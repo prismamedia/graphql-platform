@@ -1,0 +1,40 @@
+{
+  "name": "@prismamedia/graphql-platform-utils",
+  "version": "0.1.0-alpha.0",
+  "license": "MIT",
+  "contributors": [
+    "Yvann Boucher <yvann.boucher@gmail.com>"
+  ],
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/prismamedia/graphql-platform"
+  },
+  "main": "dist/commonjs/index.js",
+  "module": "dist/module/index.js",
+  "typings": "dist/types/index.d.ts",
+  "scripts": {
+    "test": "NODE_ENV=test jest --detectOpenHandles --verbose",
+    "test:watch": "yarn run test --watchAll"
+  },
+  "devDependencies": {
+    "@types/graphql": "^14.2.1",
+    "@types/jest": "^24.0.15",
+    "@types/lodash.isplainobject": "^4.0.6",
+    "@types/lodash.mergewith": "^4.6.6",
+    "@types/node": "^12.0.8",
+    "graphql": "^14.3.1",
+    "jest": "^24.8.0",
+    "ts-jest": "^24.0.2",
+    "typescript": "^3.5.1"
+  },
+  "dependencies": {
+    "@prismamedia/ts-module-loader": "^3.1.2",
+    "lodash.isplainobject": "^4.0.6",
+    "lodash.mergewith": "^4.6.1",
+    "typescript-memoize": "^1.0.0-alpha.3"
+  },
+  "peerDependencies": {
+    "@types/graphql": "^14.0.0",
+    "graphql": "^14.0.0"
+  }
+}

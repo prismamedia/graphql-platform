@@ -1,0 +1,26 @@
+{
+  "private": true,
+  "license": "MIT",
+  "contributors": [
+    "Yvann Boucher <yvann.boucher@gmail.com>"
+  ],
+  "workspaces": [
+    "packages/*"
+  ],
+  "engines": {
+    "node": ">=10"
+  },
+  "scripts": {
+    "build": "tsc --build packages/tsconfig.json packages/tsconfig.commonjs.json",
+    "build:clean": "yarn run build --clean",
+    "build:watch": "yarn run build --watch",
+    "clean": "git clean -dfqX -- .",
+    "prepare": "yarn run build",
+    "prettier": "prettier --write \"./**/src/**/*.ts\"",
+    "test": "lerna run --parallel test"
+  },
+  "devDependencies": {
+    "lerna": "^3.15.0",
+    "typescript": "^3.5.1"
+  }
+}

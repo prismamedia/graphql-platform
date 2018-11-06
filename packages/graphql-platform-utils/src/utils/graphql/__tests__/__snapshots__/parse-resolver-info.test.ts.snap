@@ -1,0 +1,19 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`parseResolverInfo gets a field tree 1`] = `
+Object {
+  "data": Object {
+    "myViewer": Object {
+      "less": Object {
+        "pseudo": "test",
+      },
+      "me": Object {
+        "email": "test@test.tst",
+        "hisEmail": "test@test.tst",
+        "pseudo": "test",
+      },
+      "users": Array [],
+    },
+  },
+}
+`;

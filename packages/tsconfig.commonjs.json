@@ -1,0 +1,17 @@
+{
+  "files": [],
+  "references": [
+    {
+      "path": "./graphql-platform-utils/tsconfig.commonjs.json"
+    },
+    {
+      "path": "./graphql-platform-core/tsconfig.commonjs.json"
+    },
+    {
+      "path": "./graphql-platform-connector-mariadb/tsconfig.commonjs.json"
+    },
+    {
+      "path": "./graphql-platform-server-express/tsconfig.commonjs.json"
+    }
+  ]
+}

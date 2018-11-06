@@ -1,0 +1,272 @@
+version: 2.1
+
+aliases:
+  # cf: https://nodejs.org/en/about/releases/
+  - &maintenance-node-lts-tag 8
+  - &active-node-lts-tag lts
+  - &current-node-tag latest
+
+build-steps: &build-steps
+  steps:
+    # Get the code
+    - checkout
+
+    # Generate a file containing the NodeJS version
+    - run: node --version > ~/.NODE_VERSION
+
+    # Install vendors
+    - restore_cache:
+        keys:
+          - vendor-{{ arch }}-{ checksum "~/.NODE_VERSION" }-{{ checksum "yarn.lock" }}
+          - vendor-{{ arch }}-{ checksum "~/.NODE_VERSION" }-
+    - run: node --version
+    - run: yarn --version
+    - run: yarn --no-progress --non-interactive --frozen-lockfile
+    - save_cache:
+        key: vendor-{{ arch }}-{ checksum "~/.NODE_VERSION" }-{{ checksum "yarn.lock" }}
+        paths:
+          - ~/.cache/yarn
+
+    # Persist the result
+    - persist_to_workspace:
+        root: .
+        paths:
+          - node_modules
+          - packages/*/dist
+          - packages/*/node_modules
+
+test-steps: &test-steps
+  steps:
+    - checkout
+    - attach_workspace:
+        at: .
+    - run: cd packages/graphql-platform-${PKG} && yarn run test
+
+jobs:
+  # maintenance-node-lts
+  build-with-maintenance-node-lts:
+    <<: *build-steps
+    docker:
+      - image: circleci/node:8
+
+  test-utils-with-maintenance-node-lts:
+    <<: *test-steps
+    docker:
+      - image: circleci/node:8
+        environment:
+          PKG: utils
+
+  test-core-with-maintenance-node-lts:
+    <<: *test-steps
+    docker:
+      - image: circleci/node:8
+        environment:
+          PKG: core
+
+  test-connector-mariadb-with-maintenance-node-lts:
+    <<: *test-steps
+    docker:
+      - image: circleci/node:8
+        environment:
+          PKG: connector-mariadb
+          MARIADB_HOST: 127.0.0.1
+          MARIADB_PORT: 3306
+          MARIADB_USER: root
+          MARIADB_PASSWORD: test
+          MARIADB_DATABASE: graphql-platform
+      - image: circleci/mariadb:10.3
+        environment:
+          MYSQL_ROOT_PASSWORD: test
+          MYSQL_DATABASE: graphql-platform
+
+  test-server-express-with-maintenance-node-lts:
+    <<: *test-steps
+    docker:
+      - image: circleci/node:8
+        environment:
+          PKG: server-express
+
+  # active-node-lts
+  build-with-active-node-lts:
+    <<: *build-steps
+    docker:
+      - image: circleci/node:lts
+
+  test-utils-with-active-node-lts:
+    <<: *test-steps
+    docker:
+      - image: circleci/node:lts
+        environment:
+          PKG: utils
+
+  test-core-with-active-node-lts:
+    <<: *test-steps
+    docker:
+      - image: circleci/node:lts
+        environment:
+          PKG: core
+
+  test-connector-mariadb-with-active-node-lts:
+    <<: *test-steps
+    docker:
+      - image: circleci/node:lts
+        environment:
+          PKG: connector-mariadb
+          MARIADB_HOST: 127.0.0.1
+          MARIADB_PORT: 3306
+          MARIADB_USER: root
+          MARIADB_PASSWORD: test
+          MARIADB_DATABASE: graphql-platform
+      - image: circleci/mariadb:10.3
+        environment:
+          MYSQL_ROOT_PASSWORD: test
+          MYSQL_DATABASE: graphql-platform
+
+  test-server-express-with-active-node-lts:
+    <<: *test-steps
+    docker:
+      - image: circleci/node:lts
+        environment:
+          PKG: server-express
+
+  publish-with-active-node-lts:
+    steps:
+      - checkout
+      - attach_workspace:
+          at: .
+      - run: echo "//registry.npmjs.org/:_authToken=${NPM_REGISTRY_AUTH_TOKEN}" > .npmrc
+      - run: yarn run lerna publish from-git --yes --no-git-reset --registry https://registry.npmjs.org/
+    docker:
+      - image: circleci/node:lts
+
+  # current-node
+  build-with-current-node:
+    <<: *build-steps
+    docker:
+      - image: circleci/node:latest
+
+  test-utils-with-current-node:
+    <<: *test-steps
+    docker:
+      - image: circleci/node:latest
+        environment:
+          PKG: utils
+
+  test-core-with-current-node:
+    <<: *test-steps
+    docker:
+      - image: circleci/node:latest
+        environment:
+          PKG: core
+
+  test-connector-mariadb-with-current-node:
+    <<: *test-steps
+    docker:
+      - image: circleci/node:latest
+        environment:
+          PKG: connector-mariadb
+          MARIADB_HOST: 127.0.0.1
+          MARIADB_PORT: 3306
+          MARIADB_USER: root
+          MARIADB_PASSWORD: test
+          MARIADB_DATABASE: graphql-platform
+      - image: circleci/mariadb:10.3
+        environment:
+          MYSQL_ROOT_PASSWORD: test
+          MYSQL_DATABASE: graphql-platform
+
+  test-server-express-with-current-node:
+    <<: *test-steps
+    docker:
+      - image: circleci/node:latest
+        environment:
+          PKG: server-express
+
+workflows:
+  version: 2
+
+  # build-and-test-with-maintenance-node-lts:
+  #   jobs:
+  #     # Build
+  #     - build-with-maintenance-node-lts
+
+  #     # Test
+  #     - test-utils-with-maintenance-node-lts:
+  #         requires:
+  #           - build-with-maintenance-node-lts
+  #     - test-core-with-maintenance-node-lts:
+  #         requires:
+  #           - build-with-maintenance-node-lts
+  #     - test-connector-mariadb-with-maintenance-node-lts:
+  #         requires:
+  #           - build-with-maintenance-node-lts
+  #     - test-server-express-with-maintenance-node-lts:
+  #         requires:
+  #           - build-with-maintenance-node-lts
+
+  # build-and-test-with-current-node:
+  #   jobs:
+  #     # Build
+  #     - build-with-current-node
+
+  #     # Test
+  #     - test-utils-with-current-node:
+  #         requires:
+  #           - build-with-current-node
+  #     - test-core-with-current-node:
+  #         requires:
+  #           - build-with-current-node
+  #     - test-connector-mariadb-with-current-node:
+  #         requires:
+  #           - build-with-current-node
+  #     - test-server-express-with-current-node:
+  #         requires:
+  #           - build-with-current-node
+
+  build-test-and-publish-with-active-node-lts:
+    jobs:
+      # Build
+      - build-with-active-node-lts:
+          filters:
+            tags:
+              only: /.*/
+
+      # Test
+      - test-utils-with-active-node-lts:
+          requires:
+            - build-with-active-node-lts
+          filters:
+            tags:
+              only: /.*/
+      - test-core-with-active-node-lts:
+          requires:
+            - build-with-active-node-lts
+          filters:
+            tags:
+              only: /.*/
+      - test-connector-mariadb-with-active-node-lts:
+          requires:
+            - build-with-active-node-lts
+          filters:
+            tags:
+              only: /.*/
+      - test-server-express-with-active-node-lts:
+          requires:
+            - build-with-active-node-lts
+          filters:
+            tags:
+              only: /.*/
+
+      # Publish
+      - publish-with-active-node-lts:
+          requires:
+            - test-utils-with-active-node-lts
+            - test-core-with-active-node-lts
+            - test-connector-mariadb-with-active-node-lts
+            - test-server-express-with-active-node-lts
+          filters:
+            tags:
+              only: /^v.*/
+            branches:
+              ignore: /.*/
+          context: OSS

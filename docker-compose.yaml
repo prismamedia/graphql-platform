@@ -1,0 +1,38 @@
+version: '3'
+
+services:
+  mariadb:
+    image: circleci/mariadb:10.3
+    environment:
+      MYSQL_ROOT_PASSWORD: test
+      MYSQL_DATABASE: test
+    ports:
+      - 3306:3306
+    logging:
+      options:
+        max-size: 50k
+        max-file: '1'
+    restart: on-failure
+
+  project:
+    image: circleci/node:10
+    depends_on:
+      - mariadb
+    environment:
+      MARIADB_HOST: mariadb
+      MARIADB_PORT: 3306
+      MARIADB_USER: root
+      MARIADB_PASSWORD: test
+      MARIADB_DATABASE: test
+    command: sh -c "cd ./packages/graphql-platform-server-express && yarn run dev"
+    ports:
+      - 3000:3000
+      - 9222:9222
+    working_dir: /usr/src/app
+    volumes:
+      - .:/usr/src/app:cached
+      - ~/.bash_history:/root/.bash_history
+    logging:
+      options:
+        max-size: 50k
+        max-file: '1'

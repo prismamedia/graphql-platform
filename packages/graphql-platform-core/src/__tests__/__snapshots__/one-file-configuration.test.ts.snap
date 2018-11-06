@@ -1,0 +1,87 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`One file configuration creates a GraphQL schema 1`] = `
+"type Mutation {
+  # Create a single \\"MyArticle\\" node.
+  createMyArticle(data: MyArticleCreateInput!): MyArticle!
+
+  # Delete a single \\"MyArticle\\" node.
+  deleteMyArticle(where: MyArticleWhereUniqueInput!): MyArticle
+
+  # Update a single \\"MyArticle\\" node.
+  updateMyArticle(where: MyArticleWhereUniqueInput!, data: MyArticleUpdateInput!): MyArticle
+
+  # Update or create a single \\"MyArticle\\" node.
+  upsertMyArticle(where: MyArticleWhereUniqueInput!, create: MyArticleCreateInput!, update: MyArticleUpdateInput!): MyArticle!
+}
+
+# \\"MyArticle\\" resource's node
+type MyArticle {
+  myId: Int!
+  myTitle: String
+  myVirtualField: Boolean!
+}
+
+input MyArticleCreateInput {
+  myId: Int!
+  myTitle: String
+}
+
+enum MyArticleOrderByInput {
+  myId_ASC
+  myId_DESC
+  myTitle_ASC
+  myTitle_DESC
+}
+
+input MyArticleUpdateInput {
+  myTitle: String
+}
+
+# Filters the \\"MyArticle\\" nodes by specifying some conditions
+input MyArticleWhereInput {
+  myId: Int
+  myId_not: Int
+  myId_in: [Int]
+  myId_not_in: [Int]
+  myId_lt: Int
+  myId_lte: Int
+  myId_gt: Int
+  myId_gte: Int
+  myTitle: String
+  myTitle_not: String
+  myTitle_in: [String]
+  myTitle_not_in: [String]
+  myTitle_contains: String
+  myTitle_not_contains: String
+  myTitle_starts_with: String
+  myTitle_not_starts_with: String
+  myTitle_ends_with: String
+  myTitle_not_ends_with: String
+  myTitle_lt: String
+  myTitle_lte: String
+  myTitle_gt: String
+  myTitle_gte: String
+  AND: [MyArticleWhereInput!]
+  OR: [MyArticleWhereInput!]
+  NOT: MyArticleWhereInput
+}
+
+# Identifies exactly one \\"MyArticle\\" node.
+input MyArticleWhereUniqueInput {
+  myId: Int!
+}
+
+type Query {
+  # Retrieve the number of \\"MyArticle\\" nodes.
+  myArticleCount(where: MyArticleWhereInput): Int!
+
+  # Retrieve a list of \\"MyArticle\\" nodes.
+  myArticles(where: MyArticleWhereInput, orderBy: [MyArticleOrderByInput!], first: Int!, skip: Int): [MyArticle!]!
+
+  # Retrieve a single \\"MyArticle\\" node.
+  myArticle(where: MyArticleWhereUniqueInput!): MyArticle
+  myCustomQuery: Boolean!
+}
+"
+`;

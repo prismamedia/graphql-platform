@@ -1,0 +1,1038 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`Execution executes a complex multi mutation request 1`] = `
+"# 64 queries in 1 connections
+
+INSERT INTO
+  \`users\`
+SET
+  \`id\` = '771ad98a-5b88-4d1d-a3f3-9133d367b708',
+  \`username\` = 'user-01'
+
+INSERT INTO
+  \`categories\`
+SET
+  \`id\` = '92dc645e-c5ee-46ac-8a24-53b1584e4c99',
+  \`title\` = 'Root category',
+  \`slug\` = 'root-category'
+
+SELECT
+  \`Category\`.\`id\`
+FROM
+  \`categories\` AS \`Category\`
+WHERE
+  \`Category\`.\`id\` = '92dc645e-c5ee-46ac-8a24-53b1584e4c99'
+LIMIT
+  1 FOR
+UPDATE
+
+INSERT INTO
+  \`categories\`
+SET
+  \`id\` = '8fdec553-453e-442f-a710-c52ee4a23080',
+  \`title\` = 'First category',
+  \`slug\` = 'first-category',
+  \`parentId\` = '92dc645e-c5ee-46ac-8a24-53b1584e4c99'
+
+SELECT
+  \`Category\`.\`id\`
+FROM
+  \`categories\` AS \`Category\`
+WHERE
+  \`Category\`.\`id\` = '92dc645e-c5ee-46ac-8a24-53b1584e4c99'
+LIMIT
+  1 FOR
+UPDATE
+
+INSERT INTO
+  \`categories\`
+SET
+  \`id\` = 'e411a5dc-a14f-4d0d-ac54-d4c93c7c5b84',
+  \`title\` = 'Second category',
+  \`slug\` = 'second-category',
+  \`parentId\` = '92dc645e-c5ee-46ac-8a24-53b1584e4c99'
+
+SELECT
+  \`Category\`.\`id\`
+FROM
+  \`categories\` AS \`Category\`
+WHERE
+  \`Category\`.\`id\` = '92dc645e-c5ee-46ac-8a24-53b1584e4c99'
+LIMIT
+  1 FOR
+UPDATE
+
+INSERT INTO
+  \`categories\`
+SET
+  \`id\` = 'da8d3a79-6161-46cd-a9fa-ae1382428d3c',
+  \`title\` = 'Third category, to be deleted',
+  \`slug\` = 'third-category-to-be-deleted',
+  \`parentId\` = '92dc645e-c5ee-46ac-8a24-53b1584e4c99'
+
+SELECT
+  \`Category\`.\`title\`,
+  \`Category\`.\`intId\`
+FROM
+  \`categories\` AS \`Category\`
+WHERE
+  \`Category\`.\`id\` = 'da8d3a79-6161-46cd-a9fa-ae1382428d3c'
+LIMIT
+  1 FOR
+UPDATE
+
+DELETE Category
+FROM
+  \`categories\` AS \`Category\`
+WHERE
+  \`Category\`.\`intId\` = 4
+
+INSERT INTO
+  \`tags\`
+SET
+  \`id\` = '7636d577-397f-430c-8bed-bfe0d765af07',
+  \`title\` = 'First tag',
+  \`slug\` = 'first-tag'
+
+INSERT INTO
+  \`tags\`
+SET
+  \`id\` = '21b31331-c5cc-4426-b648-4b0f14232866',
+  \`title\` = 'Second tag',
+  \`slug\` = 'second-tag'
+
+INSERT INTO
+  \`tags\`
+SET
+  \`id\` = '810629d2-3391-480e-ba9a-5e77999f6c72',
+  \`title\` = 'Third tag',
+  \`slug\` = 'third-tag'
+
+INSERT INTO
+  \`tags\`
+SET
+  \`id\` = '6af9c25e-2072-468f-8190-3c205165fe38',
+  \`title\` = 'Fourth tag',
+  \`slug\` = 'fourth-tag'
+
+SELECT
+  \`Category\`.\`parentId\`,
+  \`Category\`.\`slug\`
+FROM
+  \`categories\` AS \`Category\`
+WHERE
+  \`Category\`.\`id\` = 'e411a5dc-a14f-4d0d-ac54-d4c93c7c5b84'
+LIMIT
+  1 FOR
+UPDATE
+
+SELECT
+  \`User\`.\`username\`
+FROM
+  \`users\` AS \`User\`
+WHERE
+  \`User\`.\`id\` = '771ad98a-5b88-4d1d-a3f3-9133d367b708'
+LIMIT
+  1 FOR
+UPDATE
+
+INSERT INTO
+  \`articles\`
+SET
+  \`id\` = '9b6b98fa-586d-4987-82a0-d63f11bbe560',
+  \`format\` = 'RICH',
+  \`title\` = 'My first article title, RICH, authored by user-01, in the second category.',
+  \`slug\` = 'my-first-article-title-rich-authored-by-user-01-in-the-second-category',
+  \`categoryParentId\` = '92dc645e-c5ee-46ac-8a24-53b1584e4c99',
+  \`categorySlug\` = 'second-category',
+  \`authorUsername\` = 'user-01'
+
+SELECT
+  \`Article\`.\`id\`,
+  \`Article\`.\`slug\`,
+  \`Article\`.\`authorUsername\`,
+  \`Article>moderator\`.\`username\`,
+  \`Article\`.\`moderatorIntId\`,
+  \`Article\`.\`categoryParentId\`,
+  \`Article\`.\`categorySlug\`,
+  \`Article>category\`.\`parentId\`,
+  \`Article\`.\`intId\`
+FROM
+  \`articles\` AS \`Article\`
+  LEFT JOIN \`users\` AS \`Article>moderator\` ON \`Article\`.\`moderatorIntId\` = \`Article>moderator\`.\`intId\`
+  LEFT JOIN \`categories\` AS \`Article>category\` ON (
+    \`Article\`.\`categoryParentId\` = \`Article>category\`.\`parentId\`
+  )
+  AND (
+    \`Article\`.\`categorySlug\` = \`Article>category\`.\`slug\`
+  )
+WHERE
+  (\`Article\`.\`format\` IN ('RICH', 'VIDEO'))
+  AND (\`Article\`.\`intId\` = 1)
+LIMIT
+  1 FOR
+UPDATE
+
+SELECT
+  COUNT(
+    DISTINCT \`ArticleTag\`.\`articleIntId\`,
+    \`ArticleTag\`.\`tagIntId\`
+  ) AS result
+FROM
+  \`article_tags\` AS \`ArticleTag\`
+WHERE
+  \`ArticleTag\`.\`articleIntId\` = 1
+
+SELECT
+  \`ArticleTag>tag\`.\`title\`
+FROM
+  \`article_tags\` AS \`ArticleTag\`
+  LEFT JOIN \`tags\` AS \`ArticleTag>tag\` ON \`ArticleTag\`.\`tagIntId\` = \`ArticleTag>tag\`.\`intId\`
+WHERE
+  \`ArticleTag\`.\`articleIntId\` = 1
+LIMIT
+  1
+
+SELECT
+  \`Article\`.\`intId\`
+FROM
+  \`articles\` AS \`Article\`
+  LEFT JOIN \`categories\` AS \`Article>category\` ON (
+    \`Article\`.\`categoryParentId\` = \`Article>category\`.\`parentId\`
+  )
+  AND (
+    \`Article\`.\`categorySlug\` = \`Article>category\`.\`slug\`
+  )
+WHERE
+  (\`Article\`.\`format\` IN ('RICH', 'VIDEO'))
+  AND (
+    \`Article>category\`.\`id\` = 'e411a5dc-a14f-4d0d-ac54-d4c93c7c5b84'
+  )
+  AND (
+    \`Article\`.\`slug\` = 'my-first-article-title-rich-authored-by-user-01-in-the-second-category'
+  )
+LIMIT
+  1 FOR
+UPDATE
+
+SELECT
+  \`Tag\`.\`intId\`
+FROM
+  \`tags\` AS \`Tag\`
+WHERE
+  \`Tag\`.\`slug\` = 'first-tag'
+LIMIT
+  1 FOR
+UPDATE
+
+INSERT INTO
+  \`article_tags\`
+SET
+  \`articleIntId\` = 1,
+  \`tagIntId\` = 1,
+  \`order\` = 0
+
+SELECT
+  \`ArticleTag>article\`.\`title\`,
+  \`ArticleTag>article\`.\`intId\`,
+  \`ArticleTag>tag\`.\`title\`,
+  \`ArticleTag>tag\`.\`intId\`,
+  \`ArticleTag>comment\`.\`body\`,
+  \`ArticleTag>comment\`.\`articleTagArticleIntId\`
+FROM
+  \`article_tags\` AS \`ArticleTag\`
+  LEFT JOIN \`articles\` AS \`ArticleTag>article\` ON \`ArticleTag\`.\`articleIntId\` = \`ArticleTag>article\`.\`intId\`
+  LEFT JOIN \`tags\` AS \`ArticleTag>tag\` ON \`ArticleTag\`.\`tagIntId\` = \`ArticleTag>tag\`.\`intId\`
+  LEFT JOIN \`article_tag_comments\` AS \`ArticleTag>comment\` ON (
+    \`ArticleTag\`.\`articleIntId\` = \`ArticleTag>comment\`.\`articleTagArticleIntId\`
+  )
+  AND (
+    \`ArticleTag\`.\`tagIntId\` = \`ArticleTag>comment\`.\`articleTagTagIntId\`
+  )
+WHERE
+  (\`ArticleTag\`.\`articleIntId\` = 1)
+  AND (\`ArticleTag\`.\`tagIntId\` = 1)
+LIMIT
+  1 FOR
+UPDATE
+
+SELECT
+  COUNT(
+    DISTINCT \`ArticleTag\`.\`articleIntId\`,
+    \`ArticleTag\`.\`tagIntId\`
+  ) AS result
+FROM
+  \`article_tags\` AS \`ArticleTag\`
+WHERE
+  \`ArticleTag\`.\`articleIntId\` = 1
+
+SELECT
+  COUNT(
+    DISTINCT \`ArticleTag\`.\`articleIntId\`,
+    \`ArticleTag\`.\`tagIntId\`
+  ) AS result
+FROM
+  \`article_tags\` AS \`ArticleTag\`
+WHERE
+  \`ArticleTag\`.\`tagIntId\` = 1
+
+SELECT
+  \`Category\`.\`parentId\`,
+  \`Category\`.\`slug\`
+FROM
+  \`categories\` AS \`Category\`
+WHERE
+  \`Category\`.\`id\` = '8fdec553-453e-442f-a710-c52ee4a23080'
+LIMIT
+  1 FOR
+UPDATE
+
+INSERT INTO
+  \`users\`
+SET
+  \`id\` = 'ced8fc85-cd9f-4db7-abfb-546fa8c71cd7',
+  \`username\` = 'a-new-user-created-in-the-nested-mutation'
+
+SELECT
+  \`User\`.\`intId\`
+FROM
+  \`users\` AS \`User\`
+WHERE
+  \`User\`.\`id\` = '771ad98a-5b88-4d1d-a3f3-9133d367b708'
+LIMIT
+  1 FOR
+UPDATE
+
+INSERT INTO
+  \`articles\`
+SET
+  \`id\` = 'e672258b-0870-437b-b440-e62848b4f666',
+  \`format\` = 'VIDEO',
+  \`title\` = 'My second article title, VIDEO, authored by user-01, in the first category.',
+  \`slug\` = 'my-second-article-title-video-authored-by-user-01-in-the-first-category',
+  \`categoryParentId\` = '92dc645e-c5ee-46ac-8a24-53b1584e4c99',
+  \`categorySlug\` = 'first-category',
+  \`authorUsername\` = 'a-new-user-created-in-the-nested-mutation',
+  \`moderatorIntId\` = 1
+
+SELECT
+  \`Article\`.\`id\`,
+  \`Article\`.\`slug\`,
+  \`Article\`.\`title\`,
+  \`Article\`.\`categoryParentId\`,
+  \`Article\`.\`categorySlug\`,
+  \`Article\`.\`authorUsername\`,
+  \`Article>moderator\`.\`username\`,
+  \`Article\`.\`moderatorIntId\`,
+  \`Article>category\`.\`parentId\`,
+  \`Article\`.\`intId\`
+FROM
+  \`articles\` AS \`Article\`
+  LEFT JOIN \`users\` AS \`Article>moderator\` ON \`Article\`.\`moderatorIntId\` = \`Article>moderator\`.\`intId\`
+  LEFT JOIN \`categories\` AS \`Article>category\` ON (
+    \`Article\`.\`categoryParentId\` = \`Article>category\`.\`parentId\`
+  )
+  AND (
+    \`Article\`.\`categorySlug\` = \`Article>category\`.\`slug\`
+  )
+WHERE
+  (\`Article\`.\`format\` IN ('RICH', 'VIDEO'))
+  AND (\`Article\`.\`intId\` = 2)
+LIMIT
+  1 FOR
+UPDATE
+
+SELECT
+  COUNT(
+    DISTINCT \`ArticleTag\`.\`articleIntId\`,
+    \`ArticleTag\`.\`tagIntId\`
+  ) AS result
+FROM
+  \`article_tags\` AS \`ArticleTag\`
+WHERE
+  \`ArticleTag\`.\`articleIntId\` = 2
+
+SELECT
+  \`ArticleTag>tag\`.\`slug\`
+FROM
+  \`article_tags\` AS \`ArticleTag\`
+  LEFT JOIN \`tags\` AS \`ArticleTag>tag\` ON \`ArticleTag\`.\`tagIntId\` = \`ArticleTag>tag\`.\`intId\`
+WHERE
+  \`ArticleTag\`.\`articleIntId\` = 2
+LIMIT
+  5
+
+SELECT
+  \`Article\`.\`intId\`
+FROM
+  \`articles\` AS \`Article\`
+  LEFT JOIN \`categories\` AS \`Article>category\` ON (
+    \`Article\`.\`categoryParentId\` = \`Article>category\`.\`parentId\`
+  )
+  AND (
+    \`Article\`.\`categorySlug\` = \`Article>category\`.\`slug\`
+  )
+WHERE
+  (\`Article\`.\`format\` IN ('RICH', 'VIDEO'))
+  AND (
+    \`Article>category\`.\`id\` = '8fdec553-453e-442f-a710-c52ee4a23080'
+  )
+  AND (
+    \`Article\`.\`slug\` = 'my-second-article-title-video-authored-by-user-01-in-the-first-category'
+  )
+LIMIT
+  1 FOR
+UPDATE
+
+SELECT
+  \`Tag\`.\`intId\`
+FROM
+  \`tags\` AS \`Tag\`
+WHERE
+  \`Tag\`.\`slug\` = 'second-tag'
+LIMIT
+  1 FOR
+UPDATE
+
+INSERT INTO
+  \`article_tags\`
+SET
+  \`articleIntId\` = 2,
+  \`tagIntId\` = 2,
+  \`order\` = 0
+
+SELECT
+  \`ArticleTag>article\`.\`title\`,
+  \`ArticleTag>article\`.\`intId\`,
+  \`ArticleTag>tag\`.\`title\`,
+  \`ArticleTag>tag\`.\`intId\`,
+  \`ArticleTag>comment\`.\`body\`,
+  \`ArticleTag>comment\`.\`articleTagArticleIntId\`
+FROM
+  \`article_tags\` AS \`ArticleTag\`
+  LEFT JOIN \`articles\` AS \`ArticleTag>article\` ON \`ArticleTag\`.\`articleIntId\` = \`ArticleTag>article\`.\`intId\`
+  LEFT JOIN \`tags\` AS \`ArticleTag>tag\` ON \`ArticleTag\`.\`tagIntId\` = \`ArticleTag>tag\`.\`intId\`
+  LEFT JOIN \`article_tag_comments\` AS \`ArticleTag>comment\` ON (
+    \`ArticleTag\`.\`articleIntId\` = \`ArticleTag>comment\`.\`articleTagArticleIntId\`
+  )
+  AND (
+    \`ArticleTag\`.\`tagIntId\` = \`ArticleTag>comment\`.\`articleTagTagIntId\`
+  )
+WHERE
+  (\`ArticleTag\`.\`articleIntId\` = 2)
+  AND (\`ArticleTag\`.\`tagIntId\` = 2)
+LIMIT
+  1 FOR
+UPDATE
+
+SELECT
+  COUNT(
+    DISTINCT \`ArticleTag\`.\`articleIntId\`,
+    \`ArticleTag\`.\`tagIntId\`
+  ) AS result
+FROM
+  \`article_tags\` AS \`ArticleTag\`
+WHERE
+  \`ArticleTag\`.\`articleIntId\` = 2
+
+SELECT
+  COUNT(
+    DISTINCT \`ArticleTag\`.\`articleIntId\`,
+    \`ArticleTag\`.\`tagIntId\`
+  ) AS result
+FROM
+  \`article_tags\` AS \`ArticleTag\`
+WHERE
+  \`ArticleTag\`.\`tagIntId\` = 2
+
+SELECT
+  \`Article\`.\`intId\`
+FROM
+  \`articles\` AS \`Article\`
+  LEFT JOIN \`categories\` AS \`Article>category\` ON (
+    \`Article\`.\`categoryParentId\` = \`Article>category\`.\`parentId\`
+  )
+  AND (
+    \`Article\`.\`categorySlug\` = \`Article>category\`.\`slug\`
+  )
+WHERE
+  (\`Article\`.\`format\` IN ('RICH', 'VIDEO'))
+  AND (
+    \`Article>category\`.\`id\` = '8fdec553-453e-442f-a710-c52ee4a23080'
+  )
+  AND (
+    \`Article\`.\`slug\` = 'my-second-article-title-video-authored-by-user-01-in-the-first-category'
+  )
+LIMIT
+  1 FOR
+UPDATE
+
+SELECT
+  \`Tag\`.\`intId\`
+FROM
+  \`tags\` AS \`Tag\`
+WHERE
+  \`Tag\`.\`slug\` = 'third-tag'
+LIMIT
+  1 FOR
+UPDATE
+
+INSERT INTO
+  \`article_tags\`
+SET
+  \`articleIntId\` = 2,
+  \`tagIntId\` = 3,
+  \`order\` = 1
+
+SELECT
+  \`ArticleTag>article\`.\`title\`,
+  \`ArticleTag>article\`.\`intId\`,
+  \`ArticleTag>tag\`.\`title\`,
+  \`ArticleTag>tag\`.\`intId\`
+FROM
+  \`article_tags\` AS \`ArticleTag\`
+  LEFT JOIN \`articles\` AS \`ArticleTag>article\` ON \`ArticleTag\`.\`articleIntId\` = \`ArticleTag>article\`.\`intId\`
+  LEFT JOIN \`tags\` AS \`ArticleTag>tag\` ON \`ArticleTag\`.\`tagIntId\` = \`ArticleTag>tag\`.\`intId\`
+WHERE
+  (\`ArticleTag\`.\`articleIntId\` = 2)
+  AND (\`ArticleTag\`.\`tagIntId\` = 3)
+LIMIT
+  1 FOR
+UPDATE
+
+SELECT
+  COUNT(
+    DISTINCT \`ArticleTag\`.\`articleIntId\`,
+    \`ArticleTag\`.\`tagIntId\`
+  ) AS result
+FROM
+  \`article_tags\` AS \`ArticleTag\`
+WHERE
+  \`ArticleTag\`.\`articleIntId\` = 2
+
+SELECT
+  COUNT(
+    DISTINCT \`ArticleTag\`.\`articleIntId\`,
+    \`ArticleTag\`.\`tagIntId\`
+  ) AS result
+FROM
+  \`article_tags\` AS \`ArticleTag\`
+WHERE
+  \`ArticleTag\`.\`tagIntId\` = 3
+
+SELECT
+  \`Article\`.\`intId\`
+FROM
+  \`articles\` AS \`Article\`
+  LEFT JOIN \`categories\` AS \`Article>category\` ON (
+    \`Article\`.\`categoryParentId\` = \`Article>category\`.\`parentId\`
+  )
+  AND (
+    \`Article\`.\`categorySlug\` = \`Article>category\`.\`slug\`
+  )
+WHERE
+  (\`Article\`.\`format\` IN ('RICH', 'VIDEO'))
+  AND (
+    \`Article>category\`.\`id\` = '8fdec553-453e-442f-a710-c52ee4a23080'
+  )
+  AND (
+    \`Article\`.\`slug\` = 'my-second-article-title-video-authored-by-user-01-in-the-first-category'
+  )
+LIMIT
+  1 FOR
+UPDATE
+
+SELECT
+  \`Tag\`.\`intId\`
+FROM
+  \`tags\` AS \`Tag\`
+WHERE
+  \`Tag\`.\`slug\` = 'fourth-tag'
+LIMIT
+  1 FOR
+UPDATE
+
+INSERT INTO
+  \`article_tags\`
+SET
+  \`articleIntId\` = 2,
+  \`tagIntId\` = 4,
+  \`order\` = 2
+
+SELECT
+  \`ArticleTag>article\`.\`title\`,
+  \`ArticleTag>article\`.\`intId\`,
+  \`ArticleTag>tag\`.\`title\`,
+  \`ArticleTag>tag\`.\`intId\`
+FROM
+  \`article_tags\` AS \`ArticleTag\`
+  LEFT JOIN \`articles\` AS \`ArticleTag>article\` ON \`ArticleTag\`.\`articleIntId\` = \`ArticleTag>article\`.\`intId\`
+  LEFT JOIN \`tags\` AS \`ArticleTag>tag\` ON \`ArticleTag\`.\`tagIntId\` = \`ArticleTag>tag\`.\`intId\`
+WHERE
+  (\`ArticleTag\`.\`articleIntId\` = 2)
+  AND (\`ArticleTag\`.\`tagIntId\` = 4)
+LIMIT
+  1 FOR
+UPDATE
+
+SELECT
+  COUNT(
+    DISTINCT \`ArticleTag\`.\`articleIntId\`,
+    \`ArticleTag\`.\`tagIntId\`
+  ) AS result
+FROM
+  \`article_tags\` AS \`ArticleTag\`
+WHERE
+  \`ArticleTag\`.\`articleIntId\` = 2
+
+SELECT
+  COUNT(
+    DISTINCT \`ArticleTag\`.\`articleIntId\`,
+    \`ArticleTag\`.\`tagIntId\`
+  ) AS result
+FROM
+  \`article_tags\` AS \`ArticleTag\`
+WHERE
+  \`ArticleTag\`.\`tagIntId\` = 4
+
+SELECT
+  \`Article\`.\`intId\`
+FROM
+  \`articles\` AS \`Article\`
+  LEFT JOIN \`categories\` AS \`Article>category\` ON (
+    \`Article\`.\`categoryParentId\` = \`Article>category\`.\`parentId\`
+  )
+  AND (
+    \`Article\`.\`categorySlug\` = \`Article>category\`.\`slug\`
+  )
+WHERE
+  (\`Article\`.\`format\` IN ('RICH', 'VIDEO'))
+  AND (
+    \`Article>category\`.\`id\` = '8fdec553-453e-442f-a710-c52ee4a23080'
+  )
+  AND (
+    \`Article\`.\`slug\` = 'my-second-article-title-video-authored-by-user-01-in-the-first-category'
+  )
+LIMIT
+  1 FOR
+UPDATE
+
+SELECT
+  \`Tag\`.\`intId\`
+FROM
+  \`tags\` AS \`Tag\`
+WHERE
+  \`Tag\`.\`slug\` = 'first-tag'
+LIMIT
+  1 FOR
+UPDATE
+
+INSERT INTO
+  \`article_tags\`
+SET
+  \`articleIntId\` = 2,
+  \`tagIntId\` = 1,
+  \`order\` = 3
+
+SELECT
+  \`ArticleTag>article\`.\`title\`,
+  \`ArticleTag>article\`.\`intId\`,
+  \`ArticleTag>tag\`.\`title\`,
+  \`ArticleTag>tag\`.\`intId\`
+FROM
+  \`article_tags\` AS \`ArticleTag\`
+  LEFT JOIN \`articles\` AS \`ArticleTag>article\` ON \`ArticleTag\`.\`articleIntId\` = \`ArticleTag>article\`.\`intId\`
+  LEFT JOIN \`tags\` AS \`ArticleTag>tag\` ON \`ArticleTag\`.\`tagIntId\` = \`ArticleTag>tag\`.\`intId\`
+WHERE
+  (\`ArticleTag\`.\`articleIntId\` = 2)
+  AND (\`ArticleTag\`.\`tagIntId\` = 1)
+LIMIT
+  1 FOR
+UPDATE
+
+SELECT
+  COUNT(
+    DISTINCT \`ArticleTag\`.\`articleIntId\`,
+    \`ArticleTag\`.\`tagIntId\`
+  ) AS result
+FROM
+  \`article_tags\` AS \`ArticleTag\`
+WHERE
+  \`ArticleTag\`.\`articleIntId\` = 2
+
+SELECT
+  COUNT(
+    DISTINCT \`ArticleTag\`.\`articleIntId\`,
+    \`ArticleTag\`.\`tagIntId\`
+  ) AS result
+FROM
+  \`article_tags\` AS \`ArticleTag\`
+WHERE
+  \`ArticleTag\`.\`tagIntId\` = 1
+
+UPDATE
+  \`articles\` AS \`Article\`
+  LEFT JOIN \`categories\` AS \`Article>category\` ON (
+    \`Article\`.\`categoryParentId\` = \`Article>category\`.\`parentId\`
+  )
+  AND (
+    \`Article\`.\`categorySlug\` = \`Article>category\`.\`slug\`
+  )
+SET
+  \`Article\`.\`moderatorIntId\` = NULL
+WHERE
+  (\`Article\`.\`format\` IN ('RICH', 'VIDEO'))
+  AND (
+    \`Article>category\`.\`id\` = 'e411a5dc-a14f-4d0d-ac54-d4c93c7c5b84'
+  )
+  AND (
+    \`Article\`.\`slug\` = 'my-first-article-title-rich-authored-by-user-01-in-the-second-category'
+  )
+
+SELECT
+  \`Article\`.\`title\`,
+  \`Article\`.\`body\`
+FROM
+  \`articles\` AS \`Article\`
+  LEFT JOIN \`categories\` AS \`Article>category\` ON (
+    \`Article\`.\`categoryParentId\` = \`Article>category\`.\`parentId\`
+  )
+  AND (
+    \`Article\`.\`categorySlug\` = \`Article>category\`.\`slug\`
+  )
+WHERE
+  (\`Article\`.\`format\` IN ('RICH', 'VIDEO'))
+  AND (
+    \`Article>category\`.\`id\` = 'e411a5dc-a14f-4d0d-ac54-d4c93c7c5b84'
+  )
+  AND (
+    \`Article\`.\`slug\` = 'my-first-article-title-rich-authored-by-user-01-in-the-second-category'
+  )
+LIMIT
+  1 FOR
+UPDATE
+
+UPDATE
+  \`articles\` AS \`Article\`
+  LEFT JOIN \`categories\` AS \`Article>category\` ON (
+    \`Article\`.\`categoryParentId\` = \`Article>category\`.\`parentId\`
+  )
+  AND (
+    \`Article\`.\`categorySlug\` = \`Article>category\`.\`slug\`
+  )
+SET
+  \`Article\`.\`title\` = 'My new first article\\\\'s title',
+  \`Article\`.\`body\` = 'My new first article\\\\'s body',
+  \`Article\`.\`moderatorIntId\` = NULL
+WHERE
+  (\`Article\`.\`format\` IN ('RICH', 'VIDEO'))
+  AND (
+    \`Article>category\`.\`id\` = 'e411a5dc-a14f-4d0d-ac54-d4c93c7c5b84'
+  )
+  AND (
+    \`Article\`.\`slug\` = 'my-first-article-title-rich-authored-by-user-01-in-the-second-category'
+  )
+
+UPDATE
+  \`articles\` AS \`Article\`
+  LEFT JOIN \`categories\` AS \`Article>category\` ON (
+    \`Article\`.\`categoryParentId\` = \`Article>category\`.\`parentId\`
+  )
+  AND (
+    \`Article\`.\`categorySlug\` = \`Article>category\`.\`slug\`
+  )
+SET
+  \`Article\`.\`moderatorIntId\` = NULL
+WHERE
+  (\`Article\`.\`format\` IN ('RICH', 'VIDEO'))
+  AND (
+    \`Article>category\`.\`id\` = '8fdec553-453e-442f-a710-c52ee4a23080'
+  )
+  AND (
+    \`Article\`.\`slug\` = 'my-second-article-title-video-authored-by-user-01-in-the-first-category'
+  )
+
+SELECT
+  \`ArticleTag\`.\`articleIntId\`,
+  \`ArticleTag\`.\`tagIntId\`
+FROM
+  \`article_tags\` AS \`ArticleTag\`
+  LEFT JOIN \`articles\` AS \`ArticleTag>article\` ON \`ArticleTag\`.\`articleIntId\` = \`ArticleTag>article\`.\`intId\`
+  LEFT JOIN \`categories\` AS \`ArticleTag>article>category\` ON (
+    \`ArticleTag>article\`.\`categoryParentId\` = \`ArticleTag>article>category\`.\`parentId\`
+  )
+  AND (
+    \`ArticleTag>article\`.\`categorySlug\` = \`ArticleTag>article>category\`.\`slug\`
+  )
+  LEFT JOIN \`tags\` AS \`ArticleTag>tag\` ON \`ArticleTag\`.\`tagIntId\` = \`ArticleTag>tag\`.\`intId\`
+WHERE
+  (
+    (
+      \`ArticleTag>article\`.\`slug\` = 'my-first-article-title-rich-authored-by-user-01-in-the-second-category'
+    )
+    AND (
+      \`ArticleTag>article>category\`.\`id\` = 'e411a5dc-a14f-4d0d-ac54-d4c93c7c5b84'
+    )
+  )
+  AND (\`ArticleTag>tag\`.\`slug\` = 'first-tag')
+LIMIT
+  1 FOR
+UPDATE
+
+INSERT INTO
+  \`article_tag_comments\`
+SET
+  \`articleTagArticleIntId\` = 1,
+  \`articleTagTagIntId\` = 1,
+  \`body\` = 'My first article tag comment, on first article & first tag'
+
+SELECT
+  \`ArticleTagComment\`.\`body\`,
+  \`ArticleTagComment>articleTag>article\`.\`id\`,
+  \`ArticleTagComment>articleTag>tag\`.\`id\`
+FROM
+  \`article_tag_comments\` AS \`ArticleTagComment\`
+  LEFT JOIN \`article_tags\` AS \`ArticleTagComment>articleTag\` ON (
+    \`ArticleTagComment\`.\`articleTagArticleIntId\` = \`ArticleTagComment>articleTag\`.\`articleIntId\`
+  )
+  AND (
+    \`ArticleTagComment\`.\`articleTagTagIntId\` = \`ArticleTagComment>articleTag\`.\`tagIntId\`
+  )
+  LEFT JOIN \`articles\` AS \`ArticleTagComment>articleTag>article\` ON \`ArticleTagComment>articleTag\`.\`articleIntId\` = \`ArticleTagComment>articleTag>article\`.\`intId\`
+  LEFT JOIN \`tags\` AS \`ArticleTagComment>articleTag>tag\` ON \`ArticleTagComment>articleTag\`.\`tagIntId\` = \`ArticleTagComment>articleTag>tag\`.\`intId\`
+WHERE
+  (\`ArticleTagComment\`.\`articleTagArticleIntId\` = 1)
+  AND (\`ArticleTagComment\`.\`articleTagTagIntId\` = 1)
+LIMIT
+  1 FOR
+UPDATE"
+`;
+
+exports[`Execution executes a complex multi query request 1`] = `
+"# 8 queries in 1 connections
+
+SELECT
+  COUNT(DISTINCT \`Article\`.\`intId\`) AS result
+FROM
+  \`articles\` AS \`Article\`
+  LEFT JOIN \`article_tags\` AS \`Article>tags\` ON \`Article\`.\`intId\` = \`Article>tags\`.\`articleIntId\`
+  LEFT JOIN \`tags\` AS \`Article>tags>tag\` ON \`Article>tags\`.\`tagIntId\` = \`Article>tags>tag\`.\`intId\`
+  LEFT JOIN \`categories\` AS \`Article>category\` ON (
+    \`Article\`.\`categoryParentId\` = \`Article>category\`.\`parentId\`
+  )
+  AND (
+    \`Article\`.\`categorySlug\` = \`Article>category\`.\`slug\`
+  )
+  LEFT JOIN \`categories\` AS \`Article>category>parent\` ON \`Article>category\`.\`parentId\` = \`Article>category>parent\`.\`id\`
+WHERE
+  (\`Article\`.\`format\` IN ('RICH', 'VIDEO'))
+  AND (
+    \`Article\`.\`createdAt\` >= '2000-01-01 00:00:00.000'
+  )
+  AND (\`Article\`.\`format\` = 'RICH')
+  AND (\`Article\`.\`authorUsername\` = 'a-valid-username')
+  AND (
+    (\`Article>tags>tag\`.\`slug\` IN ('space', 'geo'))
+    AND (
+      NOT (\`Article>tags>tag\`.\`slug\` IN ('tv', 'news'))
+    )
+  )
+  AND (
+    (\`Article\`.\`moderatorIntId\` IS NOT NULL)
+    OR (\`Article\`.\`categorySlug\` IS NULL)
+    OR (
+      (\`Article\`.\`categoryParentId\` IS NULL)
+      AND (
+        \`Article\`.\`categorySlug\` = 'my-category-slug-with-null-parent'
+      )
+    )
+    OR (
+      (
+        \`Article>category\`.\`slug\` = 'my-category-slug-with-defined-parent'
+      )
+      AND (\`Article>category>parent\`.\`intId\` = 42)
+    )
+    OR (
+      (
+        \`Article\`.\`categoryParentId\` = '8fdec553-453e-442f-a710-c52ee4a23080'
+      )
+      AND (
+        \`Article\`.\`categorySlug\` = 'my-category-slug-with-defined-parent'
+      )
+    )
+    OR (
+      (\`Article>category\`.\`slug\` = 'news')
+      AND (
+        (\`Article>category\`.\`parentId\` IS NULL)
+        OR (\`Article>category\`.\`parentId\` IS NULL)
+        OR (\`Article>category\`.\`parentId\` IS NOT NULL)
+      )
+    )
+  )
+
+SELECT
+  \`Article\`.\`id\`,
+  \`Article\`.\`format\`,
+  \`Article\`.\`title\`,
+  \`Article\`.\`categoryParentId\`,
+  \`Article\`.\`categorySlug\`,
+  \`Article\`.\`intId\`,
+  \`Article>category\`.\`id\`,
+  \`Article>category>parent\`.\`title\`,
+  \`Article>category\`.\`parentId\`,
+  \`Article>category\`.\`title\`
+FROM
+  \`articles\` AS \`Article\`
+  LEFT JOIN \`categories\` AS \`Article>category\` ON (
+    \`Article\`.\`categoryParentId\` = \`Article>category\`.\`parentId\`
+  )
+  AND (
+    \`Article\`.\`categorySlug\` = \`Article>category\`.\`slug\`
+  )
+  LEFT JOIN \`categories\` AS \`Article>category>parent\` ON \`Article>category\`.\`parentId\` = \`Article>category>parent\`.\`id\`
+  LEFT JOIN \`article_tags\` AS \`Article>tags\` ON \`Article\`.\`intId\` = \`Article>tags\`.\`articleIntId\`
+  LEFT JOIN \`tags\` AS \`Article>tags>tag\` ON \`Article>tags\`.\`tagIntId\` = \`Article>tags>tag\`.\`intId\`
+WHERE
+  (\`Article\`.\`format\` IN ('RICH', 'VIDEO'))
+  AND (
+    \`Article\`.\`createdAt\` >= '2000-01-01 00:00:00.000'
+  )
+  AND (\`Article\`.\`format\` = 'RICH')
+  AND (\`Article\`.\`authorUsername\` = 'a-valid-username')
+  AND (
+    (\`Article>tags>tag\`.\`slug\` IN ('space', 'geo'))
+    AND (
+      NOT (\`Article>tags>tag\`.\`slug\` IN ('tv', 'news'))
+    )
+  )
+  AND (
+    (\`Article\`.\`moderatorIntId\` IS NOT NULL)
+    OR (\`Article\`.\`categorySlug\` IS NULL)
+    OR (
+      (\`Article\`.\`categoryParentId\` IS NULL)
+      AND (
+        \`Article\`.\`categorySlug\` = 'my-category-slug-with-null-parent'
+      )
+    )
+    OR (
+      (
+        \`Article>category\`.\`slug\` = 'my-category-slug-with-defined-parent'
+      )
+      AND (\`Article>category>parent\`.\`intId\` = 42)
+    )
+    OR (
+      (
+        \`Article\`.\`categoryParentId\` = '8fdec553-453e-442f-a710-c52ee4a23080'
+      )
+      AND (
+        \`Article\`.\`categorySlug\` = 'my-category-slug-with-defined-parent'
+      )
+    )
+    OR (
+      (\`Article>category\`.\`slug\` = 'news')
+      AND (
+        (\`Article>category\`.\`parentId\` IS NULL)
+        OR (\`Article>category\`.\`parentId\` IS NULL)
+        OR (\`Article>category\`.\`parentId\` IS NOT NULL)
+      )
+    )
+  )
+GROUP BY
+  \`Article\`.\`intId\`
+ORDER BY
+  \`Article\`.\`createdAt\` DESC
+LIMIT
+  25
+
+SELECT
+  \`Article\`.\`id\`
+FROM
+  \`articles\` AS \`Article\`
+WHERE
+  (\`Article\`.\`format\` IN ('RICH', 'VIDEO'))
+  AND (\`Article\`.\`intId\` = 5)
+LIMIT
+  1
+
+SELECT
+  \`Article\`.\`id\`
+FROM
+  \`articles\` AS \`Article\`
+WHERE
+  (\`Article\`.\`format\` IN ('RICH', 'VIDEO'))
+  AND (
+    \`Article\`.\`id\` = 'a3c2e74f-005e-471e-849c-b0025cb84a88'
+  )
+LIMIT
+  1
+
+SELECT
+  \`Article\`.\`id\`
+FROM
+  \`articles\` AS \`Article\`
+  LEFT JOIN \`categories\` AS \`Article>category\` ON (
+    \`Article\`.\`categoryParentId\` = \`Article>category\`.\`parentId\`
+  )
+  AND (
+    \`Article\`.\`categorySlug\` = \`Article>category\`.\`slug\`
+  )
+WHERE
+  (\`Article\`.\`format\` IN ('RICH', 'VIDEO'))
+  AND (\`Article>category\`.\`intId\` = 10)
+  AND (\`Article\`.\`slug\` = 'a-valid-article-slug')
+LIMIT
+  1
+
+SELECT
+  \`Article\`.\`id\`
+FROM
+  \`articles\` AS \`Article\`
+  LEFT JOIN \`categories\` AS \`Article>category\` ON (
+    \`Article\`.\`categoryParentId\` = \`Article>category\`.\`parentId\`
+  )
+  AND (
+    \`Article\`.\`categorySlug\` = \`Article>category\`.\`slug\`
+  )
+WHERE
+  (\`Article\`.\`format\` IN ('RICH', 'VIDEO'))
+  AND (
+    \`Article>category\`.\`id\` = 'b2833d86-7f24-43f7-aebb-a7afc12805b9'
+  )
+  AND (\`Article\`.\`slug\` = 'a-valid-article-slug')
+LIMIT
+  1
+
+SELECT
+  \`Article\`.\`id\`
+FROM
+  \`articles\` AS \`Article\`
+WHERE
+  (\`Article\`.\`format\` IN ('RICH', 'VIDEO'))
+  AND (
+    (
+      \`Article\`.\`categoryParentId\` = '640cebd6-1f97-403a-a246-c758d72f4b0e'
+    )
+    AND (
+      \`Article\`.\`categorySlug\` = 'a-valid-category-slug'
+    )
+  )
+  AND (\`Article\`.\`slug\` = 'a-valid-article-slug')
+LIMIT
+  1
+
+SELECT
+  \`Article\`.\`id\`
+FROM
+  \`articles\` AS \`Article\`
+WHERE
+  (\`Article\`.\`format\` IN ('RICH', 'VIDEO'))
+  AND (
+    (\`Article\`.\`categoryParentId\` IS NULL)
+    AND (
+      \`Article\`.\`categorySlug\` = 'a-valid-category-slug'
+    )
+  )
+  AND (\`Article\`.\`slug\` = 'a-valid-article-slug')
+LIMIT
+  1"
+`;

@@ -1,0 +1,19 @@
+{
+  "extends": "../../tsconfig.base",
+  "compilerOptions": {
+    "declarationDir": "dist/types",
+    "outDir": "dist/module",
+    "rootDir": "src"
+  },
+  "references": [
+    {
+      "path": "../graphql-platform-utils"
+    },
+    {
+      "path": "../graphql-platform-core"
+    },
+    {
+      "path": "../graphql-platform-connector-mariadb"
+    }
+  ]
+}

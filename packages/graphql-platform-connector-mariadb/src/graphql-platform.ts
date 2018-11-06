@@ -1,0 +1,50 @@
+import {
+  BaseContext as CoreBaseContext,
+  CustomContext,
+  CustomOperationConfig as CoreCustomOperationConfig,
+  GraphQLPlatform as CoreGraphQLPlatform,
+  GraphQLPlatformConfig as CoreGraphQLPlatformConfig,
+} from '@prismamedia/graphql-platform-core';
+import { Maybe, POJO } from '@prismamedia/graphql-platform-utils';
+import { Memoize } from 'typescript-memoize';
+import { Connector, ConnectorConfig, ConnectorRequest } from './graphql-platform/connector';
+import { ResourceConfig } from './graphql-platform/resource';
+
+export * from './graphql-platform/connector';
+export * from './graphql-platform/resource';
+
+/** "Context" provided by the GraphQL Platform */
+export interface BaseContext extends CoreBaseContext {
+  /**
+   * A new "ConnectorRequest" is created for every GraphQL execution's context, it's a convenient place
+   * to share a state/cache between all the resolvers of the same request.
+   */
+  connectorRequest: ConnectorRequest;
+}
+
+export type CustomOperationConfig<TCustomContext extends CustomContext = any> = CoreCustomOperationConfig<
+  TCustomContext,
+  BaseContext
+>;
+
+export interface GraphQLPlatformConfig<TContextParams extends POJO = any, TCustomContext extends CustomContext = any>
+  extends CoreGraphQLPlatformConfig<TContextParams, TCustomContext, BaseContext, ResourceConfig<TCustomContext>> {
+  connector?: Maybe<ConnectorConfig>;
+}
+
+export class GraphQLPlatform<
+  TContextParams extends POJO = any,
+  TCustomContext extends CustomContext = any
+> extends CoreGraphQLPlatform<TContextParams, TCustomContext, GraphQLPlatformConfig<TContextParams, TCustomContext>> {
+  @Memoize()
+  public getConnector(): Connector {
+    return new Connector(this.config.connector, this);
+  }
+
+  public async getBaseContext(): Promise<BaseContext> {
+    return {
+      ...(await super.getBaseContext()),
+      connectorRequest: this.getConnector().newRequest(),
+    };
+  }
+}

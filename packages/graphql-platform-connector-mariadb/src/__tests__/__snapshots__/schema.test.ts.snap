@@ -1,0 +1,1197 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`GraphQLSchema creates a consistent GraphQL schema 1`] = `
+"# \\"Article\\" resource's node
+type Article {
+  # The public ID
+  id: ID!
+
+  # The date, fixed, of the document's creation
+  createdAt: DateTime!
+
+  # The date of the document's last update
+  updatedAt: DateTime!
+  format: ArticleFormat!
+
+  # The article's title
+  title: String!
+
+  # The article's slug
+  slug: String!
+
+  # The article's body
+  body: String
+  category: Category!
+  author: User!
+  moderator: User
+
+  # \\"ArticleTag.article\\"'s inverse relation
+  tags(where: ArticleTagWhereInput, orderBy: [ArticleTagOrderByInput!], first: Int!, skip: Int): [ArticleTag!]!
+
+  # \\"ArticleTag.article\\"'s inverse relation count
+  tagCount(where: ArticleTagWhereInput): Int!
+
+  # \\"ArticleUrl.article\\"'s inverse relation
+  url: ArticleUrl
+
+  # Exemple of virtual field dependant of the field \\"title\\".
+  lowerCasedTitle: String!
+}
+
+input ArticleCreateAuthorInput {
+  # Connect an existing \\"User\\" node to the new \\"Article\\" node, through the \\"Article.author\\" relation.
+  connect: UserWhereUniqueInput
+
+  # Create a new \\"User\\" node and connect it to the new \\"Article\\" node, through the \\"Article.author\\" relation.
+  create: UserCreateInput
+
+  # Update an existing \\"User\\" node and connect it to the new \\"Article\\" node, through the \\"Article.author\\" relation.
+  update: UserUpdateOneInput
+}
+
+input ArticleCreateCategoryInput {
+  # Connect an existing \\"Category\\" node to the new \\"Article\\" node, through the \\"Article.category\\" relation.
+  connect: CategoryWhereUniqueInput
+
+  # Create a new \\"Category\\" node and connect it to the new \\"Article\\" node, through the \\"Article.category\\" relation.
+  create: CategoryCreateInput
+
+  # Update an existing \\"Category\\" node and connect it to the new \\"Article\\" node, through the \\"Article.category\\" relation.
+  update: CategoryUpdateOneInput
+}
+
+input ArticleCreateInput {
+  # The public ID
+  id: ID
+  format: ArticleFormat!
+
+  # The article's title
+  title: String!
+
+  # The article's slug
+  slug: String
+
+  # The article's body
+  body: String
+  category: ArticleCreateCategoryInput!
+  author: ArticleCreateAuthorInput!
+  moderator: ArticleCreateModeratorInput
+}
+
+input ArticleCreateModeratorInput {
+  # Connect an existing \\"User\\" node to the new \\"Article\\" node, through the \\"Article.moderator\\" relation.
+  connect: UserWhereUniqueInput
+
+  # Create a new \\"User\\" node and connect it to the new \\"Article\\" node, through the \\"Article.moderator\\" relation.
+  create: UserCreateInput
+
+  # Update an existing \\"User\\" node and connect it to the new \\"Article\\" node, through the \\"Article.moderator\\" relation.
+  update: UserUpdateOneInput
+}
+
+enum ArticleFormat {
+  Rich
+  Video
+}
+
+enum ArticleOrderByInput {
+  _id_ASC
+  _id_DESC
+  id_ASC
+  id_DESC
+  createdAt_ASC
+  createdAt_DESC
+  updatedAt_ASC
+  updatedAt_DESC
+  format_ASC
+  format_DESC
+  title_ASC
+  title_DESC
+  slug_ASC
+  slug_DESC
+  body_ASC
+  body_DESC
+}
+
+# \\"ArticleTag\\" resource's node
+type ArticleTag {
+  # The date, fixed, of the document's creation
+  createdAt: DateTime!
+
+  # The date of the document's last update
+  updatedAt: DateTime!
+  order: Int!
+  article: Article!
+  tag: Tag!
+
+  # \\"ArticleTagComment.articleTag\\"'s inverse relation
+  comment: ArticleTagComment
+}
+
+# \\"ArticleTagComment\\" resource's node
+type ArticleTagComment {
+  # The date, fixed, of the document's creation
+  createdAt: DateTime!
+
+  # The date of the document's last update
+  updatedAt: DateTime!
+  body: String
+  articleTag: ArticleTag!
+}
+
+input ArticleTagCommentCreateArticleTagInput {
+  # Connect an existing \\"ArticleTag\\" node to the new \\"ArticleTagComment\\" node,
+  # through the \\"ArticleTagComment.articleTag\\" relation.
+  connect: ArticleTagWhereUniqueInput
+
+  # Create a new \\"ArticleTag\\" node and connect it to the new \\"ArticleTagComment\\"
+  # node, through the \\"ArticleTagComment.articleTag\\" relation.
+  create: ArticleTagCreateInput
+
+  # Update an existing \\"ArticleTag\\" node and connect it to the new
+  # \\"ArticleTagComment\\" node, through the \\"ArticleTagComment.articleTag\\" relation.
+  update: ArticleTagUpdateOneInput
+}
+
+input ArticleTagCommentCreateInput {
+  body: String
+  articleTag: ArticleTagCommentCreateArticleTagInput!
+}
+
+enum ArticleTagCommentOrderByInput {
+  createdAt_ASC
+  createdAt_DESC
+  updatedAt_ASC
+  updatedAt_DESC
+  body_ASC
+  body_DESC
+}
+
+input ArticleTagCommentUpdateInput {
+  body: String
+}
+
+# Filters the \\"ArticleTagComment\\" nodes by specifying some conditions
+input ArticleTagCommentWhereInput {
+  createdAt: DateTime
+  createdAt_not: DateTime
+  createdAt_in: [DateTime]
+  createdAt_not_in: [DateTime]
+  createdAt_lt: DateTime
+  createdAt_lte: DateTime
+  createdAt_gt: DateTime
+  createdAt_gte: DateTime
+  updatedAt: DateTime
+  updatedAt_not: DateTime
+  updatedAt_in: [DateTime]
+  updatedAt_not_in: [DateTime]
+  updatedAt_lt: DateTime
+  updatedAt_lte: DateTime
+  updatedAt_gt: DateTime
+  updatedAt_gte: DateTime
+  body: String
+  body_not: String
+  body_in: [String]
+  body_not_in: [String]
+  body_contains: String
+  body_not_contains: String
+  body_starts_with: String
+  body_not_starts_with: String
+  body_ends_with: String
+  body_not_ends_with: String
+  body_lt: String
+  body_lte: String
+  body_gt: String
+  body_gte: String
+  articleTag: ArticleTagWhereInput
+  AND: [ArticleTagCommentWhereInput!]
+  OR: [ArticleTagCommentWhereInput!]
+  NOT: ArticleTagCommentWhereInput
+}
+
+# Identifies exactly one \\"ArticleTagComment\\" node.
+input ArticleTagCommentWhereUniqueInput {
+  articleTag: ArticleTagWhereUniqueInput!
+}
+
+input ArticleTagCreateArticleInput {
+  # Connect an existing \\"Article\\" node to the new \\"ArticleTag\\" node, through the \\"ArticleTag.article\\" relation.
+  connect: ArticleWhereUniqueInput
+
+  # Create a new \\"Article\\" node and connect it to the new \\"ArticleTag\\" node, through the \\"ArticleTag.article\\" relation.
+  create: ArticleCreateInput
+
+  # Update an existing \\"Article\\" node and connect it to the new \\"ArticleTag\\" node, through the \\"ArticleTag.article\\" relation.
+  update: ArticleUpdateOneInput
+}
+
+input ArticleTagCreateInput {
+  order: Int!
+  article: ArticleTagCreateArticleInput!
+  tag: ArticleTagCreateTagInput!
+}
+
+input ArticleTagCreateTagInput {
+  # Connect an existing \\"Tag\\" node to the new \\"ArticleTag\\" node, through the \\"ArticleTag.tag\\" relation.
+  connect: TagWhereUniqueInput
+
+  # Create a new \\"Tag\\" node and connect it to the new \\"ArticleTag\\" node, through the \\"ArticleTag.tag\\" relation.
+  create: TagCreateInput
+
+  # Update an existing \\"Tag\\" node and connect it to the new \\"ArticleTag\\" node, through the \\"ArticleTag.tag\\" relation.
+  update: TagUpdateOneInput
+}
+
+enum ArticleTagOrderByInput {
+  createdAt_ASC
+  createdAt_DESC
+  updatedAt_ASC
+  updatedAt_DESC
+  order_ASC
+  order_DESC
+}
+
+input ArticleTagUpdateInput {
+  order: Int
+}
+
+input ArticleTagUpdateOneInput {
+  where: ArticleTagWhereUniqueInput!
+  data: ArticleTagUpdateInput!
+}
+
+# Filters the \\"ArticleTag\\" nodes by specifying some conditions
+input ArticleTagWhereInput {
+  createdAt: DateTime
+  createdAt_not: DateTime
+  createdAt_in: [DateTime]
+  createdAt_not_in: [DateTime]
+  createdAt_lt: DateTime
+  createdAt_lte: DateTime
+  createdAt_gt: DateTime
+  createdAt_gte: DateTime
+  updatedAt: DateTime
+  updatedAt_not: DateTime
+  updatedAt_in: [DateTime]
+  updatedAt_not_in: [DateTime]
+  updatedAt_lt: DateTime
+  updatedAt_lte: DateTime
+  updatedAt_gt: DateTime
+  updatedAt_gte: DateTime
+  order: Int
+  order_not: Int
+  order_in: [Int]
+  order_not_in: [Int]
+  order_lt: Int
+  order_lte: Int
+  order_gt: Int
+  order_gte: Int
+  article: ArticleWhereInput
+  tag: TagWhereInput
+  comment: ArticleTagCommentWhereInput
+  comment_is_null: Boolean
+  AND: [ArticleTagWhereInput!]
+  OR: [ArticleTagWhereInput!]
+  NOT: ArticleTagWhereInput
+}
+
+# Identifies exactly one \\"ArticleTag\\" node with one of these unique combinations of values:
+# - article, tag
+# - article, order
+input ArticleTagWhereUniqueInput {
+  article: ArticleWhereUniqueInput!
+  tag: TagWhereUniqueInput
+  order: Int
+}
+
+input ArticleUpdateAuthorInput {
+  # Connect an existing \\"User\\" node to the existing \\"Article\\" node, through the \\"Article.author\\" relation.
+  connect: UserWhereUniqueInput
+
+  # Create a new \\"User\\" node and connect it to the existing \\"Article\\" node, through the \\"Article.author\\" relation.
+  create: UserCreateInput
+
+  # Update an existing \\"User\\" node and connect it to the existing \\"Article\\" node, through the \\"Article.author\\" relation.
+  update: UserUpdateOneInput
+}
+
+input ArticleUpdateCategoryInput {
+  # Connect an existing \\"Category\\" node to the existing \\"Article\\" node, through the \\"Article.category\\" relation.
+  connect: CategoryWhereUniqueInput
+
+  # Create a new \\"Category\\" node and connect it to the existing \\"Article\\" node, through the \\"Article.category\\" relation.
+  create: CategoryCreateInput
+
+  # Update an existing \\"Category\\" node and connect it to the existing \\"Article\\" node, through the \\"Article.category\\" relation.
+  update: CategoryUpdateOneInput
+}
+
+input ArticleUpdateInput {
+  # The public ID
+  id: ID
+  format: ArticleFormat
+
+  # The article's title
+  title: String
+
+  # The article's body
+  body: String
+  category: ArticleUpdateCategoryInput
+  author: ArticleUpdateAuthorInput
+  moderator: ArticleUpdateModeratorInput
+}
+
+input ArticleUpdateModeratorInput {
+  # Connect an existing \\"User\\" node to the existing \\"Article\\" node, through the \\"Article.moderator\\" relation.
+  connect: UserWhereUniqueInput
+
+  # Create a new \\"User\\" node and connect it to the existing \\"Article\\" node, through the \\"Article.moderator\\" relation.
+  create: UserCreateInput
+
+  # Update an existing \\"User\\" node and connect it to the existing \\"Article\\" node, through the \\"Article.moderator\\" relation.
+  update: UserUpdateOneInput
+
+  # Disconnect the current \\"User\\" node, if any, of the existing \\"Article\\" node, through the \\"Article.moderator\\" relation.
+  disconnect: Boolean
+}
+
+input ArticleUpdateOneInput {
+  where: ArticleWhereUniqueInput!
+  data: ArticleUpdateInput!
+}
+
+# \\"ArticleUrl\\" resource's node
+type ArticleUrl {
+  # The date, fixed, of the document's creation
+  createdAt: DateTime!
+
+  # The date of the document's last update
+  updatedAt: DateTime!
+  path: String!
+  article: Article!
+
+  # \\"ArticleUrlMeta.url\\"'s inverse relation
+  meta: ArticleUrlMeta
+}
+
+input ArticleUrlCreateArticleInput {
+  # Connect an existing \\"Article\\" node to the new \\"ArticleUrl\\" node, through the \\"ArticleUrl.article\\" relation.
+  connect: ArticleWhereUniqueInput
+
+  # Create a new \\"Article\\" node and connect it to the new \\"ArticleUrl\\" node, through the \\"ArticleUrl.article\\" relation.
+  create: ArticleCreateInput
+
+  # Update an existing \\"Article\\" node and connect it to the new \\"ArticleUrl\\" node, through the \\"ArticleUrl.article\\" relation.
+  update: ArticleUpdateOneInput
+}
+
+input ArticleUrlCreateInput {
+  path: String!
+  article: ArticleUrlCreateArticleInput!
+}
+
+# \\"ArticleUrlMeta\\" resource's node
+type ArticleUrlMeta {
+  # The date, fixed, of the document's creation
+  createdAt: DateTime!
+
+  # The date of the document's last update
+  updatedAt: DateTime!
+  url: ArticleUrl!
+}
+
+input ArticleUrlMetaCreateInput {
+  url: ArticleUrlMetaCreateUrlInput!
+}
+
+input ArticleUrlMetaCreateUrlInput {
+  # Connect an existing \\"ArticleUrl\\" node to the new \\"ArticleUrlMeta\\" node, through the \\"ArticleUrlMeta.url\\" relation.
+  connect: ArticleUrlWhereUniqueInput
+
+  # Create a new \\"ArticleUrl\\" node and connect it to the new \\"ArticleUrlMeta\\" node, through the \\"ArticleUrlMeta.url\\" relation.
+  create: ArticleUrlCreateInput
+
+  # Update an existing \\"ArticleUrl\\" node and connect it to the new
+  # \\"ArticleUrlMeta\\" node, through the \\"ArticleUrlMeta.url\\" relation.
+  update: ArticleUrlUpdateOneInput
+}
+
+enum ArticleUrlMetaOrderByInput {
+  createdAt_ASC
+  createdAt_DESC
+  updatedAt_ASC
+  updatedAt_DESC
+}
+
+# Filters the \\"ArticleUrlMeta\\" nodes by specifying some conditions
+input ArticleUrlMetaWhereInput {
+  createdAt: DateTime
+  createdAt_not: DateTime
+  createdAt_in: [DateTime]
+  createdAt_not_in: [DateTime]
+  createdAt_lt: DateTime
+  createdAt_lte: DateTime
+  createdAt_gt: DateTime
+  createdAt_gte: DateTime
+  updatedAt: DateTime
+  updatedAt_not: DateTime
+  updatedAt_in: [DateTime]
+  updatedAt_not_in: [DateTime]
+  updatedAt_lt: DateTime
+  updatedAt_lte: DateTime
+  updatedAt_gt: DateTime
+  updatedAt_gte: DateTime
+  url: ArticleUrlWhereInput
+  AND: [ArticleUrlMetaWhereInput!]
+  OR: [ArticleUrlMetaWhereInput!]
+  NOT: ArticleUrlMetaWhereInput
+}
+
+# Identifies exactly one \\"ArticleUrlMeta\\" node.
+input ArticleUrlMetaWhereUniqueInput {
+  url: ArticleUrlWhereUniqueInput!
+}
+
+enum ArticleUrlOrderByInput {
+  createdAt_ASC
+  createdAt_DESC
+  updatedAt_ASC
+  updatedAt_DESC
+  path_ASC
+  path_DESC
+}
+
+input ArticleUrlUpdateInput {
+  path: String
+}
+
+input ArticleUrlUpdateOneInput {
+  where: ArticleUrlWhereUniqueInput!
+  data: ArticleUrlUpdateInput!
+}
+
+# Filters the \\"ArticleUrl\\" nodes by specifying some conditions
+input ArticleUrlWhereInput {
+  createdAt: DateTime
+  createdAt_not: DateTime
+  createdAt_in: [DateTime]
+  createdAt_not_in: [DateTime]
+  createdAt_lt: DateTime
+  createdAt_lte: DateTime
+  createdAt_gt: DateTime
+  createdAt_gte: DateTime
+  updatedAt: DateTime
+  updatedAt_not: DateTime
+  updatedAt_in: [DateTime]
+  updatedAt_not_in: [DateTime]
+  updatedAt_lt: DateTime
+  updatedAt_lte: DateTime
+  updatedAt_gt: DateTime
+  updatedAt_gte: DateTime
+  path: String
+  path_not: String
+  path_in: [String]
+  path_not_in: [String]
+  path_contains: String
+  path_not_contains: String
+  path_starts_with: String
+  path_not_starts_with: String
+  path_ends_with: String
+  path_not_ends_with: String
+  path_lt: String
+  path_lte: String
+  path_gt: String
+  path_gte: String
+  article: ArticleWhereInput
+  meta: ArticleUrlMetaWhereInput
+  meta_is_null: Boolean
+  AND: [ArticleUrlWhereInput!]
+  OR: [ArticleUrlWhereInput!]
+  NOT: ArticleUrlWhereInput
+}
+
+# Identifies exactly one \\"ArticleUrl\\" node.
+input ArticleUrlWhereUniqueInput {
+  article: ArticleWhereUniqueInput!
+}
+
+# Filters the \\"Article\\" nodes by specifying some conditions
+input ArticleWhereInput {
+  _id: Int
+  _id_not: Int
+  _id_in: [Int]
+  _id_not_in: [Int]
+  _id_lt: Int
+  _id_lte: Int
+  _id_gt: Int
+  _id_gte: Int
+  id: ID
+  id_not: ID
+  id_in: [ID]
+  id_not_in: [ID]
+  createdAt: DateTime
+  createdAt_not: DateTime
+  createdAt_in: [DateTime]
+  createdAt_not_in: [DateTime]
+  createdAt_lt: DateTime
+  createdAt_lte: DateTime
+  createdAt_gt: DateTime
+  createdAt_gte: DateTime
+  updatedAt: DateTime
+  updatedAt_not: DateTime
+  updatedAt_in: [DateTime]
+  updatedAt_not_in: [DateTime]
+  updatedAt_lt: DateTime
+  updatedAt_lte: DateTime
+  updatedAt_gt: DateTime
+  updatedAt_gte: DateTime
+  format: ArticleFormat
+  format_not: ArticleFormat
+  format_in: [ArticleFormat]
+  format_not_in: [ArticleFormat]
+  title: String
+  title_not: String
+  title_in: [String]
+  title_not_in: [String]
+  title_contains: String
+  title_not_contains: String
+  title_starts_with: String
+  title_not_starts_with: String
+  title_ends_with: String
+  title_not_ends_with: String
+  title_lt: String
+  title_lte: String
+  title_gt: String
+  title_gte: String
+  slug: String
+  slug_not: String
+  slug_in: [String]
+  slug_not_in: [String]
+  slug_contains: String
+  slug_not_contains: String
+  slug_starts_with: String
+  slug_not_starts_with: String
+  slug_ends_with: String
+  slug_not_ends_with: String
+  slug_lt: String
+  slug_lte: String
+  slug_gt: String
+  slug_gte: String
+  body: String
+  body_not: String
+  body_in: [String]
+  body_not_in: [String]
+  body_contains: String
+  body_not_contains: String
+  body_starts_with: String
+  body_not_starts_with: String
+  body_ends_with: String
+  body_not_ends_with: String
+  body_lt: String
+  body_lte: String
+  body_gt: String
+  body_gte: String
+  category: CategoryWhereInput
+  author: UserWhereInput
+  moderator: UserWhereInput
+  moderator_is_null: Boolean
+  tags_some: ArticleTagWhereInput
+  url: ArticleUrlWhereInput
+  url_is_null: Boolean
+  AND: [ArticleWhereInput!]
+  OR: [ArticleWhereInput!]
+  NOT: ArticleWhereInput
+}
+
+# Identifies exactly one \\"Article\\" node with one of these unique combinations of values:
+# - _id
+# - id
+# - category, slug
+input ArticleWhereUniqueInput {
+  _id: Int
+  id: ID
+  category: CategoryWhereUniqueInput
+  slug: String
+}
+
+# \\"Category\\" resource's node
+type Category {
+  # The public ID
+  id: ID!
+
+  # The date, fixed, of the document's creation
+  createdAt: DateTime!
+
+  # The date of the document's last update
+  updatedAt: DateTime!
+  title: String!
+
+  # The category's slug
+  slug: String!
+  parent: Category
+
+  # \\"Article.category\\"'s inverse relation
+  articles(where: ArticleWhereInput, orderBy: [ArticleOrderByInput!], first: Int!, skip: Int): [Article!]!
+
+  # \\"Article.category\\"'s inverse relation count
+  articleCount(where: ArticleWhereInput): Int!
+
+  # \\"Category.parent\\"'s inverse relation
+  children(where: CategoryWhereInput, orderBy: [CategoryOrderByInput!], first: Int!, skip: Int): [Category!]!
+
+  # \\"Category.parent\\"'s inverse relation count
+  childCount(where: CategoryWhereInput): Int!
+}
+
+input CategoryCreateInput {
+  # The public ID
+  id: ID
+  title: String!
+
+  # The category's slug
+  slug: String
+  parent: CategoryCreateParentInput
+}
+
+input CategoryCreateParentInput {
+  # Connect an existing \\"Category\\" node to the new \\"Category\\" node, through the \\"Category.parent\\" relation.
+  connect: CategoryWhereUniqueInput
+
+  # Create a new \\"Category\\" node and connect it to the new \\"Category\\" node, through the \\"Category.parent\\" relation.
+  create: CategoryCreateInput
+
+  # Update an existing \\"Category\\" node and connect it to the new \\"Category\\" node, through the \\"Category.parent\\" relation.
+  update: CategoryUpdateOneInput
+}
+
+enum CategoryOrderByInput {
+  _id_ASC
+  _id_DESC
+  id_ASC
+  id_DESC
+  createdAt_ASC
+  createdAt_DESC
+  updatedAt_ASC
+  updatedAt_DESC
+  title_ASC
+  title_DESC
+  slug_ASC
+  slug_DESC
+}
+
+input CategoryUpdateInput {
+  # The public ID
+  id: ID
+  title: String
+  parent: CategoryUpdateParentInput
+}
+
+input CategoryUpdateOneInput {
+  where: CategoryWhereUniqueInput!
+  data: CategoryUpdateInput!
+}
+
+input CategoryUpdateParentInput {
+  # Connect an existing \\"Category\\" node to the existing \\"Category\\" node, through the \\"Category.parent\\" relation.
+  connect: CategoryWhereUniqueInput
+
+  # Create a new \\"Category\\" node and connect it to the existing \\"Category\\" node, through the \\"Category.parent\\" relation.
+  create: CategoryCreateInput
+
+  # Update an existing \\"Category\\" node and connect it to the existing \\"Category\\" node, through the \\"Category.parent\\" relation.
+  update: CategoryUpdateOneInput
+
+  # Disconnect the current \\"Category\\" node, if any, of the existing \\"Category\\" node, through the \\"Category.parent\\" relation.
+  disconnect: Boolean
+}
+
+# Filters the \\"Category\\" nodes by specifying some conditions
+input CategoryWhereInput {
+  _id: Int
+  _id_not: Int
+  _id_in: [Int]
+  _id_not_in: [Int]
+  _id_lt: Int
+  _id_lte: Int
+  _id_gt: Int
+  _id_gte: Int
+  id: ID
+  id_not: ID
+  id_in: [ID]
+  id_not_in: [ID]
+  createdAt: DateTime
+  createdAt_not: DateTime
+  createdAt_in: [DateTime]
+  createdAt_not_in: [DateTime]
+  createdAt_lt: DateTime
+  createdAt_lte: DateTime
+  createdAt_gt: DateTime
+  createdAt_gte: DateTime
+  updatedAt: DateTime
+  updatedAt_not: DateTime
+  updatedAt_in: [DateTime]
+  updatedAt_not_in: [DateTime]
+  updatedAt_lt: DateTime
+  updatedAt_lte: DateTime
+  updatedAt_gt: DateTime
+  updatedAt_gte: DateTime
+  title: String
+  title_not: String
+  title_in: [String]
+  title_not_in: [String]
+  title_contains: String
+  title_not_contains: String
+  title_starts_with: String
+  title_not_starts_with: String
+  title_ends_with: String
+  title_not_ends_with: String
+  title_lt: String
+  title_lte: String
+  title_gt: String
+  title_gte: String
+  slug: String
+  slug_not: String
+  slug_in: [String]
+  slug_not_in: [String]
+  slug_contains: String
+  slug_not_contains: String
+  slug_starts_with: String
+  slug_not_starts_with: String
+  slug_ends_with: String
+  slug_not_ends_with: String
+  slug_lt: String
+  slug_lte: String
+  slug_gt: String
+  slug_gte: String
+  parent: CategoryWhereInput
+  parent_is_null: Boolean
+  articles_some: ArticleWhereInput
+  children_some: CategoryWhereInput
+  AND: [CategoryWhereInput!]
+  OR: [CategoryWhereInput!]
+  NOT: CategoryWhereInput
+}
+
+# Identifies exactly one \\"Category\\" node with one of these unique combinations of values:
+# - _id
+# - id
+# - parent, slug
+input CategoryWhereUniqueInput {
+  _id: Int
+  id: ID
+  parent: CategoryWhereUniqueInput
+  slug: String
+}
+
+# A date-time string at UTC, such as 2007-12-03T10:15:30Z, compliant with the
+# \`date-time\` format outlined in section 5.6 of the RFC 3339 profile of the ISO
+# 8601 standard for representation of dates and times using the Gregorian calendar.
+scalar DateTime
+
+type Mutation {
+  # Create a single \\"Article\\" node.
+  createArticle(data: ArticleCreateInput!): Article!
+
+  # Delete a single \\"Article\\" node.
+  deleteArticle(where: ArticleWhereUniqueInput!): Article
+
+  # Update a single \\"Article\\" node.
+  updateArticle(where: ArticleWhereUniqueInput!, data: ArticleUpdateInput!): Article
+
+  # Update or create a single \\"Article\\" node.
+  upsertArticle(where: ArticleWhereUniqueInput!, create: ArticleCreateInput!, update: ArticleUpdateInput!): Article!
+
+  # Create a single \\"ArticleTag\\" node.
+  createArticleTag(data: ArticleTagCreateInput!): ArticleTag!
+
+  # Delete a single \\"ArticleTag\\" node.
+  deleteArticleTag(where: ArticleTagWhereUniqueInput!): ArticleTag
+
+  # Update a single \\"ArticleTag\\" node.
+  updateArticleTag(where: ArticleTagWhereUniqueInput!, data: ArticleTagUpdateInput!): ArticleTag
+
+  # Update or create a single \\"ArticleTag\\" node.
+  upsertArticleTag(where: ArticleTagWhereUniqueInput!, create: ArticleTagCreateInput!, update: ArticleTagUpdateInput!): ArticleTag!
+
+  # Create a single \\"ArticleTagComment\\" node.
+  createArticleTagComment(data: ArticleTagCommentCreateInput!): ArticleTagComment!
+
+  # Delete a single \\"ArticleTagComment\\" node.
+  deleteArticleTagComment(where: ArticleTagCommentWhereUniqueInput!): ArticleTagComment
+
+  # Update a single \\"ArticleTagComment\\" node.
+  updateArticleTagComment(where: ArticleTagCommentWhereUniqueInput!, data: ArticleTagCommentUpdateInput!): ArticleTagComment
+
+  # Update or create a single \\"ArticleTagComment\\" node.
+  upsertArticleTagComment(where: ArticleTagCommentWhereUniqueInput!, create: ArticleTagCommentCreateInput!, update: ArticleTagCommentUpdateInput!): ArticleTagComment!
+
+  # Create a single \\"ArticleUrl\\" node.
+  createArticleUrl(data: ArticleUrlCreateInput!): ArticleUrl!
+
+  # Delete a single \\"ArticleUrl\\" node.
+  deleteArticleUrl(where: ArticleUrlWhereUniqueInput!): ArticleUrl
+
+  # Update a single \\"ArticleUrl\\" node.
+  updateArticleUrl(where: ArticleUrlWhereUniqueInput!, data: ArticleUrlUpdateInput!): ArticleUrl
+
+  # Update or create a single \\"ArticleUrl\\" node.
+  upsertArticleUrl(where: ArticleUrlWhereUniqueInput!, create: ArticleUrlCreateInput!, update: ArticleUrlUpdateInput!): ArticleUrl!
+
+  # Create a single \\"ArticleUrlMeta\\" node.
+  createArticleUrlMeta(data: ArticleUrlMetaCreateInput!): ArticleUrlMeta!
+
+  # Delete a single \\"ArticleUrlMeta\\" node.
+  deleteArticleUrlMeta(where: ArticleUrlMetaWhereUniqueInput!): ArticleUrlMeta
+
+  # Update a single \\"ArticleUrlMeta\\" node.
+  updateArticleUrlMeta(where: ArticleUrlMetaWhereUniqueInput!, data: Boolean!): ArticleUrlMeta
+
+  # Update or create a single \\"ArticleUrlMeta\\" node.
+  upsertArticleUrlMeta(where: ArticleUrlMetaWhereUniqueInput!, create: ArticleUrlMetaCreateInput!, update: Boolean!): ArticleUrlMeta!
+
+  # Create a single \\"Category\\" node.
+  createCategory(data: CategoryCreateInput!): Category!
+
+  # Delete a single \\"Category\\" node.
+  deleteCategory(where: CategoryWhereUniqueInput!): Category
+
+  # Update a single \\"Category\\" node.
+  updateCategory(where: CategoryWhereUniqueInput!, data: CategoryUpdateInput!): Category
+
+  # Update or create a single \\"Category\\" node.
+  upsertCategory(where: CategoryWhereUniqueInput!, create: CategoryCreateInput!, update: CategoryUpdateInput!): Category!
+
+  # Create a single \\"Tag\\" node.
+  createTag(data: TagCreateInput!): Tag!
+
+  # Create a single \\"User\\" node.
+  createUser(data: UserCreateInput!): User!
+
+  # Delete a single \\"User\\" node.
+  deleteUser(where: UserWhereUniqueInput!): User
+
+  # Update a single \\"User\\" node.
+  updateUser(where: UserWhereUniqueInput!, data: UserUpdateInput!): User
+
+  # Update or create a single \\"User\\" node.
+  upsertUser(where: UserWhereUniqueInput!, create: UserCreateInput!, update: UserUpdateInput!): User!
+
+  # Returns a JWT in case of success.
+  login(login: String!, password: String!): String
+}
+
+type Query {
+  # Retrieve the number of \\"Article\\" nodes.
+  articleCount(where: ArticleWhereInput): Int!
+
+  # Retrieve a list of \\"Article\\" nodes.
+  articles(where: ArticleWhereInput, orderBy: [ArticleOrderByInput!], first: Int!, skip: Int): [Article!]!
+
+  # Retrieve a single \\"Article\\" node.
+  article(where: ArticleWhereUniqueInput!): Article
+
+  # Retrieve the number of \\"ArticleTag\\" nodes.
+  articleTagCount(where: ArticleTagWhereInput): Int!
+
+  # Retrieve a list of \\"ArticleTag\\" nodes.
+  articleTags(where: ArticleTagWhereInput, orderBy: [ArticleTagOrderByInput!], first: Int!, skip: Int): [ArticleTag!]!
+
+  # Retrieve a single \\"ArticleTag\\" node.
+  articleTag(where: ArticleTagWhereUniqueInput!): ArticleTag
+
+  # Retrieve the number of \\"ArticleTagComment\\" nodes.
+  articleTagCommentCount(where: ArticleTagCommentWhereInput): Int!
+
+  # Retrieve a list of \\"ArticleTagComment\\" nodes.
+  articleTagComments(where: ArticleTagCommentWhereInput, orderBy: [ArticleTagCommentOrderByInput!], first: Int!, skip: Int): [ArticleTagComment!]!
+
+  # Retrieve a single \\"ArticleTagComment\\" node.
+  articleTagComment(where: ArticleTagCommentWhereUniqueInput!): ArticleTagComment
+
+  # Retrieve the number of \\"ArticleUrl\\" nodes.
+  articleUrlCount(where: ArticleUrlWhereInput): Int!
+
+  # Retrieve a list of \\"ArticleUrl\\" nodes.
+  articleUrls(where: ArticleUrlWhereInput, orderBy: [ArticleUrlOrderByInput!], first: Int!, skip: Int): [ArticleUrl!]!
+
+  # Retrieve a single \\"ArticleUrl\\" node.
+  articleUrl(where: ArticleUrlWhereUniqueInput!): ArticleUrl
+
+  # Retrieve the number of \\"ArticleUrlMeta\\" nodes.
+  articleUrlMetaCount(where: ArticleUrlMetaWhereInput): Int!
+
+  # Retrieve a list of \\"ArticleUrlMeta\\" nodes.
+  articleUrlMetas(where: ArticleUrlMetaWhereInput, orderBy: [ArticleUrlMetaOrderByInput!], first: Int!, skip: Int): [ArticleUrlMeta!]!
+
+  # Retrieve a single \\"ArticleUrlMeta\\" node.
+  articleUrlMeta(where: ArticleUrlMetaWhereUniqueInput!): ArticleUrlMeta
+
+  # Retrieve the number of \\"Category\\" nodes.
+  categoryCount(where: CategoryWhereInput): Int!
+
+  # Retrieve a list of \\"Category\\" nodes.
+  categories(where: CategoryWhereInput, orderBy: [CategoryOrderByInput!], first: Int!, skip: Int): [Category!]!
+
+  # Retrieve a single \\"Category\\" node.
+  category(where: CategoryWhereUniqueInput!): Category
+
+  # Retrieve the number of \\"Tag\\" nodes.
+  tagCount(where: TagWhereInput): Int!
+
+  # Retrieve a list of \\"Tag\\" nodes.
+  tags(where: TagWhereInput, orderBy: [TagOrderByInput!], first: Int!, skip: Int): [Tag!]!
+
+  # Retrieve a single \\"Tag\\" node.
+  tag(where: TagWhereUniqueInput!): Tag
+
+  # Retrieve the number of \\"User\\" nodes.
+  userCount(where: UserWhereInput): Int!
+
+  # Retrieve a list of \\"User\\" nodes.
+  users(where: UserWhereInput, orderBy: [UserOrderByInput!], first: Int!, skip: Int): [User!]!
+
+  # Retrieve a single \\"User\\" node.
+  user(where: UserWhereUniqueInput!): User
+
+  # A custom query.
+  hello(name: String!, id: UserWhereUniqueInput!): User
+}
+
+# \\"Tag\\" resource's node
+type Tag {
+  # The public ID
+  id: ID!
+
+  # The date, fixed, of the document's creation
+  createdAt: DateTime!
+
+  # The date of the document's last update
+  updatedAt: DateTime!
+  title: String!
+
+  # The tag's slug
+  slug: String!
+
+  # \\"ArticleTag.tag\\"'s inverse relation
+  articles(where: ArticleTagWhereInput, orderBy: [ArticleTagOrderByInput!], first: Int!, skip: Int): [ArticleTag!]!
+
+  # \\"ArticleTag.tag\\"'s inverse relation count
+  articleCount(where: ArticleTagWhereInput): Int!
+}
+
+input TagCreateInput {
+  # The public ID
+  id: ID
+  title: String!
+
+  # The tag's slug
+  slug: String
+}
+
+enum TagOrderByInput {
+  _id_ASC
+  _id_DESC
+  id_ASC
+  id_DESC
+  createdAt_ASC
+  createdAt_DESC
+  updatedAt_ASC
+  updatedAt_DESC
+  title_ASC
+  title_DESC
+  slug_ASC
+  slug_DESC
+}
+
+input TagUpdateOneInput {
+  where: TagWhereUniqueInput!
+  data: Boolean!
+}
+
+# Filters the \\"Tag\\" nodes by specifying some conditions
+input TagWhereInput {
+  _id: Int
+  _id_not: Int
+  _id_in: [Int]
+  _id_not_in: [Int]
+  _id_lt: Int
+  _id_lte: Int
+  _id_gt: Int
+  _id_gte: Int
+  id: ID
+  id_not: ID
+  id_in: [ID]
+  id_not_in: [ID]
+  createdAt: DateTime
+  createdAt_not: DateTime
+  createdAt_in: [DateTime]
+  createdAt_not_in: [DateTime]
+  createdAt_lt: DateTime
+  createdAt_lte: DateTime
+  createdAt_gt: DateTime
+  createdAt_gte: DateTime
+  updatedAt: DateTime
+  updatedAt_not: DateTime
+  updatedAt_in: [DateTime]
+  updatedAt_not_in: [DateTime]
+  updatedAt_lt: DateTime
+  updatedAt_lte: DateTime
+  updatedAt_gt: DateTime
+  updatedAt_gte: DateTime
+  title: String
+  title_not: String
+  title_in: [String]
+  title_not_in: [String]
+  title_contains: String
+  title_not_contains: String
+  title_starts_with: String
+  title_not_starts_with: String
+  title_ends_with: String
+  title_not_ends_with: String
+  title_lt: String
+  title_lte: String
+  title_gt: String
+  title_gte: String
+  slug: String
+  slug_not: String
+  slug_in: [String]
+  slug_not_in: [String]
+  slug_contains: String
+  slug_not_contains: String
+  slug_starts_with: String
+  slug_not_starts_with: String
+  slug_ends_with: String
+  slug_not_ends_with: String
+  slug_lt: String
+  slug_lte: String
+  slug_gt: String
+  slug_gte: String
+  articles_some: ArticleTagWhereInput
+  AND: [TagWhereInput!]
+  OR: [TagWhereInput!]
+  NOT: TagWhereInput
+}
+
+# Identifies exactly one \\"Tag\\" node with one of these unique values:
+# - _id
+# - id
+# - slug
+input TagWhereUniqueInput {
+  _id: Int
+  id: ID
+  slug: String
+}
+
+# \\"User\\" resource's node
+type User {
+  # The public ID
+  id: ID!
+
+  # The date, fixed, of the document's creation
+  createdAt: DateTime!
+
+  # The date of the document's last update
+  updatedAt: DateTime!
+
+  # The user's username
+  username: String!
+
+  # \\"Article.moderator\\"'s inverse relation
+  articles(where: ArticleWhereInput, orderBy: [ArticleOrderByInput!], first: Int!, skip: Int): [Article!]!
+
+  # \\"Article.moderator\\"'s inverse relation count
+  articleCount(where: ArticleWhereInput): Int!
+}
+
+input UserCreateInput {
+  # The public ID
+  id: ID
+
+  # The user's username
+  username: String!
+}
+
+enum UserOrderByInput {
+  _id_ASC
+  _id_DESC
+  id_ASC
+  id_DESC
+  createdAt_ASC
+  createdAt_DESC
+  updatedAt_ASC
+  updatedAt_DESC
+  username_ASC
+  username_DESC
+}
+
+input UserUpdateInput {
+  # The public ID
+  id: ID
+}
+
+input UserUpdateOneInput {
+  where: UserWhereUniqueInput!
+  data: UserUpdateInput!
+}
+
+# Filters the \\"User\\" nodes by specifying some conditions
+input UserWhereInput {
+  _id: Int
+  _id_not: Int
+  _id_in: [Int]
+  _id_not_in: [Int]
+  _id_lt: Int
+  _id_lte: Int
+  _id_gt: Int
+  _id_gte: Int
+  id: ID
+  id_not: ID
+  id_in: [ID]
+  id_not_in: [ID]
+  createdAt: DateTime
+  createdAt_not: DateTime
+  createdAt_in: [DateTime]
+  createdAt_not_in: [DateTime]
+  createdAt_lt: DateTime
+  createdAt_lte: DateTime
+  createdAt_gt: DateTime
+  createdAt_gte: DateTime
+  updatedAt: DateTime
+  updatedAt_not: DateTime
+  updatedAt_in: [DateTime]
+  updatedAt_not_in: [DateTime]
+  updatedAt_lt: DateTime
+  updatedAt_lte: DateTime
+  updatedAt_gt: DateTime
+  updatedAt_gte: DateTime
+  username: String
+  username_not: String
+  username_in: [String]
+  username_not_in: [String]
+  username_contains: String
+  username_not_contains: String
+  username_starts_with: String
+  username_not_starts_with: String
+  username_ends_with: String
+  username_not_ends_with: String
+  username_lt: String
+  username_lte: String
+  username_gt: String
+  username_gte: String
+  articles_some: ArticleWhereInput
+  AND: [UserWhereInput!]
+  OR: [UserWhereInput!]
+  NOT: UserWhereInput
+}
+
+# Identifies exactly one \\"User\\" node with one of these unique values:
+# - _id
+# - id
+# - username
+input UserWhereUniqueInput {
+  _id: Int
+  id: ID
+  username: String
+}
+"
+`;
