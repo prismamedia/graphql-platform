@@ -1,6 +1,6 @@
 {
   "name": "@prismamedia/graphql-platform-connector-mariadb",
-  "version": "0.1.0-alpha.0",
+  "version": "0.1.0-alpha.1",
   "license": "MIT",
   "contributors": [
     "Yvann Boucher <yvann.boucher@gmail.com>"
@@ -25,8 +25,8 @@
     "typescript": "^3.5.1"
   },
   "dependencies": {
-    "@prismamedia/graphql-platform-core": "^0.1.0-alpha.0",
-    "@prismamedia/graphql-platform-utils": "^0.1.0-alpha.0",
+    "@prismamedia/graphql-platform-core": "^0.1.0-alpha.1",
+    "@prismamedia/graphql-platform-utils": "^0.1.0-alpha.1",
     "@prismamedia/ts-async-event-emitter": "^2.1.0",
     "@types/inflection": "^1.5.28",
     "@types/mysql": "^2.15.6",

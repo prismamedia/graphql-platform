@@ -9,6 +9,8 @@ import express from 'express';
 import expressJwt, { Options as JwtOptions } from 'express-jwt';
 import { Options as UnlessOptions } from 'express-unless';
 
+export { ExpressContext as ContextParams } from 'apollo-server-express/dist/ApolloServer';
+
 // The "app" becomes optional
 type ServerRegistration = Merge<
   BaseServerRegistration,
@@ -24,7 +26,7 @@ type ApolloServerExpressConfig = Omit<
   'context' | 'schema' | 'subscriptions' | 'resolvers' | 'typeDefs'
 >;
 
-export type GraphQLPlatformServerExpressConfig = { gp: GraphQLPlatform } & ServerRegistration &
+export type GraphQLPlatformServerExpressConfig = { gp: GraphQLPlatform<any, any, any> } & ServerRegistration &
   ApolloServerExpressConfig;
 
 export function createServer({
