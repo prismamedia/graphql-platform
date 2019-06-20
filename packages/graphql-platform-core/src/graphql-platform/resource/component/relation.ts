@@ -2,6 +2,7 @@ import { Maybe, POJO } from '@prismamedia/graphql-platform-utils';
 import { Memoize } from 'typescript-memoize';
 import { BaseContext, CustomContext } from '../../../graphql-platform';
 import { ConnectorCreateInputValue, ConnectorUpdateInputValue } from '../../connector';
+import { OperationContext } from '../../operation';
 import { CreateOneOperationArgs, UpdateOneOperationArgs } from '../../operation/mutation';
 import { NodeValue, Resource, ResourceHookKind, ResourceHookMetaMap } from '../../resource';
 import { WhereUniqueInputValue } from '../../type/input';
@@ -27,16 +28,21 @@ export enum RelationKind {
 export type RelationHookMetaMap<
   TArgs extends POJO = any,
   TCustomContext extends CustomContext = any,
-  TBaseContext extends BaseContext = any
-> = ResourceHookMetaMap<TArgs, TCustomContext, TBaseContext> & {
+  TBaseContext extends BaseContext = any,
+  TOperationContext extends OperationContext = any
+> = ResourceHookMetaMap<TArgs, TCustomContext, TBaseContext, TOperationContext> & {
   relation: Relation;
 };
 
-export interface RelationHookMap<TCustomContext extends CustomContext = any, TBaseContext extends BaseContext = any> {
+export interface RelationHookMap<
+  TCustomContext extends CustomContext = any,
+  TBaseContext extends BaseContext = any,
+  TOperationContext extends OperationContext = any
+> {
   // Create
   [ResourceHookKind.PreCreate]: {
     metas: Readonly<
-      RelationHookMetaMap<CreateOneOperationArgs, TCustomContext, TBaseContext> & {
+      RelationHookMetaMap<CreateOneOperationArgs, TCustomContext, TBaseContext, TOperationContext> & {
         /** Parsed data */
         create: ConnectorCreateInputValue;
       }
@@ -48,7 +54,7 @@ export interface RelationHookMap<TCustomContext extends CustomContext = any, TBa
   // Update
   [ResourceHookKind.PreUpdate]: {
     metas: Readonly<
-      RelationHookMetaMap<UpdateOneOperationArgs, TCustomContext, TBaseContext> & {
+      RelationHookMetaMap<UpdateOneOperationArgs, TCustomContext, TBaseContext, TOperationContext> & {
         /** Parsed data */
         update: ConnectorUpdateInputValue;
       }
@@ -58,8 +64,11 @@ export interface RelationHookMap<TCustomContext extends CustomContext = any, TBa
   };
 }
 
-export interface RelationConfig<TCustomContext extends CustomContext = any, TBaseContext extends BaseContext = any>
-  extends AbstractComponentConfig<RelationHookMap<TCustomContext, TBaseContext>> {
+export interface RelationConfig<
+  TCustomContext extends CustomContext = any,
+  TBaseContext extends BaseContext = any,
+  TOperationContext extends OperationContext = any
+> extends AbstractComponentConfig<RelationHookMap<TCustomContext, TBaseContext, TOperationContext>> {
   /** Required, name of the targeted resource */
   to: string;
 

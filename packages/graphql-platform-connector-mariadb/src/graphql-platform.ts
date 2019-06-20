@@ -7,7 +7,7 @@ import {
 } from '@prismamedia/graphql-platform-core';
 import { Maybe, POJO } from '@prismamedia/graphql-platform-utils';
 import { Memoize } from 'typescript-memoize';
-import { Connector, ConnectorConfig, ConnectorRequest } from './graphql-platform/connector';
+import { Connector, ConnectorConfig, ConnectorRequest, OperationContext } from './graphql-platform/connector';
 import { ResourceConfig } from './graphql-platform/resource';
 
 export * from './graphql-platform/connector';
@@ -33,7 +33,13 @@ export type CustomOperationConfig<TCustomContext extends CustomContext = any> = 
 >;
 
 export interface GraphQLPlatformConfig<TContextParams extends POJO = any, TCustomContext extends CustomContext = any>
-  extends CoreGraphQLPlatformConfig<TContextParams, TCustomContext, BaseContext, ResourceConfig<TCustomContext>> {
+  extends CoreGraphQLPlatformConfig<
+    TContextParams,
+    TCustomContext,
+    BaseContext,
+    OperationContext,
+    ResourceConfig<TCustomContext>
+  > {
   connector?: Maybe<ConnectorConfig>;
 }
 

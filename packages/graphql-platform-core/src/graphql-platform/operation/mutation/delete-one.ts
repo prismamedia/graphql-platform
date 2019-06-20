@@ -57,6 +57,7 @@ export class DeleteOneOperation extends AbstractOperation<DeleteOneOperationArgs
         metas: Object.freeze({
           args,
           context,
+          operationContext,
           resource,
         }),
         toBeDeletedNodeId: nodeId,
@@ -72,6 +73,7 @@ export class DeleteOneOperation extends AbstractOperation<DeleteOneOperationArgs
               metas: Object.freeze({
                 args,
                 context,
+                operationContext,
                 resource,
               }),
               deletedNodeId: nodeId,

@@ -98,6 +98,7 @@ export class CreateOneOperation extends AbstractOperation<CreateOneOperationArgs
           metas: Object.freeze({
             args,
             context,
+            operationContext,
             resource,
             field,
             create,
@@ -116,6 +117,7 @@ export class CreateOneOperation extends AbstractOperation<CreateOneOperationArgs
           metas: Object.freeze({
             args,
             context,
+            operationContext,
             resource,
             relation,
             create,
@@ -134,6 +136,7 @@ export class CreateOneOperation extends AbstractOperation<CreateOneOperationArgs
       metas: Object.freeze({
         args,
         context,
+        operationContext,
         resource,
       }),
       create,
@@ -152,6 +155,7 @@ export class CreateOneOperation extends AbstractOperation<CreateOneOperationArgs
           metas: Object.freeze({
             args,
             context,
+            operationContext,
             resource,
             create,
           }),

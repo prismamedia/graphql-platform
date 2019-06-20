@@ -123,6 +123,7 @@ export class UpdateOneOperation extends AbstractOperation<UpdateOneOperationArgs
           metas: Object.freeze({
             args,
             context,
+            operationContext,
             resource,
             field,
             update,
@@ -141,6 +142,7 @@ export class UpdateOneOperation extends AbstractOperation<UpdateOneOperationArgs
           metas: Object.freeze({
             args,
             context,
+            operationContext,
             resource,
             relation,
             update,
@@ -158,6 +160,7 @@ export class UpdateOneOperation extends AbstractOperation<UpdateOneOperationArgs
       metas: Object.freeze({
         args,
         context,
+        operationContext,
         resource,
       }),
       toBeUpdatedNodeId: nodeId,
@@ -181,6 +184,7 @@ export class UpdateOneOperation extends AbstractOperation<UpdateOneOperationArgs
             metas: Object.freeze({
               args,
               context,
+              operationContext,
               resource,
               update,
             }),

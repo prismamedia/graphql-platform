@@ -20,6 +20,7 @@ import {
   Operation,
   OperationConstructor,
   OperationConstructorMap,
+  OperationContext,
   OperationId,
   OperationType,
   operationTypeMap,
@@ -87,42 +88,48 @@ export enum ResourceHookKind {
 export type ResourceHookMetaMap<
   TArgs extends POJO = any,
   TCustomContext extends CustomContext = any,
-  TBaseContext extends BaseContext = any
+  TBaseContext extends BaseContext = any,
+  TOperationContext extends OperationContext = any
 > = {
   args: TArgs;
   context: Context<TCustomContext, TBaseContext>;
+  operationContext: TOperationContext;
   resource: Resource;
 };
 
-export interface ResourceHookMap<TCustomContext extends CustomContext = any, TBaseContext extends BaseContext = any> {
+export interface ResourceHookMap<
+  TCustomContext extends CustomContext = any,
+  TBaseContext extends BaseContext = any,
+  TOperationContext extends OperationContext = any
+> {
   // Create
   [ResourceHookKind.PreCreate]: {
-    metas: Readonly<ResourceHookMetaMap<CreateOneOperationArgs, TCustomContext, TBaseContext>>;
+    metas: Readonly<ResourceHookMetaMap<CreateOneOperationArgs, TCustomContext, TBaseContext, TOperationContext>>;
     create: ConnectorCreateInputValue;
   };
   [ResourceHookKind.PostCreate]: Readonly<{
-    metas: Readonly<ResourceHookMetaMap<CreateOneOperationArgs, TCustomContext, TBaseContext>>;
+    metas: Readonly<ResourceHookMetaMap<CreateOneOperationArgs, TCustomContext, TBaseContext, TOperationContext>>;
     createdNodeId: WhereUniqueInputValue;
   }>;
 
   // Update
   [ResourceHookKind.PreUpdate]: {
-    metas: Readonly<ResourceHookMetaMap<UpdateOneOperationArgs, TCustomContext, TBaseContext>>;
+    metas: Readonly<ResourceHookMetaMap<UpdateOneOperationArgs, TCustomContext, TBaseContext, TOperationContext>>;
     toBeUpdatedNodeId: WhereUniqueInputValue;
     update: ConnectorUpdateInputValue;
   };
   [ResourceHookKind.PostUpdate]: Readonly<{
-    metas: Readonly<ResourceHookMetaMap<UpdateOneOperationArgs, TCustomContext, TBaseContext>>;
+    metas: Readonly<ResourceHookMetaMap<UpdateOneOperationArgs, TCustomContext, TBaseContext, TOperationContext>>;
     updatedNodeId: WhereUniqueInputValue;
   }>;
 
   // Delete
   [ResourceHookKind.PreDelete]: {
-    metas: Readonly<ResourceHookMetaMap<DeleteOneOperationArgs, TCustomContext, TBaseContext>>;
+    metas: Readonly<ResourceHookMetaMap<DeleteOneOperationArgs, TCustomContext, TBaseContext, TOperationContext>>;
     toBeDeletedNodeId: WhereUniqueInputValue;
   };
   [ResourceHookKind.PostDelete]: Readonly<{
-    metas: Readonly<ResourceHookMetaMap<DeleteOneOperationArgs, TCustomContext, TBaseContext>>;
+    metas: Readonly<ResourceHookMetaMap<DeleteOneOperationArgs, TCustomContext, TBaseContext, TOperationContext>>;
     deletedNodeId: WhereUniqueInputValue;
   }>;
 }
@@ -141,7 +148,10 @@ export enum ResourceEventKind {
   PostOperation = 'POST_OPERATION',
 }
 
-export type ResourceOperationEvent<TBaseContext extends BaseContext = any, TOperationContext extends POJO = any> = {
+export type ResourceOperationEvent<
+  TBaseContext extends BaseContext = any,
+  TOperationContext extends OperationContext = any
+> = {
   // The current operation
   operation: Operation;
 
@@ -152,7 +162,10 @@ export type ResourceOperationEvent<TBaseContext extends BaseContext = any, TOper
   operationContext: TOperationContext;
 };
 
-export interface ResourceEventMap<TBaseContext extends BaseContext = any, TOperationContext extends POJO = any> {
+export interface ResourceEventMap<
+  TBaseContext extends BaseContext = any,
+  TOperationContext extends OperationContext = any
+> {
   [ResourceEventKind.PreOperation]: Readonly<ResourceOperationEvent<TBaseContext, TOperationContext>>;
   [ResourceEventKind.PostOperationSuccess]: Readonly<ResourceOperationEvent<TBaseContext, TOperationContext>>;
   [ResourceEventKind.PostOperationError]: Readonly<
@@ -164,6 +177,7 @@ export interface ResourceEventMap<TBaseContext extends BaseContext = any, TOpera
 export interface ResourceConfig<
   TCustomContext extends CustomContext = any,
   TBaseContext extends BaseContext = BaseContext,
+  TOperationContext extends OperationContext = OperationContext,
   TFieldConfig extends FieldConfig = FieldConfig<TCustomContext, TBaseContext>,
   TRelationConfig extends RelationConfig = RelationConfig<TCustomContext, TBaseContext>,
   TUniqueFullConfig extends UniqueFullConfig = UniqueFullConfig
@@ -200,10 +214,10 @@ export interface ResourceConfig<
   >;
 
   /** Optional, the behavior of the mutations can be customized by applying hooks */
-  hooks?: Maybe<EventConfigMap<ResourceHookMap<TCustomContext, TBaseContext>>>;
+  hooks?: Maybe<EventConfigMap<ResourceHookMap<TCustomContext, TBaseContext, TOperationContext>>>;
 }
 
-export class Resource<TConfig extends ResourceConfig<any, any> = ResourceConfig> extends EventEmitter<
+export class Resource<TConfig extends ResourceConfig<any, any, any> = ResourceConfig> extends EventEmitter<
   ResourceHookMap & ResourceEventMap
 > {
   public constructor(readonly name: string, readonly config: TConfig, readonly gp: GraphQLPlatform) {
@@ -236,7 +250,9 @@ export class Resource<TConfig extends ResourceConfig<any, any> = ResourceConfig>
 
     if (plural === this.name) {
       throw new Error(
-        `The singular "${this.name}" and plural "${plural}" forms of a resource have to be different, you should define it with the "plural" parameter.`,
+        `The singular "${
+          this.name
+        }" and plural "${plural}" forms of a resource have to be different, you should define it with the "plural" parameter.`,
       );
     }
 
@@ -352,7 +368,9 @@ export class Resource<TConfig extends ResourceConfig<any, any> = ResourceConfig>
     for (const component of identifier.componentSet) {
       if (component instanceof Relation && component.getTo() === this) {
         throw new Error(
-          `A circular reference has been detected as the "${this}"'s identifier (= the first unique constraint) references itself in "${component.name}".`,
+          `A circular reference has been detected as the "${this}"'s identifier (= the first unique constraint) references itself in "${
+            component.name
+          }".`,
         );
       }
     }
@@ -381,7 +399,9 @@ export class Resource<TConfig extends ResourceConfig<any, any> = ResourceConfig>
           const inverseRelation = relation.getInverse();
           if (this.getComponentMap().has(inverseRelation.name)) {
             throw new Error(
-              `The "${relation}"'s inverse relation can't be named "${inverseRelation.name}", it already exists, you may want to define the "inversedBy".`,
+              `The "${relation}"'s inverse relation can't be named "${
+                inverseRelation.name
+              }", it already exists, you may want to define the "inversedBy".`,
             );
           }
 

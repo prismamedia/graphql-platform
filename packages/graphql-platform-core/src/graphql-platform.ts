@@ -15,6 +15,7 @@ import { ExecutionResultDataDefault } from 'graphql/execution/execute';
 import { Memoize } from 'typescript-memoize';
 import { ConnectorInterface } from './graphql-platform/connector';
 import { Fixture, FixtureData, FixtureGraph } from './graphql-platform/fixture';
+import { OperationContext } from './graphql-platform/operation';
 import {
   MaybeResourceMapAware,
   Resource,
@@ -59,7 +60,12 @@ export interface GraphQLPlatformConfig<
   TContextParams extends POJO = any,
   TCustomContext extends CustomContext = any,
   TBaseContext extends BaseContext = BaseContext,
-  TResourceConfig extends ResourceConfig<any, any> = ResourceConfig<TCustomContext, TBaseContext>
+  TOperationContext extends OperationContext = OperationContext,
+  TResourceConfig extends ResourceConfig<any, any, any> = ResourceConfig<
+    TCustomContext,
+    TBaseContext,
+    TOperationContext
+  >
 > {
   /** Optional, default: true but in "production" and "test" env */
   debug?: FlagConfig;
@@ -83,7 +89,7 @@ export interface GraphQLPlatformConfig<
 export class GraphQLPlatform<
   TContextParams extends POJO = any,
   TCustomContext extends CustomContext = any,
-  TConfig extends GraphQLPlatformConfig<any, any, any> = GraphQLPlatformConfig<TContextParams, TCustomContext>
+  TConfig extends GraphQLPlatformConfig<any, any, any, any> = GraphQLPlatformConfig<TContextParams, TCustomContext>
 > {
   public constructor(readonly config: TConfig) {}
 

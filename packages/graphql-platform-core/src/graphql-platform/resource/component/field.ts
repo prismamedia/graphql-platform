@@ -3,6 +3,7 @@ import { GraphQLLeafType, isLeafType } from 'graphql';
 import { Memoize } from 'typescript-memoize';
 import { BaseContext, CustomContext } from '../../../graphql-platform';
 import { ConnectorCreateInputValue, ConnectorUpdateInputValue } from '../../connector';
+import { OperationContext } from '../../operation';
 import { CreateOneOperationArgs, UpdateOneOperationArgs } from '../../operation/mutation';
 import { ResourceHookKind, ResourceHookMetaMap } from '../../resource';
 import { AbstractComponent, AbstractComponentConfig } from '../abstract-component';
@@ -15,16 +16,21 @@ export type FieldValue = null | Scalar;
 export type FieldHookMetaMap<
   TArgs extends POJO = any,
   TCustomContext extends CustomContext = any,
-  TBaseContext extends BaseContext = any
-> = ResourceHookMetaMap<TArgs, TCustomContext, TBaseContext> & {
+  TBaseContext extends BaseContext = any,
+  TOperationContext extends OperationContext = any
+> = ResourceHookMetaMap<TArgs, TCustomContext, TBaseContext, TOperationContext> & {
   field: Field;
 };
 
-export interface FieldHookMap<TCustomContext extends CustomContext = any, TBaseContext extends BaseContext = any> {
+export interface FieldHookMap<
+  TCustomContext extends CustomContext = any,
+  TBaseContext extends BaseContext = any,
+  TOperationContext extends OperationContext = any
+> {
   // Create
   [ResourceHookKind.PreCreate]: {
     metas: Readonly<
-      FieldHookMetaMap<CreateOneOperationArgs, TCustomContext, TBaseContext> & {
+      FieldHookMetaMap<CreateOneOperationArgs, TCustomContext, TBaseContext, TOperationContext> & {
         /** Parsed data */
         create: ConnectorCreateInputValue;
       }
@@ -36,7 +42,7 @@ export interface FieldHookMap<TCustomContext extends CustomContext = any, TBaseC
   // Update
   [ResourceHookKind.PreUpdate]: {
     metas: Readonly<
-      FieldHookMetaMap<UpdateOneOperationArgs, TCustomContext, TBaseContext> & {
+      FieldHookMetaMap<UpdateOneOperationArgs, TCustomContext, TBaseContext, TOperationContext> & {
         /** Parsed data */
         update: ConnectorUpdateInputValue;
       }
@@ -46,8 +52,11 @@ export interface FieldHookMap<TCustomContext extends CustomContext = any, TBaseC
   };
 }
 
-export interface FieldConfig<TCustomContext extends CustomContext = any, TBaseContext extends BaseContext = any>
-  extends AbstractComponentConfig<FieldHookMap<TCustomContext, TBaseContext>> {
+export interface FieldConfig<
+  TCustomContext extends CustomContext = any,
+  TBaseContext extends BaseContext = any,
+  TOperationContext extends OperationContext = any
+> extends AbstractComponentConfig<FieldHookMap<TCustomContext, TBaseContext, TOperationContext>> {
   /** Required, the GraphQL leaf type that represents the output of this field */
   type: GraphQLLeafType;
 }
