@@ -16,6 +16,11 @@ export * from './graphql-platform/resource';
 /** "Context" provided by the GraphQL Platform */
 export interface BaseContext extends CoreBaseContext {
   /**
+   * Use the "Connector" at your own risk as you can do whatever you want with the database
+   */
+  connector: Connector;
+
+  /**
    * A new "ConnectorRequest" is created for every GraphQL execution's context, it's a convenient place
    * to share a state/cache between all the resolvers of the same request.
    */
@@ -44,6 +49,7 @@ export class GraphQLPlatform<
   public async getBaseContext(): Promise<BaseContext> {
     return {
       ...(await super.getBaseContext()),
+      connector: this.getConnector(),
       connectorRequest: this.getConnector().newRequest(),
     };
   }

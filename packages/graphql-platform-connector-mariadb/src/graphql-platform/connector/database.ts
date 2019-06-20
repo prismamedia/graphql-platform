@@ -54,4 +54,9 @@ export class Database {
       connection,
     );
   }
+
+  public async reset(connection?: Maybe<mysql.Connection>): Promise<void> {
+    await this.drop(connection);
+    await this.create(connection);
+  }
 }
