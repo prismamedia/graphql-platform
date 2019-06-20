@@ -6,6 +6,7 @@ import { Connector } from '../connector';
 import { CreateTableStatement } from './database/statement';
 import { Table, TableSet } from './database/table';
 
+export * from './database/statement';
 export * from './database/table';
 
 export class Database {
