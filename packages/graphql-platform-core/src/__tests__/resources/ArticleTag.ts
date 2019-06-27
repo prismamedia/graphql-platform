@@ -1,7 +1,7 @@
 import { GraphQLInt } from 'graphql';
-import { ResourceConfig } from '../..';
+import { MyResourceConfig } from '../gp';
 
-const resource: ResourceConfig = {
+const resource: MyResourceConfig = {
   uniques: [['article', 'tag'], { components: ['article', 'order'], name: 'article/order' }],
   fields: {
     order: {

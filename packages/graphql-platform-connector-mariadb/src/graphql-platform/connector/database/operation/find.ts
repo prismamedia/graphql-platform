@@ -482,7 +482,7 @@ export class FindOperation extends AbstractOperationResolver<ConnectorFindOperat
     return node;
   }
 
-  public async execute({ args, selectionNode, operationContext }: OperationResolverParams<ConnectorFindOperationArgs>) {
+  public async execute({ args, selectionNode, connection }: OperationResolverParams<ConnectorFindOperationArgs>) {
     const selectStatement = this.table.newSelectStatement();
 
     await Promise.all([
@@ -497,16 +497,12 @@ export class FindOperation extends AbstractOperationResolver<ConnectorFindOperat
       selectStatement.groupBy.add(this.table.getPrimaryKey().getColumnSet());
     }
 
-    if (operationContext && operationContext.inTransaction) {
-      selectStatement.forUpdate = true;
-    }
-
     const rows = await this.connector.query(
       {
         nestTables: true,
         sql: selectStatement.sql,
       },
-      operationContext && operationContext.connection,
+      connection,
     );
 
     return Array.isArray(rows) ? rows.map(row => this.parseRow(row, selectStatement.from, selectionNode)) : [];

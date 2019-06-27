@@ -1,10 +1,20 @@
-import { NodeValue } from '@prismamedia/graphql-platform-core';
-import { graphqlPlatform } from '../../../../../__tests__';
+import { NodeValue, ResourceMap } from '@prismamedia/graphql-platform-core';
+import { config, MyGP } from '../../../../../__tests__/gp';
+import { Connector } from '../../../../connector';
+import { Database } from '../../../database';
 
 describe('Table', () => {
-  const resourceMap = graphqlPlatform.getResourceMap();
+  let gp: MyGP;
+  let connector: Connector;
+  let database: Database;
+  let resourceMap: ResourceMap;
 
-  const database = graphqlPlatform.getConnector().getDatabase();
+  beforeAll(() => {
+    gp = new MyGP(config);
+    connector = gp.getConnector();
+    database = connector.getDatabase();
+    resourceMap = gp.getResourceMap();
+  });
 
   it('gets/sets node/row value', () => {
     const articleTagCommentResource = resourceMap.assert('ArticleTagComment');

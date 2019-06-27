@@ -16,6 +16,7 @@ export class InsertStatement implements QueryOptions {
     return [
       `INSERT INTO ${this.table.getEscapedName()}`,
       this.assignmentList.sql ? `SET ${this.assignmentList.sql}` : 'VALUES()',
+      ';',
     ]
       .filter(Boolean)
       .join(' ');

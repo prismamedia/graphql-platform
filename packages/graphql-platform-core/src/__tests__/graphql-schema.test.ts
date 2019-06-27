@@ -1,8 +1,14 @@
-import { printSchema, validateSchema } from 'graphql';
-import { graphqlPlatform } from '.';
+import { GraphQLSchema, printSchema, validateSchema } from 'graphql';
+import { config, MyGP } from './gp';
 
 describe('GraphQLSchema', () => {
-  const schema = graphqlPlatform.getGraphQLSchema();
+  let gp: MyGP;
+  let schema: GraphQLSchema;
+
+  beforeAll(() => {
+    gp = new MyGP(config);
+    schema = gp.getGraphQLSchema();
+  });
 
   it('creates a valid GraphQL schema', () => {
     expect(validateSchema(schema)).toHaveLength(0);

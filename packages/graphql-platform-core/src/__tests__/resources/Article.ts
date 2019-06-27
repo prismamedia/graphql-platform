@@ -1,8 +1,8 @@
 import { getGraphQLEnumType } from '@prismamedia/graphql-platform-utils';
 import { GraphQLNonNull, GraphQLString } from 'graphql';
 import slug from 'slug';
-import { MyContext } from '..';
-import { ManagementKind, ResourceConfig, ResourceHookKind } from '../..';
+import { ManagementKind, ResourceHookKind } from '../..';
+import { MyResourceConfig } from '../gp';
 
 export const FormatType = getGraphQLEnumType('ArticleFormat', { Rich: 'RICH', Video: 'VIDEO' });
 
@@ -12,7 +12,7 @@ export const QualifierType = getGraphQLEnumType('ArticleQualifier', {
   Slideshow: 'SLIDESHOW',
 });
 
-const resource: ResourceConfig<MyContext> = {
+const resource: MyResourceConfig = {
   description: 'An article',
   uniques: [['category', 'slug']],
   fields: {

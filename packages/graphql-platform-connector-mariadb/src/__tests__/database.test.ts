@@ -1,10 +1,16 @@
 import { format } from 'sql-formatter';
-import { graphqlPlatform } from '.';
 import { Database } from '../';
 import { CreateTableStatement } from '../graphql-platform/connector/database/statement';
+import { config, MyGP } from './gp';
 
 describe('Database', () => {
-  const database = graphqlPlatform.getConnector().getDatabase();
+  let gp: MyGP;
+  let database: Database;
+
+  beforeAll(() => {
+    gp = new MyGP(config);
+    database = gp.getConnector().getDatabase();
+  });
 
   it('creates a database', () => {
     expect(database).toBeInstanceOf(Database);

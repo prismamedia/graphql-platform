@@ -1,10 +1,21 @@
+import { ResourceMap } from '@prismamedia/graphql-platform-core';
 import { GraphQLSelectionNode } from '@prismamedia/graphql-platform-utils';
-import { graphqlPlatform } from '../../../../../__tests__';
+import { config, MyGP } from '../../../../../__tests__/gp';
+import { Connector } from '../../../../connector';
+import { Database } from '../../../database';
 
 describe('Find', () => {
-  const resourceMap = graphqlPlatform.getResourceMap();
-  const connector = graphqlPlatform.getConnector();
-  const database = connector.getDatabase();
+  let gp: MyGP;
+  let connector: Connector;
+  let database: Database;
+  let resourceMap: ResourceMap;
+
+  beforeAll(() => {
+    gp = new MyGP(config);
+    connector = gp.getConnector();
+    database = connector.getDatabase();
+    resourceMap = gp.getResourceMap();
+  });
 
   it('prefers foreign key columns over related node selection', () => {
     const Article = resourceMap.assert('Article');

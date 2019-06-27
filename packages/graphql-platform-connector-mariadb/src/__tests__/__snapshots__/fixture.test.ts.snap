@@ -1,0 +1,702 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`Fixture loads the fixtures 1`] = `
+"# 107 queries in 1 connections
+
+START TRANSACTION;
+
+INSERT INTO
+  \`categories\`
+SET
+  \`id\` = 'dc8c0340-89bf-42ec-8468-26af53248527',
+  \`title\` = 'My root category',
+  \`slug\` = 'my-root-category';
+
+COMMIT;
+
+START TRANSACTION;
+
+SELECT
+  \`Category\`.\`id\`
+FROM
+  \`categories\` AS \`Category\`
+WHERE
+  \`Category\`.\`id\` = 'dc8c0340-89bf-42ec-8468-26af53248527'
+LIMIT
+  1;
+
+INSERT INTO
+  \`categories\`
+SET
+  \`id\` = '00dd8125-a01e-4a96-9e56-35f3acfec7d1',
+  \`title\` = 'My first category',
+  \`slug\` = 'my-first-category',
+  \`parentId\` = 'dc8c0340-89bf-42ec-8468-26af53248527';
+
+COMMIT;
+
+START TRANSACTION;
+
+INSERT INTO
+  \`users\`
+SET
+  \`id\` = 'fdb371f6-3b17-427c-8a46-08b6368312b5',
+  \`username\` = 'A publisher';
+
+COMMIT;
+
+START TRANSACTION;
+
+SELECT
+  \`Category\`.\`parentId\`,
+  \`Category\`.\`slug\`
+FROM
+  \`categories\` AS \`Category\`
+WHERE
+  \`Category\`.\`id\` = '00dd8125-a01e-4a96-9e56-35f3acfec7d1'
+LIMIT
+  1;
+
+SELECT
+  \`User\`.\`username\`
+FROM
+  \`users\` AS \`User\`
+WHERE
+  \`User\`.\`id\` = 'fdb371f6-3b17-427c-8a46-08b6368312b5'
+LIMIT
+  1;
+
+SELECT
+  MAX(\`intId\`) as maxIntId
+FROM
+  \`articles\`;
+
+SELECT
+  \`Article\`.\`slug\`
+FROM
+  \`articles\` AS \`Article\`
+WHERE
+  (\`Article\`.\`format\` IN ('RICH', 'VIDEO'))
+  AND (
+    (\`Article\`.\`categoryParentId\` IS NULL)
+    AND (
+      \`Article\`.\`categorySlug\` = 'a-non-existent-category-slug'
+    )
+  )
+  AND (\`Article\`.\`slug\` = 'a-non-existent-article-slug')
+LIMIT
+  1;
+
+INSERT INTO
+  \`articles\`
+SET
+  \`id\` = '9b6b98fa-586d-4987-82a0-d63f11bbe560',
+  \`computedMaxIntId\` = 100,
+  \`format\` = 'RICH',
+  \`title\` = 'My first article\\\\'s title, a rich article.',
+  \`slug\` = 'my-first-articles-title-a-rich-article',
+  \`categoryParentId\` = 'dc8c0340-89bf-42ec-8468-26af53248527',
+  \`categorySlug\` = 'my-first-category',
+  \`authorUsername\` = 'A publisher';
+
+COMMIT;
+
+START TRANSACTION;
+
+INSERT INTO
+  \`tags\`
+SET
+  \`id\` = '3480abaa-5580-4dbe-8e55-cb0b622e1da5',
+  \`title\` = 'My third tag',
+  \`slug\` = 'my-third-tag';
+
+COMMIT;
+
+START TRANSACTION;
+
+SELECT
+  \`Article\`.\`intId\`
+FROM
+  \`articles\` AS \`Article\`
+WHERE
+  (\`Article\`.\`format\` IN ('RICH', 'VIDEO'))
+  AND (
+    \`Article\`.\`id\` = '9b6b98fa-586d-4987-82a0-d63f11bbe560'
+  )
+LIMIT
+  1;
+
+SELECT
+  \`Tag\`.\`intId\`
+FROM
+  \`tags\` AS \`Tag\`
+WHERE
+  \`Tag\`.\`id\` = '3480abaa-5580-4dbe-8e55-cb0b622e1da5'
+LIMIT
+  1;
+
+INSERT INTO
+  \`article_tags\`
+SET
+  \`articleIntId\` = 1,
+  \`tagIntId\` = 1,
+  \`order\` = 2;
+
+SELECT
+  \`ArticleTag>article\`.\`id\`,
+  \`ArticleTag>tag\`.\`id\`
+FROM
+  \`article_tags\` AS \`ArticleTag\`
+  LEFT JOIN \`articles\` AS \`ArticleTag>article\` ON \`ArticleTag\`.\`articleIntId\` = \`ArticleTag>article\`.\`intId\`
+  LEFT JOIN \`tags\` AS \`ArticleTag>tag\` ON \`ArticleTag\`.\`tagIntId\` = \`ArticleTag>tag\`.\`intId\`
+WHERE
+  (\`ArticleTag\`.\`articleIntId\` = 1)
+  AND (\`ArticleTag\`.\`tagIntId\` = 1)
+LIMIT
+  1;
+
+COMMIT;
+
+START TRANSACTION;
+
+INSERT INTO
+  \`tags\`
+SET
+  \`id\` = '1b4cc2fd-0e1f-4b97-bed5-171f52d18b1b',
+  \`title\` = 'My fourth tag',
+  \`slug\` = 'my-fourth-tag';
+
+COMMIT;
+
+START TRANSACTION;
+
+SELECT
+  \`Article\`.\`intId\`
+FROM
+  \`articles\` AS \`Article\`
+WHERE
+  (\`Article\`.\`format\` IN ('RICH', 'VIDEO'))
+  AND (
+    \`Article\`.\`id\` = '9b6b98fa-586d-4987-82a0-d63f11bbe560'
+  )
+LIMIT
+  1;
+
+SELECT
+  \`Tag\`.\`intId\`
+FROM
+  \`tags\` AS \`Tag\`
+WHERE
+  \`Tag\`.\`id\` = '1b4cc2fd-0e1f-4b97-bed5-171f52d18b1b'
+LIMIT
+  1;
+
+INSERT INTO
+  \`article_tags\`
+SET
+  \`articleIntId\` = 1,
+  \`tagIntId\` = 2,
+  \`order\` = 3;
+
+SELECT
+  \`ArticleTag>article\`.\`id\`,
+  \`ArticleTag>tag\`.\`id\`
+FROM
+  \`article_tags\` AS \`ArticleTag\`
+  LEFT JOIN \`articles\` AS \`ArticleTag>article\` ON \`ArticleTag\`.\`articleIntId\` = \`ArticleTag>article\`.\`intId\`
+  LEFT JOIN \`tags\` AS \`ArticleTag>tag\` ON \`ArticleTag\`.\`tagIntId\` = \`ArticleTag>tag\`.\`intId\`
+WHERE
+  (\`ArticleTag\`.\`articleIntId\` = 1)
+  AND (\`ArticleTag\`.\`tagIntId\` = 2)
+LIMIT
+  1;
+
+COMMIT;
+
+START TRANSACTION;
+
+SELECT
+  \`Category\`.\`id\`
+FROM
+  \`categories\` AS \`Category\`
+WHERE
+  \`Category\`.\`id\` = '00dd8125-a01e-4a96-9e56-35f3acfec7d1'
+LIMIT
+  1;
+
+INSERT INTO
+  \`categories\`
+SET
+  \`id\` = '947b872e-0a54-406d-850b-1aeae571463b',
+  \`title\` = 'My sub-category in my first category',
+  \`slug\` = 'my-sub-category-in-my-first-category',
+  \`parentId\` = '00dd8125-a01e-4a96-9e56-35f3acfec7d1';
+
+COMMIT;
+
+START TRANSACTION;
+
+INSERT INTO
+  \`users\`
+SET
+  \`id\` = '980bca6a-c034-4841-ab3e-4b636eff7be0',
+  \`username\` = 'A moderator';
+
+COMMIT;
+
+START TRANSACTION;
+
+SELECT
+  \`Category\`.\`parentId\`,
+  \`Category\`.\`slug\`
+FROM
+  \`categories\` AS \`Category\`
+WHERE
+  \`Category\`.\`id\` = '947b872e-0a54-406d-850b-1aeae571463b'
+LIMIT
+  1;
+
+SELECT
+  \`User\`.\`username\`
+FROM
+  \`users\` AS \`User\`
+WHERE
+  \`User\`.\`id\` = 'fdb371f6-3b17-427c-8a46-08b6368312b5'
+LIMIT
+  1;
+
+SELECT
+  \`User\`.\`intId\`
+FROM
+  \`users\` AS \`User\`
+WHERE
+  \`User\`.\`id\` = '980bca6a-c034-4841-ab3e-4b636eff7be0'
+LIMIT
+  1;
+
+SELECT
+  MAX(\`intId\`) as maxIntId
+FROM
+  \`articles\`;
+
+SELECT
+  \`Article\`.\`slug\`
+FROM
+  \`articles\` AS \`Article\`
+WHERE
+  (\`Article\`.\`format\` IN ('RICH', 'VIDEO'))
+  AND (
+    (\`Article\`.\`categoryParentId\` IS NULL)
+    AND (
+      \`Article\`.\`categorySlug\` = 'a-non-existent-category-slug'
+    )
+  )
+  AND (\`Article\`.\`slug\` = 'a-non-existent-article-slug')
+LIMIT
+  1;
+
+INSERT INTO
+  \`articles\`
+SET
+  \`id\` = '06bd57da-24f6-488a-a1b1-2435bd7c8d6e',
+  \`computedMaxIntId\` = 101,
+  \`format\` = 'VIDEO',
+  \`title\` = 'My second article\\\\'s title, a video.',
+  \`slug\` = 'my-second-articles-title-a-video',
+  \`categoryParentId\` = '00dd8125-a01e-4a96-9e56-35f3acfec7d1',
+  \`categorySlug\` = 'my-sub-category-in-my-first-category',
+  \`authorUsername\` = 'A publisher',
+  \`moderatorIntId\` = 2;
+
+COMMIT;
+
+START TRANSACTION;
+
+SELECT
+  \`Article\`.\`intId\`
+FROM
+  \`articles\` AS \`Article\`
+WHERE
+  (\`Article\`.\`format\` IN ('RICH', 'VIDEO'))
+  AND (
+    \`Article\`.\`id\` = '06bd57da-24f6-488a-a1b1-2435bd7c8d6e'
+  )
+LIMIT
+  1;
+
+SELECT
+  \`Tag\`.\`intId\`
+FROM
+  \`tags\` AS \`Tag\`
+WHERE
+  \`Tag\`.\`id\` = '1b4cc2fd-0e1f-4b97-bed5-171f52d18b1b'
+LIMIT
+  1;
+
+INSERT INTO
+  \`article_tags\`
+SET
+  \`articleIntId\` = 2,
+  \`tagIntId\` = 2,
+  \`order\` = 0;
+
+SELECT
+  \`ArticleTag>article\`.\`id\`,
+  \`ArticleTag>tag\`.\`id\`
+FROM
+  \`article_tags\` AS \`ArticleTag\`
+  LEFT JOIN \`articles\` AS \`ArticleTag>article\` ON \`ArticleTag\`.\`articleIntId\` = \`ArticleTag>article\`.\`intId\`
+  LEFT JOIN \`tags\` AS \`ArticleTag>tag\` ON \`ArticleTag\`.\`tagIntId\` = \`ArticleTag>tag\`.\`intId\`
+WHERE
+  (\`ArticleTag\`.\`articleIntId\` = 2)
+  AND (\`ArticleTag\`.\`tagIntId\` = 2)
+LIMIT
+  1;
+
+COMMIT;
+
+START TRANSACTION;
+
+INSERT INTO
+  \`tags\`
+SET
+  \`id\` = '91eef28c-598a-433c-9e2c-06d6bd6b455c',
+  \`title\` = 'My fifth tag',
+  \`slug\` = 'my-fifth-tag';
+
+COMMIT;
+
+START TRANSACTION;
+
+SELECT
+  \`Article\`.\`intId\`
+FROM
+  \`articles\` AS \`Article\`
+WHERE
+  (\`Article\`.\`format\` IN ('RICH', 'VIDEO'))
+  AND (
+    \`Article\`.\`id\` = '06bd57da-24f6-488a-a1b1-2435bd7c8d6e'
+  )
+LIMIT
+  1;
+
+SELECT
+  \`Tag\`.\`intId\`
+FROM
+  \`tags\` AS \`Tag\`
+WHERE
+  \`Tag\`.\`id\` = '91eef28c-598a-433c-9e2c-06d6bd6b455c'
+LIMIT
+  1;
+
+INSERT INTO
+  \`article_tags\`
+SET
+  \`articleIntId\` = 2,
+  \`tagIntId\` = 3,
+  \`order\` = 1;
+
+SELECT
+  \`ArticleTag>article\`.\`id\`,
+  \`ArticleTag>tag\`.\`id\`
+FROM
+  \`article_tags\` AS \`ArticleTag\`
+  LEFT JOIN \`articles\` AS \`ArticleTag>article\` ON \`ArticleTag\`.\`articleIntId\` = \`ArticleTag>article\`.\`intId\`
+  LEFT JOIN \`tags\` AS \`ArticleTag>tag\` ON \`ArticleTag\`.\`tagIntId\` = \`ArticleTag>tag\`.\`intId\`
+WHERE
+  (\`ArticleTag\`.\`articleIntId\` = 2)
+  AND (\`ArticleTag\`.\`tagIntId\` = 3)
+LIMIT
+  1;
+
+COMMIT;
+
+START TRANSACTION;
+
+INSERT INTO
+  \`tags\`
+SET
+  \`id\` = 'd0ae7305-ddce-4870-a0f9-0f7ef19b86ea',
+  \`title\` = 'My first tag',
+  \`slug\` = 'my-first-tag';
+
+COMMIT;
+
+START TRANSACTION;
+
+SELECT
+  \`Article\`.\`intId\`
+FROM
+  \`articles\` AS \`Article\`
+WHERE
+  (\`Article\`.\`format\` IN ('RICH', 'VIDEO'))
+  AND (
+    \`Article\`.\`id\` = '9b6b98fa-586d-4987-82a0-d63f11bbe560'
+  )
+LIMIT
+  1;
+
+SELECT
+  \`Tag\`.\`intId\`
+FROM
+  \`tags\` AS \`Tag\`
+WHERE
+  \`Tag\`.\`id\` = 'd0ae7305-ddce-4870-a0f9-0f7ef19b86ea'
+LIMIT
+  1;
+
+INSERT INTO
+  \`article_tags\`
+SET
+  \`articleIntId\` = 1,
+  \`tagIntId\` = 4,
+  \`order\` = 0;
+
+SELECT
+  \`ArticleTag>article\`.\`id\`,
+  \`ArticleTag>tag\`.\`id\`
+FROM
+  \`article_tags\` AS \`ArticleTag\`
+  LEFT JOIN \`articles\` AS \`ArticleTag>article\` ON \`ArticleTag\`.\`articleIntId\` = \`ArticleTag>article\`.\`intId\`
+  LEFT JOIN \`tags\` AS \`ArticleTag>tag\` ON \`ArticleTag\`.\`tagIntId\` = \`ArticleTag>tag\`.\`intId\`
+WHERE
+  (\`ArticleTag\`.\`articleIntId\` = 1)
+  AND (\`ArticleTag\`.\`tagIntId\` = 4)
+LIMIT
+  1;
+
+COMMIT;
+
+START TRANSACTION;
+
+SELECT
+  \`ArticleTag\`.\`articleIntId\`,
+  \`ArticleTag\`.\`tagIntId\`
+FROM
+  \`article_tags\` AS \`ArticleTag\`
+  LEFT JOIN \`articles\` AS \`ArticleTag>article\` ON \`ArticleTag\`.\`articleIntId\` = \`ArticleTag>article\`.\`intId\`
+  LEFT JOIN \`tags\` AS \`ArticleTag>tag\` ON \`ArticleTag\`.\`tagIntId\` = \`ArticleTag>tag\`.\`intId\`
+WHERE
+  (
+    \`ArticleTag>article\`.\`id\` = '9b6b98fa-586d-4987-82a0-d63f11bbe560'
+  )
+  AND (
+    \`ArticleTag>tag\`.\`id\` = 'd0ae7305-ddce-4870-a0f9-0f7ef19b86ea'
+  )
+LIMIT
+  1;
+
+INSERT INTO
+  \`article_tag_comments\`
+SET
+  \`articleTagArticleIntId\` = 1,
+  \`articleTagTagIntId\` = 4,
+  \`body\` = 'This is why I tagged the Article \\\\\\"article_01\\\\\\" with the Tag \\\\\\"tag_01\\\\\\"';
+
+SELECT
+  \`ArticleTagComment>articleTag>article\`.\`id\`,
+  \`ArticleTagComment>articleTag>tag\`.\`id\`
+FROM
+  \`article_tag_comments\` AS \`ArticleTagComment\`
+  LEFT JOIN \`article_tags\` AS \`ArticleTagComment>articleTag\` ON (
+    \`ArticleTagComment\`.\`articleTagArticleIntId\` = \`ArticleTagComment>articleTag\`.\`articleIntId\`
+  )
+  AND (
+    \`ArticleTagComment\`.\`articleTagTagIntId\` = \`ArticleTagComment>articleTag\`.\`tagIntId\`
+  )
+  LEFT JOIN \`articles\` AS \`ArticleTagComment>articleTag>article\` ON \`ArticleTagComment>articleTag\`.\`articleIntId\` = \`ArticleTagComment>articleTag>article\`.\`intId\`
+  LEFT JOIN \`tags\` AS \`ArticleTagComment>articleTag>tag\` ON \`ArticleTagComment>articleTag\`.\`tagIntId\` = \`ArticleTagComment>articleTag>tag\`.\`intId\`
+WHERE
+  (\`ArticleTagComment\`.\`articleTagArticleIntId\` = 1)
+  AND (\`ArticleTagComment\`.\`articleTagTagIntId\` = 4)
+LIMIT
+  1;
+
+COMMIT;
+
+START TRANSACTION;
+
+INSERT INTO
+  \`tags\`
+SET
+  \`id\` = '511ed2c7-0557-4e5d-8bce-d4956cac48eb',
+  \`title\` = 'My second tag',
+  \`slug\` = 'my-second-tag';
+
+COMMIT;
+
+START TRANSACTION;
+
+SELECT
+  \`Article\`.\`intId\`
+FROM
+  \`articles\` AS \`Article\`
+WHERE
+  (\`Article\`.\`format\` IN ('RICH', 'VIDEO'))
+  AND (
+    \`Article\`.\`id\` = '9b6b98fa-586d-4987-82a0-d63f11bbe560'
+  )
+LIMIT
+  1;
+
+SELECT
+  \`Tag\`.\`intId\`
+FROM
+  \`tags\` AS \`Tag\`
+WHERE
+  \`Tag\`.\`id\` = '511ed2c7-0557-4e5d-8bce-d4956cac48eb'
+LIMIT
+  1;
+
+INSERT INTO
+  \`article_tags\`
+SET
+  \`articleIntId\` = 1,
+  \`tagIntId\` = 5,
+  \`order\` = 1;
+
+SELECT
+  \`ArticleTag>article\`.\`id\`,
+  \`ArticleTag>tag\`.\`id\`
+FROM
+  \`article_tags\` AS \`ArticleTag\`
+  LEFT JOIN \`articles\` AS \`ArticleTag>article\` ON \`ArticleTag\`.\`articleIntId\` = \`ArticleTag>article\`.\`intId\`
+  LEFT JOIN \`tags\` AS \`ArticleTag>tag\` ON \`ArticleTag\`.\`tagIntId\` = \`ArticleTag>tag\`.\`intId\`
+WHERE
+  (\`ArticleTag\`.\`articleIntId\` = 1)
+  AND (\`ArticleTag\`.\`tagIntId\` = 5)
+LIMIT
+  1;
+
+COMMIT;
+
+START TRANSACTION;
+
+SELECT
+  \`ArticleTag\`.\`articleIntId\`,
+  \`ArticleTag\`.\`tagIntId\`
+FROM
+  \`article_tags\` AS \`ArticleTag\`
+  LEFT JOIN \`articles\` AS \`ArticleTag>article\` ON \`ArticleTag\`.\`articleIntId\` = \`ArticleTag>article\`.\`intId\`
+  LEFT JOIN \`tags\` AS \`ArticleTag>tag\` ON \`ArticleTag\`.\`tagIntId\` = \`ArticleTag>tag\`.\`intId\`
+WHERE
+  (
+    \`ArticleTag>article\`.\`id\` = '9b6b98fa-586d-4987-82a0-d63f11bbe560'
+  )
+  AND (
+    \`ArticleTag>tag\`.\`id\` = '511ed2c7-0557-4e5d-8bce-d4956cac48eb'
+  )
+LIMIT
+  1;
+
+INSERT INTO
+  \`article_tag_comments\`
+SET
+  \`articleTagArticleIntId\` = 1,
+  \`articleTagTagIntId\` = 5,
+  \`body\` = 'And this is why I tagged the Article \\\\\\"article_01\\\\\\" with the Tag \\\\\\"tag_02\\\\\\"';
+
+SELECT
+  \`ArticleTagComment>articleTag>article\`.\`id\`,
+  \`ArticleTagComment>articleTag>tag\`.\`id\`
+FROM
+  \`article_tag_comments\` AS \`ArticleTagComment\`
+  LEFT JOIN \`article_tags\` AS \`ArticleTagComment>articleTag\` ON (
+    \`ArticleTagComment\`.\`articleTagArticleIntId\` = \`ArticleTagComment>articleTag\`.\`articleIntId\`
+  )
+  AND (
+    \`ArticleTagComment\`.\`articleTagTagIntId\` = \`ArticleTagComment>articleTag\`.\`tagIntId\`
+  )
+  LEFT JOIN \`articles\` AS \`ArticleTagComment>articleTag>article\` ON \`ArticleTagComment>articleTag\`.\`articleIntId\` = \`ArticleTagComment>articleTag>article\`.\`intId\`
+  LEFT JOIN \`tags\` AS \`ArticleTagComment>articleTag>tag\` ON \`ArticleTagComment>articleTag\`.\`tagIntId\` = \`ArticleTagComment>articleTag>tag\`.\`intId\`
+WHERE
+  (\`ArticleTagComment\`.\`articleTagArticleIntId\` = 1)
+  AND (\`ArticleTagComment\`.\`articleTagTagIntId\` = 5)
+LIMIT
+  1;
+
+COMMIT;
+
+START TRANSACTION;
+
+SELECT
+  \`Article\`.\`intId\`
+FROM
+  \`articles\` AS \`Article\`
+WHERE
+  (\`Article\`.\`format\` IN ('RICH', 'VIDEO'))
+  AND (
+    \`Article\`.\`id\` = '9b6b98fa-586d-4987-82a0-d63f11bbe560'
+  )
+LIMIT
+  1;
+
+INSERT INTO
+  \`article_urls\`
+SET
+  \`articleIntId\` = 1,
+  \`path\` = '/my-article-01';
+
+SELECT
+  \`ArticleUrl>article\`.\`id\`
+FROM
+  \`article_urls\` AS \`ArticleUrl\`
+  LEFT JOIN \`articles\` AS \`ArticleUrl>article\` ON \`ArticleUrl\`.\`articleIntId\` = \`ArticleUrl>article\`.\`intId\`
+WHERE
+  \`ArticleUrl\`.\`articleIntId\` = 1
+LIMIT
+  1;
+
+COMMIT;
+
+START TRANSACTION;
+
+SELECT
+  \`ArticleUrl\`.\`articleIntId\`
+FROM
+  \`article_urls\` AS \`ArticleUrl\`
+  LEFT JOIN \`articles\` AS \`ArticleUrl>article\` ON \`ArticleUrl\`.\`articleIntId\` = \`ArticleUrl>article\`.\`intId\`
+WHERE
+  \`ArticleUrl>article\`.\`id\` = '9b6b98fa-586d-4987-82a0-d63f11bbe560'
+LIMIT
+  1;
+
+INSERT INTO
+  \`article_url_metas\`
+SET
+  \`urlArticleIntId\` = 1;
+
+SELECT
+  \`ArticleUrlMeta>url>article\`.\`id\`
+FROM
+  \`article_url_metas\` AS \`ArticleUrlMeta\`
+  LEFT JOIN \`article_urls\` AS \`ArticleUrlMeta>url\` ON \`ArticleUrlMeta\`.\`urlArticleIntId\` = \`ArticleUrlMeta>url\`.\`articleIntId\`
+  LEFT JOIN \`articles\` AS \`ArticleUrlMeta>url>article\` ON \`ArticleUrlMeta>url\`.\`articleIntId\` = \`ArticleUrlMeta>url>article\`.\`intId\`
+WHERE
+  \`ArticleUrlMeta\`.\`urlArticleIntId\` = 1
+LIMIT
+  1;
+
+COMMIT;
+
+START TRANSACTION;
+
+SELECT
+  \`Category\`.\`id\`
+FROM
+  \`categories\` AS \`Category\`
+WHERE
+  \`Category\`.\`id\` = 'dc8c0340-89bf-42ec-8468-26af53248527'
+LIMIT
+  1;
+
+INSERT INTO
+  \`categories\`
+SET
+  \`id\` = 'f45c709f-96ca-40cd-afe7-ed436406db03',
+  \`title\` = 'My second category',
+  \`slug\` = 'my-second-category',
+  \`parentId\` = 'dc8c0340-89bf-42ec-8468-26af53248527';
+
+COMMIT;"
+`;

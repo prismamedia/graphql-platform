@@ -1,57 +1,67 @@
 import { BoundOff } from '@prismamedia/ts-async-event-emitter';
-import { Connection, format, QueryOptions } from 'mysql';
+import { Connection, format } from 'mysql';
 import { format as beautify } from 'sql-formatter';
-import { graphqlPlatform } from '.';
 import complexMultiMutationRequest from '../../../graphql-platform-core/src/__tests__/execution/complex-multi-mutation';
 import complexMultiQueryRequest from '../../../graphql-platform-core/src/__tests__/execution/complex-multi-query';
-import { ConnectorEventKind } from '../graphql-platform/connector';
+import { Connector, ConnectorEventKind, Database } from '../graphql-platform/connector';
+import { config, MyGP } from './gp';
 
 describe('Execution', () => {
-  const connector = graphqlPlatform.getConnector();
-  const database = connector.getDatabase();
-  const connectionSet = new Set<Connection['threadId']>();
-  const querySet = new Set<QueryOptions>();
-  let offQuery: BoundOff;
+  let gp: MyGP;
+  let connector: Connector;
+  let database: Database;
+
+  let connectionSet = new Set<Connection['threadId']>();
+  let queries: string[] = [];
+  let offListeners: BoundOff[];
 
   beforeAll(async done => {
-    await database.drop();
-    await database.create();
+    gp = new MyGP(config);
+    connector = gp.getConnector();
+    database = connector.getDatabase();
+
+    await database.reset();
 
     done();
   });
 
   beforeEach(async done => {
-    // Ensure there is no remaining listeners
-    offQuery && offQuery();
-    connectionSet.clear();
-    querySet.clear();
-
-    // Empty all the tables before each test
-    await database.truncate();
-    await connector.resetPool();
-
-    offQuery = connector.on(ConnectorEventKind.PreQuery, ({ threadId, ...query }) => {
-      connectionSet.add(threadId);
-      querySet.add(query);
+    offListeners = connector.onConfig({
+      [ConnectorEventKind.StartTransaction]: ({ threadId }) => {
+        connectionSet.add(threadId);
+        queries.push('START TRANSACTION;');
+      },
+      [ConnectorEventKind.CommitTransaction]: ({ threadId }) => {
+        connectionSet.add(threadId);
+        queries.push('COMMIT;');
+      },
+      [ConnectorEventKind.RollbackTransaction]: ({ threadId }) => {
+        connectionSet.add(threadId);
+        queries.push('ROLLBACK;');
+      },
+      [ConnectorEventKind.PreQuery]: ({ threadId, sql, values }) => {
+        connectionSet.add(threadId);
+        queries.push(beautify(format(sql, values)));
+      },
     });
 
     done();
   });
 
   afterEach(async done => {
-    offQuery && offQuery();
+    offListeners && offListeners.map(off => off());
+    connectionSet.clear();
+    queries.length = 0;
+
+    await database.truncate();
 
     done();
   });
 
-  afterAll(async done => {
-    await database.drop();
-
-    done();
-  });
+  afterAll(async () => database.drop());
 
   it('executes a complex multi query request', async done => {
-    const { data, errors } = await graphqlPlatform.execute(complexMultiQueryRequest);
+    const { data, errors } = await gp.execute(complexMultiQueryRequest);
 
     if (errors) {
       console.error(
@@ -76,17 +86,14 @@ describe('Execution', () => {
     });
 
     expect(
-      [
-        `# ${querySet.size} queries in ${connectionSet.size} connections`,
-        ...[...querySet].map(({ sql, values }) => beautify(format(sql, values))),
-      ].join('\n\n'),
+      [`# ${queries.length} queries in ${connectionSet.size} connections`, ...queries].join('\n\n'),
     ).toMatchSnapshot();
 
     done();
   });
 
   it('executes a complex multi mutation request', async done => {
-    const { data, errors } = await graphqlPlatform.execute(complexMultiMutationRequest);
+    const { data, errors } = await gp.execute(complexMultiMutationRequest);
 
     if (errors) {
       console.error(
@@ -252,10 +259,7 @@ describe('Execution', () => {
     });
 
     expect(
-      [
-        `# ${querySet.size} queries in ${connectionSet.size} connections`,
-        ...[...querySet].map(({ sql, values }) => beautify(format(sql, values))),
-      ].join('\n\n'),
+      [`# ${queries.length} queries in ${connectionSet.size} connections`, , ...queries].join('\n\n'),
     ).toMatchSnapshot();
 
     done();

@@ -1,7 +1,7 @@
 import { GraphQLString } from 'graphql';
-import { ResourceConfig } from '../..';
+import { MyResourceConfig } from '../gp';
 
-const resource: ResourceConfig = {
+const resource: MyResourceConfig = {
   uniques: ['articleTag'],
   fields: {
     body: {

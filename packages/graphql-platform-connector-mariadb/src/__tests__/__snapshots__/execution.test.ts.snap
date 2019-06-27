@@ -1,20 +1,32 @@
 // Jest Snapshot v1, https://goo.gl/fbAQLP
 
 exports[`Execution executes a complex multi mutation request 1`] = `
-"# 64 queries in 1 connections
+"# 110 queries in 1 connections
+
+
+
+START TRANSACTION;
 
 INSERT INTO
   \`users\`
 SET
   \`id\` = '771ad98a-5b88-4d1d-a3f3-9133d367b708',
-  \`username\` = 'user-01'
+  \`username\` = 'user-01';
+
+COMMIT;
+
+START TRANSACTION;
 
 INSERT INTO
   \`categories\`
 SET
   \`id\` = '92dc645e-c5ee-46ac-8a24-53b1584e4c99',
   \`title\` = 'Root category',
-  \`slug\` = 'root-category'
+  \`slug\` = 'root-category';
+
+COMMIT;
+
+START TRANSACTION;
 
 SELECT
   \`Category\`.\`id\`
@@ -23,8 +35,7 @@ FROM
 WHERE
   \`Category\`.\`id\` = '92dc645e-c5ee-46ac-8a24-53b1584e4c99'
 LIMIT
-  1 FOR
-UPDATE
+  1;
 
 INSERT INTO
   \`categories\`
@@ -32,7 +43,11 @@ SET
   \`id\` = '8fdec553-453e-442f-a710-c52ee4a23080',
   \`title\` = 'First category',
   \`slug\` = 'first-category',
-  \`parentId\` = '92dc645e-c5ee-46ac-8a24-53b1584e4c99'
+  \`parentId\` = '92dc645e-c5ee-46ac-8a24-53b1584e4c99';
+
+COMMIT;
+
+START TRANSACTION;
 
 SELECT
   \`Category\`.\`id\`
@@ -41,8 +56,7 @@ FROM
 WHERE
   \`Category\`.\`id\` = '92dc645e-c5ee-46ac-8a24-53b1584e4c99'
 LIMIT
-  1 FOR
-UPDATE
+  1;
 
 INSERT INTO
   \`categories\`
@@ -50,7 +64,11 @@ SET
   \`id\` = 'e411a5dc-a14f-4d0d-ac54-d4c93c7c5b84',
   \`title\` = 'Second category',
   \`slug\` = 'second-category',
-  \`parentId\` = '92dc645e-c5ee-46ac-8a24-53b1584e4c99'
+  \`parentId\` = '92dc645e-c5ee-46ac-8a24-53b1584e4c99';
+
+COMMIT;
+
+START TRANSACTION;
 
 SELECT
   \`Category\`.\`id\`
@@ -59,8 +77,7 @@ FROM
 WHERE
   \`Category\`.\`id\` = '92dc645e-c5ee-46ac-8a24-53b1584e4c99'
 LIMIT
-  1 FOR
-UPDATE
+  1;
 
 INSERT INTO
   \`categories\`
@@ -68,7 +85,11 @@ SET
   \`id\` = 'da8d3a79-6161-46cd-a9fa-ae1382428d3c',
   \`title\` = 'Third category, to be deleted',
   \`slug\` = 'third-category-to-be-deleted',
-  \`parentId\` = '92dc645e-c5ee-46ac-8a24-53b1584e4c99'
+  \`parentId\` = '92dc645e-c5ee-46ac-8a24-53b1584e4c99';
+
+COMMIT;
+
+START TRANSACTION;
 
 SELECT
   \`Category\`.\`title\`,
@@ -78,42 +99,61 @@ FROM
 WHERE
   \`Category\`.\`id\` = 'da8d3a79-6161-46cd-a9fa-ae1382428d3c'
 LIMIT
-  1 FOR
-UPDATE
+  1;
 
 DELETE Category
 FROM
   \`categories\` AS \`Category\`
 WHERE
-  \`Category\`.\`intId\` = 4
+  \`Category\`.\`intId\` = 4;
+
+COMMIT;
+
+START TRANSACTION;
 
 INSERT INTO
   \`tags\`
 SET
   \`id\` = '7636d577-397f-430c-8bed-bfe0d765af07',
   \`title\` = 'First tag',
-  \`slug\` = 'first-tag'
+  \`slug\` = 'first-tag';
+
+COMMIT;
+
+START TRANSACTION;
 
 INSERT INTO
   \`tags\`
 SET
   \`id\` = '21b31331-c5cc-4426-b648-4b0f14232866',
   \`title\` = 'Second tag',
-  \`slug\` = 'second-tag'
+  \`slug\` = 'second-tag';
+
+COMMIT;
+
+START TRANSACTION;
 
 INSERT INTO
   \`tags\`
 SET
   \`id\` = '810629d2-3391-480e-ba9a-5e77999f6c72',
   \`title\` = 'Third tag',
-  \`slug\` = 'third-tag'
+  \`slug\` = 'third-tag';
+
+COMMIT;
+
+START TRANSACTION;
 
 INSERT INTO
   \`tags\`
 SET
   \`id\` = '6af9c25e-2072-468f-8190-3c205165fe38',
   \`title\` = 'Fourth tag',
-  \`slug\` = 'fourth-tag'
+  \`slug\` = 'fourth-tag';
+
+COMMIT;
+
+START TRANSACTION;
 
 SELECT
   \`Category\`.\`parentId\`,
@@ -123,8 +163,7 @@ FROM
 WHERE
   \`Category\`.\`id\` = 'e411a5dc-a14f-4d0d-ac54-d4c93c7c5b84'
 LIMIT
-  1 FOR
-UPDATE
+  1;
 
 SELECT
   \`User\`.\`username\`
@@ -133,19 +172,40 @@ FROM
 WHERE
   \`User\`.\`id\` = '771ad98a-5b88-4d1d-a3f3-9133d367b708'
 LIMIT
-  1 FOR
-UPDATE
+  1;
+
+SELECT
+  MAX(\`intId\`) as maxIntId
+FROM
+  \`articles\`;
+
+SELECT
+  \`Article\`.\`slug\`
+FROM
+  \`articles\` AS \`Article\`
+WHERE
+  (\`Article\`.\`format\` IN ('RICH', 'VIDEO'))
+  AND (
+    (\`Article\`.\`categoryParentId\` IS NULL)
+    AND (
+      \`Article\`.\`categorySlug\` = 'a-non-existent-category-slug'
+    )
+  )
+  AND (\`Article\`.\`slug\` = 'a-non-existent-article-slug')
+LIMIT
+  1;
 
 INSERT INTO
   \`articles\`
 SET
   \`id\` = '9b6b98fa-586d-4987-82a0-d63f11bbe560',
+  \`computedMaxIntId\` = 100,
   \`format\` = 'RICH',
   \`title\` = 'My first article title, RICH, authored by user-01, in the second category.',
   \`slug\` = 'my-first-article-title-rich-authored-by-user-01-in-the-second-category',
   \`categoryParentId\` = '92dc645e-c5ee-46ac-8a24-53b1584e4c99',
   \`categorySlug\` = 'second-category',
-  \`authorUsername\` = 'user-01'
+  \`authorUsername\` = 'user-01';
 
 SELECT
   \`Article\`.\`id\`,
@@ -170,8 +230,9 @@ WHERE
   (\`Article\`.\`format\` IN ('RICH', 'VIDEO'))
   AND (\`Article\`.\`intId\` = 1)
 LIMIT
-  1 FOR
-UPDATE
+  1;
+
+COMMIT;
 
 SELECT
   COUNT(
@@ -181,7 +242,7 @@ SELECT
 FROM
   \`article_tags\` AS \`ArticleTag\`
 WHERE
-  \`ArticleTag\`.\`articleIntId\` = 1
+  \`ArticleTag\`.\`articleIntId\` = 1;
 
 SELECT
   \`ArticleTag>tag\`.\`title\`
@@ -191,7 +252,9 @@ FROM
 WHERE
   \`ArticleTag\`.\`articleIntId\` = 1
 LIMIT
-  1
+  1;
+
+START TRANSACTION;
 
 SELECT
   \`Article\`.\`intId\`
@@ -212,8 +275,7 @@ WHERE
     \`Article\`.\`slug\` = 'my-first-article-title-rich-authored-by-user-01-in-the-second-category'
   )
 LIMIT
-  1 FOR
-UPDATE
+  1;
 
 SELECT
   \`Tag\`.\`intId\`
@@ -222,15 +284,14 @@ FROM
 WHERE
   \`Tag\`.\`slug\` = 'first-tag'
 LIMIT
-  1 FOR
-UPDATE
+  1;
 
 INSERT INTO
   \`article_tags\`
 SET
   \`articleIntId\` = 1,
   \`tagIntId\` = 1,
-  \`order\` = 0
+  \`order\` = 0;
 
 SELECT
   \`ArticleTag>article\`.\`title\`,
@@ -253,8 +314,9 @@ WHERE
   (\`ArticleTag\`.\`articleIntId\` = 1)
   AND (\`ArticleTag\`.\`tagIntId\` = 1)
 LIMIT
-  1 FOR
-UPDATE
+  1;
+
+COMMIT;
 
 SELECT
   COUNT(
@@ -264,7 +326,7 @@ SELECT
 FROM
   \`article_tags\` AS \`ArticleTag\`
 WHERE
-  \`ArticleTag\`.\`articleIntId\` = 1
+  \`ArticleTag\`.\`articleIntId\` = 1;
 
 SELECT
   COUNT(
@@ -274,7 +336,9 @@ SELECT
 FROM
   \`article_tags\` AS \`ArticleTag\`
 WHERE
-  \`ArticleTag\`.\`tagIntId\` = 1
+  \`ArticleTag\`.\`tagIntId\` = 1;
+
+START TRANSACTION;
 
 SELECT
   \`Category\`.\`parentId\`,
@@ -284,14 +348,13 @@ FROM
 WHERE
   \`Category\`.\`id\` = '8fdec553-453e-442f-a710-c52ee4a23080'
 LIMIT
-  1 FOR
-UPDATE
+  1;
 
 INSERT INTO
   \`users\`
 SET
   \`id\` = 'ced8fc85-cd9f-4db7-abfb-546fa8c71cd7',
-  \`username\` = 'a-new-user-created-in-the-nested-mutation'
+  \`username\` = 'a-new-user-created-in-the-nested-mutation';
 
 SELECT
   \`User\`.\`intId\`
@@ -300,20 +363,41 @@ FROM
 WHERE
   \`User\`.\`id\` = '771ad98a-5b88-4d1d-a3f3-9133d367b708'
 LIMIT
-  1 FOR
-UPDATE
+  1;
+
+SELECT
+  MAX(\`intId\`) as maxIntId
+FROM
+  \`articles\`;
+
+SELECT
+  \`Article\`.\`slug\`
+FROM
+  \`articles\` AS \`Article\`
+WHERE
+  (\`Article\`.\`format\` IN ('RICH', 'VIDEO'))
+  AND (
+    (\`Article\`.\`categoryParentId\` IS NULL)
+    AND (
+      \`Article\`.\`categorySlug\` = 'a-non-existent-category-slug'
+    )
+  )
+  AND (\`Article\`.\`slug\` = 'a-non-existent-article-slug')
+LIMIT
+  1;
 
 INSERT INTO
   \`articles\`
 SET
   \`id\` = 'e672258b-0870-437b-b440-e62848b4f666',
+  \`computedMaxIntId\` = 101,
   \`format\` = 'VIDEO',
   \`title\` = 'My second article title, VIDEO, authored by user-01, in the first category.',
   \`slug\` = 'my-second-article-title-video-authored-by-user-01-in-the-first-category',
   \`categoryParentId\` = '92dc645e-c5ee-46ac-8a24-53b1584e4c99',
   \`categorySlug\` = 'first-category',
   \`authorUsername\` = 'a-new-user-created-in-the-nested-mutation',
-  \`moderatorIntId\` = 1
+  \`moderatorIntId\` = 1;
 
 SELECT
   \`Article\`.\`id\`,
@@ -339,8 +423,9 @@ WHERE
   (\`Article\`.\`format\` IN ('RICH', 'VIDEO'))
   AND (\`Article\`.\`intId\` = 2)
 LIMIT
-  1 FOR
-UPDATE
+  1;
+
+COMMIT;
 
 SELECT
   COUNT(
@@ -350,7 +435,7 @@ SELECT
 FROM
   \`article_tags\` AS \`ArticleTag\`
 WHERE
-  \`ArticleTag\`.\`articleIntId\` = 2
+  \`ArticleTag\`.\`articleIntId\` = 2;
 
 SELECT
   \`ArticleTag>tag\`.\`slug\`
@@ -360,7 +445,9 @@ FROM
 WHERE
   \`ArticleTag\`.\`articleIntId\` = 2
 LIMIT
-  5
+  5;
+
+START TRANSACTION;
 
 SELECT
   \`Article\`.\`intId\`
@@ -381,8 +468,7 @@ WHERE
     \`Article\`.\`slug\` = 'my-second-article-title-video-authored-by-user-01-in-the-first-category'
   )
 LIMIT
-  1 FOR
-UPDATE
+  1;
 
 SELECT
   \`Tag\`.\`intId\`
@@ -391,15 +477,14 @@ FROM
 WHERE
   \`Tag\`.\`slug\` = 'second-tag'
 LIMIT
-  1 FOR
-UPDATE
+  1;
 
 INSERT INTO
   \`article_tags\`
 SET
   \`articleIntId\` = 2,
   \`tagIntId\` = 2,
-  \`order\` = 0
+  \`order\` = 0;
 
 SELECT
   \`ArticleTag>article\`.\`title\`,
@@ -422,8 +507,9 @@ WHERE
   (\`ArticleTag\`.\`articleIntId\` = 2)
   AND (\`ArticleTag\`.\`tagIntId\` = 2)
 LIMIT
-  1 FOR
-UPDATE
+  1;
+
+COMMIT;
 
 SELECT
   COUNT(
@@ -433,7 +519,7 @@ SELECT
 FROM
   \`article_tags\` AS \`ArticleTag\`
 WHERE
-  \`ArticleTag\`.\`articleIntId\` = 2
+  \`ArticleTag\`.\`articleIntId\` = 2;
 
 SELECT
   COUNT(
@@ -443,7 +529,9 @@ SELECT
 FROM
   \`article_tags\` AS \`ArticleTag\`
 WHERE
-  \`ArticleTag\`.\`tagIntId\` = 2
+  \`ArticleTag\`.\`tagIntId\` = 2;
+
+START TRANSACTION;
 
 SELECT
   \`Article\`.\`intId\`
@@ -464,8 +552,7 @@ WHERE
     \`Article\`.\`slug\` = 'my-second-article-title-video-authored-by-user-01-in-the-first-category'
   )
 LIMIT
-  1 FOR
-UPDATE
+  1;
 
 SELECT
   \`Tag\`.\`intId\`
@@ -474,15 +561,14 @@ FROM
 WHERE
   \`Tag\`.\`slug\` = 'third-tag'
 LIMIT
-  1 FOR
-UPDATE
+  1;
 
 INSERT INTO
   \`article_tags\`
 SET
   \`articleIntId\` = 2,
   \`tagIntId\` = 3,
-  \`order\` = 1
+  \`order\` = 1;
 
 SELECT
   \`ArticleTag>article\`.\`title\`,
@@ -497,8 +583,9 @@ WHERE
   (\`ArticleTag\`.\`articleIntId\` = 2)
   AND (\`ArticleTag\`.\`tagIntId\` = 3)
 LIMIT
-  1 FOR
-UPDATE
+  1;
+
+COMMIT;
 
 SELECT
   COUNT(
@@ -508,7 +595,7 @@ SELECT
 FROM
   \`article_tags\` AS \`ArticleTag\`
 WHERE
-  \`ArticleTag\`.\`articleIntId\` = 2
+  \`ArticleTag\`.\`articleIntId\` = 2;
 
 SELECT
   COUNT(
@@ -518,7 +605,9 @@ SELECT
 FROM
   \`article_tags\` AS \`ArticleTag\`
 WHERE
-  \`ArticleTag\`.\`tagIntId\` = 3
+  \`ArticleTag\`.\`tagIntId\` = 3;
+
+START TRANSACTION;
 
 SELECT
   \`Article\`.\`intId\`
@@ -539,8 +628,7 @@ WHERE
     \`Article\`.\`slug\` = 'my-second-article-title-video-authored-by-user-01-in-the-first-category'
   )
 LIMIT
-  1 FOR
-UPDATE
+  1;
 
 SELECT
   \`Tag\`.\`intId\`
@@ -549,15 +637,14 @@ FROM
 WHERE
   \`Tag\`.\`slug\` = 'fourth-tag'
 LIMIT
-  1 FOR
-UPDATE
+  1;
 
 INSERT INTO
   \`article_tags\`
 SET
   \`articleIntId\` = 2,
   \`tagIntId\` = 4,
-  \`order\` = 2
+  \`order\` = 2;
 
 SELECT
   \`ArticleTag>article\`.\`title\`,
@@ -572,8 +659,9 @@ WHERE
   (\`ArticleTag\`.\`articleIntId\` = 2)
   AND (\`ArticleTag\`.\`tagIntId\` = 4)
 LIMIT
-  1 FOR
-UPDATE
+  1;
+
+COMMIT;
 
 SELECT
   COUNT(
@@ -583,7 +671,7 @@ SELECT
 FROM
   \`article_tags\` AS \`ArticleTag\`
 WHERE
-  \`ArticleTag\`.\`articleIntId\` = 2
+  \`ArticleTag\`.\`articleIntId\` = 2;
 
 SELECT
   COUNT(
@@ -593,7 +681,9 @@ SELECT
 FROM
   \`article_tags\` AS \`ArticleTag\`
 WHERE
-  \`ArticleTag\`.\`tagIntId\` = 4
+  \`ArticleTag\`.\`tagIntId\` = 4;
+
+START TRANSACTION;
 
 SELECT
   \`Article\`.\`intId\`
@@ -614,8 +704,7 @@ WHERE
     \`Article\`.\`slug\` = 'my-second-article-title-video-authored-by-user-01-in-the-first-category'
   )
 LIMIT
-  1 FOR
-UPDATE
+  1;
 
 SELECT
   \`Tag\`.\`intId\`
@@ -624,15 +713,14 @@ FROM
 WHERE
   \`Tag\`.\`slug\` = 'first-tag'
 LIMIT
-  1 FOR
-UPDATE
+  1;
 
 INSERT INTO
   \`article_tags\`
 SET
   \`articleIntId\` = 2,
   \`tagIntId\` = 1,
-  \`order\` = 3
+  \`order\` = 3;
 
 SELECT
   \`ArticleTag>article\`.\`title\`,
@@ -647,8 +735,9 @@ WHERE
   (\`ArticleTag\`.\`articleIntId\` = 2)
   AND (\`ArticleTag\`.\`tagIntId\` = 1)
 LIMIT
-  1 FOR
-UPDATE
+  1;
+
+COMMIT;
 
 SELECT
   COUNT(
@@ -658,7 +747,7 @@ SELECT
 FROM
   \`article_tags\` AS \`ArticleTag\`
 WHERE
-  \`ArticleTag\`.\`articleIntId\` = 2
+  \`ArticleTag\`.\`articleIntId\` = 2;
 
 SELECT
   COUNT(
@@ -668,7 +757,9 @@ SELECT
 FROM
   \`article_tags\` AS \`ArticleTag\`
 WHERE
-  \`ArticleTag\`.\`tagIntId\` = 1
+  \`ArticleTag\`.\`tagIntId\` = 1;
+
+START TRANSACTION;
 
 UPDATE
   \`articles\` AS \`Article\`
@@ -687,7 +778,7 @@ WHERE
   )
   AND (
     \`Article\`.\`slug\` = 'my-first-article-title-rich-authored-by-user-01-in-the-second-category'
-  )
+  );
 
 SELECT
   \`Article\`.\`title\`,
@@ -709,8 +800,11 @@ WHERE
     \`Article\`.\`slug\` = 'my-first-article-title-rich-authored-by-user-01-in-the-second-category'
   )
 LIMIT
-  1 FOR
-UPDATE
+  1;
+
+COMMIT;
+
+START TRANSACTION;
 
 UPDATE
   \`articles\` AS \`Article\`
@@ -731,7 +825,11 @@ WHERE
   )
   AND (
     \`Article\`.\`slug\` = 'my-first-article-title-rich-authored-by-user-01-in-the-second-category'
-  )
+  );
+
+COMMIT;
+
+START TRANSACTION;
 
 UPDATE
   \`articles\` AS \`Article\`
@@ -750,7 +848,11 @@ WHERE
   )
   AND (
     \`Article\`.\`slug\` = 'my-second-article-title-video-authored-by-user-01-in-the-first-category'
-  )
+  );
+
+COMMIT;
+
+START TRANSACTION;
 
 SELECT
   \`ArticleTag\`.\`articleIntId\`,
@@ -776,15 +878,14 @@ WHERE
   )
   AND (\`ArticleTag>tag\`.\`slug\` = 'first-tag')
 LIMIT
-  1 FOR
-UPDATE
+  1;
 
 INSERT INTO
   \`article_tag_comments\`
 SET
   \`articleTagArticleIntId\` = 1,
   \`articleTagTagIntId\` = 1,
-  \`body\` = 'My first article tag comment, on first article & first tag'
+  \`body\` = 'My first article tag comment, on first article & first tag';
 
 SELECT
   \`ArticleTagComment\`.\`body\`,
@@ -804,8 +905,9 @@ WHERE
   (\`ArticleTagComment\`.\`articleTagArticleIntId\` = 1)
   AND (\`ArticleTagComment\`.\`articleTagTagIntId\` = 1)
 LIMIT
-  1 FOR
-UPDATE"
+  1;
+
+COMMIT;"
 `;
 
 exports[`Execution executes a complex multi query request 1`] = `
@@ -868,7 +970,7 @@ WHERE
         OR (\`Article>category\`.\`parentId\` IS NOT NULL)
       )
     )
-  )
+  );
 
 SELECT
   \`Article\`.\`id\`,
@@ -942,7 +1044,7 @@ GROUP BY
 ORDER BY
   \`Article\`.\`createdAt\` DESC
 LIMIT
-  25
+  25;
 
 SELECT
   \`Article\`.\`id\`
@@ -952,7 +1054,7 @@ WHERE
   (\`Article\`.\`format\` IN ('RICH', 'VIDEO'))
   AND (\`Article\`.\`intId\` = 5)
 LIMIT
-  1
+  1;
 
 SELECT
   \`Article\`.\`id\`
@@ -964,7 +1066,7 @@ WHERE
     \`Article\`.\`id\` = 'a3c2e74f-005e-471e-849c-b0025cb84a88'
   )
 LIMIT
-  1
+  1;
 
 SELECT
   \`Article\`.\`id\`
@@ -981,7 +1083,7 @@ WHERE
   AND (\`Article>category\`.\`intId\` = 10)
   AND (\`Article\`.\`slug\` = 'a-valid-article-slug')
 LIMIT
-  1
+  1;
 
 SELECT
   \`Article\`.\`id\`
@@ -1000,7 +1102,7 @@ WHERE
   )
   AND (\`Article\`.\`slug\` = 'a-valid-article-slug')
 LIMIT
-  1
+  1;
 
 SELECT
   \`Article\`.\`id\`
@@ -1018,7 +1120,7 @@ WHERE
   )
   AND (\`Article\`.\`slug\` = 'a-valid-article-slug')
 LIMIT
-  1
+  1;
 
 SELECT
   \`Article\`.\`id\`
@@ -1034,5 +1136,5 @@ WHERE
   )
   AND (\`Article\`.\`slug\` = 'a-valid-article-slug')
 LIMIT
-  1"
+  1;"
 `;

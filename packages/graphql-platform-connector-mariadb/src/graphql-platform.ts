@@ -21,8 +21,8 @@ export interface BaseContext extends CoreBaseContext {
   connector: Connector;
 
   /**
-   * A new "ConnectorRequest" is created for every GraphQL execution's context, it's a convenient place
-   * to share a state/cache between all the resolvers of the same request.
+   * A new "ConnectorRequest" is created for every GraphQL execution's context, it is a convenient place
+   * to share a state/cache between all the resolvers of the same request
    */
   connectorRequest: ConnectorRequest;
 }

@@ -6,7 +6,7 @@ export class CountOperation extends AbstractOperationResolver<
   ConnectorCountOperationArgs,
   ConnectorCountOperationResult
 > {
-  public async execute({ args, operationContext }: OperationResolverParams<ConnectorCountOperationArgs>) {
+  public async execute({ args, connection }: OperationResolverParams<ConnectorCountOperationArgs>) {
     const selectStatement = this.table.newSelectStatement();
 
     selectStatement.select.add(
@@ -18,7 +18,7 @@ export class CountOperation extends AbstractOperationResolver<
 
     await this.table.getOperation('Find').parseWhereArg(selectStatement.where, args.where);
 
-    const rows = await this.connector.query(selectStatement.sql, operationContext && operationContext.connection);
+    const rows = await this.connector.query(selectStatement.sql, connection);
 
     if (Array.isArray(rows) && rows.length === 1) {
       const result = parseInt(rows[0].result, 10);

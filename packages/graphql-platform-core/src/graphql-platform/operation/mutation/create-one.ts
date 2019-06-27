@@ -96,9 +96,7 @@ export class CreateOneOperation extends AbstractOperation<CreateOneOperationArgs
       ...[...resource.getFieldSet()].map(async field => {
         const hookData: FieldHookMap[ResourceHookKind.PreCreate] = {
           metas: Object.freeze({
-            args,
-            context,
-            operationContext,
+            ...params,
             resource,
             field,
             create,
@@ -115,9 +113,7 @@ export class CreateOneOperation extends AbstractOperation<CreateOneOperationArgs
       ...[...resource.getRelationSet()].map(async relation => {
         const hookData: RelationHookMap[ResourceHookKind.PreCreate] = {
           metas: Object.freeze({
-            args,
-            context,
-            operationContext,
+            ...params,
             resource,
             relation,
             create,
@@ -134,9 +130,7 @@ export class CreateOneOperation extends AbstractOperation<CreateOneOperationArgs
     // Apply the resources' hooks
     await resource.emitSerial(ResourceHookKind.PreCreate, {
       metas: Object.freeze({
-        args,
-        context,
-        operationContext,
+        ...params,
         resource,
       }),
       create,
@@ -146,23 +140,22 @@ export class CreateOneOperation extends AbstractOperation<CreateOneOperationArgs
     cleanOwnObject(create);
 
     // Actually create the node
-    const [nodeSource] = await this.connector.create({ ...params, resource, args: { ...args, data: [create] } });
+    const [nodeSource] = await this.connector.create(
+      Object.freeze({ ...params, resource, args: { ...args, data: [create] } }),
+    );
+
     const nodeId = resource.getInputType('WhereUnique').assert(nodeSource);
 
-    if (operationContext) {
-      operationContext.postHooks.push(
-        resource.emitSerial.bind(resource, ResourceHookKind.PostCreate, {
-          metas: Object.freeze({
-            args,
-            context,
-            operationContext,
-            resource,
-            create,
-          }),
-          createdNodeId: nodeId,
+    operationContext.postSuccessHooks.push(
+      resource.emitSerial.bind(resource, ResourceHookKind.PostCreate, {
+        metas: Object.freeze({
+          ...params,
+          resource,
+          create,
         }),
-      );
-    }
+        createdNodeId: nodeId,
+      }),
+    );
 
     return selectionNode.hasDiff(nodeSource)
       ? resource.getQuery('AssertOne').resolve({ ...params, args: { where: nodeId } })

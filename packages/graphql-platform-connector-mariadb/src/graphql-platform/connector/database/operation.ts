@@ -16,8 +16,7 @@ export type OperationId = keyof OperationMap;
 
 export type OperationConstructor<TId extends OperationId> = OperationMap[TId] extends Class ? OperationMap[TId] : never;
 
-export type OperationResolverParams<TArgs extends POJO> = CoreOperationResolverParams<
-  TArgs,
-  BaseContext,
-  OperationContext
->;
+export type OperationResolverParams<TArgs extends POJO> = Omit<
+  CoreOperationResolverParams<TArgs, {}, BaseContext>,
+  'operationContext'
+> & { connection?: OperationContext['connection'] };

@@ -47,11 +47,13 @@ export class CountOperation extends AbstractOperation<CountOperationArgs, CountO
     const filter = await resource.filter(context);
 
     return filter !== false
-      ? this.connector.count({
-          ...params,
-          resource,
-          args: { ...args, where: { AND: [filter, args.where] } },
-        })
+      ? this.connector.count(
+          Object.freeze({
+            ...params,
+            resource,
+            args: { ...args, where: { AND: [filter, args.where] } },
+          }),
+        )
       : 0;
   }
 }

@@ -18,9 +18,9 @@ export interface ResourceConfig<TCustomContext extends CustomContext = any>
     TCustomContext,
     BaseContext,
     OperationContext,
+    UniqueFullConfig,
     FieldConfig<TCustomContext>,
-    RelationConfig<TCustomContext>,
-    UniqueFullConfig
+    RelationConfig<TCustomContext>
   > {
   table?: Maybe<TableConfig>;
 }

@@ -6,7 +6,7 @@ import {
   Maybe,
   POJO,
 } from '@prismamedia/graphql-platform-utils';
-import { BaseContext } from '../graphql-platform';
+import { BaseContext, Context, CustomContext } from '../graphql-platform';
 import {
   CreateOneOperation as CreateOne,
   DeleteOneOperation as DeleteOne,
@@ -24,23 +24,6 @@ import { Resource } from './resource';
 export * from './operation/mutation';
 export * from './operation/query';
 
-export type PostHook = () => Promise<void>;
-
-export interface OperationContext extends POJO {
-  postHooks: PostHook[];
-}
-
-export type OperationResolverParams<
-  TArgs extends POJO = POJO,
-  TContext extends BaseContext = BaseContext,
-  TOperationContext extends OperationContext = any
-> = Readonly<{
-  args: TArgs;
-  context: TContext;
-  selectionNode: GraphQLSelectionNode<any>;
-  operationContext?: TOperationContext;
-}>;
-
 export interface Operation {
   type: GraphQLOperationType;
   id: string;
@@ -48,6 +31,80 @@ export interface Operation {
   name: string;
   isPublic(): boolean;
   getGraphQLFieldConfig(): GraphQLFieldConfig;
+}
+
+export enum OperationEventKind {
+  // Always triggered
+  PreOperation = 'PRE_OPERATION',
+
+  // Triggered on error only
+  PostOperationError = 'POST_OPERATION_ERROR',
+
+  // Triggered on success only
+  PostOperationSuccess = 'POST_OPERATION_SUCCESS',
+
+  // Always triggered
+  PostOperation = 'POST_OPERATION',
+}
+
+// A "post operation success hook" has to be bound correctly in order to be called without any argument.
+export type PostOperationSuccessHook = () => Promise<void>;
+
+export interface OperationContext extends POJO {
+  postSuccessHooks: PostOperationSuccessHook[];
+}
+
+export type OperationResolverParams<
+  TArgs extends POJO = any,
+  TCustomContext extends CustomContext = any,
+  TBaseContext extends BaseContext = any,
+  TOperationContext extends OperationContext = any
+> = Readonly<{
+  /**
+   * The current resolver "args"
+   */
+  args: TArgs;
+
+  /**
+   * The well-known GraphQL context, shared by all the resolvers of the same GraphQL request
+   */
+  context: Context<TCustomContext, TBaseContext>;
+
+  /**
+   * A new "operationContext" is created for every resolver execution
+   */
+  operationContext: TOperationContext;
+
+  /**
+   * The "selectionNode" is the result of the "GraphQLInfo" object parsing
+   */
+  selectionNode: GraphQLSelectionNode<any>;
+}>;
+
+export type OperationEvent<
+  TArgs extends POJO = any,
+  TCustomContext extends CustomContext = any,
+  TBaseContext extends BaseContext = any,
+  TOperationContext extends OperationContext = any
+> = OperationResolverParams<TArgs, TCustomContext, TBaseContext, TOperationContext> &
+  Readonly<{
+    /**
+     * The current operation
+     */
+    operation: Operation;
+  }>;
+
+export interface OperationEventMap<
+  TArgs extends POJO = any,
+  TCustomContext extends CustomContext = any,
+  TBaseContext extends BaseContext = any,
+  TOperationContext extends OperationContext = any
+> {
+  [OperationEventKind.PreOperation]: OperationEvent<TArgs, TCustomContext, TBaseContext, TOperationContext>;
+  [OperationEventKind.PostOperationSuccess]: OperationEvent<TArgs, TCustomContext, TBaseContext, TOperationContext>;
+  [OperationEventKind.PostOperationError]: OperationEvent<TArgs, TCustomContext, TBaseContext, TOperationContext> &
+    Readonly<{ error: Error }>;
+  [OperationEventKind.PostOperation]: OperationEvent<TArgs, TCustomContext, TBaseContext, TOperationContext>;
 }
 
 export const operationTypeMap = {

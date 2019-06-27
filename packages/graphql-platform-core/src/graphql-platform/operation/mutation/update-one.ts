@@ -121,9 +121,7 @@ export class UpdateOneOperation extends AbstractOperation<UpdateOneOperationArgs
       ...[...resource.getFieldSet()].map(async field => {
         const hookData: FieldHookMap[ResourceHookKind.PreUpdate] = {
           metas: Object.freeze({
-            args,
-            context,
-            operationContext,
+            ...params,
             resource,
             field,
             update,
@@ -140,9 +138,7 @@ export class UpdateOneOperation extends AbstractOperation<UpdateOneOperationArgs
       ...[...resource.getRelationSet()].map(async relation => {
         const hookData: RelationHookMap[ResourceHookKind.PreUpdate] = {
           metas: Object.freeze({
-            args,
-            context,
-            operationContext,
+            ...params,
             resource,
             relation,
             update,
@@ -158,9 +154,7 @@ export class UpdateOneOperation extends AbstractOperation<UpdateOneOperationArgs
 
     await resource.emitSerial(ResourceHookKind.PreUpdate, {
       metas: Object.freeze({
-        args,
-        context,
-        operationContext,
+        ...params,
         resource,
       }),
       toBeUpdatedNodeId: nodeId,
@@ -171,20 +165,20 @@ export class UpdateOneOperation extends AbstractOperation<UpdateOneOperationArgs
     cleanOwnObject(update);
 
     // Actually update the node
-    const { matchedCount, changedCount } = await this.connector.update({
-      ...params,
-      resource,
-      args: { ...args, where, data: update },
-    });
+    const { matchedCount, changedCount } = await this.connector.update(
+      Object.freeze({
+        ...params,
+        resource,
+        args: { ...args, where, data: update },
+      }),
+    );
 
     if (matchedCount === 1) {
-      if (operationContext && changedCount === 1) {
-        operationContext.postHooks.push(
+      if (changedCount === 1) {
+        operationContext.postSuccessHooks.push(
           resource.emitSerial.bind(resource, ResourceHookKind.PostUpdate, {
             metas: Object.freeze({
-              args,
-              context,
-              operationContext,
+              ...params,
               resource,
               update,
             }),

@@ -14,9 +14,9 @@ import { NodeSource } from './type/output';
 
 export type ConnectorOperationParams<
   TArgs extends POJO = any,
-  TContext extends BaseContext = any,
+  TBaseContext extends BaseContext = any,
   TOperationContext extends OperationContext = any
-> = Readonly<OperationResolverParams<TArgs, TContext, TOperationContext> & { resource: Resource<any> }>;
+> = OperationResolverParams<TArgs, {}, TBaseContext, TOperationContext> & Readonly<{ resource: Resource }>;
 
 export interface ConnectorCreateInputValue extends NodeValue {
   [componentName: string]: null | Scalar | WhereUniqueInputValue;
@@ -57,26 +57,26 @@ export interface ConnectorDeleteOperationArgs {
 export type ConnectorDeleteOperationResult = number;
 
 export interface ConnectorInterface<
-  TContext extends BaseContext = any,
-  TOperationContext extends OperationContext = any
+  TBaseContext extends BaseContext = BaseContext,
+  TOperationContext extends OperationContext = OperationContext
 > {
   find(
-    params: ConnectorOperationParams<ConnectorFindOperationArgs, TContext, TOperationContext>,
+    params: ConnectorOperationParams<ConnectorFindOperationArgs, TBaseContext, TOperationContext>,
   ): MaybePromise<ConnectorFindOperationResult>;
 
   count(
-    params: ConnectorOperationParams<ConnectorCountOperationArgs, TContext, TOperationContext>,
+    params: ConnectorOperationParams<ConnectorCountOperationArgs, TBaseContext, TOperationContext>,
   ): MaybePromise<ConnectorCountOperationResult>;
 
   create(
-    params: ConnectorOperationParams<ConnectorCreateOperationArgs, TContext, TOperationContext>,
+    params: ConnectorOperationParams<ConnectorCreateOperationArgs, TBaseContext, TOperationContext>,
   ): MaybePromise<ConnectorCreateOperationResult>;
 
   update(
-    params: ConnectorOperationParams<ConnectorUpdateOperationArgs, TContext, TOperationContext>,
+    params: ConnectorOperationParams<ConnectorUpdateOperationArgs, TBaseContext, TOperationContext>,
   ): MaybePromise<ConnectorUpdateOperationResult>;
 
   delete(
-    params: ConnectorOperationParams<ConnectorDeleteOperationArgs, TContext, TOperationContext>,
+    params: ConnectorOperationParams<ConnectorDeleteOperationArgs, TBaseContext, TOperationContext>,
   ): MaybePromise<ConnectorDeleteOperationResult>;
 }

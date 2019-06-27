@@ -1,10 +1,15 @@
-import { graphqlPlatform } from '.';
+import { config, MyGP } from './gp';
 
 describe('ResourceMap', () => {
-  const resourceGraph = graphqlPlatform.getResourceGraph();
-  const resourceMap = graphqlPlatform.getResourceMap();
+  let gp: MyGP;
+
+  beforeAll(() => {
+    gp = new MyGP(config);
+  });
 
   it('creates a resource map', () => {
+    const resourceGraph = gp.getResourceGraph();
+
     expect(resourceGraph.overallOrder()).toEqual([
       'Category',
       'User',
@@ -15,6 +20,8 @@ describe('ResourceMap', () => {
       'ArticleUrl',
       'ArticleUrlMeta',
     ]);
+
+    const resourceMap = gp.getResourceMap();
 
     expect(
       [...resourceMap].map(([, resource]) => ({

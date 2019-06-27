@@ -1,46 +1,35 @@
 import { POJO } from '@prismamedia/graphql-platform-utils';
 import { printType } from 'graphql';
-import { graphqlPlatform } from '../../../../__tests__';
+import { config, MyGP } from '../../../../__tests__/gp';
 import { Resource } from '../../../resource';
 import { Relation } from '../../../resource/component';
+import { ResourceMap } from '../../../resource/map';
 import { WhereUniqueInputValue } from '../where-unique';
 
 describe('WhereUniqueInput', () => {
-  const resourceMap = graphqlPlatform.getResourceMap();
+  let gp: MyGP;
+  let resourceMap: ResourceMap;
 
-  it.each([
-    [
-      resourceMap.assert('Article'),
-      [
-        resourceMap
-          .assert('Article')
-          .getRelationMap()
-          .assert('category'),
-      ],
-    ],
-    [
-      resourceMap.assert('ArticleTag'),
-      [
-        resourceMap
-          .assert('ArticleTag')
-          .getRelationMap()
-          .assert('article'),
-        ,
-        resourceMap
-          .assert('ArticleTag')
-          .getRelationMap()
-          .assert('tag'),
-      ],
-    ],
-  ] as ReadonlyArray<[Resource, Relation[] | undefined]>)(
+  beforeAll(() => {
+    gp = new MyGP(config);
+    resourceMap = gp.getResourceMap();
+  });
+
+  it.each([['Article', ['category']], ['ArticleTag', ['article', 'tag']]] as ReadonlyArray<
+    [Resource['name'], Relation['name'][] | undefined]
+  >)(
     'creates a valid GraphQL "WhereUniqueInput" type',
-    (resource: Resource, relations?: Relation[]) => {
+    (resourceName: Resource['name'], relationNames?: Relation['name'][]) => {
+      const resource = resourceMap.assert(resourceName);
+
       expect(
         printType(resource.getInputType('WhereUnique').getGraphQLType(), { commentDescriptions: true }),
       ).toMatchSnapshot();
 
-      if (relations) {
-        relations.forEach(relation => {
+      if (relationNames) {
+        relationNames.forEach(relationName => {
+          const relation = resource.getRelationMap().assert(relationName);
+
           expect(
             printType(resource.getInputType('WhereUnique').getGraphQLType(relation), { commentDescriptions: true }),
           ).toMatchSnapshot();

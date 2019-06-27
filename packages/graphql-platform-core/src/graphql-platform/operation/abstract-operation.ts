@@ -9,8 +9,15 @@ import {
 import { GraphQLFieldConfigArgumentMap, GraphQLOutputType } from 'graphql';
 import { Memoize } from 'typescript-memoize';
 import { ConnectorInterface } from '../connector';
-import { Operation, OperationContext, OperationResolverParams } from '../operation';
-import { Resource, ResourceEventKind, ResourceOperationEvent } from '../resource';
+import {
+  Operation,
+  OperationContext,
+  OperationEvent,
+  OperationEventKind,
+  OperationResolverParams,
+  PostOperationSuccessHook,
+} from '../operation';
+import { Resource } from '../resource';
 
 export abstract class AbstractOperation<TArgs extends POJO = any, TResult = any> implements Operation {
   protected connector: ConnectorInterface;
@@ -80,41 +87,42 @@ export abstract class AbstractOperation<TArgs extends POJO = any, TResult = any>
       args: this.getGraphQLFieldConfigArgs(),
       type: this.getGraphQLFieldConfigType(),
       resolve: async (_, args, context, info) => {
-        const operationContext: OperationContext = {
-          postHooks: [],
-        };
+        const selectionNode = parseGraphQLResolveInfo(info);
 
-        const event: ResourceOperationEvent = Object.freeze({
-          operation: this,
+        const postSuccessHooks: PostOperationSuccessHook[] = [];
+
+        const operationContext: OperationContext = { postSuccessHooks };
+
+        const resolverParams: OperationResolverParams<TArgs> = Object.freeze({
+          args,
           context,
+          selectionNode,
           operationContext,
         });
 
-        const selectionNode = parseGraphQLResolveInfo(info);
+        const event: OperationEvent<TArgs> = Object.freeze({
+          ...resolverParams,
+          operation: this,
+        });
 
         try {
-          await this.resource.emitSerial(ResourceEventKind.PreOperation, event);
+          await this.resource.emitSerial(OperationEventKind.PreOperation, event);
 
-          const params: OperationResolverParams<TArgs> = Object.freeze({
-            args,
-            context,
-            operationContext,
-            selectionNode,
-          });
+          // Actually resolve the operation
+          const result = await this.resolve(resolverParams);
 
-          const result = await this.resolve(params);
+          await this.resource.emitSerial(OperationEventKind.PostOperationSuccess, event);
 
-          await this.resource.emitSerial(ResourceEventKind.PostOperationSuccess, event);
-
-          await Promise.all(operationContext.postHooks.map(async postSuccessHook => postSuccessHook()));
+          // Execute the hooks on operation success
+          await Promise.all(postSuccessHooks.map(async hook => hook()));
 
           return result;
         } catch (error) {
-          await this.resource.emitSerial(ResourceEventKind.PostOperationError, Object.freeze({ ...event, error }));
+          await this.resource.emitSerial(OperationEventKind.PostOperationError, Object.freeze({ ...event, error }));
 
           throw error;
         } finally {
-          await this.resource.emitSerial(ResourceEventKind.PostOperation, event);
+          await this.resource.emitSerial(OperationEventKind.PostOperation, event);
         }
       },
     };

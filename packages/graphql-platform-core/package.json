@@ -1,6 +1,6 @@
 {
   "name": "@prismamedia/graphql-platform-core",
-  "version": "0.1.0-alpha.4",
+  "version": "0.1.0-alpha.5",
   "license": "MIT",
   "contributors": [
     "Yvann Boucher <yvann.boucher@gmail.com>"
@@ -13,20 +13,22 @@
   "module": "dist/module/index.js",
   "typings": "dist/types/index.d.ts",
   "scripts": {
+    "build": "tsc --build tsconfig.json tsconfig.commonjs.json",
+    "build:watch": "yarn run build --watch",
     "test": "NODE_ENV=test jest --detectOpenHandles --verbose",
     "test:watch": "yarn run test --watchAll"
   },
   "devDependencies": {
     "@types/faker": "^4.1.5",
-    "@types/graphql": "^14.2.1",
+    "@types/graphql": "^14.2.2",
     "@types/graphql-iso-date": "^3.3.1",
     "@types/inflection": "^1.5.28",
     "@types/jest": "^24.0.15",
-    "@types/node": "^12.0.8",
+    "@types/node": "^12.0.10",
     "@types/slug": "^0.9.1",
     "@types/uuid": "^3.4.4",
     "faker": "^4.1.0",
-    "graphql": "^14.3.1",
+    "graphql": "^14.4.0",
     "graphql-iso-date": "^3.6.1",
     "jest": "^24.8.0",
     "slug": "^1.1.0",
@@ -35,10 +37,10 @@
     "uuid": "^3.3.2"
   },
   "dependencies": {
-    "@prismamedia/graphql-platform-utils": "^0.1.0-alpha.4",
+    "@prismamedia/graphql-platform-utils": "^0.1.0-alpha.5",
     "@prismamedia/ts-async-event-emitter": "^2.1.0",
     "dependency-graph": "^0.8.0",
-    "graphql-binding": "^2.5.1",
+    "graphql-binding": "^2.5.2",
     "inflection": "^1.12.0",
     "typescript-memoize": "^1.0.0-alpha.3"
   },

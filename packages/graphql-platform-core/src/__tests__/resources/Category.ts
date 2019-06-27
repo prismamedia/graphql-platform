@@ -1,8 +1,9 @@
 import { GraphQLString } from 'graphql';
 import slug from 'slug';
-import { ManagementKind, ResourceConfig, ResourceHookKind } from '../..';
+import { ManagementKind, ResourceHookKind } from '../..';
+import { MyResourceConfig } from '../gp';
 
-const resource: ResourceConfig = {
+const resource: MyResourceConfig = {
   uniques: [['parent', 'slug']],
   fields: {
     title: {

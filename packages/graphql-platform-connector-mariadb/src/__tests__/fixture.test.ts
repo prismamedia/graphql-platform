@@ -1,39 +1,75 @@
+import { BoundOff } from '@prismamedia/ts-async-event-emitter';
 import { printError } from 'graphql';
-import { graphqlPlatform } from '.';
+import { Connection, format } from 'mysql';
+import { format as beautify } from 'sql-formatter';
+import { Connector, ConnectorEventKind, Database } from '../graphql-platform/connector';
+import { config, MyGP } from './gp';
 
 describe('Fixture', () => {
-  const connector = graphqlPlatform.getConnector();
-  const database = connector.getDatabase();
+  let gp: MyGP;
+  let connector: Connector;
+  let database: Database;
+  const fixturePath = `${__dirname}/../../../graphql-platform-core/src/__tests__/fixtures`;
+
+  let connectionSet = new Set<Connection['threadId']>();
+  let queries: string[] = [];
+  let offListeners: BoundOff[];
 
   beforeAll(async done => {
-    await database.drop();
-    await database.create();
+    gp = new MyGP(config);
+    connector = gp.getConnector();
+    database = connector.getDatabase();
+
+    await database.reset();
 
     done();
   });
 
   beforeEach(async done => {
-    // Empty all the tables before each test
+    offListeners = connector.onConfig({
+      [ConnectorEventKind.StartTransaction]: ({ threadId }) => {
+        connectionSet.add(threadId);
+        queries.push('START TRANSACTION;');
+      },
+      [ConnectorEventKind.CommitTransaction]: ({ threadId }) => {
+        connectionSet.add(threadId);
+        queries.push('COMMIT;');
+      },
+      [ConnectorEventKind.RollbackTransaction]: ({ threadId }) => {
+        connectionSet.add(threadId);
+        queries.push('ROLLBACK;');
+      },
+      [ConnectorEventKind.PreQuery]: ({ threadId, sql, values }) => {
+        connectionSet.add(threadId);
+        queries.push(beautify(format(sql, values)));
+      },
+    });
+
+    done();
+  });
+
+  afterEach(async done => {
+    offListeners && offListeners.map(off => off());
+    connectionSet.clear();
+    queries.length = 0;
+
     await database.truncate();
-    await connector.resetPool();
 
     done();
   });
 
-  afterAll(async done => {
-    await database.drop();
-
-    done();
-  });
-
-  const fixturePath = `${__dirname}/../../../graphql-platform-core/src/__tests__/fixtures`;
+  afterAll(async () => database.drop());
 
   it('loads the fixtures', async done => {
     // Load the fixtures without errors
-    await expect(graphqlPlatform.loadFixtures(fixturePath)).resolves.toBeUndefined();
+    await expect(gp.loadFixtures(fixturePath)).resolves.toBeUndefined();
+
+    expect(
+      [`# ${queries.length} queries in ${connectionSet.size} connections`, ...queries].join('\n\n'),
+    ).toMatchSnapshot();
 
     // Query the data
-    const { data, errors } = await graphqlPlatform.execute<{ articles: any[] }>({
+    const { data, errors } = await gp.execute<{ articles: any[] }>({
       source: `query {
         articles(first: 10, orderBy: [_id_ASC]) {
           id

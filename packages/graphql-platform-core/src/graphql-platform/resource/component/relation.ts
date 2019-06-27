@@ -34,40 +34,38 @@ export type RelationHookMetaMap<
   relation: Relation;
 };
 
-export interface RelationHookMap<
+export type RelationHookMap<
   TCustomContext extends CustomContext = any,
   TBaseContext extends BaseContext = any,
   TOperationContext extends OperationContext = any
-> {
+> = {
   // Create
   [ResourceHookKind.PreCreate]: {
-    metas: Readonly<
-      RelationHookMetaMap<CreateOneOperationArgs, TCustomContext, TBaseContext, TOperationContext> & {
+    metas: RelationHookMetaMap<CreateOneOperationArgs, TCustomContext, TBaseContext, TOperationContext> &
+      Readonly<{
         /** Parsed data */
         create: ConnectorCreateInputValue;
-      }
-    >;
+      }>;
     /** Parsed relation value */
     relatedNodeId: Maybe<WhereUniqueInputValue>;
   };
 
   // Update
   [ResourceHookKind.PreUpdate]: {
-    metas: Readonly<
-      RelationHookMetaMap<UpdateOneOperationArgs, TCustomContext, TBaseContext, TOperationContext> & {
+    metas: RelationHookMetaMap<UpdateOneOperationArgs, TCustomContext, TBaseContext, TOperationContext> &
+      Readonly<{
         /** Parsed data */
         update: ConnectorUpdateInputValue;
-      }
-    >;
+      }>;
     /** Parsed relation value */
     relatedNodeId: Maybe<WhereUniqueInputValue>;
   };
-}
+};
 
 export interface RelationConfig<
   TCustomContext extends CustomContext = any,
-  TBaseContext extends BaseContext = any,
-  TOperationContext extends OperationContext = any
+  TBaseContext extends BaseContext = BaseContext,
+  TOperationContext extends OperationContext = OperationContext
 > extends AbstractComponentConfig<RelationHookMap<TCustomContext, TBaseContext, TOperationContext>> {
   /** Required, name of the targeted resource */
   to: string;
@@ -79,7 +77,10 @@ export interface RelationConfig<
   inversedBy?: Maybe<string>;
 }
 
-export class Relation<TConfig extends RelationConfig = any> extends AbstractComponent<RelationHookMap, TConfig> {
+export class Relation<TConfig extends RelationConfig<any, any, any> = RelationConfig> extends AbstractComponent<
+  RelationHookMap,
+  TConfig
+> {
   public isField(): boolean {
     return false;
   }

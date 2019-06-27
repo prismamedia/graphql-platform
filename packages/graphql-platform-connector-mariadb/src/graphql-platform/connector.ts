@@ -7,10 +7,10 @@ import {
   ConnectorOperationParams as CoreConnectorOperationParams,
   ConnectorUpdateOperationArgs,
   OperationContext as CoreOperationContext,
-  ResourceEventKind,
-  ResourceEventMap,
+  OperationEventKind,
+  OperationEventMap,
 } from '@prismamedia/graphql-platform-core';
-import { GraphQLOperationType, Maybe, POJO } from '@prismamedia/graphql-platform-utils';
+import { GraphQLOperationType, Maybe, MaybeArray, POJO } from '@prismamedia/graphql-platform-utils';
 import EventEmitter from '@prismamedia/ts-async-event-emitter';
 import * as mysql from 'mysql';
 import { Memoize } from 'typescript-memoize';
@@ -22,11 +22,33 @@ import { ConnectorRequest } from './connector/request';
 export * from './connector/database';
 export * from './connector/request';
 
+type ConnectorOperationContext = {
+  // The raw MySQL connection
+  connection: mysql.PoolConnection;
+
+  // Either the connection has been started in this operation (= managed) or has been provided by the context (= not managed)
+  isConnectionManaged: boolean;
+
+  // Either the connection is currently into a transaction or not
+  transaction: boolean;
+
+  // Either the transaction has been started in this operation (= managed) or has been provided by the context (= not managed)
+  isTransactionManaged: boolean;
+};
+
+export interface OperationContext extends CoreOperationContext, ConnectorOperationContext {}
+
 export enum ConnectorEventKind {
+  StartTransaction = 'START_TRANSACTION',
+  RollbackTransaction = 'ROLLBACK_TRANSACTION',
+  CommitTransaction = 'COMMIT_TRANSACTION',
   PreQuery = 'PRE_QUERY',
 }
 
 export type ConnectorEventMap = {
+  [ConnectorEventKind.StartTransaction]: Readonly<Pick<mysql.Connection, 'threadId'>>;
+  [ConnectorEventKind.RollbackTransaction]: Readonly<Pick<mysql.Connection, 'threadId'>>;
+  [ConnectorEventKind.CommitTransaction]: Readonly<Pick<mysql.Connection, 'threadId'>>;
   [ConnectorEventKind.PreQuery]: Readonly<Pick<mysql.Connection, 'threadId'> & mysql.QueryOptions>;
 };
 
@@ -61,11 +83,6 @@ export type QueryResult =
       insertId: Maybe<number>;
     };
 
-export interface OperationContext extends CoreOperationContext {
-  connection: mysql.PoolConnection;
-  inTransaction: boolean;
-}
-
 type ConnectorOperationParams<TArgs extends POJO> = CoreConnectorOperationParams<TArgs, BaseContext, OperationContext>;
 
 export class Connector extends EventEmitter<ConnectorEventMap>
@@ -78,52 +95,102 @@ export class Connector extends EventEmitter<ConnectorEventMap>
     // Handle connection & transaction
     this.graphqlPlatform.getResourceSet().forEach(resource =>
       resource.onConfig({
-        [ResourceEventKind.PreOperation]: async ({
-          operationContext,
+        [OperationEventKind.PreOperation]: async ({
           operation: { type },
-        }: ResourceEventMap<BaseContext, CoreOperationContext>[ResourceEventKind.PreOperation]) => {
-          const connection = await this.getConnection();
+          context,
+          operationContext: coreOperationContext,
+        }: OperationEventMap<any, {}, BaseContext, CoreOperationContext>[OperationEventKind.PreOperation]) => {
+          /**
+           * If a connection has been provided in the regular "context", we use it.
+           * Otherwise, we wait for one from the pool
+           */
+          const connectorOperationContext: ConnectorOperationContext = {
+            ...(context.connectorRequest.connection
+              ? {
+                  connection: context.connectorRequest.connection,
+                  isConnectionManaged: false,
+                  transaction: context.connectorRequest.transaction === true,
+                  isTransactionManaged: false,
+                }
+              : {
+                  connection: await this.getConnection(),
+                  isConnectionManaged: true,
+                  transaction: false,
+                  isTransactionManaged: false,
+                }),
+          };
 
-          operationContext.connection = connection;
+          const operationContext: OperationContext = Object.assign(coreOperationContext, connectorOperationContext);
 
           if (type === GraphQLOperationType.Mutation) {
-            await promisify(connection.beginTransaction.bind(connection))();
-            operationContext.inTransaction = true;
-          } else {
-            operationContext.inTransaction = false;
+            if (!operationContext.transaction) {
+              await Promise.all([
+                this.emit(ConnectorEventKind.StartTransaction, { threadId: operationContext.connection.threadId }),
+                promisify(operationContext.connection.beginTransaction.bind(operationContext.connection))(),
+              ]);
+
+              operationContext.transaction = true;
+              operationContext.isTransactionManaged = true;
+            }
+
+            /**
+             * In a mutation, we know that the operations will be executed serially,
+             * so the next operation will be executed after the "PostOperation" event of this one.
+             *
+             * We use this behavior to share the connection in the regular "context" in order to
+             * be used everywhere, especially in the "API binding" when we want to run queries
+             * into the same transaction.
+             */
+            if (operationContext.isConnectionManaged) {
+              Object.assign(context.connectorRequest, {
+                connection: operationContext.connection,
+                transaction: operationContext.transaction,
+              });
+            }
           }
         },
 
-        [ResourceEventKind.PostOperationSuccess]: async ({
-          operationContext,
+        [OperationEventKind.PostOperationSuccess]: async ({
           operation: { type },
-        }: ResourceEventMap<BaseContext, OperationContext>[ResourceEventKind.PostOperationSuccess]) => {
-          const { connection } = operationContext;
+          operationContext,
+        }: OperationEventMap<any, {}, BaseContext, OperationContext>[OperationEventKind.PostOperationSuccess]) => {
+          if (type === GraphQLOperationType.Mutation && operationContext.isTransactionManaged) {
+            await Promise.all([
+              this.emit(ConnectorEventKind.CommitTransaction, { threadId: operationContext.connection.threadId }),
+              promisify(operationContext.connection.commit.bind(operationContext.connection))(),
+            ]);
 
-          if (type === GraphQLOperationType.Mutation) {
-            await promisify(connection.commit.bind(connection))();
             operationContext.inTransaction = false;
+            operationContext.isTransactionManaged = false;
           }
         },
 
-        [ResourceEventKind.PostOperationError]: async ({
-          operationContext,
+        [OperationEventKind.PostOperationError]: async ({
           operation: { type },
-        }: ResourceEventMap<BaseContext, OperationContext>[ResourceEventKind.PostOperationError]) => {
-          const { connection } = operationContext;
+          operationContext,
+        }: OperationEventMap<any, {}, BaseContext, OperationContext>[OperationEventKind.PostOperationError]) => {
+          if (type === GraphQLOperationType.Mutation && operationContext.isTransactionManaged) {
+            await Promise.all([
+              this.emit(ConnectorEventKind.RollbackTransaction, { threadId: operationContext.connection.threadId }),
+              promisify(operationContext.connection.rollback.bind(operationContext.connection))(),
+            ]);
 
-          if (type === GraphQLOperationType.Mutation) {
-            await promisify(connection.rollback.bind(connection))();
             operationContext.inTransaction = false;
+            operationContext.isTransactionManaged = false;
           }
         },
 
-        [ResourceEventKind.PostOperation]: async ({
+        [OperationEventKind.PostOperation]: async ({
+          context,
           operationContext,
-        }: ResourceEventMap<BaseContext, OperationContext>[ResourceEventKind.PostOperation]) => {
-          operationContext.connection.release();
-          delete operationContext.connection;
-          delete operationContext.inTransaction;
+        }: OperationEventMap<any, {}, BaseContext, OperationContext>[OperationEventKind.PostOperation]) => {
+          if (operationContext.isConnectionManaged) {
+            operationContext.connection.release();
+
+            // We clean what we did in the regular "context"
+            delete context.connectorRequest.connection;
+            delete context.connectorRequest.transaction;
+          }
         },
       }),
     );
@@ -207,68 +274,88 @@ export class Connector extends EventEmitter<ConnectorEventMap>
   }
 
   public async query(
-    query: mysql.QueryOptions | mysql.QueryOptions['sql'],
-    connection?: Maybe<mysql.Connection>,
+    query: MaybeArray<mysql.QueryOptions | mysql.QueryOptions['sql']>,
+    maybeConnection?: Maybe<mysql.Connection | BaseContext>,
   ): Promise<QueryResult> {
+    const connection: mysql.Connection | undefined = maybeConnection
+      ? 'connectorRequest' in maybeConnection
+        ? maybeConnection.connectorRequest.connection
+        : maybeConnection
+      : undefined;
+
     return connection
-      ? new Promise(async (resolve, reject) => {
-          const parsedQuery: mysql.QueryOptions = typeof query === 'string' ? { sql: query } : query;
+      ? Array.isArray(query)
+        ? // As we use only one connection, even if they are thrown concurrently, they are executed serially
+          Promise.all(query.map(async query => this.query(query, connection)))
+        : new Promise(async (resolve, reject) => {
+            const parsedQuery: mysql.QueryOptions = typeof query === 'string' ? { sql: query } : query;
 
-          await this.emit(ConnectorEventKind.PreQuery, {
-            threadId: connection.threadId,
-            ...parsedQuery,
-          });
+            await this.emit(ConnectorEventKind.PreQuery, {
+              threadId: connection.threadId,
+              ...parsedQuery,
+            });
 
-          connection.query(query, async (error, rows) => (error ? reject(error) : resolve(rows)));
-        })
+            connection.query(query, async (error, rows) => (error ? reject(error) : resolve(rows)));
+          })
       : this.withConnection(async connection => this.query(query, connection));
-  }
-
-  public async querySerial(
-    queries: (mysql.QueryOptions | mysql.QueryOptions['sql'])[],
-    connection?: Maybe<mysql.Connection>,
-  ): Promise<QueryResult[]> {
-    return connection
-      ? Promise.all(queries.map(async query => this.query(query, connection)))
-      : this.withConnection(async connection => this.querySerial(queries, connection));
   }
 
   public newRequest(): ConnectorRequest {
     return new ConnectorRequest(this);
   }
 
-  public async find({ resource, ...params }: ConnectorOperationParams<ConnectorFindOperationArgs>) {
+  public async find({
+    resource,
+    operationContext: { connection },
+    ...params
+  }: ConnectorOperationParams<ConnectorFindOperationArgs>) {
     return this.getDatabase()
       .getTable(resource)
       .getOperation('Find')
-      .execute(params);
+      .execute(Object.freeze({ connection, ...params }));
   }
 
-  public async count({ resource, ...params }: ConnectorOperationParams<ConnectorCountOperationArgs>) {
+  public async count({
+    resource,
+    operationContext: { connection },
+    ...params
+  }: ConnectorOperationParams<ConnectorCountOperationArgs>) {
     return this.getDatabase()
       .getTable(resource)
       .getOperation('Count')
-      .execute(params);
+      .execute(Object.freeze({ connection, ...params }));
   }
 
-  public async create({ resource, ...params }: ConnectorOperationParams<ConnectorCreateOperationArgs>) {
+  public async create({
+    resource,
+    operationContext: { connection },
+    ...params
+  }: ConnectorOperationParams<ConnectorCreateOperationArgs>) {
     return this.getDatabase()
       .getTable(resource)
       .getOperation('Create')
-      .execute(params);
+      .execute(Object.freeze({ connection, ...params }));
   }
 
-  public async update({ resource, ...params }: ConnectorOperationParams<ConnectorUpdateOperationArgs>) {
+  public async update({
+    resource,
+    operationContext: { connection },
+    ...params
+  }: ConnectorOperationParams<ConnectorUpdateOperationArgs>) {
     return this.getDatabase()
       .getTable(resource)
       .getOperation('Update')
-      .execute(params);
+      .execute(Object.freeze({ connection, ...params }));
   }
 
-  public async delete({ resource, ...params }: ConnectorOperationParams<ConnectorDeleteOperationArgs>) {
+  public async delete({
+    resource,
+    operationContext: { connection },
+    ...params
+  }: ConnectorOperationParams<ConnectorDeleteOperationArgs>) {
     return this.getDatabase()
       .getTable(resource)
       .getOperation('Delete')
-      .execute(params);
+      .execute(Object.freeze({ connection, ...params }));
   }
 }

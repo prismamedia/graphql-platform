@@ -27,6 +27,7 @@ export class DeleteStatement implements QueryOptions {
       this.where.sql ? `WHERE ${this.where.sql}` : null,
       this.orderBy.sql ? `ORDER BY ${this.orderBy.sql}` : null,
       typeof this.limit === 'number' ? `LIMIT ${this.limit}` : null,
+      ';',
     ]
       .filter(Boolean)
       .join(' ');

@@ -1,11 +1,17 @@
-import { graphqlPlatform } from '.';
 import { Resource } from '../graphql-platform/resource';
+import { config, MyGP } from './gp';
 
 describe('Fixture', () => {
+  let gp: MyGP;
   const fixturePath = `${__dirname}/fixtures`;
-  const fixtures = graphqlPlatform.getFixtureGraph(fixturePath);
+
+  beforeAll(() => {
+    gp = new MyGP(config);
+  });
 
   it('gets sorted fixtures', () => {
+    const fixtures = gp.getFixtureGraph(fixturePath);
+
     expect(fixtures.size()).toBe(23);
     expect(fixtures.overallOrder()).toEqual([
       'category_01',
@@ -35,6 +41,7 @@ describe('Fixture', () => {
   });
 
   it('creates GraphQL mutations', () => {
+    const fixtures = gp.getFixtureGraph(fixturePath);
     const visitedResourceSet = new Set<Resource>();
 
     expect(

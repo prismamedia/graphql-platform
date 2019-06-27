@@ -2,7 +2,7 @@ version: '3'
 
 services:
   mariadb:
-    image: circleci/mariadb:10.3
+    image: mariadb:10.3
     environment:
       MYSQL_ROOT_PASSWORD: test
       MYSQL_DATABASE: test
@@ -15,7 +15,7 @@ services:
     restart: on-failure
 
   project:
-    image: circleci/node:10
+    image: node:10
     depends_on:
       - mariadb
     environment:

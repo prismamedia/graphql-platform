@@ -55,31 +55,27 @@ export class DeleteOneOperation extends AbstractOperation<DeleteOneOperationArgs
 
       await resource.emitSerial(ResourceHookKind.PreDelete, {
         metas: Object.freeze({
-          args,
-          context,
-          operationContext,
+          ...params,
           resource,
         }),
         toBeDeletedNodeId: nodeId,
       });
 
       // Actually delete the node
-      const deletedNodeCount = await this.connector.delete({ ...params, resource, args: { where: nodeId } });
+      const deletedNodeCount = await this.connector.delete(
+        Object.freeze({ ...params, resource, args: { where: nodeId } }),
+      );
 
       if (deletedNodeCount === 1) {
-        if (operationContext) {
-          operationContext.postHooks.push(
-            resource.emitSerial.bind(resource, ResourceHookKind.PostDelete, {
-              metas: Object.freeze({
-                args,
-                context,
-                operationContext,
-                resource,
-              }),
-              deletedNodeId: nodeId,
+        operationContext.postSuccessHooks.push(
+          resource.emitSerial.bind(resource, ResourceHookKind.PostDelete, {
+            metas: Object.freeze({
+              ...params,
+              resource,
             }),
-          );
-        }
+            deletedNodeId: nodeId,
+          }),
+        );
 
         return nodeSource;
       }

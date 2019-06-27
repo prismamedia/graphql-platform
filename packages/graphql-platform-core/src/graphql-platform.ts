@@ -41,13 +41,15 @@ export interface BaseContext {
   api: Binding;
 }
 
-/** "Context" provided by the GraphQL Platform's user, can't override the BaseContext's properties */
+/** "Context" provided by the GraphQL Platform's user, can't override the "BaseContext"'s properties */
 export interface CustomContext {
   [key: string]: any;
 }
 
-export type Context<TCustomContext extends CustomContext = any, TBaseContext extends BaseContext = any> = TBaseContext &
-  TCustomContext;
+/** "Context" available in the operations, hooks... */
+export type Context<TCustomContext extends CustomContext = any, TBaseContext extends BaseContext = any> = Readonly<
+  TBaseContext & TCustomContext
+>;
 
 export type Request = Merge<Omit<GraphQLArgs, 'schema'>, { contextValue?: CustomContext }>;
 
@@ -61,7 +63,7 @@ export interface GraphQLPlatformConfig<
   TCustomContext extends CustomContext = any,
   TBaseContext extends BaseContext = BaseContext,
   TOperationContext extends OperationContext = OperationContext,
-  TResourceConfig extends ResourceConfig<any, any, any> = ResourceConfig<
+  TResourceConfig extends ResourceConfig<any, any, any, any, any, any> = ResourceConfig<
     TCustomContext,
     TBaseContext,
     TOperationContext
@@ -89,7 +91,7 @@ export interface GraphQLPlatformConfig<
 export class GraphQLPlatform<
   TContextParams extends POJO = any,
   TCustomContext extends CustomContext = any,
-  TConfig extends GraphQLPlatformConfig<any, any, any, any> = GraphQLPlatformConfig<TContextParams, TCustomContext>
+  TConfig extends GraphQLPlatformConfig<any, any, any, any, any> = GraphQLPlatformConfig<TContextParams, TCustomContext>
 > {
   public constructor(readonly config: TConfig) {}
 
@@ -193,10 +195,10 @@ export class GraphQLPlatform<
   public async getContext(params?: any): Promise<Context<CustomContext, BaseContext>> {
     const [custom, base] = await Promise.all([this.getCustomContext(params), this.getBaseContext()]);
 
-    return {
+    return Object.freeze({
       ...custom,
       ...base,
-    };
+    });
   }
 
   public async execute<TData = ExecutionResultDataDefault>(request: Request): Promise<ExecutionResult<TData>> {

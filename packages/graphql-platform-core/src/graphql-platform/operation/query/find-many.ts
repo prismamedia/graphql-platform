@@ -63,11 +63,13 @@ export class FindManyOperation extends AbstractOperation<FindManyOperationArgs, 
     const filter = await resource.filter(context);
 
     return filter !== false
-      ? this.connector.find({
-          ...params,
-          resource,
-          args: { ...args, where: { AND: [filter, args.where] } },
-        })
+      ? this.connector.find(
+          Object.freeze({
+            ...params,
+            resource,
+            args: { ...args, where: { AND: [filter, args.where] } },
+          }),
+        )
       : [];
   }
 }

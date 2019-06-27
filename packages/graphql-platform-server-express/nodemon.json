@@ -4,5 +4,5 @@
   },
   "watch": ["src"],
   "ext": "ts",
-  "exec": "ts-node --project tsconfig.commonjs.json --transpile-only ./src/__tests__/index.ts"
+  "exec": "ts-node --project tsconfig.commonjs.json ./src/__tests__/index.ts"
 }

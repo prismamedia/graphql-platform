@@ -1,6 +1,6 @@
-import { ResourceConfig } from '../..';
+import { MyResourceConfig } from '../gp';
 
-const resource: ResourceConfig = {
+const resource: MyResourceConfig = {
   plural: 'ArticleUrlMetas',
   uniques: ['url'],
   relations: {

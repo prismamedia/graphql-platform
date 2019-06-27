@@ -10,23 +10,29 @@ import {
   ManagementKind,
   ResourceConfig,
   ResourceHookKind,
-} from '../';
+} from '..';
 
 export interface MyContext extends CustomContext {
   myService: boolean;
 }
 
+export type MyResourceConfig = ResourceConfig<MyContext>;
+
+export type MyGPConfig = GraphQLPlatformConfig<{}, MyContext>;
+
+export class MyGP extends GraphQLPlatform<{}, MyContext> {}
+
 export const nonRelationTableResourceNames = ['Article', 'Category', 'Tag', 'User'];
 
 let resourceIndex = 0;
 
-export const config: GraphQLPlatformConfig<{}, MyContext> = {
+export const config: MyGPConfig = {
   context: params => ({
     myService: true,
   }),
 
   default: resourceName => {
-    const config: ResourceConfig = {};
+    const config: MyResourceConfig = {};
 
     const resourceIdIndex = {
       resourceIndex: ++resourceIndex * 1000000000,
@@ -91,4 +97,4 @@ export const config: GraphQLPlatformConfig<{}, MyContext> = {
   queries: `${__dirname}/queries`,
 };
 
-export const graphqlPlatform = new GraphQLPlatform(config);
+export const gp = new MyGP(config);

@@ -22,46 +22,47 @@ export type FieldHookMetaMap<
   field: Field;
 };
 
-export interface FieldHookMap<
+export type FieldHookMap<
   TCustomContext extends CustomContext = any,
   TBaseContext extends BaseContext = any,
   TOperationContext extends OperationContext = any
-> {
+> = {
   // Create
   [ResourceHookKind.PreCreate]: {
-    metas: Readonly<
-      FieldHookMetaMap<CreateOneOperationArgs, TCustomContext, TBaseContext, TOperationContext> & {
+    metas: FieldHookMetaMap<CreateOneOperationArgs, TCustomContext, TBaseContext, TOperationContext> &
+      Readonly<{
         /** Parsed data */
         create: ConnectorCreateInputValue;
-      }
-    >;
+      }>;
     /** Parsed field value */
     fieldValue: Maybe<FieldValue>;
   };
 
   // Update
   [ResourceHookKind.PreUpdate]: {
-    metas: Readonly<
-      FieldHookMetaMap<UpdateOneOperationArgs, TCustomContext, TBaseContext, TOperationContext> & {
+    metas: FieldHookMetaMap<UpdateOneOperationArgs, TCustomContext, TBaseContext, TOperationContext> &
+      Readonly<{
         /** Parsed data */
         update: ConnectorUpdateInputValue;
-      }
-    >;
+      }>;
     /** Parsed field value */
     fieldValue: Maybe<FieldValue>;
   };
-}
+};
 
 export interface FieldConfig<
   TCustomContext extends CustomContext = any,
-  TBaseContext extends BaseContext = any,
-  TOperationContext extends OperationContext = any
+  TBaseContext extends BaseContext = BaseContext,
+  TOperationContext extends OperationContext = OperationContext
 > extends AbstractComponentConfig<FieldHookMap<TCustomContext, TBaseContext, TOperationContext>> {
   /** Required, the GraphQL leaf type that represents the output of this field */
   type: GraphQLLeafType;
 }
 
-export class Field<TConfig extends FieldConfig = any> extends AbstractComponent<FieldHookMap, TConfig> {
+export class Field<TConfig extends FieldConfig<any, any, any> = FieldConfig> extends AbstractComponent<
+  FieldHookMap,
+  TConfig
+> {
   public isField(): this is Field {
     return true;
   }

@@ -28,14 +28,11 @@ export class Database {
   }
 
   public async create(connection?: Maybe<mysql.Connection>): Promise<void> {
-    await this.connector.querySerial(
-      [...this.getTableSet()].map(table => new CreateTableStatement(table).sql),
-      connection,
-    );
+    await this.connector.query([...this.getTableSet()].map(table => new CreateTableStatement(table).sql), connection);
   }
 
   public async truncate(connection?: Maybe<mysql.Connection>): Promise<void> {
-    await this.connector.querySerial(
+    await this.connector.query(
       [
         'SET FOREIGN_KEY_CHECKS = 0;',
         ...[...this.getTableSet()].map(table => `TRUNCATE TABLE ${table.getEscapedName()};`),
@@ -46,7 +43,7 @@ export class Database {
   }
 
   public async drop(connection?: Maybe<mysql.Connection>): Promise<void> {
-    await this.connector.querySerial(
+    await this.connector.query(
       [
         'SET FOREIGN_KEY_CHECKS = 0;',
         `DROP TABLE IF EXISTS ${[...this.getTableSet()].map(table => table.getEscapedName()).join(', ')};`,

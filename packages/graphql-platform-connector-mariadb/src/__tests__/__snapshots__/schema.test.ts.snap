@@ -11,6 +11,9 @@ type Article {
 
   # The date of the document's last update
   updatedAt: DateTime!
+
+  # An \\"auto-increment\\" kind of field
+  computedMaxIntId: Int!
   format: ArticleFormat!
 
   # The article's title
@@ -103,6 +106,8 @@ enum ArticleOrderByInput {
   createdAt_DESC
   updatedAt_ASC
   updatedAt_DESC
+  computedMaxIntId_ASC
+  computedMaxIntId_DESC
   format_ASC
   format_DESC
   title_ASC
@@ -545,6 +550,14 @@ input ArticleWhereInput {
   updatedAt_lte: DateTime
   updatedAt_gt: DateTime
   updatedAt_gte: DateTime
+  computedMaxIntId: Int
+  computedMaxIntId_not: Int
+  computedMaxIntId_in: [Int]
+  computedMaxIntId_not_in: [Int]
+  computedMaxIntId_lt: Int
+  computedMaxIntId_lte: Int
+  computedMaxIntId_gt: Int
+  computedMaxIntId_gte: Int
   format: ArticleFormat
   format_not: ArticleFormat
   format_in: [ArticleFormat]
@@ -606,10 +619,12 @@ input ArticleWhereInput {
 # Identifies exactly one \\"Article\\" node with one of these unique combinations of values:
 # - _id
 # - id
+# - computedMaxIntId
 # - category, slug
 input ArticleWhereUniqueInput {
   _id: Int
   id: ID
+  computedMaxIntId: Int
   category: CategoryWhereUniqueInput
   slug: String
 }
