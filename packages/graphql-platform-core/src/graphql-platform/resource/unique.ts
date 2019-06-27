@@ -20,9 +20,14 @@ export interface UniqueFullConfig {
   name?: string;
 }
 
-export type UniqueConfig<TConfig extends UniqueFullConfig = any> = Component['name'] | Component['name'][] | TConfig;
+export type AnyUniqueFullConfig = UniqueFullConfig;
 
-export class Unique<TConfig extends UniqueFullConfig = any> {
+export type UniqueConfig<TConfig extends AnyUniqueFullConfig = UniqueFullConfig> =
+  | Component['name']
+  | Component['name'][]
+  | TConfig;
+
+export class Unique<TConfig extends AnyUniqueFullConfig = UniqueFullConfig> {
   readonly componentSet: ComponentSet;
   readonly name: string;
 

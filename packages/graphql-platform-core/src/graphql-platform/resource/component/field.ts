@@ -59,10 +59,9 @@ export interface FieldConfig<
   type: GraphQLLeafType;
 }
 
-export class Field<TConfig extends FieldConfig<any, any, any> = FieldConfig> extends AbstractComponent<
-  FieldHookMap,
-  TConfig
-> {
+export type AnyFieldConfig = FieldConfig<any, any, any>;
+
+export class Field<TConfig extends AnyFieldConfig = FieldConfig> extends AbstractComponent<FieldHookMap, TConfig> {
   public isField(): this is Field {
     return true;
   }

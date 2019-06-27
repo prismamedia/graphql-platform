@@ -19,7 +19,9 @@ export type VirtualFieldConfig<
   }
 >;
 
-export class VirtualField<TConfig extends VirtualFieldConfig = any> {
+export type AnyVirtualFieldConfig = VirtualFieldConfig<any, any>;
+
+export class VirtualField<TConfig extends AnyVirtualFieldConfig = VirtualFieldConfig> {
   readonly dependencySet: ComponentSet;
 
   public constructor(readonly name: string, readonly config: TConfig, readonly resource: Resource) {

@@ -46,8 +46,10 @@ import {
   RelationMap,
   RelationSet,
 } from './resource/component';
+import { AnyFieldConfig } from './resource/component/field';
+import { AnyRelationConfig } from './resource/component/relation';
 import { ResourceMap } from './resource/map';
-import { Unique, UniqueConfig, UniqueFullConfig, UniqueSet } from './resource/unique';
+import { AnyUniqueFullConfig, Unique, UniqueConfig, UniqueFullConfig, UniqueSet } from './resource/unique';
 import { VirtualField, VirtualFieldConfig, VirtualFieldMap, VirtualFieldSet } from './resource/virtual-field';
 import {
   InputTypeConstructor,
@@ -135,13 +137,9 @@ export interface ResourceConfig<
   TCustomContext extends CustomContext = any,
   TBaseContext extends BaseContext = BaseContext,
   TOperationContext extends OperationContext = OperationContext,
-  TUniqueFullConfig extends UniqueFullConfig = UniqueFullConfig,
-  TFieldConfig extends FieldConfig<any, any, any> = FieldConfig<TCustomContext, TBaseContext, TOperationContext>,
-  TRelationConfig extends RelationConfig<any, any, any> = RelationConfig<
-    TCustomContext,
-    TBaseContext,
-    TOperationContext
-  >
+  TUniqueFullConfig extends AnyUniqueFullConfig = UniqueFullConfig,
+  TFieldConfig extends AnyFieldConfig = FieldConfig<TCustomContext, TBaseContext, TOperationContext>,
+  TRelationConfig extends AnyRelationConfig = RelationConfig<TCustomContext, TBaseContext, TOperationContext>
 > {
   /** Optional, this resource's plural form, default: guessed from the resource's name */
   plural?: Maybe<string>;
@@ -178,9 +176,11 @@ export interface ResourceConfig<
   hooks?: Maybe<EventConfigMap<ResourceHookMap<TCustomContext, TBaseContext, TOperationContext>>>;
 }
 
-export class Resource<
-  TConfig extends ResourceConfig<any, any, any, any, any, any> = ResourceConfig
-> extends EventEmitter<ResourceHookMap & OperationEventMap> {
+export type AnyResourceConfig = ResourceConfig<any, any, any, any, any, any>;
+
+export class Resource<TConfig extends AnyResourceConfig = ResourceConfig> extends EventEmitter<
+  ResourceHookMap & OperationEventMap
+> {
   public constructor(readonly name: string, readonly config: TConfig, readonly gp: GraphQLPlatform) {
     super();
 
@@ -543,3 +543,5 @@ export class Resource<
     return typeof this.parseValue(value) !== 'undefined';
   }
 }
+
+export type AnyResource = Resource<any>;

@@ -77,7 +77,9 @@ export interface RelationConfig<
   inversedBy?: Maybe<string>;
 }
 
-export class Relation<TConfig extends RelationConfig<any, any, any> = RelationConfig> extends AbstractComponent<
+export type AnyRelationConfig = RelationConfig<any, any, any>;
+
+export class Relation<TConfig extends AnyRelationConfig = RelationConfig> extends AbstractComponent<
   RelationHookMap,
   TConfig
 > {

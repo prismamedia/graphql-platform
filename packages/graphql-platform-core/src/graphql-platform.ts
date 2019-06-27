@@ -88,10 +88,12 @@ export interface GraphQLPlatformConfig<
   mutations?: ModuleMapConfig<CustomOperationConfig<TCustomContext, TBaseContext>>;
 }
 
+export type AnyGraphQLPlatformConfig = GraphQLPlatformConfig<any, any, any, any, any>;
+
 export class GraphQLPlatform<
   TContextParams extends POJO = any,
   TCustomContext extends CustomContext = any,
-  TConfig extends GraphQLPlatformConfig<any, any, any, any, any> = GraphQLPlatformConfig<TContextParams, TCustomContext>
+  TConfig extends AnyGraphQLPlatformConfig = GraphQLPlatformConfig<TContextParams, TCustomContext>
 > {
   public constructor(readonly config: TConfig) {}
 
@@ -279,3 +281,5 @@ export class GraphQLPlatform<
     }
   }
 }
+
+export type AnyGraphQLPlatform = GraphQLPlatform<any, any, any>;

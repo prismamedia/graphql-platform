@@ -1,4 +1,4 @@
-import { GraphQLPlatform } from '@prismamedia/graphql-platform-core';
+import { AnyGraphQLPlatform } from '@prismamedia/graphql-platform-core';
 import { Merge } from '@prismamedia/graphql-platform-utils';
 import {
   ApolloServer,
@@ -26,7 +26,7 @@ type ApolloServerExpressConfig = Omit<
   'context' | 'schema' | 'subscriptions' | 'resolvers' | 'typeDefs'
 >;
 
-export type GraphQLPlatformServerExpressConfig = { gp: GraphQLPlatform<any, any, any> } & ServerRegistration &
+export type GraphQLPlatformServerExpressConfig = { gp: AnyGraphQLPlatform } & ServerRegistration &
   ApolloServerExpressConfig;
 
 export function createServer({
