@@ -14,6 +14,9 @@ type Article {
 
   # An \\"auto-increment\\" kind of field
   computedMaxIntId: Int!
+
+  # The date of the document's public release
+  publishedAt: DateTime
   format: ArticleFormat!
 
   # The article's title
@@ -66,6 +69,9 @@ input ArticleCreateCategoryInput {
 input ArticleCreateInput {
   # The public ID
   id: ID
+
+  # The date of the document's public release
+  publishedAt: DateTime
   format: ArticleFormat!
 
   # The article's title
@@ -108,6 +114,8 @@ enum ArticleOrderByInput {
   updatedAt_DESC
   computedMaxIntId_ASC
   computedMaxIntId_DESC
+  publishedAt_ASC
+  publishedAt_DESC
   format_ASC
   format_DESC
   title_ASC
@@ -334,6 +342,9 @@ input ArticleUpdateCategoryInput {
 input ArticleUpdateInput {
   # The public ID
   id: ID
+
+  # The date of the document's public release
+  publishedAt: DateTime
   format: ArticleFormat
 
   # The article's title
@@ -558,6 +569,14 @@ input ArticleWhereInput {
   computedMaxIntId_lte: Int
   computedMaxIntId_gt: Int
   computedMaxIntId_gte: Int
+  publishedAt: DateTime
+  publishedAt_not: DateTime
+  publishedAt_in: [DateTime]
+  publishedAt_not_in: [DateTime]
+  publishedAt_lt: DateTime
+  publishedAt_lte: DateTime
+  publishedAt_gt: DateTime
+  publishedAt_gte: DateTime
   format: ArticleFormat
   format_not: ArticleFormat
   format_in: [ArticleFormat]

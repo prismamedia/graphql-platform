@@ -1,7 +1,7 @@
 import { GraphQLFieldConfigArgumentMap, GraphQLNonNull, GraphQLOutputType } from 'graphql';
 import { Memoize } from 'typescript-memoize';
 import { OperationResolverParams } from '../../operation';
-import { ResourceHookKind } from '../../resource';
+import { NodeValue, ResourceHookKind } from '../../resource';
 import { NodeSource, TypeKind, WhereUniqueInputValue } from '../../type';
 import { AbstractOperation } from '../abstract-operation';
 
@@ -42,11 +42,21 @@ export class DeleteOneOperation extends AbstractOperation<DeleteOneOperationArgs
   }
 
   public async resolve(params: OperationResolverParams<DeleteOneOperationArgs>): Promise<DeleteOneOperationResult> {
-    const { args, context, operationContext, selectionNode } = params;
+    const { operationContext, selectionNode } = params;
     const resource = this.resource;
 
+    // Select all the components in case of post hooks
+    if (resource.getEventListenerCount(ResourceHookKind.PostCreate) > 0) {
+      selectionNode.setChildren(resource.getComponentSet().getSelectionNodeChildren(TypeKind.Input));
+    }
+
     // Ensure the main "identifier" is requested
-    selectionNode.setChildren(resource.getIdentifier().getSelectionNode(TypeKind.Input));
+    selectionNode.setChildren(
+      resource
+        .getIdentifier()
+        .getSelectionNode(TypeKind.Input)
+        .getChildren(),
+    );
 
     const nodeSource = await resource.getQuery('FindOne').resolve(params);
 
@@ -73,7 +83,7 @@ export class DeleteOneOperation extends AbstractOperation<DeleteOneOperationArgs
               ...params,
               resource,
             }),
-            deletedNodeId: nodeId,
+            deletedNode: nodeSource as NodeValue,
           }),
         );
 

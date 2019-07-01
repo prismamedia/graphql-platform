@@ -85,8 +85,12 @@ export class Field<TConfig extends AnyFieldConfig = FieldConfig> extends Abstrac
 
   public parseValue(value: unknown): FieldValue | undefined {
     if (typeof value !== 'undefined') {
-      if ((value === null && this.isNullable()) || isScalar(value)) {
+      if (value === null && this.isNullable()) {
+        return null;
+      } else if (isScalar(value)) {
         return value;
+      } else if (value instanceof Date) {
+        return value.toISOString();
       }
 
       throw new Error(

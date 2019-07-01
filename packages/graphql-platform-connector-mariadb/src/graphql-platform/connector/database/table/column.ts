@@ -218,7 +218,18 @@ export class Column {
   }
 
   public getValue(node: POJO): ColumnValue | undefined {
-    return this.field.getValue(node);
+    switch (this.dataType.type) {
+      case DataType.DATE:
+      case DataType.DATETIME:
+      case DataType.TIMESTAMP:
+        const dateTime = this.field.getValue(node);
+
+        // We remove the timezone "Z" as MariaDB does not support it
+        return typeof dateTime === 'string' && dateTime ? dateTime.replace(/Z$/, '') : dateTime;
+
+      default:
+        return this.field.getValue(node);
+    }
   }
 
   public assertValue(node: POJO): ColumnValue {

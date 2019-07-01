@@ -4,8 +4,8 @@ exports[`Database print the "CREATE TABLE" statements 1`] = `
 "CREATE TABLE \`categories\` (
   \`intId\` INTEGER UNSIGNED NOT NULL AUTO_INCREMENT COMMENT 'The internal and private ID used to speed up some operations',
   \`id\` CHAR(36) NOT NULL COMMENT 'The public ID',
-  \`createdAt\` TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT 'The date, fixed, of the document\\\\'s creation',
-  \`updatedAt\` TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT 'The date of the document\\\\'s last update',
+  \`createdAt\` TIMESTAMP(3) NOT NULL DEFAULT NOW(3) COMMENT 'The date, fixed, of the document\\\\'s creation',
+  \`updatedAt\` TIMESTAMP(3) NOT NULL DEFAULT NOW(3) ON UPDATE NOW(3) COMMENT 'The date of the document\\\\'s last update',
   \`title\` VARCHAR(255) NOT NULL,
   \`slug\` VARCHAR(255) NOT NULL COMMENT 'The category\\\\'s slug',
   \`parentId\` CHAR(36) NULL,
@@ -21,8 +21,8 @@ COLLATE = 'utf8mb4_unicode_520_ci';
 CREATE TABLE \`users\` (
   \`intId\` INTEGER UNSIGNED NOT NULL AUTO_INCREMENT COMMENT 'The internal and private ID used to speed up some operations',
   \`id\` CHAR(36) NOT NULL COMMENT 'The public ID',
-  \`createdAt\` TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT 'The date, fixed, of the document\\\\'s creation',
-  \`updatedAt\` TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT 'The date of the document\\\\'s last update',
+  \`createdAt\` TIMESTAMP(3) NOT NULL DEFAULT NOW(3) COMMENT 'The date, fixed, of the document\\\\'s creation',
+  \`updatedAt\` TIMESTAMP(3) NOT NULL DEFAULT NOW(3) ON UPDATE NOW(3) COMMENT 'The date of the document\\\\'s last update',
   \`username\` VARCHAR(255) NOT NULL COMMENT 'The user\\\\'s username',
   PRIMARY KEY (\`intId\`),
   UNIQUE \`unq_id\` (\`id\`),
@@ -34,9 +34,10 @@ COLLATE = 'utf8mb4_unicode_520_ci';
 CREATE TABLE \`articles\` (
   \`intId\` INTEGER UNSIGNED NOT NULL AUTO_INCREMENT COMMENT 'The internal and private ID used to speed up some operations',
   \`id\` CHAR(36) NOT NULL COMMENT 'The public ID',
-  \`createdAt\` TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT 'The date, fixed, of the document\\\\'s creation',
-  \`updatedAt\` TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT 'The date of the document\\\\'s last update',
+  \`createdAt\` TIMESTAMP(3) NOT NULL DEFAULT NOW(3) COMMENT 'The date, fixed, of the document\\\\'s creation',
+  \`updatedAt\` TIMESTAMP(3) NOT NULL DEFAULT NOW(3) ON UPDATE NOW(3) COMMENT 'The date of the document\\\\'s last update',
   \`computedMaxIntId\` INTEGER NOT NULL COMMENT 'An \\\\\\"auto-increment\\\\\\" kind of field',
+  \`publishedAt\` TIMESTAMP(3) NULL COMMENT 'The date of the document\\\\'s public release',
   \`format\` ENUM('RICH', 'VIDEO') NOT NULL,
   \`title\` VARCHAR(255) NOT NULL COMMENT 'The article\\\\'s title',
   \`slug\` VARCHAR(255) NOT NULL COMMENT 'The article\\\\'s slug',
@@ -63,8 +64,8 @@ COMMENT = 'An article';
 CREATE TABLE \`tags\` (
   \`intId\` INTEGER UNSIGNED NOT NULL AUTO_INCREMENT COMMENT 'The internal and private ID used to speed up some operations',
   \`id\` CHAR(36) NOT NULL COMMENT 'The public ID',
-  \`createdAt\` TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT 'The date, fixed, of the document\\\\'s creation',
-  \`updatedAt\` TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT 'The date of the document\\\\'s last update',
+  \`createdAt\` TIMESTAMP(3) NOT NULL DEFAULT NOW(3) COMMENT 'The date, fixed, of the document\\\\'s creation',
+  \`updatedAt\` TIMESTAMP(3) NOT NULL DEFAULT NOW(3) ON UPDATE NOW(3) COMMENT 'The date of the document\\\\'s last update',
   \`title\` VARCHAR(255) NOT NULL,
   \`slug\` VARCHAR(255) NOT NULL COMMENT 'The tag\\\\'s slug',
   PRIMARY KEY (\`intId\`),
@@ -77,8 +78,8 @@ COLLATE = 'utf8mb4_unicode_520_ci';
 CREATE TABLE \`article_tags\` (
   \`articleIntId\` INTEGER UNSIGNED NOT NULL,
   \`tagIntId\` INTEGER UNSIGNED NOT NULL,
-  \`createdAt\` TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT 'The date, fixed, of the document\\\\'s creation',
-  \`updatedAt\` TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT 'The date of the document\\\\'s last update',
+  \`createdAt\` TIMESTAMP(3) NOT NULL DEFAULT NOW(3) COMMENT 'The date, fixed, of the document\\\\'s creation',
+  \`updatedAt\` TIMESTAMP(3) NOT NULL DEFAULT NOW(3) ON UPDATE NOW(3) COMMENT 'The date of the document\\\\'s last update',
   \`order\` INTEGER NOT NULL,
   PRIMARY KEY (\`articleIntId\`, \`tagIntId\`),
   UNIQUE \`article/order\` (\`articleIntId\`, \`order\`),
@@ -93,8 +94,8 @@ COLLATE = 'utf8mb4_unicode_520_ci';
 CREATE TABLE \`article_tag_comments\` (
   \`articleTagArticleIntId\` INTEGER UNSIGNED NOT NULL,
   \`articleTagTagIntId\` INTEGER UNSIGNED NOT NULL,
-  \`createdAt\` TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT 'The date, fixed, of the document\\\\'s creation',
-  \`updatedAt\` TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT 'The date of the document\\\\'s last update',
+  \`createdAt\` TIMESTAMP(3) NOT NULL DEFAULT NOW(3) COMMENT 'The date, fixed, of the document\\\\'s creation',
+  \`updatedAt\` TIMESTAMP(3) NOT NULL DEFAULT NOW(3) ON UPDATE NOW(3) COMMENT 'The date of the document\\\\'s last update',
   \`body\` VARCHAR(255) NULL,
   PRIMARY KEY (\`articleTagArticleIntId\`, \`articleTagTagIntId\`),
   INDEX (\`articleTagArticleIntId\`, \`articleTagTagIntId\`),
@@ -105,8 +106,8 @@ COLLATE = 'utf8mb4_unicode_520_ci';
 
 CREATE TABLE \`article_urls\` (
   \`articleIntId\` INTEGER UNSIGNED NOT NULL,
-  \`createdAt\` TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT 'The date, fixed, of the document\\\\'s creation',
-  \`updatedAt\` TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT 'The date of the document\\\\'s last update',
+  \`createdAt\` TIMESTAMP(3) NOT NULL DEFAULT NOW(3) COMMENT 'The date, fixed, of the document\\\\'s creation',
+  \`updatedAt\` TIMESTAMP(3) NOT NULL DEFAULT NOW(3) ON UPDATE NOW(3) COMMENT 'The date of the document\\\\'s last update',
   \`path\` VARCHAR(255) NOT NULL,
   PRIMARY KEY (\`articleIntId\`),
   INDEX (\`articleIntId\`),
@@ -117,8 +118,8 @@ COLLATE = 'utf8mb4_unicode_520_ci';
 
 CREATE TABLE \`article_url_metas\` (
   \`urlArticleIntId\` INTEGER UNSIGNED NOT NULL,
-  \`createdAt\` TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT 'The date, fixed, of the document\\\\'s creation',
-  \`updatedAt\` TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT 'The date of the document\\\\'s last update',
+  \`createdAt\` TIMESTAMP(3) NOT NULL DEFAULT NOW(3) COMMENT 'The date, fixed, of the document\\\\'s creation',
+  \`updatedAt\` TIMESTAMP(3) NOT NULL DEFAULT NOW(3) ON UPDATE NOW(3) COMMENT 'The date of the document\\\\'s last update',
   PRIMARY KEY (\`urlArticleIntId\`),
   INDEX (\`urlArticleIntId\`),
   FOREIGN KEY (\`urlArticleIntId\`) REFERENCES \`article_urls\` (\`articleIntId\`) ON UPDATE CASCADE ON DELETE RESTRICT

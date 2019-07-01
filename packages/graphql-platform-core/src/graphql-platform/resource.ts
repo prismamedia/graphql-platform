@@ -70,7 +70,7 @@ export * from './resource/set';
 export * from './resource/unique';
 export * from './resource/virtual-field';
 
-export interface NodeValue {
+export interface NodeValue extends WhereUniqueInputValue {
   [componentName: string]: ComponentValue;
 }
 
@@ -108,7 +108,8 @@ export type ResourceHookMap<
   };
   [ResourceHookKind.PostCreate]: Readonly<{
     metas: ResourceHookMetaMap<CreateOneOperationArgs, TCustomContext, TBaseContext, TOperationContext>;
-    createdNodeId: WhereUniqueInputValue;
+    // Contains the whole node value: all the fields and relation's ids
+    createdNode: NodeValue;
   }>;
 
   // Update
@@ -119,7 +120,8 @@ export type ResourceHookMap<
   };
   [ResourceHookKind.PostUpdate]: Readonly<{
     metas: ResourceHookMetaMap<UpdateOneOperationArgs, TCustomContext, TBaseContext, TOperationContext>;
-    updatedNodeId: WhereUniqueInputValue;
+    // Contains the whole node value: all the fields and relation's ids
+    updatedNode: NodeValue;
   }>;
 
   // Delete
@@ -129,7 +131,8 @@ export type ResourceHookMap<
   };
   [ResourceHookKind.PostDelete]: Readonly<{
     metas: ResourceHookMetaMap<DeleteOneOperationArgs, TCustomContext, TBaseContext, TOperationContext>;
-    deletedNodeId: WhereUniqueInputValue;
+    // Contains the whole node value: all the fields and relation's ids
+    deletedNode: NodeValue;
   }>;
 };
 

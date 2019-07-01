@@ -112,6 +112,7 @@ describe('Execution', () => {
           username: 'user-01',
         },
         moderator: null,
+        publishedAt: '2019-06-01T12:10:37.829Z',
         category: {
           parent: {
             id: '92dc645e-c5ee-46ac-8a24-53b1584e4c99',

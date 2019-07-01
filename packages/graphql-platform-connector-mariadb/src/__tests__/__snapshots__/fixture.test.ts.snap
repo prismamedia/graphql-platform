@@ -1,7 +1,7 @@
 // Jest Snapshot v1, https://goo.gl/fbAQLP
 
 exports[`Fixture loads the fixtures 1`] = `
-"# 107 queries in 1 connections
+"# 109 queries in 1 connections
 
 START TRANSACTION;
 
@@ -92,12 +92,43 @@ INSERT INTO
 SET
   \`id\` = '9b6b98fa-586d-4987-82a0-d63f11bbe560',
   \`computedMaxIntId\` = 100,
+  \`publishedAt\` = '2019-07-01T03:41:37.829',
   \`format\` = 'RICH',
   \`title\` = 'My first article\\\\'s title, a rich article.',
   \`slug\` = 'my-first-articles-title-a-rich-article',
   \`categoryParentId\` = 'dc8c0340-89bf-42ec-8468-26af53248527',
   \`categorySlug\` = 'my-first-category',
   \`authorUsername\` = 'A publisher';
+
+SELECT
+  \`Article\`.\`id\`,
+  \`Article\`.\`intId\`,
+  \`Article\`.\`createdAt\`,
+  \`Article\`.\`updatedAt\`,
+  \`Article\`.\`computedMaxIntId\`,
+  \`Article\`.\`publishedAt\`,
+  \`Article\`.\`format\`,
+  \`Article\`.\`title\`,
+  \`Article\`.\`slug\`,
+  \`Article\`.\`body\`,
+  \`Article\`.\`categoryParentId\`,
+  \`Article\`.\`categorySlug\`,
+  \`Article>category\`.\`parentId\`,
+  \`Article\`.\`authorUsername\`,
+  \`Article\`.\`moderatorIntId\`
+FROM
+  \`articles\` AS \`Article\`
+  LEFT JOIN \`categories\` AS \`Article>category\` ON (
+    \`Article\`.\`categoryParentId\` = \`Article>category\`.\`parentId\`
+  )
+  AND (
+    \`Article\`.\`categorySlug\` = \`Article>category\`.\`slug\`
+  )
+WHERE
+  (\`Article\`.\`format\` IN ('RICH', 'VIDEO'))
+  AND (\`Article\`.\`intId\` = 1)
+LIMIT
+  1;
 
 COMMIT;
 
@@ -307,6 +338,36 @@ SET
   \`categorySlug\` = 'my-sub-category-in-my-first-category',
   \`authorUsername\` = 'A publisher',
   \`moderatorIntId\` = 2;
+
+SELECT
+  \`Article\`.\`id\`,
+  \`Article\`.\`intId\`,
+  \`Article\`.\`createdAt\`,
+  \`Article\`.\`updatedAt\`,
+  \`Article\`.\`computedMaxIntId\`,
+  \`Article\`.\`publishedAt\`,
+  \`Article\`.\`format\`,
+  \`Article\`.\`title\`,
+  \`Article\`.\`slug\`,
+  \`Article\`.\`body\`,
+  \`Article\`.\`categoryParentId\`,
+  \`Article\`.\`categorySlug\`,
+  \`Article>category\`.\`parentId\`,
+  \`Article\`.\`authorUsername\`,
+  \`Article\`.\`moderatorIntId\`
+FROM
+  \`articles\` AS \`Article\`
+  LEFT JOIN \`categories\` AS \`Article>category\` ON (
+    \`Article\`.\`categoryParentId\` = \`Article>category\`.\`parentId\`
+  )
+  AND (
+    \`Article\`.\`categorySlug\` = \`Article>category\`.\`slug\`
+  )
+WHERE
+  (\`Article\`.\`format\` IN ('RICH', 'VIDEO'))
+  AND (\`Article\`.\`intId\` = 2)
+LIMIT
+  1;
 
 COMMIT;
 

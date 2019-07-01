@@ -305,4 +305,46 @@ describe('parseResolverInfo', () => {
       },
     });
   });
+
+  it('merge selections', () => {
+    const a = new GraphQLSelectionNode('article', {}, [
+      new GraphQLSelectionNode('id', {}, [], 'myId'),
+      'title',
+      new GraphQLSelectionNode('category', {}, ['slug', new GraphQLSelectionNode('parent', {}, ['updatedAt'])]),
+    ]);
+
+    const b = new GraphQLSelectionNode('article', {}, [
+      new GraphQLSelectionNode('category', {}, [new GraphQLSelectionNode('parent', {}, ['title'])]),
+    ]);
+
+    a.setChildren(b.getChildren());
+
+    expect(a.toPlainObject()).toEqual({
+      category: {
+        children: {
+          parent: {
+            children: {
+              title: {
+                name: 'title',
+              },
+              updatedAt: {
+                name: 'updatedAt',
+              },
+            },
+            name: 'parent',
+          },
+          slug: {
+            name: 'slug',
+          },
+        },
+        name: 'category',
+      },
+      myId: {
+        name: 'id',
+      },
+      title: {
+        name: 'title',
+      },
+    });
+  });
 });

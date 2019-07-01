@@ -3,7 +3,7 @@ import { GraphQLFieldConfigArgumentMap, GraphQLNonNull, GraphQLOutputType } from
 import { Memoize } from 'typescript-memoize';
 import { ConnectorCreateInputValue } from '../../connector';
 import { OperationResolverParams } from '../../operation';
-import { ResourceHookKind } from '../../resource';
+import { NodeValue, ResourceHookKind } from '../../resource';
 import { FieldHookMap, RelationHookMap } from '../../resource/component';
 import { CreateInputValue, NodeSource, TypeKind } from '../../type';
 import { AbstractOperation } from '../abstract-operation';
@@ -41,11 +41,16 @@ export class CreateOneOperation extends AbstractOperation<CreateOneOperationArgs
   }
 
   public async resolve(params: OperationResolverParams<CreateOneOperationArgs>): Promise<CreateOneOperationResult> {
-    const { args, context, operationContext, selectionNode } = params;
+    const { args, operationContext, selectionNode } = params;
     const resource = this.resource;
 
     const data = typeof args.data === 'boolean' ? {} : args.data;
     const create: ConnectorCreateInputValue = {};
+
+    // Select all the components in case of post hooks
+    if (resource.getEventListenerCount(ResourceHookKind.PostCreate) > 0) {
+      selectionNode.setChildren(resource.getComponentSet().getSelectionNodeChildren(TypeKind.Input));
+    }
 
     // Parse the provided args
     await Promise.all([
@@ -146,6 +151,10 @@ export class CreateOneOperation extends AbstractOperation<CreateOneOperationArgs
 
     const nodeId = resource.getInputType('WhereUnique').assert(nodeSource);
 
+    const result = selectionNode.hasDiff(nodeSource)
+      ? await resource.getQuery('AssertOne').resolve({ ...params, args: { where: nodeId } })
+      : nodeSource;
+
     operationContext.postSuccessHooks.push(
       resource.emitSerial.bind(resource, ResourceHookKind.PostCreate, {
         metas: Object.freeze({
@@ -153,12 +162,10 @@ export class CreateOneOperation extends AbstractOperation<CreateOneOperationArgs
           resource,
           create,
         }),
-        createdNodeId: nodeId,
+        createdNode: nodeSource as NodeValue,
       }),
     );
 
-    return selectionNode.hasDiff(nodeSource)
-      ? resource.getQuery('AssertOne').resolve({ ...params, args: { where: nodeId } })
-      : nodeSource;
+    return result;
   }
 }

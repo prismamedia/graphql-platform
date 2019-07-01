@@ -21,6 +21,9 @@ type Article {
 
   # The article's body
   body: String
+
+  # The date of the document's public release
+  publishedAt: DateTime
   category: Category!
   author: User!
   moderator: User
@@ -73,6 +76,9 @@ input ArticleCreateInput {
 
   # The article's body
   body: String
+
+  # The date of the document's public release
+  publishedAt: DateTime
   category: ArticleCreateCategoryInput!
   author: ArticleCreateAuthorInput!
   moderator: ArticleCreateModeratorInput
@@ -111,6 +117,8 @@ enum ArticleOrderByInput {
   slug_DESC
   body_ASC
   body_DESC
+  publishedAt_ASC
+  publishedAt_DESC
 }
 
 # \\"ArticleTag\\" resource's node
@@ -336,6 +344,9 @@ input ArticleUpdateInput {
 
   # The article's body
   body: String
+
+  # The date of the document's public release
+  publishedAt: DateTime
   category: ArticleUpdateCategoryInput
   author: ArticleUpdateAuthorInput
   moderator: ArticleUpdateModeratorInput
@@ -591,6 +602,14 @@ input ArticleWhereInput {
   body_lte: String
   body_gt: String
   body_gte: String
+  publishedAt: DateTime
+  publishedAt_not: DateTime
+  publishedAt_in: [DateTime]
+  publishedAt_not_in: [DateTime]
+  publishedAt_lt: DateTime
+  publishedAt_lte: DateTime
+  publishedAt_gt: DateTime
+  publishedAt_gte: DateTime
   category: CategoryWhereInput
   author: UserWhereInput
   moderator: UserWhereInput

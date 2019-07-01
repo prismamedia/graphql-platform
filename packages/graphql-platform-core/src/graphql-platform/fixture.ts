@@ -1,5 +1,5 @@
 import { DepGraph } from 'dependency-graph';
-import { OperationDefinitionNode, print, printError } from 'graphql';
+import { OperationDefinitionNode, print } from 'graphql';
 import { GraphQLPlatform, Request } from '../graphql-platform';
 import { Field, FieldValue, Relation, Resource } from './resource';
 import { TypeKind } from './type';
@@ -164,7 +164,7 @@ export class Fixture {
     if (errors && errors.length > 0) {
       const error = errors[0];
 
-      console.error(printError(error));
+      console.error(error.originalError || error);
       throw error;
     }
 

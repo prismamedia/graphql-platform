@@ -78,6 +78,7 @@ export const request: Request = {
     article_01: createArticle(data: $article_01) {
       id
       slug
+      publishedAt
       author {
         username
       }
@@ -279,6 +280,7 @@ export const request: Request = {
     article_01: {
       format: 'Rich',
       title: 'My first article title, RICH, authored by user-01, in the second category.',
+      publishedAt: '2019-06-01T12:10:37.829Z',
       author: {
         connect: {
           id: '771ad98a-5b88-4d1d-a3f3-9133d367b708',

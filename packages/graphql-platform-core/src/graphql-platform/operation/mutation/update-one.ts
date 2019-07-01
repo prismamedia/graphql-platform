@@ -3,7 +3,7 @@ import { GraphQLFieldConfigArgumentMap, GraphQLInputObjectType, GraphQLNonNull, 
 import { Memoize } from 'typescript-memoize';
 import { ConnectorUpdateInputValue } from '../../connector';
 import { OperationResolverParams } from '../../operation';
-import { ResourceHookKind } from '../../resource';
+import { NodeValue, ResourceHookKind } from '../../resource';
 import { FieldHookMap, RelationHookMap } from '../../resource/component';
 import { NodeSource, TypeKind, UpdateInputValue, WhereUniqueInputValue } from '../../type';
 import { WhereInputValue } from '../../type/input';
@@ -67,6 +67,11 @@ export class UpdateOneOperation extends AbstractOperation<UpdateOneOperationArgs
 
     const data = typeof args.data === 'boolean' ? {} : args.data;
     const update: ConnectorUpdateInputValue = {};
+
+    // Select all the components in case of post hooks
+    if (resource.getEventListenerCount(ResourceHookKind.PostCreate) > 0) {
+      selectionNode.setChildren(resource.getComponentSet().getSelectionNodeChildren(TypeKind.Input));
+    }
 
     // Parse the provided args
     await Promise.all([
@@ -174,6 +179,13 @@ export class UpdateOneOperation extends AbstractOperation<UpdateOneOperationArgs
     );
 
     if (matchedCount === 1) {
+      const node = resource.parseValue({ ...nodeId, ...update });
+
+      const result =
+        !node || selectionNode.hasDiff(node)
+          ? await resource.getQuery('AssertOne').resolve({ ...params, args: { where: nodeId } })
+          : node;
+
       if (changedCount === 1) {
         operationContext.postSuccessHooks.push(
           resource.emitSerial.bind(resource, ResourceHookKind.PostUpdate, {
@@ -182,16 +194,12 @@ export class UpdateOneOperation extends AbstractOperation<UpdateOneOperationArgs
               resource,
               update,
             }),
-            updatedNodeId: nodeId,
+            updatedNode: result as NodeValue,
           }),
         );
       }
 
-      const node = resource.parseValue({ ...nodeId, ...update });
-
-      return !node || selectionNode.hasDiff(node)
-        ? resource.getQuery('AssertOne').resolve({ ...params, args: { where: nodeId } })
-        : node;
+      return result;
     }
 
     return null;

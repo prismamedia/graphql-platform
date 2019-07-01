@@ -87,6 +87,13 @@ export const config: MyGPConfig = {
       },
     });
 
+    if (resourceName === 'Article') {
+      // A hook is defined to test the returned event object
+      config.hooks = {
+        [ResourceHookKind.PostCreate]: () => {},
+      };
+    }
+
     return config;
   },
 

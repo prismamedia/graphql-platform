@@ -1,5 +1,6 @@
 import { getGraphQLEnumType } from '@prismamedia/graphql-platform-utils';
 import { GraphQLNonNull, GraphQLString } from 'graphql';
+import { GraphQLDateTime } from 'graphql-iso-date';
 import slug from 'slug';
 import { ManagementKind, ResourceHookKind } from '../..';
 import { MyResourceConfig } from '../gp';
@@ -53,6 +54,10 @@ const resource: MyResourceConfig = {
     body: {
       type: GraphQLString,
       description: "The article's body",
+    },
+    publishedAt: {
+      type: GraphQLDateTime,
+      description: "The date of the document's public release",
     },
   },
   relations: {

@@ -1,7 +1,7 @@
 // Jest Snapshot v1, https://goo.gl/fbAQLP
 
 exports[`Execution executes a complex multi mutation request 1`] = `
-"# 110 queries in 1 connections
+"# 112 queries in 1 connections
 
 
 
@@ -200,6 +200,7 @@ INSERT INTO
 SET
   \`id\` = '9b6b98fa-586d-4987-82a0-d63f11bbe560',
   \`computedMaxIntId\` = 100,
+  \`publishedAt\` = '2019-06-01T12:10:37.829',
   \`format\` = 'RICH',
   \`title\` = 'My first article title, RICH, authored by user-01, in the second category.',
   \`slug\` = 'my-first-article-title-rich-authored-by-user-01-in-the-second-category',
@@ -210,13 +211,20 @@ SET
 SELECT
   \`Article\`.\`id\`,
   \`Article\`.\`slug\`,
+  \`Article\`.\`publishedAt\`,
   \`Article\`.\`authorUsername\`,
-  \`Article>moderator\`.\`username\`,
   \`Article\`.\`moderatorIntId\`,
+  \`Article>moderator\`.\`username\`,
   \`Article\`.\`categoryParentId\`,
   \`Article\`.\`categorySlug\`,
   \`Article>category\`.\`parentId\`,
-  \`Article\`.\`intId\`
+  \`Article\`.\`intId\`,
+  \`Article\`.\`createdAt\`,
+  \`Article\`.\`updatedAt\`,
+  \`Article\`.\`computedMaxIntId\`,
+  \`Article\`.\`format\`,
+  \`Article\`.\`title\`,
+  \`Article\`.\`body\`
 FROM
   \`articles\` AS \`Article\`
   LEFT JOIN \`users\` AS \`Article>moderator\` ON \`Article\`.\`moderatorIntId\` = \`Article>moderator\`.\`intId\`
@@ -406,10 +414,16 @@ SELECT
   \`Article\`.\`categoryParentId\`,
   \`Article\`.\`categorySlug\`,
   \`Article\`.\`authorUsername\`,
-  \`Article>moderator\`.\`username\`,
   \`Article\`.\`moderatorIntId\`,
+  \`Article>moderator\`.\`username\`,
   \`Article>category\`.\`parentId\`,
-  \`Article\`.\`intId\`
+  \`Article\`.\`intId\`,
+  \`Article\`.\`createdAt\`,
+  \`Article\`.\`updatedAt\`,
+  \`Article\`.\`computedMaxIntId\`,
+  \`Article\`.\`publishedAt\`,
+  \`Article\`.\`format\`,
+  \`Article\`.\`body\`
 FROM
   \`articles\` AS \`Article\`
   LEFT JOIN \`users\` AS \`Article>moderator\` ON \`Article\`.\`moderatorIntId\` = \`Article>moderator\`.\`intId\`
@@ -782,7 +796,20 @@ WHERE
 
 SELECT
   \`Article\`.\`title\`,
-  \`Article\`.\`body\`
+  \`Article\`.\`body\`,
+  \`Article\`.\`intId\`,
+  \`Article\`.\`id\`,
+  \`Article\`.\`createdAt\`,
+  \`Article\`.\`updatedAt\`,
+  \`Article\`.\`computedMaxIntId\`,
+  \`Article\`.\`publishedAt\`,
+  \`Article\`.\`format\`,
+  \`Article\`.\`slug\`,
+  \`Article\`.\`categoryParentId\`,
+  \`Article\`.\`categorySlug\`,
+  \`Article>category\`.\`parentId\`,
+  \`Article\`.\`authorUsername\`,
+  \`Article\`.\`moderatorIntId\`
 FROM
   \`articles\` AS \`Article\`
   LEFT JOIN \`categories\` AS \`Article>category\` ON (
@@ -827,6 +854,41 @@ WHERE
     \`Article\`.\`slug\` = 'my-first-article-title-rich-authored-by-user-01-in-the-second-category'
   );
 
+SELECT
+  \`Article\`.\`title\`,
+  \`Article\`.\`body\`,
+  \`Article\`.\`intId\`,
+  \`Article\`.\`id\`,
+  \`Article\`.\`createdAt\`,
+  \`Article\`.\`updatedAt\`,
+  \`Article\`.\`computedMaxIntId\`,
+  \`Article\`.\`publishedAt\`,
+  \`Article\`.\`format\`,
+  \`Article\`.\`slug\`,
+  \`Article\`.\`categoryParentId\`,
+  \`Article\`.\`categorySlug\`,
+  \`Article>category\`.\`parentId\`,
+  \`Article\`.\`authorUsername\`,
+  \`Article\`.\`moderatorIntId\`
+FROM
+  \`articles\` AS \`Article\`
+  LEFT JOIN \`categories\` AS \`Article>category\` ON (
+    \`Article\`.\`categoryParentId\` = \`Article>category\`.\`parentId\`
+  )
+  AND (
+    \`Article\`.\`categorySlug\` = \`Article>category\`.\`slug\`
+  )
+WHERE
+  (\`Article\`.\`format\` IN ('RICH', 'VIDEO'))
+  AND (
+    \`Article>category\`.\`id\` = 'e411a5dc-a14f-4d0d-ac54-d4c93c7c5b84'
+  )
+  AND (
+    \`Article\`.\`slug\` = 'my-first-article-title-rich-authored-by-user-01-in-the-second-category'
+  )
+LIMIT
+  1;
+
 COMMIT;
 
 START TRANSACTION;
@@ -849,6 +911,43 @@ WHERE
   AND (
     \`Article\`.\`slug\` = 'my-second-article-title-video-authored-by-user-01-in-the-first-category'
   );
+
+SELECT
+  \`Article\`.\`moderatorIntId\`,
+  \`Article>moderator\`.\`id\`,
+  \`Article\`.\`intId\`,
+  \`Article\`.\`id\`,
+  \`Article\`.\`createdAt\`,
+  \`Article\`.\`updatedAt\`,
+  \`Article\`.\`computedMaxIntId\`,
+  \`Article\`.\`publishedAt\`,
+  \`Article\`.\`format\`,
+  \`Article\`.\`title\`,
+  \`Article\`.\`slug\`,
+  \`Article\`.\`body\`,
+  \`Article\`.\`categoryParentId\`,
+  \`Article\`.\`categorySlug\`,
+  \`Article>category\`.\`parentId\`,
+  \`Article\`.\`authorUsername\`
+FROM
+  \`articles\` AS \`Article\`
+  LEFT JOIN \`users\` AS \`Article>moderator\` ON \`Article\`.\`moderatorIntId\` = \`Article>moderator\`.\`intId\`
+  LEFT JOIN \`categories\` AS \`Article>category\` ON (
+    \`Article\`.\`categoryParentId\` = \`Article>category\`.\`parentId\`
+  )
+  AND (
+    \`Article\`.\`categorySlug\` = \`Article>category\`.\`slug\`
+  )
+WHERE
+  (\`Article\`.\`format\` IN ('RICH', 'VIDEO'))
+  AND (
+    \`Article>category\`.\`id\` = '8fdec553-453e-442f-a710-c52ee4a23080'
+  )
+  AND (
+    \`Article\`.\`slug\` = 'my-second-article-title-video-authored-by-user-01-in-the-first-category'
+  )
+LIMIT
+  1;
 
 COMMIT;
 

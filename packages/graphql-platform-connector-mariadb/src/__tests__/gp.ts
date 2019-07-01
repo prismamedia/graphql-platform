@@ -1,6 +1,7 @@
 import { ManagementKind, ResourceHookKind } from '@prismamedia/graphql-platform-core';
 import { mergeWith } from '@prismamedia/graphql-platform-utils';
 import { GraphQLInt } from 'graphql';
+import { GraphQLDateTime } from 'graphql-iso-date';
 import { config as coreConfig, MyContext } from '../../../graphql-platform-core/src/__tests__/gp';
 import { GraphQLPlatform, GraphQLPlatformConfig } from '../graphql-platform';
 import { DataType, NumericDataTypeModifier } from '../graphql-platform/connector/database';
@@ -52,8 +53,8 @@ export const config: MyGPConfig = mergeWith(
             },
           });
 
-          // This field is set in order to test current connection usage in hooks
           if (resourceName === 'Article') {
+            // This field is set in order to test current connection usage in hooks
             mergeWith(fields, {
               computedMaxIntId: {
                 description: 'An "auto-increment" kind of field',
@@ -93,34 +94,45 @@ export const config: MyGPConfig = mergeWith(
                   },
                 },
               } as FieldConfig<{}>,
+              publishedAt: {
+                column: {
+                  dataType: {
+                    type: DataType.TIMESTAMP,
+                    microsecondPrecision: 3,
+                  },
+                },
+              } as FieldConfig<{}>,
             });
 
             (config.uniques || (config.uniques = [])).push('computedMaxIntId');
           }
         }
 
-        if (fields.createdAt) {
-          mergeWith(fields.createdAt, {
-            column: {
-              dataType: {
-                type: DataType.TIMESTAMP,
-                microsecondPrecision: 3,
+        for (const [name, field] of Object.entries(fields)) {
+          if (field.type === GraphQLDateTime) {
+            mergeWith(field, {
+              column: {
+                dataType: {
+                  type: DataType.TIMESTAMP,
+                  microsecondPrecision: 3,
+                },
               },
-              default: 'CURRENT_TIMESTAMP',
-            },
-          });
-        }
+            });
 
-        if (fields.updatedAt) {
-          mergeWith(fields.updatedAt, {
-            column: {
-              dataType: {
-                type: DataType.TIMESTAMP,
-                microsecondPrecision: 3,
-              },
-              default: 'CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP',
-            },
-          });
+            if (name === 'createdAt') {
+              mergeWith(field, {
+                column: {
+                  default: 'NOW(3)',
+                },
+              });
+            } else if (name === 'updatedAt') {
+              mergeWith(field, {
+                column: {
+                  default: 'NOW(3) ON UPDATE NOW(3)',
+                },
+              });
+            }
+          }
         }
       }
 

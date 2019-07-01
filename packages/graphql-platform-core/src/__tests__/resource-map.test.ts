@@ -96,6 +96,11 @@ describe('ResourceMap', () => {
               "immutable": false,
               "name": "body",
             },
+            Object {
+              "description": "The date of the document's public release",
+              "immutable": false,
+              "name": "publishedAt",
+            },
           ],
           "identifier": Object {
             "name": "_id",

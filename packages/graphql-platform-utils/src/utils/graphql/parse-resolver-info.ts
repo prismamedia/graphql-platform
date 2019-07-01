@@ -15,9 +15,7 @@ import { POJO } from '../../types/pojo';
 import { isPlainObject } from '../is-plain-object';
 import { SuperMap } from '../super-map';
 
-export type GraphQLSelectionNodeChildren =
-  | Array<GraphQLSelectionNode | GraphQLSelectionNode['name']>
-  | GraphQLSelectionNode;
+export type GraphQLSelectionNodeChildren = Array<GraphQLSelectionNode<any> | GraphQLSelectionNode['name']>;
 
 export class GraphQLSelectionNode<TArgs extends POJO = any> extends SuperMap<
   GraphQLSelectionNode['key'],
@@ -74,8 +72,12 @@ export class GraphQLSelectionNode<TArgs extends POJO = any> extends SuperMap<
     this.parent = parent;
   }
 
+  public getChildren(): GraphQLSelectionNode[] {
+    return [...this.values()];
+  }
+
   public setChildren(children: GraphQLSelectionNodeChildren): void {
-    (children instanceof GraphQLSelectionNode ? [...children.values()] : children).forEach(child =>
+    (children instanceof GraphQLSelectionNode ? children.getChildren() : children).forEach(child =>
       this.setChild(child),
     );
   }
@@ -85,7 +87,13 @@ export class GraphQLSelectionNode<TArgs extends POJO = any> extends SuperMap<
       typeof nodeOrNodeName === 'string' ? new GraphQLSelectionNode(nodeOrNodeName, {}) : nodeOrNodeName.clone();
 
     node.setParent(this);
-    this.set(node.key, node);
+
+    const currentNode = this.get(node.key);
+    if (currentNode) {
+      currentNode.setChildren(node.getChildren());
+    } else {
+      this.set(node.key, node);
+    }
   }
 
   @Memoize()
@@ -115,7 +123,7 @@ export class GraphQLSelectionNode<TArgs extends POJO = any> extends SuperMap<
   public clone(): GraphQLSelectionNode<TArgs>;
   public clone<CArgs>(args: CArgs): GraphQLSelectionNode<CArgs>;
   public clone(args: POJO = this.args): GraphQLSelectionNode {
-    return new GraphQLSelectionNode(this.name, args, this, this.alias, this.parent, this.rootPath);
+    return new GraphQLSelectionNode(this.name, args, this.getChildren(), this.alias, this.parent, this.rootPath);
   }
 
   public diff(node: unknown): GraphQLSelectionNode<TArgs> {

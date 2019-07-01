@@ -1,13 +1,13 @@
 import { GraphQLNonNullDecorator, isPlainObject, Scalar, SuperMap } from '@prismamedia/graphql-platform-utils';
 import { GraphQLInputFieldConfigMap, GraphQLInputObjectType } from 'graphql';
 import { Memoize } from 'typescript-memoize';
-import { Component, ComponentSet, Field, NodeValue, Unique } from '../../resource';
+import { Component, ComponentSet, Field, Unique } from '../../resource';
 import { UniqueSet } from '../../resource/unique';
 import { AbstractInputType } from '../abstract-type';
 
 export type WhereUniqueInputValueComponent = null | Scalar | WhereUniqueInputValue;
 
-export interface WhereUniqueInputValue extends NodeValue {
+export interface WhereUniqueInputValue {
   [componentName: string]: WhereUniqueInputValueComponent;
 }
 
