@@ -188,7 +188,7 @@ export class UpdateOneOperation extends AbstractOperation<UpdateOneOperationArgs
 
       if (changedCount === 1) {
         operationContext.postSuccessHooks.push(
-          resource.emitSerial.bind(resource, ResourceHookKind.PostUpdate, {
+          resource.emit.bind(resource, ResourceHookKind.PostUpdate, {
             metas: Object.freeze({
               ...params,
               resource,

@@ -8,6 +8,8 @@ import {
 } from '@prismamedia/graphql-platform-utils';
 import { GraphQLFieldConfigArgumentMap, GraphQLOutputType } from 'graphql';
 import { Memoize } from 'typescript-memoize';
+import { BaseContext } from '../../graphql-platform';
+import { logPromiseError } from '../../utils';
 import { ConnectorInterface } from '../connector';
 import {
   Operation,
@@ -81,7 +83,7 @@ export abstract class AbstractOperation<TArgs extends POJO = any, TResult = any>
   public abstract async resolve(params: OperationResolverParams<TArgs>): Promise<TResult>;
 
   @Memoize()
-  public getGraphQLFieldConfig(): GraphQLFieldConfig<any, any, TArgs, TResult> {
+  public getGraphQLFieldConfig(): GraphQLFieldConfig<any, BaseContext, TArgs, TResult> {
     return {
       description: this.description,
       args: this.getGraphQLFieldConfigArgs(),
@@ -113,11 +115,15 @@ export abstract class AbstractOperation<TArgs extends POJO = any, TResult = any>
 
           await this.resource.emitSerial(OperationEventKind.PostOperationSuccess, event);
 
-          // Execute the hooks on operation success
-          await Promise.all(postSuccessHooks.map(async hook => hook()));
+          // Execute the hooks on operation success, asynchronously.
+          // In case of error, we log it, but do not throw anything as the operation is already a success
+          logPromiseError(Promise.all(postSuccessHooks.map(async hook => hook())), context.logger).catch(() => {
+            // Do not throw any error, it is already logged
+          });
 
           return result;
         } catch (error) {
+          context.logger && context.logger.error(error);
           await this.resource.emitSerial(OperationEventKind.PostOperationError, Object.freeze({ ...event, error }));
 
           throw error;

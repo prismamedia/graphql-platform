@@ -78,7 +78,7 @@ export class DeleteOneOperation extends AbstractOperation<DeleteOneOperationArgs
 
       if (deletedNodeCount === 1) {
         operationContext.postSuccessHooks.push(
-          resource.emitSerial.bind(resource, ResourceHookKind.PostDelete, {
+          resource.emit.bind(resource, ResourceHookKind.PostDelete, {
             metas: Object.freeze({
               ...params,
               resource,

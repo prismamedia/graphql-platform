@@ -10,6 +10,7 @@ import {
 import { GraphQLFieldConfigMap, GraphQLObjectType, GraphQLResolveInfo } from 'graphql';
 import { Memoize } from 'typescript-memoize';
 import { BaseContext } from '../../../graphql-platform';
+import { logPromiseError } from '../../../utils';
 import { Field, FieldValue, InverseRelation, Relation, VirtualField } from '../../resource';
 import { AbstractOutputType } from '../abstract-type';
 
@@ -87,7 +88,9 @@ export class NodeType extends AbstractOutputType {
     const selectionNode = parseGraphQLResolveInfo(info);
     const fieldValue = source[selectionNode.name];
 
-    return typeof fieldValue === 'function' ? fieldValue({ args, context, selectionNode }) : fieldValue;
+    return typeof fieldValue === 'function'
+      ? logPromiseError(fieldValue({ args, context, selectionNode }), context.logger)
+      : fieldValue;
   }
 
   @Memoize()

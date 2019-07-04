@@ -156,7 +156,7 @@ export class CreateOneOperation extends AbstractOperation<CreateOneOperationArgs
       : nodeSource;
 
     operationContext.postSuccessHooks.push(
-      resource.emitSerial.bind(resource, ResourceHookKind.PostCreate, {
+      resource.emit.bind(resource, ResourceHookKind.PostCreate, {
         metas: Object.freeze({
           ...params,
           resource,

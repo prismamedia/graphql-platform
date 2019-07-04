@@ -13,6 +13,7 @@ import { ExecutionResult, graphql, GraphQLArgs, GraphQLFieldConfig, GraphQLSchem
 import { Binding } from 'graphql-binding';
 import { ExecutionResultDataDefault } from 'graphql/execution/execute';
 import { Memoize } from 'typescript-memoize';
+import { Logger } from 'winston';
 import { ConnectorInterface } from './graphql-platform/connector';
 import { Fixture, FixtureData, FixtureGraph } from './graphql-platform/fixture';
 import { OperationContext } from './graphql-platform/operation';
@@ -27,6 +28,7 @@ import {
 import { GraphQLSchemaConfig } from './graphql-platform/schema';
 
 export * from './graphql-platform/connector';
+export * from './graphql-platform/fixture';
 export * from './graphql-platform/operation';
 export * from './graphql-platform/resource';
 export * from './graphql-platform/schema';
@@ -34,10 +36,13 @@ export * from './graphql-platform/type';
 
 /** "Context" provided by the GraphQL Platform */
 export interface BaseContext {
+  // The logger, if any
+  logger: Logger | undefined;
+
   // Either we are in debug mode or not
   debug: boolean;
 
-  // This API's binding in order to execute other requests
+  // This API's binding, in order to execute other requests
   api: Binding;
 }
 
@@ -69,6 +74,9 @@ export interface GraphQLPlatformConfig<
     TOperationContext
   >
 > {
+  /** Optional, provide your own logger to see what happens under the hood */
+  logger?: Maybe<Logger>;
+
   /** Optional, default: true but in "production" and "test" env */
   debug?: FlagConfig;
 
@@ -96,6 +104,11 @@ export class GraphQLPlatform<
   TConfig extends AnyGraphQLPlatformConfig = GraphQLPlatformConfig<TContextParams, TCustomContext>
 > {
   public constructor(readonly config: TConfig) {}
+
+  @Memoize()
+  public getLogger(): Logger | undefined {
+    return this.config.logger || undefined;
+  }
 
   @Memoize()
   public getEnvironment(): string {
@@ -189,6 +202,7 @@ export class GraphQLPlatform<
 
   public async getBaseContext(): Promise<BaseContext> {
     return {
+      logger: this.getLogger(),
       debug: this.isDebug(),
       api: this.getBinding(),
     };
