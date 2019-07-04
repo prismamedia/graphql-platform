@@ -1,6 +1,6 @@
 {
   "name": "@prismamedia/graphql-platform-utils",
-  "version": "0.1.0-alpha.8",
+  "version": "0.1.0-alpha.9",
   "license": "MIT",
   "contributors": [
     "Yvann Boucher <yvann.boucher@gmail.com>"
@@ -36,7 +36,6 @@
     "typescript-memoize": "^1.0.0-alpha.3"
   },
   "peerDependencies": {
-    "@types/graphql": "^14.0.0",
     "graphql": "^14.0.0"
   }
 }

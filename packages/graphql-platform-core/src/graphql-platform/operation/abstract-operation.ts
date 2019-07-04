@@ -9,7 +9,6 @@ import {
 import { GraphQLFieldConfigArgumentMap, GraphQLOutputType } from 'graphql';
 import { Memoize } from 'typescript-memoize';
 import { BaseContext } from '../../graphql-platform';
-import { logPromiseError } from '../../utils';
 import { ConnectorInterface } from '../connector';
 import {
   Operation,
@@ -115,11 +114,17 @@ export abstract class AbstractOperation<TArgs extends POJO = any, TResult = any>
 
           await this.resource.emitSerial(OperationEventKind.PostOperationSuccess, event);
 
-          // Execute the hooks on operation success, asynchronously.
-          // In case of error, we log it, but do not throw anything as the operation is already a success
-          logPromiseError(Promise.all(postSuccessHooks.map(async hook => hook())), context.logger).catch(() => {
-            // Do not throw any error, it is already logged
-          });
+          // Execute the hooks on operation success
+          // In case of errors: we log them but do not throw anything as we want the operation remains a "success"
+          await Promise.all(
+            postSuccessHooks.map(async hook => {
+              try {
+                await hook();
+              } catch (error) {
+                context.logger && context.logger.error(error);
+              }
+            }),
+          );
 
           return result;
         } catch (error) {
