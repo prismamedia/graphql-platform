@@ -1,11 +1,11 @@
 import { NodeValue } from '@prismamedia/graphql-platform-core';
-import { isScalar, loadModuleMap, Maybe, POJO } from '@prismamedia/graphql-platform-utils';
+import { loadModuleMap, Maybe, MaybeUndefinedDecorator, POJO } from '@prismamedia/graphql-platform-utils';
 import inflector from 'inflection';
 import { escapeId } from 'mysql';
 import { Memoize } from 'typescript-memoize';
 import { Component, Relation } from '../../../resource';
 import { Table } from '../table';
-import { Column, ColumnDataType, ColumnValue } from './column';
+import { Column, ColumnDataType, ColumnValue, isColumnValue } from './column';
 
 export interface ColumnReferenceConfig {
   /** Optional, the column's name, default: guessed from relation and reference name */
@@ -68,50 +68,42 @@ export class ColumnReference {
     return undefined;
   }
 
-  public parseValue(value: unknown): ColumnValue | undefined {
-    if (typeof value !== 'undefined') {
-      if (value === null) {
-        if (this.nullable) {
-          return null;
-        } else {
-          throw new Error(`The "${this}" column is not nullable.`);
-        }
-      } else if (isScalar(value)) {
-        return value;
-      } else {
-        throw new Error(`The "${this}" column's value has to be a scalar: "${value}" given.`);
-      }
-    }
-
-    return undefined;
-  }
-
-  public getValue(node: POJO): ColumnValue | undefined {
-    const relatedNode = this.relation.getValue(node);
+  public getValue<TStrict extends boolean>(node: POJO, strict: TStrict): MaybeUndefinedDecorator<ColumnValue, TStrict> {
+    const relatedNode = this.relation.getValue(node, strict);
     if (typeof relatedNode !== 'undefined') {
-      return relatedNode ? this.reference.getValue(relatedNode) : null;
-    }
+      if (relatedNode === null) {
+        if (!this.nullable) {
+          throw new Error(`The "${this}" column reference's value cannot be null`);
+        }
 
-    return undefined;
-  }
-
-  public assertValue(node: POJO): ColumnValue {
-    const parsedValue = this.getValue(node);
-    if (typeof parsedValue === 'undefined') {
-      throw new Error(`The "${this}" column's value is not defined.`);
-    }
-
-    return parsedValue;
-  }
-
-  public setValue(node: POJO, value: unknown): void {
-    const parsedValue = this.parseValue(value);
-    if (typeof parsedValue !== 'undefined') {
-      if (typeof node[this.relation.name] === 'undefined' || node[this.relation.name] === null) {
-        node[this.relation.name] = {};
+        return null as any;
       }
 
-      this.reference.setValue(node[this.relation.name] as NodeValue, parsedValue);
+      return this.reference.getValue(relatedNode as NodeValue, strict);
+    }
+
+    if (strict) {
+      throw new Error(`The "${this}" column reference's value cannot be undefined`);
+    }
+
+    return undefined as any;
+  }
+
+  public setValue(node: POJO, value: ColumnValue | undefined): void {
+    if (isColumnValue(value, this.nullable)) {
+      let relatedNode = this.relation.getValue(node, false);
+      if (relatedNode === null) {
+        throw new Error(`The "${this}" column reference's cannot be set on a "null" relation`);
+      }
+
+      if (!relatedNode && value !== null) {
+        relatedNode = Object.create(null) as NodeValue;
+      }
+
+      if (relatedNode) {
+        this.reference.setValue(relatedNode, value);
+        this.relation.setValue(node, relatedNode);
+      }
     }
   }
 }

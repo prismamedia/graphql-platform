@@ -1,4 +1,4 @@
-import { FlagConfig, getFlagValue, Maybe } from '@prismamedia/graphql-platform-utils';
+import { FlagConfig, getFlagValue, Maybe, MaybeUndefinedDecorator, POJO } from '@prismamedia/graphql-platform-utils';
 import { EventConfigMap, EventEmitter, EventMap } from '@prismamedia/ts-async-event-emitter';
 import inflector from 'inflection';
 import { Memoize } from 'typescript-memoize';
@@ -6,7 +6,7 @@ import { Resource } from '../resource';
 import { isComponent } from './component';
 import { Field } from './component/field';
 import { Relation } from './component/relation';
-import { ManagementKind } from './component/types';
+import { ComponentValue, ManagementKind } from './component/types';
 
 export interface AbstractComponentConfig<THookMap extends EventMap = any> {
   /**
@@ -42,9 +42,12 @@ export interface AbstractComponentConfig<THookMap extends EventMap = any> {
   hooks?: Maybe<EventConfigMap<THookMap>>;
 }
 
+export type AnyAbstractComponentConfig = AbstractComponentConfig<any>;
+
 export abstract class AbstractComponent<
-  THookMap extends EventMap,
-  TConfig extends AbstractComponentConfig<THookMap>
+  THookMap extends EventMap = EventMap,
+  TConfig extends AnyAbstractComponentConfig = AbstractComponentConfig<THookMap>,
+  TValue extends ComponentValue = ComponentValue
 > extends EventEmitter<THookMap> {
   public constructor(readonly name: string, readonly config: TConfig, readonly resource: Resource) {
     super();
@@ -131,7 +134,7 @@ export abstract class AbstractComponent<
   /** Non-nullable input */
   @Memoize()
   public isRequired(): boolean {
-    return !this.isNullable() && !this.isManaged();
+    return !(this.isNullable() || this.isManaged());
   }
 
   @Memoize()
@@ -139,7 +142,7 @@ export abstract class AbstractComponent<
     const isImmutable = getFlagValue(this.config.immutable, this.isInIdentifier() || this.resource.isImmutable());
 
     if (!isImmutable && this.isInIdentifier()) {
-      throw new Error(`The component "${this}" has to be "immutable" as it's part of the identifier.`);
+      throw new Error(`The component "${this}" has to be "immutable" as it is part of the identifier.`);
     }
 
     if (!isImmutable && this.resource.isImmutable()) {
@@ -148,4 +151,29 @@ export abstract class AbstractComponent<
 
     return isImmutable;
   }
+
+  public abstract isValue(value: unknown): value is TValue;
+
+  public abstract parseValue<TStrict extends boolean>(
+    value: unknown,
+    strict: TStrict,
+  ): MaybeUndefinedDecorator<TValue, TStrict>;
+
+  public hasValue(node: POJO): boolean {
+    return this.isValue(node[this.name]);
+  }
+
+  public getValue<TStrict extends boolean>(node: POJO, strict: TStrict): MaybeUndefinedDecorator<TValue, TStrict> {
+    return this.parseValue(node[this.name], strict);
+  }
+
+  public setValue(node: POJO, value: TValue | undefined): void {
+    if (typeof value === 'undefined') {
+      delete node[this.name];
+    } else {
+      node[this.name] = value;
+    }
+  }
 }
+
+export type AnyAbstractComponent = AbstractComponent<any, any, any>;

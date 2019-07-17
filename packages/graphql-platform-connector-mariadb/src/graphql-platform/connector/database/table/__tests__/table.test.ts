@@ -53,22 +53,20 @@ describe('Table', () => {
       },
     };
 
-    expect(articleTagCommentTable.getValue({}, articleTagCommentBodyColumn)).toBeUndefined();
-
-    expect(articleTagCommentBodyColumn.getValue(node)).toEqual('My body');
+    expect(articleTagCommentBodyColumn.getValue(node, true)).toEqual('My body');
     articleTagCommentBodyColumn.setValue(node, 'Another body');
-    expect(articleTagCommentBodyColumn.getValue(node)).toEqual('Another body');
+    expect(articleTagCommentBodyColumn.getValue(node, true)).toEqual('Another body');
 
     if (articleTagArticleIdColumnReference) {
-      expect(articleTagArticleIdColumnReference.getValue(node)).toEqual(5);
+      expect(articleTagArticleIdColumnReference.getValue(node, true)).toEqual(5);
       articleTagArticleIdColumnReference.setValue(node, 50);
-      expect(articleTagArticleIdColumnReference.getValue(node)).toEqual(50);
+      expect(articleTagArticleIdColumnReference.getValue(node, true)).toEqual(50);
     }
 
     if (articleTagTagIdColumnReference) {
-      expect(articleTagTagIdColumnReference.getValue(node)).toEqual(15);
+      expect(articleTagTagIdColumnReference.getValue(node, true)).toEqual(15);
       articleTagTagIdColumnReference.setValue(node, 150);
-      expect(articleTagTagIdColumnReference.getValue(node)).toEqual(150);
+      expect(articleTagTagIdColumnReference.getValue(node, true)).toEqual(150);
     }
 
     expect(node).toEqual({

@@ -27,15 +27,15 @@ describe('Execution', () => {
 
   beforeEach(async done => {
     offListeners = connector.onConfig({
-      [ConnectorEventKind.StartTransaction]: ({ threadId }) => {
+      [ConnectorEventKind.PreStartTransaction]: ({ threadId }) => {
         connectionSet.add(threadId);
         queries.push('START TRANSACTION;');
       },
-      [ConnectorEventKind.CommitTransaction]: ({ threadId }) => {
+      [ConnectorEventKind.PreCommitTransaction]: ({ threadId }) => {
         connectionSet.add(threadId);
         queries.push('COMMIT;');
       },
-      [ConnectorEventKind.RollbackTransaction]: ({ threadId }) => {
+      [ConnectorEventKind.PreRollbackTransaction]: ({ threadId }) => {
         connectionSet.add(threadId);
         queries.push('ROLLBACK;');
       },
@@ -140,7 +140,7 @@ describe('Execution', () => {
         id: 'e672258b-0870-437b-b440-e62848b4f666',
         slug: 'my-second-article-title-video-authored-by-user-01-in-the-first-category',
         lowerCasedTitle:
-          'LowerCasedTitle: "my second article title, video, authored by user-01, in the first category." in category "{"parent":{"id":"92dc645e-c5ee-46ac-8a24-53b1584e4c99"},"slug":"first-category"}"',
+          'LowerCasedTitle: "my second article title, video, authored by user-01, in the first category." in category "{"slug":"first-category","parent":{"id":"92dc645e-c5ee-46ac-8a24-53b1584e4c99"}}"',
         tagCount: 0,
         tags: [],
       },

@@ -1,7 +1,8 @@
+import { GraphQLOperationType } from '@prismamedia/graphql-platform-utils';
 import { GraphQLFieldConfigArgumentMap, GraphQLNonNull, GraphQLOutputType } from 'graphql';
 import { Memoize } from 'typescript-memoize';
 import { OperationResolverParams } from '../../operation';
-import { NodeValue, ResourceHookKind } from '../../resource';
+import { ResourceHookKind } from '../../resource';
 import { NodeSource, TypeKind, WhereUniqueInputValue } from '../../type';
 import { AbstractOperation } from '../abstract-operation';
 
@@ -42,11 +43,16 @@ export class DeleteOneOperation extends AbstractOperation<DeleteOneOperationArgs
   }
 
   public async resolve(params: OperationResolverParams<DeleteOneOperationArgs>): Promise<DeleteOneOperationResult> {
-    const { operationContext, selectionNode } = params;
+    const { context, selectionNode } = params;
+    const operationContext = context.operationContext;
     const resource = this.resource;
 
-    // Select all the components in case of post hooks
-    if (resource.getEventListenerCount(ResourceHookKind.PostCreate) > 0) {
+    const postSuccessHooks =
+      operationContext.type === GraphQLOperationType.Mutation ? operationContext.postSuccessHooks : undefined;
+
+    // Select all the components in case of post success hooks
+    const hasPostSuccessHook = resource.getEventListenerCount(ResourceHookKind.PostDelete) > 0;
+    if (hasPostSuccessHook) {
       selectionNode.setChildren(resource.getComponentSet().getSelectionNodeChildren(TypeKind.Input));
     }
 
@@ -58,10 +64,10 @@ export class DeleteOneOperation extends AbstractOperation<DeleteOneOperationArgs
         .getChildren(),
     );
 
-    const nodeSource = await resource.getQuery('FindOne').resolve(params);
+    const node = await resource.getQuery('FindOne').resolve(params);
 
-    if (nodeSource) {
-      const nodeId = resource.getInputType('WhereUnique').assert(nodeSource);
+    if (node) {
+      const nodeId = resource.parseId(node, true);
 
       await resource.emitSerial(ResourceHookKind.PreDelete, {
         metas: Object.freeze({
@@ -77,17 +83,19 @@ export class DeleteOneOperation extends AbstractOperation<DeleteOneOperationArgs
       );
 
       if (deletedNodeCount === 1) {
-        operationContext.postSuccessHooks.push(
-          resource.emit.bind(resource, ResourceHookKind.PostDelete, {
-            metas: Object.freeze({
-              ...params,
-              resource,
+        if (postSuccessHooks && hasPostSuccessHook) {
+          postSuccessHooks.push(
+            resource.emit.bind(resource, ResourceHookKind.PostDelete, {
+              metas: Object.freeze({
+                ...params,
+                resource,
+              }),
+              deletedNode: resource.parseValue(node, true, true),
             }),
-            deletedNode: nodeSource as NodeValue,
-          }),
-        );
+          );
+        }
 
-        return nodeSource;
+        return node;
       }
     }
 

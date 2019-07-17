@@ -1,7 +1,7 @@
 import { Maybe, Merge } from '@prismamedia/graphql-platform-utils';
 import { GraphQLFieldConfig } from 'graphql';
 import { Memoize } from 'typescript-memoize';
-import { BaseContext, Context, CustomContext } from '../../graphql-platform';
+import { AnyBaseContext, BaseContext, Context, CustomContext } from '../../graphql-platform';
 import { Resource } from '../resource';
 import { Component, ComponentSet } from './component';
 
@@ -9,8 +9,8 @@ export * from './virtual-field/map';
 export * from './virtual-field/set';
 
 export type VirtualFieldConfig<
-  TCustomContext extends CustomContext = any,
-  TBaseContext extends BaseContext = BaseContext
+  TCustomContext extends CustomContext = {},
+  TBaseContext extends AnyBaseContext = BaseContext
 > = Merge<
   GraphQLFieldConfig<any, Context<TCustomContext, TBaseContext>>,
   {

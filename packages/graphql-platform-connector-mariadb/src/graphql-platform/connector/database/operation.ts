@@ -1,7 +1,9 @@
-import { OperationResolverParams as CoreOperationResolverParams } from '@prismamedia/graphql-platform-core';
+import {
+  OperationEvent as CoreOperationEvent,
+  OperationResolverParams as CoreOperationResolverParams,
+} from '@prismamedia/graphql-platform-core';
 import { Class, POJO } from '@prismamedia/graphql-platform-utils';
 import { BaseContext } from '../../../graphql-platform';
-import { OperationContext } from '../../connector';
 import { CountOperation as Count } from './operation/count';
 import { CreateOperation as Create } from './operation/create';
 import { DeleteOperation as Delete } from './operation/delete';
@@ -16,7 +18,6 @@ export type OperationId = keyof OperationMap;
 
 export type OperationConstructor<TId extends OperationId> = OperationMap[TId] extends Class ? OperationMap[TId] : never;
 
-export type OperationResolverParams<TArgs extends POJO> = Omit<
-  CoreOperationResolverParams<TArgs, {}, BaseContext>,
-  'operationContext'
-> & { connection?: OperationContext['connection'] };
+export type OperationResolverParams<TArgs extends POJO> = CoreOperationResolverParams<TArgs, {}, BaseContext>;
+
+export type OperationEvent<TArgs extends POJO = any> = CoreOperationEvent<TArgs, {}, BaseContext>;

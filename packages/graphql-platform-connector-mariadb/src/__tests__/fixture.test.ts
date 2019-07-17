@@ -27,15 +27,15 @@ describe('Fixture', () => {
 
   beforeEach(async done => {
     offListeners = connector.onConfig({
-      [ConnectorEventKind.StartTransaction]: ({ threadId }) => {
+      [ConnectorEventKind.PreStartTransaction]: ({ threadId }) => {
         connectionSet.add(threadId);
         queries.push('START TRANSACTION;');
       },
-      [ConnectorEventKind.CommitTransaction]: ({ threadId }) => {
+      [ConnectorEventKind.PreCommitTransaction]: ({ threadId }) => {
         connectionSet.add(threadId);
         queries.push('COMMIT;');
       },
-      [ConnectorEventKind.RollbackTransaction]: ({ threadId }) => {
+      [ConnectorEventKind.PreRollbackTransaction]: ({ threadId }) => {
         connectionSet.add(threadId);
         queries.push('ROLLBACK;');
       },
@@ -73,6 +73,9 @@ describe('Fixture', () => {
       source: `query {
         articles(first: 10, orderBy: [_id_ASC]) {
           id
+          publishedAt
+          isPublished
+          isImportant
           slug
           url {
             meta {
@@ -115,6 +118,18 @@ describe('Fixture', () => {
       Array [
         Object {
           "id": "9b6b98fa-586d-4987-82a0-d63f11bbe560",
+          "isImportant": false,
+          "isPublished": false,
+          "publishedAt": null,
+          "slug": "my-third-articles-title-a-video",
+          "tags": Array [],
+          "url": null,
+        },
+        Object {
+          "id": "06bd57da-24f6-488a-a1b1-2435bd7c8d6e",
+          "isImportant": null,
+          "isPublished": true,
+          "publishedAt": "2019-07-01T03:41:37.829Z",
           "slug": "my-first-articles-title-a-rich-article",
           "tags": Array [
             Object {
@@ -203,7 +218,10 @@ describe('Fixture', () => {
           },
         },
         Object {
-          "id": "06bd57da-24f6-488a-a1b1-2435bd7c8d6e",
+          "id": "75758b29-2530-4843-b5b0-5dec41749417",
+          "isImportant": true,
+          "isPublished": false,
+          "publishedAt": null,
           "slug": "my-second-articles-title-a-video",
           "tags": Array [
             Object {

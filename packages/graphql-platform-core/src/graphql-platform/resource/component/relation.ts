@@ -1,13 +1,13 @@
-import { Maybe, POJO } from '@prismamedia/graphql-platform-utils';
+import { isPlainObject, Maybe, MaybeUndefinedDecorator, POJO } from '@prismamedia/graphql-platform-utils';
 import { Memoize } from 'typescript-memoize';
-import { BaseContext, CustomContext } from '../../../graphql-platform';
+import { AnyBaseContext, BaseContext, CustomContext } from '../../../graphql-platform';
 import { ConnectorCreateInputValue, ConnectorUpdateInputValue } from '../../connector';
-import { OperationContext } from '../../operation';
 import { CreateOneOperationArgs, UpdateOneOperationArgs } from '../../operation/mutation';
 import { NodeValue, Resource, ResourceHookKind, ResourceHookMetaMap } from '../../resource';
 import { WhereUniqueInputValue } from '../../type/input';
 import { AbstractComponent, AbstractComponentConfig } from '../abstract-component';
 import { Unique } from '../unique';
+import { UniqueSet } from '../unique/set';
 import { Inverse as InverseRelation } from './relation/inverse';
 
 export {
@@ -20,6 +20,8 @@ export * from './relation/set';
 
 export type RelationValue = null | NodeValue;
 
+export type NormalizedRelationValue = null | WhereUniqueInputValue;
+
 export enum RelationKind {
   toOne = 'toOne',
   toMany = 'toMany',
@@ -28,20 +30,18 @@ export enum RelationKind {
 export type RelationHookMetaMap<
   TArgs extends POJO = any,
   TCustomContext extends CustomContext = any,
-  TBaseContext extends BaseContext = any,
-  TOperationContext extends OperationContext = any
-> = ResourceHookMetaMap<TArgs, TCustomContext, TBaseContext, TOperationContext> & {
+  TBaseContext extends AnyBaseContext = BaseContext
+> = ResourceHookMetaMap<TArgs, TCustomContext, TBaseContext> & {
   relation: Relation;
 };
 
 export type RelationHookMap<
   TCustomContext extends CustomContext = any,
-  TBaseContext extends BaseContext = any,
-  TOperationContext extends OperationContext = any
+  TBaseContext extends AnyBaseContext = BaseContext
 > = {
   // Create
   [ResourceHookKind.PreCreate]: {
-    metas: RelationHookMetaMap<CreateOneOperationArgs, TCustomContext, TBaseContext, TOperationContext> &
+    metas: RelationHookMetaMap<CreateOneOperationArgs, TCustomContext, TBaseContext> &
       Readonly<{
         /** Parsed data */
         create: ConnectorCreateInputValue;
@@ -52,7 +52,7 @@ export type RelationHookMap<
 
   // Update
   [ResourceHookKind.PreUpdate]: {
-    metas: RelationHookMetaMap<UpdateOneOperationArgs, TCustomContext, TBaseContext, TOperationContext> &
+    metas: RelationHookMetaMap<UpdateOneOperationArgs, TCustomContext, TBaseContext> &
       Readonly<{
         /** Parsed data */
         update: ConnectorUpdateInputValue;
@@ -63,10 +63,9 @@ export type RelationHookMap<
 };
 
 export interface RelationConfig<
-  TCustomContext extends CustomContext = any,
-  TBaseContext extends BaseContext = BaseContext,
-  TOperationContext extends OperationContext = OperationContext
-> extends AbstractComponentConfig<RelationHookMap<TCustomContext, TBaseContext, TOperationContext>> {
+  TCustomContext extends CustomContext = {},
+  TBaseContext extends AnyBaseContext = BaseContext
+> extends AbstractComponentConfig<RelationHookMap<TCustomContext, TBaseContext>> {
   /** Required, name of the targeted resource */
   to: string;
 
@@ -77,11 +76,12 @@ export interface RelationConfig<
   inversedBy?: Maybe<string>;
 }
 
-export type AnyRelationConfig = RelationConfig<any, any, any>;
+export type AnyRelationConfig = RelationConfig<any, any>;
 
 export class Relation<TConfig extends AnyRelationConfig = RelationConfig> extends AbstractComponent<
   RelationHookMap,
-  TConfig
+  TConfig,
+  RelationValue
 > {
   public isField(): boolean {
     return false;
@@ -117,19 +117,14 @@ export class Relation<TConfig extends AnyRelationConfig = RelationConfig> extend
   @Memoize()
   public getToUnique(): Unique {
     if (this.config.unique) {
-      const nonNullableUniqueSet = this.getTo()
-        .getUniqueSet()
-        .filter(unique => unique.componentSet.some(component => !component.isNullable()));
+      const nonNullableUniqueSet = this.getTo().getNonNullableUniqueSet();
 
       const unique = nonNullableUniqueSet.find(({ name }) => name === this.config.unique);
-
       if (!unique) {
         throw new Error(
           `The relation "${this.resource.name}.${this.name}"'s targeted unique "${
             this.config.unique
-          }" does not exist or is not composed of at least one non-nullable component, chose among: ${nonNullableUniqueSet
-            .getNames()
-            .join(', ')}`,
+          }" does not exist or is "nullable", chose among: ${nonNullableUniqueSet.getNames().join(', ')}`,
         );
       }
 
@@ -137,6 +132,11 @@ export class Relation<TConfig extends AnyRelationConfig = RelationConfig> extend
     }
 
     return this.getTo().getIdentifier();
+  }
+
+  @Memoize()
+  public getToUniqueSet(): UniqueSet {
+    return new UniqueSet([this.getToUnique(), ...this.getTo().getUniqueSet()]);
   }
 
   @Memoize()
@@ -157,45 +157,87 @@ export class Relation<TConfig extends AnyRelationConfig = RelationConfig> extend
     return new InverseRelation(this);
   }
 
-  public parseValue(value: unknown): RelationValue | undefined {
+  public isId(value: unknown): value is WhereUniqueInputValue {
+    return (
+      typeof this.getTo()
+        .getInputType('WhereUnique')
+        .parse(value, false) !== 'undefined'
+    );
+  }
+
+  public parseId<TStrict extends boolean>(
+    value: unknown,
+    strict: TStrict,
+    // Accept only the defined unique
+    relationToUniqueOnly: boolean = false,
+  ): MaybeUndefinedDecorator<NormalizedRelationValue, TStrict> {
     if (typeof value !== 'undefined') {
       if (value === null) {
-        if (this.isNullable()) {
-          return null;
-        } else {
-          throw new Error(`The "${this}" relation is not nullable.`);
+        if (!this.isNullable()) {
+          throw new Error(`The "${this}" relation's value cannot be null`);
         }
-      } else {
-        return this.getTo().parseValue(value);
+
+        return null as any;
       }
+
+      return relationToUniqueOnly
+        ? this.getTo()
+            .getInputType('WhereUnique')
+            .parseUnique(value, this.getToUnique(), strict, relationToUniqueOnly)
+        : this.getTo()
+            .getInputType('WhereUnique')
+            .parse(value, strict, this.getToUniqueSet());
     }
 
-    return undefined;
+    if (strict) {
+      throw new Error(`The "${this}" relation's value cannot be undefined`);
+    }
+
+    return undefined as any;
+  }
+
+  public getId<TStrict extends boolean>(
+    node: POJO,
+    strict: TStrict,
+    // Accept only the defined unique
+    relationToUniqueOnly: boolean = false,
+  ): MaybeUndefinedDecorator<NormalizedRelationValue, TStrict> {
+    return this.parseId(node[this.name], strict, relationToUniqueOnly);
   }
 
   public isValue(value: unknown): value is RelationValue {
-    return typeof this.parseValue(value) !== 'undefined';
+    return value === null ? this.isNullable() : this.getTo().isValue(value);
   }
 
-  public getValue(node: NodeValue): RelationValue | undefined {
-    return this.parseValue(node[this.name]);
-  }
+  public parseValue<TStrict extends boolean>(
+    value: unknown,
+    strict: TStrict,
+  ): MaybeUndefinedDecorator<RelationValue, TStrict> {
+    if (typeof value !== 'undefined') {
+      if (value === null) {
+        if (!this.isNullable()) {
+          throw new Error(`The "${this}" relation's value cannot be null`);
+        }
 
-  public assertValue(node: NodeValue): RelationValue {
-    const parsedValue = this.getValue(node);
-    if (typeof parsedValue === 'undefined') {
-      throw new Error(`The "${this}" relation's value has to be defined.`);
+        return null as any;
+      } else if (!isPlainObject(value)) {
+        throw new Error(`The "${this}" relation's value has to be a plain object: ${JSON.stringify(value)}`);
+      }
+
+      return this.getTo().parseValue(value, strict, false);
     }
 
-    return parsedValue;
+    if (strict) {
+      throw new Error(`The "${this}" relation's value cannot be undefined`);
+    }
+
+    return undefined as any;
   }
 
-  public setValue(node: NodeValue, value: unknown): void {
-    const parsedValue = this.parseValue(value);
-    if (typeof parsedValue === 'undefined') {
-      delete node[this.name];
-    } else {
-      node[this.name] = parsedValue;
-    }
+  public getValue<TStrict extends boolean>(
+    node: POJO,
+    strict: TStrict,
+  ): MaybeUndefinedDecorator<RelationValue, TStrict> {
+    return this.parseValue(node[this.name], strict);
   }
 }

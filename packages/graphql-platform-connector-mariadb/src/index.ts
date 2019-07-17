@@ -11,7 +11,6 @@ export {
   FieldConfig,
   GraphQLPlatform,
   GraphQLPlatformConfig,
-  OperationContext,
   Relation,
   RelationConfig,
   Resource,

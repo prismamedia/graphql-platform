@@ -1,29 +1,28 @@
-import { MaybePromise, POJO, Scalar } from '@prismamedia/graphql-platform-utils';
-import { BaseContext } from '../graphql-platform';
+import { MaybePromise, POJO } from '@prismamedia/graphql-platform-utils';
+import { AnyBaseContext, BaseContext } from '../graphql-platform';
 import {
   CountOperationArgs,
   CountOperationResult,
   FindManyOperationArgs,
   FindManyOperationResult,
-  OperationContext,
   OperationResolverParams,
 } from './operation';
-import { NodeValue, Resource } from './resource';
+import { Resource } from './resource';
+import { NormalizedComponentValue } from './resource/component';
 import { WhereInputValue, WhereUniqueInputValue } from './type';
 import { NodeSource } from './type/output';
 
 export type ConnectorOperationParams<
   TArgs extends POJO = any,
-  TBaseContext extends BaseContext = any,
-  TOperationContext extends OperationContext = any
-> = OperationResolverParams<TArgs, {}, TBaseContext, TOperationContext> & Readonly<{ resource: Resource }>;
+  TBaseContext extends AnyBaseContext = BaseContext
+> = OperationResolverParams<TArgs, {}, TBaseContext> & Readonly<{ resource: Resource }>;
 
-export interface ConnectorCreateInputValue extends NodeValue {
-  [componentName: string]: null | Scalar | WhereUniqueInputValue;
+export interface ConnectorCreateInputValue {
+  [componentName: string]: NormalizedComponentValue;
 }
 
-export interface ConnectorUpdateInputValue extends NodeValue {
-  [componentName: string]: null | Scalar | WhereUniqueInputValue;
+export interface ConnectorUpdateInputValue {
+  [componentName: string]: NormalizedComponentValue;
 }
 
 export type ConnectorFindOperationArgs = FindManyOperationArgs;
@@ -56,27 +55,24 @@ export interface ConnectorDeleteOperationArgs {
 
 export type ConnectorDeleteOperationResult = number;
 
-export interface ConnectorInterface<
-  TBaseContext extends BaseContext = BaseContext,
-  TOperationContext extends OperationContext = OperationContext
-> {
+export interface ConnectorInterface<TBaseContext extends AnyBaseContext = BaseContext> {
   find(
-    params: ConnectorOperationParams<ConnectorFindOperationArgs, TBaseContext, TOperationContext>,
+    params: ConnectorOperationParams<ConnectorFindOperationArgs, TBaseContext>,
   ): MaybePromise<ConnectorFindOperationResult>;
 
   count(
-    params: ConnectorOperationParams<ConnectorCountOperationArgs, TBaseContext, TOperationContext>,
+    params: ConnectorOperationParams<ConnectorCountOperationArgs, TBaseContext>,
   ): MaybePromise<ConnectorCountOperationResult>;
 
   create(
-    params: ConnectorOperationParams<ConnectorCreateOperationArgs, TBaseContext, TOperationContext>,
+    params: ConnectorOperationParams<ConnectorCreateOperationArgs, TBaseContext>,
   ): MaybePromise<ConnectorCreateOperationResult>;
 
   update(
-    params: ConnectorOperationParams<ConnectorUpdateOperationArgs, TBaseContext, TOperationContext>,
+    params: ConnectorOperationParams<ConnectorUpdateOperationArgs, TBaseContext>,
   ): MaybePromise<ConnectorUpdateOperationResult>;
 
   delete(
-    params: ConnectorOperationParams<ConnectorDeleteOperationArgs, TBaseContext, TOperationContext>,
+    params: ConnectorOperationParams<ConnectorDeleteOperationArgs, TBaseContext>,
   ): MaybePromise<ConnectorDeleteOperationResult>;
 }

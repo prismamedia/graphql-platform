@@ -19,12 +19,6 @@ export enum ReferentialAction {
 export interface ForeignKeyConfig {
   /** Optional, the foreign key index's name, default: computed from components' name */
   name?: Maybe<string>;
-
-  /** Optional, the foreign key delete's referential action, default: RESTRICT */
-  onDelete?: Maybe<ReferentialAction>;
-
-  /** Optional, the foreign key update's referential action, default: CASCADE */
-  onUpdate?: Maybe<ReferentialAction>;
 }
 
 export class ForeignKey {
@@ -81,11 +75,11 @@ export class ForeignKey {
 
   @Memoize()
   public get onDelete(): ReferentialAction {
-    return this.config.onDelete || ReferentialAction.RESTRICT;
+    return ReferentialAction.RESTRICT;
   }
 
   @Memoize()
   public get onUpdate(): ReferentialAction {
-    return this.config.onUpdate || ReferentialAction.CASCADE;
+    return ReferentialAction.RESTRICT;
   }
 }

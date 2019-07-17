@@ -6,7 +6,7 @@ import {
   Maybe,
   POJO,
 } from '@prismamedia/graphql-platform-utils';
-import { BaseContext, Context, CustomContext } from '../graphql-platform';
+import { AnyBaseContext, BaseContext, Context, CustomContext } from '../graphql-platform';
 import {
   CreateOneOperation as CreateOne,
   DeleteOneOperation as DeleteOne,
@@ -50,15 +50,25 @@ export enum OperationEventKind {
 // A "post operation success hook" has to be bound correctly in order to be called without any argument.
 export type PostOperationSuccessHook = () => Promise<void>;
 
-export interface OperationContext extends POJO {
-  postSuccessHooks: PostOperationSuccessHook[];
-}
+export type OperationContext =
+  | {
+      type?: Exclude<GraphQLOperationType, GraphQLOperationType.Mutation>;
+    }
+  | {
+      type: GraphQLOperationType.Mutation;
+
+      /**
+       * In a "mutation", the fields are resolved serially,
+       * We use this behavior to share a variable in which we store the post success hooks
+       * cf: https://graphql.github.io/graphql-spec/draft/#sec-Mutation
+       */
+      postSuccessHooks?: PostOperationSuccessHook[];
+    };
 
 export type OperationResolverParams<
   TArgs extends POJO = any,
-  TCustomContext extends CustomContext = any,
-  TBaseContext extends BaseContext = any,
-  TOperationContext extends OperationContext = any
+  TCustomContext extends CustomContext = {},
+  TBaseContext extends AnyBaseContext = BaseContext
 > = Readonly<{
   /**
    * The current resolver "args"
@@ -71,11 +81,6 @@ export type OperationResolverParams<
   context: Context<TCustomContext, TBaseContext>;
 
   /**
-   * A new "operationContext" is created for every resolver execution
-   */
-  operationContext: TOperationContext;
-
-  /**
    * The "selectionNode" is the result of the "GraphQLInfo" object parsing
    */
   selectionNode: GraphQLSelectionNode<any>;
@@ -84,9 +89,8 @@ export type OperationResolverParams<
 export type OperationEvent<
   TArgs extends POJO = any,
   TCustomContext extends CustomContext = any,
-  TBaseContext extends BaseContext = any,
-  TOperationContext extends OperationContext = any
-> = OperationResolverParams<TArgs, TCustomContext, TBaseContext, TOperationContext> &
+  TBaseContext extends AnyBaseContext = BaseContext
+> = OperationResolverParams<TArgs, TCustomContext, TBaseContext> &
   Readonly<{
     /**
      * The current operation
@@ -94,18 +98,11 @@ export type OperationEvent<
     operation: Operation;
   }>;
 
-export interface OperationEventMap<
+export type OperationEventMap<
   TArgs extends POJO = any,
   TCustomContext extends CustomContext = any,
-  TBaseContext extends BaseContext = any,
-  TOperationContext extends OperationContext = any
-> {
-  [OperationEventKind.PreOperation]: OperationEvent<TArgs, TCustomContext, TBaseContext, TOperationContext>;
-  [OperationEventKind.PostOperationSuccess]: OperationEvent<TArgs, TCustomContext, TBaseContext, TOperationContext>;
-  [OperationEventKind.PostOperationError]: OperationEvent<TArgs, TCustomContext, TBaseContext, TOperationContext> &
-    Readonly<{ error: Error }>;
-  [OperationEventKind.PostOperation]: OperationEvent<TArgs, TCustomContext, TBaseContext, TOperationContext>;
-}
+  TBaseContext extends AnyBaseContext = BaseContext
+> = Record<OperationEventKind, OperationEvent<TArgs, TCustomContext, TBaseContext>>;
 
 export const operationTypeMap = {
   [GraphQLOperationType.Mutation]: { CreateOne, DeleteOne, UpdateOne, UpsertOne },

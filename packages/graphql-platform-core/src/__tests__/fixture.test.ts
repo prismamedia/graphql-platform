@@ -12,11 +12,13 @@ describe('Fixture', () => {
   it('gets sorted fixtures', () => {
     const fixtures = gp.getFixtureGraph(fixturePath);
 
-    expect(fixtures.size()).toBe(23);
+    expect(fixtures.size()).toBe(24);
     expect(fixtures.overallOrder()).toEqual([
       'category_01',
-      'category_02',
+      'category_03',
       'user_01',
+      'article_03',
+      'category_02',
       'article_01',
       'tag_03',
       'article_01_tag_03',
@@ -36,7 +38,6 @@ describe('Fixture', () => {
       'article_01_tag_02_comment',
       'article_01_url',
       'article_01_url_comment',
-      'category_03',
     ]);
   });
 

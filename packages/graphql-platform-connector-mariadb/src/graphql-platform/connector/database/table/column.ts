@@ -1,5 +1,12 @@
-import { FieldValue } from '@prismamedia/graphql-platform-core';
-import { FlagConfig, getFlagValue, Maybe, POJO } from '@prismamedia/graphql-platform-utils';
+import {
+  FlagConfig,
+  getFlagValue,
+  isScalar,
+  Maybe,
+  MaybeUndefinedDecorator,
+  POJO,
+  Scalar,
+} from '@prismamedia/graphql-platform-utils';
 import { isEnumType } from 'graphql';
 import { escapeId } from 'mysql';
 import { Memoize } from 'typescript-memoize';
@@ -94,14 +101,15 @@ export interface ColumnConfig {
   /** Optional, either this column is auto increment or not, default: false */
   autoIncrement?: FlagConfig;
 
-  /** Optional, either this column is nullable or not, default: guessed from the field's definition */
-  nullable?: FlagConfig;
-
   /** Optional, either this column has a default value or not, default: NULL */
   default?: Maybe<string>;
 }
 
-export type ColumnValue = FieldValue;
+export type ColumnValue = null | Scalar | Date;
+
+export function isColumnValue(value: unknown, nullable: boolean = true): value is ColumnValue {
+  return value === null ? nullable : isScalar(value) || value instanceof Date;
+}
 
 export class Column {
   readonly component: Component;
@@ -187,9 +195,14 @@ export class Column {
           length: 255,
         };
 
+      case 'Time':
+        return {
+          type: DataType.TIME,
+        };
+
       default:
         throw new Error(
-          `We were not able to guess the "${this.field}"'s column type "${fieldType.name}", you have to define it by yourself.`,
+          `We were not able to guess the "${this.field}"'s column type, you have to define it by yourself.`,
         );
     }
   }
@@ -199,9 +212,8 @@ export class Column {
     return getFlagValue(this.config.autoIncrement, false);
   }
 
-  @Memoize()
   public get nullable(): boolean {
-    return getFlagValue(this.config.nullable, this.field.isNullable());
+    return this.field.isNullable();
   }
 
   @Memoize()
@@ -213,30 +225,17 @@ export class Column {
     return this.field.description;
   }
 
-  public parseValue(value: unknown): ColumnValue | undefined {
-    return this.field.parseValue(value);
+  /**
+   * Get the corresponding column's value from the GraphQL field's value
+   */
+  public getValue<TStrict extends boolean>(node: POJO, strict: TStrict): MaybeUndefinedDecorator<ColumnValue, TStrict> {
+    return this.field.getValue(node, strict);
   }
 
-  public getValue(node: POJO): ColumnValue | undefined {
-    switch (this.dataType.type) {
-      case DataType.DATE:
-      case DataType.DATETIME:
-      case DataType.TIMESTAMP:
-        const dateTime = this.field.getValue(node);
-
-        // We remove the timezone "Z" as MariaDB does not support it
-        return typeof dateTime === 'string' && dateTime ? dateTime.replace(/Z$/, '') : dateTime;
-
-      default:
-        return this.field.getValue(node);
-    }
-  }
-
-  public assertValue(node: POJO): ColumnValue {
-    return this.field.assertValue(node);
-  }
-
-  public setValue(node: POJO, value: unknown): void {
+  /**
+   * Set the corresponding the GraphQL field's value from the column's value
+   */
+  public setValue(node: POJO, value: ColumnValue | undefined): void {
     return this.field.setValue(node, value);
   }
 }

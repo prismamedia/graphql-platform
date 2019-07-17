@@ -1,9 +1,8 @@
-import { isScalar, Maybe, POJO, Scalar } from '@prismamedia/graphql-platform-utils';
+import { isScalar, MaybeUndefinedDecorator, POJO, Scalar } from '@prismamedia/graphql-platform-utils';
 import { GraphQLLeafType, isLeafType } from 'graphql';
 import { Memoize } from 'typescript-memoize';
-import { BaseContext, CustomContext } from '../../../graphql-platform';
+import { AnyBaseContext, BaseContext, CustomContext } from '../../../graphql-platform';
 import { ConnectorCreateInputValue, ConnectorUpdateInputValue } from '../../connector';
-import { OperationContext } from '../../operation';
 import { CreateOneOperationArgs, UpdateOneOperationArgs } from '../../operation/mutation';
 import { ResourceHookKind, ResourceHookMetaMap } from '../../resource';
 import { AbstractComponent, AbstractComponentConfig } from '../abstract-component';
@@ -11,57 +10,62 @@ import { AbstractComponent, AbstractComponentConfig } from '../abstract-componen
 export * from './field/map';
 export * from './field/set';
 
-export type FieldValue = null | Scalar;
+export type FieldValue = null | Scalar | Date;
+
+export function isFieldValue(value: unknown, nullable: boolean = true): value is FieldValue {
+  return value === null ? nullable : isScalar(value) || value instanceof Date;
+}
 
 export type FieldHookMetaMap<
   TArgs extends POJO = any,
   TCustomContext extends CustomContext = any,
-  TBaseContext extends BaseContext = any,
-  TOperationContext extends OperationContext = any
-> = ResourceHookMetaMap<TArgs, TCustomContext, TBaseContext, TOperationContext> & {
+  TBaseContext extends AnyBaseContext = BaseContext
+> = ResourceHookMetaMap<TArgs, TCustomContext, TBaseContext> & {
   field: Field;
 };
 
 export type FieldHookMap<
   TCustomContext extends CustomContext = any,
-  TBaseContext extends BaseContext = any,
-  TOperationContext extends OperationContext = any
+  TBaseContext extends AnyBaseContext = BaseContext
 > = {
   // Create
   [ResourceHookKind.PreCreate]: {
-    metas: FieldHookMetaMap<CreateOneOperationArgs, TCustomContext, TBaseContext, TOperationContext> &
+    metas: FieldHookMetaMap<CreateOneOperationArgs, TCustomContext, TBaseContext> &
       Readonly<{
         /** Parsed data */
         create: ConnectorCreateInputValue;
       }>;
     /** Parsed field value */
-    fieldValue: Maybe<FieldValue>;
+    fieldValue: FieldValue | undefined;
   };
 
   // Update
   [ResourceHookKind.PreUpdate]: {
-    metas: FieldHookMetaMap<UpdateOneOperationArgs, TCustomContext, TBaseContext, TOperationContext> &
+    metas: FieldHookMetaMap<UpdateOneOperationArgs, TCustomContext, TBaseContext> &
       Readonly<{
         /** Parsed data */
         update: ConnectorUpdateInputValue;
       }>;
     /** Parsed field value */
-    fieldValue: Maybe<FieldValue>;
+    fieldValue: FieldValue | undefined;
   };
 };
 
 export interface FieldConfig<
-  TCustomContext extends CustomContext = any,
-  TBaseContext extends BaseContext = BaseContext,
-  TOperationContext extends OperationContext = OperationContext
-> extends AbstractComponentConfig<FieldHookMap<TCustomContext, TBaseContext, TOperationContext>> {
+  TCustomContext extends CustomContext = {},
+  TBaseContext extends AnyBaseContext = BaseContext
+> extends AbstractComponentConfig<FieldHookMap<TCustomContext, TBaseContext>> {
   /** Required, the GraphQL leaf type that represents the output of this field */
   type: GraphQLLeafType;
 }
 
-export type AnyFieldConfig = FieldConfig<any, any, any>;
+export type AnyFieldConfig = FieldConfig<any, any>;
 
-export class Field<TConfig extends AnyFieldConfig = FieldConfig> extends AbstractComponent<FieldHookMap, TConfig> {
+export class Field<TConfig extends AnyFieldConfig = FieldConfig> extends AbstractComponent<
+  FieldHookMap,
+  TConfig,
+  FieldValue
+> {
   public isField(): this is Field {
     return true;
   }
@@ -83,47 +87,32 @@ export class Field<TConfig extends AnyFieldConfig = FieldConfig> extends Abstrac
     return fieldType;
   }
 
-  public parseValue(value: unknown): FieldValue | undefined {
+  public isValue(value: unknown): value is FieldValue {
+    return isFieldValue(value, this.isNullable());
+  }
+
+  public parseValue<TStrict extends boolean>(
+    value: unknown,
+    strict: TStrict,
+  ): MaybeUndefinedDecorator<FieldValue, TStrict> {
     if (typeof value !== 'undefined') {
-      if (value === null && this.isNullable()) {
-        return null;
-      } else if (isScalar(value)) {
-        return value;
-      } else if (value instanceof Date) {
-        return value.toISOString();
+      if (value === null) {
+        if (!this.isNullable()) {
+          throw new Error(`The "${this}" field's value cannot be null`);
+        }
+
+        return null as any;
+      } else if (!this.isValue(value)) {
+        throw new Error(`The "${this}" field's value is not valid: ${JSON.stringify(value)}`);
       }
 
-      throw new Error(
-        `The "${this}" field's value has to be a${!this.isNullable() ? ' non-null' : ''} scalar: "${value}" given.`,
-      );
+      return value as any;
     }
 
-    return undefined;
-  }
-
-  public isValue(value: unknown): value is FieldValue {
-    return typeof this.parseValue(value) !== 'undefined';
-  }
-
-  public getValue(node: POJO): FieldValue | undefined {
-    return this.parseValue(node[this.name]);
-  }
-
-  public assertValue(node: POJO): FieldValue {
-    const parsedValue = this.getValue(node);
-    if (typeof parsedValue === 'undefined') {
-      throw new Error(`The "${this}" field's value is not defined.`);
+    if (strict) {
+      throw new Error(`The "${this}" field's value cannot be undefined`);
     }
 
-    return parsedValue;
-  }
-
-  public setValue(node: POJO, value: unknown): void {
-    const parsedValue = this.parseValue(value);
-    if (typeof parsedValue === 'undefined') {
-      delete node[this.name];
-    } else {
-      node[this.name] = parsedValue;
-    }
+    return undefined as any;
   }
 }

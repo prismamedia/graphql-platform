@@ -6,12 +6,12 @@ export class DeleteOperation extends AbstractOperationResolver<
   ConnectorDeleteOperationArgs,
   ConnectorDeleteOperationResult
 > {
-  public async execute({ args, connection }: OperationResolverParams<ConnectorDeleteOperationArgs>) {
+  public async execute({ args, context }: OperationResolverParams<ConnectorDeleteOperationArgs>) {
     const deleteStatement = this.table.newDeleteStatement();
 
     await this.table.getOperation('Find').parseWhereArg(deleteStatement.where, args.where);
 
-    const result = await this.connector.query(deleteStatement.sql, connection);
+    const result = await this.connector.query(deleteStatement.sql, context.connectorRequest.connection);
 
     if (
       'affectedRows' in result &&

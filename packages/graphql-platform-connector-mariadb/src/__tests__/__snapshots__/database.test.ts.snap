@@ -13,7 +13,7 @@ exports[`Database print the "CREATE TABLE" statements 1`] = `
   UNIQUE \`unq_id\` (\`id\`),
   UNIQUE \`unq_parentId_slug\` (\`parentId\`, \`slug\`),
   INDEX (\`parentId\`),
-  FOREIGN KEY (\`parentId\`) REFERENCES \`categories\` (\`id\`) ON UPDATE CASCADE ON DELETE RESTRICT
+  FOREIGN KEY (\`parentId\`) REFERENCES \`categories\` (\`id\`) ON UPDATE RESTRICT ON DELETE RESTRICT
 ) ENGINE = 'InnoDB',
 CHARSET = 'utf8mb4',
 COLLATE = 'utf8mb4_unicode_520_ci';
@@ -42,6 +42,8 @@ CREATE TABLE \`articles\` (
   \`title\` VARCHAR(255) NOT NULL COMMENT 'The article\\\\'s title',
   \`slug\` VARCHAR(255) NOT NULL COMMENT 'The article\\\\'s slug',
   \`body\` VARCHAR(255) NULL COMMENT 'The article\\\\'s body',
+  \`isPublished\` BOOLEAN NOT NULL COMMENT 'Either this article is published or not',
+  \`isImportant\` BOOLEAN NULL COMMENT 'Either this article is important or not',
   \`categoryParentId\` CHAR(36) NULL,
   \`categorySlug\` VARCHAR(255) NOT NULL,
   \`authorUsername\` VARCHAR(255) NOT NULL,
@@ -53,9 +55,9 @@ CREATE TABLE \`articles\` (
   INDEX (\`categoryParentId\`, \`categorySlug\`),
   INDEX (\`authorUsername\`),
   INDEX (\`moderatorIntId\`),
-  FOREIGN KEY (\`categoryParentId\`, \`categorySlug\`) REFERENCES \`categories\` (\`parentId\`, \`slug\`) ON UPDATE CASCADE ON DELETE RESTRICT,
-  FOREIGN KEY (\`authorUsername\`) REFERENCES \`users\` (\`username\`) ON UPDATE CASCADE ON DELETE RESTRICT,
-  FOREIGN KEY (\`moderatorIntId\`) REFERENCES \`users\` (\`intId\`) ON UPDATE CASCADE ON DELETE RESTRICT
+  FOREIGN KEY (\`categoryParentId\`, \`categorySlug\`) REFERENCES \`categories\` (\`parentId\`, \`slug\`) ON UPDATE RESTRICT ON DELETE RESTRICT,
+  FOREIGN KEY (\`authorUsername\`) REFERENCES \`users\` (\`username\`) ON UPDATE RESTRICT ON DELETE RESTRICT,
+  FOREIGN KEY (\`moderatorIntId\`) REFERENCES \`users\` (\`intId\`) ON UPDATE RESTRICT ON DELETE RESTRICT
 ) ENGINE = 'InnoDB',
 CHARSET = 'utf8mb4',
 COLLATE = 'utf8mb4_unicode_520_ci',
@@ -85,8 +87,8 @@ CREATE TABLE \`article_tags\` (
   UNIQUE \`article/order\` (\`articleIntId\`, \`order\`),
   INDEX (\`articleIntId\`),
   INDEX (\`tagIntId\`),
-  FOREIGN KEY (\`articleIntId\`) REFERENCES \`articles\` (\`intId\`) ON UPDATE CASCADE ON DELETE RESTRICT,
-  FOREIGN KEY (\`tagIntId\`) REFERENCES \`tags\` (\`intId\`) ON UPDATE CASCADE ON DELETE RESTRICT
+  FOREIGN KEY (\`articleIntId\`) REFERENCES \`articles\` (\`intId\`) ON UPDATE RESTRICT ON DELETE RESTRICT,
+  FOREIGN KEY (\`tagIntId\`) REFERENCES \`tags\` (\`intId\`) ON UPDATE RESTRICT ON DELETE RESTRICT
 ) ENGINE = 'InnoDB',
 CHARSET = 'utf8mb4',
 COLLATE = 'utf8mb4_unicode_520_ci';
@@ -99,7 +101,7 @@ CREATE TABLE \`article_tag_comments\` (
   \`body\` VARCHAR(255) NULL,
   PRIMARY KEY (\`articleTagArticleIntId\`, \`articleTagTagIntId\`),
   INDEX (\`articleTagArticleIntId\`, \`articleTagTagIntId\`),
-  FOREIGN KEY (\`articleTagArticleIntId\`, \`articleTagTagIntId\`) REFERENCES \`article_tags\` (\`articleIntId\`, \`tagIntId\`) ON UPDATE CASCADE ON DELETE RESTRICT
+  FOREIGN KEY (\`articleTagArticleIntId\`, \`articleTagTagIntId\`) REFERENCES \`article_tags\` (\`articleIntId\`, \`tagIntId\`) ON UPDATE RESTRICT ON DELETE RESTRICT
 ) ENGINE = 'InnoDB',
 CHARSET = 'utf8mb4',
 COLLATE = 'utf8mb4_unicode_520_ci';
@@ -111,7 +113,7 @@ CREATE TABLE \`article_urls\` (
   \`path\` VARCHAR(255) NOT NULL,
   PRIMARY KEY (\`articleIntId\`),
   INDEX (\`articleIntId\`),
-  FOREIGN KEY (\`articleIntId\`) REFERENCES \`articles\` (\`intId\`) ON UPDATE CASCADE ON DELETE RESTRICT
+  FOREIGN KEY (\`articleIntId\`) REFERENCES \`articles\` (\`intId\`) ON UPDATE RESTRICT ON DELETE RESTRICT
 ) ENGINE = 'InnoDB',
 CHARSET = 'utf8mb4',
 COLLATE = 'utf8mb4_unicode_520_ci';
@@ -122,7 +124,7 @@ CREATE TABLE \`article_url_metas\` (
   \`updatedAt\` TIMESTAMP(3) NOT NULL DEFAULT NOW(3) ON UPDATE NOW(3) COMMENT 'The date of the document\\\\'s last update',
   PRIMARY KEY (\`urlArticleIntId\`),
   INDEX (\`urlArticleIntId\`),
-  FOREIGN KEY (\`urlArticleIntId\`) REFERENCES \`article_urls\` (\`articleIntId\`) ON UPDATE CASCADE ON DELETE RESTRICT
+  FOREIGN KEY (\`urlArticleIntId\`) REFERENCES \`article_urls\` (\`articleIntId\`) ON UPDATE RESTRICT ON DELETE RESTRICT
 ) ENGINE = 'InnoDB',
 CHARSET = 'utf8mb4',
 COLLATE = 'utf8mb4_unicode_520_ci';"

@@ -8,20 +8,20 @@ export class CreateOperation extends AbstractOperationResolver<
 > {
   public async execute({
     args: { data: creates },
-    connection,
+    context,
   }: OperationResolverParams<ConnectorCreateOperationArgs>): Promise<ConnectorCreateOperationResult> {
     return Promise.all(
       creates.map(async create => {
         const insertStatement = this.table.newInsertStatement();
 
         for (const column of this.table.getColumnSet()) {
-          const columnValue = column.getValue(create);
+          const columnValue = column.getValue(create, false);
           if (typeof columnValue !== 'undefined') {
             insertStatement.assignmentList.addAssignment(column, columnValue);
           }
         }
 
-        const result = await this.connector.query(insertStatement.sql, connection);
+        const result = await this.connector.query(insertStatement.sql, context.connectorRequest.connection);
 
         const autoIncrementColumn = this.table.getAutoIncrementColumn();
         if (autoIncrementColumn) {

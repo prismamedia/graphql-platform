@@ -1,7 +1,8 @@
 import { DepGraph } from 'dependency-graph';
 import { OperationDefinitionNode, print } from 'graphql';
+import { Logger } from 'winston';
 import { GraphQLPlatform, Request } from '../graphql-platform';
-import { Field, FieldValue, Relation, Resource } from './resource';
+import { FieldValue, Relation, Resource } from './resource';
 import { TypeKind } from './type';
 import { CreateInputValue, WhereUniqueInputValue } from './type/input';
 
@@ -16,6 +17,7 @@ export type FixtureDataMap = {
 };
 
 export class Fixture {
+  readonly logger?: Logger;
   protected id?: WhereUniqueInputValue;
 
   public constructor(
@@ -24,16 +26,12 @@ export class Fixture {
     readonly data: FixtureData,
     protected graph: FixtureGraph,
     protected gp: GraphQLPlatform,
-  ) {}
+  ) {
+    this.logger = gp.getLogger();
+  }
 
   public toString(): string {
     return `${this.resource}.${this.name}`;
-  }
-
-  public getFieldValue(field: Field): FieldValue | undefined {
-    this.resource.getFieldMap().assert(field);
-
-    return field.getValue(this.data);
   }
 
   public getRelatedFixture(relation: Relation): Fixture | null {
@@ -130,7 +128,7 @@ export class Fixture {
 
     this.resource.getFieldSet().forEach(field => {
       if (!field.isFullyManaged()) {
-        Object.assign(data, { [field.name]: this.getFieldValue(field) });
+        Object.assign(data, { [field.name]: field.getValue(this.data, false) });
       }
     });
 
@@ -163,8 +161,8 @@ export class Fixture {
 
     if (errors && errors.length > 0) {
       const error = errors[0];
+      this.logger && this.logger.error(error);
 
-      console.error(error.originalError || error);
       throw error;
     }
 
@@ -172,7 +170,7 @@ export class Fixture {
       throw new Error('An error occured.');
     }
 
-    this.id = this.resource.getInputType('WhereUnique').assert(data.id);
+    this.id = this.resource.parseId(data.id, true);
   }
 
   public assertId(): WhereUniqueInputValue {

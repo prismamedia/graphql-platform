@@ -8,12 +8,12 @@ export class UpdateOperation extends AbstractOperationResolver<
 > {
   public async execute({
     args: { data: update, where },
-    connection,
+    context,
   }: OperationResolverParams<ConnectorUpdateOperationArgs>): Promise<ConnectorUpdateOperationResult> {
     const updateStatement = this.table.newUpdateStatement();
 
     for (const column of this.table.getColumnSet()) {
-      const columnValue = column.getValue(update);
+      const columnValue = column.getValue(update, false);
       if (typeof columnValue !== 'undefined') {
         updateStatement.assignmentList.addAssignment(column, columnValue);
       }
@@ -21,7 +21,7 @@ export class UpdateOperation extends AbstractOperationResolver<
 
     await this.table.getOperation('Find').parseWhereArg(updateStatement.where, where);
 
-    const result = await this.connector.query(updateStatement.sql, connection);
+    const result = await this.connector.query(updateStatement.sql, context.connectorRequest.connection);
 
     if (
       'affectedRows' in result &&

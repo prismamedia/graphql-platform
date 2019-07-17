@@ -8,16 +8,9 @@ import {
 } from '@prismamedia/graphql-platform-utils';
 import { GraphQLFieldConfigArgumentMap, GraphQLOutputType } from 'graphql';
 import { Memoize } from 'typescript-memoize';
-import { BaseContext } from '../../graphql-platform';
+import { Context } from '../../graphql-platform';
 import { ConnectorInterface } from '../connector';
-import {
-  Operation,
-  OperationContext,
-  OperationEvent,
-  OperationEventKind,
-  OperationResolverParams,
-  PostOperationSuccessHook,
-} from '../operation';
+import { Operation, OperationEvent, OperationEventKind, OperationResolverParams } from '../operation';
 import { Resource } from '../resource';
 
 export abstract class AbstractOperation<TArgs extends POJO = any, TResult = any> implements Operation {
@@ -82,29 +75,49 @@ export abstract class AbstractOperation<TArgs extends POJO = any, TResult = any>
   public abstract async resolve(params: OperationResolverParams<TArgs>): Promise<TResult>;
 
   @Memoize()
-  public getGraphQLFieldConfig(): GraphQLFieldConfig<any, BaseContext, TArgs, TResult> {
+  public getGraphQLFieldConfig(): GraphQLFieldConfig<any, Context, TArgs, TResult> {
     return {
       description: this.description,
       args: this.getGraphQLFieldConfigArgs(),
       type: this.getGraphQLFieldConfigType(),
       resolve: async (_, args, context, info) => {
         const selectionNode = parseGraphQLResolveInfo(info);
+        const operationContext = context.operationContext;
 
-        const postSuccessHooks: PostOperationSuccessHook[] = [];
+        if (typeof operationContext.type === 'undefined') {
+          operationContext.type = this.type;
+        }
 
-        const operationContext: OperationContext = { postSuccessHooks };
+        let isRootOperation: boolean = false;
+
+        if (this.type === GraphQLOperationType.Mutation) {
+          if (operationContext.type !== GraphQLOperationType.Mutation) {
+            throw new Error(
+              `A mutation can only be be executed in a mutation, have you tried to executed a mutation through the API binding in a query ?`,
+            );
+          }
+
+          if (!operationContext.postSuccessHooks) {
+            isRootOperation = true;
+
+            operationContext.postSuccessHooks = [];
+          }
+        }
 
         const resolverParams: OperationResolverParams<TArgs> = Object.freeze({
           args,
           context,
           selectionNode,
-          operationContext,
         });
 
         const event: OperationEvent<TArgs> = Object.freeze({
           ...resolverParams,
           operation: this,
         });
+
+        context.operationEventDataMap.set(event, Object.create(null));
+
+        const profile = context.logger && context.logger.startTimer();
 
         try {
           await this.resource.emitSerial(OperationEventKind.PreOperation, event);
@@ -114,26 +127,47 @@ export abstract class AbstractOperation<TArgs extends POJO = any, TResult = any>
 
           await this.resource.emitSerial(OperationEventKind.PostOperationSuccess, event);
 
-          // Execute the hooks on operation success
-          // In case of errors: we log them but do not throw anything as we want the operation remains a "success"
-          await Promise.all(
-            postSuccessHooks.map(async hook => {
-              try {
-                await hook();
-              } catch (error) {
-                context.logger && context.logger.error(error);
-              }
-            }),
-          );
+          if (
+            operationContext.type === GraphQLOperationType.Mutation &&
+            isRootOperation &&
+            operationContext.postSuccessHooks
+          ) {
+            // Execute the hooks on operation success
+            // In case of errors: we log them but do not throw anything as we want the operation remains a "success"
+            await Promise.all(
+              operationContext.postSuccessHooks.map(async hook => {
+                try {
+                  await hook();
+                } catch (error) {
+                  context.logger && context.logger.error(error);
+                }
+              }),
+            );
+          }
+
+          profile &&
+            profile.done({
+              level: 'debug',
+              message: `Resolved "${this}" successfully`,
+            });
 
           return result;
         } catch (error) {
-          context.logger && context.logger.error(error);
-          await this.resource.emitSerial(OperationEventKind.PostOperationError, Object.freeze({ ...event, error }));
+          profile &&
+            profile.done({
+              level: 'error',
+              message: error,
+            });
+
+          await this.resource.emitSerial(OperationEventKind.PostOperationError, event);
 
           throw error;
         } finally {
           await this.resource.emitSerial(OperationEventKind.PostOperation, event);
+
+          if (operationContext.type === GraphQLOperationType.Mutation && isRootOperation) {
+            delete operationContext.postSuccessHooks;
+          }
         }
       },
     };

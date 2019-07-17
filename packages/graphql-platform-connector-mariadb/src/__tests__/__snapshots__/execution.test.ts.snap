@@ -200,10 +200,11 @@ INSERT INTO
 SET
   \`id\` = '9b6b98fa-586d-4987-82a0-d63f11bbe560',
   \`computedMaxIntId\` = 100,
-  \`publishedAt\` = '2019-06-01T12:10:37.829',
+  \`publishedAt\` = '2019-06-01 12:10:37.829',
   \`format\` = 'RICH',
   \`title\` = 'My first article title, RICH, authored by user-01, in the second category.',
   \`slug\` = 'my-first-article-title-rich-authored-by-user-01-in-the-second-category',
+  \`isPublished\` = true,
   \`categoryParentId\` = '92dc645e-c5ee-46ac-8a24-53b1584e4c99',
   \`categorySlug\` = 'second-category',
   \`authorUsername\` = 'user-01';
@@ -224,7 +225,9 @@ SELECT
   \`Article\`.\`computedMaxIntId\`,
   \`Article\`.\`format\`,
   \`Article\`.\`title\`,
-  \`Article\`.\`body\`
+  \`Article\`.\`body\`,
+  \`Article\`.\`isPublished\`,
+  \`Article\`.\`isImportant\`
 FROM
   \`articles\` AS \`Article\`
   LEFT JOIN \`users\` AS \`Article>moderator\` ON \`Article\`.\`moderatorIntId\` = \`Article>moderator\`.\`intId\`
@@ -402,6 +405,7 @@ SET
   \`format\` = 'VIDEO',
   \`title\` = 'My second article title, VIDEO, authored by user-01, in the first category.',
   \`slug\` = 'my-second-article-title-video-authored-by-user-01-in-the-first-category',
+  \`isPublished\` = false,
   \`categoryParentId\` = '92dc645e-c5ee-46ac-8a24-53b1584e4c99',
   \`categorySlug\` = 'first-category',
   \`authorUsername\` = 'a-new-user-created-in-the-nested-mutation',
@@ -423,7 +427,9 @@ SELECT
   \`Article\`.\`computedMaxIntId\`,
   \`Article\`.\`publishedAt\`,
   \`Article\`.\`format\`,
-  \`Article\`.\`body\`
+  \`Article\`.\`body\`,
+  \`Article\`.\`isPublished\`,
+  \`Article\`.\`isImportant\`
 FROM
   \`articles\` AS \`Article\`
   LEFT JOIN \`users\` AS \`Article>moderator\` ON \`Article\`.\`moderatorIntId\` = \`Article>moderator\`.\`intId\`
@@ -784,6 +790,7 @@ UPDATE
     \`Article\`.\`categorySlug\` = \`Article>category\`.\`slug\`
   )
 SET
+  \`Article\`.\`isPublished\` = false,
   \`Article\`.\`moderatorIntId\` = NULL
 WHERE
   (\`Article\`.\`format\` IN ('RICH', 'VIDEO'))
@@ -796,20 +803,7 @@ WHERE
 
 SELECT
   \`Article\`.\`title\`,
-  \`Article\`.\`body\`,
-  \`Article\`.\`intId\`,
-  \`Article\`.\`id\`,
-  \`Article\`.\`createdAt\`,
-  \`Article\`.\`updatedAt\`,
-  \`Article\`.\`computedMaxIntId\`,
-  \`Article\`.\`publishedAt\`,
-  \`Article\`.\`format\`,
-  \`Article\`.\`slug\`,
-  \`Article\`.\`categoryParentId\`,
-  \`Article\`.\`categorySlug\`,
-  \`Article>category\`.\`parentId\`,
-  \`Article\`.\`authorUsername\`,
-  \`Article\`.\`moderatorIntId\`
+  \`Article\`.\`body\`
 FROM
   \`articles\` AS \`Article\`
   LEFT JOIN \`categories\` AS \`Article>category\` ON (
@@ -844,6 +838,7 @@ UPDATE
 SET
   \`Article\`.\`title\` = 'My new first article\\\\'s title',
   \`Article\`.\`body\` = 'My new first article\\\\'s body',
+  \`Article\`.\`isPublished\` = false,
   \`Article\`.\`moderatorIntId\` = NULL
 WHERE
   (\`Article\`.\`format\` IN ('RICH', 'VIDEO'))
@@ -856,20 +851,7 @@ WHERE
 
 SELECT
   \`Article\`.\`title\`,
-  \`Article\`.\`body\`,
-  \`Article\`.\`intId\`,
-  \`Article\`.\`id\`,
-  \`Article\`.\`createdAt\`,
-  \`Article\`.\`updatedAt\`,
-  \`Article\`.\`computedMaxIntId\`,
-  \`Article\`.\`publishedAt\`,
-  \`Article\`.\`format\`,
-  \`Article\`.\`slug\`,
-  \`Article\`.\`categoryParentId\`,
-  \`Article\`.\`categorySlug\`,
-  \`Article>category\`.\`parentId\`,
-  \`Article\`.\`authorUsername\`,
-  \`Article\`.\`moderatorIntId\`
+  \`Article\`.\`body\`
 FROM
   \`articles\` AS \`Article\`
   LEFT JOIN \`categories\` AS \`Article>category\` ON (
@@ -902,6 +884,7 @@ UPDATE
     \`Article\`.\`categorySlug\` = \`Article>category\`.\`slug\`
   )
 SET
+  \`Article\`.\`isPublished\` = false,
   \`Article\`.\`moderatorIntId\` = NULL
 WHERE
   (\`Article\`.\`format\` IN ('RICH', 'VIDEO'))
@@ -913,22 +896,8 @@ WHERE
   );
 
 SELECT
-  \`Article\`.\`moderatorIntId\`,
   \`Article>moderator\`.\`id\`,
-  \`Article\`.\`intId\`,
-  \`Article\`.\`id\`,
-  \`Article\`.\`createdAt\`,
-  \`Article\`.\`updatedAt\`,
-  \`Article\`.\`computedMaxIntId\`,
-  \`Article\`.\`publishedAt\`,
-  \`Article\`.\`format\`,
-  \`Article\`.\`title\`,
-  \`Article\`.\`slug\`,
-  \`Article\`.\`body\`,
-  \`Article\`.\`categoryParentId\`,
-  \`Article\`.\`categorySlug\`,
-  \`Article>category\`.\`parentId\`,
-  \`Article\`.\`authorUsername\`
+  \`Article\`.\`moderatorIntId\`
 FROM
   \`articles\` AS \`Article\`
   LEFT JOIN \`users\` AS \`Article>moderator\` ON \`Article\`.\`moderatorIntId\` = \`Article>moderator\`.\`intId\`
@@ -969,10 +938,10 @@ FROM
 WHERE
   (
     (
-      \`ArticleTag>article\`.\`slug\` = 'my-first-article-title-rich-authored-by-user-01-in-the-second-category'
+      \`ArticleTag>article>category\`.\`id\` = 'e411a5dc-a14f-4d0d-ac54-d4c93c7c5b84'
     )
     AND (
-      \`ArticleTag>article>category\`.\`id\` = 'e411a5dc-a14f-4d0d-ac54-d4c93c7c5b84'
+      \`ArticleTag>article\`.\`slug\` = 'my-first-article-title-rich-authored-by-user-01-in-the-second-category'
     )
   )
   AND (\`ArticleTag>tag\`.\`slug\` = 'first-tag')

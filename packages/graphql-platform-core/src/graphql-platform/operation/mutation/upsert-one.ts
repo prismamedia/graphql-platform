@@ -55,13 +55,13 @@ export class UpsertOneOperation extends AbstractOperation<UpsertOneOperationArgs
     const resource = this.resource;
 
     // We select only the identifier
-    const nodeSource = await resource.getQuery('FindOne').resolve({
+    const node = await resource.getQuery('FindOne').resolve({
       ...params,
       args: { where },
       selectionNode: resource.getIdentifier().getSelectionNode(TypeKind.Input),
     });
 
-    const result = await (!nodeSource
+    const result = await (!node
       ? resource.getMutation('CreateOne').resolve({
           ...params,
           args: { data: create },
@@ -69,7 +69,7 @@ export class UpsertOneOperation extends AbstractOperation<UpsertOneOperationArgs
       : resource.getMutation('UpdateOne').resolve({
           ...params,
           args: {
-            where: resource.getInputType('WhereUnique').assert(nodeSource),
+            where: resource.parseId(node, true),
             data: update,
           },
         }));

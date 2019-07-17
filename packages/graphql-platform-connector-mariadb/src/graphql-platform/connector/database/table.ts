@@ -1,12 +1,4 @@
-import {
-  Component,
-  ComponentSet,
-  Field,
-  FieldValue,
-  NodeValue,
-  Relation,
-  Resource,
-} from '@prismamedia/graphql-platform-core';
+import { Component, ComponentSet, Field, Relation, Resource } from '@prismamedia/graphql-platform-core';
 import { Maybe } from '@prismamedia/graphql-platform-utils';
 import inflector from 'inflection';
 import { escapeId } from 'mysql';
@@ -136,8 +128,13 @@ export class Table {
   }
 
   @Memoize()
-  public getAutoIncrementColumn(): Column | ColumnReference | null {
-    return this.getColumnSet().find(column => column.autoIncrement) || null;
+  public getAutoIncrementColumn(): Column | undefined {
+    const column = this.getColumnSet().find(column => column.autoIncrement);
+    if (column instanceof ColumnReference) {
+      throw new Error(`Runtime error: A column reference cannot be "autoIncrement"`);
+    }
+
+    return column;
   }
 
   public newSelectStatement(): SelectStatement {
@@ -168,9 +165,5 @@ export class Table {
     }
 
     return new constructor(this);
-  }
-
-  public getValue(node: NodeValue, column: Column | ColumnReference): FieldValue | undefined {
-    return column.getValue(node);
   }
 }

@@ -20,10 +20,10 @@ export class Database {
   @Memoize()
   public getTableSet(): TableSet {
     return new TableSet(
-      this.connector.graphqlPlatform
+      this.connector.gp
         .getResourceGraph()
         .overallOrder()
-        .map(resourceName => this.getTable(this.connector.graphqlPlatform.getResourceMap().assert(resourceName))),
+        .map(resourceName => this.getTable(this.connector.gp.getResourceMap().assert(resourceName))),
     );
   }
 

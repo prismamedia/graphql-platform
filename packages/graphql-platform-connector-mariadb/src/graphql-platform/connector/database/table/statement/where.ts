@@ -1,11 +1,10 @@
-import { AnyRelation } from '@prismamedia/graphql-platform-core';
+import { AnyRelation, FieldValue } from '@prismamedia/graphql-platform-core';
 import { MaybeArray, SuperSet } from '@prismamedia/graphql-platform-utils';
 import { escape } from 'mysql';
 import { Memoize } from 'typescript-memoize';
 import { Column, ColumnReference, Table } from '../..';
 import { Resource } from '../../../../resource';
 import { Database } from '../../../database';
-import { ColumnValue } from '../column';
 import { TableReference } from './reference';
 
 export type WhereConditionBool = WhereConditionAnd | WhereConditionOr;
@@ -47,7 +46,7 @@ abstract class AbstractWhereConditionBool extends SuperSet<WhereCondition> {
   public addFilter(
     column: Column | ColumnReference,
     operator: string,
-    value?: MaybeArray<NonNullable<ColumnValue>>,
+    value?: MaybeArray<NonNullable<FieldValue>>,
   ): this {
     return this.addRaw(
       [

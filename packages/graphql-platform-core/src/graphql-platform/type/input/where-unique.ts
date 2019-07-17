@@ -1,15 +1,20 @@
-import { GraphQLNonNullDecorator, isPlainObject, Scalar, SuperMap } from '@prismamedia/graphql-platform-utils';
+import {
+  GraphQLNonNullDecorator,
+  isPlainObject,
+  MaybeUndefinedDecorator,
+  SuperMap,
+} from '@prismamedia/graphql-platform-utils';
 import { GraphQLInputFieldConfigMap, GraphQLInputObjectType } from 'graphql';
 import { Memoize } from 'typescript-memoize';
 import { Component, ComponentSet, Field, Unique } from '../../resource';
+import { FieldValue } from '../../resource/component';
 import { UniqueSet } from '../../resource/unique';
 import { AbstractInputType } from '../abstract-type';
 
-export type WhereUniqueInputValueComponent = null | Scalar | WhereUniqueInputValue;
-
-export interface WhereUniqueInputValue {
-  [componentName: string]: WhereUniqueInputValueComponent;
-}
+// Node's identifier
+export type WhereUniqueInputValue = {
+  [componentName: string]: FieldValue | (null | WhereUniqueInputValue);
+};
 
 export class WhereUniqueInputType extends AbstractInputType {
   @Memoize()
@@ -57,89 +62,73 @@ export class WhereUniqueInputType extends AbstractInputType {
     return uniqueCombinationMap;
   }
 
-  public parseUnique(
+  public parseUnique<TStrict extends boolean>(
     value: unknown,
     unique: Unique,
+    strict: TStrict,
+    // Accept only the defined unique
     relationToUniqueOnly: boolean = false,
-  ): WhereUniqueInputValue | undefined {
-    if (isPlainObject(value)) {
-      const id: WhereUniqueInputValue = {};
+  ): MaybeUndefinedDecorator<WhereUniqueInputValue, TStrict> {
+    const id: WhereUniqueInputValue = Object.create(null);
 
-      for (const component of unique.componentSet) {
-        const componentValue = component.parseValue(value[component.name]);
-        if (typeof componentValue !== 'undefined') {
-          if (componentValue === null) {
-            component.setValue(id, null);
-          } else {
-            if (component.isField()) {
-              component.setValue(id, componentValue);
-            } else {
-              const relatedNodeId = component
-                .getTo()
-                .getInputType('WhereUnique')
-                .parse(
-                  componentValue,
-                  new UniqueSet([
-                    component.getToUnique(),
-                    ...(relationToUniqueOnly ? [] : component.getTo().getUniqueSet()),
-                  ]),
-                );
-
-              if (relatedNodeId) {
-                component.setValue(id, relatedNodeId);
-              } else {
-                return undefined;
-              }
-            }
+    if (
+      isPlainObject(value) &&
+      unique.componentSet.every(component => {
+        if (component.isField()) {
+          // Field
+          const componentValue = component.getValue(value, false);
+          if (typeof componentValue === 'undefined') {
+            return false;
           }
-        } else {
-          return undefined;
-        }
-      }
 
-      return id;
+          component.setValue(id, componentValue);
+        } else {
+          // Relation
+          const relatedNodeId = component.getId(value, false, relationToUniqueOnly);
+          if (typeof relatedNodeId === 'undefined') {
+            return false;
+          }
+
+          component.setValue(id, relatedNodeId);
+        }
+
+        return true;
+      })
+    ) {
+      return id as any;
     }
 
-    return undefined;
-  }
-
-  public assertUnique(value: unknown, unique: Unique, relationToUniqueOnly: boolean = false): WhereUniqueInputValue {
-    const uniqueValue = this.parseUnique(value, unique, relationToUniqueOnly);
-    if (!uniqueValue) {
+    if (strict) {
       throw new Error(
-        `The following "${this.resource}"'s where argument does not contain a valid "${
+        `The following "${this.resource}"'s identifier does not contain a valid "${
           unique.name
         }" combination: ${JSON.stringify(value)}`,
       );
     }
 
-    return uniqueValue;
+    return undefined as any;
   }
 
-  public parse(value: unknown, uniqueSet: UniqueSet = this.resource.getUniqueSet()): WhereUniqueInputValue | undefined {
-    if (isPlainObject(value)) {
-      for (const unique of uniqueSet) {
-        const uniqueValue = this.parseUnique(value, unique);
-        if (uniqueValue) {
-          return uniqueValue;
-        }
-      }
+  public parse<TStrict extends boolean>(
+    value: unknown,
+    strict: TStrict,
+    uniqueSet: UniqueSet = this.resource.getUniqueSet(),
+  ): MaybeUndefinedDecorator<WhereUniqueInputValue, TStrict> {
+    let id: WhereUniqueInputValue | undefined;
+
+    if (isPlainObject(value) && uniqueSet.some(unique => !!(id = this.parseUnique(value, unique, false)))) {
+      return id as any;
     }
 
-    return undefined;
-  }
-
-  public assert(value: unknown, uniqueSet: UniqueSet = this.resource.getUniqueSet()): WhereUniqueInputValue {
-    const uniqueValue = this.parse(value, uniqueSet);
-    if (!uniqueValue) {
+    if (strict) {
       throw new Error(
-        `The following "${
-          this.resource
-        }"'s where argument does not contain any valid unique combination: ${JSON.stringify(value)}`,
+        `The following "${this.resource}"'s identifier does not contain any valid unique combination: ${JSON.stringify(
+          value,
+        )}`,
       );
     }
 
-    return uniqueValue;
+    return undefined as any;
   }
 
   @Memoize((knownComponent?: Component, forced: boolean = false) =>

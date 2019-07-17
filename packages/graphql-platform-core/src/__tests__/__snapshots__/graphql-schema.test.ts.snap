@@ -24,6 +24,12 @@ type Article {
 
   # The date of the document's public release
   publishedAt: DateTime
+
+  # Either this article is published or not
+  isPublished: Boolean!
+
+  # Either this article is important or not
+  isImportant: Boolean
   category: Category!
   author: User!
   moderator: User
@@ -79,6 +85,9 @@ input ArticleCreateInput {
 
   # The date of the document's public release
   publishedAt: DateTime
+
+  # Either this article is important or not
+  isImportant: Boolean
   category: ArticleCreateCategoryInput!
   author: ArticleCreateAuthorInput!
   moderator: ArticleCreateModeratorInput
@@ -119,6 +128,10 @@ enum ArticleOrderByInput {
   body_DESC
   publishedAt_ASC
   publishedAt_DESC
+  isPublished_ASC
+  isPublished_DESC
+  isImportant_ASC
+  isImportant_DESC
 }
 
 # \\"ArticleTag\\" resource's node
@@ -347,6 +360,9 @@ input ArticleUpdateInput {
 
   # The date of the document's public release
   publishedAt: DateTime
+
+  # Either this article is important or not
+  isImportant: Boolean
   category: ArticleUpdateCategoryInput
   author: ArticleUpdateAuthorInput
   moderator: ArticleUpdateModeratorInput
@@ -610,6 +626,14 @@ input ArticleWhereInput {
   publishedAt_lte: DateTime
   publishedAt_gt: DateTime
   publishedAt_gte: DateTime
+  isPublished: Boolean
+  isPublished_not: Boolean
+  isPublished_in: [Boolean]
+  isPublished_not_in: [Boolean]
+  isImportant: Boolean
+  isImportant_not: Boolean
+  isImportant_in: [Boolean]
+  isImportant_not_in: [Boolean]
   category: CategoryWhereInput
   author: UserWhereInput
   moderator: UserWhereInput

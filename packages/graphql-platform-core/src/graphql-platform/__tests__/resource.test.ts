@@ -18,38 +18,36 @@ describe('Resource', () => {
     [{ title: 'Test', unknownProperty: null }, { title: 'Test' }],
     [{ title: 'Test', category: { slug: 'category-slug' } }, { title: 'Test', category: { slug: 'category-slug' } }],
     [
-      { title: 'Test', category: { slug: 'category-slug', parent: { slug: 'category-parent-slug' } } },
-      { title: 'Test', category: { slug: 'category-slug', parent: { slug: 'category-parent-slug' } } },
+      { title: 'Test', category: { slug: 'category-slug', parent: { id: 'a3b9f2a2-84e1-4430-a520-f3af562471a7' } } },
+      { title: 'Test', category: { slug: 'category-slug', parent: { id: 'a3b9f2a2-84e1-4430-a520-f3af562471a7' } } },
     ],
     [
       { title: 'Test', category: { slug: 'category-slug', parent: null } },
       { title: 'Test', category: { slug: 'category-slug', parent: null } },
     ],
+    [
+      { title: 'Test', category: { slug: 'category-slug', parent: undefined } },
+      { title: 'Test', category: { slug: 'category-slug' } },
+    ],
   ] as ReadonlyArray<[POJO, POJO]>)('parses value', (rawValue, parsedValue) => {
-    expect(articleResource.parseValue(rawValue)).toEqual(parsedValue);
+    expect(articleResource.parseValue(rawValue, false, false)).toEqual(parsedValue);
   });
 
   it.each([null, 0, true, false, 'string'])('throws error for invalid value', value => {
-    expect(() => articleResource.parseValue(value)).toThrowError(
+    expect(() => articleResource.parseValue(value, false, false)).toThrowError(
       /^The "Article" node's value has to be a plain object: (.+)/,
     );
   });
 
-  it('throws error for non-nullable component value', () => {
-    expect(() => articleResource.parseValue({ id: null })).toThrowError(
-      'The "Article.id" field\'s value has to be a non-null scalar: "null" given.',
+  it.each([{ id: null }, { category: null }])('throws error for non-nullable component value', value => {
+    expect(() => articleResource.parseValue(value, false, false)).toThrowError(
+      /^The "Article.(id|category)" (field|relation)'s value cannot be null/,
     );
   });
 
-  it('throws error for invalid component value', () => {
-    expect(() => articleResource.parseValue({ id: {} })).toThrowError(
-      'The "Article.id" field\'s value has to be a non-null scalar: "[object Object]" given',
-    );
-  });
-
-  it('throws error for invalid component value', () => {
-    expect(() => articleResource.parseValue({ category: 5 })).toThrowError(
-      'The "Category" node\'s value has to be a plain object: "5" given.',
+  it.each([{ id: {} }, { category: 5 }])('throws error for invalid component value', value => {
+    expect(() => articleResource.parseValue(value, false, false)).toThrowError(
+      /^The "Article.(id|category)" (field's value is not valid: (.+)|relation's value has to be a plain object)/,
     );
   });
 });

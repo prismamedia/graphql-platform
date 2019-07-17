@@ -2,6 +2,7 @@ import { mergeWith } from '@prismamedia/graphql-platform-utils';
 import faker from 'faker/locale/en';
 import { GraphQLID, GraphQLInt } from 'graphql';
 import { GraphQLDateTime } from 'graphql-iso-date';
+import { createLogger, format, transports } from 'winston';
 import {
   CustomContext,
   FieldConfig,
@@ -27,6 +28,14 @@ export const nonRelationTableResourceNames = ['Article', 'Category', 'Tag', 'Use
 let resourceIndex = 0;
 
 export const config: MyGPConfig = {
+  logger: createLogger({
+    format: format.combine(format.colorize(), format.errors({ stack: false }), format.simple()),
+    transports: [new transports.Console()],
+    // level: 'debug',
+    level: 'error',
+    silent: process.env.NODE_ENV === 'test',
+  }),
+
   context: params => ({
     myService: true,
   }),

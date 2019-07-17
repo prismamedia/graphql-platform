@@ -217,12 +217,12 @@ export class FindOperation extends AbstractOperationResolver<ConnectorFindOperat
                   relation
                     .getTo()
                     .getInputType('WhereUnique')
-                    .parseUnique(value, relation.getToUnique(), true);
+                    .parseUnique(value, relation.getToUnique(), false, true);
 
                 if (relatedNodeId && Object.keys(relatedNodeId).length === Object.keys(value).length) {
                   where.addAnd(where =>
                     foreignKeyColumnSet.forEach(column => {
-                      const fieldValue = column.reference.assertValue(relatedNodeId);
+                      const fieldValue = column.reference.getValue(relatedNodeId, true);
 
                       fieldValue === null
                         ? where.addFilter(column, 'IS NULL')
@@ -349,15 +349,14 @@ export class FindOperation extends AbstractOperationResolver<ConnectorFindOperat
       switch (nodeField.kind) {
         case NodeFieldKind.Field: {
           const field = nodeField.field;
-
           const column = table.getColumn(field);
+
           column.setValue(node, tableData[column.name]);
           break;
         }
 
         case NodeFieldKind.Relation: {
           const relation = nodeField.relation;
-
           const foreignKey = this.table.getForeignKey(relation);
 
           const selectionCopy = selection.clone();
@@ -427,7 +426,7 @@ export class FindOperation extends AbstractOperationResolver<ConnectorFindOperat
                       {
                         [inverseRelation.getInverse().name]: resource
                           .getInputType('WhereUnique')
-                          .assertUnique(node, inverseRelation.getInverse().getToUnique(), true),
+                          .parseUnique(node, inverseRelation.getInverse().getToUnique(), true),
                       },
                       params.args.where,
                     ],
@@ -459,7 +458,7 @@ export class FindOperation extends AbstractOperationResolver<ConnectorFindOperat
                     {
                       [inverseRelation.getInverse().name]: resource
                         .getInputType('WhereUnique')
-                        .assertUnique(node, inverseRelation.getInverse().getToUnique(), true),
+                        .parseUnique(node, inverseRelation.getInverse().getToUnique(), true),
                     },
                     params.args.where,
                   ],
@@ -469,20 +468,21 @@ export class FindOperation extends AbstractOperationResolver<ConnectorFindOperat
           break;
         }
 
-        case NodeFieldKind.VirtualField:
+        case NodeFieldKind.VirtualField: {
           const virtualField = nodeField.virtualField;
 
           table
             .getComponentSetColumnSet(virtualField.dependencySet)
             .forEach(column => column.setValue(node, tableData[column.name]));
           break;
+        }
       }
     }
 
     return node;
   }
 
-  public async execute({ args, selectionNode, connection }: OperationResolverParams<ConnectorFindOperationArgs>) {
+  public async execute({ args, context, selectionNode }: OperationResolverParams<ConnectorFindOperationArgs>) {
     const selectStatement = this.table.newSelectStatement();
 
     await Promise.all([
@@ -502,7 +502,7 @@ export class FindOperation extends AbstractOperationResolver<ConnectorFindOperat
         nestTables: true,
         sql: selectStatement.sql,
       },
-      connection,
+      context.connectorRequest.connection,
     );
 
     return Array.isArray(rows) ? rows.map(row => this.parseRow(row, selectStatement.from, selectionNode)) : [];

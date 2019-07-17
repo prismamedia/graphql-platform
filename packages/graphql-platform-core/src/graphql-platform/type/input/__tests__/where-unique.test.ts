@@ -65,7 +65,7 @@ describe('WhereUniqueInput', () => {
       resourceMap
         .assert('Article')
         .getInputType('WhereUnique')
-        .parse(value),
+        .parse(value, false),
     ).toBeUndefined();
   });
 
@@ -135,7 +135,7 @@ describe('WhereUniqueInput', () => {
       const id = resourceMap
         .assert('Article')
         .getInputType('WhereUnique')
-        .parse(value);
+        .parse(value, false);
 
       expect(id).toEqual(whereUniqueInputValue);
     },

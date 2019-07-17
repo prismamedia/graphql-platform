@@ -16,8 +16,9 @@ import { Memoize } from 'typescript-memoize';
 import { Logger } from 'winston';
 import { ConnectorInterface } from './graphql-platform/connector';
 import { Fixture, FixtureData, FixtureGraph } from './graphql-platform/fixture';
-import { OperationContext } from './graphql-platform/operation';
+import { OperationContext, OperationEvent } from './graphql-platform/operation';
 import {
+  AnyResourceConfig,
   MaybeResourceMapAware,
   Resource,
   ResourceConfig,
@@ -35,16 +36,34 @@ export * from './graphql-platform/schema';
 export * from './graphql-platform/type';
 
 /** "Context" provided by the GraphQL Platform */
-export interface BaseContext {
-  // The logger, if any
+export type BaseContext = {
+  /**
+   * The logger, if any
+   */
   logger: Logger | undefined;
 
-  // Either we are in debug mode or not
+  /**
+   * Either we are in debug mode or not
+   */
   debug: boolean;
 
-  // This API's binding, in order to execute other requests
+  /**
+   * This API's binding, in order to execute other requests
+   */
   api: Binding;
-}
+
+  /**
+   * This operation's context
+   */
+  operationContext: OperationContext;
+
+  /**
+   * A convenient location to store data between the different operations' events
+   */
+  operationEventDataMap: WeakMap<OperationEvent, any>;
+};
+
+export type AnyBaseContext = BaseContext;
 
 /** "Context" provided by the GraphQL Platform's user, can't override the "BaseContext"'s properties */
 export interface CustomContext {
@@ -52,27 +71,23 @@ export interface CustomContext {
 }
 
 /** "Context" available in the operations, hooks... */
-export type Context<TCustomContext extends CustomContext = any, TBaseContext extends BaseContext = any> = Readonly<
-  TBaseContext & TCustomContext
->;
+export type Context<
+  TCustomContext extends CustomContext = {},
+  TBaseContext extends AnyBaseContext = BaseContext
+> = TCustomContext & TBaseContext;
 
 export type Request = Merge<Omit<GraphQLArgs, 'schema'>, { contextValue?: CustomContext }>;
 
 export type CustomOperationConfig<
-  TCustomContext extends CustomContext = any,
-  TBaseContext extends BaseContext = any
+  TCustomContext extends CustomContext = {},
+  TBaseContext extends AnyBaseContext = BaseContext
 > = MaybeResourceMapAware<GraphQLFieldConfig<any, Context<TCustomContext, TBaseContext>>>;
 
 export interface GraphQLPlatformConfig<
   TContextParams extends POJO = any,
-  TCustomContext extends CustomContext = any,
-  TBaseContext extends BaseContext = BaseContext,
-  TOperationContext extends OperationContext = OperationContext,
-  TResourceConfig extends ResourceConfig<any, any, any, any, any, any> = ResourceConfig<
-    TCustomContext,
-    TBaseContext,
-    TOperationContext
-  >
+  TCustomContext extends CustomContext = {},
+  TBaseContext extends AnyBaseContext = BaseContext,
+  TResourceConfig extends AnyResourceConfig = ResourceConfig<TCustomContext, TBaseContext>
 > {
   /** Optional, provide your own logger to see what happens under the hood */
   logger?: Maybe<Logger>;
@@ -96,11 +111,11 @@ export interface GraphQLPlatformConfig<
   mutations?: ModuleMapConfig<CustomOperationConfig<TCustomContext, TBaseContext>>;
 }
 
-export type AnyGraphQLPlatformConfig = GraphQLPlatformConfig<any, any, any, any, any>;
+export type AnyGraphQLPlatformConfig = GraphQLPlatformConfig<any, any, any, any>;
 
 export class GraphQLPlatform<
   TContextParams extends POJO = any,
-  TCustomContext extends CustomContext = any,
+  TCustomContext extends CustomContext = {},
   TConfig extends AnyGraphQLPlatformConfig = GraphQLPlatformConfig<TContextParams, TCustomContext>
 > {
   public constructor(readonly config: TConfig) {}
@@ -205,6 +220,8 @@ export class GraphQLPlatform<
       logger: this.getLogger(),
       debug: this.isDebug(),
       api: this.getBinding(),
+      operationContext: {},
+      operationEventDataMap: new WeakMap(),
     };
   }
 
@@ -221,10 +238,10 @@ export class GraphQLPlatform<
     return graphql<TData>({
       ...request,
       schema: this.getGraphQLSchema(),
-      contextValue: {
+      contextValue: Object.freeze({
         ...(await this.getContext()),
         ...request.contextValue,
-      },
+      }),
     });
   }
 
@@ -291,7 +308,7 @@ export class GraphQLPlatform<
 
     // Actually load the fixtures
     for (const fixtureName of fixtureGraph.overallOrder()) {
-      await fixtureGraph.getNodeData(fixtureName).load();
+      await fixtureGraph.getNodeData(fixtureName).load(contextValue);
     }
   }
 }

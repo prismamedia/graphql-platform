@@ -9,24 +9,9 @@ import {
 } from '@prismamedia/graphql-platform-utils';
 import { GraphQLFieldConfigMap, GraphQLObjectType, GraphQLResolveInfo } from 'graphql';
 import { Memoize } from 'typescript-memoize';
-import { BaseContext } from '../../../graphql-platform';
-import { logPromiseError } from '../../../utils';
+import { AnyBaseContext, BaseContext } from '../../../graphql-platform';
 import { Field, FieldValue, InverseRelation, Relation, VirtualField } from '../../resource';
 import { AbstractOutputType } from '../abstract-type';
-
-export type NodeSourceFieldValue = FieldValue | NodeSource | NodeSource[] | number;
-
-export type NodeSourceFieldResolverParams<TArgs extends POJO = any, TContext extends BaseContext = any> = Readonly<{
-  args: TArgs;
-  context: TContext;
-  selectionNode: GraphQLSelectionNode<TArgs>;
-}>;
-
-export type NodeSourceFieldResolver<TArgs extends POJO = any, TContext extends BaseContext = any> = (
-  params: NodeSourceFieldResolverParams<TArgs, TContext>,
-) => MaybePromise<NodeSourceFieldValue>;
-
-export type NodeSourceField = NodeSourceFieldValue | NodeSourceFieldResolver;
 
 export enum NodeFieldKind {
   Field,
@@ -64,8 +49,22 @@ export type NodeField = {
 
 export class NodeFieldMap extends SuperMapOfNamedObject<NodeField> {}
 
+export type NodeSourceFieldValue = FieldValue | NodeSource | NodeSource[] | number;
+
+export type NodeSourceFieldResolverParams<TArgs extends POJO = any, TContext extends AnyBaseContext = any> = Readonly<{
+  args: TArgs;
+  context: TContext;
+  selectionNode: GraphQLSelectionNode<TArgs>;
+}>;
+
+export type NodeSourceFieldResolver<TArgs extends POJO = any, TContext extends AnyBaseContext = any> = (
+  params: NodeSourceFieldResolverParams<TArgs, TContext>,
+) => MaybePromise<NodeSourceFieldValue>;
+
+export type NodeSourceField = NodeSourceFieldValue | NodeSourceFieldResolver;
+
 export interface NodeSource {
-  [key: string]: NodeSourceField;
+  [fieldName: string]: NodeSourceField;
 }
 
 export class NodeType extends AbstractOutputType {
@@ -88,9 +87,7 @@ export class NodeType extends AbstractOutputType {
     const selectionNode = parseGraphQLResolveInfo(info);
     const fieldValue = source[selectionNode.name];
 
-    return typeof fieldValue === 'function'
-      ? logPromiseError(fieldValue({ args, context, selectionNode }), context.logger)
-      : fieldValue;
+    return typeof fieldValue === 'function' ? fieldValue({ args, context, selectionNode }) : fieldValue;
   }
 
   @Memoize()

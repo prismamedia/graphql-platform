@@ -1,5 +1,5 @@
 import { getGraphQLEnumType } from '@prismamedia/graphql-platform-utils';
-import { GraphQLNonNull, GraphQLString } from 'graphql';
+import { GraphQLBoolean, GraphQLNonNull, GraphQLString } from 'graphql';
 import { GraphQLDateTime } from 'graphql-iso-date';
 import slug from 'slug';
 import { ManagementKind, ResourceHookKind } from '../..';
@@ -59,6 +59,27 @@ const resource: MyResourceConfig = {
       type: GraphQLDateTime,
       description: "The date of the document's public release",
     },
+    isPublished: {
+      type: GraphQLBoolean,
+      description: 'Either this article is published or not',
+      managed: ManagementKind.Full,
+      hooks: {
+        [ResourceHookKind.PreCreate]: event => {
+          event.fieldValue =
+            event.metas.create.publishedAt instanceof Date && event.metas.create.publishedAt <= new Date();
+        },
+        [ResourceHookKind.PreUpdate]: event => {
+          if (typeof event.metas.update !== 'undefined') {
+            event.fieldValue =
+              event.metas.update.publishedAt instanceof Date && event.metas.update.publishedAt <= new Date();
+          }
+        },
+      },
+    },
+    isImportant: {
+      type: GraphQLBoolean,
+      description: 'Either this article is important or not',
+    },
   },
   relations: {
     category: {
@@ -89,6 +110,16 @@ const resource: MyResourceConfig = {
   filter: ({ debug, myService }) => ({
     format_in: ['RICH', 'VIDEO'],
   }),
+  hooks: {
+    [ResourceHookKind.PostCreate]: ({
+      metas: {
+        context: { logger },
+      },
+      createdNode,
+    }) => {
+      logger && logger.info(`Created article "${createdNode.title}"`);
+    },
+  },
 };
 
 export default resource;

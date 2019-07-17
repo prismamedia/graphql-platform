@@ -7,13 +7,14 @@ import {
   loadModuleMap,
   Maybe,
   MaybePromise,
+  MaybeUndefinedDecorator,
   ModuleMapConfig,
   POJO,
 } from '@prismamedia/graphql-platform-utils';
 import { EventConfigMap, EventEmitter } from '@prismamedia/ts-async-event-emitter';
 import inflector from 'inflection';
 import { Memoize } from 'typescript-memoize';
-import { BaseContext, Context, CustomContext, GraphQLPlatform } from '../graphql-platform';
+import { AnyBaseContext, AnyGraphQLPlatform, BaseContext, Context, CustomContext } from '../graphql-platform';
 import { ConnectorCreateInputValue, ConnectorUpdateInputValue } from './connector';
 import {
   CreateOneOperationArgs,
@@ -21,7 +22,6 @@ import {
   Operation,
   OperationConstructor,
   OperationConstructorMap,
-  OperationContext,
   OperationEventMap,
   OperationId,
   OperationResolverParams,
@@ -32,9 +32,10 @@ import {
 } from './operation';
 import { AnyRelationMap, AnyRelationSet } from './resource/any-relation';
 import {
+  AnyFieldConfig,
+  AnyRelationConfig,
   ComponentMap,
   ComponentSet,
-  ComponentValue,
   Field,
   FieldConfig,
   FieldMap,
@@ -46,8 +47,7 @@ import {
   RelationMap,
   RelationSet,
 } from './resource/component';
-import { AnyFieldConfig } from './resource/component/field';
-import { AnyRelationConfig } from './resource/component/relation';
+import { ComponentValue, NormalizedComponentValue } from './resource/component/types';
 import { ResourceMap } from './resource/map';
 import { AnyUniqueFullConfig, Unique, UniqueConfig, UniqueFullConfig, UniqueSet } from './resource/unique';
 import { VirtualField, VirtualFieldConfig, VirtualFieldMap, VirtualFieldSet } from './resource/virtual-field';
@@ -70,9 +70,13 @@ export * from './resource/set';
 export * from './resource/unique';
 export * from './resource/virtual-field';
 
-export interface NodeValue extends WhereUniqueInputValue {
+export type NodeValue = {
   [componentName: string]: ComponentValue;
-}
+};
+
+export type NormalizedNodeValue = WhereUniqueInputValue & {
+  [componentName: string]: NormalizedComponentValue;
+};
 
 export type MaybeResourceAware<T = any> = T | ((args: { resource: Resource }) => T);
 
@@ -92,57 +96,54 @@ export enum ResourceHookKind {
 export type ResourceHookMetaMap<
   TArgs extends POJO = any,
   TCustomContext extends CustomContext = any,
-  TBaseContext extends BaseContext = any,
-  TOperationContext extends OperationContext = any
-> = OperationResolverParams<TArgs, TCustomContext, TBaseContext, TOperationContext> & Readonly<{ resource: Resource }>;
+  TBaseContext extends AnyBaseContext = BaseContext
+> = OperationResolverParams<TArgs, TCustomContext, TBaseContext> & Readonly<{ resource: Resource }>;
 
 export type ResourceHookMap<
   TCustomContext extends CustomContext = any,
-  TBaseContext extends BaseContext = any,
-  TOperationContext extends OperationContext = any
+  TBaseContext extends AnyBaseContext = BaseContext
 > = {
   // Create
   [ResourceHookKind.PreCreate]: {
-    metas: ResourceHookMetaMap<CreateOneOperationArgs, TCustomContext, TBaseContext, TOperationContext>;
+    metas: ResourceHookMetaMap<CreateOneOperationArgs, TCustomContext, TBaseContext>;
     create: ConnectorCreateInputValue;
   };
   [ResourceHookKind.PostCreate]: Readonly<{
-    metas: ResourceHookMetaMap<CreateOneOperationArgs, TCustomContext, TBaseContext, TOperationContext>;
+    metas: ResourceHookMetaMap<CreateOneOperationArgs, TCustomContext, TBaseContext>;
     // Contains the whole node value: all the fields and relation's ids
-    createdNode: NodeValue;
+    createdNode: NormalizedNodeValue;
   }>;
 
   // Update
   [ResourceHookKind.PreUpdate]: {
-    metas: ResourceHookMetaMap<UpdateOneOperationArgs, TCustomContext, TBaseContext, TOperationContext>;
+    metas: ResourceHookMetaMap<UpdateOneOperationArgs, TCustomContext, TBaseContext>;
     toBeUpdatedNodeId: WhereUniqueInputValue;
     update: ConnectorUpdateInputValue;
   };
   [ResourceHookKind.PostUpdate]: Readonly<{
-    metas: ResourceHookMetaMap<UpdateOneOperationArgs, TCustomContext, TBaseContext, TOperationContext>;
+    metas: ResourceHookMetaMap<UpdateOneOperationArgs, TCustomContext, TBaseContext>;
     // Contains the whole node value: all the fields and relation's ids
-    updatedNode: NodeValue;
+    updatedNode: NormalizedNodeValue;
   }>;
 
   // Delete
   [ResourceHookKind.PreDelete]: {
-    metas: ResourceHookMetaMap<DeleteOneOperationArgs, TCustomContext, TBaseContext, TOperationContext>;
+    metas: ResourceHookMetaMap<DeleteOneOperationArgs, TCustomContext, TBaseContext>;
     toBeDeletedNodeId: WhereUniqueInputValue;
   };
   [ResourceHookKind.PostDelete]: Readonly<{
-    metas: ResourceHookMetaMap<DeleteOneOperationArgs, TCustomContext, TBaseContext, TOperationContext>;
+    metas: ResourceHookMetaMap<DeleteOneOperationArgs, TCustomContext, TBaseContext>;
     // Contains the whole node value: all the fields and relation's ids
-    deletedNode: NodeValue;
+    deletedNode: NormalizedNodeValue;
   }>;
 };
 
 export interface ResourceConfig<
-  TCustomContext extends CustomContext = any,
-  TBaseContext extends BaseContext = BaseContext,
-  TOperationContext extends OperationContext = OperationContext,
+  TCustomContext extends CustomContext = {},
+  TBaseContext extends AnyBaseContext = BaseContext,
   TUniqueFullConfig extends AnyUniqueFullConfig = UniqueFullConfig,
-  TFieldConfig extends AnyFieldConfig = FieldConfig<TCustomContext, TBaseContext, TOperationContext>,
-  TRelationConfig extends AnyRelationConfig = RelationConfig<TCustomContext, TBaseContext, TOperationContext>
+  TFieldConfig extends AnyFieldConfig = FieldConfig<TCustomContext, TBaseContext>,
+  TRelationConfig extends AnyRelationConfig = RelationConfig<TCustomContext, TBaseContext>
 > {
   /** Optional, this resource's plural form, default: guessed from the resource's name */
   plural?: Maybe<string>;
@@ -176,15 +177,15 @@ export interface ResourceConfig<
   >;
 
   /** Optional, the behavior of the mutations can be customized by applying hooks */
-  hooks?: Maybe<EventConfigMap<ResourceHookMap<TCustomContext, TBaseContext, TOperationContext>>>;
+  hooks?: Maybe<EventConfigMap<ResourceHookMap<TCustomContext, TBaseContext>>>;
 }
 
-export type AnyResourceConfig = ResourceConfig<any, any, any, any, any, any>;
+export type AnyResourceConfig = ResourceConfig<any, any, any, any, any>;
 
 export class Resource<TConfig extends AnyResourceConfig = ResourceConfig> extends EventEmitter<
   ResourceHookMap & OperationEventMap
 > {
-  public constructor(readonly name: string, readonly config: TConfig, readonly gp: GraphQLPlatform) {
+  public constructor(readonly name: string, readonly config: TConfig, readonly gp: AnyGraphQLPlatform) {
     super();
 
     const pascalCasedName = inflector.camelize(name, false);
@@ -308,11 +309,16 @@ export class Resource<TConfig extends AnyResourceConfig = ResourceConfig> extend
 
     if (!uniqueSet.some(unique => unique.isPublic())) {
       throw new Error(
-        `At least one public unique constraint (= with all its components public) has to be defined in the resource "${this}".`,
+        `At least one "public" unique constraint (= with all its components "public") has to be defined in the resource "${this}".`,
       );
     }
 
     return uniqueSet;
+  }
+
+  @Memoize()
+  public getNonNullableUniqueSet(): UniqueSet {
+    return this.getUniqueSet().filter(unique => !unique.isNullable());
   }
 
   @Memoize()
@@ -322,10 +328,7 @@ export class Resource<TConfig extends AnyResourceConfig = ResourceConfig> extend
 
   @Memoize()
   public getIdentifier(): Unique {
-    const identifier = this.getUniqueSet().first();
-    if (!identifier) {
-      throw new Error(`At least one unique constraint has to be defined in the resource "${this}".`);
-    }
+    const identifier = this.getUniqueSet().assertFirst();
 
     for (const component of identifier.componentSet) {
       if (component instanceof Relation && component.getTo() === this) {
@@ -340,14 +343,7 @@ export class Resource<TConfig extends AnyResourceConfig = ResourceConfig> extend
 
   @Memoize()
   public getFirstPublicUnique(): Unique {
-    const firstPublicUnique = this.getPublicUniqueSet().first();
-    if (!firstPublicUnique) {
-      throw new Error(
-        `At least one public unique constraint (= with all its components public) has to be defined in the resource "${this}".`,
-      );
-    }
-
-    return firstPublicUnique;
+    return this.getPublicUniqueSet().assertFirst();
   }
 
   @Memoize()
@@ -520,30 +516,61 @@ export class Resource<TConfig extends AnyResourceConfig = ResourceConfig> extend
     return new VirtualFieldSet(this.getVirtualFieldMap().values());
   }
 
-  public parseValue(value: unknown): NodeValue | undefined {
-    if (typeof value !== 'undefined') {
-      if (isPlainObject(value)) {
-        const node: NodeValue = Object.create(null);
+  public isId(value: unknown): value is WhereUniqueInputValue {
+    return typeof this.parseId(value, false) !== 'undefined';
+  }
 
-        for (const component of this.getComponentSet()) {
-          component.setValue(node, value[component.name]);
-        }
-
-        if (Object.keys(node).length === 0) {
-          return undefined;
-        }
-
-        return node;
-      }
-
-      throw new Error(`The "${this}" node's value has to be a plain object: "${value}" given.`);
-    }
-
-    return undefined;
+  public parseId<TStrict extends boolean>(value: unknown, strict: TStrict) {
+    return this.getInputType('WhereUnique').parse(value, strict);
   }
 
   public isValue(value: unknown): value is NodeValue {
-    return typeof this.parseValue(value) !== 'undefined';
+    return isPlainObject(value) && this.getComponentSet().some(component => component.hasValue(value));
+  }
+
+  public parseValue<TStrict extends boolean, TNormalized extends boolean>(
+    value: unknown,
+    strict: TStrict,
+    normalized: TNormalized,
+  ): MaybeUndefinedDecorator<TNormalized extends true ? NormalizedNodeValue : NodeValue, TStrict> {
+    const node: NodeValue = Object.create(null);
+    let hasComponentValue: boolean = false;
+
+    if (typeof value !== 'undefined') {
+      if (isPlainObject(value)) {
+        for (const component of this.getComponentSet()) {
+          if (component.isField()) {
+            const componentValue = component.getValue(value, normalized);
+
+            if (typeof componentValue !== 'undefined') {
+              hasComponentValue = true;
+              component.setValue(node, componentValue);
+            }
+          } else {
+            const componentValue = normalized
+              ? component.getId(value, normalized)
+              : component.getValue(value, normalized);
+
+            if (typeof componentValue !== 'undefined') {
+              hasComponentValue = true;
+              component.setValue(node, componentValue);
+            }
+          }
+        }
+      } else {
+        throw new Error(`The "${this}" node's value has to be a plain object: ${JSON.stringify(value)}`);
+      }
+    }
+
+    if (!hasComponentValue) {
+      if (strict) {
+        throw new Error(`The "${this}" field's value cannot be undefined`);
+      }
+
+      return undefined as any;
+    }
+
+    return node as any;
   }
 }
 

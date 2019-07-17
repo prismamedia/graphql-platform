@@ -79,6 +79,11 @@ export class Unique<TConfig extends AnyUniqueFullConfig = UniqueFullConfig> {
   }
 
   @Memoize()
+  public isNullable(): boolean {
+    return this.componentSet.every(component => component.isNullable());
+  }
+
+  @Memoize()
   public isPublic(): boolean {
     return this.componentSet.every(component => component.isPublic());
   }

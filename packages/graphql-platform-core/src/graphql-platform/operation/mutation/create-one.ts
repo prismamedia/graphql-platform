@@ -1,9 +1,9 @@
-import { cleanOwnObject, isPlainObject } from '@prismamedia/graphql-platform-utils';
+import { cleanOwnObject, GraphQLOperationType, isPlainObject } from '@prismamedia/graphql-platform-utils';
 import { GraphQLFieldConfigArgumentMap, GraphQLNonNull, GraphQLOutputType } from 'graphql';
 import { Memoize } from 'typescript-memoize';
 import { ConnectorCreateInputValue } from '../../connector';
 import { OperationResolverParams } from '../../operation';
-import { NodeValue, ResourceHookKind } from '../../resource';
+import { ResourceHookKind } from '../../resource';
 import { FieldHookMap, RelationHookMap } from '../../resource/component';
 import { CreateInputValue, NodeSource, TypeKind } from '../../type';
 import { AbstractOperation } from '../abstract-operation';
@@ -41,14 +41,19 @@ export class CreateOneOperation extends AbstractOperation<CreateOneOperationArgs
   }
 
   public async resolve(params: OperationResolverParams<CreateOneOperationArgs>): Promise<CreateOneOperationResult> {
-    const { args, operationContext, selectionNode } = params;
+    const { args, context, selectionNode } = params;
+    const operationContext = context.operationContext;
     const resource = this.resource;
 
-    const data = typeof args.data === 'boolean' ? {} : args.data;
-    const create: ConnectorCreateInputValue = {};
+    const postSuccessHooks =
+      operationContext.type === GraphQLOperationType.Mutation ? operationContext.postSuccessHooks : undefined;
 
-    // Select all the components in case of post hooks
-    if (resource.getEventListenerCount(ResourceHookKind.PostCreate) > 0) {
+    const data = typeof args.data === 'boolean' ? {} : args.data;
+    const create: ConnectorCreateInputValue = Object.create(null);
+
+    // Select all the components in case of post success hooks
+    const hasPostSuccessHook = resource.getEventListenerCount(ResourceHookKind.PostCreate) > 0;
+    if (hasPostSuccessHook) {
       selectionNode.setChildren(resource.getComponentSet().getSelectionNodeChildren(TypeKind.Input));
     }
 
@@ -68,7 +73,7 @@ export class CreateOneOperation extends AbstractOperation<CreateOneOperationArgs
           // Returns only the selection we need (the targeted unique constraint)
           const selectionNode = relation.getToUnique().getSelectionNode(TypeKind.Input);
 
-          const relatedNodeId = await (isPlainObject(actions['connect'])
+          const relatedNode = await (isPlainObject(actions['connect'])
             ? relatedResource
                 .getQuery('AssertOne')
                 .resolve({ ...params, args: { where: actions['connect'] }, selectionNode })
@@ -82,15 +87,7 @@ export class CreateOneOperation extends AbstractOperation<CreateOneOperationArgs
                 .resolve({ ...params, args: actions['update'] as UpdateOneOperationArgs, selectionNode })
             : null);
 
-          relation.setValue(
-            create,
-            relatedNodeId
-              ? relation
-                  .getTo()
-                  .getInputType('WhereUnique')
-                  .assertUnique(relatedNodeId, relation.getToUnique(), true)
-              : null,
-          );
+          relation.setValue(create, relatedNode ? relation.parseId(relatedNode, true, true) : null);
         }
       }),
     ]);
@@ -106,12 +103,12 @@ export class CreateOneOperation extends AbstractOperation<CreateOneOperationArgs
             field,
             create,
           }),
-          fieldValue: field.parseValue(create[field.name]),
+          fieldValue: field.getValue(create, false),
         };
 
         await field.emitSerial(ResourceHookKind.PreCreate, hookData);
 
-        field.setValue(create, hookData.fieldValue);
+        field.setValue(create, field.parseValue(hookData.fieldValue, false));
       }),
 
       // Relations
@@ -123,12 +120,12 @@ export class CreateOneOperation extends AbstractOperation<CreateOneOperationArgs
             relation,
             create,
           }),
-          relatedNodeId: relation.parseValue(create[relation.name]),
+          relatedNodeId: relation.getId(create, false),
         };
 
         await relation.emitSerial(ResourceHookKind.PreCreate, hookData);
 
-        relation.setValue(create, hookData.relatedNodeId);
+        relation.setValue(create, relation.parseId(hookData.relatedNodeId, false));
       }),
     ]);
 
@@ -149,23 +146,23 @@ export class CreateOneOperation extends AbstractOperation<CreateOneOperationArgs
       Object.freeze({ ...params, resource, args: { ...args, data: [create] } }),
     );
 
-    const nodeId = resource.getInputType('WhereUnique').assert(nodeSource);
-
-    const result = selectionNode.hasDiff(nodeSource)
-      ? await resource.getQuery('AssertOne').resolve({ ...params, args: { where: nodeId } })
+    const node = selectionNode.hasDiff(nodeSource)
+      ? await resource.getQuery('AssertOne').resolve({ ...params, args: { where: resource.parseId(nodeSource, true) } })
       : nodeSource;
 
-    operationContext.postSuccessHooks.push(
-      resource.emit.bind(resource, ResourceHookKind.PostCreate, {
-        metas: Object.freeze({
-          ...params,
-          resource,
-          create,
+    if (postSuccessHooks && hasPostSuccessHook) {
+      postSuccessHooks.push(
+        resource.emit.bind(resource, ResourceHookKind.PostCreate, {
+          metas: Object.freeze({
+            ...params,
+            resource,
+            create,
+          }),
+          createdNode: resource.parseValue(node, true, true),
         }),
-        createdNode: nodeSource as NodeValue,
-      }),
-    );
+      );
+    }
 
-    return result;
+    return node;
   }
 }

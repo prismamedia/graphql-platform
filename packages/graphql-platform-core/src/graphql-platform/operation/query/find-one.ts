@@ -44,7 +44,7 @@ export class FindOneOperation extends AbstractOperation<FindOneOperationArgs, Fi
     const nodes = await this.resource.getQuery('FindMany').resolve({
       ...params,
       args: {
-        where: this.resource.getInputType('WhereUnique').assert(where),
+        where: this.resource.parseId(where, true),
         first: 1,
       },
     });

@@ -1,9 +1,9 @@
-import { cleanOwnObject, isPlainObject } from '@prismamedia/graphql-platform-utils';
+import { cleanOwnObject, GraphQLOperationType, isPlainObject } from '@prismamedia/graphql-platform-utils';
 import { GraphQLFieldConfigArgumentMap, GraphQLInputObjectType, GraphQLNonNull, GraphQLOutputType } from 'graphql';
 import { Memoize } from 'typescript-memoize';
 import { ConnectorUpdateInputValue } from '../../connector';
 import { OperationResolverParams } from '../../operation';
-import { NodeValue, ResourceHookKind } from '../../resource';
+import { ResourceHookKind } from '../../resource';
 import { FieldHookMap, RelationHookMap } from '../../resource/component';
 import { NodeSource, TypeKind, UpdateInputValue, WhereUniqueInputValue } from '../../type';
 import { WhereInputValue } from '../../type/input';
@@ -58,18 +58,23 @@ export class UpdateOneOperation extends AbstractOperation<UpdateOneOperationArgs
   }
 
   public async resolve(params: OperationResolverParams<UpdateOneOperationArgs>): Promise<UpdateOneOperationResult> {
-    const { args, context, operationContext, selectionNode } = params;
+    const { args, context, selectionNode } = params;
+    const operationContext = context.operationContext;
     const resource = this.resource;
 
+    const postSuccessHooks =
+      operationContext.type === GraphQLOperationType.Mutation ? operationContext.postSuccessHooks : undefined;
+
     const filter = await resource.filter(context);
-    const nodeId = resource.getInputType('WhereUnique').assert(args.where);
+    const nodeId = resource.parseId(args.where, true);
     const where: WhereInputValue = { AND: [filter, nodeId] };
 
     const data = typeof args.data === 'boolean' ? {} : args.data;
-    const update: ConnectorUpdateInputValue = {};
+    const update: ConnectorUpdateInputValue = Object.create(null);
 
-    // Select all the components in case of post hooks
-    if (resource.getEventListenerCount(ResourceHookKind.PostCreate) > 0) {
+    // Select all the components in case of post success hooks
+    const hasPostSuccessHook = resource.getEventListenerCount(ResourceHookKind.PostUpdate) > 0;
+    if (hasPostSuccessHook) {
       selectionNode.setChildren(resource.getComponentSet().getSelectionNodeChildren(TypeKind.Input));
     }
 
@@ -89,7 +94,7 @@ export class UpdateOneOperation extends AbstractOperation<UpdateOneOperationArgs
           // Returns only the selection we need (the targeted unique constraint)
           const selectionNode = relation.getToUnique().getSelectionNode(TypeKind.Input);
 
-          const relatedNodeId = await (isPlainObject(actions['connect'])
+          const relatedNode = await (isPlainObject(actions['connect'])
             ? relatedResource
                 .getQuery('AssertOne')
                 .resolve({ ...params, args: { where: actions['connect'] }, selectionNode })
@@ -105,16 +110,8 @@ export class UpdateOneOperation extends AbstractOperation<UpdateOneOperationArgs
             ? null
             : undefined);
 
-          if (typeof relatedNodeId !== 'undefined') {
-            relation.setValue(
-              update,
-              relatedNodeId
-                ? relation
-                    .getTo()
-                    .getInputType('WhereUnique')
-                    .assertUnique(relatedNodeId, relation.getToUnique(), true)
-                : null,
-            );
+          if (typeof relatedNode !== 'undefined') {
+            relation.setValue(update, relatedNode ? relation.parseId(relatedNode, true, true) : null);
           }
         }
       }),
@@ -131,12 +128,12 @@ export class UpdateOneOperation extends AbstractOperation<UpdateOneOperationArgs
             field,
             update,
           }),
-          fieldValue: field.parseValue(update[field.name]),
+          fieldValue: field.getValue(update, false),
         };
 
         await field.emitSerial(ResourceHookKind.PreUpdate, hookData);
 
-        field.setValue(update, hookData.fieldValue);
+        field.setValue(update, field.parseValue(hookData.fieldValue, false));
       }),
 
       // Relations
@@ -148,12 +145,12 @@ export class UpdateOneOperation extends AbstractOperation<UpdateOneOperationArgs
             relation,
             update,
           }),
-          relatedNodeId: relation.parseValue(update[relation.name]),
+          relatedNodeId: relation.getId(update, false),
         };
 
         await relation.emitSerial(ResourceHookKind.PreUpdate, hookData);
 
-        relation.setValue(update, hookData.relatedNodeId);
+        relation.setValue(update, relation.parseId(hookData.relatedNodeId, false));
       }),
     ]);
 
@@ -179,27 +176,24 @@ export class UpdateOneOperation extends AbstractOperation<UpdateOneOperationArgs
     );
 
     if (matchedCount === 1) {
-      const node = resource.parseValue({ ...nodeId, ...update });
-
-      const result =
-        !node || selectionNode.hasDiff(node)
-          ? await resource.getQuery('AssertOne').resolve({ ...params, args: { where: nodeId } })
-          : node;
+      const node = await resource.getQuery('AssertOne').resolve({ ...params, args: { where: nodeId } });
 
       if (changedCount === 1) {
-        operationContext.postSuccessHooks.push(
-          resource.emit.bind(resource, ResourceHookKind.PostUpdate, {
-            metas: Object.freeze({
-              ...params,
-              resource,
-              update,
+        if (postSuccessHooks && hasPostSuccessHook) {
+          postSuccessHooks.push(
+            resource.emit.bind(resource, ResourceHookKind.PostUpdate, {
+              metas: Object.freeze({
+                ...params,
+                resource,
+                update,
+              }),
+              updatedNode: resource.parseValue(node, true, true),
             }),
-            updatedNode: result as NodeValue,
-          }),
-        );
+          );
+        }
       }
 
-      return result;
+      return node;
     }
 
     return null;

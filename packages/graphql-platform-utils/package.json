@@ -1,6 +1,6 @@
 {
   "name": "@prismamedia/graphql-platform-utils",
-  "version": "0.1.0-alpha.9",
+  "version": "0.1.0-alpha.10",
   "license": "MIT",
   "contributors": [
     "Yvann Boucher <yvann.boucher@gmail.com>"
@@ -23,16 +23,16 @@
     "@types/jest": "^24.0.15",
     "@types/lodash.isplainobject": "^4.0.6",
     "@types/lodash.mergewith": "^4.6.6",
-    "@types/node": "^12.0.10",
+    "@types/node": "^12.6.6",
     "graphql": "^14.4.1",
     "jest": "^24.8.0",
     "ts-jest": "^24.0.2",
-    "typescript": "^3.5.1"
+    "typescript": "^3.5.3"
   },
   "dependencies": {
     "@prismamedia/ts-module-loader": "^3.1.2",
     "lodash.isplainobject": "^4.0.6",
-    "lodash.mergewith": "^4.6.1",
+    "lodash.mergewith": "^4.6.2",
     "typescript-memoize": "^1.0.0-alpha.3"
   },
   "peerDependencies": {
