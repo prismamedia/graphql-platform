@@ -117,6 +117,7 @@ export abstract class AbstractOperation<TArgs extends POJO = any, TResult = any>
 
         context.operationEventDataMap.set(event, Object.create(null));
 
+        let success: boolean = false;
         const profile = context.logger && context.logger.startTimer();
 
         try {
@@ -127,24 +128,7 @@ export abstract class AbstractOperation<TArgs extends POJO = any, TResult = any>
 
           await this.resource.emitSerial(OperationEventKind.PostOperationSuccess, event);
 
-          if (
-            operationContext.type === GraphQLOperationType.Mutation &&
-            isRootOperation &&
-            operationContext.postSuccessHooks
-          ) {
-            // Execute the hooks on operation success
-            // In case of errors: we log them but do not throw anything as we want the operation remains a "success"
-            await Promise.all(
-              operationContext.postSuccessHooks.map(async hook => {
-                try {
-                  await hook();
-                } catch (error) {
-                  context.logger && context.logger.error(error);
-                }
-              }),
-            );
-          }
-
+          success = true;
           profile &&
             profile.done({
               level: 'debug',
@@ -153,19 +137,37 @@ export abstract class AbstractOperation<TArgs extends POJO = any, TResult = any>
 
           return result;
         } catch (error) {
+          await this.resource.emitSerial(OperationEventKind.PostOperationError, event);
+
           profile &&
             profile.done({
               level: 'error',
               message: error,
             });
 
-          await this.resource.emitSerial(OperationEventKind.PostOperationError, event);
-
           throw error;
         } finally {
           await this.resource.emitSerial(OperationEventKind.PostOperation, event);
 
-          if (operationContext.type === GraphQLOperationType.Mutation && isRootOperation) {
+          if (
+            operationContext.type === GraphQLOperationType.Mutation &&
+            isRootOperation &&
+            operationContext.postSuccessHooks
+          ) {
+            // Execute the hooks on operation success
+            if (success) {
+              // In case of errors: we log them but do not throw anything as we want the operation remains a "success"
+              await Promise.all(
+                operationContext.postSuccessHooks.map(async hook => {
+                  try {
+                    await hook();
+                  } catch (error) {
+                    context.logger && context.logger.error(error);
+                  }
+                }),
+              );
+            }
+
             delete operationContext.postSuccessHooks;
           }
         }
