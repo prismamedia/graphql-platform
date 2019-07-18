@@ -10,18 +10,12 @@ import express from 'express';
 import expressJwt, { Options as JwtOptions } from 'express-jwt';
 import { Options as UnlessOptions } from 'express-unless';
 
-export type ContextParams<TUser = any> = Merge<
-  ExpressContext,
-  {
-    req: Merge<
-      ExpressContext['req'],
-      {
-        // The property's name can be configured with the "jwt.requestProperty" option
-        user?: TUser;
-      }
-    >;
-  }
->;
+export type ContextParams<TUser = any> = ExpressContext & {
+  req: {
+    // This property's name can be configured with the "jwt.requestProperty" option
+    user?: TUser;
+  };
+};
 
 // The "app" becomes optional
 type ServerRegistration = Merge<
