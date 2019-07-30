@@ -2,6 +2,7 @@ import { escape, QueryOptions } from 'mysql';
 import { Memoize } from 'typescript-memoize';
 import { Table } from '../table';
 import { ColumnDefinition } from './create-table-statement/column-definition';
+import { ColumnIndexDefinition } from './create-table-statement/column-index-definition';
 import { ForeignKeyDefinition } from './create-table-statement/foreign-key-definition';
 import { ForeignKeyIndexDefinition } from './create-table-statement/foreign-key-index-definition';
 import { PrimaryKeyDefinition } from './create-table-statement/primary-key-definition';
@@ -15,6 +16,7 @@ export class CreateTableStatement implements QueryOptions {
       ...[...this.table.getColumnSet()].map(column => new ColumnDefinition(column)),
       new PrimaryKeyDefinition(this.table.getPrimaryKey()),
       ...[...this.table.getUniqueIndexSet()].map(uniqueIndex => new UniqueIndexDefinition(uniqueIndex)),
+      ...[...this.table.getColumnIndexSet()].map(columnIndex => new ColumnIndexDefinition(columnIndex)),
       ...[...this.table.getForeignKeySet()].map(foreignKey => new ForeignKeyIndexDefinition(foreignKey)),
       ...[...this.table.getForeignKeySet()].map(foreignKey => new ForeignKeyDefinition(foreignKey)),
     ]

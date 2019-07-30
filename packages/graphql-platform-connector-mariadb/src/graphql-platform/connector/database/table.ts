@@ -7,6 +7,8 @@ import { ResourceConfig } from '../../resource';
 import { Database } from '../database';
 import { OperationConstructor, OperationId, operationMap } from './operation';
 import { Column, ColumnSet } from './table/column';
+import { ColumnIndex, ColumnIndexConfig } from './table/column-index';
+import { ColumnIndexSet } from './table/column-index/set';
 import { ColumnReference } from './table/column-reference';
 import { ForeignKey, ForeignKeySet } from './table/foreign-key';
 import { PrimaryKey } from './table/primary-key';
@@ -14,6 +16,7 @@ import { DeleteStatement, InsertStatement, SelectStatement, UpdateStatement } fr
 import { UniqueIndex, UniqueIndexSet } from './table/unique-index';
 
 export * from './table/column';
+export * from './table/column-index';
 export * from './table/column-reference';
 export * from './table/foreign-key';
 export * from './table/primary-key';
@@ -23,6 +26,9 @@ export * from './table/unique-index';
 export interface TableConfig {
   /** Optional, the table's name, default: resource's plural name snake cased */
   name?: Maybe<string>;
+
+  /** Optional, some additional table indexes */
+  indexes?: Maybe<(ColumnIndexConfig | ColumnIndexConfig['components'])[]>;
 
   /** Optional, the table's charset, default: utf8mb4 */
   charset?: Maybe<string>;
@@ -109,6 +115,18 @@ export class Table {
     }
 
     return uniqueIndexSet;
+  }
+
+  @Memoize()
+  public getColumnIndexSet(): ColumnIndexSet {
+    const columnIndexSet = new ColumnIndexSet();
+    if (Array.isArray(this.config.indexes)) {
+      for (const config of this.config.indexes) {
+        columnIndexSet.add(new ColumnIndex(this, config));
+      }
+    }
+
+    return columnIndexSet;
   }
 
   @Memoize()

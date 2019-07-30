@@ -12,6 +12,8 @@ exports[`Database print the "CREATE TABLE" statements 1`] = `
   PRIMARY KEY (\`intId\`),
   UNIQUE \`unq_id\` (\`id\`),
   UNIQUE \`unq_parentId_slug\` (\`parentId\`, \`slug\`),
+  INDEX \`idx_createdAt\` (\`createdAt\`),
+  INDEX \`ids_my_custom_name_for_updatedAt\` (\`updatedAt\`),
   INDEX (\`parentId\`),
   FOREIGN KEY (\`parentId\`) REFERENCES \`categories\` (\`id\`) ON UPDATE RESTRICT ON DELETE RESTRICT
 ) ENGINE = 'InnoDB',
@@ -26,7 +28,9 @@ CREATE TABLE \`users\` (
   \`username\` VARCHAR(255) NOT NULL COMMENT 'The user\\\\'s username',
   PRIMARY KEY (\`intId\`),
   UNIQUE \`unq_id\` (\`id\`),
-  UNIQUE \`unq_username\` (\`username\`)
+  UNIQUE \`unq_username\` (\`username\`),
+  INDEX \`idx_createdAt\` (\`createdAt\`),
+  INDEX \`ids_my_custom_name_for_updatedAt\` (\`updatedAt\`)
 ) ENGINE = 'InnoDB',
 CHARSET = 'utf8mb4',
 COLLATE = 'utf8mb4_unicode_520_ci';
@@ -52,6 +56,8 @@ CREATE TABLE \`articles\` (
   UNIQUE \`unq_id\` (\`id\`),
   UNIQUE \`unq_computedMaxIntId\` (\`computedMaxIntId\`),
   UNIQUE \`unq_categoryParentId_categorySlug_slug\` (\`categoryParentId\`, \`categorySlug\`, \`slug\`),
+  INDEX \`idx_createdAt\` (\`createdAt\`),
+  INDEX \`ids_my_custom_name_for_updatedAt\` (\`updatedAt\`),
   INDEX (\`categoryParentId\`, \`categorySlug\`),
   INDEX (\`authorUsername\`),
   INDEX (\`moderatorIntId\`),
@@ -72,7 +78,9 @@ CREATE TABLE \`tags\` (
   \`slug\` VARCHAR(255) NOT NULL COMMENT 'The tag\\\\'s slug',
   PRIMARY KEY (\`intId\`),
   UNIQUE \`unq_id\` (\`id\`),
-  UNIQUE \`unq_slug\` (\`slug\`)
+  UNIQUE \`unq_slug\` (\`slug\`),
+  INDEX \`idx_createdAt\` (\`createdAt\`),
+  INDEX \`ids_my_custom_name_for_updatedAt\` (\`updatedAt\`)
 ) ENGINE = 'InnoDB',
 CHARSET = 'utf8mb4',
 COLLATE = 'utf8mb4_unicode_520_ci';
@@ -85,6 +93,8 @@ CREATE TABLE \`article_tags\` (
   \`order\` INTEGER NOT NULL,
   PRIMARY KEY (\`articleIntId\`, \`tagIntId\`),
   UNIQUE \`article/order\` (\`articleIntId\`, \`order\`),
+  INDEX \`idx_createdAt\` (\`createdAt\`),
+  INDEX \`ids_my_custom_name_for_updatedAt\` (\`updatedAt\`),
   INDEX (\`articleIntId\`),
   INDEX (\`tagIntId\`),
   FOREIGN KEY (\`articleIntId\`) REFERENCES \`articles\` (\`intId\`) ON UPDATE RESTRICT ON DELETE RESTRICT,
@@ -100,6 +110,8 @@ CREATE TABLE \`article_tag_comments\` (
   \`updatedAt\` TIMESTAMP(3) NOT NULL DEFAULT NOW(3) ON UPDATE NOW(3) COMMENT 'The date of the document\\\\'s last update',
   \`body\` VARCHAR(255) NULL,
   PRIMARY KEY (\`articleTagArticleIntId\`, \`articleTagTagIntId\`),
+  INDEX \`idx_createdAt\` (\`createdAt\`),
+  INDEX \`ids_my_custom_name_for_updatedAt\` (\`updatedAt\`),
   INDEX (\`articleTagArticleIntId\`, \`articleTagTagIntId\`),
   FOREIGN KEY (\`articleTagArticleIntId\`, \`articleTagTagIntId\`) REFERENCES \`article_tags\` (\`articleIntId\`, \`tagIntId\`) ON UPDATE RESTRICT ON DELETE RESTRICT
 ) ENGINE = 'InnoDB',
@@ -112,6 +124,8 @@ CREATE TABLE \`article_urls\` (
   \`updatedAt\` TIMESTAMP(3) NOT NULL DEFAULT NOW(3) ON UPDATE NOW(3) COMMENT 'The date of the document\\\\'s last update',
   \`path\` VARCHAR(255) NOT NULL,
   PRIMARY KEY (\`articleIntId\`),
+  INDEX \`idx_createdAt\` (\`createdAt\`),
+  INDEX \`ids_my_custom_name_for_updatedAt\` (\`updatedAt\`),
   INDEX (\`articleIntId\`),
   FOREIGN KEY (\`articleIntId\`) REFERENCES \`articles\` (\`intId\`) ON UPDATE RESTRICT ON DELETE RESTRICT
 ) ENGINE = 'InnoDB',
@@ -123,6 +137,8 @@ CREATE TABLE \`article_url_metas\` (
   \`createdAt\` TIMESTAMP(3) NOT NULL DEFAULT NOW(3) COMMENT 'The date, fixed, of the document\\\\'s creation',
   \`updatedAt\` TIMESTAMP(3) NOT NULL DEFAULT NOW(3) ON UPDATE NOW(3) COMMENT 'The date of the document\\\\'s last update',
   PRIMARY KEY (\`urlArticleIntId\`),
+  INDEX \`idx_createdAt\` (\`createdAt\`),
+  INDEX \`ids_my_custom_name_for_updatedAt\` (\`updatedAt\`),
   INDEX (\`urlArticleIntId\`),
   FOREIGN KEY (\`urlArticleIntId\`) REFERENCES \`article_urls\` (\`articleIntId\`) ON UPDATE RESTRICT ON DELETE RESTRICT
 ) ENGINE = 'InnoDB',

@@ -125,10 +125,27 @@ export const config: MyGPConfig = mergeWith(
                   default: 'NOW(3)',
                 },
               });
+
+              mergeWith(config, {
+                table: <ResourceConfig['table']>{
+                  indexes: [['createdAt']],
+                },
+              });
             } else if (name === 'updatedAt') {
               mergeWith(field, {
                 column: {
                   default: 'NOW(3) ON UPDATE NOW(3)',
+                },
+              });
+
+              mergeWith(config, {
+                table: <ResourceConfig['table']>{
+                  indexes: [
+                    {
+                      name: 'ids_my_custom_name_for_updatedAt',
+                      components: ['updatedAt'],
+                    },
+                  ],
                 },
               });
             }

@@ -1,6 +1,6 @@
 {
   "name": "@prismamedia/graphql-platform-utils",
-  "version": "0.1.0-alpha.13",
+  "version": "0.1.0-alpha.14",
   "license": "MIT",
   "contributors": [
     "Yvann Boucher <yvann.boucher@gmail.com>"
@@ -19,8 +19,8 @@
     "test:watch": "yarn run test --watchAll"
   },
   "devDependencies": {
-    "@types/graphql": "^14.2.2",
-    "@types/jest": "^24.0.15",
+    "@types/graphql": "^14.2.3",
+    "@types/jest": "^24.0.16",
     "@types/lodash.isplainobject": "^4.0.6",
     "@types/lodash.mergewith": "^4.6.6",
     "@types/node": "^12.6.8",

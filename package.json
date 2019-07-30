@@ -20,7 +20,7 @@
     "test": "lerna run --parallel test"
   },
   "devDependencies": {
-    "lerna": "^3.15.0",
+    "lerna": "^3.16.4",
     "prettier": "^1.18.2",
     "typescript": "^3.5.3"
   }
