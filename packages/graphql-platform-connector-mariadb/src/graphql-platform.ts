@@ -1,5 +1,6 @@
 import {
   BaseContext as CoreBaseContext,
+  Context as CoreContext,
   CustomContext,
   CustomOperationConfig as CoreCustomOperationConfig,
   GraphQLPlatform as CoreGraphQLPlatform,
@@ -26,6 +27,8 @@ export type BaseContext = CoreBaseContext & {
    */
   connectorRequest: ConnectorRequest;
 };
+
+export type Context<TCustomContext extends CustomContext = {}> = CoreContext<TCustomContext, BaseContext>;
 
 export type CustomOperationConfig<TCustomContext extends CustomContext = {}> = CoreCustomOperationConfig<
   TCustomContext,
