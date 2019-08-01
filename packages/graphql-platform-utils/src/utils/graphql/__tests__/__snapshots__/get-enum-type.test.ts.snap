@@ -1,0 +1,37 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`getGraphQLEnumType creates an enum type from numeric enum 1`] = `
+"enum ANumericEnum {
+  Left
+  Right
+  Up
+  Down
+}"
+`;
+
+exports[`getGraphQLEnumType creates an enum type from numeric enum using "key as value" 1`] = `
+"enum ANumericEnumUsingKeyAsValue {
+  Left
+  Right
+  Up
+  Down
+}"
+`;
+
+exports[`getGraphQLEnumType creates an enum type from string enum 1`] = `
+"enum AStringEnum {
+  Left
+  Right
+  Up
+  Down
+}"
+`;
+
+exports[`getGraphQLEnumType creates an enum type from string enum using "key as value" 1`] = `
+"enum AStringEnumUsingKeyAsValue {
+  Left
+  Right
+  Up
+  Down
+}"
+`;
