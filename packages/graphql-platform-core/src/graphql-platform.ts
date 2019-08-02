@@ -48,6 +48,11 @@ export type BaseContext = {
   debug: boolean;
 
   /**
+   * This GraphQL Platform's resources
+   */
+  resourceMap: ResourceMap;
+
+  /**
    * This API's binding, in order to execute other requests
    */
   api: Binding;
@@ -219,6 +224,7 @@ export class GraphQLPlatform<
     return {
       logger: this.getLogger(),
       debug: this.isDebug(),
+      resourceMap: this.getResourceMap(),
       api: this.getBinding(),
       operationContext: {},
       operationEventDataMap: new WeakMap(),
