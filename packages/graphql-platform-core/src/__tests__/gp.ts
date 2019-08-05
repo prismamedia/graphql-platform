@@ -1,5 +1,5 @@
 import { mergeWith } from '@prismamedia/graphql-platform-utils';
-import faker from 'faker/locale/en';
+import faker from 'faker';
 import { GraphQLID, GraphQLInt } from 'graphql';
 import { GraphQLDateTime } from 'graphql-iso-date';
 import { createLogger, format, transports } from 'winston';
@@ -12,6 +12,7 @@ import {
   ResourceConfig,
   ResourceHookKind,
 } from '..';
+import { fixtures } from './fixtures';
 
 export interface MyContext extends CustomContext {
   myService: boolean;
@@ -24,8 +25,6 @@ export type MyGPConfig = GraphQLPlatformConfig<{}, MyContext>;
 export class MyGP extends GraphQLPlatform<{}, MyContext> {}
 
 export const nonRelationTableResourceNames = ['Article', 'Category', 'Tag', 'User'];
-
-let resourceIndex = 0;
 
 export const config: MyGPConfig = {
   logger: createLogger({
@@ -42,11 +41,6 @@ export const config: MyGPConfig = {
 
   default: resourceName => {
     const config: MyResourceConfig = {};
-
-    const resourceIdIndex = {
-      resourceIndex: ++resourceIndex * 1000000000,
-      index: 0,
-    };
 
     // Common fields for non-"relation table"
     if (nonRelationTableResourceNames.includes(resourceName)) {
@@ -67,9 +61,6 @@ export const config: MyGPConfig = {
             hooks: {
               [ResourceHookKind.PreCreate]: event => {
                 if (event.fieldValue == null) {
-                  // Fixed UUID instead of "uuid()" in order to have consistent test results
-                  faker.seed(resourceIdIndex.resourceIndex + ++resourceIdIndex.index);
-
                   event.fieldValue = faker.random.uuid();
                 }
               },
@@ -111,6 +102,6 @@ export const config: MyGPConfig = {
   mutations: `${__dirname}/mutations`,
 
   queries: `${__dirname}/queries`,
-};
 
-export const gp = new MyGP(config);
+  fixtures,
+};

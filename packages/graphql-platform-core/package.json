@@ -15,7 +15,7 @@
   "scripts": {
     "build": "tsc --build tsconfig.json tsconfig.commonjs.json",
     "build:watch": "yarn run build --watch",
-    "test": "NODE_ENV=test jest --detectOpenHandles --verbose",
+    "test": "NODE_ENV=test jest --coverage --detectOpenHandles --verbose --passWithNoTests",
     "test:watch": "yarn run test --watchAll"
   },
   "devDependencies": {
@@ -23,8 +23,8 @@
     "@types/graphql": "^14.2.3",
     "@types/graphql-iso-date": "^3.3.1",
     "@types/inflection": "^1.5.28",
-    "@types/jest": "^24.0.16",
-    "@types/node": "^12.6.9",
+    "@types/jest": "^24.0.17",
+    "@types/node": "^12.7.1",
     "@types/slug": "^0.9.1",
     "@types/uuid": "^3.4.4",
     "faker": "^4.1.0",

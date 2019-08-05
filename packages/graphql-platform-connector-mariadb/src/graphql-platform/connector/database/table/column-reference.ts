@@ -96,8 +96,8 @@ export class ColumnReference {
         throw new Error(`The "${this}" column reference's cannot be set on a "null" relation`);
       }
 
-      if (!relatedNode && value !== null) {
-        relatedNode = Object.create(null) as NodeValue;
+      if (typeof relatedNode === 'undefined' && value != null) {
+        relatedNode = {} as NodeValue;
       }
 
       if (relatedNode) {

@@ -157,5 +157,3 @@ export const config: MyGPConfig = mergeWith(
     },
   } as Partial<MyGPConfig>,
 );
-
-export const gp = new MyGP(config);

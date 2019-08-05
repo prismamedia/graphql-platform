@@ -9,7 +9,6 @@ describe('Fixture', () => {
   let gp: MyGP;
   let connector: Connector;
   let database: Database;
-  const fixturePath = `${__dirname}/../../../graphql-platform-core/src/__tests__/fixtures`;
 
   let connectionSet = new Set<Connection['threadId']>();
   let queries: string[] = [];
@@ -62,7 +61,7 @@ describe('Fixture', () => {
 
   it('loads the fixtures', async done => {
     // Load the fixtures without errors
-    await expect(gp.loadFixtures(fixturePath)).resolves.toBeUndefined();
+    await expect(gp.loadFixtures()).resolves.toBeUndefined();
 
     expect(
       [`# ${queries.length} queries in ${connectionSet.size} connections`, ...queries].join('\n\n'),
@@ -117,79 +116,30 @@ describe('Fixture', () => {
     expect(data.articles).toMatchInlineSnapshot(`
       Array [
         Object {
-          "id": "9b6b98fa-586d-4987-82a0-d63f11bbe560",
-          "isImportant": false,
+          "id": "87ece569-f025-4212-b800-7ffd50721582",
+          "isImportant": true,
           "isPublished": false,
           "publishedAt": null,
-          "slug": "my-third-articles-title-a-video",
+          "slug": "deserunt-quam",
           "tags": Array [],
           "url": null,
         },
         Object {
-          "id": "06bd57da-24f6-488a-a1b1-2435bd7c8d6e",
-          "isImportant": null,
+          "id": "192d396a-54b9-4bc1-90cc-bed054a77563",
+          "isImportant": false,
           "isPublished": true,
-          "publishedAt": "2019-07-01T03:41:37.829Z",
-          "slug": "my-first-articles-title-a-rich-article",
+          "publishedAt": "2018-09-24T11:25:53.212Z",
+          "slug": "consequuntur-aut",
+          "tags": Array [],
+          "url": null,
+        },
+        Object {
+          "id": "4d88dc29-1b08-47c0-917c-5a1c6b13f024",
+          "isImportant": true,
+          "isPublished": false,
+          "publishedAt": null,
+          "slug": "velit-sit",
           "tags": Array [
-            Object {
-              "comment": Object {
-                "body": "This is why I tagged the Article \\"article_01\\" with the Tag \\"tag_01\\"",
-              },
-              "tag": Object {
-                "allArticleCount": 1,
-                "articleWithUrlCount": 1,
-                "articles": Array [
-                  Object {
-                    "article": Object {
-                      "url": Object {
-                        "path": "/my-article-01",
-                      },
-                    },
-                  },
-                ],
-                "id": "d0ae7305-ddce-4870-a0f9-0f7ef19b86ea",
-                "slug": "my-first-tag",
-              },
-            },
-            Object {
-              "comment": Object {
-                "body": "And this is why I tagged the Article \\"article_01\\" with the Tag \\"tag_02\\"",
-              },
-              "tag": Object {
-                "allArticleCount": 1,
-                "articleWithUrlCount": 1,
-                "articles": Array [
-                  Object {
-                    "article": Object {
-                      "url": Object {
-                        "path": "/my-article-01",
-                      },
-                    },
-                  },
-                ],
-                "id": "511ed2c7-0557-4e5d-8bce-d4956cac48eb",
-                "slug": "my-second-tag",
-              },
-            },
-            Object {
-              "comment": null,
-              "tag": Object {
-                "allArticleCount": 1,
-                "articleWithUrlCount": 1,
-                "articles": Array [
-                  Object {
-                    "article": Object {
-                      "url": Object {
-                        "path": "/my-article-01",
-                      },
-                    },
-                  },
-                ],
-                "id": "3480abaa-5580-4dbe-8e55-cb0b622e1da5",
-                "slug": "my-third-tag",
-              },
-            },
             Object {
               "comment": null,
               "tag": Object {
@@ -199,57 +149,347 @@ describe('Fixture', () => {
                   Object {
                     "article": Object {
                       "url": Object {
-                        "path": "/my-article-01",
+                        "path": "https://nick.biz",
                       },
                     },
                   },
                 ],
-                "id": "1b4cc2fd-0e1f-4b97-bed5-171f52d18b1b",
-                "slug": "my-fourth-tag",
+                "id": "cdd1ba92-287e-4573-99d4-2e8e74317377",
+                "slug": "neural-4",
+              },
+            },
+            Object {
+              "comment": null,
+              "tag": Object {
+                "allArticleCount": 4,
+                "articleWithUrlCount": 0,
+                "articles": Array [],
+                "id": "5b0383ad-0629-4935-9e8c-73239a82a82f",
+                "slug": "michigan-frozen-3",
+              },
+            },
+            Object {
+              "comment": null,
+              "tag": Object {
+                "allArticleCount": 4,
+                "articleWithUrlCount": 1,
+                "articles": Array [
+                  Object {
+                    "article": Object {
+                      "url": Object {
+                        "path": "https://claudie.net",
+                      },
+                    },
+                  },
+                ],
+                "id": "c2308ecb-0456-4d1d-980d-9f3dad510abb",
+                "slug": "ameliorated-oman-district-2",
+              },
+            },
+          ],
+          "url": null,
+        },
+        Object {
+          "id": "c96cb09c-fb44-4543-aa5c-c879c0f74f25",
+          "isImportant": false,
+          "isPublished": false,
+          "publishedAt": null,
+          "slug": "architecto-ducimus",
+          "tags": Array [
+            Object {
+              "comment": null,
+              "tag": Object {
+                "allArticleCount": 3,
+                "articleWithUrlCount": 1,
+                "articles": Array [
+                  Object {
+                    "article": Object {
+                      "url": Object {
+                        "path": "https://claudie.net",
+                      },
+                    },
+                  },
+                ],
+                "id": "e886ffa3-ff8a-48c2-b5e0-829be055bdcb",
+                "slug": "yen-operations-0",
+              },
+            },
+          ],
+          "url": null,
+        },
+        Object {
+          "id": "0391d268-bc8e-483f-bc40-9b275f1384b1",
+          "isImportant": true,
+          "isPublished": false,
+          "publishedAt": null,
+          "slug": "soluta-sint",
+          "tags": Array [
+            Object {
+              "comment": null,
+              "tag": Object {
+                "allArticleCount": 4,
+                "articleWithUrlCount": 0,
+                "articles": Array [],
+                "id": "5b0383ad-0629-4935-9e8c-73239a82a82f",
+                "slug": "michigan-frozen-3",
+              },
+            },
+            Object {
+              "comment": null,
+              "tag": Object {
+                "allArticleCount": 3,
+                "articleWithUrlCount": 1,
+                "articles": Array [
+                  Object {
+                    "article": Object {
+                      "url": Object {
+                        "path": "https://claudie.net",
+                      },
+                    },
+                  },
+                ],
+                "id": "e886ffa3-ff8a-48c2-b5e0-829be055bdcb",
+                "slug": "yen-operations-0",
+              },
+            },
+            Object {
+              "comment": Object {
+                "body": "Dolore.",
+              },
+              "tag": Object {
+                "allArticleCount": 3,
+                "articleWithUrlCount": 1,
+                "articles": Array [
+                  Object {
+                    "article": Object {
+                      "url": Object {
+                        "path": "https://kathryne.org",
+                      },
+                    },
+                  },
+                ],
+                "id": "15e6083f-d04b-47ea-8284-5ede88b47ea7",
+                "slug": "e-tailers-kyat-violet-1",
+              },
+            },
+          ],
+          "url": null,
+        },
+        Object {
+          "id": "7651da0c-6b7c-4b5e-946d-daa02b190a19",
+          "isImportant": true,
+          "isPublished": true,
+          "publishedAt": "2018-07-05T00:47:52.153Z",
+          "slug": "officia-quaerat",
+          "tags": Array [
+            Object {
+              "comment": null,
+              "tag": Object {
+                "allArticleCount": 4,
+                "articleWithUrlCount": 1,
+                "articles": Array [
+                  Object {
+                    "article": Object {
+                      "url": Object {
+                        "path": "https://claudie.net",
+                      },
+                    },
+                  },
+                ],
+                "id": "c2308ecb-0456-4d1d-980d-9f3dad510abb",
+                "slug": "ameliorated-oman-district-2",
+              },
+            },
+            Object {
+              "comment": Object {
+                "body": "Quis.",
+              },
+              "tag": Object {
+                "allArticleCount": 3,
+                "articleWithUrlCount": 1,
+                "articles": Array [
+                  Object {
+                    "article": Object {
+                      "url": Object {
+                        "path": "https://claudie.net",
+                      },
+                    },
+                  },
+                ],
+                "id": "e886ffa3-ff8a-48c2-b5e0-829be055bdcb",
+                "slug": "yen-operations-0",
+              },
+            },
+          ],
+          "url": Object {
+            "meta": null,
+          },
+        },
+        Object {
+          "id": "79150fcf-66bd-47f7-97a7-1cf6cef0ac02",
+          "isImportant": true,
+          "isPublished": true,
+          "publishedAt": "2018-08-22T03:21:11.726Z",
+          "slug": "eos-saepe",
+          "tags": Array [
+            Object {
+              "comment": null,
+              "tag": Object {
+                "allArticleCount": 4,
+                "articleWithUrlCount": 0,
+                "articles": Array [],
+                "id": "5b0383ad-0629-4935-9e8c-73239a82a82f",
+                "slug": "michigan-frozen-3",
+              },
+            },
+            Object {
+              "comment": null,
+              "tag": Object {
+                "allArticleCount": 4,
+                "articleWithUrlCount": 1,
+                "articles": Array [
+                  Object {
+                    "article": Object {
+                      "url": Object {
+                        "path": "https://claudie.net",
+                      },
+                    },
+                  },
+                ],
+                "id": "c2308ecb-0456-4d1d-980d-9f3dad510abb",
+                "slug": "ameliorated-oman-district-2",
+              },
+            },
+          ],
+          "url": null,
+        },
+        Object {
+          "id": "b9b09810-4fce-4ec8-ab21-293d9be8fdbb",
+          "isImportant": true,
+          "isPublished": true,
+          "publishedAt": "2018-12-08T14:46:11.842Z",
+          "slug": "delectus-aut",
+          "tags": Array [
+            Object {
+              "comment": null,
+              "tag": Object {
+                "allArticleCount": 2,
+                "articleWithUrlCount": 1,
+                "articles": Array [
+                  Object {
+                    "article": Object {
+                      "url": Object {
+                        "path": "https://nick.biz",
+                      },
+                    },
+                  },
+                ],
+                "id": "cdd1ba92-287e-4573-99d4-2e8e74317377",
+                "slug": "neural-4",
               },
             },
           ],
           "url": Object {
             "meta": Object {
               "url": Object {
-                "path": "/my-article-01",
+                "path": "https://nick.biz",
               },
             },
           },
         },
         Object {
-          "id": "75758b29-2530-4843-b5b0-5dec41749417",
-          "isImportant": true,
+          "id": "b4ef693a-271e-4dd2-94ad-944ff4c885ce",
+          "isImportant": false,
           "isPublished": false,
           "publishedAt": null,
-          "slug": "my-second-articles-title-a-video",
+          "slug": "occaecati-debitis",
           "tags": Array [
             Object {
-              "comment": null,
+              "comment": Object {
+                "body": "Quia.",
+              },
               "tag": Object {
-                "allArticleCount": 2,
+                "allArticleCount": 3,
                 "articleWithUrlCount": 1,
                 "articles": Array [
                   Object {
                     "article": Object {
                       "url": Object {
-                        "path": "/my-article-01",
+                        "path": "https://kathryne.org",
                       },
                     },
                   },
                 ],
-                "id": "1b4cc2fd-0e1f-4b97-bed5-171f52d18b1b",
-                "slug": "my-fourth-tag",
+                "id": "15e6083f-d04b-47ea-8284-5ede88b47ea7",
+                "slug": "e-tailers-kyat-violet-1",
+              },
+            },
+          ],
+          "url": Object {
+            "meta": Object {
+              "url": Object {
+                "path": "https://kathryne.org",
+              },
+            },
+          },
+        },
+        Object {
+          "id": "5522d916-fd22-47b2-be97-560430a27c82",
+          "isImportant": false,
+          "isPublished": true,
+          "publishedAt": "2018-02-12T15:49:15.009Z",
+          "slug": "sed-quae",
+          "tags": Array [
+            Object {
+              "comment": Object {
+                "body": "Incidunt.",
+              },
+              "tag": Object {
+                "allArticleCount": 4,
+                "articleWithUrlCount": 0,
+                "articles": Array [],
+                "id": "5b0383ad-0629-4935-9e8c-73239a82a82f",
+                "slug": "michigan-frozen-3",
               },
             },
             Object {
-              "comment": null,
+              "comment": Object {
+                "body": "Delectus.",
+              },
               "tag": Object {
-                "allArticleCount": 1,
-                "articleWithUrlCount": 0,
-                "articles": Array [],
-                "id": "91eef28c-598a-433c-9e2c-06d6bd6b455c",
-                "slug": "my-fifth-tag",
+                "allArticleCount": 3,
+                "articleWithUrlCount": 1,
+                "articles": Array [
+                  Object {
+                    "article": Object {
+                      "url": Object {
+                        "path": "https://kathryne.org",
+                      },
+                    },
+                  },
+                ],
+                "id": "15e6083f-d04b-47ea-8284-5ede88b47ea7",
+                "slug": "e-tailers-kyat-violet-1",
+              },
+            },
+            Object {
+              "comment": Object {
+                "body": "Minima.",
+              },
+              "tag": Object {
+                "allArticleCount": 4,
+                "articleWithUrlCount": 1,
+                "articles": Array [
+                  Object {
+                    "article": Object {
+                      "url": Object {
+                        "path": "https://claudie.net",
+                      },
+                    },
+                  },
+                ],
+                "id": "c2308ecb-0456-4d1d-980d-9f3dad510abb",
+                "slug": "ameliorated-oman-district-2",
               },
             },
           ],

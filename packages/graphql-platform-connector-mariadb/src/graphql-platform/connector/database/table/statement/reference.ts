@@ -68,13 +68,21 @@ export class JoinTable extends AbstractTableReference {
     if (this.relation instanceof Relation) {
       for (const column of this.parent.table.getForeignKey(this.relation).getColumnSet()) {
         joinCondition.addRaw(
-          `${column.getEscapedName(this.parent.alias)} = ${column.reference.getEscapedName(this.alias)}`,
+          [
+            column.getEscapedName(this.parent.alias),
+            column.nullable && column.reference.nullable ? '<=>' : '=',
+            column.reference.getEscapedName(this.alias),
+          ].join(' '),
         );
       }
     } else {
       for (const column of this.table.getForeignKey(this.relation.getInverse()).getColumnSet()) {
         joinCondition.addRaw(
-          `${column.reference.getEscapedName(this.parent.alias)} = ${column.getEscapedName(this.alias)}`,
+          [
+            column.reference.getEscapedName(this.parent.alias),
+            column.reference.nullable && column.nullable ? '<=>' : '=',
+            column.getEscapedName(this.alias),
+          ].join(' '),
         );
       }
     }

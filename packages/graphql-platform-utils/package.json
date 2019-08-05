@@ -15,15 +15,15 @@
   "scripts": {
     "build": "tsc --build tsconfig.json tsconfig.commonjs.json",
     "build:watch": "yarn run build --watch",
-    "test": "NODE_ENV=test jest --detectOpenHandles --verbose",
+    "test": "NODE_ENV=test jest --detectOpenHandles --verbose --passWithNoTests",
     "test:watch": "yarn run test --watchAll"
   },
   "devDependencies": {
     "@types/graphql": "^14.2.3",
-    "@types/jest": "^24.0.16",
+    "@types/jest": "^24.0.17",
     "@types/lodash.isplainobject": "^4.0.6",
     "@types/lodash.mergewith": "^4.6.6",
-    "@types/node": "^12.6.9",
+    "@types/node": "^12.7.1",
     "graphql": "^14.4.1",
     "jest": "^24.8.0",
     "ts-jest": "^24.0.2",

@@ -1,5 +1,10 @@
 import { GraphQLOperationType } from '@prismamedia/graphql-platform-utils';
-import { GraphQLFieldConfigMap, GraphQLObjectType, GraphQLSchemaConfig as BaseGraphQLSchemaConfig } from 'graphql';
+import {
+  GraphQLFieldConfigMap,
+  GraphQLNamedType,
+  GraphQLObjectType,
+  GraphQLSchemaConfig as BaseGraphQLSchemaConfig,
+} from 'graphql';
 import { OperationType } from '../operation';
 import { ResourceMap } from '../resource/map';
 
@@ -8,6 +13,7 @@ export interface GraphQLSchemaConfigConfig
   resourceMap: ResourceMap;
   queryMap: GraphQLFieldConfigMap<any, any>;
   mutationMap: GraphQLFieldConfigMap<any, any>;
+  types: GraphQLNamedType[];
 }
 
 export class GraphQLSchemaConfig implements BaseGraphQLSchemaConfig {
@@ -43,5 +49,9 @@ export class GraphQLSchemaConfig implements BaseGraphQLSchemaConfig {
 
   public get subscription() {
     return undefined;
+  }
+
+  public get types() {
+    return this.config.types;
   }
 }

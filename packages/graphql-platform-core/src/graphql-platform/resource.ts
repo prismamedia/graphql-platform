@@ -268,9 +268,7 @@ export class Resource<TConfig extends AnyResourceConfig = ResourceConfig> extend
     for (const [name, config] of loadModuleMap(this.config.relations)) {
       const field = this.getFieldMap().get(name);
       if (field) {
-        throw new Error(
-          `The relation "${name}" cannot be defined as the field "${field}" is already defined with the same name.`,
-        );
+        throw new Error(`The relation "${this}.${name}" cannot have the same name than the field "${field}".`);
       }
 
       relationMap.set(name, new Relation(name, config, this));
@@ -353,9 +351,18 @@ export class Resource<TConfig extends AnyResourceConfig = ResourceConfig> extend
       for (const relation of resource.getRelationMap().values()) {
         if (relation.getTo() === this) {
           const inverseRelation = relation.getInverse();
-          if (this.getComponentMap().has(inverseRelation.name)) {
+
+          const component = this.getComponentMap().get(inverseRelation.name);
+          if (component) {
             throw new Error(
-              `The "${relation}"'s inverse relation can't be named "${inverseRelation.name}", it already exists, you may want to define the "inversedBy".`,
+              `The "${relation}"'s inverse relation cannot have the same name than the component "${component}", you may want to define the "inversedBy" property.`,
+            );
+          }
+
+          const previousInverseRelation = inverseRelationMap.get(inverseRelation.name);
+          if (previousInverseRelation) {
+            throw new Error(
+              `The "${relation}"'s inverse relation cannot have the same name than the "${previousInverseRelation.getInverse()}"'s inverse relation, you may want to define the "inversedBy" property.`,
             );
           }
 
@@ -497,7 +504,14 @@ export class Resource<TConfig extends AnyResourceConfig = ResourceConfig> extend
         const component = this.getComponentMap().get(name);
         if (component) {
           throw new Error(
-            `The virtual field "${name}" cannot be defined as the component "${component}" is already defined with the same name.`,
+            `The virtual field "${this}.${name}" cannot have the same name than the component "${component}".`,
+          );
+        }
+
+        const inverseRelation = this.getInverseRelationMap().get(name);
+        if (inverseRelation) {
+          throw new Error(
+            `The virtual field "${this}.${name}" cannot have the same name than the "${inverseRelation.getInverse()}"'s inverse relation.`,
           );
         }
 

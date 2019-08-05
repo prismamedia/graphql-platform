@@ -15,7 +15,7 @@
   "scripts": {
     "build": "tsc --build tsconfig.json tsconfig.commonjs.json",
     "build:watch": "yarn run build --watch",
-    "test": "NODE_ENV=test jest --detectOpenHandles --passWithNoTests --verbose",
+    "test": "NODE_ENV=test jest --detectOpenHandles --verbose --passWithNoTests",
     "test:watch": "yarn run test --watchAll",
     "dev": "nodemon"
   },
@@ -23,7 +23,7 @@
     "@prismamedia/graphql-platform-connector-mariadb": "^0.1.0-alpha.18",
     "@types/express": "^4.17.0",
     "@types/graphql": "^14.2.3",
-    "@types/jest": "^24.0.16",
+    "@types/jest": "^24.0.17",
     "express": "^4.17.1",
     "graphql": "^14.4.1",
     "jest": "^24.8.0",

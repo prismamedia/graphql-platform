@@ -3,46 +3,72 @@ import { config, MyGP } from './gp';
 
 describe('Fixture', () => {
   let gp: MyGP;
-  const fixturePath = `${__dirname}/fixtures`;
 
   beforeAll(() => {
     gp = new MyGP(config);
   });
 
   it('gets sorted fixtures', () => {
-    const fixtures = gp.getFixtureGraph(fixturePath);
+    const fixtures = gp.getFixtureGraph();
 
-    expect(fixtures.size()).toBe(24);
     expect(fixtures.overallOrder()).toEqual([
-      'category_01',
-      'category_03',
-      'user_01',
-      'article_03',
-      'category_02',
-      'article_01',
-      'tag_03',
-      'article_01_tag_03',
-      'tag_04',
-      'article_01_tag_04',
-      'category_04',
-      'user_02',
-      'article_02',
-      'article_02_tag_04',
-      'tag_05',
-      'article_02_tag_05',
-      'tag_01',
-      'article_01_tag_01',
-      'article_01_tag_01_comment',
-      'tag_02',
-      'article_01_tag_02',
-      'article_01_tag_02_comment',
-      'article_01_url',
-      'article_01_url_comment',
+      'category_0',
+      'category_3',
+      'category_1',
+      'user_0',
+      'user_3',
+      'article_1',
+      'user_4',
+      'user_2',
+      'article_8',
+      'user_1',
+      'article_2',
+      'tag_4',
+      'articleTag_article_2-tag_4',
+      'tag_3',
+      'articleTag_article_2-tag_3',
+      'tag_2',
+      'articleTag_article_2-tag_2',
+      'article_3',
+      'tag_0',
+      'articleTag_article_3-tag_0',
+      'category_2',
+      'article_4',
+      'articleTag_article_4-tag_3',
+      'articleTag_article_4-tag_0',
+      'article_5',
+      'articleTag_article_5-tag_2',
+      'article_7',
+      'articleTag_article_7-tag_3',
+      'articleTag_article_7-tag_2',
+      'article_9',
+      'articleTag_article_9-tag_4',
+      'articleUrl_article_5',
+      'article_0',
+      'articleUrl_article_0',
+      'articleUrlMeta_articleUrl_article_0',
+      'articleUrl_article_9',
+      'articleUrlMeta_articleUrl_article_9',
+      'tag_1',
+      'articleTag_article_0-tag_1',
+      'articleTagComment_articleTag_article_0-tag_1',
+      'articleTag_article_4-tag_1',
+      'articleTagComment_articleTag_article_4-tag_1',
+      'articleTag_article_5-tag_0',
+      'articleTagComment_articleTag_article_5-tag_0',
+      'category_4',
+      'article_6',
+      'articleTag_article_6-tag_3',
+      'articleTagComment_articleTag_article_6-tag_3',
+      'articleTag_article_6-tag_1',
+      'articleTagComment_articleTag_article_6-tag_1',
+      'articleTag_article_6-tag_2',
+      'articleTagComment_articleTag_article_6-tag_2',
     ]);
   });
 
   it('creates GraphQL mutations', () => {
-    const fixtures = gp.getFixtureGraph(fixturePath);
+    const fixtures = gp.getFixtureGraph();
     const visitedResourceSet = new Set<Resource>();
 
     expect(
@@ -50,13 +76,14 @@ describe('Fixture', () => {
         .overallOrder()
         .map(fixtureName => {
           const fixture = fixtures.getNodeData(fixtureName);
+
           if (visitedResourceSet.has(fixture.resource)) {
             return null;
           } else {
             visitedResourceSet.add(fixture.resource);
           }
 
-          return fixtures.getNodeData(fixtureName).getCreateMutationSource();
+          return fixture.getCreateMutationSource();
         })
         .filter(Boolean),
     ).toMatchInlineSnapshot(`
@@ -91,18 +118,6 @@ describe('Fixture', () => {
           }
         }
       }",
-        "mutation ($data: ArticleTagCommentCreateInput!) {
-        id: createArticleTagComment(data: $data) {
-          articleTag {
-            article {
-              id
-            }
-            tag {
-              id
-            }
-          }
-        }
-      }",
         "mutation ($data: ArticleUrlCreateInput!) {
         id: createArticleUrl(data: $data) {
           article {
@@ -114,6 +129,18 @@ describe('Fixture', () => {
         id: createArticleUrlMeta(data: $data) {
           url {
             article {
+              id
+            }
+          }
+        }
+      }",
+        "mutation ($data: ArticleTagCommentCreateInput!) {
+        id: createArticleTagComment(data: $data) {
+          articleTag {
+            article {
+              id
+            }
+            tag {
               id
             }
           }

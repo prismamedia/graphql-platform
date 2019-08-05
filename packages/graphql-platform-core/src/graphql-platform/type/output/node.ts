@@ -91,7 +91,7 @@ export class NodeType extends AbstractOutputType {
   }
 
   @Memoize()
-  protected getFieldMap(): NodeFieldMap {
+  public getFieldMap(): NodeFieldMap {
     const nodeFieldMap = new NodeFieldMap();
 
     for (const field of this.resource.getFieldSet()) {
@@ -202,16 +202,6 @@ export class NodeType extends AbstractOutputType {
     }
 
     return nodeFieldMap;
-  }
-
-  @Memoize(({ name }: GraphQLSelectionNode) => name)
-  public assertField(selection: GraphQLSelectionNode): NodeField {
-    const field = this.getFieldMap().get(selection.name);
-    if (!field) {
-      throw new Error(`The "${this.name}" node's field "${selection.name}" does not exist.`);
-    }
-
-    return field;
   }
 
   @Memoize()

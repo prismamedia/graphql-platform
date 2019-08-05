@@ -211,18 +211,18 @@ function parseGraphQLSelectionNode(
   const name = field.name && field.name.value;
   const alias = field.alias && field.alias.value;
   const fieldDef = parentType.getFields()[name];
-  const fieldType = getNamedType(fieldDef.type);
+  const fieldType = fieldDef ? getNamedType(fieldDef.type) : null;
 
   const node = new GraphQLSelectionNode(
     name,
-    getArgumentValues(fieldDef, field, variableValues),
+    fieldDef ? getArgumentValues(fieldDef, field, variableValues) : {},
     undefined,
     alias,
     undefined,
     path ? responsePathAsArray(path) : undefined,
   );
 
-  if (field.selectionSet && fieldType instanceof GraphQLObjectType) {
+  if (fieldType && field.selectionSet && fieldType instanceof GraphQLObjectType) {
     field.selectionSet.selections.forEach(selection =>
       appendNodeChild(node, selection, fragments, variableValues, fieldType),
     );

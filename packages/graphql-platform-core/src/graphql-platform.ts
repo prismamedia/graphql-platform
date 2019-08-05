@@ -1,6 +1,7 @@
 import {
   FlagConfig,
   getFlagValue,
+  getThunkValue,
   loadModuleMap,
   Maybe,
   MaybePromise,
@@ -8,8 +9,9 @@ import {
   mergeWith,
   ModuleMapConfig,
   POJO,
+  Thunk,
 } from '@prismamedia/graphql-platform-utils';
-import { ExecutionResult, graphql, GraphQLArgs, GraphQLFieldConfig, GraphQLSchema } from 'graphql';
+import { ExecutionResult, graphql, GraphQLArgs, GraphQLFieldConfig, GraphQLNamedType, GraphQLSchema } from 'graphql';
 import { Binding } from 'graphql-binding';
 import { ExecutionResultDataDefault } from 'graphql/execution/execute';
 import { Memoize } from 'typescript-memoize';
@@ -41,6 +43,11 @@ export type BaseContext = {
    * The logger, if any
    */
   logger: Logger | undefined;
+
+  /**
+   * Return the current environment
+   */
+  environment: string;
 
   /**
    * Either we are in debug mode or not
@@ -81,7 +88,11 @@ export type Context<
   TBaseContext extends AnyBaseContext = BaseContext
 > = TCustomContext & TBaseContext;
 
-export type Request = Merge<Omit<GraphQLArgs, 'schema'>, { contextValue?: CustomContext }>;
+export type GraphQLRequest = Merge<Omit<GraphQLArgs, 'schema'>, { contextValue?: CustomContext }>;
+
+export interface GraphQLExecutor {
+  execute<TData = ExecutionResultDataDefault>(request: GraphQLRequest): Promise<ExecutionResult<TData>>;
+}
 
 export type CustomOperationConfig<
   TCustomContext extends CustomContext = {},
@@ -114,6 +125,12 @@ export interface GraphQLPlatformConfig<
 
   /** Optional, provide some custom mutations */
   mutations?: ModuleMapConfig<CustomOperationConfig<TCustomContext, TBaseContext>>;
+
+  /** Optional, provide some custom types */
+  types?: Maybe<MaybeResourceMapAware<GraphQLNamedType[]>>;
+
+  /** Optional, default fixtures */
+  fixtures?: Thunk<ModuleMapConfig<ModuleMapConfig<FixtureData>>>;
 }
 
 export type AnyGraphQLPlatformConfig = GraphQLPlatformConfig<any, any, any, any>;
@@ -122,7 +139,7 @@ export class GraphQLPlatform<
   TContextParams extends POJO = any,
   TCustomContext extends CustomContext = {},
   TConfig extends AnyGraphQLPlatformConfig = GraphQLPlatformConfig<TContextParams, TCustomContext>
-> {
+> implements GraphQLExecutor {
   public constructor(readonly config: TConfig) {}
 
   @Memoize()
@@ -203,6 +220,11 @@ export class GraphQLPlatform<
             {},
           )
         : {},
+      types: this.config.types
+        ? typeof this.config.types === 'function'
+          ? this.config.types({ resourceMap })
+          : this.config.types
+        : [],
     });
   }
 
@@ -223,6 +245,7 @@ export class GraphQLPlatform<
   public async getBaseContext(): Promise<BaseContext> {
     return {
       logger: this.getLogger(),
+      environment: this.getEnvironment(),
       debug: this.isDebug(),
       resourceMap: this.getResourceMap(),
       api: this.getBinding(),
@@ -240,7 +263,7 @@ export class GraphQLPlatform<
     });
   }
 
-  public async execute<TData = ExecutionResultDataDefault>(request: Request): Promise<ExecutionResult<TData>> {
+  public async execute<TData = ExecutionResultDataDefault>(request: GraphQLRequest): Promise<ExecutionResult<TData>> {
     return graphql<TData>({
       ...request,
       schema: this.getGraphQLSchema(),
@@ -273,7 +296,9 @@ export class GraphQLPlatform<
   }
 
   // Gets the fixtures, sorted by their dependencies
-  public getFixtureGraph(config: ModuleMapConfig<ModuleMapConfig<FixtureData>>): FixtureGraph {
+  public getFixtureGraph(
+    config: ModuleMapConfig<ModuleMapConfig<FixtureData>> = getThunkValue(this.config.fixtures),
+  ): FixtureGraph {
     const fixtureGraph = new FixtureGraph({ circular: false });
 
     for (const [resourceName, fixtureDataMap] of loadModuleMap(config)) {
@@ -307,8 +332,8 @@ export class GraphQLPlatform<
   }
 
   public async loadFixtures(
-    config: ModuleMapConfig<ModuleMapConfig<FixtureData>>,
-    contextValue?: Request['contextValue'],
+    config?: ModuleMapConfig<ModuleMapConfig<FixtureData>>,
+    contextValue?: GraphQLRequest['contextValue'],
   ): Promise<void> {
     const fixtureGraph = this.getFixtureGraph(config);
 

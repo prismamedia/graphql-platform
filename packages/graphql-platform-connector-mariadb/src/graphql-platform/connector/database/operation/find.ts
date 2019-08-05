@@ -36,92 +36,98 @@ export class FindOperation extends AbstractOperationResolver<ConnectorFindOperat
 
   public async parseSelectionNode(select: SelectExpressionSet, selectionNode: GraphQLSelectionNode) {
     for (const selection of selectionNode.values()) {
-      const nodeField = this.resource.getOutputType('Node').assertField(selection);
-      switch (nodeField.kind) {
-        case NodeFieldKind.Field: {
-          const field = nodeField.field;
+      const nodeField = this.resource
+        .getOutputType('Node')
+        .getFieldMap()
+        .get(selection.name);
 
-          const column = this.table.getColumn(field);
-          select.add(column);
-          break;
-        }
+      if (nodeField) {
+        switch (nodeField.kind) {
+          case NodeFieldKind.Field: {
+            const field = nodeField.field;
 
-        case NodeFieldKind.Relation: {
-          const relation = nodeField.relation;
-
-          const foreignKey = this.table.getForeignKey(relation);
-
-          // We'll try to fetch the related table's columns in the current table's foreign key to avoid a costly join
-          // As we will modify the selection, we create a carbon copy of it
-          const selectionCopy = selection.clone();
-
-          // Columns of the foreign key that have been selected
-          const selectedForeignKeyColumnSet = foreignKey
-            .getColumnSet()
-            .filter(column => this.preferForeignKeyColumn(column, selectionCopy));
-
-          select.push(...selectedForeignKeyColumnSet);
-
-          if (selectionCopy.size > 0) {
-            const relatedTable = this.database.getTable(relation.getTo());
-            const relatedFindOperation = relatedTable.getOperation('Find');
-
-            select.on(relation, select => relatedFindOperation.parseSelectionNode(select, selectionCopy));
+            const column = this.table.getColumn(field);
+            select.add(column);
+            break;
           }
 
-          // This non-nullable reference's value will tell us if the relation is defined or not
-          if (relation.isNullable() && selectedForeignKeyColumnSet.every(column => column.reference.nullable)) {
-            select.push(foreignKey.getFirstNonNullableReference());
+          case NodeFieldKind.Relation: {
+            const relation = nodeField.relation;
+
+            const foreignKey = this.table.getForeignKey(relation);
+
+            // We'll try to fetch the related table's columns in the current table's foreign key to avoid a costly join
+            // As we will modify the selection, we create a carbon copy of it
+            const selectionCopy = selection.clone();
+
+            // Columns of the foreign key that have been selected
+            const selectedForeignKeyColumnSet = foreignKey
+              .getColumnSet()
+              .filter(column => this.preferForeignKeyColumn(column, selectionCopy));
+
+            select.push(...selectedForeignKeyColumnSet);
+
+            if (selectionCopy.size > 0) {
+              const relatedTable = this.database.getTable(relation.getTo());
+              const relatedFindOperation = relatedTable.getOperation('Find');
+
+              select.on(relation, select => relatedFindOperation.parseSelectionNode(select, selectionCopy));
+            }
+
+            // This non-nullable reference's value will tell us if the relation is defined or not
+            if (relation.isNullable() && selectedForeignKeyColumnSet.every(column => column.reference.nullable)) {
+              select.push(foreignKey.getFirstNonNullableReference());
+            }
+            break;
           }
-          break;
-        }
 
-        case NodeFieldKind.InverseRelation: {
-          const inverseRelation = nodeField.inverseRelation;
+          case NodeFieldKind.InverseRelation: {
+            const inverseRelation = nodeField.inverseRelation;
 
-          if (inverseRelation.isToOne()) {
-            const relatedTable = this.database.getTable(inverseRelation.getTo());
-            const relatedFindOperation = relatedTable.getOperation('Find');
+            if (inverseRelation.isToOne()) {
+              const relatedTable = this.database.getTable(inverseRelation.getTo());
+              const relatedFindOperation = relatedTable.getOperation('Find');
 
-            select.on(inverseRelation, select => {
-              relatedFindOperation.parseSelectionNode(select, selection);
+              select.on(inverseRelation, select => {
+                relatedFindOperation.parseSelectionNode(select, selection);
 
-              // This non-nullable column's value will tell us if the relation is defined or not
-              const firstNonNullableColumn = relatedTable
-                .getPrimaryKey()
+                // This non-nullable column's value will tell us if the relation is defined or not
+                const firstNonNullableColumn = relatedTable
+                  .getPrimaryKey()
+                  .getColumnSet()
+                  .assertFirst();
+
+                select.push(firstNonNullableColumn);
+              });
+            } else {
+              // Add the columns needed to request the inverse relation later
+              this.database
+                .getTable(inverseRelation.getTo())
+                .getForeignKey(inverseRelation.getInverse())
                 .getColumnSet()
-                .assertFirst();
+                .forEach(({ reference }) => select.add(reference));
+            }
+            break;
+          }
 
-              select.push(firstNonNullableColumn);
-            });
-          } else {
+          case NodeFieldKind.InverseRelationCount: {
+            const inverseRelation = nodeField.inverseRelation;
+
             // Add the columns needed to request the inverse relation later
             this.database
               .getTable(inverseRelation.getTo())
               .getForeignKey(inverseRelation.getInverse())
               .getColumnSet()
               .forEach(({ reference }) => select.add(reference));
+            break;
           }
-          break;
-        }
 
-        case NodeFieldKind.InverseRelationCount: {
-          const inverseRelation = nodeField.inverseRelation;
+          case NodeFieldKind.VirtualField: {
+            const virtualField = nodeField.virtualField;
 
-          // Add the columns needed to request the inverse relation later
-          this.database
-            .getTable(inverseRelation.getTo())
-            .getForeignKey(inverseRelation.getInverse())
-            .getColumnSet()
-            .forEach(({ reference }) => select.add(reference));
-          break;
-        }
-
-        case NodeFieldKind.VirtualField: {
-          const virtualField = nodeField.virtualField;
-
-          virtualField.dependencySet.forEach(component => select.add(this.table.getComponentColumnSet(component)));
-          break;
+            virtualField.dependencySet.forEach(component => select.add(this.table.getComponentColumnSet(component)));
+            break;
+          }
         }
       }
     }
@@ -340,84 +346,121 @@ export class FindOperation extends AbstractOperationResolver<ConnectorFindOperat
     const resource = table.resource;
     const database = table.database;
 
-    const node: NodeSource = Object.create(null);
+    const node: NodeSource = {};
 
     const tableData: POJO = this.getRowTableData(data, tableReference);
 
     for (const selection of selectionNode.values()) {
-      const nodeField = resource.getOutputType('Node').assertField(selection);
-      switch (nodeField.kind) {
-        case NodeFieldKind.Field: {
-          const field = nodeField.field;
-          const column = table.getColumn(field);
+      const nodeField = this.resource
+        .getOutputType('Node')
+        .getFieldMap()
+        .get(selection.name);
 
-          column.setValue(node, tableData[column.name]);
-          break;
-        }
+      if (nodeField) {
+        switch (nodeField.kind) {
+          case NodeFieldKind.Field: {
+            const field = nodeField.field;
+            const column = table.getColumn(field);
 
-        case NodeFieldKind.Relation: {
-          const relation = nodeField.relation;
-          const foreignKey = this.table.getForeignKey(relation);
-
-          const selectionCopy = selection.clone();
-
-          const selectedForeignKeyColumnSet = foreignKey
-            .getColumnSet()
-            .filter(column => this.preferForeignKeyColumn(column, selectionCopy));
-
-          if (
-            relation.isNullable() &&
-            tableData[
-              (
-                selectedForeignKeyColumnSet.find(column => !column.reference.nullable) ||
-                foreignKey.getFirstNonNullableReference()
-              ).name
-            ] === null
-          ) {
-            mergeWith(node, {
-              [nodeField.name]: null,
-            });
-          } else {
-            selectedForeignKeyColumnSet.forEach(column => column.setValue(node, tableData[column.name]));
-
-            if (selectionCopy.size > 0) {
-              const relatedTable = database.getTable(relation.getTo());
-              const relatedFindOperation = relatedTable.getOperation('Find');
-
-              mergeWith(node, {
-                [nodeField.name]: relatedFindOperation.parseRow(data, tableReference.join(relation), selectionCopy),
-              });
-            }
+            column.setValue(node, tableData[column.name]);
+            break;
           }
 
-          break;
-        }
+          case NodeFieldKind.Relation: {
+            const relation = nodeField.relation;
+            const foreignKey = this.table.getForeignKey(relation);
 
-        case NodeFieldKind.InverseRelation: {
-          const inverseRelation = nodeField.inverseRelation;
+            const selectionCopy = selection.clone();
 
-          const relatedTable = this.database.getTable(inverseRelation.getTo());
-          const relatedPrimaryKey = relatedTable.getPrimaryKey();
-          const relatedForeignKey = relatedTable.getForeignKey(inverseRelation.getInverse());
-          const relatedFindOperation = relatedTable.getOperation('Find');
+            const selectedForeignKeyColumnSet = foreignKey
+              .getColumnSet()
+              .filter(column => this.preferForeignKeyColumn(column, selectionCopy));
 
-          if (inverseRelation.isToOne()) {
-            const relatedTableData = this.getRowTableData(data, tableReference.join(inverseRelation));
-            const firstNonNullableColumn = relatedPrimaryKey.getColumnSet().assertFirst();
+            if (
+              relation.isNullable() &&
+              tableData[
+                (
+                  selectedForeignKeyColumnSet.find(column => !column.reference.nullable) ||
+                  foreignKey.getFirstNonNullableReference()
+                ).name
+              ] === null
+            ) {
+              mergeWith(node, {
+                [nodeField.name]: null,
+              });
+            } else {
+              selectedForeignKeyColumnSet.forEach(column => column.setValue(node, tableData[column.name]));
 
-            mergeWith(node, {
-              [nodeField.name]:
-                relatedTableData[firstNonNullableColumn.name] !== null
-                  ? relatedFindOperation.parseRow(data, tableReference.join(inverseRelation), selection)
-                  : null,
-            });
-          } else {
+              if (selectionCopy.size > 0) {
+                const relatedTable = database.getTable(relation.getTo());
+                const relatedFindOperation = relatedTable.getOperation('Find');
+
+                mergeWith(node, {
+                  [nodeField.name]: relatedFindOperation.parseRow(data, tableReference.join(relation), selectionCopy),
+                });
+              }
+            }
+
+            break;
+          }
+
+          case NodeFieldKind.InverseRelation: {
+            const inverseRelation = nodeField.inverseRelation;
+
+            const relatedTable = this.database.getTable(inverseRelation.getTo());
+            const relatedPrimaryKey = relatedTable.getPrimaryKey();
+            const relatedForeignKey = relatedTable.getForeignKey(inverseRelation.getInverse());
+            const relatedFindOperation = relatedTable.getOperation('Find');
+
+            if (inverseRelation.isToOne()) {
+              const relatedTableData = this.getRowTableData(data, tableReference.join(inverseRelation));
+              const firstNonNullableColumn = relatedPrimaryKey.getColumnSet().assertFirst();
+
+              mergeWith(node, {
+                [nodeField.name]:
+                  relatedTableData[firstNonNullableColumn.name] !== null
+                    ? relatedFindOperation.parseRow(data, tableReference.join(inverseRelation), selection)
+                    : null,
+              });
+            } else {
+              relatedForeignKey
+                .getColumnSet()
+                .forEach(({ reference }) => reference.setValue(node, tableData[reference.name]));
+
+              node[nodeField.name] = async params =>
+                relatedFindOperation.execute({
+                  ...params,
+                  args: {
+                    ...params.args,
+                    where: {
+                      AND: [
+                        {
+                          [inverseRelation.getInverse().name]: resource
+                            .getInputType('WhereUnique')
+                            .parseUnique(node, inverseRelation.getInverse().getToUnique(), true),
+                        },
+                        params.args.where,
+                      ],
+                    },
+                  },
+                });
+            }
+            break;
+          }
+
+          case NodeFieldKind.InverseRelationCount: {
+            const inverseRelation = nodeField.inverseRelation;
+
+            const relatedTable = database.getTable(inverseRelation.getTo());
+            const relatedForeignKey = relatedTable.getForeignKey(inverseRelation.getInverse());
+            const relatedCountOperation = relatedTable.getOperation('Count');
+
             relatedForeignKey
               .getColumnSet()
               .forEach(({ reference }) => reference.setValue(node, tableData[reference.name]));
 
             node[nodeField.name] = async params =>
-              relatedFindOperation.execute({
+              relatedCountOperation.execute({
                 ...params,
                 args: {
                   ...params.args,
@@ -433,48 +476,17 @@ export class FindOperation extends AbstractOperationResolver<ConnectorFindOperat
                   },
                 },
               });
+            break;
           }
-          break;
-        }
 
-        case NodeFieldKind.InverseRelationCount: {
-          const inverseRelation = nodeField.inverseRelation;
+          case NodeFieldKind.VirtualField: {
+            const virtualField = nodeField.virtualField;
 
-          const relatedTable = database.getTable(inverseRelation.getTo());
-          const relatedForeignKey = relatedTable.getForeignKey(inverseRelation.getInverse());
-          const relatedCountOperation = relatedTable.getOperation('Count');
-
-          relatedForeignKey
-            .getColumnSet()
-            .forEach(({ reference }) => reference.setValue(node, tableData[reference.name]));
-
-          node[nodeField.name] = async params =>
-            relatedCountOperation.execute({
-              ...params,
-              args: {
-                ...params.args,
-                where: {
-                  AND: [
-                    {
-                      [inverseRelation.getInverse().name]: resource
-                        .getInputType('WhereUnique')
-                        .parseUnique(node, inverseRelation.getInverse().getToUnique(), true),
-                    },
-                    params.args.where,
-                  ],
-                },
-              },
-            });
-          break;
-        }
-
-        case NodeFieldKind.VirtualField: {
-          const virtualField = nodeField.virtualField;
-
-          table
-            .getComponentSetColumnSet(virtualField.dependencySet)
-            .forEach(column => column.setValue(node, tableData[column.name]));
-          break;
+            table
+              .getComponentSetColumnSet(virtualField.dependencySet)
+              .forEach(column => column.setValue(node, tableData[column.name]));
+            break;
+          }
         }
       }
     }
