@@ -30,7 +30,7 @@ import {
   OperationTypeMapConfig,
   UpdateOneOperationArgs,
 } from './operation';
-import { AnyRelationMap, AnyRelationSet } from './resource/any-relation';
+import { AnyRelation, AnyRelationMap, AnyRelationSet } from './resource/any-relation';
 import {
   AnyFieldConfig,
   AnyRelationConfig,
@@ -47,7 +47,7 @@ import {
   RelationMap,
   RelationSet,
 } from './resource/component';
-import { ComponentValue, NormalizedComponentValue } from './resource/component/types';
+import { Component, ComponentValue, NormalizedComponentValue } from './resource/component/types';
 import { ResourceMap } from './resource/map';
 import { AnyUniqueFullConfig, Unique, UniqueConfig, UniqueFullConfig, UniqueSet } from './resource/unique';
 import { VirtualField, VirtualFieldConfig, VirtualFieldMap, VirtualFieldSet } from './resource/virtual-field';
@@ -297,6 +297,14 @@ export class Resource<TConfig extends AnyResourceConfig = ResourceConfig> extend
     return new ComponentSet(this.getComponentMap().values());
   }
 
+  public assertComponent<TComponent extends Component>(component: TComponent): TComponent {
+    if (!this.getComponentSet().has(component)) {
+      throw new Error(`The component "${component}" does not belong to the resource "${this}".`);
+    }
+
+    return component;
+  }
+
   @Memoize()
   public getUniqueSet(): UniqueSet {
     const uniqueSet = new UniqueSet((this.config.uniques || []).map(config => new Unique(config, this)));
@@ -387,6 +395,14 @@ export class Resource<TConfig extends AnyResourceConfig = ResourceConfig> extend
   @Memoize()
   public getAnyRelationSet(): AnyRelationSet {
     return new AnyRelationSet(this.getAnyRelationMap().values());
+  }
+
+  public assertAnyRelation<TAnyRelation extends AnyRelation>(anyRelation: TAnyRelation): TAnyRelation {
+    if (!this.getAnyRelationSet().has(anyRelation)) {
+      throw new Error(`The relation "${anyRelation}" does not belong to the resource "${this}".`);
+    }
+
+    return anyRelation;
   }
 
   @Memoize()

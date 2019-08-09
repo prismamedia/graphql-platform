@@ -242,7 +242,12 @@ export class UpdateOneOperation extends AbstractOperation<UpdateOneOperationArgs
                       await relatedResource.getMutation('UpdateOne').resolve({
                         args: {
                           where: { [relation.name]: nodeId, ...value.where },
-                          data: { ...value.data, [relation.name]: { [UpdateRelationActionKind.Connect]: nodeId } },
+                          data: {
+                            ...value.data,
+                            ...(relation.isMutable()
+                              ? { [relation.name]: { [UpdateRelationActionKind.Connect]: nodeId } }
+                              : {}),
+                          },
                         },
                         context,
                         selectionNode,
@@ -263,7 +268,12 @@ export class UpdateOneOperation extends AbstractOperation<UpdateOneOperationArgs
                       await relatedResource.getMutation('UpsertOne').resolve({
                         args: {
                           where: { [relation.name]: nodeId, ...value.where },
-                          update: { ...value.update, [relation.name]: { [UpdateRelationActionKind.Connect]: nodeId } },
+                          update: {
+                            ...value.update,
+                            ...(relation.isMutable()
+                              ? { [relation.name]: { [UpdateRelationActionKind.Connect]: nodeId } }
+                              : {}),
+                          },
                           create: { ...value.create, [relation.name]: { [CreateRelationActionKind.Connect]: nodeId } },
                         },
                         context,

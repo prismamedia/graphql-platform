@@ -42,14 +42,15 @@ input MyArticleUpdateInput {
 input MyArticleWhereInput {
   myId: Int
   myId_not: Int
-  myId_in: [Int]
-  myId_not_in: [Int]
+  myId_in: [Int!]
+  myId_not_in: [Int!]
   myId_lt: Int
   myId_lte: Int
   myId_gt: Int
   myId_gte: Int
   myTitle: String
   myTitle_not: String
+  myTitle_is_null: Boolean
   myTitle_in: [String]
   myTitle_not_in: [String]
   myTitle_contains: String

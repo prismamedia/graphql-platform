@@ -1,8 +1,10 @@
 import {
   getPlainObjectEntries,
+  GraphQLNonNullDecorator,
   isPlainObject,
   Maybe,
   MaybePromise,
+  POJO,
   SuperMapOfNamedObject,
 } from '@prismamedia/graphql-platform-utils';
 import {
@@ -34,6 +36,7 @@ type WhereFilterConfig = Omit<WhereFilter, 'id' | 'parse'>;
 enum FieldWhereFilter {
   eq,
   not,
+  is_null,
   in,
   not_in,
   contains,
@@ -105,13 +108,21 @@ export class WhereInputType extends AbstractInputType {
       name: `${field.name}_not`,
       fieldConfig: { type: field.getType() },
     }),
+    is_null: field =>
+      field.isNullable()
+        ? {
+            name: `${field.name}_is_null`,
+            clean: (value: unknown) => (typeof value === 'boolean' ? value : undefined),
+            fieldConfig: { type: GraphQLBoolean },
+          }
+        : null,
     in: field => ({
       name: `${field.name}_in`,
-      fieldConfig: { type: GraphQLList(field.getType()) },
+      fieldConfig: { type: GraphQLList(GraphQLNonNullDecorator(field.getType(), !field.isNullable())) },
     }),
     not_in: field => ({
       name: `${field.name}_not_in`,
-      fieldConfig: { type: GraphQLList(field.getType()) },
+      fieldConfig: { type: GraphQLList(GraphQLNonNullDecorator(field.getType(), !field.isNullable())) },
     }),
     contains: field =>
       ['String'].includes(field.getType().name)
@@ -188,6 +199,13 @@ export class WhereInputType extends AbstractInputType {
   protected relationFilterConfigMap: RelationWhereFilterConfigMap = {
     eq: relation => ({
       name: relation.name,
+      clean: (value: unknown) =>
+        relation.isNullable() && value === null
+          ? value
+          : relation
+              .getTo()
+              .getInputType('Where')
+              .clean(value),
       fieldConfig: {
         type: relation
           .getTo()
@@ -199,6 +217,7 @@ export class WhereInputType extends AbstractInputType {
       relation.isNullable()
         ? {
             name: `${relation.name}_is_null`,
+            clean: (value: unknown) => (typeof value === 'boolean' ? value : undefined),
             fieldConfig: {
               type: GraphQLBoolean,
             },
@@ -211,6 +230,13 @@ export class WhereInputType extends AbstractInputType {
       relationInverse.isToOne()
         ? {
             name: relationInverse.name,
+            clean: (value: unknown) =>
+              value === null
+                ? value
+                : relationInverse
+                    .getTo()
+                    .getInputType('Where')
+                    .clean(value),
             fieldConfig: {
               type: relationInverse
                 .getTo()
@@ -223,6 +249,7 @@ export class WhereInputType extends AbstractInputType {
       relationInverse.isToOne()
         ? {
             name: `${relationInverse.name}_is_null`,
+            clean: (value: unknown) => (typeof value === 'boolean' ? value : undefined),
             fieldConfig: {
               type: GraphQLBoolean,
             },
@@ -232,6 +259,11 @@ export class WhereInputType extends AbstractInputType {
       relationInverse.isToMany()
         ? {
             name: `${relationInverse.name}_some`,
+            clean: (value: unknown) =>
+              relationInverse
+                .getTo()
+                .getInputType('Where')
+                .clean(value),
             fieldConfig: {
               type: relationInverse
                 .getTo()
@@ -246,33 +278,38 @@ export class WhereInputType extends AbstractInputType {
     and: () => ({
       name: 'AND',
       clean: (value: unknown) => {
-        if (Array.isArray(value) && value.length > 0) {
-          const filteredValue = value.filter(Boolean);
-          if (filteredValue.length > 0) {
-            return filteredValue;
+        const cleanedValues = (Array.isArray(value) ? value : []).reduce((cleanedValues: any[], value) => {
+          const cleanedValue = this.clean(value);
+          if (typeof cleanedValue !== 'undefined') {
+            cleanedValues.push(cleanedValue);
           }
-        }
 
-        return undefined;
+          return cleanedValues;
+        }, []);
+
+        return cleanedValues.length > 0 ? cleanedValues : undefined;
       },
       fieldConfig: { type: GraphQLList(GraphQLNonNull(this.getGraphQLType())) },
     }),
     or: () => ({
       name: 'OR',
       clean: (value: unknown) => {
-        if (Array.isArray(value) && value.length > 0) {
-          const filteredValue = value.filter(Boolean);
-          if (filteredValue.length > 0) {
-            return filteredValue;
+        const cleanedValues = (Array.isArray(value) ? value : []).reduce((cleanedValues: any[], value) => {
+          const cleanedValue = this.clean(value);
+          if (typeof cleanedValue !== 'undefined') {
+            cleanedValues.push(cleanedValue);
           }
-        }
 
-        return undefined;
+          return cleanedValues;
+        }, []);
+
+        return cleanedValues.length > 0 ? cleanedValues : undefined;
       },
       fieldConfig: { type: GraphQLList(GraphQLNonNull(this.getGraphQLType())) },
     }),
     not: () => ({
       name: 'NOT',
+      clean: (value: unknown) => this.clean(value),
       fieldConfig: { type: this.getGraphQLType() },
     }),
   };
@@ -335,21 +372,35 @@ export class WhereInputType extends AbstractInputType {
     return filterMap;
   }
 
-  public async parse(parser: WhereInputParser, value: unknown) {
-    const filterMap = this.getFilterMap();
+  public clean(value: unknown): POJO | undefined {
     if (isPlainObject(value)) {
-      await Promise.all(
-        Object.entries(value).map(async ([filterName, filterValue]) => {
-          if (typeof filterValue !== 'undefined') {
-            const filter = filterMap.get(filterName);
-            if (!filter) {
-              throw new Error(`The "${this.resource.name}"'s where filter "${filterName}" does not exist`);
-            }
+      const cleanedValue = Object.create(null);
 
-            const cleanedFilterValue = filter.clean ? filter.clean(filterValue) : filterValue;
-            if (typeof cleanedFilterValue !== 'undefined') {
-              await filter.parse(parser, cleanedFilterValue);
-            }
+      for (const [filterName, filterValue] of Object.entries(value)) {
+        if (typeof filterValue !== 'undefined') {
+          const filter = this.getFilterMap().assert(filterName);
+          const cleanedFilterValue = filter.clean ? filter.clean(filterValue) : filterValue;
+          if (typeof cleanedFilterValue !== 'undefined') {
+            cleanedValue[filterName] = cleanedFilterValue;
+          }
+        }
+      }
+
+      return Object.keys(cleanedValue).length > 0 ? cleanedValue : undefined;
+    }
+
+    return undefined;
+  }
+
+  public async parse(parser: WhereInputParser, value: unknown) {
+    const cleanedValue = this.clean(value);
+    if (cleanedValue) {
+      await Promise.all(
+        Object.entries(cleanedValue).map(async ([filterName, filterValue]) => {
+          if (typeof filterValue !== 'undefined') {
+            await this.getFilterMap()
+              .assert(filterName)
+              .parse(parser, filterValue);
           }
         }),
       );

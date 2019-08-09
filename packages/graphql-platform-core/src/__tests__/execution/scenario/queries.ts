@@ -342,4 +342,28 @@ export const scenario: Scenario = [
       article_05: { id: '0391d268-bc8e-483f-bc40-9b275f1384b1' },
     },
   ],
+
+  // execute a query with empty parameter (category/tag)
+  [
+    {
+      source: `query ($where: ArticleWhereInput!) {
+        articles(where: $where, first: 1) { id }
+      }`,
+      variableValues: {
+        where: {
+          category: {},
+          tags_some: {
+            tag: {},
+          },
+        },
+      },
+    },
+    {
+      articles: [
+        {
+          id: '87ece569-f025-4212-b800-7ffd50721582',
+        },
+      ],
+    },
+  ],
 ];

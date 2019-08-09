@@ -18,7 +18,7 @@ export class SuperSet<V = any> extends Set<V> {
   public assertFirst(): V {
     const first = this.first();
     if (typeof first === 'undefined') {
-      throw new Error(`There is no "first" element as the "${this.constructor.name}" is empty.`);
+      throw new Error(`There is no "first" element: the "${this.constructor.name}" is empty.`);
     }
 
     return first;

@@ -1,6 +1,6 @@
 // Jest Snapshot v1, https://goo.gl/fbAQLP
 
-exports[`GraphQLSchema creates a consistent GraphQL schema 1`] = `
+exports[`GraphQLSchema creates a consistent valid GraphQL schema 1`] = `
 "# \\"Article\\" resource's node
 type Article {
   # The public ID
@@ -408,22 +408,23 @@ input ArticleTagCommentUpdateInput {
 input ArticleTagCommentWhereInput {
   createdAt: DateTime
   createdAt_not: DateTime
-  createdAt_in: [DateTime]
-  createdAt_not_in: [DateTime]
+  createdAt_in: [DateTime!]
+  createdAt_not_in: [DateTime!]
   createdAt_lt: DateTime
   createdAt_lte: DateTime
   createdAt_gt: DateTime
   createdAt_gte: DateTime
   updatedAt: DateTime
   updatedAt_not: DateTime
-  updatedAt_in: [DateTime]
-  updatedAt_not_in: [DateTime]
+  updatedAt_in: [DateTime!]
+  updatedAt_not_in: [DateTime!]
   updatedAt_lt: DateTime
   updatedAt_lte: DateTime
   updatedAt_gt: DateTime
   updatedAt_gte: DateTime
   body: String
   body_not: String
+  body_is_null: Boolean
   body_in: [String]
   body_not_in: [String]
   body_contains: String
@@ -553,24 +554,24 @@ input ArticleTagUpdateInput {
 input ArticleTagWhereInput {
   createdAt: DateTime
   createdAt_not: DateTime
-  createdAt_in: [DateTime]
-  createdAt_not_in: [DateTime]
+  createdAt_in: [DateTime!]
+  createdAt_not_in: [DateTime!]
   createdAt_lt: DateTime
   createdAt_lte: DateTime
   createdAt_gt: DateTime
   createdAt_gte: DateTime
   updatedAt: DateTime
   updatedAt_not: DateTime
-  updatedAt_in: [DateTime]
-  updatedAt_not_in: [DateTime]
+  updatedAt_in: [DateTime!]
+  updatedAt_not_in: [DateTime!]
   updatedAt_lt: DateTime
   updatedAt_lte: DateTime
   updatedAt_gt: DateTime
   updatedAt_gte: DateTime
   order: Int
   order_not: Int
-  order_in: [Int]
-  order_not_in: [Int]
+  order_in: [Int!]
+  order_not_in: [Int!]
   order_lt: Int
   order_lte: Int
   order_gt: Int
@@ -738,16 +739,16 @@ enum ArticleUrlMetaOrderByInput {
 input ArticleUrlMetaWhereInput {
   createdAt: DateTime
   createdAt_not: DateTime
-  createdAt_in: [DateTime]
-  createdAt_not_in: [DateTime]
+  createdAt_in: [DateTime!]
+  createdAt_not_in: [DateTime!]
   createdAt_lt: DateTime
   createdAt_lte: DateTime
   createdAt_gt: DateTime
   createdAt_gte: DateTime
   updatedAt: DateTime
   updatedAt_not: DateTime
-  updatedAt_in: [DateTime]
-  updatedAt_not_in: [DateTime]
+  updatedAt_in: [DateTime!]
+  updatedAt_not_in: [DateTime!]
   updatedAt_lt: DateTime
   updatedAt_lte: DateTime
   updatedAt_gt: DateTime
@@ -839,24 +840,24 @@ input ArticleUrlUpdateInput {
 input ArticleUrlWhereInput {
   createdAt: DateTime
   createdAt_not: DateTime
-  createdAt_in: [DateTime]
-  createdAt_not_in: [DateTime]
+  createdAt_in: [DateTime!]
+  createdAt_not_in: [DateTime!]
   createdAt_lt: DateTime
   createdAt_lte: DateTime
   createdAt_gt: DateTime
   createdAt_gte: DateTime
   updatedAt: DateTime
   updatedAt_not: DateTime
-  updatedAt_in: [DateTime]
-  updatedAt_not_in: [DateTime]
+  updatedAt_in: [DateTime!]
+  updatedAt_not_in: [DateTime!]
   updatedAt_lt: DateTime
   updatedAt_lte: DateTime
   updatedAt_gt: DateTime
   updatedAt_gte: DateTime
   path: String
   path_not: String
-  path_in: [String]
-  path_not_in: [String]
+  path_in: [String!]
+  path_not_in: [String!]
   path_contains: String
   path_not_contains: String
   path_starts_with: String
@@ -898,42 +899,43 @@ input ArticleUrlWithForcedArticleUpdateInput {
 input ArticleWhereInput {
   _id: Int
   _id_not: Int
-  _id_in: [Int]
-  _id_not_in: [Int]
+  _id_in: [Int!]
+  _id_not_in: [Int!]
   _id_lt: Int
   _id_lte: Int
   _id_gt: Int
   _id_gte: Int
   id: ID
   id_not: ID
-  id_in: [ID]
-  id_not_in: [ID]
+  id_in: [ID!]
+  id_not_in: [ID!]
   createdAt: DateTime
   createdAt_not: DateTime
-  createdAt_in: [DateTime]
-  createdAt_not_in: [DateTime]
+  createdAt_in: [DateTime!]
+  createdAt_not_in: [DateTime!]
   createdAt_lt: DateTime
   createdAt_lte: DateTime
   createdAt_gt: DateTime
   createdAt_gte: DateTime
   updatedAt: DateTime
   updatedAt_not: DateTime
-  updatedAt_in: [DateTime]
-  updatedAt_not_in: [DateTime]
+  updatedAt_in: [DateTime!]
+  updatedAt_not_in: [DateTime!]
   updatedAt_lt: DateTime
   updatedAt_lte: DateTime
   updatedAt_gt: DateTime
   updatedAt_gte: DateTime
   computedMaxIntId: Int
   computedMaxIntId_not: Int
-  computedMaxIntId_in: [Int]
-  computedMaxIntId_not_in: [Int]
+  computedMaxIntId_in: [Int!]
+  computedMaxIntId_not_in: [Int!]
   computedMaxIntId_lt: Int
   computedMaxIntId_lte: Int
   computedMaxIntId_gt: Int
   computedMaxIntId_gte: Int
   publishedAt: DateTime
   publishedAt_not: DateTime
+  publishedAt_is_null: Boolean
   publishedAt_in: [DateTime]
   publishedAt_not_in: [DateTime]
   publishedAt_lt: DateTime
@@ -942,12 +944,12 @@ input ArticleWhereInput {
   publishedAt_gte: DateTime
   format: ArticleFormat
   format_not: ArticleFormat
-  format_in: [ArticleFormat]
-  format_not_in: [ArticleFormat]
+  format_in: [ArticleFormat!]
+  format_not_in: [ArticleFormat!]
   title: String
   title_not: String
-  title_in: [String]
-  title_not_in: [String]
+  title_in: [String!]
+  title_not_in: [String!]
   title_contains: String
   title_not_contains: String
   title_starts_with: String
@@ -960,8 +962,8 @@ input ArticleWhereInput {
   title_gte: String
   slug: String
   slug_not: String
-  slug_in: [String]
-  slug_not_in: [String]
+  slug_in: [String!]
+  slug_not_in: [String!]
   slug_contains: String
   slug_not_contains: String
   slug_starts_with: String
@@ -974,6 +976,7 @@ input ArticleWhereInput {
   slug_gte: String
   body: String
   body_not: String
+  body_is_null: Boolean
   body_in: [String]
   body_not_in: [String]
   body_contains: String
@@ -988,10 +991,11 @@ input ArticleWhereInput {
   body_gte: String
   isPublished: Boolean
   isPublished_not: Boolean
-  isPublished_in: [Boolean]
-  isPublished_not_in: [Boolean]
+  isPublished_in: [Boolean!]
+  isPublished_not_in: [Boolean!]
   isImportant: Boolean
   isImportant_not: Boolean
+  isImportant_is_null: Boolean
   isImportant_in: [Boolean]
   isImportant_not_in: [Boolean]
   category: CategoryWhereInput
@@ -1439,36 +1443,36 @@ input CategoryUpdateInput {
 input CategoryWhereInput {
   _id: Int
   _id_not: Int
-  _id_in: [Int]
-  _id_not_in: [Int]
+  _id_in: [Int!]
+  _id_not_in: [Int!]
   _id_lt: Int
   _id_lte: Int
   _id_gt: Int
   _id_gte: Int
   id: ID
   id_not: ID
-  id_in: [ID]
-  id_not_in: [ID]
+  id_in: [ID!]
+  id_not_in: [ID!]
   createdAt: DateTime
   createdAt_not: DateTime
-  createdAt_in: [DateTime]
-  createdAt_not_in: [DateTime]
+  createdAt_in: [DateTime!]
+  createdAt_not_in: [DateTime!]
   createdAt_lt: DateTime
   createdAt_lte: DateTime
   createdAt_gt: DateTime
   createdAt_gte: DateTime
   updatedAt: DateTime
   updatedAt_not: DateTime
-  updatedAt_in: [DateTime]
-  updatedAt_not_in: [DateTime]
+  updatedAt_in: [DateTime!]
+  updatedAt_not_in: [DateTime!]
   updatedAt_lt: DateTime
   updatedAt_lte: DateTime
   updatedAt_gt: DateTime
   updatedAt_gte: DateTime
   title: String
   title_not: String
-  title_in: [String]
-  title_not_in: [String]
+  title_in: [String!]
+  title_not_in: [String!]
   title_contains: String
   title_not_contains: String
   title_starts_with: String
@@ -1481,8 +1485,8 @@ input CategoryWhereInput {
   title_gte: String
   slug: String
   slug_not: String
-  slug_in: [String]
-  slug_not_in: [String]
+  slug_in: [String!]
+  slug_not_in: [String!]
   slug_contains: String
   slug_not_contains: String
   slug_starts_with: String
@@ -1788,36 +1792,36 @@ enum TagOrderByInput {
 input TagWhereInput {
   _id: Int
   _id_not: Int
-  _id_in: [Int]
-  _id_not_in: [Int]
+  _id_in: [Int!]
+  _id_not_in: [Int!]
   _id_lt: Int
   _id_lte: Int
   _id_gt: Int
   _id_gte: Int
   id: ID
   id_not: ID
-  id_in: [ID]
-  id_not_in: [ID]
+  id_in: [ID!]
+  id_not_in: [ID!]
   createdAt: DateTime
   createdAt_not: DateTime
-  createdAt_in: [DateTime]
-  createdAt_not_in: [DateTime]
+  createdAt_in: [DateTime!]
+  createdAt_not_in: [DateTime!]
   createdAt_lt: DateTime
   createdAt_lte: DateTime
   createdAt_gt: DateTime
   createdAt_gte: DateTime
   updatedAt: DateTime
   updatedAt_not: DateTime
-  updatedAt_in: [DateTime]
-  updatedAt_not_in: [DateTime]
+  updatedAt_in: [DateTime!]
+  updatedAt_not_in: [DateTime!]
   updatedAt_lt: DateTime
   updatedAt_lte: DateTime
   updatedAt_gt: DateTime
   updatedAt_gte: DateTime
   title: String
   title_not: String
-  title_in: [String]
-  title_not_in: [String]
+  title_in: [String!]
+  title_not_in: [String!]
   title_contains: String
   title_not_contains: String
   title_starts_with: String
@@ -1830,8 +1834,8 @@ input TagWhereInput {
   title_gte: String
   slug: String
   slug_not: String
-  slug_in: [String]
-  slug_not_in: [String]
+  slug_in: [String!]
+  slug_not_in: [String!]
   slug_contains: String
   slug_not_contains: String
   slug_starts_with: String
@@ -2006,36 +2010,36 @@ input UserUpdateInput {
 input UserWhereInput {
   _id: Int
   _id_not: Int
-  _id_in: [Int]
-  _id_not_in: [Int]
+  _id_in: [Int!]
+  _id_not_in: [Int!]
   _id_lt: Int
   _id_lte: Int
   _id_gt: Int
   _id_gte: Int
   id: ID
   id_not: ID
-  id_in: [ID]
-  id_not_in: [ID]
+  id_in: [ID!]
+  id_not_in: [ID!]
   createdAt: DateTime
   createdAt_not: DateTime
-  createdAt_in: [DateTime]
-  createdAt_not_in: [DateTime]
+  createdAt_in: [DateTime!]
+  createdAt_not_in: [DateTime!]
   createdAt_lt: DateTime
   createdAt_lte: DateTime
   createdAt_gt: DateTime
   createdAt_gte: DateTime
   updatedAt: DateTime
   updatedAt_not: DateTime
-  updatedAt_in: [DateTime]
-  updatedAt_not_in: [DateTime]
+  updatedAt_in: [DateTime!]
+  updatedAt_not_in: [DateTime!]
   updatedAt_lt: DateTime
   updatedAt_lte: DateTime
   updatedAt_gt: DateTime
   updatedAt_gte: DateTime
   username: String
   username_not: String
-  username_in: [String]
-  username_not_in: [String]
+  username_in: [String!]
+  username_not_in: [String!]
   username_contains: String
   username_not_contains: String
   username_starts_with: String

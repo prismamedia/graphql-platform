@@ -148,6 +148,10 @@ export class FindOperation extends AbstractOperationResolver<ConnectorFindOperat
               value === null ? where.addFilter(column, 'IS NOT NULL') : where.addFilter(column, '<>', value);
               break;
 
+            case 'is_null':
+              where.addFilter(column, value ? 'IS NULL' : 'IS NOT NULL');
+              break;
+
             case 'in':
               Array.isArray(value) && where.addFilter(column, 'IN', value);
               break;

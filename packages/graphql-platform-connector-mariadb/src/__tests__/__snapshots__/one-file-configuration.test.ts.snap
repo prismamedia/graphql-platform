@@ -28,8 +28,8 @@ enum MyConnectedArticleOrderByInput {
 input MyConnectedArticleWhereInput {
   myId: Int
   myId_not: Int
-  myId_in: [Int]
-  myId_not_in: [Int]
+  myId_in: [Int!]
+  myId_not_in: [Int!]
   myId_lt: Int
   myId_lte: Int
   myId_gt: Int

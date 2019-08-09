@@ -1,5 +1,3 @@
-import { SuperSet } from './super-set';
-
 export class SuperMap<K = any, V = any> extends Map<K, V> {
   public some(some: (entry: [K, V], index: number) => boolean): boolean {
     return [...this].some(some);
@@ -20,7 +18,7 @@ export class SuperMap<K = any, V = any> extends Map<K, V> {
   public assertFirst(): [K, V] {
     const first = this.first();
     if (typeof first === 'undefined') {
-      throw new Error(`There is no "first" element as the "${this.constructor.name}" is empty.`);
+      throw new Error(`There is no "first" element: the "${this.constructor.name}" is empty.`);
     }
 
     return first;
@@ -59,9 +57,5 @@ export class SuperMap<K = any, V = any> extends Map<K, V> {
     newMap.push(this, ...entries);
 
     return newMap;
-  }
-
-  public toSet(constructor: new (values: ReadonlyArray<V>) => SuperSet<V> = SuperSet): SuperSet<V> {
-    return new constructor([...this.values()]);
   }
 }

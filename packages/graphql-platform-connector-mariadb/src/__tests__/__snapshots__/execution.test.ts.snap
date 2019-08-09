@@ -1,7 +1,7 @@
 // Jest Snapshot v1, https://goo.gl/fbAQLP
 
 exports[`Execution executes a scenario 1`] = `
-"# 86 queries in 1 connections
+"# 85 queries in 1 connections
 
 SELECT
   COUNT(DISTINCT \`Article\`.\`intId\`) AS result
@@ -214,6 +214,15 @@ LIMIT
   1;
 
 SELECT
+  \`Article\`.\`id\`
+FROM
+  \`articles\` AS \`Article\`
+WHERE
+  \`Article\`.\`format\` IN ('RICH', 'VIDEO')
+LIMIT
+  1;
+
+SELECT
   \`Article\`.\`id\`,
   \`Article>url\`.\`path\`,
   \`Article>url\`.\`articleIntId\`,
@@ -326,23 +335,10 @@ LIMIT
 
 START TRANSACTION;
 
-SELECT
-  \`Article\`.\`intId\`
-FROM
-  \`articles\` AS \`Article\`
-WHERE
-  (\`Article\`.\`format\` IN ('RICH', 'VIDEO'))
-  AND (
-    \`Article\`.\`id\` = '4d88dc29-1b08-47c0-917c-5a1c6b13f024'
-  )
-LIMIT
-  1;
-
 UPDATE
   \`article_urls\` AS \`ArticleUrl\`
   LEFT JOIN \`articles\` AS \`ArticleUrl>article\` ON \`ArticleUrl\`.\`articleIntId\` = \`ArticleUrl>article\`.\`intId\`
 SET
-  \`ArticleUrl\`.\`articleIntId\` = 3,
   \`ArticleUrl\`.\`path\` = '/still-a-success'
 WHERE
   \`ArticleUrl>article\`.\`id\` = '4d88dc29-1b08-47c0-917c-5a1c6b13f024';
@@ -921,44 +917,9 @@ WHERE
 LIMIT
   1;
 
-SELECT
-  \`Article\`.\`intId\`,
-  \`Article\`.\`id\`,
-  \`Article\`.\`createdAt\`,
-  \`Article\`.\`updatedAt\`,
-  \`Article\`.\`computedMaxIntId\`,
-  \`Article\`.\`publishedAt\`,
-  \`Article\`.\`format\`,
-  \`Article\`.\`title\`,
-  \`Article\`.\`slug\`,
-  \`Article\`.\`body\`,
-  \`Article\`.\`isPublished\`,
-  \`Article\`.\`isImportant\`,
-  \`Article\`.\`categoryParentId\`,
-  \`Article\`.\`categorySlug\`,
-  \`Article>category\`.\`parentId\`,
-  \`Article\`.\`authorUsername\`,
-  \`Article\`.\`moderatorIntId\`
-FROM
-  \`articles\` AS \`Article\`
-  LEFT JOIN \`categories\` AS \`Article>category\` ON (
-    \`Article\`.\`categoryParentId\` <= > \`Article>category\`.\`parentId\`
-  )
-  AND (
-    \`Article\`.\`categorySlug\` = \`Article>category\`.\`slug\`
-  )
-WHERE
-  (\`Article\`.\`format\` IN ('RICH', 'VIDEO'))
-  AND (
-    \`Article\`.\`id\` = '4d88dc29-1b08-47c0-917c-5a1c6b13f024'
-  )
-LIMIT
-  1;
-
 UPDATE
   \`article_urls\` AS \`ArticleUrl\`
 SET
-  \`ArticleUrl\`.\`articleIntId\` = 3,
   \`ArticleUrl\`.\`path\` = '/updated'
 WHERE
   \`ArticleUrl\`.\`articleIntId\` = 3;

@@ -1,3 +1,4 @@
+import { Maybe } from '../types/maybe';
 import { SuperMap } from './super-map';
 
 interface NamedObject {
@@ -8,6 +9,14 @@ export class SuperMapOfNamedObject<TNamedObject extends NamedObject> extends Sup
   TNamedObject['name'],
   TNamedObject
 > {
+  public setObject(value?: Maybe<TNamedObject>): this {
+    if (value) {
+      super.set(value.name, value);
+    }
+
+    return this;
+  }
+
   public getNames(): TNamedObject['name'][] {
     return [...this.keys()];
   }
