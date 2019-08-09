@@ -1,6 +1,6 @@
 {
   "name": "@prismamedia/graphql-platform-core",
-  "version": "0.1.0-alpha.19",
+  "version": "0.1.0-alpha.20",
   "license": "MIT",
   "contributors": [
     "Yvann Boucher <yvann.boucher@gmail.com>"
@@ -15,7 +15,7 @@
   "scripts": {
     "build": "tsc --build tsconfig.json tsconfig.commonjs.json",
     "build:watch": "yarn run build --watch",
-    "test": "NODE_ENV=test jest --coverage --detectOpenHandles --verbose --passWithNoTests",
+    "test": "NODE_ENV=test jest --detectOpenHandles --verbose --passWithNoTests",
     "test:watch": "yarn run test --watchAll"
   },
   "devDependencies": {
@@ -38,7 +38,7 @@
     "winston": "^3.2.1"
   },
   "dependencies": {
-    "@prismamedia/graphql-platform-utils": "^0.1.0-alpha.19",
+    "@prismamedia/graphql-platform-utils": "^0.1.0-alpha.20",
     "@prismamedia/ts-async-event-emitter": "^2.1.0",
     "dependency-graph": "^0.8.0",
     "graphql-binding": "^2.5.2",
