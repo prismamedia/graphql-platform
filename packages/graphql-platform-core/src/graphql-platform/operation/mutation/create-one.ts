@@ -6,8 +6,14 @@ import { OperationResolverParams } from '../../operation';
 import { ResourceHookKind } from '../../resource';
 import { FieldHookMap, RelationHookMap } from '../../resource/component';
 import { CreateInputValue, NodeSource, TypeKind } from '../../type';
+import {
+  CreateInverseRelationActionKind,
+  createInverseRelationActionKinds,
+  CreateRelationActionKind,
+  createRelationActionKinds,
+  UpdateRelationActionKind,
+} from '../../type/input';
 import { AbstractOperation } from '../abstract-operation';
-import { UpdateOneOperationArgs } from './update-one';
 
 export interface CreateOneOperationArgs {
   data: CreateInputValue;
@@ -51,8 +57,9 @@ export class CreateOneOperation extends AbstractOperation<CreateOneOperationArgs
     const data = typeof args.data === 'boolean' ? {} : args.data;
     const create: ConnectorCreateInputValue = Object.create(null);
 
-    // Select all the components in case of post success hooks
     const hasPostSuccessHook = resource.getEventListenerCount(ResourceHookKind.PostCreate) > 0;
+
+    // Select all the components in case of post success hooks
     if (hasPostSuccessHook) {
       selectionNode.setChildren(resource.getComponentSet().getSelectionNodeChildren(TypeKind.Input));
     }
@@ -68,24 +75,51 @@ export class CreateOneOperation extends AbstractOperation<CreateOneOperationArgs
       ...[...resource.getRelationSet()].map(async relation => {
         const actions = data[relation.name];
         if (isPlainObject(actions)) {
+          if (Object.keys(actions).length !== 1) {
+            throw new Error(`The relation "${relation}" supports exactly 1 action in the "${this}" mutation`);
+          }
+
           const relatedResource = relation.getTo();
 
           // Returns only the selection we need (the targeted unique constraint)
           const selectionNode = relation.getToUnique().getSelectionNode(TypeKind.Input);
 
-          const relatedNode = await (isPlainObject(actions['connect'])
-            ? relatedResource
-                .getQuery('AssertOne')
-                .resolve({ ...params, args: { where: actions['connect'] }, selectionNode })
-            : isPlainObject(actions['create'])
-            ? relatedResource
-                .getMutation('CreateOne')
-                .resolve({ ...params, args: { data: actions['create'] }, selectionNode })
-            : isPlainObject(actions['update'])
-            ? relatedResource
-                .getMutation('UpdateOne')
-                .resolve({ ...params, args: actions['update'] as UpdateOneOperationArgs, selectionNode })
-            : null);
+          let relatedNode = null;
+          for (const actionKind of createRelationActionKinds) {
+            const value = actions[actionKind];
+            if (value != null) {
+              switch (actionKind) {
+                case CreateRelationActionKind.Connect:
+                  relatedNode = await relatedResource
+                    .getQuery('AssertOne')
+                    .resolve({ args: { where: value }, context, selectionNode });
+                  break;
+
+                case CreateRelationActionKind.Update:
+                  relatedNode = await relatedResource
+                    .getMutation('UpdateOne')
+                    .resolve({ args: value, context, selectionNode });
+                  break;
+
+                case CreateRelationActionKind.Create:
+                  relatedNode = await relatedResource
+                    .getMutation('CreateOne')
+                    .resolve({ args: { data: value }, context, selectionNode });
+                  break;
+
+                case CreateRelationActionKind.Upsert:
+                  relatedNode = await relatedResource
+                    .getMutation('UpsertOne')
+                    .resolve({ args: value, context, selectionNode });
+                  break;
+
+                default:
+                  throw new Error(
+                    `The relation "${relation}" does not support the following action in the "${this}" mutation: "${actionKind}"`,
+                  );
+              }
+            }
+          }
 
           relation.setValue(create, relatedNode ? relation.parseId(relatedNode, true, true) : null);
         }
@@ -144,6 +178,55 @@ export class CreateOneOperation extends AbstractOperation<CreateOneOperationArgs
     // Actually create the node
     const [nodeSource] = await this.connector.create(
       Object.freeze({ ...params, resource, args: { ...args, data: [create] } }),
+    );
+
+    await Promise.all(
+      [...resource.getInverseRelationSet()].map(async inverseRelation => {
+        const actions = data[inverseRelation.name];
+        if (isPlainObject(actions)) {
+          const relation = inverseRelation.getInverse();
+          const nodeId = relation.parseId(nodeSource, true, true);
+          const relatedResource = inverseRelation.getTo();
+          const selectionNode = relatedResource.getIdentifier().getSelectionNode(TypeKind.Input);
+
+          for (const actionKind of createInverseRelationActionKinds) {
+            const value = actions[actionKind];
+            if (value != null) {
+              await Promise.all(
+                (Array.isArray(value) ? value : [value]).map(async value => {
+                  switch (actionKind) {
+                    case CreateInverseRelationActionKind.Connect:
+                      await relatedResource.getMutation('UpdateOne').resolve({
+                        args: {
+                          where: value,
+                          data: { [relation.name]: { [UpdateRelationActionKind.Connect]: nodeId } } as any,
+                        },
+                        context,
+                        selectionNode,
+                      });
+                      break;
+
+                    case CreateInverseRelationActionKind.Create:
+                      await relatedResource.getMutation('CreateOne').resolve({
+                        args: {
+                          data: { ...value, [relation.name]: { [CreateRelationActionKind.Connect]: nodeId } },
+                        },
+                        context,
+                        selectionNode,
+                      });
+                      break;
+
+                    default:
+                      throw new Error(
+                        `The relation "${inverseRelation}" does not support the following action in the "${this}" mutation: "${actionKind}"`,
+                      );
+                  }
+                }),
+              );
+            }
+          }
+        }
+      }),
     );
 
     const node = selectionNode.hasDiff(nodeSource)

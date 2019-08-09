@@ -16,23 +16,23 @@ describe('flag', () => {
   });
 
   it('throws error on unsupported type', () => {
-    expect(() => getFlagValue('', true)).toThrowErrorMatchingInlineSnapshot(
+    expect(() => getFlagValue('' as any, true)).toThrowErrorMatchingInlineSnapshot(
       `"The flag value \\"\\" of type \\"string\\" has to be a boolean, null or undefined."`,
     );
 
-    expect(() => getFlagValue('1', true)).toThrowErrorMatchingInlineSnapshot(
+    expect(() => getFlagValue('1' as any, true)).toThrowErrorMatchingInlineSnapshot(
       `"The flag value \\"1\\" of type \\"string\\" has to be a boolean, null or undefined."`,
     );
 
-    expect(() => getFlagValue('true', true)).toThrowErrorMatchingInlineSnapshot(
+    expect(() => getFlagValue('true' as any, true)).toThrowErrorMatchingInlineSnapshot(
       `"The flag value \\"true\\" of type \\"string\\" has to be a boolean, null or undefined."`,
     );
 
-    expect(() => getFlagValue(1, true)).toThrowErrorMatchingInlineSnapshot(
+    expect(() => getFlagValue(1 as any, true)).toThrowErrorMatchingInlineSnapshot(
       `"The flag value \\"1\\" of type \\"number\\" has to be a boolean, null or undefined."`,
     );
 
-    expect(() => getFlagValue({}, true)).toThrowErrorMatchingInlineSnapshot(
+    expect(() => getFlagValue({} as any, true)).toThrowErrorMatchingInlineSnapshot(
       `"The flag value \\"[object Object]\\" of type \\"object\\" has to be a boolean, null or undefined."`,
     );
   });

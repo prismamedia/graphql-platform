@@ -14,3 +14,4 @@ export * from './utils/super-map';
 export * from './utils/super-map-of-named-object';
 export * from './utils/super-set';
 export * from './utils/super-set-of-named-object';
+export * from './utils/thunk';

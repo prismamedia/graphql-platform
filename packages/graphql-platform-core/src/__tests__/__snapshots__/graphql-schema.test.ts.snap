@@ -1,6 +1,6 @@
 // Jest Snapshot v1, https://goo.gl/fbAQLP
 
-exports[`GraphQLSchema creates a consistent GraphQL schema 1`] = `
+exports[`GraphQLSchema creates a consistent valid GraphQL schema 1`] = `
 "# \\"Article\\" resource's node
 type Article {
   # The public ID
@@ -51,22 +51,28 @@ input ArticleCreateAuthorInput {
   # Connect an existing \\"User\\" node to the new \\"Article\\" node, through the \\"Article.author\\" relation.
   connect: UserWhereUniqueInput
 
+  # Update an existing \\"User\\" node and connect it to the new \\"Article\\" node, through the \\"Article.author\\" relation.
+  update: ArticleCreateNestedUpdateAuthorInput
+
   # Create a new \\"User\\" node and connect it to the new \\"Article\\" node, through the \\"Article.author\\" relation.
   create: UserCreateInput
 
-  # Update an existing \\"User\\" node and connect it to the new \\"Article\\" node, through the \\"Article.author\\" relation.
-  update: UserUpdateOneInput
+  # Create or update a \\"User\\" node and connect it to the new \\"Article\\" node, through the \\"Article.author\\" relation.
+  upsert: ArticleCreateNestedUpsertAuthorInput
 }
 
 input ArticleCreateCategoryInput {
   # Connect an existing \\"Category\\" node to the new \\"Article\\" node, through the \\"Article.category\\" relation.
   connect: CategoryWhereUniqueInput
 
+  # Update an existing \\"Category\\" node and connect it to the new \\"Article\\" node, through the \\"Article.category\\" relation.
+  update: ArticleCreateNestedUpdateCategoryInput
+
   # Create a new \\"Category\\" node and connect it to the new \\"Article\\" node, through the \\"Article.category\\" relation.
   create: CategoryCreateInput
 
-  # Update an existing \\"Category\\" node and connect it to the new \\"Article\\" node, through the \\"Article.category\\" relation.
-  update: CategoryUpdateOneInput
+  # Create or update a \\"Category\\" node and connect it to the new \\"Article\\" node, through the \\"Article.category\\" relation.
+  upsert: ArticleCreateNestedUpsertCategoryInput
 }
 
 input ArticleCreateInput {
@@ -88,20 +94,78 @@ input ArticleCreateInput {
 
   # Either this article is important or not
   isImportant: Boolean
+
+  # Nested actions for the \\"Article.category\\" relation
   category: ArticleCreateCategoryInput!
+
+  # Nested actions for the \\"Article.author\\" relation
   author: ArticleCreateAuthorInput!
+
+  # Nested actions for the \\"Article.moderator\\" relation
   moderator: ArticleCreateModeratorInput
+
+  # Nested actions for the \\"Article.tags\\" relation
+  tags: ArticleCreateTagsInput
+
+  # Nested actions for the \\"Article.url\\" relation
+  url: ArticleCreateUrlInput
 }
 
 input ArticleCreateModeratorInput {
   # Connect an existing \\"User\\" node to the new \\"Article\\" node, through the \\"Article.moderator\\" relation.
   connect: UserWhereUniqueInput
 
+  # Update an existing \\"User\\" node and connect it to the new \\"Article\\" node, through the \\"Article.moderator\\" relation.
+  update: ArticleCreateNestedUpdateModeratorInput
+
   # Create a new \\"User\\" node and connect it to the new \\"Article\\" node, through the \\"Article.moderator\\" relation.
   create: UserCreateInput
 
-  # Update an existing \\"User\\" node and connect it to the new \\"Article\\" node, through the \\"Article.moderator\\" relation.
-  update: UserUpdateOneInput
+  # Create or update a \\"User\\" node and connect it to the new \\"Article\\" node, through the \\"Article.moderator\\" relation.
+  upsert: ArticleCreateNestedUpsertModeratorInput
+}
+
+input ArticleCreateNestedUpdateAuthorInput {
+  where: UserWhereUniqueInput!
+  data: UserUpdateInput!
+}
+
+input ArticleCreateNestedUpdateCategoryInput {
+  where: CategoryWhereUniqueInput!
+  data: CategoryUpdateInput!
+}
+
+input ArticleCreateNestedUpdateModeratorInput {
+  where: UserWhereUniqueInput!
+  data: UserUpdateInput!
+}
+
+input ArticleCreateNestedUpsertAuthorInput {
+  where: UserWhereUniqueInput!
+  create: UserCreateInput!
+  update: UserUpdateInput!
+}
+
+input ArticleCreateNestedUpsertCategoryInput {
+  where: CategoryWhereUniqueInput!
+  create: CategoryCreateInput!
+  update: CategoryUpdateInput!
+}
+
+input ArticleCreateNestedUpsertModeratorInput {
+  where: UserWhereUniqueInput!
+  create: UserCreateInput!
+  update: UserUpdateInput!
+}
+
+input ArticleCreateTagsInput {
+  # Create new \\"ArticleTag\\" nodes and connect them to the new \\"Article\\" node, through the \\"Article.tags\\" relation.
+  create: [ArticleTagWithForcedArticleCreateInput!]
+}
+
+input ArticleCreateUrlInput {
+  # Create a new \\"ArticleUrl\\" node and connect it to the new \\"Article\\" node, through the \\"Article.url\\" relation.
+  create: ArticleUrlWithForcedArticleCreateInput
 }
 
 enum ArticleFormat {
@@ -165,18 +229,35 @@ input ArticleTagCommentCreateArticleTagInput {
   # through the \\"ArticleTagComment.articleTag\\" relation.
   connect: ArticleTagWhereUniqueInput
 
+  # Update an existing \\"ArticleTag\\" node and connect it to the new
+  # \\"ArticleTagComment\\" node, through the \\"ArticleTagComment.articleTag\\" relation.
+  update: ArticleTagCommentCreateNestedUpdateArticleTagInput
+
   # Create a new \\"ArticleTag\\" node and connect it to the new \\"ArticleTagComment\\"
   # node, through the \\"ArticleTagComment.articleTag\\" relation.
   create: ArticleTagCreateInput
 
-  # Update an existing \\"ArticleTag\\" node and connect it to the new
+  # Create or update a \\"ArticleTag\\" node and connect it to the new
   # \\"ArticleTagComment\\" node, through the \\"ArticleTagComment.articleTag\\" relation.
-  update: ArticleTagUpdateOneInput
+  upsert: ArticleTagCommentCreateNestedUpsertArticleTagInput
 }
 
 input ArticleTagCommentCreateInput {
   body: String
+
+  # Nested actions for the \\"ArticleTagComment.articleTag\\" relation
   articleTag: ArticleTagCommentCreateArticleTagInput!
+}
+
+input ArticleTagCommentCreateNestedUpdateArticleTagInput {
+  where: ArticleTagWhereUniqueInput!
+  data: ArticleTagUpdateInput!
+}
+
+input ArticleTagCommentCreateNestedUpsertArticleTagInput {
+  where: ArticleTagWhereUniqueInput!
+  create: ArticleTagCreateInput!
+  update: ArticleTagUpdateInput!
 }
 
 enum ArticleTagCommentOrderByInput {
@@ -235,21 +316,61 @@ input ArticleTagCommentWhereUniqueInput {
   articleTag: ArticleTagWhereUniqueInput!
 }
 
+input ArticleTagCommentWithForcedArticleTagCreateInput {
+  body: String
+}
+
+input ArticleTagCommentWithForcedArticleTagUpdateInput {
+  body: String
+}
+
+# Given a known \\"articleTag\\", identifies exactly one \\"ArticleTagComment\\" node.
+input ArticleTagCommentWithOptionalArticleTagWhereUniqueInput {
+  articleTag: ArticleTagWhereUniqueInput
+}
+
 input ArticleTagCreateArticleInput {
   # Connect an existing \\"Article\\" node to the new \\"ArticleTag\\" node, through the \\"ArticleTag.article\\" relation.
   connect: ArticleWhereUniqueInput
 
+  # Update an existing \\"Article\\" node and connect it to the new \\"ArticleTag\\" node, through the \\"ArticleTag.article\\" relation.
+  update: ArticleTagCreateNestedUpdateArticleInput
+
   # Create a new \\"Article\\" node and connect it to the new \\"ArticleTag\\" node, through the \\"ArticleTag.article\\" relation.
   create: ArticleCreateInput
 
-  # Update an existing \\"Article\\" node and connect it to the new \\"ArticleTag\\" node, through the \\"ArticleTag.article\\" relation.
-  update: ArticleUpdateOneInput
+  # Create or update a \\"Article\\" node and connect it to the new \\"ArticleTag\\" node, through the \\"ArticleTag.article\\" relation.
+  upsert: ArticleTagCreateNestedUpsertArticleInput
+}
+
+input ArticleTagCreateCommentInput {
+  # Create a new \\"ArticleTagComment\\" node and connect it to the new \\"ArticleTag\\"
+  # node, through the \\"ArticleTag.comment\\" relation.
+  create: ArticleTagCommentWithForcedArticleTagCreateInput
 }
 
 input ArticleTagCreateInput {
   order: Int!
+
+  # Nested actions for the \\"ArticleTag.article\\" relation
   article: ArticleTagCreateArticleInput!
+
+  # Nested actions for the \\"ArticleTag.tag\\" relation
   tag: ArticleTagCreateTagInput!
+
+  # Nested actions for the \\"ArticleTag.comment\\" relation
+  comment: ArticleTagCreateCommentInput
+}
+
+input ArticleTagCreateNestedUpdateArticleInput {
+  where: ArticleWhereUniqueInput!
+  data: ArticleUpdateInput!
+}
+
+input ArticleTagCreateNestedUpsertArticleInput {
+  where: ArticleWhereUniqueInput!
+  create: ArticleCreateInput!
+  update: ArticleUpdateInput!
 }
 
 input ArticleTagCreateTagInput {
@@ -258,9 +379,6 @@ input ArticleTagCreateTagInput {
 
   # Create a new \\"Tag\\" node and connect it to the new \\"ArticleTag\\" node, through the \\"ArticleTag.tag\\" relation.
   create: TagCreateInput
-
-  # Update an existing \\"Tag\\" node and connect it to the new \\"ArticleTag\\" node, through the \\"ArticleTag.tag\\" relation.
-  update: TagUpdateOneInput
 }
 
 enum ArticleTagOrderByInput {
@@ -272,13 +390,39 @@ enum ArticleTagOrderByInput {
   order_DESC
 }
 
-input ArticleTagUpdateInput {
-  order: Int
+input ArticleTagUpdateCommentInput {
+  # Update an existing \\"ArticleTagComment\\" node and connect it to the existing
+  # \\"ArticleTag\\" node, through the \\"ArticleTag.comment\\" relation.
+  update: ArticleTagUpdateNestedUpdateCommentInput
+
+  # Create a new \\"ArticleTagComment\\" node and connect it to the existing
+  # \\"ArticleTag\\" node, through the \\"ArticleTag.comment\\" relation.
+  create: ArticleTagCommentWithForcedArticleTagCreateInput
+
+  # Upsert an existing \\"ArticleTagComment\\" node and connect it to the existing
+  # \\"ArticleTag\\" node, through the \\"ArticleTag.comment\\" relation.
+  upsert: ArticleTagUpdateNestedUpsertCommentInput
+
+  # Delete an existing \\"ArticleTagComment\\" node from the \\"ArticleTag.comment\\" relation.
+  delete: Boolean
 }
 
-input ArticleTagUpdateOneInput {
-  where: ArticleTagWhereUniqueInput!
-  data: ArticleTagUpdateInput!
+input ArticleTagUpdateInput {
+  order: Int
+
+  # Nested actions for the \\"ArticleTag.comment\\" relation
+  comment: ArticleTagUpdateCommentInput
+}
+
+input ArticleTagUpdateNestedUpdateCommentInput {
+  where: ArticleTagCommentWithOptionalArticleTagWhereUniqueInput
+  data: ArticleTagCommentWithForcedArticleTagUpdateInput!
+}
+
+input ArticleTagUpdateNestedUpsertCommentInput {
+  where: ArticleTagCommentWithOptionalArticleTagWhereUniqueInput!
+  update: ArticleTagCommentWithForcedArticleTagUpdateInput!
+  create: ArticleTagCommentWithForcedArticleTagCreateInput!
 }
 
 # Filters the \\"ArticleTag\\" nodes by specifying some conditions
@@ -325,26 +469,76 @@ input ArticleTagWhereUniqueInput {
   order: Int
 }
 
+input ArticleTagWithForcedArticleCreateInput {
+  order: Int!
+
+  # Nested actions for the \\"ArticleTag.tag\\" relation
+  tag: ArticleTagCreateTagInput!
+
+  # Nested actions for the \\"ArticleTag.comment\\" relation
+  comment: ArticleTagCreateCommentInput
+}
+
+input ArticleTagWithForcedArticleUpdateInput {
+  order: Int
+
+  # Nested actions for the \\"ArticleTag.comment\\" relation
+  comment: ArticleTagUpdateCommentInput
+}
+
+# Given a forced \\"article\\", identifies exactly one \\"ArticleTag\\" node with one of these unique values:
+# - tag
+# - order
+input ArticleTagWithForcedArticleWhereUniqueInput {
+  tag: TagWhereUniqueInput
+  order: Int
+}
+
+input ArticleTagWithForcedTagCreateInput {
+  order: Int!
+
+  # Nested actions for the \\"ArticleTag.article\\" relation
+  article: ArticleTagCreateArticleInput!
+
+  # Nested actions for the \\"ArticleTag.comment\\" relation
+  comment: ArticleTagCreateCommentInput
+}
+
+# Given a known \\"article\\", identifies exactly one \\"ArticleTag\\" node with one of these unique combinations of values:
+# - article (optional), tag
+# - article (optional), order
+input ArticleTagWithOptionalArticleWhereUniqueInput {
+  article: ArticleWhereUniqueInput
+  tag: TagWhereUniqueInput
+  order: Int
+}
+
 input ArticleUpdateAuthorInput {
   # Connect an existing \\"User\\" node to the existing \\"Article\\" node, through the \\"Article.author\\" relation.
   connect: UserWhereUniqueInput
 
+  # Update an existing \\"User\\" node and connect it to the existing \\"Article\\" node, through the \\"Article.author\\" relation.
+  update: ArticleUpdateNestedUpdateAuthorInput
+
   # Create a new \\"User\\" node and connect it to the existing \\"Article\\" node, through the \\"Article.author\\" relation.
   create: UserCreateInput
 
-  # Update an existing \\"User\\" node and connect it to the existing \\"Article\\" node, through the \\"Article.author\\" relation.
-  update: UserUpdateOneInput
+  # Create or update a \\"User\\" node and connect it to the existing \\"Article\\" node, through the \\"Article.author\\" relation.
+  upsert: ArticleUpdateNestedUpsertAuthorInput
 }
 
 input ArticleUpdateCategoryInput {
   # Connect an existing \\"Category\\" node to the existing \\"Article\\" node, through the \\"Article.category\\" relation.
   connect: CategoryWhereUniqueInput
 
+  # Update an existing \\"Category\\" node and connect it to the existing \\"Article\\" node, through the \\"Article.category\\" relation.
+  update: ArticleUpdateNestedUpdateCategoryInput
+
   # Create a new \\"Category\\" node and connect it to the existing \\"Article\\" node, through the \\"Article.category\\" relation.
   create: CategoryCreateInput
 
-  # Update an existing \\"Category\\" node and connect it to the existing \\"Article\\" node, through the \\"Article.category\\" relation.
-  update: CategoryUpdateOneInput
+  # Create or update a \\"Category\\" node and connect it to the existing \\"Article\\" node, through the \\"Article.category\\" relation.
+  upsert: ArticleUpdateNestedUpsertCategoryInput
 }
 
 input ArticleUpdateInput {
@@ -363,28 +557,121 @@ input ArticleUpdateInput {
 
   # Either this article is important or not
   isImportant: Boolean
+
+  # Nested actions for the \\"Article.category\\" relation
   category: ArticleUpdateCategoryInput
+
+  # Nested actions for the \\"Article.author\\" relation
   author: ArticleUpdateAuthorInput
+
+  # Nested actions for the \\"Article.moderator\\" relation
   moderator: ArticleUpdateModeratorInput
+
+  # Nested actions for the \\"Article.tags\\" relation
+  tags: ArticleUpdateTagsInput
+
+  # Nested actions for the \\"Article.url\\" relation
+  url: ArticleUpdateUrlInput
 }
 
 input ArticleUpdateModeratorInput {
   # Connect an existing \\"User\\" node to the existing \\"Article\\" node, through the \\"Article.moderator\\" relation.
   connect: UserWhereUniqueInput
 
+  # Update an existing \\"User\\" node and connect it to the existing \\"Article\\" node, through the \\"Article.moderator\\" relation.
+  update: ArticleUpdateNestedUpdateModeratorInput
+
   # Create a new \\"User\\" node and connect it to the existing \\"Article\\" node, through the \\"Article.moderator\\" relation.
   create: UserCreateInput
 
-  # Update an existing \\"User\\" node and connect it to the existing \\"Article\\" node, through the \\"Article.moderator\\" relation.
-  update: UserUpdateOneInput
+  # Create or update a \\"User\\" node and connect it to the existing \\"Article\\" node, through the \\"Article.moderator\\" relation.
+  upsert: ArticleUpdateNestedUpsertModeratorInput
 
-  # Disconnect the current \\"User\\" node, if any, of the existing \\"Article\\" node, through the \\"Article.moderator\\" relation.
+  # Disconnect the current connected \\"User\\" node, if any, of the \\"Article.moderator\\" relation.
   disconnect: Boolean
 }
 
-input ArticleUpdateOneInput {
-  where: ArticleWhereUniqueInput!
-  data: ArticleUpdateInput!
+input ArticleUpdateNestedUpdateAuthorInput {
+  where: UserWhereUniqueInput!
+  data: UserUpdateInput!
+}
+
+input ArticleUpdateNestedUpdateCategoryInput {
+  where: CategoryWhereUniqueInput!
+  data: CategoryUpdateInput!
+}
+
+input ArticleUpdateNestedUpdateModeratorInput {
+  where: UserWhereUniqueInput!
+  data: UserUpdateInput!
+}
+
+input ArticleUpdateNestedUpdateTagsInput {
+  where: ArticleTagWithOptionalArticleWhereUniqueInput!
+  data: ArticleTagWithForcedArticleUpdateInput!
+}
+
+input ArticleUpdateNestedUpdateUrlInput {
+  where: ArticleUrlWithOptionalArticleWhereUniqueInput
+  data: ArticleUrlWithForcedArticleUpdateInput!
+}
+
+input ArticleUpdateNestedUpsertAuthorInput {
+  where: UserWhereUniqueInput!
+  create: UserCreateInput!
+  update: UserUpdateInput!
+}
+
+input ArticleUpdateNestedUpsertCategoryInput {
+  where: CategoryWhereUniqueInput!
+  create: CategoryCreateInput!
+  update: CategoryUpdateInput!
+}
+
+input ArticleUpdateNestedUpsertModeratorInput {
+  where: UserWhereUniqueInput!
+  create: UserCreateInput!
+  update: UserUpdateInput!
+}
+
+input ArticleUpdateNestedUpsertTagsInput {
+  where: ArticleTagWithOptionalArticleWhereUniqueInput!
+  update: ArticleTagWithForcedArticleUpdateInput!
+  create: ArticleTagWithForcedArticleCreateInput!
+}
+
+input ArticleUpdateNestedUpsertUrlInput {
+  where: ArticleUrlWithOptionalArticleWhereUniqueInput!
+  update: ArticleUrlWithForcedArticleUpdateInput!
+  create: ArticleUrlWithForcedArticleCreateInput!
+}
+
+input ArticleUpdateTagsInput {
+  # Update existing \\"ArticleTag\\" nodes and connect them to the existing \\"Article\\" node, through the \\"Article.tags\\" relation.
+  update: [ArticleUpdateNestedUpdateTagsInput!]
+
+  # Create new \\"ArticleTag\\" nodes and connect them to the existing \\"Article\\" node, through the \\"Article.tags\\" relation.
+  create: [ArticleTagWithForcedArticleCreateInput!]
+
+  # Upsert existing \\"ArticleTag\\" nodes and connect them to the existing \\"Article\\" node, through the \\"Article.tags\\" relation.
+  upsert: [ArticleUpdateNestedUpsertTagsInput!]
+
+  # Delete existing \\"ArticleTag\\" nodes from the \\"Article.tags\\" relation.
+  delete: [ArticleTagWithForcedArticleWhereUniqueInput!]
+}
+
+input ArticleUpdateUrlInput {
+  # Update an existing \\"ArticleUrl\\" node and connect it to the existing \\"Article\\" node, through the \\"Article.url\\" relation.
+  update: ArticleUpdateNestedUpdateUrlInput
+
+  # Create a new \\"ArticleUrl\\" node and connect it to the existing \\"Article\\" node, through the \\"Article.url\\" relation.
+  create: ArticleUrlWithForcedArticleCreateInput
+
+  # Upsert an existing \\"ArticleUrl\\" node and connect it to the existing \\"Article\\" node, through the \\"Article.url\\" relation.
+  upsert: ArticleUpdateNestedUpsertUrlInput
+
+  # Delete an existing \\"ArticleUrl\\" node from the \\"Article.url\\" relation.
+  delete: Boolean
 }
 
 # \\"ArticleUrl\\" resource's node
@@ -405,16 +692,40 @@ input ArticleUrlCreateArticleInput {
   # Connect an existing \\"Article\\" node to the new \\"ArticleUrl\\" node, through the \\"ArticleUrl.article\\" relation.
   connect: ArticleWhereUniqueInput
 
+  # Update an existing \\"Article\\" node and connect it to the new \\"ArticleUrl\\" node, through the \\"ArticleUrl.article\\" relation.
+  update: ArticleUrlCreateNestedUpdateArticleInput
+
   # Create a new \\"Article\\" node and connect it to the new \\"ArticleUrl\\" node, through the \\"ArticleUrl.article\\" relation.
   create: ArticleCreateInput
 
-  # Update an existing \\"Article\\" node and connect it to the new \\"ArticleUrl\\" node, through the \\"ArticleUrl.article\\" relation.
-  update: ArticleUpdateOneInput
+  # Create or update a \\"Article\\" node and connect it to the new \\"ArticleUrl\\" node, through the \\"ArticleUrl.article\\" relation.
+  upsert: ArticleUrlCreateNestedUpsertArticleInput
 }
 
 input ArticleUrlCreateInput {
   path: String!
+
+  # Nested actions for the \\"ArticleUrl.article\\" relation
   article: ArticleUrlCreateArticleInput!
+
+  # Nested actions for the \\"ArticleUrl.meta\\" relation
+  meta: ArticleUrlCreateMetaInput
+}
+
+input ArticleUrlCreateMetaInput {
+  # Create a new \\"ArticleUrlMeta\\" node and connect it to the new \\"ArticleUrl\\" node, through the \\"ArticleUrl.meta\\" relation.
+  create: Boolean
+}
+
+input ArticleUrlCreateNestedUpdateArticleInput {
+  where: ArticleWhereUniqueInput!
+  data: ArticleUpdateInput!
+}
+
+input ArticleUrlCreateNestedUpsertArticleInput {
+  where: ArticleWhereUniqueInput!
+  create: ArticleCreateInput!
+  update: ArticleUpdateInput!
 }
 
 # \\"ArticleUrlMeta\\" resource's node
@@ -428,19 +739,35 @@ type ArticleUrlMeta {
 }
 
 input ArticleUrlMetaCreateInput {
+  # Nested actions for the \\"ArticleUrlMeta.url\\" relation
   url: ArticleUrlMetaCreateUrlInput!
+}
+
+input ArticleUrlMetaCreateNestedUpdateUrlInput {
+  where: ArticleUrlWhereUniqueInput!
+  data: ArticleUrlUpdateInput!
+}
+
+input ArticleUrlMetaCreateNestedUpsertUrlInput {
+  where: ArticleUrlWhereUniqueInput!
+  create: ArticleUrlCreateInput!
+  update: ArticleUrlUpdateInput!
 }
 
 input ArticleUrlMetaCreateUrlInput {
   # Connect an existing \\"ArticleUrl\\" node to the new \\"ArticleUrlMeta\\" node, through the \\"ArticleUrlMeta.url\\" relation.
   connect: ArticleUrlWhereUniqueInput
 
+  # Update an existing \\"ArticleUrl\\" node and connect it to the new
+  # \\"ArticleUrlMeta\\" node, through the \\"ArticleUrlMeta.url\\" relation.
+  update: ArticleUrlMetaCreateNestedUpdateUrlInput
+
   # Create a new \\"ArticleUrl\\" node and connect it to the new \\"ArticleUrlMeta\\" node, through the \\"ArticleUrlMeta.url\\" relation.
   create: ArticleUrlCreateInput
 
-  # Update an existing \\"ArticleUrl\\" node and connect it to the new
+  # Create or update a \\"ArticleUrl\\" node and connect it to the new
   # \\"ArticleUrlMeta\\" node, through the \\"ArticleUrlMeta.url\\" relation.
-  update: ArticleUrlUpdateOneInput
+  upsert: ArticleUrlMetaCreateNestedUpsertUrlInput
 }
 
 enum ArticleUrlMetaOrderByInput {
@@ -479,6 +806,11 @@ input ArticleUrlMetaWhereUniqueInput {
   url: ArticleUrlWhereUniqueInput!
 }
 
+# Given a known \\"url\\", identifies exactly one \\"ArticleUrlMeta\\" node.
+input ArticleUrlMetaWithOptionalUrlWhereUniqueInput {
+  url: ArticleUrlWhereUniqueInput
+}
+
 enum ArticleUrlOrderByInput {
   createdAt_ASC
   createdAt_DESC
@@ -490,11 +822,37 @@ enum ArticleUrlOrderByInput {
 
 input ArticleUrlUpdateInput {
   path: String
+
+  # Nested actions for the \\"ArticleUrl.meta\\" relation
+  meta: ArticleUrlUpdateMetaInput
 }
 
-input ArticleUrlUpdateOneInput {
-  where: ArticleUrlWhereUniqueInput!
-  data: ArticleUrlUpdateInput!
+input ArticleUrlUpdateMetaInput {
+  # Update an existing \\"ArticleUrlMeta\\" node and connect it to the existing
+  # \\"ArticleUrl\\" node, through the \\"ArticleUrl.meta\\" relation.
+  update: ArticleUrlUpdateNestedUpdateMetaInput
+
+  # Create a new \\"ArticleUrlMeta\\" node and connect it to the existing \\"ArticleUrl\\"
+  # node, through the \\"ArticleUrl.meta\\" relation.
+  create: Boolean
+
+  # Upsert an existing \\"ArticleUrlMeta\\" node and connect it to the existing
+  # \\"ArticleUrl\\" node, through the \\"ArticleUrl.meta\\" relation.
+  upsert: ArticleUrlUpdateNestedUpsertMetaInput
+
+  # Delete an existing \\"ArticleUrlMeta\\" node from the \\"ArticleUrl.meta\\" relation.
+  delete: Boolean
+}
+
+input ArticleUrlUpdateNestedUpdateMetaInput {
+  where: ArticleUrlMetaWithOptionalUrlWhereUniqueInput
+  data: Boolean!
+}
+
+input ArticleUrlUpdateNestedUpsertMetaInput {
+  where: ArticleUrlMetaWithOptionalUrlWhereUniqueInput!
+  update: Boolean!
+  create: Boolean!
 }
 
 # Filters the \\"ArticleUrl\\" nodes by specifying some conditions
@@ -540,6 +898,25 @@ input ArticleUrlWhereInput {
 # Identifies exactly one \\"ArticleUrl\\" node.
 input ArticleUrlWhereUniqueInput {
   article: ArticleWhereUniqueInput!
+}
+
+input ArticleUrlWithForcedArticleCreateInput {
+  path: String!
+
+  # Nested actions for the \\"ArticleUrl.meta\\" relation
+  meta: ArticleUrlCreateMetaInput
+}
+
+input ArticleUrlWithForcedArticleUpdateInput {
+  path: String
+
+  # Nested actions for the \\"ArticleUrl.meta\\" relation
+  meta: ArticleUrlUpdateMetaInput
+}
+
+# Given a known \\"article\\", identifies exactly one \\"ArticleUrl\\" node.
+input ArticleUrlWithOptionalArticleWhereUniqueInput {
+  article: ArticleWhereUniqueInput
 }
 
 # Filters the \\"Article\\" nodes by specifying some conditions
@@ -657,6 +1034,211 @@ input ArticleWhereUniqueInput {
   slug: String
 }
 
+input ArticleWithForcedAuthorCreateInput {
+  # The public ID
+  id: ID
+  format: ArticleFormat!
+
+  # The article's title
+  title: String!
+
+  # The article's slug
+  slug: String
+
+  # The article's body
+  body: String
+
+  # The date of the document's public release
+  publishedAt: DateTime
+
+  # Either this article is important or not
+  isImportant: Boolean
+
+  # Nested actions for the \\"Article.category\\" relation
+  category: ArticleCreateCategoryInput!
+
+  # Nested actions for the \\"Article.moderator\\" relation
+  moderator: ArticleCreateModeratorInput
+
+  # Nested actions for the \\"Article.tags\\" relation
+  tags: ArticleCreateTagsInput
+
+  # Nested actions for the \\"Article.url\\" relation
+  url: ArticleCreateUrlInput
+}
+
+input ArticleWithForcedAuthorUpdateInput {
+  # The public ID
+  id: ID
+  format: ArticleFormat
+
+  # The article's title
+  title: String
+
+  # The article's body
+  body: String
+
+  # The date of the document's public release
+  publishedAt: DateTime
+
+  # Either this article is important or not
+  isImportant: Boolean
+
+  # Nested actions for the \\"Article.category\\" relation
+  category: ArticleUpdateCategoryInput
+
+  # Nested actions for the \\"Article.moderator\\" relation
+  moderator: ArticleUpdateModeratorInput
+
+  # Nested actions for the \\"Article.tags\\" relation
+  tags: ArticleUpdateTagsInput
+
+  # Nested actions for the \\"Article.url\\" relation
+  url: ArticleUpdateUrlInput
+}
+
+input ArticleWithForcedCategoryCreateInput {
+  # The public ID
+  id: ID
+  format: ArticleFormat!
+
+  # The article's title
+  title: String!
+
+  # The article's slug
+  slug: String
+
+  # The article's body
+  body: String
+
+  # The date of the document's public release
+  publishedAt: DateTime
+
+  # Either this article is important or not
+  isImportant: Boolean
+
+  # Nested actions for the \\"Article.author\\" relation
+  author: ArticleCreateAuthorInput!
+
+  # Nested actions for the \\"Article.moderator\\" relation
+  moderator: ArticleCreateModeratorInput
+
+  # Nested actions for the \\"Article.tags\\" relation
+  tags: ArticleCreateTagsInput
+
+  # Nested actions for the \\"Article.url\\" relation
+  url: ArticleCreateUrlInput
+}
+
+input ArticleWithForcedCategoryUpdateInput {
+  # The public ID
+  id: ID
+  format: ArticleFormat
+
+  # The article's title
+  title: String
+
+  # The article's body
+  body: String
+
+  # The date of the document's public release
+  publishedAt: DateTime
+
+  # Either this article is important or not
+  isImportant: Boolean
+
+  # Nested actions for the \\"Article.author\\" relation
+  author: ArticleUpdateAuthorInput
+
+  # Nested actions for the \\"Article.moderator\\" relation
+  moderator: ArticleUpdateModeratorInput
+
+  # Nested actions for the \\"Article.tags\\" relation
+  tags: ArticleUpdateTagsInput
+
+  # Nested actions for the \\"Article.url\\" relation
+  url: ArticleUpdateUrlInput
+}
+
+# Given a forced \\"category\\", identifies exactly one \\"Article\\" node.
+input ArticleWithForcedCategoryWhereUniqueInput {
+  slug: String!
+}
+
+input ArticleWithForcedModeratorCreateInput {
+  # The public ID
+  id: ID
+  format: ArticleFormat!
+
+  # The article's title
+  title: String!
+
+  # The article's slug
+  slug: String
+
+  # The article's body
+  body: String
+
+  # The date of the document's public release
+  publishedAt: DateTime
+
+  # Either this article is important or not
+  isImportant: Boolean
+
+  # Nested actions for the \\"Article.category\\" relation
+  category: ArticleCreateCategoryInput!
+
+  # Nested actions for the \\"Article.author\\" relation
+  author: ArticleCreateAuthorInput!
+
+  # Nested actions for the \\"Article.tags\\" relation
+  tags: ArticleCreateTagsInput
+
+  # Nested actions for the \\"Article.url\\" relation
+  url: ArticleCreateUrlInput
+}
+
+input ArticleWithForcedModeratorUpdateInput {
+  # The public ID
+  id: ID
+  format: ArticleFormat
+
+  # The article's title
+  title: String
+
+  # The article's body
+  body: String
+
+  # The date of the document's public release
+  publishedAt: DateTime
+
+  # Either this article is important or not
+  isImportant: Boolean
+
+  # Nested actions for the \\"Article.category\\" relation
+  category: ArticleUpdateCategoryInput
+
+  # Nested actions for the \\"Article.author\\" relation
+  author: ArticleUpdateAuthorInput
+
+  # Nested actions for the \\"Article.tags\\" relation
+  tags: ArticleUpdateTagsInput
+
+  # Nested actions for the \\"Article.url\\" relation
+  url: ArticleUpdateUrlInput
+}
+
+# Given a known \\"category\\", identifies exactly one \\"Article\\" node with one of these unique combinations of values:
+# - _id
+# - id
+# - category (optional), slug
+input ArticleWithOptionalCategoryWhereUniqueInput {
+  _id: Int
+  id: ID
+  category: CategoryWhereUniqueInput
+  slug: String
+}
+
 # \\"Category\\" resource's node
 type Category {
   # The public ID
@@ -686,6 +1268,22 @@ type Category {
   childCount(where: CategoryWhereInput): Int!
 }
 
+input CategoryCreateArticlesInput {
+  # Connect existing \\"Article\\" nodes to the new \\"Category\\" node, through the \\"Category.articles\\" relation.
+  connect: [ArticleWhereUniqueInput!]
+
+  # Create new \\"Article\\" nodes and connect them to the new \\"Category\\" node, through the \\"Category.articles\\" relation.
+  create: [ArticleWithForcedCategoryCreateInput!]
+}
+
+input CategoryCreateChildrenInput {
+  # Connect existing \\"Category\\" nodes to the new \\"Category\\" node, through the \\"Category.children\\" relation.
+  connect: [CategoryWhereUniqueInput!]
+
+  # Create new \\"Category\\" nodes and connect them to the new \\"Category\\" node, through the \\"Category.children\\" relation.
+  create: [CategoryWithForcedParentCreateInput!]
+}
+
 input CategoryCreateInput {
   # The public ID
   id: ID
@@ -693,18 +1291,40 @@ input CategoryCreateInput {
 
   # The category's slug
   slug: String
+
+  # Nested actions for the \\"Category.parent\\" relation
   parent: CategoryCreateParentInput
+
+  # Nested actions for the \\"Category.articles\\" relation
+  articles: CategoryCreateArticlesInput
+
+  # Nested actions for the \\"Category.children\\" relation
+  children: CategoryCreateChildrenInput
+}
+
+input CategoryCreateNestedUpdateParentInput {
+  where: CategoryWhereUniqueInput!
+  data: CategoryUpdateInput!
+}
+
+input CategoryCreateNestedUpsertParentInput {
+  where: CategoryWhereUniqueInput!
+  create: CategoryCreateInput!
+  update: CategoryUpdateInput!
 }
 
 input CategoryCreateParentInput {
   # Connect an existing \\"Category\\" node to the new \\"Category\\" node, through the \\"Category.parent\\" relation.
   connect: CategoryWhereUniqueInput
 
+  # Update an existing \\"Category\\" node and connect it to the new \\"Category\\" node, through the \\"Category.parent\\" relation.
+  update: CategoryCreateNestedUpdateParentInput
+
   # Create a new \\"Category\\" node and connect it to the new \\"Category\\" node, through the \\"Category.parent\\" relation.
   create: CategoryCreateInput
 
-  # Update an existing \\"Category\\" node and connect it to the new \\"Category\\" node, through the \\"Category.parent\\" relation.
-  update: CategoryUpdateOneInput
+  # Create or update a \\"Category\\" node and connect it to the new \\"Category\\" node, through the \\"Category.parent\\" relation.
+  upsert: CategoryCreateNestedUpsertParentInput
 }
 
 enum CategoryOrderByInput {
@@ -722,29 +1342,109 @@ enum CategoryOrderByInput {
   slug_DESC
 }
 
+input CategoryUpdateArticlesInput {
+  # Connect existing \\"Article\\" nodes to the existing \\"Category\\" node, through the \\"Category.articles\\" relation.
+  connect: [ArticleWhereUniqueInput!]
+
+  # Update existing \\"Article\\" nodes and connect them to the existing \\"Category\\"
+  # node, through the \\"Category.articles\\" relation.
+  update: [CategoryUpdateNestedUpdateArticlesInput!]
+
+  # Create new \\"Article\\" nodes and connect them to the existing \\"Category\\" node, through the \\"Category.articles\\" relation.
+  create: [ArticleWithForcedCategoryCreateInput!]
+
+  # Upsert existing \\"Article\\" nodes and connect them to the existing \\"Category\\"
+  # node, through the \\"Category.articles\\" relation.
+  upsert: [CategoryUpdateNestedUpsertArticlesInput!]
+
+  # Delete existing \\"Article\\" nodes from the \\"Category.articles\\" relation.
+  delete: [ArticleWithForcedCategoryWhereUniqueInput!]
+}
+
+input CategoryUpdateChildrenInput {
+  # Connect existing \\"Category\\" nodes to the existing \\"Category\\" node, through the \\"Category.children\\" relation.
+  connect: [CategoryWhereUniqueInput!]
+
+  # Disconnect existing \\"Category\\" nodes of the \\"Category.children\\" relation.
+  disconnect: [CategoryWithForcedParentWhereUniqueInput!]
+
+  # Update existing \\"Category\\" nodes and connect them to the existing \\"Category\\"
+  # node, through the \\"Category.children\\" relation.
+  update: [CategoryUpdateNestedUpdateChildrenInput!]
+
+  # Create new \\"Category\\" nodes and connect them to the existing \\"Category\\" node, through the \\"Category.children\\" relation.
+  create: [CategoryWithForcedParentCreateInput!]
+
+  # Upsert existing \\"Category\\" nodes and connect them to the existing \\"Category\\"
+  # node, through the \\"Category.children\\" relation.
+  upsert: [CategoryUpdateNestedUpsertChildrenInput!]
+
+  # Delete existing \\"Category\\" nodes from the \\"Category.children\\" relation.
+  delete: [CategoryWithForcedParentWhereUniqueInput!]
+}
+
 input CategoryUpdateInput {
   # The public ID
   id: ID
   title: String
+
+  # Nested actions for the \\"Category.parent\\" relation
   parent: CategoryUpdateParentInput
+
+  # Nested actions for the \\"Category.articles\\" relation
+  articles: CategoryUpdateArticlesInput
+
+  # Nested actions for the \\"Category.children\\" relation
+  children: CategoryUpdateChildrenInput
 }
 
-input CategoryUpdateOneInput {
+input CategoryUpdateNestedUpdateArticlesInput {
+  where: ArticleWithOptionalCategoryWhereUniqueInput!
+  data: ArticleWithForcedCategoryUpdateInput!
+}
+
+input CategoryUpdateNestedUpdateChildrenInput {
+  where: CategoryWithOptionalParentWhereUniqueInput!
+  data: CategoryWithForcedParentUpdateInput!
+}
+
+input CategoryUpdateNestedUpdateParentInput {
   where: CategoryWhereUniqueInput!
   data: CategoryUpdateInput!
+}
+
+input CategoryUpdateNestedUpsertArticlesInput {
+  where: ArticleWithOptionalCategoryWhereUniqueInput!
+  update: ArticleWithForcedCategoryUpdateInput!
+  create: ArticleWithForcedCategoryCreateInput!
+}
+
+input CategoryUpdateNestedUpsertChildrenInput {
+  where: CategoryWithOptionalParentWhereUniqueInput!
+  update: CategoryWithForcedParentUpdateInput!
+  create: CategoryWithForcedParentCreateInput!
+}
+
+input CategoryUpdateNestedUpsertParentInput {
+  where: CategoryWhereUniqueInput!
+  create: CategoryCreateInput!
+  update: CategoryUpdateInput!
 }
 
 input CategoryUpdateParentInput {
   # Connect an existing \\"Category\\" node to the existing \\"Category\\" node, through the \\"Category.parent\\" relation.
   connect: CategoryWhereUniqueInput
 
+  # Update an existing \\"Category\\" node and connect it to the existing \\"Category\\" node, through the \\"Category.parent\\" relation.
+  update: CategoryUpdateNestedUpdateParentInput
+
   # Create a new \\"Category\\" node and connect it to the existing \\"Category\\" node, through the \\"Category.parent\\" relation.
   create: CategoryCreateInput
 
-  # Update an existing \\"Category\\" node and connect it to the existing \\"Category\\" node, through the \\"Category.parent\\" relation.
-  update: CategoryUpdateOneInput
+  # Create or update a \\"Category\\" node and connect it to the existing \\"Category\\" node, through the \\"Category.parent\\" relation.
+  upsert: CategoryUpdateNestedUpsertParentInput
 
-  # Disconnect the current \\"Category\\" node, if any, of the existing \\"Category\\" node, through the \\"Category.parent\\" relation.
+  # Disconnect the current connected \\"Category\\" node, if any, of the \\"Category.parent\\" relation.
   disconnect: Boolean
 }
 
@@ -820,6 +1520,49 @@ input CategoryWhereInput {
 # - id
 # - parent, slug
 input CategoryWhereUniqueInput {
+  _id: Int
+  id: ID
+  parent: CategoryWhereUniqueInput
+  slug: String
+}
+
+input CategoryWithForcedParentCreateInput {
+  # The public ID
+  id: ID
+  title: String!
+
+  # The category's slug
+  slug: String
+
+  # Nested actions for the \\"Category.articles\\" relation
+  articles: CategoryCreateArticlesInput
+
+  # Nested actions for the \\"Category.children\\" relation
+  children: CategoryCreateChildrenInput
+}
+
+input CategoryWithForcedParentUpdateInput {
+  # The public ID
+  id: ID
+  title: String
+
+  # Nested actions for the \\"Category.articles\\" relation
+  articles: CategoryUpdateArticlesInput
+
+  # Nested actions for the \\"Category.children\\" relation
+  children: CategoryUpdateChildrenInput
+}
+
+# Given a forced \\"parent\\", identifies exactly one \\"Category\\" node.
+input CategoryWithForcedParentWhereUniqueInput {
+  slug: String!
+}
+
+# Given a known \\"parent\\", identifies exactly one \\"Category\\" node with one of these unique combinations of values:
+# - _id
+# - id
+# - parent (optional), slug
+input CategoryWithOptionalParentWhereUniqueInput {
   _id: Int
   id: ID
   parent: CategoryWhereUniqueInput
@@ -1022,6 +1765,11 @@ type Tag {
   articleCount(where: ArticleTagWhereInput): Int!
 }
 
+input TagCreateArticlesInput {
+  # Create new \\"ArticleTag\\" nodes and connect them to the new \\"Tag\\" node, through the \\"Tag.articles\\" relation.
+  create: [ArticleTagWithForcedTagCreateInput!]
+}
+
 input TagCreateInput {
   # The public ID
   id: ID
@@ -1029,6 +1777,9 @@ input TagCreateInput {
 
   # The tag's slug
   slug: String
+
+  # Nested actions for the \\"Tag.articles\\" relation
+  articles: TagCreateArticlesInput
 }
 
 enum TagOrderByInput {
@@ -1044,11 +1795,6 @@ enum TagOrderByInput {
   title_DESC
   slug_ASC
   slug_DESC
-}
-
-input TagUpdateOneInput {
-  where: TagWhereUniqueInput!
-  data: Boolean!
 }
 
 # Filters the \\"Tag\\" nodes by specifying some conditions
@@ -1139,11 +1885,25 @@ type User {
   # The user's username
   username: String!
 
+  # \\"Article.author\\"'s inverse relation
+  authorOfArticles(where: ArticleWhereInput, orderBy: [ArticleOrderByInput!], first: Int!, skip: Int): [Article!]!
+
+  # \\"Article.author\\"'s inverse relation count
+  authorOfArticleCount(where: ArticleWhereInput): Int!
+
   # \\"Article.moderator\\"'s inverse relation
-  articles(where: ArticleWhereInput, orderBy: [ArticleOrderByInput!], first: Int!, skip: Int): [Article!]!
+  moderatorOfArticles(where: ArticleWhereInput, orderBy: [ArticleOrderByInput!], first: Int!, skip: Int): [Article!]!
 
   # \\"Article.moderator\\"'s inverse relation count
-  articleCount(where: ArticleWhereInput): Int!
+  moderatorOfArticleCount(where: ArticleWhereInput): Int!
+}
+
+input UserCreateAuthorOfArticlesInput {
+  # Connect existing \\"Article\\" nodes to the new \\"User\\" node, through the \\"User.authorOfArticles\\" relation.
+  connect: [ArticleWhereUniqueInput!]
+
+  # Create new \\"Article\\" nodes and connect them to the new \\"User\\" node, through the \\"User.authorOfArticles\\" relation.
+  create: [ArticleWithForcedAuthorCreateInput!]
 }
 
 input UserCreateInput {
@@ -1152,6 +1912,20 @@ input UserCreateInput {
 
   # The user's username
   username: String!
+
+  # Nested actions for the \\"User.authorOfArticles\\" relation
+  authorOfArticles: UserCreateAuthorOfArticlesInput
+
+  # Nested actions for the \\"User.moderatorOfArticles\\" relation
+  moderatorOfArticles: UserCreateModeratorOfArticlesInput
+}
+
+input UserCreateModeratorOfArticlesInput {
+  # Connect existing \\"Article\\" nodes to the new \\"User\\" node, through the \\"User.moderatorOfArticles\\" relation.
+  connect: [ArticleWhereUniqueInput!]
+
+  # Create new \\"Article\\" nodes and connect them to the new \\"User\\" node, through the \\"User.moderatorOfArticles\\" relation.
+  create: [ArticleWithForcedModeratorCreateInput!]
 }
 
 enum UserOrderByInput {
@@ -1167,14 +1941,78 @@ enum UserOrderByInput {
   username_DESC
 }
 
+input UserUpdateAuthorOfArticlesInput {
+  # Connect existing \\"Article\\" nodes to the existing \\"User\\" node, through the \\"User.authorOfArticles\\" relation.
+  connect: [ArticleWhereUniqueInput!]
+
+  # Update existing \\"Article\\" nodes and connect them to the existing \\"User\\" node,
+  # through the \\"User.authorOfArticles\\" relation.
+  update: [UserUpdateNestedUpdateAuthorOfArticlesInput!]
+
+  # Create new \\"Article\\" nodes and connect them to the existing \\"User\\" node, through the \\"User.authorOfArticles\\" relation.
+  create: [ArticleWithForcedAuthorCreateInput!]
+
+  # Upsert existing \\"Article\\" nodes and connect them to the existing \\"User\\" node,
+  # through the \\"User.authorOfArticles\\" relation.
+  upsert: [UserUpdateNestedUpsertAuthorOfArticlesInput!]
+
+  # Delete existing \\"Article\\" nodes from the \\"User.authorOfArticles\\" relation.
+  delete: [ArticleWhereUniqueInput!]
+}
+
 input UserUpdateInput {
   # The public ID
   id: ID
+
+  # Nested actions for the \\"User.authorOfArticles\\" relation
+  authorOfArticles: UserUpdateAuthorOfArticlesInput
+
+  # Nested actions for the \\"User.moderatorOfArticles\\" relation
+  moderatorOfArticles: UserUpdateModeratorOfArticlesInput
 }
 
-input UserUpdateOneInput {
-  where: UserWhereUniqueInput!
-  data: UserUpdateInput!
+input UserUpdateModeratorOfArticlesInput {
+  # Connect existing \\"Article\\" nodes to the existing \\"User\\" node, through the \\"User.moderatorOfArticles\\" relation.
+  connect: [ArticleWhereUniqueInput!]
+
+  # Disconnect existing \\"Article\\" nodes of the \\"User.moderatorOfArticles\\" relation.
+  disconnect: [ArticleWhereUniqueInput!]
+
+  # Update existing \\"Article\\" nodes and connect them to the existing \\"User\\" node,
+  # through the \\"User.moderatorOfArticles\\" relation.
+  update: [UserUpdateNestedUpdateModeratorOfArticlesInput!]
+
+  # Create new \\"Article\\" nodes and connect them to the existing \\"User\\" node, through the \\"User.moderatorOfArticles\\" relation.
+  create: [ArticleWithForcedModeratorCreateInput!]
+
+  # Upsert existing \\"Article\\" nodes and connect them to the existing \\"User\\" node,
+  # through the \\"User.moderatorOfArticles\\" relation.
+  upsert: [UserUpdateNestedUpsertModeratorOfArticlesInput!]
+
+  # Delete existing \\"Article\\" nodes from the \\"User.moderatorOfArticles\\" relation.
+  delete: [ArticleWhereUniqueInput!]
+}
+
+input UserUpdateNestedUpdateAuthorOfArticlesInput {
+  where: ArticleWhereUniqueInput
+  data: ArticleWithForcedAuthorUpdateInput!
+}
+
+input UserUpdateNestedUpdateModeratorOfArticlesInput {
+  where: ArticleWhereUniqueInput
+  data: ArticleWithForcedModeratorUpdateInput!
+}
+
+input UserUpdateNestedUpsertAuthorOfArticlesInput {
+  where: ArticleWhereUniqueInput!
+  update: ArticleWithForcedAuthorUpdateInput!
+  create: ArticleWithForcedAuthorCreateInput!
+}
+
+input UserUpdateNestedUpsertModeratorOfArticlesInput {
+  where: ArticleWhereUniqueInput!
+  update: ArticleWithForcedModeratorUpdateInput!
+  create: ArticleWithForcedModeratorCreateInput!
 }
 
 # Filters the \\"User\\" nodes by specifying some conditions
@@ -1221,7 +2059,8 @@ input UserWhereInput {
   username_lte: String
   username_gt: String
   username_gte: String
-  articles_some: ArticleWhereInput
+  authorOfArticles_some: ArticleWhereInput
+  moderatorOfArticles_some: ArticleWhereInput
   AND: [UserWhereInput!]
   OR: [UserWhereInput!]
   NOT: UserWhereInput

@@ -17,6 +17,11 @@ export class Inverse<TConfig extends RelationConfig = RelationConfig> {
   }
 
   @Memoize()
+  public get pascalCasedName(): string {
+    return inflector.camelize(this.name, false);
+  }
+
+  @Memoize()
   public get description(): string {
     return `"${this.relation}"'s inverse relation`;
   }
@@ -35,17 +40,17 @@ export class Inverse<TConfig extends RelationConfig = RelationConfig> {
     return `"${this.relation}"'s inverse relation count`;
   }
 
-  @Memoize()
-  public toString(): string {
-    return `${this.relation.resource.name}.${this.name}`;
-  }
-
   public getFrom() {
     return this.relation.getTo();
   }
 
   public getTo() {
     return this.relation.getFrom();
+  }
+
+  @Memoize()
+  public toString(): string {
+    return `${this.getFrom().name}.${this.name}`;
   }
 
   public getKind(): RelationKind {

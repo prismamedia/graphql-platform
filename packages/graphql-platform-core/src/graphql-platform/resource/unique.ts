@@ -1,4 +1,4 @@
-import { GraphQLSelectionNode } from '@prismamedia/graphql-platform-utils';
+import { GraphQLSelectionNode, GraphQLSelectionNodeChildren } from '@prismamedia/graphql-platform-utils';
 import { Memoize } from 'typescript-memoize';
 import { Resource } from '../resource';
 import { TypeKind } from '../type';
@@ -98,6 +98,11 @@ export class Unique<TConfig extends AnyUniqueFullConfig = UniqueFullConfig> {
       throw new Error(`As the unique "${this}"'s components are not public, they can't be selectionned.`);
     }
 
-    return new GraphQLSelectionNode(this.name, {}, this.componentSet.getSelectionNodeChildren(use));
+    return new GraphQLSelectionNode(this.name, {}, this.getSelectionNodeChildren(use));
+  }
+
+  @Memoize((use: TypeKind = TypeKind.Output) => use)
+  public getSelectionNodeChildren(use: TypeKind = TypeKind.Output): GraphQLSelectionNodeChildren {
+    return this.componentSet.getSelectionNodeChildren(use);
   }
 }

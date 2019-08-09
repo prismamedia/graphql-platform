@@ -33,6 +33,32 @@ const resource: MyResourceConfig = {
       unique: 'id',
       inversedBy: 'children',
       nullable: true,
+      hooks: {
+        // Only one category without parent is allowed
+        [ResourceHookKind.PreCreate]: async ({ relatedNodeId, metas: { context } }) => {
+          if (relatedNodeId == null) {
+            const categoryCount = await context.api.query.categoryCount({ where: { parent: null } }, undefined, {
+              context,
+            });
+
+            if (categoryCount !== 0) {
+              throw new Error(`Only one category without parent is allowed, the "root".`);
+            }
+          }
+        },
+        // Only one category without parent is allowed
+        [ResourceHookKind.PreUpdate]: async ({ relatedNodeId, metas: { context } }) => {
+          if (relatedNodeId === null) {
+            const categoryCount = await context.api.query.categoryCount({ where: { parent: null } }, undefined, {
+              context,
+            });
+
+            if (categoryCount !== 0) {
+              throw new Error(`Only one category without parent is allowed, the "root".`);
+            }
+          }
+        },
+      },
     },
   },
 };

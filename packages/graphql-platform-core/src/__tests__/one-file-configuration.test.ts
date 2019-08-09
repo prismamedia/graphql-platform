@@ -45,11 +45,6 @@ describe('One file configuration', () => {
     const schema = gp.getGraphQLSchema();
 
     expect(validateSchema(schema)).toHaveLength(0);
-  });
-
-  it('creates a GraphQL schema', () => {
-    const schema = gp.getGraphQLSchema();
-
     expect(printSchema(schema, { commentDescriptions: true })).toMatchSnapshot();
   });
 });

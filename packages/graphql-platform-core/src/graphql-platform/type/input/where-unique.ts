@@ -4,10 +4,10 @@ import {
   MaybeUndefinedDecorator,
   SuperMap,
 } from '@prismamedia/graphql-platform-utils';
-import { GraphQLInputFieldConfigMap, GraphQLInputObjectType } from 'graphql';
+import { GraphQLBoolean, GraphQLInputFieldConfigMap, GraphQLInputObjectType } from 'graphql';
 import { Memoize } from 'typescript-memoize';
-import { Component, ComponentSet, Field, Unique } from '../../resource';
-import { FieldValue } from '../../resource/component';
+import { ComponentSet, Field, Unique } from '../../resource';
+import { FieldValue, Relation } from '../../resource/component';
 import { UniqueSet } from '../../resource/unique';
 import { AbstractInputType } from '../abstract-type';
 
@@ -27,31 +27,32 @@ export class WhereUniqueInputType extends AbstractInputType {
     return `Identifies exactly one "${this.resource}" node`;
   }
 
-  @Memoize((knownComponent?: Component, forced: boolean = false) =>
-    [knownComponent ? knownComponent.name : '', String(forced)].join('|'),
+  @Memoize((knownRelation?: Relation, forced: boolean = false) =>
+    [knownRelation ? knownRelation.name : '', String(forced)].join('|'),
   )
-  public getUniqueCombinationMap(knownComponent?: Component, forced: boolean = false) {
-    // Contains all the resource's uniques
-    const uniqueSet = this.resource.getUniqueSet();
+  public getUniqueCombinationMap(knownRelation?: Relation, forced: boolean = false) {
+    // Contains all the resource's unique constraints
+    const resourceUniqueSet = this.resource.getUniqueSet();
 
-    // Contains all the components of all the resource's uniques
-    const componentInUniqueSet = new ComponentSet().concat(...[...uniqueSet].map(unique => unique.componentSet));
-
-    if (knownComponent && !componentInUniqueSet.has(knownComponent)) {
+    if (knownRelation && !resourceUniqueSet.getComponentSet().has(knownRelation)) {
       throw new Error(
-        `The component "${knownComponent}" is not part of the "${
+        `The relation "${knownRelation}" is not part of the "${
           this.resource
-        }"'s unique constraints: ${componentInUniqueSet.getNames().join(', ')}`,
+        }"'s unique constraints: ${resourceUniqueSet.getNames().join(', ')}`,
       );
     }
 
-    // Contains all the components we have to display
-    const displayedComponentSet =
-      knownComponent && forced === true ? componentInUniqueSet.diff(knownComponent) : componentInUniqueSet;
+    const uniqueSet =
+      knownRelation && forced === true
+        ? resourceUniqueSet.filter(({ componentSet }) => componentSet.has(knownRelation))
+        : resourceUniqueSet;
+
+    const componentInUniqueSet =
+      knownRelation && forced === true ? uniqueSet.getComponentSet().diff(knownRelation) : uniqueSet.getComponentSet();
 
     const uniqueCombinationMap = new SuperMap<string, ComponentSet>();
     for (const unique of uniqueSet) {
-      const displayedComponentInUniqueSet = unique.componentSet.intersect(displayedComponentSet).sortByName();
+      const displayedComponentInUniqueSet = unique.componentSet.intersect(componentInUniqueSet).sortByName();
       const displayedComponentInUniqueSetKey = displayedComponentInUniqueSet.getNames().join('|');
 
       if (displayedComponentInUniqueSet.size > 0 && !uniqueCombinationMap.has(displayedComponentInUniqueSetKey)) {
@@ -131,60 +132,62 @@ export class WhereUniqueInputType extends AbstractInputType {
     return undefined as any;
   }
 
-  @Memoize((knownComponent?: Component, forced: boolean = false) =>
-    [knownComponent ? knownComponent.name : '', String(forced)].join('|'),
+  @Memoize((knownRelation?: Relation, forced: boolean = true) =>
+    [knownRelation ? knownRelation.name : '', String(forced)].join('|'),
   )
-  public getGraphQLType(knownComponent?: Component, forced: boolean = false) {
-    const uniqueCombinationMap = this.getUniqueCombinationMap(knownComponent, forced);
+  public getGraphQLType(knownRelation?: Relation, forced: boolean = true) {
+    const uniqueCombinationMap = this.getUniqueCombinationMap(knownRelation, forced);
     const displayedComponentSet = new ComponentSet().concat(...[...uniqueCombinationMap.values()]);
 
-    return new GraphQLInputObjectType({
-      name: [
-        this.resource.name,
-        knownComponent ? `With${forced ? 'Forced' : 'Optional'}${knownComponent.pascalCasedName}` : null,
-        'WhereUniqueInput',
-      ]
-        .filter(Boolean)
-        .join(''),
-      description: `${knownComponent ? `Given a known "${knownComponent.name}", i` : 'I'}dentifies exactly one "${
-        this.resource.name
-      }" node${
-        uniqueCombinationMap.size > 1
-          ? ` with one of these unique ${
-              uniqueCombinationMap.some(([, componentSet]) => componentSet.size > 1)
-                ? 'combinations of values'
-                : 'values'
-            }:\n${[...uniqueCombinationMap.values()]
-              .map(
-                componentSet =>
-                  `- ${[...componentSet]
-                    .map(component => `${component.name}${component === knownComponent ? ' (optional)' : ''}`)
-                    .join(', ')}`,
-              )
-              .join('\n')}`
-          : '.'
-      }`,
-      fields: () => {
-        const fields: GraphQLInputFieldConfigMap = {};
+    return displayedComponentSet.size > 0
+      ? new GraphQLInputObjectType({
+          name: [
+            this.resource.name,
+            knownRelation ? `With${forced ? 'Forced' : 'Optional'}${knownRelation.pascalCasedName}` : null,
+            'WhereUniqueInput',
+          ]
+            .filter(Boolean)
+            .join(''),
+          description: `${
+            knownRelation ? `Given a ${forced ? 'forced' : 'known'} "${knownRelation.name}", i` : 'I'
+          }dentifies exactly one "${this.resource.name}" node${
+            uniqueCombinationMap.size > 1
+              ? ` with one of these unique ${
+                  uniqueCombinationMap.some(([, componentSet]) => componentSet.size > 1)
+                    ? 'combinations of values'
+                    : 'values'
+                }:\n${[...uniqueCombinationMap.values()]
+                  .map(
+                    componentSet =>
+                      `- ${[...componentSet]
+                        .map(component => `${component.name}${component === knownRelation ? ' (optional)' : ''}`)
+                        .join(', ')}`,
+                  )
+                  .join('\n')}`
+              : '.'
+          }`,
+          fields: () => {
+            const fields: GraphQLInputFieldConfigMap = {};
 
-        for (const component of displayedComponentSet) {
-          fields[component.name] = {
-            type: GraphQLNonNullDecorator(
-              component instanceof Field
-                ? component.getType()
-                : component
-                    .getTo()
-                    .getInputType('WhereUnique')
-                    .getGraphQLType(),
-              uniqueCombinationMap.every(
-                ([, componentSet]) => componentSet.has(component) && component !== knownComponent,
-              ),
-            ),
-          };
-        }
+            for (const component of displayedComponentSet) {
+              fields[component.name] = {
+                type: GraphQLNonNullDecorator(
+                  component instanceof Field
+                    ? component.getType()
+                    : component
+                        .getTo()
+                        .getInputType('WhereUnique')
+                        .getGraphQLType(),
+                  uniqueCombinationMap.every(
+                    ([, componentSet]) => componentSet.has(component) && component !== knownRelation,
+                  ),
+                ),
+              };
+            }
 
-        return fields;
-      },
-    });
+            return fields;
+          },
+        })
+      : GraphQLBoolean;
   }
 }

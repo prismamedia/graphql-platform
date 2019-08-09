@@ -3,4 +3,5 @@
 dist/
 node_modules/
 package-lock.json
+packages/**/coverage
 packages/**/yarn.lock

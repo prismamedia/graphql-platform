@@ -499,8 +499,12 @@ describe('ResourceMap', () => {
           },
           "inverseRelationMap": Array [
             Object {
+              "description": "\\"Article.author\\"'s inverse relation",
+              "name": "authorOfArticles",
+            },
+            Object {
               "description": "\\"Article.moderator\\"'s inverse relation",
-              "name": "articles",
+              "name": "moderatorOfArticles",
             },
           ],
           "name": "User",

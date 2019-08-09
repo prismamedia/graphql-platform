@@ -31,11 +31,13 @@ describe('WhereUniqueInput', () => {
           const relation = resource.getRelationMap().assert(relationName);
 
           expect(
-            printType(resource.getInputType('WhereUnique').getGraphQLType(relation), { commentDescriptions: true }),
+            printType(resource.getInputType('WhereUnique').getGraphQLType(relation, false), {
+              commentDescriptions: true,
+            }),
           ).toMatchSnapshot();
 
           expect(
-            printType(resource.getInputType('WhereUnique').getGraphQLType(relation, true), {
+            printType(resource.getInputType('WhereUnique').getGraphQLType(relation), {
               commentDescriptions: true,
             }),
           ).toMatchSnapshot();
@@ -54,9 +56,10 @@ describe('WhereUniqueInput', () => {
             .assert('Article')
             .getRelationMap()
             .assert('author'),
+          false,
         ),
     ).toThrowErrorMatchingInlineSnapshot(
-      `"The component \\"Article.author\\" is not part of the \\"Article\\"'s unique constraints: _id, id, category, slug"`,
+      `"The relation \\"Article.author\\" is not part of the \\"Article\\"'s unique constraints: _id, id, category-slug"`,
     );
   });
 

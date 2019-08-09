@@ -1,12 +1,19 @@
 import { cleanOwnObject, GraphQLOperationType, isPlainObject } from '@prismamedia/graphql-platform-utils';
-import { GraphQLFieldConfigArgumentMap, GraphQLInputObjectType, GraphQLNonNull, GraphQLOutputType } from 'graphql';
+import { GraphQLFieldConfigArgumentMap, GraphQLNonNull, GraphQLOutputType } from 'graphql';
 import { Memoize } from 'typescript-memoize';
 import { ConnectorUpdateInputValue } from '../../connector';
 import { OperationResolverParams } from '../../operation';
 import { ResourceHookKind } from '../../resource';
 import { FieldHookMap, RelationHookMap } from '../../resource/component';
 import { NodeSource, TypeKind, UpdateInputValue, WhereUniqueInputValue } from '../../type';
-import { WhereInputValue } from '../../type/input';
+import {
+  CreateRelationActionKind,
+  UpdateInverseRelationActionKind,
+  updateInverseRelationActionKinds,
+  UpdateRelationActionKind,
+  updateRelationActionKinds,
+  WhereInputValue,
+} from '../../type/input';
 import { AbstractOperation } from '../abstract-operation';
 
 export interface UpdateOneOperationArgs {
@@ -45,14 +52,6 @@ export class UpdateOneOperation extends AbstractOperation<UpdateOneOperationArgs
   }
 
   @Memoize()
-  public getGraphQLFieldConfigArgsAsType(): GraphQLInputObjectType {
-    return new GraphQLInputObjectType({
-      name: [this.resource.name, 'UpdateOneInput'].join(''),
-      fields: () => this.getGraphQLFieldConfigArgs(),
-    });
-  }
-
-  @Memoize()
   public getGraphQLFieldConfigType(): GraphQLOutputType {
     return this.resource.getOutputType('Node').getGraphQLType();
   }
@@ -72,8 +71,9 @@ export class UpdateOneOperation extends AbstractOperation<UpdateOneOperationArgs
     const data = typeof args.data === 'boolean' ? {} : args.data;
     const update: ConnectorUpdateInputValue = Object.create(null);
 
-    // Select all the components in case of post success hooks
     const hasPostSuccessHook = resource.getEventListenerCount(ResourceHookKind.PostUpdate) > 0;
+
+    // Select all the components in case of post success hooks
     if (hasPostSuccessHook) {
       selectionNode.setChildren(resource.getComponentSet().getSelectionNodeChildren(TypeKind.Input));
     }
@@ -89,26 +89,57 @@ export class UpdateOneOperation extends AbstractOperation<UpdateOneOperationArgs
       ...[...resource.getRelationSet()].map(async relation => {
         const actions = data[relation.name];
         if (isPlainObject(actions)) {
+          if (Object.keys(actions).length !== 1) {
+            throw new Error(`The relation "${relation}" supports exactly 1 action in the "${this}" mutation`);
+          }
+
           const relatedResource = relation.getTo();
 
           // Returns only the selection we need (the targeted unique constraint)
           const selectionNode = relation.getToUnique().getSelectionNode(TypeKind.Input);
 
-          const relatedNode = await (isPlainObject(actions['connect'])
-            ? relatedResource
-                .getQuery('AssertOne')
-                .resolve({ ...params, args: { where: actions['connect'] }, selectionNode })
-            : isPlainObject(actions['create'])
-            ? relatedResource
-                .getMutation('CreateOne')
-                .resolve({ ...params, args: { data: actions['create'] }, selectionNode })
-            : isPlainObject(actions['update'])
-            ? relatedResource
-                .getMutation('UpdateOne')
-                .resolve({ ...params, args: actions['update'] as UpdateOneOperationArgs, selectionNode })
-            : actions['disconnect'] === true
-            ? null
-            : undefined);
+          let relatedNode = undefined;
+          for (const actionKind of updateRelationActionKinds) {
+            const value = actions[actionKind];
+            if (value != null) {
+              switch (actionKind) {
+                case UpdateRelationActionKind.Connect:
+                  relatedNode = await relatedResource
+                    .getQuery('AssertOne')
+                    .resolve({ args: { where: value }, context, selectionNode });
+                  break;
+
+                case UpdateRelationActionKind.Update:
+                  relatedNode = await relatedResource
+                    .getMutation('UpdateOne')
+                    .resolve({ args: value, context, selectionNode });
+                  break;
+
+                case UpdateRelationActionKind.Create:
+                  relatedNode = await relatedResource
+                    .getMutation('CreateOne')
+                    .resolve({ args: { data: value }, context, selectionNode });
+                  break;
+
+                case UpdateRelationActionKind.Upsert:
+                  relatedNode = await relatedResource
+                    .getMutation('UpsertOne')
+                    .resolve({ args: value, context, selectionNode });
+                  break;
+
+                case UpdateRelationActionKind.Disconnect:
+                  if (value === true) {
+                    relatedNode = null;
+                  }
+                  break;
+
+                default:
+                  throw new Error(
+                    `The relation "${relation}" does not support the following action in the "${this}" mutation: "${actionKind}"`,
+                  );
+              }
+            }
+          }
 
           if (typeof relatedNode !== 'undefined') {
             relation.setValue(update, relatedNode ? relation.parseId(relatedNode, true, true) : null);
@@ -167,35 +198,131 @@ export class UpdateOneOperation extends AbstractOperation<UpdateOneOperationArgs
     cleanOwnObject(update);
 
     // Actually update the node
-    const { matchedCount, changedCount } = await this.connector.update(
-      Object.freeze({
-        ...params,
-        resource,
-        args: { ...args, where, data: update },
+    const { matchedCount, changedCount } =
+      Object.keys(update).length > 0
+        ? await this.connector.update(
+            Object.freeze({
+              ...params,
+              resource,
+              args: { ...args, where, data: update },
+            }),
+          )
+        : { matchedCount: undefined, changedCount: 0 };
+
+    // If an update actually occurred and no row matched
+    if (matchedCount === 0) {
+      return null;
+    }
+
+    await Promise.all(
+      [...resource.getInverseRelationSet()].map(async inverseRelation => {
+        const actions = data[inverseRelation.name];
+        if (isPlainObject(actions)) {
+          const relation = inverseRelation.getInverse();
+          const relatedResource = inverseRelation.getTo();
+          const selectionNode = relatedResource.getIdentifier().getSelectionNode(TypeKind.Input);
+
+          for (const actionKind of updateInverseRelationActionKinds) {
+            const value = actions[actionKind];
+            if (value != null) {
+              await Promise.all(
+                (Array.isArray(value) ? value : [value]).map(async value => {
+                  switch (actionKind) {
+                    case UpdateInverseRelationActionKind.Connect:
+                      await relatedResource.getMutation('UpdateOne').resolve({
+                        args: {
+                          where: value,
+                          data: { [relation.name]: { [UpdateRelationActionKind.Connect]: nodeId } } as any,
+                        },
+                        context,
+                        selectionNode,
+                      });
+                      break;
+
+                    case UpdateInverseRelationActionKind.Update:
+                      await relatedResource.getMutation('UpdateOne').resolve({
+                        args: {
+                          where: { [relation.name]: nodeId, ...value.where },
+                          data: { ...value.data, [relation.name]: { [UpdateRelationActionKind.Connect]: nodeId } },
+                        },
+                        context,
+                        selectionNode,
+                      });
+                      break;
+
+                    case UpdateInverseRelationActionKind.Create:
+                      await relatedResource.getMutation('CreateOne').resolve({
+                        args: {
+                          data: { ...value, [relation.name]: { [CreateRelationActionKind.Connect]: nodeId } },
+                        },
+                        context,
+                        selectionNode,
+                      });
+                      break;
+
+                    case UpdateInverseRelationActionKind.Upsert:
+                      await relatedResource.getMutation('UpsertOne').resolve({
+                        args: {
+                          where: { [relation.name]: nodeId, ...value.where },
+                          update: { ...value.update, [relation.name]: { [UpdateRelationActionKind.Connect]: nodeId } },
+                          create: { ...value.create, [relation.name]: { [CreateRelationActionKind.Connect]: nodeId } },
+                        },
+                        context,
+                        selectionNode,
+                      });
+                      break;
+
+                    case UpdateInverseRelationActionKind.Disconnect:
+                      await relatedResource.getMutation('UpdateOne').resolve({
+                        args: {
+                          where: { ...value, [relation.name]: nodeId },
+                          data: { [relation.name]: { [UpdateRelationActionKind.Disconnect]: true } as any },
+                        },
+                        context,
+                        selectionNode,
+                      });
+                      break;
+
+                    case UpdateInverseRelationActionKind.Delete:
+                      await relatedResource.getMutation('DeleteOne').resolve({
+                        args: {
+                          where: { ...value, [relation.name]: nodeId },
+                        },
+                        context,
+                        selectionNode,
+                      });
+                      break;
+
+                    default:
+                      throw new Error(
+                        `The relation "${inverseRelation}" does not support the following action in the "${this}" mutation: "${actionKind}"`,
+                      );
+                  }
+                }),
+              );
+            }
+          }
+        }
       }),
     );
 
-    if (matchedCount === 1) {
-      const node = await resource.getQuery('AssertOne').resolve({ ...params, args: { where: nodeId } });
+    const node = await resource.getQuery('FindOne').resolve({ ...params, args: { where: nodeId } });
 
-      if (changedCount === 1) {
-        if (postSuccessHooks && hasPostSuccessHook) {
-          postSuccessHooks.push(
-            resource.emit.bind(resource, ResourceHookKind.PostUpdate, {
-              metas: Object.freeze({
-                ...params,
-                resource,
-                update,
-              }),
-              updatedNode: resource.parseValue(node, true, true),
+    if (changedCount === 1) {
+      if (postSuccessHooks && hasPostSuccessHook) {
+        postSuccessHooks.push(
+          resource.emit.bind(resource, ResourceHookKind.PostUpdate, {
+            metas: Object.freeze({
+              ...params,
+              resource,
+              update,
             }),
-          );
-        }
+            updatedNode: resource.parseValue(node, true, true),
+          }),
+        );
       }
-
-      return node;
     }
 
-    return null;
+    return node;
   }
 }

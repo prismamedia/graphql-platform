@@ -1,6 +1,6 @@
 // Jest Snapshot v1, https://goo.gl/fbAQLP
 
-exports[`One file configuration creates a GraphQL schema 1`] = `
+exports[`One file configuration creates a valid GraphQL schema 1`] = `
 "type Mutation {
   # Create a single \\"MyArticle\\" node.
   createMyArticle(data: MyArticleCreateInput!): MyArticle!

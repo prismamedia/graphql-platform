@@ -27,14 +27,9 @@ input ArticleWithOptionalCategoryWhereUniqueInput {
 `;
 
 exports[`WhereUniqueInput creates a valid GraphQL "WhereUniqueInput" type 3`] = `
-"# Given a known \\"category\\", identifies exactly one \\"Article\\" node with one of these unique values:
-# - _id
-# - id
-# - slug
+"# Given a forced \\"category\\", identifies exactly one \\"Article\\" node.
 input ArticleWithForcedCategoryWhereUniqueInput {
-  _id: Int
-  id: ID
-  slug: String
+  slug: String!
 }"
 `;
 
@@ -61,7 +56,7 @@ input ArticleTagWithOptionalArticleWhereUniqueInput {
 `;
 
 exports[`WhereUniqueInput creates a valid GraphQL "WhereUniqueInput" type 6`] = `
-"# Given a known \\"article\\", identifies exactly one \\"ArticleTag\\" node with one of these unique values:
+"# Given a forced \\"article\\", identifies exactly one \\"ArticleTag\\" node with one of these unique values:
 # - tag
 # - order
 input ArticleTagWithForcedArticleWhereUniqueInput {
@@ -82,11 +77,8 @@ input ArticleTagWithOptionalTagWhereUniqueInput {
 `;
 
 exports[`WhereUniqueInput creates a valid GraphQL "WhereUniqueInput" type 8`] = `
-"# Given a known \\"tag\\", identifies exactly one \\"ArticleTag\\" node with one of these unique combinations of values:
-# - article
-# - article, order
+"# Given a forced \\"tag\\", identifies exactly one \\"ArticleTag\\" node.
 input ArticleTagWithForcedTagWhereUniqueInput {
   article: ArticleWhereUniqueInput!
-  order: Int
 }"
 `;

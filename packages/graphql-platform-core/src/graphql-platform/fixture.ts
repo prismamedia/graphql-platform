@@ -1,7 +1,7 @@
 import { DepGraph } from 'dependency-graph';
 import { OperationDefinitionNode, print } from 'graphql';
 import { Logger } from 'winston';
-import { GraphQLPlatform, Request } from '../graphql-platform';
+import { GraphQLPlatform, GraphQLRequest } from '../graphql-platform';
 import { FieldValue, Relation, Resource } from './resource';
 import { TypeKind } from './type';
 import { CreateInputValue, WhereUniqueInputValue } from './type/input';
@@ -123,7 +123,7 @@ export class Fixture {
     return print(this.getCreateMutationAST());
   }
 
-  public getCreateMutationVariables(): Request['variableValues'] {
+  public getCreateMutationVariables(): GraphQLRequest['variableValues'] {
     const data: CreateInputValue = {};
 
     this.resource.getFieldSet().forEach(field => {
@@ -146,14 +146,14 @@ export class Fixture {
     };
   }
 
-  public getCreateMutation(): Request {
+  public getCreateMutation(): GraphQLRequest {
     return {
       source: this.getCreateMutationSource(),
       variableValues: this.getCreateMutationVariables(),
     };
   }
 
-  public async load(contextValue?: Request['contextValue']): Promise<void> {
+  public async load(contextValue?: GraphQLRequest['contextValue']): Promise<void> {
     const { data, errors } = await this.gp.execute<{ id: WhereUniqueInputValue }>({
       ...this.getCreateMutation(),
       contextValue,

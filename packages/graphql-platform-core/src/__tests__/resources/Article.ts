@@ -5,20 +5,27 @@ import slug from 'slug';
 import { ManagementKind, ResourceHookKind } from '../..';
 import { MyResourceConfig } from '../gp';
 
-export const FormatType = getGraphQLEnumType('ArticleFormat', { Rich: 'RICH', Video: 'VIDEO' });
+export enum ArticleFormat {
+  Rich = 'RICH',
+  Video = 'VIDEO',
+}
 
-export const QualifierType = getGraphQLEnumType('ArticleQualifier', {
-  Hot: 'HOT',
-  Cold: 'COLD',
-  Slideshow: 'SLIDESHOW',
-});
+export const ArticleFormatType = getGraphQLEnumType('ArticleFormat', ArticleFormat);
+
+export enum ArticleQualifier {
+  Hot = 'HOT',
+  Cold = 'COLD',
+  Slideshow = 'SLIDESHOW',
+}
+
+export const ArticleQualifierType = getGraphQLEnumType('ArticleQualifier', ArticleQualifier);
 
 const resource: MyResourceConfig = {
   description: 'An article',
   uniques: [['category', 'slug']],
   fields: {
     format: {
-      type: FormatType,
+      type: ArticleFormatType,
       nullable: false,
     },
     title: {
@@ -69,7 +76,7 @@ const resource: MyResourceConfig = {
             event.metas.create.publishedAt instanceof Date && event.metas.create.publishedAt <= new Date();
         },
         [ResourceHookKind.PreUpdate]: event => {
-          if (typeof event.metas.update !== 'undefined') {
+          if (typeof event.metas.update.publishedAt !== 'undefined') {
             event.fieldValue =
               event.metas.update.publishedAt instanceof Date && event.metas.update.publishedAt <= new Date();
           }
@@ -91,9 +98,11 @@ const resource: MyResourceConfig = {
       to: 'User',
       unique: 'username',
       nullable: false,
+      inversedBy: 'authorOfArticles',
     },
     moderator: {
       to: 'User',
+      inversedBy: 'moderatorOfArticles',
     },
   },
   virtualFields: {

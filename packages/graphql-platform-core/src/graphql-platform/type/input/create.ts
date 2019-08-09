@@ -1,4 +1,11 @@
-import { GraphQLNonNullDecorator, Maybe, SuperMapOfNamedObject } from '@prismamedia/graphql-platform-utils';
+import {
+  getEnumValues,
+  GraphQLListDecorator,
+  GraphQLNonNullDecorator,
+  Maybe,
+  MaybeArray,
+  SuperMapOfNamedObject,
+} from '@prismamedia/graphql-platform-utils';
 import {
   GraphQLBoolean,
   GraphQLInputFieldConfig,
@@ -7,14 +14,18 @@ import {
   GraphQLScalarType,
 } from 'graphql';
 import { Memoize } from 'typescript-memoize';
-import { Component, Field, InverseRelation, Relation } from '../../resource';
+import { Field, InverseRelation, Relation } from '../../resource';
 import { FieldValue } from '../../resource/component';
 import { AbstractInputType } from '../abstract-type';
 
-export type CreateRelationInputValue = { [actionName in RelationActionId]?: any };
+export type CreateRelationInputValue = Partial<Record<CreateRelationActionKind, any>>;
+
+export type CreateInverseRelationInputValue = Partial<Record<CreateInverseRelationActionKind, MaybeArray<any>>>;
 
 export type CreateInputValue =
-  | ({ [fieldName: string]: Maybe<FieldValue> } & { [relationName: string]: Maybe<CreateRelationInputValue> })
+  | ({ [fieldName: string]: Maybe<FieldValue> } & { [relationName: string]: Maybe<CreateRelationInputValue> } & {
+      [inverseRelationName: string]: Maybe<CreateInverseRelationInputValue>;
+    })
   | boolean;
 
 export interface CreateAction {
@@ -24,23 +35,25 @@ export interface CreateAction {
 
 export class CreateActionMap extends SuperMapOfNamedObject<CreateAction> {}
 
-enum FieldAction {
-  set,
+export enum CreateFieldActionKind {
+  Set = 'set',
 }
 
-type FieldActionId = keyof typeof FieldAction;
-
-enum RelationAction {
-  connect,
-  create,
-  update,
+export enum CreateRelationActionKind {
+  Connect = 'connect',
+  Create = 'create',
+  Update = 'update',
+  Upsert = 'upsert',
 }
 
-type RelationActionId = keyof typeof RelationAction;
+export const createRelationActionKinds = getEnumValues(CreateRelationActionKind);
 
-enum InverseRelationAction {}
+export enum CreateInverseRelationActionKind {
+  Connect = 'connect',
+  Create = 'create',
+}
 
-type InverseRelationActionId = keyof typeof InverseRelationAction;
+export const createInverseRelationActionKinds = getEnumValues(CreateInverseRelationActionKind);
 
 export class CreateInputType extends AbstractInputType {
   @Memoize(({ name }: Field) => name)
@@ -58,37 +71,51 @@ export class CreateInputType extends AbstractInputType {
   @Memoize(({ name }: Relation) => name)
   protected getRelationActionFieldConfig(relation: Relation): Maybe<GraphQLInputFieldConfig> {
     if (!relation.isFullyManaged()) {
+      const relatedResource = relation.getTo();
+
       return {
-        description: relation.description,
+        description: `Nested actions for the "${relation}" relation`,
         type: GraphQLNonNullDecorator(
           new GraphQLInputObjectType({
             name: [relation.getFrom().name, 'Create', relation.pascalCasedName, 'Input'].filter(Boolean).join(''),
             fields: () => {
-              const fields: Record<RelationActionId, GraphQLInputFieldConfig> = {
-                connect: {
-                  description: `Connect an existing "${relation.getTo()}" node to the new "${relation.getFrom()}" node, through the "${relation}" relation.`,
-                  type: relation
-                    .getTo()
-                    .getInputType('WhereUnique')
-                    .getGraphQLType(),
-                },
+              const fields: GraphQLInputFieldConfigMap = {};
 
-                create: {
-                  description: `Create a new "${relation.getTo()}" node and connect it to the new "${relation.getFrom()}" node, through the "${relation}" relation.`,
-                  type: relation
-                    .getTo()
-                    .getInputType('Create')
-                    .getGraphQLType(),
-                },
-
-                update: {
-                  description: `Update an existing "${relation.getTo()}" node and connect it to the new "${relation.getFrom()}" node, through the "${relation}" relation.`,
-                  type: relation
-                    .getTo()
-                    .getMutation('UpdateOne')
-                    .getGraphQLFieldConfigArgsAsType(),
-                },
+              fields[CreateRelationActionKind.Connect] = {
+                description: `Connect an existing "${relatedResource}" node to the new "${relation.getFrom()}" node, through the "${relation}" relation.`,
+                type: relatedResource.getInputType('WhereUnique').getGraphQLType(),
               };
+
+              if (relatedResource.getMutation('UpdateOne').isPublic()) {
+                fields[CreateRelationActionKind.Update] = {
+                  description: `Update an existing "${relatedResource}" node and connect it to the new "${relation.getFrom()}" node, through the "${relation}" relation.`,
+                  type: new GraphQLInputObjectType({
+                    name: [relation.getFrom().name, 'Create', 'NestedUpdate', relation.pascalCasedName, 'Input']
+                      .filter(Boolean)
+                      .join(''),
+                    fields: () => relatedResource.getMutation('UpdateOne').getGraphQLFieldConfigArgs(),
+                  }),
+                };
+              }
+
+              if (relatedResource.getMutation('CreateOne').isPublic()) {
+                fields[CreateRelationActionKind.Create] = {
+                  description: `Create a new "${relatedResource}" node and connect it to the new "${relation.getFrom()}" node, through the "${relation}" relation.`,
+                  type: relatedResource.getInputType('Create').getGraphQLType(),
+                };
+              }
+
+              if (relatedResource.getMutation('UpsertOne').isPublic()) {
+                fields[CreateRelationActionKind.Upsert] = {
+                  description: `Create or update a "${relatedResource}" node and connect it to the new "${relation.getFrom()}" node, through the "${relation}" relation.`,
+                  type: new GraphQLInputObjectType({
+                    name: [relation.getFrom().name, 'Create', 'NestedUpsert', relation.pascalCasedName, 'Input']
+                      .filter(Boolean)
+                      .join(''),
+                    fields: () => relatedResource.getMutation('UpsertOne').getGraphQLFieldConfigArgs(),
+                  }),
+                };
+              }
 
               return fields;
             },
@@ -103,29 +130,79 @@ export class CreateInputType extends AbstractInputType {
 
   @Memoize(({ name }: InverseRelation) => name)
   protected getInverseRelationActionFieldConfig(inverseRelation: InverseRelation): Maybe<GraphQLInputFieldConfig> {
+    const relation = inverseRelation.getInverse();
+    const relatedResource = inverseRelation.getTo();
+
+    if (
+      (!relation.isImmutable() && relatedResource.getMutation('UpdateOne').isPublic()) ||
+      relatedResource.getMutation('CreateOne').isPublic()
+    ) {
+      return {
+        description: `Nested actions for the "${inverseRelation}" relation`,
+        type: new GraphQLInputObjectType({
+          name: [inverseRelation.getFrom().name, 'Create', inverseRelation.pascalCasedName, 'Input']
+            .filter(Boolean)
+            .join(''),
+          fields: () => {
+            const fields: GraphQLInputFieldConfigMap = {};
+
+            if (!relation.isImmutable() && relatedResource.getMutation('UpdateOne').isPublic()) {
+              fields[CreateInverseRelationActionKind.Connect] = {
+                description: inverseRelation.isToMany()
+                  ? `Connect existing "${relatedResource}" nodes to the new "${inverseRelation.getFrom()}" node, through the "${inverseRelation}" relation.`
+                  : `Connect an existing "${relatedResource}" node to the new "${inverseRelation.getFrom()}" node, through the "${inverseRelation}" relation.`,
+                type: GraphQLListDecorator(
+                  GraphQLNonNullDecorator(
+                    relatedResource.getInputType('WhereUnique').getGraphQLType(),
+                    inverseRelation.isToMany(),
+                  ),
+                  inverseRelation.isToMany(),
+                ),
+              };
+            }
+
+            if (relatedResource.getMutation('CreateOne').isPublic()) {
+              fields[CreateInverseRelationActionKind.Create] = {
+                description: inverseRelation.isToMany()
+                  ? `Create new "${relatedResource}" nodes and connect them to the new "${inverseRelation.getFrom()}" node, through the "${inverseRelation}" relation.`
+                  : `Create a new "${relatedResource}" node and connect it to the new "${inverseRelation.getFrom()}" node, through the "${inverseRelation}" relation.`,
+                type: GraphQLListDecorator(
+                  GraphQLNonNullDecorator(
+                    relatedResource.getInputType('Create').getGraphQLType(relation),
+                    inverseRelation.isToMany(),
+                  ),
+                  inverseRelation.isToMany(),
+                ),
+              };
+            }
+
+            return fields;
+          },
+        }),
+      };
+    }
+
     return null;
   }
 
-  @Memoize((forcedComponent?: Component) => (forcedComponent ? forcedComponent.name : ''))
-  public getActionMap(forcedComponent?: Component): CreateActionMap {
+  @Memoize((forcedRelation?: Relation) => (forcedRelation ? forcedRelation.name : ''))
+  public getActionMap(forcedRelation?: Relation): CreateActionMap {
     const actionMap = new CreateActionMap();
 
     for (const field of this.resource.getFieldSet()) {
-      if (!(forcedComponent && forcedComponent === field)) {
-        const fieldConfig = this.getFieldActionFieldConfig(field);
-        if (fieldConfig) {
-          const name = field.name;
+      const fieldConfig = this.getFieldActionFieldConfig(field);
+      if (fieldConfig) {
+        const name = field.name;
 
-          actionMap.set(name, {
-            name,
-            config: fieldConfig,
-          });
-        }
+        actionMap.set(name, {
+          name,
+          config: fieldConfig,
+        });
       }
     }
 
     for (const relation of this.resource.getRelationSet()) {
-      if (!(forcedComponent && forcedComponent === relation)) {
+      if (!(forcedRelation && forcedRelation === relation)) {
         const fieldConfig = this.getRelationActionFieldConfig(relation);
         if (fieldConfig) {
           const name = relation.name;
@@ -153,15 +230,15 @@ export class CreateInputType extends AbstractInputType {
     return actionMap;
   }
 
-  @Memoize((forcedComponent?: Component) => (forcedComponent ? forcedComponent.name : ''))
-  public getGraphQLType(forcedComponent?: Component): GraphQLInputObjectType | GraphQLScalarType {
-    const actionMap = this.getActionMap(forcedComponent);
+  @Memoize((forcedRelation?: Relation) => (forcedRelation ? forcedRelation.name : ''))
+  public getGraphQLType(forcedRelation?: Relation): GraphQLInputObjectType | GraphQLScalarType {
+    const actionMap = this.getActionMap(forcedRelation);
 
     return actionMap.size > 0
       ? new GraphQLInputObjectType({
           name: [
             this.resource.name,
-            forcedComponent ? `WithForced${forcedComponent.pascalCasedName}` : null,
+            forcedRelation ? `WithForced${forcedRelation.pascalCasedName}` : null,
             'CreateInput',
           ].join(''),
           fields: () => {
