@@ -77,7 +77,7 @@ export class CreateInputType extends AbstractInputType {
         description: `Nested actions for the "${relation}" relation`,
         type: GraphQLNonNullDecorator(
           new GraphQLInputObjectType({
-            name: [relation.getFrom().name, 'Create', relation.pascalCasedName, 'Input'].filter(Boolean).join(''),
+            name: [relation.getFrom().name, 'Nested', relation.pascalCasedName, 'CreateInput'].filter(Boolean).join(''),
             fields: () => {
               const fields: GraphQLInputFieldConfigMap = {};
 
@@ -90,7 +90,7 @@ export class CreateInputType extends AbstractInputType {
                 fields[CreateRelationActionKind.Update] = {
                   description: `Update an existing "${relatedResource}" node and connect it to the new "${relation.getFrom()}" node, through the "${relation}" relation.`,
                   type: new GraphQLInputObjectType({
-                    name: [relation.getFrom().name, 'Create', 'NestedUpdate', relation.pascalCasedName, 'Input']
+                    name: [relation.getFrom().name, 'NestedUpdate', relation.pascalCasedName, 'CreateInput']
                       .filter(Boolean)
                       .join(''),
                     fields: () => relatedResource.getMutation('UpdateOne').getGraphQLFieldConfigArgs(),
@@ -109,7 +109,7 @@ export class CreateInputType extends AbstractInputType {
                 fields[CreateRelationActionKind.Upsert] = {
                   description: `Create or update a "${relatedResource}" node and connect it to the new "${relation.getFrom()}" node, through the "${relation}" relation.`,
                   type: new GraphQLInputObjectType({
-                    name: [relation.getFrom().name, 'Create', 'NestedUpsert', relation.pascalCasedName, 'Input']
+                    name: [relation.getFrom().name, 'NestedUpsert', relation.pascalCasedName, 'CreateInput']
                       .filter(Boolean)
                       .join(''),
                     fields: () => relatedResource.getMutation('UpsertOne').getGraphQLFieldConfigArgs(),
@@ -134,19 +134,19 @@ export class CreateInputType extends AbstractInputType {
     const relatedResource = inverseRelation.getTo();
 
     if (
-      (!relation.isImmutable() && relatedResource.getMutation('UpdateOne').isPublic()) ||
+      (relation.isMutable() && relatedResource.getMutation('UpdateOne').isPublic()) ||
       relatedResource.getMutation('CreateOne').isPublic()
     ) {
       return {
-        description: `Nested actions for the "${inverseRelation}" relation`,
+        description: `Nested actions for the "${inverseRelation}" inverse relation`,
         type: new GraphQLInputObjectType({
-          name: [inverseRelation.getFrom().name, 'Create', inverseRelation.pascalCasedName, 'Input']
+          name: [inverseRelation.getFrom().name, 'Nested', inverseRelation.pascalCasedName, 'CreateInput']
             .filter(Boolean)
             .join(''),
           fields: () => {
             const fields: GraphQLInputFieldConfigMap = {};
 
-            if (!relation.isImmutable() && relatedResource.getMutation('UpdateOne').isPublic()) {
+            if (relation.isMutable() && relatedResource.getMutation('UpdateOne').isPublic()) {
               fields[CreateInverseRelationActionKind.Connect] = {
                 description: inverseRelation.isToMany()
                   ? `Connect existing "${relatedResource}" nodes to the new "${inverseRelation.getFrom()}" node, through the "${inverseRelation}" relation.`

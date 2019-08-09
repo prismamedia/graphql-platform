@@ -71,9 +71,8 @@ export class UpdateOneOperation extends AbstractOperation<UpdateOneOperationArgs
     const data = typeof args.data === 'boolean' ? {} : args.data;
     const update: ConnectorUpdateInputValue = Object.create(null);
 
-    const hasPostSuccessHook = resource.getEventListenerCount(ResourceHookKind.PostUpdate) > 0;
-
     // Select all the components in case of post success hooks
+    const hasPostSuccessHook = resource.getEventListenerCount(ResourceHookKind.PostUpdate) > 0;
     if (hasPostSuccessHook) {
       selectionNode.setChildren(resource.getComponentSet().getSelectionNodeChildren(TypeKind.Input));
     }

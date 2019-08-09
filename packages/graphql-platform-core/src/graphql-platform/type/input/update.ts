@@ -87,7 +87,7 @@ export class UpdateInputType extends AbstractInputType {
       return {
         description: `Nested actions for the "${relation}" relation`,
         type: new GraphQLInputObjectType({
-          name: [relation.getFrom().name, 'Update', relation.pascalCasedName, 'Input'].filter(Boolean).join(''),
+          name: [relation.getFrom().name, 'Nested', relation.pascalCasedName, 'UpdateInput'].filter(Boolean).join(''),
           fields: () => {
             const fields: GraphQLInputFieldConfigMap = {};
 
@@ -100,7 +100,7 @@ export class UpdateInputType extends AbstractInputType {
               fields[UpdateRelationActionKind.Update] = {
                 description: `Update an existing "${relatedResource}" node and connect it to the existing "${relation.getFrom()}" node, through the "${relation}" relation.`,
                 type: new GraphQLInputObjectType({
-                  name: [relation.getFrom().name, 'Update', 'NestedUpdate', relation.pascalCasedName, 'Input']
+                  name: [relation.getFrom().name, 'NestedUpdate', relation.pascalCasedName, 'UpdateInput']
                     .filter(Boolean)
                     .join(''),
                   fields: () => relatedResource.getMutation('UpdateOne').getGraphQLFieldConfigArgs(),
@@ -119,7 +119,7 @@ export class UpdateInputType extends AbstractInputType {
               fields[UpdateRelationActionKind.Upsert] = {
                 description: `Create or update a "${relatedResource}" node and connect it to the existing "${relation.getFrom()}" node, through the "${relation}" relation.`,
                 type: new GraphQLInputObjectType({
-                  name: [relation.getFrom().name, 'Update', 'NestedUpsert', relation.pascalCasedName, 'Input']
+                  name: [relation.getFrom().name, 'NestedUpsert', relation.pascalCasedName, 'UpdateInput']
                     .filter(Boolean)
                     .join(''),
                   fields: () => relatedResource.getMutation('UpsertOne').getGraphQLFieldConfigArgs(),
@@ -149,19 +149,19 @@ export class UpdateInputType extends AbstractInputType {
     const relatedResource = inverseRelation.getTo();
 
     if (
-      (!relation.isImmutable() && relatedResource.getMutation('UpdateOne').isPublic()) ||
+      (relation.isMutable() && relatedResource.getMutation('UpdateOne').isPublic()) ||
       relatedResource.getMutation('CreateOne').isPublic()
     ) {
       return {
-        description: `Nested actions for the "${inverseRelation}" relation`,
+        description: `Nested actions for the "${inverseRelation}" inverse relation`,
         type: new GraphQLInputObjectType({
-          name: [inverseRelation.getFrom().name, 'Update', inverseRelation.pascalCasedName, 'Input']
+          name: [inverseRelation.getFrom().name, 'Nested', inverseRelation.pascalCasedName, 'UpdateInput']
             .filter(Boolean)
             .join(''),
           fields: () => {
             const fields: GraphQLInputFieldConfigMap = {};
 
-            if (!relation.isImmutable() && relatedResource.getMutation('UpdateOne').isPublic()) {
+            if (relation.isMutable() && relatedResource.getMutation('UpdateOne').isPublic()) {
               fields[UpdateInverseRelationActionKind.Connect] = {
                 description: inverseRelation.isToMany()
                   ? `Connect existing "${relatedResource}" nodes to the existing "${inverseRelation.getFrom()}" node, through the "${inverseRelation}" relation.`
@@ -203,24 +203,25 @@ export class UpdateInputType extends AbstractInputType {
                     new GraphQLInputObjectType({
                       name: [
                         inverseRelation.getFrom().name,
-                        'Update',
                         'NestedUpdate',
                         inverseRelation.pascalCasedName,
-                        'Input',
+                        'UpdateInput',
                       ]
                         .filter(Boolean)
                         .join(''),
                       fields: () => {
+                        const whereUniqueType = relation.isInUnique()
+                          ? relatedResource.getInputType('WhereUnique').getGraphQLType(relation, relation.isImmutable())
+                          : relatedResource.getInputType('WhereUnique').getGraphQLType();
+
                         return {
-                          where: {
-                            type: inverseRelation.isToOne()
-                              ? relatedResource.getInputType('WhereUnique').getGraphQLType(relation, false)
-                              : relation.isInUnique()
-                              ? GraphQLNonNull(
-                                  relatedResource.getInputType('WhereUnique').getGraphQLType(relation, false),
-                                )
-                              : relatedResource.getInputType('WhereUnique').getGraphQLType(),
-                          },
+                          ...(whereUniqueType instanceof GraphQLInputObjectType
+                            ? {
+                                where: {
+                                  type: GraphQLNonNull(whereUniqueType),
+                                },
+                              }
+                            : {}),
                           data: {
                             type: GraphQLNonNull(relatedResource.getInputType('Update').getGraphQLType(relation)),
                           },
@@ -259,22 +260,25 @@ export class UpdateInputType extends AbstractInputType {
                     new GraphQLInputObjectType({
                       name: [
                         inverseRelation.getFrom().name,
-                        'Update',
                         'NestedUpsert',
                         inverseRelation.pascalCasedName,
-                        'Input',
+                        'UpdateInput',
                       ]
                         .filter(Boolean)
                         .join(''),
                       fields: () => {
+                        const whereUniqueType = relation.isInUnique()
+                          ? relatedResource.getInputType('WhereUnique').getGraphQLType(relation, relation.isImmutable())
+                          : relatedResource.getInputType('WhereUnique').getGraphQLType();
+
                         return {
-                          where: {
-                            type: GraphQLNonNull(
-                              relation.isInUnique()
-                                ? relatedResource.getInputType('WhereUnique').getGraphQLType(relation, false)
-                                : relatedResource.getInputType('WhereUnique').getGraphQLType(),
-                            ),
-                          },
+                          ...(whereUniqueType instanceof GraphQLInputObjectType
+                            ? {
+                                where: {
+                                  type: GraphQLNonNull(whereUniqueType),
+                                },
+                              }
+                            : {}),
                           update: {
                             type: GraphQLNonNull(relatedResource.getInputType('Update').getGraphQLType(relation)),
                           },

@@ -388,4 +388,65 @@ export const scenario: Scenario = [
       },
     },
   ],
+
+  /**
+   * Upsert a "toOne" inverse relation (create or update the related document)
+   */
+  [
+    {
+      source: `mutation {
+        first: updateArticle(
+          where: { id: "4d88dc29-1b08-47c0-917c-5a1c6b13f024" },
+          data: {
+            url: {
+              upsert: {
+                update: {
+                  path: "/updated"
+                },
+                create: {
+                  path: "/created"
+                }
+              }
+            }
+          }
+        ) {
+          url {
+            path
+          }
+        }
+
+        second: updateArticle(
+          where: { id: "4d88dc29-1b08-47c0-917c-5a1c6b13f024" },
+          data: {
+            url: {
+              upsert: {
+                update: {
+                  path: "/updated"
+                },
+                create: {
+                  path: "/created"
+                }
+              }
+            }
+          }
+        ) {
+          url {
+            path
+          }
+        }
+      }`,
+    },
+    {
+      first: {
+        url: {
+          path: '/created',
+        },
+      },
+      second: {
+        url: {
+          path: '/updated',
+        },
+      },
+    },
+  ],
 ];

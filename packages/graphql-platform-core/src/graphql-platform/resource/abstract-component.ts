@@ -152,6 +152,10 @@ export abstract class AbstractComponent<
     return isImmutable;
   }
 
+  public isMutable(): boolean {
+    return !this.isImmutable();
+  }
+
   public abstract isValue(value: unknown): value is TValue;
 
   public abstract parseValue<TStrict extends boolean>(

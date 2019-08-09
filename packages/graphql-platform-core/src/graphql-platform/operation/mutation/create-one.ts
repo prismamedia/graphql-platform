@@ -57,9 +57,8 @@ export class CreateOneOperation extends AbstractOperation<CreateOneOperationArgs
     const data = typeof args.data === 'boolean' ? {} : args.data;
     const create: ConnectorCreateInputValue = Object.create(null);
 
-    const hasPostSuccessHook = resource.getEventListenerCount(ResourceHookKind.PostCreate) > 0;
-
     // Select all the components in case of post success hooks
+    const hasPostSuccessHook = resource.getEventListenerCount(ResourceHookKind.PostCreate) > 0;
     if (hasPostSuccessHook) {
       selectionNode.setChildren(resource.getComponentSet().getSelectionNodeChildren(TypeKind.Input));
     }
