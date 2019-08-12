@@ -102,10 +102,28 @@ export class WhereInputType extends AbstractInputType {
   protected fieldFilterConfigMap: FieldWhereFilterConfigMap = {
     eq: field => ({
       name: field.name,
+      clean: (value: unknown) => {
+        if (value === null && !field.isNullable()) {
+          throw new Error(
+            `The "${field.resource}.${field.name}" operator does not accept the "null" value as the field is non-nullable.`,
+          );
+        }
+
+        return value;
+      },
       fieldConfig: { type: field.getType() },
     }),
     not: field => ({
       name: `${field.name}_not`,
+      clean: (value: unknown) => {
+        if (value === null && !field.isNullable()) {
+          throw new Error(
+            `The "${field.resource}.${field.name}_not" operator does not accept the "null" value as the field is non-nullable.`,
+          );
+        }
+
+        return value;
+      },
       fieldConfig: { type: field.getType() },
     }),
     is_null: field =>
@@ -118,16 +136,19 @@ export class WhereInputType extends AbstractInputType {
         : null,
     in: field => ({
       name: `${field.name}_in`,
+      clean: (value: unknown) => (Array.isArray(value) ? value : undefined),
       fieldConfig: { type: GraphQLList(GraphQLNonNullDecorator(field.getType(), !field.isNullable())) },
     }),
     not_in: field => ({
       name: `${field.name}_not_in`,
+      clean: (value: unknown) => (Array.isArray(value) ? value : undefined),
       fieldConfig: { type: GraphQLList(GraphQLNonNullDecorator(field.getType(), !field.isNullable())) },
     }),
     contains: field =>
       ['String'].includes(field.getType().name)
         ? {
             name: `${field.name}_contains`,
+            clean: (value: null | string) => value || undefined,
             fieldConfig: { type: field.getType() },
           }
         : null,
@@ -135,6 +156,7 @@ export class WhereInputType extends AbstractInputType {
       ['String'].includes(field.getType().name)
         ? {
             name: `${field.name}_not_contains`,
+            clean: (value: null | string) => value || undefined,
             fieldConfig: { type: field.getType() },
           }
         : null,
@@ -142,6 +164,7 @@ export class WhereInputType extends AbstractInputType {
       ['String'].includes(field.getType().name)
         ? {
             name: `${field.name}_starts_with`,
+            clean: (value: null | string) => value || undefined,
             fieldConfig: { type: field.getType() },
           }
         : null,
@@ -149,6 +172,7 @@ export class WhereInputType extends AbstractInputType {
       ['String'].includes(field.getType().name)
         ? {
             name: `${field.name}_not_starts_with`,
+            clean: (value: null | string) => value || undefined,
             fieldConfig: { type: field.getType() },
           }
         : null,
@@ -156,6 +180,7 @@ export class WhereInputType extends AbstractInputType {
       ['String'].includes(field.getType().name)
         ? {
             name: `${field.name}_ends_with`,
+            clean: (value: null | string) => value || undefined,
             fieldConfig: { type: field.getType() },
           }
         : null,
@@ -163,6 +188,7 @@ export class WhereInputType extends AbstractInputType {
       ['String'].includes(field.getType().name)
         ? {
             name: `${field.name}_not_ends_with`,
+            clean: (value: null | string) => value || undefined,
             fieldConfig: { type: field.getType() },
           }
         : null,
@@ -170,6 +196,7 @@ export class WhereInputType extends AbstractInputType {
       ['String', 'Int', 'Float', 'DateTime'].includes(field.getType().name)
         ? {
             name: `${field.name}_lt`,
+            clean: (value: unknown) => (value !== null ? value : undefined),
             fieldConfig: { type: field.getType() },
           }
         : null,
@@ -177,6 +204,7 @@ export class WhereInputType extends AbstractInputType {
       ['String', 'Int', 'Float', 'DateTime'].includes(field.getType().name)
         ? {
             name: `${field.name}_lte`,
+            clean: (value: unknown) => (value !== null ? value : undefined),
             fieldConfig: { type: field.getType() },
           }
         : null,
@@ -184,6 +212,7 @@ export class WhereInputType extends AbstractInputType {
       ['String', 'Int', 'Float', 'DateTime'].includes(field.getType().name)
         ? {
             name: `${field.name}_gt`,
+            clean: (value: unknown) => (value !== null ? value : undefined),
             fieldConfig: { type: field.getType() },
           }
         : null,
@@ -191,6 +220,7 @@ export class WhereInputType extends AbstractInputType {
       ['String', 'Int', 'Float', 'DateTime'].includes(field.getType().name)
         ? {
             name: `${field.name}_gte`,
+            clean: (value: unknown) => (value !== null ? value : undefined),
             fieldConfig: { type: field.getType() },
           }
         : null,
@@ -199,13 +229,22 @@ export class WhereInputType extends AbstractInputType {
   protected relationFilterConfigMap: RelationWhereFilterConfigMap = {
     eq: relation => ({
       name: relation.name,
-      clean: (value: unknown) =>
-        relation.isNullable() && value === null
-          ? value
-          : relation
-              .getTo()
-              .getInputType('Where')
-              .clean(value),
+      clean: (value: unknown) => {
+        if (value === null) {
+          if (relation.isNullable()) {
+            return value;
+          }
+
+          throw new Error(
+            `The "${relation.resource}.${relation.name}" operator does not accept the "null" value as the relation is non-nullable.`,
+          );
+        }
+
+        return relation
+          .getTo()
+          .getInputType('Where')
+          .clean(value);
+      },
       fieldConfig: {
         type: relation
           .getTo()
@@ -396,13 +435,11 @@ export class WhereInputType extends AbstractInputType {
     const cleanedValue = this.clean(value);
     if (cleanedValue) {
       await Promise.all(
-        Object.entries(cleanedValue).map(async ([filterName, filterValue]) => {
-          if (typeof filterValue !== 'undefined') {
-            await this.getFilterMap()
-              .assert(filterName)
-              .parse(parser, filterValue);
-          }
-        }),
+        Object.entries(cleanedValue).map(async ([filterName, filterValue]) =>
+          this.getFilterMap()
+            .assert(filterName)
+            .parse(parser, filterValue),
+        ),
       );
     }
   }

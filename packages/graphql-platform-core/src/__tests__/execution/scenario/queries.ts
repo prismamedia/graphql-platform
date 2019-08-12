@@ -366,4 +366,39 @@ export const scenario: Scenario = [
       ],
     },
   ],
+
+  // execute a query with some empty or null operator
+  [
+    {
+      source: `query ($where: ArticleWhereInput!) {
+        articles(where: $where, first: 1) { id }
+      }`,
+      variableValues: {
+        where: {
+          id: '87ece569-f025-4212-b800-7ffd50721582',
+          OR: [
+            {
+              // should be removed
+              format_in: null,
+            },
+            {
+              // should return nothing
+              format_in: [],
+            },
+            {
+              // should be removed
+              format_not_in: null,
+            },
+            {
+              // should return everything
+              format_not_in: [],
+            },
+          ],
+        },
+      },
+    },
+    {
+      articles: [{ id: '87ece569-f025-4212-b800-7ffd50721582' }],
+    },
+  ],
 ];

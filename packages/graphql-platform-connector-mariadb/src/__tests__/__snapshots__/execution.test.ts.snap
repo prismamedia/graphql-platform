@@ -1,7 +1,7 @@
 // Jest Snapshot v1, https://goo.gl/fbAQLP
 
 exports[`Execution executes a scenario 1`] = `
-"# 85 queries in 1 connections
+"# 86 queries in 1 connections
 
 SELECT
   COUNT(DISTINCT \`Article\`.\`intId\`) AS result
@@ -219,6 +219,22 @@ FROM
   \`articles\` AS \`Article\`
 WHERE
   \`Article\`.\`format\` IN ('RICH', 'VIDEO')
+LIMIT
+  1;
+
+SELECT
+  \`Article\`.\`id\`
+FROM
+  \`articles\` AS \`Article\`
+WHERE
+  (\`Article\`.\`format\` IN ('RICH', 'VIDEO'))
+  AND (
+    \`Article\`.\`id\` = '87ece569-f025-4212-b800-7ffd50721582'
+  )
+  AND (
+    (FALSE)
+    OR (TRUE)
+  )
 LIMIT
   1;
 

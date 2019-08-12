@@ -153,11 +153,15 @@ export class FindOperation extends AbstractOperationResolver<ConnectorFindOperat
               break;
 
             case 'in':
-              Array.isArray(value) && where.addFilter(column, 'IN', value);
+              if (Array.isArray(value)) {
+                value.length > 0 ? where.addFilter(column, 'IN', value) : where.addRaw('FALSE');
+              }
               break;
 
             case 'not_in':
-              Array.isArray(value) && where.addFilter(column, 'NOT IN', value);
+              if (Array.isArray(value)) {
+                value.length > 0 ? where.addFilter(column, 'NOT IN', value) : where.addRaw('TRUE');
+              }
               break;
 
             case 'contains':
