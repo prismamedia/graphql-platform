@@ -106,3 +106,5 @@ export class Unique<TConfig extends AnyUniqueFullConfig = UniqueFullConfig> {
     return this.componentSet.getSelectionNodeChildren(use);
   }
 }
+
+export type AnyUnique = Unique<any>;

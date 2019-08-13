@@ -1,15 +1,22 @@
+import { Entries, fromEntries } from '@prismamedia/graphql-platform-utils';
 import { DepGraph } from 'dependency-graph';
 import { OperationDefinitionNode, print } from 'graphql';
 import { Logger } from 'winston';
 import { GraphQLPlatform, GraphQLRequest } from '../graphql-platform';
-import { FieldValue, Relation, Resource } from './resource';
-import { TypeKind } from './type';
-import { CreateInputValue, WhereUniqueInputValue } from './type/input';
+import { CreateOneDataInputValue } from './operation';
+import { AnyResource, Relation, SerializedFieldValue } from './resource';
+import { TypeKind, WhereUniqueInputValue } from './type';
 
 export class FixtureGraph extends DepGraph<Fixture> {}
 
+export type FixtureFieldData = SerializedFieldValue;
+
+export type FixtureRelationData = null | Fixture['name'];
+
+export type FixtureComponentData = FixtureFieldData | FixtureRelationData;
+
 export type FixtureData = {
-  [componentName: string]: null | FieldValue | Fixture['name'];
+  [componentName: string]: FixtureComponentData;
 };
 
 export type FixtureDataMap = {
@@ -22,7 +29,7 @@ export class Fixture {
 
   public constructor(
     readonly name: string,
-    readonly resource: Resource,
+    readonly resource: AnyResource,
     readonly data: FixtureData,
     protected graph: FixtureGraph,
     protected gp: GraphQLPlatform,
@@ -72,7 +79,7 @@ export class Fixture {
               kind: 'NamedType',
               name: {
                 kind: 'Name',
-                value: this.resource.getInputType('Create').getGraphQLType().name,
+                value: this.resource.getMutation('CreateOne').getDataType().name,
               },
             },
           },
@@ -124,25 +131,22 @@ export class Fixture {
   }
 
   public getCreateMutationVariables(): GraphQLRequest['variableValues'] {
-    const data: CreateInputValue = {};
-
-    this.resource.getFieldSet().forEach(field => {
-      if (!field.isFullyManaged()) {
-        Object.assign(data, { [field.name]: field.getValue(this.data, false) });
-      }
-    });
-
-    this.resource.getRelationSet().forEach(relation => {
-      if (!relation.isFullyManaged()) {
-        const relatedFixture = this.getRelatedFixture(relation);
-        if (relatedFixture) {
-          Object.assign(data, { [relation.name]: { connect: relatedFixture.assertId() } });
-        }
-      }
-    });
-
     return {
-      data,
+      data: fromEntries([
+        // Fields
+        ...[...this.resource.getFieldSet()].map(field =>
+          !field.isFullyManaged() ? [field.name, this.data[field.name] as FixtureFieldData] : undefined,
+        ),
+        // Relations
+        ...[...this.resource.getRelationSet()].map(relation => {
+          if (!relation.isFullyManaged()) {
+            const relatedFixture = this.getRelatedFixture(relation);
+            if (relatedFixture) {
+              return [relation.name, { connect: relatedFixture.assertId() }];
+            }
+          }
+        }),
+      ] as Entries<CreateOneDataInputValue>),
     };
   }
 
@@ -170,7 +174,7 @@ export class Fixture {
       throw new Error('An error occured.');
     }
 
-    this.id = this.resource.parseId(data.id, true);
+    this.id = this.resource.getInputType('WhereUnique').assert(data.id);
   }
 
   public assertId(): WhereUniqueInputValue {

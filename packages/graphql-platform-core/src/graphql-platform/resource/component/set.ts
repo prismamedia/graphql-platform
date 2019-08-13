@@ -1,9 +1,9 @@
 import { GraphQLSelectionNode, SuperSetOfNamedObject } from '@prismamedia/graphql-platform-utils';
 import { Memoize } from 'typescript-memoize';
 import { TypeKind } from '../../type';
-import { Component } from './types';
+import { AnyComponent, Component } from './types';
 
-export class ComponentSet<TComponent extends Component = Component> extends SuperSetOfNamedObject<TComponent> {
+export class ComponentSet<TComponent extends AnyComponent = Component> extends SuperSetOfNamedObject<TComponent> {
   @Memoize((use: TypeKind = TypeKind.Output) => use)
   public getSelectionNodeChildren(use: TypeKind = TypeKind.Output): GraphQLSelectionNode[] {
     const children: GraphQLSelectionNode[] = [];

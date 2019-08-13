@@ -1,4 +1,4 @@
 import { SuperMapOfNamedObject } from '@prismamedia/graphql-platform-utils';
-import { Component } from './types';
+import { AnyComponent, Component } from './types';
 
-export class ComponentMap<TComponent extends Component = Component> extends SuperMapOfNamedObject<TComponent> {}
+export class ComponentMap<TComponent extends AnyComponent = Component> extends SuperMapOfNamedObject<TComponent> {}

@@ -22,7 +22,10 @@ export class FindOneOperation extends AbstractOperation<FindOneOperationArgs, Fi
     return `Retrieve a single "${this.resource}" node.`;
   }
 
-  @Memoize()
+  public getGraphQLFieldConfigType(): GraphQLOutputType {
+    return this.resource.getOutputType('Node').getGraphQLType();
+  }
+
   public getGraphQLFieldConfigArgs(): GraphQLFieldConfigArgumentMap {
     return {
       where: {
@@ -31,20 +34,13 @@ export class FindOneOperation extends AbstractOperation<FindOneOperationArgs, Fi
     };
   }
 
-  @Memoize()
-  public getGraphQLFieldConfigType(): GraphQLOutputType {
-    return this.resource.getOutputType('Node').getGraphQLType();
-  }
-
   public async resolve(params: OperationResolverParams<FindOneOperationArgs>): Promise<FindOneOperationResult> {
-    const {
-      args: { where },
-    } = params;
+    const { args } = params;
 
     const nodes = await this.resource.getQuery('FindMany').resolve({
       ...params,
       args: {
-        where: this.resource.parseId(where, true),
+        where: this.resource.getInputType('WhereUnique').assert(args.where),
         first: 1,
       },
     });

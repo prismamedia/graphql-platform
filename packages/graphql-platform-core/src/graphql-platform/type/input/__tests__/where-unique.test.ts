@@ -37,7 +37,7 @@ describe('WhereUniqueInput', () => {
           ).toMatchSnapshot();
 
           expect(
-            printType(resource.getInputType('WhereUnique').getGraphQLType(relation), {
+            printType(resource.getInputType('WhereUnique').getGraphQLType(relation, true), {
               commentDescriptions: true,
             }),
           ).toMatchSnapshot();
@@ -63,13 +63,13 @@ describe('WhereUniqueInput', () => {
     );
   });
 
-  it.each([[undefined], [null], [{}]] as ReadonlyArray<any>)('parses value into "undefined"', value => {
-    expect(
+  it.each([[undefined], [null], [{}]] as ReadonlyArray<any>)('throws error on invalid values', value => {
+    expect(() =>
       resourceMap
         .assert('Article')
         .getInputType('WhereUnique')
-        .parse(value, false),
-    ).toBeUndefined();
+        .assert(value),
+    ).toThrowError('The following "Article"\'s identifier does not contain any valid');
   });
 
   it.each([
@@ -135,12 +135,12 @@ describe('WhereUniqueInput', () => {
   ] as ReadonlyArray<[WhereUniqueInputValue, POJO]>)(
     'parses value into "whereUniqueInputValue"',
     (value, whereUniqueInputValue) => {
-      const id = resourceMap
-        .assert('Article')
-        .getInputType('WhereUnique')
-        .parse(value, false);
-
-      expect(id).toEqual(whereUniqueInputValue);
+      expect(
+        resourceMap
+          .assert('Article')
+          .getInputType('WhereUnique')
+          .parse(value),
+      ).toEqual(whereUniqueInputValue);
     },
   );
 });

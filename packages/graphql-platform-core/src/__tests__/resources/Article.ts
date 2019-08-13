@@ -90,6 +90,7 @@ const resource: MyResourceConfig = {
   },
   relations: {
     category: {
+      description: "The article's category",
       to: 'Category',
       unique: 'parent-slug',
       nullable: false,
@@ -117,16 +118,24 @@ const resource: MyResourceConfig = {
     },
   },
   filter: ({ debug, myService }) => ({
-    format_in: ['RICH', 'VIDEO'],
+    format_in: [ArticleFormat.Rich, ArticleFormat.Video],
   }),
   hooks: {
+    [ResourceHookKind.PreCreate]: ({
+      metas: {
+        context: { logger },
+      },
+      create,
+    }) => {
+      logger && logger.info(`Will create "${create.format}" article: ${create.title}`);
+    },
     [ResourceHookKind.PostCreate]: ({
       metas: {
         context: { logger },
       },
       createdNode,
     }) => {
-      logger && logger.info(`Created article "${createdNode.title}"`);
+      logger && logger.info(`Created "${createdNode.format}" article: ${createdNode.title}`);
     },
   },
 };

@@ -12,7 +12,7 @@ exports[`One file configuration creates a valid GraphQL schema 1`] = `
   updateMyArticle(where: MyArticleWhereUniqueInput!, data: MyArticleUpdateInput!): MyArticle
 
   # Update or create a single \\"MyArticle\\" node.
-  upsertMyArticle(where: MyArticleWhereUniqueInput!, create: MyArticleCreateInput!, update: MyArticleUpdateInput!): MyArticle!
+  upsertMyArticle(where: MyArticleWhereUniqueInput!, update: MyArticleUpdateInput!, create: MyArticleCreateInput!): MyArticle!
 }
 
 # \\"MyArticle\\" resource's node

@@ -14,10 +14,28 @@ export class CreateOperation extends AbstractOperationResolver<
       creates.map(async create => {
         const insertStatement = this.table.newInsertStatement();
 
-        for (const column of this.table.getColumnSet()) {
-          const columnValue = column.getValue(create, false);
-          if (typeof columnValue !== 'undefined') {
-            insertStatement.assignmentList.addAssignment(column, columnValue);
+        for (const component of this.resource.getComponentSet()) {
+          if (component.isField()) {
+            if (component.isList()) {
+              throw new Error(`Not implemented, yet`);
+            } else {
+              const fieldValue = create.get(component);
+              if (typeof fieldValue !== 'undefined') {
+                const column = this.table.getColumn(component);
+                insertStatement.assignmentList.addAssignment(column, column.getValue(fieldValue));
+              }
+            }
+          } else {
+            if (component.isList()) {
+              throw new Error(`Not implemented, yet`);
+            } else {
+              const relationValue = create.get(component);
+              if (typeof relationValue !== 'undefined') {
+                for (const column of this.table.getForeignKey(component).getColumnSet()) {
+                  insertStatement.assignmentList.addAssignment(column, column.getValue(relationValue));
+                }
+              }
+            }
           }
         }
 
@@ -27,11 +45,11 @@ export class CreateOperation extends AbstractOperationResolver<
         if (autoIncrementColumn) {
           if (!('insertId' in result && typeof result.insertId === 'number')) {
             throw new Error(
-              `As the column "${autoIncrementColumn}" is AUTO_INCREMENT, a number should be returned for it.`,
+              `As the column "${autoIncrementColumn}" is AUTO_INCREMENT, a number should be returned for it: "${result}" have been returned`,
             );
           }
 
-          autoIncrementColumn.setValue(create, result.insertId);
+          create.set(autoIncrementColumn.field, result.insertId);
         }
 
         return create;

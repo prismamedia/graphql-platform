@@ -1,14 +1,16 @@
 import { GraphQLFieldConfigArgumentMap, GraphQLNonNull, GraphQLOutputType } from 'graphql';
 import { Memoize } from 'typescript-memoize';
 import { OperationResolverParams } from '../../operation';
-import { CreateInputValue, NodeSource, TypeKind, UpdateInputValue, WhereUniqueInputValue } from '../../type';
+import { NodeSource, TypeKind, WhereUniqueInputValue } from '../../type';
 import { AbstractOperation } from '../abstract-operation';
+import { CreateOneDataInputValue } from './create-one';
+import { UpdateOneDataInputValue } from './update-one';
 
-export interface UpsertOneOperationArgs {
+export type UpsertOneOperationArgs = {
   where: WhereUniqueInputValue;
-  create: CreateInputValue;
-  update: UpdateInputValue;
-}
+  create: CreateOneDataInputValue;
+  update: UpdateOneDataInputValue;
+};
 
 export type UpsertOneOperationResult = NodeSource;
 
@@ -28,24 +30,19 @@ export class UpsertOneOperation extends AbstractOperation<UpsertOneOperationArgs
     return `Update or create a single "${this.resource}" node.`;
   }
 
-  @Memoize()
-  public getGraphQLFieldConfigArgs(): GraphQLFieldConfigArgumentMap {
-    return {
-      where: {
-        type: GraphQLNonNull(this.resource.getInputType('WhereUnique').getGraphQLType()),
-      },
-      create: {
-        type: GraphQLNonNull(this.resource.getInputType('Create').getGraphQLType()),
-      },
-      update: {
-        type: GraphQLNonNull(this.resource.getInputType('Update').getGraphQLType()),
-      },
-    };
-  }
-
-  @Memoize()
   public getGraphQLFieldConfigType(): GraphQLOutputType {
     return GraphQLNonNull(this.resource.getOutputType('Node').getGraphQLType());
+  }
+
+  public getGraphQLFieldConfigArgs(): GraphQLFieldConfigArgumentMap {
+    const { where, data: update } = this.resource.getMutation('UpdateOne').getGraphQLFieldConfigArgs();
+    const { data: create } = this.resource.getMutation('CreateOne').getGraphQLFieldConfigArgs();
+
+    return {
+      where,
+      update,
+      create,
+    };
   }
 
   public async resolve(params: OperationResolverParams<UpsertOneOperationArgs>): Promise<UpsertOneOperationResult> {
@@ -61,17 +58,17 @@ export class UpsertOneOperation extends AbstractOperation<UpsertOneOperationArgs
       selectionNode: resource.getIdentifier().getSelectionNode(TypeKind.Input),
     });
 
-    const result = await (!node
-      ? resource.getMutation('CreateOne').resolve({
-          ...params,
-          args: { data: create },
-        })
-      : resource.getMutation('UpdateOne').resolve({
+    const result = await (node
+      ? resource.getMutation('UpdateOne').resolve({
           ...params,
           args: {
-            where: resource.parseId(node, true),
+            where: resource.getInputType('WhereUnique').assertUnique(node, resource.getIdentifier(), true),
             data: update,
           },
+        })
+      : resource.getMutation('CreateOne').resolve({
+          ...params,
+          args: { data: create },
         }));
 
     if (!result) {

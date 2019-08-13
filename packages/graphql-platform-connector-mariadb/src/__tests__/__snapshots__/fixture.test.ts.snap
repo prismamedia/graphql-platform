@@ -144,8 +144,8 @@ SET
   \`title\` = 'Deserunt quam.',
   \`slug\` = 'deserunt-quam',
   \`body\` = 'Tempore a velit provident velit.',
-  \`isPublished\` = false,
-  \`isImportant\` = true,
+  \`isPublished\` = 0,
+  \`isImportant\` = 1,
   \`categoryParentId\` = '199f6850-dc43-4bc9-a6dc-b68625021e0e',
   \`categorySlug\` = 'quisquam-recusandae-alias',
   \`authorUsername\` = 'Michel',
@@ -266,8 +266,8 @@ SET
   \`title\` = 'Consequuntur aut.',
   \`slug\` = 'consequuntur-aut',
   \`body\` = 'Est fuga est placeat ex.',
-  \`isPublished\` = true,
-  \`isImportant\` = false,
+  \`isPublished\` = 1,
+  \`isImportant\` = 0,
   \`categoryParentId\` = '199f6850-dc43-4bc9-a6dc-b68625021e0e',
   \`categorySlug\` = 'quisquam-recusandae-alias',
   \`authorUsername\` = 'Augusta',
@@ -378,8 +378,8 @@ SET
   \`title\` = 'Velit sit.',
   \`slug\` = 'velit-sit',
   \`body\` = 'Aperiam placeat fuga doloribus distinctio.',
-  \`isPublished\` = false,
-  \`isImportant\` = true,
+  \`isPublished\` = 0,
+  \`isImportant\` = 1,
   \`categoryParentId\` = '199f6850-dc43-4bc9-a6dc-b68625021e0e',
   \`categorySlug\` = 'quisquam-recusandae-alias',
   \`authorUsername\` = 'Priscilla',
@@ -456,9 +456,9 @@ LIMIT
 INSERT INTO
   \`article_tags\`
 SET
+  \`order\` = 0,
   \`articleIntId\` = 3,
-  \`tagIntId\` = 1,
-  \`order\` = 0;
+  \`tagIntId\` = 1;
 
 SELECT
   \`ArticleTag>article\`.\`id\`,
@@ -512,9 +512,9 @@ LIMIT
 INSERT INTO
   \`article_tags\`
 SET
+  \`order\` = 1,
   \`articleIntId\` = 3,
-  \`tagIntId\` = 2,
-  \`order\` = 1;
+  \`tagIntId\` = 2;
 
 SELECT
   \`ArticleTag>article\`.\`id\`,
@@ -568,9 +568,9 @@ LIMIT
 INSERT INTO
   \`article_tags\`
 SET
+  \`order\` = 2,
   \`articleIntId\` = 3,
-  \`tagIntId\` = 3,
-  \`order\` = 2;
+  \`tagIntId\` = 3;
 
 SELECT
   \`ArticleTag>article\`.\`id\`,
@@ -639,8 +639,8 @@ SET
   \`title\` = 'Architecto ducimus.',
   \`slug\` = 'architecto-ducimus',
   \`body\` = 'Totam voluptates explicabo exercitationem ut.',
-  \`isPublished\` = false,
-  \`isImportant\` = false,
+  \`isPublished\` = 0,
+  \`isImportant\` = 0,
   \`categoryParentId\` = NULL,
   \`categorySlug\` = 'root-category',
   \`authorUsername\` = 'Priscilla';
@@ -716,9 +716,9 @@ LIMIT
 INSERT INTO
   \`article_tags\`
 SET
+  \`order\` = 0,
   \`articleIntId\` = 4,
-  \`tagIntId\` = 4,
-  \`order\` = 0;
+  \`tagIntId\` = 4;
 
 SELECT
   \`ArticleTag>article\`.\`id\`,
@@ -817,8 +817,8 @@ SET
   \`title\` = 'Soluta sint.',
   \`slug\` = 'soluta-sint',
   \`body\` = 'Non voluptates ut ullam quos.',
-  \`isPublished\` = false,
-  \`isImportant\` = true,
+  \`isPublished\` = 0,
+  \`isImportant\` = 1,
   \`categoryParentId\` = '199f6850-dc43-4bc9-a6dc-b68625021e0e',
   \`categorySlug\` = 'repellat',
   \`authorUsername\` = 'Priscilla',
@@ -884,9 +884,9 @@ LIMIT
 INSERT INTO
   \`article_tags\`
 SET
+  \`order\` = 0,
   \`articleIntId\` = 5,
-  \`tagIntId\` = 2,
-  \`order\` = 0;
+  \`tagIntId\` = 2;
 
 SELECT
   \`ArticleTag>article\`.\`id\`,
@@ -929,9 +929,9 @@ LIMIT
 INSERT INTO
   \`article_tags\`
 SET
+  \`order\` = 1,
   \`articleIntId\` = 5,
-  \`tagIntId\` = 4,
-  \`order\` = 1;
+  \`tagIntId\` = 4;
 
 SELECT
   \`ArticleTag>article\`.\`id\`,
@@ -1000,8 +1000,8 @@ SET
   \`title\` = 'Officia quaerat.',
   \`slug\` = 'officia-quaerat',
   \`body\` = 'Cumque incidunt aut provident esse.',
-  \`isPublished\` = true,
-  \`isImportant\` = true,
+  \`isPublished\` = 1,
+  \`isImportant\` = 1,
   \`categoryParentId\` = '199f6850-dc43-4bc9-a6dc-b68625021e0e',
   \`categorySlug\` = 'repellat',
   \`authorUsername\` = 'Priscilla';
@@ -1066,9 +1066,9 @@ LIMIT
 INSERT INTO
   \`article_tags\`
 SET
+  \`order\` = 0,
   \`articleIntId\` = 6,
-  \`tagIntId\` = 3,
-  \`order\` = 0;
+  \`tagIntId\` = 3;
 
 SELECT
   \`ArticleTag>article\`.\`id\`,
@@ -1146,8 +1146,8 @@ SET
   \`title\` = 'Eos saepe.',
   \`slug\` = 'eos-saepe',
   \`body\` = 'Consequatur vel in ut dolorem.',
-  \`isPublished\` = true,
-  \`isImportant\` = true,
+  \`isPublished\` = 1,
+  \`isImportant\` = 1,
   \`categoryParentId\` = '199f6850-dc43-4bc9-a6dc-b68625021e0e',
   \`categorySlug\` = 'quisquam-recusandae-alias',
   \`authorUsername\` = 'Priscilla',
@@ -1213,9 +1213,9 @@ LIMIT
 INSERT INTO
   \`article_tags\`
 SET
+  \`order\` = 1,
   \`articleIntId\` = 7,
-  \`tagIntId\` = 2,
-  \`order\` = 1;
+  \`tagIntId\` = 2;
 
 SELECT
   \`ArticleTag>article\`.\`id\`,
@@ -1258,9 +1258,9 @@ LIMIT
 INSERT INTO
   \`article_tags\`
 SET
+  \`order\` = 2,
   \`articleIntId\` = 7,
-  \`tagIntId\` = 3,
-  \`order\` = 2;
+  \`tagIntId\` = 3;
 
 SELECT
   \`ArticleTag>article\`.\`id\`,
@@ -1338,8 +1338,8 @@ SET
   \`title\` = 'Delectus aut.',
   \`slug\` = 'delectus-aut',
   \`body\` = 'Nam et dolorum architecto fugit.',
-  \`isPublished\` = true,
-  \`isImportant\` = true,
+  \`isPublished\` = 1,
+  \`isImportant\` = 1,
   \`categoryParentId\` = '199f6850-dc43-4bc9-a6dc-b68625021e0e',
   \`categorySlug\` = 'repellat',
   \`authorUsername\` = 'Vivianne',
@@ -1405,9 +1405,9 @@ LIMIT
 INSERT INTO
   \`article_tags\`
 SET
+  \`order\` = 0,
   \`articleIntId\` = 8,
-  \`tagIntId\` = 1,
-  \`order\` = 0;
+  \`tagIntId\` = 1;
 
 SELECT
   \`ArticleTag>article\`.\`id\`,
@@ -1441,8 +1441,8 @@ LIMIT
 INSERT INTO
   \`article_urls\`
 SET
-  \`articleIntId\` = 6,
-  \`path\` = 'https://claudie.net';
+  \`path\` = 'https://claudie.net',
+  \`articleIntId\` = 6;
 
 SELECT
   \`ArticleUrl>article\`.\`id\`
@@ -1517,8 +1517,8 @@ SET
   \`title\` = 'Occaecati debitis.',
   \`slug\` = 'occaecati-debitis',
   \`body\` = 'Et saepe eum dicta eum.',
-  \`isPublished\` = false,
-  \`isImportant\` = false,
+  \`isPublished\` = 0,
+  \`isImportant\` = 0,
   \`categoryParentId\` = NULL,
   \`categorySlug\` = 'root-category',
   \`authorUsername\` = 'Michel',
@@ -1575,8 +1575,8 @@ LIMIT
 INSERT INTO
   \`article_urls\`
 SET
-  \`articleIntId\` = 9,
-  \`path\` = 'https://kathryne.org';
+  \`path\` = 'https://kathryne.org',
+  \`articleIntId\` = 9;
 
 SELECT
   \`ArticleUrl>article\`.\`id\`
@@ -1637,8 +1637,8 @@ LIMIT
 INSERT INTO
   \`article_urls\`
 SET
-  \`articleIntId\` = 8,
-  \`path\` = 'https://nick.biz';
+  \`path\` = 'https://nick.biz',
+  \`articleIntId\` = 8;
 
 SELECT
   \`ArticleUrl>article\`.\`id\`
@@ -1719,9 +1719,9 @@ LIMIT
 INSERT INTO
   \`article_tags\`
 SET
+  \`order\` = 0,
   \`articleIntId\` = 9,
-  \`tagIntId\` = 5,
-  \`order\` = 0;
+  \`tagIntId\` = 5;
 
 SELECT
   \`ArticleTag>article\`.\`id\`,
@@ -1760,9 +1760,9 @@ LIMIT
 INSERT INTO
   \`article_tag_comments\`
 SET
+  \`body\` = 'Quia.',
   \`articleTagArticleIntId\` = 9,
-  \`articleTagTagIntId\` = 5,
-  \`body\` = 'Quia.';
+  \`articleTagTagIntId\` = 5;
 
 SELECT
   \`ArticleTagComment>articleTag>article\`.\`id\`,
@@ -1811,9 +1811,9 @@ LIMIT
 INSERT INTO
   \`article_tags\`
 SET
+  \`order\` = 2,
   \`articleIntId\` = 5,
-  \`tagIntId\` = 5,
-  \`order\` = 2;
+  \`tagIntId\` = 5;
 
 SELECT
   \`ArticleTag>article\`.\`id\`,
@@ -1852,9 +1852,9 @@ LIMIT
 INSERT INTO
   \`article_tag_comments\`
 SET
+  \`body\` = 'Dolore.',
   \`articleTagArticleIntId\` = 5,
-  \`articleTagTagIntId\` = 5,
-  \`body\` = 'Dolore.';
+  \`articleTagTagIntId\` = 5;
 
 SELECT
   \`ArticleTagComment>articleTag>article\`.\`id\`,
@@ -1903,9 +1903,9 @@ LIMIT
 INSERT INTO
   \`article_tags\`
 SET
+  \`order\` = 1,
   \`articleIntId\` = 6,
-  \`tagIntId\` = 4,
-  \`order\` = 1;
+  \`tagIntId\` = 4;
 
 SELECT
   \`ArticleTag>article\`.\`id\`,
@@ -1944,9 +1944,9 @@ LIMIT
 INSERT INTO
   \`article_tag_comments\`
 SET
+  \`body\` = 'Quis.',
   \`articleTagArticleIntId\` = 6,
-  \`articleTagTagIntId\` = 4,
-  \`body\` = 'Quis.';
+  \`articleTagTagIntId\` = 4;
 
 SELECT
   \`ArticleTagComment>articleTag>article\`.\`id\`,
@@ -2042,8 +2042,8 @@ SET
   \`title\` = 'Sed quae.',
   \`slug\` = 'sed-quae',
   \`body\` = 'Nam eos sint autem rerum.',
-  \`isPublished\` = true,
-  \`isImportant\` = false,
+  \`isPublished\` = 1,
+  \`isImportant\` = 0,
   \`categoryParentId\` = '4739fde2-c0a1-407d-9c97-58f1926883be',
   \`categorySlug\` = 'iure',
   \`authorUsername\` = 'Priscilla';
@@ -2108,9 +2108,9 @@ LIMIT
 INSERT INTO
   \`article_tags\`
 SET
+  \`order\` = 0,
   \`articleIntId\` = 10,
-  \`tagIntId\` = 2,
-  \`order\` = 0;
+  \`tagIntId\` = 2;
 
 SELECT
   \`ArticleTag>article\`.\`id\`,
@@ -2149,9 +2149,9 @@ LIMIT
 INSERT INTO
   \`article_tag_comments\`
 SET
+  \`body\` = 'Incidunt.',
   \`articleTagArticleIntId\` = 10,
-  \`articleTagTagIntId\` = 2,
-  \`body\` = 'Incidunt.';
+  \`articleTagTagIntId\` = 2;
 
 SELECT
   \`ArticleTagComment>articleTag>article\`.\`id\`,
@@ -2202,9 +2202,9 @@ LIMIT
 INSERT INTO
   \`article_tags\`
 SET
+  \`order\` = 1,
   \`articleIntId\` = 10,
-  \`tagIntId\` = 5,
-  \`order\` = 1;
+  \`tagIntId\` = 5;
 
 SELECT
   \`ArticleTag>article\`.\`id\`,
@@ -2243,9 +2243,9 @@ LIMIT
 INSERT INTO
   \`article_tag_comments\`
 SET
+  \`body\` = 'Delectus.',
   \`articleTagArticleIntId\` = 10,
-  \`articleTagTagIntId\` = 5,
-  \`body\` = 'Delectus.';
+  \`articleTagTagIntId\` = 5;
 
 SELECT
   \`ArticleTagComment>articleTag>article\`.\`id\`,
@@ -2296,9 +2296,9 @@ LIMIT
 INSERT INTO
   \`article_tags\`
 SET
+  \`order\` = 2,
   \`articleIntId\` = 10,
-  \`tagIntId\` = 3,
-  \`order\` = 2;
+  \`tagIntId\` = 3;
 
 SELECT
   \`ArticleTag>article\`.\`id\`,
@@ -2337,9 +2337,9 @@ LIMIT
 INSERT INTO
   \`article_tag_comments\`
 SET
+  \`body\` = 'Minima.',
   \`articleTagArticleIntId\` = 10,
-  \`articleTagTagIntId\` = 3,
-  \`body\` = 'Minima.';
+  \`articleTagTagIntId\` = 3;
 
 SELECT
   \`ArticleTagComment>articleTag>article\`.\`id\`,

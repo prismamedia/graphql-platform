@@ -68,9 +68,9 @@ export abstract class AbstractOperation<TArgs extends POJO = any, TResult = any>
     return this.isSupported() && getFlagValue(this.getConfig(), true);
   }
 
-  public abstract getGraphQLFieldConfigArgs(): GraphQLFieldConfigArgumentMap;
-
   public abstract getGraphQLFieldConfigType(): GraphQLOutputType;
+
+  public abstract getGraphQLFieldConfigArgs(): GraphQLFieldConfigArgumentMap;
 
   public abstract async resolve(params: OperationResolverParams<TArgs>): Promise<TResult>;
 
@@ -78,8 +78,8 @@ export abstract class AbstractOperation<TArgs extends POJO = any, TResult = any>
   public getGraphQLFieldConfig(): GraphQLFieldConfig<any, Context, TArgs, TResult> {
     return {
       description: this.description,
-      args: this.getGraphQLFieldConfigArgs(),
       type: this.getGraphQLFieldConfigType(),
+      args: this.getGraphQLFieldConfigArgs(),
       resolve: async (_, args, context, info) => {
         const selectionNode = parseGraphQLResolveInfo(info);
         const operationContext = context.operationContext;

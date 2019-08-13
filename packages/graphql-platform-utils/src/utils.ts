@@ -1,6 +1,7 @@
 export * from './utils/clean-own-object';
 export * from './utils/enum';
 export * from './utils/flag';
+export * from './utils/from-entries';
 export * from './utils/get-plain-object-entries';
 export * from './utils/get-plain-object-keys';
 export * from './utils/get-predictable-id';

@@ -1,4 +1,4 @@
-import { NodeValue, ResourceMap } from '@prismamedia/graphql-platform-core';
+import { ResourceMap } from '@prismamedia/graphql-platform-core';
 import { config, MyGP } from '../../../../../__tests__/gp';
 import { Connector } from '../../../../connector';
 import { Database } from '../../../database';
@@ -16,7 +16,7 @@ describe('Table', () => {
     resourceMap = gp.getResourceMap();
   });
 
-  it('gets/sets node/row value', () => {
+  it("gets columns' value", () => {
     const articleTagCommentResource = resourceMap.assert('ArticleTagComment');
     const articleTagCommentTable = database.getTable(articleTagCommentResource);
     const articleTagCommentBodyColumn = articleTagCommentTable.getColumn(
@@ -34,14 +34,14 @@ describe('Table', () => {
     const articleTagArticleIdColumnReference = articleTagCommentTable
       .getForeignKey(articleTagCommentResource.getRelationMap().assert('articleTag'))
       .getColumnSet()
-      .find(column => column.getReferencedColumn() === articleIntIdColumn);
+      .find(column => column.getReferencedColumn() === articleIntIdColumn, true);
 
     const articleTagTagIdColumnReference = articleTagCommentTable
       .getForeignKey(articleTagCommentResource.getRelationMap().assert('articleTag'))
       .getColumnSet()
-      .find(column => column.getReferencedColumn() === tagIntIdColumn);
+      .find(column => column.getReferencedColumn() === tagIntIdColumn, true);
 
-    const node: NodeValue = {
+    const node = articleTagCommentResource.assertValue({
       body: 'My body',
       articleTag: {
         article: {
@@ -51,34 +51,32 @@ describe('Table', () => {
           _id: 15,
         },
       },
-    };
-
-    expect(articleTagCommentBodyColumn.getValue(node, true)).toEqual('My body');
-    articleTagCommentBodyColumn.setValue(node, 'Another body');
-    expect(articleTagCommentBodyColumn.getValue(node, true)).toEqual('Another body');
-
-    if (articleTagArticleIdColumnReference) {
-      expect(articleTagArticleIdColumnReference.getValue(node, true)).toEqual(5);
-      articleTagArticleIdColumnReference.setValue(node, 50);
-      expect(articleTagArticleIdColumnReference.getValue(node, true)).toEqual(50);
-    }
-
-    if (articleTagTagIdColumnReference) {
-      expect(articleTagTagIdColumnReference.getValue(node, true)).toEqual(15);
-      articleTagTagIdColumnReference.setValue(node, 150);
-      expect(articleTagTagIdColumnReference.getValue(node, true)).toEqual(150);
-    }
-
-    expect(node).toEqual({
-      body: 'Another body',
-      articleTag: {
-        article: {
-          _id: 50,
-        },
-        tag: {
-          _id: 150,
-        },
-      },
+      updatedAt: new Date('2019-01-01T00:00:00.000Z'),
+      createdAt: new Date('2019-01-01T00:00:00.000Z'),
     });
+
+    expect(articleTagCommentBodyColumn.pickValue(node)).toEqual('My body');
+    // articleTagCommentBodyColumn.setValue(node, 'Another body');
+    // expect(articleTagCommentBodyColumn.getValue(node, true)).toEqual('Another body');
+
+    expect(articleTagArticleIdColumnReference.pickValue(node)).toEqual(5);
+    // articleTagArticleIdColumnReference.setValue(node, 50);
+    // expect(articleTagArticleIdColumnReference.getValue(node, true)).toEqual(50);
+
+    expect(articleTagTagIdColumnReference.pickValue(node)).toEqual(15);
+    // articleTagTagIdColumnReference.setValue(node, 150);
+    // expect(articleTagTagIdColumnReference.getValue(node, true)).toEqual(150);
+
+    // expect(node).toEqual({
+    //   body: 'Another body',
+    //   articleTag: {
+    //     article: {
+    //       _id: 50,
+    //     },
+    //     tag: {
+    //       _id: 150,
+    //     },
+    //   },
+    // });
   });
 });

@@ -19,15 +19,14 @@
     "test:watch": "yarn run test --watchAll"
   },
   "devDependencies": {
-    "@types/graphql": "^14.2.3",
-    "@types/jest": "^24.0.17",
+    "@types/jest": "^24.0.18",
     "@types/lodash.isplainobject": "^4.0.6",
     "@types/lodash.mergewith": "^4.6.6",
-    "@types/node": "^12.7.1",
-    "graphql": "^14.4.1",
-    "jest": "^24.8.0",
+    "@types/node": "^12.7.4",
+    "graphql": "^14.5.0",
+    "jest": "^24.9.0",
     "ts-jest": "^24.0.2",
-    "typescript": "^3.5.3"
+    "typescript": "^3.6.2"
   },
   "dependencies": {
     "@prismamedia/ts-module-loader": "^3.1.2",
@@ -36,6 +35,6 @@
     "typescript-memoize": "^1.0.0-alpha.3"
   },
   "peerDependencies": {
-    "graphql": "^14.0.0"
+    "graphql": "^14.5.0"
   }
 }

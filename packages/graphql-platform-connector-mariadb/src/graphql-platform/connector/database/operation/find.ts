@@ -95,7 +95,7 @@ export class FindOperation extends AbstractOperationResolver<ConnectorFindOperat
                 const firstNonNullableColumn = relatedTable
                   .getPrimaryKey()
                   .getColumnSet()
-                  .assertFirst();
+                  .first(true);
 
                 select.push(firstNonNullableColumn);
               });
@@ -215,7 +215,7 @@ export class FindOperation extends AbstractOperationResolver<ConnectorFindOperat
 
           const relatedTable = this.database.getTable(relation.getTo());
           const relatedTablePrimaryKey = relatedTable.getPrimaryKey();
-          const firstRelatedTablePrimaryKeyColumn = relatedTablePrimaryKey.getColumnSet().assertFirst();
+          const firstRelatedTablePrimaryKeyColumn = relatedTablePrimaryKey.getColumnSet().first(true);
 
           switch (filterId) {
             case 'eq':
@@ -231,16 +231,16 @@ export class FindOperation extends AbstractOperationResolver<ConnectorFindOperat
                   relation
                     .getTo()
                     .getInputType('WhereUnique')
-                    .parseUnique(value, relation.getToUnique(), false, true);
+                    .parseUnique(value, relation.getToUnique(), true);
 
                 if (relatedNodeId && Object.keys(relatedNodeId).length === Object.keys(value).length) {
                   where.addAnd(where =>
                     foreignKeyColumnSet.forEach(column => {
-                      const fieldValue = column.reference.getValue(relatedNodeId, true);
+                      const columnValue = column.reference.pickValue(relatedNodeId, true);
 
-                      fieldValue === null
+                      columnValue === null
                         ? where.addFilter(column, 'IS NULL')
-                        : where.addFilter(column, '=', fieldValue);
+                        : where.addFilter(column, '=', columnValue);
                     }),
                   );
                 } else {
@@ -277,7 +277,7 @@ export class FindOperation extends AbstractOperationResolver<ConnectorFindOperat
               if (typeof value === 'boolean') {
                 const relatedTable = this.database.getTable(inverseRelation.getTo());
                 const relatedTablePrimaryKey = relatedTable.getPrimaryKey();
-                const firstRelatedTablePrimaryKeyColumn = relatedTablePrimaryKey.getColumnSet().assertFirst();
+                const firstRelatedTablePrimaryKeyColumn = relatedTablePrimaryKey.getColumnSet().first(true);
 
                 where.on(inverseRelation, where =>
                   where.addFilter(firstRelatedTablePrimaryKeyColumn, value ? 'IS NULL' : 'IS NOT NULL'),
@@ -354,7 +354,7 @@ export class FindOperation extends AbstractOperationResolver<ConnectorFindOperat
     const resource = table.resource;
     const database = table.database;
 
-    const node: NodeSource = {};
+    const node: NodeSource = Object.create(null);
 
     const tableData: POJO = this.getRowTableData(data, tableReference);
 
@@ -422,7 +422,7 @@ export class FindOperation extends AbstractOperationResolver<ConnectorFindOperat
 
             if (inverseRelation.isToOne()) {
               const relatedTableData = this.getRowTableData(data, tableReference.join(inverseRelation));
-              const firstNonNullableColumn = relatedPrimaryKey.getColumnSet().assertFirst();
+              const firstNonNullableColumn = relatedPrimaryKey.getColumnSet().first(true);
 
               mergeWith(node, {
                 [nodeField.name]:
@@ -445,7 +445,7 @@ export class FindOperation extends AbstractOperationResolver<ConnectorFindOperat
                         {
                           [inverseRelation.getInverse().name]: resource
                             .getInputType('WhereUnique')
-                            .parseUnique(node, inverseRelation.getInverse().getToUnique(), true),
+                            .assertUnique(node, inverseRelation.getInverse().getToUnique()),
                         },
                         params.args.where,
                       ],
@@ -477,7 +477,7 @@ export class FindOperation extends AbstractOperationResolver<ConnectorFindOperat
                       {
                         [inverseRelation.getInverse().name]: resource
                           .getInputType('WhereUnique')
-                          .parseUnique(node, inverseRelation.getInverse().getToUnique(), true),
+                          .assertUnique(node, inverseRelation.getInverse().getToUnique()),
                       },
                       params.args.where,
                     ],

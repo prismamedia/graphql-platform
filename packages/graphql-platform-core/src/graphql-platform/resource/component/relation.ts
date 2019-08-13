@@ -1,16 +1,18 @@
-import { isPlainObject, Maybe, MaybeUndefinedDecorator, POJO } from '@prismamedia/graphql-platform-utils';
+import { Maybe, MaybeUndefinedDecorator, POJO } from '@prismamedia/graphql-platform-utils';
 import { Memoize } from 'typescript-memoize';
 import { AnyBaseContext, BaseContext, CustomContext } from '../../../graphql-platform';
-import { ConnectorCreateInputValue, ConnectorUpdateInputValue } from '../../connector';
-import { CreateOneOperationArgs, UpdateOneOperationArgs } from '../../operation/mutation';
+import { CreateOneOperationArgs, CreateOneRawValue, UpdateOneOperationArgs, UpdateOneRawValue } from '../../operation';
+import { RelationUpdate } from '../../operation/mutation';
 import { NodeValue, Resource, ResourceHookKind, ResourceHookMetaMap } from '../../resource';
-import { WhereUniqueInputValue } from '../../type/input';
+import { SerializedWhereUniqueInputValue, WhereUniqueInputValue } from '../../type/input';
 import { AbstractComponent, AbstractComponentConfig } from '../abstract-component';
 import { Unique } from '../unique';
 import { UniqueSet } from '../unique/set';
+import { NullComponentValueError, UndefinedComponentValueError } from './error';
 import { Inverse as InverseRelation } from './relation/inverse';
 
 export {
+  AnyInverse as AnyInverseRelation,
   Inverse as InverseRelation,
   InverseMap as InverseRelationMap,
   InverseSet as InverseRelationSet,
@@ -18,13 +20,13 @@ export {
 export * from './relation/map';
 export * from './relation/set';
 
-export type RelationValue = null | NodeValue;
+export type RelationValue = null | WhereUniqueInputValue;
 
-export type NormalizedRelationValue = null | WhereUniqueInputValue;
+export type SerializedRelationValue = null | SerializedWhereUniqueInputValue;
 
 export enum RelationKind {
-  toOne = 'toOne',
-  toMany = 'toMany',
+  ToOne = 'toOne',
+  ToMany = 'toMany',
 }
 
 export type RelationHookMetaMap<
@@ -43,22 +45,19 @@ export type RelationHookMap<
   [ResourceHookKind.PreCreate]: {
     metas: RelationHookMetaMap<CreateOneOperationArgs, TCustomContext, TBaseContext> &
       Readonly<{
-        /** Parsed data */
-        create: ConnectorCreateInputValue;
+        create: CreateOneRawValue;
       }>;
-    /** Parsed relation value */
-    relatedNodeId: Maybe<WhereUniqueInputValue>;
+    relatedNodeId: RelationValue | undefined;
   };
 
   // Update
   [ResourceHookKind.PreUpdate]: {
     metas: RelationHookMetaMap<UpdateOneOperationArgs, TCustomContext, TBaseContext> &
       Readonly<{
-        /** Parsed data */
-        update: ConnectorUpdateInputValue;
+        toBeUpdatedNodeId: WhereUniqueInputValue;
+        update: UpdateOneRawValue;
       }>;
-    /** Parsed relation value */
-    relatedNodeId: Maybe<WhereUniqueInputValue>;
+    relatedNodeId: RelationUpdate | undefined;
   };
 };
 
@@ -80,8 +79,7 @@ export type AnyRelationConfig = RelationConfig<any, any>;
 
 export class Relation<TConfig extends AnyRelationConfig = RelationConfig> extends AbstractComponent<
   RelationHookMap,
-  TConfig,
-  RelationValue
+  TConfig
 > {
   public isField(): boolean {
     return false;
@@ -91,7 +89,6 @@ export class Relation<TConfig extends AnyRelationConfig = RelationConfig> extend
     return true;
   }
 
-  @Memoize()
   public getFrom(): Resource {
     return this.resource;
   }
@@ -139,17 +136,16 @@ export class Relation<TConfig extends AnyRelationConfig = RelationConfig> extend
     return new UniqueSet([this.getToUnique(), ...this.getTo().getUniqueSet()]);
   }
 
-  @Memoize()
   public getKind(): RelationKind {
-    return RelationKind.toOne;
+    return RelationKind.ToOne;
   }
 
   public isToOne(): boolean {
-    return this.getKind() === RelationKind.toOne;
+    return true;
   }
 
   public isToMany(): boolean {
-    return this.getKind() === RelationKind.toMany;
+    return false;
   }
 
   @Memoize()
@@ -157,87 +153,78 @@ export class Relation<TConfig extends AnyRelationConfig = RelationConfig> extend
     return new InverseRelation(this);
   }
 
-  public isId(value: unknown): value is WhereUniqueInputValue {
-    return (
-      typeof this.getTo()
-        .getInputType('WhereUnique')
-        .parse(value, false) !== 'undefined'
-    );
-  }
-
-  public parseId<TStrict extends boolean>(
-    value: unknown,
-    strict: TStrict,
-    // Accept only the defined unique
-    relationToUniqueOnly: boolean = false,
-  ): MaybeUndefinedDecorator<NormalizedRelationValue, TStrict> {
-    if (typeof value !== 'undefined') {
-      if (value === null) {
-        if (!this.isNullable()) {
-          throw new Error(`The "${this}" relation's value cannot be null`);
-        }
-
-        return null as any;
+  public assertValue(value: unknown, normalized?: boolean): RelationValue {
+    if (typeof value === 'undefined') {
+      throw new UndefinedComponentValueError(this);
+    } else if (value === null) {
+      if (!this.isNullable()) {
+        throw new NullComponentValueError(this);
       }
 
-      return relationToUniqueOnly
-        ? this.getTo()
-            .getInputType('WhereUnique')
-            .parseUnique(value, this.getToUnique(), strict, relationToUniqueOnly)
-        : this.getTo()
-            .getInputType('WhereUnique')
-            .parse(value, strict, this.getToUniqueSet());
+      return null;
     }
 
-    if (strict) {
-      throw new Error(`The "${this}" relation's value cannot be undefined`);
-    }
-
-    return undefined as any;
+    return normalized
+      ? this.getTo()
+          .getInputType('WhereUnique')
+          .assertUnique(value, this.getToUnique(), true)
+      : this.getTo()
+          .getInputType('WhereUnique')
+          .assert(value, this.getToUniqueSet());
   }
 
-  public getId<TStrict extends boolean>(
-    node: POJO,
-    strict: TStrict,
-    // Accept only the defined unique
-    relationToUniqueOnly: boolean = false,
-  ): MaybeUndefinedDecorator<NormalizedRelationValue, TStrict> {
-    return this.parseId(node[this.name], strict, relationToUniqueOnly);
-  }
-
-  public isValue(value: unknown): value is RelationValue {
-    return value === null ? this.isNullable() : this.getTo().isValue(value);
-  }
-
-  public parseValue<TStrict extends boolean>(
-    value: unknown,
-    strict: TStrict,
-  ): MaybeUndefinedDecorator<RelationValue, TStrict> {
-    if (typeof value !== 'undefined') {
-      if (value === null) {
-        if (!this.isNullable()) {
-          throw new Error(`The "${this}" relation's value cannot be null`);
-        }
-
-        return null as any;
-      } else if (!isPlainObject(value)) {
-        throw new Error(`The "${this}" relation's value has to be a plain object: ${JSON.stringify(value)}`);
+  public serialize(value: RelationValue, normalized?: boolean): SerializedRelationValue {
+    if (typeof value === 'undefined') {
+      throw new UndefinedComponentValueError(this);
+    } else if (value === null) {
+      if (!this.isNullable()) {
+        throw new NullComponentValueError(this);
       }
 
-      return this.getTo().parseValue(value, strict, false);
+      return null;
     }
 
-    if (strict) {
-      throw new Error(`The "${this}" relation's value cannot be undefined`);
-    }
-
-    return undefined as any;
+    return normalized
+      ? this.getTo().serialize(value, true, this.getToUnique().componentSet)
+      : this.getTo().serialize(value);
   }
 
-  public getValue<TStrict extends boolean>(
-    node: POJO,
-    strict: TStrict,
+  public parseValue(value: SerializedRelationValue, normalized?: boolean): RelationValue {
+    if (typeof value === 'undefined') {
+      throw new UndefinedComponentValueError(this);
+    } else if (value === null) {
+      if (!this.isNullable()) {
+        throw new NullComponentValueError(this);
+      }
+
+      return null;
+    }
+
+    return normalized
+      ? this.getTo().parseValue(value, true, this.getToUnique().componentSet)
+      : this.getTo().parseValue(value);
+  }
+
+  public pickValue<TStrict extends boolean>(
+    node: NodeValue,
+    normalized?: boolean,
+    strict?: TStrict,
   ): MaybeUndefinedDecorator<RelationValue, TStrict> {
-    return this.parseValue(node[this.name], strict);
+    const value = node[this.name];
+    if (typeof value === 'undefined') {
+      if (strict === true) {
+        throw new UndefinedComponentValueError(this);
+      }
+
+      return undefined as any;
+    }
+
+    return this.assertValue(value, normalized) as any;
+  }
+
+  public setValue(node: NodeValue, value: RelationValue): void {
+    node[this.name] = this.assertValue(value);
   }
 }
+
+export type AnyRelation = Relation<any>;

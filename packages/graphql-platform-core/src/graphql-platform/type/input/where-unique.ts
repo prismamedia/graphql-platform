@@ -1,4 +1,6 @@
 import {
+  Entries,
+  fromEntries,
   GraphQLNonNullDecorator,
   isPlainObject,
   MaybeUndefinedDecorator,
@@ -6,15 +8,15 @@ import {
 } from '@prismamedia/graphql-platform-utils';
 import { GraphQLBoolean, GraphQLInputFieldConfigMap, GraphQLInputObjectType } from 'graphql';
 import { Memoize } from 'typescript-memoize';
-import { ComponentSet, Field, Unique } from '../../resource';
-import { FieldValue, Relation } from '../../resource/component';
+import { ComponentSet, Field, NodeValue, SerializedNodeValue, Unique } from '../../resource';
+import { NullComponentValueError, Relation, UndefinedComponentValueError } from '../../resource/component';
 import { UniqueSet } from '../../resource/unique';
 import { AbstractInputType } from '../abstract-type';
 
 // Node's identifier
-export type WhereUniqueInputValue = {
-  [componentName: string]: FieldValue | (null | WhereUniqueInputValue);
-};
+export type WhereUniqueInputValue = NodeValue;
+
+export type SerializedWhereUniqueInputValue = SerializedNodeValue;
 
 export class WhereUniqueInputType extends AbstractInputType {
   @Memoize()
@@ -66,42 +68,69 @@ export class WhereUniqueInputType extends AbstractInputType {
   public parseUnique<TStrict extends boolean>(
     value: unknown,
     unique: Unique,
-    strict: TStrict,
-    // Accept only the defined unique
-    relationToUniqueOnly: boolean = false,
+    normalized?: boolean,
+    strict?: TStrict,
   ): MaybeUndefinedDecorator<WhereUniqueInputValue, TStrict> {
-    const id: WhereUniqueInputValue = Object.create(null);
-
+    const entries: Entries<WhereUniqueInputValue> = [];
     if (
       isPlainObject(value) &&
-      unique.componentSet.every(component => {
-        if (component.isField()) {
-          // Field
-          const componentValue = component.getValue(value, false);
-          if (typeof componentValue === 'undefined') {
+      [...unique.componentSet].every(component => {
+        const componentValue = value[component.name];
+        if (typeof componentValue === 'undefined') {
+          if (strict) {
+            throw new UndefinedComponentValueError(component);
+          } else {
             return false;
           }
-
-          component.setValue(id, componentValue);
-        } else {
-          // Relation
-          const relatedNodeId = component.getId(value, false, relationToUniqueOnly);
-          if (typeof relatedNodeId === 'undefined') {
-            return false;
+        } else if (componentValue === null) {
+          if (!component.isNullable()) {
+            if (strict) {
+              throw new NullComponentValueError(component);
+            } else {
+              return false;
+            }
           }
 
-          component.setValue(id, relatedNodeId);
+          entries.push([component.name, null]);
+
+          return true;
         }
 
-        return true;
+        if (component.isField()) {
+          entries.push([component.name, component.assertValue(componentValue)]);
+
+          return true;
+        } else {
+          const relatedNodeId = normalized
+            ? component
+                .getTo()
+                .getInputType('WhereUnique')
+                .parseUnique(componentValue, component.getToUnique(), true, false)
+            : component
+                .getTo()
+                .getInputType('WhereUnique')
+                .parse(componentValue, component.getToUniqueSet(), false);
+
+          if (relatedNodeId) {
+            entries.push([component.name, relatedNodeId]);
+
+            return true;
+          } else {
+            if (strict) {
+              throw new UndefinedComponentValueError(component);
+            } else {
+              return false;
+            }
+          }
+        }
       })
     ) {
-      return id as any;
+      return fromEntries(entries) as any;
     }
 
     if (strict) {
       throw new Error(
-        `The following "${this.resource}"'s identifier does not contain a valid "${
+        `The following "${this.resource}"'s identifier does not contain any valid "${
           unique.name
         }" combination: ${JSON.stringify(value)}`,
       );
@@ -110,15 +139,20 @@ export class WhereUniqueInputType extends AbstractInputType {
     return undefined as any;
   }
 
+  public assertUnique(value: unknown, unique: Unique, normalized?: boolean): WhereUniqueInputValue {
+    return this.parseUnique(value, unique, normalized, true);
+  }
+
   public parse<TStrict extends boolean>(
     value: unknown,
-    strict: TStrict,
     uniqueSet: UniqueSet = this.resource.getUniqueSet(),
+    strict?: TStrict,
   ): MaybeUndefinedDecorator<WhereUniqueInputValue, TStrict> {
-    let id: WhereUniqueInputValue | undefined;
-
-    if (isPlainObject(value) && uniqueSet.some(unique => !!(id = this.parseUnique(value, unique, false)))) {
-      return id as any;
+    for (const unique of uniqueSet) {
+      const id = this.parseUnique(value, unique, false, false);
+      if (id) {
+        return id as any;
+      }
     }
 
     if (strict) {
@@ -130,6 +164,10 @@ export class WhereUniqueInputType extends AbstractInputType {
     }
 
     return undefined as any;
+  }
+
+  public assert(value: unknown, uniqueSet: UniqueSet = this.resource.getUniqueSet()): WhereUniqueInputValue {
+    return this.parse(value, uniqueSet, true);
   }
 
   @Memoize((knownRelation?: Relation, forced: boolean = true) =>

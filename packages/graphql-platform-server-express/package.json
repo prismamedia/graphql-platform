@@ -21,29 +21,28 @@
   },
   "devDependencies": {
     "@prismamedia/graphql-platform-connector-mariadb": "^0.1.0-alpha.23",
-    "@types/express": "^4.17.0",
-    "@types/graphql": "^14.2.3",
-    "@types/jest": "^24.0.17",
+    "@types/express": "^4.17.1",
+    "@types/jest": "^24.0.18",
     "express": "^4.17.1",
-    "graphql": "^14.4.1",
-    "jest": "^24.8.0",
-    "nodemon": "^1.19.1",
+    "graphql": "^14.5.0",
+    "jest": "^24.9.0",
+    "nodemon": "^1.19.2",
     "ts-jest": "^24.0.2",
     "ts-node": "^8.3.0",
-    "typescript": "^3.5.3"
+    "typescript": "^3.6.2"
   },
   "dependencies": {
     "@prismamedia/graphql-platform-core": "^0.1.0-alpha.23",
     "@prismamedia/graphql-platform-utils": "^0.1.0-alpha.23",
     "@types/express-jwt": "^0.0.42",
     "@types/express-unless": "^0.5.1",
-    "apollo-server-express": "^2.8.1",
+    "apollo-server-express": "^2.9.3",
     "express-jwt": "^5.3.1",
     "express-unless": "^0.5.0",
     "typescript-memoize": "^1.0.0-alpha.3"
   },
   "peerDependencies": {
     "express": "^4.0.0",
-    "graphql": "^14.0.0"
+    "graphql": "^14.5.0"
   }
 }

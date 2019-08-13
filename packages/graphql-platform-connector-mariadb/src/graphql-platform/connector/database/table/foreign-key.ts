@@ -70,7 +70,7 @@ export class ForeignKey {
 
   @Memoize()
   public getFirstNonNullableReference() {
-    return this.getNonNullableReferenceSet().assertFirst();
+    return this.getNonNullableReferenceSet().first(true);
   }
 
   @Memoize()

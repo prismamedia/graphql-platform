@@ -25,7 +25,10 @@ export class FindManyOperation extends AbstractOperation<FindManyOperationArgs, 
     return `Retrieve a list of "${this.resource}" nodes.`;
   }
 
-  @Memoize()
+  public getGraphQLFieldConfigType(): GraphQLOutputType {
+    return GraphQLNonNull(GraphQLList(GraphQLNonNull(this.resource.getOutputType('Node').getGraphQLType())));
+  }
+
   public getGraphQLFieldConfigArgs(): GraphQLFieldConfigArgumentMap {
     return {
       ...(this.resource.getInputType('Where').isSupported()
@@ -49,11 +52,6 @@ export class FindManyOperation extends AbstractOperation<FindManyOperationArgs, 
         type: GraphQLInt,
       },
     };
-  }
-
-  @Memoize()
-  public getGraphQLFieldConfigType(): GraphQLOutputType {
-    return GraphQLNonNull(GraphQLList(GraphQLNonNull(this.resource.getOutputType('Node').getGraphQLType())));
   }
 
   public async resolve(params: OperationResolverParams<FindManyOperationArgs>): Promise<FindManyOperationResult> {

@@ -136,12 +136,12 @@ export class WhereInputType extends AbstractInputType {
         : null,
     in: field => ({
       name: `${field.name}_in`,
-      clean: (value: unknown) => (Array.isArray(value) ? value : undefined),
+      clean: (value: unknown) => (Array.isArray(value) ? [...new Set(value)] : undefined),
       fieldConfig: { type: GraphQLList(GraphQLNonNullDecorator(field.getType(), !field.isNullable())) },
     }),
     not_in: field => ({
       name: `${field.name}_not_in`,
-      clean: (value: unknown) => (Array.isArray(value) ? value : undefined),
+      clean: (value: unknown) => (Array.isArray(value) ? [...new Set(value)] : undefined),
       fieldConfig: { type: GraphQLList(GraphQLNonNullDecorator(field.getType(), !field.isNullable())) },
     }),
     contains: field =>
@@ -317,14 +317,16 @@ export class WhereInputType extends AbstractInputType {
     and: () => ({
       name: 'AND',
       clean: (value: unknown) => {
-        const cleanedValues = (Array.isArray(value) ? value : []).reduce((cleanedValues: any[], value) => {
-          const cleanedValue = this.clean(value);
-          if (typeof cleanedValue !== 'undefined') {
-            cleanedValues.push(cleanedValue);
-          }
+        const cleanedValues = Array.isArray(value)
+          ? value.reduce((cleanedValues: any[], value) => {
+              const cleanedValue = this.clean(value);
+              if (typeof cleanedValue !== 'undefined') {
+                cleanedValues.push(cleanedValue);
+              }
 
-          return cleanedValues;
-        }, []);
+              return cleanedValues;
+            }, [])
+          : [];
 
         return cleanedValues.length > 0 ? cleanedValues : undefined;
       },
@@ -333,14 +335,16 @@ export class WhereInputType extends AbstractInputType {
     or: () => ({
       name: 'OR',
       clean: (value: unknown) => {
-        const cleanedValues = (Array.isArray(value) ? value : []).reduce((cleanedValues: any[], value) => {
-          const cleanedValue = this.clean(value);
-          if (typeof cleanedValue !== 'undefined') {
-            cleanedValues.push(cleanedValue);
-          }
+        const cleanedValues = Array.isArray(value)
+          ? value.reduce((cleanedValues: any[], value) => {
+              const cleanedValue = this.clean(value);
+              if (typeof cleanedValue !== 'undefined') {
+                cleanedValues.push(cleanedValue);
+              }
 
-          return cleanedValues;
-        }, []);
+              return cleanedValues;
+            }, [])
+          : [];
 
         return cleanedValues.length > 0 ? cleanedValues : undefined;
       },
@@ -418,6 +422,7 @@ export class WhereInputType extends AbstractInputType {
       for (const [filterName, filterValue] of Object.entries(value)) {
         if (typeof filterValue !== 'undefined') {
           const filter = this.getFilterMap().assert(filterName);
+
           const cleanedFilterValue = filter.clean ? filter.clean(filterValue) : filterValue;
           if (typeof cleanedFilterValue !== 'undefined') {
             cleanedValue[filterName] = cleanedFilterValue;

@@ -1,7 +1,7 @@
 // Jest Snapshot v1, https://goo.gl/fbAQLP
 
 exports[`Execution executes a scenario 1`] = `
-"# 86 queries in 1 connections
+"# 92 queries in 1 connections
 
 SELECT
   COUNT(DISTINCT \`Article\`.\`intId\`) AS result
@@ -273,6 +273,16 @@ LIMIT
 START TRANSACTION;
 
 SELECT
+  COUNT(DISTINCT \`Article\`.\`intId\`) AS result
+FROM
+  \`articles\` AS \`Article\`
+WHERE
+  (\`Article\`.\`format\` IN ('RICH', 'VIDEO'))
+  AND (
+    \`Article\`.\`id\` = '4d88dc29-1b08-47c0-917c-5a1c6b13f024'
+  );
+
+SELECT
   \`Article\`.\`intId\`
 FROM
   \`articles\` AS \`Article\`
@@ -308,15 +318,15 @@ LIMIT
 INSERT INTO
   \`article_tags\`
 SET
+  \`order\` = 3,
   \`articleIntId\` = 3,
-  \`tagIntId\` = 4,
-  \`order\` = 3;
+  \`tagIntId\` = 4;
 
 INSERT INTO
   \`article_urls\`
 SET
-  \`articleIntId\` = 3,
-  \`path\` = '/success';
+  \`path\` = '/success',
+  \`articleIntId\` = 3;
 
 SELECT
   \`Article\`.\`id\`,
@@ -350,6 +360,16 @@ LIMIT
   5;
 
 START TRANSACTION;
+
+SELECT
+  COUNT(DISTINCT \`Article\`.\`intId\`) AS result
+FROM
+  \`articles\` AS \`Article\`
+WHERE
+  (\`Article\`.\`format\` IN ('RICH', 'VIDEO'))
+  AND (
+    \`Article\`.\`id\` = '4d88dc29-1b08-47c0-917c-5a1c6b13f024'
+  );
 
 UPDATE
   \`article_urls\` AS \`ArticleUrl\`
@@ -387,6 +407,16 @@ LIMIT
 COMMIT;
 
 START TRANSACTION;
+
+SELECT
+  COUNT(DISTINCT \`Article\`.\`intId\`) AS result
+FROM
+  \`articles\` AS \`Article\`
+WHERE
+  (\`Article\`.\`format\` IN ('RICH', 'VIDEO'))
+  AND (
+    \`Article\`.\`id\` = '4d88dc29-1b08-47c0-917c-5a1c6b13f024'
+  );
 
 SELECT
   \`ArticleTag\`.\`articleIntId\`,
@@ -564,6 +594,13 @@ LIMIT
   10;
 
 START TRANSACTION;
+
+SELECT
+  COUNT(DISTINCT \`Category\`.\`intId\`) AS result
+FROM
+  \`categories\` AS \`Category\`
+WHERE
+  \`Category\`.\`id\` = '4739fde2-c0a1-407d-9c97-58f1926883be';
 
 SELECT
   \`Category\`.\`parentId\`,
@@ -746,31 +783,9 @@ LIMIT
   1;
 
 SELECT
-  \`Article\`.\`intId\`,
-  \`Article\`.\`id\`,
-  \`Article\`.\`createdAt\`,
-  \`Article\`.\`updatedAt\`,
-  \`Article\`.\`computedMaxIntId\`,
-  \`Article\`.\`publishedAt\`,
-  \`Article\`.\`format\`,
-  \`Article\`.\`title\`,
-  \`Article\`.\`slug\`,
-  \`Article\`.\`body\`,
-  \`Article\`.\`isPublished\`,
-  \`Article\`.\`isImportant\`,
-  \`Article\`.\`categoryParentId\`,
-  \`Article\`.\`categorySlug\`,
-  \`Article>category\`.\`parentId\`,
-  \`Article\`.\`authorUsername\`,
-  \`Article\`.\`moderatorIntId\`
+  \`Article\`.\`intId\`
 FROM
   \`articles\` AS \`Article\`
-  LEFT JOIN \`categories\` AS \`Article>category\` ON (
-    \`Article\`.\`categoryParentId\` <= > \`Article>category\`.\`parentId\`
-  )
-  AND (
-    \`Article\`.\`categorySlug\` = \`Article>category\`.\`slug\`
-  )
 WHERE
   (\`Article\`.\`format\` IN ('RICH', 'VIDEO'))
   AND (\`Article\`.\`intId\` = 3)
@@ -785,7 +800,7 @@ SET
   \`format\` = 'VIDEO',
   \`title\` = 'The title of this new video, written by Vivianne',
   \`slug\` = 'the-title-of-this-new-video-written-by-vivianne',
-  \`isPublished\` = false,
+  \`isPublished\` = 0,
   \`categoryParentId\` = '199f6850-dc43-4bc9-a6dc-b68625021e0e',
   \`categorySlug\` = 'quisquam-recusandae-alias',
   \`authorUsername\` = 'Vivianne';
@@ -856,6 +871,16 @@ LIMIT
 START TRANSACTION;
 
 SELECT
+  COUNT(DISTINCT \`Article\`.\`intId\`) AS result
+FROM
+  \`articles\` AS \`Article\`
+WHERE
+  (\`Article\`.\`format\` IN ('RICH', 'VIDEO'))
+  AND (
+    \`Article\`.\`id\` = '4d88dc29-1b08-47c0-917c-5a1c6b13f024'
+  );
+
+SELECT
   \`ArticleUrl\`.\`articleIntId\`
 FROM
   \`article_urls\` AS \`ArticleUrl\`
@@ -902,8 +927,8 @@ LIMIT
 INSERT INTO
   \`article_urls\`
 SET
-  \`articleIntId\` = 3,
-  \`path\` = '/created';
+  \`path\` = '/created',
+  \`articleIntId\` = 3;
 
 SELECT
   \`Article>url\`.\`path\`,
@@ -922,6 +947,16 @@ LIMIT
 COMMIT;
 
 START TRANSACTION;
+
+SELECT
+  COUNT(DISTINCT \`Article\`.\`intId\`) AS result
+FROM
+  \`articles\` AS \`Article\`
+WHERE
+  (\`Article\`.\`format\` IN ('RICH', 'VIDEO'))
+  AND (
+    \`Article\`.\`id\` = '4d88dc29-1b08-47c0-917c-5a1c6b13f024'
+  );
 
 SELECT
   \`ArticleUrl\`.\`articleIntId\`

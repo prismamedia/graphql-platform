@@ -63,9 +63,9 @@ export type NodeSourceFieldResolver<TArgs extends POJO = any, TContext extends A
 
 export type NodeSourceField = NodeSourceFieldValue | NodeSourceFieldResolver;
 
-export interface NodeSource {
+export type NodeSource = {
   [fieldName: string]: NodeSourceField;
-}
+};
 
 export class NodeType extends AbstractOutputType {
   @Memoize()

@@ -1,29 +1,25 @@
-import { MaybePromise, POJO } from '@prismamedia/graphql-platform-utils';
-import { AnyBaseContext, BaseContext } from '../graphql-platform';
+import { GraphQLSelectionNode, MaybePromise, POJO } from '@prismamedia/graphql-platform-utils';
+import { AnyBaseContext, BaseContext, Context } from '../graphql-platform';
 import {
   CountOperationArgs,
   CountOperationResult,
+  CreateOneValue,
   FindManyOperationArgs,
   FindManyOperationResult,
-  OperationResolverParams,
+  UpdateOneValue,
 } from './operation';
 import { Resource } from './resource';
-import { NormalizedComponentValue } from './resource/component';
-import { WhereInputValue, WhereUniqueInputValue } from './type';
-import { NodeSource } from './type/output';
+import { WhereInputValue } from './type';
 
 export type ConnectorOperationParams<
   TArgs extends POJO = any,
   TBaseContext extends AnyBaseContext = BaseContext
-> = OperationResolverParams<TArgs, {}, TBaseContext> & Readonly<{ resource: Resource }>;
-
-export interface ConnectorCreateInputValue {
-  [componentName: string]: NormalizedComponentValue;
-}
-
-export interface ConnectorUpdateInputValue {
-  [componentName: string]: NormalizedComponentValue;
-}
+> = Readonly<{
+  args: TArgs;
+  context: Context<{}, TBaseContext>;
+  selectionNode: GraphQLSelectionNode<any>;
+  resource: Resource;
+}>;
 
 export type ConnectorFindOperationArgs = FindManyOperationArgs;
 
@@ -34,14 +30,14 @@ export type ConnectorCountOperationArgs = CountOperationArgs;
 export type ConnectorCountOperationResult = CountOperationResult;
 
 export interface ConnectorCreateOperationArgs {
-  data: ConnectorCreateInputValue[];
+  data: CreateOneValue[];
 }
 
-export type ConnectorCreateOperationResult = (WhereUniqueInputValue & NodeSource)[];
+export type ConnectorCreateOperationResult = CreateOneValue[];
 
 export interface ConnectorUpdateOperationArgs {
   where: WhereInputValue;
-  data: ConnectorUpdateInputValue;
+  data: UpdateOneValue;
 }
 
 export type ConnectorUpdateOperationResult = {

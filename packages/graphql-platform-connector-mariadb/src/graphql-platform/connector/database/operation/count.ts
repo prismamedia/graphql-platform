@@ -27,6 +27,6 @@ export class CountOperation extends AbstractOperationResolver<
       }
     }
 
-    throw new Error('An error occurred: the result has to be a positive integer.');
+    throw new Error(`An error occurred: the result has to be a positive integer, "${rows}" received`);
   }
 }

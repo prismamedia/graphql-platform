@@ -33,6 +33,8 @@ type Article {
 
   # Either this article is important or not
   isImportant: Boolean
+
+  # The article's category
   category: Category!
   author: User!
   moderator: User
@@ -70,19 +72,19 @@ input ArticleCreateInput {
   # Either this article is important or not
   isImportant: Boolean
 
-  # Nested actions for the \\"Article.category\\" relation
+  # Actions for the \\"Article.category\\" relation: The article's category
   category: ArticleNestedCategoryCreateInput!
 
-  # Nested actions for the \\"Article.author\\" relation
+  # Actions for the \\"Article.author\\" relation
   author: ArticleNestedAuthorCreateInput!
 
-  # Nested actions for the \\"Article.moderator\\" relation
+  # Actions for the \\"Article.moderator\\" relation
   moderator: ArticleNestedModeratorCreateInput
 
-  # Nested actions for the \\"Article.tags\\" inverse relation
+  # Actions for the \\"Article.tags\\" relation: \\"ArticleTag.article\\"'s inverse relation
   tags: ArticleNestedTagsCreateInput
 
-  # Nested actions for the \\"Article.url\\" inverse relation
+  # Actions for the \\"Article.url\\" relation: \\"ArticleUrl.article\\"'s inverse relation
   url: ArticleNestedUrlCreateInput
 }
 
@@ -238,38 +240,38 @@ input ArticleNestedUpdateUrlUpdateInput {
 
 input ArticleNestedUpsertAuthorCreateInput {
   where: UserWhereUniqueInput!
-  create: UserCreateInput!
   update: UserUpdateInput!
+  create: UserCreateInput!
 }
 
 input ArticleNestedUpsertAuthorUpdateInput {
   where: UserWhereUniqueInput!
-  create: UserCreateInput!
   update: UserUpdateInput!
+  create: UserCreateInput!
 }
 
 input ArticleNestedUpsertCategoryCreateInput {
   where: CategoryWhereUniqueInput!
-  create: CategoryCreateInput!
   update: CategoryUpdateInput!
+  create: CategoryCreateInput!
 }
 
 input ArticleNestedUpsertCategoryUpdateInput {
   where: CategoryWhereUniqueInput!
-  create: CategoryCreateInput!
   update: CategoryUpdateInput!
+  create: CategoryCreateInput!
 }
 
 input ArticleNestedUpsertModeratorCreateInput {
   where: UserWhereUniqueInput!
-  create: UserCreateInput!
   update: UserUpdateInput!
+  create: UserCreateInput!
 }
 
 input ArticleNestedUpsertModeratorUpdateInput {
   where: UserWhereUniqueInput!
-  create: UserCreateInput!
   update: UserUpdateInput!
+  create: UserCreateInput!
 }
 
 input ArticleNestedUpsertTagsUpdateInput {
@@ -358,7 +360,7 @@ type ArticleTagComment {
 input ArticleTagCommentCreateInput {
   body: String
 
-  # Nested actions for the \\"ArticleTagComment.articleTag\\" relation
+  # Actions for the \\"ArticleTagComment.articleTag\\" relation
   articleTag: ArticleTagCommentNestedArticleTagCreateInput!
 }
 
@@ -387,8 +389,8 @@ input ArticleTagCommentNestedUpdateArticleTagCreateInput {
 
 input ArticleTagCommentNestedUpsertArticleTagCreateInput {
   where: ArticleTagWhereUniqueInput!
-  create: ArticleTagCreateInput!
   update: ArticleTagUpdateInput!
+  create: ArticleTagCreateInput!
 }
 
 enum ArticleTagCommentOrderByInput {
@@ -459,13 +461,13 @@ input ArticleTagCommentWithForcedArticleTagUpdateInput {
 input ArticleTagCreateInput {
   order: Int!
 
-  # Nested actions for the \\"ArticleTag.article\\" relation
+  # Actions for the \\"ArticleTag.article\\" relation
   article: ArticleTagNestedArticleCreateInput!
 
-  # Nested actions for the \\"ArticleTag.tag\\" relation
+  # Actions for the \\"ArticleTag.tag\\" relation
   tag: ArticleTagNestedTagCreateInput!
 
-  # Nested actions for the \\"ArticleTag.comment\\" inverse relation
+  # Actions for the \\"ArticleTag.comment\\" relation: \\"ArticleTagComment.articleTag\\"'s inverse relation
   comment: ArticleTagNestedCommentCreateInput
 }
 
@@ -525,8 +527,8 @@ input ArticleTagNestedUpdateCommentUpdateInput {
 
 input ArticleTagNestedUpsertArticleCreateInput {
   where: ArticleWhereUniqueInput!
-  create: ArticleCreateInput!
   update: ArticleUpdateInput!
+  create: ArticleCreateInput!
 }
 
 input ArticleTagNestedUpsertCommentUpdateInput {
@@ -546,7 +548,7 @@ enum ArticleTagOrderByInput {
 input ArticleTagUpdateInput {
   order: Int
 
-  # Nested actions for the \\"ArticleTag.comment\\" inverse relation
+  # Actions for the \\"ArticleTag.comment\\" relation: \\"ArticleTagComment.articleTag\\"'s inverse relation
   comment: ArticleTagNestedCommentUpdateInput
 }
 
@@ -597,17 +599,17 @@ input ArticleTagWhereUniqueInput {
 input ArticleTagWithForcedArticleCreateInput {
   order: Int!
 
-  # Nested actions for the \\"ArticleTag.tag\\" relation
+  # Actions for the \\"ArticleTag.tag\\" relation
   tag: ArticleTagNestedTagCreateInput!
 
-  # Nested actions for the \\"ArticleTag.comment\\" inverse relation
+  # Actions for the \\"ArticleTag.comment\\" relation: \\"ArticleTagComment.articleTag\\"'s inverse relation
   comment: ArticleTagNestedCommentCreateInput
 }
 
 input ArticleTagWithForcedArticleUpdateInput {
   order: Int
 
-  # Nested actions for the \\"ArticleTag.comment\\" inverse relation
+  # Actions for the \\"ArticleTag.comment\\" relation: \\"ArticleTagComment.articleTag\\"'s inverse relation
   comment: ArticleTagNestedCommentUpdateInput
 }
 
@@ -622,10 +624,10 @@ input ArticleTagWithForcedArticleWhereUniqueInput {
 input ArticleTagWithForcedTagCreateInput {
   order: Int!
 
-  # Nested actions for the \\"ArticleTag.article\\" relation
+  # Actions for the \\"ArticleTag.article\\" relation
   article: ArticleTagNestedArticleCreateInput!
 
-  # Nested actions for the \\"ArticleTag.comment\\" inverse relation
+  # Actions for the \\"ArticleTag.comment\\" relation: \\"ArticleTagComment.articleTag\\"'s inverse relation
   comment: ArticleTagNestedCommentCreateInput
 }
 
@@ -646,19 +648,19 @@ input ArticleUpdateInput {
   # Either this article is important or not
   isImportant: Boolean
 
-  # Nested actions for the \\"Article.category\\" relation
+  # Actions for the \\"Article.category\\" relation: The article's category
   category: ArticleNestedCategoryUpdateInput
 
-  # Nested actions for the \\"Article.author\\" relation
+  # Actions for the \\"Article.author\\" relation
   author: ArticleNestedAuthorUpdateInput
 
-  # Nested actions for the \\"Article.moderator\\" relation
+  # Actions for the \\"Article.moderator\\" relation
   moderator: ArticleNestedModeratorUpdateInput
 
-  # Nested actions for the \\"Article.tags\\" inverse relation
+  # Actions for the \\"Article.tags\\" relation: \\"ArticleTag.article\\"'s inverse relation
   tags: ArticleNestedTagsUpdateInput
 
-  # Nested actions for the \\"Article.url\\" inverse relation
+  # Actions for the \\"Article.url\\" relation: \\"ArticleUrl.article\\"'s inverse relation
   url: ArticleNestedUrlUpdateInput
 }
 
@@ -679,10 +681,10 @@ type ArticleUrl {
 input ArticleUrlCreateInput {
   path: String!
 
-  # Nested actions for the \\"ArticleUrl.article\\" relation
+  # Actions for the \\"ArticleUrl.article\\" relation
   article: ArticleUrlNestedArticleCreateInput!
 
-  # Nested actions for the \\"ArticleUrl.meta\\" inverse relation
+  # Actions for the \\"ArticleUrl.meta\\" relation: \\"ArticleUrlMeta.url\\"'s inverse relation
   meta: ArticleUrlNestedMetaCreateInput
 }
 
@@ -697,7 +699,7 @@ type ArticleUrlMeta {
 }
 
 input ArticleUrlMetaCreateInput {
-  # Nested actions for the \\"ArticleUrlMeta.url\\" relation
+  # Actions for the \\"ArticleUrlMeta.url\\" relation
   url: ArticleUrlMetaNestedUrlCreateInput!
 }
 
@@ -708,8 +710,8 @@ input ArticleUrlMetaNestedUpdateUrlCreateInput {
 
 input ArticleUrlMetaNestedUpsertUrlCreateInput {
   where: ArticleUrlWhereUniqueInput!
-  create: ArticleUrlCreateInput!
   update: ArticleUrlUpdateInput!
+  create: ArticleUrlCreateInput!
 }
 
 input ArticleUrlMetaNestedUrlCreateInput {
@@ -811,8 +813,8 @@ input ArticleUrlNestedUpdateMetaUpdateInput {
 
 input ArticleUrlNestedUpsertArticleCreateInput {
   where: ArticleWhereUniqueInput!
-  create: ArticleCreateInput!
   update: ArticleUpdateInput!
+  create: ArticleCreateInput!
 }
 
 input ArticleUrlNestedUpsertMetaUpdateInput {
@@ -832,7 +834,7 @@ enum ArticleUrlOrderByInput {
 input ArticleUrlUpdateInput {
   path: String
 
-  # Nested actions for the \\"ArticleUrl.meta\\" inverse relation
+  # Actions for the \\"ArticleUrl.meta\\" relation: \\"ArticleUrlMeta.url\\"'s inverse relation
   meta: ArticleUrlNestedMetaUpdateInput
 }
 
@@ -884,14 +886,14 @@ input ArticleUrlWhereUniqueInput {
 input ArticleUrlWithForcedArticleCreateInput {
   path: String!
 
-  # Nested actions for the \\"ArticleUrl.meta\\" inverse relation
+  # Actions for the \\"ArticleUrl.meta\\" relation: \\"ArticleUrlMeta.url\\"'s inverse relation
   meta: ArticleUrlNestedMetaCreateInput
 }
 
 input ArticleUrlWithForcedArticleUpdateInput {
   path: String
 
-  # Nested actions for the \\"ArticleUrl.meta\\" inverse relation
+  # Actions for the \\"ArticleUrl.meta\\" relation: \\"ArticleUrlMeta.url\\"'s inverse relation
   meta: ArticleUrlNestedMetaUpdateInput
 }
 
@@ -1043,16 +1045,16 @@ input ArticleWithForcedAuthorCreateInput {
   # Either this article is important or not
   isImportant: Boolean
 
-  # Nested actions for the \\"Article.category\\" relation
+  # Actions for the \\"Article.category\\" relation: The article's category
   category: ArticleNestedCategoryCreateInput!
 
-  # Nested actions for the \\"Article.moderator\\" relation
+  # Actions for the \\"Article.moderator\\" relation
   moderator: ArticleNestedModeratorCreateInput
 
-  # Nested actions for the \\"Article.tags\\" inverse relation
+  # Actions for the \\"Article.tags\\" relation: \\"ArticleTag.article\\"'s inverse relation
   tags: ArticleNestedTagsCreateInput
 
-  # Nested actions for the \\"Article.url\\" inverse relation
+  # Actions for the \\"Article.url\\" relation: \\"ArticleUrl.article\\"'s inverse relation
   url: ArticleNestedUrlCreateInput
 }
 
@@ -1073,16 +1075,16 @@ input ArticleWithForcedAuthorUpdateInput {
   # Either this article is important or not
   isImportant: Boolean
 
-  # Nested actions for the \\"Article.category\\" relation
+  # Actions for the \\"Article.category\\" relation: The article's category
   category: ArticleNestedCategoryUpdateInput
 
-  # Nested actions for the \\"Article.moderator\\" relation
+  # Actions for the \\"Article.moderator\\" relation
   moderator: ArticleNestedModeratorUpdateInput
 
-  # Nested actions for the \\"Article.tags\\" inverse relation
+  # Actions for the \\"Article.tags\\" relation: \\"ArticleTag.article\\"'s inverse relation
   tags: ArticleNestedTagsUpdateInput
 
-  # Nested actions for the \\"Article.url\\" inverse relation
+  # Actions for the \\"Article.url\\" relation: \\"ArticleUrl.article\\"'s inverse relation
   url: ArticleNestedUrlUpdateInput
 }
 
@@ -1106,16 +1108,16 @@ input ArticleWithForcedCategoryCreateInput {
   # Either this article is important or not
   isImportant: Boolean
 
-  # Nested actions for the \\"Article.author\\" relation
+  # Actions for the \\"Article.author\\" relation
   author: ArticleNestedAuthorCreateInput!
 
-  # Nested actions for the \\"Article.moderator\\" relation
+  # Actions for the \\"Article.moderator\\" relation
   moderator: ArticleNestedModeratorCreateInput
 
-  # Nested actions for the \\"Article.tags\\" inverse relation
+  # Actions for the \\"Article.tags\\" relation: \\"ArticleTag.article\\"'s inverse relation
   tags: ArticleNestedTagsCreateInput
 
-  # Nested actions for the \\"Article.url\\" inverse relation
+  # Actions for the \\"Article.url\\" relation: \\"ArticleUrl.article\\"'s inverse relation
   url: ArticleNestedUrlCreateInput
 }
 
@@ -1136,16 +1138,16 @@ input ArticleWithForcedCategoryUpdateInput {
   # Either this article is important or not
   isImportant: Boolean
 
-  # Nested actions for the \\"Article.author\\" relation
+  # Actions for the \\"Article.author\\" relation
   author: ArticleNestedAuthorUpdateInput
 
-  # Nested actions for the \\"Article.moderator\\" relation
+  # Actions for the \\"Article.moderator\\" relation
   moderator: ArticleNestedModeratorUpdateInput
 
-  # Nested actions for the \\"Article.tags\\" inverse relation
+  # Actions for the \\"Article.tags\\" relation: \\"ArticleTag.article\\"'s inverse relation
   tags: ArticleNestedTagsUpdateInput
 
-  # Nested actions for the \\"Article.url\\" inverse relation
+  # Actions for the \\"Article.url\\" relation: \\"ArticleUrl.article\\"'s inverse relation
   url: ArticleNestedUrlUpdateInput
 }
 
@@ -1174,16 +1176,16 @@ input ArticleWithForcedModeratorCreateInput {
   # Either this article is important or not
   isImportant: Boolean
 
-  # Nested actions for the \\"Article.category\\" relation
+  # Actions for the \\"Article.category\\" relation: The article's category
   category: ArticleNestedCategoryCreateInput!
 
-  # Nested actions for the \\"Article.author\\" relation
+  # Actions for the \\"Article.author\\" relation
   author: ArticleNestedAuthorCreateInput!
 
-  # Nested actions for the \\"Article.tags\\" inverse relation
+  # Actions for the \\"Article.tags\\" relation: \\"ArticleTag.article\\"'s inverse relation
   tags: ArticleNestedTagsCreateInput
 
-  # Nested actions for the \\"Article.url\\" inverse relation
+  # Actions for the \\"Article.url\\" relation: \\"ArticleUrl.article\\"'s inverse relation
   url: ArticleNestedUrlCreateInput
 }
 
@@ -1204,16 +1206,16 @@ input ArticleWithForcedModeratorUpdateInput {
   # Either this article is important or not
   isImportant: Boolean
 
-  # Nested actions for the \\"Article.category\\" relation
+  # Actions for the \\"Article.category\\" relation: The article's category
   category: ArticleNestedCategoryUpdateInput
 
-  # Nested actions for the \\"Article.author\\" relation
+  # Actions for the \\"Article.author\\" relation
   author: ArticleNestedAuthorUpdateInput
 
-  # Nested actions for the \\"Article.tags\\" inverse relation
+  # Actions for the \\"Article.tags\\" relation: \\"ArticleTag.article\\"'s inverse relation
   tags: ArticleNestedTagsUpdateInput
 
-  # Nested actions for the \\"Article.url\\" inverse relation
+  # Actions for the \\"Article.url\\" relation: \\"ArticleUrl.article\\"'s inverse relation
   url: ArticleNestedUrlUpdateInput
 }
 
@@ -1267,13 +1269,13 @@ input CategoryCreateInput {
   # The category's slug
   slug: String
 
-  # Nested actions for the \\"Category.parent\\" relation
+  # Actions for the \\"Category.parent\\" relation
   parent: CategoryNestedParentCreateInput
 
-  # Nested actions for the \\"Category.articles\\" inverse relation
+  # Actions for the \\"Category.articles\\" relation: \\"Article.category\\"'s inverse relation
   articles: CategoryNestedArticlesCreateInput
 
-  # Nested actions for the \\"Category.children\\" inverse relation
+  # Actions for the \\"Category.children\\" relation: \\"Category.parent\\"'s inverse relation
   children: CategoryNestedChildrenCreateInput
 }
 
@@ -1399,14 +1401,14 @@ input CategoryNestedUpsertChildrenUpdateInput {
 
 input CategoryNestedUpsertParentCreateInput {
   where: CategoryWhereUniqueInput!
-  create: CategoryCreateInput!
   update: CategoryUpdateInput!
+  create: CategoryCreateInput!
 }
 
 input CategoryNestedUpsertParentUpdateInput {
   where: CategoryWhereUniqueInput!
-  create: CategoryCreateInput!
   update: CategoryUpdateInput!
+  create: CategoryCreateInput!
 }
 
 enum CategoryOrderByInput {
@@ -1429,13 +1431,13 @@ input CategoryUpdateInput {
   id: ID
   title: String
 
-  # Nested actions for the \\"Category.parent\\" relation
+  # Actions for the \\"Category.parent\\" relation
   parent: CategoryNestedParentUpdateInput
 
-  # Nested actions for the \\"Category.articles\\" inverse relation
+  # Actions for the \\"Category.articles\\" relation: \\"Article.category\\"'s inverse relation
   articles: CategoryNestedArticlesUpdateInput
 
-  # Nested actions for the \\"Category.children\\" inverse relation
+  # Actions for the \\"Category.children\\" relation: \\"Category.parent\\"'s inverse relation
   children: CategoryNestedChildrenUpdateInput
 }
 
@@ -1525,10 +1527,10 @@ input CategoryWithForcedParentCreateInput {
   # The category's slug
   slug: String
 
-  # Nested actions for the \\"Category.articles\\" inverse relation
+  # Actions for the \\"Category.articles\\" relation: \\"Article.category\\"'s inverse relation
   articles: CategoryNestedArticlesCreateInput
 
-  # Nested actions for the \\"Category.children\\" inverse relation
+  # Actions for the \\"Category.children\\" relation: \\"Category.parent\\"'s inverse relation
   children: CategoryNestedChildrenCreateInput
 }
 
@@ -1537,10 +1539,10 @@ input CategoryWithForcedParentUpdateInput {
   id: ID
   title: String
 
-  # Nested actions for the \\"Category.articles\\" inverse relation
+  # Actions for the \\"Category.articles\\" relation: \\"Article.category\\"'s inverse relation
   articles: CategoryNestedArticlesUpdateInput
 
-  # Nested actions for the \\"Category.children\\" inverse relation
+  # Actions for the \\"Category.children\\" relation: \\"Category.parent\\"'s inverse relation
   children: CategoryNestedChildrenUpdateInput
 }
 
@@ -1576,7 +1578,7 @@ type Mutation {
   updateArticle(where: ArticleWhereUniqueInput!, data: ArticleUpdateInput!): Article
 
   # Update or create a single \\"Article\\" node.
-  upsertArticle(where: ArticleWhereUniqueInput!, create: ArticleCreateInput!, update: ArticleUpdateInput!): Article!
+  upsertArticle(where: ArticleWhereUniqueInput!, update: ArticleUpdateInput!, create: ArticleCreateInput!): Article!
 
   # Create a single \\"ArticleTag\\" node.
   createArticleTag(data: ArticleTagCreateInput!): ArticleTag!
@@ -1588,7 +1590,7 @@ type Mutation {
   updateArticleTag(where: ArticleTagWhereUniqueInput!, data: ArticleTagUpdateInput!): ArticleTag
 
   # Update or create a single \\"ArticleTag\\" node.
-  upsertArticleTag(where: ArticleTagWhereUniqueInput!, create: ArticleTagCreateInput!, update: ArticleTagUpdateInput!): ArticleTag!
+  upsertArticleTag(where: ArticleTagWhereUniqueInput!, update: ArticleTagUpdateInput!, create: ArticleTagCreateInput!): ArticleTag!
 
   # Create a single \\"ArticleTagComment\\" node.
   createArticleTagComment(data: ArticleTagCommentCreateInput!): ArticleTagComment!
@@ -1600,7 +1602,7 @@ type Mutation {
   updateArticleTagComment(where: ArticleTagCommentWhereUniqueInput!, data: ArticleTagCommentUpdateInput!): ArticleTagComment
 
   # Update or create a single \\"ArticleTagComment\\" node.
-  upsertArticleTagComment(where: ArticleTagCommentWhereUniqueInput!, create: ArticleTagCommentCreateInput!, update: ArticleTagCommentUpdateInput!): ArticleTagComment!
+  upsertArticleTagComment(where: ArticleTagCommentWhereUniqueInput!, update: ArticleTagCommentUpdateInput!, create: ArticleTagCommentCreateInput!): ArticleTagComment!
 
   # Create a single \\"ArticleUrl\\" node.
   createArticleUrl(data: ArticleUrlCreateInput!): ArticleUrl!
@@ -1612,7 +1614,7 @@ type Mutation {
   updateArticleUrl(where: ArticleUrlWhereUniqueInput!, data: ArticleUrlUpdateInput!): ArticleUrl
 
   # Update or create a single \\"ArticleUrl\\" node.
-  upsertArticleUrl(where: ArticleUrlWhereUniqueInput!, create: ArticleUrlCreateInput!, update: ArticleUrlUpdateInput!): ArticleUrl!
+  upsertArticleUrl(where: ArticleUrlWhereUniqueInput!, update: ArticleUrlUpdateInput!, create: ArticleUrlCreateInput!): ArticleUrl!
 
   # Create a single \\"ArticleUrlMeta\\" node.
   createArticleUrlMeta(data: ArticleUrlMetaCreateInput!): ArticleUrlMeta!
@@ -1624,7 +1626,7 @@ type Mutation {
   updateArticleUrlMeta(where: ArticleUrlMetaWhereUniqueInput!, data: Boolean!): ArticleUrlMeta
 
   # Update or create a single \\"ArticleUrlMeta\\" node.
-  upsertArticleUrlMeta(where: ArticleUrlMetaWhereUniqueInput!, create: ArticleUrlMetaCreateInput!, update: Boolean!): ArticleUrlMeta!
+  upsertArticleUrlMeta(where: ArticleUrlMetaWhereUniqueInput!, update: Boolean!, create: ArticleUrlMetaCreateInput!): ArticleUrlMeta!
 
   # Create a single \\"Category\\" node.
   createCategory(data: CategoryCreateInput!): Category!
@@ -1636,7 +1638,7 @@ type Mutation {
   updateCategory(where: CategoryWhereUniqueInput!, data: CategoryUpdateInput!): Category
 
   # Update or create a single \\"Category\\" node.
-  upsertCategory(where: CategoryWhereUniqueInput!, create: CategoryCreateInput!, update: CategoryUpdateInput!): Category!
+  upsertCategory(where: CategoryWhereUniqueInput!, update: CategoryUpdateInput!, create: CategoryCreateInput!): Category!
 
   # Create a single \\"Tag\\" node.
   createTag(data: TagCreateInput!): Tag!
@@ -1651,7 +1653,7 @@ type Mutation {
   updateUser(where: UserWhereUniqueInput!, data: UserUpdateInput!): User
 
   # Update or create a single \\"User\\" node.
-  upsertUser(where: UserWhereUniqueInput!, create: UserCreateInput!, update: UserUpdateInput!): User!
+  upsertUser(where: UserWhereUniqueInput!, update: UserUpdateInput!, create: UserCreateInput!): User!
 
   # Returns a JWT in case of success.
   login(login: String!, password: String!): String
@@ -1764,7 +1766,7 @@ input TagCreateInput {
   # The tag's slug
   slug: String
 
-  # Nested actions for the \\"Tag.articles\\" inverse relation
+  # Actions for the \\"Tag.articles\\" relation: \\"ArticleTag.tag\\"'s inverse relation
   articles: TagNestedArticlesCreateInput
 }
 
@@ -1896,10 +1898,10 @@ input UserCreateInput {
   # The user's username
   username: String!
 
-  # Nested actions for the \\"User.authorOfArticles\\" inverse relation
+  # Actions for the \\"User.authorOfArticles\\" relation: \\"Article.author\\"'s inverse relation
   authorOfArticles: UserNestedAuthorOfArticlesCreateInput
 
-  # Nested actions for the \\"User.moderatorOfArticles\\" inverse relation
+  # Actions for the \\"User.moderatorOfArticles\\" relation: \\"Article.moderator\\"'s inverse relation
   moderatorOfArticles: UserNestedModeratorOfArticlesCreateInput
 }
 
@@ -1999,10 +2001,10 @@ input UserUpdateInput {
   # The public ID
   id: ID
 
-  # Nested actions for the \\"User.authorOfArticles\\" inverse relation
+  # Actions for the \\"User.authorOfArticles\\" relation: \\"Article.author\\"'s inverse relation
   authorOfArticles: UserNestedAuthorOfArticlesUpdateInput
 
-  # Nested actions for the \\"User.moderatorOfArticles\\" inverse relation
+  # Actions for the \\"User.moderatorOfArticles\\" relation: \\"Article.moderator\\"'s inverse relation
   moderatorOfArticles: UserNestedModeratorOfArticlesUpdateInput
 }
 

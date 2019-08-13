@@ -1,3 +1,5 @@
+import { MaybeUndefinedDecorator } from '../types/maybe-undefined-decorator';
+
 export class SuperMap<K = any, V = any> extends Map<K, V> {
   public some(some: (entry: [K, V], index: number) => boolean): boolean {
     return [...this].some(some);
@@ -7,21 +9,20 @@ export class SuperMap<K = any, V = any> extends Map<K, V> {
     return [...this].every(every);
   }
 
-  public find(find: (entry: [K, V], index: number) => boolean): [K, V] | undefined {
-    return [...this].find(find);
-  }
-
-  public first(): [K, V] | undefined {
-    return this.find((_, index) => index === 0);
-  }
-
-  public assertFirst(): [K, V] {
-    const first = this.first();
-    if (typeof first === 'undefined') {
-      throw new Error(`There is no "first" element: the "${this.constructor.name}" is empty.`);
+  public find<TStrict extends boolean>(
+    find: (entry: [K, V], index: number) => boolean,
+    strict?: TStrict,
+  ): MaybeUndefinedDecorator<[K, V], TStrict> {
+    const value = [...this].find(find);
+    if (typeof value === 'undefined' && strict === true) {
+      throw new Error(`No element found in the "${this.constructor.name}".`);
     }
 
-    return first;
+    return value as any;
+  }
+
+  public first<TStrict extends boolean>(strict?: TStrict): MaybeUndefinedDecorator<[K, V], TStrict> {
+    return this.find((_, index) => index === 0, strict);
   }
 
   public filter(filter: (entry: [K, V], index: number) => boolean): this {
