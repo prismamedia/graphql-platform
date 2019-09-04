@@ -1,4 +1,4 @@
-import { AnyRelation, Relation } from '@prismamedia/graphql-platform-core';
+import { AnyInverseRelation, AnyRelation, Relation } from '@prismamedia/graphql-platform-core';
 import { SuperMap } from '@prismamedia/graphql-platform-utils';
 import { Memoize } from 'typescript-memoize';
 import { Resource } from '../../../../resource';
@@ -13,7 +13,7 @@ class JoinTableMap extends SuperMap<JoinTable['alias'], JoinTable> {}
 abstract class AbstractTableReference {
   readonly database: Database;
   readonly resource: Resource;
-  readonly joinTableMap: JoinTableMap = new JoinTableMap();
+  readonly joinTableMap = new JoinTableMap();
 
   public constructor(readonly table: Table) {
     this.database = table.database;
@@ -26,8 +26,8 @@ abstract class AbstractTableReference {
     return this.joinTableMap.some(([, joinTable]) => joinTable.relation.isToMany() || joinTable.isToMany());
   }
 
-  @Memoize((relation: AnyRelation, key?: string) => [relation.name, key].filter(Boolean).join('/'))
-  public join(relation: AnyRelation, key?: string): JoinTable {
+  @Memoize((relation: AnyRelation | AnyInverseRelation, key?: string) => [relation.name, key].filter(Boolean).join('/'))
+  public join(relation: AnyRelation | AnyInverseRelation, key?: string): JoinTable {
     const joinTable = new JoinTable(this, relation, key);
     this.joinTableMap.set(joinTable.alias, joinTable);
 
@@ -52,7 +52,11 @@ export class TableFactor extends AbstractTableReference {
 }
 
 export class JoinTable extends AbstractTableReference {
-  public constructor(readonly parent: TableReference, readonly relation: AnyRelation, readonly key?: string) {
+  public constructor(
+    readonly parent: TableReference,
+    readonly relation: AnyRelation | AnyInverseRelation,
+    readonly key?: string,
+  ) {
     super(parent.database.getTable(relation.getTo()));
   }
 

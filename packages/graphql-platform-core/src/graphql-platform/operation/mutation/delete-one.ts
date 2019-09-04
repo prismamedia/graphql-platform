@@ -2,7 +2,7 @@ import { GraphQLOperationType } from '@prismamedia/graphql-platform-utils';
 import { GraphQLFieldConfigArgumentMap, GraphQLNonNull, GraphQLOutputType } from 'graphql';
 import { Memoize } from 'typescript-memoize';
 import { OperationResolverParams } from '../../operation';
-import { ResourceHookKind } from '../../resource';
+import { NodeValue, ResourceHookKind } from '../../resource';
 import { NodeSource, TypeKind, WhereUniqueInputValue } from '../../type';
 import { AbstractOperation } from '../abstract-operation';
 
@@ -28,18 +28,16 @@ export class DeleteOneOperation extends AbstractOperation<DeleteOneOperationArgs
     return `Delete a single "${this.resource}" node.`;
   }
 
-  @Memoize()
+  public getGraphQLFieldConfigType(): GraphQLOutputType {
+    return this.resource.getOutputType('Node').getGraphQLType();
+  }
+
   public getGraphQLFieldConfigArgs(): GraphQLFieldConfigArgumentMap {
     return {
       where: {
         type: GraphQLNonNull(this.resource.getInputType('WhereUnique').getGraphQLType()),
       },
     };
-  }
-
-  @Memoize()
-  public getGraphQLFieldConfigType(): GraphQLOutputType {
-    return this.resource.getOutputType('Node').getGraphQLType();
   }
 
   public async resolve(params: OperationResolverParams<DeleteOneOperationArgs>): Promise<DeleteOneOperationResult> {
@@ -67,7 +65,7 @@ export class DeleteOneOperation extends AbstractOperation<DeleteOneOperationArgs
     const node = await resource.getQuery('FindOne').resolve(params);
 
     if (node) {
-      const nodeId = resource.parseId(node, true);
+      const nodeId = resource.getInputType('WhereUnique').assertUnique(node, resource.getIdentifier(), true);
 
       await resource.emitSerial(ResourceHookKind.PreDelete, {
         metas: Object.freeze({
@@ -90,7 +88,7 @@ export class DeleteOneOperation extends AbstractOperation<DeleteOneOperationArgs
                 ...params,
                 resource,
               }),
-              deletedNode: resource.parseValue(node, true, true),
+              deletedNode: resource.serialize(node as NodeValue, true, resource.getComponentSet()),
             }),
           );
         }

@@ -1,11 +1,16 @@
 import {
+  FieldValue,
+  NodeValue,
+  NullComponentValueError,
+  UndefinedComponentValueError,
+} from '@prismamedia/graphql-platform-core';
+import {
   FlagConfig,
   getFlagValue,
   isScalar,
   Maybe,
   MaybeUndefinedDecorator,
   POJO,
-  Scalar,
 } from '@prismamedia/graphql-platform-utils';
 import { isEnumType } from 'graphql';
 import { escapeId } from 'mysql';
@@ -105,7 +110,7 @@ export interface ColumnConfig {
   default?: Maybe<string>;
 }
 
-export type ColumnValue = null | Scalar | Date;
+export type ColumnValue = null | boolean | number | string | Date;
 
 export function isColumnValue(value: unknown, nullable: boolean = true): value is ColumnValue {
   return value === null ? nullable : isScalar(value) || value instanceof Date;
@@ -225,17 +230,58 @@ export class Column {
     return this.field.description;
   }
 
-  /**
-   * Get the corresponding column's value from the GraphQL field's value
-   */
-  public getValue<TStrict extends boolean>(node: POJO, strict: TStrict): MaybeUndefinedDecorator<ColumnValue, TStrict> {
-    return this.field.getValue(node, strict);
+  public getValue(value: FieldValue): ColumnValue {
+    if (typeof value === 'undefined') {
+      throw new UndefinedComponentValueError(this.component);
+    } else if (value === null) {
+      if (!this.nullable) {
+        throw new NullComponentValueError(this.component);
+      }
+
+      return null;
+    } else {
+      switch (this.field.getType().name) {
+        case 'Boolean':
+          return value ? 1 : 0;
+
+        default:
+          return value;
+      }
+    }
   }
 
-  /**
-   * Set the corresponding the GraphQL field's value from the column's value
-   */
-  public setValue(node: POJO, value: ColumnValue | undefined): void {
-    return this.field.setValue(node, value);
+  public pickValue<TStrict extends boolean>(
+    node: NodeValue,
+    strict?: TStrict,
+  ): MaybeUndefinedDecorator<ColumnValue, TStrict> {
+    const value = this.field.pickValue(node, strict);
+
+    return (typeof value !== 'undefined' ? this.getValue(value as FieldValue) : undefined) as any;
+  }
+
+  public setValue(node: POJO, value: ColumnValue): void {
+    if (value === null) {
+      this.field.setValue(node, value);
+    } else {
+      switch (this.field.getType().name) {
+        case 'Boolean':
+          this.field.setValue(
+            node,
+            typeof value === 'boolean'
+              ? value
+              : typeof value === 'number'
+              ? value === 1
+              : typeof value === 'string'
+              ? value === '1'
+              : // Will throw an error
+                value,
+          );
+          break;
+
+        default:
+          this.field.setValue(node, value);
+          break;
+      }
+    }
   }
 }

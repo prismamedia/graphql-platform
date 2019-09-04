@@ -12,10 +12,28 @@ export class UpdateOperation extends AbstractOperationResolver<
   }: OperationResolverParams<ConnectorUpdateOperationArgs>): Promise<ConnectorUpdateOperationResult> {
     const updateStatement = this.table.newUpdateStatement();
 
-    for (const column of this.table.getColumnSet()) {
-      const columnValue = column.getValue(update, false);
-      if (typeof columnValue !== 'undefined') {
-        updateStatement.assignmentList.addAssignment(column, columnValue);
+    for (const component of this.resource.getComponentSet()) {
+      if (component.isField()) {
+        if (component.isList()) {
+          throw new Error(`Not implemented, yet`);
+        } else {
+          const fieldValue = update.get(component);
+          if (typeof fieldValue !== 'undefined') {
+            const column = this.table.getColumn(component);
+            updateStatement.assignmentList.addAssignment(column, column.getValue(fieldValue));
+          }
+        }
+      } else {
+        if (component.isList()) {
+          throw new Error(`Not implemented, yet`);
+        } else {
+          const relationValue = update.get(component);
+          if (typeof relationValue !== 'undefined') {
+            for (const column of this.table.getForeignKey(component).getColumnSet()) {
+              updateStatement.assignmentList.addAssignment(column, column.getValue(relationValue));
+            }
+          }
+        }
       }
     }
 
@@ -39,6 +57,6 @@ export class UpdateOperation extends AbstractOperationResolver<
       };
     }
 
-    throw new Error('An error occurred: the result has to be a positive integer.');
+    throw new Error(`An error occurred: the result has to be a positive integer, "${result}" have been returned`);
   }
 }

@@ -22,7 +22,10 @@ export class CountOperation extends AbstractOperation<CountOperationArgs, CountO
     return `Retrieve the number of "${this.resource}" nodes.`;
   }
 
-  @Memoize()
+  public getGraphQLFieldConfigType(): GraphQLOutputType {
+    return GraphQLNonNull(GraphQLInt);
+  }
+
   public getGraphQLFieldConfigArgs(): GraphQLFieldConfigArgumentMap {
     return {
       ...(this.resource.getInputType('Where').isSupported()
@@ -33,11 +36,6 @@ export class CountOperation extends AbstractOperation<CountOperationArgs, CountO
           }
         : undefined),
     };
-  }
-
-  @Memoize()
-  public getGraphQLFieldConfigType(): GraphQLOutputType {
-    return GraphQLNonNull(GraphQLInt);
   }
 
   public async resolve(params: OperationResolverParams<CountOperationArgs>): Promise<CountOperationResult> {

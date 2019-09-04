@@ -1,12 +1,11 @@
-import { FlagConfig, getFlagValue, Maybe, MaybeUndefinedDecorator, POJO } from '@prismamedia/graphql-platform-utils';
+import { FlagConfig, getFlagValue, Maybe } from '@prismamedia/graphql-platform-utils';
 import { EventConfigMap, EventEmitter, EventMap } from '@prismamedia/ts-async-event-emitter';
 import inflector from 'inflection';
 import { Memoize } from 'typescript-memoize';
-import { Resource } from '../resource';
-import { isComponent } from './component';
+import { AnyResource } from '../resource';
 import { Field } from './component/field';
 import { Relation } from './component/relation';
-import { ComponentValue, ManagementKind } from './component/types';
+import { Component, List, ManagementKind } from './component/types';
 
 export interface AbstractComponentConfig<THookMap extends EventMap = any> {
   /**
@@ -45,11 +44,10 @@ export interface AbstractComponentConfig<THookMap extends EventMap = any> {
 export type AnyAbstractComponentConfig = AbstractComponentConfig<any>;
 
 export abstract class AbstractComponent<
-  THookMap extends EventMap = EventMap,
-  TConfig extends AnyAbstractComponentConfig = AbstractComponentConfig<THookMap>,
-  TValue extends ComponentValue = ComponentValue
+  THookMap extends EventMap,
+  TConfig extends AnyAbstractComponentConfig
 > extends EventEmitter<THookMap> {
-  public constructor(readonly name: string, readonly config: TConfig, readonly resource: Resource) {
+  public constructor(readonly name: string, readonly config: TConfig, readonly resource: AnyResource) {
     super();
 
     config.hooks && this.onConfig(config.hooks);
@@ -58,6 +56,14 @@ export abstract class AbstractComponent<
   public abstract isField(): this is Field;
 
   public abstract isRelation(): this is Relation;
+
+  public isComponent(): this is Component {
+    return this.isField() || this.isRelation();
+  }
+
+  public isList(): this is List<this extends Component ? (this extends Field ? Field : Relation) : never> {
+    return false;
+  }
 
   @Memoize()
   public toString(): string {
@@ -77,7 +83,7 @@ export abstract class AbstractComponent<
   /** Either this component is part of the identifier or not */
   @Memoize()
   public isInIdentifier(): boolean {
-    return isComponent(this) && this.resource.getIdentifier().contains(this);
+    return this.isComponent() && this.resource.getIdentifier().contains(this);
   }
 
   /** Either this component is part of the non-composite identifier or not */
@@ -89,7 +95,7 @@ export abstract class AbstractComponent<
   /** Either this component is part of a unique or not */
   @Memoize()
   public isInUnique(): boolean {
-    return this.resource.getUniqueSet().some(unique => isComponent(this) && unique.contains(this));
+    return this.resource.getUniqueSet().some(unique => this.isComponent() && unique.contains(this));
   }
 
   @Memoize()
@@ -102,7 +108,7 @@ export abstract class AbstractComponent<
   public isUnique(): boolean {
     return this.resource
       .getUniqueSet()
-      .some(unique => isComponent(this) && unique.contains(this) && !unique.isComposite());
+      .some(unique => this.isComponent() && unique.contains(this) && !unique.isComposite());
   }
 
   @Memoize()
@@ -155,29 +161,6 @@ export abstract class AbstractComponent<
   public isMutable(): boolean {
     return !this.isImmutable();
   }
-
-  public abstract isValue(value: unknown): value is TValue;
-
-  public abstract parseValue<TStrict extends boolean>(
-    value: unknown,
-    strict: TStrict,
-  ): MaybeUndefinedDecorator<TValue, TStrict>;
-
-  public hasValue(node: POJO): boolean {
-    return this.isValue(node[this.name]);
-  }
-
-  public getValue<TStrict extends boolean>(node: POJO, strict: TStrict): MaybeUndefinedDecorator<TValue, TStrict> {
-    return this.parseValue(node[this.name], strict);
-  }
-
-  public setValue(node: POJO, value: TValue | undefined): void {
-    if (typeof value === 'undefined') {
-      delete node[this.name];
-    } else {
-      node[this.name] = value;
-    }
-  }
 }
 
-export type AnyAbstractComponent = AbstractComponent<any, any, any>;
+export type AnyAbstractComponent = AbstractComponent<any, any>;

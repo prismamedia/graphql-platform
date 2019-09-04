@@ -30,7 +30,7 @@ export const config: MyGPConfig = {
   logger: createLogger({
     format: format.combine(format.colorize(), format.errors({ stack: false }), format.simple()),
     transports: [new transports.Console()],
-    // level: 'debug',
+    // level: 'info',
     level: 'error',
     silent: process.env.NODE_ENV === 'test',
   }),
@@ -86,13 +86,6 @@ export const config: MyGPConfig = {
         },
       },
     });
-
-    if (resourceName === 'Article') {
-      // A hook is defined to test the returned event object
-      config.hooks = {
-        [ResourceHookKind.PostCreate]: () => {},
-      };
-    }
 
     return config;
   },

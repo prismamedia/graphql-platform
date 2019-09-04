@@ -2,6 +2,7 @@ import { GraphQLFieldConfigArgumentMap, GraphQLNonNull, GraphQLOutputType } from
 import { Memoize } from 'typescript-memoize';
 import { OperationResolverParams } from '../../operation';
 import { AbstractOperation } from '../abstract-operation';
+import { NodeNotFoundError } from '../error';
 import { FindOneOperationArgs, FindOneOperationResult } from './find-one';
 
 export interface AssertOneOperationArgs extends FindOneOperationArgs {}
@@ -23,7 +24,10 @@ export class AssertOneOperation extends AbstractOperation<AssertOneOperationArgs
     return `Retrieve a single "${this.resource}" node, fail otherwise.`;
   }
 
-  @Memoize()
+  public getGraphQLFieldConfigType(): GraphQLOutputType {
+    return GraphQLNonNull(this.resource.getOutputType('Node').getGraphQLType());
+  }
+
   public getGraphQLFieldConfigArgs(): GraphQLFieldConfigArgumentMap {
     return {
       where: {
@@ -32,20 +36,10 @@ export class AssertOneOperation extends AbstractOperation<AssertOneOperationArgs
     };
   }
 
-  @Memoize()
-  public getGraphQLFieldConfigType(): GraphQLOutputType {
-    return GraphQLNonNull(this.resource.getOutputType('Node').getGraphQLType());
-  }
-
   public async resolve(params: OperationResolverParams<AssertOneOperationArgs>): Promise<AssertOneOperationResult> {
-    const resource = this.resource;
-
-    const node = await resource.getQuery('FindOne').resolve(params);
-
+    const node = await this.resource.getQuery('FindOne').resolve(params);
     if (!node) {
-      throw new Error(
-        `The "${resource.name}" node identified by "${JSON.stringify(params.args.where)}" does not exist.`,
-      );
+      throw new NodeNotFoundError(this, params.args.where);
     }
 
     return node;

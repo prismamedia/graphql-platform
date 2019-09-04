@@ -1,5 +1,6 @@
 import {
   FlagConfig,
+  fromEntries,
   getFlagValue,
   getPlainObjectKeys,
   GraphQLOperationType,
@@ -7,7 +8,6 @@ import {
   loadModuleMap,
   Maybe,
   MaybePromise,
-  MaybeUndefinedDecorator,
   ModuleMapConfig,
   POJO,
 } from '@prismamedia/graphql-platform-utils';
@@ -15,9 +15,9 @@ import { EventConfigMap, EventEmitter } from '@prismamedia/ts-async-event-emitte
 import inflector from 'inflection';
 import { Memoize } from 'typescript-memoize';
 import { AnyBaseContext, AnyGraphQLPlatform, BaseContext, Context, CustomContext } from '../graphql-platform';
-import { ConnectorCreateInputValue, ConnectorUpdateInputValue } from './connector';
 import {
   CreateOneOperationArgs,
+  CreateOneRawValue,
   DeleteOneOperationArgs,
   Operation,
   OperationConstructor,
@@ -29,25 +29,32 @@ import {
   operationTypeMap,
   OperationTypeMapConfig,
   UpdateOneOperationArgs,
+  UpdateOneRawValue,
 } from './operation';
-import { AnyRelation, AnyRelationMap, AnyRelationSet } from './resource/any-relation';
 import {
   AnyFieldConfig,
   AnyRelationConfig,
+  Component,
   ComponentMap,
   ComponentSet,
+  ComponentValue,
   Field,
   FieldConfig,
   FieldMap,
   FieldSet,
+  FieldValue,
   InverseRelationMap,
   InverseRelationSet,
   Relation,
   RelationConfig,
   RelationMap,
   RelationSet,
+  RelationValue,
+  SerializedComponentValue,
+  SerializedFieldValue,
+  SerializedRelationValue,
 } from './resource/component';
-import { Component, ComponentValue, NormalizedComponentValue } from './resource/component/types';
+import { InvalidNodeValueError } from './resource/error';
 import { ResourceMap } from './resource/map';
 import { AnyUniqueFullConfig, Unique, UniqueConfig, UniqueFullConfig, UniqueSet } from './resource/unique';
 import { VirtualField, VirtualFieldConfig, VirtualFieldMap, VirtualFieldSet } from './resource/virtual-field';
@@ -62,21 +69,17 @@ import {
   WhereUniqueInputValue,
 } from './type';
 
-export * from './resource/any-relation';
 export * from './resource/component';
+export * from './resource/error';
 export * from './resource/graph';
 export * from './resource/map';
 export * from './resource/set';
 export * from './resource/unique';
 export * from './resource/virtual-field';
 
-export type NodeValue = {
-  [componentName: string]: ComponentValue;
-};
+export type NodeValue = { [componentName: string]: ComponentValue };
 
-export type NormalizedNodeValue = WhereUniqueInputValue & {
-  [componentName: string]: NormalizedComponentValue;
-};
+export type SerializedNodeValue = { [componentName: string]: SerializedComponentValue };
 
 export type MaybeResourceAware<T = any> = T | ((args: { resource: Resource }) => T);
 
@@ -106,24 +109,24 @@ export type ResourceHookMap<
   // Create
   [ResourceHookKind.PreCreate]: {
     metas: ResourceHookMetaMap<CreateOneOperationArgs, TCustomContext, TBaseContext>;
-    create: ConnectorCreateInputValue;
+    create: CreateOneRawValue;
   };
   [ResourceHookKind.PostCreate]: Readonly<{
     metas: ResourceHookMetaMap<CreateOneOperationArgs, TCustomContext, TBaseContext>;
     // Contains the whole node value: all the fields and relation's ids
-    createdNode: NormalizedNodeValue;
+    createdNode: SerializedNodeValue;
   }>;
 
   // Update
   [ResourceHookKind.PreUpdate]: {
     metas: ResourceHookMetaMap<UpdateOneOperationArgs, TCustomContext, TBaseContext>;
     toBeUpdatedNodeId: WhereUniqueInputValue;
-    update: ConnectorUpdateInputValue;
+    update: UpdateOneRawValue;
   };
   [ResourceHookKind.PostUpdate]: Readonly<{
     metas: ResourceHookMetaMap<UpdateOneOperationArgs, TCustomContext, TBaseContext>;
     // Contains the whole node value: all the fields and relation's ids
-    updatedNode: NormalizedNodeValue;
+    updatedNode: SerializedNodeValue;
   }>;
 
   // Delete
@@ -134,7 +137,7 @@ export type ResourceHookMap<
   [ResourceHookKind.PostDelete]: Readonly<{
     metas: ResourceHookMetaMap<DeleteOneOperationArgs, TCustomContext, TBaseContext>;
     // Contains the whole node value: all the fields and relation's ids
-    deletedNode: NormalizedNodeValue;
+    deletedNode: SerializedNodeValue;
   }>;
 };
 
@@ -297,6 +300,24 @@ export class Resource<TConfig extends AnyResourceConfig = ResourceConfig> extend
     return new ComponentSet(this.getComponentMap().values());
   }
 
+  @Memoize((hookKind: ResourceHookKind) => hookKind)
+  public hasPreHook(
+    hookKind: ResourceHookKind.PreCreate | ResourceHookKind.PreUpdate | ResourceHookKind.PreDelete,
+  ): boolean {
+    return (
+      this.getEventListenerCount(hookKind) > 0 ||
+      (ResourceHookKind.PreDelete !== hookKind &&
+        [...this.getComponentSet()].some(component => component.getEventListenerCount(hookKind) > 0))
+    );
+  }
+
+  @Memoize((hookKind: ResourceHookKind) => hookKind)
+  public hasPostHook(
+    hookKind: ResourceHookKind.PostCreate | ResourceHookKind.PostUpdate | ResourceHookKind.PostDelete,
+  ): boolean {
+    return this.getEventListenerCount(hookKind) > 0;
+  }
+
   public assertComponent<TComponent extends Component>(component: TComponent): TComponent {
     if (!this.getComponentSet().has(component)) {
       throw new Error(`The component "${component}" does not belong to the resource "${this}".`);
@@ -334,7 +355,7 @@ export class Resource<TConfig extends AnyResourceConfig = ResourceConfig> extend
 
   @Memoize()
   public getIdentifier(): Unique {
-    const identifier = this.getUniqueSet().assertFirst();
+    const identifier = this.getUniqueSet().first(true);
 
     for (const component of identifier.componentSet) {
       if (component instanceof Relation && component.getTo() === this) {
@@ -349,7 +370,7 @@ export class Resource<TConfig extends AnyResourceConfig = ResourceConfig> extend
 
   @Memoize()
   public getFirstPublicUnique(): Unique {
-    return this.getPublicUniqueSet().assertFirst();
+    return this.getPublicUniqueSet().first(true);
   }
 
   @Memoize()
@@ -385,24 +406,6 @@ export class Resource<TConfig extends AnyResourceConfig = ResourceConfig> extend
   @Memoize()
   public getInverseRelationSet(): InverseRelationSet {
     return new InverseRelationSet(this.getInverseRelationMap().values());
-  }
-
-  @Memoize()
-  public getAnyRelationMap(): AnyRelationMap {
-    return new AnyRelationMap([...this.getRelationMap(), ...this.getInverseRelationMap()]);
-  }
-
-  @Memoize()
-  public getAnyRelationSet(): AnyRelationSet {
-    return new AnyRelationSet(this.getAnyRelationMap().values());
-  }
-
-  public assertAnyRelation<TAnyRelation extends AnyRelation>(anyRelation: TAnyRelation): TAnyRelation {
-    if (!this.getAnyRelationSet().has(anyRelation)) {
-      throw new Error(`The relation "${anyRelation}" does not belong to the resource "${this}".`);
-    }
-
-    return anyRelation;
   }
 
   @Memoize()
@@ -546,61 +549,53 @@ export class Resource<TConfig extends AnyResourceConfig = ResourceConfig> extend
     return new VirtualFieldSet(this.getVirtualFieldMap().values());
   }
 
-  public isId(value: unknown): value is WhereUniqueInputValue {
-    return typeof this.parseId(value, false) !== 'undefined';
-  }
+  public assertValue(node: unknown, normalized?: boolean, componentSet?: ComponentSet): NodeValue {
+    if (isPlainObject(node)) {
+      const strict = typeof componentSet !== 'undefined';
 
-  public parseId<TStrict extends boolean>(value: unknown, strict: TStrict) {
-    return this.getInputType('WhereUnique').parse(value, strict);
-  }
-
-  public isValue(value: unknown): value is NodeValue {
-    return isPlainObject(value) && this.getComponentSet().some(component => component.hasValue(value));
-  }
-
-  public parseValue<TStrict extends boolean, TNormalized extends boolean>(
-    value: unknown,
-    strict: TStrict,
-    normalized: TNormalized,
-  ): MaybeUndefinedDecorator<TNormalized extends true ? NormalizedNodeValue : NodeValue, TStrict> {
-    const node: NodeValue = Object.create(null);
-    let hasComponentValue: boolean = false;
-
-    if (typeof value !== 'undefined') {
-      if (isPlainObject(value)) {
-        for (const component of this.getComponentSet()) {
-          if (component.isField()) {
-            const componentValue = component.getValue(value, normalized);
-
-            if (typeof componentValue !== 'undefined') {
-              hasComponentValue = true;
-              component.setValue(node, componentValue);
-            }
-          } else {
-            const componentValue = normalized
-              ? component.getId(value, normalized)
-              : component.getValue(value, normalized);
-
-            if (typeof componentValue !== 'undefined') {
-              hasComponentValue = true;
-              component.setValue(node, componentValue);
-            }
-          }
-        }
-      } else {
-        throw new Error(`The "${this}" node's value has to be a plain object: ${JSON.stringify(value)}`);
-      }
+      return fromEntries(
+        [...(componentSet || this.getComponentSet())].map(component => [
+          component.name,
+          typeof node[component.name] !== 'undefined' || strict
+            ? component.isField()
+              ? component.assertValue(node[component.name])
+              : component.assertValue(node[component.name], normalized)
+            : undefined,
+        ]),
+      );
     }
 
-    if (!hasComponentValue) {
-      if (strict) {
-        throw new Error(`The "${this}" field's value cannot be undefined`);
-      }
+    throw new InvalidNodeValueError(this, `a plain object is expected but received "${node}" instead`);
+  }
 
-      return undefined as any;
-    }
+  public serialize(node: NodeValue, normalized?: boolean, componentSet?: ComponentSet): SerializedNodeValue {
+    const strict = typeof componentSet !== 'undefined';
 
-    return node as any;
+    return fromEntries(
+      [...(componentSet || this.getComponentSet())].map(component => [
+        component.name,
+        typeof node[component.name] !== 'undefined' || strict
+          ? component.isField()
+            ? component.serialize(node[component.name] as FieldValue)
+            : component.serialize(node[component.name] as RelationValue, normalized)
+          : undefined,
+      ]),
+    );
+  }
+
+  public parseValue(node: SerializedNodeValue, normalized?: boolean, componentSet?: ComponentSet): NodeValue {
+    const strict = typeof componentSet !== 'undefined';
+
+    return fromEntries(
+      [...(componentSet || this.getComponentSet())].map(component => [
+        component.name,
+        typeof node[component.name] !== 'undefined' || strict
+          ? component.isField()
+            ? component.parseValue(node[component.name] as SerializedFieldValue)
+            : component.parseValue(node[component.name] as SerializedRelationValue, normalized)
+          : undefined,
+      ]),
+    );
   }
 }
 

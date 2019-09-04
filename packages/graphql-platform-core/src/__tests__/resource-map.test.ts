@@ -129,7 +129,7 @@ describe('ResourceMap', () => {
           "plural": "Articles",
           "relationMap": Array [
             Object {
-              "description": undefined,
+              "description": "The article's category",
               "immutable": false,
               "name": "category",
               "targetedResource": "Category",

@@ -1,4 +1,4 @@
-import { AnyRelation } from '@prismamedia/graphql-platform-core';
+import { AnyInverseRelation, AnyRelation } from '@prismamedia/graphql-platform-core';
 import { SuperSet } from '@prismamedia/graphql-platform-utils';
 import { Memoize } from 'typescript-memoize';
 import { Column, ColumnReference, ColumnSet } from '../../../table';
@@ -11,7 +11,11 @@ export class SelectExpressionSet extends SuperSet<SelectExpression> {
     super();
   }
 
-  public on(relation: AnyRelation, callback: (select: SelectExpressionSet) => void, key?: string): this {
+  public on(
+    relation: AnyRelation | AnyInverseRelation,
+    callback: (select: SelectExpressionSet) => void,
+    key?: string,
+  ): this {
     const joinTable = this.tableReference.join(relation, key);
     const select = new SelectExpressionSet(joinTable);
     callback(select);

@@ -22,6 +22,6 @@ export class DeleteOperation extends AbstractOperationResolver<
       return result.affectedRows;
     }
 
-    throw new Error('An error occurred: the result has to be a positive integer.');
+    throw new Error(`An error occurred: the result has to be a positive integer, "${result}" have been returned`);
   }
 }

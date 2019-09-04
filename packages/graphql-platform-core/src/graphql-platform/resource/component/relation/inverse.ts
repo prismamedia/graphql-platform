@@ -1,11 +1,11 @@
 import inflector from 'inflection';
 import { Memoize } from 'typescript-memoize';
-import { Relation, RelationConfig, RelationKind } from '../relation';
+import { AnyRelationConfig, Relation, RelationConfig, RelationKind } from '../relation';
 
 export * from './inverse/map';
 export * from './inverse/set';
 
-export class Inverse<TConfig extends RelationConfig = RelationConfig> {
+export class Inverse<TConfig extends AnyRelationConfig = RelationConfig> {
   public constructor(readonly relation: Relation<TConfig>) {}
 
   @Memoize()
@@ -53,19 +53,22 @@ export class Inverse<TConfig extends RelationConfig = RelationConfig> {
     return `${this.getFrom().name}.${this.name}`;
   }
 
+  @Memoize()
   public getKind(): RelationKind {
-    return this.relation.isUnique() ? RelationKind.toOne : RelationKind.toMany;
+    return this.relation.isUnique() ? RelationKind.ToOne : RelationKind.ToMany;
   }
 
   public isToOne(): boolean {
-    return this.getKind() === RelationKind.toOne;
+    return this.getKind() === RelationKind.ToOne;
   }
 
   public isToMany(): boolean {
-    return this.getKind() === RelationKind.toMany;
+    return this.getKind() === RelationKind.ToMany;
   }
 
   public getInverse() {
     return this.relation;
   }
 }
+
+export type AnyInverse = Inverse<any>;
