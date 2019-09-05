@@ -37,8 +37,9 @@ export type GraphQLPlatformServerExpressConfig = { gp: AnyGraphQLPlatform } & Se
 
 export function createServer({
   gp,
-  app = express(),
   // ServerRegistration
+  app = express(),
+  bodyParserConfig,
   cors,
   disableHealthCheck,
   jwt,
@@ -91,14 +92,6 @@ export function createServer({
     ...config,
   });
 
-  server.applyMiddleware({
-    app,
-    cors,
-    disableHealthCheck,
-    onHealthCheck,
-    path,
-  });
-
   if (jwt) {
     const { unless = {}, requestProperty = 'user', ...config } = jwt;
 
@@ -109,6 +102,15 @@ export function createServer({
       }).unless(unless),
     );
   }
+
+  server.applyMiddleware({
+    app,
+    bodyParserConfig,
+    cors,
+    disableHealthCheck,
+    onHealthCheck,
+    path,
+  });
 
   return app;
 }
