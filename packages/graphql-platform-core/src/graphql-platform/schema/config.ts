@@ -34,21 +34,42 @@ export class GraphQLSchemaConfig implements BaseGraphQLSchemaConfig {
   }
 
   public get mutation() {
-    return new GraphQLObjectType({
-      name: 'Mutation',
-      fields: { ...this.getOperationTypeFieldMap(GraphQLOperationType.Mutation), ...this.config.mutationMap },
-    });
+    const fields: GraphQLFieldConfigMap<any, any> = {
+      ...this.getOperationTypeFieldMap(GraphQLOperationType.Mutation),
+      ...this.config.mutationMap,
+    };
+
+    return Object.keys(fields).length > 0
+      ? new GraphQLObjectType({
+          name: 'Mutation',
+          fields,
+        })
+      : undefined;
   }
 
   public get query() {
-    return new GraphQLObjectType({
-      name: 'Query',
-      fields: { ...this.getOperationTypeFieldMap(GraphQLOperationType.Query), ...this.config.queryMap },
-    });
+    const fields: GraphQLFieldConfigMap<any, any> = {
+      ...this.getOperationTypeFieldMap(GraphQLOperationType.Query),
+      ...this.config.queryMap,
+    };
+
+    return Object.keys(fields).length > 0
+      ? new GraphQLObjectType({
+          name: 'Query',
+          fields,
+        })
+      : undefined;
   }
 
   public get subscription() {
-    return undefined;
+    const fields: GraphQLFieldConfigMap<any, any> = {};
+
+    return Object.keys(fields).length > 0
+      ? new GraphQLObjectType({
+          name: 'Subscription',
+          fields,
+        })
+      : undefined;
   }
 
   public get types() {
