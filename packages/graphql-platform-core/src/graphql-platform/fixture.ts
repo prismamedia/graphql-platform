@@ -158,23 +158,18 @@ export class Fixture {
   }
 
   public async load(contextValue?: GraphQLRequest['contextValue']): Promise<void> {
-    const { data, errors } = await this.gp.execute<{ id: WhereUniqueInputValue }>({
-      ...this.getCreateMutation(),
-      contextValue,
-    });
+    try {
+      const { id } = await this.gp.execute<{ id: WhereUniqueInputValue }>({
+        ...this.getCreateMutation(),
+        contextValue,
+      });
 
-    if (errors && errors.length > 0) {
-      const error = errors[0];
+      this.id = this.resource.getInputType('WhereUnique').assert(id);
+    } catch (error) {
       this.logger && this.logger.error(error);
 
       throw error;
     }
-
-    if (!data) {
-      throw new Error('An error occured.');
-    }
-
-    this.id = this.resource.getInputType('WhereUnique').assert(data.id);
   }
 
   public assertId(): WhereUniqueInputValue {

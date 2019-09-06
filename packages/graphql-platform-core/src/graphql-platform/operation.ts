@@ -21,6 +21,7 @@ import {
 } from './operation/query';
 import { Resource } from './resource';
 
+export * from './operation/error';
 export * from './operation/mutation';
 export * from './operation/query';
 

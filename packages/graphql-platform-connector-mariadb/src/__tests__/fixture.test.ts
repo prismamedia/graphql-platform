@@ -1,5 +1,4 @@
 import { BoundOff } from '@prismamedia/ts-async-event-emitter';
-import { printError } from 'graphql';
 import { Connection, format } from 'mysql';
 import { format as beautify } from 'sql-formatter';
 import { Connector, ConnectorEventKind, Database } from '../graphql-platform/connector';
@@ -68,7 +67,7 @@ describe('Fixture', () => {
     ).toMatchSnapshot();
 
     // Query the data
-    const { data, errors } = await gp.execute<{ articles: any[] }>({
+    const { articles } = await gp.execute<{ articles: any[] }>({
       source: `query {
         articles(first: 10, orderBy: [_id_ASC]) {
           id
@@ -105,15 +104,8 @@ describe('Fixture', () => {
       }`,
     });
 
-    if (errors) {
-      const error = errors[0];
-
-      console.error(printError(error));
-      throw error;
-    }
-
     // Then check the data
-    expect(data.articles).toMatchInlineSnapshot(`
+    expect(articles).toMatchInlineSnapshot(`
       Array [
         Object {
           "id": "87ece569-f025-4212-b800-7ffd50721582",

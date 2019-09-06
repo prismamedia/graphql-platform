@@ -14,18 +14,17 @@ export const scenario: Scenario = [...queries, ...mutations];
 
 export async function play(gp: GraphQLExecutor, scenario: Scenario) {
   for (const [request, result] of scenario) {
-    const { data, errors } = await gp.execute(request);
+    try {
+      const data = await gp.execute(request);
 
-    if (errors) {
+      expect(data).toEqual(result);
+    } catch (error) {
       console.debug({
         source: request.source,
-        ...(request.variableValues ? { variables: request.variableValues } : {}),
+        variableValues: request.variableValues,
       });
 
-      const error = errors[0];
-      throw error.originalError || error;
+      throw error;
     }
-
-    expect(data).toEqual(result);
   }
 }

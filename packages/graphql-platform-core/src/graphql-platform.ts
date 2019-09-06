@@ -11,7 +11,7 @@ import {
   POJO,
   Thunk,
 } from '@prismamedia/graphql-platform-utils';
-import { ExecutionResult, graphql, GraphQLArgs, GraphQLFieldConfig, GraphQLNamedType, GraphQLSchema } from 'graphql';
+import { graphql, GraphQLArgs, GraphQLFieldConfig, GraphQLNamedType, GraphQLSchema } from 'graphql';
 import { Binding } from 'graphql-binding';
 import { ExecutionResultDataDefault } from 'graphql/execution/execute';
 import { Memoize } from 'typescript-memoize';
@@ -91,7 +91,7 @@ export type Context<
 export type GraphQLRequest = Merge<Omit<GraphQLArgs, 'schema'>, { contextValue?: CustomContext }>;
 
 export interface GraphQLExecutor {
-  execute<TData = ExecutionResultDataDefault>(request: GraphQLRequest): Promise<ExecutionResult<TData>>;
+  execute<TData = ExecutionResultDataDefault>(request: GraphQLRequest): Promise<TData>;
 }
 
 export type CustomOperationConfig<
@@ -263,8 +263,8 @@ export class GraphQLPlatform<
     });
   }
 
-  public async execute<TData = ExecutionResultDataDefault>(request: GraphQLRequest): Promise<ExecutionResult<TData>> {
-    return graphql<TData>({
+  public async execute<TData = ExecutionResultDataDefault>(request: GraphQLRequest): Promise<TData> {
+    const { data, errors } = await graphql<TData>({
       ...request,
       schema: this.getGraphQLSchema(),
       contextValue: Object.freeze({
@@ -272,6 +272,21 @@ export class GraphQLPlatform<
         ...request.contextValue,
       }),
     });
+
+    if (errors && errors.length > 0) {
+      throw errors[0];
+    }
+
+    if (data == null) {
+      throw new Error(
+        `An empty result have been returned for the following request: ${JSON.stringify({
+          source: request.source,
+          variableValues: request.variableValues,
+        })}`,
+      );
+    }
+
+    return data;
   }
 
   @Memoize()
