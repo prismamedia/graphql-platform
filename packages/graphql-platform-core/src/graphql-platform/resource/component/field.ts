@@ -238,7 +238,7 @@ export class Field<TConfig extends AnyFieldConfig = FieldConfig> extends Abstrac
     return maybeValue as FieldValue;
   }
 
-  public serialize(value: FieldValue): SerializedFieldValue {
+  public serializeValue(value: FieldValue): SerializedFieldValue {
     if (typeof value === 'undefined') {
       throw new UndefinedComponentValueError(this);
     } else if (value === null) {

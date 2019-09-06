@@ -126,13 +126,13 @@ describe('Resource', () => {
   });
 
   it("serializes a full node's value", () => {
-    expect(article.serialize(normalizedNode)).toEqual(normalizedSerializedNode);
-    expect(article.serialize(normalizedNode, false)).toEqual(normalizedSerializedNode);
-    expect(article.serialize(normalizedNode, true, article.getComponentSet())).toEqual(normalizedSerializedNode);
+    expect(article.serializeValue(normalizedNode)).toEqual(normalizedSerializedNode);
+    expect(article.serializeValue(normalizedNode, false)).toEqual(normalizedSerializedNode);
+    expect(article.serializeValue(normalizedNode, true, article.getComponentSet())).toEqual(normalizedSerializedNode);
 
-    expect(article.serialize(node)).toEqual(serializedNode);
-    expect(article.serialize(node, false)).toEqual(serializedNode);
-    expect(() => article.serialize(node, true, article.getComponentSet())).toThrowError(
+    expect(article.serializeValue(node)).toEqual(serializedNode);
+    expect(article.serializeValue(node, false)).toEqual(serializedNode);
+    expect(() => article.serializeValue(node, true, article.getComponentSet())).toThrowError(
       'The "User.username"\'s value is invalid: cannot be undefined.',
     );
   });
@@ -142,10 +142,10 @@ describe('Resource', () => {
     const { title: normalizedTitle, ...partialNormalizedNode } = normalizedNode;
     const { title: normalizedSerializedTitle, ...partialNormalizedSerializedNode } = normalizedSerializedNode;
 
-    expect(article.serialize(partialNormalizedNode)).toEqual(partialNormalizedSerializedNode);
-    expect(article.serialize(partialNormalizedNode, false)).toEqual(partialNormalizedSerializedNode);
-    expect(article.serialize(partialNormalizedNode, true)).toEqual(partialNormalizedSerializedNode);
-    expect(() => article.serialize(partialNormalizedNode, true, article.getComponentSet())).toThrowError(
+    expect(article.serializeValue(partialNormalizedNode)).toEqual(partialNormalizedSerializedNode);
+    expect(article.serializeValue(partialNormalizedNode, false)).toEqual(partialNormalizedSerializedNode);
+    expect(article.serializeValue(partialNormalizedNode, true)).toEqual(partialNormalizedSerializedNode);
+    expect(() => article.serializeValue(partialNormalizedNode, true, article.getComponentSet())).toThrowError(
       'The "Article.title"\'s value is invalid: cannot be undefined.',
     );
 
@@ -153,9 +153,9 @@ describe('Resource', () => {
     const { title, ...partialNode } = node;
     const { title: serializedTitle, ...partialSerializedNode } = serializedNode;
 
-    expect(article.serialize(partialNode)).toEqual(partialSerializedNode);
-    expect(article.serialize(partialNode, false)).toEqual(partialSerializedNode);
-    expect(() => article.serialize(partialNode, true)).toThrowError(
+    expect(article.serializeValue(partialNode)).toEqual(partialSerializedNode);
+    expect(article.serializeValue(partialNode, false)).toEqual(partialSerializedNode);
+    expect(() => article.serializeValue(partialNode, true)).toThrowError(
       'The "User.username"\'s value is invalid: cannot be undefined.',
     );
   });

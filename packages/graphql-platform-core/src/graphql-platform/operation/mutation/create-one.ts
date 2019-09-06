@@ -522,7 +522,7 @@ export class CreateOneOperation extends AbstractOperation<CreateOneOperationArgs
             ...params,
             resource,
           }),
-          createdNode: resource.serialize(node as NodeValue, true, resource.getComponentSet()),
+          createdNode: resource.serializeValue(node as NodeValue, true, resource.getComponentSet()),
         }),
       );
     }

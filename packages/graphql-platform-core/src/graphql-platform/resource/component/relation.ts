@@ -173,7 +173,7 @@ export class Relation<TConfig extends AnyRelationConfig = RelationConfig> extend
           .assert(value, this.getToUniqueSet());
   }
 
-  public serialize(value: RelationValue, normalized?: boolean): SerializedRelationValue {
+  public serializeValue(value: RelationValue, normalized?: boolean): SerializedRelationValue {
     if (typeof value === 'undefined') {
       throw new UndefinedComponentValueError(this);
     } else if (value === null) {
@@ -185,8 +185,8 @@ export class Relation<TConfig extends AnyRelationConfig = RelationConfig> extend
     }
 
     return normalized
-      ? this.getTo().serialize(value, true, this.getToUnique().componentSet)
-      : this.getTo().serialize(value);
+      ? this.getTo().serializeValue(value, true, this.getToUnique().componentSet)
+      : this.getTo().serializeValue(value);
   }
 
   public parseValue(value: SerializedRelationValue, normalized?: boolean): RelationValue {
@@ -202,7 +202,8 @@ export class Relation<TConfig extends AnyRelationConfig = RelationConfig> extend
 
     return normalized
       ? this.getTo().parseValue(value, true, this.getToUnique().componentSet)
-      : this.getTo().parseValue(value);
+      : // TODO: Optimize this by parsing only what is required
+        this.assertValue(this.getTo().parseValue(value, false), false);
   }
 
   public pickValue<TStrict extends boolean>(

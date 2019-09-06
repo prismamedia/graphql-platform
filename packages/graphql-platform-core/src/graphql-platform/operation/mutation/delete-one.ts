@@ -88,7 +88,7 @@ export class DeleteOneOperation extends AbstractOperation<DeleteOneOperationArgs
                 ...params,
                 resource,
               }),
-              deletedNode: resource.serialize(node as NodeValue, true, resource.getComponentSet()),
+              deletedNode: resource.serializeValue(node as NodeValue, true, resource.getComponentSet()),
             }),
           );
         }

@@ -65,6 +65,7 @@ import {
   OutputTypeConstructor,
   OutputTypeId,
   outputTypeMap,
+  SerializedWhereUniqueInputValue,
   WhereInputValue,
   WhereUniqueInputValue,
 } from './type';
@@ -568,7 +569,7 @@ export class Resource<TConfig extends AnyResourceConfig = ResourceConfig> extend
     throw new InvalidNodeValueError(this, `a plain object is expected but received "${node}" instead`);
   }
 
-  public serialize(node: NodeValue, normalized?: boolean, componentSet?: ComponentSet): SerializedNodeValue {
+  public serializeValue(node: NodeValue, normalized?: boolean, componentSet?: ComponentSet): SerializedNodeValue {
     const strict = typeof componentSet !== 'undefined';
 
     return fromEntries(
@@ -576,8 +577,8 @@ export class Resource<TConfig extends AnyResourceConfig = ResourceConfig> extend
         component.name,
         typeof node[component.name] !== 'undefined' || strict
           ? component.isField()
-            ? component.serialize(node[component.name] as FieldValue)
-            : component.serialize(node[component.name] as RelationValue, normalized)
+            ? component.serializeValue(node[component.name] as FieldValue)
+            : component.serializeValue(node[component.name] as RelationValue, normalized)
           : undefined,
       ]),
     );
@@ -596,6 +597,18 @@ export class Resource<TConfig extends AnyResourceConfig = ResourceConfig> extend
           : undefined,
       ]),
     );
+  }
+
+  public assertId(id: unknown): WhereUniqueInputValue {
+    return this.getInputType('WhereUnique').assert(id);
+  }
+
+  public serializeId(id: WhereUniqueInputValue): SerializedWhereUniqueInputValue {
+    return this.serializeValue(this.assertId(id));
+  }
+
+  public parseId(node: SerializedWhereUniqueInputValue): WhereUniqueInputValue {
+    return this.assertId(this.parseValue(node));
   }
 }
 

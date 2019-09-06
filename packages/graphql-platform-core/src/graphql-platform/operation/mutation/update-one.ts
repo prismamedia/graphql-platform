@@ -774,7 +774,7 @@ export class UpdateOneOperation extends AbstractOperation<UpdateOneOperationArgs
               resource,
               update,
             }),
-            updatedNode: resource.serialize(node as NodeValue, true, resource.getComponentSet()),
+            updatedNode: resource.serializeValue(node as NodeValue, true, resource.getComponentSet()),
           }),
         );
       }
