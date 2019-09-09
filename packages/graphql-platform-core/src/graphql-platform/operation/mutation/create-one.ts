@@ -353,57 +353,60 @@ export class CreateOneOperation extends AbstractOperation<CreateOneOperationArgs
           const relatedResource = inverseRelation.getTo();
           const selectionNode = relatedResource.getIdentifier().getSelectionNode(TypeKind.Input);
 
-          for (const [actionKind, actionValues] of getPlainObjectEntries(actions as Record<
-            CreateOneDataInverseRelationActionKind,
-            any
-          >)) {
-            if (actionValues == null) {
-              throw new Error(
-                `The "${inverseRelation}" relation's action "${actionKind}" does not support an empty value`,
-              );
-            }
-
-            await Promise.all(
-              (inverseRelation.isToMany() ? actionValues : [actionValues]).map(async (actionValue: any) => {
-                switch (actionKind) {
-                  case CreateOneDataInverseRelationActionKind.Connect:
-                    const where = relatedResource.getInputType('WhereUnique').assert(actionValue);
-
-                    const updatedNode = await relatedResource.getMutation('UpdateOne').resolve({
-                      args: {
-                        where,
-                        data: {
-                          [inverseRelation.getInverse().name]: { [UpdateOneDataRelationActionKind.Connect]: id },
-                        },
-                      },
-                      context,
-                      selectionNode,
-                    });
-
-                    if (!updatedNode) {
-                      throw new NodeNotFoundError(relatedResource.getMutation('UpdateOne'), where);
-                    }
-                    break;
-
-                  case CreateOneDataInverseRelationActionKind.Create:
-                    await relatedResource.getMutation('CreateOne').resolve({
-                      args: {
-                        data: {
-                          ...actionValue,
-                          [inverseRelation.getInverse().name]: { [CreateOneDataRelationActionKind.Connect]: id },
-                        },
-                      },
-                      context,
-                      selectionNode,
-                    });
-                    break;
-
-                  default:
-                    throw new Error(`The "${inverseRelation}" relation's action "${actionKind}" is not supported, yet`);
+          await Promise.all(
+            getPlainObjectEntries(actions as Record<CreateOneDataInverseRelationActionKind, any>).map(
+              async ([actionKind, actionValues]) => {
+                if (actionValues == null) {
+                  throw new Error(
+                    `The "${inverseRelation}" relation's action "${actionKind}" does not support an empty value`,
+                  );
                 }
-              }),
-            );
-          }
+
+                await Promise.all(
+                  (inverseRelation.isToMany() ? actionValues : [actionValues]).map(async (actionValue: any) => {
+                    switch (actionKind) {
+                      case CreateOneDataInverseRelationActionKind.Connect:
+                        const where = relatedResource.getInputType('WhereUnique').assert(actionValue);
+
+                        const updatedNode = await relatedResource.getMutation('UpdateOne').resolve({
+                          args: {
+                            where,
+                            data: {
+                              [inverseRelation.getInverse().name]: { [UpdateOneDataRelationActionKind.Connect]: id },
+                            },
+                          },
+                          context,
+                          selectionNode,
+                        });
+
+                        if (!updatedNode) {
+                          throw new NodeNotFoundError(relatedResource.getMutation('UpdateOne'), where);
+                        }
+                        break;
+
+                      case CreateOneDataInverseRelationActionKind.Create:
+                        await relatedResource.getMutation('CreateOne').resolve({
+                          args: {
+                            data: {
+                              ...actionValue,
+                              [inverseRelation.getInverse().name]: { [CreateOneDataRelationActionKind.Connect]: id },
+                            },
+                          },
+                          context,
+                          selectionNode,
+                        });
+                        break;
+
+                      default:
+                        throw new Error(
+                          `The "${inverseRelation}" relation's action "${actionKind}" is not supported, yet`,
+                        );
+                    }
+                  }),
+                );
+              },
+            ),
+          );
         }
       }),
     );

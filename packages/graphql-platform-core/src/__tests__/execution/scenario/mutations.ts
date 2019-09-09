@@ -178,6 +178,12 @@ export const scenario: Scenario = [
               delete: true
             },
             tags: {
+              create: [
+                {
+                  order: 2,
+                  tag: { connect: { slug: "yen-operations-0" }}
+                }
+              ],
               delete: [
                 {
                   order: 2
@@ -217,6 +223,12 @@ export const scenario: Scenario = [
             order: 1,
             tag: {
               slug: 'michigan-frozen-3',
+            },
+          },
+          {
+            order: 2,
+            tag: {
+              slug: 'yen-operations-0',
             },
           },
         ],

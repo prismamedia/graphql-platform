@@ -2,7 +2,6 @@ import {
   Entries,
   fromEntries,
   getEnumValues,
-  getPlainObjectEntries,
   GraphQLListDecorator,
   GraphQLNonNullDecorator,
   GraphQLOperationType,
@@ -53,13 +52,7 @@ export enum UpdateOneDataInverseRelationActionKind {
   Upsert = 'upsert',
 }
 
-export const updateOneDataInverseRelationActionKinds = [
-  ...new Set([
-    UpdateOneDataInverseRelationActionKind.Delete,
-    UpdateOneDataInverseRelationActionKind.Disconnect,
-    ...getEnumValues(UpdateOneDataInverseRelationActionKind),
-  ]),
-];
+export const updateOneDataInverseRelationActionKinds = getEnumValues(UpdateOneDataInverseRelationActionKind);
 
 export type UpdateOneDataInputValue = POJO;
 
@@ -496,144 +489,196 @@ export class UpdateOneOperation extends AbstractOperation<UpdateOneOperationArgs
           const relatedResource = inverseRelation.getTo();
           const selectionNode = relatedResource.getIdentifier().getSelectionNode(TypeKind.Input);
 
-          for (const [actionKind, actionValues] of getPlainObjectEntries(actions as Record<
-            UpdateOneDataInverseRelationActionKind,
-            any
-          >)) {
-            if (actionValues == null) {
-              throw new Error(
-                `The "${inverseRelation}" relation's action "${actionKind}" does not support an empty value`,
-              );
-            }
-
-            await Promise.all(
-              (inverseRelation.isToMany() ? actionValues : [actionValues]).map(async (actionValue: any) => {
-                switch (actionKind) {
-                  case UpdateOneDataInverseRelationActionKind.Connect: {
-                    const where = relatedResource.getInputType('WhereUnique').assert(actionValue);
-
-                    const updatedNode = await relatedResource.getMutation('UpdateOne').resolve({
-                      args: {
-                        where,
-                        data: {
-                          [inverseRelation.getInverse().name]: { [UpdateOneDataRelationActionKind.Connect]: id },
-                        },
-                      },
-                      context,
-                      selectionNode,
-                    });
-
-                    if (!updatedNode) {
-                      throw new NodeNotFoundError(relatedResource.getMutation('UpdateOne'), where);
-                    }
-                    break;
+          // First we delete & disconnect in order to avoid further unique constraint errors
+          await Promise.all(
+            [UpdateOneDataInverseRelationActionKind.Delete, UpdateOneDataInverseRelationActionKind.Disconnect].map(
+              async actionKind => {
+                const actionValues = actions[actionKind];
+                if (typeof actionValues !== 'undefined') {
+                  if (actionValues == null) {
+                    throw new Error(
+                      `The "${inverseRelation}" relation's action "${actionKind}" does not support an empty value`,
+                    );
                   }
 
-                  case UpdateOneDataInverseRelationActionKind.Create: {
-                    await relatedResource.getMutation('CreateOne').resolve({
-                      args: {
-                        data: {
-                          ...actionValue,
-                          [inverseRelation.getInverse().name]: { [CreateOneDataRelationActionKind.Connect]: id },
-                        },
-                      },
-                      context,
-                      selectionNode,
-                    });
-                    break;
-                  }
+                  await Promise.all(
+                    (inverseRelation.isToMany() ? actionValues : [actionValues]).map(async (actionValue: any) => {
+                      switch (actionKind) {
+                        case UpdateOneDataInverseRelationActionKind.Delete: {
+                          const where = relatedResource
+                            .getInputType('WhereUnique')
+                            .assert({ ...actionValue, [inverseRelation.getInverse().name]: id });
 
-                  case UpdateOneDataInverseRelationActionKind.Delete: {
-                    const where = relatedResource
-                      .getInputType('WhereUnique')
-                      .assert({ ...actionValue, [inverseRelation.getInverse().name]: id });
+                          await relatedResource.getMutation('DeleteOne').resolve({
+                            args: { where },
+                            context,
+                            selectionNode,
+                          });
+                          break;
+                        }
 
-                    await relatedResource.getMutation('DeleteOne').resolve({
-                      args: { where },
-                      context,
-                      selectionNode,
-                    });
-                    break;
-                  }
+                        case UpdateOneDataInverseRelationActionKind.Disconnect: {
+                          const where = relatedResource
+                            .getInputType('WhereUnique')
+                            .assert({ ...actionValue, [inverseRelation.getInverse().name]: id });
 
-                  case UpdateOneDataInverseRelationActionKind.Disconnect: {
-                    const where = relatedResource
-                      .getInputType('WhereUnique')
-                      .assert({ ...actionValue, [inverseRelation.getInverse().name]: id });
+                          const updatedNode = await relatedResource.getMutation('UpdateOne').resolve({
+                            args: {
+                              where,
+                              data: {
+                                [inverseRelation.getInverse().name]: {
+                                  [UpdateOneDataRelationActionKind.Disconnect]: true,
+                                },
+                              },
+                            },
+                            context,
+                            selectionNode,
+                          });
 
-                    const updatedNode = await relatedResource.getMutation('UpdateOne').resolve({
-                      args: {
-                        where,
-                        data: {
-                          [inverseRelation.getInverse().name]: { [UpdateOneDataRelationActionKind.Disconnect]: true },
-                        },
-                      },
-                      context,
-                      selectionNode,
-                    });
+                          if (!updatedNode) {
+                            throw new NodeNotFoundError(relatedResource.getMutation('UpdateOne'), where);
+                          }
+                          break;
+                        }
 
-                    if (!updatedNode) {
-                      throw new NodeNotFoundError(relatedResource.getMutation('UpdateOne'), where);
-                    }
-                    break;
-                  }
-
-                  case UpdateOneDataInverseRelationActionKind.Update: {
-                    const where = relatedResource
-                      .getInputType('WhereUnique')
-                      .assert({ [inverseRelation.getInverse().name]: id, ...actionValue.where });
-
-                    const updatedNode = await relatedResource.getMutation('UpdateOne').resolve({
-                      args: {
-                        where,
-                        data: {
-                          ...actionValue.data,
-                          ...(inverseRelation.getInverse().isMutable()
-                            ? { [inverseRelation.getInverse().name]: { [UpdateOneDataRelationActionKind.Connect]: id } }
-                            : {}),
-                        },
-                      },
-                      context,
-                      selectionNode,
-                    });
-
-                    if (!updatedNode) {
-                      throw new NodeNotFoundError(relatedResource.getMutation('UpdateOne'), where);
-                    }
-                    break;
-                  }
-
-                  case UpdateOneDataInverseRelationActionKind.Upsert: {
-                    const where = relatedResource
-                      .getInputType('WhereUnique')
-                      .assert({ [inverseRelation.getInverse().name]: id, ...actionValue.where });
-
-                    await relatedResource.getMutation('UpsertOne').resolve({
-                      args: {
-                        where,
-                        update: {
-                          ...actionValue.update,
-                          ...(inverseRelation.getInverse().isMutable()
-                            ? { [inverseRelation.getInverse().name]: { [UpdateOneDataRelationActionKind.Connect]: id } }
-                            : {}),
-                        },
-                        create: {
-                          ...actionValue.create,
-                          [inverseRelation.getInverse().name]: { [CreateOneDataRelationActionKind.Connect]: id },
-                        },
-                      },
-                      context,
-                      selectionNode,
-                    });
-                    break;
-                  }
-
-                  default:
-                    throw new Error(`The "${inverseRelation}" relation's action "${actionKind}" is not supported, yet`);
+                        default:
+                          throw new Error(
+                            `The "${inverseRelation}" relation's action "${actionKind}" is not supported, yet`,
+                          );
+                      }
+                    }),
+                  );
                 }
-              }),
-            );
-          }
+              },
+            ),
+          );
+
+          // Then we do everything else
+          await Promise.all(
+            updateOneDataInverseRelationActionKinds.map(async actionKind => {
+              const actionValues = actions[actionKind];
+              if (typeof actionValues !== 'undefined') {
+                if (actionValues == null) {
+                  throw new Error(
+                    `The "${inverseRelation}" relation's action "${actionKind}" does not support an empty value`,
+                  );
+                }
+
+                await Promise.all(
+                  (inverseRelation.isToMany() ? actionValues : [actionValues]).map(async (actionValue: any) => {
+                    switch (actionKind) {
+                      case UpdateOneDataInverseRelationActionKind.Connect: {
+                        const where = relatedResource.getInputType('WhereUnique').assert(actionValue);
+
+                        const updatedNode = await relatedResource.getMutation('UpdateOne').resolve({
+                          args: {
+                            where,
+                            data: {
+                              [inverseRelation.getInverse().name]: { [UpdateOneDataRelationActionKind.Connect]: id },
+                            },
+                          },
+                          context,
+                          selectionNode,
+                        });
+
+                        if (!updatedNode) {
+                          throw new NodeNotFoundError(relatedResource.getMutation('UpdateOne'), where);
+                        }
+                        break;
+                      }
+
+                      case UpdateOneDataInverseRelationActionKind.Create: {
+                        await relatedResource.getMutation('CreateOne').resolve({
+                          args: {
+                            data: {
+                              ...actionValue,
+                              [inverseRelation.getInverse().name]: { [CreateOneDataRelationActionKind.Connect]: id },
+                            },
+                          },
+                          context,
+                          selectionNode,
+                        });
+                        break;
+                      }
+
+                      case UpdateOneDataInverseRelationActionKind.Delete: {
+                        // Already done
+                        break;
+                      }
+
+                      case UpdateOneDataInverseRelationActionKind.Disconnect: {
+                        // Already done
+                        break;
+                      }
+
+                      case UpdateOneDataInverseRelationActionKind.Update: {
+                        const where = relatedResource
+                          .getInputType('WhereUnique')
+                          .assert({ [inverseRelation.getInverse().name]: id, ...actionValue.where });
+
+                        const updatedNode = await relatedResource.getMutation('UpdateOne').resolve({
+                          args: {
+                            where,
+                            data: {
+                              ...actionValue.data,
+                              ...(inverseRelation.getInverse().isMutable()
+                                ? {
+                                    [inverseRelation.getInverse().name]: {
+                                      [UpdateOneDataRelationActionKind.Connect]: id,
+                                    },
+                                  }
+                                : {}),
+                            },
+                          },
+                          context,
+                          selectionNode,
+                        });
+
+                        if (!updatedNode) {
+                          throw new NodeNotFoundError(relatedResource.getMutation('UpdateOne'), where);
+                        }
+                        break;
+                      }
+
+                      case UpdateOneDataInverseRelationActionKind.Upsert: {
+                        const where = relatedResource
+                          .getInputType('WhereUnique')
+                          .assert({ [inverseRelation.getInverse().name]: id, ...actionValue.where });
+
+                        await relatedResource.getMutation('UpsertOne').resolve({
+                          args: {
+                            where,
+                            update: {
+                              ...actionValue.update,
+                              ...(inverseRelation.getInverse().isMutable()
+                                ? {
+                                    [inverseRelation.getInverse().name]: {
+                                      [UpdateOneDataRelationActionKind.Connect]: id,
+                                    },
+                                  }
+                                : {}),
+                            },
+                            create: {
+                              ...actionValue.create,
+                              [inverseRelation.getInverse().name]: { [CreateOneDataRelationActionKind.Connect]: id },
+                            },
+                          },
+                          context,
+                          selectionNode,
+                        });
+                        break;
+                      }
+
+                      default:
+                        throw new Error(
+                          `The "${inverseRelation}" relation's action "${actionKind}" is not supported, yet`,
+                        );
+                    }
+                  }),
+                );
+              }
+            }),
+          );
         }
       }),
     );

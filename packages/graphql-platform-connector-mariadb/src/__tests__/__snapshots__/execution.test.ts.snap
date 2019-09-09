@@ -1,7 +1,7 @@
 // Jest Snapshot v1, https://goo.gl/fbAQLP
 
 exports[`Execution executes a scenario 1`] = `
-"# 92 queries in 1 connections
+"# 95 queries in 1 connections
 
 SELECT
   COUNT(DISTINCT \`Article\`.\`intId\`) AS result
@@ -477,6 +477,34 @@ WHERE
   \`ArticleUrl\`.\`articleIntId\` = 3;
 
 SELECT
+  \`Article\`.\`intId\`
+FROM
+  \`articles\` AS \`Article\`
+WHERE
+  (\`Article\`.\`format\` IN ('RICH', 'VIDEO'))
+  AND (
+    \`Article\`.\`id\` = '4d88dc29-1b08-47c0-917c-5a1c6b13f024'
+  )
+LIMIT
+  1;
+
+SELECT
+  \`Tag\`.\`intId\`
+FROM
+  \`tags\` AS \`Tag\`
+WHERE
+  \`Tag\`.\`slug\` = 'yen-operations-0'
+LIMIT
+  1;
+
+INSERT INTO
+  \`article_tags\`
+SET
+  \`order\` = 2,
+  \`articleIntId\` = 3,
+  \`tagIntId\` = 4;
+
+SELECT
   \`Article\`.\`id\`,
   \`Article>url\`.\`path\`,
   \`Article>url\`.\`articleIntId\`,
@@ -603,88 +631,6 @@ WHERE
   \`Category\`.\`id\` = '4739fde2-c0a1-407d-9c97-58f1926883be';
 
 SELECT
-  \`Category\`.\`parentId\`,
-  \`Category\`.\`slug\`
-FROM
-  \`categories\` AS \`Category\`
-WHERE
-  \`Category\`.\`id\` = '4739fde2-c0a1-407d-9c97-58f1926883be'
-LIMIT
-  1;
-
-SELECT
-  \`Category\`.\`parentId\`,
-  \`Category\`.\`slug\`
-FROM
-  \`categories\` AS \`Category\`
-WHERE
-  \`Category\`.\`id\` = '4739fde2-c0a1-407d-9c97-58f1926883be'
-LIMIT
-  1;
-
-UPDATE
-  \`articles\` AS \`Article\`
-  LEFT JOIN \`categories\` AS \`Article>category\` ON (
-    \`Article\`.\`categoryParentId\` <= > \`Article>category\`.\`parentId\`
-  )
-  AND (
-    \`Article\`.\`categorySlug\` = \`Article>category\`.\`slug\`
-  )
-SET
-  \`Article\`.\`title\` = 'My new article\\\\'s title',
-  \`Article\`.\`categoryParentId\` = '199f6850-dc43-4bc9-a6dc-b68625021e0e',
-  \`Article\`.\`categorySlug\` = 'quisquam-recusandae-alias'
-WHERE
-  (\`Article\`.\`format\` IN ('RICH', 'VIDEO'))
-  AND (
-    \`Article>category\`.\`id\` = '4739fde2-c0a1-407d-9c97-58f1926883be'
-  )
-  AND (\`Article\`.\`slug\` = 'eos-saepe');
-
-UPDATE
-  \`articles\` AS \`Article\`
-SET
-  \`Article\`.\`title\` = 'My new connected article',
-  \`Article\`.\`categoryParentId\` = '199f6850-dc43-4bc9-a6dc-b68625021e0e',
-  \`Article\`.\`categorySlug\` = 'quisquam-recusandae-alias'
-WHERE
-  (\`Article\`.\`format\` IN ('RICH', 'VIDEO'))
-  AND (
-    \`Article\`.\`id\` = 'c96cb09c-fb44-4543-aa5c-c879c0f74f25'
-  );
-
-SELECT
-  \`Article\`.\`intId\`
-FROM
-  \`articles\` AS \`Article\`
-  LEFT JOIN \`categories\` AS \`Article>category\` ON (
-    \`Article\`.\`categoryParentId\` <= > \`Article>category\`.\`parentId\`
-  )
-  AND (
-    \`Article\`.\`categorySlug\` = \`Article>category\`.\`slug\`
-  )
-WHERE
-  (\`Article\`.\`format\` IN ('RICH', 'VIDEO'))
-  AND (
-    \`Article>category\`.\`id\` = '4739fde2-c0a1-407d-9c97-58f1926883be'
-  )
-  AND (\`Article\`.\`slug\` = 'eos-saepe')
-LIMIT
-  1;
-
-SELECT
-  \`Article\`.\`intId\`
-FROM
-  \`articles\` AS \`Article\`
-WHERE
-  (\`Article\`.\`format\` IN ('RICH', 'VIDEO'))
-  AND (
-    \`Article\`.\`id\` = 'c96cb09c-fb44-4543-aa5c-c879c0f74f25'
-  )
-LIMIT
-  1;
-
-SELECT
   \`Article\`.\`intId\`
 FROM
   \`articles\` AS \`Article\`
@@ -743,6 +689,26 @@ LIMIT
   1;
 
 SELECT
+  \`Category\`.\`parentId\`,
+  \`Category\`.\`slug\`
+FROM
+  \`categories\` AS \`Category\`
+WHERE
+  \`Category\`.\`id\` = '4739fde2-c0a1-407d-9c97-58f1926883be'
+LIMIT
+  1;
+
+SELECT
+  \`Category\`.\`parentId\`,
+  \`Category\`.\`slug\`
+FROM
+  \`categories\` AS \`Category\`
+WHERE
+  \`Category\`.\`id\` = '4739fde2-c0a1-407d-9c97-58f1926883be'
+LIMIT
+  1;
+
+SELECT
   \`User\`.\`username\`
 FROM
   \`users\` AS \`User\`
@@ -750,6 +716,37 @@ WHERE
   \`User\`.\`id\` = '60685298-62f6-4aa3-8605-3c0eeeca8404'
 LIMIT
   1;
+
+UPDATE
+  \`articles\` AS \`Article\`
+  LEFT JOIN \`categories\` AS \`Article>category\` ON (
+    \`Article\`.\`categoryParentId\` <= > \`Article>category\`.\`parentId\`
+  )
+  AND (
+    \`Article\`.\`categorySlug\` = \`Article>category\`.\`slug\`
+  )
+SET
+  \`Article\`.\`title\` = 'My new article\\\\'s title',
+  \`Article\`.\`categoryParentId\` = '199f6850-dc43-4bc9-a6dc-b68625021e0e',
+  \`Article\`.\`categorySlug\` = 'quisquam-recusandae-alias'
+WHERE
+  (\`Article\`.\`format\` IN ('RICH', 'VIDEO'))
+  AND (
+    \`Article>category\`.\`id\` = '4739fde2-c0a1-407d-9c97-58f1926883be'
+  )
+  AND (\`Article\`.\`slug\` = 'eos-saepe');
+
+UPDATE
+  \`articles\` AS \`Article\`
+SET
+  \`Article\`.\`title\` = 'My new connected article',
+  \`Article\`.\`categoryParentId\` = '199f6850-dc43-4bc9-a6dc-b68625021e0e',
+  \`Article\`.\`categorySlug\` = 'quisquam-recusandae-alias'
+WHERE
+  (\`Article\`.\`format\` IN ('RICH', 'VIDEO'))
+  AND (
+    \`Article\`.\`id\` = 'c96cb09c-fb44-4543-aa5c-c879c0f74f25'
+  );
 
 UPDATE
   \`articles\` AS \`Article\`
@@ -779,6 +776,37 @@ WHERE
     )
   )
   AND (\`Article\`.\`slug\` = 'a-non-existent-article-slug')
+LIMIT
+  1;
+
+SELECT
+  \`Article\`.\`intId\`
+FROM
+  \`articles\` AS \`Article\`
+  LEFT JOIN \`categories\` AS \`Article>category\` ON (
+    \`Article\`.\`categoryParentId\` <= > \`Article>category\`.\`parentId\`
+  )
+  AND (
+    \`Article\`.\`categorySlug\` = \`Article>category\`.\`slug\`
+  )
+WHERE
+  (\`Article\`.\`format\` IN ('RICH', 'VIDEO'))
+  AND (
+    \`Article>category\`.\`id\` = '4739fde2-c0a1-407d-9c97-58f1926883be'
+  )
+  AND (\`Article\`.\`slug\` = 'eos-saepe')
+LIMIT
+  1;
+
+SELECT
+  \`Article\`.\`intId\`
+FROM
+  \`articles\` AS \`Article\`
+WHERE
+  (\`Article\`.\`format\` IN ('RICH', 'VIDEO'))
+  AND (
+    \`Article\`.\`id\` = 'c96cb09c-fb44-4543-aa5c-c879c0f74f25'
+  )
 LIMIT
   1;
 
