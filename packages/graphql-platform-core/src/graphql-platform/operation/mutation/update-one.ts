@@ -5,7 +5,6 @@ import {
   GraphQLListDecorator,
   GraphQLNonNullDecorator,
   GraphQLOperationType,
-  GraphQLSelectionNode,
   isPlainObject,
   POJO,
 } from '@prismamedia/graphql-platform-utils';
@@ -21,6 +20,7 @@ import {
 } from 'graphql';
 import { Memoize } from 'typescript-memoize';
 import { BaseContext } from '../../../graphql-platform';
+import { ConnectorUpdateOperationArgs } from '../../connector';
 import { OperationResolverParams } from '../../operation';
 import { Field, InverseRelation, NodeValue, Relation, ResourceHookKind } from '../../resource';
 import { RelationValue } from '../../resource/component';
@@ -161,7 +161,8 @@ export class UpdateOneOperation extends AbstractOperation<UpdateOneOperationArgs
       (relatedResource.getMutation('UpdateOne').isPublic() &&
         !relation.getInverse().isFullyManaged() &&
         relation.getInverse().isMutable()) ||
-      relatedResource.getMutation('CreateOne').isPublic()
+      relatedResource.getMutation('CreateOne').isPublic() ||
+      relatedResource.getMutation('DeleteOne').isPublic()
     ) {
       return {
         description: [`Actions for the "${relation}" relation`, relation.description].filter(Boolean).join(': '),
@@ -684,13 +685,11 @@ export class UpdateOneOperation extends AbstractOperation<UpdateOneOperationArgs
     );
   }
 
-  public async resolve(params: OperationResolverParams<UpdateOneOperationArgs>): Promise<UpdateOneOperationResult> {
-    const { args, context, selectionNode } = params;
-    const operationContext = context.operationContext;
+  public async preUpdate(
+    params: OperationResolverParams<UpdateOneOperationArgs>,
+  ): Promise<ConnectorUpdateOperationArgs> {
+    const { args, context } = params;
     const resource = this.resource;
-
-    const postSuccessHooks =
-      operationContext.type === GraphQLOperationType.Mutation ? operationContext.postSuccessHooks : undefined;
 
     const filter = await resource.filter(context);
     const nodeId = resource.getInputType('WhereUnique').assert(args.where);
@@ -774,21 +773,33 @@ export class UpdateOneOperation extends AbstractOperation<UpdateOneOperationArgs
       revoke();
     }
 
+    return { where, data: update };
+  }
+
+  public async resolve(params: OperationResolverParams<UpdateOneOperationArgs>): Promise<UpdateOneOperationResult> {
+    const { args, context, selectionNode } = params;
+    const resource = this.resource;
+
+    // Build the connector args
+    const { where, data: update } = await this.preUpdate(params);
+
     // Actually update the node
     const { matchedCount, changedCount } = update.isEmpty()
       ? {
-          matchedCount: await resource.getQuery('Count').resolve({
-            args: { where: nodeId },
-            context,
-            selectionNode: new GraphQLSelectionNode('empty-selection', {}),
-          }),
+          matchedCount: await this.connector.count(
+            Object.freeze({
+              resource,
+              context,
+              args: { where },
+            }),
+          ),
           changedCount: 0,
         }
       : await this.connector.update(
           Object.freeze({
-            ...params,
             resource,
-            args: { ...args, where, data: update },
+            context,
+            args: { where, data: update },
           }),
         );
 
@@ -796,6 +807,8 @@ export class UpdateOneOperation extends AbstractOperation<UpdateOneOperationArgs
     if (matchedCount === 0) {
       return null;
     }
+
+    const nodeId = resource.getInputType('WhereUnique').assert(args.where);
 
     await this.parseDataInverseRelationMap(args.data, nodeId, context);
 
@@ -811,13 +824,16 @@ export class UpdateOneOperation extends AbstractOperation<UpdateOneOperationArgs
       : nodeFromUpdate;
 
     if (changedCount === 1) {
+      const { operationContext } = context;
+      const postSuccessHooks =
+        operationContext.type === GraphQLOperationType.Mutation ? operationContext.postSuccessHooks : undefined;
+
       if (postSuccessHooks && hasPostSuccessHook) {
         postSuccessHooks.push(
           resource.emit.bind(resource, ResourceHookKind.PostUpdate, {
             metas: Object.freeze({
               ...params,
               resource,
-              update,
             }),
             updatedNode: resource.serializeValue(node as NodeValue, true, resource.getComponentSet()),
           }),

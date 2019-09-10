@@ -8,20 +8,22 @@ import {
   FindManyOperationResult,
   UpdateOneValue,
 } from './operation';
-import { Resource } from './resource';
+import { AnyResource, Resource } from './resource';
 import { WhereInputValue } from './type';
 
 export type ConnectorOperationParams<
   TArgs extends POJO = any,
-  TBaseContext extends AnyBaseContext = BaseContext
+  TBaseContext extends AnyBaseContext = BaseContext,
+  TResource extends AnyResource = Resource
 > = Readonly<{
   args: TArgs;
   context: Context<{}, TBaseContext>;
-  selectionNode: GraphQLSelectionNode<any>;
-  resource: Resource;
+  resource: TResource;
 }>;
 
-export type ConnectorFindOperationArgs = FindManyOperationArgs;
+export type ConnectorFindOperationArgs = FindManyOperationArgs & {
+  selectionNode: GraphQLSelectionNode<any>;
+};
 
 export type ConnectorFindOperationResult = FindManyOperationResult;
 

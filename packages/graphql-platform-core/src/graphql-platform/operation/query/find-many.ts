@@ -55,7 +55,7 @@ export class FindManyOperation extends AbstractOperation<FindManyOperationArgs, 
   }
 
   public async resolve(params: OperationResolverParams<FindManyOperationArgs>): Promise<FindManyOperationResult> {
-    const { args, context } = params;
+    const { args, context, selectionNode } = params;
     const resource = this.resource;
 
     const filter = await resource.filter(context);
@@ -63,9 +63,9 @@ export class FindManyOperation extends AbstractOperation<FindManyOperationArgs, 
     return filter !== false
       ? this.connector.find(
           Object.freeze({
-            ...params,
             resource,
-            args: { ...args, where: { AND: [filter, args.where] } },
+            context,
+            args: { ...args, where: { AND: [filter, args.where] }, selectionNode },
           }),
         )
       : [];

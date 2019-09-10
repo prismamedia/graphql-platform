@@ -435,7 +435,7 @@ export class FindOperation extends AbstractOperationResolver<ConnectorFindOperat
                 .getColumnSet()
                 .forEach(({ reference }) => reference.setValue(node, tableData[reference.name]));
 
-              node[nodeField.name] = async params =>
+              node[nodeField.name] = async ({ selectionNode, ...params }) =>
                 relatedFindOperation.execute({
                   ...params,
                   args: {
@@ -450,6 +450,7 @@ export class FindOperation extends AbstractOperationResolver<ConnectorFindOperat
                         params.args.where,
                       ],
                     },
+                    selectionNode,
                   },
                 });
             }
@@ -467,7 +468,7 @@ export class FindOperation extends AbstractOperationResolver<ConnectorFindOperat
               .getColumnSet()
               .forEach(({ reference }) => reference.setValue(node, tableData[reference.name]));
 
-            node[nodeField.name] = async params =>
+            node[nodeField.name] = async ({ selectionNode, ...params }) =>
               relatedCountOperation.execute({
                 ...params,
                 args: {
@@ -502,11 +503,11 @@ export class FindOperation extends AbstractOperationResolver<ConnectorFindOperat
     return node;
   }
 
-  public async execute({ args, context, selectionNode }: OperationResolverParams<ConnectorFindOperationArgs>) {
+  public async execute({ args, context }: OperationResolverParams<ConnectorFindOperationArgs>) {
     const selectStatement = this.table.newSelectStatement();
 
     await Promise.all([
-      this.parseSelectionNode(selectStatement.select, selectionNode),
+      this.parseSelectionNode(selectStatement.select, args.selectionNode),
       this.parseWhereArg(selectStatement.where, args.where),
       this.parseOrderByArg(selectStatement.orderBy, args.orderBy),
       this.parseSkipArg(selectStatement, args.skip),
@@ -525,6 +526,6 @@ export class FindOperation extends AbstractOperationResolver<ConnectorFindOperat
       context.connectorRequest.connection,
     );
 
-    return Array.isArray(rows) ? rows.map(row => this.parseRow(row, selectStatement.from, selectionNode)) : [];
+    return Array.isArray(rows) ? rows.map(row => this.parseRow(row, selectStatement.from, args.selectionNode)) : [];
   }
 }

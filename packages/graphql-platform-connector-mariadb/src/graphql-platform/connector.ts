@@ -67,7 +67,7 @@ export type QueryResult =
       insertId: Maybe<number>;
     };
 
-type ConnectorOperationParams<TArgs extends POJO> = CoreConnectorOperationParams<TArgs, BaseContext>;
+export type ConnectorOperationParams<TArgs extends POJO> = CoreConnectorOperationParams<TArgs, BaseContext>;
 
 export class Connector extends EventEmitter<ConnectorEventMap> implements ConnectorInterface<BaseContext> {
   protected pool?: mysql.Pool;

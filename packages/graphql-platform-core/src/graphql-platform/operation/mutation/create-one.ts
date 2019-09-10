@@ -21,6 +21,7 @@ import {
 } from 'graphql';
 import { Memoize } from 'typescript-memoize';
 import { BaseContext } from '../../../graphql-platform';
+import { ConnectorCreateOperationArgs } from '../../connector';
 import { OperationResolverParams } from '../../operation';
 import {
   ComponentValue,
@@ -412,13 +413,11 @@ export class CreateOneOperation extends AbstractOperation<CreateOneOperationArgs
     );
   }
 
-  public async resolve(params: OperationResolverParams<CreateOneOperationArgs>): Promise<CreateOneOperationResult> {
-    const { args, context, selectionNode } = params;
-    const operationContext = context.operationContext;
+  public async preCreate(
+    params: OperationResolverParams<CreateOneOperationArgs>,
+  ): Promise<ConnectorCreateOperationArgs> {
+    const { args, context } = params;
     const resource = this.resource;
-
-    const postSuccessHooks =
-      operationContext.type === GraphQLOperationType.Mutation ? operationContext.postSuccessHooks : undefined;
 
     const create = new CreateOneValue(resource, await this.parseDataComponentMap(args.data, context));
 
@@ -495,8 +494,20 @@ export class CreateOneOperation extends AbstractOperation<CreateOneOperationArgs
       revoke();
     }
 
+    return { data: [create] };
+  }
+
+  public async resolve(params: OperationResolverParams<CreateOneOperationArgs>): Promise<CreateOneOperationResult> {
+    const { args, context, selectionNode } = params;
+    const resource = this.resource;
+
+    // Build the connector args
+    const {
+      data: [create],
+    } = await this.preCreate(params);
+
     // Actually create the node
-    await this.connector.create(Object.freeze({ ...params, resource, args: { ...args, data: [create] } }));
+    await this.connector.create(Object.freeze({ resource, context, args: { data: [create] } }));
 
     const nodeFromCreate = create.toNodeValue();
     const nodeId = resource.getInputType('WhereUnique').assertUnique(nodeFromCreate, resource.getIdentifier(), true);
@@ -517,6 +528,10 @@ export class CreateOneOperation extends AbstractOperation<CreateOneOperationArgs
           },
         })
       : (nodeFromCreate as NodeSource);
+
+    const { operationContext } = context;
+    const postSuccessHooks =
+      operationContext.type === GraphQLOperationType.Mutation ? operationContext.postSuccessHooks : undefined;
 
     if (postSuccessHooks && hasPostSuccessHook) {
       postSuccessHooks.push(

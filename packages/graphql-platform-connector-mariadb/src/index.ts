@@ -6,6 +6,7 @@ export * from './graphql-platform';
 export {
   BaseContext,
   Component,
+  ConnectorOperationParams,
   Context,
   CustomOperationConfig,
   Field,

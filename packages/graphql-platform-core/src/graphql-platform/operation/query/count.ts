@@ -47,8 +47,8 @@ export class CountOperation extends AbstractOperation<CountOperationArgs, CountO
     return filter !== false
       ? this.connector.count(
           Object.freeze({
-            ...params,
             resource,
+            context,
             args: { ...args, where: { AND: [filter, args.where] } },
           }),
         )

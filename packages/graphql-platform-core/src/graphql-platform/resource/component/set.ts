@@ -5,6 +5,11 @@ import { AnyComponent, Component } from './types';
 
 export class ComponentSet<TComponent extends AnyComponent = Component> extends SuperSetOfNamedObject<TComponent> {
   @Memoize((use: TypeKind = TypeKind.Output) => use)
+  public getSelectionNode(use: TypeKind = TypeKind.Output): GraphQLSelectionNode {
+    return new GraphQLSelectionNode(this.getNames().join('_'), {}, this.getSelectionNodeChildren(use));
+  }
+
+  @Memoize((use: TypeKind = TypeKind.Output) => use)
   public getSelectionNodeChildren(use: TypeKind = TypeKind.Output): GraphQLSelectionNode[] {
     const children: GraphQLSelectionNode[] = [];
 

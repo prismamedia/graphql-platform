@@ -41,12 +41,8 @@ export class DeleteOneOperation extends AbstractOperation<DeleteOneOperationArgs
   }
 
   public async resolve(params: OperationResolverParams<DeleteOneOperationArgs>): Promise<DeleteOneOperationResult> {
-    const { context, selectionNode } = params;
-    const operationContext = context.operationContext;
+    const { args, context, selectionNode } = params;
     const resource = this.resource;
-
-    const postSuccessHooks =
-      operationContext.type === GraphQLOperationType.Mutation ? operationContext.postSuccessHooks : undefined;
 
     // Select all the components in case of post success hooks
     const hasPostSuccessHook = resource.getEventListenerCount(ResourceHookKind.PostDelete) > 0;
@@ -77,10 +73,14 @@ export class DeleteOneOperation extends AbstractOperation<DeleteOneOperationArgs
 
       // Actually delete the node
       const deletedNodeCount = await this.connector.delete(
-        Object.freeze({ ...params, resource, args: { where: nodeId } }),
+        Object.freeze({ resource, context, args: { where: nodeId } }),
       );
 
       if (deletedNodeCount === 1) {
+        const { operationContext } = context;
+        const postSuccessHooks =
+          operationContext.type === GraphQLOperationType.Mutation ? operationContext.postSuccessHooks : undefined;
+
         if (postSuccessHooks && hasPostSuccessHook) {
           postSuccessHooks.push(
             resource.emit.bind(resource, ResourceHookKind.PostDelete, {
