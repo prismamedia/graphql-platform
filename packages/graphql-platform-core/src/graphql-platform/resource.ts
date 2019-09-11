@@ -24,7 +24,6 @@ import {
   OperationConstructorMap,
   OperationEventMap,
   OperationId,
-  OperationResolverParams,
   OperationType,
   operationTypeMap,
   OperationTypeMapConfig,
@@ -101,7 +100,7 @@ export type ResourceHookMetaMap<
   TArgs extends POJO = any,
   TCustomContext extends CustomContext = any,
   TBaseContext extends AnyBaseContext = BaseContext
-> = OperationResolverParams<TArgs, TCustomContext, TBaseContext> & Readonly<{ resource: Resource }>;
+> = Readonly<{ args: TArgs; context: Context<TCustomContext, TBaseContext>; resource: Resource }>;
 
 export type ResourceHookMap<
   TCustomContext extends CustomContext = any,

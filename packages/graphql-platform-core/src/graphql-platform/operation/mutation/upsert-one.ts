@@ -3,6 +3,7 @@ import { Memoize } from 'typescript-memoize';
 import { OperationResolverParams } from '../../operation';
 import { NodeSource, TypeKind, WhereUniqueInputValue } from '../../type';
 import { AbstractOperation } from '../abstract-operation';
+import { NodeNotFoundError } from '../error';
 import { CreateOneDataInputValue } from './create-one';
 import { UpdateOneDataInputValue } from './update-one';
 
@@ -58,23 +59,28 @@ export class UpsertOneOperation extends AbstractOperation<UpsertOneOperationArgs
       selectionNode: resource.getIdentifier().getSelectionNode(TypeKind.Input),
     });
 
-    const result = await (node
-      ? resource.getMutation('UpdateOne').resolve({
-          ...params,
-          args: {
-            where: resource.getInputType('WhereUnique').assertUnique(node, resource.getIdentifier(), true),
-            data: update,
-          },
-        })
-      : resource.getMutation('CreateOne').resolve({
-          ...params,
-          args: { data: create },
-        }));
+    if (node) {
+      const nodeId = resource.getInputType('WhereUnique').assertUnique(node, resource.getIdentifier(), true);
 
-    if (!result) {
-      throw new Error(`An error occured during the upserting of "${this}", it has to return a result.`);
+      const updatedNode = await resource.getMutation('UpdateOne').resolve({
+        ...params,
+        args: {
+          where: nodeId,
+          data: update,
+        },
+      });
+
+      // Should never happen
+      if (!updatedNode) {
+        throw new NodeNotFoundError(resource.getMutation('UpdateOne'), nodeId);
+      }
+
+      return updatedNode;
+    } else {
+      return resource.getMutation('CreateOne').resolve({
+        ...params,
+        args: { data: create },
+      });
     }
-
-    return result;
   }
 }

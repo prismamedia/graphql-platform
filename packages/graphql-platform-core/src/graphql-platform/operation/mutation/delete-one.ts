@@ -65,7 +65,8 @@ export class DeleteOneOperation extends AbstractOperation<DeleteOneOperationArgs
 
       await resource.emitSerial(ResourceHookKind.PreDelete, {
         metas: Object.freeze({
-          ...params,
+          args,
+          context,
           resource,
         }),
         toBeDeletedNodeId: nodeId,
@@ -85,7 +86,8 @@ export class DeleteOneOperation extends AbstractOperation<DeleteOneOperationArgs
           postSuccessHooks.push(
             resource.emit.bind(resource, ResourceHookKind.PostDelete, {
               metas: Object.freeze({
-                ...params,
+                args,
+                context,
                 resource,
               }),
               deletedNode: resource.serializeValue(node as NodeValue, true, resource.getComponentSet()),

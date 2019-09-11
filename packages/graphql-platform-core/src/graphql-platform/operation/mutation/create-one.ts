@@ -20,7 +20,7 @@ import {
   GraphQLScalarType,
 } from 'graphql';
 import { Memoize } from 'typescript-memoize';
-import { BaseContext } from '../../../graphql-platform';
+import { AnyBaseContext, BaseContext } from '../../../graphql-platform';
 import { ConnectorCreateOperationArgs } from '../../connector';
 import { OperationResolverParams } from '../../operation';
 import {
@@ -413,10 +413,13 @@ export class CreateOneOperation extends AbstractOperation<CreateOneOperationArgs
     );
   }
 
-  public async preCreate(
-    params: OperationResolverParams<CreateOneOperationArgs>,
-  ): Promise<ConnectorCreateOperationArgs> {
-    const { args, context } = params;
+  public async preCreate({
+    args,
+    context,
+  }: {
+    args: CreateOneOperationArgs;
+    context: AnyBaseContext;
+  }): Promise<ConnectorCreateOperationArgs> {
     const resource = this.resource;
 
     const create = new CreateOneValue(resource, await this.parseDataComponentMap(args.data, context));
@@ -432,7 +435,8 @@ export class CreateOneOperation extends AbstractOperation<CreateOneOperationArgs
           const { proxy: hookData, revoke } = Proxy.revocable(
             {
               metas: Object.freeze({
-                ...params,
+                args,
+                context,
                 resource,
                 field,
                 create: proxy,
@@ -458,7 +462,8 @@ export class CreateOneOperation extends AbstractOperation<CreateOneOperationArgs
           const { proxy: hookData, revoke } = Proxy.revocable(
             {
               metas: Object.freeze({
-                ...params,
+                args,
+                context,
                 resource,
                 relation,
                 create: proxy,
@@ -484,7 +489,8 @@ export class CreateOneOperation extends AbstractOperation<CreateOneOperationArgs
       // Apply the resources' hooks
       await resource.emitSerial(ResourceHookKind.PreCreate, {
         metas: Object.freeze({
-          ...params,
+          args,
+          context,
           resource,
         }),
         create: proxy,
@@ -504,7 +510,7 @@ export class CreateOneOperation extends AbstractOperation<CreateOneOperationArgs
     // Build the connector args
     const {
       data: [create],
-    } = await this.preCreate(params);
+    } = await this.preCreate({ args, context });
 
     // Actually create the node
     await this.connector.create(Object.freeze({ resource, context, args: { data: [create] } }));

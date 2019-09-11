@@ -19,7 +19,7 @@ import {
   GraphQLScalarType,
 } from 'graphql';
 import { Memoize } from 'typescript-memoize';
-import { BaseContext } from '../../../graphql-platform';
+import { AnyBaseContext, BaseContext } from '../../../graphql-platform';
 import { ConnectorUpdateOperationArgs } from '../../connector';
 import { OperationResolverParams } from '../../operation';
 import { Field, InverseRelation, NodeValue, Relation, ResourceHookKind } from '../../resource';
@@ -685,10 +685,13 @@ export class UpdateOneOperation extends AbstractOperation<UpdateOneOperationArgs
     );
   }
 
-  public async preUpdate(
-    params: OperationResolverParams<UpdateOneOperationArgs>,
-  ): Promise<ConnectorUpdateOperationArgs> {
-    const { args, context } = params;
+  public async preUpdate({
+    args,
+    context,
+  }: {
+    args: UpdateOneOperationArgs;
+    context: AnyBaseContext;
+  }): Promise<ConnectorUpdateOperationArgs> {
     const resource = this.resource;
 
     const filter = await resource.filter(context);
@@ -708,7 +711,8 @@ export class UpdateOneOperation extends AbstractOperation<UpdateOneOperationArgs
           const { proxy: hookData, revoke } = Proxy.revocable(
             {
               metas: Object.freeze({
-                ...params,
+                args,
+                context,
                 resource,
                 field,
                 toBeUpdatedNodeId: nodeId,
@@ -735,7 +739,8 @@ export class UpdateOneOperation extends AbstractOperation<UpdateOneOperationArgs
           const { proxy: hookData, revoke } = Proxy.revocable(
             {
               metas: Object.freeze({
-                ...params,
+                args,
+                context,
                 resource,
                 relation,
                 toBeUpdatedNodeId: nodeId,
@@ -762,7 +767,8 @@ export class UpdateOneOperation extends AbstractOperation<UpdateOneOperationArgs
       // Apply the resources' hooks
       await resource.emitSerial(ResourceHookKind.PreUpdate, {
         metas: Object.freeze({
-          ...params,
+          args,
+          context,
           resource,
         }),
         toBeUpdatedNodeId: nodeId,
@@ -781,7 +787,7 @@ export class UpdateOneOperation extends AbstractOperation<UpdateOneOperationArgs
     const resource = this.resource;
 
     // Build the connector args
-    const { where, data: update } = await this.preUpdate(params);
+    const { where, data: update } = await this.preUpdate({ args, context });
 
     // Actually update the node
     const { matchedCount, changedCount } = update.isEmpty()
