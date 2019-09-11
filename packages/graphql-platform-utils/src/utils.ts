@@ -6,6 +6,7 @@ export * from './utils/get-plain-object-entries';
 export * from './utils/get-plain-object-keys';
 export * from './utils/get-predictable-id';
 export * from './utils/graphql';
+export * from './utils/is-non-empty-plain-object';
 export * from './utils/is-plain-object';
 export * from './utils/is-scalar';
 export * from './utils/merge-with';

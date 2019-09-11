@@ -6,7 +6,7 @@ import {
   GraphQLListDecorator,
   GraphQLNonNullDecorator,
   GraphQLOperationType,
-  isPlainObject,
+  isNonEmptyPlainObject,
   POJO,
 } from '@prismamedia/graphql-platform-utils';
 import {
@@ -238,10 +238,7 @@ export class CreateOneOperation extends AbstractOperation<CreateOneOperationArgs
     };
   }
 
-  protected async parseDataComponentMap(
-    data: CreateOneDataInputValue,
-    context: BaseContext,
-  ): Promise<CreateOneRawValue> {
+  public async parseDataComponentMap(data: CreateOneDataInputValue, context: BaseContext): Promise<CreateOneRawValue> {
     return fromEntries(
       await Promise.all([
         // Fields
@@ -252,10 +249,9 @@ export class CreateOneOperation extends AbstractOperation<CreateOneOperationArgs
         ...[...this.resource.getRelationSet()].map(
           async (relation): Promise<[string, RelationValue] | undefined> => {
             const actions = data[relation.name];
-            if (actions != null) {
+            if (isNonEmptyPlainObject(actions)) {
               if (
                 !(
-                  isPlainObject(actions) &&
                   Object.keys(actions).length === 1 &&
                   createOneDataRelationActionKinds.includes(Object.keys(actions)[0] as any)
                 )
@@ -326,7 +322,7 @@ export class CreateOneOperation extends AbstractOperation<CreateOneOperationArgs
     );
   }
 
-  protected async parseDataInverseRelationMap(
+  public async parseDataInverseRelationMap(
     data: CreateOneDataInputValue,
     id: WhereUniqueInputValue,
     context: BaseContext,
@@ -334,14 +330,10 @@ export class CreateOneOperation extends AbstractOperation<CreateOneOperationArgs
     await Promise.all(
       [...this.resource.getInverseRelationSet()].map(async inverseRelation => {
         const actions = data[inverseRelation.name];
-        if (actions != null) {
+        if (isNonEmptyPlainObject(actions)) {
           if (
-            !(
-              isPlainObject(actions) &&
-              Object.keys(actions).length > 0 &&
-              Object.keys(actions).every(actionKind =>
-                createOneDataInverseRelationActionKinds.includes(actionKind as any),
-              )
+            !Object.keys(actions).every(actionKind =>
+              createOneDataInverseRelationActionKinds.includes(actionKind as any),
             )
           ) {
             throw new Error(
