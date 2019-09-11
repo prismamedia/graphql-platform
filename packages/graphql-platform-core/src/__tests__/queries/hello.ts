@@ -1,7 +1,7 @@
 import { GraphQLNonNull, GraphQLString } from 'graphql';
 import { CustomOperationConfig } from '../..';
 
-export default (({ resourceMap }) => ({
+const query: CustomOperationConfig = ({ resourceMap }) => ({
   description: 'A custom query.',
   args: {
     name: {
@@ -20,4 +20,6 @@ export default (({ resourceMap }) => ({
     .assert('User')
     .getOutputType('Node')
     .getGraphQLType(),
-})) as CustomOperationConfig;
+});
+
+export default query;

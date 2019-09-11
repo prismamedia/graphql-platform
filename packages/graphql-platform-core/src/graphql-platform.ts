@@ -95,9 +95,10 @@ export interface GraphQLExecutor {
 }
 
 export type CustomOperationConfig<
+  TArgs extends POJO = any,
   TCustomContext extends CustomContext = {},
   TBaseContext extends AnyBaseContext = BaseContext
-> = MaybeResourceMapAware<GraphQLFieldConfig<any, Context<TCustomContext, TBaseContext>>>;
+> = MaybeResourceMapAware<GraphQLFieldConfig<any, Context<TCustomContext, TBaseContext>, TArgs>>;
 
 export interface GraphQLPlatformConfig<
   TContextParams extends POJO = any,
@@ -121,10 +122,10 @@ export interface GraphQLPlatformConfig<
   resources?: ModuleMapConfig<TResourceConfig>;
 
   /** Optional, provide some custom queries */
-  queries?: ModuleMapConfig<CustomOperationConfig<TCustomContext, TBaseContext>>;
+  queries?: ModuleMapConfig<CustomOperationConfig<any, TCustomContext, TBaseContext>>;
 
   /** Optional, provide some custom mutations */
-  mutations?: ModuleMapConfig<CustomOperationConfig<TCustomContext, TBaseContext>>;
+  mutations?: ModuleMapConfig<CustomOperationConfig<any, TCustomContext, TBaseContext>>;
 
   /** Optional, provide some custom types */
   types?: Maybe<MaybeResourceMapAware<GraphQLNamedType[]>>;

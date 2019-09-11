@@ -1,6 +1,7 @@
 import { GraphQLNonNull, GraphQLString } from 'graphql';
+import { CustomOperationConfig } from '../../graphql-platform';
 
-export default {
+const query: CustomOperationConfig = {
   description: 'Returns a JWT in case of success.',
   args: {
     login: {
@@ -12,3 +13,5 @@ export default {
   },
   type: GraphQLString,
 };
+
+export default query;

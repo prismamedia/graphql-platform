@@ -30,10 +30,10 @@ export type BaseContext = CoreBaseContext & {
 
 export type Context<TCustomContext extends CustomContext = {}> = CoreContext<TCustomContext, BaseContext>;
 
-export type CustomOperationConfig<TCustomContext extends CustomContext = {}> = CoreCustomOperationConfig<
-  TCustomContext,
-  BaseContext
->;
+export type CustomOperationConfig<
+  TArgs extends POJO = any,
+  TCustomContext extends CustomContext = {}
+> = CoreCustomOperationConfig<TArgs, TCustomContext, BaseContext>;
 
 export interface GraphQLPlatformConfig<TContextParams extends POJO = any, TCustomContext extends CustomContext = {}>
   extends CoreGraphQLPlatformConfig<TContextParams, TCustomContext, BaseContext, ResourceConfig<TCustomContext>> {
