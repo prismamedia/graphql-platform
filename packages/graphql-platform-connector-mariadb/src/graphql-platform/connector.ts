@@ -7,6 +7,7 @@ import {
   ConnectorInterface,
   ConnectorOperationParams as CoreConnectorOperationParams,
   ConnectorUpdateOperationArgs,
+  CustomContext,
   OperationEventKind,
 } from '@prismamedia/graphql-platform-core';
 import { GraphQLOperationType, Maybe, MaybeArray, POJO } from '@prismamedia/graphql-platform-utils';
@@ -67,9 +68,13 @@ export type QueryResult =
       insertId: Maybe<number>;
     };
 
-export type ConnectorOperationParams<TArgs extends POJO> = CoreConnectorOperationParams<TArgs, BaseContext>;
+export type ConnectorOperationParams<
+  TArgs extends POJO,
+  TCustomContext extends CustomContext = {}
+> = CoreConnectorOperationParams<TArgs, TCustomContext, BaseContext>;
 
-export class Connector extends EventEmitter<ConnectorEventMap> implements ConnectorInterface<BaseContext> {
+export class Connector<TCustomContext extends CustomContext = {}> extends EventEmitter<ConnectorEventMap>
+  implements ConnectorInterface<TCustomContext, BaseContext> {
   protected pool?: mysql.Pool;
 
   public constructor(readonly config: Maybe<ConnectorConfig>, readonly gp: AnyGraphQLPlatform) {
@@ -78,7 +83,7 @@ export class Connector extends EventEmitter<ConnectorEventMap> implements Connec
     // Handle connection & transaction
     this.gp.getResourceSet().forEach(resource =>
       resource.onConfig({
-        [OperationEventKind.PreOperation]: async (event: OperationEvent) => {
+        [OperationEventKind.PreOperation]: async (event: OperationEvent<any, TCustomContext>) => {
           const {
             operation: { type },
             context: { operationEventDataMap, connectorRequest, logger },
@@ -104,7 +109,7 @@ export class Connector extends EventEmitter<ConnectorEventMap> implements Connec
             }
           }
         },
-        [OperationEventKind.PostOperationSuccess]: async (event: OperationEvent) => {
+        [OperationEventKind.PostOperationSuccess]: async (event: OperationEvent<any, TCustomContext>) => {
           const {
             operation: { type },
             context: { operationEventDataMap, connectorRequest, logger },
@@ -129,7 +134,7 @@ export class Connector extends EventEmitter<ConnectorEventMap> implements Connec
             await promisify(connectorRequest.connection.commit.bind(connectorRequest.connection))();
           }
         },
-        [OperationEventKind.PostOperationError]: async (event: OperationEvent) => {
+        [OperationEventKind.PostOperationError]: async (event: OperationEvent<any, TCustomContext>) => {
           const {
             operation: { type },
             context: { operationEventDataMap, connectorRequest, logger },
@@ -154,7 +159,7 @@ export class Connector extends EventEmitter<ConnectorEventMap> implements Connec
             await promisify(connectorRequest.connection.rollback.bind(connectorRequest.connection))();
           }
         },
-        [OperationEventKind.PostOperation]: async (event: OperationEvent) => {
+        [OperationEventKind.PostOperation]: async (event: OperationEvent<any, TCustomContext>) => {
           const {
             operation: { type },
             context: { operationEventDataMap, connectorRequest },
