@@ -4,6 +4,7 @@ export * from '@prismamedia/graphql-platform-core';
 export * from './graphql-platform';
 // Overrides some exports
 export {
+  AnyBaseContext,
   BaseContext,
   Component,
   ConnectorOperationParams,

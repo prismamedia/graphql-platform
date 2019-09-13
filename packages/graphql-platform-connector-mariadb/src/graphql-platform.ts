@@ -28,6 +28,8 @@ export type BaseContext = CoreBaseContext & {
   connectorRequest: ConnectorRequest;
 };
 
+export type AnyBaseContext = BaseContext;
+
 export type Context<TCustomContext extends CustomContext = {}> = CoreContext<TCustomContext, BaseContext>;
 
 export type CustomOperationConfig<
@@ -35,21 +37,36 @@ export type CustomOperationConfig<
   TCustomContext extends CustomContext = {}
 > = CoreCustomOperationConfig<TArgs, TCustomContext, BaseContext>;
 
-export interface GraphQLPlatformConfig<TContextParams extends POJO = any, TCustomContext extends CustomContext = {}>
-  extends CoreGraphQLPlatformConfig<TContextParams, TCustomContext, BaseContext, ResourceConfig<TCustomContext>> {
+export interface GraphQLPlatformConfig<
+  TContextParams extends POJO = any,
+  TCustomContext extends CustomContext = {},
+  TBaseContext extends AnyBaseContext = BaseContext
+>
+  extends CoreGraphQLPlatformConfig<
+    TContextParams,
+    TCustomContext,
+    TBaseContext,
+    ResourceConfig<TCustomContext, TBaseContext>
+  > {
   connector?: Maybe<ConnectorConfig>;
 }
 
 export class GraphQLPlatform<
   TContextParams extends POJO = any,
-  TCustomContext extends CustomContext = {}
-> extends CoreGraphQLPlatform<TContextParams, TCustomContext, GraphQLPlatformConfig<TContextParams, TCustomContext>> {
+  TCustomContext extends CustomContext = {},
+  TBaseContext extends AnyBaseContext = BaseContext
+> extends CoreGraphQLPlatform<
+  TContextParams,
+  TCustomContext,
+  TBaseContext,
+  GraphQLPlatformConfig<TContextParams, TCustomContext, TBaseContext>
+> {
   @Memoize()
   public getConnector(): Connector {
     return new Connector(this.config.connector, this);
   }
 
-  public async getBaseContext(): Promise<BaseContext> {
+  public async getBaseContext(): Promise<TBaseContext> {
     return {
       ...(await super.getBaseContext()),
       connector: this.getConnector(),

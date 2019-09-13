@@ -139,7 +139,8 @@ export type AnyGraphQLPlatformConfig = GraphQLPlatformConfig<any, any, any, any>
 export class GraphQLPlatform<
   TContextParams extends POJO = any,
   TCustomContext extends CustomContext = {},
-  TConfig extends AnyGraphQLPlatformConfig = GraphQLPlatformConfig<TContextParams, TCustomContext>
+  TBaseContext extends AnyBaseContext = BaseContext,
+  TConfig extends AnyGraphQLPlatformConfig = GraphQLPlatformConfig<TContextParams, TCustomContext, TBaseContext>
 > implements GraphQLExecutor {
   public constructor(readonly config: TConfig) {}
 
@@ -239,11 +240,11 @@ export class GraphQLPlatform<
     return new Binding({ schema: this.getGraphQLSchema() });
   }
 
-  public async getCustomContext(params?: any): Promise<CustomContext> {
+  public async getCustomContext(params?: any): Promise<TCustomContext> {
     return this.config.context ? this.config.context(params) : {};
   }
 
-  public async getBaseContext(): Promise<BaseContext> {
+  public async getBaseContext(): Promise<TBaseContext> {
     return {
       logger: this.getLogger(),
       environment: this.getEnvironment(),
@@ -252,10 +253,10 @@ export class GraphQLPlatform<
       api: this.getBinding(),
       operationContext: {},
       operationEventDataMap: new WeakMap(),
-    };
+    } as TBaseContext;
   }
 
-  public async getContext(params?: any): Promise<Context<CustomContext, BaseContext>> {
+  public async getContext(params?: any): Promise<Context<TCustomContext, TBaseContext>> {
     const [custom, base] = await Promise.all([this.getCustomContext(params), this.getBaseContext()]);
 
     return Object.freeze({

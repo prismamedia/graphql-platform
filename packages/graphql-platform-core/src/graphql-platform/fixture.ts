@@ -2,7 +2,7 @@ import { Entries, fromEntries } from '@prismamedia/graphql-platform-utils';
 import { DepGraph } from 'dependency-graph';
 import { OperationDefinitionNode, print } from 'graphql';
 import { Logger } from 'winston';
-import { GraphQLPlatform, GraphQLRequest } from '../graphql-platform';
+import { AnyGraphQLPlatform, GraphQLRequest } from '../graphql-platform';
 import { CreateOneDataInputValue } from './operation';
 import { AnyResource, Relation, SerializedFieldValue } from './resource';
 import { TypeKind, WhereUniqueInputValue } from './type';
@@ -32,7 +32,7 @@ export class Fixture {
     readonly resource: AnyResource,
     readonly data: FixtureData,
     protected graph: FixtureGraph,
-    protected gp: GraphQLPlatform,
+    protected gp: AnyGraphQLPlatform,
   ) {
     this.logger = gp.getLogger();
   }
