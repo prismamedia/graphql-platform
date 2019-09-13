@@ -75,7 +75,9 @@ export abstract class AbstractOperation<TArgs extends POJO = any, TResult = any>
   public abstract async resolve(params: OperationResolverParams<TArgs>): Promise<TResult>;
 
   @Memoize()
-  public getGraphQLFieldConfig(): GraphQLFieldConfig<any, Context, TArgs, TResult> {
+  public getGraphQLFieldConfig(): Required<
+    Pick<GraphQLFieldConfig<any, Context, TArgs, TResult>, 'description' | 'type' | 'args' | 'resolve'>
+  > {
     return {
       description: this.description,
       type: this.getGraphQLFieldConfigType(),
