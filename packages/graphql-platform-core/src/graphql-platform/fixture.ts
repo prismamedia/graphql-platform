@@ -1,11 +1,11 @@
-import { Entries, fromEntries } from '@prismamedia/graphql-platform-utils';
+import { Entries, Entry, fromEntries } from '@prismamedia/graphql-platform-utils';
 import { DepGraph } from 'dependency-graph';
 import { OperationDefinitionNode, print } from 'graphql';
 import { Logger } from 'winston';
 import { AnyGraphQLPlatform, GraphQLRequest } from '../graphql-platform';
-import { CreateOneDataInputValue } from './operation';
+import { CreateOneDataInputValue, CreateOneDataRelationActionKind } from './operation';
 import { AnyResource, Relation, SerializedFieldValue } from './resource';
-import { TypeKind, WhereUniqueInputValue } from './type';
+import { SerializedWhereUniqueInputValue, TypeKind } from './type';
 
 export class FixtureGraph extends DepGraph<Fixture> {}
 
@@ -25,7 +25,7 @@ export type FixtureDataMap = {
 
 export class Fixture {
   readonly logger?: Logger;
-  protected id?: WhereUniqueInputValue;
+  protected id?: Promise<SerializedWhereUniqueInputValue>;
 
   public constructor(
     readonly name: string,
@@ -130,51 +130,55 @@ export class Fixture {
     return print(this.getCreateMutationAST());
   }
 
-  public getCreateMutationVariables(): GraphQLRequest['variableValues'] {
+  public async getCreateMutationVariables(
+    contextValue?: GraphQLRequest['contextValue'],
+  ): Promise<GraphQLRequest['variableValues']> {
     return {
-      data: fromEntries([
+      data: fromEntries((await Promise.all([
         // Fields
-        ...[...this.resource.getFieldSet()].map(field =>
-          !field.isFullyManaged() ? [field.name, this.data[field.name] as FixtureFieldData] : undefined,
+        ...[...this.resource.getFieldSet()].map(
+          async (field): Promise<Entry<FixtureData> | undefined> =>
+            !field.isFullyManaged() ? [field.name, this.data[field.name] as any] : undefined,
         ),
+
         // Relations
-        ...[...this.resource.getRelationSet()].map(relation => {
-          if (!relation.isFullyManaged()) {
-            const relatedFixture = this.getRelatedFixture(relation);
-            if (relatedFixture) {
-              return [relation.name, { connect: relatedFixture.assertId() }];
+        ...[...this.resource.getRelationSet()].map(
+          async (relation): Promise<Entry<FixtureData> | undefined> => {
+            if (!relation.isFullyManaged()) {
+              const relatedFixture = this.getRelatedFixture(relation);
+              if (relatedFixture) {
+                return [
+                  relation.name,
+                  { [CreateOneDataRelationActionKind.Connect]: await relatedFixture.load(contextValue) } as any,
+                ];
+              }
             }
-          }
-        }),
-      ] as Entries<CreateOneDataInputValue>),
+          },
+        ),
+      ])) as Entries<CreateOneDataInputValue>),
     };
   }
 
-  public getCreateMutation(): GraphQLRequest {
+  public async getCreateMutation(contextValue?: GraphQLRequest['contextValue']): Promise<GraphQLRequest> {
     return {
       source: this.getCreateMutationSource(),
-      variableValues: this.getCreateMutationVariables(),
+      variableValues: await this.getCreateMutationVariables(contextValue),
     };
   }
 
-  public async load(contextValue?: GraphQLRequest['contextValue']): Promise<void> {
-    try {
-      const { id } = await this.gp.execute<{ id: WhereUniqueInputValue }>({
-        ...this.getCreateMutation(),
-        contextValue,
-      });
+  protected async doLoad(contextValue?: GraphQLRequest['contextValue']): Promise<SerializedWhereUniqueInputValue> {
+    const { id } = await this.gp.execute<{ id: SerializedWhereUniqueInputValue }>({
+      ...(await this.getCreateMutation()),
+      contextValue,
+    });
 
-      this.id = this.resource.getInputType('WhereUnique').assert(id);
-    } catch (error) {
-      this.logger && this.logger.error(error);
-
-      throw error;
-    }
+    return id;
   }
 
-  public assertId(): WhereUniqueInputValue {
+  public async load(contextValue?: GraphQLRequest['contextValue']): Promise<SerializedWhereUniqueInputValue> {
+    // Only the first call will run the mutation (= "doLoad"), the others will wait for the result
     if (!this.id) {
-      throw new Error(`The fixture "${this.name}" is not loaded yet.`);
+      this.id = this.doLoad(contextValue);
     }
 
     return this.id;

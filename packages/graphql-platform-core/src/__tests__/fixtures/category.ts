@@ -11,6 +11,7 @@ export function fixtures({ categoryCount }: FixturesConfig): FixtureDataMap {
 
   for (let i = 1; i < categoryCount; i++) {
     fixtureMap[`category_${i}`] = {
+      id: faker.random.uuid(),
       parent: faker.random.arrayElement(Object.keys(fixtureMap)),
       title: faker.lorem.words(faker.random.number({ min: 1, max: 3 })),
     };

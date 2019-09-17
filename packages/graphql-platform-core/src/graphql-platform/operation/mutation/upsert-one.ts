@@ -1,10 +1,11 @@
+import { fromEntries, POJO } from '@prismamedia/graphql-platform-utils';
 import { GraphQLFieldConfigArgumentMap, GraphQLNonNull, GraphQLOutputType } from 'graphql';
 import { Memoize } from 'typescript-memoize';
 import { OperationResolverParams } from '../../operation';
 import { NodeSource, TypeKind, WhereUniqueInputValue } from '../../type';
 import { AbstractOperation } from '../abstract-operation';
 import { NodeNotFoundError } from '../error';
-import { CreateOneDataInputValue } from './create-one';
+import { CreateOneDataInputValue, CreateOneDataRelationActionKind } from './create-one';
 import { UpdateOneDataInputValue } from './update-one';
 
 export type UpsertOneOperationArgs = {
@@ -77,9 +78,21 @@ export class UpsertOneOperation extends AbstractOperation<UpsertOneOperationArgs
 
       return updatedNode;
     } else {
+      // We transform the "where" argument in a valid "create" value (= transform the relation's value into a relation "connect" action)
+      const whereAsCreate: POJO = fromEntries(
+        Object.entries(where).map(([componentName, componentValue]) => {
+          const component = resource.getComponentMap().assert(componentName);
+
+          return [
+            componentName,
+            component.isField() ? componentValue : { [CreateOneDataRelationActionKind.Connect]: componentValue },
+          ];
+        }),
+      );
+
       return resource.getMutation('CreateOne').resolve({
         ...params,
-        args: { data: create },
+        args: { data: { ...whereAsCreate, ...create } },
       });
     }
   }

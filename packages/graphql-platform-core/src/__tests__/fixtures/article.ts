@@ -17,12 +17,17 @@ export function fixtures(
 
   for (let i = 0; i < articleCount; i++) {
     fixtureMap[`article_${i}`] = {
+      id: faker.random.uuid(),
       format: faker.random.arrayElement(formats),
       title: faker.lorem.sentence(2, 5),
       body: faker.lorem.sentence(5, 10),
       isImportant: faker.random.boolean(),
       publishedAt: faker.random.boolean() ? faker.date.past(undefined, dateReference).toISOString() : null,
-      category: faker.random.arrayElement(categoryReferences),
+      category:
+        // The first article will be in the "root" category, if any
+        i === 0 && categoryReferences.length > 0
+          ? categoryReferences[0]
+          : faker.random.arrayElement(categoryReferences),
       author: faker.random.arrayElement(userReferences),
       moderator: faker.random.boolean() ? faker.random.arrayElement(userReferences) : null,
     };

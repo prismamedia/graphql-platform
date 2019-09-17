@@ -6,7 +6,7 @@ export const scenario: Scenario = [
     {
       source: `{ 
         articleCount
-        articles (first: 10, orderBy: [_id_ASC]) {
+        articles (first: 10, orderBy: [slug_ASC]) {
           id
           slug
         }
@@ -16,44 +16,44 @@ export const scenario: Scenario = [
       articleCount: 10,
       articles: [
         {
-          id: '87ece569-f025-4212-b800-7ffd50721582',
-          slug: 'deserunt-quam',
+          id: 'cb0456d1-d580-4d9f-bdad-510abbc96cb0',
+          slug: 'assumenda-ut',
         },
         {
-          id: '192d396a-54b9-4bc1-90cc-bed054a77563',
-          slug: 'consequuntur-aut',
+          id: '823c9900-060a-46e9-8dfc-64f192d396a5',
+          slug: 'cumque-officia',
         },
         {
-          id: '4d88dc29-1b08-47c0-917c-5a1c6b13f024',
-          slug: 'velit-sit',
+          id: '09b275f1-384b-4176-91da-0c6b7cb5ed46',
+          slug: 'dolorem-expedita',
         },
         {
-          id: 'c96cb09c-fb44-4543-aa5c-c879c0f74f25',
-          slug: 'architecto-ducimus',
+          id: 'd7894f73-4334-4ace-b30e-873bc4470391',
+          slug: 'dolorem-vel',
         },
         {
-          id: '0391d268-bc8e-483f-bc40-9b275f1384b1',
-          slug: 'soluta-sint',
+          id: 'e7431737-75b0-4383-ad06-299351e8c732',
+          slug: 'dolorum-soluta',
         },
         {
-          id: '7651da0c-6b7c-4b5e-946d-daa02b190a19',
-          slug: 'officia-quaerat',
+          id: '9150fcf6-6bd7-4f79-ba71-cf6cef0ac02b',
+          slug: 'est-aut',
         },
         {
-          id: '79150fcf-66bd-47f7-97a7-1cf6cef0ac02',
-          slug: 'eos-saepe',
+          id: 'b21293d9-be8f-4dbb-b4ef-693a271edd2d',
+          slug: 'est-illum',
         },
         {
-          id: 'b9b09810-4fce-4ec8-ab21-293d9be8fdbb',
-          slug: 'delectus-aut',
+          id: '54a77563-6068-4529-862f-6aa346053c0e',
+          slug: 'et-dolor',
         },
         {
-          id: 'b4ef693a-271e-4dd2-94ad-944ff4c885ce',
-          slug: 'occaecati-debitis',
+          id: '79c0f74f-25e8-486f-ba3f-f8a8c275e082',
+          slug: 'maxime-sint',
         },
         {
-          id: '5522d916-fd22-47b2-be97-560430a27c82',
-          slug: 'sed-quae',
+          id: '91b087c0-917c-45a1-86b1-3f024cdd1ba9',
+          slug: 'neque-cupiditate',
         },
       ],
     },
@@ -62,7 +62,7 @@ export const scenario: Scenario = [
     {
       source: `{ 
         categoryCount 
-        categories (first: 5, orderBy: [_id_ASC]) {
+        categories (first: 5, orderBy: [slug_ASC]) {
           id
           slug
           parent {
@@ -75,37 +75,37 @@ export const scenario: Scenario = [
       categoryCount: 5,
       categories: [
         {
-          id: '199f6850-dc43-4bc9-a6dc-b68625021e0e',
+          id: '6fbe024f-2316-4265-a6e8-d65a837e308a',
+          parent: {
+            id: 'e9756043-0a27-4c82-a99e-f1d792f4ec9a',
+          },
+          slug: 'blanditiis-natus',
+        },
+        {
+          id: '62f3ccbf-c51b-48ed-ad1d-0420ea196af6',
+          parent: {
+            id: '6fbe024f-2316-4265-a6e8-d65a837e308a',
+          },
+          slug: 'eligendi',
+        },
+        {
+          id: 'e3e44790-9992-4f94-b318-6fb7680c80a2',
+          parent: {
+            id: '62f3ccbf-c51b-48ed-ad1d-0420ea196af6',
+          },
+          slug: 'rerum-doloremque-officia',
+        },
+        {
+          id: 'e9756043-0a27-4c82-a99e-f1d792f4ec9a',
           parent: null,
           slug: 'root-category',
         },
         {
-          id: '1c39b08a-0214-4f59-8314-2b23f95f0db3',
+          id: '452acd60-0c9f-4ab4-87c3-1177e14e4128',
           parent: {
-            id: '199f6850-dc43-4bc9-a6dc-b68625021e0e',
+            id: 'e9756043-0a27-4c82-a99e-f1d792f4ec9a',
           },
-          slug: 'sunt',
-        },
-        {
-          id: '4739fde2-c0a1-407d-9c97-58f1926883be',
-          parent: {
-            id: '199f6850-dc43-4bc9-a6dc-b68625021e0e',
-          },
-          slug: 'quisquam-recusandae-alias',
-        },
-        {
-          id: '7b73d789-4f73-4433-8ace-730e873bc447',
-          parent: {
-            id: '199f6850-dc43-4bc9-a6dc-b68625021e0e',
-          },
-          slug: 'repellat',
-        },
-        {
-          id: '450e934d-8de8-4623-b50e-ee9d6ea32163',
-          parent: {
-            id: '4739fde2-c0a1-407d-9c97-58f1926883be',
-          },
-          slug: 'iure',
+          slug: 'soluta',
         },
       ],
     },
@@ -114,7 +114,7 @@ export const scenario: Scenario = [
     {
       source: `{ 
         tagCount 
-        tags (first: 5, orderBy: [_id_ASC]) {
+        tags (first: 5, orderBy: [slug_ASC]) {
           id
           slug
         }
@@ -124,24 +124,24 @@ export const scenario: Scenario = [
       tagCount: 5,
       tags: [
         {
-          id: 'cdd1ba92-287e-4573-99d4-2e8e74317377',
-          slug: 'neural-4',
+          id: '7911cf17-59f6-463c-ac94-0c925980eb57',
+          slug: 'calculate-bridge-upward-trending-1',
         },
         {
-          id: '5b0383ad-0629-4935-9e8c-73239a82a82f',
-          slug: 'michigan-frozen-3',
+          id: 'ee8272ec-6682-4ae5-99ca-b2eb9ac55c45',
+          slug: 'index-xss-baby-0',
         },
         {
-          id: 'c2308ecb-0456-4d1d-980d-9f3dad510abb',
-          slug: 'ameliorated-oman-district-2',
+          id: '4838fd41-3419-49f6-850d-c43bc966dcb6',
+          slug: 'platforms-proactive-3',
         },
         {
-          id: 'e886ffa3-ff8a-48c2-b5e0-829be055bdcb',
-          slug: 'yen-operations-0',
+          id: 'db8f1272-be3b-4713-88c3-e0b812060108',
+          slug: 'refined-2',
         },
         {
-          id: '15e6083f-d04b-47ea-8284-5ede88b47ea7',
-          slug: 'e-tailers-kyat-violet-1',
+          id: '21e0e1c3-9b08-4a02-94f5-943142b23f95',
+          slug: 'refined-soft-bike-initiative-orchid-4',
         },
       ],
     },
@@ -150,7 +150,7 @@ export const scenario: Scenario = [
     {
       source: `{ 
         userCount 
-        users (first: 5, orderBy: [_id_ASC]) {
+        users (first: 5, orderBy: [username_ASC]) {
           id
           username
         }
@@ -160,24 +160,24 @@ export const scenario: Scenario = [
       userCount: 5,
       users: [
         {
-          id: 'a7421c53-a131-4c21-941c-23ea98de9451',
-          username: 'Michel',
+          id: 'fde2c0a1-07d9-4c97-98f1-926883bea742',
+          username: 'annabell',
         },
         {
-          id: 'bb8cbe2e-a063-4b9c-b6fe-83e0ae647290',
-          username: 'Elza',
+          id: '2ea063b9-cf6f-4e83-a0ae-64729087ece5',
+          username: 'godfrey',
         },
         {
-          id: 'ec854f59-ee3d-40ef-b685-c9427f950f93',
-          username: 'Augusta',
+          id: 'ee3d0ef7-685c-4942-bf95-0f9363cd53ed',
+          username: 'kobe',
         },
         {
-          id: '63cd53ed-9823-4c99-8006-0a6e90dfc64f',
-          username: 'Priscilla',
+          id: '9f025212-b800-47ff-9507-21582ec854f5',
+          username: 'kristina',
         },
         {
-          id: '60685298-62f6-4aa3-8605-3c0eeeca8404',
-          username: 'Vivianne',
+          id: 'c53a131c-2154-41c2-bea9-8de9451bb8cb',
+          username: 'sydney',
         },
       ],
     },
@@ -187,7 +187,7 @@ export const scenario: Scenario = [
   [
     {
       source: `{ 
-        articles(first: 1, orderBy: [_id_ASC], where: { category: { parent_is_null: false }, publishedAt_not: null, moderator: null }) {
+        articles(first: 1, orderBy: [slug_ASC], where: { category: { parent_is_null: false }, publishedAt_not: null, moderator: null }) {
           __typename
           id
           format
@@ -209,16 +209,16 @@ export const scenario: Scenario = [
       articles: [
         {
           __typename: 'Article',
-          id: '7651da0c-6b7c-4b5e-946d-daa02b190a19',
-          format: 'Video',
-          slug: 'officia-quaerat',
-          publishedAt: '2018-07-05T00:47:52.153Z',
-          isPublished: true,
           category: {
             __typename: 'Category',
-            id: '7b73d789-4f73-4433-8ace-730e873bc447',
+            id: '452acd60-0c9f-4ab4-87c3-1177e14e4128',
           },
+          format: 'Video',
+          id: '79c0f74f-25e8-486f-ba3f-f8a8c275e082',
+          isPublished: true,
           moderator: null,
+          publishedAt: '2018-07-09T18:38:55.025Z',
+          slug: 'maxime-sint',
         },
       ],
     },
@@ -228,7 +228,7 @@ export const scenario: Scenario = [
   [
     {
       source: `{ 
-        articles(first: 1, orderBy: [_id_ASC], where: { category: { parent_is_null: true } }) {
+        articles(first: 1, orderBy: [slug_ASC], where: { category: { parent_is_null: true } }) {
           id
           slug
           category {
@@ -244,13 +244,13 @@ export const scenario: Scenario = [
     {
       articles: [
         {
-          id: 'c96cb09c-fb44-4543-aa5c-c879c0f74f25',
-          slug: 'architecto-ducimus',
           category: {
-            id: '199f6850-dc43-4bc9-a6dc-b68625021e0e',
-            slug: 'root-category',
+            id: 'e9756043-0a27-4c82-a99e-f1d792f4ec9a',
             parent: null,
+            slug: 'root-category',
           },
+          id: '823c9900-060a-46e9-8dfc-64f192d396a5',
+          slug: 'cumque-officia',
         },
       ],
     },
@@ -260,7 +260,7 @@ export const scenario: Scenario = [
   [
     {
       source: `{ 
-        articles(first: 4, orderBy: [_id_ASC], where: { category: { parent_is_null: false } }) {
+        articles(first: 4, orderBy: [slug_ASC], where: { category: { parent_is_null: false } }) {
           id
           slug
           category {
@@ -276,48 +276,48 @@ export const scenario: Scenario = [
     {
       articles: [
         {
-          id: '87ece569-f025-4212-b800-7ffd50721582',
-          slug: 'deserunt-quam',
           category: {
-            id: '4739fde2-c0a1-407d-9c97-58f1926883be',
-            slug: 'quisquam-recusandae-alias',
+            id: '6fbe024f-2316-4265-a6e8-d65a837e308a',
             parent: {
-              id: '199f6850-dc43-4bc9-a6dc-b68625021e0e',
+              id: 'e9756043-0a27-4c82-a99e-f1d792f4ec9a',
             },
+            slug: 'blanditiis-natus',
           },
+          id: 'cb0456d1-d580-4d9f-bdad-510abbc96cb0',
+          slug: 'assumenda-ut',
         },
         {
-          id: '192d396a-54b9-4bc1-90cc-bed054a77563',
-          slug: 'consequuntur-aut',
           category: {
-            id: '4739fde2-c0a1-407d-9c97-58f1926883be',
-            slug: 'quisquam-recusandae-alias',
+            id: '452acd60-0c9f-4ab4-87c3-1177e14e4128',
             parent: {
-              id: '199f6850-dc43-4bc9-a6dc-b68625021e0e',
+              id: 'e9756043-0a27-4c82-a99e-f1d792f4ec9a',
             },
+            slug: 'soluta',
           },
+          id: '09b275f1-384b-4176-91da-0c6b7cb5ed46',
+          slug: 'dolorem-expedita',
         },
         {
-          id: '4d88dc29-1b08-47c0-917c-5a1c6b13f024',
-          slug: 'velit-sit',
           category: {
-            id: '4739fde2-c0a1-407d-9c97-58f1926883be',
-            slug: 'quisquam-recusandae-alias',
+            id: 'e3e44790-9992-4f94-b318-6fb7680c80a2',
             parent: {
-              id: '199f6850-dc43-4bc9-a6dc-b68625021e0e',
+              id: '62f3ccbf-c51b-48ed-ad1d-0420ea196af6',
             },
+            slug: 'rerum-doloremque-officia',
           },
+          id: 'd7894f73-4334-4ace-b30e-873bc4470391',
+          slug: 'dolorem-vel',
         },
         {
-          id: '0391d268-bc8e-483f-bc40-9b275f1384b1',
-          slug: 'soluta-sint',
           category: {
-            id: '7b73d789-4f73-4433-8ace-730e873bc447',
-            slug: 'repellat',
+            id: '6fbe024f-2316-4265-a6e8-d65a837e308a',
             parent: {
-              id: '199f6850-dc43-4bc9-a6dc-b68625021e0e',
+              id: 'e9756043-0a27-4c82-a99e-f1d792f4ec9a',
             },
+            slug: 'blanditiis-natus',
           },
+          id: 'e7431737-75b0-4383-ad06-299351e8c732',
+          slug: 'dolorum-soluta',
         },
       ],
     },
@@ -327,19 +327,19 @@ export const scenario: Scenario = [
   [
     {
       source: `{
-        article_01: article(where: { category: { parent: null, slug: "root-category" }, slug: "architecto-ducimus" }) { id }
-        article_02: article(where: { _id: 1 }) { id }
-        article_03: article(where: { id: "192d396a-54b9-4bc1-90cc-bed054a77563" }) { id }
-        article_04: article(where: { category: { id: "4739fde2-c0a1-407d-9c97-58f1926883be" }, slug: "velit-sit" }) { id }
-        article_05: article(where: { category: { parent: { id: "199f6850-dc43-4bc9-a6dc-b68625021e0e" }, slug: "repellat" }, slug: "soluta-sint" }) { id }
+        article_01: article(where: { category: { parent: null, slug: "root-category" }, slug: "cumque-officia" }) { id }
+        article_02: article(where: { _id: 2 }) { id }
+        article_03: article(where: { id: "cb0456d1-d580-4d9f-bdad-510abbc96cb0" }) { id }
+        article_04: article(where: { category: { id: "452acd60-0c9f-4ab4-87c3-1177e14e4128" }, slug: "dolorem-expedita" }) { id }
+        article_05: article(where: { category: { parent: { id: "62f3ccbf-c51b-48ed-ad1d-0420ea196af6" }, slug: "rerum-doloremque-officia" }, slug: "dolorem-vel" }) { id }
       }`,
     },
     {
-      article_01: { id: 'c96cb09c-fb44-4543-aa5c-c879c0f74f25' },
-      article_02: { id: '87ece569-f025-4212-b800-7ffd50721582' },
-      article_03: { id: '192d396a-54b9-4bc1-90cc-bed054a77563' },
-      article_04: { id: '4d88dc29-1b08-47c0-917c-5a1c6b13f024' },
-      article_05: { id: '0391d268-bc8e-483f-bc40-9b275f1384b1' },
+      article_01: { id: '823c9900-060a-46e9-8dfc-64f192d396a5' },
+      article_02: { id: '91b087c0-917c-45a1-86b1-3f024cdd1ba9' },
+      article_03: { id: 'cb0456d1-d580-4d9f-bdad-510abbc96cb0' },
+      article_04: { id: '09b275f1-384b-4176-91da-0c6b7cb5ed46' },
+      article_05: { id: 'd7894f73-4334-4ace-b30e-873bc4470391' },
     },
   ],
 
@@ -361,7 +361,7 @@ export const scenario: Scenario = [
     {
       articles: [
         {
-          id: '87ece569-f025-4212-b800-7ffd50721582',
+          id: '823c9900-060a-46e9-8dfc-64f192d396a5',
         },
       ],
     },
@@ -375,7 +375,7 @@ export const scenario: Scenario = [
       }`,
       variableValues: {
         where: {
-          id: '87ece569-f025-4212-b800-7ffd50721582',
+          id: '823c9900-060a-46e9-8dfc-64f192d396a5',
           OR: [
             {
               // should be removed
@@ -398,7 +398,20 @@ export const scenario: Scenario = [
       },
     },
     {
-      articles: [{ id: '87ece569-f025-4212-b800-7ffd50721582' }],
+      articles: [{ id: '823c9900-060a-46e9-8dfc-64f192d396a5' }],
     },
+  ],
+  [
+    {
+      source: `query ($where: ArticleWhereInput!) {
+        articles(where: $where, first: 1) { id }
+      }`,
+      variableValues: {
+        where: {
+          id_in: [],
+        },
+      },
+    },
+    { articles: [] },
   ],
 ];

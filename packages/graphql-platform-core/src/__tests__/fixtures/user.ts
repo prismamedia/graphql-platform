@@ -1,4 +1,5 @@
 import faker from 'faker';
+import slug from 'slug';
 import { FixtureDataMap } from '../../graphql-platform/fixture';
 import { FixturesConfig } from '../fixtures';
 
@@ -7,7 +8,8 @@ export function fixtures({ userCount }: FixturesConfig): FixtureDataMap {
 
   for (let i = 0; i < userCount; i++) {
     fixtureMap[`user_${i}`] = {
-      username: faker.name.firstName(),
+      id: faker.random.uuid(),
+      username: slug(faker.name.firstName(), { lower: true }),
     };
   }
 

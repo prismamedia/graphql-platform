@@ -353,11 +353,11 @@ export class GraphQLPlatform<
     contextValue?: GraphQLRequest['contextValue'],
   ): Promise<void> {
     const fixtureGraph = this.getFixtureGraph(config);
+    // Will throw an error in case of circular reference
+    const fixtureNames = fixtureGraph.overallOrder();
 
     // Actually load the fixtures
-    for (const fixtureName of fixtureGraph.overallOrder()) {
-      await fixtureGraph.getNodeData(fixtureName).load(contextValue);
-    }
+    await Promise.all(fixtureNames.map(async fixtureName => fixtureGraph.getNodeData(fixtureName).load(contextValue)));
   }
 }
 
