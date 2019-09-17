@@ -22,8 +22,16 @@ import { Memoize } from 'typescript-memoize';
 import { AnyBaseContext, BaseContext } from '../../../graphql-platform';
 import { ConnectorUpdateOperationArgs } from '../../connector';
 import { OperationResolverParams } from '../../operation';
-import { Field, InverseRelation, NodeValue, Relation, ResourceHookKind } from '../../resource';
-import { RelationValue } from '../../resource/component';
+import {
+  Component,
+  Field,
+  InvalidComponentValueError,
+  InverseRelation,
+  NodeValue,
+  Relation,
+  RelationValue,
+  ResourceHookKind,
+} from '../../resource';
 import { NodeSource, TypeKind, WhereUniqueInputValue } from '../../type';
 import { WhereInputValue } from '../../type/input';
 import { AbstractOperation } from '../abstract-operation';
@@ -83,9 +91,14 @@ export class UpdateOneOperation extends AbstractOperation<UpdateOneOperationArgs
     return this.resource.getOutputType('Node').getGraphQLType();
   }
 
+  @Memoize(({ name }: Component) => name)
+  public canBeProvided(component: Component): boolean {
+    return !component.isFullyManaged() && !component.isImmutable();
+  }
+
   @Memoize(({ name }: Field) => name)
   protected getDataFieldConfig(field: Field): GraphQLInputFieldConfig | undefined {
-    if (!field.isFullyManaged() && !field.isImmutable()) {
+    if (this.canBeProvided(field)) {
       return {
         description: field.description,
         type: field.getType(),
@@ -98,7 +111,7 @@ export class UpdateOneOperation extends AbstractOperation<UpdateOneOperationArgs
     const resource = relation.getFrom();
     const relatedResource = relation.getTo();
 
-    if (!relation.isFullyManaged() && relation.isMutable()) {
+    if (this.canBeProvided(relation)) {
       return {
         description: [`Actions for the "${relation}" relation`, relation.description].filter(Boolean).join(': '),
         type: new GraphQLInputObjectType({
@@ -372,13 +385,26 @@ export class UpdateOneOperation extends AbstractOperation<UpdateOneOperationArgs
       await Promise.all([
         // Fields
         ...[...this.resource.getFieldSet()].map(
-          async (field): Promise<[string, FieldUpdate | undefined]> => [field.name, data[field.name]],
+          async (field): Promise<[string, FieldUpdate | undefined] | undefined> => {
+            const fieldValue: FieldUpdate | undefined = data[field.name];
+            if (typeof fieldValue !== 'undefined') {
+              if (!this.canBeProvided(field)) {
+                throw new InvalidComponentValueError(field, `cannot be provided`);
+              }
+
+              return [field.name, fieldValue];
+            }
+          },
         ),
         // Relations
         ...[...this.resource.getRelationSet()].map(
           async (relation): Promise<[string, RelationUpdate | undefined] | undefined> => {
             const actions = data[relation.name];
             if (isNonEmptyPlainObject(actions)) {
+              if (!this.canBeProvided(relation)) {
+                throw new InvalidComponentValueError(relation, `cannot be provided`);
+              }
+
               if (
                 !(
                   Object.keys(actions).length === 1 &&

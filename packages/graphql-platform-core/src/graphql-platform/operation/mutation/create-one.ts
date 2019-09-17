@@ -24,9 +24,11 @@ import { AnyBaseContext, BaseContext } from '../../../graphql-platform';
 import { ConnectorCreateOperationArgs } from '../../connector';
 import { OperationResolverParams } from '../../operation';
 import {
+  Component,
   ComponentValue,
   Field,
   FieldValue,
+  InvalidComponentValueError,
   InverseRelation,
   NodeValue,
   Relation,
@@ -81,9 +83,14 @@ export class CreateOneOperation extends AbstractOperation<CreateOneOperationArgs
     return GraphQLNonNull(this.resource.getOutputType('Node').getGraphQLType());
   }
 
+  @Memoize(({ name }: Component) => name)
+  public canBeProvided(component: Component): boolean {
+    return !component.isFullyManaged();
+  }
+
   @Memoize(({ name }: Field) => name)
   protected getDataFieldConfig(field: Field): GraphQLInputFieldConfig | undefined {
-    if (!field.isFullyManaged()) {
+    if (this.canBeProvided(field)) {
       return {
         description: field.description,
         type: GraphQLNonNullDecorator(field.getType(), field.isRequired()),
@@ -96,7 +103,7 @@ export class CreateOneOperation extends AbstractOperation<CreateOneOperationArgs
     const resource = relation.getFrom();
     const relatedResource = relation.getTo();
 
-    if (!relation.isFullyManaged()) {
+    if (this.canBeProvided(relation)) {
       return {
         description: [`Actions for the "${relation}" relation`, relation.description].filter(Boolean).join(': '),
         type: GraphQLNonNullDecorator(
@@ -243,13 +250,26 @@ export class CreateOneOperation extends AbstractOperation<CreateOneOperationArgs
       await Promise.all([
         // Fields
         ...[...this.resource.getFieldSet()].map(
-          async (field): Promise<[string, FieldValue | undefined]> => [field.name, data[field.name]],
+          async (field): Promise<[string, FieldValue | undefined] | undefined> => {
+            const fieldValue: FieldValue | undefined = data[field.name];
+            if (typeof fieldValue !== 'undefined') {
+              if (!this.canBeProvided(field)) {
+                throw new InvalidComponentValueError(field, `cannot be provided`);
+              }
+
+              return [field.name, fieldValue];
+            }
+          },
         ),
         // Relations
         ...[...this.resource.getRelationSet()].map(
           async (relation): Promise<[string, RelationValue] | undefined> => {
             const actions = data[relation.name];
             if (isNonEmptyPlainObject(actions)) {
+              if (!this.canBeProvided(relation)) {
+                throw new InvalidComponentValueError(relation, `cannot be provided`);
+              }
+
               if (
                 !(
                   Object.keys(actions).length === 1 &&
