@@ -84,13 +84,13 @@ export class CreateOneOperation extends AbstractOperation<CreateOneOperationArgs
   }
 
   @Memoize(({ name }: Component) => name)
-  public canBeProvided(component: Component): boolean {
+  public isDataField(component: Component): boolean {
     return !component.isFullyManaged();
   }
 
   @Memoize(({ name }: Field) => name)
   protected getDataFieldConfig(field: Field): GraphQLInputFieldConfig | undefined {
-    if (this.canBeProvided(field)) {
+    if (this.isDataField(field)) {
       return {
         description: field.description,
         type: GraphQLNonNullDecorator(field.getType(), field.isRequired()),
@@ -103,7 +103,7 @@ export class CreateOneOperation extends AbstractOperation<CreateOneOperationArgs
     const resource = relation.getFrom();
     const relatedResource = relation.getTo();
 
-    if (this.canBeProvided(relation)) {
+    if (this.isDataField(relation)) {
       return {
         description: [`Actions for the "${relation}" relation`, relation.description].filter(Boolean).join(': '),
         type: GraphQLNonNullDecorator(
@@ -253,8 +253,8 @@ export class CreateOneOperation extends AbstractOperation<CreateOneOperationArgs
           async (field): Promise<[string, FieldValue | undefined] | undefined> => {
             const fieldValue: FieldValue | undefined = data[field.name];
             if (typeof fieldValue !== 'undefined') {
-              if (!this.canBeProvided(field)) {
-                throw new InvalidComponentValueError(field, `cannot be provided`);
+              if (!this.isDataField(field)) {
+                throw new InvalidComponentValueError(field, `cannot be set`);
               }
 
               return [field.name, fieldValue];
@@ -266,8 +266,8 @@ export class CreateOneOperation extends AbstractOperation<CreateOneOperationArgs
           async (relation): Promise<[string, RelationValue] | undefined> => {
             const actions = data[relation.name];
             if (isNonEmptyPlainObject(actions)) {
-              if (!this.canBeProvided(relation)) {
-                throw new InvalidComponentValueError(relation, `cannot be provided`);
+              if (!this.isDataField(relation)) {
+                throw new InvalidComponentValueError(relation, `cannot be set`);
               }
 
               if (

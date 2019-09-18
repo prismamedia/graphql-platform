@@ -37,7 +37,9 @@ export interface AbstractComponentConfig<THookMap extends EventMap = any> {
    */
   immutable?: FlagConfig;
 
-  /** Optional, act on some events */
+  /**
+   * Optional, act on some events
+   */
   hooks?: Maybe<EventConfigMap<THookMap>>;
 }
 
