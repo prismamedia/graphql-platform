@@ -18,7 +18,20 @@ export type UpsertOneOperationResult = NodeSource;
 export class UpsertOneOperation extends AbstractOperation<UpsertOneOperationArgs, UpsertOneOperationResult> {
   @Memoize()
   public isSupported(): boolean {
-    return this.resource.getMutation('CreateOne').isSupported() && this.resource.getMutation('UpdateOne').isSupported();
+    return (
+      super.isSupported() &&
+      this.resource.getMutation('CreateOne').isSupported() &&
+      this.resource.getMutation('UpdateOne').isSupported()
+    );
+  }
+
+  @Memoize()
+  public isPublic(): boolean {
+    return (
+      super.isPublic() &&
+      this.resource.getMutation('CreateOne').isPublic() &&
+      this.resource.getMutation('UpdateOne').isPublic()
+    );
   }
 
   @Memoize()
