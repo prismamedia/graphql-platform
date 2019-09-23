@@ -215,7 +215,6 @@ export class Connector<TCustomContext extends CustomContext = {}> extends EventE
         debug: false,
         multipleStatements: false,
         supportBigNumbers: true,
-        timezone: 'Z',
         waitForConnections: true,
         dateStrings: false,
       })
