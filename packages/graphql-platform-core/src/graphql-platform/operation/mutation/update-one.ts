@@ -842,10 +842,14 @@ export class UpdateOneOperation extends AbstractOperation<UpdateOneOperationArgs
       selectionNode.setChildren(resource.getComponentSet().getSelectionNodeChildren(TypeKind.Input));
     }
 
-    const nodeFromUpdate = update.toNodeValue() as NodeSource;
-    const node = selectionNode.hasDiff(nodeFromUpdate)
-      ? await resource.getQuery('AssertOne').resolve({ ...params, args: { where: nodeId } })
-      : nodeFromUpdate;
+    // // Fetch the updated node only if we don't have all the data yet
+    // const nodeFromUpdate = update.toNodeValue() as NodeSource;
+    // const node = selectionNode.hasDiff(nodeFromUpdate)
+    //   ? await resource.getQuery('AssertOne').resolve({ ...params, args: { where: nodeId } })
+    //   : nodeFromUpdate;
+
+    // Always fetch the updated node
+    const node = await resource.getQuery('AssertOne').resolve({ ...params, args: { where: nodeId } });
 
     if (changedCount === 1) {
       const { operationContext } = context;

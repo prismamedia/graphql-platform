@@ -538,14 +538,18 @@ export class CreateOneOperation extends AbstractOperation<CreateOneOperationArgs
       selectionNode.setChildren(resource.getComponentSet().getSelectionNodeChildren(TypeKind.Input));
     }
 
-    const node = selectionNode.hasDiff(nodeFromCreate)
-      ? await resource.getQuery('AssertOne').resolve({
-          ...params,
-          args: {
-            where: nodeId,
-          },
-        })
-      : (nodeFromCreate as NodeSource);
+    // // Fetch the created node only if we don't have all the data yet
+    // const node = selectionNode.hasDiff(nodeFromCreate)
+    //   ? await resource.getQuery('AssertOne').resolve({
+    //       ...params,
+    //       args: {
+    //         where: nodeId,
+    //       },
+    //     })
+    //   : (nodeFromCreate as NodeSource);
+
+    // Always fetch the created node
+    const node = await resource.getQuery('AssertOne').resolve({ ...params, args: { where: nodeId } });
 
     const { operationContext } = context;
     const postSuccessHooks =

@@ -220,7 +220,7 @@ export class Connector<TCustomContext extends CustomContext = {}> extends EventE
       })
       .on('connection', connection => {
         // We ensure the good charset and the good timezone to be used
-        connection.query(`SET NAMES ${this.getCharset()} COLLATE ${this.getCollation()}; SET time_zone = 'UTC';`);
+        connection.query(`SET NAMES ${this.getCharset()} COLLATE ${this.getCollation()}, time_zone = 'UTC';`);
 
         // We let the user configure the connection
         onConnect && onConnect(connection);

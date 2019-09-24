@@ -25,9 +25,19 @@ describe('Execution', () => {
   });
 
   it('executes a scenario', async done => {
+    // Ensure the timezone is well defined for both the system and the session
+    await expect(
+      gp.getConnector().query([`SHOW GLOBAL VARIABLES LIKE 'time_zone';`, `SHOW SESSION VARIABLES LIKE 'time_zone';`]),
+    ).resolves.toEqual([
+      // System
+      [{ Variable_name: 'time_zone', Value: 'SYSTEM' }],
+      // Session
+      [{ Variable_name: 'time_zone', Value: 'UTC' }],
+    ]);
+
     await play(gp, scenario);
 
-    expect.assertions(scenario.length);
+    expect.assertions(scenario.length + 1);
 
     done();
   });

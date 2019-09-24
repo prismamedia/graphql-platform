@@ -116,6 +116,33 @@ export const scenario: Scenario = [
     },
   ],
 
+  /**
+   * We update a DateTime and the timezone is well respected
+   */
+  [
+    {
+      source: `mutation ($where: ArticleWhereUniqueInput!, $data: ArticleUpdateInput!) {
+        updateArticle(where: $where, data: $data) {
+          publishedAt
+        }
+      }`,
+      variableValues: {
+        where: {
+          id: 'e7431737-75b0-4383-ad06-299351e8c732',
+        },
+        data: {
+          publishedAt: '2019-09-24T10:11:12.123456+02:00',
+        },
+      },
+    },
+    {
+      updateArticle: {
+        // We lose 3 digits in precision as we configured the column as TIMESTAMP(3)
+        publishedAt: '2019-09-24T08:11:12.123Z',
+      },
+    },
+  ],
+
   // /**
   //  * We can update an "ArticleUrl" node through the nested actions
   //  */

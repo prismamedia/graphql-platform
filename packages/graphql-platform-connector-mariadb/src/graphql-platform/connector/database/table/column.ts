@@ -8,14 +8,7 @@ import {
   NullComponentValueError,
   UndefinedComponentValueError,
 } from '@prismamedia/graphql-platform-core';
-import {
-  FlagConfig,
-  getFlagValue,
-  isScalar,
-  Maybe,
-  MaybeUndefinedDecorator,
-  POJO,
-} from '@prismamedia/graphql-platform-utils';
+import { FlagConfig, getFlagValue, Maybe, MaybeUndefinedDecorator, POJO } from '@prismamedia/graphql-platform-utils';
 import { isEnumType } from 'graphql';
 import { escapeId } from 'mysql';
 import { Memoize } from 'typescript-memoize';
@@ -115,10 +108,6 @@ export interface ColumnConfig {
 }
 
 export type ColumnValue = null | number | string;
-
-export function isColumnValue(value: unknown, nullable: boolean = true): value is ColumnValue {
-  return value === null ? nullable : isScalar(value) || value instanceof Date;
-}
 
 export class Column {
   readonly component: Component;
