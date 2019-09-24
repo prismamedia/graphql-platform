@@ -102,6 +102,16 @@ describe('ResourceMap', () => {
               "name": "publishedAt",
             },
             Object {
+              "description": "The day of the document's public release",
+              "immutable": true,
+              "name": "publicationDay",
+            },
+            Object {
+              "description": "The time of the document's public release",
+              "immutable": true,
+              "name": "publicationTime",
+            },
+            Object {
               "description": "Either this article is published or not",
               "immutable": false,
               "name": "isPublished",

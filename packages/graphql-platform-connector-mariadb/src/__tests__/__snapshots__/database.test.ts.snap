@@ -46,6 +46,8 @@ CREATE TABLE \`articles\` (
   \`title\` VARCHAR(255) NOT NULL COMMENT 'The article\\\\'s title',
   \`slug\` VARCHAR(255) NOT NULL COMMENT 'The article\\\\'s slug',
   \`body\` VARCHAR(255) NULL COMMENT 'The article\\\\'s body',
+  \`publicationDay\` DATE NULL COMMENT 'The day of the document\\\\'s public release',
+  \`publicationTime\` TIME NULL COMMENT 'The time of the document\\\\'s public release',
   \`isPublished\` BOOLEAN NOT NULL COMMENT 'Either this article is published or not',
   \`isImportant\` BOOLEAN NULL COMMENT 'Either this article is important or not',
   \`categoryParentId\` CHAR(36) NULL,

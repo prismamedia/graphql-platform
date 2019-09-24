@@ -24,6 +24,8 @@ services:
       MARIADB_USER: root
       MARIADB_PASSWORD: test
       MARIADB_DATABASE: test
+
+      TZ: Europe/Paris
     command: sh -c "cd ./packages/graphql-platform-server-express && yarn run dev"
     ports:
       - 3000:3000

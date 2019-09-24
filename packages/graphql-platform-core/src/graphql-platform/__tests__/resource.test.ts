@@ -3,6 +3,20 @@ import { ArticleFormat } from '../../__tests__/resources/Article';
 import { NodeValue, Resource, SerializedNodeValue } from '../resource';
 
 describe('Resource', () => {
+  const RealDate = Date;
+
+  function mockDate(reference: string) {
+    (global as any).Date = class extends RealDate {
+      constructor(date: any) {
+        super(date || reference);
+      }
+    };
+  }
+
+  afterEach(() => {
+    global.Date = RealDate;
+  });
+
   let gp: MyGP;
   let article: Resource;
 
@@ -13,7 +27,9 @@ describe('Resource', () => {
     slug: 'title',
     body: 'The body',
     format: ArticleFormat.Rich,
-    publishedAt: new Date('2019-01-01T00:00:00.000Z'),
+    publishedAt: new Date('2019-02-01T00:00:00.000Z'),
+    publicationDay: new Date('2019-02-01T00:00:00.000Z'),
+    publicationTime: new Date('2019-02-01T00:00:00.000Z'),
     isPublished: true,
     isImportant: false,
     category: {
@@ -37,7 +53,9 @@ describe('Resource', () => {
     slug: 'title',
     body: 'The body',
     format: 'Rich',
-    publishedAt: '2019-01-01T00:00:00.000Z',
+    publishedAt: '2019-02-01T00:00:00.000Z',
+    publicationDay: '2019-02-01',
+    publicationTime: '00:00:00.000Z',
     isPublished: true,
     isImportant: false,
     category: {
@@ -161,6 +179,9 @@ describe('Resource', () => {
   });
 
   it("parses a full node's value", () => {
+    // We mock the "new Date()" to have a consistent "date" part for our "time" fields
+    mockDate('2019-02-01T12:00:00.000Z');
+
     expect(article.parseValue(normalizedSerializedNode)).toEqual(normalizedNode);
     expect(article.parseValue(normalizedSerializedNode, false)).toEqual(normalizedNode);
     expect(article.parseValue(normalizedSerializedNode, true)).toEqual(normalizedNode);
@@ -177,6 +198,9 @@ describe('Resource', () => {
     // Omit the "title" property of the normalized node & serializedNode
     const { title: normalizedTitle, ...partialNormalizedNode } = normalizedNode;
     const { title: normalizedSerializedTitle, ...partialNormalizedSerializedNode } = normalizedSerializedNode;
+
+    // We mock the "new Date()" to have a consistent "date" part for our "time" fields
+    mockDate('2019-02-01T12:00:00.000Z');
 
     expect(article.parseValue(partialNormalizedSerializedNode)).toEqual(partialNormalizedNode);
     expect(article.parseValue(partialNormalizedSerializedNode, false)).toEqual(partialNormalizedNode);

@@ -132,10 +132,6 @@ export abstract class AbstractComponent<
       throw new Error(`The component "${this}" cannot be "nullable" as it's part of the identifier.`);
     }
 
-    if (isNullable && this.isManaged()) {
-      throw new Error(`The component "${this}" cannot be "nullable" as it's managed.`);
-    }
-
     return isNullable;
   }
 

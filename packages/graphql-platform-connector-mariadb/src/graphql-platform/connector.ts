@@ -216,7 +216,7 @@ export class Connector<TCustomContext extends CustomContext = {}> extends EventE
         multipleStatements: false,
         supportBigNumbers: true,
         waitForConnections: true,
-        dateStrings: false,
+        dateStrings: true,
       })
       .on('connection', connection => {
         // We ensure the good charset and the good timezone to be used

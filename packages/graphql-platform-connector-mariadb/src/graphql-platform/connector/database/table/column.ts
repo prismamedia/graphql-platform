@@ -1,5 +1,9 @@
 import {
   FieldValue,
+  GraphQLDate,
+  GraphQLDateTime,
+  GraphQLTime,
+  InvalidComponentValueError,
   NodeValue,
   NullComponentValueError,
   UndefinedComponentValueError,
@@ -110,7 +114,7 @@ export interface ColumnConfig {
   default?: Maybe<string>;
 }
 
-export type ColumnValue = null | boolean | number | string | Date;
+export type ColumnValue = null | number | string;
 
 export function isColumnValue(value: unknown, nullable: boolean = true): value is ColumnValue {
   return value === null ? nullable : isScalar(value) || value instanceof Date;
@@ -242,9 +246,58 @@ export class Column {
     } else {
       switch (this.field.getType().name) {
         case 'Boolean':
+          if (typeof value !== 'boolean') {
+            throw new InvalidComponentValueError(this.field, `has to be a Boolean, received "${value}"`);
+          }
+
           return value ? 1 : 0;
 
+        case 'DateTime':
+          if (!(value instanceof Date)) {
+            throw new InvalidComponentValueError(this.field, `has to be a Date, received "${value}"`);
+          }
+
+          return (
+            value
+              // Get the date as a string in UTC timezone (eg: 2018-04-21T05:01:06.295Z)
+              .toISOString()
+              // Remove the final 'Z' (eg: 2018-04-21T05:01:06.295)
+              .slice(0, -1)
+              // Remove the 'T' (eg: 2018-04-21 05:01:06.295)
+              .replace('T', ' ')
+          );
+
+        case 'Date':
+          if (!(value instanceof Date)) {
+            throw new InvalidComponentValueError(this.field, `has to be a Date, received "${value}"`);
+          }
+
+          return (
+            value
+              // Get the date as a string in UTC timezone (eg: 2018-04-21T05:01:06.295Z)
+              .toISOString()
+              // Remove 'T', the time and the final 'Z' (eg: 2018-04-21)
+              .slice(0, 10)
+          );
+
+        case 'Time':
+          if (!(value instanceof Date)) {
+            throw new InvalidComponentValueError(this.field, `has to be a Date, received "${value}"`);
+          }
+
+          return (
+            value
+              // Get the date as a string in UTC timezone (eg: 2018-04-21T05:01:06.295Z)
+              .toISOString()
+              // Remove the date, 'T' and the final 'Z' (eg: 05:01:06.295)
+              .slice(11, -1)
+          );
+
         default:
+          if (!(typeof value === 'number' || typeof value === 'string')) {
+            throw new InvalidComponentValueError(this.field, `has to be a number or a string, received "${value}"`);
+          }
+
           return value;
       }
     }
@@ -265,20 +318,42 @@ export class Column {
     } else {
       switch (this.field.getType().name) {
         case 'Boolean':
-          this.field.setValue(
-            node,
-            typeof value === 'boolean'
-              ? value
-              : typeof value === 'number'
-              ? value === 1
-              : typeof value === 'string'
-              ? value === '1'
-              : // Will throw an error
-                value,
-          );
+          if (typeof value !== 'number') {
+            throw new InvalidComponentValueError(this.field, `has to be a number, received "${value}"`);
+          }
+
+          this.field.setValue(node, value === 1);
+          break;
+
+        case 'DateTime':
+          if (typeof value !== 'string') {
+            throw new InvalidComponentValueError(this.field, `has to be a string, received "${value}"`);
+          }
+
+          this.field.setValue(node, GraphQLDateTime.parseValue(`${value.split(' ').join('T')}Z`));
+          break;
+
+        case 'Date':
+          if (typeof value !== 'string') {
+            throw new InvalidComponentValueError(this.field, `has to be a string, received "${value}"`);
+          }
+
+          this.field.setValue(node, GraphQLDate.parseValue(value));
+          break;
+
+        case 'Time':
+          if (typeof value !== 'string') {
+            throw new InvalidComponentValueError(this.field, `has to be a string, received "${value}"`);
+          }
+
+          this.field.setValue(node, GraphQLTime.parseValue(`${value}Z`));
           break;
 
         default:
+          if (!(typeof value === 'number' || typeof value === 'string')) {
+            throw new InvalidComponentValueError(this.field, `has to be a number or a string, received "${value}"`);
+          }
+
           this.field.setValue(node, value);
           break;
       }

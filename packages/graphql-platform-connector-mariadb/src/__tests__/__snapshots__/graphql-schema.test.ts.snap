@@ -28,6 +28,12 @@ type Article {
   # The article's body
   body: String
 
+  # The day of the document's public release
+  publicationDay: Date
+
+  # The time of the document's public release
+  publicationTime: Time
+
   # Either this article is published or not
   isPublished: Boolean!
 
@@ -325,6 +331,10 @@ enum ArticleOrderByInput {
   slug_DESC
   body_ASC
   body_DESC
+  publicationDay_ASC
+  publicationDay_DESC
+  publicationTime_ASC
+  publicationTime_DESC
   isPublished_ASC
   isPublished_DESC
   isImportant_ASC
@@ -991,6 +1001,16 @@ input ArticleWhereInput {
   body_lte: String
   body_gt: String
   body_gte: String
+  publicationDay: Date
+  publicationDay_not: Date
+  publicationDay_is_null: Boolean
+  publicationDay_in: [Date]
+  publicationDay_not_in: [Date]
+  publicationTime: Time
+  publicationTime_not: Time
+  publicationTime_is_null: Boolean
+  publicationTime_in: [Time]
+  publicationTime_not_in: [Time]
   isPublished: Boolean
   isPublished_not: Boolean
   isPublished_in: [Boolean!]
@@ -1562,6 +1582,11 @@ input CategoryWithOptionalParentWhereUniqueInput {
   slug: String
 }
 
+# A date string, such as 2007-12-03, compliant with the \`full-date\` format
+# outlined in section 5.6 of the RFC 3339 profile of the ISO 8601 standard for
+# representation of dates and times using the Gregorian calendar.
+scalar Date
+
 # A date-time string at UTC, such as 2007-12-03T10:15:30Z, compliant with the
 # \`date-time\` format outlined in section 5.6 of the RFC 3339 profile of the ISO
 # 8601 standard for representation of dates and times using the Gregorian calendar.
@@ -1863,6 +1888,11 @@ input TagWhereUniqueInput {
   id: ID
   slug: String
 }
+
+# A time string at UTC, such as 10:15:30Z, compliant with the \`full-time\` format
+# outlined in section 5.6 of the RFC 3339profile of the ISO 8601 standard for
+# representation of dates and times using the Gregorian calendar.
+scalar Time
 
 # \\"User\\" resource's node
 type User {

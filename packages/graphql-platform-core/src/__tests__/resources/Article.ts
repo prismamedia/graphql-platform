@@ -1,6 +1,6 @@
 import { getGraphQLEnumType } from '@prismamedia/graphql-platform-utils';
 import { GraphQLBoolean, GraphQLNonNull, GraphQLString } from 'graphql';
-import { GraphQLDateTime } from 'graphql-iso-date';
+import { GraphQLDate, GraphQLDateTime, GraphQLTime } from 'graphql-iso-date';
 import slug from 'slug';
 import { ManagementKind, ResourceHookKind } from '../..';
 import { MyResourceConfig } from '../gp';
@@ -65,6 +65,30 @@ const resource: MyResourceConfig = {
     publishedAt: {
       type: GraphQLDateTime,
       description: "The date of the document's public release",
+    },
+    publicationDay: {
+      type: GraphQLDate,
+      description: "The day of the document's public release",
+      nullable: true,
+      immutable: true,
+      managed: ManagementKind.Full,
+      hooks: {
+        [ResourceHookKind.PreCreate]: event => {
+          event.fieldValue = event.metas.create.publishedAt instanceof Date ? event.fieldValue : null;
+        },
+      },
+    },
+    publicationTime: {
+      type: GraphQLTime,
+      description: "The time of the document's public release",
+      nullable: true,
+      immutable: true,
+      managed: ManagementKind.Full,
+      hooks: {
+        [ResourceHookKind.PreCreate]: event => {
+          event.fieldValue = event.metas.create.publishedAt instanceof Date ? event.fieldValue : null;
+        },
+      },
     },
     isPublished: {
       type: GraphQLBoolean,
