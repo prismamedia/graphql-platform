@@ -1,8 +1,0 @@
-{
-  "env": {
-    "NODE_ENV": "development"
-  },
-  "watch": ["src"],
-  "ext": "ts",
-  "exec": "ts-node --project tsconfig.commonjs.json ./src/__tests__/index.ts"
-}

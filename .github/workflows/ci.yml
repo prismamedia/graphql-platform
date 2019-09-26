@@ -1,0 +1,39 @@
+name: CI
+
+on: [push, pull_request]
+
+jobs:
+  setup-build-and-test:
+    runs-on: ubuntu-latest
+
+    strategy:
+      fail-fast: false
+
+      matrix:
+        node:
+          - 14
+          - 15
+
+        package:
+          - graphql-platform
+          - graphql-platform-scalars
+          - graphql-platform-utils
+
+        include:
+          - node: 14
+            publish: true
+            continue-on-error: false
+
+    continue-on-error: ${{ matrix.continue-on-error == true }}
+
+    container:
+      image: node:${{ matrix.node }}
+
+    steps:
+      - name: Checkout the code
+        uses: actions/checkout@v2
+        with:
+          fetch-depth: 1
+
+      - name: Validate the dependencies
+        run: yarn install --immutable --immutable-cache

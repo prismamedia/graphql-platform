@@ -1,0 +1,10 @@
+{
+  "extends": "@tsconfig/node14",
+  "compilerOptions": {
+    "rootDir": "src"
+  },
+  "references": [
+    { "path": "../graphql-platform" },
+    { "path": "../graphql-platform-connector-in-memory" }
+  ]
+}

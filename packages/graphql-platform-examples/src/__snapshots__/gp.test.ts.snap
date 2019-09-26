@@ -1,0 +1,71 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`GraphQL Platform generates a valid GraphQL Schema 1`] = `
+"schema {
+  query: query
+  mutation: mutation
+}
+
+type query {
+  # Gets the number of \\"Article\\" nodes
+  articleCount(where: ArticleWhereInput): NonNegativeInt!
+
+  # Retrieves a list of \\"Article\\" nodes
+  articles(where: ArticleWhereInput, orderBy: [ArticleOrderByInput!], skip: NonNegativeInt, first: NonNegativeInt!): [Article!]!
+}
+
+# Integers that will have a value of 0 or more.
+scalar NonNegativeInt
+
+input ArticleWhereInput {
+  id: UUID
+  id_not: UUID
+  id_in: [UUID!]
+  id_not_in: [UUID!]
+  title: NonEmptyTrimmedString
+  title_not: NonEmptyTrimmedString
+  title_in: [NonEmptyTrimmedString!]
+  title_not_in: [NonEmptyTrimmedString!]
+  slug: NonEmptyTrimmedString
+  slug_not: NonEmptyTrimmedString
+  slug_in: [NonEmptyTrimmedString!]
+  slug_not_in: [NonEmptyTrimmedString!]
+  AND: [ArticleWhereInput!]
+  OR: [ArticleWhereInput!]
+  NOT: ArticleWhereInput
+}
+
+# A field whose value is a generic Universally Unique Identifier: https://en.wikipedia.org/wiki/Universally_unique_identifier.
+scalar UUID
+
+# A string in which the leading and trailing whitespace characters are removed, plus it cannot be empty.
+scalar NonEmptyTrimmedString
+
+type Article {
+  id: UUID!
+  title: NonEmptyTrimmedString!
+  slug: NonEmptyTrimmedString!
+}
+
+enum ArticleOrderByInput {
+  id_ASC
+  id_DESC
+  title_ASC
+  title_DESC
+  slug_ASC
+  slug_DESC
+}
+
+type mutation {
+  # Creates a(n) \\"Article\\" node then returns it
+  createArticle(data: ArticleCreateInput!): Article!
+}
+
+# Data provided to create a(n) \\"Article\\" node
+input ArticleCreateInput {
+  id: UUID!
+  title: NonEmptyTrimmedString!
+  slug: NonEmptyTrimmedString!
+}
+"
+`;

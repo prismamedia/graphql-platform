@@ -1,5 +1,0 @@
-version: '3.7'
-
-services:
-  project:
-    command: /bin/sh -c "while sleep 1000; do :; done"

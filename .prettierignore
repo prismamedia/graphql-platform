@@ -1,1 +1,4 @@
+.pnp.json
+.yarn
+.yarnrc.yml
 package.json
