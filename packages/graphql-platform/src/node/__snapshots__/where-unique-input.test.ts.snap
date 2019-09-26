@@ -1,0 +1,69 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`WhereUniqueInput has a(n) ArticleTagWhereUniqueInput: ArticleTagWhereUniqueInput 1`] = `
+"# Identifies exactly one \\"ArticleTag\\" node given a unique combination of values:
+# article, tag
+# article, order
+input ArticleTagWhereUniqueInput {
+  article: ArticleWhereUniqueInput!
+  tag: TagWhereUniqueInput
+  order: NonNegativeInt
+}"
+`;
+
+exports[`WhereUniqueInput has a(n) ArticleWhereUniqueInput: ArticleWhereUniqueInput 1`] = `
+"# Identifies exactly one \\"Article\\" node given a unique combination of values:
+# id
+input ArticleWhereUniqueInput {
+  id: UUID!
+}"
+`;
+
+exports[`WhereUniqueInput has a(n) CategoryWhereUniqueInput: CategoryWhereUniqueInput 1`] = `
+"# Identifies exactly one \\"Category\\" node given a unique combination of values:
+# id
+# parent, slug
+# parent, order
+input CategoryWhereUniqueInput {
+  id: UUID
+  parent: CategoryWhereUniqueInput
+  slug: NonEmptyTrimmedString
+  order: NonNegativeInt
+}"
+`;
+
+exports[`WhereUniqueInput has a(n) HitWhereUniqueInput: HitWhereUniqueInput 1`] = `
+"# Identifies exactly one \\"Hit\\" node given a unique combination of values:
+# _id
+input HitWhereUniqueInput {
+  _id: NonNegativeInt!
+}"
+`;
+
+exports[`WhereUniqueInput has a(n) TagWhereUniqueInput: TagWhereUniqueInput 1`] = `
+"# Identifies exactly one \\"Tag\\" node given a unique combination of values:
+# id
+# slug
+input TagWhereUniqueInput {
+  id: UUID
+  slug: NonEmptyTrimmedString
+}"
+`;
+
+exports[`WhereUniqueInput has a(n) UserProfileWhereUniqueInput: UserProfileWhereUniqueInput 1`] = `
+"# Identifies exactly one \\"UserProfile\\" node given a unique combination of values:
+# user
+input UserProfileWhereUniqueInput {
+  user: UserWhereUniqueInput!
+}"
+`;
+
+exports[`WhereUniqueInput has a(n) UserWhereUniqueInput: UserWhereUniqueInput 1`] = `
+"# Identifies exactly one \\"User\\" node given a unique combination of values:
+# id
+# username
+input UserWhereUniqueInput {
+  id: UUID
+  username: NonEmptyTrimmedString
+}"
+`;

@@ -1,0 +1,32 @@
+name: CI
+
+on: [push, pull_request]
+
+jobs:
+  setup-build-and-test:
+    runs-on: ubuntu-latest
+
+    strategy:
+      matrix:
+        node-version:
+          - 14
+          - 15
+
+        package:
+          - graphql-platform
+          - graphql-platform-scalars
+          - graphql-platform-utils
+
+    steps:
+      - name: Checkout the code
+        uses: actions/checkout@v2
+        with:
+          fetch-depth: 1
+
+      - name: Setup NodeJS v${{ matrix.node-version }}
+        uses: actions/setup-node@v1
+        with:
+          node-version: ${{ matrix.node-version }}
+
+      - name: Validate the dependencies
+        run: yarn install --immutable --immutable-cache

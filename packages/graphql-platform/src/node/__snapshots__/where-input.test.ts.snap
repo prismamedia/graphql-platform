@@ -1,0 +1,242 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`WhereInput has a(n) ArticleTagWhereInput: ArticleTagWhereInput 1`] = `
+"# Used to filter the \\"ArticleTag\\" nodes
+input ArticleTagWhereInput {
+  article: ArticleWhereInput
+  article_not: ArticleWhereInput
+  tag: TagWhereInput
+  tag_not: TagWhereInput
+  order: NonNegativeInt
+  order_not: NonNegativeInt
+  order_in: [NonNegativeInt!]
+  order_not_in: [NonNegativeInt!]
+  order_gt: NonNegativeInt
+  order_gte: NonNegativeInt
+  order_lt: NonNegativeInt
+  order_lte: NonNegativeInt
+  AND: [ArticleTagWhereInput!]
+  OR: [ArticleTagWhereInput!]
+  NOT: ArticleTagWhereInput
+}"
+`;
+
+exports[`WhereInput has a(n) ArticleWhereInput: ArticleWhereInput 1`] = `
+"# Used to filter the \\"Article\\" nodes
+input ArticleWhereInput {
+  id: UUID
+  id_not: UUID
+  id_in: [UUID!]
+  id_not_in: [UUID!]
+  status: ArticleStatus
+  status_not: ArticleStatus
+  status_in: [ArticleStatus!]
+  status_not_in: [ArticleStatus!]
+  title: NonEmptyTrimmedString
+  title_not: NonEmptyTrimmedString
+  title_in: [NonEmptyTrimmedString!]
+  title_not_in: [NonEmptyTrimmedString!]
+  slug: NonEmptyTrimmedString
+  slug_not: NonEmptyTrimmedString
+  slug_in: [NonEmptyTrimmedString!]
+  slug_not_in: [NonEmptyTrimmedString!]
+  body: NonEmptyTrimmedString
+  body_not: NonEmptyTrimmedString
+  body_is_null: Boolean
+  body_in: [NonEmptyTrimmedString]
+  body_not_in: [NonEmptyTrimmedString]
+  category: CategoryWhereInput
+  category_not: CategoryWhereInput
+  category_is_null: Boolean
+  createdBy: UserWhereInput
+  createdBy_not: UserWhereInput
+  createdAt: DateTime
+  createdAt_not: DateTime
+  createdAt_in: [DateTime!]
+  createdAt_not_in: [DateTime!]
+  createdAt_gt: DateTime
+  createdAt_gte: DateTime
+  createdAt_lt: DateTime
+  createdAt_lte: DateTime
+  updatedBy: UserWhereInput
+  updatedBy_not: UserWhereInput
+  updatedAt: DateTime
+  updatedAt_not: DateTime
+  updatedAt_in: [DateTime!]
+  updatedAt_not_in: [DateTime!]
+  updatedAt_gt: DateTime
+  updatedAt_gte: DateTime
+  updatedAt_lt: DateTime
+  updatedAt_lte: DateTime
+  tags_none: ArticleTagWhereInput
+  tags_some: ArticleTagWhereInput
+  tags_every: ArticleTagWhereInput
+  AND: [ArticleWhereInput!]
+  OR: [ArticleWhereInput!]
+  NOT: ArticleWhereInput
+}"
+`;
+
+exports[`WhereInput has a(n) CategoryWhereInput: CategoryWhereInput 1`] = `
+"# Used to filter the \\"Category\\" nodes
+input CategoryWhereInput {
+  id: UUID
+  id_not: UUID
+  id_in: [UUID!]
+  id_not_in: [UUID!]
+  title: NonEmptyTrimmedString
+  title_not: NonEmptyTrimmedString
+  title_in: [NonEmptyTrimmedString!]
+  title_not_in: [NonEmptyTrimmedString!]
+  slug: NonEmptyTrimmedString
+  slug_not: NonEmptyTrimmedString
+  slug_in: [NonEmptyTrimmedString!]
+  slug_not_in: [NonEmptyTrimmedString!]
+  parent: CategoryWhereInput
+  parent_not: CategoryWhereInput
+  parent_is_null: Boolean
+  order: NonNegativeInt
+  order_not: NonNegativeInt
+  order_in: [NonNegativeInt!]
+  order_not_in: [NonNegativeInt!]
+  order_gt: NonNegativeInt
+  order_gte: NonNegativeInt
+  order_lt: NonNegativeInt
+  order_lte: NonNegativeInt
+  articles_none: ArticleWhereInput
+  articles_some: ArticleWhereInput
+  articles_every: ArticleWhereInput
+  children_none: CategoryWhereInput
+  children_some: CategoryWhereInput
+  children_every: CategoryWhereInput
+  AND: [CategoryWhereInput!]
+  OR: [CategoryWhereInput!]
+  NOT: CategoryWhereInput
+}"
+`;
+
+exports[`WhereInput has a(n) HitWhereInput: HitWhereInput 1`] = `
+"# Used to filter the \\"Hit\\" nodes
+input HitWhereInput {
+  _id: NonNegativeInt
+  _id_not: NonNegativeInt
+  _id_in: [NonNegativeInt!]
+  _id_not_in: [NonNegativeInt!]
+  _id_gt: NonNegativeInt
+  _id_gte: NonNegativeInt
+  _id_lt: NonNegativeInt
+  _id_lte: NonNegativeInt
+  at: DateTime
+  at_not: DateTime
+  at_in: [DateTime!]
+  at_not_in: [DateTime!]
+  at_gt: DateTime
+  at_gte: DateTime
+  at_lt: DateTime
+  at_lte: DateTime
+  AND: [HitWhereInput!]
+  OR: [HitWhereInput!]
+  NOT: HitWhereInput
+}"
+`;
+
+exports[`WhereInput has a(n) TagWhereInput: TagWhereInput 1`] = `
+"# Used to filter the \\"Tag\\" nodes
+input TagWhereInput {
+  id: UUID
+  id_not: UUID
+  id_in: [UUID!]
+  id_not_in: [UUID!]
+  title: NonEmptyTrimmedString
+  title_not: NonEmptyTrimmedString
+  title_in: [NonEmptyTrimmedString!]
+  title_not_in: [NonEmptyTrimmedString!]
+  slug: NonEmptyTrimmedString
+  slug_not: NonEmptyTrimmedString
+  slug_in: [NonEmptyTrimmedString!]
+  slug_not_in: [NonEmptyTrimmedString!]
+  createdAt: DateTime
+  createdAt_not: DateTime
+  createdAt_in: [DateTime!]
+  createdAt_not_in: [DateTime!]
+  createdAt_gt: DateTime
+  createdAt_gte: DateTime
+  createdAt_lt: DateTime
+  createdAt_lte: DateTime
+  updatedAt: DateTime
+  updatedAt_not: DateTime
+  updatedAt_in: [DateTime!]
+  updatedAt_not_in: [DateTime!]
+  updatedAt_gt: DateTime
+  updatedAt_gte: DateTime
+  updatedAt_lt: DateTime
+  updatedAt_lte: DateTime
+  articleTags_none: ArticleTagWhereInput
+  articleTags_some: ArticleTagWhereInput
+  articleTags_every: ArticleTagWhereInput
+  AND: [TagWhereInput!]
+  OR: [TagWhereInput!]
+  NOT: TagWhereInput
+}"
+`;
+
+exports[`WhereInput has a(n) UserProfileWhereInput: UserProfileWhereInput 1`] = `
+"# Used to filter the \\"UserProfile\\" nodes
+input UserProfileWhereInput {
+  user: UserWhereInput
+  user_not: UserWhereInput
+  birthday: Date
+  birthday_not: Date
+  birthday_is_null: Boolean
+  birthday_in: [Date]
+  birthday_not_in: [Date]
+  birthday_gt: Date
+  birthday_gte: Date
+  birthday_lt: Date
+  birthday_lte: Date
+  facebookId: ID
+  facebookId_not: ID
+  facebookId_is_null: Boolean
+  facebookId_in: [ID]
+  facebookId_not_in: [ID]
+  googleId: ID
+  googleId_not: ID
+  googleId_is_null: Boolean
+  googleId_in: [ID]
+  googleId_not_in: [ID]
+  twitterId: ID
+  twitterId_not: ID
+  twitterId_is_null: Boolean
+  twitterId_in: [ID]
+  twitterId_not_in: [ID]
+  AND: [UserProfileWhereInput!]
+  OR: [UserProfileWhereInput!]
+  NOT: UserProfileWhereInput
+}"
+`;
+
+exports[`WhereInput has a(n) UserWhereInput: UserWhereInput 1`] = `
+"# Used to filter the \\"User\\" nodes
+input UserWhereInput {
+  id: UUID
+  id_not: UUID
+  id_in: [UUID!]
+  id_not_in: [UUID!]
+  username: NonEmptyTrimmedString
+  username_not: NonEmptyTrimmedString
+  username_in: [NonEmptyTrimmedString!]
+  username_not_in: [NonEmptyTrimmedString!]
+  created_none: ArticleWhereInput
+  created_some: ArticleWhereInput
+  created_every: ArticleWhereInput
+  updated_none: ArticleWhereInput
+  updated_some: ArticleWhereInput
+  updated_every: ArticleWhereInput
+  profile: UserProfileWhereInput
+  profile_not: UserProfileWhereInput
+  profile_is_null: Boolean
+  AND: [UserWhereInput!]
+  OR: [UserWhereInput!]
+  NOT: UserWhereInput
+}"
+`;

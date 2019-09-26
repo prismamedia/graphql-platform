@@ -1,0 +1,40 @@
+{
+  "name": "@prismamedia/graphql-platform-scalars",
+  "version": "1.0.0-alpha.1",
+  "license": "MIT",
+  "contributors": [
+    "Yvann Boucher <yvann.boucher@gmail.com>"
+  ],
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/prismamedia/graphql-platform"
+  },
+  "main": "dist/mjs/index.js",
+  "typings": "dist/types/index.d.ts",
+  "scripts": {
+    "build": "tsc --build",
+    "build:watch": "yarn build --watch",
+    "test": "NODE_ENV=test jest --detectOpenHandles --verbose --passWithNoTests",
+    "test:watch": "yarn test --watchAll"
+  },
+  "engines": {
+    "node": ">=14"
+  },
+  "devDependencies": {
+    "@tsconfig/node14": "^1.0.0",
+    "@types/jest": "^26.0.20",
+    "@types/lodash": "^4.14.167",
+    "@types/node": "^14.14.21",
+    "jest": "^26.6.3",
+    "ts-jest": "^26.4.4",
+    "typescript": "^4.1.3"
+  },
+  "dependencies": {
+    "@prismamedia/graphql-platform-utils": "workspace:packages/graphql-platform-utils",
+    "@types/draft-js": "^0.10.44",
+    "graphql": "^15.4.0",
+    "graphql-scalars": "^1.7.0",
+    "lodash": "^4.17.20",
+    "type-fest": "^0.20.2"
+  }
+}

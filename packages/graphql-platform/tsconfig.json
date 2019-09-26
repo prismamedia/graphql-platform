@@ -1,0 +1,19 @@
+{
+  "extends": "@tsconfig/node14",
+  "compilerOptions": {
+    "rootDir": "src",
+    "moduleResolution": "Node",
+    // "module": "ES2020",
+    "module": "CommonJS",
+    "outDir": "dist/mjs",
+    "declaration": true,
+    "declarationMap": true,
+    "declarationDir": "dist/types",
+    "composite": true,
+    "experimentalDecorators": true
+  },
+  "references": [
+    { "path": "../graphql-platform-scalars" },
+    { "path": "../graphql-platform-utils" }
+  ]
+}
