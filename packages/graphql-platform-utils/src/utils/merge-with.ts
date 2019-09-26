@@ -1,4 +1,4 @@
-import baseMergeWith from 'lodash.mergewith';
+import { mergeWith as baseMergeWith } from 'lodash';
 import { POJO } from '../types/pojo';
 
 export function mergeWithCustomizer(a: unknown, b: unknown) {

@@ -20,8 +20,7 @@
   },
   "devDependencies": {
     "@types/jest": "^24.0.18",
-    "@types/lodash.isplainobject": "^4.0.6",
-    "@types/lodash.mergewith": "^4.6.6",
+    "@types/lodash": "^4.14.139",
     "@types/node": "^12.7.5",
     "graphql": "^14.5.0",
     "jest": "^24.9.0",
@@ -30,8 +29,7 @@
   },
   "dependencies": {
     "@prismamedia/ts-module-loader": "^3.1.2",
-    "lodash.isplainobject": "^4.0.6",
-    "lodash.mergewith": "^4.6.2",
+    "lodash": "^4.17.15",
     "typescript-memoize": "^1.0.0-alpha.3"
   },
   "peerDependencies": {
