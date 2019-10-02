@@ -1,8 +1,10 @@
 import { Resource } from '@prismamedia/graphql-platform-core';
 import { Maybe } from '@prismamedia/graphql-platform-utils';
+import marvDriver from 'marv-mysql-driver';
+import marv from 'marv/api/promise';
 import * as mysql from 'mysql';
 import { Memoize } from 'typescript-memoize';
-import { Connector } from '../connector';
+import { Connector, MigrationsFullOptions, MigrationsOptions } from '../connector';
 import { CreateTableStatement } from './database/statement';
 import { Table, TableSet } from './database/table';
 
@@ -89,5 +91,25 @@ export class Database {
   public async reset(all: boolean = false, connection?: Maybe<mysql.Connection>): Promise<void> {
     await this.drop(all, connection);
     await this.create(connection);
+  }
+
+  public async migrate(options?: Maybe<MigrationsOptions>): Promise<void> {
+    const actualOptions = options || (this.connector.config && this.connector.config.migrations);
+    if (!actualOptions) {
+      throw new Error(`You have to provide the connector's configuration.`);
+    }
+
+    const { directory, tableName }: MigrationsFullOptions =
+      typeof actualOptions === 'string' ? { directory: actualOptions } : actualOptions;
+
+    const migrations = await marv.scan(directory);
+
+    await marv.migrate(
+      migrations,
+      marvDriver({
+        connection: { ...this.connector.getPoolConfig().connectionConfig, multipleStatements: true },
+        table: tableName || 'migrations',
+      }),
+    );
   }
 }

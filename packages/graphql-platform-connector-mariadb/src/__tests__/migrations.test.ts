@@ -35,7 +35,7 @@ describe('Database', () => {
     // Empty database before the migrations
     await expect(connector.query(listTableStatement)).resolves.toEqual([]);
 
-    await connector.migrate();
+    await database.migrate();
 
     // 4 tables after the migrations : 2 new tables + the 2 for marv
     await expect(connector.query(listTableStatement)).resolves.toEqual(

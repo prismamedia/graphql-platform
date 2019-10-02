@@ -12,8 +12,6 @@ import {
 } from '@prismamedia/graphql-platform-core';
 import { GraphQLOperationType, Maybe, MaybeArray, POJO } from '@prismamedia/graphql-platform-utils';
 import EventEmitter from '@prismamedia/ts-async-event-emitter';
-import marvDriver from 'marv-mysql-driver';
-import marv from 'marv/api/promise';
 import * as mysql from 'mysql';
 import { Memoize } from 'typescript-memoize';
 import { promisify } from 'util';
@@ -251,26 +249,6 @@ export class Connector<TCustomContext extends CustomContext = {}> extends EventE
   public async resetPool(): Promise<void> {
     await this.closePool();
     this.getPool();
-  }
-
-  public async migrate(options?: Maybe<MigrationsOptions>): Promise<void> {
-    const actualOptions = options || (this.config && this.config.migrations);
-    if (!actualOptions) {
-      throw new Error(`You have to provide the connector's configuration.`);
-    }
-
-    const { directory, tableName }: MigrationsFullOptions =
-      typeof actualOptions === 'string' ? { directory: actualOptions } : actualOptions;
-
-    const migrations = await marv.scan(directory);
-
-    await marv.migrate(
-      migrations,
-      marvDriver({
-        connection: { ...this.getPoolConfig().connectionConfig, multipleStatements: true },
-        table: tableName || 'migrations',
-      }),
-    );
   }
 
   protected async getConnection(): Promise<mysql.PoolConnection> {
