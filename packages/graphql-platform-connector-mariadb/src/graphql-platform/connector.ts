@@ -12,6 +12,8 @@ import {
 } from '@prismamedia/graphql-platform-core';
 import { GraphQLOperationType, Maybe, MaybeArray, POJO } from '@prismamedia/graphql-platform-utils';
 import EventEmitter from '@prismamedia/ts-async-event-emitter';
+import marvDriver from 'marv-mysql-driver';
+import marv from 'marv/api/promise';
 import * as mysql from 'mysql';
 import { Memoize } from 'typescript-memoize';
 import { promisify } from 'util';
@@ -37,6 +39,9 @@ export type ConnectorEventMap = {
   [ConnectorEventKind.PreQuery]: Readonly<Pick<mysql.Connection, 'threadId'> & mysql.QueryOptions>;
 };
 
+export type MigrationsFullOptions = { directory: string; tableName?: Maybe<string> };
+export type MigrationsOptions = MigrationsFullOptions['directory'] | MigrationsFullOptions;
+
 export type ConnectorConfig = Omit<
   mysql.PoolConfig,
   | 'bigNumberStrings'
@@ -55,9 +60,14 @@ export type ConnectorConfig = Omit<
 > & {
   /**
    * If you need to set session variables on the connection before it gets used, you're able to do it like:
-   * onConnect: connection => connection.query('SET wait_timeout=1; SET max_statement_time=1;')
+   * onConnect: connection => connection.query('SET wait_timeout=1, max_statement_time=1;')
    */
   onConnect?: Maybe<(connection: mysql.PoolConnection) => void>;
+
+  /**
+   * You can configure the migrations here, either the full options or only the directory's name
+   */
+  migrations?: Maybe<MigrationsOptions>;
 };
 
 export type QueryResult =
@@ -197,7 +207,7 @@ export class Connector<TCustomContext extends CustomContext = {}> extends EventE
     return new Database(this);
   }
 
-  protected getPool(): mysql.Pool {
+  public getPool(): mysql.Pool {
     if (this.pool) {
       return this.pool;
     }
@@ -206,7 +216,7 @@ export class Connector<TCustomContext extends CustomContext = {}> extends EventE
       throw new Error(`You have to provide the connector's configuration.`);
     }
 
-    const { onConnect, ...poolConfig } = this.config;
+    const { onConnect, migrations, ...poolConfig } = this.config;
 
     return (this.pool = mysql
       .createPool({
@@ -227,6 +237,10 @@ export class Connector<TCustomContext extends CustomContext = {}> extends EventE
       }));
   }
 
+  public getPoolConfig(): mysql.PoolConfig & { connectionConfig: mysql.ConnectionConfig } {
+    return this.getPool().config as any;
+  }
+
   public async closePool(): Promise<void> {
     if (this.pool) {
       await promisify(this.pool.end.bind(this.pool))();
@@ -237,6 +251,26 @@ export class Connector<TCustomContext extends CustomContext = {}> extends EventE
   public async resetPool(): Promise<void> {
     await this.closePool();
     this.getPool();
+  }
+
+  public async migrate(options?: Maybe<MigrationsOptions>): Promise<void> {
+    const actualOptions = options || (this.config && this.config.migrations);
+    if (!actualOptions) {
+      throw new Error(`You have to provide the connector's configuration.`);
+    }
+
+    const { directory, tableName }: MigrationsFullOptions =
+      typeof actualOptions === 'string' ? { directory: actualOptions } : actualOptions;
+
+    const migrations = await marv.scan(directory);
+
+    await marv.migrate(
+      migrations,
+      marvDriver({
+        connection: { ...this.getPoolConfig().connectionConfig, multipleStatements: true },
+        table: tableName || 'migrations',
+      }),
+    );
   }
 
   protected async getConnection(): Promise<mysql.PoolConnection> {

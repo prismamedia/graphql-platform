@@ -32,7 +32,9 @@ export const config: MyGPConfig = mergeWith(
       database: assertEnv('MARIADB_DATABASE'),
 
       connectionLimit: 1,
-      onConnect: connection => connection.query('SET wait_timeout=1; SET max_statement_time=1;'),
+      onConnect: connection => connection.query('SET wait_timeout=1, max_statement_time=1;'),
+
+      migrations: `${__dirname}/migrations`,
     },
 
     default: resourceName => {
