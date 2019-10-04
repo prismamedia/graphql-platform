@@ -1,5 +1,6 @@
 import {
   assertEnumKey,
+  assertEnumKeyFromValue,
   assertEnumValue,
   getEnumKeyFromValue,
   getEnumKeys,
@@ -36,9 +37,11 @@ describe('enum', () => {
   it('gets the key from a value', () => {
     expect(getEnumKeyFromValue(ANumericEnum, 5 as any)).toBeUndefined();
     expect(getEnumKeyFromValue(ANumericEnum, ANumericEnum.Up)).toEqual('Up');
+    expect(assertEnumKeyFromValue(ANumericEnum, ANumericEnum.Up)).toEqual('Up');
 
     expect(getEnumKeyFromValue(AStringEnum, 'OTHER' as any)).toBeUndefined();
     expect(getEnumKeyFromValue(AStringEnum, AStringEnum.Up)).toEqual('Up');
+    expect(assertEnumKeyFromValue(AStringEnum, AStringEnum.Up)).toEqual('Up');
   });
 
   it('is the key from the enum', () => {
@@ -51,12 +54,12 @@ describe('enum', () => {
 
   it('assert the key is from the enum', () => {
     expect(() => assertEnumKey(ANumericEnum, 'Other' as any)).toThrowError(
-      'The value "Other" does not belong to this enum, choose among: Left, Right, Up, Down',
+      'The key "Other" does not belong to this enum, choose among: Left, Right, Up, Down',
     );
     expect(assertEnumKey(ANumericEnum, 'Up')).toEqual('Up');
 
     expect(() => assertEnumKey(AStringEnum, 'Other' as any)).toThrowError(
-      'The value "Other" does not belong to this enum, choose among: Left, Right, Up, Down',
+      'The key "Other" does not belong to this enum, choose among: Left, Right, Up, Down',
     );
     expect(assertEnumKey(AStringEnum, 'Up')).toEqual('Up');
   });

@@ -35,6 +35,20 @@ export function getEnumKeyFromValue<TEnumerable extends POJO>(
   return undefined;
 }
 
+export function assertEnumKeyFromValue<TEnumerable extends POJO>(
+  enumerable: TEnumerable,
+  value: ValueOf<TEnumerable>,
+): keyof TEnumerable {
+  const key = getEnumKeyFromValue(enumerable, value);
+  if (!key) {
+    throw new Error(
+      `The value "${value}" does not belong to this enum, choose among: ${getEnumValues(enumerable).join(', ')}`,
+    );
+  }
+
+  return key;
+}
+
 export function isEnumKey<TEnumerable extends POJO>(
   enumerable: TEnumerable,
   key: keyof TEnumerable,
@@ -42,13 +56,13 @@ export function isEnumKey<TEnumerable extends POJO>(
   return getEnumKeys(enumerable).includes(key);
 }
 
-export function assertEnumKey<TEnumerable extends POJO>(
+export function assertEnumKey<TEnumerable extends POJO, TKey extends keyof TEnumerable>(
   enumerable: TEnumerable,
-  key: keyof TEnumerable,
-): keyof TEnumerable {
+  key: TKey,
+): TKey {
   if (!isEnumKey(enumerable, key)) {
     throw new Error(
-      `The value "${key}" does not belong to this enum, choose among: ${getEnumKeys(enumerable).join(', ')}`,
+      `The key "${key}" does not belong to this enum, choose among: ${getEnumKeys(enumerable).join(', ')}`,
     );
   }
 
@@ -62,10 +76,10 @@ export function isEnumValue<TEnumerable extends POJO>(
   return getEnumValues(enumerable).includes(value);
 }
 
-export function assertEnumValue<TEnumerable extends POJO>(
+export function assertEnumValue<TEnumerable extends POJO, TValue extends ValueOf<TEnumerable>>(
   enumerable: TEnumerable,
-  value: ValueOf<TEnumerable>,
-): ValueOf<TEnumerable> {
+  value: TValue,
+): TValue {
   if (!isEnumValue(enumerable, value)) {
     throw new Error(
       `The value "${value}" does not belong to this enum, choose among: ${getEnumValues(enumerable).join(', ')}`,
