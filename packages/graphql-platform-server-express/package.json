@@ -36,7 +36,7 @@
     "@prismamedia/graphql-platform-utils": "^0.1.0-alpha.46",
     "@types/express-jwt": "^0.0.42",
     "@types/express-unless": "^0.5.1",
-    "apollo-server-express": "^2.9.3",
+    "apollo-server-express": "^2.9.5",
     "express-jwt": "^5.3.1",
     "express-unless": "^0.5.0",
     "typescript-memoize": "^1.0.0-alpha.3"
