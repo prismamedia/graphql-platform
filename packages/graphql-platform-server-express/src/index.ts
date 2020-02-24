@@ -61,33 +61,37 @@ export function createServer({
     playground,
     tracing,
     uploads,
-    formatResponse: ({ errors, ...rest }: any) => {
-      const referenceSet = new WeakSet();
+    formatResponse: (response, requestContext) => {
+      let safeResponse = response || {};
+      if (response) {
+        const { errors, ...rest } = response;
+        const referenceSet = new WeakSet();
 
-      // Errors without circular references
-      const safeErrors =
-        Array.isArray(errors) && errors.length > 0
-          ? JSON.parse(
-              JSON.stringify(errors, (key, value) => {
-                if (typeof value === 'object' && value !== null) {
-                  if (referenceSet.has(value)) {
-                    return;
+        // Errors without circular references
+        const safeErrors =
+          Array.isArray(errors) && errors.length > 0
+            ? JSON.parse(
+                JSON.stringify(errors, (key, value) => {
+                  if (typeof value === 'object' && value !== null) {
+                    if (referenceSet.has(value)) {
+                      return;
+                    }
+
+                    referenceSet.add(value);
                   }
 
-                  referenceSet.add(value);
-                }
+                  return value;
+                }),
+              )
+            : undefined;
 
-                return value;
-              }),
-            )
-          : undefined;
+        safeResponse = {
+          errors: safeErrors,
+          ...rest,
+        };
+      }
 
-      const response = {
-        errors: safeErrors,
-        ...rest,
-      };
-
-      return formatResponse ? formatResponse(response) : response;
+      return formatResponse ? formatResponse(safeResponse, requestContext) : safeResponse;
     },
     ...config,
   });

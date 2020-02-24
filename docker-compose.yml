@@ -15,7 +15,7 @@ services:
     restart: on-failure
 
   project:
-    image: node:12
+    image: node:10
     depends_on:
       - mariadb
     environment:
@@ -28,7 +28,6 @@ services:
       TZ: Europe/Paris
 
       YARN_CACHE_FOLDER: /var/cache/yarn
-    command: sh -c "cd ./packages/graphql-platform-server-express && yarn run dev"
     ports:
       - 3000:3000
       - 9222:9222
