@@ -13,7 +13,7 @@ import {
 } from 'graphql';
 import { GraphQLDate, GraphQLDateTime, GraphQLTime } from 'graphql-iso-date';
 import { Memoize } from 'typescript-memoize';
-import { AnyBaseContext, BaseContext, CustomContext } from '../../../graphql-platform';
+import { AnyBaseContext, BaseContext, CustomContext, NodeSource } from '../../../graphql-platform';
 import {
   CreateOneOperationArgs,
   CreateOneRawValue,
@@ -121,6 +121,7 @@ export type FieldHookMap<
     metas: FieldHookMetaMap<UpdateOneOperationArgs, TCustomContext, TBaseContext> &
       Readonly<{
         toBeUpdatedNodeId: WhereUniqueInputValue;
+        toBeUpdatedNode?: NodeSource;
         update: UpdateOneRawValue;
       }>;
     fieldValue: FieldUpdate | undefined;

@@ -1,6 +1,6 @@
 import { Maybe, MaybeUndefinedDecorator, POJO } from '@prismamedia/graphql-platform-utils';
 import { Memoize } from 'typescript-memoize';
-import { AnyBaseContext, BaseContext, CustomContext } from '../../../graphql-platform';
+import { AnyBaseContext, BaseContext, CustomContext, NodeSource } from '../../../graphql-platform';
 import { CreateOneOperationArgs, CreateOneRawValue, UpdateOneOperationArgs, UpdateOneRawValue } from '../../operation';
 import { RelationUpdate } from '../../operation/mutation';
 import { NodeValue, Resource, ResourceHookKind, ResourceHookMetaMap } from '../../resource';
@@ -55,6 +55,7 @@ export type RelationHookMap<
     metas: RelationHookMetaMap<UpdateOneOperationArgs, TCustomContext, TBaseContext> &
       Readonly<{
         toBeUpdatedNodeId: WhereUniqueInputValue;
+        toBeUpdatedNode?: NodeSource;
         update: UpdateOneRawValue;
       }>;
     relatedNodeId: RelationUpdate | undefined;

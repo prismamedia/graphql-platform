@@ -719,6 +719,18 @@ export class UpdateOneOperation extends AbstractOperation<UpdateOneOperationArgs
     const update = new UpdateOneValue(resource, await this.parseDataComponentMap(args.data, context));
 
     if (resource.hasPreHook(ResourceHookKind.PreUpdate)) {
+      const selectionNode =
+          this.resource
+            .getComponentSet()
+            .getSelectionNode(TypeKind.Input);
+
+      const toBeUpdatedNodeData = await this.connector.find({
+        args: { first: 1, selectionNode, where: nodeId },
+        context,
+        resource,
+      });
+      const toBeUpdatedNode = toBeUpdatedNodeData[0];
+
       // Let's the value be manipulated easily AND safely in the hooks
       const { proxy, revoke } = update.toProxy();
 
@@ -734,6 +746,7 @@ export class UpdateOneOperation extends AbstractOperation<UpdateOneOperationArgs
                 resource,
                 field,
                 toBeUpdatedNodeId: nodeId,
+                toBeUpdatedNode,
                 update: proxy,
               }),
               fieldValue: update.get(field),
@@ -762,6 +775,7 @@ export class UpdateOneOperation extends AbstractOperation<UpdateOneOperationArgs
                 resource,
                 relation,
                 toBeUpdatedNodeId: nodeId,
+                toBeUpdatedNode,
                 update: proxy,
               }),
               relatedNodeId: update.get(relation),
@@ -788,7 +802,10 @@ export class UpdateOneOperation extends AbstractOperation<UpdateOneOperationArgs
           args,
           context,
           resource,
+          toBeUpdatedNodeId: nodeId,
+          toBeUpdatedNode,
         }),
+        // @deprecated: use one in metas
         toBeUpdatedNodeId: nodeId,
         update: proxy,
       });

@@ -14,7 +14,7 @@ import {
 import { EventConfigMap, EventEmitter } from '@prismamedia/ts-async-event-emitter';
 import inflector from 'inflection';
 import { Memoize } from 'typescript-memoize';
-import { AnyBaseContext, AnyGraphQLPlatform, BaseContext, Context, CustomContext } from '../graphql-platform';
+import { AnyBaseContext, AnyGraphQLPlatform, BaseContext, Context, CustomContext, NodeSource } from '../graphql-platform';
 import {
   CreateOneOperationArgs,
   CreateOneRawValue,
@@ -119,7 +119,11 @@ export type ResourceHookMap<
 
   // Update
   [ResourceHookKind.PreUpdate]: {
-    metas: ResourceHookMetaMap<UpdateOneOperationArgs, TCustomContext, TBaseContext>;
+    metas: ResourceHookMetaMap<UpdateOneOperationArgs, TCustomContext, TBaseContext> & {
+      toBeUpdatedNodeId: WhereUniqueInputValue;
+      toBeUpdatedNode?: NodeSource;
+    };
+    // @deprecated
     toBeUpdatedNodeId: WhereUniqueInputValue;
     update: UpdateOneRawValue;
   };
