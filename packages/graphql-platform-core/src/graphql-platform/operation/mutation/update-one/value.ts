@@ -27,6 +27,14 @@ const updateInputHookProxyHandler: ProxyHandler<UpdateOneValue> = {
   ownKeys(update) {
     return [...update.resource.getComponentMap().keys()];
   },
+  getOwnPropertyDescriptor(update, propertyKey) {
+    if (!update.resource.getComponentMap().hasOwnProperty(propertyKey)) {
+      return undefined;
+    }
+    return {
+      enumerable: true,
+    };
+  },
   has(update, propertyKey) {
     return typeof getComponentByPropertyKey(update.resource.getComponentMap(), propertyKey) !== 'undefined';
   },

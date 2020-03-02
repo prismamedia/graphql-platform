@@ -719,10 +719,7 @@ export class UpdateOneOperation extends AbstractOperation<UpdateOneOperationArgs
     const update = new UpdateOneValue(resource, await this.parseDataComponentMap(args.data, context));
 
     if (resource.hasPreHook(ResourceHookKind.PreUpdate)) {
-      const selectionNode =
-          this.resource
-            .getComponentSet()
-            .getSelectionNode(TypeKind.Input);
+      const selectionNode = this.resource.getComponentSet().getSelectionNode(TypeKind.Input);
 
       const toBeUpdatedNodeData = await this.connector.find({
         args: { first: 1, selectionNode, where: nodeId },

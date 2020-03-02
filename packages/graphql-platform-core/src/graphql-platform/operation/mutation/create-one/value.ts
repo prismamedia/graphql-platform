@@ -20,6 +20,14 @@ const createInputHookProxyHandler: ProxyHandler<CreateOneValue> = {
   ownKeys(create) {
     return [...create.resource.getComponentMap().keys()];
   },
+  getOwnPropertyDescriptor(create, propertyKey) {
+    if (!create.resource.getComponentMap().hasOwnProperty(propertyKey)) {
+      return undefined;
+    }
+    return {
+      enumerable: true,
+    };
+  },
   has(create, propertyKey) {
     return typeof getComponentByPropertyKey(create.resource.getComponentMap(), propertyKey) !== 'undefined';
   },

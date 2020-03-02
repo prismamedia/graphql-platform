@@ -14,7 +14,14 @@ import {
 import { EventConfigMap, EventEmitter } from '@prismamedia/ts-async-event-emitter';
 import inflector from 'inflection';
 import { Memoize } from 'typescript-memoize';
-import { AnyBaseContext, AnyGraphQLPlatform, BaseContext, Context, CustomContext, NodeSource } from '../graphql-platform';
+import {
+  AnyBaseContext,
+  AnyGraphQLPlatform,
+  BaseContext,
+  Context,
+  CustomContext,
+  NodeSource,
+} from '../graphql-platform';
 import {
   CreateOneOperationArgs,
   CreateOneRawValue,
