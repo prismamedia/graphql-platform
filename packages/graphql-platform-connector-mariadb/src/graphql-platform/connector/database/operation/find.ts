@@ -3,6 +3,7 @@ import {
   ConnectorFindOperationResult,
   NodeFieldKind,
   NodeSource,
+  TypeKind,
 } from '@prismamedia/graphql-platform-core';
 import { GraphQLSelectionNode, isPlainObject, mergeWith, POJO } from '@prismamedia/graphql-platform-utils';
 import { AbstractOperationResolver } from '../abstract-operation';
@@ -504,14 +505,71 @@ export class FindOperation extends AbstractOperationResolver<ConnectorFindOperat
   }
 
   public async execute({ args, context }: OperationResolverParams<ConnectorFindOperationArgs>) {
+    let { where, skip, first } = args;
+
+    // In some cases, we'll make a query first to fetch the primary keys, then we'll fetch the other requested columns
+    if (
+      // If we don't already select only one unique constraint
+      this.resource
+        .getUniqueSet()
+        .every(unique => args.selectionNode.hasDiff(unique.getSelectionNode(TypeKind.Input).toPlainObject())) &&
+      // and if we don't query only the first result
+      args.first > 1 &&
+      // and either we forced it or we query paginated result
+      (this.table.findPrimaryKeyFirst() || (typeof args.skip === 'number' && args.skip > 0))
+    ) {
+      const pkSelectStatement = this.table.newSelectStatement();
+      const pkSelectionNode = this.resource.getIdentifier().getSelectionNode(TypeKind.Input);
+
+      await Promise.all([
+        this.parseSelectionNode(pkSelectStatement.select, pkSelectionNode),
+        this.parseWhereArg(pkSelectStatement.where, args.where),
+        this.parseOrderByArg(pkSelectStatement.orderBy, args.orderBy),
+        this.parseSkipArg(pkSelectStatement, args.skip),
+        this.parseFirstArg(pkSelectStatement, args.first),
+      ]);
+
+      if (pkSelectStatement.from.isToMany()) {
+        pkSelectStatement.groupBy.add(this.table.getPrimaryKey().getColumnSet());
+      }
+
+      const pkRows = await this.connector.query(
+        {
+          nestTables: true,
+          sql: pkSelectStatement.sql,
+        },
+        context.connectorRequest.connection,
+      );
+
+      const pks = Array.isArray(pkRows)
+        ? pkRows.map(row => this.parseRow(row, pkSelectStatement.from, pkSelectionNode))
+        : [];
+
+      if (pks.length === 0) {
+        // Don't need to go further if there is no result
+        return [];
+      }
+
+      where =
+        pkSelectionNode.size > 1
+          ? { OR: pks }
+          : {
+              // An optimization in case the primary key is not composite (as "IN" is faster than "OR")
+              [`${pkSelectionNode.first(true)[0]}_in`]: pks.map(pk => pk[pkSelectionNode.first(true)[0]]),
+            };
+
+      skip = 0;
+      first = pks.length;
+    }
+
     const selectStatement = this.table.newSelectStatement();
 
     await Promise.all([
       this.parseSelectionNode(selectStatement.select, args.selectionNode),
-      this.parseWhereArg(selectStatement.where, args.where),
       this.parseOrderByArg(selectStatement.orderBy, args.orderBy),
-      this.parseSkipArg(selectStatement, args.skip),
-      this.parseFirstArg(selectStatement, args.first),
+      this.parseWhereArg(selectStatement.where, where),
+      this.parseSkipArg(selectStatement, skip),
+      this.parseFirstArg(selectStatement, first),
     ]);
 
     if (selectStatement.from.isToMany()) {

@@ -56,6 +56,8 @@ export const config: MyGPConfig = mergeWith(
           });
 
           if (resourceName === 'Article') {
+            mergeWith(config, { table: { findPrimaryKeyFirst: true } });
+
             // This field is set in order to test current connection usage in hooks
             mergeWith(fields, {
               computedMaxIntId: {

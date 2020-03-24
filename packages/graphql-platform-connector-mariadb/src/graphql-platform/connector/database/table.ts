@@ -1,5 +1,5 @@
 import { Component, ComponentSet, Field, Relation, Resource } from '@prismamedia/graphql-platform-core';
-import { Maybe } from '@prismamedia/graphql-platform-utils';
+import { FlagConfig, getFlagValue, Maybe } from '@prismamedia/graphql-platform-utils';
 import inflector from 'inflection';
 import { escapeId } from 'mysql';
 import { Memoize } from 'typescript-memoize';
@@ -35,6 +35,9 @@ export interface TableConfig {
 
   /** Optional, the table's collation, default: utf8mb4_unicode_520_ci */
   collation?: Maybe<string>;
+
+  /** Optional, sometimes, it's more efficient to query the primary key then all the requested columns than querying everything in one query, default: false */
+  findPrimaryKeyFirst?: FlagConfig;
 }
 
 export class Table {
@@ -66,6 +69,11 @@ export class Table {
   @Memoize()
   public getCollation(): string {
     return this.config.collation || this.database.connector.getCollation();
+  }
+
+  @Memoize()
+  public findPrimaryKeyFirst(): boolean {
+    return getFlagValue(this.config.findPrimaryKeyFirst, false);
   }
 
   @Memoize(({ name }: Field) => name)
