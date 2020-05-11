@@ -45,7 +45,8 @@ export type NodeField = {
   | {
       kind: NodeFieldKind.VirtualField;
       virtualField: VirtualField;
-    });
+    }
+);
 
 export class NodeFieldMap extends SuperMapOfNamedObject<NodeField> {}
 
@@ -75,7 +76,7 @@ export class NodeType extends AbstractOutputType {
 
   @Memoize()
   public get description() {
-    return `"${this.resource}" resource's node`;
+    return this.resource.description || `"${this.resource}" resource's node`;
   }
 
   protected async getSourceFieldValue(

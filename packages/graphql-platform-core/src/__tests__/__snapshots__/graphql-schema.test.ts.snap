@@ -1,7 +1,7 @@
 // Jest Snapshot v1, https://goo.gl/fbAQLP
 
 exports[`GraphQLSchema creates a consistent valid GraphQL schema 1`] = `
-"# \\"Article\\" resource's node
+"# An article
 type Article {
   # The public ID
   id: ID!
