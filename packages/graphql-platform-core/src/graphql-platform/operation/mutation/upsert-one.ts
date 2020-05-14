@@ -1,5 +1,9 @@
-import { GraphQLFieldConfigArgumentMap, GraphQLNonNull, GraphQLOutputType } from 'graphql';
-import { Memoize } from 'typescript-memoize';
+import { Memoize } from '@prismamedia/ts-memoize';
+import {
+  GraphQLFieldConfigArgumentMap,
+  GraphQLNonNull,
+  GraphQLOutputType,
+} from 'graphql';
 import { OperationResolverParams } from '../../operation';
 import { NodeSource, TypeKind, WhereUniqueInputValue } from '../../type';
 import { AbstractOperation } from '../abstract-operation';
@@ -15,7 +19,10 @@ export type UpsertOneOperationArgs = {
 
 export type UpsertOneOperationResult = NodeSource;
 
-export class UpsertOneOperation extends AbstractOperation<UpsertOneOperationArgs, UpsertOneOperationResult> {
+export class UpsertOneOperation extends AbstractOperation<
+  UpsertOneOperationArgs,
+  UpsertOneOperationResult
+> {
   @Memoize()
   public isSupported(): boolean {
     return (
@@ -49,8 +56,12 @@ export class UpsertOneOperation extends AbstractOperation<UpsertOneOperationArgs
   }
 
   public getGraphQLFieldConfigArgs(): GraphQLFieldConfigArgumentMap {
-    const { where, data: update } = this.resource.getMutation('UpdateOne').getGraphQLFieldConfigArgs();
-    const { data: create } = this.resource.getMutation('CreateOne').getGraphQLFieldConfigArgs();
+    const { where, data: update } = this.resource
+      .getMutation('UpdateOne')
+      .getGraphQLFieldConfigArgs();
+    const { data: create } = this.resource
+      .getMutation('CreateOne')
+      .getGraphQLFieldConfigArgs();
 
     return {
       where,
@@ -59,7 +70,9 @@ export class UpsertOneOperation extends AbstractOperation<UpsertOneOperationArgs
     };
   }
 
-  public async resolve(params: OperationResolverParams<UpsertOneOperationArgs>): Promise<UpsertOneOperationResult> {
+  public async resolve(
+    params: OperationResolverParams<UpsertOneOperationArgs>,
+  ): Promise<UpsertOneOperationResult> {
     const {
       args: { where, create, update },
     } = params;
@@ -73,7 +86,9 @@ export class UpsertOneOperation extends AbstractOperation<UpsertOneOperationArgs
     });
 
     if (node) {
-      const nodeId = resource.getInputType('WhereUnique').assertUnique(node, resource.getIdentifier(), true);
+      const nodeId = resource
+        .getInputType('WhereUnique')
+        .assertUnique(node, resource.getIdentifier(), true);
 
       const updatedNode = await resource.getMutation('UpdateOne').resolve({
         ...params,

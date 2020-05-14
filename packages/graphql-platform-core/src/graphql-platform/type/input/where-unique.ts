@@ -6,10 +6,24 @@ import {
   MaybeUndefinedDecorator,
   SuperMap,
 } from '@prismamedia/graphql-platform-utils';
-import { GraphQLBoolean, GraphQLInputFieldConfigMap, GraphQLInputObjectType } from 'graphql';
-import { Memoize } from 'typescript-memoize';
-import { ComponentSet, Field, NodeValue, SerializedNodeValue, Unique } from '../../resource';
-import { NullComponentValueError, Relation, UndefinedComponentValueError } from '../../resource/component';
+import { Memoize } from '@prismamedia/ts-memoize';
+import {
+  GraphQLBoolean,
+  GraphQLInputFieldConfigMap,
+  GraphQLInputObjectType,
+} from 'graphql';
+import {
+  ComponentSet,
+  Field,
+  NodeValue,
+  SerializedNodeValue,
+  Unique,
+} from '../../resource';
+import {
+  NullComponentValueError,
+  Relation,
+  UndefinedComponentValueError,
+} from '../../resource/component';
 import { UniqueSet } from '../../resource/unique';
 import { AbstractInputType } from '../abstract-type';
 
@@ -32,11 +46,17 @@ export class WhereUniqueInputType extends AbstractInputType {
   @Memoize((knownRelation?: Relation, forced: boolean = false) =>
     [knownRelation ? knownRelation.name : '', String(forced)].join('|'),
   )
-  public getUniqueCombinationMap(knownRelation?: Relation, forced: boolean = false) {
+  public getUniqueCombinationMap(
+    knownRelation?: Relation,
+    forced: boolean = false,
+  ) {
     // Contains all the resource's unique constraints
     const resourceUniqueSet = this.resource.getUniqueSet();
 
-    if (knownRelation && !resourceUniqueSet.getComponentSet().has(knownRelation)) {
+    if (
+      knownRelation &&
+      !resourceUniqueSet.getComponentSet().has(knownRelation)
+    ) {
       throw new Error(
         `The relation "${knownRelation}" is not part of the "${
           this.resource
@@ -46,19 +66,33 @@ export class WhereUniqueInputType extends AbstractInputType {
 
     const uniqueSet =
       knownRelation && forced === true
-        ? resourceUniqueSet.filter(({ componentSet }) => componentSet.has(knownRelation))
+        ? resourceUniqueSet.filter(({ componentSet }) =>
+            componentSet.has(knownRelation),
+          )
         : resourceUniqueSet;
 
     const componentInUniqueSet =
-      knownRelation && forced === true ? uniqueSet.getComponentSet().diff(knownRelation) : uniqueSet.getComponentSet();
+      knownRelation && forced === true
+        ? uniqueSet.getComponentSet().diff(knownRelation)
+        : uniqueSet.getComponentSet();
 
     const uniqueCombinationMap = new SuperMap<string, ComponentSet>();
     for (const unique of uniqueSet) {
-      const displayedComponentInUniqueSet = unique.componentSet.intersect(componentInUniqueSet).sortByName();
-      const displayedComponentInUniqueSetKey = displayedComponentInUniqueSet.getNames().join('|');
+      const displayedComponentInUniqueSet = unique.componentSet
+        .intersect(componentInUniqueSet)
+        .sortByName();
+      const displayedComponentInUniqueSetKey = displayedComponentInUniqueSet
+        .getNames()
+        .join('|');
 
-      if (displayedComponentInUniqueSet.size > 0 && !uniqueCombinationMap.has(displayedComponentInUniqueSetKey)) {
-        uniqueCombinationMap.set(displayedComponentInUniqueSetKey, displayedComponentInUniqueSet);
+      if (
+        displayedComponentInUniqueSet.size > 0 &&
+        !uniqueCombinationMap.has(displayedComponentInUniqueSetKey)
+      ) {
+        uniqueCombinationMap.set(
+          displayedComponentInUniqueSetKey,
+          displayedComponentInUniqueSet,
+        );
       }
     }
 
@@ -74,7 +108,7 @@ export class WhereUniqueInputType extends AbstractInputType {
     const entries: Entries<WhereUniqueInputValue> = [];
     if (
       isPlainObject(value) &&
-      [...unique.componentSet].every(component => {
+      [...unique.componentSet].every((component) => {
         const componentValue = value[component.name];
         if (typeof componentValue === 'undefined') {
           if (strict) {
@@ -105,7 +139,12 @@ export class WhereUniqueInputType extends AbstractInputType {
             ? component
                 .getTo()
                 .getInputType('WhereUnique')
-                .parseUnique(componentValue, component.getToUnique(), true, false)
+                .parseUnique(
+                  componentValue,
+                  component.getToUnique(),
+                  true,
+                  false,
+                )
             : component
                 .getTo()
                 .getInputType('WhereUnique')
@@ -130,7 +169,9 @@ export class WhereUniqueInputType extends AbstractInputType {
 
     if (strict) {
       throw new Error(
-        `The following "${this.resource}"'s identifier does not contain any valid "${
+        `The following "${
+          this.resource
+        }"'s identifier does not contain any valid "${
           unique.name
         }" combination: ${JSON.stringify(value)}`,
       );
@@ -139,7 +180,11 @@ export class WhereUniqueInputType extends AbstractInputType {
     return undefined as any;
   }
 
-  public assertUnique(value: unknown, unique: Unique, normalized?: boolean): WhereUniqueInputValue {
+  public assertUnique(
+    value: unknown,
+    unique: Unique,
+    normalized?: boolean,
+  ): WhereUniqueInputValue {
     return this.parseUnique(value, unique, normalized, true);
   }
 
@@ -157,7 +202,9 @@ export class WhereUniqueInputType extends AbstractInputType {
 
     if (strict) {
       throw new Error(
-        `The following "${this.resource}"'s identifier does not contain any valid unique combination: ${JSON.stringify(
+        `The following "${
+          this.resource
+        }"'s identifier does not contain any valid unique combination: ${JSON.stringify(
           value,
         )}`,
       );
@@ -166,7 +213,10 @@ export class WhereUniqueInputType extends AbstractInputType {
     return undefined as any;
   }
 
-  public assert(value: unknown, uniqueSet: UniqueSet = this.resource.getUniqueSet()): WhereUniqueInputValue {
+  public assert(
+    value: unknown,
+    uniqueSet: UniqueSet = this.resource.getUniqueSet(),
+  ): WhereUniqueInputValue {
     return this.parse(value, uniqueSet, true);
   }
 
@@ -174,31 +224,51 @@ export class WhereUniqueInputType extends AbstractInputType {
     [knownRelation ? knownRelation.name : '', String(forced)].join('|'),
   )
   public getGraphQLType(knownRelation?: Relation, forced: boolean = true) {
-    const uniqueCombinationMap = this.getUniqueCombinationMap(knownRelation, forced);
-    const displayedComponentSet = new ComponentSet().concat(...[...uniqueCombinationMap.values()]);
+    const uniqueCombinationMap = this.getUniqueCombinationMap(
+      knownRelation,
+      forced,
+    );
+    const displayedComponentSet = new ComponentSet().concat(
+      ...[...uniqueCombinationMap.values()],
+    );
 
     return displayedComponentSet.size > 0
       ? new GraphQLInputObjectType({
           name: [
             this.resource.name,
-            knownRelation ? `With${forced ? 'Forced' : 'Optional'}${knownRelation.pascalCasedName}` : null,
+            knownRelation
+              ? `With${forced ? 'Forced' : 'Optional'}${
+                  knownRelation.pascalCasedName
+                }`
+              : null,
             'WhereUniqueInput',
           ]
             .filter(Boolean)
             .join(''),
           description: `${
-            knownRelation ? `Given a ${forced ? 'forced' : 'known'} "${knownRelation.name}", i` : 'I'
+            knownRelation
+              ? `Given a ${forced ? 'forced' : 'known'} "${
+                  knownRelation.name
+                }", i`
+              : 'I'
           }dentifies exactly one "${this.resource.name}" node${
             uniqueCombinationMap.size > 1
               ? ` with one of these unique ${
-                  uniqueCombinationMap.some(([, componentSet]) => componentSet.size > 1)
+                  uniqueCombinationMap.some(
+                    ([, componentSet]) => componentSet.size > 1,
+                  )
                     ? 'combinations of values'
                     : 'values'
                 }:\n${[...uniqueCombinationMap.values()]
                   .map(
-                    componentSet =>
+                    (componentSet) =>
                       `- ${[...componentSet]
-                        .map(component => `${component.name}${component === knownRelation ? ' (optional)' : ''}`)
+                        .map(
+                          (component) =>
+                            `${component.name}${
+                              component === knownRelation ? ' (optional)' : ''
+                            }`,
+                        )
                         .join(', ')}`,
                   )
                   .join('\n')}`
@@ -217,7 +287,9 @@ export class WhereUniqueInputType extends AbstractInputType {
                         .getInputType('WhereUnique')
                         .getGraphQLType(),
                   uniqueCombinationMap.every(
-                    ([, componentSet]) => componentSet.has(component) && component !== knownRelation,
+                    ([, componentSet]) =>
+                      componentSet.has(component) &&
+                      component !== knownRelation,
                   ),
                 ),
               };

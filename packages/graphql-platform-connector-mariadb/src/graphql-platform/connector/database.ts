@@ -1,10 +1,15 @@
+/// <reference path="../../@types/marv.d.ts"/>
 import { Resource } from '@prismamedia/graphql-platform-core';
 import { Maybe } from '@prismamedia/graphql-platform-utils';
+import { Memoize } from '@prismamedia/ts-memoize';
 import marvDriver from 'marv-mysql-driver';
 import marv from 'marv/api/promise';
 import * as mysql from 'mysql';
-import { Memoize } from 'typescript-memoize';
-import { Connector, MigrationsFullOptions, MigrationsOptions } from '../connector';
+import {
+  Connector,
+  MigrationsFullOptions,
+  MigrationsOptions,
+} from '../connector';
 import { CreateTableStatement } from './database/statement';
 import { Table, TableSet } from './database/table';
 
@@ -35,26 +40,40 @@ export class Database {
       this.connector.gp
         .getResourceGraph()
         .overallOrder()
-        .map(resourceName => this.getTable(this.connector.gp.getResourceMap().assert(resourceName))),
+        .map((resourceName) =>
+          this.getTable(
+            this.connector.gp.getResourceMap().assert(resourceName),
+          ),
+        ),
     );
   }
 
   public async create(connection?: Maybe<mysql.Connection>): Promise<void> {
-    await this.connector.query([...this.getTableSet()].map(table => new CreateTableStatement(table).sql), connection);
+    await this.connector.query(
+      [...this.getTableSet()].map(
+        (table) => new CreateTableStatement(table).sql,
+      ),
+      connection,
+    );
   }
 
   public async truncate(connection?: Maybe<mysql.Connection>): Promise<void> {
     await this.connector.query(
       [
         'SET FOREIGN_KEY_CHECKS = 0;',
-        ...[...this.getTableSet()].map(table => `TRUNCATE TABLE ${table.getEscapedName()};`),
+        ...[...this.getTableSet()].map(
+          (table) => `TRUNCATE TABLE ${table.getEscapedName()};`,
+        ),
         'SET FOREIGN_KEY_CHECKS = 1;',
       ],
       connection,
     );
   }
 
-  public async drop(all: boolean = false, connection?: Maybe<mysql.Connection>): Promise<void> {
+  public async drop(
+    all: boolean = false,
+    connection?: Maybe<mysql.Connection>,
+  ): Promise<void> {
     try {
       await this.connector.query(
         [
@@ -74,13 +93,22 @@ export class Database {
                 `EXECUTE stmt`,
                 `DEALLOCATE PREPARE stmt`,
               ]
-            : [`DROP TABLE IF EXISTS ${[...this.getTableSet()].map(table => table.getEscapedName()).join(', ')};`]),
+            : [
+                `DROP TABLE IF EXISTS ${[...this.getTableSet()]
+                  .map((table) => table.getEscapedName())
+                  .join(', ')};`,
+              ]),
           'SET FOREIGN_KEY_CHECKS = 1;',
         ],
         connection,
       );
     } catch (error) {
-      if (all && ['PREPARE stmt FROM @views', 'PREPARE stmt FROM @tables'].includes(error.sql)) {
+      if (
+        all &&
+        ['PREPARE stmt FROM @views', 'PREPARE stmt FROM @tables'].includes(
+          error.sql,
+        )
+      ) {
         // Do nothing, the database is already empty
       } else {
         throw error;
@@ -88,26 +116,34 @@ export class Database {
     }
   }
 
-  public async reset(all: boolean = false, connection?: Maybe<mysql.Connection>): Promise<void> {
+  public async reset(
+    all: boolean = false,
+    connection?: Maybe<mysql.Connection>,
+  ): Promise<void> {
     await this.drop(all, connection);
     await this.create(connection);
   }
 
   public async migrate(options?: Maybe<MigrationsOptions>): Promise<void> {
-    const actualOptions = options || (this.connector.config && this.connector.config.migrations);
+    const actualOptions = options || this.connector.config?.migrations;
     if (!actualOptions) {
       throw new Error(`You have to provide the connector's configuration.`);
     }
 
     const { directory, tableName }: MigrationsFullOptions =
-      typeof actualOptions === 'string' ? { directory: actualOptions } : actualOptions;
+      typeof actualOptions === 'string'
+        ? { directory: actualOptions }
+        : actualOptions;
 
     const migrations = await marv.scan(directory);
 
     await marv.migrate(
       migrations,
       marvDriver({
-        connection: { ...this.connector.getPoolConfig().connectionConfig, multipleStatements: true },
+        connection: {
+          ...this.connector.getPoolConfig().connectionConfig,
+          multipleStatements: true,
+        },
         table: tableName || 'migrations',
       }),
     );

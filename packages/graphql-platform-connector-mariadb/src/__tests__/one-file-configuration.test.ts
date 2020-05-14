@@ -1,4 +1,11 @@
-import { GraphQLBoolean, GraphQLInt, GraphQLNonNull, GraphQLSchema, printSchema, validateSchema } from 'graphql';
+import {
+  GraphQLBoolean,
+  GraphQLInt,
+  GraphQLNonNull,
+  GraphQLSchema,
+  printSchema,
+  validateSchema,
+} from 'graphql';
 import { MyGP } from './gp';
 
 describe('One file configuration', () => {
@@ -46,6 +53,8 @@ describe('One file configuration', () => {
   });
 
   it('creates a consistent GraphQL schema', () => {
-    expect(printSchema(schema, { commentDescriptions: true })).toMatchSnapshot();
+    expect(
+      printSchema(schema, { commentDescriptions: true }),
+    ).toMatchSnapshot();
   });
 });

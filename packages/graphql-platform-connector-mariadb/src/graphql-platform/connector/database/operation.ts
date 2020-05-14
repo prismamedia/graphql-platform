@@ -1,4 +1,7 @@
-import { CustomContext, OperationEvent as CoreOperationEvent } from '@prismamedia/graphql-platform-core';
+import {
+  CustomContext,
+  OperationEvent as CoreOperationEvent,
+} from '@prismamedia/graphql-platform-core';
 import { Class, POJO } from '@prismamedia/graphql-platform-utils';
 import { BaseContext } from '../../../graphql-platform';
 import { ConnectorOperationParams } from '../../connector';
@@ -14,15 +17,16 @@ export type OperationMap = typeof operationMap;
 
 export type OperationId = keyof OperationMap;
 
-export type OperationConstructor<TId extends OperationId> = OperationMap[TId] extends Class ? OperationMap[TId] : never;
+export type OperationConstructor<
+  TId extends OperationId
+> = OperationMap[TId] extends Class ? OperationMap[TId] : never;
 
-export type OperationResolverParams<TArgs extends POJO, TCustomContext extends CustomContext = {}> = Omit<
-  ConnectorOperationParams<TArgs, TCustomContext>,
-  'resource'
->;
+export type OperationResolverParams<
+  TArgs extends POJO,
+  TCustomContext extends CustomContext = {}
+> = Omit<ConnectorOperationParams<TArgs, TCustomContext>, 'resource'>;
 
-export type OperationEvent<TArgs extends POJO = any, TCustomContext extends CustomContext = {}> = CoreOperationEvent<
-  TArgs,
-  TCustomContext,
-  BaseContext
->;
+export type OperationEvent<
+  TArgs extends POJO = any,
+  TCustomContext extends CustomContext = {}
+> = CoreOperationEvent<TArgs, TCustomContext, BaseContext>;

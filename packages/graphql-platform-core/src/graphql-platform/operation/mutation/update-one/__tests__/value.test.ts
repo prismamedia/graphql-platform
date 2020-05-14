@@ -27,13 +27,21 @@ describe('Resource', () => {
     proxy.title = 'My new title';
     proxy.slug = 'my-new-title';
 
-    expect(() => (proxy.unknownField = `Will throw en error as the "unknownField" field does not exist`)).toThrowError(
+    expect(
+      () =>
+        (proxy.unknownField = `Will throw en error as the "unknownField" field does not exist`),
+    ).toThrowError(
       'The resource "Tag" does not have the component "unknownField".',
     );
 
-    expect(JSON.stringify(proxy)).toEqual('{"title":"My new title","slug":"my-new-title"}');
+    expect(JSON.stringify(proxy)).toEqual(
+      '{"title":"My new title","slug":"my-new-title"}',
+    );
     expect(JSON.stringify(proxy)).toEqual(JSON.stringify(update));
-    expect(update.toNodeValue()).toEqual({ title: 'My new title', slug: 'my-new-title' });
+    expect(update.toNodeValue()).toEqual({
+      title: 'My new title',
+      slug: 'my-new-title',
+    });
 
     // Can unset a "nullable" field
     proxy.slug = undefined;
@@ -46,19 +54,23 @@ describe('Resource', () => {
     expect(update.toNodeValue()).toEqual({});
 
     // Cannot set an invalid value
-    expect(() => (proxy.title = null)).toThrowError('The "Tag.title"\'s value is invalid: cannot be null.');
+    expect(() => (proxy.title = null)).toThrowError(
+      'The "Tag.title"\'s value is invalid: cannot be null.',
+    );
     expect(() => (proxy.title = true)).toThrowError(
       'The "Tag.title"\'s value is invalid: a string is expected but received "true" instead.',
     );
-    expect(() => (proxy.slug = null)).toThrowError('The "Tag.slug"\'s value is invalid: cannot be null.');
+    expect(() => (proxy.slug = null)).toThrowError(
+      'The "Tag.slug"\'s value is invalid: cannot be null.',
+    );
     expect(() => (proxy.slug = true)).toThrowError(
       'The "Tag.slug"\'s value is invalid: a string is expected but received "true" instead.',
     );
 
     revoke();
 
-    expect(() => (proxy.title = 'Will throw en error as the proxy is revoked')).toThrowError(
-      "Cannot perform 'set' on a proxy that has been revoked",
-    );
+    expect(
+      () => (proxy.title = 'Will throw en error as the proxy is revoked'),
+    ).toThrowError("Cannot perform 'set' on a proxy that has been revoked");
   });
 });

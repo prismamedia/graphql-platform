@@ -1,6 +1,8 @@
-import { format } from 'sql-formatter';
-import { Database } from '../';
-import { CreateTableStatement } from '../graphql-platform/connector/database/statement';
+import sqlFormatter from 'sql-formatter';
+import {
+  CreateTableStatement,
+  Database,
+} from '../graphql-platform/connector/database';
 import { config, MyGP } from './gp';
 
 describe('Database', () => {
@@ -17,7 +19,8 @@ describe('Database', () => {
   });
 
   it('creates tables', () => {
-    expect([...database.getTableSet()].map(table => table.name)).toMatchInlineSnapshot(`
+    expect([...database.getTableSet()].map((table) => table.name))
+      .toMatchInlineSnapshot(`
       Array [
         "categories",
         "users",
@@ -33,7 +36,11 @@ describe('Database', () => {
 
   it('print the "CREATE TABLE" statements', () => {
     expect(
-      [...database.getTableSet()].map(table => format(new CreateTableStatement(table).sql)).join('\n\n'),
+      [...database.getTableSet()]
+        .map((table) =>
+          sqlFormatter.format(new CreateTableStatement(table).sql),
+        )
+        .join('\n\n'),
     ).toMatchSnapshot();
   });
 });

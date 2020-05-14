@@ -1,0 +1,17 @@
+{
+  "files": [],
+  "references": [
+    {
+      "path": "./packages/graphql-platform-utils/tsconfig.esm.json"
+    },
+    {
+      "path": "./packages/graphql-platform-core/tsconfig.esm.json"
+    },
+    {
+      "path": "./packages/graphql-platform-connector-mariadb/tsconfig.esm.json"
+    },
+    {
+      "path": "./packages/graphql-platform-server-express/tsconfig.esm.json"
+    }
+  ]
+}

@@ -39,8 +39,12 @@ export class SelectStatement implements QueryOptions {
       this.groupBy.sql ? `GROUP BY ${this.groupBy.sql}` : null,
       this.orderBy.sql ? `ORDER BY ${this.orderBy.sql}` : null,
       typeof this.limit === 'number' ? `LIMIT ${this.limit}` : null,
-      typeof this.offset === 'number' && this.offset > 0 ? `OFFSET ${this.offset}` : null,
-      typeof this.forUpdate === 'boolean' && this.forUpdate ? `FOR UPDATE` : null,
+      typeof this.offset === 'number' && this.offset > 0
+        ? `OFFSET ${this.offset}`
+        : null,
+      typeof this.forUpdate === 'boolean' && this.forUpdate
+        ? `FOR UPDATE`
+        : null,
       ';',
     ]
       .filter(Boolean)

@@ -8,6 +8,7 @@ import {
   isNonEmptyPlainObject,
   POJO,
 } from '@prismamedia/graphql-platform-utils';
+import { Memoize } from '@prismamedia/ts-memoize';
 import {
   GraphQLBoolean,
   GraphQLFieldConfigArgumentMap,
@@ -18,7 +19,6 @@ import {
   GraphQLOutputType,
   GraphQLScalarType,
 } from 'graphql';
-import { Memoize } from 'typescript-memoize';
 import { AnyBaseContext, BaseContext } from '../../../graphql-platform';
 import { ConnectorUpdateOperationArgs } from '../../connector';
 import { OperationResolverParams } from '../../operation';
@@ -37,7 +37,13 @@ import { WhereInputValue } from '../../type/input';
 import { AbstractOperation } from '../abstract-operation';
 import { NodeNotFoundError } from '../error';
 import { CreateOneDataRelationActionKind } from './create-one';
-import { ComponentUpdate, FieldUpdate, RelationUpdate, UpdateOneRawValue, UpdateOneValue } from './update-one/value';
+import {
+  ComponentUpdate,
+  FieldUpdate,
+  RelationUpdate,
+  UpdateOneRawValue,
+  UpdateOneValue,
+} from './update-one/value';
 
 export * from './update-one/value';
 
@@ -49,7 +55,9 @@ export enum UpdateOneDataRelationActionKind {
   Upsert = 'upsert',
 }
 
-export const updateOneDataRelationActionKinds = getEnumValues(UpdateOneDataRelationActionKind);
+export const updateOneDataRelationActionKinds = getEnumValues(
+  UpdateOneDataRelationActionKind,
+);
 
 export enum UpdateOneDataInverseRelationActionKind {
   Connect = 'connect',
@@ -60,7 +68,9 @@ export enum UpdateOneDataInverseRelationActionKind {
   Upsert = 'upsert',
 }
 
-export const updateOneDataInverseRelationActionKinds = getEnumValues(UpdateOneDataInverseRelationActionKind);
+export const updateOneDataInverseRelationActionKinds = getEnumValues(
+  UpdateOneDataInverseRelationActionKind,
+);
 
 export type UpdateOneDataInputValue = POJO;
 
@@ -71,10 +81,15 @@ export type UpdateOneOperationArgs = {
 
 export type UpdateOneOperationResult = NodeSource | null;
 
-export class UpdateOneOperation extends AbstractOperation<UpdateOneOperationArgs, UpdateOneOperationResult> {
+export class UpdateOneOperation extends AbstractOperation<
+  UpdateOneOperationArgs,
+  UpdateOneOperationResult
+> {
   @Memoize()
   public isSupported(): boolean {
-    return this.resource.getComponentSet().some(component => component.isMutable());
+    return this.resource
+      .getComponentSet()
+      .some((component) => component.isMutable());
   }
 
   @Memoize()
@@ -97,7 +112,9 @@ export class UpdateOneOperation extends AbstractOperation<UpdateOneOperationArgs
   }
 
   @Memoize(({ name }: Field) => name)
-  protected getDataFieldConfig(field: Field): GraphQLInputFieldConfig | undefined {
+  protected getDataFieldConfig(
+    field: Field,
+  ): GraphQLInputFieldConfig | undefined {
     if (this.isDataField(field)) {
       return {
         description: field.description,
@@ -107,29 +124,51 @@ export class UpdateOneOperation extends AbstractOperation<UpdateOneOperationArgs
   }
 
   @Memoize(({ name }: Relation) => name)
-  protected getDataRelationConfig(relation: Relation): GraphQLInputFieldConfig | undefined {
+  protected getDataRelationConfig(
+    relation: Relation,
+  ): GraphQLInputFieldConfig | undefined {
     const resource = relation.getFrom();
     const relatedResource = relation.getTo();
 
     if (this.isDataField(relation)) {
       return {
-        description: [`Actions for the "${relation}" relation`, relation.description].filter(Boolean).join(': '),
+        description: [
+          `Actions for the "${relation}" relation`,
+          relation.description,
+        ]
+          .filter(Boolean)
+          .join(': '),
         type: new GraphQLInputObjectType({
-          name: [resource.name, 'Nested', relation.pascalCasedName, 'UpdateInput'].join(''),
+          name: [
+            resource.name,
+            'Nested',
+            relation.pascalCasedName,
+            'UpdateInput',
+          ].join(''),
           fields: () => {
             const fields: GraphQLInputFieldConfigMap = {};
 
             fields[UpdateOneDataRelationActionKind.Connect] = {
               description: `Connect an existing "${relatedResource}" node to the existing "${resource}" node, through the "${relation}" relation.`,
-              type: relatedResource.getInputType('WhereUnique').getGraphQLType(),
+              type: relatedResource
+                .getInputType('WhereUnique')
+                .getGraphQLType(),
             };
 
             if (relatedResource.getMutation('UpdateOne').isPublic()) {
               fields[UpdateOneDataRelationActionKind.Update] = {
                 description: `Update an existing "${relatedResource}" node and connect it to the existing "${resource}" node, through the "${relation}" relation.`,
                 type: new GraphQLInputObjectType({
-                  name: [resource.name, 'NestedUpdate', relation.pascalCasedName, 'UpdateInput'].join(''),
-                  fields: () => relatedResource.getMutation('UpdateOne').getGraphQLFieldConfigArgs(),
+                  name: [
+                    resource.name,
+                    'NestedUpdate',
+                    relation.pascalCasedName,
+                    'UpdateInput',
+                  ].join(''),
+                  fields: () =>
+                    relatedResource
+                      .getMutation('UpdateOne')
+                      .getGraphQLFieldConfigArgs(),
                 }),
               };
             }
@@ -145,8 +184,16 @@ export class UpdateOneOperation extends AbstractOperation<UpdateOneOperationArgs
               fields[UpdateOneDataRelationActionKind.Upsert] = {
                 description: `Create or update a "${relatedResource}" node and connect it to the existing "${resource}" node, through the "${relation}" relation.`,
                 type: new GraphQLInputObjectType({
-                  name: [resource.name, 'NestedUpsert', relation.pascalCasedName, 'UpdateInput'].join(''),
-                  fields: () => relatedResource.getMutation('UpsertOne').getGraphQLFieldConfigArgs(),
+                  name: [
+                    resource.name,
+                    'NestedUpsert',
+                    relation.pascalCasedName,
+                    'UpdateInput',
+                  ].join(''),
+                  fields: () =>
+                    relatedResource
+                      .getMutation('UpsertOne')
+                      .getGraphQLFieldConfigArgs(),
                 }),
               };
             }
@@ -166,7 +213,9 @@ export class UpdateOneOperation extends AbstractOperation<UpdateOneOperationArgs
   }
 
   @Memoize(({ name }: InverseRelation) => name)
-  protected getDataInverseRelationConfig(relation: InverseRelation): GraphQLInputFieldConfig | undefined {
+  protected getDataInverseRelationConfig(
+    relation: InverseRelation,
+  ): GraphQLInputFieldConfig | undefined {
     const resource = relation.getFrom();
     const relatedResource = relation.getTo();
 
@@ -178,20 +227,35 @@ export class UpdateOneOperation extends AbstractOperation<UpdateOneOperationArgs
       relatedResource.getMutation('DeleteOne').isPublic()
     ) {
       return {
-        description: [`Actions for the "${relation}" relation`, relation.description].filter(Boolean).join(': '),
+        description: [
+          `Actions for the "${relation}" relation`,
+          relation.description,
+        ]
+          .filter(Boolean)
+          .join(': '),
         type: new GraphQLInputObjectType({
-          name: [resource.name, 'Nested', relation.pascalCasedName, 'UpdateInput'].join(''),
+          name: [
+            resource.name,
+            'Nested',
+            relation.pascalCasedName,
+            'UpdateInput',
+          ].join(''),
           fields: () => {
             const fields: GraphQLInputFieldConfigMap = {};
 
-            if (relatedResource.getMutation('UpdateOne').isPublic() && relation.getInverse().isMutable()) {
+            if (
+              relatedResource.getMutation('UpdateOne').isPublic() &&
+              relation.getInverse().isMutable()
+            ) {
               fields[UpdateOneDataInverseRelationActionKind.Connect] = {
                 description: relation.isToMany()
                   ? `Connect existing "${relatedResource}" nodes to the existing "${resource}" node, through the "${relation}" relation.`
                   : `Connect an existing "${relatedResource}" node to the existing "${resource}" node, through the "${relation}" relation.`,
                 type: GraphQLListDecorator(
                   GraphQLNonNullDecorator(
-                    relatedResource.getInputType('WhereUnique').getGraphQLType(),
+                    relatedResource
+                      .getInputType('WhereUnique')
+                      .getGraphQLType(),
                     relation.isToMany(),
                   ),
                   relation.isToMany(),
@@ -206,8 +270,12 @@ export class UpdateOneOperation extends AbstractOperation<UpdateOneOperationArgs
                   type: GraphQLListDecorator(
                     GraphQLNonNullDecorator(
                       relation.getInverse().isInUnique()
-                        ? relatedResource.getInputType('WhereUnique').getGraphQLType(relation.getInverse(), true)
-                        : relatedResource.getInputType('WhereUnique').getGraphQLType(),
+                        ? relatedResource
+                            .getInputType('WhereUnique')
+                            .getGraphQLType(relation.getInverse(), true)
+                        : relatedResource
+                            .getInputType('WhereUnique')
+                            .getGraphQLType(),
                       relation.isToMany(),
                     ),
                     relation.isToMany(),
@@ -224,13 +292,25 @@ export class UpdateOneOperation extends AbstractOperation<UpdateOneOperationArgs
                 type: GraphQLListDecorator(
                   GraphQLNonNullDecorator(
                     new GraphQLInputObjectType({
-                      name: [resource.name, 'NestedUpdate', relation.pascalCasedName, 'UpdateInput'].join(''),
+                      name: [
+                        resource.name,
+                        'NestedUpdate',
+                        relation.pascalCasedName,
+                        'UpdateInput',
+                      ].join(''),
                       fields: () => {
-                        const whereUniqueType = relation.getInverse().isInUnique()
+                        const whereUniqueType = relation
+                          .getInverse()
+                          .isInUnique()
                           ? relatedResource
                               .getInputType('WhereUnique')
-                              .getGraphQLType(relation.getInverse(), relation.getInverse().isImmutable())
-                          : relatedResource.getInputType('WhereUnique').getGraphQLType();
+                              .getGraphQLType(
+                                relation.getInverse(),
+                                relation.getInverse().isImmutable(),
+                              )
+                          : relatedResource
+                              .getInputType('WhereUnique')
+                              .getGraphQLType();
 
                         return {
                           ...(whereUniqueType instanceof GraphQLInputObjectType
@@ -242,7 +322,9 @@ export class UpdateOneOperation extends AbstractOperation<UpdateOneOperationArgs
                             : {}),
                           data: {
                             type: GraphQLNonNull(
-                              relatedResource.getMutation('UpdateOne').getDataType(relation.getInverse()),
+                              relatedResource
+                                .getMutation('UpdateOne')
+                                .getDataType(relation.getInverse()),
                             ),
                           },
                         };
@@ -262,7 +344,9 @@ export class UpdateOneOperation extends AbstractOperation<UpdateOneOperationArgs
                   : `Create a new "${relatedResource}" node and connect it to the existing "${resource}" node, through the "${relation}" relation.`,
                 type: GraphQLListDecorator(
                   GraphQLNonNullDecorator(
-                    relatedResource.getMutation('CreateOne').getDataType(relation.getInverse()),
+                    relatedResource
+                      .getMutation('CreateOne')
+                      .getDataType(relation.getInverse()),
                     relation.isToMany(),
                   ),
                   relation.isToMany(),
@@ -278,13 +362,25 @@ export class UpdateOneOperation extends AbstractOperation<UpdateOneOperationArgs
                 type: GraphQLListDecorator(
                   GraphQLNonNullDecorator(
                     new GraphQLInputObjectType({
-                      name: [resource.name, 'NestedUpsert', relation.pascalCasedName, 'UpdateInput'].join(''),
+                      name: [
+                        resource.name,
+                        'NestedUpsert',
+                        relation.pascalCasedName,
+                        'UpdateInput',
+                      ].join(''),
                       fields: () => {
-                        const whereUniqueType = relation.getInverse().isInUnique()
+                        const whereUniqueType = relation
+                          .getInverse()
+                          .isInUnique()
                           ? relatedResource
                               .getInputType('WhereUnique')
-                              .getGraphQLType(relation.getInverse(), relation.getInverse().isImmutable())
-                          : relatedResource.getInputType('WhereUnique').getGraphQLType();
+                              .getGraphQLType(
+                                relation.getInverse(),
+                                relation.getInverse().isImmutable(),
+                              )
+                          : relatedResource
+                              .getInputType('WhereUnique')
+                              .getGraphQLType();
 
                         return {
                           ...(whereUniqueType instanceof GraphQLInputObjectType
@@ -296,12 +392,16 @@ export class UpdateOneOperation extends AbstractOperation<UpdateOneOperationArgs
                             : {}),
                           update: {
                             type: GraphQLNonNull(
-                              relatedResource.getMutation('UpdateOne').getDataType(relation.getInverse()),
+                              relatedResource
+                                .getMutation('UpdateOne')
+                                .getDataType(relation.getInverse()),
                             ),
                           },
                           create: {
                             type: GraphQLNonNull(
-                              relatedResource.getMutation('CreateOne').getDataType(relation.getInverse()),
+                              relatedResource
+                                .getMutation('CreateOne')
+                                .getDataType(relation.getInverse()),
                             ),
                           },
                         };
@@ -322,8 +422,12 @@ export class UpdateOneOperation extends AbstractOperation<UpdateOneOperationArgs
                 type: GraphQLListDecorator(
                   GraphQLNonNullDecorator(
                     relation.getInverse().isInUnique()
-                      ? relatedResource.getInputType('WhereUnique').getGraphQLType(relation.getInverse(), true)
-                      : relatedResource.getInputType('WhereUnique').getGraphQLType(),
+                      ? relatedResource
+                          .getInputType('WhereUnique')
+                          .getGraphQLType(relation.getInverse(), true)
+                      : relatedResource
+                          .getInputType('WhereUnique')
+                          .getGraphQLType(),
                     relation.isToMany(),
                   ),
                   relation.isToMany(),
@@ -338,20 +442,29 @@ export class UpdateOneOperation extends AbstractOperation<UpdateOneOperationArgs
     }
   }
 
-  @Memoize((forcedRelation?: Relation) => (forcedRelation ? forcedRelation.name : ''))
-  public getDataType(forcedRelation?: Relation): GraphQLInputObjectType | GraphQLScalarType {
+  @Memoize((forcedRelation?: Relation) =>
+    forcedRelation ? forcedRelation.name : '',
+  )
+  public getDataType(
+    forcedRelation?: Relation,
+  ): GraphQLInputObjectType | GraphQLScalarType {
     forcedRelation && this.resource.assertComponent(forcedRelation);
 
     const fields: GraphQLInputFieldConfigMap = fromEntries([
       // Fields
-      ...[...this.resource.getFieldSet()].map(field => [field.name, this.getDataFieldConfig(field)]),
+      ...[...this.resource.getFieldSet()].map((field) => [
+        field.name,
+        this.getDataFieldConfig(field),
+      ]),
       // Relations
-      ...[...this.resource.getRelationSet()].map(relation => [
+      ...[...this.resource.getRelationSet()].map((relation) => [
         relation.name,
-        forcedRelation && forcedRelation === relation ? undefined : this.getDataRelationConfig(relation),
+        forcedRelation && forcedRelation === relation
+          ? undefined
+          : this.getDataRelationConfig(relation),
       ]),
       // Inverse relations
-      ...[...this.resource.getInverseRelationSet()].map(relation => [
+      ...[...this.resource.getInverseRelationSet()].map((relation) => [
         relation.name,
         this.getDataInverseRelationConfig(relation),
       ]),
@@ -361,7 +474,9 @@ export class UpdateOneOperation extends AbstractOperation<UpdateOneOperationArgs
       ? new GraphQLInputObjectType({
           name: [
             this.resource.name,
-            forcedRelation ? `WithForced${forcedRelation.pascalCasedName}` : null,
+            forcedRelation
+              ? `WithForced${forcedRelation.pascalCasedName}`
+              : null,
             'UpdateInput',
           ].join(''),
           fields,
@@ -372,7 +487,9 @@ export class UpdateOneOperation extends AbstractOperation<UpdateOneOperationArgs
   public getGraphQLFieldConfigArgs(): GraphQLFieldConfigArgumentMap {
     return {
       where: {
-        type: GraphQLNonNull(this.resource.getInputType('WhereUnique').getGraphQLType()),
+        type: GraphQLNonNull(
+          this.resource.getInputType('WhereUnique').getGraphQLType(),
+        ),
       },
       data: {
         type: GraphQLNonNull(this.getDataType()),
@@ -380,12 +497,17 @@ export class UpdateOneOperation extends AbstractOperation<UpdateOneOperationArgs
     };
   }
 
-  public async parseDataComponentMap(data: UpdateOneDataInputValue, context: BaseContext): Promise<UpdateOneRawValue> {
+  public async parseDataComponentMap(
+    data: UpdateOneDataInputValue,
+    context: BaseContext,
+  ): Promise<UpdateOneRawValue> {
     return fromEntries(
       await Promise.all([
         // Fields
         ...[...this.resource.getFieldSet()].map(
-          async (field): Promise<[string, FieldUpdate | undefined] | undefined> => {
+          async (
+            field,
+          ): Promise<[string, FieldUpdate | undefined] | undefined> => {
             const fieldValue: FieldUpdate | undefined = data[field.name];
             if (typeof fieldValue !== 'undefined') {
               if (!this.isDataField(field)) {
@@ -398,7 +520,9 @@ export class UpdateOneOperation extends AbstractOperation<UpdateOneOperationArgs
         ),
         // Relations
         ...[...this.resource.getRelationSet()].map(
-          async (relation): Promise<[string, RelationUpdate | undefined] | undefined> => {
+          async (
+            relation,
+          ): Promise<[string, RelationUpdate | undefined] | undefined> => {
             const actions = data[relation.name];
             if (isNonEmptyPlainObject(actions)) {
               if (!this.isDataField(relation)) {
@@ -408,7 +532,9 @@ export class UpdateOneOperation extends AbstractOperation<UpdateOneOperationArgs
               if (
                 !(
                   Object.keys(actions).length === 1 &&
-                  updateOneDataRelationActionKinds.includes(Object.keys(actions)[0] as any)
+                  updateOneDataRelationActionKinds.includes(
+                    Object.keys(actions)[0] as any,
+                  )
                 )
               ) {
                 throw new Error(
@@ -418,7 +544,9 @@ export class UpdateOneOperation extends AbstractOperation<UpdateOneOperationArgs
                 );
               }
 
-              const actionKind = Object.keys(actions)[0] as UpdateOneDataRelationActionKind;
+              const actionKind = Object.keys(
+                actions,
+              )[0] as UpdateOneDataRelationActionKind;
               const actionValue = actions[actionKind];
 
               if (actionValue == null) {
@@ -428,7 +556,9 @@ export class UpdateOneOperation extends AbstractOperation<UpdateOneOperationArgs
               }
 
               // Returns only the selection we need (the targeted unique constraint)
-              const selectionNode = relation.getToUnique().getSelectionNode(TypeKind.Input);
+              const selectionNode = relation
+                .getToUnique()
+                .getSelectionNode(TypeKind.Input);
               const relatedResource = relation.getTo();
 
               let relatedNode: NodeSource | null | undefined;
@@ -436,7 +566,11 @@ export class UpdateOneOperation extends AbstractOperation<UpdateOneOperationArgs
                 case UpdateOneDataRelationActionKind.Connect: {
                   relatedNode = await relatedResource
                     .getQuery('AssertOne')
-                    .resolve({ args: { where: actionValue }, context, selectionNode });
+                    .resolve({
+                      args: { where: actionValue },
+                      context,
+                      selectionNode,
+                    });
                   break;
                 }
 
@@ -451,7 +585,10 @@ export class UpdateOneOperation extends AbstractOperation<UpdateOneOperationArgs
                     .resolve({ args: actionValue, context, selectionNode });
 
                   if (!updatedNode) {
-                    throw new NodeNotFoundError(relatedResource.getMutation('UpdateOne'), actionValue.where);
+                    throw new NodeNotFoundError(
+                      relatedResource.getMutation('UpdateOne'),
+                      actionValue.where,
+                    );
                   }
 
                   relatedNode = updatedNode;
@@ -461,7 +598,11 @@ export class UpdateOneOperation extends AbstractOperation<UpdateOneOperationArgs
                 case UpdateOneDataRelationActionKind.Create: {
                   relatedNode = await relatedResource
                     .getMutation('CreateOne')
-                    .resolve({ args: { data: actionValue }, context, selectionNode });
+                    .resolve({
+                      args: { data: actionValue },
+                      context,
+                      selectionNode,
+                    });
                   break;
                 }
 
@@ -473,7 +614,9 @@ export class UpdateOneOperation extends AbstractOperation<UpdateOneOperationArgs
                 }
 
                 default:
-                  throw new Error(`The relation "${relation}"'s nested action "${actionKind}" is not supported, yet`);
+                  throw new Error(
+                    `The relation "${relation}"'s nested action "${actionKind}" is not supported, yet`,
+                  );
               }
 
               return [relation.name, relatedNode as RelationValue | undefined];
@@ -490,28 +633,35 @@ export class UpdateOneOperation extends AbstractOperation<UpdateOneOperationArgs
     context: BaseContext,
   ): Promise<void> {
     await Promise.all(
-      [...this.resource.getInverseRelationSet()].map(async inverseRelation => {
-        const actions = data[inverseRelation.name];
-        if (isNonEmptyPlainObject(actions)) {
-          if (
-            !Object.keys(actions).every(actionKind =>
-              updateOneDataInverseRelationActionKinds.includes(actionKind as any),
-            )
-          ) {
-            throw new Error(
-              `The "${inverseRelation}" relation supports at least one action among: ${updateOneDataInverseRelationActionKinds.join(
-                ', ',
-              )}`,
-            );
-          }
+      [...this.resource.getInverseRelationSet()].map(
+        async (inverseRelation) => {
+          const actions = data[inverseRelation.name];
+          if (isNonEmptyPlainObject(actions)) {
+            if (
+              !Object.keys(actions).every((actionKind) =>
+                updateOneDataInverseRelationActionKinds.includes(
+                  actionKind as any,
+                ),
+              )
+            ) {
+              throw new Error(
+                `The "${inverseRelation}" relation supports at least one action among: ${updateOneDataInverseRelationActionKinds.join(
+                  ', ',
+                )}`,
+              );
+            }
 
-          const relatedResource = inverseRelation.getTo();
-          const selectionNode = relatedResource.getIdentifier().getSelectionNode(TypeKind.Input);
+            const relatedResource = inverseRelation.getTo();
+            const selectionNode = relatedResource
+              .getIdentifier()
+              .getSelectionNode(TypeKind.Input);
 
-          // First we delete & disconnect in order to avoid further unique constraint errors
-          await Promise.all(
-            [UpdateOneDataInverseRelationActionKind.Delete, UpdateOneDataInverseRelationActionKind.Disconnect].map(
-              async actionKind => {
+            // First we delete & disconnect in order to avoid further unique constraint errors
+            await Promise.all(
+              [
+                UpdateOneDataInverseRelationActionKind.Delete,
+                UpdateOneDataInverseRelationActionKind.Disconnect,
+              ].map(async (actionKind) => {
                 const actionValues = actions[actionKind];
                 if (typeof actionValues !== 'undefined') {
                   if (actionValues == null) {
@@ -521,41 +671,57 @@ export class UpdateOneOperation extends AbstractOperation<UpdateOneOperationArgs
                   }
 
                   await Promise.all(
-                    (inverseRelation.isToMany() ? actionValues : [actionValues]).map(async (actionValue: any) => {
+                    (inverseRelation.isToMany()
+                      ? actionValues
+                      : [actionValues]
+                    ).map(async (actionValue: any) => {
                       switch (actionKind) {
                         case UpdateOneDataInverseRelationActionKind.Delete: {
                           const where = relatedResource
                             .getInputType('WhereUnique')
-                            .assert({ ...actionValue, [inverseRelation.getInverse().name]: id });
+                            .assert({
+                              ...actionValue,
+                              [inverseRelation.getInverse().name]: id,
+                            });
 
-                          await relatedResource.getMutation('DeleteOne').resolve({
-                            args: { where },
-                            context,
-                            selectionNode,
-                          });
+                          await relatedResource
+                            .getMutation('DeleteOne')
+                            .resolve({
+                              args: { where },
+                              context,
+                              selectionNode,
+                            });
                           break;
                         }
 
                         case UpdateOneDataInverseRelationActionKind.Disconnect: {
                           const where = relatedResource
                             .getInputType('WhereUnique')
-                            .assert({ ...actionValue, [inverseRelation.getInverse().name]: id });
+                            .assert({
+                              ...actionValue,
+                              [inverseRelation.getInverse().name]: id,
+                            });
 
-                          const updatedNode = await relatedResource.getMutation('UpdateOne').resolve({
-                            args: {
-                              where,
-                              data: {
-                                [inverseRelation.getInverse().name]: {
-                                  [UpdateOneDataRelationActionKind.Disconnect]: true,
+                          const updatedNode = await relatedResource
+                            .getMutation('UpdateOne')
+                            .resolve({
+                              args: {
+                                where,
+                                data: {
+                                  [inverseRelation.getInverse().name]: {
+                                    [UpdateOneDataRelationActionKind.Disconnect]: true,
+                                  },
                                 },
                               },
-                            },
-                            context,
-                            selectionNode,
-                          });
+                              context,
+                              selectionNode,
+                            });
 
                           if (!updatedNode) {
-                            throw new NodeNotFoundError(relatedResource.getMutation('UpdateOne'), where);
+                            throw new NodeNotFoundError(
+                              relatedResource.getMutation('UpdateOne'),
+                              where,
+                            );
                           }
                           break;
                         }
@@ -568,138 +734,171 @@ export class UpdateOneOperation extends AbstractOperation<UpdateOneOperationArgs
                     }),
                   );
                 }
-              },
-            ),
-          );
+              }),
+            );
 
-          // Then we do everything else
-          await Promise.all(
-            updateOneDataInverseRelationActionKinds.map(async actionKind => {
-              const actionValues = actions[actionKind];
-              if (typeof actionValues !== 'undefined') {
-                if (actionValues == null) {
-                  throw new Error(
-                    `The "${inverseRelation}" relation's action "${actionKind}" does not support an empty value`,
-                  );
-                }
-
-                await Promise.all(
-                  (inverseRelation.isToMany() ? actionValues : [actionValues]).map(async (actionValue: any) => {
-                    switch (actionKind) {
-                      case UpdateOneDataInverseRelationActionKind.Connect: {
-                        const where = relatedResource.getInputType('WhereUnique').assert(actionValue);
-
-                        const updatedNode = await relatedResource.getMutation('UpdateOne').resolve({
-                          args: {
-                            where,
-                            data: {
-                              [inverseRelation.getInverse().name]: { [UpdateOneDataRelationActionKind.Connect]: id },
-                            },
-                          },
-                          context,
-                          selectionNode,
-                        });
-
-                        if (!updatedNode) {
-                          throw new NodeNotFoundError(relatedResource.getMutation('UpdateOne'), where);
-                        }
-                        break;
-                      }
-
-                      case UpdateOneDataInverseRelationActionKind.Create: {
-                        await relatedResource.getMutation('CreateOne').resolve({
-                          args: {
-                            data: {
-                              ...actionValue,
-                              [inverseRelation.getInverse().name]: { [CreateOneDataRelationActionKind.Connect]: id },
-                            },
-                          },
-                          context,
-                          selectionNode,
-                        });
-                        break;
-                      }
-
-                      case UpdateOneDataInverseRelationActionKind.Delete: {
-                        // Already done
-                        break;
-                      }
-
-                      case UpdateOneDataInverseRelationActionKind.Disconnect: {
-                        // Already done
-                        break;
-                      }
-
-                      case UpdateOneDataInverseRelationActionKind.Update: {
-                        const where = relatedResource
-                          .getInputType('WhereUnique')
-                          .assert({ [inverseRelation.getInverse().name]: id, ...actionValue.where });
-
-                        const updatedNode = await relatedResource.getMutation('UpdateOne').resolve({
-                          args: {
-                            where,
-                            data: {
-                              ...actionValue.data,
-                              ...(inverseRelation.getInverse().isMutable()
-                                ? {
-                                    [inverseRelation.getInverse().name]: {
-                                      [UpdateOneDataRelationActionKind.Connect]: id,
-                                    },
-                                  }
-                                : {}),
-                            },
-                          },
-                          context,
-                          selectionNode,
-                        });
-
-                        if (!updatedNode) {
-                          throw new NodeNotFoundError(relatedResource.getMutation('UpdateOne'), where);
-                        }
-                        break;
-                      }
-
-                      case UpdateOneDataInverseRelationActionKind.Upsert: {
-                        const where = relatedResource
-                          .getInputType('WhereUnique')
-                          .assert({ [inverseRelation.getInverse().name]: id, ...actionValue.where });
-
-                        await relatedResource.getMutation('UpsertOne').resolve({
-                          args: {
-                            where,
-                            update: {
-                              ...actionValue.update,
-                              ...(inverseRelation.getInverse().isMutable()
-                                ? {
-                                    [inverseRelation.getInverse().name]: {
-                                      [UpdateOneDataRelationActionKind.Connect]: id,
-                                    },
-                                  }
-                                : {}),
-                            },
-                            create: {
-                              ...actionValue.create,
-                              [inverseRelation.getInverse().name]: { [CreateOneDataRelationActionKind.Connect]: id },
-                            },
-                          },
-                          context,
-                          selectionNode,
-                        });
-                        break;
-                      }
-
-                      default:
-                        throw new Error(
-                          `The "${inverseRelation}" relation's action "${actionKind}" is not supported, yet`,
-                        );
+            // Then we do everything else
+            await Promise.all(
+              updateOneDataInverseRelationActionKinds.map(
+                async (actionKind) => {
+                  const actionValues = actions[actionKind];
+                  if (typeof actionValues !== 'undefined') {
+                    if (actionValues == null) {
+                      throw new Error(
+                        `The "${inverseRelation}" relation's action "${actionKind}" does not support an empty value`,
+                      );
                     }
-                  }),
-                );
-              }
-            }),
-          );
-        }
-      }),
+
+                    await Promise.all(
+                      (inverseRelation.isToMany()
+                        ? actionValues
+                        : [actionValues]
+                      ).map(async (actionValue: any) => {
+                        switch (actionKind) {
+                          case UpdateOneDataInverseRelationActionKind.Connect: {
+                            const where = relatedResource
+                              .getInputType('WhereUnique')
+                              .assert(actionValue);
+
+                            const updatedNode = await relatedResource
+                              .getMutation('UpdateOne')
+                              .resolve({
+                                args: {
+                                  where,
+                                  data: {
+                                    [inverseRelation.getInverse().name]: {
+                                      [UpdateOneDataRelationActionKind.Connect]: id,
+                                    },
+                                  },
+                                },
+                                context,
+                                selectionNode,
+                              });
+
+                            if (!updatedNode) {
+                              throw new NodeNotFoundError(
+                                relatedResource.getMutation('UpdateOne'),
+                                where,
+                              );
+                            }
+                            break;
+                          }
+
+                          case UpdateOneDataInverseRelationActionKind.Create: {
+                            await relatedResource
+                              .getMutation('CreateOne')
+                              .resolve({
+                                args: {
+                                  data: {
+                                    ...actionValue,
+                                    [inverseRelation.getInverse().name]: {
+                                      [CreateOneDataRelationActionKind.Connect]: id,
+                                    },
+                                  },
+                                },
+                                context,
+                                selectionNode,
+                              });
+                            break;
+                          }
+
+                          case UpdateOneDataInverseRelationActionKind.Delete: {
+                            // Already done
+                            break;
+                          }
+
+                          case UpdateOneDataInverseRelationActionKind.Disconnect: {
+                            // Already done
+                            break;
+                          }
+
+                          case UpdateOneDataInverseRelationActionKind.Update: {
+                            const where = relatedResource
+                              .getInputType('WhereUnique')
+                              .assert({
+                                [inverseRelation.getInverse().name]: id,
+                                ...actionValue.where,
+                              });
+
+                            const updatedNode = await relatedResource
+                              .getMutation('UpdateOne')
+                              .resolve({
+                                args: {
+                                  where,
+                                  data: {
+                                    ...actionValue.data,
+                                    ...(inverseRelation.getInverse().isMutable()
+                                      ? {
+                                          [inverseRelation.getInverse().name]: {
+                                            [UpdateOneDataRelationActionKind.Connect]: id,
+                                          },
+                                        }
+                                      : {}),
+                                  },
+                                },
+                                context,
+                                selectionNode,
+                              });
+
+                            if (!updatedNode) {
+                              throw new NodeNotFoundError(
+                                relatedResource.getMutation('UpdateOne'),
+                                where,
+                              );
+                            }
+                            break;
+                          }
+
+                          case UpdateOneDataInverseRelationActionKind.Upsert: {
+                            const where = relatedResource
+                              .getInputType('WhereUnique')
+                              .assert({
+                                [inverseRelation.getInverse().name]: id,
+                                ...actionValue.where,
+                              });
+
+                            await relatedResource
+                              .getMutation('UpsertOne')
+                              .resolve({
+                                args: {
+                                  where,
+                                  update: {
+                                    ...actionValue.update,
+                                    ...(inverseRelation.getInverse().isMutable()
+                                      ? {
+                                          [inverseRelation.getInverse().name]: {
+                                            [UpdateOneDataRelationActionKind.Connect]: id,
+                                          },
+                                        }
+                                      : {}),
+                                  },
+                                  create: {
+                                    ...actionValue.create,
+                                    [inverseRelation.getInverse().name]: {
+                                      [CreateOneDataRelationActionKind.Connect]: id,
+                                    },
+                                  },
+                                },
+                                context,
+                                selectionNode,
+                              });
+                            break;
+                          }
+
+                          default:
+                            throw new Error(
+                              `The "${inverseRelation}" relation's action "${actionKind}" is not supported, yet`,
+                            );
+                        }
+                      }),
+                    );
+                  }
+                },
+              ),
+            );
+          }
+        },
+      ),
     );
   }
 
@@ -716,13 +915,15 @@ export class UpdateOneOperation extends AbstractOperation<UpdateOneOperationArgs
     const nodeId = resource.getInputType('WhereUnique').assert(args.where);
     const where: WhereInputValue = { AND: [filter, nodeId] };
 
-    const update = new UpdateOneValue(resource, await this.parseDataComponentMap(args.data, context));
+    const update = new UpdateOneValue(
+      resource,
+      await this.parseDataComponentMap(args.data, context),
+    );
 
     if (resource.hasPreHook(ResourceHookKind.PreUpdate)) {
-      const selectionNode =
-          this.resource
-            .getComponentSet()
-            .getSelectionNode(TypeKind.Input);
+      const selectionNode = this.resource
+        .getComponentSet()
+        .getSelectionNode(TypeKind.Input);
 
       const toBeUpdatedNodeData = await this.connector.find({
         args: { first: 1, selectionNode, where: nodeId },
@@ -737,7 +938,7 @@ export class UpdateOneOperation extends AbstractOperation<UpdateOneOperationArgs
       // Apply the components' hooks
       await Promise.all([
         // Fields
-        ...[...resource.getFieldSet()].map(async field => {
+        ...[...resource.getFieldSet()].map(async (field) => {
           const { proxy: hookData, revoke } = Proxy.revocable(
             {
               metas: Object.freeze({
@@ -766,7 +967,7 @@ export class UpdateOneOperation extends AbstractOperation<UpdateOneOperationArgs
           revoke();
         }),
         // Relations
-        ...[...resource.getRelationSet()].map(async relation => {
+        ...[...resource.getRelationSet()].map(async (relation) => {
           const { proxy: hookData, revoke } = Proxy.revocable(
             {
               metas: Object.freeze({
@@ -817,7 +1018,9 @@ export class UpdateOneOperation extends AbstractOperation<UpdateOneOperationArgs
     return { where, data: update };
   }
 
-  public async resolve(params: OperationResolverParams<UpdateOneOperationArgs>): Promise<UpdateOneOperationResult> {
+  public async resolve(
+    params: OperationResolverParams<UpdateOneOperationArgs>,
+  ): Promise<UpdateOneOperationResult> {
     const { args, context, selectionNode } = params;
     const resource = this.resource;
 
@@ -854,9 +1057,13 @@ export class UpdateOneOperation extends AbstractOperation<UpdateOneOperationArgs
     await this.parseDataInverseRelationMap(args.data, nodeId, context);
 
     // Select all the components in case of post success hooks
-    const hasPostSuccessHook = resource.hasPostHook(ResourceHookKind.PostUpdate);
+    const hasPostSuccessHook = resource.hasPostHook(
+      ResourceHookKind.PostUpdate,
+    );
     if (hasPostSuccessHook) {
-      selectionNode.setChildren(resource.getComponentSet().getSelectionNodeChildren(TypeKind.Input));
+      selectionNode.setChildren(
+        resource.getComponentSet().getSelectionNodeChildren(TypeKind.Input),
+      );
     }
 
     // // Fetch the updated node only if we don't have all the data yet
@@ -866,12 +1073,16 @@ export class UpdateOneOperation extends AbstractOperation<UpdateOneOperationArgs
     //   : nodeFromUpdate;
 
     // Always fetch the updated node
-    const node = await resource.getQuery('AssertOne').resolve({ ...params, args: { where: nodeId } });
+    const node = await resource
+      .getQuery('AssertOne')
+      .resolve({ ...params, args: { where: nodeId } });
 
     if (changedCount === 1) {
       const { operationContext } = context;
       const postSuccessHooks =
-        operationContext.type === GraphQLOperationType.Mutation ? operationContext.postSuccessHooks : undefined;
+        operationContext.type === GraphQLOperationType.Mutation
+          ? operationContext.postSuccessHooks
+          : undefined;
 
       if (postSuccessHooks && hasPostSuccessHook) {
         postSuccessHooks.push(
@@ -880,7 +1091,11 @@ export class UpdateOneOperation extends AbstractOperation<UpdateOneOperationArgs
               ...params,
               resource,
             }),
-            updatedNode: resource.serializeValue(node as NodeValue, true, resource.getComponentSet()),
+            updatedNode: resource.serializeValue(
+              node as NodeValue,
+              true,
+              resource.getComponentSet(),
+            ),
           }),
         );
       }

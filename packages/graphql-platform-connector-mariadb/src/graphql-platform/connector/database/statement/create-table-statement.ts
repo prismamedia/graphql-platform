@@ -1,5 +1,5 @@
+import { Memoize } from '@prismamedia/ts-memoize';
 import { escape, QueryOptions } from 'mysql';
-import { Memoize } from 'typescript-memoize';
 import { Table } from '../table';
 import { ColumnDefinition } from './create-table-statement/column-definition';
 import { ColumnIndexDefinition } from './create-table-statement/column-index-definition';
@@ -13,12 +13,22 @@ export class CreateTableStatement implements QueryOptions {
 
   public get createDefinition(): string {
     return [
-      ...[...this.table.getColumnSet()].map(column => new ColumnDefinition(column)),
+      ...[...this.table.getColumnSet()].map(
+        (column) => new ColumnDefinition(column),
+      ),
       new PrimaryKeyDefinition(this.table.getPrimaryKey()),
-      ...[...this.table.getUniqueIndexSet()].map(uniqueIndex => new UniqueIndexDefinition(uniqueIndex)),
-      ...[...this.table.getColumnIndexSet()].map(columnIndex => new ColumnIndexDefinition(columnIndex)),
-      ...[...this.table.getForeignKeySet()].map(foreignKey => new ForeignKeyIndexDefinition(foreignKey)),
-      ...[...this.table.getForeignKeySet()].map(foreignKey => new ForeignKeyDefinition(foreignKey)),
+      ...[...this.table.getUniqueIndexSet()].map(
+        (uniqueIndex) => new UniqueIndexDefinition(uniqueIndex),
+      ),
+      ...[...this.table.getColumnIndexSet()].map(
+        (columnIndex) => new ColumnIndexDefinition(columnIndex),
+      ),
+      ...[...this.table.getForeignKeySet()].map(
+        (foreignKey) => new ForeignKeyIndexDefinition(foreignKey),
+      ),
+      ...[...this.table.getForeignKeySet()].map(
+        (foreignKey) => new ForeignKeyDefinition(foreignKey),
+      ),
     ]
       .filter(Boolean)
       .join(',');
@@ -29,7 +39,10 @@ export class CreateTableStatement implements QueryOptions {
       ENGINE: 'InnoDB',
       CHARSET: this.table.getCharset(),
       COLLATE: this.table.getCollation(),
-      COMMENT: (this.table.resource.description && this.table.resource.description.substring(0, 60)) || null,
+      COMMENT:
+        (this.table.resource.description &&
+          this.table.resource.description.substring(0, 60)) ||
+        null,
     };
 
     return Object.entries(options)
@@ -40,6 +53,8 @@ export class CreateTableStatement implements QueryOptions {
 
   @Memoize()
   public get sql(): string {
-    return `CREATE TABLE ${this.table.getEscapedName()} (${this.createDefinition}) ${this.tableOptions};`;
+    return `CREATE TABLE ${this.table.getEscapedName()} (${
+      this.createDefinition
+    }) ${this.tableOptions};`;
   }
 }

@@ -1,8 +1,18 @@
-import { Component, ComponentSet, Field, Relation, Resource } from '@prismamedia/graphql-platform-core';
-import { FlagConfig, getFlagValue, Maybe } from '@prismamedia/graphql-platform-utils';
+import {
+  Component,
+  ComponentSet,
+  Field,
+  Relation,
+  Resource,
+} from '@prismamedia/graphql-platform-core';
+import {
+  FlagConfig,
+  getFlagValue,
+  Maybe,
+} from '@prismamedia/graphql-platform-utils';
+import { Memoize } from '@prismamedia/ts-memoize';
 import inflector from 'inflection';
 import { escapeId } from 'mysql';
-import { Memoize } from 'typescript-memoize';
 import { ResourceConfig } from '../../resource';
 import { Database } from '../database';
 import { OperationConstructor, OperationId, operationMap } from './operation';
@@ -12,7 +22,12 @@ import { ColumnIndexSet } from './table/column-index/set';
 import { ColumnReference } from './table/column-reference';
 import { ForeignKey, ForeignKeySet } from './table/foreign-key';
 import { PrimaryKey } from './table/primary-key';
-import { DeleteStatement, InsertStatement, SelectStatement, UpdateStatement } from './table/statement';
+import {
+  DeleteStatement,
+  InsertStatement,
+  SelectStatement,
+  UpdateStatement,
+} from './table/statement';
 import { UniqueIndex, UniqueIndexSet } from './table/unique-index';
 
 export * from './table/column';
@@ -41,7 +56,10 @@ export interface TableConfig {
 }
 
 export class Table {
-  public constructor(readonly database: Database, readonly resource: Resource<ResourceConfig>) {}
+  public constructor(
+    readonly database: Database,
+    readonly resource: Resource<ResourceConfig>,
+  ) {}
 
   public get config(): TableConfig {
     return this.resource.config.table || {};
@@ -58,7 +76,9 @@ export class Table {
   }
 
   public getEscapedName(alias?: string): string {
-    return `${escapeId(this.name)}${alias && alias !== this.name ? ` AS ${escapeId(alias)}` : ''}`;
+    return `${escapeId(this.name)}${
+      alias && alias !== this.name ? ` AS ${escapeId(alias)}` : ''
+    }`;
   }
 
   @Memoize()
@@ -95,12 +115,18 @@ export class Table {
     this.resource.getComponentMap().assert(component);
 
     return new ColumnSet<Column | ColumnReference>(
-      component instanceof Field ? [this.getColumn(component)] : this.getForeignKey(component).getColumnSet(),
+      component instanceof Field
+        ? [this.getColumn(component)]
+        : this.getForeignKey(component).getColumnSet(),
     );
   }
 
   public getComponentSetColumnSet(componentSet: ComponentSet): ColumnSet {
-    return new ColumnSet().concat(...[...componentSet].map(component => this.getComponentColumnSet(component)));
+    return new ColumnSet().concat(
+      ...[...componentSet].map((component) =>
+        this.getComponentColumnSet(component),
+      ),
+    );
   }
 
   @Memoize()
@@ -110,7 +136,11 @@ export class Table {
 
   @Memoize()
   public getForeignKeySet(): ForeignKeySet {
-    return new ForeignKeySet([...this.resource.getRelationSet()].map(relation => this.getForeignKey(relation)));
+    return new ForeignKeySet(
+      [...this.resource.getRelationSet()].map((relation) =>
+        this.getForeignKey(relation),
+      ),
+    );
   }
 
   @Memoize()
@@ -155,9 +185,11 @@ export class Table {
 
   @Memoize()
   public getAutoIncrementColumn(): Column | undefined {
-    const column = this.getColumnSet().find(column => column.autoIncrement);
+    const column = this.getColumnSet().find((column) => column.autoIncrement);
     if (column instanceof ColumnReference) {
-      throw new Error(`Runtime error: A column reference cannot be "autoIncrement"`);
+      throw new Error(
+        `Runtime error: A column reference cannot be "autoIncrement"`,
+      );
     }
 
     return column;
@@ -179,14 +211,17 @@ export class Table {
     return new DeleteStatement(this);
   }
 
-  @Memoize(id => id)
-  public getOperation<TId extends OperationId, TConstructor extends OperationConstructor<TId>>(
-    id: TId,
-  ): InstanceType<TConstructor> {
+  @Memoize((id) => id)
+  public getOperation<
+    TId extends OperationId,
+    TConstructor extends OperationConstructor<TId>
+  >(id: TId): InstanceType<TConstructor> {
     const constructor = operationMap[id] as TConstructor;
     if (!constructor) {
       throw new Error(
-        `The operation "${id}" does not exist, please choose among "${Object.keys(operationMap).join(', ')}".`,
+        `The operation "${id}" does not exist, please choose among "${Object.keys(
+          operationMap,
+        ).join(', ')}".`,
       );
     }
 

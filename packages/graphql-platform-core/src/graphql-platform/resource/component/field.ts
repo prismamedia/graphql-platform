@@ -1,4 +1,8 @@
-import { MaybeUndefinedDecorator, POJO } from '@prismamedia/graphql-platform-utils';
+import {
+  MaybeUndefinedDecorator,
+  POJO,
+} from '@prismamedia/graphql-platform-utils';
+import { Memoize } from '@prismamedia/ts-memoize';
 import {
   GraphQLBoolean,
   GraphQLEnumType,
@@ -12,8 +16,12 @@ import {
   isScalarType,
 } from 'graphql';
 import { GraphQLDate, GraphQLDateTime, GraphQLTime } from 'graphql-iso-date';
-import { Memoize } from 'typescript-memoize';
-import { AnyBaseContext, BaseContext, CustomContext, NodeSource } from '../../../graphql-platform';
+import {
+  AnyBaseContext,
+  BaseContext,
+  CustomContext,
+  NodeSource,
+} from '../../../graphql-platform';
 import {
   CreateOneOperationArgs,
   CreateOneRawValue,
@@ -21,9 +29,16 @@ import {
   UpdateOneOperationArgs,
   UpdateOneRawValue,
 } from '../../operation';
-import { NodeValue, ResourceHookKind, ResourceHookMetaMap } from '../../resource';
+import {
+  NodeValue,
+  ResourceHookKind,
+  ResourceHookMetaMap,
+} from '../../resource';
 import { WhereUniqueInputValue } from '../../type/input';
-import { AbstractComponent, AbstractComponentConfig } from '../abstract-component';
+import {
+  AbstractComponent,
+  AbstractComponentConfig,
+} from '../abstract-component';
 import {
   InvalidComponentValueError,
   InvalidEnumFieldValueError,
@@ -31,7 +46,14 @@ import {
   UndefinedComponentValueError,
 } from './error';
 
-export { GraphQLBoolean, GraphQLEnumType, GraphQLFloat, GraphQLID, GraphQLInt, GraphQLString } from 'graphql';
+export {
+  GraphQLBoolean,
+  GraphQLEnumType,
+  GraphQLFloat,
+  GraphQLID,
+  GraphQLInt,
+  GraphQLString,
+} from 'graphql';
 export { GraphQLDate, GraphQLDateTime, GraphQLTime } from 'graphql-iso-date';
 export * from './field/map';
 export * from './field/set';
@@ -109,7 +131,11 @@ export type FieldHookMap<
 > = {
   // Create
   [ResourceHookKind.PreCreate]: {
-    metas: FieldHookMetaMap<CreateOneOperationArgs, TCustomContext, TBaseContext> &
+    metas: FieldHookMetaMap<
+      CreateOneOperationArgs,
+      TCustomContext,
+      TBaseContext
+    > &
       Readonly<{
         create: CreateOneRawValue;
       }>;
@@ -118,7 +144,11 @@ export type FieldHookMap<
 
   // Update
   [ResourceHookKind.PreUpdate]: {
-    metas: FieldHookMetaMap<UpdateOneOperationArgs, TCustomContext, TBaseContext> &
+    metas: FieldHookMetaMap<
+      UpdateOneOperationArgs,
+      TCustomContext,
+      TBaseContext
+    > &
       Readonly<{
         toBeUpdatedNodeId: WhereUniqueInputValue;
         toBeUpdatedNode?: NodeSource;
@@ -150,7 +180,9 @@ export interface FieldConfig<
 
 export type AnyFieldConfig = FieldConfig<any, any>;
 
-export class Field<TConfig extends AnyFieldConfig = FieldConfig> extends AbstractComponent<FieldHookMap, TConfig> {
+export class Field<
+  TConfig extends AnyFieldConfig = FieldConfig
+> extends AbstractComponent<FieldHookMap, TConfig> {
   public isField(): this is Field {
     return true;
   }
@@ -163,11 +195,18 @@ export class Field<TConfig extends AnyFieldConfig = FieldConfig> extends Abstrac
   public getType(): GraphQLLeafType {
     const type = this.config.type;
 
-    if (!((isScalarType(type) && supportedScalarTypes.includes(type)) || isEnumType(type))) {
+    if (
+      !(
+        (isScalarType(type) && supportedScalarTypes.includes(type)) ||
+        isEnumType(type)
+      )
+    ) {
       throw new Error(
         `The field "${this.resource.name}.${
           this.name
-        }" has to be a "leaf", an Enum or one of the following scalar types: ${supportedScalarTypes.join(', ')}`,
+        }" has to be a "leaf", an Enum or one of the following scalar types: ${supportedScalarTypes.join(
+          ', ',
+        )}`,
       );
     }
 
@@ -195,7 +234,10 @@ export class Field<TConfig extends AnyFieldConfig = FieldConfig> extends Abstrac
       switch (type.name) {
         case 'Boolean':
           if (typeof maybeValue !== 'boolean') {
-            throw new InvalidComponentValueError(this, `a boolean is expected but received "${maybeValue}" instead`);
+            throw new InvalidComponentValueError(
+              this,
+              `a boolean is expected but received "${maybeValue}" instead`,
+            );
           }
           break;
 
@@ -203,36 +245,57 @@ export class Field<TConfig extends AnyFieldConfig = FieldConfig> extends Abstrac
         case 'Date':
         case 'Time':
           if (!(maybeValue instanceof Date)) {
-            throw new InvalidComponentValueError(this, `a Date is expected but received "${maybeValue}" instead`);
+            throw new InvalidComponentValueError(
+              this,
+              `a Date is expected but received "${maybeValue}" instead`,
+            );
           }
           break;
 
         case 'Float':
-          if (!(typeof maybeValue === 'number' && Number.isFinite(maybeValue))) {
-            throw new InvalidComponentValueError(this, `a float is expected but received "${maybeValue}" instead`);
+          if (
+            !(typeof maybeValue === 'number' && Number.isFinite(maybeValue))
+          ) {
+            throw new InvalidComponentValueError(
+              this,
+              `a float is expected but received "${maybeValue}" instead`,
+            );
           }
           break;
 
         case 'ID':
           if (typeof maybeValue !== 'string') {
-            throw new InvalidComponentValueError(this, `a string is expected but received "${maybeValue}" instead`);
+            throw new InvalidComponentValueError(
+              this,
+              `a string is expected but received "${maybeValue}" instead`,
+            );
           }
           break;
 
         case 'Int':
-          if (!(typeof maybeValue === 'number' && Number.isInteger(maybeValue))) {
-            throw new InvalidComponentValueError(this, `an integer is expected but received "${maybeValue}" instead`);
+          if (
+            !(typeof maybeValue === 'number' && Number.isInteger(maybeValue))
+          ) {
+            throw new InvalidComponentValueError(
+              this,
+              `an integer is expected but received "${maybeValue}" instead`,
+            );
           }
           break;
 
         case 'String':
           if (typeof maybeValue !== 'string') {
-            throw new InvalidComponentValueError(this, `a string is expected but received "${maybeValue}" instead`);
+            throw new InvalidComponentValueError(
+              this,
+              `a string is expected but received "${maybeValue}" instead`,
+            );
           }
           break;
 
         default:
-          throw new Error(`The "${this}"'s type "${type.name}" is not supported, yet`);
+          throw new Error(
+            `The "${this}"'s type "${type.name}" is not supported, yet`,
+          );
       }
     }
 

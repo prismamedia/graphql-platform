@@ -32,7 +32,9 @@ type ApolloServerExpressConfig = Omit<
   'context' | 'schema' | 'subscriptions' | 'resolvers' | 'typeDefs'
 >;
 
-export type GraphQLPlatformServerExpressConfig = { gp: AnyGraphQLPlatform } & ServerRegistration &
+export type GraphQLPlatformServerExpressConfig = {
+  gp: AnyGraphQLPlatform;
+} & ServerRegistration &
   ApolloServerExpressConfig;
 
 export function createServer({
@@ -91,7 +93,9 @@ export function createServer({
         };
       }
 
-      return formatResponse ? formatResponse(safeResponse, requestContext) : safeResponse;
+      return formatResponse
+        ? formatResponse(safeResponse, requestContext)
+        : safeResponse;
     },
     ...config,
   });

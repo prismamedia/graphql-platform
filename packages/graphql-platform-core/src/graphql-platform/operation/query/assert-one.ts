@@ -1,5 +1,9 @@
-import { GraphQLFieldConfigArgumentMap, GraphQLNonNull, GraphQLOutputType } from 'graphql';
-import { Memoize } from 'typescript-memoize';
+import { Memoize } from '@prismamedia/ts-memoize';
+import {
+  GraphQLFieldConfigArgumentMap,
+  GraphQLNonNull,
+  GraphQLOutputType,
+} from 'graphql';
 import { OperationResolverParams } from '../../operation';
 import { AbstractOperation } from '../abstract-operation';
 import { NodeNotFoundError } from '../error';
@@ -9,7 +13,10 @@ export interface AssertOneOperationArgs extends FindOneOperationArgs {}
 
 export type AssertOneOperationResult = NonNullable<FindOneOperationResult>;
 
-export class AssertOneOperation extends AbstractOperation<AssertOneOperationArgs, AssertOneOperationResult> {
+export class AssertOneOperation extends AbstractOperation<
+  AssertOneOperationArgs,
+  AssertOneOperationResult
+> {
   public isPublic() {
     return false;
   }
@@ -31,12 +38,16 @@ export class AssertOneOperation extends AbstractOperation<AssertOneOperationArgs
   public getGraphQLFieldConfigArgs(): GraphQLFieldConfigArgumentMap {
     return {
       where: {
-        type: GraphQLNonNull(this.resource.getInputType('WhereUnique').getGraphQLType()),
+        type: GraphQLNonNull(
+          this.resource.getInputType('WhereUnique').getGraphQLType(),
+        ),
       },
     };
   }
 
-  public async resolve(params: OperationResolverParams<AssertOneOperationArgs>): Promise<AssertOneOperationResult> {
+  public async resolve(
+    params: OperationResolverParams<AssertOneOperationArgs>,
+  ): Promise<AssertOneOperationResult> {
     const node = await this.resource.getQuery('FindOne').resolve(params);
     if (!node) {
       throw new NodeNotFoundError(this, params.args.where);

@@ -10,7 +10,10 @@ export class ComponentError extends ResourceError {
 
 export class InvalidComponentValueError extends ComponentError {
   constructor(readonly component: AnyComponent, cause?: string) {
-    super(component, `The "${component}"'s value is invalid${cause ? `: ${cause}` : ''}.`);
+    super(
+      component,
+      `The "${component}"'s value is invalid${cause ? `: ${cause}` : ''}.`,
+    );
   }
 }
 
@@ -27,7 +30,11 @@ export class NullComponentValueError extends InvalidComponentValueError {
 }
 
 export class InvalidEnumFieldValueError extends InvalidComponentValueError {
-  constructor(readonly component: AnyComponent, enumType: GraphQLEnumType, value: unknown) {
+  constructor(
+    readonly component: AnyComponent,
+    enumType: GraphQLEnumType,
+    value: unknown,
+  ) {
     super(
       component,
       `${value} is not among "${enumType

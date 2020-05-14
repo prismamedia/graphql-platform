@@ -20,10 +20,17 @@ export class ColumnIndexDefinition {
         break;
 
       default:
-        throw new Error(`The column index's kind "${this.columnIndex.kind}" is not supported, yet`);
+        throw new Error(
+          `The column index's kind "${this.columnIndex.kind}" is not supported, yet`,
+        );
     }
 
-    return [kind, 'INDEX', escapeId(this.columnIndex.name), `(${this.columnIndex.getColumnSet().getEscapedNames()})`]
+    return [
+      kind,
+      'INDEX',
+      escapeId(this.columnIndex.name),
+      `(${this.columnIndex.getColumnSet().getEscapedNames()})`,
+    ]
       .filter(Boolean)
       .join(' ');
   }

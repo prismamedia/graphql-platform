@@ -1,6 +1,6 @@
 import { MaybeUndefinedDecorator } from '../types/maybe-undefined-decorator';
 
-export class SuperSet<V = any> extends Set<V> {
+export class SuperSet<V> extends Set<V> {
   public some(some: (value: V, index: number) => boolean): boolean {
     return [...this].some(some);
   }
@@ -21,12 +21,16 @@ export class SuperSet<V = any> extends Set<V> {
     return value as any;
   }
 
-  public first<TStrict extends boolean>(strict?: TStrict): MaybeUndefinedDecorator<V, TStrict> {
+  public first<TStrict extends boolean>(
+    strict?: TStrict,
+  ): MaybeUndefinedDecorator<V, TStrict> {
     return this.find((_, index) => index === 0, strict);
   }
 
   public filter(filter: (value: V, index: number) => boolean): this {
-    return new (this.constructor as typeof SuperSet)([...this].filter(filter)) as this;
+    return new (this.constructor as typeof SuperSet)(
+      [...this].filter(filter),
+    ) as this;
   }
 
   public count(filter?: (value: V, index: number) => boolean): number {
@@ -46,7 +50,9 @@ export class SuperSet<V = any> extends Set<V> {
   }
 
   public unshift(...values: Array<V | this>): number {
-    const original: this = new (this.constructor as typeof SuperSet)(this) as this;
+    const original: this = new (this.constructor as typeof SuperSet)(
+      this,
+    ) as this;
     this.clear();
     this.push(...values, original);
 
@@ -64,16 +70,22 @@ export class SuperSet<V = any> extends Set<V> {
    * Returns a new Set containing all the entries not present in any of the args.
    */
   public diff(...args: Array<V | this>): this {
-    const argSet = (new (this.constructor as typeof SuperSet)() as this).concat(...args);
+    const argSet = (new (this.constructor as typeof SuperSet)() as this).concat(
+      ...args,
+    );
 
-    return this.filter(value => !argSet.has(value));
+    return this.filter((value) => !argSet.has(value));
   }
 
   /**
    * Returns a new Set containing all the entries present in all of the args.
    */
   public intersect(...args: Array<V | this>): this {
-    return this.filter(value => args.every(arg => (arg instanceof Set ? arg.has(value) : arg === value)));
+    return this.filter((value) =>
+      args.every((arg) =>
+        arg instanceof Set ? arg.has(value) : arg === value,
+      ),
+    );
   }
 
   /**

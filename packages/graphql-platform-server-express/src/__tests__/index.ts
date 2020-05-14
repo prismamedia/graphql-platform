@@ -1,5 +1,8 @@
+import {
+  config,
+  MyGP,
+} from '@prismamedia/graphql-platform-connector-mariadb/src/__tests__/gp';
 import { createServer } from '..';
-import { config, MyGP } from '../../../graphql-platform-connector-mariadb/src/__tests__/gp';
 
 const gp = new MyGP(config);
 
@@ -13,7 +16,7 @@ const server = createServer({
   await gp.loadFixtures();
 
   server.listen(3000, () => console.log(`Listening on port 3000.`));
-})().catch(err => {
+})().catch((err) => {
   console.error(err);
 
   process.exit(1);

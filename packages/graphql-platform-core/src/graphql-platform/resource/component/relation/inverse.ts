@@ -1,6 +1,11 @@
+import { Memoize } from '@prismamedia/ts-memoize';
 import inflector from 'inflection';
-import { Memoize } from 'typescript-memoize';
-import { AnyRelationConfig, Relation, RelationConfig, RelationKind } from '../relation';
+import {
+  AnyRelationConfig,
+  Relation,
+  RelationConfig,
+  RelationKind,
+} from '../relation';
 
 export * from './inverse/map';
 export * from './inverse/set';
@@ -12,7 +17,10 @@ export class Inverse<TConfig extends AnyRelationConfig = RelationConfig> {
   public get name(): string {
     return (
       this.relation.config.inversedBy ||
-      inflector.camelize(this.isToOne() ? this.getTo().name : this.getTo().plural, true)
+      inflector.camelize(
+        this.isToOne() ? this.getTo().name : this.getTo().plural,
+        true,
+      )
     );
   }
 
@@ -29,7 +37,9 @@ export class Inverse<TConfig extends AnyRelationConfig = RelationConfig> {
   @Memoize()
   public get countName(): string {
     if (this.isToOne()) {
-      throw new Error(`The "countName" property does not exist on the "toOne" ${this}"" relation.`);
+      throw new Error(
+        `The "countName" property does not exist on the "toOne" ${this}"" relation.`,
+      );
     }
 
     return `${inflector.singularize(this.name)}Count`;

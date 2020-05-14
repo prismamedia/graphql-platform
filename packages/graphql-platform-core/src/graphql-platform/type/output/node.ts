@@ -7,10 +7,20 @@ import {
   POJO,
   SuperMapOfNamedObject,
 } from '@prismamedia/graphql-platform-utils';
-import { GraphQLFieldConfigMap, GraphQLObjectType, GraphQLResolveInfo } from 'graphql';
-import { Memoize } from 'typescript-memoize';
+import { Memoize } from '@prismamedia/ts-memoize';
+import {
+  GraphQLFieldConfigMap,
+  GraphQLObjectType,
+  GraphQLResolveInfo,
+} from 'graphql';
 import { AnyBaseContext, BaseContext } from '../../../graphql-platform';
-import { Field, FieldValue, InverseRelation, Relation, VirtualField } from '../../resource';
+import {
+  Field,
+  FieldValue,
+  InverseRelation,
+  Relation,
+  VirtualField,
+} from '../../resource';
 import { AbstractOutputType } from '../abstract-type';
 
 export enum NodeFieldKind {
@@ -50,15 +60,25 @@ export type NodeField = {
 
 export class NodeFieldMap extends SuperMapOfNamedObject<NodeField> {}
 
-export type NodeSourceFieldValue = FieldValue | NodeSource | NodeSource[] | number;
+export type NodeSourceFieldValue =
+  | FieldValue
+  | NodeSource
+  | NodeSource[]
+  | number;
 
-export type NodeSourceFieldResolverParams<TArgs extends POJO = any, TContext extends AnyBaseContext = any> = Readonly<{
+export type NodeSourceFieldResolverParams<
+  TArgs extends POJO = any,
+  TContext extends AnyBaseContext = any
+> = Readonly<{
   args: TArgs;
   context: TContext;
-  selectionNode: GraphQLSelectionNode<TArgs>;
+  selectionNode: GraphQLSelectionNode;
 }>;
 
-export type NodeSourceFieldResolver<TArgs extends POJO = any, TContext extends AnyBaseContext = any> = (
+export type NodeSourceFieldResolver<
+  TArgs extends POJO = any,
+  TContext extends AnyBaseContext = any
+> = (
   params: NodeSourceFieldResolverParams<TArgs, TContext>,
 ) => MaybePromise<NodeSourceFieldValue>;
 
@@ -88,7 +108,9 @@ export class NodeType extends AbstractOutputType {
     const selectionNode = parseGraphQLResolveInfo(info);
     const fieldValue = source[selectionNode.name];
 
-    return typeof fieldValue === 'function' ? fieldValue({ args, context, selectionNode }) : fieldValue;
+    return typeof fieldValue === 'function'
+      ? fieldValue({ args, context, selectionNode })
+      : fieldValue;
   }
 
   @Memoize()
@@ -121,7 +143,10 @@ export class NodeType extends AbstractOutputType {
         relation,
         config: {
           description: relation.description,
-          type: GraphQLNonNullDecorator(findOne.getGraphQLFieldConfigType(), !relation.isNullable()),
+          type: GraphQLNonNullDecorator(
+            findOne.getGraphQLFieldConfigType(),
+            !relation.isNullable(),
+          ),
           resolve: this.getSourceFieldValue,
         },
       };

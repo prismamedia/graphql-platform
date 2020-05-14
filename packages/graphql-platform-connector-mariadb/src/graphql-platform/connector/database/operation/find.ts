@@ -5,7 +5,12 @@ import {
   NodeSource,
   TypeKind,
 } from '@prismamedia/graphql-platform-core';
-import { GraphQLSelectionNode, isPlainObject, mergeWith, POJO } from '@prismamedia/graphql-platform-utils';
+import {
+  GraphQLSelectionNode,
+  isPlainObject,
+  mergeWith,
+  POJO,
+} from '@prismamedia/graphql-platform-utils';
 import { AbstractOperationResolver } from '../abstract-operation';
 import { OperationResolverParams } from '../operation';
 import { Column } from '../table/column';
@@ -15,8 +20,14 @@ import { OrderByExpressionSet } from '../table/statement/order-by';
 import { TableReference } from '../table/statement/reference';
 import { WhereConditionBool } from '../table/statement/where';
 
-export class FindOperation extends AbstractOperationResolver<ConnectorFindOperationArgs, ConnectorFindOperationResult> {
-  public preferForeignKeyColumn(column: ColumnReference, relatedNodeSelection: GraphQLSelectionNode): boolean {
+export class FindOperation extends AbstractOperationResolver<
+  ConnectorFindOperationArgs,
+  ConnectorFindOperationResult
+> {
+  public preferForeignKeyColumn(
+    column: ColumnReference,
+    relatedNodeSelection: GraphQLSelectionNode,
+  ): boolean {
     const referencedColumn = column.reference;
     const referencedComponent = referencedColumn.component;
 
@@ -35,7 +46,10 @@ export class FindOperation extends AbstractOperationResolver<ConnectorFindOperat
     return false;
   }
 
-  public async parseSelectionNode(select: SelectExpressionSet, selectionNode: GraphQLSelectionNode) {
+  public async parseSelectionNode(
+    select: SelectExpressionSet,
+    selectionNode: GraphQLSelectionNode,
+  ) {
     for (const selection of selectionNode.values()) {
       const nodeField = this.resource
         .getOutputType('Node')
@@ -64,7 +78,9 @@ export class FindOperation extends AbstractOperationResolver<ConnectorFindOperat
             // Columns of the foreign key that have been selected
             const selectedForeignKeyColumnSet = foreignKey
               .getColumnSet()
-              .filter(column => this.preferForeignKeyColumn(column, selectionCopy));
+              .filter((column) =>
+                this.preferForeignKeyColumn(column, selectionCopy),
+              );
 
             select.push(...selectedForeignKeyColumnSet);
 
@@ -72,11 +88,18 @@ export class FindOperation extends AbstractOperationResolver<ConnectorFindOperat
               const relatedTable = this.database.getTable(relation.getTo());
               const relatedFindOperation = relatedTable.getOperation('Find');
 
-              select.on(relation, select => relatedFindOperation.parseSelectionNode(select, selectionCopy));
+              select.on(relation, (select) =>
+                relatedFindOperation.parseSelectionNode(select, selectionCopy),
+              );
             }
 
             // This non-nullable reference's value will tell us if the relation is defined or not
-            if (relation.isNullable() && selectedForeignKeyColumnSet.every(column => column.reference.nullable)) {
+            if (
+              relation.isNullable() &&
+              selectedForeignKeyColumnSet.every(
+                (column) => column.reference.nullable,
+              )
+            ) {
               select.push(foreignKey.getFirstNonNullableReference());
             }
             break;
@@ -86,10 +109,12 @@ export class FindOperation extends AbstractOperationResolver<ConnectorFindOperat
             const inverseRelation = nodeField.inverseRelation;
 
             if (inverseRelation.isToOne()) {
-              const relatedTable = this.database.getTable(inverseRelation.getTo());
+              const relatedTable = this.database.getTable(
+                inverseRelation.getTo(),
+              );
               const relatedFindOperation = relatedTable.getOperation('Find');
 
-              select.on(inverseRelation, select => {
+              select.on(inverseRelation, (select) => {
                 relatedFindOperation.parseSelectionNode(select, selection);
 
                 // This non-nullable column's value will tell us if the relation is defined or not
@@ -126,7 +151,9 @@ export class FindOperation extends AbstractOperationResolver<ConnectorFindOperat
           case NodeFieldKind.VirtualField: {
             const virtualField = nodeField.virtualField;
 
-            virtualField.dependencySet.forEach(component => select.add(this.table.getComponentColumnSet(component)));
+            virtualField.dependencySet.forEach((component) =>
+              select.add(this.table.getComponentColumnSet(component)),
+            );
             break;
           }
         }
@@ -134,7 +161,10 @@ export class FindOperation extends AbstractOperationResolver<ConnectorFindOperat
     }
   }
 
-  public async parseWhereArg(where: WhereConditionBool, whereArg: ConnectorFindOperationArgs['where']) {
+  public async parseWhereArg(
+    where: WhereConditionBool,
+    whereArg: ConnectorFindOperationArgs['where'],
+  ) {
     await this.resource.getInputType('Where').parse(
       {
         parseFieldFilter: (field, filterId, value) => {
@@ -142,11 +172,15 @@ export class FindOperation extends AbstractOperationResolver<ConnectorFindOperat
 
           switch (filterId) {
             case 'eq':
-              value === null ? where.addFilter(column, 'IS NULL') : where.addFilter(column, '=', value);
+              value === null
+                ? where.addFilter(column, 'IS NULL')
+                : where.addFilter(column, '=', value);
               break;
 
             case 'not':
-              value === null ? where.addFilter(column, 'IS NOT NULL') : where.addFilter(column, '<>', value);
+              value === null
+                ? where.addFilter(column, 'IS NOT NULL')
+                : where.addFilter(column, '<>', value);
               break;
 
             case 'is_null':
@@ -155,13 +189,17 @@ export class FindOperation extends AbstractOperationResolver<ConnectorFindOperat
 
             case 'in':
               if (Array.isArray(value)) {
-                value.length > 0 ? where.addFilter(column, 'IN', value) : where.addRaw('FALSE');
+                value.length > 0
+                  ? where.addFilter(column, 'IN', value)
+                  : where.addRaw('FALSE');
               }
               break;
 
             case 'not_in':
               if (Array.isArray(value)) {
-                value.length > 0 ? where.addFilter(column, 'NOT IN', value) : where.addRaw('TRUE');
+                value.length > 0
+                  ? where.addFilter(column, 'NOT IN', value)
+                  : where.addRaw('TRUE');
               }
               break;
 
@@ -170,7 +208,8 @@ export class FindOperation extends AbstractOperationResolver<ConnectorFindOperat
               break;
 
             case 'not_contains':
-              value !== null && where.addFilter(column, 'NOT LIKE', `%${value}%`);
+              value !== null &&
+                where.addFilter(column, 'NOT LIKE', `%${value}%`);
               break;
 
             case 'starts_with':
@@ -178,7 +217,8 @@ export class FindOperation extends AbstractOperationResolver<ConnectorFindOperat
               break;
 
             case 'not_starts_with':
-              value !== null && where.addFilter(column, 'NOT LIKE', `${value}%`);
+              value !== null &&
+                where.addFilter(column, 'NOT LIKE', `${value}%`);
               break;
 
             case 'ends_with':
@@ -186,7 +226,8 @@ export class FindOperation extends AbstractOperationResolver<ConnectorFindOperat
               break;
 
             case 'not_ends_with':
-              value !== null && where.addFilter(column, 'NOT LIKE', `%${value}`);
+              value !== null &&
+                where.addFilter(column, 'NOT LIKE', `%${value}`);
               break;
 
             case 'lt':
@@ -206,17 +247,23 @@ export class FindOperation extends AbstractOperationResolver<ConnectorFindOperat
               break;
 
             default:
-              throw new Error(`The field filter "${filterId}" is not implemented, yet`);
+              throw new Error(
+                `The field filter "${filterId}" is not implemented, yet`,
+              );
           }
         },
         parseRelationFilter: (relation, filterId, value) => {
           const foreignKey = this.table.getForeignKey(relation);
           const foreignKeyColumnSet = foreignKey.getColumnSet();
-          const firstNonNullableForeignKeyColumn = foreignKey.getNonNullableReferenceSet().first();
+          const firstNonNullableForeignKeyColumn = foreignKey
+            .getNonNullableReferenceSet()
+            .first();
 
           const relatedTable = this.database.getTable(relation.getTo());
           const relatedTablePrimaryKey = relatedTable.getPrimaryKey();
-          const firstRelatedTablePrimaryKeyColumn = relatedTablePrimaryKey.getColumnSet().first(true);
+          const firstRelatedTablePrimaryKeyColumn = relatedTablePrimaryKey
+            .getColumnSet()
+            .first(true);
 
           switch (filterId) {
             case 'eq':
@@ -224,7 +271,12 @@ export class FindOperation extends AbstractOperationResolver<ConnectorFindOperat
                 if (firstNonNullableForeignKeyColumn) {
                   where.addFilter(firstNonNullableForeignKeyColumn, 'IS NULL');
                 } else {
-                  where.on(relation, where => where.addFilter(firstRelatedTablePrimaryKeyColumn, 'IS NULL'));
+                  where.on(relation, (where) =>
+                    where.addFilter(
+                      firstRelatedTablePrimaryKeyColumn,
+                      'IS NULL',
+                    ),
+                  );
                 }
               } else {
                 const relatedNodeId =
@@ -234,10 +286,17 @@ export class FindOperation extends AbstractOperationResolver<ConnectorFindOperat
                     .getInputType('WhereUnique')
                     .parseUnique(value, relation.getToUnique(), true);
 
-                if (relatedNodeId && Object.keys(relatedNodeId).length === Object.keys(value).length) {
-                  where.addAnd(where =>
-                    foreignKeyColumnSet.forEach(column => {
-                      const columnValue = column.reference.pickValue(relatedNodeId, true);
+                if (
+                  relatedNodeId &&
+                  Object.keys(relatedNodeId).length ===
+                    Object.keys(value).length
+                ) {
+                  where.addAnd((where) =>
+                    foreignKeyColumnSet.forEach((column) => {
+                      const columnValue = column.reference.pickValue(
+                        relatedNodeId,
+                        true,
+                      );
 
                       columnValue === null
                         ? where.addFilter(column, 'IS NULL')
@@ -245,7 +304,11 @@ export class FindOperation extends AbstractOperationResolver<ConnectorFindOperat
                     }),
                   );
                 } else {
-                  where.on(relation, where => relatedTable.getOperation('Find').parseWhereArg(where, value));
+                  where.on(relation, (where) =>
+                    relatedTable
+                      .getOperation('Find')
+                      .parseWhereArg(where, value),
+                  );
                 }
               }
               break;
@@ -253,63 +316,98 @@ export class FindOperation extends AbstractOperationResolver<ConnectorFindOperat
             case 'is_null':
               if (typeof value === 'boolean') {
                 if (firstNonNullableForeignKeyColumn) {
-                  where.addFilter(firstNonNullableForeignKeyColumn, value ? 'IS NULL' : 'IS NOT NULL');
+                  where.addFilter(
+                    firstNonNullableForeignKeyColumn,
+                    value ? 'IS NULL' : 'IS NOT NULL',
+                  );
                 } else {
-                  where.on(relation, where =>
-                    where.addFilter(firstRelatedTablePrimaryKeyColumn, value ? 'IS NULL' : 'IS NOT NULL'),
+                  where.on(relation, (where) =>
+                    where.addFilter(
+                      firstRelatedTablePrimaryKeyColumn,
+                      value ? 'IS NULL' : 'IS NOT NULL',
+                    ),
                   );
                 }
               }
               break;
 
             default:
-              throw new Error(`The relation filter "${filterId}" is not implemented, yet`);
+              throw new Error(
+                `The relation filter "${filterId}" is not implemented, yet`,
+              );
           }
         },
         parseInverseRelationFilter: (inverseRelation, filterId, value) => {
-          const findManyTo = this.database.getTable(inverseRelation.getTo()).getOperation('Find');
+          const findManyTo = this.database
+            .getTable(inverseRelation.getTo())
+            .getOperation('Find');
 
           switch (filterId) {
             case 'eq':
-              where.on(inverseRelation, where => findManyTo.parseWhereArg(where, value));
+              where.on(inverseRelation, (where) =>
+                findManyTo.parseWhereArg(where, value),
+              );
               break;
 
             case 'is_null':
               if (typeof value === 'boolean') {
-                const relatedTable = this.database.getTable(inverseRelation.getTo());
+                const relatedTable = this.database.getTable(
+                  inverseRelation.getTo(),
+                );
                 const relatedTablePrimaryKey = relatedTable.getPrimaryKey();
-                const firstRelatedTablePrimaryKeyColumn = relatedTablePrimaryKey.getColumnSet().first(true);
+                const firstRelatedTablePrimaryKeyColumn = relatedTablePrimaryKey
+                  .getColumnSet()
+                  .first(true);
 
-                where.on(inverseRelation, where =>
-                  where.addFilter(firstRelatedTablePrimaryKeyColumn, value ? 'IS NULL' : 'IS NOT NULL'),
+                where.on(inverseRelation, (where) =>
+                  where.addFilter(
+                    firstRelatedTablePrimaryKeyColumn,
+                    value ? 'IS NULL' : 'IS NOT NULL',
+                  ),
                 );
               }
               break;
 
             case 'some':
-              where.on(inverseRelation, where => findManyTo.parseWhereArg(where, value));
+              where.on(inverseRelation, (where) =>
+                findManyTo.parseWhereArg(where, value),
+              );
               break;
 
             default:
-              throw new Error(`The relation filter "${filterId}" is not implemented, yet`);
+              throw new Error(
+                `The relation filter "${filterId}" is not implemented, yet`,
+              );
           }
         },
         parseLogicalOperatorFilter: (filterId, value) => {
           switch (filterId) {
             case 'and':
-              where.addAnd(and => Array.isArray(value) && value.forEach(subValue => this.parseWhereArg(and, subValue)));
+              where.addAnd(
+                (and) =>
+                  Array.isArray(value) &&
+                  value.forEach((subValue) =>
+                    this.parseWhereArg(and, subValue),
+                  ),
+              );
               break;
 
             case 'or':
-              where.addOr(or => Array.isArray(value) && value.forEach(subValue => this.parseWhereArg(or, subValue)));
+              where.addOr(
+                (or) =>
+                  Array.isArray(value) &&
+                  value.forEach((subValue) => this.parseWhereArg(or, subValue)),
+              );
               break;
 
             case 'not':
-              where.addNotAnd(and => this.parseWhereArg(and, value));
+              where.addNotAnd((and) => this.parseWhereArg(and, value));
               break;
 
             default:
-              throw new Error(`The logical operator "${filterId}" is not implemented, yet`);
+              throw new Error(
+                `The logical operator "${filterId}" is not implemented, yet`,
+              );
           }
         },
       },
@@ -317,7 +415,10 @@ export class FindOperation extends AbstractOperationResolver<ConnectorFindOperat
     );
   }
 
-  public async parseOrderByArg(orderBy: OrderByExpressionSet, orderByArg: ConnectorFindOperationArgs['orderBy']) {
+  public async parseOrderByArg(
+    orderBy: OrderByExpressionSet,
+    orderByArg: ConnectorFindOperationArgs['orderBy'],
+  ) {
     await this.resource.getInputType('OrderBy').parse(
       {
         parseFieldFilter: (field, sortId) => {
@@ -338,19 +439,31 @@ export class FindOperation extends AbstractOperationResolver<ConnectorFindOperat
     );
   }
 
-  public async parseSkipArg(selectStatement: SelectStatement, skip: ConnectorFindOperationArgs['skip']) {
+  public async parseSkipArg(
+    selectStatement: SelectStatement,
+    skip: ConnectorFindOperationArgs['skip'],
+  ) {
     selectStatement.offset = typeof skip === 'number' && skip > 0 ? skip : 0;
   }
 
-  public async parseFirstArg(selectStatement: SelectStatement, first: ConnectorFindOperationArgs['first']) {
+  public async parseFirstArg(
+    selectStatement: SelectStatement,
+    first: ConnectorFindOperationArgs['first'],
+  ) {
     selectStatement.limit = first;
   }
 
   protected getRowTableData(data: POJO, tableReference: TableReference): POJO {
-    return isPlainObject(data[tableReference.alias]) ? data[tableReference.alias] : {};
+    return isPlainObject(data[tableReference.alias])
+      ? data[tableReference.alias]
+      : {};
   }
 
-  public parseRow(data: POJO, tableReference: TableReference, selectionNode: GraphQLSelectionNode): NodeSource {
+  public parseRow(
+    data: POJO,
+    tableReference: TableReference,
+    selectionNode: GraphQLSelectionNode,
+  ): NodeSource {
     const table = tableReference.table;
     const resource = table.resource;
     const database = table.database;
@@ -383,14 +496,17 @@ export class FindOperation extends AbstractOperationResolver<ConnectorFindOperat
 
             const selectedForeignKeyColumnSet = foreignKey
               .getColumnSet()
-              .filter(column => this.preferForeignKeyColumn(column, selectionCopy));
+              .filter((column) =>
+                this.preferForeignKeyColumn(column, selectionCopy),
+              );
 
             if (
               relation.isNullable() &&
               tableData[
                 (
-                  selectedForeignKeyColumnSet.find(column => !column.reference.nullable) ||
-                  foreignKey.getFirstNonNullableReference()
+                  selectedForeignKeyColumnSet.find(
+                    (column) => !column.reference.nullable,
+                  ) || foreignKey.getFirstNonNullableReference()
                 ).name
               ] === null
             ) {
@@ -398,14 +514,20 @@ export class FindOperation extends AbstractOperationResolver<ConnectorFindOperat
                 [nodeField.name]: null,
               });
             } else {
-              selectedForeignKeyColumnSet.forEach(column => column.setValue(node, tableData[column.name]));
+              selectedForeignKeyColumnSet.forEach((column) =>
+                column.setValue(node, tableData[column.name]),
+              );
 
               if (selectionCopy.size > 0) {
                 const relatedTable = database.getTable(relation.getTo());
                 const relatedFindOperation = relatedTable.getOperation('Find');
 
                 mergeWith(node, {
-                  [nodeField.name]: relatedFindOperation.parseRow(data, tableReference.join(relation), selectionCopy),
+                  [nodeField.name]: relatedFindOperation.parseRow(
+                    data,
+                    tableReference.join(relation),
+                    selectionCopy,
+                  ),
                 });
               }
             }
@@ -416,25 +538,40 @@ export class FindOperation extends AbstractOperationResolver<ConnectorFindOperat
           case NodeFieldKind.InverseRelation: {
             const inverseRelation = nodeField.inverseRelation;
 
-            const relatedTable = this.database.getTable(inverseRelation.getTo());
+            const relatedTable = this.database.getTable(
+              inverseRelation.getTo(),
+            );
             const relatedPrimaryKey = relatedTable.getPrimaryKey();
-            const relatedForeignKey = relatedTable.getForeignKey(inverseRelation.getInverse());
+            const relatedForeignKey = relatedTable.getForeignKey(
+              inverseRelation.getInverse(),
+            );
             const relatedFindOperation = relatedTable.getOperation('Find');
 
             if (inverseRelation.isToOne()) {
-              const relatedTableData = this.getRowTableData(data, tableReference.join(inverseRelation));
-              const firstNonNullableColumn = relatedPrimaryKey.getColumnSet().first(true);
+              const relatedTableData = this.getRowTableData(
+                data,
+                tableReference.join(inverseRelation),
+              );
+              const firstNonNullableColumn = relatedPrimaryKey
+                .getColumnSet()
+                .first(true);
 
               mergeWith(node, {
                 [nodeField.name]:
                   relatedTableData[firstNonNullableColumn.name] !== null
-                    ? relatedFindOperation.parseRow(data, tableReference.join(inverseRelation), selection)
+                    ? relatedFindOperation.parseRow(
+                        data,
+                        tableReference.join(inverseRelation),
+                        selection,
+                      )
                     : null,
               });
             } else {
               relatedForeignKey
                 .getColumnSet()
-                .forEach(({ reference }) => reference.setValue(node, tableData[reference.name]));
+                .forEach(({ reference }) =>
+                  reference.setValue(node, tableData[reference.name]),
+                );
 
               node[nodeField.name] = async ({ selectionNode, ...params }) =>
                 relatedFindOperation.execute({
@@ -444,9 +581,13 @@ export class FindOperation extends AbstractOperationResolver<ConnectorFindOperat
                     where: {
                       AND: [
                         {
-                          [inverseRelation.getInverse().name]: resource
+                          [inverseRelation.getInverse()
+                            .name]: resource
                             .getInputType('WhereUnique')
-                            .assertUnique(node, inverseRelation.getInverse().getToUnique()),
+                            .assertUnique(
+                              node,
+                              inverseRelation.getInverse().getToUnique(),
+                            ),
                         },
                         params.args.where,
                       ],
@@ -462,12 +603,16 @@ export class FindOperation extends AbstractOperationResolver<ConnectorFindOperat
             const inverseRelation = nodeField.inverseRelation;
 
             const relatedTable = database.getTable(inverseRelation.getTo());
-            const relatedForeignKey = relatedTable.getForeignKey(inverseRelation.getInverse());
+            const relatedForeignKey = relatedTable.getForeignKey(
+              inverseRelation.getInverse(),
+            );
             const relatedCountOperation = relatedTable.getOperation('Count');
 
             relatedForeignKey
               .getColumnSet()
-              .forEach(({ reference }) => reference.setValue(node, tableData[reference.name]));
+              .forEach(({ reference }) =>
+                reference.setValue(node, tableData[reference.name]),
+              );
 
             node[nodeField.name] = async ({ selectionNode, ...params }) =>
               relatedCountOperation.execute({
@@ -477,9 +622,13 @@ export class FindOperation extends AbstractOperationResolver<ConnectorFindOperat
                   where: {
                     AND: [
                       {
-                        [inverseRelation.getInverse().name]: resource
+                        [inverseRelation.getInverse()
+                          .name]: resource
                           .getInputType('WhereUnique')
-                          .assertUnique(node, inverseRelation.getInverse().getToUnique()),
+                          .assertUnique(
+                            node,
+                            inverseRelation.getInverse().getToUnique(),
+                          ),
                       },
                       params.args.where,
                     ],
@@ -494,7 +643,9 @@ export class FindOperation extends AbstractOperationResolver<ConnectorFindOperat
 
             table
               .getComponentSetColumnSet(virtualField.dependencySet)
-              .forEach(column => column.setValue(node, tableData[column.name]));
+              .forEach((column) =>
+                column.setValue(node, tableData[column.name]),
+              );
             break;
           }
         }
@@ -504,7 +655,10 @@ export class FindOperation extends AbstractOperationResolver<ConnectorFindOperat
     return node;
   }
 
-  public async execute({ args, context }: OperationResolverParams<ConnectorFindOperationArgs>) {
+  public async execute({
+    args,
+    context,
+  }: OperationResolverParams<ConnectorFindOperationArgs>) {
     let { where, skip, first } = args;
 
     // In some cases, we'll make a query first to fetch the primary keys, then we'll fetch the other requested columns
@@ -512,14 +666,21 @@ export class FindOperation extends AbstractOperationResolver<ConnectorFindOperat
       // If we don't already select only one unique constraint
       this.resource
         .getUniqueSet()
-        .every(unique => args.selectionNode.hasDiff(unique.getSelectionNode(TypeKind.Input).toPlainObject())) &&
+        .every((unique) =>
+          args.selectionNode.hasDiff(
+            unique.getSelectionNode(TypeKind.Input).toPlainObject(),
+          ),
+        ) &&
       // and if we don't query only the first result
       args.first > 1 &&
       // and either we forced it or we query paginated result
-      (this.table.findPrimaryKeyFirst() || (typeof args.skip === 'number' && args.skip > 0))
+      (this.table.findPrimaryKeyFirst() ||
+        (typeof args.skip === 'number' && args.skip > 0))
     ) {
       const pkSelectStatement = this.table.newSelectStatement();
-      const pkSelectionNode = this.resource.getIdentifier().getSelectionNode(TypeKind.Input);
+      const pkSelectionNode = this.resource
+        .getIdentifier()
+        .getSelectionNode(TypeKind.Input);
 
       await Promise.all([
         this.parseSelectionNode(pkSelectStatement.select, pkSelectionNode),
@@ -530,7 +691,9 @@ export class FindOperation extends AbstractOperationResolver<ConnectorFindOperat
       ]);
 
       if (pkSelectStatement.from.isToMany()) {
-        pkSelectStatement.groupBy.add(this.table.getPrimaryKey().getColumnSet());
+        pkSelectStatement.groupBy.add(
+          this.table.getPrimaryKey().getColumnSet(),
+        );
       }
 
       const pkRows = await this.connector.query(
@@ -542,7 +705,9 @@ export class FindOperation extends AbstractOperationResolver<ConnectorFindOperat
       );
 
       const pks = Array.isArray(pkRows)
-        ? pkRows.map(row => this.parseRow(row, pkSelectStatement.from, pkSelectionNode))
+        ? pkRows.map((row) =>
+            this.parseRow(row, pkSelectStatement.from, pkSelectionNode),
+          )
         : [];
 
       if (pks.length === 0) {
@@ -555,7 +720,9 @@ export class FindOperation extends AbstractOperationResolver<ConnectorFindOperat
           ? { OR: pks }
           : {
               // An optimization in case the primary key is not composite (as "IN" is faster than "OR")
-              [`${pkSelectionNode.first(true)[0]}_in`]: pks.map(pk => pk[pkSelectionNode.first(true)[0]]),
+              [`${pkSelectionNode.first(true)[0]}_in`]: pks.map(
+                (pk) => pk[pkSelectionNode.first(true)[0]],
+              ),
             };
 
       skip = 0;
@@ -584,6 +751,10 @@ export class FindOperation extends AbstractOperationResolver<ConnectorFindOperat
       context.connectorRequest.connection,
     );
 
-    return Array.isArray(rows) ? rows.map(row => this.parseRow(row, selectStatement.from, args.selectionNode)) : [];
+    return Array.isArray(rows)
+      ? rows.map((row) =>
+          this.parseRow(row, selectStatement.from, args.selectionNode),
+        )
+      : [];
   }
 }

@@ -15,7 +15,7 @@ services:
     restart: 'unless-stopped'
 
   project:
-    image: node:10
+    image: node:12
     depends_on:
       - mariadb
     environment:

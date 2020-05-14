@@ -1,7 +1,12 @@
 import { Maybe, Merge } from '@prismamedia/graphql-platform-utils';
+import { Memoize } from '@prismamedia/ts-memoize';
 import { GraphQLFieldConfig } from 'graphql';
-import { Memoize } from 'typescript-memoize';
-import { AnyBaseContext, BaseContext, Context, CustomContext } from '../../graphql-platform';
+import {
+  AnyBaseContext,
+  BaseContext,
+  Context,
+  CustomContext,
+} from '../../graphql-platform';
 import { Resource } from '../resource';
 import { Component, ComponentSet } from './component';
 
@@ -21,17 +26,23 @@ export type VirtualFieldConfig<
 
 export type AnyVirtualFieldConfig = VirtualFieldConfig<any, any>;
 
-export class VirtualField<TConfig extends AnyVirtualFieldConfig = VirtualFieldConfig> {
+export class VirtualField<
+  TConfig extends AnyVirtualFieldConfig = VirtualFieldConfig
+> {
   readonly dependencySet: ComponentSet;
 
-  public constructor(readonly name: string, readonly config: TConfig, readonly resource: Resource) {
+  public constructor(
+    readonly name: string,
+    readonly config: TConfig,
+    readonly resource: Resource,
+  ) {
     this.dependencySet = new ComponentSet(
       (typeof this.config.dependency === 'string'
         ? [this.config.dependency]
         : Array.isArray(this.config.dependencies)
         ? this.config.dependencies
         : []
-      ).map(dependency => this.resource.getComponentMap().assert(dependency)),
+      ).map((dependency) => this.resource.getComponentMap().assert(dependency)),
     );
   }
 

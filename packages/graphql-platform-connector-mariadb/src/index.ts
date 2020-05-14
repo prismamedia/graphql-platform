@@ -1,5 +1,3 @@
-import { GraphQLPlatform } from './graphql-platform';
-
 export * from '@prismamedia/graphql-platform-core';
 export * from './graphql-platform';
 // Overrides some exports
@@ -12,6 +10,7 @@ export {
   CustomOperationConfig,
   Field,
   FieldConfig,
+  GraphQLPlatform as default,
   GraphQLPlatform,
   GraphQLPlatformConfig,
   Relation,
@@ -20,5 +19,3 @@ export {
   ResourceConfig,
   UniqueFullConfig,
 } from './graphql-platform';
-
-export default GraphQLPlatform;

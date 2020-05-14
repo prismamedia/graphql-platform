@@ -1,6 +1,12 @@
 import { Maybe } from '@prismamedia/graphql-platform-utils';
-import { GraphQLFieldConfigArgumentMap, GraphQLInt, GraphQLList, GraphQLNonNull, GraphQLOutputType } from 'graphql';
-import { Memoize } from 'typescript-memoize';
+import { Memoize } from '@prismamedia/ts-memoize';
+import {
+  GraphQLFieldConfigArgumentMap,
+  GraphQLInt,
+  GraphQLList,
+  GraphQLNonNull,
+  GraphQLOutputType,
+} from 'graphql';
 import { OperationResolverParams } from '../../operation';
 import { NodeSource, OrderByInputValue, WhereInputValue } from '../../type';
 import { AbstractOperation } from '../abstract-operation';
@@ -14,7 +20,10 @@ export interface FindManyOperationArgs {
 
 export type FindManyOperationResult = NodeSource[];
 
-export class FindManyOperation extends AbstractOperation<FindManyOperationArgs, FindManyOperationResult> {
+export class FindManyOperation extends AbstractOperation<
+  FindManyOperationArgs,
+  FindManyOperationResult
+> {
   @Memoize()
   public get name(): string {
     return this.resource.camelCasedPlural;
@@ -26,7 +35,11 @@ export class FindManyOperation extends AbstractOperation<FindManyOperationArgs, 
   }
 
   public getGraphQLFieldConfigType(): GraphQLOutputType {
-    return GraphQLNonNull(GraphQLList(GraphQLNonNull(this.resource.getOutputType('Node').getGraphQLType())));
+    return GraphQLNonNull(
+      GraphQLList(
+        GraphQLNonNull(this.resource.getOutputType('Node').getGraphQLType()),
+      ),
+    );
   }
 
   public getGraphQLFieldConfigArgs(): GraphQLFieldConfigArgumentMap {
@@ -41,7 +54,11 @@ export class FindManyOperation extends AbstractOperation<FindManyOperationArgs, 
       ...(this.resource.getInputType('OrderBy').isSupported()
         ? {
             orderBy: {
-              type: GraphQLList(GraphQLNonNull(this.resource.getInputType('OrderBy').getGraphQLType())),
+              type: GraphQLList(
+                GraphQLNonNull(
+                  this.resource.getInputType('OrderBy').getGraphQLType(),
+                ),
+              ),
             },
           }
         : undefined),
@@ -54,7 +71,9 @@ export class FindManyOperation extends AbstractOperation<FindManyOperationArgs, 
     };
   }
 
-  public async resolve(params: OperationResolverParams<FindManyOperationArgs>): Promise<FindManyOperationResult> {
+  public async resolve(
+    params: OperationResolverParams<FindManyOperationArgs>,
+  ): Promise<FindManyOperationResult> {
     const { args, context, selectionNode } = params;
     const resource = this.resource;
 
@@ -65,7 +84,11 @@ export class FindManyOperation extends AbstractOperation<FindManyOperationArgs, 
           Object.freeze({
             resource,
             context,
-            args: { ...args, where: { AND: [filter, args.where] }, selectionNode },
+            args: {
+              ...args,
+              where: { AND: [filter, args.where] },
+              selectionNode,
+            },
           }),
         )
       : [];

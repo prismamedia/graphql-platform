@@ -1,4 +1,7 @@
-import { ConnectorUpdateOperationArgs, ConnectorUpdateOperationResult } from '@prismamedia/graphql-platform-core';
+import {
+  ConnectorUpdateOperationArgs,
+  ConnectorUpdateOperationResult,
+} from '@prismamedia/graphql-platform-core';
 import { AbstractOperationResolver } from '../abstract-operation';
 import { OperationResolverParams } from '../operation';
 
@@ -9,37 +12,44 @@ export class UpdateOperation extends AbstractOperationResolver<
   public async execute({
     args: { data: update, where },
     context,
-  }: OperationResolverParams<ConnectorUpdateOperationArgs>): Promise<ConnectorUpdateOperationResult> {
+  }: OperationResolverParams<ConnectorUpdateOperationArgs>): Promise<
+    ConnectorUpdateOperationResult
+  > {
     const updateStatement = this.table.newUpdateStatement();
 
     for (const component of this.resource.getComponentSet()) {
       if (component.isField()) {
-        if (component.isList()) {
-          throw new Error(`Not implemented, yet`);
-        } else {
-          const fieldValue = update.get(component);
-          if (typeof fieldValue !== 'undefined') {
-            const column = this.table.getColumn(component);
-            updateStatement.assignmentList.addAssignment(column, column.getValue(fieldValue));
-          }
+        const fieldValue = update.get(component);
+        if (typeof fieldValue !== 'undefined') {
+          const column = this.table.getColumn(component);
+          updateStatement.assignmentList.addAssignment(
+            column,
+            column.getValue(fieldValue),
+          );
         }
       } else {
-        if (component.isList()) {
-          throw new Error(`Not implemented, yet`);
-        } else {
-          const relationValue = update.get(component);
-          if (typeof relationValue !== 'undefined') {
-            for (const column of this.table.getForeignKey(component).getColumnSet()) {
-              updateStatement.assignmentList.addAssignment(column, column.getValue(relationValue));
-            }
+        const relationValue = update.get(component);
+        if (typeof relationValue !== 'undefined') {
+          for (const column of this.table
+            .getForeignKey(component)
+            .getColumnSet()) {
+            updateStatement.assignmentList.addAssignment(
+              column,
+              column.getValue(relationValue),
+            );
           }
         }
       }
     }
 
-    await this.table.getOperation('Find').parseWhereArg(updateStatement.where, where);
+    await this.table
+      .getOperation('Find')
+      .parseWhereArg(updateStatement.where, where);
 
-    const result = await this.connector.query(updateStatement.sql, context.connectorRequest.connection);
+    const result = await this.connector.query(
+      updateStatement.sql,
+      context.connectorRequest.connection,
+    );
 
     if (
       'affectedRows' in result &&
@@ -57,6 +67,8 @@ export class UpdateOperation extends AbstractOperationResolver<
       };
     }
 
-    throw new Error(`An error occurred: the result has to be a positive integer, "${result}" have been returned`);
+    throw new Error(
+      `An error occurred: the result has to be a positive integer, "${result}" have been returned`,
+    );
   }
 }

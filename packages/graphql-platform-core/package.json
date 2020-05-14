@@ -1,46 +1,49 @@
 {
   "name": "@prismamedia/graphql-platform-core",
-  "version": "0.1.0-alpha.49",
+  "version": "0.1.0-alpha.50",
   "license": "MIT",
   "contributors": [
     "Yvann Boucher <yvann.boucher@gmail.com>"
   ],
+  "engines": {
+    "node": ">=12"
+  },
   "repository": {
     "type": "git",
     "url": "https://github.com/prismamedia/graphql-platform"
   },
-  "main": "dist/commonjs/index.js",
-  "module": "dist/module/index.js",
+  "main": "dist/cjs/index.js",
+  "module": "dist/esm/index.js",
   "typings": "dist/types/index.d.ts",
   "scripts": {
     "build": "tsc --build tsconfig.json tsconfig.commonjs.json",
-    "build:watch": "yarn run build --watch",
+    "build:watch": "tsc --build tsconfig.json --watch",
     "test": "NODE_ENV=test jest --detectOpenHandles --verbose --passWithNoTests",
     "test:watch": "yarn run test --watchAll"
   },
   "devDependencies": {
-    "@types/faker": "^4.1.6",
+    "@types/faker": "^4.1.12",
     "@types/inflection": "^1.5.28",
-    "@types/jest": "^24.0.18",
-    "@types/node": "^12.12.28",
+    "@types/jest": "^25.2.2",
+    "@types/node": "^14.0.1",
     "@types/slug": "^0.9.1",
     "faker": "^4.1.0",
     "graphql": "^14.5.0",
-    "jest": "^24.9.0",
-    "slug": "^1.1.0",
-    "ts-jest": "^24.1.0",
-    "typescript": "~3.6.3",
+    "jest": "^26.0.1",
+    "slug": "^2.1.1",
+    "ts-jest": "^25.5.1",
+    "typescript": "^3.9.2",
     "winston": "^3.2.1"
   },
   "dependencies": {
-    "@prismamedia/graphql-platform-utils": "^0.1.0-alpha.49",
-    "@prismamedia/ts-async-event-emitter": "^2.1.0",
+    "@prismamedia/graphql-platform-utils": "^0.1.0-alpha.50",
+    "@prismamedia/ts-async-event-emitter": "^3.0.2",
+    "@prismamedia/ts-memoize": "^1.0.0",
     "@types/graphql-iso-date": "^3.3.3",
     "dependency-graph": "^0.9.0",
     "graphql-binding": "^2.5.2",
     "graphql-iso-date": "^3.6.1",
-    "inflection": "^1.12.0",
-    "typescript-memoize": "^1.0.0-alpha.3"
+    "inflection": "^1.12.0"
   },
   "peerDependencies": {
     "graphql": "^14.5.0",

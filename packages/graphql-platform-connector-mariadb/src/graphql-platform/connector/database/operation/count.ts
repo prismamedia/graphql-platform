@@ -1,4 +1,7 @@
-import { ConnectorCountOperationArgs, ConnectorCountOperationResult } from '@prismamedia/graphql-platform-core';
+import {
+  ConnectorCountOperationArgs,
+  ConnectorCountOperationResult,
+} from '@prismamedia/graphql-platform-core';
 import { AbstractOperationResolver } from '../abstract-operation';
 import { OperationResolverParams } from '../operation';
 
@@ -6,7 +9,10 @@ export class CountOperation extends AbstractOperationResolver<
   ConnectorCountOperationArgs,
   ConnectorCountOperationResult
 > {
-  public async execute({ args, context }: OperationResolverParams<ConnectorCountOperationArgs>) {
+  public async execute({
+    args,
+    context,
+  }: OperationResolverParams<ConnectorCountOperationArgs>) {
     const selectStatement = this.table.newSelectStatement();
 
     selectStatement.select.add(
@@ -16,9 +22,14 @@ export class CountOperation extends AbstractOperationResolver<
         .getEscapedNames(selectStatement.from.alias)}) AS result`,
     );
 
-    await this.table.getOperation('Find').parseWhereArg(selectStatement.where, args.where);
+    await this.table
+      .getOperation('Find')
+      .parseWhereArg(selectStatement.where, args.where);
 
-    const rows = await this.connector.query(selectStatement.sql, context.connectorRequest.connection);
+    const rows = await this.connector.query(
+      selectStatement.sql,
+      context.connectorRequest.connection,
+    );
 
     if (Array.isArray(rows) && rows.length === 1) {
       const result = parseInt(rows[0].result, 10);
@@ -27,6 +38,8 @@ export class CountOperation extends AbstractOperationResolver<
       }
     }
 
-    throw new Error(`An error occurred: the result has to be a positive integer, "${rows}" received`);
+    throw new Error(
+      `An error occurred: the result has to be a positive integer, "${rows}" received`,
+    );
   }
 }

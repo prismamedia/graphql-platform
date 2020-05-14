@@ -6,7 +6,7 @@ describe('Fixture', () => {
   let connector: Connector;
   let database: Database;
 
-  beforeAll(async done => {
+  beforeAll(async (done) => {
     gp = new MyGP(config);
     connector = gp.getConnector();
     database = connector.getDatabase();
@@ -16,13 +16,13 @@ describe('Fixture', () => {
     done();
   });
 
-  afterAll(async done => {
+  afterAll(async (done) => {
     await database.drop();
 
     done();
   });
 
-  it('loads the fixtures', async done => {
+  it('loads the fixtures', async (done) => {
     // Load the fixtures without errors
     await expect(gp.loadFixtures()).resolves.toBeUndefined();
 

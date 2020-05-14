@@ -17,11 +17,12 @@ const resource: MyResourceConfig = {
       immutable: true,
       managed: ManagementKind.Optional,
       hooks: {
-        [ResourceHookKind.PreCreate]: event => {
+        [ResourceHookKind.PreCreate]: (event) => {
           if (event.fieldValue == null) {
             const title = event.metas.create.title;
 
-            event.fieldValue = typeof title === 'string' ? slug(title, { lower: true }) : null;
+            event.fieldValue =
+              typeof title === 'string' ? slug(title, { lower: true }) : null;
           }
         },
       },
@@ -35,26 +36,44 @@ const resource: MyResourceConfig = {
       nullable: true,
       hooks: {
         // Only one category without parent is allowed
-        [ResourceHookKind.PreCreate]: async ({ relatedNodeId, metas: { context } }) => {
+        [ResourceHookKind.PreCreate]: async ({
+          relatedNodeId,
+          metas: { context },
+        }) => {
           if (relatedNodeId == null) {
-            const categoryCount = await context.api.query.categoryCount({ where: { parent: null } }, undefined, {
-              context,
-            });
+            const categoryCount = await context.api.query.categoryCount(
+              { where: { parent: null } },
+              undefined,
+              {
+                context,
+              },
+            );
 
             if (categoryCount !== 0) {
-              throw new Error(`Only one category without parent is allowed, the "root".`);
+              throw new Error(
+                `Only one category without parent is allowed, the "root".`,
+              );
             }
           }
         },
         // Only one category without parent is allowed
-        [ResourceHookKind.PreUpdate]: async ({ relatedNodeId, metas: { context } }) => {
+        [ResourceHookKind.PreUpdate]: async ({
+          relatedNodeId,
+          metas: { context },
+        }) => {
           if (relatedNodeId === null) {
-            const categoryCount = await context.api.query.categoryCount({ where: { parent: null } }, undefined, {
-              context,
-            });
+            const categoryCount = await context.api.query.categoryCount(
+              { where: { parent: null } },
+              undefined,
+              {
+                context,
+              },
+            );
 
             if (categoryCount !== 0) {
-              throw new Error(`Only one category without parent is allowed, the "root".`);
+              throw new Error(
+                `Only one category without parent is allowed, the "root".`,
+              );
             }
           }
         },

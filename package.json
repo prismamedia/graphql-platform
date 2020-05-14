@@ -4,24 +4,24 @@
   "contributors": [
     "Yvann Boucher <yvann.boucher@gmail.com>"
   ],
+  "engines": {
+    "node": ">=12"
+  },
   "workspaces": [
     "packages/*"
   ],
-  "engines": {
-    "node": ">=10"
-  },
   "scripts": {
-    "build": "tsc --build packages/tsconfig.json packages/tsconfig.commonjs.json",
-    "build:clean": "yarn run build --clean",
-    "build:watch": "yarn run build --watch",
+    "build": "tsc --build tsconfig.json tsconfig.esm.json",
+    "build:clean": "tsc --build tsconfig.json tsconfig.esm.json --clean",
+    "build:watch": "tsc --build tsconfig.json --watch",
     "clean": "git clean -dfqX -- .",
     "prepare": "yarn run build",
     "prettier": "prettier --write \"./**/src/**/*.ts\"",
     "test": "lerna run --parallel test"
   },
   "devDependencies": {
-    "lerna": "^3.16.4",
-    "prettier": "^1.18.2",
-    "typescript": "~3.6.3"
+    "lerna": "^3.21.0",
+    "prettier": "^2.0.5",
+    "typescript": "^3.9.2"
   }
 }

@@ -4,10 +4,15 @@ import {
   RelationValue,
   UndefinedComponentValueError,
 } from '@prismamedia/graphql-platform-core';
-import { loadModuleMap, Maybe, MaybeUndefinedDecorator, POJO } from '@prismamedia/graphql-platform-utils';
+import {
+  loadModuleMap,
+  Maybe,
+  MaybeUndefinedDecorator,
+  POJO,
+} from '@prismamedia/graphql-platform-utils';
+import { Memoize } from '@prismamedia/ts-memoize';
 import inflector from 'inflection';
 import { escapeId } from 'mysql';
-import { Memoize } from 'typescript-memoize';
 import { Component, Relation } from '../../../resource';
 import { Table } from '../table';
 import { Column, ColumnDataType, ColumnValue } from './column';
@@ -20,24 +25,37 @@ export interface ColumnReferenceConfig {
 export class ColumnReference {
   readonly component: Component;
 
-  public constructor(readonly table: Table, readonly relation: Relation, readonly reference: Column | ColumnReference) {
+  public constructor(
+    readonly table: Table,
+    readonly relation: Relation,
+    readonly reference: Column | ColumnReference,
+  ) {
     this.component = relation;
   }
 
   @Memoize()
   public getReferencedColumn(): Column {
-    return this.reference instanceof ColumnReference ? this.reference.getReferencedColumn() : this.reference;
+    return this.reference instanceof ColumnReference
+      ? this.reference.getReferencedColumn()
+      : this.reference;
   }
 
   @Memoize()
   public get config(): ColumnReferenceConfig {
-    return loadModuleMap(this.relation.config.columns).get(this.getReferencedColumn().field.name) || {};
+    return (
+      loadModuleMap(this.relation.config.columns).get(
+        this.getReferencedColumn().field.name,
+      ) || {}
+    );
   }
 
   @Memoize()
   public get name(): string {
     return (
-      (this.config.name || `${this.relation.name}${inflector.camelize(this.reference.name, false)}`)
+      (
+        this.config.name ||
+        `${this.relation.name}${inflector.camelize(this.reference.name, false)}`
+      )
         // cf: https://dev.mysql.com/doc/refman/8.0/en/identifiers.html
         .substr(0, 64)
     );
@@ -93,7 +111,9 @@ export class ColumnReference {
   ): MaybeUndefinedDecorator<ColumnValue, TStrict> {
     const value = this.relation.pickValue(node, true, strict);
 
-    return (typeof value !== 'undefined' ? this.getValue(value as RelationValue) : undefined) as any;
+    return (typeof value !== 'undefined'
+      ? this.getValue(value as RelationValue)
+      : undefined) as any;
   }
 
   public setValue(node: POJO, value: ColumnValue): void {

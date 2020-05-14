@@ -11,5 +11,7 @@ export function getFlagValue(flag: FlagConfig, defaultValue: boolean): boolean {
     return defaultValue;
   }
 
-  throw new Error(`The flag value "${flag}" of type "${typeof flag}" has to be a boolean, null or undefined.`);
+  throw new Error(
+    `The flag value "${flag}" of type "${typeof flag}" has to be a boolean, null or undefined.`,
+  );
 }

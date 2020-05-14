@@ -10,10 +10,15 @@ import {
   CustomContext,
   OperationEventKind,
 } from '@prismamedia/graphql-platform-core';
-import { GraphQLOperationType, Maybe, MaybeArray, POJO } from '@prismamedia/graphql-platform-utils';
+import {
+  GraphQLOperationType,
+  Maybe,
+  MaybeArray,
+  POJO,
+} from '@prismamedia/graphql-platform-utils';
 import EventEmitter from '@prismamedia/ts-async-event-emitter';
+import { Memoize } from '@prismamedia/ts-memoize';
 import * as mysql from 'mysql';
-import { Memoize } from 'typescript-memoize';
 import { promisify } from 'util';
 import { BaseContext } from '../graphql-platform';
 import { Database } from './connector/database';
@@ -31,14 +36,27 @@ export enum ConnectorEventKind {
 }
 
 export type ConnectorEventMap = {
-  [ConnectorEventKind.PreStartTransaction]: Readonly<Pick<mysql.Connection, 'threadId'>>;
-  [ConnectorEventKind.PreRollbackTransaction]: Readonly<Pick<mysql.Connection, 'threadId'>>;
-  [ConnectorEventKind.PreCommitTransaction]: Readonly<Pick<mysql.Connection, 'threadId'>>;
-  [ConnectorEventKind.PreQuery]: Readonly<Pick<mysql.Connection, 'threadId'> & mysql.QueryOptions>;
+  [ConnectorEventKind.PreStartTransaction]: Readonly<
+    Pick<mysql.Connection, 'threadId'>
+  >;
+  [ConnectorEventKind.PreRollbackTransaction]: Readonly<
+    Pick<mysql.Connection, 'threadId'>
+  >;
+  [ConnectorEventKind.PreCommitTransaction]: Readonly<
+    Pick<mysql.Connection, 'threadId'>
+  >;
+  [ConnectorEventKind.PreQuery]: Readonly<
+    Pick<mysql.Connection, 'threadId'> & mysql.QueryOptions
+  >;
 };
 
-export type MigrationsFullOptions = { directory: string; tableName?: Maybe<string> };
-export type MigrationsOptions = MigrationsFullOptions['directory'] | MigrationsFullOptions;
+export type MigrationsFullOptions = {
+  directory: string;
+  tableName?: Maybe<string>;
+};
+export type MigrationsOptions =
+  | MigrationsFullOptions['directory']
+  | MigrationsFullOptions;
 
 export type ConnectorConfig = Omit<
   mysql.PoolConfig,
@@ -81,17 +99,23 @@ export type ConnectorOperationParams<
   TCustomContext extends CustomContext = {}
 > = CoreConnectorOperationParams<TArgs, TCustomContext, BaseContext>;
 
-export class Connector<TCustomContext extends CustomContext = {}> extends EventEmitter<ConnectorEventMap>
+export class Connector<TCustomContext extends CustomContext = {}>
+  extends EventEmitter<ConnectorEventMap>
   implements ConnectorInterface<TCustomContext, BaseContext> {
   protected pool?: mysql.Pool;
 
-  public constructor(readonly config: Maybe<ConnectorConfig>, readonly gp: AnyGraphQLPlatform) {
+  public constructor(
+    readonly config: Maybe<ConnectorConfig>,
+    readonly gp: AnyGraphQLPlatform,
+  ) {
     super();
 
     // Handle connection & transaction
-    this.gp.getResourceSet().forEach(resource =>
-      resource.onConfig({
-        [OperationEventKind.PreOperation]: async (event: OperationEvent<any, TCustomContext>) => {
+    this.gp.getResourceSet().forEach((resource) =>
+      resource.on({
+        [OperationEventKind.PreOperation]: async (
+          event: OperationEvent<any, TCustomContext>,
+        ) => {
           const {
             operation: { type },
             context: { operationEventDataMap, connectorRequest, logger },
@@ -99,7 +123,10 @@ export class Connector<TCustomContext extends CustomContext = {}> extends EventE
 
           const eventData = operationEventDataMap.get(event);
 
-          if (type === GraphQLOperationType.Mutation && !connectorRequest.connection) {
+          if (
+            type === GraphQLOperationType.Mutation &&
+            !connectorRequest.connection
+          ) {
             connectorRequest.connection = await this.getConnection();
 
             try {
@@ -107,17 +134,23 @@ export class Connector<TCustomContext extends CustomContext = {}> extends EventE
                 threadId: connectorRequest.connection.threadId,
               });
             } catch (error) {
-              logger && logger.error(logger);
+              logger?.error(logger);
             }
 
-            await promisify(connectorRequest.connection.beginTransaction.bind(connectorRequest.connection))();
+            await promisify(
+              connectorRequest.connection.beginTransaction.bind(
+                connectorRequest.connection,
+              ),
+            )();
 
             if (eventData) {
               eventData.createdConnection = true;
             }
           }
         },
-        [OperationEventKind.PostOperationSuccess]: async (event: OperationEvent<any, TCustomContext>) => {
+        [OperationEventKind.PostOperationSuccess]: async (
+          event: OperationEvent<any, TCustomContext>,
+        ) => {
           const {
             operation: { type },
             context: { operationEventDataMap, connectorRequest, logger },
@@ -136,13 +169,19 @@ export class Connector<TCustomContext extends CustomContext = {}> extends EventE
                 threadId: connectorRequest.connection.threadId,
               });
             } catch (error) {
-              logger && logger.error(logger);
+              logger?.error(logger);
             }
 
-            await promisify(connectorRequest.connection.commit.bind(connectorRequest.connection))();
+            await promisify(
+              connectorRequest.connection.commit.bind(
+                connectorRequest.connection,
+              ),
+            )();
           }
         },
-        [OperationEventKind.PostOperationError]: async (event: OperationEvent<any, TCustomContext>) => {
+        [OperationEventKind.PostOperationError]: async (
+          event: OperationEvent<any, TCustomContext>,
+        ) => {
           const {
             operation: { type },
             context: { operationEventDataMap, connectorRequest, logger },
@@ -161,13 +200,19 @@ export class Connector<TCustomContext extends CustomContext = {}> extends EventE
                 threadId: connectorRequest.connection.threadId,
               });
             } catch (error) {
-              logger && logger.error(logger);
+              logger?.error(logger);
             }
 
-            await promisify(connectorRequest.connection.rollback.bind(connectorRequest.connection))();
+            await promisify(
+              connectorRequest.connection.rollback.bind(
+                connectorRequest.connection,
+              ),
+            )();
           }
         },
-        [OperationEventKind.PostOperation]: async (event: OperationEvent<any, TCustomContext>) => {
+        [OperationEventKind.PostOperation]: async (
+          event: OperationEvent<any, TCustomContext>,
+        ) => {
           const {
             operation: { type },
             context: { operationEventDataMap, connectorRequest },
@@ -226,16 +271,20 @@ export class Connector<TCustomContext extends CustomContext = {}> extends EventE
         waitForConnections: true,
         dateStrings: true,
       })
-      .on('connection', connection => {
+      .on('connection', (connection) => {
         // We ensure the good charset and the good timezone to be used
-        connection.query(`SET NAMES ${this.getCharset()} COLLATE ${this.getCollation()}, time_zone = 'UTC';`);
+        connection.query(
+          `SET NAMES ${this.getCharset()} COLLATE ${this.getCollation()}, time_zone = 'UTC';`,
+        );
 
         // We let the user configure the connection
-        onConnect && onConnect(connection);
+        onConnect?.(connection);
       }));
   }
 
-  public getPoolConfig(): mysql.PoolConfig & { connectionConfig: mysql.ConnectionConfig } {
+  public getPoolConfig(): mysql.PoolConfig & {
+    connectionConfig: mysql.ConnectionConfig;
+  } {
     return this.getPool().config as any;
   }
 
@@ -258,7 +307,9 @@ export class Connector<TCustomContext extends CustomContext = {}> extends EventE
   }
 
   /** Ensures the connection is released at the end of the task. */
-  public async withConnection<R>(task: (connection: mysql.Connection) => Promise<R>): Promise<R> {
+  public async withConnection<R>(
+    task: (connection: mysql.Connection) => Promise<R>,
+  ): Promise<R> {
     let result: R;
 
     const connection = await this.getConnection();
@@ -284,53 +335,73 @@ export class Connector<TCustomContext extends CustomContext = {}> extends EventE
     return connection
       ? Array.isArray(query)
         ? // As we use only one connection, even if they are thrown concurrently, they are executed serially
-          Promise.all(query.map(async query => this.query(query, connection)))
+          Promise.all(query.map(async (query) => this.query(query, connection)))
         : new Promise(async (resolve, reject) => {
-            const parsedQuery: mysql.QueryOptions = typeof query === 'string' ? { sql: query } : query;
+            const parsedQuery: mysql.QueryOptions =
+              typeof query === 'string' ? { sql: query } : query;
 
             await this.emit(ConnectorEventKind.PreQuery, {
               threadId: connection.threadId,
               ...parsedQuery,
             });
 
-            connection.query(query, async (error, rows) => (error ? reject(error) : resolve(rows)));
+            connection.query(query, async (error, rows) =>
+              error ? reject(error) : resolve(rows),
+            );
           })
-      : this.withConnection(async connection => this.query(query, connection));
+      : this.withConnection(async (connection) =>
+          this.query(query, connection),
+        );
   }
 
   public newRequest(): ConnectorRequest {
     return new ConnectorRequest(this);
   }
 
-  public async find({ resource, ...params }: ConnectorOperationParams<ConnectorFindOperationArgs>) {
+  public async find({
+    resource,
+    ...params
+  }: ConnectorOperationParams<ConnectorFindOperationArgs>) {
     return this.getDatabase()
       .getTable(resource)
       .getOperation('Find')
       .execute(Object.freeze(params));
   }
 
-  public async count({ resource, ...params }: ConnectorOperationParams<ConnectorCountOperationArgs>) {
+  public async count({
+    resource,
+    ...params
+  }: ConnectorOperationParams<ConnectorCountOperationArgs>) {
     return this.getDatabase()
       .getTable(resource)
       .getOperation('Count')
       .execute(Object.freeze(params));
   }
 
-  public async create({ resource, ...params }: ConnectorOperationParams<ConnectorCreateOperationArgs>) {
+  public async create({
+    resource,
+    ...params
+  }: ConnectorOperationParams<ConnectorCreateOperationArgs>) {
     return this.getDatabase()
       .getTable(resource)
       .getOperation('Create')
       .execute(Object.freeze(params));
   }
 
-  public async update({ resource, ...params }: ConnectorOperationParams<ConnectorUpdateOperationArgs>) {
+  public async update({
+    resource,
+    ...params
+  }: ConnectorOperationParams<ConnectorUpdateOperationArgs>) {
     return this.getDatabase()
       .getTable(resource)
       .getOperation('Update')
       .execute(Object.freeze(params));
   }
 
-  public async delete({ resource, ...params }: ConnectorOperationParams<ConnectorDeleteOperationArgs>) {
+  public async delete({
+    resource,
+    ...params
+  }: ConnectorOperationParams<ConnectorDeleteOperationArgs>) {
     return this.getDatabase()
       .getTable(resource)
       .getOperation('Delete')

@@ -1,3 +1,4 @@
+import { Memoize } from '@prismamedia/ts-memoize';
 import {
   FieldNode,
   getNamedType,
@@ -10,20 +11,21 @@ import {
   SelectionSetNode,
 } from 'graphql';
 import { getArgumentValues } from 'graphql/execution/values';
-import { Memoize } from 'typescript-memoize';
 import { POJO } from '../../types/pojo';
 import { isPlainObject } from '../is-plain-object';
 import { SuperMap } from '../super-map';
 
-export type GraphQLSelectionNodeChildren = Array<GraphQLSelectionNode<any> | GraphQLSelectionNode['name']>;
+export type GraphQLSelectionNodeChildren = Array<
+  GraphQLSelectionNode | GraphQLSelectionNode['name']
+>;
 
-export class GraphQLSelectionNode<TArgs extends POJO = any> extends SuperMap<
+export class GraphQLSelectionNode extends SuperMap<
   GraphQLSelectionNode['key'],
   GraphQLSelectionNode
 > {
   public constructor(
     readonly name: string,
-    readonly args: TArgs,
+    readonly args: POJO,
     children: GraphQLSelectionNodeChildren = [],
     readonly alias: string | undefined = undefined,
     protected parent: GraphQLSelectionNode | undefined = undefined,
@@ -77,14 +79,19 @@ export class GraphQLSelectionNode<TArgs extends POJO = any> extends SuperMap<
   }
 
   public setChildren(children: GraphQLSelectionNodeChildren): void {
-    (children instanceof GraphQLSelectionNode ? children.getChildren() : children).forEach(child =>
-      this.setChild(child),
-    );
+    (children instanceof GraphQLSelectionNode
+      ? children.getChildren()
+      : children
+    ).forEach((child) => this.setChild(child));
   }
 
-  public setChild(nodeOrNodeName: GraphQLSelectionNode | GraphQLSelectionNode['name']): void {
+  public setChild(
+    nodeOrNodeName: GraphQLSelectionNode | GraphQLSelectionNode['name'],
+  ): void {
     const node =
-      typeof nodeOrNodeName === 'string' ? new GraphQLSelectionNode(nodeOrNodeName, {}) : nodeOrNodeName.clone();
+      typeof nodeOrNodeName === 'string'
+        ? new GraphQLSelectionNode(nodeOrNodeName, {})
+        : nodeOrNodeName.clone();
 
     node.setParent(this);
 
@@ -112,7 +119,10 @@ export class GraphQLSelectionNode<TArgs extends POJO = any> extends SuperMap<
 
   @Memoize()
   public get pathAsArray(): string[] {
-    return [...(this.parent ? [this.parent.path] : (this.rootPath || []).map(String)), this.key].filter(Boolean);
+    return [
+      ...(this.parent ? [this.parent.path] : (this.rootPath || []).map(String)),
+      this.key,
+    ].filter(Boolean);
   }
 
   @Memoize()
@@ -120,17 +130,24 @@ export class GraphQLSelectionNode<TArgs extends POJO = any> extends SuperMap<
     return this.pathAsArray.join('/');
   }
 
-  public clone(): GraphQLSelectionNode<TArgs>;
-  public clone<CArgs>(args: CArgs): GraphQLSelectionNode<CArgs>;
   public clone(args: POJO = this.args): GraphQLSelectionNode {
-    return new GraphQLSelectionNode(this.name, args, this.getChildren(), this.alias, this.parent, this.rootPath);
+    return new GraphQLSelectionNode(
+      this.name,
+      args,
+      this.getChildren(),
+      this.alias,
+      this.parent,
+      this.rootPath,
+    );
   }
 
-  public diff(node: unknown): GraphQLSelectionNode<TArgs> {
+  public diff(node: unknown): GraphQLSelectionNode {
     const diff = new GraphQLSelectionNode(this.name, this.args);
 
     if (!isPlainObject(node)) {
-      throw new Error(`The "${this.name}.diff()" function has to be called with a plain object.`);
+      throw new Error(
+        `The "${this.name}.diff()" function has to be called with a plain object.`,
+      );
     }
 
     for (const child of this.values()) {
@@ -187,14 +204,24 @@ function appendNodeChild(
 ): void {
   switch (selection.kind) {
     case 'Field':
-      node.setChild(parseGraphQLSelectionNode(selection, fragments, variableValues, parentType));
+      node.setChild(
+        parseGraphQLSelectionNode(
+          selection,
+          fragments,
+          variableValues,
+          parentType,
+        ),
+      );
       break;
 
     case 'InlineFragment':
     case 'FragmentSpread':
-      const fragment = selection.kind === 'FragmentSpread' ? fragments[selection.name.value] : selection;
+      const fragment =
+        selection.kind === 'FragmentSpread'
+          ? fragments[selection.name.value]
+          : selection;
 
-      fragment.selectionSet.selections.forEach(selection =>
+      fragment.selectionSet.selections.forEach((selection) =>
         appendNodeChild(node, selection, fragments, variableValues, parentType),
       );
       break;
@@ -207,9 +234,9 @@ function parseGraphQLSelectionNode(
   variableValues: GraphQLResolveInfo['variableValues'],
   parentType: GraphQLObjectType,
   path?: ResponsePath,
-): GraphQLSelectionNode<any> {
-  const name = field.name && field.name.value;
-  const alias = field.alias && field.alias.value;
+): GraphQLSelectionNode {
+  const name = field.name?.value;
+  const alias = field.alias?.value;
   const fieldDef = parentType.getFields()[name];
   const fieldType = fieldDef ? getNamedType(fieldDef.type) : null;
 
@@ -222,8 +249,12 @@ function parseGraphQLSelectionNode(
     path ? responsePathAsArray(path) : undefined,
   );
 
-  if (fieldType && field.selectionSet && fieldType instanceof GraphQLObjectType) {
-    field.selectionSet.selections.forEach(selection =>
+  if (
+    fieldType &&
+    field.selectionSet &&
+    fieldType instanceof GraphQLObjectType
+  ) {
+    field.selectionSet.selections.forEach((selection) =>
       appendNodeChild(node, selection, fragments, variableValues, fieldType),
     );
   }
@@ -231,9 +262,9 @@ function parseGraphQLSelectionNode(
   return node;
 }
 
-export function parseGraphQLResolveInfo<TArgs extends POJO = POJO>(
+export function parseGraphQLResolveInfo(
   info: GraphQLResolveInfo,
-): GraphQLSelectionNode<TArgs> {
+): GraphQLSelectionNode {
   return parseGraphQLSelectionNode(
     info.fieldNodes[0],
     info.fragments,

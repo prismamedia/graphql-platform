@@ -18,11 +18,12 @@ const resource: MyResourceConfig = {
       immutable: true,
       managed: ManagementKind.Optional,
       hooks: {
-        [ResourceHookKind.PreCreate]: event => {
+        [ResourceHookKind.PreCreate]: (event) => {
           if (event.fieldValue == null) {
             const title = event.metas.create.title;
 
-            event.fieldValue = typeof title === 'string' ? slug(title, { lower: true }) : null;
+            event.fieldValue =
+              typeof title === 'string' ? slug(title, { lower: true }) : null;
           }
         },
       },

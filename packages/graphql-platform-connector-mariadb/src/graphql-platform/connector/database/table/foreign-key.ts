@@ -1,7 +1,7 @@
 import { Relation } from '@prismamedia/graphql-platform-core';
 import { Maybe } from '@prismamedia/graphql-platform-utils';
+import { Memoize } from '@prismamedia/ts-memoize';
 import { escapeId } from 'mysql';
-import { Memoize } from 'typescript-memoize';
 import { RelationConfig } from '../../../resource/component';
 import { Table } from '../table';
 import { ColumnReference } from './column-reference';
@@ -22,7 +22,10 @@ export interface ForeignKeyConfig {
 }
 
 export class ForeignKey {
-  public constructor(readonly table: Table, readonly relation: Relation<RelationConfig>) {}
+  public constructor(
+    readonly table: Table,
+    readonly relation: Relation<RelationConfig>,
+  ) {}
 
   @Memoize()
   public get config(): ForeignKeyConfig {
@@ -46,7 +49,7 @@ export class ForeignKey {
 
   public getEscapedName(alias?: string): string {
     return [alias, this.name]
-      .map(value => value && escapeId(value))
+      .map((value) => value && escapeId(value))
       .filter(Boolean)
       .join('.');
   }
@@ -55,7 +58,9 @@ export class ForeignKey {
   public getColumnSet(): ColumnSet<ColumnReference> {
     const columnSet = new ColumnSet<ColumnReference>();
 
-    const referencedColumnSet = this.getTo().getComponentSetColumnSet(this.relation.getToUnique().componentSet);
+    const referencedColumnSet = this.getTo().getComponentSetColumnSet(
+      this.relation.getToUnique().componentSet,
+    );
     for (const column of referencedColumnSet) {
       columnSet.add(new ColumnReference(this.table, this.relation, column));
     }
@@ -65,7 +70,7 @@ export class ForeignKey {
 
   @Memoize()
   public getNonNullableReferenceSet() {
-    return this.getColumnSet().filter(column => !column.reference.nullable);
+    return this.getColumnSet().filter((column) => !column.reference.nullable);
   }
 
   @Memoize()

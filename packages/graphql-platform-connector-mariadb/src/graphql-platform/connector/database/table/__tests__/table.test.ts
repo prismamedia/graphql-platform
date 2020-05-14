@@ -25,21 +25,32 @@ describe('Table', () => {
 
     const articleResource = resourceMap.assert('Article');
     const articleTable = database.getTable(articleResource);
-    const articleIntIdColumn = articleTable.getColumn(articleResource.getFieldMap().assert('_id'));
+    const articleIntIdColumn = articleTable.getColumn(
+      articleResource.getFieldMap().assert('_id'),
+    );
 
     const tagResource = resourceMap.assert('Tag');
     const tagTable = database.getTable(tagResource);
-    const tagIntIdColumn = tagTable.getColumn(tagResource.getFieldMap().assert('_id'));
+    const tagIntIdColumn = tagTable.getColumn(
+      tagResource.getFieldMap().assert('_id'),
+    );
 
     const articleTagArticleIdColumnReference = articleTagCommentTable
-      .getForeignKey(articleTagCommentResource.getRelationMap().assert('articleTag'))
+      .getForeignKey(
+        articleTagCommentResource.getRelationMap().assert('articleTag'),
+      )
       .getColumnSet()
-      .find(column => column.getReferencedColumn() === articleIntIdColumn, true);
+      .find(
+        (column) => column.getReferencedColumn() === articleIntIdColumn,
+        true,
+      );
 
     const articleTagTagIdColumnReference = articleTagCommentTable
-      .getForeignKey(articleTagCommentResource.getRelationMap().assert('articleTag'))
+      .getForeignKey(
+        articleTagCommentResource.getRelationMap().assert('articleTag'),
+      )
       .getColumnSet()
-      .find(column => column.getReferencedColumn() === tagIntIdColumn, true);
+      .find((column) => column.getReferencedColumn() === tagIntIdColumn, true);
 
     const node = articleTagCommentResource.assertValue({
       body: 'My body',

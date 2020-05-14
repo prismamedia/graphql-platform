@@ -24,22 +24,31 @@ export type MyGPConfig = GraphQLPlatformConfig<{}, MyContext>;
 
 export class MyGP extends GraphQLPlatform<{}, MyContext> {}
 
-export const nonRelationTableResourceNames = ['Article', 'Category', 'Tag', 'User'];
+export const nonRelationTableResourceNames = [
+  'Article',
+  'Category',
+  'Tag',
+  'User',
+];
 
 export const config: MyGPConfig = {
   logger: createLogger({
-    format: format.combine(format.colorize(), format.errors({ stack: false }), format.simple()),
+    format: format.combine(
+      format.colorize(),
+      format.errors({ stack: false }),
+      format.simple(),
+    ),
     transports: [new transports.Console()],
     // level: 'info',
     level: 'error',
     silent: process.env.NODE_ENV === 'test',
   }),
 
-  context: params => ({
+  context: (params) => ({
     myService: true,
   }),
 
-  default: resourceName => {
+  default: (resourceName) => {
     const config: MyResourceConfig = {};
 
     // Common fields for non-"relation table"
@@ -49,7 +58,8 @@ export const config: MyGPConfig = {
 
         fields: {
           _id: {
-            description: 'The internal and private ID used to speed up some operations',
+            description:
+              'The internal and private ID used to speed up some operations',
             type: GraphQLInt,
             managed: ManagementKind.Full,
             public: false,
@@ -59,7 +69,7 @@ export const config: MyGPConfig = {
             type: GraphQLID,
             managed: ManagementKind.Optional,
             hooks: {
-              [ResourceHookKind.PreCreate]: event => {
+              [ResourceHookKind.PreCreate]: (event) => {
                 if (event.fieldValue == null) {
                   event.fieldValue = faker.random.uuid();
                 }

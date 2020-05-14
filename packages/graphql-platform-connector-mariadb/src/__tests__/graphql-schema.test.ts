@@ -12,6 +12,8 @@ describe('GraphQLSchema', () => {
     const schema = gp.getGraphQLSchema();
 
     expect(validateSchema(schema)).toHaveLength(0);
-    expect(printSchema(schema, { commentDescriptions: true })).toMatchSnapshot();
+    expect(
+      printSchema(schema, { commentDescriptions: true }),
+    ).toMatchSnapshot();
   });
 });

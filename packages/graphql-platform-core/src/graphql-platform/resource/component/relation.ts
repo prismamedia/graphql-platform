@@ -1,11 +1,36 @@
-import { Maybe, MaybeUndefinedDecorator, POJO } from '@prismamedia/graphql-platform-utils';
-import { Memoize } from 'typescript-memoize';
-import { AnyBaseContext, BaseContext, CustomContext, NodeSource } from '../../../graphql-platform';
-import { CreateOneOperationArgs, CreateOneRawValue, UpdateOneOperationArgs, UpdateOneRawValue } from '../../operation';
+import {
+  Maybe,
+  MaybeUndefinedDecorator,
+  POJO,
+} from '@prismamedia/graphql-platform-utils';
+import { Memoize } from '@prismamedia/ts-memoize';
+import {
+  AnyBaseContext,
+  BaseContext,
+  CustomContext,
+  NodeSource,
+} from '../../../graphql-platform';
+import {
+  CreateOneOperationArgs,
+  CreateOneRawValue,
+  UpdateOneOperationArgs,
+  UpdateOneRawValue,
+} from '../../operation';
 import { RelationUpdate } from '../../operation/mutation';
-import { NodeValue, Resource, ResourceHookKind, ResourceHookMetaMap } from '../../resource';
-import { SerializedWhereUniqueInputValue, WhereUniqueInputValue } from '../../type/input';
-import { AbstractComponent, AbstractComponentConfig } from '../abstract-component';
+import {
+  NodeValue,
+  Resource,
+  ResourceHookKind,
+  ResourceHookMetaMap,
+} from '../../resource';
+import {
+  SerializedWhereUniqueInputValue,
+  WhereUniqueInputValue,
+} from '../../type/input';
+import {
+  AbstractComponent,
+  AbstractComponentConfig,
+} from '../abstract-component';
 import { Unique } from '../unique';
 import { UniqueSet } from '../unique/set';
 import { NullComponentValueError, UndefinedComponentValueError } from './error';
@@ -43,7 +68,11 @@ export type RelationHookMap<
 > = {
   // Create
   [ResourceHookKind.PreCreate]: {
-    metas: RelationHookMetaMap<CreateOneOperationArgs, TCustomContext, TBaseContext> &
+    metas: RelationHookMetaMap<
+      CreateOneOperationArgs,
+      TCustomContext,
+      TBaseContext
+    > &
       Readonly<{
         create: CreateOneRawValue;
       }>;
@@ -52,7 +81,11 @@ export type RelationHookMap<
 
   // Update
   [ResourceHookKind.PreUpdate]: {
-    metas: RelationHookMetaMap<UpdateOneOperationArgs, TCustomContext, TBaseContext> &
+    metas: RelationHookMetaMap<
+      UpdateOneOperationArgs,
+      TCustomContext,
+      TBaseContext
+    > &
       Readonly<{
         toBeUpdatedNodeId: WhereUniqueInputValue;
         toBeUpdatedNode?: NodeSource;
@@ -65,7 +98,10 @@ export type RelationHookMap<
 export interface RelationConfig<
   TCustomContext extends CustomContext = {},
   TBaseContext extends AnyBaseContext = BaseContext
-> extends AbstractComponentConfig<RelationHookMap<TCustomContext, TBaseContext>> {
+>
+  extends AbstractComponentConfig<
+    RelationHookMap<TCustomContext, TBaseContext>
+  > {
   /** Required, name of the targeted resource */
   to: string;
 
@@ -78,10 +114,9 @@ export interface RelationConfig<
 
 export type AnyRelationConfig = RelationConfig<any, any>;
 
-export class Relation<TConfig extends AnyRelationConfig = RelationConfig> extends AbstractComponent<
-  RelationHookMap,
-  TConfig
-> {
+export class Relation<
+  TConfig extends AnyRelationConfig = RelationConfig
+> extends AbstractComponent<RelationHookMap, TConfig> {
   public isField(): boolean {
     return false;
   }
@@ -117,12 +152,18 @@ export class Relation<TConfig extends AnyRelationConfig = RelationConfig> extend
     if (this.config.unique) {
       const nonNullableUniqueSet = this.getTo().getNonNullableUniqueSet();
 
-      const unique = nonNullableUniqueSet.find(({ name }) => name === this.config.unique);
+      const unique = nonNullableUniqueSet.find(
+        ({ name }) => name === this.config.unique,
+      );
       if (!unique) {
         throw new Error(
-          `The relation "${this.resource.name}.${this.name}"'s targeted unique "${
+          `The relation "${this.resource.name}.${
+            this.name
+          }"'s targeted unique "${
             this.config.unique
-          }" does not exist or is "nullable", chose among: ${nonNullableUniqueSet.getNames().join(', ')}`,
+          }" does not exist or is "nullable", chose among: ${nonNullableUniqueSet
+            .getNames()
+            .join(', ')}`,
         );
       }
 
@@ -174,7 +215,10 @@ export class Relation<TConfig extends AnyRelationConfig = RelationConfig> extend
           .assert(value, this.getToUniqueSet());
   }
 
-  public serializeValue(value: RelationValue, normalized?: boolean): SerializedRelationValue {
+  public serializeValue(
+    value: RelationValue,
+    normalized?: boolean,
+  ): SerializedRelationValue {
     if (typeof value === 'undefined') {
       throw new UndefinedComponentValueError(this);
     } else if (value === null) {
@@ -186,11 +230,18 @@ export class Relation<TConfig extends AnyRelationConfig = RelationConfig> extend
     }
 
     return normalized
-      ? this.getTo().serializeValue(value, true, this.getToUnique().componentSet)
+      ? this.getTo().serializeValue(
+          value,
+          true,
+          this.getToUnique().componentSet,
+        )
       : this.getTo().serializeValue(value);
   }
 
-  public parseValue(value: SerializedRelationValue, normalized?: boolean): RelationValue {
+  public parseValue(
+    value: SerializedRelationValue,
+    normalized?: boolean,
+  ): RelationValue {
     if (typeof value === 'undefined') {
       throw new UndefinedComponentValueError(this);
     } else if (value === null) {

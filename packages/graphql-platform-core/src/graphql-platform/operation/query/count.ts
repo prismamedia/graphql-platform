@@ -1,6 +1,11 @@
 import { Maybe } from '@prismamedia/graphql-platform-utils';
-import { GraphQLFieldConfigArgumentMap, GraphQLInt, GraphQLNonNull, GraphQLOutputType } from 'graphql';
-import { Memoize } from 'typescript-memoize';
+import { Memoize } from '@prismamedia/ts-memoize';
+import {
+  GraphQLFieldConfigArgumentMap,
+  GraphQLInt,
+  GraphQLNonNull,
+  GraphQLOutputType,
+} from 'graphql';
 import { OperationResolverParams } from '../../operation';
 import { WhereInputValue } from '../../type/input';
 import { AbstractOperation } from '../abstract-operation';
@@ -11,7 +16,10 @@ export interface CountOperationArgs {
 
 export type CountOperationResult = number;
 
-export class CountOperation extends AbstractOperation<CountOperationArgs, CountOperationResult> {
+export class CountOperation extends AbstractOperation<
+  CountOperationArgs,
+  CountOperationResult
+> {
   @Memoize()
   public get name(): string {
     return `${this.resource.camelCasedName}Count`;
@@ -38,7 +46,9 @@ export class CountOperation extends AbstractOperation<CountOperationArgs, CountO
     };
   }
 
-  public async resolve(params: OperationResolverParams<CountOperationArgs>): Promise<CountOperationResult> {
+  public async resolve(
+    params: OperationResolverParams<CountOperationArgs>,
+  ): Promise<CountOperationResult> {
     const { args, context } = params;
     const resource = this.resource;
 

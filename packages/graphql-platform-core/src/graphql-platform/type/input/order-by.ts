@@ -1,6 +1,11 @@
-import { getPlainObjectKeys, Maybe, MaybePromise, SuperMapOfNamedObject } from '@prismamedia/graphql-platform-utils';
+import {
+  getPlainObjectKeys,
+  Maybe,
+  MaybePromise,
+  SuperMapOfNamedObject,
+} from '@prismamedia/graphql-platform-utils';
+import { Memoize } from '@prismamedia/ts-memoize';
 import { GraphQLEnumType, GraphQLEnumValueConfigMap } from 'graphql';
-import { Memoize } from 'typescript-memoize';
 import { Field } from '../../resource/component';
 import { AbstractInputType } from '../abstract-type';
 
@@ -21,16 +26,22 @@ enum FieldOrderBySort {
 
 export type FieldOrderBySortId = keyof typeof FieldOrderBySort;
 
-type FieldOrderBySortConfigMap = Record<FieldOrderBySortId, (field: Field) => Maybe<OrderBySort['name']>>;
+type FieldOrderBySortConfigMap = Record<
+  FieldOrderBySortId,
+  (field: Field) => Maybe<OrderBySort['name']>
+>;
 
 export type OrderByInputParser = {
-  parseFieldFilter(field: Field, sortId: FieldOrderBySortId): MaybePromise<void>;
+  parseFieldFilter(
+    field: Field,
+    sortId: FieldOrderBySortId,
+  ): MaybePromise<void>;
 };
 
 export class OrderByInputType extends AbstractInputType {
   protected fieldSortConfigMap: FieldOrderBySortConfigMap = {
-    asc: field => `${field.name}_ASC`,
-    desc: field => `${field.name}_DESC`,
+    asc: (field) => `${field.name}_ASC`,
+    desc: (field) => `${field.name}_DESC`,
   };
 
   @Memoize()
@@ -54,14 +65,19 @@ export class OrderByInputType extends AbstractInputType {
     return sortMap;
   }
 
-  public async parse(parser: OrderByInputParser, value: Maybe<OrderByInputValue>) {
+  public async parse(
+    parser: OrderByInputParser,
+    value: Maybe<OrderByInputValue>,
+  ) {
     const sortMap = this.getSortMap();
     if (value != null) {
       await Promise.all(
-        value.map(async sortName => {
+        value.map(async (sortName) => {
           const sort = sortMap.get(sortName);
           if (!sort) {
-            throw new Error(`The "${this.resource.name}"'s orderBy sort "${sortName}" does not exist`);
+            throw new Error(
+              `The "${this.resource.name}"'s orderBy sort "${sortName}" does not exist`,
+            );
           }
 
           await sort.parse(parser);

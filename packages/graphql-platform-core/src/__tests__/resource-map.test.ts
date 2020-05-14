@@ -28,23 +28,25 @@ describe('ResourceMap', () => {
         name: resource.name,
         plural: resource.plural,
         description: resource.description,
-        fieldMap: [...resource.getFieldSet()].map(field => ({
+        fieldMap: [...resource.getFieldSet()].map((field) => ({
           name: field.name,
           description: field.description,
           immutable: field.isImmutable(),
         })),
-        relationMap: [...resource.getRelationSet()].map(relation => ({
+        relationMap: [...resource.getRelationSet()].map((relation) => ({
           name: relation.name,
           description: relation.description,
           immutable: relation.isImmutable(),
           targetedResource: relation.getTo().name,
           targetedUniqueName: relation.getToUnique().name,
         })),
-        inverseRelationMap: [...resource.getInverseRelationSet()].map(inverseRelation => ({
-          name: inverseRelation.name,
-          description: inverseRelation.description,
-        })),
-        uniqueSet: [...resource.getUniqueSet()].map(unique => ({
+        inverseRelationMap: [...resource.getInverseRelationSet()].map(
+          (inverseRelation) => ({
+            name: inverseRelation.name,
+            description: inverseRelation.description,
+          }),
+        ),
+        uniqueSet: [...resource.getUniqueSet()].map((unique) => ({
           name: unique.name,
         })),
         identifier: {

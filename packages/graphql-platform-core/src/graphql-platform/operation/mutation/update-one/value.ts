@@ -1,9 +1,6 @@
 import {
   fromEntries,
-  getEnumValues,
-  isPlainObject,
   MaybeUndefinedDecorator,
-  POJO,
 } from '@prismamedia/graphql-platform-utils';
 import {
   AnyComponent,
@@ -11,7 +8,6 @@ import {
   Component,
   ComponentMap,
   FieldValue,
-  List,
   NodeValue,
   RelationValue,
   Resource,
@@ -19,23 +15,50 @@ import {
 } from '../../../resource';
 import { UndefinedComponentValueError } from '../../../resource/component';
 
-function getComponentByPropertyKey(componentMap: ComponentMap, propertyKey: keyof any): Component | undefined {
-  return typeof propertyKey === 'string' ? componentMap.get(propertyKey) : undefined;
+function getComponentByPropertyKey(
+  componentMap: ComponentMap,
+  propertyKey: keyof any,
+): Component | undefined {
+  return typeof propertyKey === 'string'
+    ? componentMap.get(propertyKey)
+    : undefined;
 }
 
 const updateInputHookProxyHandler: ProxyHandler<UpdateOneValue> = {
   ownKeys(update) {
     return [...update.resource.getComponentMap().keys()];
   },
+  getOwnPropertyDescriptor(update, propertyKey) {
+    const component = getComponentByPropertyKey(
+      update.resource.getComponentMap(),
+      propertyKey,
+    );
+
+    return component
+      ? {
+          value: update.get(component),
+          enumerable: true,
+        }
+      : Reflect.getOwnPropertyDescriptor(update, propertyKey);
+  },
   has(update, propertyKey) {
-    return typeof getComponentByPropertyKey(update.resource.getComponentMap(), propertyKey) !== 'undefined';
+    return (
+      typeof getComponentByPropertyKey(
+        update.resource.getComponentMap(),
+        propertyKey,
+      ) !== 'undefined'
+    );
   },
   get(update, propertyKey) {
     if (propertyKey === 'toJSON') {
       return () => update.toJSON();
     }
 
-    const component = getComponentByPropertyKey(update.resource.getComponentMap(), propertyKey);
+    const component = getComponentByPropertyKey(
+      update.resource.getComponentMap(),
+      propertyKey,
+    );
+
     if (!component) {
       throw new UndefinedComponentError(update.resource, String(propertyKey));
     }
@@ -43,7 +66,11 @@ const updateInputHookProxyHandler: ProxyHandler<UpdateOneValue> = {
     return update.get(component);
   },
   set(update, propertyKey, value) {
-    const component = getComponentByPropertyKey(update.resource.getComponentMap(), propertyKey);
+    const component = getComponentByPropertyKey(
+      update.resource.getComponentMap(),
+      propertyKey,
+    );
+
     if (!component) {
       throw new UndefinedComponentError(update.resource, String(propertyKey));
     }
@@ -53,7 +80,11 @@ const updateInputHookProxyHandler: ProxyHandler<UpdateOneValue> = {
     return true;
   },
   deleteProperty(update, propertyKey) {
-    const component = getComponentByPropertyKey(update.resource.getComponentMap(), propertyKey);
+    const component = getComponentByPropertyKey(
+      update.resource.getComponentMap(),
+      propertyKey,
+    );
+
     if (!component) {
       throw new UndefinedComponentError(update.resource, String(propertyKey));
     }
@@ -64,36 +95,15 @@ const updateInputHookProxyHandler: ProxyHandler<UpdateOneValue> = {
   },
 };
 
-export enum FieldListUpdateKind {
-  Set = 'set',
-  Push = 'push',
-  Pop = 'pop',
-  Remove = 'remove',
-}
-
-// For scalar lists, cf: https://github.com/prisma/prisma/issues/1275
-export type FieldListUpdate =
-  | {
-      [FieldListUpdateKind.Set]: FieldValue;
-    }
-  | {
-      [FieldListUpdateKind.Push]: FieldValue;
-      location?: number;
-    }
-  | {
-      [FieldListUpdateKind.Pop]: number;
-    }
-  | {
-      [FieldListUpdateKind.Remove]: POJO;
-    };
-
-export type FieldUpdate = FieldValue | FieldListUpdate;
+export type FieldUpdate = FieldValue;
 
 export type RelationUpdate = RelationValue;
 
 export type ComponentUpdate = FieldUpdate | RelationUpdate;
 
-export type UpdateOneRawValue = Partial<{ [componentName: string]: ComponentUpdate }>;
+export type UpdateOneRawValue = Partial<{
+  [componentName: string]: ComponentUpdate;
+}>;
 
 export class UpdateOneValue {
   protected data: Map<Component, ComponentUpdate> = new Map();
@@ -107,9 +117,7 @@ export class UpdateOneValue {
   public set<TComponent extends AnyComponent>(
     component: TComponent,
     update:
-      | (TComponent extends AnyField
-          ? (TComponent extends List<AnyField> ? FieldListUpdate : FieldValue)
-          : RelationUpdate)
+      | (TComponent extends AnyField ? FieldValue : RelationUpdate)
       | undefined,
   ): boolean {
     this.resource.assertComponent(component);
@@ -117,31 +125,12 @@ export class UpdateOneValue {
     if (typeof update === 'undefined') {
       this.data.delete(component);
     } else {
-      if (component.isField()) {
-        if (component.isList()) {
-          if (!isPlainObject(update)) {
-            throw new Error(`The field "${component}"'s action has to be an object: "${update}" given`);
-          }
-
-          if (FieldListUpdateKind.Set in update) {
-            this.data.set(component, {
-              [FieldListUpdateKind.Set]: component.assertValue((update as any)[FieldListUpdateKind.Set]),
-            } as FieldUpdate);
-          } else {
-            throw new Error(
-              `The field "${component}" supports exactly 1 action among: ${getEnumValues(FieldListUpdateKind).join(
-                ', ',
-              )}`,
-            );
-          }
-
-          throw new Error(`The field "${component}"'s list type is not supported, yet`);
-        } else {
-          this.data.set(component, component.assertValue(update));
-        }
-      } else {
-        this.data.set(component, component.assertValue(update, true));
-      }
+      this.data.set(
+        component,
+        component.isField()
+          ? component.assertValue(update)
+          : component.assertValue(update, true),
+      );
     }
 
     return true;
@@ -151,7 +140,7 @@ export class UpdateOneValue {
     component: TComponent,
     strict?: TStrict,
   ): MaybeUndefinedDecorator<
-    TComponent extends AnyField ? (TComponent extends List<AnyField> ? FieldListUpdate : FieldValue) : RelationUpdate,
+    TComponent extends AnyField ? FieldValue : RelationUpdate,
     TStrict
   > {
     const value = this.data.get(component);
@@ -173,16 +162,10 @@ export class UpdateOneValue {
 
   public toNodeValue(): Partial<NodeValue> {
     return fromEntries(
-      [...this.data.keys()].map(component => {
-        if (component.isField() && component.isList()) {
-          const value = this.get(component);
-          if (value && FieldListUpdateKind.Set in value) {
-            return [component.name, (value as any)[FieldListUpdateKind.Set]];
-          }
-        } else {
-          return [component.name, this.get(component)];
-        }
-      }),
+      [...this.data.keys()].map((component) => [
+        component.name,
+        this.get(component),
+      ]),
     );
   }
 

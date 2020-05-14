@@ -6,7 +6,12 @@ import {
   Maybe,
   POJO,
 } from '@prismamedia/graphql-platform-utils';
-import { AnyBaseContext, BaseContext, Context, CustomContext } from '../graphql-platform';
+import {
+  AnyBaseContext,
+  BaseContext,
+  Context,
+  CustomContext,
+} from '../graphql-platform';
 import {
   CreateOneOperation as CreateOne,
   DeleteOneOperation as DeleteOne,
@@ -84,7 +89,7 @@ export type OperationResolverParams<
   /**
    * The "selectionNode" is the result of the "GraphQLInfo" object parsing
    */
-  selectionNode: GraphQLSelectionNode<any>;
+  selectionNode: GraphQLSelectionNode;
 }>;
 
 export type OperationEvent<
@@ -103,10 +108,18 @@ export type OperationEventMap<
   TArgs extends POJO = any,
   TCustomContext extends CustomContext = any,
   TBaseContext extends AnyBaseContext = BaseContext
-> = Record<OperationEventKind, OperationEvent<TArgs, TCustomContext, TBaseContext>>;
+> = Record<
+  OperationEventKind,
+  OperationEvent<TArgs, TCustomContext, TBaseContext>
+>;
 
 export const operationTypeMap = {
-  [GraphQLOperationType.Mutation]: { CreateOne, DeleteOne, UpdateOne, UpsertOne },
+  [GraphQLOperationType.Mutation]: {
+    CreateOne,
+    DeleteOne,
+    UpdateOne,
+    UpsertOne,
+  },
   [GraphQLOperationType.Query]: { AssertOne, Count, FindMany, FindOne },
 };
 
@@ -114,13 +127,18 @@ export type OperationTypeMap = typeof operationTypeMap;
 
 export type OperationType = keyof OperationTypeMap;
 
-export type OperationConstructorMap<TOperationType extends OperationType> = OperationTypeMap[TOperationType];
+export type OperationConstructorMap<
+  TOperationType extends OperationType
+> = OperationTypeMap[TOperationType];
 
-export type OperationId<TOperationType extends OperationType> = keyof OperationConstructorMap<TOperationType>;
+export type OperationId<
+  TOperationType extends OperationType
+> = keyof OperationConstructorMap<TOperationType>;
 
-export type OperationConstructor<TType extends OperationType, TId extends OperationId<TType>> = OperationConstructorMap<
-  TType
->[TId] extends Class
+export type OperationConstructor<
+  TType extends OperationType,
+  TId extends OperationId<TType>
+> = OperationConstructorMap<TType>[TId] extends Class
   ? OperationConstructorMap<TType>[TId]
   : never;
 
@@ -145,5 +163,7 @@ export type OperationTypeMapConfig =
       queries?: Maybe<OperationTypeConfig<GraphQLOperationType.Query>>;
 
       /** Optional, fine-tune the subscriptions */
-      subscriptions?: Maybe<OperationTypeConfig<GraphQLOperationType.Subscription>>;
+      subscriptions?: Maybe<
+        OperationTypeConfig<GraphQLOperationType.Subscription>
+      >;
     };

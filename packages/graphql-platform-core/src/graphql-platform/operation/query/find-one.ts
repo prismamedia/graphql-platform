@@ -1,5 +1,9 @@
-import { GraphQLFieldConfigArgumentMap, GraphQLNonNull, GraphQLOutputType } from 'graphql';
-import { Memoize } from 'typescript-memoize';
+import { Memoize } from '@prismamedia/ts-memoize';
+import {
+  GraphQLFieldConfigArgumentMap,
+  GraphQLNonNull,
+  GraphQLOutputType,
+} from 'graphql';
 import { OperationResolverParams } from '../../operation';
 import { NodeSource } from '../../type';
 import { WhereUniqueInputValue } from '../../type/input';
@@ -11,7 +15,10 @@ export interface FindOneOperationArgs {
 
 export type FindOneOperationResult = NodeSource | null;
 
-export class FindOneOperation extends AbstractOperation<FindOneOperationArgs, FindOneOperationResult> {
+export class FindOneOperation extends AbstractOperation<
+  FindOneOperationArgs,
+  FindOneOperationResult
+> {
   @Memoize()
   public get name(): string {
     return this.resource.camelCasedName;
@@ -29,12 +36,16 @@ export class FindOneOperation extends AbstractOperation<FindOneOperationArgs, Fi
   public getGraphQLFieldConfigArgs(): GraphQLFieldConfigArgumentMap {
     return {
       where: {
-        type: GraphQLNonNull(this.resource.getInputType('WhereUnique').getGraphQLType()),
+        type: GraphQLNonNull(
+          this.resource.getInputType('WhereUnique').getGraphQLType(),
+        ),
       },
     };
   }
 
-  public async resolve(params: OperationResolverParams<FindOneOperationArgs>): Promise<FindOneOperationResult> {
+  public async resolve(
+    params: OperationResolverParams<FindOneOperationArgs>,
+  ): Promise<FindOneOperationResult> {
     const { args } = params;
 
     const nodes = await this.resource.getQuery('FindMany').resolve({

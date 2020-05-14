@@ -1,6 +1,10 @@
-import { AnyInverseRelation, AnyRelation, Relation } from '@prismamedia/graphql-platform-core';
+import {
+  AnyInverseRelation,
+  AnyRelation,
+  Relation,
+} from '@prismamedia/graphql-platform-core';
 import { SuperMap } from '@prismamedia/graphql-platform-utils';
-import { Memoize } from 'typescript-memoize';
+import { Memoize } from '@prismamedia/ts-memoize';
 import { Resource } from '../../../../resource';
 import { Database } from '../../../database';
 import { Table } from '../../table';
@@ -23,11 +27,18 @@ abstract class AbstractTableReference {
   public abstract get alias(): string;
 
   public isToMany(): boolean {
-    return this.joinTableMap.some(([, joinTable]) => joinTable.relation.isToMany() || joinTable.isToMany());
+    return this.joinTableMap.some(
+      ([, joinTable]) => joinTable.relation.isToMany() || joinTable.isToMany(),
+    );
   }
 
-  @Memoize((relation: AnyRelation | AnyInverseRelation, key?: string) => [relation.name, key].filter(Boolean).join('/'))
-  public join(relation: AnyRelation | AnyInverseRelation, key?: string): JoinTable {
+  @Memoize((relation: AnyRelation | AnyInverseRelation, key?: string) =>
+    [relation.name, key].filter(Boolean).join('/'),
+  )
+  public join(
+    relation: AnyRelation | AnyInverseRelation,
+    key?: string,
+  ): JoinTable {
     const joinTable = new JoinTable(this, relation, key);
     this.joinTableMap.set(joinTable.alias, joinTable);
 
@@ -45,7 +56,10 @@ export class TableFactor extends AbstractTableReference {
 
   @Memoize()
   public get sql(): string {
-    return [this.table.getEscapedName(this.alias), ...[...this.joinTableMap.values()].map(({ sql }) => sql)]
+    return [
+      this.table.getEscapedName(this.alias),
+      ...[...this.joinTableMap.values()].map(({ sql }) => sql),
+    ]
       .filter(Boolean)
       .join(' ');
   }
@@ -62,7 +76,10 @@ export class JoinTable extends AbstractTableReference {
 
   @Memoize()
   public get alias(): string {
-    return [this.parent.alias, [this.relation.name, this.key].filter(Boolean).join('/')].join('>');
+    return [
+      this.parent.alias,
+      [this.relation.name, this.key].filter(Boolean).join('/'),
+    ].join('>');
   }
 
   @Memoize()
@@ -70,7 +87,9 @@ export class JoinTable extends AbstractTableReference {
     const joinCondition = new WhereConditionAnd(this);
 
     if (this.relation instanceof Relation) {
-      for (const column of this.parent.table.getForeignKey(this.relation).getColumnSet()) {
+      for (const column of this.parent.table
+        .getForeignKey(this.relation)
+        .getColumnSet()) {
         joinCondition.addRaw(
           [
             column.getEscapedName(this.parent.alias),
@@ -80,7 +99,9 @@ export class JoinTable extends AbstractTableReference {
         );
       }
     } else {
-      for (const column of this.table.getForeignKey(this.relation.getInverse()).getColumnSet()) {
+      for (const column of this.table
+        .getForeignKey(this.relation.getInverse())
+        .getColumnSet()) {
         joinCondition.addRaw(
           [
             column.reference.getEscapedName(this.parent.alias),

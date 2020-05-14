@@ -15,11 +15,16 @@ export class ResourceError extends Error {
 }
 
 export class UndefinedComponentError extends ResourceError {
-  constructor(readonly resource: AnyResource, readonly componentOrComponentName: AnyComponent | AnyComponent['name']) {
+  constructor(
+    readonly resource: AnyResource,
+    readonly componentOrComponentName: AnyComponent | AnyComponent['name'],
+  ) {
     super(
       resource,
       `The resource "${resource}" does not have the component "${
-        typeof componentOrComponentName === 'string' ? componentOrComponentName : componentOrComponentName.name
+        typeof componentOrComponentName === 'string'
+          ? componentOrComponentName
+          : componentOrComponentName.name
       }".`,
     );
   }
@@ -27,6 +32,9 @@ export class UndefinedComponentError extends ResourceError {
 
 export class InvalidNodeValueError extends ResourceError {
   constructor(readonly resource: AnyResource, cause?: string) {
-    super(resource, `The "${resource}"'s node value is invalid${cause ? `: ${cause}` : ''}.`);
+    super(
+      resource,
+      `The "${resource}"'s node value is invalid${cause ? `: ${cause}` : ''}.`,
+    );
   }
 }

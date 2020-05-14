@@ -1,21 +1,17 @@
-import { getPredictableId, getPredictableSequence } from '../get-predictable-id';
+import {
+  getPredictableId,
+  getPredictableSequence,
+} from '../get-predictable-id';
 
 describe('get-short-id', () => {
   it('generates a predictable sequence', () => {
     const charset = 'abc';
 
-    expect([...new Array(10)].map((_, index) => getPredictableSequence(index, charset))).toEqual([
-      'a',
-      'b',
-      'c',
-      'aa',
-      'ab',
-      'ac',
-      'ba',
-      'bb',
-      'bc',
-      'ca',
-    ]);
+    expect(
+      [...new Array(10)].map((_, index) =>
+        getPredictableSequence(index, charset),
+      ),
+    ).toEqual(['a', 'b', 'c', 'aa', 'ab', 'ac', 'ba', 'bb', 'bc', 'ca']);
   });
 
   it('generates predictable ids', () => {

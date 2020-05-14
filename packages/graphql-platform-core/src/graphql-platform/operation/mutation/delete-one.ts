@@ -1,6 +1,10 @@
 import { GraphQLOperationType } from '@prismamedia/graphql-platform-utils';
-import { GraphQLFieldConfigArgumentMap, GraphQLNonNull, GraphQLOutputType } from 'graphql';
-import { Memoize } from 'typescript-memoize';
+import { Memoize } from '@prismamedia/ts-memoize';
+import {
+  GraphQLFieldConfigArgumentMap,
+  GraphQLNonNull,
+  GraphQLOutputType,
+} from 'graphql';
 import { OperationResolverParams } from '../../operation';
 import { NodeValue, ResourceHookKind } from '../../resource';
 import { NodeSource, TypeKind, WhereUniqueInputValue } from '../../type';
@@ -12,7 +16,10 @@ export interface DeleteOneOperationArgs {
 
 export type DeleteOneOperationResult = NodeSource | null;
 
-export class DeleteOneOperation extends AbstractOperation<DeleteOneOperationArgs, DeleteOneOperationResult> {
+export class DeleteOneOperation extends AbstractOperation<
+  DeleteOneOperationArgs,
+  DeleteOneOperationResult
+> {
   @Memoize()
   public isSupported(): boolean {
     return !this.resource.isImmutable();
@@ -35,33 +42,39 @@ export class DeleteOneOperation extends AbstractOperation<DeleteOneOperationArgs
   public getGraphQLFieldConfigArgs(): GraphQLFieldConfigArgumentMap {
     return {
       where: {
-        type: GraphQLNonNull(this.resource.getInputType('WhereUnique').getGraphQLType()),
+        type: GraphQLNonNull(
+          this.resource.getInputType('WhereUnique').getGraphQLType(),
+        ),
       },
     };
   }
 
-  public async resolve(params: OperationResolverParams<DeleteOneOperationArgs>): Promise<DeleteOneOperationResult> {
+  public async resolve(
+    params: OperationResolverParams<DeleteOneOperationArgs>,
+  ): Promise<DeleteOneOperationResult> {
     const { args, context, selectionNode } = params;
     const resource = this.resource;
 
     // Select all the components in case of post success hooks
-    const hasPostSuccessHook = resource.getEventListenerCount(ResourceHookKind.PostDelete) > 0;
+    const hasPostSuccessHook =
+      resource.getEventListenerCount(ResourceHookKind.PostDelete) > 0;
     if (hasPostSuccessHook) {
-      selectionNode.setChildren(resource.getComponentSet().getSelectionNodeChildren(TypeKind.Input));
+      selectionNode.setChildren(
+        resource.getComponentSet().getSelectionNodeChildren(TypeKind.Input),
+      );
     }
 
     // Ensure the main "identifier" is requested
     selectionNode.setChildren(
-      resource
-        .getIdentifier()
-        .getSelectionNode(TypeKind.Input)
-        .getChildren(),
+      resource.getIdentifier().getSelectionNode(TypeKind.Input).getChildren(),
     );
 
     const node = await resource.getQuery('FindOne').resolve(params);
 
     if (node) {
-      const nodeId = resource.getInputType('WhereUnique').assertUnique(node, resource.getIdentifier(), true);
+      const nodeId = resource
+        .getInputType('WhereUnique')
+        .assertUnique(node, resource.getIdentifier(), true);
 
       await resource.emitSerial(ResourceHookKind.PreDelete, {
         metas: Object.freeze({
@@ -80,7 +93,9 @@ export class DeleteOneOperation extends AbstractOperation<DeleteOneOperationArgs
       if (deletedNodeCount === 1) {
         const { operationContext } = context;
         const postSuccessHooks =
-          operationContext.type === GraphQLOperationType.Mutation ? operationContext.postSuccessHooks : undefined;
+          operationContext.type === GraphQLOperationType.Mutation
+            ? operationContext.postSuccessHooks
+            : undefined;
 
         if (postSuccessHooks && hasPostSuccessHook) {
           postSuccessHooks.push(
@@ -90,7 +105,11 @@ export class DeleteOneOperation extends AbstractOperation<DeleteOneOperationArgs
                 context,
                 resource,
               }),
-              deletedNode: resource.serializeValue(node as NodeValue, true, resource.getComponentSet()),
+              deletedNode: resource.serializeValue(
+                node as NodeValue,
+                true,
+                resource.getComponentSet(),
+              ),
             }),
           );
         }

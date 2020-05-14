@@ -16,18 +16,34 @@ enum AStringEnum {
 
 describe('getGraphQLEnumType', () => {
   it('creates an enum type from numeric enum', () => {
-    expect(getGraphQLEnumType('ANumericEnum', ANumericEnum).toConfig()).toMatchSnapshot();
+    expect(
+      getGraphQLEnumType('ANumericEnum', ANumericEnum).toConfig(),
+    ).toMatchSnapshot();
   });
 
   it('creates an enum type from numeric enum using "key as value"', () => {
-    expect(getGraphQLEnumType('ANumericEnumUsingKeyAsValue', ANumericEnum, true).toConfig()).toMatchSnapshot();
+    expect(
+      getGraphQLEnumType(
+        'ANumericEnumUsingKeyAsValue',
+        ANumericEnum,
+        true,
+      ).toConfig(),
+    ).toMatchSnapshot();
   });
 
   it('creates an enum type from string enum', () => {
-    expect(getGraphQLEnumType('AStringEnum', AStringEnum).toConfig()).toMatchSnapshot();
+    expect(
+      getGraphQLEnumType('AStringEnum', AStringEnum).toConfig(),
+    ).toMatchSnapshot();
   });
 
   it('creates an enum type from string enum using "key as value"', () => {
-    expect(getGraphQLEnumType('AStringEnumUsingKeyAsValue', AStringEnum, true).toConfig()).toMatchSnapshot();
+    expect(
+      getGraphQLEnumType(
+        'AStringEnumUsingKeyAsValue',
+        AStringEnum,
+        true,
+      ).toConfig(),
+    ).toMatchSnapshot();
   });
 });

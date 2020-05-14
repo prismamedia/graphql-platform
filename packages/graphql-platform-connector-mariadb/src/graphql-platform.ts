@@ -7,8 +7,12 @@ import {
   GraphQLPlatformConfig as CoreGraphQLPlatformConfig,
 } from '@prismamedia/graphql-platform-core';
 import { Maybe, POJO } from '@prismamedia/graphql-platform-utils';
-import { Memoize } from 'typescript-memoize';
-import { Connector, ConnectorConfig, ConnectorRequest } from './graphql-platform/connector';
+import { Memoize } from '@prismamedia/ts-memoize';
+import {
+  Connector,
+  ConnectorConfig,
+  ConnectorRequest,
+} from './graphql-platform/connector';
 import { ResourceConfig } from './graphql-platform/resource';
 
 export * from './graphql-platform/connector';
@@ -30,7 +34,10 @@ export type BaseContext = CoreBaseContext & {
 
 export type AnyBaseContext = BaseContext;
 
-export type Context<TCustomContext extends CustomContext = {}> = CoreContext<TCustomContext, BaseContext>;
+export type Context<TCustomContext extends CustomContext = {}> = CoreContext<
+  TCustomContext,
+  BaseContext
+>;
 
 export type CustomOperationConfig<
   TArgs extends POJO = any,

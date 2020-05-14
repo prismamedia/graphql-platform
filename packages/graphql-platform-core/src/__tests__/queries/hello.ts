@@ -9,17 +9,11 @@ const query: CustomOperationConfig = ({ resourceMap }) => ({
     },
     id: {
       type: GraphQLNonNull(
-        resourceMap
-          .assert('User')
-          .getInputType('WhereUnique')
-          .getGraphQLType(),
+        resourceMap.assert('User').getInputType('WhereUnique').getGraphQLType(),
       ),
     },
   },
-  type: resourceMap
-    .assert('User')
-    .getOutputType('Node')
-    .getGraphQLType(),
+  type: resourceMap.assert('User').getOutputType('Node').getGraphQLType(),
 });
 
 export default query;

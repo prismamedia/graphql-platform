@@ -9,7 +9,10 @@ export enum TypeKind {
   Output,
 }
 
-interface Type<TTypeKind extends TypeKind, TType extends GraphQLInputType | GraphQLOutputType> {
+interface Type<
+  TTypeKind extends TypeKind,
+  TType extends GraphQLInputType | GraphQLOutputType
+> {
   kind: TTypeKind;
   id: string;
   resource: Resource;

@@ -1,5 +1,5 @@
 import { Unique } from '@prismamedia/graphql-platform-core';
-import { Memoize } from 'typescript-memoize';
+import { Memoize } from '@prismamedia/ts-memoize';
 import { Table } from '../table';
 import { ColumnSet } from './column/set';
 

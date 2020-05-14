@@ -1,7 +1,10 @@
-import { AnyInverseRelation, AnyRelation } from '@prismamedia/graphql-platform-core';
+import {
+  AnyInverseRelation,
+  AnyRelation,
+} from '@prismamedia/graphql-platform-core';
 import { MaybeArray, SuperSet } from '@prismamedia/graphql-platform-utils';
+import { Memoize } from '@prismamedia/ts-memoize';
 import { escape } from 'mysql';
-import { Memoize } from 'typescript-memoize';
 import { Column, ColumnReference, Table } from '../..';
 import { Resource } from '../../../../resource';
 import { Database } from '../../../database';
@@ -9,7 +12,10 @@ import { ColumnValue } from '../column';
 import { TableReference } from './reference';
 
 export type WhereConditionBool = WhereConditionAnd | WhereConditionOr;
-export type WhereCondition = WhereConditionRaw | WhereConditionNot | WhereConditionBool;
+export type WhereCondition =
+  | WhereConditionRaw
+  | WhereConditionNot
+  | WhereConditionBool;
 
 class WhereConditionRaw {
   public constructor(protected condition: string) {}
@@ -56,7 +62,9 @@ abstract class AbstractWhereConditionBool extends SuperSet<WhereCondition> {
         typeof value === 'undefined'
           ? undefined
           : Array.isArray(value)
-          ? `(${escape(value.filter(subValue => typeof subValue !== 'undefined'))})`
+          ? `(${escape(
+              value.filter((subValue) => typeof subValue !== 'undefined'),
+            )})`
           : escape(value),
       ]
         .filter(Boolean)
@@ -96,7 +104,10 @@ abstract class AbstractWhereConditionBool extends SuperSet<WhereCondition> {
     return this;
   }
 
-  public on(relation: AnyRelation | AnyInverseRelation, callback: (where: WhereConditionAnd) => void): this {
+  public on(
+    relation: AnyRelation | AnyInverseRelation,
+    callback: (where: WhereConditionAnd) => void,
+  ): this {
     const joinTable = this.tableReference.join(relation);
     const where = new WhereConditionAnd(joinTable);
     callback(where);
@@ -116,7 +127,9 @@ abstract class AbstractWhereConditionBool extends SuperSet<WhereCondition> {
     const conditionSet = this.getNormalizedSet();
 
     return conditionSet.size > 0
-      ? [...conditionSet].map(({ sql }) => (conditionSet.size > 1 ? `(${sql})` : sql)).join(` ${this.BOOL_OPERATOR} `)
+      ? [...conditionSet]
+          .map(({ sql }) => (conditionSet.size > 1 ? `(${sql})` : sql))
+          .join(` ${this.BOOL_OPERATOR} `)
       : null;
   }
 }

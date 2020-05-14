@@ -2,6 +2,7 @@ import {
   FlagConfig,
   getFlagValue,
   getThunkValue,
+  GraphQLOperationType,
   loadModuleMap,
   Maybe,
   MaybePromise,
@@ -11,14 +12,24 @@ import {
   POJO,
   Thunk,
 } from '@prismamedia/graphql-platform-utils';
-import { graphql, GraphQLArgs, GraphQLFieldConfig, GraphQLNamedType, GraphQLSchema } from 'graphql';
+import { Memoize } from '@prismamedia/ts-memoize';
+import {
+  graphql,
+  GraphQLArgs,
+  GraphQLFieldConfig,
+  GraphQLNamedType,
+  GraphQLSchema,
+} from 'graphql';
 import { Binding } from 'graphql-binding';
 import { ExecutionResultDataDefault } from 'graphql/execution/execute';
-import { Memoize } from 'typescript-memoize';
 import { Logger } from 'winston';
 import { ConnectorInterface } from './graphql-platform/connector';
 import { Fixture, FixtureData, FixtureGraph } from './graphql-platform/fixture';
-import { OperationContext, OperationEvent } from './graphql-platform/operation';
+import {
+  OperationContext,
+  OperationEvent,
+  PostOperationSuccessHook,
+} from './graphql-platform/operation';
 import {
   AnyResourceConfig,
   MaybeResourceMapAware,
@@ -88,23 +99,33 @@ export type Context<
   TBaseContext extends AnyBaseContext = BaseContext
 > = TCustomContext & TBaseContext;
 
-export type GraphQLRequest = Merge<Omit<GraphQLArgs, 'schema'>, { contextValue?: CustomContext }>;
+export type GraphQLRequest = Merge<
+  Omit<GraphQLArgs, 'schema'>,
+  { contextValue?: CustomContext }
+>;
 
 export interface GraphQLExecutor {
-  execute<TData = ExecutionResultDataDefault>(request: GraphQLRequest): Promise<TData>;
+  execute<TData = ExecutionResultDataDefault>(
+    request: GraphQLRequest,
+  ): Promise<TData>;
 }
 
 export type CustomOperationConfig<
   TArgs extends POJO = any,
   TCustomContext extends CustomContext = {},
   TBaseContext extends AnyBaseContext = BaseContext
-> = MaybeResourceMapAware<GraphQLFieldConfig<any, Context<TCustomContext, TBaseContext>, TArgs>>;
+> = MaybeResourceMapAware<
+  GraphQLFieldConfig<any, Context<TCustomContext, TBaseContext>, TArgs>
+>;
 
 export interface GraphQLPlatformConfig<
   TContextParams extends POJO = any,
   TCustomContext extends CustomContext = {},
   TBaseContext extends AnyBaseContext = BaseContext,
-  TResourceConfig extends AnyResourceConfig = ResourceConfig<TCustomContext, TBaseContext>
+  TResourceConfig extends AnyResourceConfig = ResourceConfig<
+    TCustomContext,
+    TBaseContext
+  >
 > {
   /** Optional, provide your own logger to see what happens under the hood */
   logger?: Maybe<Logger>;
@@ -122,10 +143,14 @@ export interface GraphQLPlatformConfig<
   resources?: ModuleMapConfig<TResourceConfig>;
 
   /** Optional, provide some custom queries */
-  queries?: ModuleMapConfig<CustomOperationConfig<any, TCustomContext, TBaseContext>>;
+  queries?: ModuleMapConfig<
+    CustomOperationConfig<any, TCustomContext, TBaseContext>
+  >;
 
   /** Optional, provide some custom mutations */
-  mutations?: ModuleMapConfig<CustomOperationConfig<any, TCustomContext, TBaseContext>>;
+  mutations?: ModuleMapConfig<
+    CustomOperationConfig<any, TCustomContext, TBaseContext>
+  >;
 
   /** Optional, provide some custom types */
   types?: Maybe<MaybeResourceMapAware<GraphQLNamedType[]>>;
@@ -134,13 +159,22 @@ export interface GraphQLPlatformConfig<
   fixtures?: Thunk<ModuleMapConfig<ModuleMapConfig<FixtureData>>>;
 }
 
-export type AnyGraphQLPlatformConfig = GraphQLPlatformConfig<any, any, any, any>;
+export type AnyGraphQLPlatformConfig = GraphQLPlatformConfig<
+  any,
+  any,
+  any,
+  any
+>;
 
 export class GraphQLPlatform<
   TContextParams extends POJO = any,
   TCustomContext extends CustomContext = {},
   TBaseContext extends AnyBaseContext = BaseContext,
-  TConfig extends AnyGraphQLPlatformConfig = GraphQLPlatformConfig<TContextParams, TCustomContext, TBaseContext>
+  TConfig extends AnyGraphQLPlatformConfig = GraphQLPlatformConfig<
+    TContextParams,
+    TCustomContext,
+    TBaseContext
+  >
 > implements GraphQLExecutor {
   public constructor(readonly config: TConfig) {}
 
@@ -156,23 +190,33 @@ export class GraphQLPlatform<
 
   @Memoize()
   public isDebug(): boolean {
-    return getFlagValue(this.config.debug, !['production', 'test'].includes(this.getEnvironment()));
+    return getFlagValue(
+      this.config.debug,
+      !['production', 'test'].includes(this.getEnvironment()),
+    );
   }
 
   @Memoize()
   public getResourceMap(): ResourceMap {
     const resourceMap = new ResourceMap();
 
-    for (const [resourceName, resourceConfig] of loadModuleMap(this.config.resources)) {
+    for (const [resourceName, resourceConfig] of loadModuleMap(
+      this.config.resources,
+    )) {
       // Generate the default config by providing the resource's name
-      const defaultResourceConfig = this.config.default ? this.config.default(resourceName) : undefined;
+      const defaultResourceConfig = this.config.default
+        ? this.config.default(resourceName)
+        : undefined;
 
       // Process the configs merging, the resource's config prevails over the default one.
       const mergedResourceConfig = defaultResourceConfig
         ? mergeWith({}, defaultResourceConfig, resourceConfig)
         : resourceConfig;
 
-      resourceMap.set(resourceName, new Resource(resourceName, mergedResourceConfig, this));
+      resourceMap.set(
+        resourceName,
+        new Resource(resourceName, mergedResourceConfig, this),
+      );
     }
 
     return resourceMap;
@@ -211,14 +255,24 @@ export class GraphQLPlatform<
       queryMap: this.config.queries
         ? [...loadModuleMap(this.config.queries)].reduce(
             (operationMap, [name, config]) =>
-              Object.assign(operationMap, { [name]: typeof config === 'function' ? config({ resourceMap }) : config }),
+              Object.assign(operationMap, {
+                [name]:
+                  typeof config === 'function'
+                    ? config({ resourceMap })
+                    : config,
+              }),
             {},
           )
         : {},
       mutationMap: this.config.mutations
         ? [...loadModuleMap(this.config.mutations)].reduce(
             (operationMap, [name, config]) =>
-              Object.assign(operationMap, { [name]: typeof config === 'function' ? config({ resourceMap }) : config }),
+              Object.assign(operationMap, {
+                [name]:
+                  typeof config === 'function'
+                    ? config({ resourceMap })
+                    : config,
+              }),
             {},
           )
         : {},
@@ -256,8 +310,13 @@ export class GraphQLPlatform<
     } as TBaseContext;
   }
 
-  public async getContext(params?: any): Promise<Context<TCustomContext, TBaseContext>> {
-    const [custom, base] = await Promise.all([this.getCustomContext(params), this.getBaseContext()]);
+  public async getContext(
+    params?: any,
+  ): Promise<Context<TCustomContext, TBaseContext>> {
+    const [custom, base] = await Promise.all([
+      this.getCustomContext(params),
+      this.getBaseContext(),
+    ]);
 
     return Object.freeze({
       ...custom,
@@ -265,7 +324,9 @@ export class GraphQLPlatform<
     });
   }
 
-  public async execute<TData = ExecutionResultDataDefault>(request: GraphQLRequest): Promise<TData> {
+  public async execute<TData = ExecutionResultDataDefault>(
+    request: GraphQLRequest,
+  ): Promise<TData> {
     const { data, errors } = await graphql<TData>({
       ...request,
       schema: this.getGraphQLSchema(),
@@ -275,16 +336,18 @@ export class GraphQLPlatform<
       }),
     });
 
-    if (errors && errors.length > 0) {
+    if (errors?.length) {
       throw errors[0];
     }
 
     if (data == null) {
       throw new Error(
-        `An empty result have been returned for the following request: ${JSON.stringify({
-          source: request.source,
-          variableValues: request.variableValues,
-        })}`,
+        `An empty result have been returned for the following request: ${JSON.stringify(
+          {
+            source: request.source,
+            variableValues: request.variableValues,
+          },
+        )}`,
       );
     }
 
@@ -314,7 +377,9 @@ export class GraphQLPlatform<
 
   // Gets the fixtures, sorted by their dependencies
   public getFixtureGraph(
-    config: ModuleMapConfig<ModuleMapConfig<FixtureData>> = getThunkValue(this.config.fixtures),
+    config: ModuleMapConfig<ModuleMapConfig<FixtureData>> = getThunkValue(
+      this.config.fixtures,
+    ),
   ): FixtureGraph {
     const fixtureGraph = new FixtureGraph({ circular: false });
 
@@ -324,10 +389,18 @@ export class GraphQLPlatform<
         if (fixtureGraph.hasNode(fixtureName)) {
           const fixture = fixtureGraph.getNodeData(fixtureName);
 
-          throw new Error(`At least 2 fixtures have the same name: "${resource}.${fixtureName}" and "${fixture}"`);
+          throw new Error(
+            `At least 2 fixtures have the same name: "${resource}.${fixtureName}" and "${fixture}"`,
+          );
         }
 
-        const fixture = new Fixture(fixtureName, resource, fixtureData, fixtureGraph, this);
+        const fixture = new Fixture(
+          fixtureName,
+          resource,
+          fixtureData,
+          fixtureGraph,
+          this,
+        );
 
         fixtureGraph.addNode(fixture.name, fixture);
       }
@@ -338,9 +411,9 @@ export class GraphQLPlatform<
       const fixture = fixtureGraph.getNodeData(fixtureName);
 
       for (const relation of fixture.resource.getRelationSet()) {
-        const relatedFixture = fixture.getRelatedFixture(relation);
-        if (relatedFixture) {
-          fixtureGraph.addDependency(fixture.name, relatedFixture.name);
+        const dependency = fixture.getDependency(relation);
+        if (dependency) {
+          fixtureGraph.addDependency(fixture.name, dependency.name);
         }
       }
     }
@@ -353,11 +426,26 @@ export class GraphQLPlatform<
     contextValue?: GraphQLRequest['contextValue'],
   ): Promise<void> {
     const fixtureGraph = this.getFixtureGraph(config);
-    // Will throw an error in case of circular reference
-    const fixtureNames = fixtureGraph.overallOrder();
+
+    // By providing this "OperationContext", we control when the "postSuccessHooks" are executed
+    const postSuccessHooks: PostOperationSuccessHook[] = [];
+    const operationContext: OperationContext = {
+      type: GraphQLOperationType.Mutation,
+      postSuccessHooks,
+    };
 
     // Actually load the fixtures
-    await Promise.all(fixtureNames.map(async fixtureName => fixtureGraph.getNodeData(fixtureName).load(contextValue)));
+    await Promise.all(
+      fixtureGraph
+        .overallOrder()
+        .map(async (fixtureName) =>
+          fixtureGraph
+            .getNodeData(fixtureName)
+            .load({ ...contextValue, operationContext }),
+        ),
+    );
+
+    await Promise.all(postSuccessHooks.map(async (hook) => hook()));
   }
 }
 

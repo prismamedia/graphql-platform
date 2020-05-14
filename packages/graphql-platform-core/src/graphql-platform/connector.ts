@@ -1,5 +1,14 @@
-import { GraphQLSelectionNode, MaybePromise, POJO } from '@prismamedia/graphql-platform-utils';
-import { AnyBaseContext, BaseContext, Context, CustomContext } from '../graphql-platform';
+import {
+  GraphQLSelectionNode,
+  MaybePromise,
+  POJO,
+} from '@prismamedia/graphql-platform-utils';
+import {
+  AnyBaseContext,
+  BaseContext,
+  Context,
+  CustomContext,
+} from '../graphql-platform';
 import {
   CountOperationArgs,
   CountOperationResult,
@@ -23,7 +32,7 @@ export type ConnectorOperationParams<
 }>;
 
 export type ConnectorFindOperationArgs = FindManyOperationArgs & {
-  selectionNode: GraphQLSelectionNode<any>;
+  selectionNode: GraphQLSelectionNode;
 };
 
 export type ConnectorFindOperationResult = FindManyOperationResult;
@@ -59,23 +68,43 @@ export interface ConnectorInterface<
   TBaseContext extends AnyBaseContext = BaseContext
 > {
   find(
-    params: ConnectorOperationParams<ConnectorFindOperationArgs, TCustomContext, TBaseContext>,
+    params: ConnectorOperationParams<
+      ConnectorFindOperationArgs,
+      TCustomContext,
+      TBaseContext
+    >,
   ): MaybePromise<ConnectorFindOperationResult>;
 
   count(
-    params: ConnectorOperationParams<ConnectorCountOperationArgs, TCustomContext, TBaseContext>,
+    params: ConnectorOperationParams<
+      ConnectorCountOperationArgs,
+      TCustomContext,
+      TBaseContext
+    >,
   ): MaybePromise<ConnectorCountOperationResult>;
 
   create(
-    params: ConnectorOperationParams<ConnectorCreateOperationArgs, TCustomContext, TBaseContext>,
+    params: ConnectorOperationParams<
+      ConnectorCreateOperationArgs,
+      TCustomContext,
+      TBaseContext
+    >,
   ): MaybePromise<ConnectorCreateOperationResult>;
 
   update(
-    params: ConnectorOperationParams<ConnectorUpdateOperationArgs, TCustomContext, TBaseContext>,
+    params: ConnectorOperationParams<
+      ConnectorUpdateOperationArgs,
+      TCustomContext,
+      TBaseContext
+    >,
   ): MaybePromise<ConnectorUpdateOperationResult>;
 
   delete(
-    params: ConnectorOperationParams<ConnectorDeleteOperationArgs, TCustomContext, TBaseContext>,
+    params: ConnectorOperationParams<
+      ConnectorDeleteOperationArgs,
+      TCustomContext,
+      TBaseContext
+    >,
   ): MaybePromise<ConnectorDeleteOperationResult>;
 }
 

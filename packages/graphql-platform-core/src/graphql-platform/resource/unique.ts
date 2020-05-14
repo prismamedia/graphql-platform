@@ -1,5 +1,8 @@
-import { GraphQLSelectionNode, GraphQLSelectionNodeChildren } from '@prismamedia/graphql-platform-utils';
-import { Memoize } from 'typescript-memoize';
+import {
+  GraphQLSelectionNode,
+  GraphQLSelectionNodeChildren,
+} from '@prismamedia/graphql-platform-utils';
+import { Memoize } from '@prismamedia/ts-memoize';
 import { Resource } from '../resource';
 import { TypeKind } from '../type';
 import { ComponentSet } from './component/set';
@@ -22,16 +25,18 @@ export interface UniqueFullConfig {
 
 export type AnyUniqueFullConfig = UniqueFullConfig;
 
-export type UniqueConfig<TConfig extends AnyUniqueFullConfig = UniqueFullConfig> =
-  | Component['name']
-  | Component['name'][]
-  | TConfig;
+export type UniqueConfig<
+  TConfig extends AnyUniqueFullConfig = UniqueFullConfig
+> = Component['name'] | Component['name'][] | TConfig;
 
 export class Unique<TConfig extends AnyUniqueFullConfig = UniqueFullConfig> {
   readonly componentSet: ComponentSet;
   readonly name: string;
 
-  constructor(readonly config: UniqueConfig<TConfig>, readonly resource: Resource) {
+  constructor(
+    readonly config: UniqueConfig<TConfig>,
+    readonly resource: Resource,
+  ) {
     const [name = null, componentNames = []] =
       config != null
         ? typeof config === 'string'
@@ -48,7 +53,7 @@ export class Unique<TConfig extends AnyUniqueFullConfig = UniqueFullConfig> {
     }
 
     this.componentSet = new ComponentSet(
-      componentNames.map(componentName => {
+      componentNames.map((componentName) => {
         const component = resource.getComponentMap().get(componentName);
         if (!component) {
           throw new Error(
@@ -60,7 +65,8 @@ export class Unique<TConfig extends AnyUniqueFullConfig = UniqueFullConfig> {
       }),
     );
 
-    this.name = name || [...this.componentSet].map(({ name }) => name).join('-');
+    this.name =
+      name || [...this.componentSet].map(({ name }) => name).join('-');
   }
 
   @Memoize()
@@ -80,12 +86,12 @@ export class Unique<TConfig extends AnyUniqueFullConfig = UniqueFullConfig> {
 
   @Memoize()
   public isNullable(): boolean {
-    return this.componentSet.every(component => component.isNullable());
+    return this.componentSet.every((component) => component.isNullable());
   }
 
   @Memoize()
   public isPublic(): boolean {
-    return this.componentSet.every(component => component.isPublic());
+    return this.componentSet.every((component) => component.isPublic());
   }
 
   public contains(component: Component): boolean {
@@ -93,16 +99,26 @@ export class Unique<TConfig extends AnyUniqueFullConfig = UniqueFullConfig> {
   }
 
   @Memoize((use: TypeKind = TypeKind.Output) => use)
-  public getSelectionNode(use: TypeKind = TypeKind.Output): GraphQLSelectionNode {
+  public getSelectionNode(
+    use: TypeKind = TypeKind.Output,
+  ): GraphQLSelectionNode {
     if (use === TypeKind.Output && !this.isPublic()) {
-      throw new Error(`As the unique "${this}"'s components are not public, they can't be selectionned.`);
+      throw new Error(
+        `As the unique "${this}"'s components are not public, they can't be selectionned.`,
+      );
     }
 
-    return new GraphQLSelectionNode(this.name, {}, this.getSelectionNodeChildren(use));
+    return new GraphQLSelectionNode(
+      this.name,
+      {},
+      this.getSelectionNodeChildren(use),
+    );
   }
 
   @Memoize((use: TypeKind = TypeKind.Output) => use)
-  public getSelectionNodeChildren(use: TypeKind = TypeKind.Output): GraphQLSelectionNodeChildren {
+  public getSelectionNodeChildren(
+    use: TypeKind = TypeKind.Output,
+  ): GraphQLSelectionNodeChildren {
     return this.componentSet.getSelectionNodeChildren(use);
   }
 }

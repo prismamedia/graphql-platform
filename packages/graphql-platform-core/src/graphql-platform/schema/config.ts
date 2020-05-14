@@ -19,7 +19,9 @@ export interface GraphQLSchemaConfigConfig
 export class GraphQLSchemaConfig implements BaseGraphQLSchemaConfig {
   public constructor(readonly config: GraphQLSchemaConfigConfig) {}
 
-  public getOperationTypeFieldMap<TType extends OperationType>(type: TType): GraphQLFieldConfigMap<any, any> {
+  public getOperationTypeFieldMap<TType extends OperationType>(
+    type: TType,
+  ): GraphQLFieldConfigMap<any, any> {
     const fields: GraphQLFieldConfigMap<any, any> = {};
 
     for (const resource of this.config.resourceMap.values()) {

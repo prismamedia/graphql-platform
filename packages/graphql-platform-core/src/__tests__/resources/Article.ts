@@ -10,7 +10,10 @@ export enum ArticleFormat {
   Video = 'VIDEO',
 }
 
-export const ArticleFormatType = getGraphQLEnumType('ArticleFormat', ArticleFormat);
+export const ArticleFormatType = getGraphQLEnumType(
+  'ArticleFormat',
+  ArticleFormat,
+);
 
 export enum ArticleQualifier {
   Hot = 'HOT',
@@ -18,7 +21,10 @@ export enum ArticleQualifier {
   Slideshow = 'SLIDESHOW',
 }
 
-export const ArticleQualifierType = getGraphQLEnumType('ArticleQualifier', ArticleQualifier);
+export const ArticleQualifierType = getGraphQLEnumType(
+  'ArticleQualifier',
+  ArticleQualifier,
+);
 
 const resource: MyResourceConfig = {
   description: 'An article',
@@ -40,11 +46,12 @@ const resource: MyResourceConfig = {
       immutable: true,
       managed: ManagementKind.Optional,
       hooks: {
-        [ResourceHookKind.PreCreate]: event => {
+        [ResourceHookKind.PreCreate]: (event) => {
           if (event.fieldValue == null) {
             const title = event.metas.create.title;
 
-            event.fieldValue = typeof title === 'string' ? slug(title, { lower: true }) : null;
+            event.fieldValue =
+              typeof title === 'string' ? slug(title, { lower: true }) : null;
           }
         },
       },
@@ -73,8 +80,11 @@ const resource: MyResourceConfig = {
       immutable: true,
       managed: ManagementKind.Full,
       hooks: {
-        [ResourceHookKind.PreCreate]: event => {
-          event.fieldValue = event.metas.create.publishedAt instanceof Date ? event.fieldValue : null;
+        [ResourceHookKind.PreCreate]: (event) => {
+          event.fieldValue =
+            event.metas.create.publishedAt instanceof Date
+              ? event.fieldValue
+              : null;
         },
       },
     },
@@ -85,8 +95,11 @@ const resource: MyResourceConfig = {
       immutable: true,
       managed: ManagementKind.Full,
       hooks: {
-        [ResourceHookKind.PreCreate]: event => {
-          event.fieldValue = event.metas.create.publishedAt instanceof Date ? event.fieldValue : null;
+        [ResourceHookKind.PreCreate]: (event) => {
+          event.fieldValue =
+            event.metas.create.publishedAt instanceof Date
+              ? event.fieldValue
+              : null;
         },
       },
     },
@@ -95,14 +108,16 @@ const resource: MyResourceConfig = {
       description: 'Either this article is published or not',
       managed: ManagementKind.Full,
       hooks: {
-        [ResourceHookKind.PreCreate]: event => {
+        [ResourceHookKind.PreCreate]: (event) => {
           event.fieldValue =
-            event.metas.create.publishedAt instanceof Date && event.metas.create.publishedAt <= new Date();
+            event.metas.create.publishedAt instanceof Date &&
+            event.metas.create.publishedAt <= new Date();
         },
-        [ResourceHookKind.PreUpdate]: event => {
+        [ResourceHookKind.PreUpdate]: (event) => {
           if (typeof event.metas.update.publishedAt !== 'undefined') {
             event.fieldValue =
-              event.metas.update.publishedAt instanceof Date && event.metas.update.publishedAt <= new Date();
+              event.metas.update.publishedAt instanceof Date &&
+              event.metas.update.publishedAt <= new Date();
           }
         },
       },
@@ -137,7 +152,9 @@ const resource: MyResourceConfig = {
       dependencies: ['title', 'category'],
       resolve: ({ title, category }, args, { debug, myService, api }) =>
         typeof title === 'string'
-          ? `LowerCasedTitle: "${title.toLowerCase()}" in category "${JSON.stringify(category)}"`
+          ? `LowerCasedTitle: "${title.toLowerCase()}" in category "${JSON.stringify(
+              category,
+            )}"`
           : '',
     },
   },
@@ -151,7 +168,7 @@ const resource: MyResourceConfig = {
       },
       create,
     }) => {
-      logger && logger.info(`Will create "${create.format}" article: ${create.title}`);
+      logger?.info(`Will create "${create.format}" article: ${create.title}`);
     },
     [ResourceHookKind.PostCreate]: ({
       metas: {
@@ -159,7 +176,9 @@ const resource: MyResourceConfig = {
       },
       createdNode,
     }) => {
-      logger && logger.info(`Created "${createdNode.format}" article: ${createdNode.title}`);
+      logger?.info(
+        `Created "${createdNode.format}" article: ${createdNode.title}`,
+      );
     },
   },
 };

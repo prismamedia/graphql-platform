@@ -1,10 +1,19 @@
-import { ManagementKind, ResourceHookKind } from '@prismamedia/graphql-platform-core';
+import {
+  ManagementKind,
+  ResourceHookKind,
+} from '@prismamedia/graphql-platform-core';
+import {
+  config as coreConfig,
+  MyContext,
+} from '@prismamedia/graphql-platform-core/src/__tests__/gp';
 import { mergeWith } from '@prismamedia/graphql-platform-utils';
 import { GraphQLInt } from 'graphql';
 import { GraphQLDateTime } from 'graphql-iso-date';
-import { config as coreConfig, MyContext } from '../../../graphql-platform-core/src/__tests__/gp';
 import { GraphQLPlatform, GraphQLPlatformConfig } from '../graphql-platform';
-import { DataType, NumericDataTypeModifier } from '../graphql-platform/connector/database';
+import {
+  DataType,
+  NumericDataTypeModifier,
+} from '../graphql-platform/connector/database';
 import { FieldConfig, ResourceConfig } from '../graphql-platform/resource';
 
 export type MyGPConfig = GraphQLPlatformConfig<any, MyContext>;
@@ -32,13 +41,16 @@ export const config: MyGPConfig = mergeWith(
       database: assertEnv('MARIADB_DATABASE'),
 
       connectionLimit: 1,
-      onConnect: connection => connection.query('SET wait_timeout=1, max_statement_time=1;'),
+      onConnect: (connection) =>
+        connection.query('SET wait_timeout=1, max_statement_time=1;'),
 
       migrations: `${__dirname}/migrations`,
     },
 
-    default: resourceName => {
-      const config = ((coreConfig.default ? coreConfig.default(resourceName) : {}) as unknown) as ResourceConfig;
+    default: (resourceName) => {
+      const config = ((coreConfig.default
+        ? coreConfig.default(resourceName)
+        : {}) as unknown) as ResourceConfig;
 
       const fields = config.fields;
 
@@ -65,18 +77,28 @@ export const config: MyGPConfig = mergeWith(
                 type: GraphQLInt,
                 managed: ManagementKind.Full,
                 hooks: {
-                  [ResourceHookKind.PreCreate]: async event => {
+                  [ResourceHookKind.PreCreate]: async (event) => {
                     const context = event.metas.context;
                     const connector = event.metas.context.connector;
-                    const table = connector.getDatabase().getTable(event.metas.resource);
-                    const field = table.getColumn(event.metas.resource.getFieldMap().assert('_id'));
+                    const table = connector
+                      .getDatabase()
+                      .getTable(event.metas.resource);
+                    const field = table.getColumn(
+                      event.metas.resource.getFieldMap().assert('_id'),
+                    );
 
                     // These 2 tests ensures the same connection is used everywhere in a mutation
-                    const [uselessQueryToEnsureTheSameConnectionIsUsedInAPIBinding, results] = await Promise.all([
+                    const [
+                      uselessQueryToEnsureTheSameConnectionIsUsedInAPIBinding,
+                      results,
+                    ] = await Promise.all([
                       context.api.query.article(
                         {
                           where: {
-                            category: { parent: null, slug: 'a-non-existent-category-slug' },
+                            category: {
+                              parent: null,
+                              slug: 'a-non-existent-category-slug',
+                            },
                             slug: 'a-non-existent-article-slug',
                           },
                         },
@@ -91,7 +113,8 @@ export const config: MyGPConfig = mergeWith(
 
                     if (Array.isArray(results) && results.length === 1) {
                       // The "|| 0" is usefull for empty databse
-                      event.fieldValue = parseInt(results[0].maxIntId || 0, 10) + 100;
+                      event.fieldValue =
+                        parseInt(results[0].maxIntId || 0, 10) + 100;
                     } else {
                       throw new Error(`An error occured.`);
                     }

@@ -1,7 +1,7 @@
 import { Component, ComponentSet } from '@prismamedia/graphql-platform-core';
 import { Maybe } from '@prismamedia/graphql-platform-utils';
+import { Memoize } from '@prismamedia/ts-memoize';
 import { escapeId } from 'mysql';
-import { Memoize } from 'typescript-memoize';
 import { Table } from '../table';
 import { ColumnSet } from './column/set';
 
@@ -34,7 +34,10 @@ export interface ColumnIndexConfig {
 export class ColumnIndex {
   readonly config: ColumnIndexConfig;
 
-  public constructor(readonly table: Table, config: ColumnIndexConfig | ColumnIndexConfig['components']) {
+  public constructor(
+    readonly table: Table,
+    config: ColumnIndexConfig | ColumnIndexConfig['components'],
+  ) {
     this.config = Array.isArray(config) ? { components: config } : config;
   }
 
@@ -48,7 +51,9 @@ export class ColumnIndex {
     const componentSet = new ComponentSet();
     if (Array.isArray(this.config.components)) {
       for (const componentName of this.config.components) {
-        componentSet.add(this.table.resource.getComponentMap().assert(componentName));
+        componentSet.add(
+          this.table.resource.getComponentMap().assert(componentName),
+        );
       }
     }
 
@@ -67,7 +72,10 @@ export class ColumnIndex {
   @Memoize()
   public get name(): string {
     return (
-      (this.config.name || ['idx', ...[...this.getColumnSet()].map(({ name }) => name)].join('_'))
+      (
+        this.config.name ||
+        ['idx', ...[...this.getColumnSet()].map(({ name }) => name)].join('_')
+      )
         // cf: https://dev.mysql.com/doc/refman/8.0/en/identifiers.html
         .substr(0, 64)
     );
@@ -75,7 +83,7 @@ export class ColumnIndex {
 
   public getEscapedName(alias?: string): string {
     return [alias, this.name]
-      .map(value => (value ? escapeId(value) : null))
+      .map((value) => (value ? escapeId(value) : null))
       .filter(Boolean)
       .join('.');
   }

@@ -22,14 +22,18 @@ export function fixtures(
       title: faker.lorem.sentence(2, 5),
       body: faker.lorem.sentence(5, 10),
       isImportant: faker.random.boolean(),
-      publishedAt: faker.random.boolean() ? faker.date.past(undefined, dateReference).toISOString() : null,
+      publishedAt: faker.random.boolean()
+        ? faker.date.past(undefined, dateReference).toISOString()
+        : null,
       category:
         // The first article will be in the "root" category, if any
         i === 0 && categoryReferences.length > 0
           ? categoryReferences[0]
           : faker.random.arrayElement(categoryReferences),
       author: faker.random.arrayElement(userReferences),
-      moderator: faker.random.boolean() ? faker.random.arrayElement(userReferences) : null,
+      moderator: faker.random.boolean()
+        ? faker.random.arrayElement(userReferences)
+        : null,
     };
   }
 

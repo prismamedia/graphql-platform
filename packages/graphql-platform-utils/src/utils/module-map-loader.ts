@@ -3,9 +3,13 @@ import { Maybe } from '../types';
 
 export type ModuleMap<T> = Map<string, T>;
 
-export type ModuleMapConfig<T> = Maybe<ModuleMap<T> | Record<string, T> | string>;
+export type ModuleMapConfig<T> = Maybe<
+  ModuleMap<T> | Record<string, T> | string
+>;
 
-export type GetModuleMapConfigType<T> = T extends Record<string, infer M> ? M : never;
+export type GetModuleMapConfigType<T> = T extends Record<string, infer M>
+  ? M
+  : never;
 
 export const loadModuleMap = <T>(config: ModuleMapConfig<T>): ModuleMap<T> =>
   config != null

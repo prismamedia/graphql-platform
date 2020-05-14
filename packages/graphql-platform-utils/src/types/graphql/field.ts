@@ -1,4 +1,7 @@
-import { GraphQLFieldConfig as GraphQLFieldConfigBase, GraphQLResolveInfo } from 'graphql';
+import {
+  GraphQLFieldConfig as GraphQLFieldConfigBase,
+  GraphQLResolveInfo,
+} from 'graphql';
 import { MaybePromise } from '../maybe-promise';
 
 export type FieldResolverArgs<TSource = any, TContext = any, TArgs = any> = [
@@ -9,13 +12,22 @@ export type FieldResolverArgs<TSource = any, TContext = any, TArgs = any> = [
 ];
 
 /** Override the original "GraphQLFieldResolver" to be able to define the result */
-export type FieldResolver<TSource = any, TContext = any, TArgs = any, TResult = any> = (
+export type FieldResolver<
+  TSource = any,
+  TContext = any,
+  TArgs = any,
+  TResult = any
+> = (
   ...args: FieldResolverArgs<TSource, TContext, TArgs>
 ) => MaybePromise<TResult>;
 
 /** Override the original "GraphQLFieldConfig" to be able to define the resolver's result */
-export interface FieldConfig<TSource = any, TContext = any, TArgs = any, TResult = any>
-  extends Omit<GraphQLFieldConfigBase<TSource, TContext, TArgs>, 'resolve'> {
+export interface FieldConfig<
+  TSource = any,
+  TContext = any,
+  TArgs = any,
+  TResult = any
+> extends Omit<GraphQLFieldConfigBase<TSource, TContext, TArgs>, 'resolve'> {
   resolve?: FieldResolver<TSource, TContext, TArgs, TResult>;
 }
 

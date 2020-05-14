@@ -9,7 +9,10 @@ import {
   graphqlSync,
 } from 'graphql';
 import { POJO } from '../../../types/pojo';
-import { GraphQLSelectionNode, parseGraphQLResolveInfo } from '../parse-resolver-info';
+import {
+  GraphQLSelectionNode,
+  parseGraphQLResolveInfo,
+} from '../parse-resolver-info';
 
 function query(document: string, variables: POJO = {}) {
   const UserProfileType = new GraphQLObjectType({
@@ -68,7 +71,9 @@ function query(document: string, variables: POJO = {}) {
                       ),
                     },
                   },
-                  type: GraphQLNonNull(GraphQLList(GraphQLNonNull(UserProfileType))),
+                  type: GraphQLNonNull(
+                    GraphQLList(GraphQLNonNull(UserProfileType)),
+                  ),
                   resolve: (source, args, ctx, info) => {
                     infos.users = parseGraphQLResolveInfo(info);
 
@@ -267,7 +272,12 @@ describe('parseResolverInfo', () => {
 
     expect(
       selectionNode
-        .diff({ id: 'my-article-id', category: { parent: { createdAt: null, children: [{ id: 'my-category-id' }] } } })
+        .diff({
+          id: 'my-article-id',
+          category: {
+            parent: { createdAt: null, children: [{ id: 'my-category-id' }] },
+          },
+        })
         .toPlainObject(),
     ).toEqual({
       category: {
@@ -310,11 +320,16 @@ describe('parseResolverInfo', () => {
     const a = new GraphQLSelectionNode('article', {}, [
       new GraphQLSelectionNode('id', {}, [], 'myId'),
       'title',
-      new GraphQLSelectionNode('category', {}, ['slug', new GraphQLSelectionNode('parent', {}, ['updatedAt'])]),
+      new GraphQLSelectionNode('category', {}, [
+        'slug',
+        new GraphQLSelectionNode('parent', {}, ['updatedAt']),
+      ]),
     ]);
 
     const b = new GraphQLSelectionNode('article', {}, [
-      new GraphQLSelectionNode('category', {}, [new GraphQLSelectionNode('parent', {}, ['title'])]),
+      new GraphQLSelectionNode('category', {}, [
+        new GraphQLSelectionNode('parent', {}, ['title']),
+      ]),
     ]);
 
     a.setChildren(b.getChildren());

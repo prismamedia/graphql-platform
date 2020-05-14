@@ -15,31 +15,44 @@ describe('WhereUniqueInput', () => {
     resourceMap = gp.getResourceMap();
   });
 
-  it.each([['Article', ['category']], ['ArticleTag', ['article', 'tag']]] as ReadonlyArray<
-    [Resource['name'], Relation['name'][] | undefined]
-  >)(
+  it.each([
+    ['Article', ['category']],
+    ['ArticleTag', ['article', 'tag']],
+  ] as ReadonlyArray<[Resource['name'], Relation['name'][] | undefined]>)(
     'creates a valid GraphQL "WhereUniqueInput" type',
     (resourceName: Resource['name'], relationNames?: Relation['name'][]) => {
       const resource = resourceMap.assert(resourceName);
 
       expect(
-        printType(resource.getInputType('WhereUnique').getGraphQLType(), { commentDescriptions: true }),
+        printType(resource.getInputType('WhereUnique').getGraphQLType(), {
+          commentDescriptions: true,
+        }),
       ).toMatchSnapshot();
 
       if (relationNames) {
-        relationNames.forEach(relationName => {
+        relationNames.forEach((relationName) => {
           const relation = resource.getRelationMap().assert(relationName);
 
           expect(
-            printType(resource.getInputType('WhereUnique').getGraphQLType(relation, false), {
-              commentDescriptions: true,
-            }),
+            printType(
+              resource
+                .getInputType('WhereUnique')
+                .getGraphQLType(relation, false),
+              {
+                commentDescriptions: true,
+              },
+            ),
           ).toMatchSnapshot();
 
           expect(
-            printType(resource.getInputType('WhereUnique').getGraphQLType(relation, true), {
-              commentDescriptions: true,
-            }),
+            printType(
+              resource
+                .getInputType('WhereUnique')
+                .getGraphQLType(relation, true),
+              {
+                commentDescriptions: true,
+              },
+            ),
           ).toMatchSnapshot();
         });
       }
@@ -52,10 +65,7 @@ describe('WhereUniqueInput', () => {
         .assert('Article')
         .getInputType('WhereUnique')
         .getGraphQLType(
-          resourceMap
-            .assert('Article')
-            .getRelationMap()
-            .assert('author'),
+          resourceMap.assert('Article').getRelationMap().assert('author'),
           false,
         ),
     ).toThrowErrorMatchingInlineSnapshot(
@@ -63,14 +73,16 @@ describe('WhereUniqueInput', () => {
     );
   });
 
-  it.each([[undefined], [null], [{}]] as ReadonlyArray<any>)('throws error on invalid values', value => {
-    expect(() =>
-      resourceMap
-        .assert('Article')
-        .getInputType('WhereUnique')
-        .assert(value),
-    ).toThrowError('The following "Article"\'s identifier does not contain any valid');
-  });
+  it.each([[undefined], [null], [{}]] as ReadonlyArray<any>)(
+    'throws error on invalid values',
+    (value) => {
+      expect(() =>
+        resourceMap.assert('Article').getInputType('WhereUnique').assert(value),
+      ).toThrowError(
+        'The following "Article"\'s identifier does not contain any valid',
+      );
+    },
+  );
 
   it.each([
     [
@@ -136,10 +148,7 @@ describe('WhereUniqueInput', () => {
     'parses value into "whereUniqueInputValue"',
     (value, whereUniqueInputValue) => {
       expect(
-        resourceMap
-          .assert('Article')
-          .getInputType('WhereUnique')
-          .parse(value),
+        resourceMap.assert('Article').getInputType('WhereUnique').parse(value),
       ).toEqual(whereUniqueInputValue);
     },
   );

@@ -6,17 +6,27 @@ import {
   parseGraphQLResolveInfo,
   POJO,
 } from '@prismamedia/graphql-platform-utils';
+import { Memoize } from '@prismamedia/ts-memoize';
 import { GraphQLFieldConfigArgumentMap, GraphQLOutputType } from 'graphql';
-import { Memoize } from 'typescript-memoize';
 import { Context } from '../../graphql-platform';
 import { ConnectorInterface } from '../connector';
-import { Operation, OperationEvent, OperationEventKind, OperationResolverParams } from '../operation';
+import {
+  Operation,
+  OperationEvent,
+  OperationEventKind,
+  OperationResolverParams,
+} from '../operation';
 import { Resource } from '../resource';
 
-export abstract class AbstractOperation<TArgs extends POJO = any, TResult = any> implements Operation {
+export abstract class AbstractOperation<TArgs extends POJO = any, TResult = any>
+  implements Operation {
   protected connector: ConnectorInterface;
 
-  public constructor(readonly type: GraphQLOperationType, readonly id: string, readonly resource: Resource) {
+  public constructor(
+    readonly type: GraphQLOperationType,
+    readonly id: string,
+    readonly resource: Resource,
+  ) {
     this.connector = resource.gp.getConnector();
   }
 
@@ -72,11 +82,16 @@ export abstract class AbstractOperation<TArgs extends POJO = any, TResult = any>
 
   public abstract getGraphQLFieldConfigArgs(): GraphQLFieldConfigArgumentMap;
 
-  public abstract async resolve(params: OperationResolverParams<TArgs>): Promise<TResult>;
+  public abstract async resolve(
+    params: OperationResolverParams<TArgs>,
+  ): Promise<TResult>;
 
   @Memoize()
   public getGraphQLFieldConfig(): Required<
-    Pick<GraphQLFieldConfig<any, Context, TArgs, TResult>, 'description' | 'type' | 'args' | 'resolve'>
+    Pick<
+      GraphQLFieldConfig<any, Context, TArgs, TResult>,
+      'description' | 'type' | 'args' | 'resolve'
+    >
   > {
     return {
       description: this.description,
@@ -120,36 +135,46 @@ export abstract class AbstractOperation<TArgs extends POJO = any, TResult = any>
         context.operationEventDataMap.set(event, Object.create(null));
 
         let success: boolean = false;
-        const profile = context.logger && context.logger.startTimer();
+        const profile = context.logger?.startTimer();
 
         try {
-          await this.resource.emitSerial(OperationEventKind.PreOperation, event);
+          await this.resource.emitSerial(
+            OperationEventKind.PreOperation,
+            event,
+          );
 
           // Actually resolve the operation
           const result = await this.resolve(resolverParams);
 
-          await this.resource.emitSerial(OperationEventKind.PostOperationSuccess, event);
+          await this.resource.emitSerial(
+            OperationEventKind.PostOperationSuccess,
+            event,
+          );
 
           success = true;
-          profile &&
-            profile.done({
-              level: 'debug',
-              message: `Resolved "${this}" successfully`,
-            });
+          profile?.done({
+            level: 'debug',
+            message: `Resolved "${this}" successfully`,
+          });
 
           return result;
         } catch (error) {
-          await this.resource.emitSerial(OperationEventKind.PostOperationError, event);
+          await this.resource.emitSerial(
+            OperationEventKind.PostOperationError,
+            event,
+          );
 
-          profile &&
-            profile.done({
-              level: 'error',
-              message: error,
-            });
+          profile?.done({
+            level: 'error',
+            message: error,
+          });
 
           throw error;
         } finally {
-          await this.resource.emitSerial(OperationEventKind.PostOperation, event);
+          await this.resource.emitSerial(
+            OperationEventKind.PostOperation,
+            event,
+          );
 
           if (
             operationContext.type === GraphQLOperationType.Mutation &&
@@ -160,11 +185,11 @@ export abstract class AbstractOperation<TArgs extends POJO = any, TResult = any>
             if (success) {
               // In case of errors: we log them but do not throw anything as we want the operation remains a "success"
               await Promise.all(
-                operationContext.postSuccessHooks.map(async hook => {
+                operationContext.postSuccessHooks.map(async (hook) => {
                   try {
                     await hook();
                   } catch (error) {
-                    context.logger && context.logger.error(error);
+                    context.logger?.warn(error);
                   }
                 }),
               );

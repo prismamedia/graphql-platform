@@ -9,6 +9,7 @@ import {
   isNonEmptyPlainObject,
   POJO,
 } from '@prismamedia/graphql-platform-utils';
+import { Memoize } from '@prismamedia/ts-memoize';
 import {
   GraphQLBoolean,
   GraphQLFieldConfigArgumentMap,
@@ -19,7 +20,6 @@ import {
   GraphQLOutputType,
   GraphQLScalarType,
 } from 'graphql';
-import { Memoize } from 'typescript-memoize';
 import { AnyBaseContext, BaseContext } from '../../../graphql-platform';
 import { ConnectorCreateOperationArgs } from '../../connector';
 import { OperationResolverParams } from '../../operation';
@@ -51,14 +51,18 @@ export enum CreateOneDataRelationActionKind {
   Upsert = 'upsert',
 }
 
-export const createOneDataRelationActionKinds = getEnumValues(CreateOneDataRelationActionKind);
+export const createOneDataRelationActionKinds = getEnumValues(
+  CreateOneDataRelationActionKind,
+);
 
 export enum CreateOneDataInverseRelationActionKind {
   Connect = 'connect',
   Create = 'create',
 }
 
-export const createOneDataInverseRelationActionKinds = getEnumValues(CreateOneDataInverseRelationActionKind);
+export const createOneDataInverseRelationActionKinds = getEnumValues(
+  CreateOneDataInverseRelationActionKind,
+);
 
 export type CreateOneDataInputValue = POJO;
 
@@ -68,7 +72,10 @@ export type CreateOneOperationArgs = {
 
 export type CreateOneOperationResult = NodeSource;
 
-export class CreateOneOperation extends AbstractOperation<CreateOneOperationArgs, CreateOneOperationResult> {
+export class CreateOneOperation extends AbstractOperation<
+  CreateOneOperationArgs,
+  CreateOneOperationResult
+> {
   @Memoize()
   public get name(): string {
     return `create${this.resource.name}`;
@@ -89,7 +96,9 @@ export class CreateOneOperation extends AbstractOperation<CreateOneOperationArgs
   }
 
   @Memoize(({ name }: Field) => name)
-  protected getDataFieldConfig(field: Field): GraphQLInputFieldConfig | undefined {
+  protected getDataFieldConfig(
+    field: Field,
+  ): GraphQLInputFieldConfig | undefined {
     if (this.isDataField(field)) {
       return {
         description: field.description,
@@ -99,30 +108,52 @@ export class CreateOneOperation extends AbstractOperation<CreateOneOperationArgs
   }
 
   @Memoize(({ name }: Relation) => name)
-  protected getDataRelationConfig(relation: Relation): GraphQLInputFieldConfig | undefined {
+  protected getDataRelationConfig(
+    relation: Relation,
+  ): GraphQLInputFieldConfig | undefined {
     const resource = relation.getFrom();
     const relatedResource = relation.getTo();
 
     if (this.isDataField(relation)) {
       return {
-        description: [`Actions for the "${relation}" relation`, relation.description].filter(Boolean).join(': '),
+        description: [
+          `Actions for the "${relation}" relation`,
+          relation.description,
+        ]
+          .filter(Boolean)
+          .join(': '),
         type: GraphQLNonNullDecorator(
           new GraphQLInputObjectType({
-            name: [resource.name, 'Nested', relation.pascalCasedName, 'CreateInput'].join(''),
+            name: [
+              resource.name,
+              'Nested',
+              relation.pascalCasedName,
+              'CreateInput',
+            ].join(''),
             fields: () => {
               const fields: GraphQLInputFieldConfigMap = {};
 
               fields[CreateOneDataRelationActionKind.Connect] = {
                 description: `Connect an existing "${relatedResource}" node to the new "${resource}" node, through the "${relation}" relation.`,
-                type: relatedResource.getInputType('WhereUnique').getGraphQLType(),
+                type: relatedResource
+                  .getInputType('WhereUnique')
+                  .getGraphQLType(),
               };
 
               if (relatedResource.getMutation('UpdateOne').isPublic()) {
                 fields[CreateOneDataRelationActionKind.Update] = {
                   description: `Update an existing "${relatedResource}" node and connect it to the new "${resource}" node, through the "${relation}" relation.`,
                   type: new GraphQLInputObjectType({
-                    name: [resource.name, 'NestedUpdate', relation.pascalCasedName, 'CreateInput'].join(''),
-                    fields: () => relatedResource.getMutation('UpdateOne').getGraphQLFieldConfigArgs(),
+                    name: [
+                      resource.name,
+                      'NestedUpdate',
+                      relation.pascalCasedName,
+                      'CreateInput',
+                    ].join(''),
+                    fields: () =>
+                      relatedResource
+                        .getMutation('UpdateOne')
+                        .getGraphQLFieldConfigArgs(),
                   }),
                 };
               }
@@ -138,8 +169,16 @@ export class CreateOneOperation extends AbstractOperation<CreateOneOperationArgs
                 fields[CreateOneDataRelationActionKind.Upsert] = {
                   description: `Create or update a "${relatedResource}" node and connect it to the new "${resource}" node, through the "${relation}" relation.`,
                   type: new GraphQLInputObjectType({
-                    name: [resource.name, 'NestedUpsert', relation.pascalCasedName, 'CreateInput'].join(''),
-                    fields: () => relatedResource.getMutation('UpsertOne').getGraphQLFieldConfigArgs(),
+                    name: [
+                      resource.name,
+                      'NestedUpsert',
+                      relation.pascalCasedName,
+                      'CreateInput',
+                    ].join(''),
+                    fields: () =>
+                      relatedResource
+                        .getMutation('UpsertOne')
+                        .getGraphQLFieldConfigArgs(),
                   }),
                 };
               }
@@ -154,29 +193,47 @@ export class CreateOneOperation extends AbstractOperation<CreateOneOperationArgs
   }
 
   @Memoize(({ name }: InverseRelation) => name)
-  protected getDataInverseRelationConfig(relation: InverseRelation): GraphQLInputFieldConfig | undefined {
+  protected getDataInverseRelationConfig(
+    relation: InverseRelation,
+  ): GraphQLInputFieldConfig | undefined {
     const resource = relation.getFrom();
     const relatedResource = relation.getTo();
 
     if (
-      (relatedResource.getMutation('UpdateOne').isPublic() && relation.getInverse().isMutable()) ||
+      (relatedResource.getMutation('UpdateOne').isPublic() &&
+        relation.getInverse().isMutable()) ||
       relatedResource.getMutation('CreateOne').isPublic()
     ) {
       return {
-        description: [`Actions for the "${relation}" relation`, relation.description].filter(Boolean).join(': '),
+        description: [
+          `Actions for the "${relation}" relation`,
+          relation.description,
+        ]
+          .filter(Boolean)
+          .join(': '),
         type: new GraphQLInputObjectType({
-          name: [resource.name, 'Nested', relation.pascalCasedName, 'CreateInput'].join(''),
+          name: [
+            resource.name,
+            'Nested',
+            relation.pascalCasedName,
+            'CreateInput',
+          ].join(''),
           fields: () => {
             const fields: GraphQLInputFieldConfigMap = {};
 
-            if (relatedResource.getMutation('UpdateOne').isPublic() && relation.getInverse().isMutable()) {
+            if (
+              relatedResource.getMutation('UpdateOne').isPublic() &&
+              relation.getInverse().isMutable()
+            ) {
               fields[CreateOneDataInverseRelationActionKind.Connect] = {
                 description: relation.isToMany()
                   ? `Connect existing "${relatedResource}" nodes to the new "${resource}" node, through the "${relation}" relation.`
                   : `Connect an existing "${relatedResource}" node to the new "${resource}" node, through the "${relation}" relation.`,
                 type: GraphQLListDecorator(
                   GraphQLNonNullDecorator(
-                    relatedResource.getInputType('WhereUnique').getGraphQLType(),
+                    relatedResource
+                      .getInputType('WhereUnique')
+                      .getGraphQLType(),
                     relation.isToMany(),
                   ),
                   relation.isToMany(),
@@ -191,7 +248,9 @@ export class CreateOneOperation extends AbstractOperation<CreateOneOperationArgs
                   : `Create a new "${relatedResource}" node and connect it to the new "${resource}" node, through the "${relation}" relation.`,
                 type: GraphQLListDecorator(
                   GraphQLNonNullDecorator(
-                    relatedResource.getMutation('CreateOne').getDataType(relation.getInverse()),
+                    relatedResource
+                      .getMutation('CreateOne')
+                      .getDataType(relation.getInverse()),
                     relation.isToMany(),
                   ),
                   relation.isToMany(),
@@ -206,20 +265,29 @@ export class CreateOneOperation extends AbstractOperation<CreateOneOperationArgs
     }
   }
 
-  @Memoize((forcedRelation?: Relation) => (forcedRelation ? forcedRelation.name : ''))
-  public getDataType(forcedRelation?: Relation): GraphQLInputObjectType | GraphQLScalarType {
+  @Memoize((forcedRelation?: Relation) =>
+    forcedRelation ? forcedRelation.name : '',
+  )
+  public getDataType(
+    forcedRelation?: Relation,
+  ): GraphQLInputObjectType | GraphQLScalarType {
     forcedRelation && this.resource.assertComponent(forcedRelation);
 
     const fields: GraphQLInputFieldConfigMap = fromEntries([
       // Fields
-      ...[...this.resource.getFieldSet()].map(field => [field.name, this.getDataFieldConfig(field)]),
+      ...[...this.resource.getFieldSet()].map((field) => [
+        field.name,
+        this.getDataFieldConfig(field),
+      ]),
       // Relations
-      ...[...this.resource.getRelationSet()].map(relation => [
+      ...[...this.resource.getRelationSet()].map((relation) => [
         relation.name,
-        forcedRelation && forcedRelation === relation ? undefined : this.getDataRelationConfig(relation),
+        forcedRelation && forcedRelation === relation
+          ? undefined
+          : this.getDataRelationConfig(relation),
       ]),
       // Inverse relations
-      ...[...this.resource.getInverseRelationSet()].map(relation => [
+      ...[...this.resource.getInverseRelationSet()].map((relation) => [
         relation.name,
         this.getDataInverseRelationConfig(relation),
       ]),
@@ -229,7 +297,9 @@ export class CreateOneOperation extends AbstractOperation<CreateOneOperationArgs
       ? new GraphQLInputObjectType({
           name: [
             this.resource.name,
-            forcedRelation ? `WithForced${forcedRelation.pascalCasedName}` : null,
+            forcedRelation
+              ? `WithForced${forcedRelation.pascalCasedName}`
+              : null,
             'CreateInput',
           ].join(''),
           fields,
@@ -245,12 +315,17 @@ export class CreateOneOperation extends AbstractOperation<CreateOneOperationArgs
     };
   }
 
-  public async parseDataComponentMap(data: CreateOneDataInputValue, context: BaseContext): Promise<CreateOneRawValue> {
+  public async parseDataComponentMap(
+    data: CreateOneDataInputValue,
+    context: BaseContext,
+  ): Promise<CreateOneRawValue> {
     return fromEntries(
       await Promise.all([
         // Fields
         ...[...this.resource.getFieldSet()].map(
-          async (field): Promise<[string, FieldValue | undefined] | undefined> => {
+          async (
+            field,
+          ): Promise<[string, FieldValue | undefined] | undefined> => {
             const fieldValue: FieldValue | undefined = data[field.name];
             if (typeof fieldValue !== 'undefined') {
               if (!this.isDataField(field)) {
@@ -273,7 +348,9 @@ export class CreateOneOperation extends AbstractOperation<CreateOneOperationArgs
               if (
                 !(
                   Object.keys(actions).length === 1 &&
-                  createOneDataRelationActionKinds.includes(Object.keys(actions)[0] as any)
+                  createOneDataRelationActionKinds.includes(
+                    Object.keys(actions)[0] as any,
+                  )
                 )
               ) {
                 throw new Error(
@@ -283,15 +360,21 @@ export class CreateOneOperation extends AbstractOperation<CreateOneOperationArgs
                 );
               }
 
-              const actionKind = Object.keys(actions)[0] as CreateOneDataRelationActionKind;
+              const actionKind = Object.keys(
+                actions,
+              )[0] as CreateOneDataRelationActionKind;
               const actionValue = actions[actionKind];
 
               if (actionValue == null) {
-                throw new Error(`The "${relation}" relation's action "${actionKind}" does not support an empty value`);
+                throw new Error(
+                  `The "${relation}" relation's action "${actionKind}" does not support an empty value`,
+                );
               }
 
               // Returns only the selection we need (the targeted unique constraint)
-              const selectionNode = relation.getToUnique().getSelectionNode(TypeKind.Input);
+              const selectionNode = relation
+                .getToUnique()
+                .getSelectionNode(TypeKind.Input);
               const relatedResource = relation.getTo();
 
               let relatedNode: NodeSource;
@@ -299,7 +382,11 @@ export class CreateOneOperation extends AbstractOperation<CreateOneOperationArgs
                 case CreateOneDataRelationActionKind.Connect: {
                   relatedNode = await relatedResource
                     .getQuery('AssertOne')
-                    .resolve({ args: { where: actionValue }, context, selectionNode });
+                    .resolve({
+                      args: { where: actionValue },
+                      context,
+                      selectionNode,
+                    });
                   break;
                 }
 
@@ -309,7 +396,10 @@ export class CreateOneOperation extends AbstractOperation<CreateOneOperationArgs
                     .resolve({ args: actionValue, context, selectionNode });
 
                   if (!updatedNode) {
-                    throw new NodeNotFoundError(relatedResource.getMutation('UpdateOne'), actionValue.where);
+                    throw new NodeNotFoundError(
+                      relatedResource.getMutation('UpdateOne'),
+                      actionValue.where,
+                    );
                   }
 
                   relatedNode = updatedNode;
@@ -319,7 +409,11 @@ export class CreateOneOperation extends AbstractOperation<CreateOneOperationArgs
                 case CreateOneDataRelationActionKind.Create: {
                   relatedNode = await relatedResource
                     .getMutation('CreateOne')
-                    .resolve({ args: { data: actionValue }, context, selectionNode });
+                    .resolve({
+                      args: { data: actionValue },
+                      context,
+                      selectionNode,
+                    });
                   break;
                 }
 
@@ -331,7 +425,9 @@ export class CreateOneOperation extends AbstractOperation<CreateOneOperationArgs
                 }
 
                 default:
-                  throw new Error(`The "${relation}" relation's action "${actionKind}" is not supported, yet`);
+                  throw new Error(
+                    `The "${relation}" relation's action "${actionKind}" is not supported, yet`,
+                  );
               }
 
               return [relation.name, relatedNode as RelationValue];
@@ -348,27 +444,33 @@ export class CreateOneOperation extends AbstractOperation<CreateOneOperationArgs
     context: BaseContext,
   ): Promise<void> {
     await Promise.all(
-      [...this.resource.getInverseRelationSet()].map(async inverseRelation => {
-        const actions = data[inverseRelation.name];
-        if (isNonEmptyPlainObject(actions)) {
-          if (
-            !Object.keys(actions).every(actionKind =>
-              createOneDataInverseRelationActionKinds.includes(actionKind as any),
-            )
-          ) {
-            throw new Error(
-              `The "${inverseRelation}" relation supports at least one action among: ${createOneDataInverseRelationActionKinds.join(
-                ', ',
-              )}`,
-            );
-          }
+      [...this.resource.getInverseRelationSet()].map(
+        async (inverseRelation) => {
+          const actions = data[inverseRelation.name];
+          if (isNonEmptyPlainObject(actions)) {
+            if (
+              !Object.keys(actions).every((actionKind) =>
+                createOneDataInverseRelationActionKinds.includes(
+                  actionKind as any,
+                ),
+              )
+            ) {
+              throw new Error(
+                `The "${inverseRelation}" relation supports at least one action among: ${createOneDataInverseRelationActionKinds.join(
+                  ', ',
+                )}`,
+              );
+            }
 
-          const relatedResource = inverseRelation.getTo();
-          const selectionNode = relatedResource.getIdentifier().getSelectionNode(TypeKind.Input);
+            const relatedResource = inverseRelation.getTo();
+            const selectionNode = relatedResource
+              .getIdentifier()
+              .getSelectionNode(TypeKind.Input);
 
-          await Promise.all(
-            getPlainObjectEntries(actions as Record<CreateOneDataInverseRelationActionKind, any>).map(
-              async ([actionKind, actionValues]) => {
+            await Promise.all(
+              getPlainObjectEntries(
+                actions as Record<CreateOneDataInverseRelationActionKind, any>,
+              ).map(async ([actionKind, actionValues]) => {
                 if (actionValues == null) {
                   throw new Error(
                     `The "${inverseRelation}" relation's action "${actionKind}" does not support an empty value`,
@@ -376,24 +478,36 @@ export class CreateOneOperation extends AbstractOperation<CreateOneOperationArgs
                 }
 
                 await Promise.all(
-                  (inverseRelation.isToMany() ? actionValues : [actionValues]).map(async (actionValue: any) => {
+                  (inverseRelation.isToMany()
+                    ? actionValues
+                    : [actionValues]
+                  ).map(async (actionValue: any) => {
                     switch (actionKind) {
                       case CreateOneDataInverseRelationActionKind.Connect:
-                        const where = relatedResource.getInputType('WhereUnique').assert(actionValue);
+                        const where = relatedResource
+                          .getInputType('WhereUnique')
+                          .assert(actionValue);
 
-                        const updatedNode = await relatedResource.getMutation('UpdateOne').resolve({
-                          args: {
-                            where,
-                            data: {
-                              [inverseRelation.getInverse().name]: { [UpdateOneDataRelationActionKind.Connect]: id },
+                        const updatedNode = await relatedResource
+                          .getMutation('UpdateOne')
+                          .resolve({
+                            args: {
+                              where,
+                              data: {
+                                [inverseRelation.getInverse().name]: {
+                                  [UpdateOneDataRelationActionKind.Connect]: id,
+                                },
+                              },
                             },
-                          },
-                          context,
-                          selectionNode,
-                        });
+                            context,
+                            selectionNode,
+                          });
 
                         if (!updatedNode) {
-                          throw new NodeNotFoundError(relatedResource.getMutation('UpdateOne'), where);
+                          throw new NodeNotFoundError(
+                            relatedResource.getMutation('UpdateOne'),
+                            where,
+                          );
                         }
                         break;
 
@@ -402,7 +516,9 @@ export class CreateOneOperation extends AbstractOperation<CreateOneOperationArgs
                           args: {
                             data: {
                               ...actionValue,
-                              [inverseRelation.getInverse().name]: { [CreateOneDataRelationActionKind.Connect]: id },
+                              [inverseRelation.getInverse().name]: {
+                                [CreateOneDataRelationActionKind.Connect]: id,
+                              },
                             },
                           },
                           context,
@@ -417,11 +533,11 @@ export class CreateOneOperation extends AbstractOperation<CreateOneOperationArgs
                     }
                   }),
                 );
-              },
-            ),
-          );
-        }
-      }),
+              }),
+            );
+          }
+        },
+      ),
     );
   }
 
@@ -434,7 +550,10 @@ export class CreateOneOperation extends AbstractOperation<CreateOneOperationArgs
   }): Promise<ConnectorCreateOperationArgs> {
     const resource = this.resource;
 
-    const create = new CreateOneValue(resource, await this.parseDataComponentMap(args.data, context));
+    const create = new CreateOneValue(
+      resource,
+      await this.parseDataComponentMap(args.data, context),
+    );
 
     if (resource.hasPreHook(ResourceHookKind.PreCreate)) {
       // Let's the value be manipulated easily AND safely in the hooks
@@ -443,7 +562,7 @@ export class CreateOneOperation extends AbstractOperation<CreateOneOperationArgs
       // Apply the components' hooks
       await Promise.all([
         // Fields
-        ...[...resource.getFieldSet()].map(async field => {
+        ...[...resource.getFieldSet()].map(async (field) => {
           const { proxy: hookData, revoke } = Proxy.revocable(
             {
               metas: Object.freeze({
@@ -470,7 +589,7 @@ export class CreateOneOperation extends AbstractOperation<CreateOneOperationArgs
           revoke();
         }),
         // Relations
-        ...[...resource.getRelationSet()].map(async relation => {
+        ...[...resource.getRelationSet()].map(async (relation) => {
           const { proxy: hookData, revoke } = Proxy.revocable(
             {
               metas: Object.freeze({
@@ -515,7 +634,9 @@ export class CreateOneOperation extends AbstractOperation<CreateOneOperationArgs
     return { data: [create] };
   }
 
-  public async resolve(params: OperationResolverParams<CreateOneOperationArgs>): Promise<CreateOneOperationResult> {
+  public async resolve(
+    params: OperationResolverParams<CreateOneOperationArgs>,
+  ): Promise<CreateOneOperationResult> {
     const { args, context, selectionNode } = params;
     const resource = this.resource;
 
@@ -525,17 +646,25 @@ export class CreateOneOperation extends AbstractOperation<CreateOneOperationArgs
     } = await this.preCreate({ args, context });
 
     // Actually create the node
-    await this.connector.create(Object.freeze({ resource, context, args: { data: [create] } }));
+    await this.connector.create(
+      Object.freeze({ resource, context, args: { data: [create] } }),
+    );
 
     const nodeFromCreate = create.toNodeValue();
-    const nodeId = resource.getInputType('WhereUnique').assertUnique(nodeFromCreate, resource.getIdentifier(), true);
+    const nodeId = resource
+      .getInputType('WhereUnique')
+      .assertUnique(nodeFromCreate, resource.getIdentifier(), true);
 
     await this.parseDataInverseRelationMap(args.data, nodeId, context);
 
     // Select all the components in case of post success hooks
-    const hasPostSuccessHook = resource.hasPostHook(ResourceHookKind.PostCreate);
+    const hasPostSuccessHook = resource.hasPostHook(
+      ResourceHookKind.PostCreate,
+    );
     if (hasPostSuccessHook) {
-      selectionNode.setChildren(resource.getComponentSet().getSelectionNodeChildren(TypeKind.Input));
+      selectionNode.setChildren(
+        resource.getComponentSet().getSelectionNodeChildren(TypeKind.Input),
+      );
     }
 
     // // Fetch the created node only if we don't have all the data yet
@@ -549,11 +678,15 @@ export class CreateOneOperation extends AbstractOperation<CreateOneOperationArgs
     //   : (nodeFromCreate as NodeSource);
 
     // Always fetch the created node
-    const node = await resource.getQuery('AssertOne').resolve({ ...params, args: { where: nodeId } });
+    const node = await resource
+      .getQuery('AssertOne')
+      .resolve({ ...params, args: { where: nodeId } });
 
     const { operationContext } = context;
     const postSuccessHooks =
-      operationContext.type === GraphQLOperationType.Mutation ? operationContext.postSuccessHooks : undefined;
+      operationContext.type === GraphQLOperationType.Mutation
+        ? operationContext.postSuccessHooks
+        : undefined;
 
     if (postSuccessHooks && hasPostSuccessHook) {
       postSuccessHooks.push(
@@ -562,7 +695,11 @@ export class CreateOneOperation extends AbstractOperation<CreateOneOperationArgs
             ...params,
             resource,
           }),
-          createdNode: resource.serializeValue(node as NodeValue, true, resource.getComponentSet()),
+          createdNode: resource.serializeValue(
+            node as NodeValue,
+            true,
+            resource.getComponentSet(),
+          ),
         }),
       );
     }

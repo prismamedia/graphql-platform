@@ -12,19 +12,19 @@ describe('Database', () => {
     database = connector.getDatabase();
   });
 
-  beforeEach(async done => {
+  beforeEach(async (done) => {
     await database.drop(true);
 
     done();
   });
 
-  afterEach(async done => {
+  afterEach(async (done) => {
     await database.drop(true);
 
     done();
   });
 
-  it('executes the migrations', async done => {
+  it('executes the migrations', async (done) => {
     const listTableStatement = `
       SELECT table_name
       FROM information_schema.tables
@@ -39,7 +39,12 @@ describe('Database', () => {
 
     // 4 tables after the migrations : 2 new tables + the 2 for marv
     await expect(connector.query(listTableStatement)).resolves.toEqual(
-      ['migrations', 'migrations_lock', 'my_new_table', 'my_other_table'].map(table => ({ table_name: table })),
+      [
+        'migrations',
+        'migrations_lock',
+        'my_new_table',
+        'my_other_table',
+      ].map((table) => ({ table_name: table })),
     );
 
     done();

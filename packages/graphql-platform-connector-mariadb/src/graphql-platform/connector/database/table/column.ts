@@ -8,10 +8,16 @@ import {
   NullComponentValueError,
   UndefinedComponentValueError,
 } from '@prismamedia/graphql-platform-core';
-import { FlagConfig, getFlagValue, Maybe, MaybeUndefinedDecorator, POJO } from '@prismamedia/graphql-platform-utils';
+import {
+  FlagConfig,
+  getFlagValue,
+  Maybe,
+  MaybeUndefinedDecorator,
+  POJO,
+} from '@prismamedia/graphql-platform-utils';
+import { Memoize } from '@prismamedia/ts-memoize';
 import { isEnumType } from 'graphql';
 import { escapeId } from 'mysql';
-import { Memoize } from 'typescript-memoize';
 import { Component, Field } from '../../../resource';
 import { Table } from '../table';
 
@@ -60,7 +66,11 @@ export type ColumnDataTypeWithOptions =
       values: string[];
     }
   | {
-      type: DataType.TEXT | DataType.MEDIUMTEXT | DataType.LONGTEXT | DataType.TINYTEXT;
+      type:
+        | DataType.TEXT
+        | DataType.MEDIUMTEXT
+        | DataType.LONGTEXT
+        | DataType.TINYTEXT;
       length?: Maybe<number>;
     }
   | {
@@ -72,7 +82,12 @@ export type ColumnDataTypeWithOptions =
       length?: number;
     }
   | {
-      type: DataType.BIGINT | DataType.INTEGER | DataType.MEDIUMINT | DataType.SMALLINT | DataType.TINYINT;
+      type:
+        | DataType.BIGINT
+        | DataType.INTEGER
+        | DataType.MEDIUMINT
+        | DataType.SMALLINT
+        | DataType.TINYINT;
       modifiers?: Maybe<NumericDataTypeModifier[]>;
       length?: number;
     }
@@ -216,7 +231,9 @@ export class Column {
 
   @Memoize()
   public get default(): string | undefined {
-    return typeof this.config.default === 'string' ? this.config.default : undefined;
+    return typeof this.config.default === 'string'
+      ? this.config.default
+      : undefined;
   }
 
   public get comment(): string | undefined {
@@ -236,14 +253,20 @@ export class Column {
       switch (this.field.getType().name) {
         case 'Boolean':
           if (typeof value !== 'boolean') {
-            throw new InvalidComponentValueError(this.field, `has to be a Boolean, received "${value}"`);
+            throw new InvalidComponentValueError(
+              this.field,
+              `has to be a Boolean, received "${value}"`,
+            );
           }
 
           return value ? 1 : 0;
 
         case 'DateTime':
           if (!(value instanceof Date)) {
-            throw new InvalidComponentValueError(this.field, `has to be a Date, received "${value}"`);
+            throw new InvalidComponentValueError(
+              this.field,
+              `has to be a Date, received "${value}"`,
+            );
           }
 
           return (
@@ -258,7 +281,10 @@ export class Column {
 
         case 'Date':
           if (!(value instanceof Date)) {
-            throw new InvalidComponentValueError(this.field, `has to be a Date, received "${value}"`);
+            throw new InvalidComponentValueError(
+              this.field,
+              `has to be a Date, received "${value}"`,
+            );
           }
 
           return (
@@ -271,7 +297,10 @@ export class Column {
 
         case 'Time':
           if (!(value instanceof Date)) {
-            throw new InvalidComponentValueError(this.field, `has to be a Date, received "${value}"`);
+            throw new InvalidComponentValueError(
+              this.field,
+              `has to be a Date, received "${value}"`,
+            );
           }
 
           return (
@@ -284,7 +313,10 @@ export class Column {
 
         default:
           if (!(typeof value === 'number' || typeof value === 'string')) {
-            throw new InvalidComponentValueError(this.field, `has to be a number or a string, received "${value}"`);
+            throw new InvalidComponentValueError(
+              this.field,
+              `has to be a number or a string, received "${value}"`,
+            );
           }
 
           return value;
@@ -298,7 +330,9 @@ export class Column {
   ): MaybeUndefinedDecorator<ColumnValue, TStrict> {
     const value = this.field.pickValue(node, strict);
 
-    return (typeof value !== 'undefined' ? this.getValue(value as FieldValue) : undefined) as any;
+    return (typeof value !== 'undefined'
+      ? this.getValue(value as FieldValue)
+      : undefined) as any;
   }
 
   public setValue(node: POJO, value: ColumnValue): void {
@@ -308,7 +342,10 @@ export class Column {
       switch (this.field.getType().name) {
         case 'Boolean':
           if (typeof value !== 'number') {
-            throw new InvalidComponentValueError(this.field, `has to be a number, received "${value}"`);
+            throw new InvalidComponentValueError(
+              this.field,
+              `has to be a number, received "${value}"`,
+            );
           }
 
           this.field.setValue(node, value === 1);
@@ -316,15 +353,24 @@ export class Column {
 
         case 'DateTime':
           if (typeof value !== 'string') {
-            throw new InvalidComponentValueError(this.field, `has to be a string, received "${value}"`);
+            throw new InvalidComponentValueError(
+              this.field,
+              `has to be a string, received "${value}"`,
+            );
           }
 
-          this.field.setValue(node, GraphQLDateTime.parseValue(`${value.split(' ').join('T')}Z`));
+          this.field.setValue(
+            node,
+            GraphQLDateTime.parseValue(`${value.split(' ').join('T')}Z`),
+          );
           break;
 
         case 'Date':
           if (typeof value !== 'string') {
-            throw new InvalidComponentValueError(this.field, `has to be a string, received "${value}"`);
+            throw new InvalidComponentValueError(
+              this.field,
+              `has to be a string, received "${value}"`,
+            );
           }
 
           this.field.setValue(node, GraphQLDate.parseValue(value));
@@ -332,7 +378,10 @@ export class Column {
 
         case 'Time':
           if (typeof value !== 'string') {
-            throw new InvalidComponentValueError(this.field, `has to be a string, received "${value}"`);
+            throw new InvalidComponentValueError(
+              this.field,
+              `has to be a string, received "${value}"`,
+            );
           }
 
           this.field.setValue(node, GraphQLTime.parseValue(`${value}Z`));
@@ -340,7 +389,10 @@ export class Column {
 
         default:
           if (!(typeof value === 'number' || typeof value === 'string')) {
-            throw new InvalidComponentValueError(this.field, `has to be a number or a string, received "${value}"`);
+            throw new InvalidComponentValueError(
+              this.field,
+              `has to be a number or a string, received "${value}"`,
+            );
           }
 
           this.field.setValue(node, value);

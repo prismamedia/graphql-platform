@@ -1,5 +1,5 @@
 import { SuperSet } from '@prismamedia/graphql-platform-utils';
-import { Memoize } from 'typescript-memoize';
+import { Memoize } from '@prismamedia/ts-memoize';
 import { Column, ColumnReference } from '../..';
 import { TableReference } from './reference';
 
@@ -10,8 +10,13 @@ export class OrderByExpressionSet extends SuperSet<OrderByExpression> {
     super();
   }
 
-  public addSort(column: Column | ColumnReference, direction: 'ASC' | 'DESC' = 'ASC'): this {
-    return this.add([column.getEscapedName(this.tableReference.alias), direction].join(' '));
+  public addSort(
+    column: Column | ColumnReference,
+    direction: 'ASC' | 'DESC' = 'ASC',
+  ): this {
+    return this.add(
+      [column.getEscapedName(this.tableReference.alias), direction].join(' '),
+    );
   }
 
   public get expressions(): SuperSet<string> {

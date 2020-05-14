@@ -21,7 +21,9 @@ describe('Find', () => {
     const Article = resourceMap.assert('Article');
     const ArticleCategory = Article.getRelationMap().assert('category');
     const articleTable = database.getTable(Article);
-    const articleCategoryForeignKeyColumnSet = articleTable.getForeignKey(ArticleCategory).getColumnSet();
+    const articleCategoryForeignKeyColumnSet = articleTable
+      .getForeignKey(ArticleCategory)
+      .getColumnSet();
 
     const findArticles = articleTable.getOperation('Find');
 
@@ -51,11 +53,15 @@ describe('Find', () => {
       },
     });
 
-    const selectedForeignKeyColumnSet = articleCategoryForeignKeyColumnSet.filter(column =>
-      findArticles.preferForeignKeyColumn(column, relatedNodeSelection),
+    const selectedForeignKeyColumnSet = articleCategoryForeignKeyColumnSet.filter(
+      (column) =>
+        findArticles.preferForeignKeyColumn(column, relatedNodeSelection),
     );
 
-    expect([...selectedForeignKeyColumnSet].map(({ name }) => name)).toEqual(['categoryParentId', 'categorySlug']);
+    expect([...selectedForeignKeyColumnSet].map(({ name }) => name)).toEqual([
+      'categoryParentId',
+      'categorySlug',
+    ]);
 
     expect(relatedNodeSelection.toPlainObject()).toEqual({
       parent: {

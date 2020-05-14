@@ -1,6 +1,6 @@
 import { SuperSet } from '@prismamedia/graphql-platform-utils';
+import { Memoize } from '@prismamedia/ts-memoize';
 import { escape } from 'mysql';
-import { Memoize } from 'typescript-memoize';
 import { Column, ColumnReference } from '../../../table';
 import { ColumnValue } from '../../column';
 import { TableReference } from '../reference';
@@ -12,8 +12,13 @@ export class AssignmentSet extends SuperSet<Assignment> {
     super();
   }
 
-  public addAssignment(column: Column | ColumnReference, value: ColumnValue): this {
-    return this.add(`${column.getEscapedName(this.tableReference.alias)} = ${escape(value)}`);
+  public addAssignment(
+    column: Column | ColumnReference,
+    value: ColumnValue,
+  ): this {
+    return this.add(
+      `${column.getEscapedName(this.tableReference.alias)} = ${escape(value)}`,
+    );
   }
 
   @Memoize()

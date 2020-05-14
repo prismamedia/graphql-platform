@@ -1,5 +1,5 @@
 import { SuperSet } from '@prismamedia/graphql-platform-utils';
-import { Memoize } from 'typescript-memoize';
+import { Memoize } from '@prismamedia/ts-memoize';
 import { Column, ColumnReference, ColumnSet } from '../../../table';
 import { TableReference } from '../reference';
 
@@ -17,10 +17,15 @@ export class GroupByExpressionSet extends SuperSet<GroupByExpression> {
     for (const expression of this) {
       if (typeof expression === 'string') {
         expression && expressionSet.add(expression);
-      } else if (expression instanceof Column || expression instanceof ColumnReference) {
+      } else if (
+        expression instanceof Column ||
+        expression instanceof ColumnReference
+      ) {
         expressionSet.add(expression.getEscapedName(this.tableReference.alias));
       } else if (expression instanceof ColumnSet) {
-        [...expression].forEach(column => expressionSet.add(column.getEscapedName(this.tableReference.alias)));
+        [...expression].forEach((column) =>
+          expressionSet.add(column.getEscapedName(this.tableReference.alias)),
+        );
       }
     }
 

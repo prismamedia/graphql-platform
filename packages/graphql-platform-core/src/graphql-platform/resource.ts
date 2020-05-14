@@ -11,10 +11,20 @@ import {
   ModuleMapConfig,
   POJO,
 } from '@prismamedia/graphql-platform-utils';
-import { EventConfigMap, EventEmitter } from '@prismamedia/ts-async-event-emitter';
+import {
+  EventConfigMap,
+  EventEmitter,
+} from '@prismamedia/ts-async-event-emitter';
+import { Memoize } from '@prismamedia/ts-memoize';
 import inflector from 'inflection';
-import { Memoize } from 'typescript-memoize';
-import { AnyBaseContext, AnyGraphQLPlatform, BaseContext, Context, CustomContext, NodeSource } from '../graphql-platform';
+import {
+  AnyBaseContext,
+  AnyGraphQLPlatform,
+  BaseContext,
+  Context,
+  CustomContext,
+  NodeSource,
+} from '../graphql-platform';
 import {
   CreateOneOperationArgs,
   CreateOneRawValue,
@@ -55,8 +65,19 @@ import {
 } from './resource/component';
 import { InvalidNodeValueError } from './resource/error';
 import { ResourceMap } from './resource/map';
-import { AnyUniqueFullConfig, Unique, UniqueConfig, UniqueFullConfig, UniqueSet } from './resource/unique';
-import { VirtualField, VirtualFieldConfig, VirtualFieldMap, VirtualFieldSet } from './resource/virtual-field';
+import {
+  AnyUniqueFullConfig,
+  Unique,
+  UniqueConfig,
+  UniqueFullConfig,
+  UniqueSet,
+} from './resource/unique';
+import {
+  VirtualField,
+  VirtualFieldConfig,
+  VirtualFieldMap,
+  VirtualFieldSet,
+} from './resource/virtual-field';
 import {
   InputTypeConstructor,
   InputTypeId,
@@ -79,11 +100,17 @@ export * from './resource/virtual-field';
 
 export type NodeValue = { [componentName: string]: ComponentValue };
 
-export type SerializedNodeValue = { [componentName: string]: SerializedComponentValue };
+export type SerializedNodeValue = {
+  [componentName: string]: SerializedComponentValue;
+};
 
-export type MaybeResourceAware<T = any> = T | ((args: { resource: Resource }) => T);
+export type MaybeResourceAware<T = any> =
+  | T
+  | ((args: { resource: Resource }) => T);
 
-export type MaybeResourceMapAware<T = any> = T | ((args: { resourceMap: ResourceMap }) => T);
+export type MaybeResourceMapAware<T = any> =
+  | T
+  | ((args: { resourceMap: ResourceMap }) => T);
 
 export type ResourceFilterValue = WhereInputValue | false;
 
@@ -100,7 +127,11 @@ export type ResourceHookMetaMap<
   TArgs extends POJO = any,
   TCustomContext extends CustomContext = any,
   TBaseContext extends AnyBaseContext = BaseContext
-> = Readonly<{ args: TArgs; context: Context<TCustomContext, TBaseContext>; resource: Resource }>;
+> = Readonly<{
+  args: TArgs;
+  context: Context<TCustomContext, TBaseContext>;
+  resource: Resource;
+}>;
 
 export type ResourceHookMap<
   TCustomContext extends CustomContext = any,
@@ -108,18 +139,30 @@ export type ResourceHookMap<
 > = {
   // Create
   [ResourceHookKind.PreCreate]: {
-    metas: ResourceHookMetaMap<CreateOneOperationArgs, TCustomContext, TBaseContext>;
+    metas: ResourceHookMetaMap<
+      CreateOneOperationArgs,
+      TCustomContext,
+      TBaseContext
+    >;
     create: CreateOneRawValue;
   };
   [ResourceHookKind.PostCreate]: Readonly<{
-    metas: ResourceHookMetaMap<CreateOneOperationArgs, TCustomContext, TBaseContext>;
+    metas: ResourceHookMetaMap<
+      CreateOneOperationArgs,
+      TCustomContext,
+      TBaseContext
+    >;
     // Contains the whole node value: all the fields and relation's ids
     createdNode: SerializedNodeValue;
   }>;
 
   // Update
   [ResourceHookKind.PreUpdate]: {
-    metas: ResourceHookMetaMap<UpdateOneOperationArgs, TCustomContext, TBaseContext> & {
+    metas: ResourceHookMetaMap<
+      UpdateOneOperationArgs,
+      TCustomContext,
+      TBaseContext
+    > & {
       toBeUpdatedNodeId: WhereUniqueInputValue;
       toBeUpdatedNode?: NodeSource;
     };
@@ -128,18 +171,30 @@ export type ResourceHookMap<
     update: UpdateOneRawValue;
   };
   [ResourceHookKind.PostUpdate]: Readonly<{
-    metas: ResourceHookMetaMap<UpdateOneOperationArgs, TCustomContext, TBaseContext>;
+    metas: ResourceHookMetaMap<
+      UpdateOneOperationArgs,
+      TCustomContext,
+      TBaseContext
+    >;
     // Contains the whole node value: all the fields and relation's ids
     updatedNode: SerializedNodeValue;
   }>;
 
   // Delete
   [ResourceHookKind.PreDelete]: {
-    metas: ResourceHookMetaMap<DeleteOneOperationArgs, TCustomContext, TBaseContext>;
+    metas: ResourceHookMetaMap<
+      DeleteOneOperationArgs,
+      TCustomContext,
+      TBaseContext
+    >;
     toBeDeletedNodeId: WhereUniqueInputValue;
   };
   [ResourceHookKind.PostDelete]: Readonly<{
-    metas: ResourceHookMetaMap<DeleteOneOperationArgs, TCustomContext, TBaseContext>;
+    metas: ResourceHookMetaMap<
+      DeleteOneOperationArgs,
+      TCustomContext,
+      TBaseContext
+    >;
     // Contains the whole node value: all the fields and relation's ids
     deletedNode: SerializedNodeValue;
   }>;
@@ -149,8 +204,14 @@ export interface ResourceConfig<
   TCustomContext extends CustomContext = {},
   TBaseContext extends AnyBaseContext = BaseContext,
   TUniqueFullConfig extends AnyUniqueFullConfig = UniqueFullConfig,
-  TFieldConfig extends AnyFieldConfig = FieldConfig<TCustomContext, TBaseContext>,
-  TRelationConfig extends AnyRelationConfig = RelationConfig<TCustomContext, TBaseContext>
+  TFieldConfig extends AnyFieldConfig = FieldConfig<
+    TCustomContext,
+    TBaseContext
+  >,
+  TRelationConfig extends AnyRelationConfig = RelationConfig<
+    TCustomContext,
+    TBaseContext
+  >
 > {
   /** Optional, this resource's plural form, default: guessed from the resource's name */
   plural?: Maybe<string>;
@@ -175,12 +236,17 @@ export interface ResourceConfig<
 
   /** Optional, a list of virtual fields (= dynamic fields) */
   virtualFields?: MaybeResourceAware<
-    ModuleMapConfig<MaybeResourceAware<VirtualFieldConfig<TCustomContext, TBaseContext>>>
+    ModuleMapConfig<
+      MaybeResourceAware<VirtualFieldConfig<TCustomContext, TBaseContext>>
+    >
   >;
 
   /** Optional, a filter applied to all the queries, "false" means returning nothing. */
   filter?: Maybe<
-    ResourceFilterValue | ((context: Context<TCustomContext, TBaseContext>) => MaybePromise<Maybe<ResourceFilterValue>>)
+    | ResourceFilterValue
+    | ((
+        context: Context<TCustomContext, TBaseContext>,
+      ) => MaybePromise<Maybe<ResourceFilterValue>>)
   >;
 
   /** Optional, the behavior of the mutations can be customized by applying hooks */
@@ -189,18 +255,24 @@ export interface ResourceConfig<
 
 export type AnyResourceConfig = ResourceConfig<any, any, any, any, any>;
 
-export class Resource<TConfig extends AnyResourceConfig = ResourceConfig> extends EventEmitter<
-  ResourceHookMap & OperationEventMap
-> {
-  public constructor(readonly name: string, readonly config: TConfig, readonly gp: AnyGraphQLPlatform) {
+export class Resource<
+  TConfig extends AnyResourceConfig = ResourceConfig
+> extends EventEmitter<ResourceHookMap & OperationEventMap> {
+  public constructor(
+    readonly name: string,
+    readonly config: TConfig,
+    readonly gp: AnyGraphQLPlatform,
+  ) {
     super();
 
     const pascalCasedName = inflector.camelize(name, false);
     if (name !== pascalCasedName) {
-      throw new Error(`The resource's name "${name}" has to be in "Pascal" case: "${pascalCasedName}".`);
+      throw new Error(
+        `The resource's name "${name}" has to be in "Pascal" case: "${pascalCasedName}".`,
+      );
     }
 
-    config.hooks && this.onConfig(config.hooks);
+    config.hooks && this.on(config.hooks);
   }
 
   @Memoize()
@@ -217,7 +289,9 @@ export class Resource<TConfig extends AnyResourceConfig = ResourceConfig> extend
 
     const pascalCasedPlural = inflector.camelize(plural, false);
     if (plural !== pascalCasedPlural) {
-      throw new Error(`The resource's plural "${plural}" has to be in "Pascal" case: "${pascalCasedPlural}".`);
+      throw new Error(
+        `The resource's plural "${plural}" has to be in "Pascal" case: "${pascalCasedPlural}".`,
+      );
     }
 
     if (plural === this.name) {
@@ -241,14 +315,21 @@ export class Resource<TConfig extends AnyResourceConfig = ResourceConfig> extend
 
   @Memoize()
   public get description(): string | undefined {
-    return typeof this.config.description === 'string' && this.config.description ? this.config.description : undefined;
+    return typeof this.config.description === 'string' &&
+      this.config.description
+      ? this.config.description
+      : undefined;
   }
 
   @Memoize()
-  public get filter(): (context: Context) => MaybePromise<Maybe<ResourceFilterValue>> {
+  public get filter(): (
+    context: Context,
+  ) => MaybePromise<Maybe<ResourceFilterValue>> {
     const filter = this.config.filter;
     if (filter != null) {
-      return typeof filter === 'object' || filter === false ? () => filter : filter;
+      return typeof filter === 'object' || filter === false
+        ? () => filter
+        : filter;
     }
 
     return () => undefined;
@@ -275,7 +356,9 @@ export class Resource<TConfig extends AnyResourceConfig = ResourceConfig> extend
     for (const [name, config] of loadModuleMap(this.config.relations)) {
       const field = this.getFieldMap().get(name);
       if (field) {
-        throw new Error(`The relation "${this}.${name}" cannot have the same name than the field "${field}".`);
+        throw new Error(
+          `The relation "${this}.${name}" cannot have the same name than the field "${field}".`,
+        );
       }
 
       relationMap.set(name, new Relation(name, config, this));
@@ -291,9 +374,14 @@ export class Resource<TConfig extends AnyResourceConfig = ResourceConfig> extend
 
   @Memoize()
   public getComponentMap(): ComponentMap {
-    const componentMap = new ComponentMap<Field | Relation>([...this.getFieldMap(), ...this.getRelationMap()]);
+    const componentMap = new ComponentMap<Field | Relation>([
+      ...this.getFieldMap(),
+      ...this.getRelationMap(),
+    ]);
     if (componentMap.size === 0) {
-      throw new Error(`At least one component (= a field or a relation) has to be defined in the resource "${this}".`);
+      throw new Error(
+        `At least one component (= a field or a relation) has to be defined in the resource "${this}".`,
+      );
     }
 
     return componentMap;
@@ -306,25 +394,37 @@ export class Resource<TConfig extends AnyResourceConfig = ResourceConfig> extend
 
   @Memoize((hookKind: ResourceHookKind) => hookKind)
   public hasPreHook(
-    hookKind: ResourceHookKind.PreCreate | ResourceHookKind.PreUpdate | ResourceHookKind.PreDelete,
+    hookKind:
+      | ResourceHookKind.PreCreate
+      | ResourceHookKind.PreUpdate
+      | ResourceHookKind.PreDelete,
   ): boolean {
     return (
       this.getEventListenerCount(hookKind) > 0 ||
       (ResourceHookKind.PreDelete !== hookKind &&
-        [...this.getComponentSet()].some(component => component.getEventListenerCount(hookKind) > 0))
+        [...this.getComponentSet()].some(
+          (component) => component.getEventListenerCount(hookKind) > 0,
+        ))
     );
   }
 
   @Memoize((hookKind: ResourceHookKind) => hookKind)
   public hasPostHook(
-    hookKind: ResourceHookKind.PostCreate | ResourceHookKind.PostUpdate | ResourceHookKind.PostDelete,
+    hookKind:
+      | ResourceHookKind.PostCreate
+      | ResourceHookKind.PostUpdate
+      | ResourceHookKind.PostDelete,
   ): boolean {
     return this.getEventListenerCount(hookKind) > 0;
   }
 
-  public assertComponent<TComponent extends Component>(component: TComponent): TComponent {
+  public assertComponent<TComponent extends Component>(
+    component: TComponent,
+  ): TComponent {
     if (!this.getComponentSet().has(component)) {
-      throw new Error(`The component "${component}" does not belong to the resource "${this}".`);
+      throw new Error(
+        `The component "${component}" does not belong to the resource "${this}".`,
+      );
     }
 
     return component;
@@ -332,13 +432,17 @@ export class Resource<TConfig extends AnyResourceConfig = ResourceConfig> extend
 
   @Memoize()
   public getUniqueSet(): UniqueSet {
-    const uniqueSet = new UniqueSet((this.config.uniques || []).map(config => new Unique(config, this)));
+    const uniqueSet = new UniqueSet(
+      (this.config.uniques || []).map((config) => new Unique(config, this)),
+    );
 
     if (uniqueSet.size === 0) {
-      throw new Error(`At least one unique constraint has to be defined in the resource "${this}".`);
+      throw new Error(
+        `At least one unique constraint has to be defined in the resource "${this}".`,
+      );
     }
 
-    if (!uniqueSet.some(unique => unique.isPublic())) {
+    if (!uniqueSet.some((unique) => unique.isPublic())) {
       throw new Error(
         `At least one "public" unique constraint (= with all its components "public") has to be defined in the resource "${this}".`,
       );
@@ -349,12 +453,12 @@ export class Resource<TConfig extends AnyResourceConfig = ResourceConfig> extend
 
   @Memoize()
   public getNonNullableUniqueSet(): UniqueSet {
-    return this.getUniqueSet().filter(unique => !unique.isNullable());
+    return this.getUniqueSet().filter((unique) => !unique.isNullable());
   }
 
   @Memoize()
   public getPublicUniqueSet(): UniqueSet {
-    return this.getUniqueSet().filter(unique => unique.isPublic());
+    return this.getUniqueSet().filter((unique) => unique.isPublic());
   }
 
   @Memoize()
@@ -392,7 +496,9 @@ export class Resource<TConfig extends AnyResourceConfig = ResourceConfig> extend
             );
           }
 
-          const previousInverseRelation = inverseRelationMap.get(inverseRelation.name);
+          const previousInverseRelation = inverseRelationMap.get(
+            inverseRelation.name,
+          );
           if (previousInverseRelation) {
             throw new Error(
               `The "${relation}"'s inverse relation cannot have the same name than the "${previousInverseRelation.getInverse()}"'s inverse relation, you may want to define the "inversedBy" property.`,
@@ -417,27 +523,31 @@ export class Resource<TConfig extends AnyResourceConfig = ResourceConfig> extend
     return getFlagValue(this.config.immutable, false);
   }
 
-  public getOperationConstructorMap<TType extends OperationType>(type: TType): OperationConstructorMap<TType> {
+  public getOperationConstructorMap<TType extends OperationType>(
+    type: TType,
+  ): OperationConstructorMap<TType> {
     if (!(type in operationTypeMap && operationTypeMap[type])) {
       throw new Error(
-        `The operation type "${type}" does not exist, please choose among "${Object.keys(operationTypeMap).join(
-          ', ',
-        )}".`,
+        `The operation type "${type}" does not exist, please choose among "${Object.keys(
+          operationTypeMap,
+        ).join(', ')}".`,
       );
     }
 
     return operationTypeMap[type] as any;
   }
 
-  public getOperationConstructor<TType extends OperationType, TId extends OperationId<TType>>(
-    type: TType,
-    id: TId,
-  ): OperationConstructor<TType, TId> {
+  public getOperationConstructor<
+    TType extends OperationType,
+    TId extends OperationId<TType>
+  >(type: TType, id: TId): OperationConstructor<TType, TId> {
     const constructorMap = this.getOperationConstructorMap(type);
 
     if (!(id in constructorMap && constructorMap[id])) {
       throw new Error(
-        `The ${type} "${id}" does not exist, please choose among "${Object.keys(constructorMap).join(', ')}".`,
+        `The ${type} "${id}" does not exist, please choose among "${Object.keys(
+          constructorMap,
+        ).join(', ')}".`,
       );
     }
 
@@ -448,18 +558,25 @@ export class Resource<TConfig extends AnyResourceConfig = ResourceConfig> extend
   public getOperation<
     TType extends OperationType = OperationType,
     TId extends OperationId<TType> = OperationId<TType>,
-    TConstructor extends OperationConstructor<TType, TId> = OperationConstructor<TType, TId>
+    TConstructor extends OperationConstructor<
+      TType,
+      TId
+    > = OperationConstructor<TType, TId>
   >(type: TType, id: TId): InstanceType<TConstructor> {
     const constructor = this.getOperationConstructor(type, id);
 
     return new constructor(type, id, this);
   }
 
-  public getMutation<TId extends OperationId<GraphQLOperationType.Mutation>>(id: TId) {
+  public getMutation<TId extends OperationId<GraphQLOperationType.Mutation>>(
+    id: TId,
+  ) {
     return this.getOperation(GraphQLOperationType.Mutation, id);
   }
 
-  public getQuery<TId extends OperationId<GraphQLOperationType.Query>>(id: TId) {
+  public getQuery<TId extends OperationId<GraphQLOperationType.Query>>(
+    id: TId,
+  ) {
     return this.getOperation(GraphQLOperationType.Query, id);
   }
 
@@ -467,7 +584,9 @@ export class Resource<TConfig extends AnyResourceConfig = ResourceConfig> extend
     return getPlainObjectKeys(operationTypeMap);
   }
 
-  public getOperationIds<TType extends OperationType>(type: TType): OperationId<TType>[] {
+  public getOperationIds<TType extends OperationType>(
+    type: TType,
+  ): OperationId<TType>[] {
     const constructorMap = this.getOperationConstructorMap(type);
 
     return getPlainObjectKeys(constructorMap);
@@ -493,7 +612,9 @@ export class Resource<TConfig extends AnyResourceConfig = ResourceConfig> extend
   >(id: TId): InstanceType<TConstructor> {
     if (!(id in inputTypeMap && inputTypeMap[id])) {
       throw new Error(
-        `The input type "${id}" does not exist, please choose among "${Object.keys(inputTypeMap).join(', ')}".`,
+        `The input type "${id}" does not exist, please choose among "${Object.keys(
+          inputTypeMap,
+        ).join(', ')}".`,
       );
     }
 
@@ -507,7 +628,9 @@ export class Resource<TConfig extends AnyResourceConfig = ResourceConfig> extend
   >(id: TId): InstanceType<TConstructor> {
     if (!(id in outputTypeMap && outputTypeMap[id])) {
       throw new Error(
-        `The output type "${id}" does not exist, please choose among "${Object.keys(outputTypeMap).join(', ')}".`,
+        `The output type "${id}" does not exist, please choose among "${Object.keys(
+          outputTypeMap,
+        ).join(', ')}".`,
       );
     }
 
@@ -540,7 +663,11 @@ export class Resource<TConfig extends AnyResourceConfig = ResourceConfig> extend
 
         virtualFieldMap.set(
           name,
-          new VirtualField(name, typeof config === 'function' ? config({ resource: this }) : config, this),
+          new VirtualField(
+            name,
+            typeof config === 'function' ? config({ resource: this }) : config,
+            this,
+          ),
         );
       }
     }
@@ -553,12 +680,16 @@ export class Resource<TConfig extends AnyResourceConfig = ResourceConfig> extend
     return new VirtualFieldSet(this.getVirtualFieldMap().values());
   }
 
-  public assertValue(node: unknown, normalized?: boolean, componentSet?: ComponentSet): NodeValue {
+  public assertValue(
+    node: unknown,
+    normalized?: boolean,
+    componentSet?: ComponentSet,
+  ): NodeValue {
     if (isPlainObject(node)) {
       const strict = typeof componentSet !== 'undefined';
 
       return fromEntries(
-        [...(componentSet || this.getComponentSet())].map(component => [
+        [...(componentSet || this.getComponentSet())].map((component) => [
           component.name,
           typeof node[component.name] !== 'undefined' || strict
             ? component.isField()
@@ -569,34 +700,51 @@ export class Resource<TConfig extends AnyResourceConfig = ResourceConfig> extend
       );
     }
 
-    throw new InvalidNodeValueError(this, `a plain object is expected but received "${node}" instead`);
+    throw new InvalidNodeValueError(
+      this,
+      `a plain object is expected but received "${node}" instead`,
+    );
   }
 
-  public serializeValue(node: NodeValue, normalized?: boolean, componentSet?: ComponentSet): SerializedNodeValue {
+  public serializeValue(
+    node: NodeValue,
+    normalized?: boolean,
+    componentSet?: ComponentSet,
+  ): SerializedNodeValue {
     const strict = typeof componentSet !== 'undefined';
 
     return fromEntries(
-      [...(componentSet || this.getComponentSet())].map(component => [
+      [...(componentSet || this.getComponentSet())].map((component) => [
         component.name,
         typeof node[component.name] !== 'undefined' || strict
           ? component.isField()
             ? component.serializeValue(node[component.name] as FieldValue)
-            : component.serializeValue(node[component.name] as RelationValue, normalized)
+            : component.serializeValue(
+                node[component.name] as RelationValue,
+                normalized,
+              )
           : undefined,
       ]),
     );
   }
 
-  public parseValue(node: SerializedNodeValue, normalized?: boolean, componentSet?: ComponentSet): NodeValue {
+  public parseValue(
+    node: SerializedNodeValue,
+    normalized?: boolean,
+    componentSet?: ComponentSet,
+  ): NodeValue {
     const strict = typeof componentSet !== 'undefined';
 
     return fromEntries(
-      [...(componentSet || this.getComponentSet())].map(component => [
+      [...(componentSet || this.getComponentSet())].map((component) => [
         component.name,
         typeof node[component.name] !== 'undefined' || strict
           ? component.isField()
             ? component.parseValue(node[component.name] as SerializedFieldValue)
-            : component.parseValue(node[component.name] as SerializedRelationValue, normalized)
+            : component.parseValue(
+                node[component.name] as SerializedRelationValue,
+                normalized,
+              )
           : undefined,
       ]),
     );
@@ -606,7 +754,9 @@ export class Resource<TConfig extends AnyResourceConfig = ResourceConfig> extend
     return this.getInputType('WhereUnique').assert(id);
   }
 
-  public serializeId(id: WhereUniqueInputValue): SerializedWhereUniqueInputValue {
+  public serializeId(
+    id: WhereUniqueInputValue,
+  ): SerializedWhereUniqueInputValue {
     return this.serializeValue(this.assertId(id));
   }
 

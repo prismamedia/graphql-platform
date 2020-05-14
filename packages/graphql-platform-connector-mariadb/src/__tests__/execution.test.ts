@@ -1,4 +1,7 @@
-import { play, scenario } from '../../../graphql-platform-core/src/__tests__/execution/scenario';
+import {
+  play,
+  scenario,
+} from '@prismamedia/graphql-platform-core/src/__tests__/execution/scenario';
 import { Connector, Database } from '../graphql-platform/connector';
 import { config, MyGP } from './gp';
 
@@ -7,7 +10,7 @@ describe('Execution', () => {
   let connector: Connector;
   let database: Database;
 
-  beforeAll(async done => {
+  beforeAll(async (done) => {
     gp = new MyGP(config);
     connector = gp.getConnector();
     database = connector.getDatabase();
@@ -18,16 +21,21 @@ describe('Execution', () => {
     done();
   });
 
-  afterAll(async done => {
+  afterAll(async (done) => {
     await database.drop();
 
     done();
   });
 
-  it('executes a scenario', async done => {
+  it('executes a scenario', async (done) => {
     // Ensure the timezone is well defined for both the system and the session
     await expect(
-      gp.getConnector().query([`SHOW GLOBAL VARIABLES LIKE 'time_zone';`, `SHOW SESSION VARIABLES LIKE 'time_zone';`]),
+      gp
+        .getConnector()
+        .query([
+          `SHOW GLOBAL VARIABLES LIKE 'time_zone';`,
+          `SHOW SESSION VARIABLES LIKE 'time_zone';`,
+        ]),
     ).resolves.toEqual([
       // System
       [{ Variable_name: 'time_zone', Value: 'SYSTEM' }],
