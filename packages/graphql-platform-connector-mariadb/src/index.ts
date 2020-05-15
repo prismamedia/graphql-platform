@@ -10,7 +10,6 @@ export {
   CustomOperationConfig,
   Field,
   FieldConfig,
-  GraphQLPlatform as default,
   GraphQLPlatform,
   GraphQLPlatformConfig,
   Relation,

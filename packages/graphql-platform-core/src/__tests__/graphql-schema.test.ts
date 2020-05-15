@@ -1,5 +1,5 @@
 import { GraphQLID, printSchema, validateSchema } from 'graphql';
-import GraphQLPlatform from '..';
+import { GraphQLPlatform } from '..';
 import { config, MyGP } from './gp';
 
 describe('GraphQLSchema', () => {
