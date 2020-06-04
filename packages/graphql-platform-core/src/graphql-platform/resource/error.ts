@@ -11,13 +11,16 @@ export class ResourceError extends Error {
     });
 
     Object.setPrototypeOf(this, new.target.prototype);
+
+    // In order not to pollute the logs
+    Object.defineProperty(this, 'resource', { enumerable: false });
   }
 }
 
 export class UndefinedComponentError extends ResourceError {
   constructor(
-    readonly resource: AnyResource,
-    readonly componentOrComponentName: AnyComponent | AnyComponent['name'],
+    resource: AnyResource,
+    componentOrComponentName: AnyComponent | AnyComponent['name'],
   ) {
     super(
       resource,
@@ -31,7 +34,7 @@ export class UndefinedComponentError extends ResourceError {
 }
 
 export class InvalidNodeValueError extends ResourceError {
-  constructor(readonly resource: AnyResource, cause?: string) {
+  constructor(resource: AnyResource, cause?: string) {
     super(
       resource,
       `The "${resource}"'s node value is invalid${cause ? `: ${cause}` : ''}.`,

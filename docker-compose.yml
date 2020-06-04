@@ -31,9 +31,9 @@ services:
     ports:
       - 3000:3000
       - 9222:9222
-    working_dir: /usr/src/app
+    working_dir: /workspace
     volumes:
-      - .:/usr/src/app:delegated
+      - .:/workspace:delegated
       - ~/.bash_history:/root/.bash_history
       - yarn_cache:/var/cache/yarn
     logging:

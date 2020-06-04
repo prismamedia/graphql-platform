@@ -10,11 +10,14 @@ export class OperationError extends ResourceError {
         cause ? `, ${cause}` : ''
       }.`,
     );
+
+    // In order not to pollute the logs
+    Object.defineProperty(this, 'operation', { enumerable: false });
   }
 }
 
 export class NodeNotFoundError extends OperationError {
-  constructor(readonly operation: Operation, id: WhereUniqueInputValue) {
+  constructor(operation: Operation, id: WhereUniqueInputValue) {
     super(
       operation,
       `the following node does not exist: ${JSON.stringify(id)}`,
