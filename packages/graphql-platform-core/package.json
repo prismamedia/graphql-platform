@@ -1,6 +1,6 @@
 {
   "name": "@prismamedia/graphql-platform-core",
-  "version": "0.1.0-alpha.54",
+  "version": "0.1.0-alpha.55",
   "license": "MIT",
   "contributors": [
     "Yvann Boucher <yvann.boucher@gmail.com>"
@@ -36,10 +36,10 @@
     "winston": "^3.2.1"
   },
   "dependencies": {
-    "@prismamedia/graphql-platform-utils": "^0.1.0-alpha.54",
+    "@prismamedia/graphql-platform-utils": "^0.1.0-alpha.55",
     "@prismamedia/ts-async-event-emitter": "^3.0.2",
     "@prismamedia/ts-memoize": "^1.0.0",
-    "@types/graphql-iso-date": "^3.3.3",
+    "@types/graphql-iso-date": "~3.3.3",
     "dependency-graph": "^0.9.0",
     "graphql-binding": "^2.5.2",
     "graphql-iso-date": "^3.6.1",
