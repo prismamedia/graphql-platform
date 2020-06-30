@@ -41,7 +41,7 @@
     "@types/express-jwt": "^0.0.42",
     "@types/express-unless": "^0.5.1",
     "apollo-server-express": "^2.13.1",
-    "express-jwt": "^5.3.1",
+    "express-jwt": "^6.0.0",
     "express-unless": "^0.5.0"
   },
   "peerDependencies": {
