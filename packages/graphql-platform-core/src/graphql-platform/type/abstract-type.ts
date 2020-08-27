@@ -14,12 +14,14 @@ abstract class AbstractType<
   public abstract getGraphQLType(): TType;
 }
 
-export abstract class AbstractInputType extends AbstractType<GraphQLInputType>
+export abstract class AbstractInputType
+  extends AbstractType<GraphQLInputType>
   implements InputType {
   readonly kind = TypeKind.Input;
 }
 
-export abstract class AbstractOutputType extends AbstractType<GraphQLOutputType>
+export abstract class AbstractOutputType
+  extends AbstractType<GraphQLOutputType>
   implements OutputType {
   readonly kind = TypeKind.Output;
 }

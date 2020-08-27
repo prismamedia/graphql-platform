@@ -195,7 +195,7 @@ export class GraphQLSelectionNode extends SuperMap<
   }
 }
 
-function appendNodeChild(
+export function appendNodeChild(
   node: GraphQLSelectionNode,
   selection: SelectionNode,
   fragments: GraphQLResolveInfo['fragments'],
@@ -228,7 +228,7 @@ function appendNodeChild(
   }
 }
 
-function parseGraphQLSelectionNode(
+export function parseGraphQLSelectionNode(
   field: FieldNode,
   fragments: GraphQLResolveInfo['fragments'],
   variableValues: GraphQLResolveInfo['variableValues'],

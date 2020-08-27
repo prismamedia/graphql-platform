@@ -48,8 +48,7 @@ export interface GraphQLPlatformConfig<
   TContextParams extends POJO = any,
   TCustomContext extends CustomContext = {},
   TBaseContext extends AnyBaseContext = BaseContext
->
-  extends CoreGraphQLPlatformConfig<
+> extends CoreGraphQLPlatformConfig<
     TContextParams,
     TCustomContext,
     TBaseContext,

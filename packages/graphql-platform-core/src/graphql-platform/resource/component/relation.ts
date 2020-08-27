@@ -98,8 +98,7 @@ export type RelationHookMap<
 export interface RelationConfig<
   TCustomContext extends CustomContext = {},
   TBaseContext extends AnyBaseContext = BaseContext
->
-  extends AbstractComponentConfig<
+> extends AbstractComponentConfig<
     RelationHookMap<TCustomContext, TBaseContext>
   > {
   /** Required, name of the targeted resource */
