@@ -181,22 +181,20 @@ export abstract class AbstractOperation<TArgs extends POJO = any, TResult = any>
             isRootOperation &&
             operationContext.postSuccessHooks
           ) {
-            const postSuccessHooks = operationContext.postSuccessHooks;
-            delete operationContext.postSuccessHooks;
-
             // Execute the hooks on operation success
             if (success) {
-              // In case of errors: we log them but do not throw anything as we want the operation remains a "success"
-              await Promise.all(
-                postSuccessHooks.map(async (hook) => {
-                  try {
-                    await hook();
-                  } catch (error) {
-                    context.logger?.warn(error);
-                  }
-                }),
-              );
+              let hook: any;
+              while ((hook = operationContext.postSuccessHooks.shift())) {
+                try {
+                  await hook();
+                } catch (error) {
+                  // In case of errors: we log them but do not throw anything as we want the operation remains a "success"
+                  context.logger?.warn(error);
+                }
+              }
             }
+
+            delete operationContext.postSuccessHooks;
           }
         }
       },
