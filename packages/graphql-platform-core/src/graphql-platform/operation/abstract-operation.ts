@@ -8,6 +8,7 @@ import {
 } from '@prismamedia/graphql-platform-utils';
 import { Memoize } from '@prismamedia/ts-memoize';
 import { GraphQLFieldConfigArgumentMap, GraphQLOutputType } from 'graphql';
+import { Logger } from 'winston';
 import { Context } from '../../graphql-platform';
 import { ConnectorInterface } from '../connector';
 import {
@@ -15,6 +16,7 @@ import {
   OperationEvent,
   OperationEventKind,
   OperationResolverParams,
+  PostOperationSuccessHook,
 } from '../operation';
 import { Resource } from '../resource';
 
@@ -183,15 +185,10 @@ export abstract class AbstractOperation<TArgs extends POJO = any, TResult = any>
           ) {
             // Execute the hooks on operation success
             if (success) {
-              let hook: any;
-              while ((hook = operationContext.postSuccessHooks.shift())) {
-                try {
-                  await hook();
-                } catch (error) {
-                  // In case of errors: we log them but do not throw anything as we want the operation remains a "success"
-                  context.logger?.warn(error);
-                }
-              }
+              await executePostHooks(
+                operationContext.postSuccessHooks,
+                context.logger,
+              );
             }
 
             delete operationContext.postSuccessHooks;
@@ -199,5 +196,24 @@ export abstract class AbstractOperation<TArgs extends POJO = any, TResult = any>
         }
       },
     };
+  }
+}
+
+export async function executePostHooks(
+  hooks: PostOperationSuccessHook[],
+  logger?: Logger,
+): Promise<void> {
+  // As the post-hooks can themself trigger post-hooks, we need to run in a "while" loop
+  while (hooks.length) {
+    await Promise.all(
+      hooks.splice(0, hooks.length).map(async (hook) => {
+        try {
+          await hook();
+        } catch (error) {
+          // In case of errors: we log them but do not throw anything as we want the operation remains a "success"
+          logger?.warn(error);
+        }
+      }),
+    );
   }
 }

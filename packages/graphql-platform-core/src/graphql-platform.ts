@@ -26,6 +26,7 @@ import { Logger } from 'winston';
 import { ConnectorInterface } from './graphql-platform/connector';
 import { Fixture, FixtureData, FixtureGraph } from './graphql-platform/fixture';
 import {
+  executePostHooks,
   OperationContext,
   OperationEvent,
   PostOperationSuccessHook,
@@ -445,7 +446,7 @@ export class GraphQLPlatform<
         ),
     );
 
-    await Promise.all(postSuccessHooks.map(async (hook) => hook()));
+    await executePostHooks(postSuccessHooks, this.getLogger());
   }
 }
 
