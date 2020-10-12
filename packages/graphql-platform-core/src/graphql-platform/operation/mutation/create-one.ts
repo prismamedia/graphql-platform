@@ -657,39 +657,30 @@ export class CreateOneOperation extends AbstractOperation<
 
     await this.parseDataInverseRelationMap(args.data, nodeId, context);
 
-    // Select all the components in case of post success hooks
-    const hasPostSuccessHook = resource.hasPostHook(
-      ResourceHookKind.PostCreate,
+    // Select all the components
+    selectionNode.setChildren(
+      resource.getComponentSet().getSelectionNodeChildren(TypeKind.Input),
     );
-    if (hasPostSuccessHook) {
-      selectionNode.setChildren(
-        resource.getComponentSet().getSelectionNodeChildren(TypeKind.Input),
-      );
-    }
-
-    // // Fetch the created node only if we don't have all the data yet
-    // const node = selectionNode.hasDiff(nodeFromCreate)
-    //   ? await resource.getQuery('AssertOne').resolve({
-    //       ...params,
-    //       args: {
-    //         where: nodeId,
-    //       },
-    //     })
-    //   : (nodeFromCreate as NodeSource);
 
     // Always fetch the created node
     const node = await resource
       .getQuery('AssertOne')
       .resolve({ ...params, args: { where: nodeId } });
 
-    const { operationContext } = context;
-    const postSuccessHooks =
-      operationContext.type === GraphQLOperationType.Mutation
-        ? operationContext.postSuccessHooks
-        : undefined;
+    await resource.emitSerial(ResourceHookKind.ToBeCreated, {
+      metas: Object.freeze({
+        ...params,
+        resource,
+      }),
+      toBeCreatedNode: resource.serializeValue(
+        node as NodeValue,
+        true,
+        resource.getComponentSet(),
+      ),
+    });
 
-    if (postSuccessHooks && hasPostSuccessHook) {
-      postSuccessHooks.push(
+    if (context.operationContext.type === GraphQLOperationType.Mutation) {
+      context.operationContext.postSuccessHooks?.push(
         resource.emit.bind(resource, ResourceHookKind.PostCreate, {
           metas: Object.freeze({
             ...params,

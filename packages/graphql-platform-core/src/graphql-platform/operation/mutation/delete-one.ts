@@ -56,13 +56,9 @@ export class DeleteOneOperation extends AbstractOperation<
     const resource = this.resource;
 
     // Select all the components in case of post success hooks
-    const hasPostSuccessHook =
-      resource.getEventListenerCount(ResourceHookKind.PostDelete) > 0;
-    if (hasPostSuccessHook) {
-      selectionNode.setChildren(
-        resource.getComponentSet().getSelectionNodeChildren(TypeKind.Input),
-      );
-    }
+    selectionNode.setChildren(
+      resource.getComponentSet().getSelectionNodeChildren(TypeKind.Input),
+    );
 
     // Ensure the main "identifier" is requested
     selectionNode.setChildren(
@@ -91,14 +87,20 @@ export class DeleteOneOperation extends AbstractOperation<
       );
 
       if (deletedNodeCount === 1) {
-        const { operationContext } = context;
-        const postSuccessHooks =
-          operationContext.type === GraphQLOperationType.Mutation
-            ? operationContext.postSuccessHooks
-            : undefined;
+        await resource.emitSerial(ResourceHookKind.ToBeDeleted, {
+          metas: Object.freeze({
+            ...params,
+            resource,
+          }),
+          toBeDeletedNode: resource.serializeValue(
+            node as NodeValue,
+            true,
+            resource.getComponentSet(),
+          ),
+        });
 
-        if (postSuccessHooks && hasPostSuccessHook) {
-          postSuccessHooks.push(
+        if (context.operationContext.type === GraphQLOperationType.Mutation) {
+          context.operationContext.postSuccessHooks?.push(
             resource.emit.bind(resource, ResourceHookKind.PostDelete, {
               metas: Object.freeze({
                 args,

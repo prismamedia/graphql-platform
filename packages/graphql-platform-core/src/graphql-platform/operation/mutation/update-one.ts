@@ -1057,20 +1057,9 @@ export class UpdateOneOperation extends AbstractOperation<
     await this.parseDataInverseRelationMap(args.data, nodeId, context);
 
     // Select all the components in case of post success hooks
-    const hasPostSuccessHook = resource.hasPostHook(
-      ResourceHookKind.PostUpdate,
+    selectionNode.setChildren(
+      resource.getComponentSet().getSelectionNodeChildren(TypeKind.Input),
     );
-    if (hasPostSuccessHook) {
-      selectionNode.setChildren(
-        resource.getComponentSet().getSelectionNodeChildren(TypeKind.Input),
-      );
-    }
-
-    // // Fetch the updated node only if we don't have all the data yet
-    // const nodeFromUpdate = update.toNodeValue() as NodeSource;
-    // const node = selectionNode.hasDiff(nodeFromUpdate)
-    //   ? await resource.getQuery('AssertOne').resolve({ ...params, args: { where: nodeId } })
-    //   : nodeFromUpdate;
 
     // Always fetch the updated node
     const node = await resource
@@ -1078,14 +1067,20 @@ export class UpdateOneOperation extends AbstractOperation<
       .resolve({ ...params, args: { where: nodeId } });
 
     if (changedCount === 1) {
-      const { operationContext } = context;
-      const postSuccessHooks =
-        operationContext.type === GraphQLOperationType.Mutation
-          ? operationContext.postSuccessHooks
-          : undefined;
+      await resource.emitSerial(ResourceHookKind.ToBeUpdated, {
+        metas: Object.freeze({
+          ...params,
+          resource,
+        }),
+        toBeUpdatedNode: resource.serializeValue(
+          node as NodeValue,
+          true,
+          resource.getComponentSet(),
+        ),
+      });
 
-      if (postSuccessHooks && hasPostSuccessHook) {
-        postSuccessHooks.push(
+      if (context.operationContext.type === GraphQLOperationType.Mutation) {
+        context.operationContext.postSuccessHooks?.push(
           resource.emit.bind(resource, ResourceHookKind.PostUpdate, {
             metas: Object.freeze({
               ...params,

@@ -170,6 +170,16 @@ const resource: MyResourceConfig = {
     }) => {
       logger?.info(`Will create "${create.format}" article: ${create.title}`);
     },
+    [ResourceHookKind.ToBeCreated]: ({
+      metas: {
+        context: { logger },
+      },
+      toBeCreatedNode,
+    }) => {
+      logger?.info(
+        `About to create "${toBeCreatedNode.format}" article: ${toBeCreatedNode.title}`,
+      );
+    },
     [ResourceHookKind.PostCreate]: ({
       metas: {
         context: { logger },

@@ -116,10 +116,13 @@ export type ResourceFilterValue = WhereInputValue | false;
 
 export enum ResourceHookKind {
   PreCreate = 'PRE_CREATE',
+  ToBeCreated = 'TO_BE_CREATED',
   PostCreate = 'POST_CREATE',
   PreUpdate = 'PRE_UPDATE',
+  ToBeUpdated = 'TO_BE_UPDATED',
   PostUpdate = 'POST_UPDATE',
   PreDelete = 'PRE_DELETE',
+  ToBeDeleted = 'TO_BE_DELETED',
   PostDelete = 'POST_DELETE',
 }
 
@@ -146,6 +149,15 @@ export type ResourceHookMap<
     >;
     create: CreateOneRawValue;
   };
+  [ResourceHookKind.ToBeCreated]: {
+    metas: ResourceHookMetaMap<
+      CreateOneOperationArgs,
+      TCustomContext,
+      TBaseContext
+    >;
+    // Contains the whole node value: all the fields and relation's ids
+    toBeCreatedNode: SerializedNodeValue;
+  };
   [ResourceHookKind.PostCreate]: Readonly<{
     metas: ResourceHookMetaMap<
       CreateOneOperationArgs,
@@ -170,6 +182,15 @@ export type ResourceHookMap<
     toBeUpdatedNodeId: WhereUniqueInputValue;
     update: UpdateOneRawValue;
   };
+  [ResourceHookKind.ToBeUpdated]: Readonly<{
+    metas: ResourceHookMetaMap<
+      UpdateOneOperationArgs,
+      TCustomContext,
+      TBaseContext
+    >;
+    // Contains the whole node value: all the fields and relation's ids
+    toBeUpdatedNode: SerializedNodeValue;
+  }>;
   [ResourceHookKind.PostUpdate]: Readonly<{
     metas: ResourceHookMetaMap<
       UpdateOneOperationArgs,
@@ -189,6 +210,15 @@ export type ResourceHookMap<
     >;
     toBeDeletedNodeId: WhereUniqueInputValue;
   };
+  [ResourceHookKind.ToBeDeleted]: Readonly<{
+    metas: ResourceHookMetaMap<
+      DeleteOneOperationArgs,
+      TCustomContext,
+      TBaseContext
+    >;
+    // Contains the whole node value: all the fields and relation's ids
+    toBeDeletedNode: SerializedNodeValue;
+  }>;
   [ResourceHookKind.PostDelete]: Readonly<{
     metas: ResourceHookMetaMap<
       DeleteOneOperationArgs,
@@ -406,16 +436,6 @@ export class Resource<
           (component) => component.getEventListenerCount(hookKind) > 0,
         ))
     );
-  }
-
-  @Memoize((hookKind: ResourceHookKind) => hookKind)
-  public hasPostHook(
-    hookKind:
-      | ResourceHookKind.PostCreate
-      | ResourceHookKind.PostUpdate
-      | ResourceHookKind.PostDelete,
-  ): boolean {
-    return this.getEventListenerCount(hookKind) > 0;
   }
 
   public assertComponent<TComponent extends Component>(

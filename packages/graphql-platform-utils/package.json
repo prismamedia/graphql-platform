@@ -1,6 +1,6 @@
 {
   "name": "@prismamedia/graphql-platform-utils",
-  "version": "0.1.0-alpha.58",
+  "version": "0.1.0-alpha.60",
   "license": "MIT",
   "contributors": [
     "Yvann Boucher <yvann.boucher@gmail.com>"
@@ -22,16 +22,16 @@
     "test:watch": "yarn run test --watchAll"
   },
   "devDependencies": {
-    "@types/jest": "^26.0.13",
-    "@types/lodash": "^4.14.161",
-    "@types/node": "^14.6.4",
+    "@types/jest": "^26.0.14",
+    "@types/lodash": "^4.14.162",
+    "@types/node": "^14.11.8",
     "graphql": "^14.5.0",
     "jest": "^26.4.2",
     "ts-jest": "^26.3.0",
     "typescript": "~3.8.3"
   },
   "dependencies": {
-    "@prismamedia/ts-memoize": "^1.0.0",
+    "@prismamedia/ts-memoize": "^1.1.1",
     "@prismamedia/ts-module-loader": "3.1.4",
     "lodash": "^4.17.20"
   },
