@@ -60,11 +60,6 @@ export class DeleteOneOperation extends AbstractOperation<
       resource.getComponentSet().getSelectionNodeChildren(TypeKind.Input),
     );
 
-    // Ensure the main "identifier" is requested
-    selectionNode.setChildren(
-      resource.getIdentifier().getSelectionNode(TypeKind.Input).getChildren(),
-    );
-
     const node = await resource.getQuery('FindOne').resolve(params);
 
     if (node) {
