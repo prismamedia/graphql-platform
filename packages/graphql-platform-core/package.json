@@ -1,6 +1,6 @@
 {
   "name": "@prismamedia/graphql-platform-core",
-  "version": "0.1.0-alpha.60",
+  "version": "0.1.0-alpha.61",
   "license": "MIT",
   "contributors": [
     "Yvann Boucher <yvann.boucher@gmail.com>"
@@ -36,7 +36,7 @@
     "winston": "^3.2.1"
   },
   "dependencies": {
-    "@prismamedia/graphql-platform-utils": "^0.1.0-alpha.60",
+    "@prismamedia/graphql-platform-utils": "^0.1.0-alpha.61",
     "@prismamedia/ts-async-event-emitter": "^3.0.2",
     "@prismamedia/ts-memoize": "^1.1.1",
     "@types/graphql-iso-date": "~3.3.3",

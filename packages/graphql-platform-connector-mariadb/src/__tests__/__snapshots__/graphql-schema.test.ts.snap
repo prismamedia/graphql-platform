@@ -1006,11 +1006,19 @@ input ArticleWhereInput {
   publicationDay_is_null: Boolean
   publicationDay_in: [Date]
   publicationDay_not_in: [Date]
+  publicationDay_lt: Date
+  publicationDay_lte: Date
+  publicationDay_gt: Date
+  publicationDay_gte: Date
   publicationTime: Time
   publicationTime_not: Time
   publicationTime_is_null: Boolean
   publicationTime_in: [Time]
   publicationTime_not_in: [Time]
+  publicationTime_lt: Time
+  publicationTime_lte: Time
+  publicationTime_gt: Time
+  publicationTime_gte: Time
   isPublished: Boolean
   isPublished_not: Boolean
   isPublished_in: [Boolean!]

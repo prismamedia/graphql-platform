@@ -224,7 +224,7 @@ export class WhereInputType extends AbstractInputType {
           }
         : null,
     lt: (field) =>
-      ['String', 'Int', 'Float', 'DateTime'].includes(field.getType().name)
+      ['String', 'Int', 'Float', 'DateTime', 'Date', 'Time'].includes(field.getType().name)
         ? {
             name: `${field.name}_lt`,
             clean: (value: unknown) => (value !== null ? value : undefined),
@@ -232,7 +232,7 @@ export class WhereInputType extends AbstractInputType {
           }
         : null,
     lte: (field) =>
-      ['String', 'Int', 'Float', 'DateTime'].includes(field.getType().name)
+      ['String', 'Int', 'Float', 'DateTime', 'Date', 'Time'].includes(field.getType().name)
         ? {
             name: `${field.name}_lte`,
             clean: (value: unknown) => (value !== null ? value : undefined),
@@ -240,7 +240,7 @@ export class WhereInputType extends AbstractInputType {
           }
         : null,
     gt: (field) =>
-      ['String', 'Int', 'Float', 'DateTime'].includes(field.getType().name)
+      ['String', 'Int', 'Float', 'DateTime', 'Date', 'Time'].includes(field.getType().name)
         ? {
             name: `${field.name}_gt`,
             clean: (value: unknown) => (value !== null ? value : undefined),
@@ -248,7 +248,7 @@ export class WhereInputType extends AbstractInputType {
           }
         : null,
     gte: (field) =>
-      ['String', 'Int', 'Float', 'DateTime'].includes(field.getType().name)
+      ['String', 'Int', 'Float', 'DateTime', 'Date', 'Time'].includes(field.getType().name)
         ? {
             name: `${field.name}_gte`,
             clean: (value: unknown) => (value !== null ? value : undefined),
