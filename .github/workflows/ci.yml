@@ -10,7 +10,7 @@ jobs:
       matrix:
         node-version:
           - 14
-          - 15
+          # - 15
 
         package:
           - graphql-platform
@@ -18,15 +18,23 @@ jobs:
           - graphql-platform-utils
 
     steps:
+      - name: Setup NodeJS v${{ matrix.node-version }}
+        uses: actions/setup-node@v2
+        with:
+          node-version: ${{ matrix.node-version }}
+
       - name: Checkout the code
         uses: actions/checkout@v2
         with:
           fetch-depth: 1
 
-      - name: Setup NodeJS v${{ matrix.node-version }}
-        uses: actions/setup-node@v1
-        with:
-          node-version: ${{ matrix.node-version }}
-
-      - name: Validate the dependencies
+      - name: Validate the "${{ matrix.package }}" package's dependencies
         run: yarn install --immutable --immutable-cache
+
+      - name: Build "${{ matrix.package }}"
+        run: yarn build
+        working-directory: packages/${{ matrix.package }}
+
+      - name: Test "${{ matrix.package }}"
+        run: yarn test --ci
+        working-directory: packages/${{ matrix.package }}
