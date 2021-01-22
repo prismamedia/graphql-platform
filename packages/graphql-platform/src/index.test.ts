@@ -96,7 +96,7 @@ describe('GraphQL Platform', () => {
           },
         }),
     ).toThrowError(
-      '"User" contains at least 2 filters with the same name "username"',
+      'The "User" node contains at least 2 fields with the same name: username',
     );
   });
 

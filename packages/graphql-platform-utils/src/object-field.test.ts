@@ -38,9 +38,7 @@ describe('Object field', () => {
     [undefined, true],
     [{}, true],
     [{ public: true }, true],
-    [{ public: () => true }, true],
     [{ public: false }, false],
-    [{ public: () => false }, false],
   ])(`a public object's field accepts the config: %p`, (config, visibility) => {
     expect(new Implementation(publicParent, 'field', config).public).toEqual(
       visibility,
@@ -51,7 +49,6 @@ describe('Object field', () => {
     [undefined, false],
     [{}, false],
     [{ public: false }, false],
-    [{ public: () => false }, false],
   ])(
     `a private object's field accepts the config: %p`,
     (config, visibility) => {
@@ -61,7 +58,7 @@ describe('Object field', () => {
     },
   );
 
-  it.each([{ public: true }, { public: () => true }])(
+  it.each([{ public: true }])(
     `a private object's field cannot use the config: %p`,
     (config) => {
       expect(

@@ -9,6 +9,7 @@
     "type": "git",
     "url": "https://github.com/prismamedia/graphql-platform"
   },
+  "type": "module",
   "main": "dist/mjs/index.js",
   "typings": "dist/types/index.d.ts",
   "scripts": {
@@ -25,8 +26,8 @@
     "@types/faker": "^5.1.5",
     "@types/inflection": "^1.5.28",
     "@types/jest": "^26.0.20",
-    "@types/lodash": "^4.14.167",
-    "@types/node": "^14.14.21",
+    "@types/lodash": "^4.14.168",
+    "@types/node": "^14.14.22",
     "@types/slug": "^0.9.1",
     "@types/uuid": "^8.3.0",
     "faker": "^5.1.0",
@@ -39,7 +40,7 @@
   "dependencies": {
     "@prismamedia/graphql-platform-scalars": "workspace:packages/graphql-platform-scalars",
     "@prismamedia/graphql-platform-utils": "workspace:packages/graphql-platform-utils",
-    "@prismamedia/ts-memoize": "^1.1.1",
+    "@prismamedia/ts-memoize": "^1.1.2",
     "@prismamedia/ts-typed-event-emitter": "^1.0.2",
     "dependency-graph": "^0.10.0",
     "graphql": "^15.4.0",

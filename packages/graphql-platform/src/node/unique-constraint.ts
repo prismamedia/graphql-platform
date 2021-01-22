@@ -6,7 +6,7 @@ import {
   TGetConnectorOverrides,
 } from '../connector';
 import { Node } from '../node';
-import { Leaf, TComponent } from './component';
+import { TComponent } from './component';
 
 type TFullUniqueConstraintConfig<TConnector extends IConnector> = {
   components: string[];
@@ -54,14 +54,6 @@ export class UniqueConstraint<TConnector extends IConnector = any> {
       this.componentSet.size > 0,
       `The "${this.id}" unique constraint expects at least one component`,
     );
-
-    for (const component of this.componentSet) {
-      if (component instanceof Leaf && !component.isFilterableWith('eq')) {
-        throw new Error(
-          `The "${this.id}" unique constraint contains the unsupported component "${component.name}"`,
-        );
-      }
-    }
   }
 
   public toString(): string {

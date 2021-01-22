@@ -21,26 +21,7 @@ export class MaybePathAwareError extends Error {
 }
 
 export class UnexpectedValueError extends MaybePathAwareError {
-  public constructor(value: any | Error, expectation: string, path?: Path) {
-    super(
-      `expects ${expectation}, ${
-        value instanceof Error
-          ? `got the error: ${value.message}`
-          : `got: ${JSON.stringify(value)}`
-      }`,
-      path,
-    );
-  }
-}
-
-export class UnexpectedUndefinedValueError extends UnexpectedValueError {
-  public constructor(expectation: string = 'a value', path?: Path) {
-    super(undefined, expectation, path);
-  }
-}
-
-export class UnexpectedNullValueError extends UnexpectedValueError {
-  public constructor(expectation: string = 'a non-null value', path?: Path) {
-    super(null, expectation, path);
+  public constructor(value: any, expectation: string, path?: Path) {
+    super(`expects ${expectation}, got: ${JSON.stringify(value)}`, path);
   }
 }

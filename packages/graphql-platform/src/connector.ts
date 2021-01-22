@@ -1,14 +1,14 @@
-import type { GraphQLPlatform } from '.';
 import type {
+  GraphQLPlatform,
   INodeValue,
   Node,
-  TFieldSelection,
+  OperationContext,
+  TFilterValue,
   TLeafValue,
+  TNodeOutputSelection,
   TReferenceValue,
-} from './node';
-import { TParsedOrderByInputValue } from './node/order-by-input';
-import { TParsedWhereInputValue } from './node/where-input';
-import type { OperationContext } from './operations';
+  TSortValue,
+} from '.';
 
 /**
  * The connector can define its own typing for some of the internal objects
@@ -21,43 +21,43 @@ export enum TConnectorOverridesKind {
 }
 
 export interface TCreateValue {
-  [componentName: string]: TLeafValue | TReferenceValue;
+  readonly [componentName: string]: TLeafValue | TReferenceValue;
 }
 
 export interface IConnectorCreateOperationArgs {
   readonly data: ReadonlyArray<TCreateValue | undefined>;
-  readonly selections: ReadonlyArray<TFieldSelection>;
+  readonly selections: ReadonlyArray<TNodeOutputSelection>;
 }
 
 export interface IConnectorDeleteOperationArgs {
-  readonly filter?: TParsedWhereInputValue;
-  readonly orderBy?: TParsedOrderByInputValue;
+  readonly filter?: TFilterValue;
+  readonly sorts?: TSortValue[];
   readonly first: number;
-  readonly selections: ReadonlyArray<TFieldSelection>;
+  readonly selections: ReadonlyArray<TNodeOutputSelection>;
 }
 
 export interface TUpdateValue {
-  [componentName: string]: any;
+  readonly [componentName: string]: any;
 }
 
 export interface IConnectorUpdateOperationArgs {
-  readonly filter?: TParsedWhereInputValue;
-  readonly orderBy?: TParsedOrderByInputValue;
+  readonly filter?: TFilterValue;
+  readonly sorts?: TSortValue[];
   readonly first: number;
   readonly data: TUpdateValue;
-  readonly selections: ReadonlyArray<TFieldSelection>;
+  readonly selections: ReadonlyArray<TNodeOutputSelection>;
 }
 
 export interface IConnectorFindOperationArgs {
-  readonly filter?: TParsedWhereInputValue;
-  readonly orderBy?: TParsedOrderByInputValue;
+  readonly filter?: TFilterValue;
+  readonly sorts?: TSortValue[];
   readonly skip?: number;
   readonly first: number;
-  readonly selections: ReadonlyArray<TFieldSelection>;
+  readonly selections: ReadonlyArray<TNodeOutputSelection>;
 }
 
 export interface IConnectorCountOperationArgs {
-  readonly filter?: TParsedWhereInputValue;
+  readonly filter?: TFilterValue;
 }
 
 export type TConnectorOperationArgs<TArgs> = [

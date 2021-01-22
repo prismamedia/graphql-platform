@@ -8,6 +8,9 @@ import { GraphQLDraftJS } from './objects/draft-js';
 import { GraphQLURL } from './objects/url';
 import { TypedGraphQLScalarType } from './types';
 
+export * from './objects/draft-js';
+export * from './objects/url';
+
 export const DateScalarTypes = Object.freeze([
   GraphQLDate as TypedGraphQLScalarType<'Date', Date, string>,
   GraphQLDateTime as TypedGraphQLScalarType<'DateTime', Date, string>,

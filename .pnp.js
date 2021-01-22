@@ -951,14 +951,14 @@ function $$SETUP_STATE(hydrateRuntimeState, basePath) {
             ["@prismamedia/graphql-platform", "workspace:packages/graphql-platform"],
             ["@prismamedia/graphql-platform-scalars", "workspace:packages/graphql-platform-scalars"],
             ["@prismamedia/graphql-platform-utils", "workspace:packages/graphql-platform-utils"],
-            ["@prismamedia/ts-memoize", "npm:1.1.1"],
+            ["@prismamedia/ts-memoize", "npm:1.1.2"],
             ["@prismamedia/ts-typed-event-emitter", "npm:1.0.2"],
             ["@tsconfig/node14", "npm:1.0.0"],
             ["@types/faker", "npm:5.1.5"],
             ["@types/inflection", "npm:1.5.28"],
             ["@types/jest", "npm:26.0.20"],
-            ["@types/lodash", "npm:4.14.167"],
-            ["@types/node", "npm:14.14.21"],
+            ["@types/lodash", "npm:4.14.168"],
+            ["@types/node", "npm:14.14.22"],
             ["@types/slug", "npm:0.9.1"],
             ["@types/uuid", "npm:8.3.0"],
             ["dependency-graph", "npm:0.10.0"],
@@ -984,7 +984,7 @@ function $$SETUP_STATE(hydrateRuntimeState, basePath) {
             ["@prismamedia/graphql-platform", "workspace:packages/graphql-platform"],
             ["@tsconfig/node14", "npm:1.0.0"],
             ["@types/jest", "npm:26.0.20"],
-            ["@types/lodash", "npm:4.14.167"],
+            ["@types/lodash", "npm:4.14.168"],
             ["graphql", "npm:15.4.0"],
             ["jest", "npm:26.6.3"],
             ["lodash", "npm:4.17.20"],
@@ -1007,12 +1007,12 @@ function $$SETUP_STATE(hydrateRuntimeState, basePath) {
             ["@tsconfig/node14", "npm:1.0.0"],
             ["@types/faker", "npm:5.1.5"],
             ["@types/jest", "npm:26.0.20"],
-            ["@types/node", "npm:14.14.21"],
+            ["@types/node", "npm:14.14.22"],
             ["builtin-modules", "npm:3.2.0"],
             ["faker", "npm:5.1.0"],
             ["graphql", "npm:15.4.0"],
             ["jest", "npm:26.6.3"],
-            ["rollup", "npm:2.36.1"],
+            ["rollup", "npm:2.37.1"],
             ["ts-jest", "virtual:c7c75c4198df42aa7a4432388dd8f68ff90594bc6067e3b833b9f6f918a512a8d7d52849adf3cb74ab19e048995230308a75a71a17691a5efdcd3f89f5c43b8b#npm:26.4.4"],
             ["tslib", "npm:2.1.0"],
             ["typescript", "patch:typescript@npm%3A4.1.3#builtin<compat/typescript>::version=4.1.3&hash=cc6730"]
@@ -1029,8 +1029,8 @@ function $$SETUP_STATE(hydrateRuntimeState, basePath) {
             ["@tsconfig/node14", "npm:1.0.0"],
             ["@types/draft-js", "npm:0.10.44"],
             ["@types/jest", "npm:26.0.20"],
-            ["@types/lodash", "npm:4.14.167"],
-            ["@types/node", "npm:14.14.21"],
+            ["@types/lodash", "npm:4.14.168"],
+            ["@types/node", "npm:14.14.22"],
             ["graphql", "npm:15.4.0"],
             ["graphql-scalars", "virtual:34187a311283cb2d097a1f47663251e4e0ab0d6684daad3075cd57a44d66ae244ec23fefdd04a1db3d35c1777c3bafb208e0106b5d76584ba9ff2a381bbfc562#npm:1.7.0"],
             ["jest", "npm:26.6.3"],
@@ -1048,11 +1048,11 @@ function $$SETUP_STATE(hydrateRuntimeState, basePath) {
           "packageDependencies": [
             ["@prismamedia/graphql-platform-utils", "workspace:packages/graphql-platform-utils"],
             ["@graphql-tools/schema", "virtual:c7c75c4198df42aa7a4432388dd8f68ff90594bc6067e3b833b9f6f918a512a8d7d52849adf3cb74ab19e048995230308a75a71a17691a5efdcd3f89f5c43b8b#npm:7.1.2"],
-            ["@prismamedia/ts-memoize", "npm:1.1.1"],
+            ["@prismamedia/ts-memoize", "npm:1.1.2"],
             ["@tsconfig/node14", "npm:1.0.0"],
             ["@types/jest", "npm:26.0.20"],
-            ["@types/lodash", "npm:4.14.167"],
-            ["@types/node", "npm:14.14.21"],
+            ["@types/lodash", "npm:4.14.168"],
+            ["@types/node", "npm:14.14.22"],
             ["didyoumean2", "npm:4.1.0"],
             ["graphql", "npm:15.4.0"],
             ["jest", "npm:26.6.3"],
@@ -1065,10 +1065,10 @@ function $$SETUP_STATE(hydrateRuntimeState, basePath) {
         }]
       ]],
       ["@prismamedia/ts-memoize", [
-        ["npm:1.1.1", {
-          "packageLocation": "./.yarn/cache/@prismamedia-ts-memoize-npm-1.1.1-9fdb05b8a7-42a36c1e13.zip/node_modules/@prismamedia/ts-memoize/",
+        ["npm:1.1.2", {
+          "packageLocation": "./.yarn/cache/@prismamedia-ts-memoize-npm-1.1.2-d176ff2275-3da770fad9.zip/node_modules/@prismamedia/ts-memoize/",
           "packageDependencies": [
-            ["@prismamedia/ts-memoize", "npm:1.1.1"]
+            ["@prismamedia/ts-memoize", "npm:1.1.2"]
           ],
           "linkType": "HARD",
         }]
@@ -1102,7 +1102,7 @@ function $$SETUP_STATE(hydrateRuntimeState, basePath) {
             ["is-reference", "npm:1.2.1"],
             ["magic-string", "npm:0.25.7"],
             ["resolve", "patch:resolve@npm%3A1.19.0#builtin<compat/resolve>::version=1.19.0&hash=3388aa"],
-            ["rollup", "npm:2.36.1"]
+            ["rollup", "npm:2.37.1"]
           ],
           "packagePeers": [
             "@types/rollup",
@@ -1130,7 +1130,7 @@ function $$SETUP_STATE(hydrateRuntimeState, basePath) {
             ["deepmerge", "npm:4.2.2"],
             ["is-module", "npm:1.0.0"],
             ["resolve", "patch:resolve@npm%3A1.19.0#builtin<compat/resolve>::version=1.19.0&hash=3388aa"],
-            ["rollup", "npm:2.36.1"]
+            ["rollup", "npm:2.37.1"]
           ],
           "packagePeers": [
             "@types/rollup",
@@ -1156,7 +1156,7 @@ function $$SETUP_STATE(hydrateRuntimeState, basePath) {
             ["@types/tslib", null],
             ["@types/typescript", null],
             ["resolve", "patch:resolve@npm%3A1.19.0#builtin<compat/resolve>::version=1.19.0&hash=3388aa"],
-            ["rollup", "npm:2.36.1"],
+            ["rollup", "npm:2.37.1"],
             ["tslib", "npm:2.1.0"],
             ["typescript", "patch:typescript@npm%3A4.1.3#builtin<compat/typescript>::version=4.1.3&hash=cc6730"]
           ],
@@ -1187,7 +1187,7 @@ function $$SETUP_STATE(hydrateRuntimeState, basePath) {
             ["@types/rollup", null],
             ["estree-walker", "npm:1.0.1"],
             ["picomatch", "npm:2.2.2"],
-            ["rollup", "npm:2.36.1"]
+            ["rollup", "npm:2.37.1"]
           ],
           "packagePeers": [
             "@types/rollup",
@@ -1426,10 +1426,10 @@ function $$SETUP_STATE(hydrateRuntimeState, basePath) {
         }]
       ]],
       ["@types/lodash", [
-        ["npm:4.14.167", {
-          "packageLocation": "./.yarn/cache/@types-lodash-npm-4.14.167-275fff817a-40778f83a8.zip/node_modules/@types/lodash/",
+        ["npm:4.14.168", {
+          "packageLocation": "./.yarn/cache/@types-lodash-npm-4.14.168-2d65abe211-9a4e25f89f.zip/node_modules/@types/lodash/",
           "packageDependencies": [
-            ["@types/lodash", "npm:4.14.167"]
+            ["@types/lodash", "npm:4.14.168"]
           ],
           "linkType": "HARD",
         }]
@@ -1446,6 +1446,13 @@ function $$SETUP_STATE(hydrateRuntimeState, basePath) {
           "packageLocation": "./.yarn/cache/@types-node-npm-14.14.21-dcd7190898-b659823ffa.zip/node_modules/@types/node/",
           "packageDependencies": [
             ["@types/node", "npm:14.14.21"]
+          ],
+          "linkType": "HARD",
+        }],
+        ["npm:14.14.22", {
+          "packageLocation": "./.yarn/cache/@types-node-npm-14.14.22-fe4ed4ddc2-e46e32685b.zip/node_modules/@types/node/",
+          "packageDependencies": [
+            ["@types/node", "npm:14.14.22"]
           ],
           "linkType": "HARD",
         }]
@@ -6418,10 +6425,10 @@ function $$SETUP_STATE(hydrateRuntimeState, basePath) {
         }]
       ]],
       ["rollup", [
-        ["npm:2.36.1", {
-          "packageLocation": "./.yarn/cache/rollup-npm-2.36.1-effb32897b-bb48730bf3.zip/node_modules/rollup/",
+        ["npm:2.37.1", {
+          "packageLocation": "./.yarn/cache/rollup-npm-2.37.1-8350e208df-983bdfbe13.zip/node_modules/rollup/",
           "packageDependencies": [
-            ["rollup", "npm:2.36.1"],
+            ["rollup", "npm:2.37.1"],
             ["fsevents", "patch:fsevents@npm%3A2.1.3#builtin<compat/fsevents>::version=2.1.3&hash=11e9ea"]
           ],
           "linkType": "HARD",

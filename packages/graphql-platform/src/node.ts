@@ -1,16 +1,12 @@
 import {
   addPath,
   didYouMean,
-  getNormalizedObject,
-  getOptionalFlagValue,
+  getOptionalFlag,
   isPlainObject,
-  isPublic,
-  isPublicEntry,
-  mapObject,
   MaybePathAwareError,
-  OptionalFlagValue,
+  normalizeObject,
+  OptionalFlag,
   Path,
-  Public,
   UnexpectedValueError,
 } from '@prismamedia/graphql-platform-utils';
 import { Memoize } from '@prismamedia/ts-memoize';
@@ -19,11 +15,7 @@ import {
   TypedEventEmitter,
 } from '@prismamedia/ts-typed-event-emitter';
 import assert from 'assert';
-import {
-  assertValidName,
-  GraphQLInterfaceType,
-  GraphQLObjectType,
-} from 'graphql';
+import { assertValidName, GraphQLInterfaceType } from 'graphql';
 import { camelize, pluralize } from 'inflection';
 import { Promisable } from 'type-fest';
 import { GraphQLPlatform } from '.';
@@ -40,50 +32,44 @@ import {
   Leaf,
   TComponent,
   TComponentConfig,
-} from './node/component';
-import {
-  EdgeExistenceField,
-  EdgeField,
-  IEdgeSelection,
-  ILeafSelection,
-  LeafField,
-  TCustomFieldConfigMap,
-  TField,
-  TFieldSelection,
-  TFieldValue,
-} from './node/fields';
-import { OrderByInput } from './node/order-by-input';
-import { IReverseEdgeConfig, ReverseEdge } from './node/reverse-edge';
-import {
-  getNormalizedSelectionArgs,
-  getSelectedNode,
-  getSelectionKey,
-} from './node/selection';
-import {
-  TUniqueConstraintConfig,
-  UniqueConstraint,
-} from './node/unique-constraint';
-import { TFilterValue, TWhereInputValue, WhereInput } from './node/where-input';
-import { WhereUniqueInput } from './node/where-unique-input';
+} from './node/components';
 import {
   operationConstructorMap,
   TOperation,
   TOperationConfigMap,
   TOperationKey,
   TOperationMap,
-} from './operations';
+} from './node/operations';
+import { IReverseEdgeConfig, ReverseEdge } from './node/reverse-edge';
+import {
+  getNormalizedSelectionArgs,
+  getSelectedNode,
+  getSelectionKey,
+  IEdgeSelection,
+  ILeafSelection,
+  NodeOutput,
+  OrderByNodeInput,
+  TCustomFieldConfigMap,
+  TFilterValue,
+  TNodeOutputFieldValue,
+  TNodeOutputSelection,
+  TWhereNodeValue,
+  WhereNodeInput,
+  WhereUniqueNodeInput,
+} from './node/types';
+import {
+  TUniqueConstraintConfig,
+  UniqueConstraint,
+} from './node/unique-constraint';
 
-export * from './node/component';
-export * from './node/fields';
-export * from './node/order-by-input';
+export * from './node/components';
+export * from './node/operations';
 export * from './node/reverse-edge';
-export * from './node/selection';
+export * from './node/types';
 export * from './node/unique-constraint';
-export * from './node/where-input';
-export * from './node/where-unique-input';
 
 export interface INodeValue {
-  [fieldName: string]: TFieldValue;
+  [fieldName: string]: TNodeOutputFieldValue;
 }
 
 export type TNodeEventMap<
@@ -93,7 +79,7 @@ export type TNodeEventMap<
   'created' | 'updated' | 'deleted',
   [
     args: {
-      node: Node<TContext, TConnector>;
+      node: Node<TConnector>;
       value: INodeValue;
       context: TContext;
     },
@@ -109,7 +95,7 @@ export type TNodeConfig<
    *
    * Default: true
    */
-  public?: OptionalFlagValue;
+  public?: OptionalFlag;
 
   /**
    * Optional, you can provide this node's "plural" form if the one guessed is not what you expect
@@ -124,18 +110,16 @@ export type TNodeConfig<
   description?: string;
 
   /**
-   * Optional, either the node's value can be changed or not
-   *
-   * Default: false
-   */
-  immutable?: OptionalFlagValue;
-
-  /**
    * A component is either a "leaf" (= an Enum or a Scalar) or an "edge" (= a "link" to another node)
    *
    * At least one must be defined
    */
   components: {
+    /**
+     * The components' name are expected to be valid against the GraphQL "Names" rules
+     *
+     * @see https://spec.graphql.org/draft/#sec-Names
+     */
     [componentName: string]: TComponentConfig<TContext, TConnector>;
   };
 
@@ -147,10 +131,10 @@ export type TNodeConfig<
   uniques: TUniqueConstraintConfig<TConnector>[];
 
   /**
-   * Optional, fine-tune the reverse edges
+   * Optional, define some reverse edges
    */
   reverseEdges?: {
-    [edgeId: string]: IReverseEdgeConfig;
+    [reverseEdgeName: string]: IReverseEdgeConfig;
   };
 
   /**
@@ -166,15 +150,15 @@ export type TNodeConfig<
   /**
    * Optional, fine-tune the access to this node by providing a "filter" (= the "where" argument) that will always be appended to the client request, unlike the "defautArgs.where" that is replaced by the client request:
    * - "undefined" or "true" means no filter is appended
-   * - "false" means no node is returned
+   * - "null" or "false" means no node is returned
    * - "a filter" means it will applied in a logical "AND" like: { AND: ["THE NODE FILTER", "THE CLIENT FILTER"] }
    */
   filter?: (
     context: TContext,
-  ) => Promisable<TWhereInputValue | boolean | undefined>;
+  ) => Promisable<TWhereNodeValue | boolean | null | undefined>;
 
   /**
-   * Optional, fine-tune the operations
+   * Optional, fine-tune the operations for this node
    */
   operations?: TOperationConfigMap;
 
@@ -185,25 +169,16 @@ export type TNodeConfig<
 } & TGetConnectorOverrides<TConnector, TConnectorOverridesKind.Node>;
 
 export class Node<
-  TContext = any,
   TConnector extends IConnector = any
-> extends TypedEventEmitter<TNodeEventMap<TContext, TConnector>> {
+> extends TypedEventEmitter<TNodeEventMap<any, TConnector>> {
   public readonly public: boolean;
   public readonly plural: string;
   public readonly description?: string;
-  public readonly immutable: boolean;
-  public readonly componentMap: ReadonlyMap<string, TComponent<TConnector>>;
-  public readonly leafMap: ReadonlyMap<string, Leaf<TConnector>>;
-  public readonly edgeMap: ReadonlyMap<string, Edge<TConnector>>;
-  public readonly uniqueConstraintMap: ReadonlyMap<
-    string,
-    UniqueConstraint<TConnector>
-  >;
-  public readonly identifier: UniqueConstraint<TConnector>;
-  public readonly whereInput: WhereInput;
-  public readonly orderByInput: OrderByInput;
-  public readonly whereUniqueInput: WhereUniqueInput;
-  public readonly operationMap: TOperationMap;
+  public readonly componentMap: ReadonlyMap<string, TComponent>;
+  public readonly leafMap: ReadonlyMap<string, Leaf>;
+  public readonly edgeMap: ReadonlyMap<string, Edge>;
+  public readonly uniqueConstraintMap: ReadonlyMap<string, UniqueConstraint>;
+  public readonly identifier: UniqueConstraint;
 
   public constructor(
     public readonly gp: GraphQLPlatform<any, TConnector>,
@@ -212,7 +187,6 @@ export class Node<
   ) {
     super(config.on);
 
-    this.immutable = getOptionalFlagValue(config.immutable, false);
     this.description = config.description || undefined;
     this.plural = config.plural ?? pluralize(name);
 
@@ -222,11 +196,11 @@ export class Node<
       `A node definition expects its "singular" and "plural" forms to be different, got "${name}" (you have to provide the node's "plural" parameter)`,
     );
 
-    // Are valid against GraphQL rules
+    // Are valid against the GraphQL rules
     assertValidName(name);
     assertValidName(this.plural);
 
-    // Are valid against GraphQL Platform rules
+    // Are valid against the GraphQL Platform rules
     const pascalCasedName = camelize(name, false);
     assert(
       name === pascalCasedName,
@@ -239,10 +213,10 @@ export class Node<
       `A node definition expects a plural form in "PascalCase", got "${this.plural}" instead of "${pascalCasedPlural}"`,
     );
 
-    this.public = getOptionalFlagValue(config.public, gp.public);
+    this.public = getOptionalFlag(config.public, gp.public);
     assert(
       !this.public || gp.public,
-      `The "${name}" node cannot be public as the API is not`,
+      `The "${name}" node cannot be public as the GraphQL Platform is not`,
     );
 
     this.componentMap = new Map(
@@ -260,7 +234,6 @@ export class Node<
     );
 
     this.leafMap = new Map([...this.componentMap].filter(isLeafEntry));
-
     this.edgeMap = new Map([...this.componentMap].filter(isEdgeEntry));
 
     this.uniqueConstraintMap = new Map(
@@ -288,26 +261,15 @@ export class Node<
       this.identifier.immutable,
       `The "${name}" node's identifier (= the first unique constraint) has to be immutable (= all its components have to be immutable)`,
     );
-
-    this.whereInput = new WhereInput(this);
-
-    this.orderByInput = new OrderByInput(this);
-
-    this.whereUniqueInput = new WhereUniqueInput(this);
-
-    this.operationMap = mapObject(
-      operationConstructorMap,
-      (OperationConstructor, key) =>
-        new OperationConstructor(this, this.config.operations?.[key] as any),
-    );
   }
 
   public toString(): string {
     return this.name;
   }
 
-  public getComponent(name: string, path?: Path): TComponent<TConnector> {
-    if (!this.componentMap.has(name)) {
+  public getComponent(name: string, path?: Path): TComponent {
+    const component = this.componentMap.get(name);
+    if (!component) {
       throw new MaybePathAwareError(
         `The "${
           this.name
@@ -319,11 +281,12 @@ export class Node<
       );
     }
 
-    return this.componentMap.get(name)!;
+    return component;
   }
 
-  public getLeaf(name: string, path?: Path): Leaf<TConnector> {
-    if (!this.leafMap.has(name)) {
+  public getLeaf(name: string, path?: Path): Leaf {
+    const leaf = this.leafMap.get(name);
+    if (!leaf) {
       throw new MaybePathAwareError(
         `The "${
           this.name
@@ -335,11 +298,12 @@ export class Node<
       );
     }
 
-    return this.leafMap.get(name)!;
+    return leaf;
   }
 
-  public getEdge(name: string, path?: Path): Edge<TConnector> {
-    if (!this.edgeMap.has(name)) {
+  public getEdge(name: string, path?: Path): Edge {
+    const edge = this.edgeMap.get(name);
+    if (!edge) {
       throw new MaybePathAwareError(
         `The "${
           this.name
@@ -351,14 +315,12 @@ export class Node<
       );
     }
 
-    return this.edgeMap.get(name)!;
+    return edge;
   }
 
-  public getUniqueConstraint(
-    name: string,
-    path?: Path,
-  ): UniqueConstraint<TConnector> {
-    if (!this.uniqueConstraintMap.has(name)) {
+  public getUniqueConstraint(name: string, path?: Path): UniqueConstraint {
+    const uniqueConstraint = this.uniqueConstraintMap.get(name);
+    if (!uniqueConstraint) {
       throw new MaybePathAwareError(
         `The "${
           this.name
@@ -370,86 +332,33 @@ export class Node<
       );
     }
 
-    return this.uniqueConstraintMap.get(name)!;
-  }
-
-  @Memoize()
-  public get publicUniqueConstraintSet(): ReadonlySet<
-    Public<UniqueConstraint<TConnector>>
-  > {
-    assert(this.public, `"${this.name}" is private`);
-
-    const publicUniqueConstraintSet = new Set(
-      [...this.uniqueConstraintMap.values()].filter(isPublic),
-    );
-
-    assert(
-      publicUniqueConstraintSet.size,
-      `"${this.name}" expects at least one public unique constraint (= with all its components being public)`,
-    );
-
-    return publicUniqueConstraintSet;
+    return uniqueConstraint;
   }
 
   @Memoize()
   public get reverseEdgeMap(): ReadonlyMap<string, ReverseEdge> {
     const reverseEdgeMap = new Map<string, ReverseEdge>();
 
-    const reverseEdgeConfigMap: NonNullable<TNodeConfig['reverseEdges']> = {
-      ...this.config.reverseEdges,
-    };
+    if (this.config.reverseEdges) {
+      for (const [name, config] of Object.entries(this.config.reverseEdges)) {
+        const reverseEdge = new ReverseEdge(this, name, config);
+        assert(
+          !this.componentMap.has(reverseEdge.name),
+          `A component and a reverse edge have the same name "${name}"`,
+        );
 
-    for (const node of this.gp.nodeMap.values()) {
-      for (const component of node.componentMap.values()) {
-        if (component instanceof Edge && component.to === this) {
-          const reverseEdge = new ReverseEdge(
-            component,
-            reverseEdgeConfigMap[component.id],
-          );
-
-          if (reverseEdgeMap.has(reverseEdge.name)) {
-            throw new Error(
-              `The "${this.name}" node has more than one reverse edge named "${
-                reverseEdge.name
-              }", you have to configure their name through the "reverseEdges" parameter: ${[
-                reverseEdgeMap.get(reverseEdge.name)!.edge.id,
-                component.id,
-              ].join(', ')}`,
-            );
-          }
-
-          if (this.componentMap.has(reverseEdge.name)) {
-            throw new Error(
-              `The "${this.name}" node cannot have a reverse edge named as the component "${reverseEdge.name}", you have to configure its name through the "reverseEdges" parameter`,
-            );
-          }
-
-          reverseEdgeMap.set(reverseEdge.name, reverseEdge);
-
-          // We delete the entry in order to see if some remains at the end
-          delete reverseEdgeConfigMap[component.id];
-        }
+        reverseEdgeMap.set(reverseEdge.name, reverseEdge);
       }
-    }
-
-    const missingReverseEdgeIds = Object.keys(reverseEdgeConfigMap);
-    if (missingReverseEdgeIds.length > 0) {
-      throw new Error(
-        `The "${this}" node has unknown reverse edge definition: ${missingReverseEdgeIds.join(
-          ', ',
-        )}`,
-      );
     }
 
     return reverseEdgeMap;
   }
 
   public getReverseEdge(name: string, path?: Path): ReverseEdge {
-    if (!this.reverseEdgeMap.has(name)) {
+    const reverseEdge = this.reverseEdgeMap.get(name);
+    if (!reverseEdge) {
       throw new MaybePathAwareError(
-        `The "${
-          this.name
-        }" node does not contain the reverse edge "${name}", did you mean: ${didYouMean(
+        `The "${this}" node does not contain the reverse edge "${name}", did you mean: ${didYouMean(
           name,
           this.reverseEdgeMap.keys(),
         )}`,
@@ -457,101 +366,27 @@ export class Node<
       );
     }
 
-    return this.reverseEdgeMap.get(name)!;
+    return reverseEdge;
   }
 
   @Memoize()
-  public get fieldMap(): ReadonlyMap<string, TField> {
-    const fields: TField[] = [];
-
-    for (const component of this.componentMap.values()) {
-      if (component instanceof Leaf) {
-        fields.push(new LeafField(this, component));
-      } else {
-        fields.push(new EdgeField(this, component));
-        if (component.nullable) {
-          fields.push(new EdgeExistenceField(this, component));
-        }
-      }
-    }
-
-    // for (const reverseEdge of this.reverseEdgeMap.values()) {
-    //   if (reverseEdge.unique) {
-    //     fields.push(
-    //       new UniqueReverseEdgeField(this, reverseEdge),
-    //       new UniqueReverseEdgeExistenceField(this, reverseEdge),
-    //     );
-    //   } else {
-    //     fields.push(
-    //       new ReverseEdgeField(this, reverseEdge),
-    //       new ReverseEdgeCountField(this, reverseEdge),
-    //     );
-    //   }
-    // }
-
-    // for (const [name, config] of Object.entries(
-    //   getCustomFieldConfigMap(this, this.config?.customFields),
-    // )) {
-    //   fields.push(new CustomField(this, name, config));
-    // }
-
-    const fieldMap = new Map<string, TField>();
-
-    for (const field of fields) {
-      if (fieldMap.has(field.name)) {
-        throw new Error(
-          `"${this.name}" contains at least 2 filters with the same name "${field.name}"`,
-        );
-      }
-
-      fieldMap.set(field.name, field);
-    }
-
-    return fieldMap;
-  }
-
-  public getField(name: string, path?: Path): TField {
-    if (!this.fieldMap.has(name)) {
-      throw new MaybePathAwareError(
-        `The "${
-          this.name
-        }" node does not contain the field "${name}", did you mean: ${didYouMean(
-          name,
-          this.fieldMap.keys(),
-        )}`,
-        path,
-      );
-    }
-
-    return this.fieldMap.get(name)!;
+  public get whereUniqueInput(): WhereUniqueNodeInput {
+    return new WhereUniqueNodeInput(this);
   }
 
   @Memoize()
-  public get publicFieldMap(): ReadonlyMap<string, Public<TField>> {
-    return new Map([...this.fieldMap].filter(isPublicEntry));
+  public get whereInput(): WhereNodeInput {
+    return new WhereNodeInput(this);
   }
 
   @Memoize()
-  public get type(): GraphQLObjectType {
-    assert(this.public, `"${this.name}" is private`);
+  public get orderByInput(): OrderByNodeInput {
+    return new OrderByNodeInput(this);
+  }
 
-    assert(
-      this.publicFieldMap.size,
-      `"${this.name}" expects at least one public field`,
-    );
-
-    return new GraphQLObjectType({
-      name: this.name,
-      description: this.description,
-      interfaces: this.config?.interfaces,
-      fields: () =>
-        Object.fromEntries(
-          Array.from(this.publicFieldMap.values(), (field) => [
-            field.name,
-            field.graphqlFieldConfig,
-          ]),
-        ),
-    });
+  @Memoize()
+  public get output(): NodeOutput {
+    return new NodeOutput(this);
   }
 
   @Memoize()
@@ -572,7 +407,7 @@ export class Node<
 
   public assertNodeValue(
     maybeNodeValue: unknown,
-    selections: ReadonlyArray<TFieldSelection>,
+    selections: ReadonlyArray<TNodeOutputSelection>,
     path?: Path,
   ): INodeValue {
     if (!isPlainObject(maybeNodeValue)) {
@@ -593,6 +428,21 @@ export class Node<
         ];
       }),
     );
+  }
+
+  @Memoize()
+  public get operationMap(): TOperationMap {
+    return Object.fromEntries(
+      Object.entries(
+        operationConstructorMap,
+      ).map(([key, OperationConstructor]) => [
+        key,
+        new (OperationConstructor as any)(
+          this,
+          (this.config.operations as any)?.[key],
+        ),
+      ]),
+    ) as TOperationMap;
   }
 
   public getOperation<TKey extends TOperationKey>(
@@ -618,8 +468,8 @@ export class Node<
    * Given a filter, appends the one configured to produce the one actually provided to the connector
    */
   public async getContextualizedFilter(
-    filter: TWhereInputValue | boolean | undefined,
-    context: TContext,
+    filter: TWhereNodeValue | boolean | null | undefined,
+    context: any,
     path: Path,
   ): Promise<TFilterValue> {
     return this.whereInput.parseValue(
@@ -636,10 +486,10 @@ export class Node<
    * Given an array of selection, returns a new one with contextualized filter where it matters
    */
   public async getContextualizedSelections(
-    selections: ReadonlyArray<TFieldSelection>,
-    context: TContext,
+    selections: ReadonlyArray<TNodeOutputSelection>,
+    context: any,
     path: Path,
-  ): Promise<Array<TFieldSelection>> {
+  ): Promise<Array<TNodeOutputSelection>> {
     return Promise.all(
       selections.map(async (selection) => {
         switch (selection.kind) {
@@ -657,7 +507,7 @@ export class Node<
               addPath(path, getSelectionKey(selection)),
             );
 
-            const args = getNormalizedObject({
+            const args = normalizeObject({
               ...getNormalizedSelectionArgs(selection),
               filter:
                 contextualizedFilter.kind === 'Boolean' &&
@@ -666,7 +516,7 @@ export class Node<
                   : contextualizedFilter,
             });
 
-            return <TFieldSelection>{
+            return <TNodeOutputSelection>{
               ...selection,
               ...(args && { args }),
               ...('selections' in selection && {

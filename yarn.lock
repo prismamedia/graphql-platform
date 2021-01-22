@@ -678,7 +678,7 @@ __metadata:
     "@prismamedia/graphql-platform": "workspace:packages/graphql-platform"
     "@tsconfig/node14": ^1.0.0
     "@types/jest": ^26.0.20
-    "@types/lodash": ^4.14.167
+    "@types/lodash": ^4.14.168
     graphql: ^15.4.0
     jest: ^26.6.3
     lodash: ^4.17.20
@@ -699,12 +699,12 @@ __metadata:
     "@tsconfig/node14": ^1.0.0
     "@types/faker": ^5.1.5
     "@types/jest": ^26.0.20
-    "@types/node": ^14.14.21
+    "@types/node": ^14.14.22
     builtin-modules: ^3.2.0
     faker: ^5.1.0
     graphql: ^15.4.0
     jest: ^26.6.3
-    rollup: ^2.36.1
+    rollup: ^2.37.1
     ts-jest: ^26.4.4
     tslib: ^2.1.0
     typescript: ^4.1.3
@@ -719,8 +719,8 @@ __metadata:
     "@tsconfig/node14": ^1.0.0
     "@types/draft-js": ^0.10.44
     "@types/jest": ^26.0.20
-    "@types/lodash": ^4.14.167
-    "@types/node": ^14.14.21
+    "@types/lodash": ^4.14.168
+    "@types/node": ^14.14.22
     graphql: ^15.4.0
     graphql-scalars: ^1.7.0
     jest: ^26.6.3
@@ -736,11 +736,11 @@ __metadata:
   resolution: "@prismamedia/graphql-platform-utils@workspace:packages/graphql-platform-utils"
   dependencies:
     "@graphql-tools/schema": ^7.1.2
-    "@prismamedia/ts-memoize": ^1.1.1
+    "@prismamedia/ts-memoize": ^1.1.2
     "@tsconfig/node14": ^1.0.0
     "@types/jest": ^26.0.20
-    "@types/lodash": ^4.14.167
-    "@types/node": ^14.14.21
+    "@types/lodash": ^4.14.168
+    "@types/node": ^14.14.22
     didyoumean2: ^4.1.0
     graphql: ^15.4.0
     jest: ^26.6.3
@@ -757,14 +757,14 @@ __metadata:
   dependencies:
     "@prismamedia/graphql-platform-scalars": "workspace:packages/graphql-platform-scalars"
     "@prismamedia/graphql-platform-utils": "workspace:packages/graphql-platform-utils"
-    "@prismamedia/ts-memoize": ^1.1.1
+    "@prismamedia/ts-memoize": ^1.1.2
     "@prismamedia/ts-typed-event-emitter": ^1.0.2
     "@tsconfig/node14": ^1.0.0
     "@types/faker": ^5.1.5
     "@types/inflection": ^1.5.28
     "@types/jest": ^26.0.20
-    "@types/lodash": ^4.14.167
-    "@types/node": ^14.14.21
+    "@types/lodash": ^4.14.168
+    "@types/node": ^14.14.22
     "@types/slug": ^0.9.1
     "@types/uuid": ^8.3.0
     dependency-graph: ^0.10.0
@@ -781,10 +781,10 @@ __metadata:
   languageName: unknown
   linkType: soft
 
-"@prismamedia/ts-memoize@npm:^1.1.1":
-  version: 1.1.1
-  resolution: "@prismamedia/ts-memoize@npm:1.1.1"
-  checksum: 42a36c1e13d3dc8a8fa22f969ca68bf6b2813ffe367215807ffca68e87142d02ff9668896e41de2c27969e163edd2686bc794a975c207f295f9c5d2ed9d16b97
+"@prismamedia/ts-memoize@npm:^1.1.2":
+  version: 1.1.2
+  resolution: "@prismamedia/ts-memoize@npm:1.1.2"
+  checksum: 3da770fad98235197d96c986cce4115824ac779c36b90722230538a31f9ad4d89df195af21e625c787f537306eca2ec53a257eb3ef336d8915b01e0aa868ab22
   languageName: node
   linkType: hard
 
@@ -1054,14 +1054,14 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@types/lodash@npm:^4.14.167":
-  version: 4.14.167
-  resolution: "@types/lodash@npm:4.14.167"
-  checksum: 40778f83a86392625b3d52c15f59171a0f6a35436128b8fb1e37f89162f7950dc98570f27bc99ce1e2e04084e64da41cb45146d091d5181e12c6733bcf16fac6
+"@types/lodash@npm:^4.14.168":
+  version: 4.14.168
+  resolution: "@types/lodash@npm:4.14.168"
+  checksum: 9a4e25f89fc035b9f0388f1f7be85e5eff49f9e6db0d93432c9a89fce0916f8a89db4e8290415f7ea02de6b00d3573826378dcb655b7b2d20530a6e8d6dd6fd0
   languageName: node
   linkType: hard
 
-"@types/node@npm:*, @types/node@npm:^14.14.21":
+"@types/node@npm:*":
   version: 14.14.21
   resolution: "@types/node@npm:14.14.21"
   checksum: b659823ffa01684ff2cb4edf0b70ea76d7eae6cd86af43de62ae6b460c174161850fb75a1be50ab60c4519c14babd4ec430ddbbe6689e341073ba10ff106311c
@@ -1072,6 +1072,13 @@ __metadata:
   version: 13.13.23
   resolution: "@types/node@npm:13.13.23"
   checksum: aa7e63fd980d5bab0def39e73befa8f52b824c14464ca848e44481fb4c0ff6d9ca1fc8ec4b291e8bee854b9946855cc39e1b954f2783a90ef9b94a7fd7a61478
+  languageName: node
+  linkType: hard
+
+"@types/node@npm:^14.14.22":
+  version: 14.14.22
+  resolution: "@types/node@npm:14.14.22"
+  checksum: e46e32685b4d0261779c13c10ba3ff220cfa714b5c12f8f571fd52cc309546bdbc8ffc86cbad20559ad88e7b17e66fc51c98b067d8c3766597092c05df157b9b
   languageName: node
   linkType: hard
 
@@ -5408,9 +5415,9 @@ __metadata:
   languageName: node
   linkType: hard
 
-"rollup@npm:^2.36.1":
-  version: 2.36.1
-  resolution: "rollup@npm:2.36.1"
+"rollup@npm:^2.37.1":
+  version: 2.37.1
+  resolution: "rollup@npm:2.37.1"
   dependencies:
     fsevents: ~2.1.2
   dependenciesMeta:
@@ -5418,7 +5425,7 @@ __metadata:
       optional: true
   bin:
     rollup: dist/bin/rollup
-  checksum: bb48730bf382d6439012a1504a8ca2f676657b472e9fbf72f726701c3091325229e1501c75088f4feebf6c9eb54cfc01353a11b50d3b0b9fa23764aaf5fca38c
+  checksum: 983bdfbe13697370857e52cdb929b1cf9b19df698e6bc6b9a2ad83d163604727b54be46d44268ee667d5d026a2ba2b63d1364c5d18ee166570872f7d3b09be74
   languageName: node
   linkType: hard
 

@@ -1,6 +1,4 @@
-import { fromObjectEntries } from '@prismamedia/graphql-platform-utils';
 import assert from 'assert';
-import { ValueOf } from 'type-fest';
 import { objectScalarTypes } from './objects';
 import { primitiveScalarTypes } from './primitives';
 
@@ -26,19 +24,11 @@ export type TScalarType = typeof scalarTypes extends Iterable<infer T>
   : never;
 
 export const scalarTypeByName = Object.freeze(
-  fromObjectEntries(
-    [...scalarTypes].map((scalarType) => [
-      scalarType.name,
-      scalarType,
-    ]) as ValueOf<
-      {
-        [TName in TScalarType['name']]: [
-          TName,
-          Extract<TScalarType, { name: TName }>,
-        ];
-      }
-    >[],
-  ),
+  Object.fromEntries(
+    [...scalarTypes].map((scalarType) => [scalarType.name, scalarType]),
+  ) as {
+    [TName in TScalarType['name']]: Extract<TScalarType, { name: TName }>;
+  },
 );
 
 export const isScalarTypeName = (
@@ -50,10 +40,5 @@ export const isScalarTypeAmong = <T extends TScalarType>(
   maybeScalarType: any,
   scalarTypes: ReadonlyArray<T>,
 ): maybeScalarType is T => scalarTypes.includes(maybeScalarType);
-
-export const isScalarType = (
-  maybeScalarType: any,
-): maybeScalarType is TScalarType =>
-  isScalarTypeAmong(maybeScalarType, scalarTypes);
 
 export default scalarTypeByName;

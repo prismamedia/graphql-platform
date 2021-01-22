@@ -1,4 +1,4 @@
-import assert from 'assert';
+import { UnexpectedValueError } from './errors';
 
 export interface Path {
   readonly prev: Path | undefined;
@@ -6,12 +6,14 @@ export interface Path {
 }
 
 export function addPath(prev: Path | undefined, key: string | number): Path {
-  assert(
-    typeof key === 'number' || !key.includes('.'),
-    'The key cannot contain a dot (= ".")',
-  );
+  if (typeof key === 'string' && key.includes('.')) {
+    throw new UnexpectedValueError(
+      key,
+      `not to contains a dot (= the string character ".")`,
+    );
+  }
 
-  return { prev, key };
+  return Object.freeze({ prev, key });
 }
 
 export function pathToArray(path: Path): Array<string | number> {

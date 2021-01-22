@@ -6,17 +6,7 @@ import {
   GraphQLInputType,
   isInputType,
 } from 'graphql';
-import {
-  getOptionalFlagValue,
-  OptionalFlagValue,
-  resolveThunkOrValue,
-  ThunkOrValue,
-} from '.';
-import {
-  UnexpectedNullValueError,
-  UnexpectedUndefinedValueError,
-  UnexpectedValueError,
-} from './errors';
+import { UnexpectedValueError } from './errors';
 import {
   assertWrappedLeafValue,
   GraphQLNonNullDecorator,
@@ -28,65 +18,48 @@ import {
   PlainObject,
   VisibilityAware,
 } from './object';
+import { getOptionalFlag, OptionalFlag } from './optional-flag';
 import { addPath, Path } from './path';
+import { resolveThunkOrValue, ThunkOrValue } from './thunk-or-value';
 
 export interface AbstractFieldConfig {
   /**
    * Optional, provide a description
    */
-  readonly description?: ThunkOrValue<string | undefined>;
+  readonly description?: string;
 
   /**
    * Optional, either this field is public or not
    *
    * Default: the parent's visibility
    */
-  readonly public?: ThunkOrValue<OptionalFlagValue>;
+  readonly public?: OptionalFlag;
 }
 
 export abstract class AbstractField implements NameAware, VisibilityAware {
-  readonly #parent: NameAware & VisibilityAware;
   public readonly name: string;
   public readonly id: string;
-  readonly #description: AbstractFieldConfig['description'];
-  readonly #public: AbstractFieldConfig['public'];
+  public readonly description: string | undefined;
+  public readonly public: boolean;
 
   public constructor(
     parent: NameAware & VisibilityAware,
     name: string,
     config?: AbstractFieldConfig,
   ) {
-    this.#parent = parent;
     this.name = assertValidName(name);
     this.id = `${parent.name}.${this.name}`;
-    this.#description = config?.description;
-    this.#public = config?.public;
+    this.description = config?.description || undefined;
+
+    this.public = getOptionalFlag(config?.public, parent.public);
+    assert(
+      !this.public || parent.public,
+      `The "${this}" field cannot be public as "${parent.name}" is not`,
+    );
   }
 
   public toString(): string {
     return this.id;
-  }
-
-  @Memoize()
-  public get description(): string | undefined {
-    return resolveThunkOrValue(this.#description);
-  }
-
-  @Memoize()
-  public get public(): boolean {
-    const isPublic = getOptionalFlagValue(
-      resolveThunkOrValue(this.#public),
-      this.#parent.public,
-    );
-
-    assert(
-      !isPublic || this.#parent.public,
-      `The "${this.id}" field cannot be public as "${
-        this.#parent.name
-      }" is not`,
-    );
-
-    return isPublic;
   }
 }
 
@@ -100,7 +73,7 @@ export interface InputFieldConfig<TValue = unknown>
   /**
    * Optional, either the provided value can be null or not
    */
-  readonly nullable?: OptionalFlagValue;
+  readonly nullable?: OptionalFlag;
 
   /**
    * Optional, a default value for this field
@@ -112,7 +85,7 @@ export interface InputFieldConfig<TValue = unknown>
    *
    * Default: !nullable
    */
-  readonly required?: OptionalFlagValue;
+  readonly required?: OptionalFlag;
 
   /**
    * Optional, a function used to assert the provided value is valid
@@ -142,9 +115,9 @@ export class InputField<TValue = unknown> extends AbstractField {
     super(parent, name, config);
 
     this.#type = type;
-    this.#nullable = getOptionalFlagValue(nullable, true);
+    this.#nullable = getOptionalFlag(nullable, true);
     this.#defaultValue = defaultValue;
-    this.#required = getOptionalFlagValue(required, !this.#nullable);
+    this.#required = getOptionalFlag(required, !this.#nullable);
     this.#assertValue = assertValue
       ? assertValue
       : isWrappedLeafType(type)
@@ -169,11 +142,11 @@ export class InputField<TValue = unknown> extends AbstractField {
     assert(this.public, `"${this.id} is private`);
 
     return {
-      description: this.description,
       type: GraphQLNonNullDecorator(
         resolveThunkOrValue(this.#type),
         this.required && !this.#nullable,
       ),
+      description: this.description,
       defaultValue: this.defaultValue,
     };
   }
@@ -184,7 +157,8 @@ export class InputField<TValue = unknown> extends AbstractField {
   ): TValue | undefined {
     if (value === undefined) {
       if (this.#required) {
-        throw new UnexpectedUndefinedValueError(
+        throw new UnexpectedValueError(
+          value,
           `a "${isInputType(this.#type) ? String(this.#type) : 'value'}"`,
           path,
         );
@@ -193,7 +167,8 @@ export class InputField<TValue = unknown> extends AbstractField {
       return value;
     } else if (value === null) {
       if (!this.#nullable) {
-        throw new UnexpectedNullValueError(
+        throw new UnexpectedValueError(
+          value,
           `a non-null "${
             isInputType(this.#type) ? String(this.#type) : 'value'
           }"`,
@@ -211,9 +186,6 @@ export class InputField<TValue = unknown> extends AbstractField {
 export const isRequiredInputEntry = (entry: [string, InputField]) =>
   entry[1].required;
 
-export const hasRequiredInputField = (fields: Iterable<InputField>) =>
-  [...fields].some((field) => field.required);
-
 export function assertInputObject(
   maybeObject: unknown,
   fields: Iterable<InputField>,
@@ -226,7 +198,11 @@ export function assertInputObject(
       isPlainObject(maybeObject)
     )
   ) {
-    throw new UnexpectedValueError(maybeObject, `nothing or an object`, path);
+    throw new UnexpectedValueError(
+      maybeObject,
+      `a nullish value or a plain object`,
+      path,
+    );
   }
 
   /**

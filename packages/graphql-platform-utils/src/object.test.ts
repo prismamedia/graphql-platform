@@ -1,26 +1,25 @@
-import { getNormalizedObject } from './object';
+import { normalizeObject } from './object';
 
 describe('Object', () => {
-  it('normalizes an object', () => {
+  it('deeply normalizes an object', () => {
     const object = Object.freeze({
       myKey: 'myValue',
       myOtherKey: {
         myDeepKey: 'myDeepValue',
+        myDeepUndefinedKey: undefined,
       },
       myUndefinedKey: undefined,
     });
 
-    expect(getNormalizedObject(object)).toEqual({
+    expect(normalizeObject(object)).toEqual({
       myKey: 'myValue',
       myOtherKey: {
         myDeepKey: 'myDeepValue',
       },
     });
 
-    expect(getNormalizedObject({ a: undefined, b: { c: undefined } })).toEqual({
-      b: { c: undefined },
-    });
-
-    expect(getNormalizedObject({ a: undefined, b: undefined })).toBeUndefined();
+    expect(
+      normalizeObject({ a: undefined, b: { c: undefined } }),
+    ).toBeUndefined();
   });
 });

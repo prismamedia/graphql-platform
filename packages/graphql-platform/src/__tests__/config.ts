@@ -93,11 +93,11 @@ export const Article: TNodeConfig<TMyContext> = {
       nullable: false,
       immutable: true,
       inputs: {
-        create: {
-          description: 'You can either provide an UUID or let one be generated',
-          nullable: true,
-          // parser: ({ value }) => value || v4(),
-        },
+        // create: {
+        //   description: 'You can either provide an UUID or let one be generated',
+        //   nullable: true,
+        //   // parser: ({ value }) => value || v4(),
+        // },
       },
     },
     status: {
@@ -118,13 +118,13 @@ export const Article: TNodeConfig<TMyContext> = {
       type: 'NonEmptyTrimmedString',
       nullable: false,
       inputs: {
-        create: {
-          description: `You can either provide a slug or let the title be "slugified" for you`,
-          nullable: true,
-          dependencies: ['title'],
-          // parser: ({ value, dependencies: { title } }) =>
-          //   value || slugify(title, slugify.defaults.modes.rfc3986),
-        },
+        // create: {
+        //   description: `You can either provide a slug or let the title be "slugified" for you`,
+        //   nullable: true,
+        //   dependencies: ['title'],
+        //   // parser: ({ value, dependencies: { title } }) =>
+        //   //   value || slugify(title, slugify.defaults.modes.rfc3986),
+        // },
       },
     },
     body: {
@@ -214,17 +214,8 @@ export const Article: TNodeConfig<TMyContext> = {
   uniques: [['_id'], ['id']],
 
   reverseEdges: {
-    'ArticleTag.article': {
-      defaultArgs: {
-        orderBy: ['order_ASC'],
-        first: 10,
-      },
-      inputs: {
-        create: {
-          description:
-            'Optional, link this new article with some tags at creation',
-        },
-      },
+    tags: {
+      to: 'ArticleTag',
     },
   },
 
@@ -305,11 +296,11 @@ export const Category: TNodeConfig<TMyContext> = {
       nullable: false,
       immutable: true,
       inputs: {
-        create: {
-          description: 'You can either provide an UUID or let one be generated',
-          nullable: true,
-          // parser: ({ value }) => value || v4(),
-        },
+        // create: {
+        //   description: 'You can either provide an UUID or let one be generated',
+        //   nullable: true,
+        //   // parser: ({ value }) => value || v4(),
+        // },
       },
     },
     title: {
@@ -321,13 +312,13 @@ export const Category: TNodeConfig<TMyContext> = {
       type: 'NonEmptyTrimmedString',
       nullable: false,
       inputs: {
-        create: {
-          description: `You can either provide a slug or let the title be "slugified" for you`,
-          nullable: true,
-          dependencies: ['title'],
-          // parser: ({ value, dependencies: { title } }) =>
-          //   value || slugify(title, slugify.defaults.modes.rfc3986),
-        },
+        // create: {
+        //   description: `You can either provide a slug or let the title be "slugified" for you`,
+        //   nullable: true,
+        //   dependencies: ['title'],
+        //   // parser: ({ value, dependencies: { title } }) =>
+        //   //   value || slugify(title, slugify.defaults.modes.rfc3986),
+        // },
       },
     },
     parent: {
@@ -340,13 +331,9 @@ export const Category: TNodeConfig<TMyContext> = {
   },
   uniques: [['_id'], ['id'], ['parent', 'slug'], ['parent', 'order']],
   reverseEdges: {
-    'Category.parent': {
-      name: 'children',
+    children: {
+      to: 'Category',
       description: `This category's children`,
-      defaultArgs: {
-        orderBy: ['order_ASC'],
-        first: 25,
-      },
     },
   },
   interfaces: [NodeInterfaceType],
@@ -360,11 +347,11 @@ export const Tag: TNodeConfig<TMyContext> = {
       nullable: false,
       immutable: true,
       inputs: {
-        create: {
-          description: 'You can either provide an UUID or let one be generated',
-          nullable: true,
-          // parser: ({ value }) => value || v4(),
-        },
+        // create: {
+        //   description: 'You can either provide an UUID or let one be generated',
+        //   nullable: true,
+        //   // parser: ({ value }) => value || v4(),
+        // },
       },
     },
     title: {
@@ -451,11 +438,11 @@ export const User: TNodeConfig<TMyContext> = {
       nullable: false,
       immutable: true,
       inputs: {
-        create: {
-          description: 'You can either provide an UUID or let one be generated',
-          nullable: true,
-          // parser: ({ value }) => value || v4(),
-        },
+        // create: {
+        //   description: 'You can either provide an UUID or let one be generated',
+        //   nullable: true,
+        //   // parser: ({ value }) => value || v4(),
+        // },
       },
     },
     username: {
@@ -465,15 +452,16 @@ export const User: TNodeConfig<TMyContext> = {
   },
   uniques: [['id'], ['username']],
   reverseEdges: {
-    'Article.createdBy': {
-      name: 'created',
+    hasCreatedArticles: {
+      to: 'Article.createdBy',
       description: `All the articles this user has created`,
     },
-    'Article.updatedBy': {
-      name: 'updated',
+    hasUpdatedArticles: {
+      to: 'Article.updatedBy',
       description: `All the articles this user has updated`,
     },
-    'UserProfile.user': {
+    profile: {
+      to: 'UserProfile.user',
       description: `This user's profile, only the optional informations`,
     },
   },
@@ -508,11 +496,11 @@ export const UserProfile: TNodeConfig<TMyContext> = {
  */
 export const Log: TNodeConfig<TMyContext> = {
   public: false,
-  immutable: true,
   components: {
     _id: {
       type: 'NonNegativeInt',
       nullable: false,
+      immutable: true,
       inputs: {
         create: {
           public: false,

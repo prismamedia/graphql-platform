@@ -4,6 +4,5 @@
   "search.exclude": {
     "**/.yarn": true,
     "**/.pnp.*": true
-  },
-  "typescript.enablePromptUseWorkspaceTsdk": true
+  }
 }

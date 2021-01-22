@@ -1,6 +1,4 @@
-import assert from 'assert';
 import {
-  ArgumentNode,
   GraphQLArgumentConfig,
   GraphQLEnumType,
   GraphQLLeafType,
@@ -16,9 +14,7 @@ import {
   isScalarType,
   isSchema,
   isWrappingType,
-  ValueNode,
 } from 'graphql';
-import { pathToArray } from 'graphql/jsutils/Path';
 import { isEqual } from 'lodash';
 import { isIterable } from '.';
 import { UnexpectedValueError } from './errors';
@@ -45,60 +41,6 @@ export const GraphQLListDecorator = <T extends GraphQLType>(
   type: T,
   list: boolean,
 ) => (list ? GraphQLList(type) : type);
-
-export function parseValueNode(
-  value: ValueNode,
-  variables?: GraphQLResolveInfo['variableValues'],
-): any {
-  switch (value.kind) {
-    case 'BooleanValue':
-      return value.value;
-
-    case 'IntValue':
-      return Number.parseInt(value.value, 10);
-
-    case 'FloatValue':
-      return Number.parseFloat(value.value);
-
-    case 'Variable':
-      assert(isPlainObject(variables));
-      assert(value.name.value in variables);
-
-      return variables[value.name.value];
-
-    case 'ObjectValue':
-      return Object.fromEntries(
-        value.fields.map((field) => [
-          field.name.value,
-          parseValueNode(field.value, variables),
-        ]),
-      );
-
-    case 'ListValue':
-      return value.values.map((value) => parseValueNode(value, variables));
-
-    case 'NullValue':
-      return null;
-
-    default:
-      return value.value;
-  }
-}
-
-export const parseArgumentNodes = (
-  args: ReadonlyArray<ArgumentNode>,
-  variables?: GraphQLResolveInfo['variableValues'],
-): PlainObject =>
-  Object.fromEntries(
-    args.map(({ name, value }) => [
-      name.value,
-      parseValueNode(value, variables),
-    ]),
-  );
-
-export function getResolverPath(info: GraphQLResolveInfo): Path {
-  return pathToArray(info.path).reduce(addPath, undefined) as Path;
-}
 
 export function isGraphQLResolveInfo(
   value: unknown,
@@ -129,12 +71,12 @@ export function assertScalarValue(
   try {
     parsedValue = type.parseValue(value);
   } catch (error) {
-    throw new UnexpectedValueError(value, `a "${type.name}"`, path);
+    throw new UnexpectedValueError(value, `a "${type}"`, path);
   }
 
   // Should never happen
   if (parsedValue == null) {
-    throw new UnexpectedValueError(parseValueNode, `a "${type.name}"`, path);
+    throw new UnexpectedValueError(parsedValue, `a "${type}"`, path);
   }
 
   return parsedValue;
@@ -152,10 +94,10 @@ export function assertEnumValue(
   if (enumValue === undefined) {
     throw new UnexpectedValueError(
       value,
-      `a value among "${type
+      `a "${type}" (= a value among "${type
         .getValues()
         .map(({ value }) => value)
-        .join(', ')}"`,
+        .join(', ')}")`,
       path,
     );
   }
@@ -167,10 +109,22 @@ export function assertLeafValue(
   type: GraphQLLeafType,
   value: any,
   path?: Path,
-) {
+): any {
   return isScalarType(type)
     ? assertScalarValue(type, value, path)
     : assertEnumValue(type, value, path);
+}
+
+export function isLeafValue(type: GraphQLLeafType, value: any): boolean {
+  try {
+    isScalarType(type)
+      ? assertScalarValue(type, value)
+      : assertEnumValue(type, value);
+
+    return true;
+  } catch (error) {
+    return false;
+  }
 }
 
 export function isWrappedLeafType(
@@ -190,7 +144,11 @@ export function assertWrappedLeafValue(
     throw new UnexpectedValueError(value, `a "${type}"`, path);
   } else if (value === null) {
     if (isNonNullType(type)) {
-      throw new UnexpectedValueError(value, `a "${type}"`, path);
+      throw new UnexpectedValueError(
+        value,
+        `a non-null "${type.ofType}"`,
+        path,
+      );
     }
 
     return value;
@@ -200,7 +158,7 @@ export function assertWrappedLeafValue(
     return assertWrappedLeafValue(type.ofType, value, path);
   } else if (isListType(type)) {
     if (!isIterable(value)) {
-      throw new UnexpectedValueError(value, `a "${type}"`, path);
+      throw new UnexpectedValueError(value, `a list of "${type.ofType}"`, path);
     }
 
     return Array.from(value, (value, index) =>

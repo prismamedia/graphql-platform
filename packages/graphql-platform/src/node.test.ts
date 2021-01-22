@@ -78,7 +78,7 @@ describe('Node', () => {
           uniques: [['id']],
         }),
     ).toThrowError(
-      `The \"Article.id\" unique constraint expects at least one non-nullable component`,
+      'The "Article" node\'s identifier (= the first unique constraint) cannot be nullable (= at least one of its components has to be non-nullable)',
     );
   });
 
@@ -90,7 +90,7 @@ describe('Node', () => {
           uniques: [['id']],
         }),
     ).toThrowError(
-      `The "Article" node's identifier (= the first unique constraint) has to be immutable (= all its components has to be immutable)`,
+      'The "Article" node\'s identifier (= the first unique constraint) has to be immutable (= all its components have to be immutable)',
     );
   });
 

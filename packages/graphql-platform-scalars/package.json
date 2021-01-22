@@ -9,6 +9,7 @@
     "type": "git",
     "url": "https://github.com/prismamedia/graphql-platform"
   },
+  "type": "module",
   "main": "dist/mjs/index.js",
   "typings": "dist/types/index.d.ts",
   "scripts": {
@@ -23,8 +24,8 @@
   "devDependencies": {
     "@tsconfig/node14": "^1.0.0",
     "@types/jest": "^26.0.20",
-    "@types/lodash": "^4.14.167",
-    "@types/node": "^14.14.21",
+    "@types/lodash": "^4.14.168",
+    "@types/node": "^14.14.22",
     "jest": "^26.6.3",
     "ts-jest": "^26.4.4",
     "typescript": "^4.1.3"

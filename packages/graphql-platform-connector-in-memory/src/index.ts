@@ -138,7 +138,7 @@ export class InMemoryConnector implements IConnector {
   ): number {
     switch (orderingExpression.kind) {
       case 'Leaf':
-        if (a[orderingExpression.leaf] > b[orderingExpression.leaf]) {
+        if (a[orderingExpression.name] > b[orderingExpression.name]) {
           return orderingExpression.direction === 'ASC' ? 1 : -1;
         } else {
           return 0;
