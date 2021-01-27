@@ -1,129 +1,133 @@
-import type {
-  GraphQLPlatform,
-  INodeValue,
-  Node,
-  OperationContext,
-  TFilterValue,
-  TLeafValue,
-  TNodeOutputSelection,
-  TReferenceValue,
-  TSortValue,
-} from '.';
+import type { GraphQLPlatform } from '.';
+import type { Model } from './model';
+import type { OperationContext } from './model/operations';
+import type { NodeCreation } from './model/types/inputs/creation';
+import type { SortValue } from './model/types/inputs/order-by';
+import type { NodeUpdate } from './model/types/inputs/update';
+import type { FilterValue } from './model/types/inputs/where';
+import type { NodeRecord, NodeSelection, NodeValue } from './model/types/node';
 
 /**
  * The connector can define its own typing for some of the internal objects
  */
-export enum TConnectorOverridesKind {
-  'Node',
+export enum ConnectorConfigOverrideKind {
+  'Model',
   'Leaf',
-  'Edge',
+  'Reference',
   'UniqueConstraint',
 }
 
-export interface TCreateValue {
-  readonly [componentName: string]: TLeafValue | TReferenceValue;
-}
+export type ConnectorConfigOverride<
+  TConnector extends ConnectorInterface,
+  TKind extends ConnectorConfigOverrideKind,
+> = Partial<NonNullable<TConnector['configOverrides']>[TKind]>;
 
-export interface IConnectorCreateOperationArgs {
-  readonly data: ReadonlyArray<TCreateValue | undefined>;
-  readonly selections: ReadonlyArray<TNodeOutputSelection>;
-}
+export type ConnectorCreateOperationArgs = {
+  creations: ReadonlyArray<
+    | NodeCreation
+    // "undefined" is to the support the edge case when there are only generated columns
+    | undefined
+  >;
+};
 
-export interface IConnectorDeleteOperationArgs {
-  readonly filter?: TFilterValue;
-  readonly sorts?: TSortValue[];
-  readonly first: number;
-  readonly selections: ReadonlyArray<TNodeOutputSelection>;
-}
+export type ConnectorDeleteOperationArgs = {
+  filter?: FilterValue;
+  sorts?: SortValue[];
+  first: number;
+};
 
-export interface TUpdateValue {
-  readonly [componentName: string]: any;
-}
+export type ConnectorUpdateOperationArgs = {
+  filter?: FilterValue;
+  sorts?: SortValue[];
+  first: number;
+  update: NodeUpdate;
+};
 
-export interface IConnectorUpdateOperationArgs {
-  readonly filter?: TFilterValue;
-  readonly sorts?: TSortValue[];
-  readonly first: number;
-  readonly data: TUpdateValue;
-  readonly selections: ReadonlyArray<TNodeOutputSelection>;
-}
+export type ConnectorFindOperationArgs = {
+  filter?: FilterValue;
+  sorts?: SortValue[];
+  skip?: number;
+  first: number;
+  selection: NodeSelection;
+};
 
-export interface IConnectorFindOperationArgs {
-  readonly filter?: TFilterValue;
-  readonly sorts?: TSortValue[];
-  readonly skip?: number;
-  readonly first: number;
-  readonly selections: ReadonlyArray<TNodeOutputSelection>;
-}
+export type ConnectorCountOperationArgs =
+  | {
+      filter?: FilterValue;
+    }
+  | undefined;
 
-export interface IConnectorCountOperationArgs {
-  readonly filter?: TFilterValue;
-}
-
-export type TConnectorOperationArgs<TArgs> = [
-  node: Node,
-  args: TArgs,
+export type ConnectorOperationArgs<TArgs> = [
+  model: Model,
+  args: Readonly<TArgs>,
   operationContext: OperationContext,
 ];
 
-export interface IConnector {
+export interface ConnectorInterface {
   /**
-   * This property has no other purpose than carrying the overrides "types" provided by the connector, its value will never be filled by anything
+   * This property has no other purpose than carrying the "TypeScript typing" provided by the connector, it will never be filled by anything
    */
-  overrides?: Partial<Record<TConnectorOverridesKind, Record<string, any>>>;
+  configOverrides?: Partial<
+    Record<ConnectorConfigOverrideKind, Record<string, any>>
+  >;
 
   /**
    * This method, if provided, is called at construct time, can be used to check the configuration validity against this connector
    */
-  connect?(gp: GraphQLPlatform<any, any>): this;
+  connect?(gp: GraphQLPlatform): void;
 
   /**
-   * This method, if provided, is called at the end of the whole operation, including the nested ones (= would be good place to commit a transaction)
+   * This method, if provided, is called at the beginning of a new operation
    */
-  onSuccess?(operationContext: OperationContext): Promise<void>;
+  preOperation?(operationContext: OperationContext): Promise<void>;
 
   /**
-   * This method, if provided, is called whenever the operation fails (= would be good place to rollback a transaction)
+   * This method, if provided, is called at the end of the whole operation, including the nested ones (= would be a good place to commit a transaction)
    */
-  onFailure?(operationContext: OperationContext): Promise<void>;
+  postSuccessfulOperation?(operationContext: OperationContext): Promise<void>;
+
+  /**
+   * This method, if provided, is called if the operation fails (= would be a good place to rollback a transaction)
+   */
+  postFailedOperation?(operationContext: OperationContext): Promise<void>;
+
+  /**
+   * This method, if provided, is called after the operation, regardless of its success or failure
+   */
+  postOperation?(operationContext: OperationContext): Promise<void>;
 
   /**
    * Returns a list of nodes
    */
   find(
-    ...args: TConnectorOperationArgs<IConnectorFindOperationArgs>
-  ): Promise<INodeValue[]>;
+    ...args: ConnectorOperationArgs<ConnectorFindOperationArgs>
+  ): Promise<NodeValue[]>;
 
   /**
    * Returns the number of nodes
    */
   count(
-    ...args: TConnectorOperationArgs<IConnectorCountOperationArgs>
+    ...args: ConnectorOperationArgs<ConnectorCountOperationArgs>
   ): Promise<number>;
 
   /**
-   * Creates some nodes and returns them
+   * Creates some records and returns them
    */
   create(
-    ...args: TConnectorOperationArgs<IConnectorCreateOperationArgs>
-  ): Promise<INodeValue[]>;
+    ...args: ConnectorOperationArgs<ConnectorCreateOperationArgs>
+  ): Promise<NodeRecord[]>;
 
   /**
-   * Deletes some nodes and returns them
+   * Deletes some records and returns them
    */
   delete(
-    ...args: TConnectorOperationArgs<IConnectorDeleteOperationArgs>
-  ): Promise<INodeValue[]>;
+    ...args: ConnectorOperationArgs<ConnectorDeleteOperationArgs>
+  ): Promise<NodeRecord[]>;
 
   /**
-   * Updates some nodes and returns them
+   * Updates some records and returns them
    */
   update(
-    ...args: TConnectorOperationArgs<IConnectorUpdateOperationArgs>
-  ): Promise<INodeValue[]>;
+    ...args: ConnectorOperationArgs<ConnectorUpdateOperationArgs>
+  ): Promise<NodeRecord[]>;
 }
-
-export type TGetConnectorOverrides<
-  TConnector extends IConnector,
-  TKey extends TConnectorOverridesKind
-> = Partial<NonNullable<TConnector['overrides']>[TKey]>;

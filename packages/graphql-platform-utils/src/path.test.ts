@@ -1,4 +1,4 @@
-import { addPath, printPath } from '.';
+import { addPath, printPath } from './path';
 
 describe('Path', () => {
   it('works', () => {

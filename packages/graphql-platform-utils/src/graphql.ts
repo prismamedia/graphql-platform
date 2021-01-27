@@ -1,4 +1,5 @@
 import {
+  ArgumentNode,
   GraphQLArgumentConfig,
   GraphQLEnumType,
   GraphQLLeafType,
@@ -7,93 +8,108 @@ import {
   GraphQLResolveInfo,
   GraphQLScalarType,
   GraphQLType,
-  isLeafType,
   isListType,
   isNonNullType,
   isOutputType,
   isScalarType,
   isSchema,
-  isWrappingType,
+  OperationTypeNode,
+  valueFromASTUntyped,
 } from 'graphql';
 import { isEqual } from 'lodash';
-import { isIterable } from '.';
 import { UnexpectedValueError } from './errors';
-import { isPlainObject, PlainObject } from './object';
-import { addPath, Path } from './path';
+import { indefiniteQuote } from './indefinite';
+import { isPlainObject, normalizeObject, PlainObject } from './object';
+import { Path } from './path';
+
+export const valueFromArgumentNodes = (
+  argumentNodes: ReadonlyArray<ArgumentNode>,
+  variables?: GraphQLResolveInfo['variableValues'],
+) =>
+  normalizeObject(
+    Object.fromEntries(
+      argumentNodes.map(({ name, value }) => [
+        name.value,
+        valueFromASTUntyped(value, variables),
+      ]),
+    ),
+  );
+
+export const operationTypes: ReadonlyArray<OperationTypeNode> = Object.freeze([
+  'query',
+  'mutation',
+  'subscription',
+]);
 
 export type GraphQLArgumentConfigMap<TArgs extends PlainObject | undefined> = {
   readonly [argName in keyof TArgs]: GraphQLArgumentConfig;
 };
 
-export const GraphQLNonNullDecorator = <T extends GraphQLType>(
-  type: T,
-  nonNull: boolean,
-) =>
-  isNonNullType(type)
-    ? nonNull
-      ? type
-      : type.ofType
-    : nonNull
-    ? GraphQLNonNull(type)
+export const GraphQLNonNullDecorator = (type: GraphQLType, nonNull: boolean) =>
+  isNonNullType(type) && !nonNull
+    ? type.ofType
+    : !isNonNullType(type) && nonNull
+    ? new GraphQLNonNull(type)
     : type;
 
-export const GraphQLListDecorator = <T extends GraphQLType>(
-  type: T,
-  list: boolean,
-) => (list ? GraphQLList(type) : type);
+export const GraphQLListDecorator = (type: GraphQLType, list: boolean) =>
+  isListType(type) && !list
+    ? type.ofType
+    : !isListType(type) && list
+    ? new GraphQLList(type)
+    : type;
 
 export function isGraphQLResolveInfo(
   value: unknown,
 ): value is GraphQLResolveInfo {
   return (
     isPlainObject(value) &&
-    'fieldName' in value &&
     typeof value.fieldName === 'string' &&
-    'fieldNodes' in value &&
     Array.isArray(value.fieldNodes) &&
-    'returnType' in value &&
     isOutputType(value.returnType) &&
-    'parentType' in value &&
     isOutputType(value.parentType) &&
     'path' in value &&
-    'schema' in value &&
     isSchema(value.schema)
   );
 }
 
-export function assertScalarValue(
+export function assertGraphQLScalarValue<TValue = any>(
   type: GraphQLScalarType,
-  value: any,
+  maybeValue: unknown,
   path?: Path,
-) {
+): TValue {
+  if (maybeValue == null) {
+    return maybeValue as any;
+  }
+
   let parsedValue;
 
   try {
-    parsedValue = type.parseValue(value);
-  } catch (error) {
-    throw new UnexpectedValueError(value, `a "${type}"`, path);
+    parsedValue = type.parseValue(maybeValue);
+  } catch {
+    throw new UnexpectedValueError(maybeValue, indefiniteQuote(type), path);
   }
 
   // Should never happen
   if (parsedValue == null) {
-    throw new UnexpectedValueError(parsedValue, `a "${type}"`, path);
+    throw new UnexpectedValueError(parsedValue, indefiniteQuote(type), path);
   }
 
   return parsedValue;
 }
 
-export function assertEnumValue(
+export function assertGraphQLEnumValue<TValue = any>(
   type: GraphQLEnumType,
-  value: any,
+  maybeValue: unknown,
   path?: Path,
-) {
-  const enumValue = type
-    .getValues()
-    .find((enumValue) => isEqual(enumValue.value, value));
+): TValue {
+  if (maybeValue == null) {
+    return maybeValue as any;
+  }
 
-  if (enumValue === undefined) {
+  if (!type.getValues().some((value) => isEqual(value.value, maybeValue))) {
     throw new UnexpectedValueError(
-      value,
+      maybeValue,
       `a "${type}" (= a value among "${type
         .getValues()
         .map(({ value }) => value)
@@ -102,69 +118,28 @@ export function assertEnumValue(
     );
   }
 
-  return enumValue.value;
+  return maybeValue as any;
 }
 
-export function assertLeafValue(
+export function assertGraphQLLeafValue<TValue = any>(
   type: GraphQLLeafType,
-  value: any,
+  maybeValue: unknown,
   path?: Path,
-): any {
+): TValue {
   return isScalarType(type)
-    ? assertScalarValue(type, value, path)
-    : assertEnumValue(type, value, path);
+    ? assertGraphQLScalarValue(type, maybeValue, path)
+    : assertGraphQLEnumValue(type, maybeValue, path);
 }
 
-export function isLeafValue(type: GraphQLLeafType, value: any): boolean {
+export function isGraphQLLeafValue<TValue = any>(
+  type: GraphQLLeafType,
+  maybeValue: unknown,
+): maybeValue is TValue {
   try {
-    isScalarType(type)
-      ? assertScalarValue(type, value)
-      : assertEnumValue(type, value);
+    assertGraphQLLeafValue(type, maybeValue);
 
     return true;
-  } catch (error) {
+  } catch {
     return false;
-  }
-}
-
-export function isWrappedLeafType(
-  maybeWrappedLeafType: unknown,
-): maybeWrappedLeafType is GraphQLType {
-  return isWrappingType(maybeWrappedLeafType)
-    ? isWrappedLeafType(maybeWrappedLeafType.ofType)
-    : isLeafType(maybeWrappedLeafType);
-}
-
-export function assertWrappedLeafValue(
-  type: GraphQLType,
-  value: any,
-  path?: Path,
-): any {
-  if (value === undefined) {
-    throw new UnexpectedValueError(value, `a "${type}"`, path);
-  } else if (value === null) {
-    if (isNonNullType(type)) {
-      throw new UnexpectedValueError(
-        value,
-        `a non-null "${type.ofType}"`,
-        path,
-      );
-    }
-
-    return value;
-  }
-
-  if (isNonNullType(type)) {
-    return assertWrappedLeafValue(type.ofType, value, path);
-  } else if (isListType(type)) {
-    if (!isIterable(value)) {
-      throw new UnexpectedValueError(value, `a list of "${type.ofType}"`, path);
-    }
-
-    return Array.from(value, (value, index) =>
-      assertWrappedLeafValue(type.ofType, value, addPath(path, index)),
-    );
-  } else if (isLeafType(type)) {
-    return assertLeafValue(type, value, path);
   }
 }

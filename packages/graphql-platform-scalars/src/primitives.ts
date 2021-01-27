@@ -1,3 +1,4 @@
+import { IterableElement } from 'type-fest';
 import { bigintScalarTypes } from './primitives/bigints';
 import { booleanScalarTypes } from './primitives/booleans';
 import { numberScalarTypes } from './primitives/numbers';
@@ -14,3 +15,5 @@ export const primitiveScalarTypes = Object.freeze([
   ...numberScalarTypes,
   ...stringScalarTypes,
 ]);
+
+export type PrimitiveScalarType = IterableElement<typeof primitiveScalarTypes>;

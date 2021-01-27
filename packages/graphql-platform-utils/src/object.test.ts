@@ -1,4 +1,4 @@
-import { normalizeObject } from './object';
+import { mapObjectValues, normalizeObject } from './object';
 
 describe('Object', () => {
   it('deeply normalizes an object', () => {
@@ -21,5 +21,13 @@ describe('Object', () => {
     expect(
       normalizeObject({ a: undefined, b: { c: undefined } }),
     ).toBeUndefined();
+  });
+
+  it('map object values', () => {
+    expect(
+      mapObjectValues({ a: 1, b: 2, c: 3 }, (value) =>
+        value === 2 ? undefined : 2 * value,
+      ),
+    ).toEqual({ a: 2, c: 6 });
   });
 });

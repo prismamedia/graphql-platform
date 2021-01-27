@@ -4,7 +4,7 @@ import {
   GraphQLInt,
   GraphQLString,
 } from 'graphql';
-import { assertLeafValue, GraphQLArgumentConfigMap } from './graphql';
+import { assertGraphQLLeafValue, GraphQLArgumentConfigMap } from './graphql';
 
 describe('GraphQL', () => {
   it('provides some useful types', () => {
@@ -57,6 +57,8 @@ describe('GraphQL', () => {
   });
 
   it.each([
+    [GraphQLBoolean, undefined],
+    [GraphQLBoolean, null],
     [GraphQLBoolean, true],
     [GraphQLString, 'A string'],
     [
@@ -67,12 +69,10 @@ describe('GraphQL', () => {
       'TWO',
     ],
   ])('%p.parseValue(%p) = %p', (type, value) => {
-    expect(assertLeafValue(type, value)).toEqual(value);
+    expect(assertGraphQLLeafValue(type, value)).toEqual(value);
   });
 
   it.each([
-    [GraphQLBoolean, undefined],
-    [GraphQLBoolean, null],
     [GraphQLBoolean, 'A string'],
     [
       new GraphQLEnumType({
@@ -82,6 +82,6 @@ describe('GraphQL', () => {
       'THIRD',
     ],
   ])('%p.parseValue(%p) throws an Error', (type, value) => {
-    expect(() => assertLeafValue(type, value)).toThrowError();
+    expect(() => assertGraphQLLeafValue(type, value)).toThrowError();
   });
 });

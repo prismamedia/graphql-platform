@@ -5,21 +5,10 @@ import {
 } from 'graphql';
 import { Maybe } from 'graphql/jsutils/Maybe';
 
-interface IGraphQLScalarTypeConfig<TName extends string, TInternal, TExternal>
-  extends BaseGraphQLScalarTypeConfig<TInternal, TExternal> {
-  name: TName;
-  serialize: (value: any) => TExternal;
-  parseValue: (value: any) => TInternal;
-  parseLiteral: (
-    valueNode: ValueNode,
-    variables: Maybe<{ [key: string]: any }>,
-  ) => TInternal;
-}
-
 export type TypedGraphQLScalarType<
   TName extends string,
   TInternal,
-  TExternal = TInternal
+  TExternal = TInternal,
 > = BaseGraphQLScalarType & {
   name: TName;
   serialize: (value: any) => TExternal;
@@ -30,11 +19,25 @@ export type TypedGraphQLScalarType<
   ) => TInternal;
 };
 
+interface GraphQLScalarTypeConfig<TName extends string, TInternal, TExternal>
+  extends BaseGraphQLScalarTypeConfig<TInternal, TExternal> {
+  name: TName;
+  serialize: (value: any) => TExternal;
+  parseValue: (value: any) => TInternal;
+  parseLiteral: (
+    valueNode: ValueNode,
+    variables: Maybe<{ [key: string]: any }>,
+  ) => TInternal;
+}
+
 export class GraphQLScalarType<
-  TName extends string,
-  TInternal,
-  TExternal = TInternal
-> extends BaseGraphQLScalarType {
+    TName extends string,
+    TInternal,
+    TExternal = TInternal,
+  >
+  extends BaseGraphQLScalarType
+  implements TypedGraphQLScalarType<TName, TInternal, TExternal>
+{
   public readonly name: TName;
   public readonly serialize: (value: any) => TExternal;
   public readonly parseValue: (value: any) => TInternal;
@@ -44,7 +47,7 @@ export class GraphQLScalarType<
   ) => TInternal;
 
   public constructor(
-    config: IGraphQLScalarTypeConfig<TName, TInternal, TExternal>,
+    config: GraphQLScalarTypeConfig<TName, TInternal, TExternal>,
   ) {
     super(config);
 

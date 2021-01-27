@@ -1,40 +1,41 @@
-import { IConnector } from '../connector';
+import { ConnectorInterface } from '../connector';
 
-function throwUnimplementedMethod(name: string): never {
-  throw new Error(
-    `The mocked connector does not implement the "${name}" method`,
-  );
-}
-
-export const mockConnector = (connector?: Partial<IConnector>): IConnector => ({
-  count: jest.fn(async () => throwUnimplementedMethod('count')),
-  create: jest.fn(async () => throwUnimplementedMethod('create')),
-  delete: jest.fn(async () => throwUnimplementedMethod('delete')),
-  find: jest.fn(async () => throwUnimplementedMethod('find')),
-  update: jest.fn(async () => throwUnimplementedMethod('update')),
+export const mockConnector = (
+  connector?: Partial<ConnectorInterface>,
+): ConnectorInterface => ({
+  ...(Object.fromEntries(
+    ['count', 'create', 'delete', 'find', 'update'].map((name) => [
+      name,
+      jest.fn(async () => {
+        throw new Error(
+          `The mocked connector does not implement the "${name}" method`,
+        );
+      }),
+    ]),
+  ) as any),
   ...connector,
 });
 
-export function getConnectorMock<TKey extends keyof IConnector>(
-  connector: IConnector,
+export function getConnectorMock<TKey extends keyof ConnectorInterface>(
+  connector: ConnectorInterface,
   key: TKey,
-): IConnector[TKey] & jest.Mock {
+): ConnectorInterface[TKey] & jest.Mock {
   const maybeMock = connector[key];
   if (!jest.isMockFunction(maybeMock)) {
-    throw new Error(`The function "${key}" is not mocked properly`);
+    throw new Error(`The "${key}" method is not mocked properly`);
   }
 
   return maybeMock as any;
 }
 
-export function clearConnectorMock<TKey extends keyof IConnector>(
-  connector: IConnector,
+export function clearConnectorMock<TKey extends keyof ConnectorInterface>(
+  connector: ConnectorInterface,
   key: TKey,
 ): void {
   getConnectorMock(connector, key).mockClear();
 }
 
-export function clearAllConnectorMocks(connector: IConnector): void {
+export function clearAllConnectorMocks(connector: ConnectorInterface): void {
   Object.values(connector).forEach(
     (value) => jest.isMockFunction(value) && value.mockClear(),
   );

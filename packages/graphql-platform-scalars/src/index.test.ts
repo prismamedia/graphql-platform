@@ -1,21 +1,17 @@
-import { scalarTypeByName, scalarTypes, TScalarType } from '.';
+import { GraphQLScalarType } from 'graphql';
+import { Scalars, ScalarType, scalarTypes } from './index';
 
 describe('GraphQL Platform Scalars', () => {
-  it.each(scalarTypes)(
-    'throws an Error on %s.parseValue(undefined)',
-    (scalarType) => {
-      expect(() => scalarType.parseValue(undefined)).toThrowError();
-    },
-  );
+  it.each(
+    scalarTypes.flatMap((scalarType): [GraphQLScalarType, any][] => [
+      [scalarType, undefined],
+      [scalarType, null],
+    ]),
+  )('throws an Error on %s.parseValue(%s)', (scalarType, value) => {
+    expect(() => scalarType.parseValue(value)).toThrowError();
+  });
 
-  it.each(scalarTypes)(
-    'throws an Error on %s.parseValue(null)',
-    (scalarType) => {
-      expect(() => scalarType.parseValue(null)).toThrowError();
-    },
-  );
-
-  it.each<[TScalarType['name'], any, any]>([
+  it.each<[ScalarType['name'], any, any]>([
     // BigInt
     ['BigInt', 123, BigInt('123')],
     ['BigInt', BigInt('321'), BigInt('321')],
@@ -32,8 +28,6 @@ describe('GraphQL Platform Scalars', () => {
       new Date('2020-02-02T02:02:02.321Z'),
     ],
   ])('%s.parseValue(%p) = %p', (scalarTypeName, value, parsedValue) => {
-    expect(scalarTypeByName[scalarTypeName].parseValue(value)).toEqual(
-      parsedValue,
-    );
+    expect(Scalars[scalarTypeName].parseValue(value)).toEqual(parsedValue);
   });
 });

@@ -1,0 +1,69 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`OrderByInput may have a "ArticleOrderByInput" type: ArticleOrderByInput 1`] = `
+"enum ArticleOrderByInput {
+  # Sort the \\"Article\\" nodes from the lowest \\"createdAt\\" leaf to the highest
+  createdAt_ASC
+
+  # Sort the \\"Article\\" nodes from the highest \\"createdAt\\" leaf to the lowest
+  createdAt_DESC
+
+  # Sort the \\"Article\\" nodes from the lowest \\"updatedAt\\" leaf to the highest
+  updatedAt_ASC
+
+  # Sort the \\"Article\\" nodes from the highest \\"updatedAt\\" leaf to the lowest
+  updatedAt_DESC
+}"
+`;
+
+exports[`OrderByInput may have a "ArticleTagOrderByInput" type: ArticleTagOrderByInput 1`] = `
+"enum ArticleTagOrderByInput {
+  # Sort the \\"ArticleTag\\" nodes from the lowest \\"order\\" leaf to the highest
+  order_ASC
+
+  # Sort the \\"ArticleTag\\" nodes from the highest \\"order\\" leaf to the lowest
+  order_DESC
+}"
+`;
+
+exports[`OrderByInput may have a "CategoryOrderByInput" type: CategoryOrderByInput 1`] = `
+"enum CategoryOrderByInput {
+  # Sort the \\"Category\\" nodes from the lowest \\"order\\" leaf to the highest
+  order_ASC
+
+  # Sort the \\"Category\\" nodes from the highest \\"order\\" leaf to the lowest
+  order_DESC
+}"
+`;
+
+exports[`OrderByInput may have a "TagOrderByInput" type: TagOrderByInput 1`] = `
+"enum TagOrderByInput {
+  # Sort the \\"Tag\\" nodes from the lowest \\"deprecated\\" leaf to the highest
+  deprecated_ASC
+
+  # Sort the \\"Tag\\" nodes from the highest \\"deprecated\\" leaf to the lowest
+  deprecated_DESC
+
+  # Sort the \\"Tag\\" nodes from the lowest \\"createdAt\\" leaf to the highest
+  createdAt_ASC
+
+  # Sort the \\"Tag\\" nodes from the highest \\"createdAt\\" leaf to the lowest
+  createdAt_DESC
+
+  # Sort the \\"Tag\\" nodes from the lowest \\"updatedAt\\" leaf to the highest
+  updatedAt_ASC
+
+  # Sort the \\"Tag\\" nodes from the highest \\"updatedAt\\" leaf to the lowest
+  updatedAt_DESC
+}"
+`;
+
+exports[`OrderByInput may have a "UserProfileOrderByInput" type: UserProfileOrderByInput 1`] = `
+"enum UserProfileOrderByInput {
+  # Sort the \\"UserProfile\\" nodes from the lowest \\"birthday\\" leaf to the highest
+  birthday_ASC
+
+  # Sort the \\"UserProfile\\" nodes from the highest \\"birthday\\" leaf to the lowest
+  birthday_DESC
+}"
+`;

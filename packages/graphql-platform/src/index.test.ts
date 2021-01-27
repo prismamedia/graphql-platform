@@ -1,109 +1,61 @@
-import {
-  GraphQLNonNull,
-  GraphQLString,
-  printSchema,
-  validateSchema,
-} from 'graphql';
-import { Edge, GraphQLPlatform, Leaf } from '.';
-import { nodes } from './__tests__/config';
+import { printSchema, validateSchema } from 'graphql';
+import { GraphQLPlatform, Leaf, Reference } from '.';
+import { models } from './__tests__/config';
 
 describe('GraphQL Platform', () => {
-  it('throws an Error on empty nodes', () => {
+  it('throws an Error on invalid visibility', () => {
     expect(
       () =>
         new GraphQLPlatform({
-          nodes: {},
+          // @ts-expect-error
+          public: 'invalid',
         }),
-    ).toThrowError('GraphQL Platform expects at least one node to be defined');
-  });
-
-  it('throws an Error on unknown node', () => {
-    const gp = new GraphQLPlatform({ nodes });
-
-    expect(() => gp.getNode('UnknownResource')).toThrowError(
-      'The "UnknownResource" node does not exist, did you mean:',
-    );
-
-    expect(() => gp.getNode('article')).toThrowError(
-      'The "article" node does not exist, did you mean: Article',
+    ).toThrowError(
+      'An error has been found in the GraphQL Platform\'s definition - expects a valid "public" value',
     );
   });
 
-  it('throws an Error on unknown component', () => {
-    const gp = new GraphQLPlatform({ nodes });
+  it('throws an Error on empty models', () => {
+    expect(
+      () =>
+        new GraphQLPlatform({
+          models: {},
+        }),
+    ).toThrowError(
+      'An error has been found in the GraphQL Platform\'s definition - expects at least one "model" to be defined',
+    );
+  });
+
+  it('throws an Error on unknown model', () => {
+    const gp = new GraphQLPlatform({ models });
+
+    expect(() => gp.getModel('UnknownResource')).toThrowError(
+      'The "UnknownResource" model does not exist, did you mean:',
+    );
+
+    expect(() => gp.getModel('article')).toThrowError(
+      'The "article" model does not exist, did you mean: Article',
+    );
+  });
+
+  it("throws an Error on unknown model's component", () => {
+    const gp = new GraphQLPlatform({ models });
 
     expect(() =>
-      gp.getNode('Article').getComponent('UnknownComponent'),
+      gp.getModel('Article').getComponent('UnknownComponent'),
     ).toThrowError(
-      'The "Article" node does not contain the component "UnknownComponent", did you mean:',
+      'The "Article" model does not contain the component "UnknownComponent", did you mean:',
     );
 
-    expect(() => gp.getNode('Article').getComponent('ID')).toThrowError(
-      'The "Article" node does not contain the component "ID", did you mean:',
+    expect(() => gp.getModel('Article').getComponent('ID')).toThrowError(
+      'The "Article" model does not contain the component "ID", did you mean:',
     );
   });
 
-  it('throws an Error on non-unique reverse edge name', () => {
-    expect(
-      () =>
-        new GraphQLPlatform({
-          nodes: {
-            ...nodes,
-            User: { ...nodes.User, reverseEdges: {} },
-          },
-        }),
-    ).toThrowError(
-      'The "User" node has more than one reverse edge named "articles", you have to configure their name through the "reverseEdges" parameter: Article.createdBy, Article.updatedBy',
-    );
-  });
+  it('has valid models', () => {
+    const gp = new GraphQLPlatform({ models });
 
-  it('throws an Error on missing reverse edge', () => {
-    expect(
-      () =>
-        new GraphQLPlatform({
-          nodes: {
-            ...nodes,
-            User: {
-              ...nodes.User,
-              reverseEdges: {
-                ...nodes.User.reverseEdges,
-                'Article.unknownReference': { name: 'myReferrerName' },
-              },
-            },
-          },
-        }),
-    ).toThrowError(
-      'The "User" node has unknown reverse edge definition: Article.unknownReference',
-    );
-  });
-
-  it('throws an Error on custom field with invalid name', () => {
-    expect(
-      () =>
-        new GraphQLPlatform({
-          nodes: {
-            ...nodes,
-            User: {
-              ...nodes.User,
-              customFields: {
-                username: {
-                  args: {},
-                  type: GraphQLNonNull(GraphQLString),
-                  resolve: () => 'MyUsername',
-                },
-              },
-            },
-          },
-        }),
-    ).toThrowError(
-      'The "User" node contains at least 2 fields with the same name: username',
-    );
-  });
-
-  it('has valid nodes', () => {
-    const gp = new GraphQLPlatform({ nodes });
-
-    expect([...gp.nodeMap.keys()]).toEqual([
+    expect([...gp.modelMap.keys()]).toEqual([
       'Article',
       'Category',
       'Tag',
@@ -111,12 +63,11 @@ describe('GraphQL Platform', () => {
       'User',
       'UserProfile',
       'Log',
-      'Hit',
     ]);
 
     // Article
     {
-      const Article = gp.getNode('Article');
+      const Article = gp.getModel('Article');
 
       expect(Article.name).toEqual('Article');
 
@@ -139,22 +90,22 @@ describe('GraphQL Platform', () => {
       expect(body).toBeInstanceOf(Leaf);
 
       const category = Article.getComponent('category');
-      expect(category).toBeInstanceOf(Edge);
+      expect(category).toBeInstanceOf(Reference);
 
-      const createdBy = Article.getEdge('createdBy');
-      expect(createdBy).toBeInstanceOf(Edge);
-      expect(createdBy.reference.name).toEqual('id');
+      const createdBy = Article.getReference('createdBy');
+      expect(createdBy).toBeInstanceOf(Reference);
+      expect(createdBy.referencedUniqueConstraint.name).toEqual('id');
 
-      const updatedBy = Article.getEdge('updatedBy');
-      expect(updatedBy).toBeInstanceOf(Edge);
-      expect(updatedBy.reference.name).toEqual('username');
+      const updatedBy = Article.getReference('updatedBy');
+      expect(updatedBy).toBeInstanceOf(Reference);
+      expect(updatedBy.referencedUniqueConstraint.name).toEqual('username');
 
       expect([...Article.uniqueConstraintMap.keys()]).toEqual(['_id', 'id']);
     }
 
     // Category
     {
-      const Category = gp.getNode('Category');
+      const Category = gp.getModel('Category');
 
       expect(Category.name).toEqual('Category');
 
@@ -167,9 +118,9 @@ describe('GraphQL Platform', () => {
         'order',
       ]);
 
-      const parent = Category.getEdge('parent');
-      expect(parent).toBeInstanceOf(Edge);
-      expect(parent.reference.name).toEqual('_id');
+      const parent = Category.getReference('parent');
+      expect(parent).toBeInstanceOf(Reference);
+      expect(parent.referencedUniqueConstraint.name).toEqual('_id');
 
       expect([...Category.uniqueConstraintMap.keys()]).toEqual([
         '_id',
@@ -181,7 +132,7 @@ describe('GraphQL Platform', () => {
   });
 
   it('generates a valid GraphQL Schema', () => {
-    const { schema } = new GraphQLPlatform({ nodes: nodes });
+    const { schema } = new GraphQLPlatform({ models });
 
     expect(validateSchema(schema)).toEqual([]);
 

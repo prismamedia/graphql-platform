@@ -1,4 +1,5 @@
 import assert from 'assert';
+import { IterableElement } from 'type-fest';
 import { objectScalarTypes } from './objects';
 import { primitiveScalarTypes } from './primitives';
 
@@ -19,26 +20,27 @@ assert(
   `At least 2 scalar types have the same name`,
 );
 
-export type TScalarType = typeof scalarTypes extends Iterable<infer T>
-  ? T
-  : never;
+export type ScalarType = IterableElement<typeof scalarTypes>;
 
-export const scalarTypeByName = Object.freeze(
+export const Scalars = Object.freeze(
   Object.fromEntries(
     [...scalarTypes].map((scalarType) => [scalarType.name, scalarType]),
   ) as {
-    [TName in TScalarType['name']]: Extract<TScalarType, { name: TName }>;
+    [TName in ScalarType['name']]: Extract<ScalarType, { name: TName }>;
   },
 );
 
 export const isScalarTypeName = (
   maybeScalarTypeName: any,
-): maybeScalarTypeName is TScalarType['name'] =>
+): maybeScalarTypeName is ScalarType['name'] =>
   scalarTypeNames.includes(maybeScalarTypeName);
 
-export const isScalarTypeAmong = <T extends TScalarType>(
+export const isScalarTypeAmong = <T extends ScalarType>(
   maybeScalarType: any,
   scalarTypes: ReadonlyArray<T>,
 ): maybeScalarType is T => scalarTypes.includes(maybeScalarType);
 
-export default scalarTypeByName;
+export const isScalarType = (
+  maybeScalarType: any,
+): maybeScalarType is ScalarType =>
+  isScalarTypeAmong(maybeScalarType, scalarTypes);

@@ -1,16 +1,15 @@
-import { RawDraftContentBlock, RawDraftContentState } from 'draft-js';
+import {
+  assertPlainObject,
+  isPlainObject,
+} from '@prismamedia/graphql-platform-utils';
+import type { RawDraftContentBlock, RawDraftContentState } from 'draft-js';
 import { GraphQLJSONObject } from 'graphql-scalars';
-import { isPlainObject } from 'lodash';
 import { GraphQLScalarType } from '../types';
 
-export function assertRawDraftContentBlockValue(
-  value: any,
+export function ensureRawDraftContentBlockValue(
+  value: unknown,
 ): RawDraftContentBlock {
-  if (!isPlainObject(value)) {
-    throw new TypeError(
-      `RawDraftContentBlock expects an object, got: ${value}`,
-    );
-  }
+  assertPlainObject(value);
 
   if (typeof value.key !== 'string') {
     throw new TypeError(
@@ -48,24 +47,18 @@ export function assertRawDraftContentBlockValue(
     );
   }
 
-  return value;
+  return value as RawDraftContentBlock;
 }
 
-export function assertRawDraftContentStateValue(
-  value: any,
+export function ensureRawDraftContentStateValue(
+  value: unknown,
 ): RawDraftContentState {
-  if (!isPlainObject(value)) {
-    throw new TypeError(
-      `RawDraftContentState expects an object, got: ${value}`,
-    );
-  }
+  assertPlainObject(value);
 
   if (
     !(
       Array.isArray(value.blocks) &&
-      (value.blocks as any[]).every(
-        (block) => !!assertRawDraftContentBlockValue(block),
-      )
+      value.blocks.every((block) => !!ensureRawDraftContentBlockValue(block))
     )
   ) {
     throw new TypeError(
@@ -79,7 +72,7 @@ export function assertRawDraftContentStateValue(
     );
   }
 
-  return value;
+  return value as RawDraftContentState;
 }
 
 export const GraphQLDraftJS = new GraphQLScalarType({
@@ -89,9 +82,9 @@ export const GraphQLDraftJS = new GraphQLScalarType({
   specifiedByUrl:
     'https://draftjs.org/docs/api-reference-data-conversion/#convertfromraw',
   serialize: (...args) =>
-    assertRawDraftContentStateValue(GraphQLJSONObject.serialize(...args)),
+    ensureRawDraftContentStateValue(GraphQLJSONObject.serialize(...args)),
   parseValue: (...args) =>
-    assertRawDraftContentStateValue(GraphQLJSONObject.parseValue(...args)),
+    ensureRawDraftContentStateValue(GraphQLJSONObject.parseValue(...args)),
   parseLiteral: (...args) =>
-    assertRawDraftContentStateValue(GraphQLJSONObject.parseLiteral(...args)),
+    ensureRawDraftContentStateValue(GraphQLJSONObject.parseLiteral(...args)),
 });

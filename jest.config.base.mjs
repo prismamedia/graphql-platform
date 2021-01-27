@@ -1,5 +1,4 @@
-export default {
+export default async () => ({
   preset: 'ts-jest',
-  testEnvironment: 'node',
-  testMatch: ['**/src/**/*.(spec|test).ts'],
-};
+  testMatch: ['<rootDir>/src/**/*.test.ts'],
+});

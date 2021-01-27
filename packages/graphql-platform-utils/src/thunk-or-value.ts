@@ -1,6 +1,7 @@
 export type ThunkOrValue<T> = (() => T) | T;
 
-export const resolveThunkOrValue = <T>(thunkableValue: ThunkOrValue<T>): T =>
-  typeof thunkableValue === 'function'
-    ? (thunkableValue as any)()
-    : thunkableValue;
+export function resolveThunkOrValue<T>(thunkOrValue: ThunkOrValue<T>): T {
+  return typeof thunkOrValue === 'function'
+    ? (thunkOrValue as any)()
+    : thunkOrValue;
+}

@@ -1,31 +1,31 @@
 import {
+  Connector,
+  ConnectorCountOperationArgs,
+  ConnectorCreateOperationArgs,
+  ConnectorFindOperationArgs,
+  FilterValue,
   GraphQLPlatform,
-  IConnector,
-  IConnectorCountOperationArgs,
-  IConnectorCreateOperationArgs,
-  IConnectorFindOperationArgs,
-  INodeValue,
-  Node,
-  TFilterValue,
-  TSortValue,
+  Model,
+  NodeValue,
+  SortValue,
 } from '@prismamedia/graphql-platform';
 import { includes, isEqual } from 'lodash';
 
 export type TInMemoryConnectorConfig = {
-  storage?: Map<Node, Set<INodeValue>>;
+  storage?: Map<Model, Set<NodeValue>>;
 };
 
-export class InMemoryConnector implements IConnector {
-  #storage: Map<Node, Set<INodeValue>>;
+export class InMemoryConnector implements Connector {
+  #storage: Map<Model, Set<NodeValue>>;
 
   public constructor(public readonly config?: TInMemoryConnectorConfig) {
     this.#storage = config?.storage ?? new Map();
   }
 
   public connect(gp: GraphQLPlatform) {
-    for (const node of gp.nodeMap.values()) {
-      if (!this.#storage.has(node)) {
-        this.#storage.set(node, new Set());
+    for (const model of gp.modelSet) {
+      if (!this.#storage.has(model)) {
+        this.#storage.set(model, new Set());
       }
     }
 
@@ -33,16 +33,19 @@ export class InMemoryConnector implements IConnector {
   }
 
   public async create(
-    resource: Node,
-    args: IConnectorCreateOperationArgs,
-  ): Promise<INodeValue> {
+    resource: Model,
+    args: ConnectorCreateOperationArgs,
+  ): Promise<NodeValue> {
     const resourceValueSet = this.#storage.get(resource)!;
 
     for (const resourceValue of resourceValueSet) {
-      for (const uniqueConstraint of resource.uniqueConstraintMap.values()) {
+      for (const uniqueConstraint of resource.uniqueConstraintSet) {
         if (
           [...uniqueConstraint.componentSet].every((component) =>
-            isEqual(resourceValue[component.name], args.data[component.name]),
+            isEqual(
+              resourceValue[component.name],
+              args.records[component.name],
+            ),
           )
         ) {
           throw new Error(`CONFLICT found in "${resource.name}"`);
@@ -50,15 +53,15 @@ export class InMemoryConnector implements IConnector {
       }
     }
 
-    resourceValueSet.add(args.data);
+    resourceValueSet.add(args.records);
 
-    return args.data;
+    return args.records;
   }
 
   protected filter(
-    node: Node,
-    value: INodeValue,
-    filter: TFilterValue,
+    node: Model,
+    value: NodeValue,
+    filter: FilterValue,
   ): boolean {
     switch (filter.kind) {
       case 'Boolean':
@@ -131,10 +134,10 @@ export class InMemoryConnector implements IConnector {
   }
 
   protected compare(
-    node: Node,
-    a: INodeValue,
-    b: INodeValue,
-    orderingExpression: TSortValue,
+    node: Model,
+    a: NodeValue,
+    b: NodeValue,
+    orderingExpression: SortValue,
   ): number {
     switch (orderingExpression.kind) {
       case 'Leaf':
@@ -147,9 +150,9 @@ export class InMemoryConnector implements IConnector {
   }
 
   public async find(
-    node: Node,
-    { filter: where, orderBy, skip = 0, first }: IConnectorFindOperationArgs,
-  ): Promise<INodeValue[]> {
+    node: Model,
+    { filter: where, orderBy, skip = 0, first }: ConnectorFindOperationArgs,
+  ): Promise<NodeValue[]> {
     let nodeValues = [...this.#storage.get(node)!];
 
     // Filtered values
@@ -182,8 +185,8 @@ export class InMemoryConnector implements IConnector {
   }
 
   public async count(
-    node: Node,
-    { filter: where }: IConnectorCountOperationArgs,
+    node: Model,
+    { filter: where }: ConnectorCountOperationArgs,
   ): Promise<number> {
     if (where?.kind === 'Boolean' && !where.value) {
       return 0;

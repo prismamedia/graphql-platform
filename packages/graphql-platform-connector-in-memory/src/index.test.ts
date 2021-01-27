@@ -4,7 +4,7 @@ import { InMemoryConnectorProvider } from '.';
 describe('In-Memory connector', () => {
   it('typing works', () => {
     const gp = new GraphQLPlatform({
-      nodes: {
+      models: {
         Article: {
           components: {
             id: {

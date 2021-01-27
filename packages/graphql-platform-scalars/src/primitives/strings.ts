@@ -6,12 +6,15 @@ import {
   GraphQLIPv4,
   GraphQLIPv6,
   GraphQLISBN,
+  GraphQLJWT,
   GraphQLMAC,
   GraphQLNonEmptyString,
   GraphQLUUID,
 } from 'graphql-scalars';
 import { TypedGraphQLScalarType } from '../types';
 import { GraphQLNonEmptyTrimmedString } from './strings/non-empty-trimmed-string';
+
+export * from './strings/non-empty-trimmed-string';
 
 export const stringScalarTypes = Object.freeze([
   GraphQLDuration as TypedGraphQLScalarType<'Duration', string>,
@@ -21,6 +24,7 @@ export const stringScalarTypes = Object.freeze([
   GraphQLIPv4 as TypedGraphQLScalarType<'IPv4', string>,
   GraphQLIPv6 as TypedGraphQLScalarType<'IPv6', string>,
   GraphQLISBN as TypedGraphQLScalarType<'ISBN', string>,
+  GraphQLJWT as TypedGraphQLScalarType<'JWT', string>,
   GraphQLMAC as TypedGraphQLScalarType<'MAC', string>,
   GraphQLNonEmptyString as TypedGraphQLScalarType<'NonEmptyString', string>,
   GraphQLNonEmptyTrimmedString,

@@ -3,5 +3,6 @@
   "dockerComposeFile": "../docker-compose.yml",
   "service": "project",
   "workspaceFolder": "/workspace",
-  "extensions": ["arcanis.vscode-zipfs", "esbenp.prettier-vscode"]
+  "extensions": ["arcanis.vscode-zipfs", "esbenp.prettier-vscode"],
+  "postStartCommand": "yarn install --immutable --immutable-cache && yarn pnpify --sdk vscode"
 }

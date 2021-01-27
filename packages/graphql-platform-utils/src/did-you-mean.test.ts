@@ -1,4 +1,4 @@
-import { didYouMean } from '.';
+import { didYouMean } from './did-you-mean';
 
 describe('didYouMean', () => {
   it('works', () => {

@@ -1,4 +1,4 @@
-import { getOptionalFlag } from '.';
+import { getOptionalFlag } from './optional-flag';
 
 describe('OptionalFlag', () => {
   it('works', () => {

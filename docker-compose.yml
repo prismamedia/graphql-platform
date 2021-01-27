@@ -19,11 +19,12 @@ services:
     command: sleep infinity
     environment:
       TZ: Europe/Paris
-    ports:
-      - 3000:3000
+    # ports:
+    #   - 3000:3000
     working_dir: /workspace
     volumes:
       - .:/workspace
+      - ~/.bash_history:/root/.bash_history
     logging:
       options:
         max-size: 50k

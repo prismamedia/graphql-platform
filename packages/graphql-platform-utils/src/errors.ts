@@ -21,7 +21,21 @@ export class MaybePathAwareError extends Error {
 }
 
 export class UnexpectedValueError extends MaybePathAwareError {
-  public constructor(value: any, expectation: string, path?: Path) {
+  public constructor(
+    value: any,
+    expectation: string | { toString(): string },
+    path?: Path,
+  ) {
     super(`expects ${expectation}, got: ${JSON.stringify(value)}`, path);
+  }
+}
+
+export class UnreachableValueError extends UnexpectedValueError {
+  public constructor(
+    unreachableValue: never,
+    expectation: string | { toString(): string },
+    path?: Path,
+  ) {
+    super(unreachableValue, expectation, path);
   }
 }

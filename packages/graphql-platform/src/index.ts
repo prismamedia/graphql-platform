@@ -1,167 +1,270 @@
 import {
   didYouMean,
+  fromObjectEntries,
   getOptionalFlag,
+  isNonEmptyPlainObject,
+  mapObjectValues,
   MaybePathAwareError,
+  operationTypes,
   OptionalFlag,
   Path,
 } from '@prismamedia/graphql-platform-utils';
+import { Memoize } from '@prismamedia/ts-memoize';
 import assert from 'assert';
 import {
   assertValidSchema,
+  GraphQLFieldConfig,
   GraphQLFieldConfigMap,
   GraphQLObjectType,
   GraphQLSchema,
   GraphQLSchemaConfig,
   OperationTypeNode,
 } from 'graphql';
-import { IConnector } from './connector';
+import { Except } from 'type-fest';
+import { ConnectorInterface } from './connector';
+import { CustomOperationMap, getCustomOperationMap } from './custom-operations';
 import {
-  getCustomOperationMap,
-  TCustomOperationMap,
-} from './custom-operations';
-import { Node, TNodeConfig } from './node';
+  catchDefinitionError,
+  DefinitionError,
+  ModelDefinitionError,
+} from './errors';
+import {
+  Model,
+  ModelConfig,
+  OperationKey,
+  OperationParameters,
+  OperationResult,
+} from './model';
+import { Operation } from './model/operations';
 
 export * from './connector';
 export * from './custom-operations';
-export * from './node';
+export * from './errors';
+export * from './model';
 
-export interface IGraphQLPlatformConfig<
-  TContext = undefined,
-  TConnector extends IConnector = IConnector
-> {
+export type API<TRequestContext, TConnector extends ConnectorInterface> = {
+  [TKey in OperationKey]: (
+    modelName: string,
+    ...params: OperationParameters<TKey, TRequestContext, TConnector>
+  ) => OperationResult<TKey>;
+};
+
+// export type ContextProvider<
+//   TIntegrationContext = unknown,
+//   TRequestContext = unknown
+// > = (integrationContext: TIntegrationContext) => Promisable<TRequestContext>;
+
+export type GraphQLPlatformConfig<
+  TRequestContext = undefined,
+  TConnector extends ConnectorInterface = any,
+> = {
   /**
-   * Optional, either the API is exposed publicly or not
+   * Optional, either the schema is exposed publicly (= the GraphQL API) or not (= the internal API)
    *
    * Default: true
    */
   public?: OptionalFlag;
 
+  // /**
+  //  * Optional, given the "integration context" provided by your integration (Apollo Server for exemple) compute the "request context" available in the models' "filter", "parsers", "custom fields' resolver" and so on...
+  //  *
+  //  * By default, the "integration context" is provided "as is"
+  //  *
+  //  * Convenient when the schema is used with multiple integrations and you want to ensure the validity of
+  //  *
+  //  * @see: https://www.apollographql.com/docs/apollo-server/data/resolvers/#the-context-argument
+  //  */
+  // context?: ContextProvider<any, TRequestContext>;
+
   /**
-   * Required, provide the nodes' definition
+   * Required, provide the models' definition
    */
-  nodes: {
+  models: {
     /**
-     * The nodes' name are expected to be provided in "PascalCase" and to be valid against the GraphQL "Names" rules
+     * The models' name are expected to be provided in "PascalCase" and to be valid against the GraphQL "Names" rules
      *
      * @see https://spec.graphql.org/draft/#sec-Names
      */
-    [nodeName: string]: TNodeConfig<TContext, TConnector>;
+    [modelName: string]: ModelConfig<TRequestContext, TConnector>;
   };
 
   /**
    * Optional, add some "custom" operations
    */
-  customOperations?: TCustomOperationMap<TContext, TConnector>;
+  customOperations?: CustomOperationMap<TRequestContext, TConnector>;
 
   /**
    * Optional, fine-tune the generated GraphQL Schema
    */
-  schema?: Omit<GraphQLSchemaConfig, OperationTypeNode>;
+  schema?: Except<GraphQLSchemaConfig, OperationTypeNode>;
 
   /**
    * Optional, provide a connector to let the schema be executable
    */
   connector?: TConnector;
-}
+};
 
 export class GraphQLPlatform<
-  TContext = undefined,
-  TConnector extends IConnector = IConnector
+  TRequestContext = any,
+  TConnector extends ConnectorInterface = any,
 > {
   public readonly public: boolean;
-  public readonly nodeMap: ReadonlyMap<string, Node>;
-  public readonly schema: GraphQLSchema;
+  public readonly modelMap: ReadonlyMap<
+    string,
+    Model<TRequestContext, TConnector>
+  >;
+  public readonly operations: Readonly<
+    {
+      [TOperationType in OperationTypeNode]: Readonly<
+        Record<string, Extract<Operation, { type: TOperationType }>>
+      >;
+    }
+  >;
   readonly #connector?: TConnector;
 
   public constructor(
-    public readonly config: IGraphQLPlatformConfig<TContext, TConnector>,
+    public readonly config: GraphQLPlatformConfig<TRequestContext, TConnector>,
   ) {
-    this.public = getOptionalFlag(config.public, true);
-
-    this.nodeMap = new Map(
-      Object.entries(config.nodes).map(([name, config]) => [
-        name,
-        new Node(this, name, config),
-      ]),
+    // visibility
+    this.public = catchDefinitionError(
+      () => getOptionalFlag(config.public, true),
+      (error) => new DefinitionError(`expects a valid public value`, error),
     );
 
-    assert(
-      this.nodeMap.size > 0,
-      `GraphQL Platform expects at least one node to be defined`,
-    );
-
-    const operations: Record<
-      OperationTypeNode,
-      GraphQLFieldConfigMap<any, any>
-    > = {
-      query: {},
-      mutation: {},
-      subscription: {},
-    };
-
-    for (const type of Object.keys(operations) as OperationTypeNode[]) {
-      // Node operations
-      for (const node of this.nodeMap.values()) {
-        for (const operation of Object.values(node.operationMap)) {
-          if (operation.public && operation.type === type) {
-            if (operation.name in operations[type]) {
-              throw new Error(
-                `At least 2 "${type}" operations have the same name "${operation.name}"`,
-              );
-            }
-
-            Object.assign(operations[type], {
-              [operation.name]: operation.graphqlFieldConfig,
-            });
-          }
-        }
+    // models
+    {
+      if (!isNonEmptyPlainObject(config.models)) {
+        throw new DefinitionError(`expects at least one model to be defined`);
       }
 
-      // Custom operations
-      Object.assign(
-        operations[type],
-        getCustomOperationMap(this, this.config.customOperations, type),
+      this.modelMap = new Map(
+        Object.entries(config.models).map(([name, config]) => [
+          name,
+          // Catch the "uncaught" errors
+          catchDefinitionError(
+            () => new Model(this, name, config),
+            (error) => new ModelDefinitionError(name, error),
+          ),
+        ]),
+      );
+
+      // We have this "validation" step after all the references are made in order to avoid "circular references" issues
+      this.modelMap.forEach((model) =>
+        catchDefinitionError(
+          () => model.validate(),
+          (error) => new ModelDefinitionError(model, error),
+        ),
       );
     }
 
-    this.schema = new GraphQLSchema({
-      ...Object.fromEntries(
-        Object.entries(operations)
-          .filter(([, fields]) => Object.values(fields).length > 0)
-          .map(([type, fields]) => [
-            type,
-            new GraphQLObjectType({ name: type, fields }),
-          ]),
-      ),
-      ...config.schema,
-    });
-
-    assertValidSchema(this.schema);
+    // operations
+    {
+      this.operations = fromObjectEntries(
+        operationTypes.map((operationType) => [
+          operationType,
+          fromObjectEntries(
+            (<[string, Operation | undefined][]>[]).concat(
+              ...[...this.modelMap.values()].map((model) =>
+                (<[string, Operation | undefined][]>[]).concat(
+                  ...Object.values(model.operationMap).map<
+                    [string, Operation | undefined]
+                  >((operation) => [
+                    operation.name,
+                    operation.type === operationType && operation.enabled
+                      ? operation
+                      : undefined,
+                  ]),
+                ),
+              ),
+            ),
+          ),
+        ]),
+      ) as this['operations'];
+    }
 
     this.#connector = this.config.connector;
     this.#connector?.connect?.(this);
   }
 
-  public getNode(name: string, path?: Path): Node {
-    const node = this.nodeMap.get(name);
-    if (!node) {
+  public getModel(
+    name: string,
+    path?: Path,
+  ): Model<TRequestContext, TConnector> {
+    const model = this.modelMap.get(name);
+    if (!model) {
       throw new MaybePathAwareError(
-        `The "${name}" node does not exist, did you mean: ${didYouMean(
+        `The "${name}" model does not exist, did you mean: ${didYouMean(
           name,
-          this.nodeMap.keys(),
+          this.modelMap.keys(),
         )}`,
         path,
       );
     }
 
-    return node;
+    return model;
   }
 
+  @Memoize()
+  public get schema(): GraphQLSchema {
+    assert(this.public, `The GraphQL Platform is private`);
+
+    const schema = new GraphQLSchema({
+      ...this.config.schema,
+      ...mapObjectValues<
+        Record<string, Operation>,
+        GraphQLObjectType,
+        OperationTypeNode
+      >(this.operations, (operations, operationType) => {
+        const fieldConfigMap: GraphQLFieldConfigMap<any, any> = {
+          // GraphQL Platform operations
+          ...mapObjectValues<
+            Operation,
+            GraphQLFieldConfig<any, any, any>,
+            string
+          >(operations, (operation) =>
+            operation.public ? operation.graphqlFieldConfig : undefined,
+          ),
+
+          // Custom operations
+          ...getCustomOperationMap(
+            this,
+            this.config.customOperations,
+            operationType,
+          ),
+        };
+
+        return Object.keys(fieldConfigMap).length > 0
+          ? new GraphQLObjectType({
+              name: operationType,
+              fields: fieldConfigMap,
+            })
+          : undefined;
+      }),
+    });
+
+    assertValidSchema(schema);
+
+    return schema;
+  }
+
+  @Memoize()
   public get connector(): TConnector {
     if (!this.#connector) {
       throw new Error(`No connector has been provided`);
     }
 
     return this.#connector;
+  }
+
+  @Memoize()
+  public get api(): API<TRequestContext, TConnector> {
+    return new Proxy({} as any, {
+      get:
+        (_, operationKey: OperationKey) =>
+        (modelName: string, ...params: any[]) =>
+          this.getModel(modelName)
+            .getOperation<any>(operationKey)
+            .execute(...params),
+    });
   }
 }

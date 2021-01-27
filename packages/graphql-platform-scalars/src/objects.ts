@@ -4,6 +4,7 @@ import {
   GraphQLJSONObject,
   GraphQLTime,
 } from 'graphql-scalars';
+import { IterableElement } from 'type-fest';
 import { GraphQLDraftJS } from './objects/draft-js';
 import { GraphQLURL } from './objects/url';
 import { TypedGraphQLScalarType } from './types';
@@ -25,3 +26,5 @@ export const objectScalarTypes = Object.freeze([
   GraphQLJSONObject as TypedGraphQLScalarType<'JSONObject', object>,
   GraphQLURL,
 ]);
+
+export type ObjectScalarType = IterableElement<typeof objectScalarTypes>;

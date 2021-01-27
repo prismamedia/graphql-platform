@@ -1,0 +1,111 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`Node Article has a node: Article 1`] = `
+"# The article is the main resource, written by the journalists
+type Article implements Node {
+  # This UUID is used to identify an Article publicly
+  id: UUID!
+  status: ArticleStatus!
+  title: NonEmptyTrimmedString!
+  slug: NonEmptyTrimmedString!
+
+  # The article's body
+  body: DraftJS
+  category: Category
+
+  # Either this \\"Article\\" node has a \\"category\\" edge heading to a \\"Category\\" node or not?
+  hasCategory: Boolean!
+  createdBy: User!
+  createdAt: DateTime!
+  updatedBy: User!
+  updatedAt: DateTime!
+
+  # Contains any arbitrary data you want to store alongside the article
+  metas: JSONObject
+  tags(where: ArticleTagWhereInput, orderBy: [ArticleTagOrderByInput!], skip: PositiveInt, first: PositiveInt!): [ArticleTag!]!
+
+  # The number of \\"ArticleTag\\" nodes having an \\"article\\" edge heading to this \\"Article\\" node
+  tagCount(where: ArticleTagWhereInput): PositiveInt!
+
+  # A custom field with a dependency
+  lowerCasedTitle: NonEmptyTrimmedString!
+
+  # A custom field with a dependency
+  upperCasedTitle: NonEmptyTrimmedString!
+}"
+`;
+
+exports[`Node ArticleTag has a node: ArticleTag 1`] = `
+"type ArticleTag {
+  article: Article!
+  tag: Tag!
+  order: PositiveInt!
+}"
+`;
+
+exports[`Node Category has a node: Category 1`] = `
+"type Category implements Node {
+  id: UUID!
+  title: NonEmptyTrimmedString!
+  slug: NonEmptyTrimmedString!
+  parent: Category
+
+  # Either this \\"Category\\" node has a \\"parent\\" edge heading to a \\"Category\\" node or not?
+  hasParent: Boolean!
+  order: PositiveInt!
+
+  # This category's children
+  children(where: CategoryWhereInput, orderBy: [CategoryOrderByInput!], skip: PositiveInt, first: PositiveInt!): [Category!]!
+
+  # The number of \\"Category\\" nodes having a \\"parent\\" edge heading to this \\"Category\\" node
+  childCount(where: CategoryWhereInput): PositiveInt!
+}"
+`;
+
+exports[`Node Tag has a node: Tag 1`] = `
+"type Tag implements Node {
+  id: UUID!
+
+  # A tag can be deprecated
+  deprecated: Boolean
+  title: NonEmptyTrimmedString!
+  slug: NonEmptyTrimmedString!
+  createdAt: DateTime!
+  updatedAt: DateTime!
+}"
+`;
+
+exports[`Node User has a node: User 1`] = `
+"type User implements Node {
+  id: UUID!
+  username: NonEmptyTrimmedString!
+
+  # All the articles this user has created
+  createdArticles(where: ArticleWhereInput, orderBy: [ArticleOrderByInput!], skip: PositiveInt, first: PositiveInt!): [Article!]!
+
+  # The number of \\"Article\\" nodes having a \\"createdBy\\" edge heading to this \\"User\\" node
+  createdArticleCount(where: ArticleWhereInput): PositiveInt!
+
+  # All the articles this user has updated
+  updatedArticles(where: ArticleWhereInput, orderBy: [ArticleOrderByInput!], skip: PositiveInt, first: PositiveInt!): [Article!]!
+
+  # The number of \\"Article\\" nodes having an \\"updatedBy\\" edge heading to this \\"User\\" node
+  updatedArticleCount(where: ArticleWhereInput): PositiveInt!
+
+  # This user's profile, only the optional informations
+  profile: UserProfile
+
+  # Either this \\"User\\" node has a \\"profile\\" edge heading to an \\"UserProfile\\" node or not?
+  hasProfile: Boolean!
+}"
+`;
+
+exports[`Node UserProfile has a node: UserProfile 1`] = `
+"type UserProfile {
+  user: User!
+  birthday: Date
+  facebookId: ID
+  googleId: ID
+  twitterId: ID
+}"
+`;

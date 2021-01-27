@@ -3,45 +3,54 @@ import {
   GraphQLFieldConfigMap,
   OperationTypeNode,
 } from 'graphql';
-import { GraphQLPlatform, IConnector } from '.';
+import { ConnectorInterface, GraphQLPlatform } from '.';
 
-export type TMaybeGraphQLPlatformAware<TConnector extends IConnector, T> =
+type MaybeGraphQLPlatformAware<TConnector extends ConnectorInterface, T> =
   | T
   | ((gp: GraphQLPlatform<any, TConnector>) => T);
 
-export const getMaybeGraphQLPlatformAware = <TConnector extends IConnector, T>(
+const resolveMaybeGraphQLPlatformAware = <
+  TConnector extends ConnectorInterface,
+  T,
+>(
   gp: GraphQLPlatform<any, TConnector>,
-  config?: TMaybeGraphQLPlatformAware<TConnector, T>,
+  config?: MaybeGraphQLPlatformAware<TConnector, T>,
 ): T | undefined =>
   config
     ? ((typeof config === 'function' ? (config as any)(gp) : config) as T)
     : undefined;
 
-export type TCustomOperationTypeMap<TContext, TConnector extends IConnector> = {
-  [operationName: string]: TMaybeGraphQLPlatformAware<
-    TConnector,
-    GraphQLFieldConfig<undefined, TContext, any> | undefined
-  >;
-};
-
-export type TCustomOperationMap<
-  TContext = undefined,
-  TConnector extends IConnector = IConnector
+type CustomOperationTypeMap<
+  TRequestContext,
+  TConnector extends ConnectorInterface,
 > = {
-  [operationType in OperationTypeNode]?: TMaybeGraphQLPlatformAware<
+  [operationName: string]: MaybeGraphQLPlatformAware<
     TConnector,
-    TCustomOperationTypeMap<TContext, TConnector> | undefined
+    GraphQLFieldConfig<undefined, TRequestContext, any> | undefined
   >;
 };
 
-export function getCustomOperationMap<TContext, TConnector extends IConnector>(
+export type CustomOperationMap<
+  TRequestContext = any,
+  TConnector extends ConnectorInterface = any,
+> = {
+  [operationType in OperationTypeNode]?: MaybeGraphQLPlatformAware<
+    TConnector,
+    CustomOperationTypeMap<TRequestContext, TConnector> | undefined
+  >;
+};
+
+export function getCustomOperationMap<
+  TRequestContext,
+  TConnector extends ConnectorInterface,
+>(
   gp: GraphQLPlatform<any, TConnector>,
-  config: TCustomOperationMap<TContext, TConnector> | undefined,
+  config: CustomOperationMap<TRequestContext, TConnector> | undefined,
   operationType: OperationTypeNode,
-): GraphQLFieldConfigMap<undefined, TContext> {
+): GraphQLFieldConfigMap<undefined, TRequestContext> {
   const fieldConfigMap: GraphQLFieldConfigMap<any, any> = {};
 
-  const customOperations = getMaybeGraphQLPlatformAware(
+  const customOperations = resolveMaybeGraphQLPlatformAware(
     gp,
     config?.[operationType],
   );
@@ -50,7 +59,7 @@ export function getCustomOperationMap<TContext, TConnector extends IConnector>(
     for (const [operationName, maybeGraphQLFieldConfig] of Object.entries(
       customOperations,
     )) {
-      const operation = getMaybeGraphQLPlatformAware(
+      const operation = resolveMaybeGraphQLPlatformAware(
         gp,
         maybeGraphQLFieldConfig,
       );

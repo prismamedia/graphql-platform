@@ -1,17 +1,19 @@
 import { GraphQLError, Kind, print, ValueNode } from 'graphql';
 import { GraphQLScalarType } from '../../types';
 
-export function assertNonEmptyTrimmedStringValue(value: unknown): string {
-  if (typeof value !== 'string') {
+export function assertNonEmptyTrimmedStringValue(
+  maybeNonEmptyTrimmedStringValue: unknown,
+): string {
+  if (typeof maybeNonEmptyTrimmedStringValue !== 'string') {
     throw new TypeError(
-      `NonEmptyTrimmedString expects a string value, got "${value}"`,
+      `NonEmptyTrimmedString expects a string value, got "${maybeNonEmptyTrimmedStringValue}"`,
     );
   }
 
-  const trimmedValue = value.trim();
+  const trimmedValue = maybeNonEmptyTrimmedStringValue.trim();
   if (trimmedValue.length === 0) {
     throw new TypeError(
-      `NonEmptyTrimmedString expects a non empty string, got "${value}"`,
+      `NonEmptyTrimmedString expects a non empty string, got "${maybeNonEmptyTrimmedStringValue}"`,
     );
   }
 

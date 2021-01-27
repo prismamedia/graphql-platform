@@ -1,0 +1,1003 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`GraphQL Platform generates a valid GraphQL Schema 1`] = `
+"schema {
+  query: query
+  mutation: mutation
+}
+
+type query {
+  # Gets the number of \\"Article\\" nodes
+  articleCount(where: ArticleWhereInput): PositiveInt!
+
+  # Retrieves a list of \\"Article\\" nodes
+  articles(where: ArticleWhereInput, orderBy: [ArticleOrderByInput!], skip: PositiveInt, first: PositiveInt!): [Article!]!
+
+  # Retrieves one \\"Article\\" node, throws an error if it does not exist
+  article(where: ArticleWhereUniqueInput!): Article!
+
+  # Retrieves one \\"Article\\" node, returns null if it does not exist
+  articleIfExists(where: ArticleWhereUniqueInput!): Article
+
+  # Gets the number of \\"Category\\" nodes
+  categoryCount(where: CategoryWhereInput): PositiveInt!
+
+  # Retrieves a list of \\"Category\\" nodes
+  categories(where: CategoryWhereInput, orderBy: [CategoryOrderByInput!], skip: PositiveInt, first: PositiveInt!): [Category!]!
+
+  # Retrieves one \\"Category\\" node, throws an error if it does not exist
+  category(where: CategoryWhereUniqueInput!): Category!
+
+  # Retrieves one \\"Category\\" node, returns null if it does not exist
+  categoryIfExists(where: CategoryWhereUniqueInput!): Category
+
+  # Gets the number of \\"Tag\\" nodes
+  tagCount(where: TagWhereInput): PositiveInt!
+
+  # Retrieves a list of \\"Tag\\" nodes
+  tags(where: TagWhereInput, orderBy: [TagOrderByInput!], skip: PositiveInt, first: PositiveInt!): [Tag!]!
+
+  # Retrieves one \\"Tag\\" node, throws an error if it does not exist
+  tag(where: TagWhereUniqueInput!): Tag!
+
+  # Retrieves one \\"Tag\\" node, returns null if it does not exist
+  tagIfExists(where: TagWhereUniqueInput!): Tag
+
+  # Gets the number of \\"ArticleTag\\" nodes
+  articleTagCount(where: ArticleTagWhereInput): PositiveInt!
+
+  # Retrieves a list of \\"ArticleTag\\" nodes
+  articleTags(where: ArticleTagWhereInput, orderBy: [ArticleTagOrderByInput!], skip: PositiveInt, first: PositiveInt!): [ArticleTag!]!
+
+  # Retrieves one \\"ArticleTag\\" node, throws an error if it does not exist
+  articleTag(where: ArticleTagWhereUniqueInput!): ArticleTag!
+
+  # Retrieves one \\"ArticleTag\\" node, returns null if it does not exist
+  articleTagIfExists(where: ArticleTagWhereUniqueInput!): ArticleTag
+
+  # Gets the number of \\"User\\" nodes
+  userCount(where: UserWhereInput): PositiveInt!
+
+  # Retrieves a list of \\"User\\" nodes
+  users(where: UserWhereInput, skip: PositiveInt, first: PositiveInt!): [User!]!
+
+  # Retrieves one \\"User\\" node, throws an error if it does not exist
+  user(where: UserWhereUniqueInput!): User!
+
+  # Retrieves one \\"User\\" node, returns null if it does not exist
+  userIfExists(where: UserWhereUniqueInput!): User
+
+  # Gets the number of \\"UserProfile\\" nodes
+  userProfileCount(where: UserProfileWhereInput): PositiveInt!
+
+  # Retrieves a list of \\"UserProfile\\" nodes
+  userProfiles(where: UserProfileWhereInput, orderBy: [UserProfileOrderByInput!], skip: PositiveInt, first: PositiveInt!): [UserProfile!]!
+
+  # Retrieves one \\"UserProfile\\" node, throws an error if it does not exist
+  userProfile(where: UserProfileWhereUniqueInput!): UserProfile!
+
+  # Retrieves one \\"UserProfile\\" node, returns null if it does not exist
+  userProfileIfExists(where: UserProfileWhereUniqueInput!): UserProfile
+}
+
+# Integers that will have a value of 0 or more.
+scalar PositiveInt
+
+input ArticleWhereInput {
+  id: UUID
+  id_not: UUID
+  id_in: [UUID!]
+  id_not_in: [UUID!]
+  status: ArticleStatus
+  status_not: ArticleStatus
+  status_in: [ArticleStatus!]
+  status_not_in: [ArticleStatus!]
+  title: NonEmptyTrimmedString
+  title_not: NonEmptyTrimmedString
+  title_in: [NonEmptyTrimmedString!]
+  title_not_in: [NonEmptyTrimmedString!]
+  slug: NonEmptyTrimmedString
+  slug_not: NonEmptyTrimmedString
+  slug_in: [NonEmptyTrimmedString!]
+  slug_not_in: [NonEmptyTrimmedString!]
+  body: DraftJS
+  body_not: DraftJS
+  body_is_null: Boolean
+  category: CategoryWhereInput
+  category_not: CategoryWhereInput
+  category_is_null: Boolean
+  createdBy: UserWhereInput
+  createdBy_not: UserWhereInput
+  createdAt: DateTime
+  createdAt_not: DateTime
+  createdAt_in: [DateTime!]
+  createdAt_not_in: [DateTime!]
+  createdAt_gt: DateTime
+  createdAt_gte: DateTime
+  createdAt_lt: DateTime
+  createdAt_lte: DateTime
+  updatedBy: UserWhereInput
+  updatedBy_not: UserWhereInput
+  updatedAt: DateTime
+  updatedAt_not: DateTime
+  updatedAt_in: [DateTime!]
+  updatedAt_not_in: [DateTime!]
+  updatedAt_gt: DateTime
+  updatedAt_gte: DateTime
+  updatedAt_lt: DateTime
+  updatedAt_lte: DateTime
+  metas: JSONObject
+  metas_not: JSONObject
+  metas_is_null: Boolean
+  tags_none: ArticleTagWhereInput
+  tags_some: ArticleTagWhereInput
+  tags_every: ArticleTagWhereInput
+  AND: [ArticleWhereInput!]
+  OR: [ArticleWhereInput!]
+  NOT: ArticleWhereInput
+}
+
+# A field whose value is a generic Universally Unique Identifier: https://en.wikipedia.org/wiki/Universally_unique_identifier.
+scalar UUID
+
+enum ArticleStatus {
+  Draft
+  Published
+  Deleted
+}
+
+# A string in which the leading and trailing whitespace characters are removed, plus it cannot be empty.
+scalar NonEmptyTrimmedString
+
+# The DraftJS raw state contains a list of content blocks, as well as a map of all relevant entity objects.
+scalar DraftJS @specifiedBy(url: \\"https://draftjs.org/docs/api-reference-data-conversion/#convertfromraw\\")
+
+input CategoryWhereInput {
+  id: UUID
+  id_not: UUID
+  id_in: [UUID!]
+  id_not_in: [UUID!]
+  title: NonEmptyTrimmedString
+  title_not: NonEmptyTrimmedString
+  title_in: [NonEmptyTrimmedString!]
+  title_not_in: [NonEmptyTrimmedString!]
+  slug: NonEmptyTrimmedString
+  slug_not: NonEmptyTrimmedString
+  slug_in: [NonEmptyTrimmedString!]
+  slug_not_in: [NonEmptyTrimmedString!]
+  parent: CategoryWhereInput
+  parent_not: CategoryWhereInput
+  parent_is_null: Boolean
+  order: PositiveInt
+  order_not: PositiveInt
+  order_in: [PositiveInt!]
+  order_not_in: [PositiveInt!]
+  order_gt: PositiveInt
+  order_gte: PositiveInt
+  order_lt: PositiveInt
+  order_lte: PositiveInt
+  children_none: CategoryWhereInput
+  children_some: CategoryWhereInput
+  children_every: CategoryWhereInput
+  AND: [CategoryWhereInput!]
+  OR: [CategoryWhereInput!]
+  NOT: CategoryWhereInput
+}
+
+input UserWhereInput {
+  id: UUID
+  id_not: UUID
+  id_in: [UUID!]
+  id_not_in: [UUID!]
+  username: NonEmptyTrimmedString
+  username_not: NonEmptyTrimmedString
+  username_in: [NonEmptyTrimmedString!]
+  username_not_in: [NonEmptyTrimmedString!]
+  createdArticles_none: ArticleWhereInput
+  createdArticles_some: ArticleWhereInput
+  createdArticles_every: ArticleWhereInput
+  updatedArticles_none: ArticleWhereInput
+  updatedArticles_some: ArticleWhereInput
+  updatedArticles_every: ArticleWhereInput
+  profile: UserProfileWhereInput
+  profile_not: UserProfileWhereInput
+  profile_is_null: Boolean
+  AND: [UserWhereInput!]
+  OR: [UserWhereInput!]
+  NOT: UserWhereInput
+}
+
+input UserProfileWhereInput {
+  user: UserWhereInput
+  user_not: UserWhereInput
+  birthday: Date
+  birthday_not: Date
+  birthday_is_null: Boolean
+  birthday_in: [Date]
+  birthday_not_in: [Date]
+  birthday_gt: Date
+  birthday_gte: Date
+  birthday_lt: Date
+  birthday_lte: Date
+  facebookId: ID
+  facebookId_not: ID
+  facebookId_is_null: Boolean
+  facebookId_in: [ID]
+  facebookId_not_in: [ID]
+  googleId: ID
+  googleId_not: ID
+  googleId_is_null: Boolean
+  googleId_in: [ID]
+  googleId_not_in: [ID]
+  twitterId: ID
+  twitterId_not: ID
+  twitterId_is_null: Boolean
+  twitterId_in: [ID]
+  twitterId_not_in: [ID]
+  AND: [UserProfileWhereInput!]
+  OR: [UserProfileWhereInput!]
+  NOT: UserProfileWhereInput
+}
+
+# A date string, such as 2007-12-03, compliant with the \`full-date\` format outlined in section 5.6 of the RFC 3339 profile of the ISO 8601 standard for representation of dates and times using the Gregorian calendar.
+scalar Date
+
+# A date-time string at UTC, such as 2007-12-03T10:15:30Z, compliant with the \`date-time\` format outlined in section 5.6 of the RFC 3339 profile of the ISO 8601 standard for representation of dates and times using the Gregorian calendar.
+scalar DateTime
+
+# The \`JSONObject\` scalar type represents JSON objects as specified by [ECMA-404](http://www.ecma-international.org/publications/files/ECMA-ST/ECMA-404.pdf).
+scalar JSONObject @specifiedBy(url: \\"http://www.ecma-international.org/publications/files/ECMA-ST/ECMA-404.pdf\\")
+
+input ArticleTagWhereInput {
+  article: ArticleWhereInput
+  article_not: ArticleWhereInput
+  tag: TagWhereInput
+  tag_not: TagWhereInput
+  order: PositiveInt
+  order_not: PositiveInt
+  order_in: [PositiveInt!]
+  order_not_in: [PositiveInt!]
+  order_gt: PositiveInt
+  order_gte: PositiveInt
+  order_lt: PositiveInt
+  order_lte: PositiveInt
+  AND: [ArticleTagWhereInput!]
+  OR: [ArticleTagWhereInput!]
+  NOT: ArticleTagWhereInput
+}
+
+input TagWhereInput {
+  id: UUID
+  id_not: UUID
+  id_in: [UUID!]
+  id_not_in: [UUID!]
+  deprecated: Boolean
+  deprecated_not: Boolean
+  deprecated_is_null: Boolean
+  deprecated_in: [Boolean]
+  deprecated_not_in: [Boolean]
+  title: NonEmptyTrimmedString
+  title_not: NonEmptyTrimmedString
+  title_in: [NonEmptyTrimmedString!]
+  title_not_in: [NonEmptyTrimmedString!]
+  slug: NonEmptyTrimmedString
+  slug_not: NonEmptyTrimmedString
+  slug_in: [NonEmptyTrimmedString!]
+  slug_not_in: [NonEmptyTrimmedString!]
+  createdAt: DateTime
+  createdAt_not: DateTime
+  createdAt_in: [DateTime!]
+  createdAt_not_in: [DateTime!]
+  createdAt_gt: DateTime
+  createdAt_gte: DateTime
+  createdAt_lt: DateTime
+  createdAt_lte: DateTime
+  updatedAt: DateTime
+  updatedAt_not: DateTime
+  updatedAt_in: [DateTime!]
+  updatedAt_not_in: [DateTime!]
+  updatedAt_gt: DateTime
+  updatedAt_gte: DateTime
+  updatedAt_lt: DateTime
+  updatedAt_lte: DateTime
+  AND: [TagWhereInput!]
+  OR: [TagWhereInput!]
+  NOT: TagWhereInput
+}
+
+# The article is the main resource, written by the journalists
+type Article implements Node {
+  # This UUID is used to identify an Article publicly
+  id: UUID!
+  status: ArticleStatus!
+  title: NonEmptyTrimmedString!
+  slug: NonEmptyTrimmedString!
+
+  # The article's body
+  body: DraftJS
+  category: Category
+
+  # Either this \\"Article\\" node has a \\"category\\" edge heading to a \\"Category\\" node or not?
+  hasCategory: Boolean!
+  createdBy: User!
+  createdAt: DateTime!
+  updatedBy: User!
+  updatedAt: DateTime!
+
+  # Contains any arbitrary data you want to store alongside the article
+  metas: JSONObject
+  tags(where: ArticleTagWhereInput, orderBy: [ArticleTagOrderByInput!], skip: PositiveInt, first: PositiveInt!): [ArticleTag!]!
+
+  # The number of \\"ArticleTag\\" nodes having an \\"article\\" edge heading to this \\"Article\\" node
+  tagCount(where: ArticleTagWhereInput): PositiveInt!
+
+  # A custom field with a dependency
+  lowerCasedTitle: NonEmptyTrimmedString!
+
+  # A custom field with a dependency
+  upperCasedTitle: NonEmptyTrimmedString!
+}
+
+interface Node {
+  id: UUID!
+}
+
+type Category implements Node {
+  id: UUID!
+  title: NonEmptyTrimmedString!
+  slug: NonEmptyTrimmedString!
+  parent: Category
+
+  # Either this \\"Category\\" node has a \\"parent\\" edge heading to a \\"Category\\" node or not?
+  hasParent: Boolean!
+  order: PositiveInt!
+
+  # This category's children
+  children(where: CategoryWhereInput, orderBy: [CategoryOrderByInput!], skip: PositiveInt, first: PositiveInt!): [Category!]!
+
+  # The number of \\"Category\\" nodes having a \\"parent\\" edge heading to this \\"Category\\" node
+  childCount(where: CategoryWhereInput): PositiveInt!
+}
+
+enum CategoryOrderByInput {
+  # Sort the \\"Category\\" nodes from the lowest \\"order\\" leaf to the highest
+  order_ASC
+
+  # Sort the \\"Category\\" nodes from the highest \\"order\\" leaf to the lowest
+  order_DESC
+}
+
+type User implements Node {
+  id: UUID!
+  username: NonEmptyTrimmedString!
+
+  # All the articles this user has created
+  createdArticles(where: ArticleWhereInput, orderBy: [ArticleOrderByInput!], skip: PositiveInt, first: PositiveInt!): [Article!]!
+
+  # The number of \\"Article\\" nodes having a \\"createdBy\\" edge heading to this \\"User\\" node
+  createdArticleCount(where: ArticleWhereInput): PositiveInt!
+
+  # All the articles this user has updated
+  updatedArticles(where: ArticleWhereInput, orderBy: [ArticleOrderByInput!], skip: PositiveInt, first: PositiveInt!): [Article!]!
+
+  # The number of \\"Article\\" nodes having an \\"updatedBy\\" edge heading to this \\"User\\" node
+  updatedArticleCount(where: ArticleWhereInput): PositiveInt!
+
+  # This user's profile, only the optional informations
+  profile: UserProfile
+
+  # Either this \\"User\\" node has a \\"profile\\" edge heading to an \\"UserProfile\\" node or not?
+  hasProfile: Boolean!
+}
+
+enum ArticleOrderByInput {
+  # Sort the \\"Article\\" nodes from the lowest \\"createdAt\\" leaf to the highest
+  createdAt_ASC
+
+  # Sort the \\"Article\\" nodes from the highest \\"createdAt\\" leaf to the lowest
+  createdAt_DESC
+
+  # Sort the \\"Article\\" nodes from the lowest \\"updatedAt\\" leaf to the highest
+  updatedAt_ASC
+
+  # Sort the \\"Article\\" nodes from the highest \\"updatedAt\\" leaf to the lowest
+  updatedAt_DESC
+}
+
+type UserProfile {
+  user: User!
+  birthday: Date
+  facebookId: ID
+  googleId: ID
+  twitterId: ID
+}
+
+type ArticleTag {
+  article: Article!
+  tag: Tag!
+  order: PositiveInt!
+}
+
+type Tag implements Node {
+  id: UUID!
+
+  # A tag can be deprecated
+  deprecated: Boolean
+  title: NonEmptyTrimmedString!
+  slug: NonEmptyTrimmedString!
+  createdAt: DateTime!
+  updatedAt: DateTime!
+}
+
+enum ArticleTagOrderByInput {
+  # Sort the \\"ArticleTag\\" nodes from the lowest \\"order\\" leaf to the highest
+  order_ASC
+
+  # Sort the \\"ArticleTag\\" nodes from the highest \\"order\\" leaf to the lowest
+  order_DESC
+}
+
+# Identifies exactly one \\"Article\\" node given a unique combination of values:
+# id
+input ArticleWhereUniqueInput {
+  id: UUID!
+}
+
+# Identifies exactly one \\"Category\\" node given a unique combination of values:
+# id
+# parent, slug
+# parent, order
+input CategoryWhereUniqueInput {
+  id: UUID
+  parent: CategoryWhereUniqueInput
+  slug: NonEmptyTrimmedString
+  order: PositiveInt
+}
+
+enum TagOrderByInput {
+  # Sort the \\"Tag\\" nodes from the lowest \\"deprecated\\" leaf to the highest
+  deprecated_ASC
+
+  # Sort the \\"Tag\\" nodes from the highest \\"deprecated\\" leaf to the lowest
+  deprecated_DESC
+
+  # Sort the \\"Tag\\" nodes from the lowest \\"createdAt\\" leaf to the highest
+  createdAt_ASC
+
+  # Sort the \\"Tag\\" nodes from the highest \\"createdAt\\" leaf to the lowest
+  createdAt_DESC
+
+  # Sort the \\"Tag\\" nodes from the lowest \\"updatedAt\\" leaf to the highest
+  updatedAt_ASC
+
+  # Sort the \\"Tag\\" nodes from the highest \\"updatedAt\\" leaf to the lowest
+  updatedAt_DESC
+}
+
+# Identifies exactly one \\"Tag\\" node given a unique combination of values:
+# id
+# slug
+input TagWhereUniqueInput {
+  id: UUID
+  slug: NonEmptyTrimmedString
+}
+
+# Identifies exactly one \\"ArticleTag\\" node given a unique combination of values:
+# article, tag
+# article, order
+input ArticleTagWhereUniqueInput {
+  article: ArticleWhereUniqueInput!
+  tag: TagWhereUniqueInput
+  order: PositiveInt
+}
+
+# Identifies exactly one \\"User\\" node given a unique combination of values:
+# id
+# username
+input UserWhereUniqueInput {
+  id: UUID
+  username: NonEmptyTrimmedString
+}
+
+enum UserProfileOrderByInput {
+  # Sort the \\"UserProfile\\" nodes from the lowest \\"birthday\\" leaf to the highest
+  birthday_ASC
+
+  # Sort the \\"UserProfile\\" nodes from the highest \\"birthday\\" leaf to the lowest
+  birthday_DESC
+}
+
+# Identifies exactly one \\"UserProfile\\" node given a unique combination of values:
+# user
+input UserProfileWhereUniqueInput {
+  user: UserWhereUniqueInput!
+}
+
+type mutation {
+  # Creates one \\"Article\\" node then returns it
+  createArticle(data: ArticleCreateInput!): Article!
+
+  # Creates many \\"Article\\" nodes then returns them
+  createArticles(data: [ArticleCreateInput!]!): [Article!]!
+
+  # Deletes one \\"Article\\" node then returns it or throws an error if it does not exist
+  deleteArticle(where: ArticleWhereUniqueInput!): Article!
+
+  # Deletes one \\"Article\\" node then returns it or null if it does not exist
+  deleteArticleIfExists(where: ArticleWhereUniqueInput!): Article
+
+  # Deletes many \\"Article\\" nodes then returns them
+  deleteArticles(where: ArticleWhereInput, orderBy: [ArticleOrderByInput!], first: PositiveInt!): [Article!]!
+
+  # Updates one \\"Article\\" node then returns it or throws an error if it does not exist
+  updateArticle(where: ArticleWhereUniqueInput!, data: ArticleUpdateInput!): Article!
+
+  # Updates one \\"Article\\" node then returns it or null if it does not exist
+  updateArticleIfExists(where: ArticleWhereUniqueInput!, data: ArticleUpdateInput!): Article
+
+  # Updates many \\"Article\\" nodes then returns them
+  updateArticles(where: ArticleWhereInput, orderBy: [ArticleOrderByInput!], first: PositiveInt!, data: ArticleUpdateInput!): [Article!]!
+
+  # UP(date|ins)SERT, updates or inserts one \\"Article\\" node then returns it
+  upsertArticle(where: ArticleWhereUniqueInput!, create: ArticleCreateInput!, update: ArticleUpdateInput!): Article!
+
+  # Creates one \\"Category\\" node then returns it
+  createCategory(data: CategoryCreateInput!): Category!
+
+  # Creates many \\"Category\\" nodes then returns them
+  createCategories(data: [CategoryCreateInput!]!): [Category!]!
+
+  # Deletes one \\"Category\\" node then returns it or throws an error if it does not exist
+  deleteCategory(where: CategoryWhereUniqueInput!): Category!
+
+  # Deletes one \\"Category\\" node then returns it or null if it does not exist
+  deleteCategoryIfExists(where: CategoryWhereUniqueInput!): Category
+
+  # Deletes many \\"Category\\" nodes then returns them
+  deleteCategories(where: CategoryWhereInput, orderBy: [CategoryOrderByInput!], first: PositiveInt!): [Category!]!
+
+  # Updates one \\"Category\\" node then returns it or throws an error if it does not exist
+  updateCategory(where: CategoryWhereUniqueInput!, data: CategoryUpdateInput!): Category!
+
+  # Updates one \\"Category\\" node then returns it or null if it does not exist
+  updateCategoryIfExists(where: CategoryWhereUniqueInput!, data: CategoryUpdateInput!): Category
+
+  # Updates many \\"Category\\" nodes then returns them
+  updateCategories(where: CategoryWhereInput, orderBy: [CategoryOrderByInput!], first: PositiveInt!, data: CategoryUpdateInput!): [Category!]!
+
+  # UP(date|ins)SERT, updates or inserts one \\"Category\\" node then returns it
+  upsertCategory(where: CategoryWhereUniqueInput!, create: CategoryCreateInput!, update: CategoryUpdateInput!): Category!
+
+  # Creates one \\"Tag\\" node then returns it
+  createTag(data: TagCreateInput!): Tag!
+
+  # Creates many \\"Tag\\" nodes then returns them
+  createTags(data: [TagCreateInput!]!): [Tag!]!
+
+  # Deletes one \\"Tag\\" node then returns it or throws an error if it does not exist
+  deleteTag(where: TagWhereUniqueInput!): Tag!
+
+  # Deletes one \\"Tag\\" node then returns it or null if it does not exist
+  deleteTagIfExists(where: TagWhereUniqueInput!): Tag
+
+  # Deletes many \\"Tag\\" nodes then returns them
+  deleteTags(where: TagWhereInput, orderBy: [TagOrderByInput!], first: PositiveInt!): [Tag!]!
+
+  # Updates one \\"Tag\\" node then returns it or throws an error if it does not exist
+  updateTag(where: TagWhereUniqueInput!, data: TagUpdateInput!): Tag!
+
+  # Updates one \\"Tag\\" node then returns it or null if it does not exist
+  updateTagIfExists(where: TagWhereUniqueInput!, data: TagUpdateInput!): Tag
+
+  # Updates many \\"Tag\\" nodes then returns them
+  updateTags(where: TagWhereInput, orderBy: [TagOrderByInput!], first: PositiveInt!, data: TagUpdateInput!): [Tag!]!
+
+  # UP(date|ins)SERT, updates or inserts one \\"Tag\\" node then returns it
+  upsertTag(where: TagWhereUniqueInput!, create: TagCreateInput!, update: TagUpdateInput!): Tag!
+
+  # Creates one \\"ArticleTag\\" node then returns it
+  createArticleTag(data: ArticleTagCreateInput!): ArticleTag!
+
+  # Creates many \\"ArticleTag\\" nodes then returns them
+  createArticleTags(data: [ArticleTagCreateInput!]!): [ArticleTag!]!
+
+  # Deletes one \\"ArticleTag\\" node then returns it or throws an error if it does not exist
+  deleteArticleTag(where: ArticleTagWhereUniqueInput!): ArticleTag!
+
+  # Deletes one \\"ArticleTag\\" node then returns it or null if it does not exist
+  deleteArticleTagIfExists(where: ArticleTagWhereUniqueInput!): ArticleTag
+
+  # Deletes many \\"ArticleTag\\" nodes then returns them
+  deleteArticleTags(where: ArticleTagWhereInput, orderBy: [ArticleTagOrderByInput!], first: PositiveInt!): [ArticleTag!]!
+
+  # Creates one \\"User\\" node then returns it
+  createUser(data: UserCreateInput!): User!
+
+  # Creates many \\"User\\" nodes then returns them
+  createUsers(data: [UserCreateInput!]!): [User!]!
+
+  # Deletes one \\"User\\" node then returns it or throws an error if it does not exist
+  deleteUser(where: UserWhereUniqueInput!): User!
+
+  # Deletes one \\"User\\" node then returns it or null if it does not exist
+  deleteUserIfExists(where: UserWhereUniqueInput!): User
+
+  # Deletes many \\"User\\" nodes then returns them
+  deleteUsers(where: UserWhereInput, first: PositiveInt!): [User!]!
+
+  # Updates one \\"User\\" node then returns it or throws an error if it does not exist
+  updateUser(where: UserWhereUniqueInput!, data: UserUpdateInput!): User!
+
+  # Updates one \\"User\\" node then returns it or null if it does not exist
+  updateUserIfExists(where: UserWhereUniqueInput!, data: UserUpdateInput!): User
+
+  # Updates many \\"User\\" nodes then returns them
+  updateUsers(where: UserWhereInput, first: PositiveInt!, data: UserUpdateInput!): [User!]!
+
+  # UP(date|ins)SERT, updates or inserts one \\"User\\" node then returns it
+  upsertUser(where: UserWhereUniqueInput!, create: UserCreateInput!, update: UserUpdateInput!): User!
+
+  # Creates one \\"UserProfile\\" node then returns it
+  createUserProfile(data: UserProfileCreateInput!): UserProfile!
+
+  # Creates many \\"UserProfile\\" nodes then returns them
+  createUserProfiles(data: [UserProfileCreateInput!]!): [UserProfile!]!
+
+  # Deletes one \\"UserProfile\\" node then returns it or throws an error if it does not exist
+  deleteUserProfile(where: UserProfileWhereUniqueInput!): UserProfile!
+
+  # Deletes one \\"UserProfile\\" node then returns it or null if it does not exist
+  deleteUserProfileIfExists(where: UserProfileWhereUniqueInput!): UserProfile
+
+  # Deletes many \\"UserProfile\\" nodes then returns them
+  deleteUserProfiles(where: UserProfileWhereInput, orderBy: [UserProfileOrderByInput!], first: PositiveInt!): [UserProfile!]!
+
+  # Updates one \\"UserProfile\\" node then returns it or throws an error if it does not exist
+  updateUserProfile(where: UserProfileWhereUniqueInput!, data: UserProfileUpdateInput!): UserProfile!
+
+  # Updates one \\"UserProfile\\" node then returns it or null if it does not exist
+  updateUserProfileIfExists(where: UserProfileWhereUniqueInput!, data: UserProfileUpdateInput!): UserProfile
+
+  # Updates many \\"UserProfile\\" nodes then returns them
+  updateUserProfiles(where: UserProfileWhereInput, orderBy: [UserProfileOrderByInput!], first: PositiveInt!, data: UserProfileUpdateInput!): [UserProfile!]!
+
+  # UP(date|ins)SERT, updates or inserts one \\"UserProfile\\" node then returns it
+  upsertUserProfile(where: UserProfileWhereUniqueInput!, create: UserProfileCreateInput!, update: UserProfileUpdateInput!): UserProfile!
+}
+
+# Provides the data to create an \\"Article\\"
+input ArticleCreateInput {
+  # You can either provide an UUID or let one be generated for you
+  id: UUID
+  status: ArticleStatus! = Draft
+  title: NonEmptyTrimmedString!
+
+  # You can either provide a slug or let the title be \\"slugified\\" for you
+  slug: NonEmptyTrimmedString
+
+  # The article's body
+  body: DraftJS
+  category: ArticleCreateCategoryEdgeInput
+
+  # Contains any arbitrary data you want to store alongside the article
+  metas: JSONObject
+  tags: ArticleCreateTagsReverseEdgeInput!
+
+  # It is possible to provide the article's body as raw HTML
+  htmlBody: String
+}
+
+input ArticleCreateCategoryEdgeInput {
+  # Connect an existing \\"Category\\", throw an error if it does not exist
+  connect: CategoryWhereUniqueInput
+
+  # Connect a \\"Category\\", if it exists
+  connectIfExists: CategoryWhereUniqueInput
+
+  # Create and connect a new \\"Category\\"
+  create: CategoryCreateInput
+}
+
+# Provides the data to create a \\"Category\\"
+input CategoryCreateInput {
+  # You can either provide an UUID or let one be generated for you
+  id: UUID
+  title: NonEmptyTrimmedString!
+
+  # You can either provide a slug or let the title be \\"slugified\\" for you
+  slug: NonEmptyTrimmedString
+  parent: CategoryCreateParentEdgeInput
+  order: PositiveInt
+
+  # This category's children
+  children: CategoryCreateChildrenReverseEdgeInput
+}
+
+input CategoryCreateParentEdgeInput {
+  # Connect an existing \\"Category\\", throw an error if it does not exist
+  connect: CategoryWhereUniqueInput
+
+  # Connect a \\"Category\\", if it exists
+  connectIfExists: CategoryWhereUniqueInput
+
+  # Create and connect a new \\"Category\\"
+  create: CategoryCreateInput
+}
+
+input CategoryCreateChildrenReverseEdgeInput {
+  # Connect existing \\"Category\\" nodes by their \\"parent\\" edge, throw an error if one of them is not found
+  connect: [CategoryWhereUniqueInput!]
+
+  # Connect existing \\"Category\\" nodes by their \\"parent\\" edge, if they exist
+  connectIfExists: [CategoryWhereUniqueInput!]
+
+  # Connect \\"Category\\" nodes by their \\"parent\\" edge
+  connectMany: CategoryWhereInput
+
+  # Create new \\"Category\\" nodes and connect them by their \\"parent\\" edge
+  create: [CategoryWithoutParentEdgeCreateInput!]
+}
+
+# Given a known \\"parent\\" edge, provides the data to create a \\"Category\\"
+input CategoryWithoutParentEdgeCreateInput {
+  # You can either provide an UUID or let one be generated for you
+  id: UUID
+  title: NonEmptyTrimmedString!
+
+  # You can either provide a slug or let the title be \\"slugified\\" for you
+  slug: NonEmptyTrimmedString
+  order: PositiveInt
+
+  # This category's children
+  children: CategoryCreateChildrenReverseEdgeInput
+}
+
+input ArticleCreateTagsReverseEdgeInput {
+  # Create new \\"ArticleTag\\" nodes and connect them by their \\"article\\" edge
+  create: [ArticleTagWithoutArticleEdgeCreateInput!]
+}
+
+# Given a known \\"article\\" edge, provides the data to create an \\"ArticleTag\\"
+input ArticleTagWithoutArticleEdgeCreateInput {
+  tag: ArticleTagCreateTagEdgeInput!
+  order: PositiveInt!
+}
+
+input ArticleTagCreateTagEdgeInput {
+  # Connect an existing \\"Tag\\", throw an error if it does not exist
+  connect: TagWhereUniqueInput
+
+  # Create and connect a new \\"Tag\\"
+  create: TagCreateInput
+}
+
+# Provides the data to create a \\"Tag\\"
+input TagCreateInput {
+  # You can either provide an UUID or let one be generated for you
+  id: UUID
+
+  # A tag can be deprecated
+  deprecated: Boolean
+  title: NonEmptyTrimmedString!
+
+  # You can either provide a slug or let the title be \\"slugified\\" for you
+  slug: NonEmptyTrimmedString
+}
+
+# Provides the data to update an \\"Article\\"
+input ArticleUpdateInput {
+  status: ArticleStatus
+  title: NonEmptyTrimmedString
+  slug: NonEmptyTrimmedString
+
+  # The article's body
+  body: DraftJS
+  category: ArticleUpdateCategoryEdgeInput
+
+  # Contains any arbitrary data you want to store alongside the article
+  metas: JSONObject
+  tags: ArticleUpdateTagsReverseEdgeInput
+}
+
+input ArticleUpdateCategoryEdgeInput {
+  # Connect an existing \\"Category\\", throw an error if it does not exist
+  connect: CategoryWhereUniqueInput
+
+  # Connect a \\"Category\\", if it exists
+  connectIfExists: CategoryWhereUniqueInput
+
+  # Create and connect a new \\"Category\\"
+  create: CategoryCreateInput
+}
+
+input ArticleUpdateTagsReverseEdgeInput {
+  # Delete the \\"ArticleTag\\" nodes connected by their \\"article\\" edge, throw an error if one of them is not connected
+  delete: [ArticleTagWithoutArticleEdgeWhereUniqueInput!]
+
+  # Delete the \\"ArticleTag\\" nodes connected by their \\"article\\" edge, if they are connected
+  deleteIfExists: [ArticleTagWithoutArticleEdgeWhereUniqueInput!]
+
+  # Delete the \\"ArticleTag\\" nodes connected by their \\"article\\" edge
+  deleteMany: ArticleTagWhereInput
+
+  # Create new \\"ArticleTag\\" nodes and connect them by their \\"article\\" edge
+  create: [ArticleTagWithoutArticleEdgeCreateInput!]
+}
+
+# Given a known \\"article\\" edge, identifies exactly one \\"ArticleTag\\" node given a unique combination of values:
+# tag
+# order
+input ArticleTagWithoutArticleEdgeWhereUniqueInput {
+  tag: TagWhereUniqueInput
+  order: PositiveInt
+}
+
+# Provides the data to update a \\"Category\\"
+input CategoryUpdateInput {
+  title: NonEmptyTrimmedString
+  slug: NonEmptyTrimmedString
+  parent: CategoryUpdateParentEdgeInput
+  order: PositiveInt
+
+  # This category's children
+  children: CategoryUpdateChildrenReverseEdgeInput
+}
+
+input CategoryUpdateParentEdgeInput {
+  # Connect an existing \\"Category\\", throw an error if it does not exist
+  connect: CategoryWhereUniqueInput
+
+  # Connect a \\"Category\\", if it exists
+  connectIfExists: CategoryWhereUniqueInput
+
+  # Create and connect a new \\"Category\\"
+  create: CategoryCreateInput
+}
+
+input CategoryUpdateChildrenReverseEdgeInput {
+  # Delete the \\"Category\\" nodes connected by their \\"parent\\" edge, throw an error if one of them is not connected
+  delete: [CategoryWithoutParentEdgeWhereUniqueInput!]
+
+  # Delete the \\"Category\\" nodes connected by their \\"parent\\" edge, if they are connected
+  deleteIfExists: [CategoryWithoutParentEdgeWhereUniqueInput!]
+
+  # Delete the \\"Category\\" nodes connected by their \\"parent\\" edge
+  deleteMany: CategoryWhereInput
+
+  # Disconnect the \\"Category\\" nodes connected by their \\"parent\\" edge, throw an error if one of them is not connected
+  disconnect: [CategoryWithoutParentEdgeWhereUniqueInput!]
+
+  # Disconnect the \\"Category\\" nodes connected by their \\"parent\\" edge, if they are connected
+  disconnectIfExists: [CategoryWithoutParentEdgeWhereUniqueInput!]
+
+  # Disconnect the \\"Category\\" nodes connected by their \\"parent\\" edge
+  disconnectMany: CategoryWhereInput
+
+  # Connect existing \\"Category\\" nodes by their \\"parent\\" edge, throw an error if one of them is not found
+  connect: [CategoryWhereUniqueInput!]
+
+  # Connect existing \\"Category\\" nodes by their \\"parent\\" edge, if they exist
+  connectIfExists: [CategoryWhereUniqueInput!]
+
+  # Connect \\"Category\\" nodes by their \\"parent\\" edge
+  connectMany: CategoryWhereInput
+
+  # Create new \\"Category\\" nodes and connect them by their \\"parent\\" edge
+  create: [CategoryWithoutParentEdgeCreateInput!]
+}
+
+# Given a known \\"parent\\" edge, identifies exactly one \\"Category\\" node given a unique combination of values:
+# slug
+# order
+input CategoryWithoutParentEdgeWhereUniqueInput {
+  slug: NonEmptyTrimmedString
+  order: PositiveInt
+}
+
+# Provides the data to update a \\"Tag\\"
+input TagUpdateInput {
+  # A tag can be deprecated
+  deprecated: Boolean
+  title: NonEmptyTrimmedString
+  slug: NonEmptyTrimmedString
+}
+
+# Provides the data to create an \\"ArticleTag\\"
+input ArticleTagCreateInput {
+  article: ArticleTagCreateArticleEdgeInput!
+  tag: ArticleTagCreateTagEdgeInput!
+  order: PositiveInt!
+}
+
+input ArticleTagCreateArticleEdgeInput {
+  # Connect an existing \\"Article\\", throw an error if it does not exist
+  connect: ArticleWhereUniqueInput
+
+  # Create and connect a new \\"Article\\"
+  create: ArticleCreateInput
+}
+
+# Provides the data to create a \\"User\\"
+input UserCreateInput {
+  # You can either provide an UUID or let one be generated for you
+  id: UUID
+  username: NonEmptyTrimmedString!
+
+  # This user's profile, only the optional informations
+  profile: UserCreateProfileReverseEdgeInput
+}
+
+input UserCreateProfileReverseEdgeInput {
+  # Create a new \\"UserProfile\\" node and connect it by its \\"user\\" edge
+  create: UserProfileWithoutUserEdgeCreateInput
+}
+
+# Given a known \\"user\\" edge, provides the data to create an \\"UserProfile\\"
+input UserProfileWithoutUserEdgeCreateInput {
+  birthday: Date
+  facebookId: ID
+  googleId: ID
+  twitterId: ID
+}
+
+# Provides the data to update a \\"User\\"
+input UserUpdateInput {
+  username: NonEmptyTrimmedString
+
+  # All the articles this user has created
+  createdArticles: UserUpdateCreatedArticlesReverseEdgeInput
+
+  # All the articles this user has updated
+  updatedArticles: UserUpdateUpdatedArticlesReverseEdgeInput
+
+  # This user's profile, only the optional informations
+  profile: UserUpdateProfileReverseEdgeInput
+}
+
+input UserUpdateCreatedArticlesReverseEdgeInput {
+  # Delete the \\"Article\\" nodes connected by their \\"createdBy\\" edge
+  deleteMany: ArticleWhereInput
+}
+
+input UserUpdateUpdatedArticlesReverseEdgeInput {
+  # Delete the \\"Article\\" nodes connected by their \\"updatedBy\\" edge
+  deleteMany: ArticleWhereInput
+}
+
+input UserUpdateProfileReverseEdgeInput {
+  # Delete the \\"UserProfile\\" node connected by its \\"user\\" edge, throw an error if none is connected
+  delete: Boolean
+
+  # Delete the \\"UserProfile\\" node connected by its \\"user\\" edge, if any
+  deleteIfExists: Boolean
+
+  # Create a new \\"UserProfile\\" node and connect it by its \\"user\\" edge
+  create: UserProfileWithoutUserEdgeCreateInput
+}
+
+# Provides the data to create an \\"UserProfile\\"
+input UserProfileCreateInput {
+  user: UserProfileCreateUserEdgeInput!
+  birthday: Date
+  facebookId: ID
+  googleId: ID
+  twitterId: ID
+}
+
+input UserProfileCreateUserEdgeInput {
+  # Connect an existing \\"User\\", throw an error if it does not exist
+  connect: UserWhereUniqueInput
+
+  # Create and connect a new \\"User\\"
+  create: UserCreateInput
+}
+
+# Provides the data to update an \\"UserProfile\\"
+input UserProfileUpdateInput {
+  birthday: Date
+  facebookId: ID
+  googleId: ID
+  twitterId: ID
+}
+"
+`;

@@ -1,0 +1,44 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`Input field "GraphQLNonNullString" works: GraphQLNonNullString 1`] = `
+Object {
+  "type": "String!",
+}
+`;
+
+exports[`Input field "GraphQLNonNullStringWithDefaultValue" works: GraphQLNonNullStringWithDefaultValue 1`] = `
+Object {
+  "defaultValue": "My default value",
+  "type": "String!",
+}
+`;
+
+exports[`Input field "integer" works: integer 1`] = `
+Object {
+  "type": "Int",
+}
+`;
+
+exports[`Input field "nonNullableString" works: nonNullableString 1`] = `
+Object {
+  "type": "String",
+}
+`;
+
+exports[`Input field "nonOptionalNonNullableString" works: nonOptionalNonNullableString 1`] = `
+Object {
+  "type": "String!",
+}
+`;
+
+exports[`Input field "nonOptionalString" works: nonOptionalString 1`] = `
+Object {
+  "type": "String",
+}
+`;
+
+exports[`Input field "string" works: string 1`] = `
+Object {
+  "type": "String",
+}
+`;

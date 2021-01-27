@@ -1,44 +1,50 @@
+import { Scalars } from '@prismamedia/graphql-platform-scalars';
 import {
   GraphQLEnumType,
   GraphQLInterfaceType,
   GraphQLNonNull,
   GraphQLString,
 } from 'graphql';
-import { GraphQLPlatform, IConnector, Scalars, TNodeConfig } from '..';
-import { TCustomOperationMap } from '../custom-operations';
+import { GraphQLPlatform, ModelConfig } from '..';
+import { CustomOperationMap } from '../custom-operations';
+import { NodeChangeKind } from '../model/operations';
 
-export type TMyUser = {
+export type MyUser = {
   id: string;
   name: string;
-  role: 'ADMIN' | 'JOURNALIST';
+  role: 'ADMIN' | 'JOURNALIST' | 'VISITOR';
 };
 
-export type TMyContext = {
-  myUser?: TMyUser;
+export type MyContext = {
+  user: MyUser;
 };
 
-export const myAdminUser: TMyUser = Object.freeze({
-  id: '4e08b305-7e81-4a67-9377-b06d5b900b55',
-  name: 'My admin',
-  role: 'ADMIN',
+export const myAdminContext: MyContext = Object.freeze({
+  user: Object.freeze<MyUser>({
+    id: '4e08b305-7e81-4a67-9377-b06d5b900b55',
+    name: 'My admin',
+    role: 'ADMIN',
+  }),
 });
 
-export const myAdminContext: TMyContext = Object.freeze({
-  myUser: myAdminUser,
+export const myJournalistContext: MyContext = Object.freeze({
+  user: Object.freeze<MyUser>({
+    id: '5ff01840-8e75-4b18-baa1-90b51e7318cd',
+    name: 'My journalist',
+    role: 'JOURNALIST',
+  }),
 });
 
-export const myJournalistUser: TMyUser = Object.freeze({
-  id: '5ff01840-8e75-4b18-baa1-90b51e7318cd',
-  name: 'My journalist',
-  role: 'JOURNALIST',
-});
-
-export const myJournalistContext: TMyContext = Object.freeze({
-  myUser: myJournalistUser,
+export const myVisitorContext: MyContext = Object.freeze({
+  user: Object.freeze<MyUser>({
+    id: 'ae5ea62b-f518-4ab6-8dc0-438ad5deb0c4',
+    name: 'My reader',
+    role: 'VISITOR',
+  }),
 });
 
 export const NodeInterfaceType = new GraphQLInterfaceType({
-  name: 'Node',
+  name: 'NodeInterface',
   fields: {
     id: {
       type: GraphQLNonNull(Scalars.UUID),
@@ -49,6 +55,7 @@ export const NodeInterfaceType = new GraphQLInterfaceType({
 export enum ArticleStatus {
   Draft = 'DRAFT',
   Published = 'PUBLISHED',
+  Deleted = 'DELETED',
 }
 
 export const ArticleStatusType = new GraphQLEnumType({
@@ -57,500 +64,727 @@ export const ArticleStatusType = new GraphQLEnumType({
     Object.entries({
       Draft: ArticleStatus.Draft,
       Published: ArticleStatus.Published,
+      Deleted: ArticleStatus.Deleted,
     }).map(([key, value]) => [key, { value }]),
   ),
 });
 
-export const Article: TNodeConfig<TMyContext> = {
-  description: `The article is the main node, written by the journalists`,
-  filter: (context) =>
-    context?.myUser
-      ? context.myUser.role === 'ADMIN'
-        ? // No filter for the "admins"
-          true
-        : // The "journalists" see only the articles they have written
-          { createdBy: { id: context.myUser.id } }
-      : // "Anonymous" users won't have access to any articles
+export const Article: ModelConfig<MyContext> = {
+  description: `The article is the main resource, written by the journalists`,
+
+  filter: ({ requestContext: { user: myUser } }) =>
+    myUser.role === 'ADMIN'
+      ? // No filter for the "admins"
+        true
+      : myUser.role === 'JOURNALIST'
+      ? // The "journalists" see only the articles they have created
+        { createdBy: { id: myUser.id } }
+      : // Others won't have access to any articles
         false,
+
   components: {
     _id: {
-      // kind: 'Leaf',
-      description: 'This id is used to identify an Article privatly',
-      type: 'NonNegativeInt',
-      nullable: false,
-      immutable: true,
+      kind: 'Leaf',
+      type: 'PositiveInt',
+      description: 'This id is used to identify an Article internally',
       public: false,
-      inputs: {
-        create: {
-          nullable: true,
-        },
-      },
+      immutable: true,
+
+      // inputs: {
+      //   creation: null,
+      //   update: null,
+      // },
     },
     id: {
       kind: 'Leaf',
-      description: 'This UUID is used to identify an Article publicly',
       type: 'UUID',
-      nullable: false,
+      description: 'This UUID is used to identify an Article publicly',
       immutable: true,
-      inputs: {
-        // create: {
-        //   description: 'You can either provide an UUID or let one be generated',
-        //   nullable: true,
-        //   // parser: ({ value }) => value || v4(),
-        // },
-      },
+
+      // inputs: {
+      //   creation: {
+      //     defaultValue: () => randomUUID(),
+      //     description:
+      //       'You can either provide an UUID or let one be generated for you',
+      //   },
+      //   update: null,
+      // },
     },
     status: {
+      kind: 'Leaf',
       type: ArticleStatusType,
-      nullable: false,
-      inputs: {
-        create: {
-          defaultValue: ArticleStatus.Draft,
-        },
-      },
+
+      // inputs: {
+      //   creation: {
+      //     defaultValue: ArticleStatus.Draft,
+      //   },
+      //   update: {
+      //     /**
+      //      * An example of conditional dependencies:
+      //      *  if the status is provided by the client
+      //      *  -> let's get the current one to test against the workflow
+      //      */
+      //     dependsOnCurrent: ({ leafUpdate }) =>
+      //       leafUpdate !== undefined
+      //         ? ['status'] /** or "{ status }" */
+      //         : undefined,
+
+      //     preUpdate({ leafUpdate, current: { status } }) {
+      //       if (leafUpdate !== undefined && status === ArticleStatus.Deleted) {
+      //         throw new Error(
+      //           `The status of a "Deleted" article cannot be changed`,
+      //         );
+      //       }
+      //     },
+      //   },
+      // },
     },
     title: {
+      kind: 'Leaf',
       type: 'NonEmptyTrimmedString',
-      nullable: false,
     },
     slug: {
       kind: 'Leaf',
       type: 'NonEmptyTrimmedString',
-      nullable: false,
-      inputs: {
-        // create: {
-        //   description: `You can either provide a slug or let the title be "slugified" for you`,
-        //   nullable: true,
-        //   dependencies: ['title'],
-        //   // parser: ({ value, dependencies: { title } }) =>
-        //   //   value || slugify(title, slugify.defaults.modes.rfc3986),
-        // },
-      },
+
+      // inputs: {
+      //   creation: {
+      //     description: `You can either provide a slug or let the title be "slugified" for you`,
+      //     optional: false,
+      //     dependsOnCreation: ['title'],
+      //     preCreate: ({ leafValue, creation: { title } }) =>
+      //       leafValue || slugify(title, slugify.defaults.modes.rfc3986),
+      //   },
+      //   update: {
+      //     /**
+      //      * An example of conditional dependencies:
+      //      *  if the status or the title is provided by the client while the slug is not
+      //      *  -> let's get the current title and slug
+      //      */
+      //     dependsOnCurrent: ({ data: { status, title, slug } }) =>
+      //       (status !== undefined || title !== undefined) && slug === undefined
+      //         ? ['title', 'slug'] /** or "{ title slug }" */
+      //         : undefined,
+
+      //     dependsOnUpdate: ['status', 'title'],
+
+      //     preUpdate: ({ leafUpdate, update, current }) => {
+      //       if (leafUpdate) {
+      //         return slugify(leafUpdate, slugify.defaults.modes.rfc3986);
+      //       } else if (update.status === ArticleStatus.Published) {
+      //         return slugify(
+      //           update.title || current.title,
+      //           slugify.defaults.modes.rfc3986,
+      //         );
+      //       }
+      //     },
+      //   },
+      // },
     },
     body: {
+      kind: 'Leaf',
+      type: 'DraftJS',
       description: `The article's body`,
-      type: 'NonEmptyTrimmedString',
+      nullable: true,
     },
     category: {
-      type: 'Category',
-      reference: 'parent-slug',
-      inputs: {
-        create: {
-          defaultValue: {
-            connect: {
-              parent: null,
-              slug: 'home',
-            },
-          },
-        },
-      },
+      kind: 'Reference',
+      type: 'Category.parent-slug',
+      nullable: true,
     },
     createdBy: {
+      kind: 'Reference',
       type: 'User',
-      nullable: false,
       immutable: true,
-      inputs: {
-        create: {
-          public: false,
-          nullable: true,
-          // parser: ({
-          //   context: {
-          //     requestContext: { custom },
-          //   },
-          // }) => ({
-          //   id: '8496b9b2-bac8-4ed8-88a9-f4bf521b6cc2',
-          // }),
-        },
-      },
+
+      // inputs: {
+      //   creation: {
+      //     public: false,
+      //     preCreate: ({ api, operationContext: { requestContext }, edge }) =>
+      //       api.get('User', {
+      //         where: { id: requestContext.user.id },
+      //         selection: edge.headReference.selection,
+      //       }),
+      //   },
+      //   update: null,
+      // },
     },
     createdAt: {
+      kind: 'Leaf',
       type: 'DateTime',
-      nullable: false,
       immutable: true,
-      inputs: {
-        create: {
-          public: false,
-          nullable: true,
-          // parser: () => new Date(),
-        },
-      },
+
+      // inputs: {
+      //   creation: {
+      //     public: false,
+      //     defaultValue: () => new Date(),
+      //   },
+      //   update: null,
+      // },
     },
     updatedBy: {
-      type: 'User',
-      reference: 'username',
-      nullable: false,
-      inputs: {
-        create: {
-          public: false,
-          nullable: true,
-          // parser: ({
-          //   context: {
-          //     requestContext: { custom },
-          //   },
-          // }) => ({
-          //   id: '8496b9b2-bac8-4ed8-88a9-f4bf521b6cc2',
-          // }),
-        },
-      },
+      kind: 'Reference',
+      type: 'User.username',
+
+      // inputs: {
+      //   creation: {
+      //     public: false,
+      //     preCreate: ({ api, operationContext: { requestContext }, edge }) =>
+      //       api.get('User', {
+      //         where: { id: requestContext.user.id },
+      //         selection: edge.headReference.selection,
+      //       }),
+      //   },
+      //   update: {
+      //     public: false,
+      //     preUpdate: ({ api, operationContext: { requestContext }, edge }) =>
+      //       api.get('User', {
+      //         where: { id: requestContext.user.id },
+      //         selection: edge.headReference.selection,
+      //       }),
+      //   },
+      // },
     },
     updatedAt: {
+      kind: 'Leaf',
       type: 'DateTime',
-      nullable: false,
-      inputs: {
-        create: {
-          public: false,
-          nullable: true,
-          // parser: () => new Date(),
-        },
-      },
+
+      // inputs: {
+      //   creation: {
+      //     public: false,
+      //     defaultValue: () => new Date(),
+      //   },
+      //   update: {
+      //     public: false,
+      //     defaultValue: () => new Date(),
+      //   },
+      // },
     },
     metas: {
+      kind: 'Leaf',
+      type: 'JSONObject',
       description:
         'Contains any arbitrary data you want to store alongside the article',
-      type: 'JSONObject',
+      nullable: true,
     },
   },
 
   uniques: [['_id'], ['id']],
 
-  reverseEdges: {
+  referrers: {
     tags: {
-      to: 'ArticleTag',
+      referrer: 'ArticleTag.article',
+
+      // inputs: {
+      //   creation: {
+      //     optional: true,
+      //   },
+      // },
     },
   },
 
-  interfaces: [NodeInterfaceType],
+  node: {
+    interfaces: [NodeInterfaceType],
 
-  customFields: {
-    lowerCasedTitle: {
-      fragment: '{ status title category { title } }',
-      description: `A custom field with a dependency`,
-      type: GraphQLNonNull(Scalars.NonEmptyTrimmedString),
-      resolve: ({ status, title, category }) =>
-        (<string[]>[status, title, category?.title])
-          .filter(Boolean)
-          .join('-')
-          .toLowerCase(),
-    },
-    // An exemple of how to use the "Node" to build another custom field
-    upperCasedTitle: (node) => ({
-      fragment: '{ status title category { title } }',
-      description: `A custom field with a dependency`,
-      type: GraphQLNonNull(node.getLeaf('title').type),
-      resolve: ({ status, title, category }, args, context) =>
-        (<string[]>[status, title, category?.title])
-          .filter(Boolean)
-          .join('-')
-          .toUpperCase(),
+    virtualFields: (model) => ({
+      lowerCasedTitle: {
+        dependsOn: '{ status title category { title } }',
+        type: GraphQLNonNull(Scalars.NonEmptyTrimmedString),
+        description: `A custom field with a dependency`,
+        resolve: ({ status, title, category }) =>
+          (<string[]>[status, title, category?.title])
+            .filter(Boolean)
+            .join('-')
+            .toLowerCase(),
+      },
+      // An exemple of how to use the "Model" to build another custom field
+      upperCasedTitle: {
+        dependsOn: '{ status title category { title } }',
+        type: GraphQLNonNull(model.getLeaf('title').type),
+        description: `A custom field with a dependency`,
+        resolve: ({ status, title, category }, args, context) =>
+          (<string[]>[status, title, category?.title])
+            .filter(Boolean)
+            .join('-')
+            .toUpperCase(),
+      },
     }),
   },
 
-  operations: {
-    find: {
-      defaultArgs: {
-        where: { status: ArticleStatus.Published },
-        orderBy: ['createdAt_DESC'],
-        first: 25,
+  mutations: {
+    create: {
+      virtualFields: {
+        htmlBody: {
+          type: GraphQLString,
+          description: `It is possible to provide the article's body as raw HTML`,
+        },
       },
+
+      // preCreate({ creation, data }) {
+      //   if (data['htmlBody']) {
+      //     // Custom logic with this field's value
+      //   }
+
+      //   return creation;
+      // },
     },
   },
 
-  on: {
-    created({ value: nodeValue }) {
-      console.debug(
-        `The article "${nodeValue.id}" has been created at "${nodeValue.createdAt}" by "${nodeValue.createdBy}"`,
-      );
-    },
-    updated({ value: nodeValue }) {
-      console.debug(
-        `The article "${nodeValue.id}" has been updated at "${nodeValue.updatedAt}" by "${nodeValue.updatedBy}"`,
-      );
-    },
-    deleted({ value: nodeValue }) {
-      console.debug(
-        `The article "${
-          nodeValue.id
-        }" has been deleted at ${new Date().toISOString()}`,
-      );
-    },
+  onChange(change) {
+    switch (change.kind) {
+      case NodeChangeKind.Created:
+        console.debug(
+          `The article "${change.new.id}" has been created at "${change.new.createdAt}" by "${change.new.createdBy}"`,
+        );
+        break;
+
+      case NodeChangeKind.Updated:
+        console.debug(
+          `The article "${change.new.id}" has been updated at "${change.new.createdAt}" by "${change.new.createdBy}"`,
+        );
+        break;
+
+      case NodeChangeKind.Deleted:
+        console.debug(
+          `The article "${change.old.id}" has been deleted at "${change.old.createdAt}" by "${change.old.createdBy}"`,
+        );
+        break;
+    }
   },
 };
 
-export const Category: TNodeConfig<TMyContext> = {
+export const Category: ModelConfig<MyContext> = {
   components: {
     _id: {
-      type: 'NonNegativeInt',
-      nullable: false,
-      immutable: true,
+      kind: 'Leaf',
+      type: 'PositiveInt',
       public: false,
-      inputs: {
-        create: {
-          public: false,
-          nullable: true,
-        },
-      },
+      immutable: true,
+
+      // inputs: {
+      //   creation: null,
+      //   update: null,
+      // },
     },
     id: {
       kind: 'Leaf',
       type: 'UUID',
-      nullable: false,
       immutable: true,
-      inputs: {
-        // create: {
-        //   description: 'You can either provide an UUID or let one be generated',
-        //   nullable: true,
-        //   // parser: ({ value }) => value || v4(),
-        // },
-      },
+
+      // inputs: {
+      //   creation: {
+      //     defaultValue: () => randomUUID(),
+      //     description:
+      //       'You can either provide an UUID or let one be generated for you',
+      //   },
+      //   update: null,
+      // },
     },
     title: {
+      kind: 'Leaf',
       type: 'NonEmptyTrimmedString',
-      nullable: false,
     },
     slug: {
       kind: 'Leaf',
       type: 'NonEmptyTrimmedString',
-      nullable: false,
-      inputs: {
-        // create: {
-        //   description: `You can either provide a slug or let the title be "slugified" for you`,
-        //   nullable: true,
-        //   dependencies: ['title'],
-        //   // parser: ({ value, dependencies: { title } }) =>
-        //   //   value || slugify(title, slugify.defaults.modes.rfc3986),
-        // },
-      },
+
+      // inputs: {
+      //   creation: {
+      //     description: `You can either provide a slug or let the title be "slugified" for you`,
+      //     optional: false,
+      //     dependsOnCreation: ['title'],
+      //     preCreate: ({ leafValue, creation: { title } }) =>
+      //       leafValue || slugify(title, slugify.defaults.modes.rfc3986),
+      //   },
+      // },
     },
     parent: {
+      kind: 'Reference',
       type: 'Category',
+      nullable: true,
+
+      // inputs: {
+      //   creation: {
+      //     preCreate: async ({ edgeValue, api, path }) => {
+      //       if (edgeValue == null) {
+      //         const categoryCount = await api.count('Category', {
+      //           where: { parent: null },
+      //         });
+
+      //         if (categoryCount !== 0) {
+      //           throw new UnexpectedValueError(
+      //             edgeValue,
+      //             `a valid parent as the "root" category already exists`,
+      //             path,
+      //           );
+      //         }
+      //       }
+
+      //       return edgeValue;
+      //     },
+      //   },
+      // },
     },
     order: {
-      type: 'NonNegativeInt',
-      nullable: false,
+      kind: 'Leaf',
+      type: 'PositiveInt',
+
+      // inputs: {
+      //   creation: {
+      //     optional: false,
+      //     dependsOnCreation: ['parent'],
+      //     preCreate: async ({ leafValue, creation: { parent }, api }) => {
+      //       if (leafValue === undefined) {
+      //         // Get the "MAX(order)" of the categories having the same parent
+      //         const categories = await api.find('Category', {
+      //           where: { parent },
+      //           orderBy: ['order_DESC'],
+      //           first: 1,
+      //           selection: '{ order }',
+      //         });
+
+      //         return categories[0]?.order ?? 0;
+      //       }
+
+      //       return leafValue;
+      //     },
+      //   },
+      // },
     },
   },
+
   uniques: [['_id'], ['id'], ['parent', 'slug'], ['parent', 'order']],
-  reverseEdges: {
+
+  referrers: {
     children: {
-      to: 'Category',
+      referrer: 'Category.parent',
       description: `This category's children`,
     },
   },
-  interfaces: [NodeInterfaceType],
+
+  node: {
+    interfaces: [NodeInterfaceType],
+  },
 };
 
-export const Tag: TNodeConfig<TMyContext> = {
+export const Tag: ModelConfig<MyContext> = {
   components: {
     id: {
       kind: 'Leaf',
       type: 'UUID',
-      nullable: false,
+      public: false,
       immutable: true,
-      inputs: {
-        // create: {
-        //   description: 'You can either provide an UUID or let one be generated',
-        //   nullable: true,
-        //   // parser: ({ value }) => value || v4(),
-        // },
-      },
+
+      // inputs: {
+      //   creation: {
+      //     defaultValue: () => randomUUID(),
+      //     description:
+      //       'You can either provide an UUID or let one be generated for you',
+      //   },
+      //   update: null,
+      // },
+    },
+    deprecated: {
+      kind: 'Leaf',
+      type: 'Boolean',
+      description: 'A tag can be deprecated',
     },
     title: {
+      kind: 'Leaf',
       type: 'NonEmptyTrimmedString',
-      nullable: false,
     },
     slug: {
+      kind: 'Leaf',
       type: 'NonEmptyTrimmedString',
-      nullable: false,
-      // onCreate: {
-      //   source: 'Optional',
-      //   dependencies: ['title'],
-      //   parser: ({ value, dependencies: { title } }) =>
-      //     value || slugify(title, slugify.defaults.modes.rfc3986),
+
+      // inputs: {
+      //   creation: {
+      //     description: `You can either provide a slug or let the title be "slugified" for you`,
+      //     optional: false,
+      //     preCreate: ({ leafValue, data }) =>
+      //       leafValue || slugify(data?.title, slugify.defaults.modes.rfc3986),
+      //   },
       // },
     },
     createdAt: {
+      kind: 'Leaf',
       type: 'DateTime',
-      nullable: false,
       immutable: true,
-      inputs: {
-        create: {
-          public: false,
-          nullable: true,
-          // parser: () => new Date(),
-        },
-      },
+
+      // inputs: {
+      //   creation: {
+      //     public: false,
+      //     defaultValue: () => new Date(),
+      //   },
+      //   update: null,
+      // },
     },
     updatedAt: {
+      kind: 'Leaf',
       type: 'DateTime',
-      nullable: false,
-      inputs: {
-        create: {
-          public: false,
-          nullable: true,
-          // parser: () => new Date(),
-        },
-      },
+
+      // inputs: {
+      //   creation: {
+      //     public: false,
+      //     defaultValue: () => new Date(),
+      //   },
+      //   update: {
+      //     public: false,
+      //     defaultValue: () => new Date(),
+      //   },
+      // },
     },
   },
+
   uniques: [['id'], ['slug']],
-  interfaces: [NodeInterfaceType],
+
+  node: {
+    interfaces: [NodeInterfaceType],
+  },
 };
 
-export const ArticleTag: TNodeConfig<TMyContext> = {
+export const ArticleTag: ModelConfig<MyContext> = {
   components: {
     article: {
+      kind: 'Reference',
       type: 'Article',
-      nullable: false,
       immutable: true,
+
+      // inputs: {
+      //   update: null,
+      // },
     },
     tag: {
+      kind: 'Reference',
       type: 'Tag',
-      nullable: false,
       immutable: true,
+
+      // inputs: {
+      //   update: null,
+      // },
     },
     order: {
-      type: 'NonNegativeInt',
-      nullable: false,
-      immutable: true,
-      sortable: true,
+      kind: 'Leaf',
+      type: 'PositiveInt',
+
+      // inputs: {
+      //   update: null,
+      // },
     },
   },
+
   uniques: [
     ['article', 'tag'],
     ['article', 'order'],
   ],
 };
 
-export const User: TNodeConfig<TMyContext> = {
-  filter: (context) =>
-    context?.myUser
-      ? context.myUser.role === 'ADMIN'
-        ? // No filter for the "admins"
-          true
-        : // The "journalists" see only its own "User"
-          { id: context.myUser.id }
-      : // "Anonymous" users won't have access to any users
+export const User: ModelConfig<MyContext> = {
+  filter: ({ requestContext: { user: myUser } }) =>
+    myUser.role === 'ADMIN'
+      ? // No filter for the "admins"
+        true
+      : myUser.role === 'JOURNALIST'
+      ? // The "journalists" see only the articles they have created
+        { id: myUser.id }
+      : // Others won't have access to any articles
         false,
+
   components: {
     id: {
       kind: 'Leaf',
       type: 'UUID',
-      nullable: false,
       immutable: true,
-      inputs: {
-        // create: {
-        //   description: 'You can either provide an UUID or let one be generated',
-        //   nullable: true,
-        //   // parser: ({ value }) => value || v4(),
-        // },
-      },
+
+      // inputs: {
+      //   creation: {
+      //     defaultValue: () => randomUUID(),
+      //     description:
+      //       'You can either provide an UUID or let one be generated for you',
+      //   },
+      //   update: null,
+      // },
     },
     username: {
+      kind: 'Leaf',
       type: 'NonEmptyTrimmedString',
-      nullable: false,
+      immutable: true,
     },
   },
+
   uniques: [['id'], ['username']],
-  reverseEdges: {
-    hasCreatedArticles: {
-      to: 'Article.createdBy',
+
+  referrers: {
+    createdArticles: {
+      referrer: 'Article.createdBy',
       description: `All the articles this user has created`,
     },
-    hasUpdatedArticles: {
-      to: 'Article.updatedBy',
+    updatedArticles: {
+      referrer: 'Article.updatedBy',
       description: `All the articles this user has updated`,
     },
     profile: {
-      to: 'UserProfile.user',
+      referrer: 'UserProfile.user',
       description: `This user's profile, only the optional informations`,
     },
   },
-  interfaces: [NodeInterfaceType],
+
+  node: {
+    interfaces: [NodeInterfaceType],
+  },
 };
 
-export const UserProfile: TNodeConfig<TMyContext> = {
+export const UserProfile: ModelConfig<MyContext> = {
   components: {
     user: {
+      kind: 'Reference',
       type: 'User',
-      nullable: false,
       immutable: true,
+
+      // inputs: {
+      //   update: null,
+      // },
     },
     birthday: {
+      kind: 'Leaf',
       type: 'Date',
     },
     facebookId: {
+      kind: 'Leaf',
       type: 'ID',
     },
     googleId: {
+      kind: 'Leaf',
       type: 'ID',
     },
     twitterId: {
+      kind: 'Leaf',
       type: 'ID',
     },
   },
+
   uniques: [['user']],
 };
 
 /**
- * "Log" is a private node
+ * "Log" is a private model
  */
-export const Log: TNodeConfig<TMyContext> = {
+export const Log: ModelConfig<MyContext> = {
   public: false,
+
   components: {
     _id: {
-      type: 'NonNegativeInt',
-      nullable: false,
+      kind: 'Leaf',
+      type: 'PositiveInt',
+      public: false,
       immutable: true,
-      inputs: {
-        create: {
-          public: false,
-        },
-      },
+
+      // inputs: {
+      //   creation: null,
+      //   update: null,
+      // },
+    },
+    id: {
+      kind: 'Leaf',
+      type: 'UUID',
+      public: false,
+      immutable: true,
+
+      // inputs: {
+      //   creation: {
+      //     defaultValue: () => randomUUID(),
+      //     description:
+      //       'You can either provide an UUID or let one be generated for you',
+      //   },
+      //   update: null,
+      // },
     },
     message: {
+      kind: 'Leaf',
       type: 'NonEmptyTrimmedString',
-      nullable: false,
     },
     createdAt: {
+      kind: 'Leaf',
       type: 'DateTime',
-      nullable: false,
+      immutable: true,
+
+      // inputs: {
+      //   creation: {
+      //     defaultValue: () => new Date(),
+      //   },
+      // },
     },
   },
+
   uniques: [['_id']],
+
+  mutations: {
+    update: { enabled: false },
+  },
 };
 
 /**
- * "Hit" is a node with only "managed" components
+ * "Hit" is an immutable model with only managed fields
  */
-export const Hit: TNodeConfig<TMyContext> = {
+export const Hit: ModelConfig<MyContext> = {
   components: {
     _id: {
-      type: 'NonNegativeInt',
-      nullable: false,
+      kind: 'Leaf',
+      type: 'PositiveInt',
+      public: false,
       immutable: true,
-      inputs: {
-        create: {
-          public: false,
-          nullable: true,
-        },
-      },
+
+      // inputs: {
+      //   creation: null,
+      // },
+    },
+    id: {
+      kind: 'Leaf',
+      type: 'UUID',
+      immutable: true,
+
+      // inputs: {
+      //   creation: {
+      //     managed: true,
+      //     defaultValue: () => randomUUID(),
+      //   },
+      // },
+    },
+    by: {
+      kind: 'Reference',
+      type: 'User.id',
+
+      // inputs: {
+      //   creation: {
+      //     public: false,
+      //     preCreate: ({ operationContext: { requestContext } }) => ({
+      //       id: requestContext.user.id,
+      //     }),
+      //   },
+      // },
     },
     at: {
+      kind: 'Leaf',
       type: 'DateTime',
-      nullable: false,
       immutable: true,
-      inputs: {
-        create: {
-          public: false,
-          nullable: true,
-        },
-      },
+
+      // inputs: {
+      //   creation: {
+      //     defaultValue: () => new Date(),
+      //   },
+      // },
     },
   },
+
   uniques: [['_id']],
+
+  mutations: {
+    update: { enabled: false },
+    delete: { enabled: false },
+  },
 };
 
-export const nodes: Record<string, TNodeConfig<TMyContext>> = {
+export const models: Record<string, ModelConfig<MyContext>> = {
   Article,
   Category,
   Tag,
@@ -561,22 +795,26 @@ export const nodes: Record<string, TNodeConfig<TMyContext>> = {
   Hit,
 };
 
-export const nodeNames = Object.keys(nodes);
+export const modelNames = Object.keys(models);
 
-export const customOperations: TCustomOperationMap<TMyContext, IConnector> = {
+export const customOperations: CustomOperationMap<MyContext> = {
   query: {
     whoAmI: () => ({
       type: GraphQLNonNull(GraphQLString),
       resolve: (_, args, context) =>
-        `Hello ${context.myUser?.name ?? 'world'}, I'm GraphQL Platform`,
+        `Hello ${context.user.name ?? 'world'}, I'm GraphQL Platform`,
     }),
   },
-  // Can return true
+  // Can return undefined
   mutation: () => undefined,
   // Can be undefined
   subscription: undefined,
 };
 
-export const gp = new GraphQLPlatform({ nodes, customOperations });
+export const gp = new GraphQLPlatform<MyContext>({
+  models,
+  customOperations,
+  // context: (context): MyContext => context,
+});
 
 export type MyGP = typeof gp;

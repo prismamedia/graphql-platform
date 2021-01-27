@@ -1,0 +1,211 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`NodeInputWhere may have a "ArticleTagWhereInput" type: ArticleTagWhereInput 1`] = `
+"input ArticleTagWhereInput {
+  article: ArticleWhereInput
+  article_not: ArticleWhereInput
+  tag: TagWhereInput
+  tag_not: TagWhereInput
+  order: PositiveInt
+  order_not: PositiveInt
+  order_in: [PositiveInt!]
+  order_not_in: [PositiveInt!]
+  order_gt: PositiveInt
+  order_gte: PositiveInt
+  order_lt: PositiveInt
+  order_lte: PositiveInt
+  AND: [ArticleTagWhereInput!]
+  OR: [ArticleTagWhereInput!]
+  NOT: ArticleTagWhereInput
+}"
+`;
+
+exports[`NodeInputWhere may have a "ArticleWhereInput" type: ArticleWhereInput 1`] = `
+"input ArticleWhereInput {
+  id: UUID
+  id_not: UUID
+  id_in: [UUID!]
+  id_not_in: [UUID!]
+  status: ArticleStatus
+  status_not: ArticleStatus
+  status_in: [ArticleStatus!]
+  status_not_in: [ArticleStatus!]
+  title: NonEmptyTrimmedString
+  title_not: NonEmptyTrimmedString
+  title_in: [NonEmptyTrimmedString!]
+  title_not_in: [NonEmptyTrimmedString!]
+  slug: NonEmptyTrimmedString
+  slug_not: NonEmptyTrimmedString
+  slug_in: [NonEmptyTrimmedString!]
+  slug_not_in: [NonEmptyTrimmedString!]
+  body: DraftJS
+  body_not: DraftJS
+  body_is_null: Boolean
+  category: CategoryWhereInput
+  category_not: CategoryWhereInput
+  category_is_null: Boolean
+  createdBy: UserWhereInput
+  createdBy_not: UserWhereInput
+  createdAt: DateTime
+  createdAt_not: DateTime
+  createdAt_in: [DateTime!]
+  createdAt_not_in: [DateTime!]
+  createdAt_gt: DateTime
+  createdAt_gte: DateTime
+  createdAt_lt: DateTime
+  createdAt_lte: DateTime
+  updatedBy: UserWhereInput
+  updatedBy_not: UserWhereInput
+  updatedAt: DateTime
+  updatedAt_not: DateTime
+  updatedAt_in: [DateTime!]
+  updatedAt_not_in: [DateTime!]
+  updatedAt_gt: DateTime
+  updatedAt_gte: DateTime
+  updatedAt_lt: DateTime
+  updatedAt_lte: DateTime
+  metas: JSONObject
+  metas_not: JSONObject
+  metas_is_null: Boolean
+  tags_none: ArticleTagWhereInput
+  tags_some: ArticleTagWhereInput
+  tags_every: ArticleTagWhereInput
+  AND: [ArticleWhereInput!]
+  OR: [ArticleWhereInput!]
+  NOT: ArticleWhereInput
+}"
+`;
+
+exports[`NodeInputWhere may have a "CategoryWhereInput" type: CategoryWhereInput 1`] = `
+"input CategoryWhereInput {
+  id: UUID
+  id_not: UUID
+  id_in: [UUID!]
+  id_not_in: [UUID!]
+  title: NonEmptyTrimmedString
+  title_not: NonEmptyTrimmedString
+  title_in: [NonEmptyTrimmedString!]
+  title_not_in: [NonEmptyTrimmedString!]
+  slug: NonEmptyTrimmedString
+  slug_not: NonEmptyTrimmedString
+  slug_in: [NonEmptyTrimmedString!]
+  slug_not_in: [NonEmptyTrimmedString!]
+  parent: CategoryWhereInput
+  parent_not: CategoryWhereInput
+  parent_is_null: Boolean
+  order: PositiveInt
+  order_not: PositiveInt
+  order_in: [PositiveInt!]
+  order_not_in: [PositiveInt!]
+  order_gt: PositiveInt
+  order_gte: PositiveInt
+  order_lt: PositiveInt
+  order_lte: PositiveInt
+  children_none: CategoryWhereInput
+  children_some: CategoryWhereInput
+  children_every: CategoryWhereInput
+  AND: [CategoryWhereInput!]
+  OR: [CategoryWhereInput!]
+  NOT: CategoryWhereInput
+}"
+`;
+
+exports[`NodeInputWhere may have a "TagWhereInput" type: TagWhereInput 1`] = `
+"input TagWhereInput {
+  id: UUID
+  id_not: UUID
+  id_in: [UUID!]
+  id_not_in: [UUID!]
+  deprecated: Boolean
+  deprecated_not: Boolean
+  deprecated_is_null: Boolean
+  deprecated_in: [Boolean]
+  deprecated_not_in: [Boolean]
+  title: NonEmptyTrimmedString
+  title_not: NonEmptyTrimmedString
+  title_in: [NonEmptyTrimmedString!]
+  title_not_in: [NonEmptyTrimmedString!]
+  slug: NonEmptyTrimmedString
+  slug_not: NonEmptyTrimmedString
+  slug_in: [NonEmptyTrimmedString!]
+  slug_not_in: [NonEmptyTrimmedString!]
+  createdAt: DateTime
+  createdAt_not: DateTime
+  createdAt_in: [DateTime!]
+  createdAt_not_in: [DateTime!]
+  createdAt_gt: DateTime
+  createdAt_gte: DateTime
+  createdAt_lt: DateTime
+  createdAt_lte: DateTime
+  updatedAt: DateTime
+  updatedAt_not: DateTime
+  updatedAt_in: [DateTime!]
+  updatedAt_not_in: [DateTime!]
+  updatedAt_gt: DateTime
+  updatedAt_gte: DateTime
+  updatedAt_lt: DateTime
+  updatedAt_lte: DateTime
+  AND: [TagWhereInput!]
+  OR: [TagWhereInput!]
+  NOT: TagWhereInput
+}"
+`;
+
+exports[`NodeInputWhere may have a "UserProfileWhereInput" type: UserProfileWhereInput 1`] = `
+"input UserProfileWhereInput {
+  user: UserWhereInput
+  user_not: UserWhereInput
+  birthday: Date
+  birthday_not: Date
+  birthday_is_null: Boolean
+  birthday_in: [Date]
+  birthday_not_in: [Date]
+  birthday_gt: Date
+  birthday_gte: Date
+  birthday_lt: Date
+  birthday_lte: Date
+  facebookId: ID
+  facebookId_not: ID
+  facebookId_is_null: Boolean
+  facebookId_in: [ID]
+  facebookId_not_in: [ID]
+  googleId: ID
+  googleId_not: ID
+  googleId_is_null: Boolean
+  googleId_in: [ID]
+  googleId_not_in: [ID]
+  twitterId: ID
+  twitterId_not: ID
+  twitterId_is_null: Boolean
+  twitterId_in: [ID]
+  twitterId_not_in: [ID]
+  AND: [UserProfileWhereInput!]
+  OR: [UserProfileWhereInput!]
+  NOT: UserProfileWhereInput
+}"
+`;
+
+exports[`NodeInputWhere may have a "UserWhereInput" type: UserWhereInput 1`] = `
+"input UserWhereInput {
+  id: UUID
+  id_not: UUID
+  id_in: [UUID!]
+  id_not_in: [UUID!]
+  username: NonEmptyTrimmedString
+  username_not: NonEmptyTrimmedString
+  username_in: [NonEmptyTrimmedString!]
+  username_not_in: [NonEmptyTrimmedString!]
+  createdArticles_none: ArticleWhereInput
+  createdArticles_some: ArticleWhereInput
+  createdArticles_every: ArticleWhereInput
+  updatedArticles_none: ArticleWhereInput
+  updatedArticles_some: ArticleWhereInput
+  updatedArticles_every: ArticleWhereInput
+  profile: UserProfileWhereInput
+  profile_not: UserProfileWhereInput
+  profile_is_null: Boolean
+  AND: [UserWhereInput!]
+  OR: [UserWhereInput!]
+  NOT: UserWhereInput
+}"
+`;
