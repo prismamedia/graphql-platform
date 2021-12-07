@@ -106,7 +106,7 @@ export class Database {
       if (
         all &&
         ['PREPARE stmt FROM @views', 'PREPARE stmt FROM @tables'].includes(
-          error.sql,
+          (error as mysql.MysqlError).sql as any,
         )
       ) {
         // Do nothing, the database is already empty

@@ -129,7 +129,7 @@ export enum ResourceHookKind {
 export type ResourceHookMetaMap<
   TArgs extends POJO = any,
   TCustomContext extends CustomContext = any,
-  TBaseContext extends AnyBaseContext = BaseContext
+  TBaseContext extends AnyBaseContext = BaseContext,
 > = Readonly<{
   args: TArgs;
   context: Context<TCustomContext, TBaseContext>;
@@ -138,7 +138,7 @@ export type ResourceHookMetaMap<
 
 export type ResourceHookMap<
   TCustomContext extends CustomContext = any,
-  TBaseContext extends AnyBaseContext = BaseContext
+  TBaseContext extends AnyBaseContext = BaseContext,
 > = {
   // Create
   [ResourceHookKind.PreCreate]: {
@@ -241,7 +241,7 @@ export interface ResourceConfig<
   TRelationConfig extends AnyRelationConfig = RelationConfig<
     TCustomContext,
     TBaseContext
-  >
+  >,
 > {
   /** Optional, this resource's plural form, default: guessed from the resource's name */
   plural?: Maybe<string>;
@@ -286,7 +286,7 @@ export interface ResourceConfig<
 export type AnyResourceConfig = ResourceConfig<any, any, any, any, any>;
 
 export class Resource<
-  TConfig extends AnyResourceConfig = ResourceConfig
+  TConfig extends AnyResourceConfig = ResourceConfig,
 > extends EventEmitter<ResourceHookMap & OperationEventMap> {
   public constructor(
     readonly name: string,
@@ -559,7 +559,7 @@ export class Resource<
 
   public getOperationConstructor<
     TType extends OperationType,
-    TId extends OperationId<TType>
+    TId extends OperationId<TType>,
   >(type: TType, id: TId): OperationConstructor<TType, TId> {
     const constructorMap = this.getOperationConstructorMap(type);
 
@@ -581,7 +581,7 @@ export class Resource<
     TConstructor extends OperationConstructor<
       TType,
       TId
-    > = OperationConstructor<TType, TId>
+    > = OperationConstructor<TType, TId>,
   >(type: TType, id: TId): InstanceType<TConstructor> {
     const constructor = this.getOperationConstructor(type, id);
 
@@ -628,7 +628,7 @@ export class Resource<
   @Memoize((id: string) => id)
   public getInputType<
     TId extends InputTypeId = InputTypeId,
-    TConstructor extends InputTypeConstructor<TId> = InputTypeConstructor<TId>
+    TConstructor extends InputTypeConstructor<TId> = InputTypeConstructor<TId>,
   >(id: TId): InstanceType<TConstructor> {
     if (!(id in inputTypeMap && inputTypeMap[id])) {
       throw new Error(
@@ -644,7 +644,7 @@ export class Resource<
   @Memoize((id: string) => id)
   public getOutputType<
     TId extends OutputTypeId = OutputTypeId,
-    TConstructor extends OutputTypeConstructor<TId> = OutputTypeConstructor<TId>
+    TConstructor extends OutputTypeConstructor<TId> = OutputTypeConstructor<TId>,
   >(id: TId): InstanceType<TConstructor> {
     if (!(id in outputTypeMap && outputTypeMap[id])) {
       throw new Error(

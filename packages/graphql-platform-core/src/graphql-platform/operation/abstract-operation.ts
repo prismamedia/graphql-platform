@@ -21,7 +21,8 @@ import {
 import { Resource } from '../resource';
 
 export abstract class AbstractOperation<TArgs extends POJO = any, TResult = any>
-  implements Operation {
+  implements Operation
+{
   protected connector: ConnectorInterface;
 
   public constructor(
@@ -84,7 +85,7 @@ export abstract class AbstractOperation<TArgs extends POJO = any, TResult = any>
 
   public abstract getGraphQLFieldConfigArgs(): GraphQLFieldConfigArgumentMap;
 
-  public abstract async resolve(
+  public abstract resolve(
     params: OperationResolverParams<TArgs>,
   ): Promise<TResult>;
 

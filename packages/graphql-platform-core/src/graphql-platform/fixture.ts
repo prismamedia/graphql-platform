@@ -101,30 +101,23 @@ export class Fixture {
   public explain() {
     const dependencyMap = new Map(
       <[string, string][]>[...this.resource.getRelationSet()]
-        .map(
-          (relation): Maybe<[string, string]> => {
-            const dependency = this.getDependency(relation);
+        .map((relation): Maybe<[string, string]> => {
+          const dependency = this.getDependency(relation);
 
-            return dependency ? [relation.name, dependency.name] : null;
-          },
-        )
+          return dependency ? [relation.name, dependency.name] : null;
+        })
         .filter(Boolean),
     );
 
     const dependantMap = new Map(
       <[string, string[]][]>[...this.resource.getInverseRelationSet()]
-        .map(
-          (inverseRelation): Maybe<[string, string[]]> => {
-            const dependants = this.getDependants(inverseRelation);
+        .map((inverseRelation): Maybe<[string, string[]]> => {
+          const dependants = this.getDependants(inverseRelation);
 
-            return dependants.length > 0
-              ? [
-                  inverseRelation.name,
-                  dependants.map((fixture) => fixture.name),
-                ]
-              : null;
-          },
-        )
+          return dependants.length > 0
+            ? [inverseRelation.name, dependants.map((fixture) => fixture.name)]
+            : null;
+        })
         .filter(Boolean),
     );
 
@@ -233,9 +226,8 @@ export class Fixture {
                   return [
                     relation.name,
                     {
-                      [CreateOneDataRelationActionKind.Connect]: await relatedFixture.load(
-                        contextValue,
-                      ),
+                      [CreateOneDataRelationActionKind.Connect]:
+                        await relatedFixture.load(contextValue),
                     } as any,
                   ];
                 }

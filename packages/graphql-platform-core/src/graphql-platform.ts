@@ -97,7 +97,7 @@ export interface CustomContext {
 /** "Context" available in the operations, hooks... */
 export type Context<
   TCustomContext extends CustomContext = {},
-  TBaseContext extends AnyBaseContext = BaseContext
+  TBaseContext extends AnyBaseContext = BaseContext,
 > = TCustomContext & TBaseContext;
 
 export type GraphQLRequest = Merge<
@@ -114,7 +114,7 @@ export interface GraphQLExecutor {
 export type CustomOperationConfig<
   TArgs extends POJO = any,
   TCustomContext extends CustomContext = {},
-  TBaseContext extends AnyBaseContext = BaseContext
+  TBaseContext extends AnyBaseContext = BaseContext,
 > = MaybeResourceMapAware<
   GraphQLFieldConfig<any, Context<TCustomContext, TBaseContext>, TArgs>
 >;
@@ -126,7 +126,7 @@ export interface GraphQLPlatformConfig<
   TResourceConfig extends AnyResourceConfig = ResourceConfig<
     TCustomContext,
     TBaseContext
-  >
+  >,
 > {
   /** Optional, provide your own logger to see what happens under the hood */
   logger?: Maybe<Logger>;
@@ -175,8 +175,9 @@ export class GraphQLPlatform<
     TContextParams,
     TCustomContext,
     TBaseContext
-  >
-> implements GraphQLExecutor {
+  >,
+> implements GraphQLExecutor
+{
   public constructor(readonly config: TConfig) {}
 
   @Memoize()

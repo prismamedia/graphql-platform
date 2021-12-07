@@ -53,10 +53,10 @@ describe('Find', () => {
       },
     });
 
-    const selectedForeignKeyColumnSet = articleCategoryForeignKeyColumnSet.filter(
-      (column) =>
+    const selectedForeignKeyColumnSet =
+      articleCategoryForeignKeyColumnSet.filter((column) =>
         findArticles.preferForeignKeyColumn(column, relatedNodeSelection),
-    );
+      );
 
     expect([...selectedForeignKeyColumnSet].map(({ name }) => name)).toEqual([
       'categoryParentId',

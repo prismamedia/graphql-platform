@@ -18,7 +18,10 @@ import { ColumnReference } from '../table/column-reference';
 import { SelectExpressionSet, SelectStatement } from '../table/statement';
 import { OrderByExpressionSet } from '../table/statement/order-by';
 import { TableReference } from '../table/statement/reference';
-import { WhereConditionBool } from '../table/statement/where';
+import {
+  WhereConditionBool,
+  WhereConditionExists,
+} from '../table/statement/where';
 
 export class FindOperation extends AbstractOperationResolver<
   ConnectorFindOperationArgs,
@@ -31,10 +34,10 @@ export class FindOperation extends AbstractOperationResolver<
     const referencedColumn = column.reference;
     const referencedComponent = referencedColumn.component;
 
-    for (const selection of relatedNodeSelection.values()) {
+    for (const selection of relatedNodeSelection.children.values()) {
       if (referencedComponent.name === selection.name) {
         if (referencedColumn instanceof Column) {
-          relatedNodeSelection.delete(selection.key);
+          relatedNodeSelection.children.delete(selection.key);
 
           return true;
         } else {
@@ -50,7 +53,7 @@ export class FindOperation extends AbstractOperationResolver<
     select: SelectExpressionSet,
     selectionNode: GraphQLSelectionNode,
   ) {
-    for (const selection of selectionNode.values()) {
+    for (const selection of selectionNode.children.values()) {
       const nodeField = this.resource
         .getOutputType('Node')
         .getFieldMap()
@@ -84,7 +87,7 @@ export class FindOperation extends AbstractOperationResolver<
 
             select.push(...selectedForeignKeyColumnSet);
 
-            if (selectionCopy.size > 0) {
+            if (selectionCopy.children.size > 0) {
               const relatedTable = this.database.getTable(relation.getTo());
               const relatedFindOperation = relatedTable.getOperation('Find');
 
@@ -338,9 +341,9 @@ export class FindOperation extends AbstractOperationResolver<
           }
         },
         parseInverseRelationFilter: (inverseRelation, filterId, value) => {
-          const findManyTo = this.database
-            .getTable(inverseRelation.getTo())
-            .getOperation('Find');
+          const relatedTable = this.database.getTable(inverseRelation.getTo());
+
+          const findManyTo = relatedTable.getOperation('Find');
 
           switch (filterId) {
             case 'eq':
@@ -351,9 +354,6 @@ export class FindOperation extends AbstractOperationResolver<
 
             case 'is_null':
               if (typeof value === 'boolean') {
-                const relatedTable = this.database.getTable(
-                  inverseRelation.getTo(),
-                );
                 const relatedTablePrimaryKey = relatedTable.getPrimaryKey();
                 const firstRelatedTablePrimaryKeyColumn = relatedTablePrimaryKey
                   .getColumnSet()
@@ -368,11 +368,34 @@ export class FindOperation extends AbstractOperationResolver<
               }
               break;
 
-            case 'some':
-              where.on(inverseRelation, (where) =>
-                findManyTo.parseWhereArg(where, value),
-              );
+            case 'some': {
+              const selectStatement = relatedTable.newSelectStatement();
+
+              selectStatement.select.add('*');
+              selectStatement.where.addAnd((and) => {
+                // The join condition
+                relatedTable
+                  .getForeignKey(inverseRelation.getInverse())
+                  .getColumnSet()
+                  .forEach((column) => {
+                    and.addRaw(
+                      [
+                        column.getEscapedName(selectStatement.from.alias),
+                        '=',
+                        column.reference.getEscapedName(
+                          where.tableReference.alias,
+                        ),
+                      ].join(' '),
+                    );
+                  });
+
+                // The actual filter
+                findManyTo.parseWhereArg(and, value);
+              });
+
+              where.add(new WhereConditionExists(selectStatement));
               break;
+            }
 
             default:
               throw new Error(
@@ -386,9 +409,7 @@ export class FindOperation extends AbstractOperationResolver<
               where.addAnd(
                 (and) =>
                   Array.isArray(value) &&
-                  value.forEach((subValue) =>
-                    this.parseWhereArg(and, subValue),
-                  ),
+                  value.forEach((operand) => this.parseWhereArg(and, operand)),
               );
               break;
 
@@ -396,7 +417,7 @@ export class FindOperation extends AbstractOperationResolver<
               where.addOr(
                 (or) =>
                   Array.isArray(value) &&
-                  value.forEach((subValue) => this.parseWhereArg(or, subValue)),
+                  value.forEach((operand) => this.parseWhereArg(or, operand)),
               );
               break;
 
@@ -472,7 +493,7 @@ export class FindOperation extends AbstractOperationResolver<
 
     const tableData: POJO = this.getRowTableData(data, tableReference);
 
-    for (const selection of selectionNode.values()) {
+    for (const selection of selectionNode.children.values()) {
       const nodeField = this.resource
         .getOutputType('Node')
         .getFieldMap()
@@ -518,7 +539,7 @@ export class FindOperation extends AbstractOperationResolver<
                 column.setValue(node, tableData[column.name]),
               );
 
-              if (selectionCopy.size > 0) {
+              if (selectionCopy.children.size > 0) {
                 const relatedTable = database.getTable(relation.getTo());
                 const relatedFindOperation = relatedTable.getOperation('Find');
 
@@ -581,8 +602,7 @@ export class FindOperation extends AbstractOperationResolver<
                     where: {
                       AND: [
                         {
-                          [inverseRelation.getInverse()
-                            .name]: resource
+                          [inverseRelation.getInverse().name]: resource
                             .getInputType('WhereUnique')
                             .assertUnique(
                               node,
@@ -622,8 +642,7 @@ export class FindOperation extends AbstractOperationResolver<
                   where: {
                     AND: [
                       {
-                        [inverseRelation.getInverse()
-                          .name]: resource
+                        [inverseRelation.getInverse().name]: resource
                           .getInputType('WhereUnique')
                           .assertUnique(
                             node,
@@ -716,12 +735,12 @@ export class FindOperation extends AbstractOperationResolver<
       }
 
       where =
-        pkSelectionNode.size > 1
+        pkSelectionNode.children.size > 1
           ? { OR: pks }
           : {
               // An optimization in case the primary key is not composite (as "IN" is faster than "OR")
-              [`${pkSelectionNode.first(true)[0]}_in`]: pks.map(
-                (pk) => pk[pkSelectionNode.first(true)[0]],
+              [`${pkSelectionNode.children.first(true)[0]}_in`]: pks.map(
+                (pk) => pk[pkSelectionNode.children.first(true)[0]],
               ),
             };
 

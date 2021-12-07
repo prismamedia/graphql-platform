@@ -76,7 +76,8 @@ enum InverseRelationWhereFilter {
   some,
 }
 
-export type InverseRelationWhereFilterId = keyof typeof InverseRelationWhereFilter;
+export type InverseRelationWhereFilterId =
+  keyof typeof InverseRelationWhereFilter;
 
 type InverseRelationWhereFilterConfigMap = Record<
   InverseRelationWhereFilterId,
@@ -89,7 +90,8 @@ enum LogicalOperatorWhereFilter {
   not,
 }
 
-export type LogicalOperatorWhereFilterId = keyof typeof LogicalOperatorWhereFilter;
+export type LogicalOperatorWhereFilterId =
+  keyof typeof LogicalOperatorWhereFilter;
 
 type LogicalOperatorWhereFilterConfigMap = Record<
   LogicalOperatorWhereFilterId,
@@ -224,7 +226,9 @@ export class WhereInputType extends AbstractInputType {
           }
         : null,
     lt: (field) =>
-      ['String', 'Int', 'Float', 'DateTime', 'Date', 'Time'].includes(field.getType().name)
+      ['String', 'Int', 'Float', 'DateTime', 'Date', 'Time'].includes(
+        field.getType().name,
+      )
         ? {
             name: `${field.name}_lt`,
             clean: (value: unknown) => (value !== null ? value : undefined),
@@ -232,7 +236,9 @@ export class WhereInputType extends AbstractInputType {
           }
         : null,
     lte: (field) =>
-      ['String', 'Int', 'Float', 'DateTime', 'Date', 'Time'].includes(field.getType().name)
+      ['String', 'Int', 'Float', 'DateTime', 'Date', 'Time'].includes(
+        field.getType().name,
+      )
         ? {
             name: `${field.name}_lte`,
             clean: (value: unknown) => (value !== null ? value : undefined),
@@ -240,7 +246,9 @@ export class WhereInputType extends AbstractInputType {
           }
         : null,
     gt: (field) =>
-      ['String', 'Int', 'Float', 'DateTime', 'Date', 'Time'].includes(field.getType().name)
+      ['String', 'Int', 'Float', 'DateTime', 'Date', 'Time'].includes(
+        field.getType().name,
+      )
         ? {
             name: `${field.name}_gt`,
             clean: (value: unknown) => (value !== null ? value : undefined),
@@ -248,7 +256,9 @@ export class WhereInputType extends AbstractInputType {
           }
         : null,
     gte: (field) =>
-      ['String', 'Int', 'Float', 'DateTime', 'Date', 'Time'].includes(field.getType().name)
+      ['String', 'Int', 'Float', 'DateTime', 'Date', 'Time'].includes(
+        field.getType().name,
+      )
         ? {
             name: `${field.name}_gte`,
             clean: (value: unknown) => (value !== null ? value : undefined),
@@ -290,93 +300,99 @@ export class WhereInputType extends AbstractInputType {
         : null,
   };
 
-  protected inverseRelationFilterConfigMap: InverseRelationWhereFilterConfigMap = {
-    eq: (relationInverse) =>
-      relationInverse.isToOne()
-        ? {
-            name: relationInverse.name,
-            clean: (value: unknown) =>
-              value === null
-                ? value
-                : relationInverse.getTo().getInputType('Where').clean(value),
-            fieldConfig: {
-              type: relationInverse
-                .getTo()
-                .getInputType('Where')
-                .getGraphQLType(),
-            },
-          }
-        : null,
-    is_null: (relationInverse) =>
-      relationInverse.isToOne()
-        ? {
-            name: `${relationInverse.name}_is_null`,
-            clean: (value: unknown) =>
-              typeof value === 'boolean' ? value : undefined,
-            fieldConfig: {
-              type: GraphQLBoolean,
-            },
-          }
-        : null,
-    some: (relationInverse) =>
-      relationInverse.isToMany()
-        ? {
-            name: `${relationInverse.name}_some`,
-            clean: (value: unknown) =>
-              relationInverse.getTo().getInputType('Where').clean(value),
-            fieldConfig: {
-              type: relationInverse
-                .getTo()
-                .getInputType('Where')
-                .getGraphQLType(),
-            },
-          }
-        : null,
-  };
+  protected inverseRelationFilterConfigMap: InverseRelationWhereFilterConfigMap =
+    {
+      eq: (relationInverse) =>
+        relationInverse.isToOne()
+          ? {
+              name: relationInverse.name,
+              clean: (value: unknown) =>
+                value === null
+                  ? value
+                  : relationInverse.getTo().getInputType('Where').clean(value),
+              fieldConfig: {
+                type: relationInverse
+                  .getTo()
+                  .getInputType('Where')
+                  .getGraphQLType(),
+              },
+            }
+          : null,
+      is_null: (relationInverse) =>
+        relationInverse.isToOne()
+          ? {
+              name: `${relationInverse.name}_is_null`,
+              clean: (value: unknown) =>
+                typeof value === 'boolean' ? value : undefined,
+              fieldConfig: {
+                type: GraphQLBoolean,
+              },
+            }
+          : null,
+      some: (relationInverse) =>
+        relationInverse.isToMany()
+          ? {
+              name: `${relationInverse.name}_some`,
+              clean: (value: unknown) =>
+                relationInverse.getTo().getInputType('Where').clean(value),
+              fieldConfig: {
+                type: relationInverse
+                  .getTo()
+                  .getInputType('Where')
+                  .getGraphQLType(),
+              },
+            }
+          : null,
+    };
 
-  protected logicalOperatorFilterConfigMap: LogicalOperatorWhereFilterConfigMap = {
-    and: () => ({
-      name: 'AND',
-      clean: (value: unknown) => {
-        const cleanedValues = Array.isArray(value)
-          ? value.reduce((cleanedValues: any[], value) => {
-              const cleanedValue = this.clean(value);
-              if (typeof cleanedValue !== 'undefined') {
-                cleanedValues.push(cleanedValue);
-              }
+  protected logicalOperatorFilterConfigMap: LogicalOperatorWhereFilterConfigMap =
+    {
+      and: () => ({
+        name: 'AND',
+        clean: (value: unknown) => {
+          const cleanedValues = Array.isArray(value)
+            ? value.reduce((cleanedValues: any[], value) => {
+                const cleanedValue = this.clean(value);
+                if (typeof cleanedValue !== 'undefined') {
+                  cleanedValues.push(cleanedValue);
+                }
 
-              return cleanedValues;
-            }, [])
-          : [];
+                return cleanedValues;
+              }, [])
+            : [];
 
-        return cleanedValues.length > 0 ? cleanedValues : undefined;
-      },
-      fieldConfig: { type: GraphQLList(GraphQLNonNull(this.getGraphQLType())) },
-    }),
-    or: () => ({
-      name: 'OR',
-      clean: (value: unknown) => {
-        const cleanedValues = Array.isArray(value)
-          ? value.reduce((cleanedValues: any[], value) => {
-              const cleanedValue = this.clean(value);
-              if (typeof cleanedValue !== 'undefined') {
-                cleanedValues.push(cleanedValue);
-              }
+          return cleanedValues.length > 0 ? cleanedValues : undefined;
+        },
+        fieldConfig: {
+          type: GraphQLList(GraphQLNonNull(this.getGraphQLType())),
+        },
+      }),
+      or: () => ({
+        name: 'OR',
+        clean: (value: unknown) => {
+          const cleanedValues = Array.isArray(value)
+            ? value.reduce((cleanedValues: any[], value) => {
+                const cleanedValue = this.clean(value);
+                if (typeof cleanedValue !== 'undefined') {
+                  cleanedValues.push(cleanedValue);
+                }
 
-              return cleanedValues;
-            }, [])
-          : [];
+                return cleanedValues;
+              }, [])
+            : [];
 
-        return cleanedValues.length > 0 ? cleanedValues : undefined;
-      },
-      fieldConfig: { type: GraphQLList(GraphQLNonNull(this.getGraphQLType())) },
-    }),
-    not: () => ({
-      name: 'NOT',
-      clean: (value: unknown) => this.clean(value),
-      fieldConfig: { type: this.getGraphQLType() },
-    }),
-  };
+          return cleanedValues.length > 0 ? cleanedValues : undefined;
+        },
+        fieldConfig: {
+          type: GraphQLList(GraphQLNonNull(this.getGraphQLType())),
+        },
+      }),
+      not: () => ({
+        name: 'NOT',
+        clean: (value: unknown) => this.clean(value),
+        fieldConfig: { type: this.getGraphQLType() },
+      }),
+    };
 
   @Memoize()
   public getFilterMap(): WhereFilterMap {

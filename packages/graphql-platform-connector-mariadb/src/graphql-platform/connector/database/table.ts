@@ -214,7 +214,7 @@ export class Table {
   @Memoize((id) => id)
   public getOperation<
     TId extends OperationId,
-    TConstructor extends OperationConstructor<TId>
+    TConstructor extends OperationConstructor<TId>,
   >(id: TId): InstanceType<TConstructor> {
     const constructor = operationMap[id] as TConstructor;
     if (!constructor) {

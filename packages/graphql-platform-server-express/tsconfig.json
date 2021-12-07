@@ -1,10 +1,13 @@
 {
-  "extends": "./tsconfig.base",
+  "extends": "../../tsconfig.base",
   "compilerOptions": {
-    "declaration": true,
-    "declarationMap": true,
+    "rootDir": "src",
     "declarationDir": "dist/types",
-    "module": "CommonJS",
     "outDir": "dist/cjs"
-  }
+  },
+  "references": [
+    { "path": "../graphql-platform-utils" },
+    { "path": "../graphql-platform-core" },
+    { "path": "../graphql-platform-connector-mariadb" }
+  ]
 }

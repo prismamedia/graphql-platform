@@ -17,6 +17,5 @@ export type InputTypeMap = typeof inputTypeMap;
 
 export type InputTypeId = keyof InputTypeMap;
 
-export type InputTypeConstructor<
-  TId extends InputTypeId
-> = InputTypeMap[TId] extends Class ? InputTypeMap[TId] : never;
+export type InputTypeConstructor<TId extends InputTypeId> =
+  InputTypeMap[TId] extends Class ? InputTypeMap[TId] : never;

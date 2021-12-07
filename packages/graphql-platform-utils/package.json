@@ -1,41 +1,40 @@
 {
   "name": "@prismamedia/graphql-platform-utils",
-  "version": "0.1.0-alpha.61",
+  "version": "0.1.0-alpha.63",
   "license": "MIT",
   "contributors": [
     "Yvann Boucher <yvann.boucher@gmail.com>"
   ],
   "engines": {
-    "node": ">=12"
+    "node": ">=14"
   },
   "repository": {
     "type": "git",
     "url": "https://github.com/prismamedia/graphql-platform"
   },
   "main": "dist/cjs/index.js",
-  "module": "dist/esm/index.js",
   "typings": "dist/types/index.d.ts",
   "scripts": {
-    "build": "tsc --build tsconfig.json tsconfig.esm.json",
+    "build": "tsc --build tsconfig.json",
     "build:watch": "tsc --build tsconfig.json --watch",
     "test": "NODE_ENV=test jest --detectOpenHandles --verbose --passWithNoTests",
     "test:watch": "yarn run test --watchAll"
   },
   "devDependencies": {
-    "@types/jest": "^26.0.14",
-    "@types/lodash": "^4.14.162",
-    "@types/node": "^14.11.8",
-    "graphql": "^14.5.0",
-    "jest": "^26.4.2",
-    "ts-jest": "^26.3.0",
-    "typescript": "~3.8.3"
+    "@types/jest": "26.0.24",
+    "@types/lodash": "4.14.177",
+    "@types/node": "14.18.0",
+    "graphql": "14.7.0",
+    "jest": "26.6.3",
+    "ts-jest": "26.5.6",
+    "typescript": "4.5.4"
   },
   "dependencies": {
-    "@prismamedia/ts-memoize": "^1.1.1",
+    "@prismamedia/ts-memoize": "1.2.1",
     "@prismamedia/ts-module-loader": "3.1.4",
-    "lodash": "^4.17.20"
+    "lodash": "4.17.21"
   },
   "peerDependencies": {
-    "graphql": "^14.5.0"
+    "graphql": "^14.0.0"
   }
 }

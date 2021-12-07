@@ -14,7 +14,7 @@ export * from './resource/unique';
 
 export interface ResourceConfig<
   TCustomContext extends CustomContext = {},
-  TBaseContext extends AnyBaseContext = BaseContext
+  TBaseContext extends AnyBaseContext = BaseContext,
 > extends CoreResourceConfig<
     TCustomContext,
     TBaseContext,

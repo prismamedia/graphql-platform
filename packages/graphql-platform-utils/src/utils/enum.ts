@@ -64,7 +64,7 @@ export function isEnumKey<TEnumerable extends POJO>(
 
 export function assertEnumKey<
   TEnumerable extends POJO,
-  TKey extends keyof TEnumerable
+  TKey extends keyof TEnumerable,
 >(enumerable: TEnumerable, key: TKey): TKey {
   if (!isEnumKey(enumerable, key)) {
     throw new Error(
@@ -86,7 +86,7 @@ export function isEnumValue<TEnumerable extends POJO>(
 
 export function assertEnumValue<
   TEnumerable extends POJO,
-  TValue extends ValueOf<TEnumerable>
+  TValue extends ValueOf<TEnumerable>,
 >(enumerable: TEnumerable, value: TValue): TValue {
   if (!isEnumValue(enumerable, value)) {
     throw new Error(

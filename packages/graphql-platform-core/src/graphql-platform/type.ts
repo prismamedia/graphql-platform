@@ -11,7 +11,7 @@ export enum TypeKind {
 
 interface Type<
   TTypeKind extends TypeKind,
-  TType extends GraphQLInputType | GraphQLOutputType
+  TType extends GraphQLInputType | GraphQLOutputType,
 > {
   kind: TTypeKind;
   id: string;

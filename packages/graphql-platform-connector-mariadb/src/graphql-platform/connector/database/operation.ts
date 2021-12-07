@@ -17,16 +17,15 @@ export type OperationMap = typeof operationMap;
 
 export type OperationId = keyof OperationMap;
 
-export type OperationConstructor<
-  TId extends OperationId
-> = OperationMap[TId] extends Class ? OperationMap[TId] : never;
+export type OperationConstructor<TId extends OperationId> =
+  OperationMap[TId] extends Class ? OperationMap[TId] : never;
 
 export type OperationResolverParams<
   TArgs extends POJO,
-  TCustomContext extends CustomContext = {}
+  TCustomContext extends CustomContext = {},
 > = Omit<ConnectorOperationParams<TArgs, TCustomContext>, 'resource'>;
 
 export type OperationEvent<
   TArgs extends POJO = any,
-  TCustomContext extends CustomContext = {}
+  TCustomContext extends CustomContext = {},
 > = CoreOperationEvent<TArgs, TCustomContext, BaseContext>;

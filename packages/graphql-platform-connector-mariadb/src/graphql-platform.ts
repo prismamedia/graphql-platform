@@ -41,13 +41,13 @@ export type Context<TCustomContext extends CustomContext = {}> = CoreContext<
 
 export type CustomOperationConfig<
   TArgs extends POJO = any,
-  TCustomContext extends CustomContext = {}
+  TCustomContext extends CustomContext = {},
 > = CoreCustomOperationConfig<TArgs, TCustomContext, BaseContext>;
 
 export interface GraphQLPlatformConfig<
   TContextParams extends POJO = any,
   TCustomContext extends CustomContext = {},
-  TBaseContext extends AnyBaseContext = BaseContext
+  TBaseContext extends AnyBaseContext = BaseContext,
 > extends CoreGraphQLPlatformConfig<
     TContextParams,
     TCustomContext,
@@ -60,7 +60,7 @@ export interface GraphQLPlatformConfig<
 export class GraphQLPlatform<
   TContextParams extends POJO = any,
   TCustomContext extends CustomContext = {},
-  TBaseContext extends AnyBaseContext = BaseContext
+  TBaseContext extends AnyBaseContext = BaseContext,
 > extends CoreGraphQLPlatform<
   TContextParams,
   TCustomContext,

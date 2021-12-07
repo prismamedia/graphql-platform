@@ -709,7 +709,8 @@ export class UpdateOneOperation extends AbstractOperation<
                                 where,
                                 data: {
                                   [inverseRelation.getInverse().name]: {
-                                    [UpdateOneDataRelationActionKind.Disconnect]: true,
+                                    [UpdateOneDataRelationActionKind.Disconnect]:
+                                      true,
                                   },
                                 },
                               },
@@ -767,7 +768,8 @@ export class UpdateOneOperation extends AbstractOperation<
                                   where,
                                   data: {
                                     [inverseRelation.getInverse().name]: {
-                                      [UpdateOneDataRelationActionKind.Connect]: id,
+                                      [UpdateOneDataRelationActionKind.Connect]:
+                                        id,
                                     },
                                   },
                                 },
@@ -792,7 +794,8 @@ export class UpdateOneOperation extends AbstractOperation<
                                   data: {
                                     ...actionValue,
                                     [inverseRelation.getInverse().name]: {
-                                      [CreateOneDataRelationActionKind.Connect]: id,
+                                      [CreateOneDataRelationActionKind.Connect]:
+                                        id,
                                     },
                                   },
                                 },
@@ -830,7 +833,8 @@ export class UpdateOneOperation extends AbstractOperation<
                                     ...(inverseRelation.getInverse().isMutable()
                                       ? {
                                           [inverseRelation.getInverse().name]: {
-                                            [UpdateOneDataRelationActionKind.Connect]: id,
+                                            [UpdateOneDataRelationActionKind.Connect]:
+                                              id,
                                           },
                                         }
                                       : {}),
@@ -867,7 +871,8 @@ export class UpdateOneOperation extends AbstractOperation<
                                     ...(inverseRelation.getInverse().isMutable()
                                       ? {
                                           [inverseRelation.getInverse().name]: {
-                                            [UpdateOneDataRelationActionKind.Connect]: id,
+                                            [UpdateOneDataRelationActionKind.Connect]:
+                                              id,
                                           },
                                         }
                                       : {}),
@@ -875,7 +880,8 @@ export class UpdateOneOperation extends AbstractOperation<
                                   create: {
                                     ...actionValue.create,
                                     [inverseRelation.getInverse().name]: {
-                                      [CreateOneDataRelationActionKind.Connect]: id,
+                                      [CreateOneDataRelationActionKind.Connect]:
+                                        id,
                                     },
                                   },
                                 },

@@ -68,7 +68,7 @@ export type NodeSourceFieldValue =
 
 export type NodeSourceFieldResolverParams<
   TArgs extends POJO = any,
-  TContext extends AnyBaseContext = any
+  TContext extends AnyBaseContext = any,
 > = Readonly<{
   args: TArgs;
   context: TContext;
@@ -77,7 +77,7 @@ export type NodeSourceFieldResolverParams<
 
 export type NodeSourceFieldResolver<
   TArgs extends POJO = any,
-  TContext extends AnyBaseContext = any
+  TContext extends AnyBaseContext = any,
 > = (
   params: NodeSourceFieldResolverParams<TArgs, TContext>,
 ) => MaybePromise<NodeSourceFieldValue>;

@@ -55,7 +55,7 @@ export type AnyAbstractComponentConfig = AbstractComponentConfig<any>;
 
 export abstract class AbstractComponent<
   THookMap extends EventMap,
-  TConfig extends AnyAbstractComponentConfig
+  TConfig extends AnyAbstractComponentConfig,
 > extends EventEmitter<THookMap> {
   public constructor(
     readonly name: string,

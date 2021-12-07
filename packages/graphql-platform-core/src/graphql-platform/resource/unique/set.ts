@@ -1,5 +1,5 @@
 import {
-  GraphQLSelectionNodeChildren,
+  GraphQLSelectionNode,
   SuperSetOfNamedObject,
 } from '@prismamedia/graphql-platform-utils';
 import { Memoize } from '@prismamedia/ts-memoize';
@@ -18,7 +18,7 @@ export class UniqueSet extends SuperSetOfNamedObject<Unique> {
   @Memoize((use: TypeKind = TypeKind.Output) => use)
   public getSelectionNodeChildren(
     use: TypeKind = TypeKind.Output,
-  ): GraphQLSelectionNodeChildren {
+  ): GraphQLSelectionNode[] {
     return this.getComponentSet().getSelectionNodeChildren(use);
   }
 }

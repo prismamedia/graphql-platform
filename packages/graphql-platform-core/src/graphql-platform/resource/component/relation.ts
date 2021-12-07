@@ -57,14 +57,14 @@ export enum RelationKind {
 export type RelationHookMetaMap<
   TArgs extends POJO = any,
   TCustomContext extends CustomContext = any,
-  TBaseContext extends AnyBaseContext = BaseContext
+  TBaseContext extends AnyBaseContext = BaseContext,
 > = ResourceHookMetaMap<TArgs, TCustomContext, TBaseContext> & {
   relation: Relation;
 };
 
 export type RelationHookMap<
   TCustomContext extends CustomContext = any,
-  TBaseContext extends AnyBaseContext = BaseContext
+  TBaseContext extends AnyBaseContext = BaseContext,
 > = {
   // Create
   [ResourceHookKind.PreCreate]: {
@@ -97,7 +97,7 @@ export type RelationHookMap<
 
 export interface RelationConfig<
   TCustomContext extends CustomContext = {},
-  TBaseContext extends AnyBaseContext = BaseContext
+  TBaseContext extends AnyBaseContext = BaseContext,
 > extends AbstractComponentConfig<
     RelationHookMap<TCustomContext, TBaseContext>
   > {
@@ -114,7 +114,7 @@ export interface RelationConfig<
 export type AnyRelationConfig = RelationConfig<any, any>;
 
 export class Relation<
-  TConfig extends AnyRelationConfig = RelationConfig
+  TConfig extends AnyRelationConfig = RelationConfig,
 > extends AbstractComponent<RelationHookMap, TConfig> {
   public isField(): boolean {
     return false;

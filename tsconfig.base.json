@@ -7,7 +7,11 @@
     "sourceMap": true,
     "strict": true,
     "moduleResolution": "Node",
-    "lib": ["ES2019", "ES2020.String", "ESNext.BigInt"],
-    "target": "ES2019"
+    "declaration": true,
+    "declarationMap": true,
+
+    "lib": ["ES2020"],
+    "module": "commonjs",
+    "target": "ES2020"
   }
 }

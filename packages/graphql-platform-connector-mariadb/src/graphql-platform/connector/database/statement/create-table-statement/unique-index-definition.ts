@@ -5,8 +5,8 @@ export class UniqueIndexDefinition {
   public constructor(readonly uniqueIndex: UniqueIndex) {}
 
   public toString(): string {
-    return `UNIQUE ${escapeId(
-      this.uniqueIndex.name,
-    )} (${this.uniqueIndex.getColumnSet().getEscapedNames()})`;
+    return `UNIQUE ${escapeId(this.uniqueIndex.name)} (${this.uniqueIndex
+      .getColumnSet()
+      .getEscapedNames()})`;
   }
 }

@@ -15,7 +15,7 @@ export * from './virtual-field/set';
 
 export type VirtualFieldConfig<
   TCustomContext extends CustomContext = {},
-  TBaseContext extends AnyBaseContext = BaseContext
+  TBaseContext extends AnyBaseContext = BaseContext,
 > = Merge<
   GraphQLFieldConfig<any, Context<TCustomContext, TBaseContext>>,
   {
@@ -27,7 +27,7 @@ export type VirtualFieldConfig<
 export type AnyVirtualFieldConfig = VirtualFieldConfig<any, any>;
 
 export class VirtualField<
-  TConfig extends AnyVirtualFieldConfig = VirtualFieldConfig
+  TConfig extends AnyVirtualFieldConfig = VirtualFieldConfig,
 > {
   readonly dependencySet: ComponentSet;
 

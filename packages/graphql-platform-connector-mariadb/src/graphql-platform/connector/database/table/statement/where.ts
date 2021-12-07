@@ -10,12 +10,15 @@ import { Resource } from '../../../../resource';
 import { Database } from '../../../database';
 import { ColumnValue } from '../column';
 import { TableReference } from './reference';
+import { SelectStatement } from './select-statement';
 
 export type WhereConditionBool = WhereConditionAnd | WhereConditionOr;
+
 export type WhereCondition =
   | WhereConditionRaw
   | WhereConditionNot
-  | WhereConditionBool;
+  | WhereConditionBool
+  | WhereConditionExists;
 
 class WhereConditionRaw {
   public constructor(protected condition: string) {}
@@ -140,4 +143,12 @@ export class WhereConditionAnd extends AbstractWhereConditionBool {
 
 export class WhereConditionOr extends AbstractWhereConditionBool {
   protected BOOL_OPERATOR = 'OR';
+}
+
+export class WhereConditionExists {
+  public constructor(protected subquery: SelectStatement) {}
+
+  public get sql(): string {
+    return `EXISTS (${this.subquery.sql.replace(/;$/, '')})`;
+  }
 }

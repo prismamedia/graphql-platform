@@ -1,13 +1,8 @@
 {
   "name": "GraphQL Platform",
-  "dockerComposeFile": [
-    "../docker-compose.yml",
-    "docker-compose.yml"
-  ],
+  "dockerComposeFile": "../docker-compose.yml",
   "service": "project",
   "workspaceFolder": "/workspace",
-  "postCreateCommand": "yarn install",
-  "extensions": [
-    "esbenp.prettier-vscode"
-  ]
+  "extensions": ["esbenp.prettier-vscode"],
+  "postStartCommand": "yarn install"
 }

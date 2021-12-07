@@ -13,7 +13,7 @@ export function mergeWithCustomizer(a: unknown, b: unknown) {
 export function mergeWith<
   TObject extends POJO,
   TSource1 extends POJO,
-  TSource2 extends POJO
+  TSource2 extends POJO,
 >(object: TObject, source1: TSource1, source2?: TSource2) {
   return typeof source2 === 'undefined'
     ? baseMergeWith(object, source1, mergeWithCustomizer)

@@ -7,7 +7,7 @@ import { TypeKind } from '../../type';
 import { AnyComponent, Component } from './types';
 
 export class ComponentSet<
-  TComponent extends AnyComponent = Component
+  TComponent extends AnyComponent = Component,
 > extends SuperSetOfNamedObject<TComponent> {
   @Memoize((use: TypeKind = TypeKind.Output) => use)
   public getSelectionNode(

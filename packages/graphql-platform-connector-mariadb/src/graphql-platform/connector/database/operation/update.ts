@@ -12,9 +12,7 @@ export class UpdateOperation extends AbstractOperationResolver<
   public async execute({
     args: { data: update, where },
     context,
-  }: OperationResolverParams<ConnectorUpdateOperationArgs>): Promise<
-    ConnectorUpdateOperationResult
-  > {
+  }: OperationResolverParams<ConnectorUpdateOperationArgs>): Promise<ConnectorUpdateOperationResult> {
     const updateStatement = this.table.newUpdateStatement();
 
     for (const component of this.resource.getComponentSet()) {

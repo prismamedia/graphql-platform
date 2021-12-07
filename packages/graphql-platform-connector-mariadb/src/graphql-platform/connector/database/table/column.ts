@@ -330,9 +330,11 @@ export class Column {
   ): MaybeUndefinedDecorator<ColumnValue, TStrict> {
     const value = this.field.pickValue(node, strict);
 
-    return (typeof value !== 'undefined'
-      ? this.getValue(value as FieldValue)
-      : undefined) as any;
+    return (
+      typeof value !== 'undefined'
+        ? this.getValue(value as FieldValue)
+        : undefined
+    ) as any;
   }
 
   public setValue(node: POJO, value: ColumnValue): void {

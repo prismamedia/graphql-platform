@@ -96,12 +96,13 @@ export type QueryResult =
 
 export type ConnectorOperationParams<
   TArgs extends POJO,
-  TCustomContext extends CustomContext = {}
+  TCustomContext extends CustomContext = {},
 > = CoreConnectorOperationParams<TArgs, TCustomContext, BaseContext>;
 
 export class Connector<TCustomContext extends CustomContext = {}>
   extends EventEmitter<ConnectorEventMap>
-  implements ConnectorInterface<TCustomContext, BaseContext> {
+  implements ConnectorInterface<TCustomContext, BaseContext>
+{
   protected pool?: mysql.Pool;
 
   public constructor(

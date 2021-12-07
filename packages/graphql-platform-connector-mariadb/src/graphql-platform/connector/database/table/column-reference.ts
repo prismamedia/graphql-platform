@@ -111,9 +111,11 @@ export class ColumnReference {
   ): MaybeUndefinedDecorator<ColumnValue, TStrict> {
     const value = this.relation.pickValue(node, true, strict);
 
-    return (typeof value !== 'undefined'
-      ? this.getValue(value as RelationValue)
-      : undefined) as any;
+    return (
+      typeof value !== 'undefined'
+        ? this.getValue(value as RelationValue)
+        : undefined
+    ) as any;
   }
 
   public setValue(node: POJO, value: ColumnValue): void {

@@ -9,6 +9,5 @@ export type OutputTypeMap = typeof outputTypeMap;
 
 export type OutputTypeId = keyof OutputTypeMap;
 
-export type OutputTypeConstructor<
-  TId extends OutputTypeId
-> = OutputTypeMap[TId] extends Class ? OutputTypeMap[TId] : never;
+export type OutputTypeConstructor<TId extends OutputTypeId> =
+  OutputTypeMap[TId] extends Class ? OutputTypeMap[TId] : never;

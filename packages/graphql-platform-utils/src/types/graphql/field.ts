@@ -16,7 +16,7 @@ export type FieldResolver<
   TSource = any,
   TContext = any,
   TArgs = any,
-  TResult = any
+  TResult = any,
 > = (
   ...args: FieldResolverArgs<TSource, TContext, TArgs>
 ) => MaybePromise<TResult>;
@@ -26,7 +26,7 @@ export interface FieldConfig<
   TSource = any,
   TContext = any,
   TArgs = any,
-  TResult = any
+  TResult = any,
 > extends Omit<GraphQLFieldConfigBase<TSource, TContext, TArgs>, 'resolve'> {
   resolve?: FieldResolver<TSource, TContext, TArgs, TResult>;
 }

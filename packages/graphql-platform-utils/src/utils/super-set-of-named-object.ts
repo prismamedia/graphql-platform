@@ -5,7 +5,7 @@ interface NamedObject {
 }
 
 export class SuperSetOfNamedObject<
-  TNamedObject extends NamedObject
+  TNamedObject extends NamedObject,
 > extends SuperSet<TNamedObject> {
   public getNames(): TNamedObject['name'][] {
     return [...this].map(({ name }) => name);

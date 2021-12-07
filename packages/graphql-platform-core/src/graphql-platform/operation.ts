@@ -75,7 +75,7 @@ export type OperationContext =
 export type OperationResolverParams<
   TArgs extends POJO = any,
   TCustomContext extends CustomContext = {},
-  TBaseContext extends AnyBaseContext = BaseContext
+  TBaseContext extends AnyBaseContext = BaseContext,
 > = Readonly<{
   /**
    * The current resolver "args"
@@ -96,7 +96,7 @@ export type OperationResolverParams<
 export type OperationEvent<
   TArgs extends POJO = any,
   TCustomContext extends CustomContext = any,
-  TBaseContext extends AnyBaseContext = BaseContext
+  TBaseContext extends AnyBaseContext = BaseContext,
 > = OperationResolverParams<TArgs, TCustomContext, TBaseContext> &
   Readonly<{
     /**
@@ -108,7 +108,7 @@ export type OperationEvent<
 export type OperationEventMap<
   TArgs extends POJO = any,
   TCustomContext extends CustomContext = any,
-  TBaseContext extends AnyBaseContext = BaseContext
+  TBaseContext extends AnyBaseContext = BaseContext,
 > = Record<
   OperationEventKind,
   OperationEvent<TArgs, TCustomContext, TBaseContext>
@@ -128,17 +128,15 @@ export type OperationTypeMap = typeof operationTypeMap;
 
 export type OperationType = keyof OperationTypeMap;
 
-export type OperationConstructorMap<
-  TOperationType extends OperationType
-> = OperationTypeMap[TOperationType];
+export type OperationConstructorMap<TOperationType extends OperationType> =
+  OperationTypeMap[TOperationType];
 
-export type OperationId<
-  TOperationType extends OperationType
-> = keyof OperationConstructorMap<TOperationType>;
+export type OperationId<TOperationType extends OperationType> =
+  keyof OperationConstructorMap<TOperationType>;
 
 export type OperationConstructor<
   TType extends OperationType,
-  TId extends OperationId<TType>
+  TId extends OperationId<TType>,
 > = OperationConstructorMap<TType>[TId] extends Class
   ? OperationConstructorMap<TType>[TId]
   : never;

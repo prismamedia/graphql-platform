@@ -15,31 +15,27 @@ import { POJO } from '../../types/pojo';
 import { isPlainObject } from '../is-plain-object';
 import { SuperMap } from '../super-map';
 
-export type GraphQLSelectionNodeChildren = Array<
-  GraphQLSelectionNode | GraphQLSelectionNode['name']
->;
+export class GraphQLSelectionNode {
+  readonly children = new SuperMap<
+    GraphQLSelectionNode['key'],
+    GraphQLSelectionNode
+  >();
 
-export class GraphQLSelectionNode extends SuperMap<
-  GraphQLSelectionNode['key'],
-  GraphQLSelectionNode
-> {
   public constructor(
     readonly name: string,
     readonly args: POJO,
-    children: GraphQLSelectionNodeChildren = [],
+    children: Array<GraphQLSelectionNode | GraphQLSelectionNode['name']> = [],
     readonly alias: string | undefined = undefined,
     protected parent: GraphQLSelectionNode | undefined = undefined,
     protected rootPath: ReadonlyArray<string | number> | undefined = undefined,
   ) {
-    super();
-
     this.setChildren(children);
   }
 
   public toAST(): SelectionSetNode {
     const selectionSetNode: SelectionSetNode = {
       kind: 'SelectionSet',
-      selections: [...this].map(
+      selections: [...this.children].map(
         ([, selectionNode]): FieldNode => ({
           kind: 'Field',
           name: {
@@ -75,10 +71,12 @@ export class GraphQLSelectionNode extends SuperMap<
   }
 
   public getChildren(): GraphQLSelectionNode[] {
-    return [...this.values()];
+    return [...this.children.values()];
   }
 
-  public setChildren(children: GraphQLSelectionNodeChildren): void {
+  public setChildren(
+    children: Array<GraphQLSelectionNode | GraphQLSelectionNode['name']>,
+  ): void {
     (children instanceof GraphQLSelectionNode
       ? children.getChildren()
       : children
@@ -95,11 +93,11 @@ export class GraphQLSelectionNode extends SuperMap<
 
     node.setParent(this);
 
-    const currentNode = this.get(node.key);
+    const currentNode = this.children.get(node.key);
     if (currentNode) {
       currentNode.setChildren(node.getChildren());
     } else {
-      this.set(node.key, node);
+      this.children.set(node.key, node);
     }
   }
 
@@ -109,7 +107,7 @@ export class GraphQLSelectionNode extends SuperMap<
   }
 
   public isLeaf(): boolean {
-    return this.size === 0;
+    return this.children.size === 0;
   }
 
   @Memoize()
@@ -150,7 +148,7 @@ export class GraphQLSelectionNode extends SuperMap<
       );
     }
 
-    for (const child of this.values()) {
+    for (const child of this.children.values()) {
       const childValue = node[child.name];
 
       if (typeof childValue === 'undefined') {
@@ -165,7 +163,7 @@ export class GraphQLSelectionNode extends SuperMap<
 
           if (childNode) {
             const childDiff = child.diff(childNode);
-            if (childDiff.size > 0) {
+            if (childDiff.children.size > 0) {
               diff.setChild(childDiff);
             }
           }
@@ -177,13 +175,13 @@ export class GraphQLSelectionNode extends SuperMap<
   }
 
   public hasDiff(node: unknown): boolean {
-    return this.diff(node).size > 0;
+    return this.diff(node).children.size > 0;
   }
 
   public toPlainObject(): POJO {
     const pojo: POJO = {};
 
-    for (const child of this.values()) {
+    for (const child of this.children.values()) {
       pojo[child.key] = {
         name: child.name,
         ...(Object.keys(child.args).length > 0 ? { args: child.args } : {}),

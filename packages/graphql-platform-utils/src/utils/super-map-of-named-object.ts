@@ -6,7 +6,7 @@ interface NamedObject {
 }
 
 export class SuperMapOfNamedObject<
-  TNamedObject extends NamedObject
+  TNamedObject extends NamedObject,
 > extends SuperMap<TNamedObject['name'], TNamedObject> {
   public setObject(value?: Maybe<TNamedObject>): this {
     if (value) {

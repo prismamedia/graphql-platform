@@ -39,12 +39,9 @@ describe('Database', () => {
 
     // 4 tables after the migrations : 2 new tables + the 2 for marv
     await expect(connector.query(listTableStatement)).resolves.toEqual(
-      [
-        'migrations',
-        'migrations_lock',
-        'my_new_table',
-        'my_other_table',
-      ].map((table) => ({ table_name: table })),
+      ['migrations', 'migrations_lock', 'my_new_table', 'my_other_table'].map(
+        (table) => ({ table_name: table }),
+      ),
     );
 
     done();

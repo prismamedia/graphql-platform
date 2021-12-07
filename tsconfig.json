@@ -1,17 +1,9 @@
 {
   "files": [],
   "references": [
-    {
-      "path": "./packages/graphql-platform-utils"
-    },
-    {
-      "path": "./packages/graphql-platform-core"
-    },
-    {
-      "path": "./packages/graphql-platform-connector-mariadb"
-    },
-    {
-      "path": "./packages/graphql-platform-server-express"
-    }
+    { "path": "./packages/graphql-platform-utils" },
+    { "path": "./packages/graphql-platform-core" },
+    { "path": "./packages/graphql-platform-connector-mariadb" },
+    { "path": "./packages/graphql-platform-server-express" }
   ]
 }

@@ -5,23 +5,20 @@
     "Yvann Boucher <yvann.boucher@gmail.com>"
   ],
   "engines": {
-    "node": ">=12"
+    "node": ">=14"
   },
   "workspaces": [
     "packages/*"
   ],
   "scripts": {
-    "build": "tsc --build tsconfig.json tsconfig.esm.json",
-    "build:clean": "tsc --build tsconfig.json tsconfig.esm.json --clean",
-    "build:watch": "tsc --build tsconfig.json --watch",
-    "clean": "git clean -dfqx -- .",
+    "build": "tsc --build tsconfig.json",
+    "build:watch": "yarn run build --watch",
     "prepare": "yarn run build",
-    "prettier": "prettier --write \"./**/src/**/*.ts\"",
-    "test": "lerna run --parallel test"
+    "prettier": "prettier --write \"./**/src/**/*.ts\""
   },
   "devDependencies": {
-    "lerna": "^3.21.0",
-    "prettier": "^2.1.2",
-    "typescript": "~3.8.3"
-  }
+    "prettier": "2.5.1",
+    "typescript": "4.5.4"
+  },
+  "packageManager": "yarn@3.1.1"
 }

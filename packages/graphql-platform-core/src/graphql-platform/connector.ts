@@ -24,7 +24,7 @@ export type ConnectorOperationParams<
   TArgs extends POJO = any,
   TCustomContext extends CustomContext = {},
   TBaseContext extends AnyBaseContext = BaseContext,
-  TResource extends AnyResource = Resource
+  TResource extends AnyResource = Resource,
 > = Readonly<{
   args: TArgs;
   context: Context<TCustomContext, TBaseContext>;
@@ -65,7 +65,7 @@ export type ConnectorDeleteOperationResult = number;
 
 export interface ConnectorInterface<
   TCustomContext extends CustomContext = {},
-  TBaseContext extends AnyBaseContext = BaseContext
+  TBaseContext extends AnyBaseContext = BaseContext,
 > {
   find(
     params: ConnectorOperationParams<

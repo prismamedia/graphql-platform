@@ -48,9 +48,9 @@ export const config: MyGPConfig = mergeWith(
     },
 
     default: (resourceName) => {
-      const config = ((coreConfig.default
+      const config = (coreConfig.default
         ? coreConfig.default(resourceName)
-        : {}) as unknown) as ResourceConfig;
+        : {}) as unknown as ResourceConfig;
 
       const fields = config.fields;
 

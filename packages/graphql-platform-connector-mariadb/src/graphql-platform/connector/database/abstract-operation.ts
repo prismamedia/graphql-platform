@@ -16,7 +16,7 @@ export abstract class AbstractOperationResolver<TArgs extends POJO, TResult> {
     this.connector = table.database.connector;
   }
 
-  public abstract async execute(
+  public abstract execute(
     params: OperationResolverParams<TArgs>,
   ): Promise<TResult>;
 }

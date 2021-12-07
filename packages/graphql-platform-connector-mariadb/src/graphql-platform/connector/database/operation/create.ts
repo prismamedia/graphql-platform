@@ -12,9 +12,7 @@ export class CreateOperation extends AbstractOperationResolver<
   public async execute({
     args: { data: creates },
     context,
-  }: OperationResolverParams<ConnectorCreateOperationArgs>): Promise<
-    ConnectorCreateOperationResult
-  > {
+  }: OperationResolverParams<ConnectorCreateOperationArgs>): Promise<ConnectorCreateOperationResult> {
     return Promise.all(
       creates.map(async (create) => {
         const insertStatement = this.table.newInsertStatement();

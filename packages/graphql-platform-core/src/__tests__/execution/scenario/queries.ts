@@ -6,9 +6,14 @@ export const scenario: Scenario = [
     {
       source: `{ 
         articleCount
-        articles (first: 10, orderBy: [slug_ASC]) {
+        articles (orderBy: [slug_ASC], first: 5) {
           id
           slug
+          tags (orderBy: [order_ASC], first: 2) {
+            tag {
+              slug
+            }
+          }
         }
       }`,
     },
@@ -18,42 +23,69 @@ export const scenario: Scenario = [
         {
           id: 'cb0456d1-d580-4d9f-bdad-510abbc96cb0',
           slug: 'assumenda-ut',
+          tags: [
+            { tag: { slug: 'index-xss-baby-0' } },
+            { tag: { slug: 'calculate-bridge-upward-trending-1' } },
+          ],
         },
         {
           id: '823c9900-060a-46e9-8dfc-64f192d396a5',
           slug: 'cumque-officia',
+          tags: [],
         },
         {
           id: '09b275f1-384b-4176-91da-0c6b7cb5ed46',
           slug: 'dolorem-expedita',
+          tags: [{ tag: { slug: 'calculate-bridge-upward-trending-1' } }],
         },
         {
           id: 'd7894f73-4334-4ace-b30e-873bc4470391',
           slug: 'dolorem-vel',
+          tags: [{ tag: { slug: 'index-xss-baby-0' } }],
         },
         {
           id: 'e7431737-75b0-4383-ad06-299351e8c732',
           slug: 'dolorum-soluta',
+          tags: [
+            { tag: { slug: 'calculate-bridge-upward-trending-1' } },
+            { tag: { slug: 'refined-soft-bike-initiative-orchid-4' } },
+          ],
         },
+      ],
+    },
+  ],
+  [
+    {
+      source: `{ 
+        articles (
+          where: {
+            AND: [
+              { tags_some: { tag: { slug: "index-xss-baby-0" } } },
+              { tags_some: { tag: { slug: "calculate-bridge-upward-trending-1" } } }
+            ]
+          }, 
+          orderBy: [slug_ASC], 
+          first: 5
+        ) {
+          id
+          slug
+          tags (orderBy: [order_ASC], first: 2) {
+            tag {
+              slug
+            }
+          }
+        }
+      }`,
+    },
+    {
+      articles: [
         {
-          id: '9150fcf6-6bd7-4f79-ba71-cf6cef0ac02b',
-          slug: 'est-aut',
-        },
-        {
-          id: 'b21293d9-be8f-4dbb-b4ef-693a271edd2d',
-          slug: 'est-illum',
-        },
-        {
-          id: '54a77563-6068-4529-862f-6aa346053c0e',
-          slug: 'et-dolor',
-        },
-        {
-          id: '79c0f74f-25e8-486f-ba3f-f8a8c275e082',
-          slug: 'maxime-sint',
-        },
-        {
-          id: '91b087c0-917c-45a1-86b1-3f024cdd1ba9',
-          slug: 'neque-cupiditate',
+          id: 'cb0456d1-d580-4d9f-bdad-510abbc96cb0',
+          slug: 'assumenda-ut',
+          tags: [
+            { tag: { slug: 'index-xss-baby-0' } },
+            { tag: { slug: 'calculate-bridge-upward-trending-1' } },
+          ],
         },
       ],
     },

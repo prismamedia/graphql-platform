@@ -1,7 +1,4 @@
-import {
-  GraphQLSelectionNode,
-  GraphQLSelectionNodeChildren,
-} from '@prismamedia/graphql-platform-utils';
+import { GraphQLSelectionNode } from '@prismamedia/graphql-platform-utils';
 import { Memoize } from '@prismamedia/ts-memoize';
 import { Resource } from '../resource';
 import { TypeKind } from '../type';
@@ -26,7 +23,7 @@ export interface UniqueFullConfig {
 export type AnyUniqueFullConfig = UniqueFullConfig;
 
 export type UniqueConfig<
-  TConfig extends AnyUniqueFullConfig = UniqueFullConfig
+  TConfig extends AnyUniqueFullConfig = UniqueFullConfig,
 > = Component['name'] | Component['name'][] | TConfig;
 
 export class Unique<TConfig extends AnyUniqueFullConfig = UniqueFullConfig> {
@@ -118,7 +115,7 @@ export class Unique<TConfig extends AnyUniqueFullConfig = UniqueFullConfig> {
   @Memoize((use: TypeKind = TypeKind.Output) => use)
   public getSelectionNodeChildren(
     use: TypeKind = TypeKind.Output,
-  ): GraphQLSelectionNodeChildren {
+  ): GraphQLSelectionNode[] {
     return this.componentSet.getSelectionNodeChildren(use);
   }
 }

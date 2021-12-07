@@ -119,7 +119,7 @@ export type SerializedFieldValue =
 export type FieldHookMetaMap<
   TArgs extends POJO = any,
   TCustomContext extends CustomContext = any,
-  TBaseContext extends AnyBaseContext = BaseContext
+  TBaseContext extends AnyBaseContext = BaseContext,
 > = ResourceHookMetaMap<TArgs, TCustomContext, TBaseContext> &
   Readonly<{
     field: Field;
@@ -127,7 +127,7 @@ export type FieldHookMetaMap<
 
 export type FieldHookMap<
   TCustomContext extends CustomContext = any,
-  TBaseContext extends AnyBaseContext = BaseContext
+  TBaseContext extends AnyBaseContext = BaseContext,
 > = {
   // Create
   [ResourceHookKind.PreCreate]: {
@@ -160,7 +160,7 @@ export type FieldHookMap<
 
 export interface FieldConfig<
   TCustomContext extends CustomContext = {},
-  TBaseContext extends AnyBaseContext = BaseContext
+  TBaseContext extends AnyBaseContext = BaseContext,
 > extends AbstractComponentConfig<FieldHookMap<TCustomContext, TBaseContext>> {
   /**
    * Required, the GraphQL type that represents the output of this field, the supported types are:
@@ -181,7 +181,7 @@ export interface FieldConfig<
 export type AnyFieldConfig = FieldConfig<any, any>;
 
 export class Field<
-  TConfig extends AnyFieldConfig = FieldConfig
+  TConfig extends AnyFieldConfig = FieldConfig,
 > extends AbstractComponent<FieldHookMap, TConfig> {
   public isField(): this is Field {
     return true;
