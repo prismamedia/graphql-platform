@@ -1,6 +1,6 @@
 {
   "name": "@prismamedia/graphql-platform-server-express",
-  "version": "0.1.0-alpha.63",
+  "version": "0.1.0-alpha.64",
   "license": "MIT",
   "contributors": [
     "Yvann Boucher <yvann.boucher@gmail.com>"
@@ -24,9 +24,9 @@
   "devDependencies": {
     "@prismamedia/graphql-platform-connector-mariadb": "workspace:packages/graphql-platform-connector-mariadb",
     "@types/express": "4.17.13",
-    "@types/express-serve-static-core": "4.17.26",
+    "@types/express-serve-static-core": "4.17.28",
     "@types/jest": "26.0.24",
-    "@types/node": "14.18.0",
+    "@types/node": "14.18.5",
     "express": "4.17.2",
     "graphql": "14.7.0",
     "jest": "26.6.3",

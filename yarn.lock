@@ -766,7 +766,7 @@ __metadata:
     "@types/inflection": 1.13.0
     "@types/jest": 26.0.24
     "@types/mysql": 2.15.19
-    "@types/node": 14.18.0
+    "@types/node": 14.18.5
     "@types/sql-formatter": 2.3.0
     dependency-graph: 0.11.0
     graphql: 14.7.0
@@ -794,7 +794,7 @@ __metadata:
     "@types/graphql-iso-date": 3.3.3
     "@types/inflection": 1.13.0
     "@types/jest": 26.0.24
-    "@types/node": 14.18.0
+    "@types/node": 14.18.5
     "@types/slug": 0.9.1
     dependency-graph: 0.11.0
     faker: 4.1.0
@@ -823,10 +823,10 @@ __metadata:
     "@prismamedia/ts-memoize": 1.2.1
     "@types/express": 4.17.13
     "@types/express-jwt": 0.0.42
-    "@types/express-serve-static-core": 4.17.26
+    "@types/express-serve-static-core": 4.17.28
     "@types/express-unless": 0.5.2
     "@types/jest": 26.0.24
-    "@types/node": 14.18.0
+    "@types/node": 14.18.5
     apollo-server-express: 2.25.3
     express: 4.17.2
     express-jwt: 6.1.0
@@ -850,8 +850,8 @@ __metadata:
     "@prismamedia/ts-memoize": 1.2.1
     "@prismamedia/ts-module-loader": 3.1.4
     "@types/jest": 26.0.24
-    "@types/lodash": 4.14.177
-    "@types/node": 14.18.0
+    "@types/lodash": 4.14.178
+    "@types/node": 14.18.5
     graphql: 14.7.0
     jest: 26.6.3
     lodash: 4.17.21
@@ -1140,7 +1140,18 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@types/express-serve-static-core@npm:4.17.26, @types/express-serve-static-core@npm:^4.17.18, @types/express-serve-static-core@npm:^4.17.21":
+"@types/express-serve-static-core@npm:4.17.28":
+  version: 4.17.28
+  resolution: "@types/express-serve-static-core@npm:4.17.28"
+  dependencies:
+    "@types/node": "*"
+    "@types/qs": "*"
+    "@types/range-parser": "*"
+  checksum: 826489811a5b371c10f02443b4ca894ffc05813bfdf2b60c224f5c18ac9a30a2e518cb9ef9fdfcaa2a1bb17f8bfa4ed1859ccdb252e879c9276271b4ee2df5a9
+  languageName: node
+  linkType: hard
+
+"@types/express-serve-static-core@npm:^4.17.18, @types/express-serve-static-core@npm:^4.17.21":
   version: 4.17.26
   resolution: "@types/express-serve-static-core@npm:4.17.26"
   dependencies:
@@ -1303,10 +1314,10 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@types/lodash@npm:4.14.177":
-  version: 4.14.177
-  resolution: "@types/lodash@npm:4.14.177"
-  checksum: 00f9eb300ed5219cfbabb3448d4a71744895edad60dcfda9f028c0808a50eb6ad1ca9f673b56a85f85668a4ea54b9870643625468a747039c435643e52253a75
+"@types/lodash@npm:4.14.178":
+  version: 4.14.178
+  resolution: "@types/lodash@npm:4.14.178"
+  checksum: a69a04a60bfc5257c3130a554b4efa0c383f0141b7b3db8ab7cf07ad2a46ea085fce66d0242da41da7e5647b133d5dfb2c15add9cbed8d7fef955e4a1e5b3128
   languageName: node
   linkType: hard
 
@@ -1340,10 +1351,10 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@types/node@npm:14.18.0":
-  version: 14.18.0
-  resolution: "@types/node@npm:14.18.0"
-  checksum: b120c26fe5f30bc358e861db8d7e401e419d14bd9dd25c022f3c2ea8b0b429d4c9efd77ad5d6d2a8bde61702a6786fb74d409f1b2cbb61c79133e2a65aab4fb1
+"@types/node@npm:14.18.5":
+  version: 14.18.5
+  resolution: "@types/node@npm:14.18.5"
+  checksum: 5ad7090e4cd1d7cd9efa4915cc8b4f69503a1d2070b1998a55fce776ae03fef6c0703d6940197af2cd31b3516b41b552d9fced92d2a0837c28b8ed8b5ca0872c
   languageName: node
   linkType: hard
 
