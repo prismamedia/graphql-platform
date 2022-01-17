@@ -11,7 +11,7 @@
     "packages/*"
   ],
   "scripts": {
-    "build": "tsc --build tsconfig.json",
+    "build": "tsc --build",
     "build:watch": "yarn run build --watch",
     "prepare": "yarn run build",
     "prettier": "prettier --write \"./**/src/**/*.ts\""
