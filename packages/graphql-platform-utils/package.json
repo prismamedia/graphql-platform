@@ -1,6 +1,6 @@
 {
   "name": "@prismamedia/graphql-platform-utils",
-  "version": "0.1.0-alpha.65",
+  "version": "0.1.0-alpha.66",
   "license": "MIT",
   "contributors": [
     "Yvann Boucher <yvann.boucher@gmail.com>"
@@ -23,7 +23,7 @@
   "devDependencies": {
     "@types/jest": "26.0.24",
     "@types/lodash": "4.14.178",
-    "@types/node": "14.18.5",
+    "@types/node": "14.18.9",
     "graphql": "14.7.0",
     "jest": "26.6.3",
     "ts-jest": "26.5.6",

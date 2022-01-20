@@ -766,7 +766,7 @@ __metadata:
     "@types/inflection": 1.13.0
     "@types/jest": 26.0.24
     "@types/mysql": 2.15.19
-    "@types/node": 14.18.5
+    "@types/node": 14.18.9
     "@types/sql-formatter": 2.3.0
     dependency-graph: 0.11.0
     graphql: 14.7.0
@@ -794,7 +794,7 @@ __metadata:
     "@types/graphql-iso-date": 3.3.3
     "@types/inflection": 1.13.0
     "@types/jest": 26.0.24
-    "@types/node": 14.18.5
+    "@types/node": 14.18.9
     "@types/slug": 0.9.1
     dependency-graph: 0.11.0
     faker: 4.1.0
@@ -826,7 +826,7 @@ __metadata:
     "@types/express-serve-static-core": 4.17.28
     "@types/express-unless": 0.5.2
     "@types/jest": 26.0.24
-    "@types/node": 14.18.5
+    "@types/node": 14.18.9
     apollo-server-express: 2.25.3
     express: 4.17.2
     express-jwt: 6.1.0
@@ -851,7 +851,7 @@ __metadata:
     "@prismamedia/ts-module-loader": 3.1.4
     "@types/jest": 26.0.24
     "@types/lodash": 4.14.178
-    "@types/node": 14.18.5
+    "@types/node": 14.18.9
     graphql: 14.7.0
     jest: 26.6.3
     lodash: 4.17.21
@@ -1351,10 +1351,10 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@types/node@npm:14.18.5":
-  version: 14.18.5
-  resolution: "@types/node@npm:14.18.5"
-  checksum: 5ad7090e4cd1d7cd9efa4915cc8b4f69503a1d2070b1998a55fce776ae03fef6c0703d6940197af2cd31b3516b41b552d9fced92d2a0837c28b8ed8b5ca0872c
+"@types/node@npm:14.18.9":
+  version: 14.18.9
+  resolution: "@types/node@npm:14.18.9"
+  checksum: a85dae901b5c3b318747e66f2228c0f0778bcd73430a01d7c42814c04ba1070f2817b865d0c5f0c1813b89afeebb34d19cf2662252bae9dc0c18d3ad23fc98c3
   languageName: node
   linkType: hard
 

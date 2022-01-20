@@ -320,10 +320,7 @@ export class GraphQLPlatform<
       this.getBaseContext(),
     ]);
 
-    return Object.freeze({
-      ...custom,
-      ...base,
-    });
+    return { ...custom, ...base };
   }
 
   public async execute<TData = ExecutionResultDataDefault>(
