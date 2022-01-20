@@ -448,4 +448,4 @@ export class GraphQLPlatform<
   }
 }
 
-export type AnyGraphQLPlatform = GraphQLPlatform<any, any, any>;
+export type AnyGraphQLPlatform = GraphQLPlatform<any, any, any, any>;
