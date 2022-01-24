@@ -1,12 +1,17 @@
 import {
   AnyGraphQLPlatform,
   ConnectorCountOperationArgs,
+  ConnectorCountOperationResult,
   ConnectorCreateOperationArgs,
+  ConnectorCreateOperationResult,
   ConnectorDeleteOperationArgs,
+  ConnectorDeleteOperationResult,
   ConnectorFindOperationArgs,
+  ConnectorFindOperationResult,
   ConnectorInterface,
   ConnectorOperationParams as CoreConnectorOperationParams,
   ConnectorUpdateOperationArgs,
+  ConnectorUpdateOperationResult,
   CustomContext,
   OperationEventKind,
 } from '@prismamedia/graphql-platform-core';
@@ -362,7 +367,7 @@ export class Connector<TCustomContext extends CustomContext = {}>
   public async find({
     resource,
     ...params
-  }: ConnectorOperationParams<ConnectorFindOperationArgs>) {
+  }: ConnectorOperationParams<ConnectorFindOperationArgs>): Promise<ConnectorFindOperationResult> {
     return this.getDatabase()
       .getTable(resource)
       .getOperation('Find')
@@ -372,7 +377,7 @@ export class Connector<TCustomContext extends CustomContext = {}>
   public async count({
     resource,
     ...params
-  }: ConnectorOperationParams<ConnectorCountOperationArgs>) {
+  }: ConnectorOperationParams<ConnectorCountOperationArgs>): Promise<ConnectorCountOperationResult> {
     return this.getDatabase()
       .getTable(resource)
       .getOperation('Count')
@@ -382,7 +387,7 @@ export class Connector<TCustomContext extends CustomContext = {}>
   public async create({
     resource,
     ...params
-  }: ConnectorOperationParams<ConnectorCreateOperationArgs>) {
+  }: ConnectorOperationParams<ConnectorCreateOperationArgs>): Promise<ConnectorCreateOperationResult> {
     return this.getDatabase()
       .getTable(resource)
       .getOperation('Create')
@@ -392,7 +397,7 @@ export class Connector<TCustomContext extends CustomContext = {}>
   public async update({
     resource,
     ...params
-  }: ConnectorOperationParams<ConnectorUpdateOperationArgs>) {
+  }: ConnectorOperationParams<ConnectorUpdateOperationArgs>): Promise<ConnectorUpdateOperationResult> {
     return this.getDatabase()
       .getTable(resource)
       .getOperation('Update')
@@ -402,7 +407,7 @@ export class Connector<TCustomContext extends CustomContext = {}>
   public async delete({
     resource,
     ...params
-  }: ConnectorOperationParams<ConnectorDeleteOperationArgs>) {
+  }: ConnectorOperationParams<ConnectorDeleteOperationArgs>): Promise<ConnectorDeleteOperationResult> {
     return this.getDatabase()
       .getTable(resource)
       .getOperation('Delete')

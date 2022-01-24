@@ -1,6 +1,5 @@
 import {
   GraphQLSelectionNode,
-  MaybePromise,
   POJO,
 } from '@prismamedia/graphql-platform-utils';
 import {
@@ -73,7 +72,7 @@ export interface ConnectorInterface<
       TCustomContext,
       TBaseContext
     >,
-  ): MaybePromise<ConnectorFindOperationResult>;
+  ): Promise<ConnectorFindOperationResult>;
 
   count(
     params: ConnectorOperationParams<
@@ -81,7 +80,7 @@ export interface ConnectorInterface<
       TCustomContext,
       TBaseContext
     >,
-  ): MaybePromise<ConnectorCountOperationResult>;
+  ): Promise<ConnectorCountOperationResult>;
 
   create(
     params: ConnectorOperationParams<
@@ -89,7 +88,7 @@ export interface ConnectorInterface<
       TCustomContext,
       TBaseContext
     >,
-  ): MaybePromise<ConnectorCreateOperationResult>;
+  ): Promise<ConnectorCreateOperationResult>;
 
   update(
     params: ConnectorOperationParams<
@@ -97,7 +96,7 @@ export interface ConnectorInterface<
       TCustomContext,
       TBaseContext
     >,
-  ): MaybePromise<ConnectorUpdateOperationResult>;
+  ): Promise<ConnectorUpdateOperationResult>;
 
   delete(
     params: ConnectorOperationParams<
@@ -105,7 +104,7 @@ export interface ConnectorInterface<
       TCustomContext,
       TBaseContext
     >,
-  ): MaybePromise<ConnectorDeleteOperationResult>;
+  ): Promise<ConnectorDeleteOperationResult>;
 }
 
 export type AnyConnectorInterface = ConnectorInterface<any, any>;
