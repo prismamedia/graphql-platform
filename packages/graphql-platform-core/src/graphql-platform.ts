@@ -329,10 +329,10 @@ export class GraphQLPlatform<
     const { data, errors } = await graphql<TData>({
       ...request,
       schema: this.getGraphQLSchema(),
-      contextValue: Object.freeze({
+      contextValue: {
         ...(await this.getContext()),
         ...request.contextValue,
-      }),
+      },
     });
 
     if (errors?.length) {
