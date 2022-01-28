@@ -1,0 +1,44 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`Input "integer" works: integer 1`] = `
+Object {
+  "type": "Int",
+}
+`;
+
+exports[`Input "nonNillableString" works: nonNillableString 1`] = `
+Object {
+  "type": "String!",
+}
+`;
+
+exports[`Input "nonNillableStringWithDefaultValue" works: nonNillableStringWithDefaultValue 1`] = `
+Object {
+  "defaultValue": "My default value",
+  "type": "String!",
+}
+`;
+
+exports[`Input "nonNullableString" works: nonNullableString 1`] = `
+Object {
+  "type": "String",
+}
+`;
+
+exports[`Input "nonOptionalObject" works: nonOptionalObject 1`] = `
+Object {
+  "type": "MyObject",
+}
+`;
+
+exports[`Input "nonOptionalString" works: nonOptionalString 1`] = `
+Object {
+  "type": "String",
+}
+`;
+
+exports[`Input "string" works: string 1`] = `
+Object {
+  "type": "String",
+}
+`;

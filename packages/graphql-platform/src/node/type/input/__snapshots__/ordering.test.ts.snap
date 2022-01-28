@@ -1,0 +1,109 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`NodeOrderingInputType Definition Article has an ordering input type: ArticleOrderingInput 1`] = `
+""""Order the "Article" nodes"""
+enum ArticleOrderingInput {
+  """from the lowest "createdAt" to the highest"""
+  createdAt_ASC
+
+  """from the highest "createdAt" to the lowest"""
+  createdAt_DESC
+
+  """from the lowest "updatedAt" to the highest"""
+  updatedAt_ASC
+
+  """from the highest "updatedAt" to the lowest"""
+  updatedAt_DESC
+
+  """from the lowest number of "tags" to the highest"""
+  tagCount_ASC
+
+  """from the highest number of "tags" to the lowest"""
+  tagCount_DESC
+}"
+`;
+
+exports[`NodeOrderingInputType Definition ArticleTag has an ordering input type: ArticleTagOrderingInput 1`] = `
+""""Order the "ArticleTag" nodes"""
+enum ArticleTagOrderingInput {
+  """from the lowest "order" to the highest"""
+  order_ASC
+
+  """from the highest "order" to the lowest"""
+  order_DESC
+}"
+`;
+
+exports[`NodeOrderingInputType Definition Category has an ordering input type: CategoryOrderingInput 1`] = `
+""""Order the "Category" nodes"""
+enum CategoryOrderingInput {
+  """from the lowest "order" to the highest"""
+  order_ASC
+
+  """from the highest "order" to the lowest"""
+  order_DESC
+
+  """from the lowest number of "children" to the highest"""
+  childCount_ASC
+
+  """from the highest number of "children" to the lowest"""
+  childCount_DESC
+
+  """from the lowest number of "articles" to the highest"""
+  articleCount_ASC
+
+  """from the highest number of "articles" to the lowest"""
+  articleCount_DESC
+}"
+`;
+
+exports[`NodeOrderingInputType Definition Tag has an ordering input type: TagOrderingInput 1`] = `
+""""Order the "Tag" nodes"""
+enum TagOrderingInput {
+  """from the lowest "createdAt" to the highest"""
+  createdAt_ASC
+
+  """from the highest "createdAt" to the lowest"""
+  createdAt_DESC
+
+  """from the lowest "updatedAt" to the highest"""
+  updatedAt_ASC
+
+  """from the highest "updatedAt" to the lowest"""
+  updatedAt_DESC
+
+  """from the lowest number of "articles" to the highest"""
+  articleCount_ASC
+
+  """from the highest number of "articles" to the lowest"""
+  articleCount_DESC
+}"
+`;
+
+exports[`NodeOrderingInputType Definition User has an ordering input type: UserOrderingInput 1`] = `
+""""Order the "User" nodes"""
+enum UserOrderingInput {
+  """from the lowest number of "createdArticles" to the highest"""
+  createdArticleCount_ASC
+
+  """from the highest number of "createdArticles" to the lowest"""
+  createdArticleCount_DESC
+
+  """from the lowest number of "updatedArticles" to the highest"""
+  updatedArticleCount_ASC
+
+  """from the highest number of "updatedArticles" to the lowest"""
+  updatedArticleCount_DESC
+}"
+`;
+
+exports[`NodeOrderingInputType Definition UserProfile has an ordering input type: UserProfileOrderingInput 1`] = `
+""""Order the "UserProfile" nodes"""
+enum UserProfileOrderingInput {
+  """from the lowest "birthday" to the highest"""
+  birthday_ASC
+
+  """from the highest "birthday" to the lowest"""
+  birthday_DESC
+}"
+`;

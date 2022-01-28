@@ -1,6 +1,10 @@
-import { GraphQLBigInt } from 'graphql-scalars';
-import { TypedGraphQLScalarType } from '../types';
+import { GraphQLBigInt } from './bigints/signed.js';
+import { GraphQLUnsignedBigInt } from './bigints/unsigned.js';
 
-export const bigintScalarTypes = Object.freeze([
-  GraphQLBigInt as TypedGraphQLScalarType<'BigInt', bigint, string>,
-]);
+export * from './bigints/signed.js';
+export * from './bigints/unsigned.js';
+
+export const bigintScalarTypesByName = {
+  BigInt: GraphQLBigInt,
+  UnsignedBigInt: GraphQLUnsignedBigInt,
+} as const;

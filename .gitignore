@@ -1,5 +1,6 @@
 *.log
 .npmrc
+tsconfig.tsbuildinfo
 
 .yarn/*
 !.yarn/cache
@@ -10,9 +11,11 @@
 
 dist
 node_modules
+
 package-lock.json
-packages/**/coverage
 packages/**/build
+packages/**/coverage
 packages/**/dist
 packages/**/node_modules
 packages/**/package-lock.json
+packages/**/tsconfig.tsbuildinfo

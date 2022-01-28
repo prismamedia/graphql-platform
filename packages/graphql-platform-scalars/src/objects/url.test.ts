@@ -1,13 +1,11 @@
-import { URL } from 'url';
-import { GraphQLURL } from './url';
+import { URL } from 'node:url';
+import { GraphQLURL } from './url.js';
 
 describe('URL', () => {
   it.each(['https//www.ietf.org/rfc/rfc3986.txt', 'localhost'])(
-    'throws an Error on invalid value "%s"',
+    'throws an Error on invalid value: %s',
     (input) => {
-      expect(() => GraphQLURL.parseValue(input)).toThrowError(
-        /URL expects an url, got the error: /,
-      );
+      expect(() => GraphQLURL.parseValue(input)).toThrowError('Invalid URL');
     },
   );
 

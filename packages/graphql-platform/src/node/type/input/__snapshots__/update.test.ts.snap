@@ -1,0 +1,68 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`NodeUpdateInputType Definition Article has an update input type: ArticleUpdateInput 1`] = `
+""""The "Article" node's update"""
+input ArticleUpdateInput {
+  status: ArticleStatus
+  title: NonEmptyTrimmedString
+  slug: NonEmptyTrimmedString
+
+  """The article's body"""
+  body: DraftJS
+  category: ArticleNestedCategoryEdgeUpdateInput
+  updatedBy: ArticleNestedUpdatedByEdgeUpdateInput
+
+  """Contains any arbitrary data you want to store alongside the article"""
+  metas: JSONObject
+
+  """Is the article highlighted?"""
+  highlighted: Boolean
+
+  """Is the article a partnership?"""
+  sponsored: Boolean
+  tags: ArticleNestedTagsReverseEdgeUpdateInput
+
+  """It is possible to provide the article's body as raw HTML"""
+  htmlBody: String
+}"
+`;
+
+exports[`NodeUpdateInputType Definition ArticleTag has an update input type: ArticleTagUpdateInput 1`] = `
+""""The "ArticleTag" node's update"""
+input ArticleTagUpdateInput {
+  order: UnsignedInt
+}"
+`;
+
+exports[`NodeUpdateInputType Definition Category has an update input type: CategoryUpdateInput 1`] = `
+""""The "Category" node's update"""
+input CategoryUpdateInput {
+  parent: CategoryNestedParentEdgeUpdateInput
+  order: UnsignedInt
+
+  """This category's children"""
+  children: CategoryNestedChildrenReverseEdgeUpdateInput
+
+  """The articles attached to this category"""
+  articles: CategoryNestedArticlesReverseEdgeUpdateInput
+}"
+`;
+
+exports[`NodeUpdateInputType Definition Tag has an update input type: TagUpdateInput 1`] = `
+""""The "Tag" node's update"""
+input TagUpdateInput {
+  """A tag can be deprecated"""
+  deprecated: Boolean
+  articles: TagNestedArticlesReverseEdgeUpdateInput
+}"
+`;
+
+exports[`NodeUpdateInputType Definition UserProfile has an update input type: UserProfileUpdateInput 1`] = `
+""""The "UserProfile" node's update"""
+input UserProfileUpdateInput {
+  birthday: Date
+  facebookId: ID
+  googleId: ID
+  twitterHandle: ID
+}"
+`;

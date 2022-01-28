@@ -1,199 +1,348 @@
 import {
   addPath,
-  didYouMean,
-  fromObjectEntries,
-  getObjectEntries,
-  getObjectKeys,
-  getOptionalFlagValue,
-  MaybePathAwareError,
-  OptionalFlagValue,
-  Path,
+  aggregateConfigError,
+  assertPlainObjectConfig,
+  castToError,
+  ConfigError,
+  isConstructor,
+  isPlainObject,
+  operationTypes,
+  UnexpectedConfigError,
+  UnexpectedValueError,
+  type Path,
 } from '@prismamedia/graphql-platform-utils';
-import assert from 'assert';
-import {
-  assertValidSchema,
-  GraphQLFieldConfigMap,
-  GraphQLObjectType,
-  GraphQLSchema,
-  GraphQLSchemaConfig,
-  OperationTypeNode,
-} from 'graphql';
-import { IConnector } from './connector';
+import { Memoize } from '@prismamedia/ts-memoize';
+import * as graphql from 'graphql';
+import type { Constructor, Except } from 'type-fest';
+import type { ConnectorInterface } from './connector-interface.js';
 import {
   getCustomOperationMap,
-  TCustomOperationMap,
-} from './custom-operations';
-import { Edge, Leaf, Node, TNodeConfig } from './node';
+  type CustomOperationMap,
+} from './custom-operations.js';
+import {
+  createAPI,
+  InvalidContextError,
+  Node,
+  type API,
+  type NodeConfig,
+  type NodeName,
+  type OperationInterface,
+  type OperationsByNameByType,
+} from './node.js';
+import { NodeFixtureDataByReferenceByNodeName, Seeding } from './seeding.js';
 
-export * from './connector';
-export * from './custom-operations';
-export * from './node';
-export * from './operations';
+export * from './connector-interface.js';
+export * from './custom-operations.js';
+export * from './node.js';
+export * from './seeding.js';
 
-export interface IGraphQLPlatformConfig<
-  TContext = undefined,
-  TConnector extends IConnector = IConnector
-> {
-  /**
-   * Optional, either the API is exposed publicly or not
-   *
-   * Default: true
-   */
-  public?: OptionalFlagValue;
-
+export type GraphQLPlatformConfig<
+  TRequestContext extends object = any,
+  TConnector extends ConnectorInterface = any,
+> = {
   /**
    * Required, provide the nodes' definition
    */
   nodes: {
     /**
-     * The "node"'s name is expected to be provided in "PascalCase"
+     * The nodes' name are expected to be provided in "PascalCase" and to be valid against the GraphQL "Names" rules
+     *
+     * @see https://spec.graphql.org/draft/#sec-Names
      */
-    [nodeName: string]: TNodeConfig<TContext, TConnector>;
+    [nodeName: NodeName]: NodeConfig<TRequestContext, TConnector>;
   };
 
   /**
    * Optional, add some "custom" operations
    */
-  customOperations?: TCustomOperationMap<TContext, TConnector>;
+  customOperations?: CustomOperationMap<TRequestContext, TConnector>;
 
   /**
    * Optional, fine-tune the generated GraphQL Schema
    */
-  schema?: Omit<GraphQLSchemaConfig, OperationTypeNode>;
+  schema?: Except<graphql.GraphQLSchemaConfig, graphql.OperationTypeNode>;
 
   /**
    * Optional, provide a connector to let the schema be executable
    */
-  connector?: TConnector;
-}
+  connector?:
+    | TConnector
+    | Constructor<TConnector, [GraphQLPlatform]>
+    | [
+        Constructor<TConnector, [GraphQLPlatform, TConnector['config'], Path]>,
+        TConnector['config'],
+      ];
+
+  /**
+   * Optional, a method which asserts the request context validity
+   *
+   * Convenient when the GraphQL Platform is used with multiple integrations and you want to validate its context
+   *
+   * By default, the context provided by the integration is provided "as is"
+   *
+   * @see: https://www.apollographql.com/docs/apollo-server/data/resolvers/#the-context-argument
+   */
+  assertRequestContext?(
+    maybeRequestContext: unknown,
+  ): asserts maybeRequestContext is TRequestContext;
+};
 
 export class GraphQLPlatform<
-  TContext = undefined,
-  TConnector extends IConnector = IConnector
+  TRequestContext extends object = any,
+  TConnector extends ConnectorInterface = any,
 > {
-  public readonly public: boolean;
-
-  public readonly nodeMap: ReadonlyMap<string, Node<TContext, TConnector>>;
-
-  public readonly schema: GraphQLSchema;
-
+  public readonly nodesByName: ReadonlyMap<
+    Node['name'],
+    Node<TRequestContext, TConnector>
+  >;
+  public readonly operationsByNameByType: OperationsByNameByType<
+    TRequestContext,
+    TConnector
+  >;
+  public readonly api: API<TRequestContext, TConnector>;
   readonly #connector?: TConnector;
 
   public constructor(
-    public readonly config: IGraphQLPlatformConfig<TContext, TConnector>,
+    public readonly config: GraphQLPlatformConfig<TRequestContext, TConnector>,
+    public readonly configPath: Path = addPath(
+      undefined,
+      'GraphQLPlatformConfig',
+    ),
   ) {
-    this.public = getOptionalFlagValue(config.public, true);
+    assertPlainObjectConfig(config, configPath);
 
-    this.nodeMap = new Map(
-      Object.entries(config.nodes).map(([name, config]) => [
-        name,
-        new Node(this, name, config),
-      ]),
-    );
+    // nodes
+    {
+      const nodesConfig = config.nodes;
+      const nodesConfigPath = addPath(configPath, 'nodes');
 
-    assert(
-      this.nodeMap.size > 0,
-      `GraphQL Platform expects at least one node to be defined`,
-    );
-
-    // Resolves some "lazy" properties in order to validate the definitions
-    this.nodeMap.forEach((node) => {
-      node.public;
-      node.componentMap.forEach((component) => {
-        component.public;
-        if (component instanceof Edge) {
-          component.reference;
-        }
-      });
-      node.reverseEdgeMap.forEach((reverseEdge) => {
-        reverseEdge.public;
-        reverseEdge.unique;
-      });
-    });
-
-    const operations: Record<
-      OperationTypeNode,
-      GraphQLFieldConfigMap<any, any>
-    > = {
-      query: {},
-      mutation: {},
-      subscription: {},
-    };
-
-    for (const type of getObjectKeys(operations)) {
-      // Node operations
-      for (const node of this.nodeMap.values()) {
-        for (const operation of Object.values(node.operationMap)) {
-          if (operation.public && operation.type === type) {
-            if (operation.name in operations[type]) {
-              throw new Error(
-                `At least 2 "${type}" operations have the same name "${operation.name}"`,
-              );
-            }
-
-            Object.assign(operations[type], {
-              [operation.name]: operation.graphqlFieldConfig,
-            });
-          }
-        }
+      if (!isPlainObject(nodesConfig) || !Object.entries(nodesConfig).length) {
+        throw new UnexpectedConfigError(`at least one "node"`, nodesConfig, {
+          path: nodesConfigPath,
+        });
       }
 
-      // Custom operations
-      Object.assign(
-        operations[type],
-        getCustomOperationMap(this, this.config.customOperations, type),
+      this.nodesByName = new Map(
+        aggregateConfigError<
+          [Node['name'], NodeConfig<any, any>],
+          [Node['name'], Node][]
+        >(
+          Object.entries(nodesConfig),
+          (entries, [nodeName, nodeConfig]) => [
+            ...entries,
+            [
+              nodeName,
+              new Node(
+                this,
+                nodeName,
+                nodeConfig,
+                addPath(nodesConfigPath, nodeName),
+              ),
+            ],
+          ],
+          [],
+          { path: nodesConfigPath },
+        ),
+      );
+
+      /**
+       * In order to fail as soon as possible, we validate/build everything right away.
+       * It is done step by step in order to have meaningful errors.
+       */
+      {
+        aggregateConfigError<Node, void>(
+          this.nodesByName.values(),
+          (_, node) => node.validateDefinition(),
+          undefined,
+          { path: nodesConfigPath },
+        );
+
+        aggregateConfigError<Node, void>(
+          this.nodesByName.values(),
+          (_, node) => node.validateTypes(),
+          undefined,
+          { path: nodesConfigPath },
+        );
+
+        aggregateConfigError<Node, void>(
+          this.nodesByName.values(),
+          (_, node) => node.validateOperations(),
+          undefined,
+          { path: nodesConfigPath },
+        );
+      }
+    }
+
+    // operations
+    {
+      this.operationsByNameByType = Object.fromEntries(
+        operationTypes.map((type): any => [
+          type,
+          new Map(
+            Array.from(this.nodesByName.values()).flatMap((node) =>
+              node.operations
+                .filter((operation) => operation.operationType === type)
+                .map((operation) => [operation.name, operation]),
+            ),
+          ),
+        ]),
+      ) as OperationsByNameByType;
+    }
+
+    // API
+    {
+      this.api = createAPI(this);
+    }
+
+    // connector
+    {
+      const connectorConfig = this.config.connector;
+      const connectorConfigPath = addPath(this.configPath, 'connector');
+
+      this.#connector = connectorConfig
+        ? isConstructor<TConnector, [GraphQLPlatform]>(connectorConfig)
+          ? new connectorConfig(this)
+          : Array.isArray(connectorConfig)
+          ? connectorConfig.length
+            ? new connectorConfig[0](
+                this,
+                connectorConfig[1],
+                addPath(connectorConfigPath, 1),
+              )
+            : undefined
+          : connectorConfig
+        : undefined;
+    }
+  }
+
+  public getNode(
+    name: Node['name'],
+    path?: Path,
+  ): Node<TRequestContext, TConnector> {
+    const node = this.nodesByName.get(name);
+    if (!node) {
+      throw new UnexpectedValueError(
+        `a node's name among "${[...this.nodesByName.keys()].join(', ')}"`,
+        name,
+        { path },
       );
     }
 
-    this.schema = new GraphQLSchema({
-      ...fromObjectEntries(
-        getObjectEntries(operations)
-          .filter(([, fields]) => Object.values(fields).length > 0)
-          .map(([name, fields]): [OperationTypeNode, GraphQLObjectType] => [
-            name,
-            new GraphQLObjectType({ name, fields }),
-          ]),
+    return node;
+  }
+
+  public getOperation(
+    type: graphql.OperationTypeNode,
+    name: string,
+    path?: Path,
+  ): OperationInterface<TRequestContext, TConnector> {
+    if (!operationTypes.includes(type)) {
+      throw new UnexpectedValueError(
+        `an operation's type among "${operationTypes.join(', ')}"`,
+        type,
+        { path },
+      );
+    }
+
+    const operation = this.operationsByNameByType[type].get(name);
+    if (!operation) {
+      throw new UnexpectedValueError(
+        `an operation's name among "${[
+          ...this.operationsByNameByType[type].keys(),
+        ].join(', ')}"`,
+        name,
+        { path },
+      );
+    }
+
+    return operation;
+  }
+
+  @Memoize()
+  public get schema(): graphql.GraphQLSchema {
+    const schema = new graphql.GraphQLSchema({
+      ...this.config.schema,
+
+      ...Object.fromEntries(
+        operationTypes.map((type) => {
+          const fields: graphql.GraphQLFieldConfigMap<
+            undefined,
+            TRequestContext
+          > = {
+            // Native operations
+            ...Object.fromEntries(
+              [...this.operationsByNameByType[type].values()]
+                .filter((operation) => operation.isPublic())
+                .map((operation) => [
+                  operation.name,
+                  operation.getGraphQLFieldConfig(),
+                ]),
+            ),
+
+            // Custom operations
+            ...getCustomOperationMap(this, this.config.customOperations, type),
+          };
+
+          return [
+            type,
+            Object.keys(fields).length > 0
+              ? new graphql.GraphQLObjectType({ name: type, fields })
+              : undefined,
+          ];
+        }),
       ),
-      ...config.schema,
     });
 
-    assertValidSchema(this.schema);
+    graphql.assertValidSchema(schema);
 
-    this.#connector = this.config.connector;
-    this.#connector?.connect?.(this);
+    return schema;
   }
 
-  public getNode(name: string, path?: Path): Node<TContext, TConnector> {
-    if (!this.nodeMap.has(name)) {
-      throw new MaybePathAwareError(
-        `The "${name}" node does not exist, did you mean: ${didYouMean(
-          name,
-          this.nodeMap.keys(),
-        )}`,
-        path,
-      );
-    }
-
-    return this.nodeMap.get(name)!;
-  }
-
-  public getNodeLeaf(id: string, path?: Path): Leaf<TConnector> {
-    const [node, leaf] = id.split('.');
-
-    return this.getNode(node, path).getLeaf(leaf, addPath(path, leaf));
-  }
-
-  public getNodeEdge(id: string, path?: Path): Edge<TConnector> {
-    const [node, edge] = id.split('.');
-
-    return this.getNode(node, path).getEdge(edge, addPath(path, edge));
-  }
-
+  @Memoize()
   public get connector(): TConnector {
     if (!this.#connector) {
-      throw new Error(`No connector has been provided`);
+      throw new ConfigError(`No connector has been provided`, {
+        path: addPath(this.configPath, 'connector'),
+      });
     }
 
     return this.#connector;
+  }
+
+  public assertRequestContext(
+    maybeRequestContext: unknown,
+    path?: Path,
+  ): asserts maybeRequestContext is TRequestContext {
+    try {
+      if (
+        typeof maybeRequestContext !== 'object' ||
+        maybeRequestContext === null
+      ) {
+        throw new UnexpectedValueError('an object', maybeRequestContext, {
+          path,
+        });
+      }
+
+      this.config.assertRequestContext?.(maybeRequestContext);
+    } catch (error) {
+      throw new InvalidContextError({
+        cause: castToError(error),
+        path,
+      });
+    }
+  }
+
+  public async seed(
+    fixtures: NodeFixtureDataByReferenceByNodeName,
+    context: TRequestContext,
+    reset: boolean = false,
+  ): Promise<void> {
+    const seeding = new Seeding(this, fixtures);
+
+    if (reset) {
+      await this.connector.reset?.();
+    }
+
+    await seeding.load(context);
   }
 }

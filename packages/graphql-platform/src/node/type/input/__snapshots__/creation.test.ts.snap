@@ -1,0 +1,90 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`NodeCreationInputType Definition Article has a creation input type: ArticleCreationInput 1`] = `
+""""The "Article" node's creation"""
+input ArticleCreationInput {
+  """You can either provide an UUID or let one be generated for you"""
+  id: UUIDv4
+  status: ArticleStatus! = DRAFT
+  title: NonEmptyTrimmedString!
+
+  """You can either provide a slug or let the title be "slugified" for you"""
+  slug: NonEmptyTrimmedString
+
+  """The article's body"""
+  body: DraftJS
+  category: ArticleNestedCategoryEdgeCreationInput
+
+  """Contains any arbitrary data you want to store alongside the article"""
+  metas: JSONObject
+
+  """Is the article highlighted?"""
+  highlighted: Boolean
+
+  """Is the article a partnership?"""
+  sponsored: Boolean
+  tags: ArticleNestedTagsReverseEdgeCreationInput
+
+  """It is possible to provide the article's body as raw HTML"""
+  htmlBody: String
+}"
+`;
+
+exports[`NodeCreationInputType Definition ArticleTag has a creation input type: ArticleTagCreationInput 1`] = `
+""""The "ArticleTag" node's creation"""
+input ArticleTagCreationInput {
+  article: ArticleTagNestedArticleEdgeCreationInput!
+  tag: ArticleTagNestedTagEdgeCreationInput!
+  order: UnsignedInt!
+}"
+`;
+
+exports[`NodeCreationInputType Definition Category has a creation input type: CategoryCreationInput 1`] = `
+""""The "Category" node's creation"""
+input CategoryCreationInput {
+  """You can either provide an UUID or let one be generated for you"""
+  id: UUIDv4
+  title: NonEmptyTrimmedString!
+
+  """You can either provide a slug or let the title be "slugified" for you"""
+  slug: NonEmptyTrimmedString
+  parent: CategoryNestedParentEdgeCreationInput
+  order: UnsignedInt!
+
+  """This category's children"""
+  children: CategoryNestedChildrenReverseEdgeCreationInput
+
+  """The articles attached to this category"""
+  articles: CategoryNestedArticlesReverseEdgeCreationInput
+
+  """It is possible to provide the article's body as raw HTML"""
+  htmlBody: String
+}"
+`;
+
+exports[`NodeCreationInputType Definition Tag has a creation input type: TagCreationInput 1`] = `
+""""The "Tag" node's creation"""
+input TagCreationInput {
+  """You can either provide an UUID or let one be generated for you"""
+  id: UUIDv4
+
+  """A tag can be deprecated"""
+  deprecated: Boolean
+  title: NonEmptyTrimmedString!
+
+  """You can either provide a slug or let the title be "slugified" for you"""
+  slug: NonEmptyTrimmedString
+  articles: TagNestedArticlesReverseEdgeCreationInput
+}"
+`;
+
+exports[`NodeCreationInputType Definition UserProfile has a creation input type: UserProfileCreationInput 1`] = `
+""""The "UserProfile" node's creation"""
+input UserProfileCreationInput {
+  user: UserProfileNestedUserEdgeCreationInput!
+  birthday: Date
+  facebookId: ID
+  googleId: ID
+  twitterHandle: ID
+}"
+`;

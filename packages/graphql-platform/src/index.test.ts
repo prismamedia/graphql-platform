@@ -1,192 +1,91 @@
-import {
-  GraphQLNonNull,
-  GraphQLString,
-  printSchema,
-  validateSchema,
-} from 'graphql';
-import { Edge, GraphQLPlatform, Leaf } from '.';
-import { nodes } from './__tests__/config';
+import * as graphql from 'graphql';
+import { GraphQLPlatform } from './index.js';
+import { nodes } from './__tests__/config.js';
 
 describe('GraphQL Platform', () => {
-  it('throws an Error on empty nodes', () => {
-    expect(
-      () =>
-        new GraphQLPlatform({
-          nodes: {},
-        }),
-    ).toThrowError('GraphQL Platform expects at least one node to be defined');
+  describe('Fails', () => {
+    it.each([
+      [
+        undefined,
+        `\"GraphQLPlatformConfig\" - Expects a plain-object, got: undefined`,
+      ],
+      [null, `\"GraphQLPlatformConfig\" - Expects a plain-object, got: null`],
+    ])('throws an Error on invalid config: %p', (config, expectedError) => {
+      // @ts-expect-error
+      expect(() => new GraphQLPlatform(config)).toThrowError(expectedError);
+    });
+
+    it.each([
+      [
+        {},
+        `"GraphQLPlatformConfig.nodes" - Expects at least one "node", got: undefined`,
+      ],
+      [
+        { nodes: undefined },
+        `"GraphQLPlatformConfig.nodes" - Expects at least one "node", got: undefined`,
+      ],
+      [
+        { nodes: null },
+        `"GraphQLPlatformConfig.nodes" - Expects at least one "node", got: null`,
+      ],
+      [
+        { nodes: {} },
+        `"GraphQLPlatformConfig.nodes" - Expects at least one "node", got: {}`,
+      ],
+    ])('throws an Error on invalid nodes: %p', (config, expectedError) => {
+      // @ts-expect-error
+      expect(() => new GraphQLPlatform(config)).toThrowError(expectedError);
+    });
   });
 
-  it('throws an Error on unknown node', () => {
-    const gp = new GraphQLPlatform({ nodes });
+  describe('Works', () => {
+    let gp: GraphQLPlatform;
 
-    expect(() => gp.getNode('UnknownResource')).toThrowError(
-      'The "UnknownResource" node does not exist, did you mean:',
-    );
+    beforeAll(() => {
+      gp = new GraphQLPlatform({ nodes });
+    });
 
-    expect(() => gp.getNode('article')).toThrowError(
-      'The "article" node does not exist, did you mean: Article',
-    );
-  });
-
-  it('throws an Error on unknown component', () => {
-    const gp = new GraphQLPlatform({ nodes });
-
-    expect(() =>
-      gp.getNode('Article').getComponent('UnknownComponent'),
-    ).toThrowError(
-      'The "Article" node does not contain the component "UnknownComponent", did you mean:',
-    );
-
-    expect(() => gp.getNode('Article').getComponent('ID')).toThrowError(
-      'The "Article" node does not contain the component "ID", did you mean:',
-    );
-  });
-
-  it('throws an Error on non-unique reverse edge name', () => {
-    expect(
-      () =>
-        new GraphQLPlatform({
-          nodes: {
-            ...nodes,
-            User: { ...nodes.User, reverseEdges: {} },
-          },
-        }),
-    ).toThrowError(
-      'The "User" node has more than one reverse edge named "articles", you have to configure their name through the "reverseEdges" parameter: Article.createdBy, Article.updatedBy',
-    );
-  });
-
-  it('throws an Error on missing reverse edge', () => {
-    expect(
-      () =>
-        new GraphQLPlatform({
-          nodes: {
-            ...nodes,
-            User: {
-              ...nodes.User,
-              reverseEdges: {
-                ...nodes.User.reverseEdges,
-                'Article.unknownReference': { name: 'myReferrerName' },
-              },
-            },
-          },
-        }),
-    ).toThrowError(
-      'The "User" node has unknown reverse edge definition: Article.unknownReference',
-    );
-  });
-
-  it('throws an Error on custom field with invalid name', () => {
-    expect(
-      () =>
-        new GraphQLPlatform({
-          nodes: {
-            ...nodes,
-            User: {
-              ...nodes.User,
-              customFields: {
-                username: {
-                  args: {},
-                  type: GraphQLNonNull(GraphQLString),
-                  resolve: () => 'MyUsername',
-                },
-              },
-            },
-          },
-        }),
-    ).toThrowError(
-      '"User" contains at least 2 filters with the same name "username"',
-    );
-  });
-
-  it('has valid nodes', () => {
-    const gp = new GraphQLPlatform({ nodes });
-
-    expect([...gp.nodeMap.keys()]).toEqual([
-      'Article',
-      'Category',
-      'Tag',
-      'ArticleTag',
-      'User',
-      'UserProfile',
-      'Log',
-      'Hit',
-    ]);
-
-    // Article
-    {
-      const Article = gp.getNode('Article');
-
-      expect(Article.name).toEqual('Article');
-
-      expect([...Article.componentMap.keys()]).toEqual([
-        '_id',
-        'id',
-        'status',
-        'title',
-        'slug',
-        'body',
-        'category',
-        'createdBy',
-        'createdAt',
-        'updatedBy',
-        'updatedAt',
-        'metas',
+    it(`has nodes' definition`, () => {
+      expect(Array.from(gp.nodesByName.keys())).toEqual([
+        'Article',
+        'Category',
+        'Tag',
+        'ArticleTag',
+        'User',
+        'UserProfile',
+        'Log',
       ]);
+    });
 
-      const body = Article.getComponent('body');
-      expect(body).toBeInstanceOf(Leaf);
+    it.each<
+      [
+        operationType: graphql.OperationTypeNode,
+        enabledCount: number,
+        publicCount: number,
+      ]
+    >([
+      [graphql.OperationTypeNode.QUERY, 49, 42],
+      [graphql.OperationTypeNode.MUTATION, 52, 45],
+      [graphql.OperationTypeNode.SUBSCRIPTION, 0, 0],
+    ])(
+      `generates %s: %d enabled / %d public`,
+      (operationType, enabledCount, publicCount) => {
+        const enabledOperationsByName = Array.from(
+          gp.operationsByNameByType[operationType].values(),
+        ).filter((operation) => operation.isEnabled());
 
-      const category = Article.getComponent('category');
-      expect(category).toBeInstanceOf(Edge);
+        expect(enabledOperationsByName.length).toBe(enabledCount);
 
-      const createdBy = Article.getEdge('createdBy');
-      expect(createdBy).toBeInstanceOf(Edge);
-      expect(createdBy.reference.name).toEqual('id');
+        const publicOperationsByName = Array.from(
+          gp.operationsByNameByType[operationType].values(),
+        ).filter((operation) => operation.isPublic());
 
-      const updatedBy = Article.getEdge('updatedBy');
-      expect(updatedBy).toBeInstanceOf(Edge);
-      expect(updatedBy.reference.name).toEqual('username');
+        expect(publicOperationsByName.length).toBe(publicCount);
+      },
+    );
 
-      expect([...Article.uniqueConstraintMap.keys()]).toEqual(['_id', 'id']);
-    }
-
-    // Category
-    {
-      const Category = gp.getNode('Category');
-
-      expect(Category.name).toEqual('Category');
-
-      expect([...Category.componentMap.keys()]).toEqual([
-        '_id',
-        'id',
-        'title',
-        'slug',
-        'parent',
-        'order',
-      ]);
-
-      const parent = Category.getEdge('parent');
-      expect(parent).toBeInstanceOf(Edge);
-      expect(parent.reference.name).toEqual('_id');
-
-      expect([...Category.uniqueConstraintMap.keys()]).toEqual([
-        '_id',
-        'id',
-        'parent-slug',
-        'parent-order',
-      ]);
-    }
-  });
-
-  it('generates a valid GraphQL Schema', () => {
-    const { schema } = new GraphQLPlatform({ nodes: nodes });
-
-    expect(validateSchema(schema)).toEqual([]);
-
-    expect(
-      printSchema(schema, { commentDescriptions: true }),
-    ).toMatchSnapshot();
+    it('generates a valid GraphQL Schema', () => {
+      expect(graphql.printSchema(gp.schema)).toMatchSnapshot();
+    });
   });
 });

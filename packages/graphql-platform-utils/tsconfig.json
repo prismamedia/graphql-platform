@@ -1,15 +1,15 @@
 {
-  "extends": "@tsconfig/node14",
+  "extends": "@tsconfig/node18",
   "compilerOptions": {
-    "rootDir": "src",
-    "moduleResolution": "Node",
-    // "module": "ES2020",
-    "module": "CommonJS",
-    "outDir": "dist/mjs",
+    "moduleResolution": "Node16",
+    "module": "Node16",
+
+    "composite": true,
     "declaration": true,
     "declarationMap": true,
-    "declarationDir": "dist/types",
-    "composite": true,
-    "experimentalDecorators": true
+    "experimentalDecorators": true,
+
+    "rootDir": "src",
+    "outDir": "dist"
   }
 }

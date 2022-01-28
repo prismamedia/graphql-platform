@@ -1,118 +1,112 @@
 import {
   addPath,
-  didYouMean,
-  getNormalizedObject,
-  getOptionalFlagValue,
+  aggregateConfigError,
+  aggregateError,
+  assertPlainObjectConfig,
+  castToError,
+  ConfigError,
+  ensureName,
+  getOptionalDeprecation,
+  getOptionalDescription,
+  getOptionalFlag,
+  indefinite,
   isPlainObject,
-  isPublic,
-  isPublicEntry,
-  mapObject,
-  MaybePathAwareError,
-  OptionalFlagValue,
-  Path,
-  Public,
+  MutationType,
+  UnexpectedConfigError,
   UnexpectedValueError,
+  UnreachableConfigError,
+  type Name,
+  type OptionalDeprecation,
+  type OptionalDescription,
+  type OptionalFlag,
+  type Path,
 } from '@prismamedia/graphql-platform-utils';
 import { Memoize } from '@prismamedia/ts-memoize';
-import {
-  TTypedEventEmitterOptions,
-  TypedEventEmitter,
-} from '@prismamedia/ts-typed-event-emitter';
-import assert from 'assert';
-import {
-  assertValidName,
-  GraphQLInterfaceType,
-  GraphQLObjectType,
-} from 'graphql';
-import { camelize, pluralize } from 'inflection';
-import { Promisable } from 'type-fest';
-import { GraphQLPlatform } from '.';
-import {
-  IConnector,
-  TConnectorOverridesKind,
-  TGetConnectorOverrides,
-} from './connector';
+import inflection from 'inflection';
+import * as rxjs from 'rxjs';
+import type {
+  ConnectorConfigOverrideKind,
+  ConnectorInterface,
+  GetConnectorConfigOverride,
+} from './connector-interface.js';
+import type { GraphQLPlatform } from './index.js';
+import type { ChangedNode } from './node/change.js';
 import {
   Edge,
-  isEdgeEntry,
-  isLeafComponentConfig,
-  isLeafEntry,
   Leaf,
-  TComponent,
-  TComponentConfig,
-} from './node/component';
-import {
-  EdgeExistenceField,
-  EdgeField,
-  IEdgeSelection,
-  ILeafSelection,
-  LeafField,
-  TCustomFieldConfigMap,
-  TField,
-  TFieldSelection,
-  TFieldValue,
-} from './node/fields';
-import { OrderByInput } from './node/order-by-input';
-import { IReverseEdgeConfig, ReverseEdge } from './node/reverse-edge';
-import {
-  getNormalizedSelectionArgs,
-  getSelectedNode,
-  getSelectionKey,
-} from './node/selection';
-import {
-  TUniqueConstraintConfig,
+  ReverseEdgeMultiple,
+  ReverseEdgeUnique,
   UniqueConstraint,
-} from './node/unique-constraint';
-import { TFilterValue, TWhereInputValue, WhereInput } from './node/where-input';
-import { WhereUniqueInput } from './node/where-unique-input';
+  type Component,
+  type ComponentConfig,
+  type ComponentValue,
+  type ReverseEdge,
+  type ReverseEdgeConfig,
+  type UniqueConstraintConfig,
+  type UniqueConstraintValue,
+} from './node/definition.js';
+import { assertNodeName, type NodeName } from './node/name.js';
 import {
-  operationConstructorMap,
-  TOperation,
-  TOperationConfigMap,
-  TOperationKey,
-  TOperationMap,
-} from './operations';
+  mutationConstructorsByKey,
+  nodeSubscriptionConstructorsByKey,
+  queryConstructorsByKey,
+  UnauthorizedError,
+  type MutationConfig,
+  type MutationInterface,
+  type MutationKey,
+  type MutationsByKey,
+  type NodeSubscriptionKey,
+  type NodeSubscriptionsByKey,
+  type OperationInterface,
+  type QueriesByKey,
+  type QueryKey,
+} from './node/operation.js';
+import {
+  mergeSelectionExpressions,
+  NodeFilter,
+  NodeSelection,
+  type NodeSelectedValue,
+} from './node/statement.js';
+import {
+  NodeCreationInputType,
+  NodeFilterInputType,
+  NodeFilterInputValue,
+  NodeOrderingInputType,
+  NodeOutputType,
+  NodeUniqueFilterInputType,
+  NodeUpdateInputType,
+  type NodeOutputTypeConfig,
+} from './node/type.js';
 
-export * from './node/component';
-export * from './node/fields';
-export * from './node/order-by-input';
-export * from './node/reverse-edge';
-export * from './node/selection';
-export * from './node/unique-constraint';
-export * from './node/where-input';
-export * from './node/where-unique-input';
+export * from './node/change.js';
+export * from './node/definition.js';
+export * from './node/fixture.js';
+export * from './node/name.js';
+export * from './node/operation.js';
+export * from './node/statement.js';
+export * from './node/type.js';
 
-export interface INodeValue {
-  [fieldName: string]: TFieldValue;
-}
+/**
+ * Includes all the components' value
+ *
+ * -> think of a "row" in SQL or a "document" in NoSQL
+ */
+export type NodeValue = NodeSelectedValue &
+  UniqueConstraintValue & {
+    [componentName: string]: ComponentValue;
+  };
 
-export type TNodeEventMap<
-  TContext = undefined,
-  TConnector extends IConnector = IConnector
-> = Record<
-  'created' | 'updated' | 'deleted',
-  [
-    args: {
-      node: Node<TContext, TConnector>;
-      value: INodeValue;
-      context: TContext;
-    },
-  ]
->;
+export type NodeAuthorizationConfig<TRequestContext extends object> = (
+  requestContext: TRequestContext,
+  mutationType?: MutationType,
+) => boolean | NodeFilterInputValue;
 
-export type TNodeConfig<
-  TContext = undefined,
-  TConnector extends IConnector = IConnector
+export type NodeConfig<
+  TRequestContext extends object = any,
+  TConnector extends ConnectorInterface = any,
 > = {
   /**
-   * Optional, either the node is exposed publicly (in the GraphQL API) or not (only available internally)
-   *
-   * Default: true
-   */
-  public?: OptionalFlagValue;
-
-  /**
-   * Optional, you can provide this node's "plural" form if the one guessed is not what you expect
+   * Optional, you can provide this node's plural form if the one guessed is not what you expect
    *
    * Default: guessed from the name
    */
@@ -121,568 +115,1133 @@ export type TNodeConfig<
   /**
    * Optional, provide a description for this node
    */
-  description?: string;
+  description?: OptionalDescription;
 
   /**
-   * Optional, either the node's value can be changed or not
+   * Optional, either this node is deprecated or not
    *
-   * Default: false
+   * The information will be shown in all its operations
    */
-  immutable?: OptionalFlagValue;
+  deprecated?: OptionalDeprecation;
 
   /**
-   * A component is either a "leaf" (= an Enum or a Scalar) or an "edge" (= a "link" to another node)
+   * A component is either a leaf (= an enum or a scalar) or an edge (= a link to another node)
    *
    * At least one must be defined
    */
   components: {
-    [componentName: string]: TComponentConfig<TContext, TConnector>;
+    /**
+     * The components' name are expected to be valid against the GraphQL "Names" rules
+     *
+     * @see https://spec.graphql.org/draft/#sec-Names
+     */
+    [componentName: Name]: ComponentConfig<TRequestContext, TConnector>;
   };
 
   /**
-   * Define the "unique constraints" for this node
+   * Define the unique constraints for this node
    *
    * At least one must be defined
+   *
+   * The first one will become this node's identifier, a special unique constraint with some additional restrictions, it must be:
+   *  - non-nullable (= at least one of its components being non-nullable)
+   *  - immutable (= all its components being immutable)
    */
-  uniques: TUniqueConstraintConfig<TConnector>[];
+  uniques: UniqueConstraintConfig<TRequestContext, TConnector>[];
 
   /**
-   * Optional, fine-tune the reverse edges
+   * Optional, define some reverse edges
+   *
+   * @see https://en.wikipedia.org/wiki/Glossary_of_graph_theory#inverted_arrow
    */
   reverseEdges?: {
-    [edgeId: string]: IReverseEdgeConfig;
+    /**
+     * The reverse edges' name are expected to be valid against the GraphQL "Names" rules
+     *
+     * @see https://spec.graphql.org/draft/#sec-Names
+     */
+    [reverseEdge: Name]: ReverseEdgeConfig<TRequestContext, TConnector>;
   };
 
   /**
-   * Optional, add some "custom" fields whose value is computed from the components' value
+   * Optional, either the node is exposed publicly (in the GraphQL API) or not (only available internally)
+   *
+   * Default: true
    */
-  customFields?: TCustomFieldConfigMap<TContext, TConnector>;
+  public?: OptionalFlag;
 
   /**
-   * Optional, implement some GraphQL interfaces
+   * Optional, fine-tune the output type generated from this node's definition
    */
-  interfaces?: GraphQLInterfaceType[];
+  output?: NodeOutputTypeConfig<TRequestContext, TConnector>;
 
   /**
-   * Optional, fine-tune the access to this node by providing a "filter" (= the "where" argument) that will always be appended to the client request, unlike the "defautArgs.where" that is replaced by the client request:
-   * - "undefined" or "true" means no filter is appended
-   * - "false" means no node is returned
-   * - "a filter" means it will applied in a logical "AND" like: { AND: ["THE NODE FILTER", "THE CLIENT FILTER"] }
+   * Optional, fine-tune the "mutation":
+   *
+   * - "true" means all the "mutations" are enabled
+   * - "false" means all the "mutations" are disabled
    */
-  filter?: (
-    context: TContext,
-  ) => Promisable<TWhereInputValue | boolean | undefined>;
+  mutation?:
+    | boolean
+    | {
+        [TType in keyof MutationConfig<TRequestContext, TConnector>]?:
+          | boolean
+          | MutationConfig<TRequestContext, TConnector>[TType];
+      };
 
   /**
-   * Optional, fine-tune the operations
+   * Optional, fine-tune the access to this node given the request-context and the access-type among: query (= !mutationType) / creation / update / deletion
+   *
+   * Either it can proceed (= true or undefined) or an UnauthorizedError is thrown (= false or null)
+   *
+   * A third option is possible: it is to return a filter (= the "where" argument), it will restrict the client's operation to a subset of the nodes
    */
-  operations?: TOperationConfigMap;
+  authorization?: NodeAuthorizationConfig<TRequestContext>;
 
   /**
-   * Optional, configure listeners on this very node
+   * Optional, subscribe to this node's changes Observable
    */
-  on?: TTypedEventEmitterOptions<TNodeEventMap<TContext, TConnector>>;
-} & TGetConnectorOverrides<TConnector, TConnectorOverridesKind.Node>;
+  onChange?: (change: ChangedNode<TRequestContext, TConnector>) => void;
+} & GetConnectorConfigOverride<TConnector, ConnectorConfigOverrideKind.NODE>;
 
 export class Node<
-  TContext = any,
-  TConnector extends IConnector = any
-> extends TypedEventEmitter<TNodeEventMap<TContext, TConnector>> {
-  public readonly public: boolean;
+  TRequestContext extends object = any,
+  TConnector extends ConnectorInterface = any,
+> {
   public readonly plural: string;
-  public readonly description?: string;
-  public readonly immutable: boolean;
-  public readonly componentMap: ReadonlyMap<string, TComponent<TConnector>>;
-  public readonly leafMap: ReadonlyMap<string, Leaf<TConnector>>;
-  public readonly edgeMap: ReadonlyMap<string, Edge<TConnector>>;
-  public readonly uniqueConstraintMap: ReadonlyMap<
-    string,
-    UniqueConstraint<TConnector>
+  public readonly indefinite: string;
+  public readonly description: string | undefined;
+  public readonly deprecationReason: string | undefined;
+  public readonly componentsByName: ReadonlyMap<
+    Component['name'],
+    Component<TRequestContext, TConnector>
   >;
-  public readonly identifier: UniqueConstraint<TConnector>;
-  public readonly whereInput: WhereInput;
-  public readonly orderByInput: OrderByInput;
-  public readonly whereUniqueInput: WhereUniqueInput;
-  public readonly operationMap: TOperationMap;
+  public readonly leavesByName: ReadonlyMap<
+    Leaf['name'],
+    Leaf<TRequestContext, TConnector>
+  >;
+  public readonly edgesByName: ReadonlyMap<
+    Edge['name'],
+    Edge<TRequestContext, TConnector>
+  >;
+  public readonly uniqueConstraintsByName: ReadonlyMap<
+    UniqueConstraint['name'],
+    UniqueConstraint<TRequestContext, TConnector>
+  >;
+  public readonly identifier: UniqueConstraint<TRequestContext, TConnector>;
+  readonly #authorizationConfig?: NodeAuthorizationConfig<TRequestContext>;
+  readonly #authorizationConfigPath: Path;
+
+  /**
+   * An Observable of this node's changes
+   */
+  public readonly changes = new rxjs.Subject<
+    ChangedNode<TRequestContext, TConnector>
+  >();
 
   public constructor(
-    public readonly gp: GraphQLPlatform<any, TConnector>,
-    public readonly name: string,
-    public readonly config: TNodeConfig<any, TConnector>,
+    public readonly gp: GraphQLPlatform<TRequestContext, TConnector>,
+    public readonly name: NodeName,
+    public readonly config: NodeConfig<TRequestContext, TConnector>,
+    public readonly configPath: Path,
   ) {
-    super(config.on);
+    assertNodeName(name, configPath);
+    assertPlainObjectConfig(config, configPath);
 
-    this.immutable = getOptionalFlagValue(config.immutable, false);
-    this.description = config.description || undefined;
-    this.plural = config.plural ?? pluralize(name);
+    // plural
+    {
+      const pluralConfig = config.plural;
+      const pluralConfigPath = addPath(configPath, 'plural');
 
-    // Singular and plural forms must be differents
-    assert(
-      name !== this.plural,
-      `A node definition expects its "singular" and "plural" forms to be different, got "${name}" (you have to provide the node's "plural" parameter)`,
-    );
+      this.plural = ensureName(
+        pluralConfig ?? inflection.pluralize(name),
+        pluralConfigPath,
+      );
 
-    // Are valid against GraphQL rules
-    assertValidName(name);
-    assertValidName(this.plural);
+      const pascalCasedPlural = inflection.camelize(this.plural, false);
+      if (this.plural !== pascalCasedPlural) {
+        throw new UnexpectedConfigError(
+          `a "plural" form in PascalCase (= "${pascalCasedPlural}")`,
+          pluralConfig,
+          { path: pluralConfigPath },
+        );
+      }
 
-    // Are valid against GraphQL Platform rules
-    const pascalCasedName = camelize(name, false);
-    assert(
-      name === pascalCasedName,
-      `A node definition expects a name in "PascalCase", got "${name}" instead of "${pascalCasedName}"`,
-    );
+      if (name === this.plural) {
+        throw new UnexpectedConfigError(
+          `differents "singular" and "plural" forms, you have to define the "plural" parameter as we were not able to guess a valid one`,
+          pluralConfig,
+          { path: pluralConfigPath },
+        );
+      }
+    }
 
-    const pascalCasedPlural = camelize(this.plural, false);
-    assert(
-      this.plural === pascalCasedPlural,
-      `A node definition expects a plural form in "PascalCase", got "${this.plural}" instead of "${pascalCasedPlural}"`,
-    );
+    // indefinite
+    {
+      this.indefinite = indefinite(name);
+    }
 
-    this.public = getOptionalFlagValue(config.public, gp.public);
-    assert(
-      !this.public || gp.public,
-      `The "${name}" node cannot be public as the API is not`,
-    );
+    // description
+    {
+      const descriptionConfig = config.description;
+      const descriptionConfigPath = addPath(configPath, 'description');
 
-    this.componentMap = new Map(
-      Object.entries(config.components).map(([name, config]) => [
-        name,
-        isLeafComponentConfig(config)
-          ? new Leaf(this, name, config)
-          : new Edge(this, name, config),
-      ]),
-    );
+      this.description = getOptionalDescription(
+        descriptionConfig,
+        descriptionConfigPath,
+      );
+    }
 
-    assert(
-      this.componentMap.size > 0,
-      `The "${name}" node expects at least one component`,
-    );
+    // deprecated
+    {
+      const deprecatedConfig = config.deprecated;
+      const deprecatedConfigPath = addPath(configPath, 'deprecated');
 
-    this.leafMap = new Map([...this.componentMap].filter(isLeafEntry));
+      this.deprecationReason = getOptionalDeprecation(
+        deprecatedConfig,
+        `The "${this.name}" node is deprecated`,
+        deprecatedConfigPath,
+      );
+    }
 
-    this.edgeMap = new Map([...this.componentMap].filter(isEdgeEntry));
+    // components
+    {
+      const componentsConfig = config.components;
+      const componentsConfigPath = addPath(configPath, 'components');
 
-    this.uniqueConstraintMap = new Map(
-      config.uniques.map((config) => {
-        const unique = new UniqueConstraint(this, config);
+      if (
+        !isPlainObject(componentsConfig) ||
+        !Object.entries(componentsConfig).length
+      ) {
+        throw new UnexpectedConfigError(
+          `at least one "component"`,
+          componentsConfig,
+          { path: componentsConfigPath },
+        );
+      }
 
-        return [unique.name, unique];
-      }),
-    );
+      this.componentsByName = new Map(
+        aggregateConfigError<
+          [Component['name'], ComponentConfig<any, any>],
+          [Component['name'], Component][]
+        >(
+          Object.entries(componentsConfig),
+          (entries, [componentName, componentConfig]) => {
+            const componentConfigPath = addPath(
+              componentsConfigPath,
+              componentName,
+            );
 
-    assert(
-      this.uniqueConstraintMap.size > 0,
-      `The "${name}" node expects at least one unique constraint`,
-    );
+            assertPlainObjectConfig(componentConfig, componentConfigPath);
 
-    // The identifier is the first node's unique constraint
-    this.identifier = [...this.uniqueConstraintMap.values()][0];
+            let component: Component;
 
-    assert(
-      !this.identifier.nullable,
-      `The "${name}" node's identifier (= the first unique constraint) cannot be nullable (= at least one of its components has to be non-nullable)`,
-    );
+            const kindConfig = componentConfig.kind;
+            const kindConfigPath = addPath(componentConfigPath, 'kind');
 
-    assert(
-      this.identifier.immutable,
-      `The "${name}" node's identifier (= the first unique constraint) has to be immutable (= all its components have to be immutable)`,
-    );
+            if (kindConfig === 'Leaf') {
+              component = new Leaf(
+                this,
+                componentName,
+                componentConfig,
+                componentConfigPath,
+              );
+            } else if (kindConfig === 'Edge') {
+              component = new Edge(
+                this,
+                componentName,
+                componentConfig,
+                componentConfigPath,
+              );
+            } else {
+              throw new UnreachableConfigError(kindConfig, {
+                path: kindConfigPath,
+              });
+            }
 
-    this.whereInput = new WhereInput(this);
+            return [...entries, [component.name, component]];
+          },
+          [],
+          { path: componentsConfigPath },
+        ),
+      );
 
-    this.orderByInput = new OrderByInput(this);
+      this.leavesByName = new Map(
+        Array.from(this.componentsByName).filter(
+          (entry): entry is [string, Leaf] => entry[1] instanceof Leaf,
+        ),
+      );
 
-    this.whereUniqueInput = new WhereUniqueInput(this);
+      this.edgesByName = new Map(
+        Array.from(this.componentsByName).filter(
+          (entry): entry is [string, Edge] => entry[1] instanceof Edge,
+        ),
+      );
+    }
 
-    this.operationMap = mapObject(
-      operationConstructorMap,
-      (OperationConstructor, key) =>
-        new OperationConstructor(this, this.config.operations?.[key] as any),
-    );
+    // uniques
+    {
+      const uniquesConfig = config.uniques;
+      const uniquesConfigPath = addPath(configPath, 'uniques');
+
+      if (!Array.isArray(uniquesConfig) || !uniquesConfig.length) {
+        throw new UnexpectedConfigError(
+          `at least one "unique-constraint"`,
+          uniquesConfig,
+          { path: uniquesConfigPath },
+        );
+      }
+
+      this.uniqueConstraintsByName = new Map(
+        aggregateConfigError<
+          UniqueConstraintConfig<any, any>,
+          [UniqueConstraint['name'], UniqueConstraint][]
+        >(
+          uniquesConfig,
+          (entries, uniqueConstraintConfig, index) => {
+            const unique = new UniqueConstraint(
+              this,
+              uniqueConstraintConfig,
+              addPath(uniquesConfigPath, index),
+            );
+
+            return [...entries, [unique.name, unique]];
+          },
+          [],
+          { path: uniquesConfigPath },
+        ),
+      );
+
+      // identifier (= the first unique constraint)
+      {
+        const identifierConfigPath = addPath(uniquesConfigPath, 0);
+
+        this.identifier = this.uniqueConstraintsByName.values().next().value;
+
+        if (this.identifier.isNullable()) {
+          throw new ConfigError(
+            `Expects its identifier (= the first unique constraint, composed of the component${
+              this.identifier.composite ? 's' : ''
+            } "${[...this.identifier.componentsByName.keys()].join(
+              ', ',
+            )}") to be non-nullable (= at least one of its components being non-nullable)`,
+            { path: identifierConfigPath },
+          );
+        }
+
+        if (this.identifier.isMutable()) {
+          throw new ConfigError(
+            `Expects its identifier (= the first unique constraint, composed of the component${
+              this.identifier.composite ? 's' : ''
+            } "${[...this.identifier.componentsByName.keys()].join(
+              ', ',
+            )}") to be immutable (= all its components being immutable)`,
+            { path: identifierConfigPath },
+          );
+        }
+      }
+    }
+
+    // authorization
+    {
+      const authorizationConfig = config.authorization;
+      const authorizationConfigPath = addPath(configPath, 'authorization');
+
+      if (
+        authorizationConfig !== undefined &&
+        typeof authorizationConfig !== 'function'
+      ) {
+        throw new UnexpectedConfigError(
+          `a request-authorizer`,
+          authorizationConfig,
+          { path: authorizationConfigPath },
+        );
+      }
+
+      this.#authorizationConfig = authorizationConfig;
+      this.#authorizationConfigPath = authorizationConfigPath;
+    }
+
+    config.onChange && this.changes.subscribe(config.onChange);
   }
 
   public toString(): string {
     return this.name;
   }
 
-  public getComponent(name: string, path?: Path): TComponent<TConnector> {
-    if (!this.componentMap.has(name)) {
-      throw new MaybePathAwareError(
-        `The "${
-          this.name
-        }" node does not contain the component "${name}", did you mean: ${didYouMean(
-          name,
-          this.componentMap.keys(),
-        )}`,
-        path,
-      );
-    }
-
-    return this.componentMap.get(name)!;
-  }
-
-  public getLeaf(name: string, path?: Path): Leaf<TConnector> {
-    if (!this.leafMap.has(name)) {
-      throw new MaybePathAwareError(
-        `The "${
-          this.name
-        }" node does not contain the leaf "${name}", did you mean: ${didYouMean(
-          name,
-          this.leafMap.keys(),
-        )}`,
-        path,
-      );
-    }
-
-    return this.leafMap.get(name)!;
-  }
-
-  public getEdge(name: string, path?: Path): Edge<TConnector> {
-    if (!this.edgeMap.has(name)) {
-      throw new MaybePathAwareError(
-        `The "${
-          this.name
-        }" node does not contain the edge "${name}", did you mean: ${didYouMean(
-          name,
-          this.edgeMap.keys(),
-        )}`,
-        path,
-      );
-    }
-
-    return this.edgeMap.get(name)!;
-  }
-
-  public getUniqueConstraint(
-    name: string,
-    path?: Path,
-  ): UniqueConstraint<TConnector> {
-    if (!this.uniqueConstraintMap.has(name)) {
-      throw new MaybePathAwareError(
-        `The "${
-          this.name
-        }" node does not contain the unique constraint "${name}", did you mean: ${didYouMean(
-          name,
-          this.uniqueConstraintMap.keys(),
-        )}`,
-        path,
-      );
-    }
-
-    return this.uniqueConstraintMap.get(name)!;
-  }
-
   @Memoize()
-  public get publicUniqueConstraintSet(): ReadonlySet<
-    Public<UniqueConstraint<TConnector>>
-  > {
-    assert(this.public, `"${this.name}" is private`);
+  public isPublic(): boolean {
+    const publicConfig = this.config.public;
+    const publicConfigPath = addPath(this.configPath, 'public');
 
-    const publicUniqueConstraintSet = new Set(
-      [...this.uniqueConstraintMap.values()].filter(isPublic),
-    );
-
-    assert(
-      publicUniqueConstraintSet.size,
-      `"${this.name}" expects at least one public unique constraint (= with all its components being public)`,
-    );
-
-    return publicUniqueConstraintSet;
+    return getOptionalFlag(publicConfig, true, publicConfigPath);
   }
 
-  @Memoize()
-  public get reverseEdgeMap(): ReadonlyMap<string, ReverseEdge> {
-    const reverseEdgeMap = new Map<string, ReverseEdge>();
+  @Memoize((mutationType: MutationType) => mutationType)
+  public getMutationConfig<TType extends MutationType>(
+    mutationType: TType,
+  ): {
+    config?: MutationConfig<TRequestContext, TConnector>[TType];
+    configPath: Path;
+  } {
+    const mutationsConfig = this.config.mutation;
+    const mutationsConfigPath = addPath(this.configPath, 'mutation');
 
-    const reverseEdgeConfigMap: NonNullable<TNodeConfig['reverseEdges']> = {
-      ...this.config.reverseEdges,
+    if (typeof mutationsConfig === 'boolean') {
+      return {
+        config: { enabled: mutationsConfig },
+        configPath: mutationsConfigPath,
+      };
+    } else if (isPlainObject(mutationsConfig)) {
+      const mutationConfig = mutationsConfig[mutationType];
+      const mutationConfigPath = addPath(mutationsConfigPath, mutationType);
+
+      if (typeof mutationConfig === 'boolean') {
+        return {
+          config: { enabled: mutationConfig },
+          configPath: mutationConfigPath,
+        };
+      } else if (isPlainObject(mutationConfig)) {
+        return {
+          config: mutationConfig,
+          configPath: mutationConfigPath,
+        };
+      } else if (mutationConfig != null) {
+        throw new UnexpectedConfigError(
+          `a boolean or a plain-object`,
+          mutationConfig,
+          { path: mutationConfigPath },
+        );
+      }
+    } else if (mutationsConfig != null) {
+      throw new UnexpectedConfigError(
+        `a boolean or a plain-object`,
+        mutationsConfig,
+        { path: mutationsConfigPath },
+      );
+    }
+
+    return {
+      configPath: mutationsConfigPath,
     };
-
-    for (const node of this.gp.nodeMap.values()) {
-      for (const component of node.componentMap.values()) {
-        if (component instanceof Edge && component.to === this) {
-          const reverseEdge = new ReverseEdge(
-            component,
-            reverseEdgeConfigMap[component.id],
-          );
-
-          if (reverseEdgeMap.has(reverseEdge.name)) {
-            throw new Error(
-              `The "${this.name}" node has more than one reverse edge named "${
-                reverseEdge.name
-              }", you have to configure their name through the "reverseEdges" parameter: ${[
-                reverseEdgeMap.get(reverseEdge.name)!.edge.id,
-                component.id,
-              ].join(', ')}`,
-            );
-          }
-
-          if (this.componentMap.has(reverseEdge.name)) {
-            throw new Error(
-              `The "${this.name}" node cannot have a reverse edge named as the component "${reverseEdge.name}", you have to configure its name through the "reverseEdges" parameter`,
-            );
-          }
-
-          reverseEdgeMap.set(reverseEdge.name, reverseEdge);
-
-          // We delete the entry in order to see if some remains at the end
-          delete reverseEdgeConfigMap[component.id];
-        }
-      }
-    }
-
-    const missingReverseEdgeIds = Object.keys(reverseEdgeConfigMap);
-    if (missingReverseEdgeIds.length > 0) {
-      throw new Error(
-        `The "${this}" node has unknown reverse edge definition: ${missingReverseEdgeIds.join(
-          ', ',
-        )}`,
-      );
-    }
-
-    return reverseEdgeMap;
   }
 
-  public getReverseEdge(name: string, path?: Path): ReverseEdge {
-    if (!this.reverseEdgeMap.has(name)) {
-      throw new MaybePathAwareError(
-        `The "${
-          this.name
-        }" node does not contain the reverse edge "${name}", did you mean: ${didYouMean(
-          name,
-          this.reverseEdgeMap.keys(),
-        )}`,
-        path,
-      );
-    }
+  @Memoize((mutationType: MutationType) => mutationType)
+  public isMutationEnabled(mutationType: MutationType): boolean {
+    const { config, configPath } = this.getMutationConfig(mutationType);
 
-    return this.reverseEdgeMap.get(name)!;
+    return getOptionalFlag(
+      config?.enabled,
+      true,
+      addPath(configPath, 'enabled'),
+    );
   }
 
-  @Memoize()
-  public get fieldMap(): ReadonlyMap<string, TField> {
-    const fields: TField[] = [];
+  @Memoize((mutationType: MutationType) => mutationType)
+  public isMutationPublic(mutationType: MutationType): boolean {
+    const { config, configPath } = this.getMutationConfig(mutationType);
 
-    for (const component of this.componentMap.values()) {
-      if (component instanceof Leaf) {
-        fields.push(new LeafField(this, component));
-      } else {
-        fields.push(new EdgeField(this, component));
-        if (component.nullable) {
-          fields.push(new EdgeExistenceField(this, component));
-        }
-      }
-    }
+    const publicConfig = config?.public;
+    const publicConfigPath = addPath(configPath, 'public');
 
-    // for (const reverseEdge of this.reverseEdgeMap.values()) {
-    //   if (reverseEdge.unique) {
-    //     fields.push(
-    //       new UniqueReverseEdgeField(this, reverseEdge),
-    //       new UniqueReverseEdgeExistenceField(this, reverseEdge),
-    //     );
-    //   } else {
-    //     fields.push(
-    //       new ReverseEdgeField(this, reverseEdge),
-    //       new ReverseEdgeCountField(this, reverseEdge),
-    //     );
-    //   }
-    // }
+    const isPublic = getOptionalFlag(
+      publicConfig,
+      this.isPublic() && this.isMutationEnabled(mutationType),
+      publicConfigPath,
+    );
 
-    // for (const [name, config] of Object.entries(
-    //   getCustomFieldConfigMap(this, this.config?.customFields),
-    // )) {
-    //   fields.push(new CustomField(this, name, config));
-    // }
-
-    const fieldMap = new Map<string, TField>();
-
-    for (const field of fields) {
-      if (fieldMap.has(field.name)) {
-        throw new Error(
-          `"${this.name}" contains at least 2 filters with the same name "${field.name}"`,
+    if (isPublic) {
+      if (!this.isPublic()) {
+        throw new UnexpectedConfigError(
+          `not to be "true" as the "${this}" node is private`,
+          publicConfig,
+          { path: publicConfigPath },
         );
       }
 
-      fieldMap.set(field.name, field);
+      if (!this.isMutationEnabled(mutationType)) {
+        throw new UnexpectedConfigError(
+          `not to be "true" as the "${this}" node's ${mutationType} is disabled`,
+          publicConfig,
+          { path: publicConfigPath },
+        );
+      }
     }
 
-    return fieldMap;
+    return isPublic;
   }
 
-  public getField(name: string, path?: Path): TField {
-    if (!this.fieldMap.has(name)) {
-      throw new MaybePathAwareError(
-        `The "${
-          this.name
-        }" node does not contain the field "${name}", did you mean: ${didYouMean(
-          name,
-          this.fieldMap.keys(),
-        )}`,
-        path,
-      );
-    }
-
-    return this.fieldMap.get(name)!;
-  }
-
-  @Memoize()
-  public get publicFieldMap(): ReadonlyMap<string, Public<TField>> {
-    return new Map([...this.fieldMap].filter(isPublicEntry));
-  }
-
-  @Memoize()
-  public get type(): GraphQLObjectType {
-    assert(this.public, `"${this.name}" is private`);
-
-    assert(
-      this.publicFieldMap.size,
-      `"${this.name}" expects at least one public field`,
-    );
-
-    return new GraphQLObjectType({
-      name: this.name,
-      description: this.description,
-      interfaces: this.config?.interfaces,
-      fields: () =>
-        Object.fromEntries(
-          Array.from(this.publicFieldMap.values(), (field) => [
-            field.name,
-            field.graphqlFieldConfig,
-          ]),
-        ),
-    });
-  }
-
-  @Memoize()
-  public get identifierSelections(): ReadonlyArray<
-    ILeafSelection | IEdgeSelection
-  > {
-    return Object.freeze(
-      Array.from(this.identifier.componentSet, ({ selection }) => selection),
-    );
-  }
-
-  @Memoize()
-  public get selections(): ReadonlyArray<ILeafSelection | IEdgeSelection> {
-    return Object.freeze(
-      Array.from(this.componentMap.values(), ({ selection }) => selection),
-    );
-  }
-
-  public assertNodeValue(
-    maybeNodeValue: unknown,
-    selections: ReadonlyArray<TFieldSelection>,
+  public getComponent(
+    name: Component['name'],
     path?: Path,
-  ): INodeValue {
-    if (!isPlainObject(maybeNodeValue)) {
-      throw new UnexpectedValueError(maybeNodeValue, `an object`, path);
-    }
-
-    return Object.fromEntries(
-      selections.map((selection) => {
-        const key = getSelectionKey(selection);
-
-        return [
-          selection.name,
-          this.getField(selection.name).assertValue(
-            maybeNodeValue[key],
-            selection as any,
-            addPath(path, key),
-          ),
-        ];
-      }),
-    );
-  }
-
-  public getOperation<TKey extends TOperationKey>(
-    key: TKey,
-    path: Path = addPath(undefined, this.name),
-  ): TOperation<TKey> {
-    if (!this.operationMap[key]) {
-      throw new MaybePathAwareError(
-        `The "${
-          this.name
-        }" node does not contain the operation "${key}", did you mean: ${didYouMean(
-          key,
-          Object.keys(this.operationMap),
-        )}`,
-        path,
+  ): Component<TRequestContext, TConnector> {
+    const component = this.componentsByName.get(name);
+    if (!component) {
+      throw new UnexpectedValueError(
+        `${this.indefinite}'s component among "${[
+          ...this.componentsByName.keys(),
+        ].join(', ')}"`,
+        name,
+        { path },
       );
     }
 
-    return this.operationMap[key];
+    return component;
   }
 
-  /**
-   * Given a filter, appends the one configured to produce the one actually provided to the connector
-   */
-  public async getContextualizedFilter(
-    filter: TWhereInputValue | boolean | undefined,
-    context: TContext,
-    path: Path,
-  ): Promise<TFilterValue> {
-    return this.whereInput.parseValue(
-      {
-        AND: [await this.config.filter?.(context), filter].filter(
-          (value) => value !== undefined,
+  public getLeaf(
+    name: Leaf['name'],
+    path?: Path,
+  ): Leaf<TRequestContext, TConnector> {
+    const leaf = this.leavesByName.get(name);
+    if (!leaf) {
+      throw new UnexpectedValueError(
+        `${this.indefinite}'s leaf among "${[...this.leavesByName.keys()].join(
+          ', ',
+        )}"`,
+        name,
+        { path },
+      );
+    }
+
+    return leaf;
+  }
+
+  public getEdge(
+    name: Edge['name'],
+    path?: Path,
+  ): Edge<TRequestContext, TConnector> {
+    const edge = this.edgesByName.get(name);
+    if (!edge) {
+      throw new UnexpectedValueError(
+        `${this.indefinite}'s edge among "${[...this.edgesByName.keys()].join(
+          ', ',
+        )}"`,
+        name,
+        { path },
+      );
+    }
+
+    return edge;
+  }
+
+  public getUniqueConstraint(
+    name: UniqueConstraint['name'],
+    path?: Path,
+  ): UniqueConstraint<TRequestContext, TConnector> {
+    const uniqueConstraint = this.uniqueConstraintsByName.get(name);
+    if (!uniqueConstraint) {
+      throw new UnexpectedValueError(
+        `${this.indefinite}'s unique-constraint among "${[
+          ...this.uniqueConstraintsByName.keys(),
+        ].join(', ')}"`,
+        name,
+        { path },
+      );
+    }
+
+    return uniqueConstraint;
+  }
+
+  @Memoize()
+  public get selection(): NodeSelection<NodeValue> {
+    return new NodeSelection(
+      this,
+      mergeSelectionExpressions(
+        Array.from(
+          this.componentsByName.values(),
+          ({ selection }) => selection,
         ),
-      },
-      path,
+      ),
     );
   }
 
-  /**
-   * Given an array of selection, returns a new one with contextualized filter where it matters
-   */
-  public async getContextualizedSelections(
-    selections: ReadonlyArray<TFieldSelection>,
-    context: TContext,
+  @Memoize()
+  public get reverseEdgesByName(): ReadonlyMap<
+    ReverseEdge['name'],
+    ReverseEdge<TRequestContext, TConnector>
+  > {
+    // Let's find all the edges heading to this node
+    const referrersByNameByNodeName = new Map<
+      Node['name'],
+      Map<Edge['name'], Edge>
+    >(
+      [...this.gp.nodesByName.values()]
+        .map((node): [Node['name'], Map<Edge['name'], Edge>] => [
+          node.name,
+          new Map(
+            [...node.edgesByName].filter(([, edge]) => edge.head === this),
+          ),
+        ])
+        .filter(([, referrersByName]) => referrersByName.size),
+    );
+
+    const reverseEdgesConfig = this.config.reverseEdges;
+    const reverseEdgesConfigPath = addPath(this.configPath, 'reverseEdges');
+
+    // No reverse-edge
+    if (!referrersByNameByNodeName.size) {
+      if (
+        reverseEdgesConfig != null &&
+        (!isPlainObject(reverseEdgesConfig) ||
+          Object.entries(reverseEdgesConfig).length)
+      ) {
+        throw new UnexpectedConfigError(
+          `no configuration as there is no node having an edge heading to the "${this}" node`,
+          reverseEdgesConfig,
+          { path: reverseEdgesConfigPath },
+        );
+      }
+
+      return new Map();
+    }
+
+    assertPlainObjectConfig(reverseEdgesConfig, reverseEdgesConfigPath);
+
+    const reverseEdges = new Map(
+      reverseEdgesConfig
+        ? aggregateConfigError<
+            [ReverseEdge['name'], ReverseEdgeConfig<any, any>],
+            [ReverseEdge['name'], ReverseEdge][]
+          >(
+            Object.entries(reverseEdgesConfig),
+            (entries, [reverseEdgeName, reverseEdgeConfig]) => {
+              const reverseEdgeConfigPath = addPath(
+                reverseEdgesConfigPath,
+                reverseEdgeName,
+              );
+
+              if (this.componentsByName.has(reverseEdgeName)) {
+                throw new UnexpectedConfigError(
+                  `a "name" not among "${[...this.componentsByName.keys()].join(
+                    ', ',
+                  )}"`,
+                  reverseEdgeName,
+                  { path: reverseEdgeConfigPath },
+                );
+              }
+
+              assertPlainObjectConfig(reverseEdgeConfig, reverseEdgeConfigPath);
+
+              const originalEdgeConfig = reverseEdgeConfig.originalEdge;
+              const originalEdgeConfigPath = addPath(
+                reverseEdgeConfigPath,
+                'originalEdge',
+              );
+
+              if (
+                typeof originalEdgeConfig !== 'string' ||
+                !originalEdgeConfig
+              ) {
+                throw new UnexpectedConfigError(
+                  `a non-empty string`,
+                  originalEdgeConfig,
+                  { path: originalEdgeConfigPath },
+                );
+              }
+
+              const [nodeEdgeConfig, edgeEdgeConfig] =
+                originalEdgeConfig.split('.');
+
+              const referrersByName =
+                referrersByNameByNodeName.get(nodeEdgeConfig);
+
+              if (!referrersByName) {
+                throw new UnexpectedConfigError(
+                  `a node having an edge heading to the "${this}" node (= a value among "${[
+                    ...referrersByNameByNodeName.keys(),
+                  ].join(', ')}")`,
+                  nodeEdgeConfig,
+                  { path: originalEdgeConfigPath },
+                );
+              } else if (!referrersByName.size) {
+                throw new ConfigError(
+                  `Expects no more configuration for "${nodeEdgeConfig}"'s edge as there is no more edge heading to the "${this}" node`,
+                  { path: originalEdgeConfigPath },
+                );
+              }
+
+              let originalEdge: Edge;
+
+              if (edgeEdgeConfig) {
+                if (!referrersByName.has(edgeEdgeConfig)) {
+                  throw new UnexpectedConfigError(
+                    `an edge heading to the "${this}" node (= a value among "${[
+                      ...referrersByName.keys(),
+                    ].join(', ')}")`,
+                    edgeEdgeConfig,
+                    { path: originalEdgeConfigPath },
+                  );
+                }
+
+                originalEdge = referrersByName.get(edgeEdgeConfig)!;
+              } else {
+                originalEdge = [...referrersByName.values()][0];
+              }
+
+              referrersByName.delete(originalEdge.name);
+
+              let reverseEdge: ReverseEdge;
+
+              const kindConfig = reverseEdgeConfig.kind;
+              const kindConfigPath = addPath(reverseEdgeConfigPath, 'kind');
+
+              if (originalEdge.isUnique()) {
+                if (kindConfig != null && kindConfig !== 'Unique') {
+                  throw new UnexpectedConfigError(
+                    `"Unique" as the "${originalEdge}" edge is unique`,
+                    kindConfig,
+                    { path: kindConfigPath },
+                  );
+                }
+
+                reverseEdge = new ReverseEdgeUnique(
+                  originalEdge,
+                  reverseEdgeName,
+                  reverseEdgeConfig as any,
+                  reverseEdgeConfigPath,
+                );
+              } else {
+                if (kindConfig != null && kindConfig !== 'Multiple') {
+                  throw new UnexpectedConfigError(
+                    `"Multiple" as the "${originalEdge}" edge is not unique`,
+                    kindConfig,
+                    { path: kindConfigPath },
+                  );
+                }
+
+                reverseEdge = new ReverseEdgeMultiple(
+                  originalEdge,
+                  reverseEdgeName,
+                  reverseEdgeConfig as any,
+                  reverseEdgeConfigPath,
+                );
+              }
+
+              return [...entries, [reverseEdge.name, reverseEdge]];
+            },
+            [],
+            { path: reverseEdgesConfigPath },
+          )
+        : [],
+    );
+
+    const missingConfigs = [...referrersByNameByNodeName.values()].flatMap(
+      (referrersByName) => Array.from(referrersByName.values(), String),
+    );
+
+    if (missingConfigs.length) {
+      throw new ConfigError(
+        `Expects a configuration for the following referrer(s): ${missingConfigs.join(
+          ', ',
+        )}`,
+        { path: reverseEdgesConfigPath },
+      );
+    }
+
+    return reverseEdges;
+  }
+
+  public getReverseEdge(
+    name: ReverseEdge['name'],
+    path?: Path,
+  ): ReverseEdge<TRequestContext, TConnector> {
+    const reverseEdge = this.reverseEdgesByName.get(name);
+    if (!reverseEdge) {
+      throw new UnexpectedValueError(
+        `${this.indefinite}'s reverse-edge among "${[
+          ...this.reverseEdgesByName.keys(),
+        ].join(', ')}"`,
+        name,
+        { path },
+      );
+    }
+
+    return reverseEdge;
+  }
+
+  @Memoize()
+  public get reverseEdgeUniquesByName(): ReadonlyMap<
+    ReverseEdgeUnique['name'],
+    ReverseEdgeUnique<TRequestContext, TConnector>
+  > {
+    return new Map(
+      [...this.reverseEdgesByName].filter(
+        (entry): entry is [string, ReverseEdgeUnique] =>
+          entry[1] instanceof ReverseEdgeUnique,
+      ),
+    );
+  }
+
+  public getReverseEdgeUnique(
+    name: ReverseEdgeUnique['name'],
+    path?: Path,
+  ): ReverseEdgeUnique<TRequestContext, TConnector> {
+    const reverseEdge = this.reverseEdgeUniquesByName.get(name);
+    if (!reverseEdge) {
+      throw new UnexpectedValueError(
+        `${this.indefinite}'s reverse-edge-unique among "${[
+          ...this.reverseEdgeUniquesByName.keys(),
+        ].join(', ')}"`,
+        name,
+        { path },
+      );
+    }
+
+    return reverseEdge;
+  }
+
+  @Memoize()
+  public get reverseEdgeMultiplesByName(): ReadonlyMap<
+    ReverseEdgeMultiple['name'],
+    ReverseEdgeMultiple<TRequestContext, TConnector>
+  > {
+    return new Map(
+      [...this.reverseEdgesByName].filter(
+        (entry): entry is [string, ReverseEdgeMultiple] =>
+          entry[1] instanceof ReverseEdgeMultiple,
+      ),
+    );
+  }
+
+  public getReverseEdgeMultiple(
+    name: ReverseEdgeMultiple['name'],
+    path?: Path,
+  ): ReverseEdgeMultiple<TRequestContext, TConnector> {
+    const reverseEdge = this.reverseEdgeMultiplesByName.get(name);
+    if (!reverseEdge) {
+      throw new UnexpectedValueError(
+        `${this.indefinite}'s reverse-edge-multiple among "${[
+          ...this.reverseEdgeMultiplesByName.keys(),
+        ].join(', ')}"`,
+        name,
+        { path },
+      );
+    }
+
+    return reverseEdge;
+  }
+
+  @Memoize()
+  public get outputType(): NodeOutputType {
+    return new NodeOutputType(this);
+  }
+
+  @Memoize()
+  public get uniqueFilterInputType(): NodeUniqueFilterInputType {
+    return new NodeUniqueFilterInputType(this);
+  }
+
+  @Memoize()
+  public get filterInputType(): NodeFilterInputType {
+    return new NodeFilterInputType(this);
+  }
+
+  @Memoize()
+  public get orderingInputType(): NodeOrderingInputType {
+    return new NodeOrderingInputType(this);
+  }
+
+  @Memoize()
+  public get creationInputType(): NodeCreationInputType<
+    TRequestContext,
+    TConnector
+  > {
+    return new NodeCreationInputType(this);
+  }
+
+  @Memoize((edge: Edge) => edge)
+  public getCreationWithoutEdgeInputType(
+    edge: Edge,
+  ): NodeCreationInputType<TRequestContext, TConnector> {
+    return new NodeCreationInputType(this, edge);
+  }
+
+  @Memoize()
+  public get updateInputType(): NodeUpdateInputType<
+    TRequestContext,
+    TConnector
+  > {
+    return new NodeUpdateInputType(this);
+  }
+
+  @Memoize()
+  public get mutationsByKey(): Readonly<
+    MutationsByKey<TRequestContext, TConnector>
+  > {
+    return Object.fromEntries(
+      Object.entries(mutationConstructorsByKey).map(([name, constructor]) => [
+        name,
+        new constructor(this),
+      ]),
+    ) as any;
+  }
+
+  public getMutation<TKey extends MutationKey>(
+    key: TKey,
+    path?: Path,
+  ): MutationsByKey<TRequestContext, TConnector>[TKey] {
+    if (!this.mutationsByKey[key]) {
+      throw new UnexpectedValueError(
+        `a mutation's key among "${Object.keys(this.mutationsByKey).join(
+          ', ',
+        )}"`,
+        key,
+        { path },
+      );
+    }
+
+    return this.mutationsByKey[key];
+  }
+
+  @Memoize()
+  public get queriesByKey(): Readonly<
+    QueriesByKey<TRequestContext, TConnector>
+  > {
+    return Object.fromEntries(
+      Object.entries(queryConstructorsByKey).map(([name, constructor]) => [
+        name,
+        new constructor(this),
+      ]),
+    ) as any;
+  }
+
+  public getQuery<TKey extends QueryKey>(
+    key: TKey,
+    path?: Path,
+  ): QueriesByKey<TRequestContext, TConnector>[TKey] {
+    if (!this.queriesByKey[key]) {
+      throw new UnexpectedValueError(
+        `a query's key among "${Object.keys(this.queriesByKey).join(', ')}"`,
+        key,
+        { path },
+      );
+    }
+
+    return this.queriesByKey[key];
+  }
+
+  @Memoize()
+  public get subscriptionsByKey(): Readonly<
+    NodeSubscriptionsByKey<TRequestContext, TConnector>
+  > {
+    return Object.fromEntries(
+      Object.entries(nodeSubscriptionConstructorsByKey).map(
+        ([name, constructor]) => [name, new constructor(this)],
+      ),
+    ) as any;
+  }
+
+  public getSubscription<TKey extends NodeSubscriptionKey>(
+    key: TKey,
+    path?: Path,
+  ): NodeSubscriptionsByKey<TRequestContext, TConnector>[TKey] {
+    if (!this.subscriptionsByKey[key]) {
+      throw new UnexpectedValueError(
+        `a subscription's key among "${Object.keys(
+          this.subscriptionsByKey,
+        ).join(', ')}"`,
+        key,
+        { path },
+      );
+    }
+
+    return this.subscriptionsByKey[key];
+  }
+
+  @Memoize()
+  public get operations(): ReadonlyArray<
+    | MutationInterface<TRequestContext, TConnector>
+    | OperationInterface<TRequestContext, TConnector>
+  > {
+    return [
+      ...Object.values<MutationInterface>(this.mutationsByKey),
+      ...Object.values<OperationInterface>(this.queriesByKey),
+      ...Object.values<OperationInterface>(this.subscriptionsByKey),
+    ];
+  }
+
+  @Memoize()
+  public validateDefinition(): void {
+    aggregateConfigError<Component, void>(
+      this.componentsByName.values(),
+      (_, component) => component.validateDefinition(),
+      undefined,
+      { path: this.configPath },
+    );
+
+    aggregateConfigError<UniqueConstraint, void>(
+      this.uniqueConstraintsByName.values(),
+      (_, uniqueConstraint) => uniqueConstraint.validateDefinition(),
+      undefined,
+      { path: this.configPath },
+    );
+
+    this.selection;
+
+    if (this.isMutationEnabled(MutationType.UPDATE)) {
+      if (
+        ![...this.componentsByName.values()].some((component) =>
+          component.isMutable(),
+        )
+      ) {
+        throw new ConfigError(
+          `Expects at least one mutable component as it is mutable: either disable the "${MutationType.UPDATE}" or enable it on one of its components`,
+          { path: this.configPath },
+        );
+      }
+    }
+
+    if (this.isPublic()) {
+      if (
+        ![...this.componentsByName.values()].some((component) =>
+          component.isPublic(),
+        )
+      ) {
+        throw new ConfigError(
+          `Expects at least one public component as it is public: either set it private or set one of its components public`,
+          { path: this.configPath },
+        );
+      }
+
+      if (
+        ![...this.uniqueConstraintsByName.values()].some((uniqueConstraint) =>
+          uniqueConstraint.isPublic(),
+        )
+      ) {
+        throw new ConfigError(
+          `Expects at least one public unique constraint (= with all its components being public) as it is public`,
+          { path: this.configPath },
+        );
+      }
+    }
+
+    aggregateConfigError<ReverseEdge, void>(
+      this.reverseEdgesByName.values(),
+      (_, reverseEdge) => reverseEdge.validateDefinition(),
+      undefined,
+      { path: this.configPath },
+    );
+
+    this.reverseEdgeUniquesByName;
+    this.reverseEdgeMultiplesByName;
+  }
+
+  @Memoize()
+  public validateTypes(): void {
+    aggregateConfigError<Component, void>(
+      this.componentsByName.values(),
+      (_, component) => component.validateTypes(),
+      undefined,
+      { path: this.configPath },
+    );
+
+    aggregateConfigError<ReverseEdge, void>(
+      this.reverseEdgesByName.values(),
+      (_, reverseEdge) => reverseEdge.validateTypes(),
+      undefined,
+      { path: this.configPath },
+    );
+
+    this.filterInputType.validate();
+    this.orderingInputType.validate();
+    this.uniqueFilterInputType.validate();
+    this.outputType.validate();
+    this.creationInputType.validate();
+    this.updateInputType.validate();
+  }
+
+  @Memoize()
+  public validateOperations(): void {
+    aggregateConfigError<OperationInterface, void>(
+      this.operations,
+      (_, operation) => operation.validate(),
+      undefined,
+      { path: this.configPath },
+    );
+  }
+
+  public getAuthorization(
+    requestContext: TRequestContext,
     path: Path,
-  ): Promise<Array<TFieldSelection>> {
-    return Promise.all(
-      selections.map(async (selection) => {
-        switch (selection.kind) {
-          case 'Edge':
-          case 'EdgeExistence':
-          case 'ReverseEdge':
-          case 'ReverseEdgeCount':
-          case 'UniqueReverseEdge':
-          case 'UniqueReverseEdgeExistence': {
-            const selectedNode = getSelectedNode(this, selection);
+    mutationType?: MutationType,
+  ): NodeFilter<TRequestContext, TConnector> | undefined {
+    let rawAuthorization: boolean | NodeFilterInputValue;
+    try {
+      rawAuthorization = this.#authorizationConfig?.(
+        requestContext,
+        mutationType,
+      );
+    } catch (error) {
+      throw new UnauthorizedError(this, {
+        path,
+        cause: new ConfigError(
+          `Expects a valid authorization for "${mutationType ?? 'query'}"`,
+          {
+            path: this.#authorizationConfigPath,
+            cause: castToError(error),
+          },
+        ),
+      });
+    }
 
-            const contextualizedFilter = await selectedNode.getContextualizedFilter(
-              selection.args?.filter,
-              context,
-              addPath(path, getSelectionKey(selection)),
-            );
+    let authorization: NodeFilter<TRequestContext, TConnector> | undefined;
+    try {
+      authorization = this.filterInputType.parseAndFilter(
+        rawAuthorization === true
+          ? undefined
+          : rawAuthorization === false
+          ? null
+          : rawAuthorization,
+      ).normalized;
+    } catch (error) {
+      throw new UnauthorizedError(this, {
+        path,
+        cause: new ConfigError(
+          `Expects a valid authorization for "${mutationType ?? 'query'}"`,
+          {
+            path: this.#authorizationConfigPath,
+            cause: castToError(error),
+          },
+        ),
+      });
+    }
 
-            const args = getNormalizedObject({
-              ...getNormalizedSelectionArgs(selection),
-              filter:
-                contextualizedFilter.kind === 'Boolean' &&
-                contextualizedFilter.value
-                  ? undefined
-                  : contextualizedFilter,
-            });
+    if (authorization?.isFalse()) {
+      throw new UnauthorizedError(this, { path });
+    }
 
-            return <TFieldSelection>{
-              ...selection,
-              ...(args && { args }),
-              ...('selections' in selection && {
-                selections: await selectedNode.getContextualizedSelections(
-                  selection.selections,
-                  context,
-                  addPath(path, getSelectionKey(selection)),
-                ),
-              }),
-            };
-          }
+    return authorization;
+  }
 
-          default:
-            return selection;
-        }
-      }),
+  public parseValue(
+    maybeValue: unknown,
+    path: Path = addPath(undefined, this.toString()),
+  ): NodeValue {
+    if (!isPlainObject(maybeValue)) {
+      throw new UnexpectedValueError('a plain-object', maybeValue, { path });
+    }
+
+    return aggregateError<Component, NodeValue>(
+      this.componentsByName.values(),
+      (value, component) =>
+        Object.assign(value, {
+          [component.name]: component.parseValue(
+            maybeValue[component.name],
+            addPath(path, component.name),
+          ),
+        }),
+      Object.create(null),
+      { path },
+    );
+  }
+
+  public areValuesEqual(a: NodeValue, b: NodeValue): boolean {
+    return Array.from(this.componentsByName.values()).every((component) =>
+      component.areValuesEqual(
+        a[component.name] as any,
+        b[component.name] as any,
+      ),
     );
   }
 }

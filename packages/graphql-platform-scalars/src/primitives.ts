@@ -1,16 +1,18 @@
-import { bigintScalarTypes } from './primitives/bigints';
-import { booleanScalarTypes } from './primitives/booleans';
-import { numberScalarTypes } from './primitives/numbers';
-import { stringScalarTypes } from './primitives/strings';
+import { bigintScalarTypesByName } from './primitives/bigints.js';
+import { booleanScalarTypesByName } from './primitives/booleans.js';
+import { numberScalarTypesByName } from './primitives/numbers.js';
+import { stringScalarTypesByName } from './primitives/strings.js';
 
-export * from './primitives/bigints';
-export * from './primitives/booleans';
-export * from './primitives/numbers';
-export * from './primitives/strings';
+export * from './primitives/bigints.js';
+export * from './primitives/booleans.js';
+export * from './primitives/numbers.js';
+export * from './primitives/strings.js';
 
-export const primitiveScalarTypes = Object.freeze([
-  ...bigintScalarTypes,
-  ...booleanScalarTypes,
-  ...numberScalarTypes,
-  ...stringScalarTypes,
-]);
+export const primitiveScalarTypesByName = {
+  ...bigintScalarTypesByName,
+  ...booleanScalarTypesByName,
+  ...numberScalarTypesByName,
+  ...stringScalarTypesByName,
+} as const;
+
+export const primitiveScalarTypes = Object.values(primitiveScalarTypesByName);

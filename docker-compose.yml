@@ -1,29 +1,32 @@
 version: '3.8'
 
 services:
-  # mariadb:
-  #   image: mariadb:10.2
-  #   environment:
-  #     MYSQL_ROOT_PASSWORD: test
-  #     MYSQL_DATABASE: test
-  #   ports:
-  #     - 3306:3306
-  #   logging:
-  #     options:
-  #       max-size: 50k
-  #       max-file: '1'
-  #   restart: 'unless-stopped'
+  mariadb:
+    image: mariadb:10.6
+    command: --skip-bind-address
+    environment:
+      MARIADB_ROOT_PASSWORD: test
+      MARIADB_DATABASE: test
+    ports:
+      - 3306:3306
+    logging:
+      options:
+        max-size: 50k
+        max-file: '1'
+    restart: 'unless-stopped'
 
   project:
-    image: node:14
+    image: node:18
     command: sleep infinity
     environment:
       TZ: Europe/Paris
-    ports:
-      - 3000:3000
     working_dir: /workspace
     volumes:
       - .:/workspace
+      - ~/.bash_history:/root/.bash_history
+      - ~/.bash_history:/root/.ash_history
+    depends_on:
+      - mariadb
     logging:
       options:
         max-size: 50k

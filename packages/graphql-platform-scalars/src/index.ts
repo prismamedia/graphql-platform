@@ -1,59 +1,75 @@
-import { fromObjectEntries } from '@prismamedia/graphql-platform-utils';
-import assert from 'assert';
+import {
+  Path,
+  UnexpectedValueError,
+} from '@prismamedia/graphql-platform-utils';
+import * as graphql from 'graphql';
 import { ValueOf } from 'type-fest';
-import { objectScalarTypes } from './objects';
-import { primitiveScalarTypes } from './primitives';
+import { objectScalarTypesByName } from './objects.js';
+import { primitiveScalarTypesByName } from './primitives.js';
 
-export * from './objects';
-export * from './primitives';
+export * from './comparator.js';
+export * from './objects.js';
+export * from './primitives.js';
 
-export const scalarTypes = Object.freeze([
-  ...primitiveScalarTypes,
-  ...objectScalarTypes,
-]);
+export const Scalars = {
+  ...primitiveScalarTypesByName,
+  ...objectScalarTypesByName,
+};
 
-export const scalarTypeNames = Object.freeze(
-  scalarTypes.map((scalarType) => scalarType.name),
-);
+type ScalarTypesByName = typeof Scalars;
 
-assert(
-  new Set(scalarTypes.map(String)).size === scalarTypes.length,
-  `At least 2 scalar types have the same name`,
-);
+export type ScalarTypeName = keyof ScalarTypesByName;
 
-export type TScalarType = typeof scalarTypes extends Iterable<infer T>
-  ? T
-  : never;
+export const scalarTypeNames = Object.keys(Scalars) as ScalarTypeName[];
 
-export const scalarTypeByName = Object.freeze(
-  fromObjectEntries(
-    [...scalarTypes].map((scalarType) => [
-      scalarType.name,
-      scalarType,
-    ]) as ValueOf<
-      {
-        [TName in TScalarType['name']]: [
-          TName,
-          Extract<TScalarType, { name: TName }>,
-        ];
-      }
-    >[],
-  ),
-);
+export type ScalarType = ValueOf<ScalarTypesByName>;
 
-export const isScalarTypeName = (
-  maybeScalarTypeName: any,
-): maybeScalarTypeName is TScalarType['name'] =>
-  scalarTypeNames.includes(maybeScalarTypeName);
+export type GetScalarInternalValue<TScalarType extends ScalarType> =
+  TScalarType extends graphql.GraphQLScalarType<infer TInternalValue, any>
+    ? TInternalValue
+    : never;
 
-export const isScalarTypeAmong = <T extends TScalarType>(
-  maybeScalarType: any,
-  scalarTypes: ReadonlyArray<T>,
-): maybeScalarType is T => scalarTypes.includes(maybeScalarType);
+export type GetScalarExternalValue<TScalarType extends ScalarType> =
+  TScalarType extends graphql.GraphQLScalarType<any, infer TExternalValue>
+    ? TExternalValue
+    : never;
 
-export const isScalarType = (
-  maybeScalarType: any,
-): maybeScalarType is TScalarType =>
-  isScalarTypeAmong(maybeScalarType, scalarTypes);
+export const scalarTypes = Object.values(Scalars);
 
-export default scalarTypeByName;
+export function getScalarTypeByName(
+  maybeScalarTypeName: ScalarTypeName,
+  path?: Path,
+): ScalarType {
+  const scalarType = Scalars[maybeScalarTypeName];
+  if (!scalarType) {
+    throw new UnexpectedValueError(
+      `a scalar type name among "${scalarTypeNames.join(', ')}"`,
+      maybeScalarTypeName,
+      { path },
+    );
+  }
+
+  return scalarType;
+}
+
+export function assertScalarType(
+  maybeScalarType: unknown,
+  path?: Path,
+): asserts maybeScalarType is ScalarType {
+  if (!scalarTypes.includes(maybeScalarType as any)) {
+    throw new UnexpectedValueError(
+      `a scalar type among "${scalarTypeNames.join(', ')}"`,
+      maybeScalarType,
+      { path },
+    );
+  }
+}
+
+export function ensureScalarType(
+  maybeScalarType: unknown,
+  path?: Path,
+): ScalarType {
+  assertScalarType(maybeScalarType, path);
+
+  return maybeScalarType;
+}

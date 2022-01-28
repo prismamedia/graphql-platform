@@ -1,17 +1,12 @@
-import { GraphQLNonEmptyTrimmedString } from './non-empty-trimmed-string';
+import { GraphQLNonEmptyTrimmedString } from './non-empty-trimmed-string.js';
 
 describe('NonEmptyTrimmedString', () => {
-  it.each(['', ' ', ' \n \t '])('throws an Error on invalid value', (input) => {
-    expect(() => GraphQLNonEmptyTrimmedString.serialize(input)).toThrowError(
-      /NonEmptyTrimmedString expects a non empty string, got/,
-    );
-  });
-
-  it('serializes', () => {
-    expect(GraphQLNonEmptyTrimmedString.serialize('\n ok \t ')).toEqual('ok');
-  });
-
-  it('parses', () => {
-    expect(GraphQLNonEmptyTrimmedString.parseValue('\n ok \t ')).toEqual('ok');
-  });
+  it.each([[''], [' '], [' \n \t ']])(
+    'parseValue(%p) throws the following Error: %s',
+    (value) => {
+      expect(() => GraphQLNonEmptyTrimmedString.parseValue(value)).toThrowError(
+        `Expects a non-empty trimmed string, got:`,
+      );
+    },
+  );
 });

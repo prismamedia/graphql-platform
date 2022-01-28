@@ -1,39 +1,41 @@
-import { GraphQLError, Kind, print, ValueNode } from 'graphql';
-import { GraphQLScalarType } from '../../types';
+import {
+  addPath,
+  NestableError,
+  UnexpectedValueError,
+  type Path,
+} from '@prismamedia/graphql-platform-utils';
+import * as graphql from 'graphql';
 
-export function assertNonEmptyTrimmedStringValue(value: unknown): string {
-  if (typeof value !== 'string') {
-    throw new TypeError(
-      `NonEmptyTrimmedString expects a string value, got "${value}"`,
-    );
+function parseNonEmptyTrimmedString(value: unknown, path?: Path): string {
+  if (typeof value === 'string') {
+    const trimmedValue = value.trim();
+    if (trimmedValue.length > 0) {
+      return trimmedValue;
+    }
   }
 
-  const trimmedValue = value.trim();
-  if (trimmedValue.length === 0) {
-    throw new TypeError(
-      `NonEmptyTrimmedString expects a non empty string, got "${value}"`,
-    );
-  }
-
-  return trimmedValue;
+  throw new UnexpectedValueError('a non-empty trimmed string', value, { path });
 }
 
-export const GraphQLNonEmptyTrimmedString = new GraphQLScalarType({
+export const GraphQLNonEmptyTrimmedString = new graphql.GraphQLScalarType({
   name: 'NonEmptyTrimmedString',
   description:
-    'A string in which the leading and trailing whitespace characters are removed, plus it cannot be empty.',
-  serialize: assertNonEmptyTrimmedStringValue,
-  parseValue: assertNonEmptyTrimmedStringValue,
-  parseLiteral(valueNode: ValueNode) {
-    if (valueNode.kind !== Kind.STRING) {
-      throw new GraphQLError(
-        `NonEmptyTrimmedString cannot represent a non string value: ${print(
-          valueNode,
-        )}`,
-        valueNode,
-      );
+    'A string in which the leading and trailing whitespace characters are removed and cannot be empty afterwards.',
+  parseValue(value: unknown) {
+    return parseNonEmptyTrimmedString(value, addPath(undefined, this.name));
+  },
+  parseLiteral(ast) {
+    const path = addPath(undefined, this.name);
+
+    if (ast.kind === graphql.Kind.STRING) {
+      return parseNonEmptyTrimmedString(ast.value, path);
     }
 
-    return assertNonEmptyTrimmedStringValue(valueNode.value);
+    throw new NestableError(`Cannot parse literal: ${graphql.print(ast)}`, {
+      path,
+    });
+  },
+  serialize(value: unknown) {
+    return parseNonEmptyTrimmedString(value, addPath(undefined, this.name));
   },
 });

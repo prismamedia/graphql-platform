@@ -1,31 +1,26 @@
-import assert from 'assert';
+import { addPath as baseAddPath, type Path } from 'graphql/jsutils/Path.js';
+import { InputType } from './input/type.js';
+import { isPlainObject } from './plain-object.js';
 
-export interface Path {
-  readonly prev: Path | undefined;
-  readonly key: string | number;
-}
+export * from 'graphql/jsutils/Path.js';
 
-export function addPath(prev: Path | undefined, key: string | number): Path {
-  assert(
-    typeof key === 'number' || !key.includes('.'),
-    'The key cannot contain a dot (= ".")',
-  );
+export const isPath = (maybePath: unknown): maybePath is Path =>
+  isPlainObject(maybePath) &&
+  ['string', 'number'].includes(typeof maybePath.key) &&
+  (typeof maybePath.prev === 'undefined' || isPath(maybePath.prev));
 
-  return { prev, key };
-}
+export const addPath = (
+  prev: Path | undefined,
+  key: string | number,
+  type?: string | InputType,
+): Path => baseAddPath(prev, key, type != null ? String(type) : undefined);
 
-export function pathToArray(path: Path): Array<string | number> {
-  const pathAsArray: Array<string | number> = [];
+export const printPath = (path: Path, ancestor?: Path): string =>
+  path.prev && path.prev !== ancestor
+    ? `${printPath(path.prev, ancestor)}.${path.key}`
+    : String(path.key);
 
-  let currentPath: Path | undefined = path;
-  while (currentPath) {
-    pathAsArray.unshift(currentPath.key);
-    currentPath = currentPath.prev;
-  }
-
-  return pathAsArray;
-}
-
-export function printPath(path: Path): string {
-  return pathToArray(path).join('.');
-}
+export const isPathDescendantOf = (path: Path, ancestor: Path): boolean =>
+  path.prev
+    ? path.prev === ancestor || isPathDescendantOf(path.prev, ancestor)
+    : false;

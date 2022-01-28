@@ -1,106 +1,204 @@
 // Jest Snapshot v1, https://goo.gl/fbAQLP
 
-exports[`GraphQL Platform generates a valid GraphQL Schema 1`] = `
+exports[`GraphQL Platform Works generates a valid GraphQL Schema 1`] = `
 "schema {
   query: query
   mutation: mutation
 }
 
 type query {
-  # Gets the number of \\"Article\\" nodes
-  articleCount(where: ArticleWhereInput): NonNegativeInt!
+  """
+  Gets the number of "Articles"
+  """
+  articleCount(where: ArticleFilterInput): UnsignedInt!
 
-  # Retrieves a list of \\"Article\\" nodes
-  articles(where: ArticleWhereInput = {status: Published}, orderBy: [ArticleOrderByInput!] = [createdAt_DESC], skip: NonNegativeInt, first: NonNegativeInt! = 25): [Article!]!
+  """Either the "Article" exists or not?"""
+  articleExists(where: ArticleUniqueFilterInput!): Boolean!
 
-  # Retrieves one \\"Article\\" node, throws an Error if it does not exist
-  article(where: ArticleWhereUniqueInput!): Article!
+  """
+  Retrieves a list of "Articles"
+  """
+  articles(where: ArticleFilterInput, orderBy: [ArticleOrderingInput!], skip: UnsignedInt, first: UnsignedInt!): [Article!]!
 
-  # Retrieves one \\"Article\\" node, returns null if it does not exist
-  articleIfExists(where: ArticleWhereUniqueInput!): Article
+  """Retrieves one "Article", throws an error if it does not exist"""
+  article(where: ArticleUniqueFilterInput!): Article!
 
-  # Gets the number of \\"Category\\" nodes
-  categoryCount(where: CategoryWhereInput): NonNegativeInt!
+  """Retrieves one "Article" if it exists, returns null otherwise"""
+  articleIfExists(where: ArticleUniqueFilterInput!): Article
 
-  # Retrieves a list of \\"Category\\" nodes
-  categories(where: CategoryWhereInput, orderBy: [CategoryOrderByInput!], skip: NonNegativeInt, first: NonNegativeInt!): [Category!]!
+  """
+  Given a list of unique-filter's value, retrieves the corresponding "Articles" in the same order, throws an error if one does not exist
+  """
+  articlesInOrder(where: [ArticleUniqueFilterInput!]!): [Article!]!
 
-  # Retrieves one \\"Category\\" node, throws an Error if it does not exist
-  category(where: CategoryWhereUniqueInput!): Category!
+  """
+  Given a list of unique-filter's value, retrieves the corresponding "Articles", or null, in the same order
+  """
+  articlesInOrderIfExists(where: [ArticleUniqueFilterInput!]!): [Article]!
 
-  # Retrieves one \\"Category\\" node, returns null if it does not exist
-  categoryIfExists(where: CategoryWhereUniqueInput!): Category
+  """
+  Gets the number of "Categories"
+  """
+  categoryCount(where: CategoryFilterInput): UnsignedInt!
 
-  # Gets the number of \\"Tag\\" nodes
-  tagCount(where: TagWhereInput): NonNegativeInt!
+  """Either the "Category" exists or not?"""
+  categoryExists(where: CategoryUniqueFilterInput!): Boolean!
 
-  # Retrieves a list of \\"Tag\\" nodes
-  tags(where: TagWhereInput, orderBy: [TagOrderByInput!], skip: NonNegativeInt, first: NonNegativeInt!): [Tag!]!
+  """
+  Retrieves a list of "Categories"
+  """
+  categories(where: CategoryFilterInput, orderBy: [CategoryOrderingInput!], skip: UnsignedInt, first: UnsignedInt!): [Category!]!
 
-  # Retrieves one \\"Tag\\" node, throws an Error if it does not exist
-  tag(where: TagWhereUniqueInput!): Tag!
+  """Retrieves one "Category", throws an error if it does not exist"""
+  category(where: CategoryUniqueFilterInput!): Category!
 
-  # Retrieves one \\"Tag\\" node, returns null if it does not exist
-  tagIfExists(where: TagWhereUniqueInput!): Tag
+  """Retrieves one "Category" if it exists, returns null otherwise"""
+  categoryIfExists(where: CategoryUniqueFilterInput!): Category
 
-  # Gets the number of \\"ArticleTag\\" nodes
-  articleTagCount(where: ArticleTagWhereInput): NonNegativeInt!
+  """
+  Given a list of unique-filter's value, retrieves the corresponding "Categories" in the same order, throws an error if one does not exist
+  """
+  categoriesInOrder(where: [CategoryUniqueFilterInput!]!): [Category!]!
 
-  # Retrieves a list of \\"ArticleTag\\" nodes
-  articleTags(where: ArticleTagWhereInput, orderBy: [ArticleTagOrderByInput!], skip: NonNegativeInt, first: NonNegativeInt!): [ArticleTag!]!
+  """
+  Given a list of unique-filter's value, retrieves the corresponding "Categories", or null, in the same order
+  """
+  categoriesInOrderIfExists(where: [CategoryUniqueFilterInput!]!): [Category]!
 
-  # Retrieves one \\"ArticleTag\\" node, throws an Error if it does not exist
-  articleTag(where: ArticleTagWhereUniqueInput!): ArticleTag!
+  """
+  Gets the number of "Tags"
+  """
+  tagCount(where: TagFilterInput): UnsignedInt!
 
-  # Retrieves one \\"ArticleTag\\" node, returns null if it does not exist
-  articleTagIfExists(where: ArticleTagWhereUniqueInput!): ArticleTag
+  """Either the "Tag" exists or not?"""
+  tagExists(where: TagUniqueFilterInput!): Boolean!
 
-  # Gets the number of \\"User\\" nodes
-  userCount(where: UserWhereInput): NonNegativeInt!
+  """
+  Retrieves a list of "Tags"
+  """
+  tags(where: TagFilterInput, orderBy: [TagOrderingInput!], skip: UnsignedInt, first: UnsignedInt!): [Tag!]!
 
-  # Retrieves a list of \\"User\\" nodes
-  users(where: UserWhereInput, skip: NonNegativeInt, first: NonNegativeInt!): [User!]!
+  """Retrieves one "Tag", throws an error if it does not exist"""
+  tag(where: TagUniqueFilterInput!): Tag!
 
-  # Retrieves one \\"User\\" node, throws an Error if it does not exist
-  user(where: UserWhereUniqueInput!): User!
+  """Retrieves one "Tag" if it exists, returns null otherwise"""
+  tagIfExists(where: TagUniqueFilterInput!): Tag
 
-  # Retrieves one \\"User\\" node, returns null if it does not exist
-  userIfExists(where: UserWhereUniqueInput!): User
+  """
+  Given a list of unique-filter's value, retrieves the corresponding "Tags" in the same order, throws an error if one does not exist
+  """
+  tagsInOrder(where: [TagUniqueFilterInput!]!): [Tag!]!
 
-  # Gets the number of \\"UserProfile\\" nodes
-  userProfileCount(where: UserProfileWhereInput): NonNegativeInt!
+  """
+  Given a list of unique-filter's value, retrieves the corresponding "Tags", or null, in the same order
+  """
+  tagsInOrderIfExists(where: [TagUniqueFilterInput!]!): [Tag]!
 
-  # Retrieves a list of \\"UserProfile\\" nodes
-  userProfiles(where: UserProfileWhereInput, orderBy: [UserProfileOrderByInput!], skip: NonNegativeInt, first: NonNegativeInt!): [UserProfile!]!
+  """
+  Gets the number of "ArticleTags"
+  """
+  articleTagCount(where: ArticleTagFilterInput): UnsignedInt!
 
-  # Retrieves one \\"UserProfile\\" node, throws an Error if it does not exist
-  userProfile(where: UserProfileWhereUniqueInput!): UserProfile!
+  """Either the "ArticleTag" exists or not?"""
+  articleTagExists(where: ArticleTagUniqueFilterInput!): Boolean!
 
-  # Retrieves one \\"UserProfile\\" node, returns null if it does not exist
-  userProfileIfExists(where: UserProfileWhereUniqueInput!): UserProfile
+  """
+  Retrieves a list of "ArticleTags"
+  """
+  articleTags(where: ArticleTagFilterInput, orderBy: [ArticleTagOrderingInput!], skip: UnsignedInt, first: UnsignedInt!): [ArticleTag!]!
 
-  # Gets the number of \\"Hit\\" nodes
-  hitCount(where: HitWhereInput): NonNegativeInt!
+  """Retrieves one "ArticleTag", throws an error if it does not exist"""
+  articleTag(where: ArticleTagUniqueFilterInput!): ArticleTag!
 
-  # Retrieves a list of \\"Hit\\" nodes
-  hits(where: HitWhereInput, orderBy: [HitOrderByInput!], skip: NonNegativeInt, first: NonNegativeInt!): [Hit!]!
+  """Retrieves one "ArticleTag" if it exists, returns null otherwise"""
+  articleTagIfExists(where: ArticleTagUniqueFilterInput!): ArticleTag
 
-  # Retrieves one \\"Hit\\" node, throws an Error if it does not exist
-  hit(where: HitWhereUniqueInput!): Hit!
+  """
+  Given a list of unique-filter's value, retrieves the corresponding "ArticleTags" in the same order, throws an error if one does not exist
+  """
+  articleTagsInOrder(where: [ArticleTagUniqueFilterInput!]!): [ArticleTag!]!
 
-  # Retrieves one \\"Hit\\" node, returns null if it does not exist
-  hitIfExists(where: HitWhereUniqueInput!): Hit
+  """
+  Given a list of unique-filter's value, retrieves the corresponding "ArticleTags", or null, in the same order
+  """
+  articleTagsInOrderIfExists(where: [ArticleTagUniqueFilterInput!]!): [ArticleTag]!
+
+  """
+  Gets the number of "Users"
+  """
+  userCount(where: UserFilterInput): UnsignedInt!
+
+  """Either the "User" exists or not?"""
+  userExists(where: UserUniqueFilterInput!): Boolean!
+
+  """
+  Retrieves a list of "Users"
+  """
+  users(where: UserFilterInput, orderBy: [UserOrderingInput!], skip: UnsignedInt, first: UnsignedInt!): [User!]!
+
+  """Retrieves one "User", throws an error if it does not exist"""
+  user(where: UserUniqueFilterInput!): User!
+
+  """Retrieves one "User" if it exists, returns null otherwise"""
+  userIfExists(where: UserUniqueFilterInput!): User
+
+  """
+  Given a list of unique-filter's value, retrieves the corresponding "Users" in the same order, throws an error if one does not exist
+  """
+  usersInOrder(where: [UserUniqueFilterInput!]!): [User!]!
+
+  """
+  Given a list of unique-filter's value, retrieves the corresponding "Users", or null, in the same order
+  """
+  usersInOrderIfExists(where: [UserUniqueFilterInput!]!): [User]!
+
+  """
+  Gets the number of "UserProfiles"
+  """
+  userProfileCount(where: UserProfileFilterInput): UnsignedInt!
+
+  """Either the "UserProfile" exists or not?"""
+  userProfileExists(where: UserProfileUniqueFilterInput!): Boolean!
+
+  """
+  Retrieves a list of "UserProfiles"
+  """
+  userProfiles(where: UserProfileFilterInput, orderBy: [UserProfileOrderingInput!], skip: UnsignedInt, first: UnsignedInt!): [UserProfile!]!
+
+  """Retrieves one "UserProfile", throws an error if it does not exist"""
+  userProfile(where: UserProfileUniqueFilterInput!): UserProfile!
+
+  """Retrieves one "UserProfile" if it exists, returns null otherwise"""
+  userProfileIfExists(where: UserProfileUniqueFilterInput!): UserProfile
+
+  """
+  Given a list of unique-filter's value, retrieves the corresponding "UserProfiles" in the same order, throws an error if one does not exist
+  """
+  userProfilesInOrder(where: [UserProfileUniqueFilterInput!]!): [UserProfile!]!
+
+  """
+  Given a list of unique-filter's value, retrieves the corresponding "UserProfiles", or null, in the same order
+  """
+  userProfilesInOrderIfExists(where: [UserProfileUniqueFilterInput!]!): [UserProfile]!
 }
 
-# Integers that will have a value of 0 or more.
-scalar NonNegativeInt
+"""
+The \`UnsignedInt\` scalar type represents non-fractional unsigned whole numeric values, it can represent values between 0 and 4294967294 (= 2^32 - 1).
+"""
+scalar UnsignedInt
 
-# Used to filter the \\"Article\\" nodes
-input ArticleWhereInput {
-  id: UUID
-  id_not: UUID
-  id_in: [UUID!]
-  id_not_in: [UUID!]
+"""The "Article" nodes' filter"""
+input ArticleFilterInput {
+  id: UUIDv4
+  id_not: UUIDv4
+  id_in: [UUIDv4!]
+  id_not_in: [UUIDv4!]
+  id_contains: NonEmptyString
+  id_not_contains: NonEmptyString
+  id_starts_with: NonEmptyString
+  id_not_starts_with: NonEmptyString
+  id_ends_with: NonEmptyString
+  id_not_ends_with: NonEmptyString
   status: ArticleStatus
   status_not: ArticleStatus
   status_in: [ArticleStatus!]
@@ -109,20 +207,31 @@ input ArticleWhereInput {
   title_not: NonEmptyTrimmedString
   title_in: [NonEmptyTrimmedString!]
   title_not_in: [NonEmptyTrimmedString!]
+  title_contains: NonEmptyString
+  title_not_contains: NonEmptyString
+  title_starts_with: NonEmptyString
+  title_not_starts_with: NonEmptyString
+  title_ends_with: NonEmptyString
+  title_not_ends_with: NonEmptyString
   slug: NonEmptyTrimmedString
   slug_not: NonEmptyTrimmedString
   slug_in: [NonEmptyTrimmedString!]
   slug_not_in: [NonEmptyTrimmedString!]
-  body: NonEmptyTrimmedString
-  body_not: NonEmptyTrimmedString
+  slug_contains: NonEmptyString
+  slug_not_contains: NonEmptyString
+  slug_starts_with: NonEmptyString
+  slug_not_starts_with: NonEmptyString
+  slug_ends_with: NonEmptyString
+  slug_not_ends_with: NonEmptyString
+  body: DraftJS
+  body_not: DraftJS
   body_is_null: Boolean
-  body_in: [NonEmptyTrimmedString]
-  body_not_in: [NonEmptyTrimmedString]
-  category: CategoryWhereInput
-  category_not: CategoryWhereInput
+  category: CategoryFilterInput
+  category_not: CategoryFilterInput
   category_is_null: Boolean
-  createdBy: UserWhereInput
-  createdBy_not: UserWhereInput
+  createdBy: UserFilterInput
+  createdBy_not: UserFilterInput
+  createdBy_is_null: Boolean
   createdAt: DateTime
   createdAt_not: DateTime
   createdAt_in: [DateTime!]
@@ -131,8 +240,9 @@ input ArticleWhereInput {
   createdAt_gte: DateTime
   createdAt_lt: DateTime
   createdAt_lte: DateTime
-  updatedBy: UserWhereInput
-  updatedBy_not: UserWhereInput
+  updatedBy: UserFilterInput
+  updatedBy_not: UserFilterInput
+  updatedBy_is_null: Boolean
   updatedAt: DateTime
   updatedAt_not: DateTime
   updatedAt_in: [DateTime!]
@@ -141,89 +251,173 @@ input ArticleWhereInput {
   updatedAt_gte: DateTime
   updatedAt_lt: DateTime
   updatedAt_lte: DateTime
-  tags_none: ArticleTagWhereInput
-  tags_some: ArticleTagWhereInput
-  tags_every: ArticleTagWhereInput
-  AND: [ArticleWhereInput!]
-  OR: [ArticleWhereInput!]
-  NOT: ArticleWhereInput
+  metas: JSONObject
+  metas_not: JSONObject
+  metas_is_null: Boolean
+  highlighted: Boolean
+  highlighted_not: Boolean
+  highlighted_is_null: Boolean
+  highlighted_in: [Boolean]
+  highlighted_not_in: [Boolean]
+  sponsored: Boolean
+  sponsored_not: Boolean
+  sponsored_is_null: Boolean
+  sponsored_in: [Boolean]
+  sponsored_not_in: [Boolean]
+  tags_every: ArticleTagFilterInput
+  tags_some: ArticleTagFilterInput
+  tags_none: ArticleTagFilterInput
+  tagCount: UnsignedInt
+  tagCount_not: UnsignedInt
+  tagCount_gt: UnsignedInt
+  tagCount_gte: UnsignedInt
+  tagCount_lt: UnsignedInt
+  tagCount_lte: UnsignedInt
+  AND: [ArticleFilterInput]
+  OR: [ArticleFilterInput]
+  NOT: ArticleFilterInput
 }
 
-# A field whose value is a generic Universally Unique Identifier: https://en.wikipedia.org/wiki/Universally_unique_identifier.
-scalar UUID
+"""A field whose value is a generic Universally Unique Identifier."""
+scalar UUIDv4 @specifiedBy(url: "https://en.wikipedia.org/wiki/Universally_unique_identifier")
+
+"""A non-empty string."""
+scalar NonEmptyString
 
 enum ArticleStatus {
-  Draft
-  Published
+  DRAFT
+  PUBLISHED
+  DELETED
 }
 
-# A string in which the leading and trailing whitespace characters are removed, plus it cannot be empty.
+"""
+A string in which the leading and trailing whitespace characters are removed and cannot be empty afterwards.
+"""
 scalar NonEmptyTrimmedString
 
-# Used to filter the \\"Category\\" nodes
-input CategoryWhereInput {
-  id: UUID
-  id_not: UUID
-  id_in: [UUID!]
-  id_not_in: [UUID!]
+"""
+The DraftJS raw state contains a list of content blocks, as well as a map of all relevant entity objects.
+"""
+scalar DraftJS @specifiedBy(url: "https://draftjs.org/docs/api-reference-data-conversion/#convertfromraw")
+
+"""The "Category" nodes' filter"""
+input CategoryFilterInput {
+  id: UUIDv4
+  id_not: UUIDv4
+  id_in: [UUIDv4!]
+  id_not_in: [UUIDv4!]
+  id_contains: NonEmptyString
+  id_not_contains: NonEmptyString
+  id_starts_with: NonEmptyString
+  id_not_starts_with: NonEmptyString
+  id_ends_with: NonEmptyString
+  id_not_ends_with: NonEmptyString
   title: NonEmptyTrimmedString
   title_not: NonEmptyTrimmedString
   title_in: [NonEmptyTrimmedString!]
   title_not_in: [NonEmptyTrimmedString!]
+  title_contains: NonEmptyString
+  title_not_contains: NonEmptyString
+  title_starts_with: NonEmptyString
+  title_not_starts_with: NonEmptyString
+  title_ends_with: NonEmptyString
+  title_not_ends_with: NonEmptyString
   slug: NonEmptyTrimmedString
   slug_not: NonEmptyTrimmedString
   slug_in: [NonEmptyTrimmedString!]
   slug_not_in: [NonEmptyTrimmedString!]
-  parent: CategoryWhereInput
-  parent_not: CategoryWhereInput
+  slug_contains: NonEmptyString
+  slug_not_contains: NonEmptyString
+  slug_starts_with: NonEmptyString
+  slug_not_starts_with: NonEmptyString
+  slug_ends_with: NonEmptyString
+  slug_not_ends_with: NonEmptyString
+  parent: CategoryFilterInput
+  parent_not: CategoryFilterInput
   parent_is_null: Boolean
-  order: NonNegativeInt
-  order_not: NonNegativeInt
-  order_in: [NonNegativeInt!]
-  order_not_in: [NonNegativeInt!]
-  order_gt: NonNegativeInt
-  order_gte: NonNegativeInt
-  order_lt: NonNegativeInt
-  order_lte: NonNegativeInt
-  articles_none: ArticleWhereInput
-  articles_some: ArticleWhereInput
-  articles_every: ArticleWhereInput
-  children_none: CategoryWhereInput
-  children_some: CategoryWhereInput
-  children_every: CategoryWhereInput
-  AND: [CategoryWhereInput!]
-  OR: [CategoryWhereInput!]
-  NOT: CategoryWhereInput
+  order: UnsignedInt
+  order_not: UnsignedInt
+  order_in: [UnsignedInt!]
+  order_not_in: [UnsignedInt!]
+  order_gt: UnsignedInt
+  order_gte: UnsignedInt
+  order_lt: UnsignedInt
+  order_lte: UnsignedInt
+  children_every: CategoryFilterInput
+  children_some: CategoryFilterInput
+  children_none: CategoryFilterInput
+  childCount: UnsignedInt
+  childCount_not: UnsignedInt
+  childCount_gt: UnsignedInt
+  childCount_gte: UnsignedInt
+  childCount_lt: UnsignedInt
+  childCount_lte: UnsignedInt
+  articles_every: ArticleFilterInput
+  articles_some: ArticleFilterInput
+  articles_none: ArticleFilterInput
+  articleCount: UnsignedInt
+  articleCount_not: UnsignedInt
+  articleCount_gt: UnsignedInt
+  articleCount_gte: UnsignedInt
+  articleCount_lt: UnsignedInt
+  articleCount_lte: UnsignedInt
+  AND: [CategoryFilterInput]
+  OR: [CategoryFilterInput]
+  NOT: CategoryFilterInput
 }
 
-# Used to filter the \\"User\\" nodes
-input UserWhereInput {
-  id: UUID
-  id_not: UUID
-  id_in: [UUID!]
-  id_not_in: [UUID!]
+"""The "User" nodes' filter"""
+input UserFilterInput {
+  id: UUIDv4
+  id_not: UUIDv4
+  id_in: [UUIDv4!]
+  id_not_in: [UUIDv4!]
+  id_contains: NonEmptyString
+  id_not_contains: NonEmptyString
+  id_starts_with: NonEmptyString
+  id_not_starts_with: NonEmptyString
+  id_ends_with: NonEmptyString
+  id_not_ends_with: NonEmptyString
   username: NonEmptyTrimmedString
   username_not: NonEmptyTrimmedString
   username_in: [NonEmptyTrimmedString!]
   username_not_in: [NonEmptyTrimmedString!]
-  created_none: ArticleWhereInput
-  created_some: ArticleWhereInput
-  created_every: ArticleWhereInput
-  updated_none: ArticleWhereInput
-  updated_some: ArticleWhereInput
-  updated_every: ArticleWhereInput
-  profile: UserProfileWhereInput
-  profile_not: UserProfileWhereInput
+  username_contains: NonEmptyString
+  username_not_contains: NonEmptyString
+  username_starts_with: NonEmptyString
+  username_not_starts_with: NonEmptyString
+  username_ends_with: NonEmptyString
+  username_not_ends_with: NonEmptyString
+  createdArticles_every: ArticleFilterInput
+  createdArticles_some: ArticleFilterInput
+  createdArticles_none: ArticleFilterInput
+  createdArticleCount: UnsignedInt
+  createdArticleCount_not: UnsignedInt
+  createdArticleCount_gt: UnsignedInt
+  createdArticleCount_gte: UnsignedInt
+  createdArticleCount_lt: UnsignedInt
+  createdArticleCount_lte: UnsignedInt
+  updatedArticles_every: ArticleFilterInput
+  updatedArticles_some: ArticleFilterInput
+  updatedArticles_none: ArticleFilterInput
+  updatedArticleCount: UnsignedInt
+  updatedArticleCount_not: UnsignedInt
+  updatedArticleCount_gt: UnsignedInt
+  updatedArticleCount_gte: UnsignedInt
+  updatedArticleCount_lt: UnsignedInt
+  updatedArticleCount_lte: UnsignedInt
+  profile: UserProfileFilterInput
+  profile_not: UserProfileFilterInput
   profile_is_null: Boolean
-  AND: [UserWhereInput!]
-  OR: [UserWhereInput!]
-  NOT: UserWhereInput
+  AND: [UserFilterInput]
+  OR: [UserFilterInput]
+  NOT: UserFilterInput
 }
 
-# Used to filter the \\"UserProfile\\" nodes
-input UserProfileWhereInput {
-  user: UserWhereInput
-  user_not: UserWhereInput
+"""The "UserProfile" nodes' filter"""
+input UserProfileFilterInput {
+  user: UserFilterInput
+  user_not: UserFilterInput
   birthday: Date
   birthday_not: Date
   birthday_is_null: Boolean
@@ -238,60 +432,108 @@ input UserProfileWhereInput {
   facebookId_is_null: Boolean
   facebookId_in: [ID]
   facebookId_not_in: [ID]
+  facebookId_contains: NonEmptyString
+  facebookId_not_contains: NonEmptyString
+  facebookId_starts_with: NonEmptyString
+  facebookId_not_starts_with: NonEmptyString
+  facebookId_ends_with: NonEmptyString
+  facebookId_not_ends_with: NonEmptyString
   googleId: ID
   googleId_not: ID
   googleId_is_null: Boolean
   googleId_in: [ID]
   googleId_not_in: [ID]
-  twitterId: ID
-  twitterId_not: ID
-  twitterId_is_null: Boolean
-  twitterId_in: [ID]
-  twitterId_not_in: [ID]
-  AND: [UserProfileWhereInput!]
-  OR: [UserProfileWhereInput!]
-  NOT: UserProfileWhereInput
+  googleId_contains: NonEmptyString
+  googleId_not_contains: NonEmptyString
+  googleId_starts_with: NonEmptyString
+  googleId_not_starts_with: NonEmptyString
+  googleId_ends_with: NonEmptyString
+  googleId_not_ends_with: NonEmptyString
+  twitterHandle: ID
+  twitterHandle_not: ID
+  twitterHandle_is_null: Boolean
+  twitterHandle_in: [ID]
+  twitterHandle_not_in: [ID]
+  twitterHandle_contains: NonEmptyString
+  twitterHandle_not_contains: NonEmptyString
+  twitterHandle_starts_with: NonEmptyString
+  twitterHandle_not_starts_with: NonEmptyString
+  twitterHandle_ends_with: NonEmptyString
+  twitterHandle_not_ends_with: NonEmptyString
+  AND: [UserProfileFilterInput]
+  OR: [UserProfileFilterInput]
+  NOT: UserProfileFilterInput
 }
 
-# A date string, such as 2007-12-03, compliant with the \`full-date\` format outlined in section 5.6 of the RFC 3339 profile of the ISO 8601 standard for representation of dates and times using the Gregorian calendar.
-scalar Date
+"""
+A date string, such as "2007-12-03", compliant with the ISO 8601 extended format.
+"""
+scalar Date @specifiedBy(url: "https://en.wikipedia.org/wiki/ISO_8601")
 
-# A date-time string at UTC, such as 2007-12-03T10:15:30Z, compliant with the \`date-time\` format outlined in section 5.6 of the RFC 3339 profile of the ISO 8601 standard for representation of dates and times using the Gregorian calendar.
-scalar DateTime
+"""
+A date-time string, such as "2007-12-03T10:15:30.123Z", compliant with the ISO 8601 extended format.
+"""
+scalar DateTime @specifiedBy(url: "https://en.wikipedia.org/wiki/ISO_8601")
 
-# Used to filter the \\"ArticleTag\\" nodes
-input ArticleTagWhereInput {
-  article: ArticleWhereInput
-  article_not: ArticleWhereInput
-  tag: TagWhereInput
-  tag_not: TagWhereInput
-  order: NonNegativeInt
-  order_not: NonNegativeInt
-  order_in: [NonNegativeInt!]
-  order_not_in: [NonNegativeInt!]
-  order_gt: NonNegativeInt
-  order_gte: NonNegativeInt
-  order_lt: NonNegativeInt
-  order_lte: NonNegativeInt
-  AND: [ArticleTagWhereInput!]
-  OR: [ArticleTagWhereInput!]
-  NOT: ArticleTagWhereInput
+"""The \`JSONObject\` scalar type represents JSON objects."""
+scalar JSONObject @specifiedBy(url: "http://www.ecma-international.org/publications/files/ECMA-ST/ECMA-404.pdf")
+
+"""The "ArticleTag" nodes' filter"""
+input ArticleTagFilterInput {
+  article: ArticleFilterInput
+  article_not: ArticleFilterInput
+  tag: TagFilterInput
+  tag_not: TagFilterInput
+  order: UnsignedInt
+  order_not: UnsignedInt
+  order_in: [UnsignedInt!]
+  order_not_in: [UnsignedInt!]
+  order_gt: UnsignedInt
+  order_gte: UnsignedInt
+  order_lt: UnsignedInt
+  order_lte: UnsignedInt
+  AND: [ArticleTagFilterInput]
+  OR: [ArticleTagFilterInput]
+  NOT: ArticleTagFilterInput
 }
 
-# Used to filter the \\"Tag\\" nodes
-input TagWhereInput {
-  id: UUID
-  id_not: UUID
-  id_in: [UUID!]
-  id_not_in: [UUID!]
+"""The "Tag" nodes' filter"""
+input TagFilterInput {
+  id: UUIDv4
+  id_not: UUIDv4
+  id_in: [UUIDv4!]
+  id_not_in: [UUIDv4!]
+  id_contains: NonEmptyString
+  id_not_contains: NonEmptyString
+  id_starts_with: NonEmptyString
+  id_not_starts_with: NonEmptyString
+  id_ends_with: NonEmptyString
+  id_not_ends_with: NonEmptyString
+  deprecated: Boolean
+  deprecated_not: Boolean
+  deprecated_is_null: Boolean
+  deprecated_in: [Boolean]
+  deprecated_not_in: [Boolean]
   title: NonEmptyTrimmedString
   title_not: NonEmptyTrimmedString
   title_in: [NonEmptyTrimmedString!]
   title_not_in: [NonEmptyTrimmedString!]
+  title_contains: NonEmptyString
+  title_not_contains: NonEmptyString
+  title_starts_with: NonEmptyString
+  title_not_starts_with: NonEmptyString
+  title_ends_with: NonEmptyString
+  title_not_ends_with: NonEmptyString
   slug: NonEmptyTrimmedString
   slug_not: NonEmptyTrimmedString
   slug_in: [NonEmptyTrimmedString!]
   slug_not_in: [NonEmptyTrimmedString!]
+  slug_contains: NonEmptyString
+  slug_not_contains: NonEmptyString
+  slug_starts_with: NonEmptyString
+  slug_not_starts_with: NonEmptyString
+  slug_ends_with: NonEmptyString
+  slug_not_ends_with: NonEmptyString
   createdAt: DateTime
   createdAt_not: DateTime
   createdAt_in: [DateTime!]
@@ -308,162 +550,177 @@ input TagWhereInput {
   updatedAt_gte: DateTime
   updatedAt_lt: DateTime
   updatedAt_lte: DateTime
-  articleTags_none: ArticleTagWhereInput
-  articleTags_some: ArticleTagWhereInput
-  articleTags_every: ArticleTagWhereInput
-  AND: [TagWhereInput!]
-  OR: [TagWhereInput!]
-  NOT: TagWhereInput
+  articles_every: ArticleTagFilterInput
+  articles_some: ArticleTagFilterInput
+  articles_none: ArticleTagFilterInput
+  articleCount: UnsignedInt
+  articleCount_not: UnsignedInt
+  articleCount_gt: UnsignedInt
+  articleCount_gte: UnsignedInt
+  articleCount_lt: UnsignedInt
+  articleCount_lte: UnsignedInt
+  AND: [TagFilterInput]
+  OR: [TagFilterInput]
+  NOT: TagFilterInput
 }
 
-# The article is the main node, written by the journalists
-type Article implements Node {
-  # This UUID is used to identify an Article publicly
-  id: UUID!
+"""
+Identifies exactly one "Article" given one of the following combination of components' value:
+- id
+- category / slug
+"""
+input ArticleUniqueFilterInput {
+  """This UUID identifies an Article publicly"""
+  id: UUIDv4
+  category: CategoryUniqueFilterInput
+  slug: NonEmptyTrimmedString
+}
+
+"""
+Identifies exactly one "Category" given one of the following combination of components' value:
+- id
+- parent / slug
+- parent / order
+"""
+input CategoryUniqueFilterInput {
+  id: UUIDv4
+  parent: CategoryUniqueFilterInput
+  slug: NonEmptyTrimmedString
+  order: UnsignedInt
+}
+
+"""The article is the main resource, written by the journalists"""
+type Article implements PublicNodeInterface {
+  """This UUID identifies an Article publicly"""
+  id: UUIDv4!
   status: ArticleStatus!
   title: NonEmptyTrimmedString!
   slug: NonEmptyTrimmedString!
 
-  # The article's body
-  body: NonEmptyTrimmedString
+  """The article's body"""
+  body: DraftJS
   category: Category
-
-  # Either this \\"Article\\" node has a(n) \\"category\\" edge to a(n) \\"Category\\" node or not?
-  hasCategory: Boolean!
-  createdBy: User!
+  createdBy: User
   createdAt: DateTime!
-  updatedBy: User!
+  updatedBy: User
   updatedAt: DateTime!
 
-  # Contains any arbitrary data you want to store alongside the article
+  """Contains any arbitrary data you want to store alongside the article"""
   metas: JSONObject
+
+  """Is the article highlighted?"""
+  highlighted: Boolean
+
+  """Is the article a partnership?"""
+  sponsored: Boolean
+  tags(where: ArticleTagFilterInput, orderBy: [ArticleTagOrderingInput!], skip: UnsignedInt, first: UnsignedInt!): [ArticleTag!]!
+
+  """
+  Number of "tags"
+  """
+  tagCount(where: ArticleTagFilterInput): UnsignedInt!
+
+  """A custom field with a dependency"""
+  lowerCasedTitle: NonEmptyTrimmedString!
+
+  """A custom field with a dependency"""
+  upperCasedTitle: NonEmptyTrimmedString!
 }
 
-interface Node {
-  id: UUID!
+"""Exemple of interface"""
+interface PublicNodeInterface {
+  """Every public node have a public id"""
+  id: UUIDv4!
 }
 
-type Category implements Node {
-  id: UUID!
+type Category implements PublicNodeInterface {
+  id: UUIDv4!
   title: NonEmptyTrimmedString!
   slug: NonEmptyTrimmedString!
   parent: Category
+  order: UnsignedInt!
 
-  # Either this \\"Category\\" node has a(n) \\"parent\\" edge to a(n) \\"Category\\" node or not?
-  hasParent: Boolean!
-  order: NonNegativeInt!
+  """This category's children"""
+  children(where: CategoryFilterInput, orderBy: [CategoryOrderingInput!], skip: UnsignedInt, first: UnsignedInt!): [Category!]!
+
+  """
+  Number of "children"
+  """
+  childCount(where: CategoryFilterInput): UnsignedInt!
+
+  """The articles attached to this category"""
+  articles(where: ArticleFilterInput, orderBy: [ArticleOrderingInput!], skip: UnsignedInt, first: UnsignedInt!): [Article!]!
+
+  """
+  Number of "articles"
+  """
+  articleCount(where: ArticleFilterInput): UnsignedInt!
 }
 
-type User implements Node {
-  id: UUID!
+"""Order the "Category" nodes"""
+enum CategoryOrderingInput {
+  """from the lowest "order" to the highest"""
+  order_ASC
+
+  """from the highest "order" to the lowest"""
+  order_DESC
+
+  """from the lowest number of "children" to the highest"""
+  childCount_ASC
+
+  """from the highest number of "children" to the lowest"""
+  childCount_DESC
+
+  """from the lowest number of "articles" to the highest"""
+  articleCount_ASC
+
+  """from the highest number of "articles" to the lowest"""
+  articleCount_DESC
+}
+
+"""Order the "Article" nodes"""
+enum ArticleOrderingInput {
+  """from the lowest "createdAt" to the highest"""
+  createdAt_ASC
+
+  """from the highest "createdAt" to the lowest"""
+  createdAt_DESC
+
+  """from the lowest "updatedAt" to the highest"""
+  updatedAt_ASC
+
+  """from the highest "updatedAt" to the lowest"""
+  updatedAt_DESC
+
+  """from the lowest number of "tags" to the highest"""
+  tagCount_ASC
+
+  """from the highest number of "tags" to the lowest"""
+  tagCount_DESC
+}
+
+type User implements PublicNodeInterface {
+  id: UUIDv4!
   username: NonEmptyTrimmedString!
-}
 
-# The \`JSONObject\` scalar type represents JSON objects as specified by [ECMA-404](http://www.ecma-international.org/publications/files/ECMA-ST/ECMA-404.pdf).
-scalar JSONObject
+  """All the articles this user has created"""
+  createdArticles(where: ArticleFilterInput, orderBy: [ArticleOrderingInput!], skip: UnsignedInt, first: UnsignedInt!): [Article!]!
 
-# Used to sort the \\"Article\\" nodes
-enum ArticleOrderByInput {
-  # Sort the \\"Article\\" nodes from the lowest \\"createdAt\\" leaf to the highest
-  createdAt_ASC
+  """
+  Number of "createdArticles"
+  """
+  createdArticleCount(where: ArticleFilterInput): UnsignedInt!
 
-  # Sort the \\"Article\\" nodes from the highest \\"createdAt\\" leaf to the lowest
-  createdAt_DESC
+  """All the articles this user has updated"""
+  updatedArticles(where: ArticleFilterInput, orderBy: [ArticleOrderingInput!], skip: UnsignedInt, first: UnsignedInt!): [Article!]!
 
-  # Sort the \\"Article\\" nodes from the lowest \\"updatedAt\\" leaf to the highest
-  updatedAt_ASC
+  """
+  Number of "updatedArticles"
+  """
+  updatedArticleCount(where: ArticleFilterInput): UnsignedInt!
 
-  # Sort the \\"Article\\" nodes from the highest \\"updatedAt\\" leaf to the lowest
-  updatedAt_DESC
-}
-
-# Identifies exactly one \\"Article\\" node given a unique combination of values:
-# id
-input ArticleWhereUniqueInput {
-  id: UUID!
-}
-
-# Used to sort the \\"Category\\" nodes
-enum CategoryOrderByInput {
-  # Sort the \\"Category\\" nodes from the lowest \\"order\\" leaf to the highest
-  order_ASC
-
-  # Sort the \\"Category\\" nodes from the highest \\"order\\" leaf to the lowest
-  order_DESC
-}
-
-# Identifies exactly one \\"Category\\" node given a unique combination of values:
-# id
-# parent, slug
-# parent, order
-input CategoryWhereUniqueInput {
-  id: UUID
-  parent: CategoryWhereUniqueInput
-  slug: NonEmptyTrimmedString
-  order: NonNegativeInt
-}
-
-type Tag implements Node {
-  id: UUID!
-  title: NonEmptyTrimmedString!
-  slug: NonEmptyTrimmedString!
-  createdAt: DateTime!
-  updatedAt: DateTime!
-}
-
-# Used to sort the \\"Tag\\" nodes
-enum TagOrderByInput {
-  # Sort the \\"Tag\\" nodes from the lowest \\"createdAt\\" leaf to the highest
-  createdAt_ASC
-
-  # Sort the \\"Tag\\" nodes from the highest \\"createdAt\\" leaf to the lowest
-  createdAt_DESC
-
-  # Sort the \\"Tag\\" nodes from the lowest \\"updatedAt\\" leaf to the highest
-  updatedAt_ASC
-
-  # Sort the \\"Tag\\" nodes from the highest \\"updatedAt\\" leaf to the lowest
-  updatedAt_DESC
-}
-
-# Identifies exactly one \\"Tag\\" node given a unique combination of values:
-# id
-# slug
-input TagWhereUniqueInput {
-  id: UUID
-  slug: NonEmptyTrimmedString
-}
-
-type ArticleTag {
-  article: Article!
-  tag: Tag!
-  order: NonNegativeInt!
-}
-
-# Used to sort the \\"ArticleTag\\" nodes
-enum ArticleTagOrderByInput {
-  # Sort the \\"ArticleTag\\" nodes from the lowest \\"order\\" leaf to the highest
-  order_ASC
-
-  # Sort the \\"ArticleTag\\" nodes from the highest \\"order\\" leaf to the lowest
-  order_DESC
-}
-
-# Identifies exactly one \\"ArticleTag\\" node given a unique combination of values:
-# article, tag
-# article, order
-input ArticleTagWhereUniqueInput {
-  article: ArticleWhereUniqueInput!
-  tag: TagWhereUniqueInput
-  order: NonNegativeInt
-}
-
-# Identifies exactly one \\"User\\" node given a unique combination of values:
-# id
-# username
-input UserWhereUniqueInput {
-  id: UUID
-  username: NonEmptyTrimmedString
+  """This user's profile, only the optional informations"""
+  profile: UserProfile
 }
 
 type UserProfile {
@@ -471,419 +728,703 @@ type UserProfile {
   birthday: Date
   facebookId: ID
   googleId: ID
-  twitterId: ID
+  twitterHandle: ID
 }
 
-# Used to sort the \\"UserProfile\\" nodes
-enum UserProfileOrderByInput {
-  # Sort the \\"UserProfile\\" nodes from the lowest \\"birthday\\" leaf to the highest
+type ArticleTag {
+  article: Article!
+  tag: Tag!
+  order: UnsignedInt!
+}
+
+type Tag implements PublicNodeInterface {
+  id: UUIDv4!
+
+  """A tag can be deprecated"""
+  deprecated: Boolean
+  title: NonEmptyTrimmedString!
+  slug: NonEmptyTrimmedString!
+  createdAt: DateTime!
+  updatedAt: DateTime!
+  articles(where: ArticleTagFilterInput, orderBy: [ArticleTagOrderingInput!], skip: UnsignedInt, first: UnsignedInt!): [ArticleTag!]!
+
+  """
+  Number of "articles"
+  """
+  articleCount(where: ArticleTagFilterInput): UnsignedInt!
+}
+
+"""Order the "ArticleTag" nodes"""
+enum ArticleTagOrderingInput {
+  """from the lowest "order" to the highest"""
+  order_ASC
+
+  """from the highest "order" to the lowest"""
+  order_DESC
+}
+
+"""
+Identifies exactly one "Tag" given one of the following combination of components' value:
+- id
+- slug
+"""
+input TagUniqueFilterInput {
+  id: UUIDv4
+  slug: NonEmptyTrimmedString
+}
+
+"""Order the "Tag" nodes"""
+enum TagOrderingInput {
+  """from the lowest "createdAt" to the highest"""
+  createdAt_ASC
+
+  """from the highest "createdAt" to the lowest"""
+  createdAt_DESC
+
+  """from the lowest "updatedAt" to the highest"""
+  updatedAt_ASC
+
+  """from the highest "updatedAt" to the lowest"""
+  updatedAt_DESC
+
+  """from the lowest number of "articles" to the highest"""
+  articleCount_ASC
+
+  """from the highest number of "articles" to the lowest"""
+  articleCount_DESC
+}
+
+"""
+Identifies exactly one "ArticleTag" given one of the following combination of components' value:
+- article / tag
+- article / order
+"""
+input ArticleTagUniqueFilterInput {
+  article: ArticleUniqueFilterInput!
+  tag: TagUniqueFilterInput
+  order: UnsignedInt
+}
+
+"""
+Identifies exactly one "User" given one of the following combination of components' value:
+- id
+- username
+"""
+input UserUniqueFilterInput {
+  id: UUIDv4
+  username: NonEmptyTrimmedString
+}
+
+"""Order the "User" nodes"""
+enum UserOrderingInput {
+  """from the lowest number of "createdArticles" to the highest"""
+  createdArticleCount_ASC
+
+  """from the highest number of "createdArticles" to the lowest"""
+  createdArticleCount_DESC
+
+  """from the lowest number of "updatedArticles" to the highest"""
+  updatedArticleCount_ASC
+
+  """from the highest number of "updatedArticles" to the lowest"""
+  updatedArticleCount_DESC
+}
+
+"""
+Identifies exactly one "UserProfile" given one of the following combination of components' value:
+- user
+"""
+input UserProfileUniqueFilterInput {
+  user: UserUniqueFilterInput!
+}
+
+"""Order the "UserProfile" nodes"""
+enum UserProfileOrderingInput {
+  """from the lowest "birthday" to the highest"""
   birthday_ASC
 
-  # Sort the \\"UserProfile\\" nodes from the highest \\"birthday\\" leaf to the lowest
+  """from the highest "birthday" to the lowest"""
   birthday_DESC
 }
 
-# Identifies exactly one \\"UserProfile\\" node given a unique combination of values:
-# user
-input UserProfileWhereUniqueInput {
-  user: UserWhereUniqueInput!
-}
-
-# Used to filter the \\"Hit\\" nodes
-input HitWhereInput {
-  _id: NonNegativeInt
-  _id_not: NonNegativeInt
-  _id_in: [NonNegativeInt!]
-  _id_not_in: [NonNegativeInt!]
-  _id_gt: NonNegativeInt
-  _id_gte: NonNegativeInt
-  _id_lt: NonNegativeInt
-  _id_lte: NonNegativeInt
-  at: DateTime
-  at_not: DateTime
-  at_in: [DateTime!]
-  at_not_in: [DateTime!]
-  at_gt: DateTime
-  at_gte: DateTime
-  at_lt: DateTime
-  at_lte: DateTime
-  AND: [HitWhereInput!]
-  OR: [HitWhereInput!]
-  NOT: HitWhereInput
-}
-
-type Hit {
-  _id: NonNegativeInt!
-  at: DateTime!
-}
-
-# Used to sort the \\"Hit\\" nodes
-enum HitOrderByInput {
-  # Sort the \\"Hit\\" nodes from the lowest \\"_id\\" leaf to the highest
-  _id_ASC
-
-  # Sort the \\"Hit\\" nodes from the highest \\"_id\\" leaf to the lowest
-  _id_DESC
-
-  # Sort the \\"Hit\\" nodes from the lowest \\"at\\" leaf to the highest
-  at_ASC
-
-  # Sort the \\"Hit\\" nodes from the highest \\"at\\" leaf to the lowest
-  at_DESC
-}
-
-# Identifies exactly one \\"Hit\\" node given a unique combination of values:
-# _id
-input HitWhereUniqueInput {
-  _id: NonNegativeInt!
-}
-
 type mutation {
-  # Creates one \\"Article\\" node then returns it
-  createArticle(data: ArticleCreateInput!): Article!
+  """Creates one "Article", throws an error if it already exists"""
+  createArticle(data: ArticleCreationInput!): Article!
 
-  # Deletes one \\"Article\\" node then returns it or throws an Error if it does not exist
-  deleteArticle(where: ArticleWhereUniqueInput!): Article!
+  """Creates some "Article", throws an error if they already exist"""
+  createArticles(data: [ArticleCreationInput!]!): [Article!]!
 
-  # Updates one \\"Article\\" node then returns it or throws an Error if it does not exist
-  updateArticle(where: ArticleWhereUniqueInput!): Article!
+  """
+  Deletes many "Articles"
+  """
+  deleteArticles(where: ArticleFilterInput, orderBy: [ArticleOrderingInput!], first: UnsignedInt!): [Article!]!
 
-  # Creates one \\"Category\\" node then returns it
-  createCategory(data: CategoryCreateInput!): Category!
+  """Deletes one "Article", throws an error if it does not exists"""
+  deleteArticle(where: ArticleUniqueFilterInput!): Article!
 
-  # Deletes one \\"Category\\" node then returns it or throws an Error if it does not exist
-  deleteCategory(where: CategoryWhereUniqueInput!): Category!
+  """Deletes one "Article" if it exists, returns null otherwise"""
+  deleteArticleIfExists(where: ArticleUniqueFilterInput!): Article
 
-  # Updates one \\"Category\\" node then returns it or throws an Error if it does not exist
-  updateCategory(where: CategoryWhereUniqueInput!): Category!
+  """
+  Updates many "Articles"
+  """
+  updateArticles(where: ArticleFilterInput, orderBy: [ArticleOrderingInput!], first: UnsignedInt!, data: ArticleUpdateInput!): [Article!]!
 
-  # Creates one \\"Tag\\" node then returns it
-  createTag(data: TagCreateInput!): Tag!
+  """Updates one "Article", throws an error if it does not exists"""
+  updateArticle(where: ArticleUniqueFilterInput!, data: ArticleUpdateInput!): Article!
 
-  # Deletes one \\"Tag\\" node then returns it or throws an Error if it does not exist
-  deleteTag(where: TagWhereUniqueInput!): Tag!
+  """Updates one "Article" if it exists, returns null otherwise"""
+  updateArticleIfExists(where: ArticleUniqueFilterInput!, data: ArticleUpdateInput!): Article
 
-  # Updates one \\"Tag\\" node then returns it or throws an Error if it does not exist
-  updateTag(where: TagWhereUniqueInput!): Tag!
+  """Updates an existing "Article" or creates a new one"""
+  upsertArticle(where: ArticleUniqueFilterInput!, create: ArticleCreationInput!, update: ArticleUpdateInput): Article!
 
-  # Creates one \\"ArticleTag\\" node then returns it
-  createArticleTag(data: ArticleTagCreateInput!): ArticleTag!
+  """Creates one "Category", throws an error if it already exists"""
+  createCategory(data: CategoryCreationInput!): Category!
 
-  # Deletes one \\"ArticleTag\\" node then returns it or throws an Error if it does not exist
-  deleteArticleTag(where: ArticleTagWhereUniqueInput!): ArticleTag!
+  """Creates some "Category", throws an error if they already exist"""
+  createCategories(data: [CategoryCreationInput!]!): [Category!]!
 
-  # Updates one \\"ArticleTag\\" node then returns it or throws an Error if it does not exist
-  updateArticleTag(where: ArticleTagWhereUniqueInput!): ArticleTag!
+  """
+  Deletes many "Categories"
+  """
+  deleteCategories(where: CategoryFilterInput, orderBy: [CategoryOrderingInput!], first: UnsignedInt!): [Category!]!
 
-  # Creates one \\"User\\" node then returns it
-  createUser(data: UserCreateInput!): User!
+  """Deletes one "Category", throws an error if it does not exists"""
+  deleteCategory(where: CategoryUniqueFilterInput!): Category!
 
-  # Deletes one \\"User\\" node then returns it or throws an Error if it does not exist
-  deleteUser(where: UserWhereUniqueInput!): User!
+  """Deletes one "Category" if it exists, returns null otherwise"""
+  deleteCategoryIfExists(where: CategoryUniqueFilterInput!): Category
 
-  # Updates one \\"User\\" node then returns it or throws an Error if it does not exist
-  updateUser(where: UserWhereUniqueInput!): User!
+  """
+  Updates many "Categories"
+  """
+  updateCategories(where: CategoryFilterInput, orderBy: [CategoryOrderingInput!], first: UnsignedInt!, data: CategoryUpdateInput!): [Category!]!
 
-  # Creates one \\"UserProfile\\" node then returns it
-  createUserProfile(data: UserProfileCreateInput!): UserProfile!
+  """Updates one "Category", throws an error if it does not exists"""
+  updateCategory(where: CategoryUniqueFilterInput!, data: CategoryUpdateInput!): Category!
 
-  # Deletes one \\"UserProfile\\" node then returns it or throws an Error if it does not exist
-  deleteUserProfile(where: UserProfileWhereUniqueInput!): UserProfile!
+  """Updates one "Category" if it exists, returns null otherwise"""
+  updateCategoryIfExists(where: CategoryUniqueFilterInput!, data: CategoryUpdateInput!): Category
 
-  # Updates one \\"UserProfile\\" node then returns it or throws an Error if it does not exist
-  updateUserProfile(where: UserProfileWhereUniqueInput!): UserProfile!
+  """Updates an existing "Category" or creates a new one"""
+  upsertCategory(where: CategoryUniqueFilterInput!, create: CategoryCreationInput!, update: CategoryUpdateInput): Category!
 
-  # Creates one \\"Hit\\" node then returns it
-  createHit: Hit!
+  """Creates one "Tag", throws an error if it already exists"""
+  createTag(data: TagCreationInput!): Tag!
 
-  # Deletes one \\"Hit\\" node then returns it or throws an Error if it does not exist
-  deleteHit(where: HitWhereUniqueInput!): Hit!
+  """Creates some "Tag", throws an error if they already exist"""
+  createTags(data: [TagCreationInput!]!): [Tag!]!
 
-  # Updates one \\"Hit\\" node then returns it or throws an Error if it does not exist
-  updateHit(where: HitWhereUniqueInput!): Hit!
+  """
+  Deletes many "Tags"
+  """
+  deleteTags(where: TagFilterInput, orderBy: [TagOrderingInput!], first: UnsignedInt!): [Tag!]!
+
+  """Deletes one "Tag", throws an error if it does not exists"""
+  deleteTag(where: TagUniqueFilterInput!): Tag!
+
+  """Deletes one "Tag" if it exists, returns null otherwise"""
+  deleteTagIfExists(where: TagUniqueFilterInput!): Tag
+
+  """
+  Updates many "Tags"
+  """
+  updateTags(where: TagFilterInput, orderBy: [TagOrderingInput!], first: UnsignedInt!, data: TagUpdateInput!): [Tag!]!
+
+  """Updates one "Tag", throws an error if it does not exists"""
+  updateTag(where: TagUniqueFilterInput!, data: TagUpdateInput!): Tag!
+
+  """Updates one "Tag" if it exists, returns null otherwise"""
+  updateTagIfExists(where: TagUniqueFilterInput!, data: TagUpdateInput!): Tag
+
+  """Updates an existing "Tag" or creates a new one"""
+  upsertTag(where: TagUniqueFilterInput!, create: TagCreationInput!, update: TagUpdateInput): Tag!
+
+  """Creates one "ArticleTag", throws an error if it already exists"""
+  createArticleTag(data: ArticleTagCreationInput!): ArticleTag!
+
+  """Creates some "ArticleTag", throws an error if they already exist"""
+  createArticleTags(data: [ArticleTagCreationInput!]!): [ArticleTag!]!
+
+  """
+  Deletes many "ArticleTags"
+  """
+  deleteArticleTags(where: ArticleTagFilterInput, orderBy: [ArticleTagOrderingInput!], first: UnsignedInt!): [ArticleTag!]!
+
+  """Deletes one "ArticleTag", throws an error if it does not exists"""
+  deleteArticleTag(where: ArticleTagUniqueFilterInput!): ArticleTag!
+
+  """Deletes one "ArticleTag" if it exists, returns null otherwise"""
+  deleteArticleTagIfExists(where: ArticleTagUniqueFilterInput!): ArticleTag
+
+  """
+  Updates many "ArticleTags"
+  """
+  updateArticleTags(where: ArticleTagFilterInput, orderBy: [ArticleTagOrderingInput!], first: UnsignedInt!, data: ArticleTagUpdateInput!): [ArticleTag!]!
+
+  """Updates one "ArticleTag", throws an error if it does not exists"""
+  updateArticleTag(where: ArticleTagUniqueFilterInput!, data: ArticleTagUpdateInput!): ArticleTag!
+
+  """Updates one "ArticleTag" if it exists, returns null otherwise"""
+  updateArticleTagIfExists(where: ArticleTagUniqueFilterInput!, data: ArticleTagUpdateInput!): ArticleTag
+
+  """Updates an existing "ArticleTag" or creates a new one"""
+  upsertArticleTag(where: ArticleTagUniqueFilterInput!, create: ArticleTagCreationInput!, update: ArticleTagUpdateInput): ArticleTag!
+
+  """Creates one "UserProfile", throws an error if it already exists"""
+  createUserProfile(data: UserProfileCreationInput!): UserProfile!
+
+  """Creates some "UserProfile", throws an error if they already exist"""
+  createUserProfiles(data: [UserProfileCreationInput!]!): [UserProfile!]!
+
+  """
+  Deletes many "UserProfiles"
+  """
+  deleteUserProfiles(where: UserProfileFilterInput, orderBy: [UserProfileOrderingInput!], first: UnsignedInt!): [UserProfile!]!
+
+  """Deletes one "UserProfile", throws an error if it does not exists"""
+  deleteUserProfile(where: UserProfileUniqueFilterInput!): UserProfile!
+
+  """Deletes one "UserProfile" if it exists, returns null otherwise"""
+  deleteUserProfileIfExists(where: UserProfileUniqueFilterInput!): UserProfile
+
+  """
+  Updates many "UserProfiles"
+  """
+  updateUserProfiles(where: UserProfileFilterInput, orderBy: [UserProfileOrderingInput!], first: UnsignedInt!, data: UserProfileUpdateInput!): [UserProfile!]!
+
+  """Updates one "UserProfile", throws an error if it does not exists"""
+  updateUserProfile(where: UserProfileUniqueFilterInput!, data: UserProfileUpdateInput!): UserProfile!
+
+  """Updates one "UserProfile" if it exists, returns null otherwise"""
+  updateUserProfileIfExists(where: UserProfileUniqueFilterInput!, data: UserProfileUpdateInput!): UserProfile
+
+  """Updates an existing "UserProfile" or creates a new one"""
+  upsertUserProfile(where: UserProfileUniqueFilterInput!, create: UserProfileCreationInput!, update: UserProfileUpdateInput): UserProfile!
 }
 
-# Data provided to create a(n) \\"Article\\" node
-input ArticleCreateInput {
-  # You can either provide an UUID or let one be generated
-  id: UUID
-  status: ArticleStatus = Draft
+"""The "Article" node's creation"""
+input ArticleCreationInput {
+  """You can either provide an UUID or let one be generated for you"""
+  id: UUIDv4
+  status: ArticleStatus! = DRAFT
   title: NonEmptyTrimmedString!
 
-  # You can either provide a slug or let the title be \\"slugified\\" for you
+  """You can either provide a slug or let the title be "slugified" for you"""
   slug: NonEmptyTrimmedString
 
-  # The article's body
-  body: NonEmptyTrimmedString
-  category: ArticleCategoryEdgeCreateInput = {connect: {parent: null, slug: \\"home\\"}}
+  """The article's body"""
+  body: DraftJS
+  category: ArticleNestedCategoryEdgeCreationInput
 
-  # Contains any arbitrary data you want to store alongside the article
+  """Contains any arbitrary data you want to store alongside the article"""
   metas: JSONObject
 
-  # Optional, link this new article with some tags at creation
-  tags: ArticleTagsReverseEdgeCreateInput
+  """Is the article highlighted?"""
+  highlighted: Boolean
+
+  """Is the article a partnership?"""
+  sponsored: Boolean
+  tags: ArticleNestedTagsReverseEdgeCreationInput
+
+  """It is possible to provide the article's body as raw HTML"""
+  htmlBody: String
 }
 
-# The \\"Article.category\\" edge's nested mutations
-input ArticleCategoryEdgeCreateInput {
-  # Connect the new \\"Article\\" to an existing \\"Category\\" through \\"Article.category\\"
-  connect: CategoryWhereUniqueInput
+input ArticleNestedCategoryEdgeCreationInput {
+  """
+  Connect a "Category" to this new "Article" through the "Article.category" edge, throw an error if it does not exist.
+  """
+  connect: CategoryUniqueFilterInput
 
-  # Connect the new \\"Article\\" to an existing \\"Category\\", if exists, through \\"Article.category\\"
-  connectIfExists: CategoryWhereUniqueInput
+  """
+  Connect a "Category" to this new "Article" through the "Article.category" edge, if it exists.
+  """
+  connectIfExists: CategoryUniqueFilterInput
 
-  # Connect the new \\"Article\\" to a new \\"Category\\" through \\"Article.category\\"
-  create: CategoryCreateInput
+  """
+  Create a "Category" and connect it to this new "Article" through the "Article.category" edge.
+  """
+  create: CategoryCreationInput
+
+  """
+  Create a "Category" if it does not exist, and connect it to this new "Article" through the "Article.category" edge.
+  """
+  connectOrCreate: ArticleNestedConnectOrCreateCategoryEdgeCreationInput
 }
 
-# Data provided to create a(n) \\"Category\\" node
-input CategoryCreateInput {
-  # You can either provide an UUID or let one be generated
-  id: UUID
+"""The "Category" node's creation"""
+input CategoryCreationInput {
+  """You can either provide an UUID or let one be generated for you"""
+  id: UUIDv4
   title: NonEmptyTrimmedString!
 
-  # You can either provide a slug or let the title be \\"slugified\\" for you
+  """You can either provide a slug or let the title be "slugified" for you"""
   slug: NonEmptyTrimmedString
-  parent: CategoryParentEdgeCreateInput
-  order: NonNegativeInt!
+  parent: CategoryNestedParentEdgeCreationInput
+  order: UnsignedInt!
 
-  # The \\"Article\\" nodes having a(n) \\"category\\" edge to this \\"Category\\" node
-  articles: CategoryArticlesReverseEdgeCreateInput
+  """This category's children"""
+  children: CategoryNestedChildrenReverseEdgeCreationInput
 
-  # This category's children
-  children: CategoryChildrenReverseEdgeCreateInput
+  """The articles attached to this category"""
+  articles: CategoryNestedArticlesReverseEdgeCreationInput
+
+  """It is possible to provide the article's body as raw HTML"""
+  htmlBody: String
 }
 
-# The \\"Category.parent\\" edge's nested mutations
-input CategoryParentEdgeCreateInput {
-  # Connect the new \\"Category\\" to an existing \\"Category\\" through \\"Category.parent\\"
-  connect: CategoryWhereUniqueInput
+input CategoryNestedParentEdgeCreationInput {
+  """
+  Connect a "Category" to this new "Category" through the "Category.parent" edge, throw an error if it does not exist.
+  """
+  connect: CategoryUniqueFilterInput
 
-  # Connect the new \\"Category\\" to an existing \\"Category\\", if exists, through \\"Category.parent\\"
-  connectIfExists: CategoryWhereUniqueInput
+  """
+  Connect a "Category" to this new "Category" through the "Category.parent" edge, if it exists.
+  """
+  connectIfExists: CategoryUniqueFilterInput
 
-  # Connect the new \\"Category\\" to a new \\"Category\\" through \\"Category.parent\\"
-  create: CategoryCreateInput
+  """
+  Create a "Category" and connect it to this new "Category" through the "Category.parent" edge.
+  """
+  create: CategoryCreationInput
+
+  """
+  Create a "Category" if it does not exist, and connect it to this new "Category" through the "Category.parent" edge.
+  """
+  connectOrCreate: CategoryNestedConnectOrCreateParentEdgeCreationInput
 }
 
-# The \\"Category.articles\\" reverse edge's nested mutations
-input CategoryArticlesReverseEdgeCreateInput {
-  # Connect the new \\"Category\\" to an existing \\"Article\\" through \\"Category.articles\\"
-  connect: [ArticleWhereUniqueInput]
-
-  # Connect the new \\"Category\\" to a new \\"Article\\" through \\"Category.articles\\"
-  create: [ArticleWithoutCategoryCreateInput]
+input CategoryNestedConnectOrCreateParentEdgeCreationInput {
+  where: CategoryUniqueFilterInput!
+  create: CategoryCreationInput!
 }
 
-# Data provided to create a(n) \\"Article\\" node
-input ArticleWithoutCategoryCreateInput {
-  # You can either provide an UUID or let one be generated
-  id: UUID
-  status: ArticleStatus = Draft
+input CategoryNestedChildrenReverseEdgeCreationInput {
+  connectMany: CategoryFilterInput
+  connectOrCreateSome: [CategoryNestedConnectOrCreateSomeChildrenReverseEdgeCreationInput!]
+  connectSome: [CategoryUniqueFilterInput!]
+  connectSomeIfExists: [CategoryUniqueFilterInput!]
+  createSome: [CategoryCreationWithoutParentInput!]
+}
+
+input CategoryNestedConnectOrCreateSomeChildrenReverseEdgeCreationInput {
+  where: CategoryUniqueFilterInput!
+  create: CategoryCreationWithoutParentInput!
+}
+
+"""The "Category" node's creation"""
+input CategoryCreationWithoutParentInput {
+  """You can either provide an UUID or let one be generated for you"""
+  id: UUIDv4
   title: NonEmptyTrimmedString!
 
-  # You can either provide a slug or let the title be \\"slugified\\" for you
+  """You can either provide a slug or let the title be "slugified" for you"""
+  slug: NonEmptyTrimmedString
+  order: UnsignedInt!
+
+  """This category's children"""
+  children: CategoryNestedChildrenReverseEdgeCreationInput
+
+  """The articles attached to this category"""
+  articles: CategoryNestedArticlesReverseEdgeCreationInput
+
+  """It is possible to provide the article's body as raw HTML"""
+  htmlBody: String
+}
+
+input CategoryNestedArticlesReverseEdgeCreationInput {
+  connectMany: ArticleFilterInput
+  connectOrCreateSome: [CategoryNestedConnectOrCreateSomeArticlesReverseEdgeCreationInput!]
+  connectSome: [ArticleUniqueFilterInput!]
+  connectSomeIfExists: [ArticleUniqueFilterInput!]
+  createSome: [ArticleCreationWithoutCategoryInput!]
+}
+
+input CategoryNestedConnectOrCreateSomeArticlesReverseEdgeCreationInput {
+  where: ArticleUniqueFilterInput!
+  create: ArticleCreationWithoutCategoryInput!
+}
+
+"""The "Article" node's creation"""
+input ArticleCreationWithoutCategoryInput {
+  """You can either provide an UUID or let one be generated for you"""
+  id: UUIDv4
+  status: ArticleStatus! = DRAFT
+  title: NonEmptyTrimmedString!
+
+  """You can either provide a slug or let the title be "slugified" for you"""
   slug: NonEmptyTrimmedString
 
-  # The article's body
-  body: NonEmptyTrimmedString
+  """The article's body"""
+  body: DraftJS
 
-  # Contains any arbitrary data you want to store alongside the article
+  """Contains any arbitrary data you want to store alongside the article"""
   metas: JSONObject
 
-  # Optional, link this new article with some tags at creation
-  tags: ArticleTagsReverseEdgeCreateInput
+  """Is the article highlighted?"""
+  highlighted: Boolean
+
+  """Is the article a partnership?"""
+  sponsored: Boolean
+  tags: ArticleNestedTagsReverseEdgeCreationInput
+
+  """It is possible to provide the article's body as raw HTML"""
+  htmlBody: String
 }
 
-# The \\"Article.tags\\" reverse edge's nested mutations
-input ArticleTagsReverseEdgeCreateInput {
-  # Connect the new \\"Article\\" to a new \\"ArticleTag\\" through \\"Article.tags\\"
-  create: [ArticleTagWithoutArticleCreateInput]
+input ArticleNestedTagsReverseEdgeCreationInput {
+  createSome: [ArticleTagCreationWithoutArticleInput!]
 }
 
-# Data provided to create a(n) \\"ArticleTag\\" node
-input ArticleTagWithoutArticleCreateInput {
-  tag: ArticleTagTagEdgeCreateInput!
-  order: NonNegativeInt!
+"""The "ArticleTag" node's creation"""
+input ArticleTagCreationWithoutArticleInput {
+  tag: ArticleTagNestedTagEdgeCreationInput!
+  order: UnsignedInt!
 }
 
-# The \\"ArticleTag.tag\\" edge's nested mutations
-input ArticleTagTagEdgeCreateInput {
-  # Connect the new \\"ArticleTag\\" to an existing \\"Tag\\" through \\"ArticleTag.tag\\"
-  connect: TagWhereUniqueInput
+input ArticleTagNestedTagEdgeCreationInput {
+  """
+  Connect a "Tag" to this new "ArticleTag" through the "ArticleTag.tag" edge, throw an error if it does not exist.
+  """
+  connect: TagUniqueFilterInput
 
-  # Connect the new \\"ArticleTag\\" to a new \\"Tag\\" through \\"ArticleTag.tag\\"
-  create: TagCreateInput
+  """
+  Create a "Tag" and connect it to this new "ArticleTag" through the "ArticleTag.tag" edge.
+  """
+  create: TagCreationInput
+
+  """
+  Create a "Tag" if it does not exist, and connect it to this new "ArticleTag" through the "ArticleTag.tag" edge.
+  """
+  connectOrCreate: ArticleTagNestedConnectOrCreateTagEdgeCreationInput
 }
 
-# Data provided to create a(n) \\"Tag\\" node
-input TagCreateInput {
-  # You can either provide an UUID or let one be generated
-  id: UUID
-  title: NonEmptyTrimmedString!
-  slug: NonEmptyTrimmedString!
+"""The "Tag" node's creation"""
+input TagCreationInput {
+  """You can either provide an UUID or let one be generated for you"""
+  id: UUIDv4
 
-  # The \\"ArticleTag\\" nodes having a(n) \\"tag\\" edge to this \\"Tag\\" node
-  articleTags: TagArticleTagsReverseEdgeCreateInput
-}
-
-# The \\"Tag.articleTags\\" reverse edge's nested mutations
-input TagArticleTagsReverseEdgeCreateInput {
-  # Connect the new \\"Tag\\" to a new \\"ArticleTag\\" through \\"Tag.articleTags\\"
-  create: [ArticleTagWithoutTagCreateInput]
-}
-
-# Data provided to create a(n) \\"ArticleTag\\" node
-input ArticleTagWithoutTagCreateInput {
-  article: ArticleTagArticleEdgeCreateInput!
-  order: NonNegativeInt!
-}
-
-# The \\"ArticleTag.article\\" edge's nested mutations
-input ArticleTagArticleEdgeCreateInput {
-  # Connect the new \\"ArticleTag\\" to an existing \\"Article\\" through \\"ArticleTag.article\\"
-  connect: ArticleWhereUniqueInput
-
-  # Connect the new \\"ArticleTag\\" to a new \\"Article\\" through \\"ArticleTag.article\\"
-  create: ArticleCreateInput
-}
-
-# The \\"Category.children\\" reverse edge's nested mutations
-input CategoryChildrenReverseEdgeCreateInput {
-  # Connect the new \\"Category\\" to an existing \\"Category\\" through \\"Category.children\\"
-  connect: [CategoryWhereUniqueInput]
-
-  # Connect the new \\"Category\\" to a new \\"Category\\" through \\"Category.children\\"
-  create: [CategoryWithoutParentCreateInput]
-}
-
-# Data provided to create a(n) \\"Category\\" node
-input CategoryWithoutParentCreateInput {
-  # You can either provide an UUID or let one be generated
-  id: UUID
+  """A tag can be deprecated"""
+  deprecated: Boolean
   title: NonEmptyTrimmedString!
 
-  # You can either provide a slug or let the title be \\"slugified\\" for you
+  """You can either provide a slug or let the title be "slugified" for you"""
   slug: NonEmptyTrimmedString
-  order: NonNegativeInt!
-
-  # The \\"Article\\" nodes having a(n) \\"category\\" edge to this \\"Category\\" node
-  articles: CategoryArticlesReverseEdgeCreateInput
-
-  # This category's children
-  children: CategoryChildrenReverseEdgeCreateInput
+  articles: TagNestedArticlesReverseEdgeCreationInput
 }
 
-# Data provided to create a(n) \\"ArticleTag\\" node
-input ArticleTagCreateInput {
-  article: ArticleTagArticleEdgeCreateInput!
-  tag: ArticleTagTagEdgeCreateInput!
-  order: NonNegativeInt!
+input TagNestedArticlesReverseEdgeCreationInput {
+  createSome: [ArticleTagCreationWithoutTagInput!]
 }
 
-# Data provided to create a(n) \\"User\\" node
-input UserCreateInput {
-  # You can either provide an UUID or let one be generated
-  id: UUID
-  username: NonEmptyTrimmedString!
-
-  # All the articles this user has created
-  created: UserCreatedReverseEdgeCreateInput
-
-  # All the articles this user has updated
-  updated: UserUpdatedReverseEdgeCreateInput
-
-  # This user's profile, only the optional informations
-  profile: UserProfileReverseEdgeCreateInput
+"""The "ArticleTag" node's creation"""
+input ArticleTagCreationWithoutTagInput {
+  article: ArticleTagNestedArticleEdgeCreationInput!
+  order: UnsignedInt!
 }
 
-# The \\"User.created\\" reverse edge's nested mutations
-input UserCreatedReverseEdgeCreateInput {
-  # Connect the new \\"User\\" to a new \\"Article\\" through \\"User.created\\"
-  create: [ArticleWithoutCreatedByCreateInput]
+input ArticleTagNestedArticleEdgeCreationInput {
+  """
+  Connect an "Article" to this new "ArticleTag" through the "ArticleTag.article" edge, throw an error if it does not exist.
+  """
+  connect: ArticleUniqueFilterInput
+
+  """
+  Create an "Article" and connect it to this new "ArticleTag" through the "ArticleTag.article" edge.
+  """
+  create: ArticleCreationInput
+
+  """
+  Create an "Article" if it does not exist, and connect it to this new "ArticleTag" through the "ArticleTag.article" edge.
+  """
+  connectOrCreate: ArticleTagNestedConnectOrCreateArticleEdgeCreationInput
 }
 
-# Data provided to create a(n) \\"Article\\" node
-input ArticleWithoutCreatedByCreateInput {
-  # You can either provide an UUID or let one be generated
-  id: UUID
-  status: ArticleStatus = Draft
-  title: NonEmptyTrimmedString!
+input ArticleTagNestedConnectOrCreateArticleEdgeCreationInput {
+  where: ArticleUniqueFilterInput!
+  create: ArticleCreationInput!
+}
 
-  # You can either provide a slug or let the title be \\"slugified\\" for you
+input ArticleTagNestedConnectOrCreateTagEdgeCreationInput {
+  where: TagUniqueFilterInput!
+  create: TagCreationInput!
+}
+
+input ArticleNestedConnectOrCreateCategoryEdgeCreationInput {
+  where: CategoryUniqueFilterInput!
+  create: CategoryCreationInput!
+}
+
+"""The "Article" node's update"""
+input ArticleUpdateInput {
+  status: ArticleStatus
+  title: NonEmptyTrimmedString
   slug: NonEmptyTrimmedString
 
-  # The article's body
-  body: NonEmptyTrimmedString
-  category: ArticleCategoryEdgeCreateInput = {connect: {parent: null, slug: \\"home\\"}}
+  """The article's body"""
+  body: DraftJS
+  category: ArticleNestedCategoryEdgeUpdateInput
+  updatedBy: ArticleNestedUpdatedByEdgeUpdateInput
 
-  # Contains any arbitrary data you want to store alongside the article
+  """Contains any arbitrary data you want to store alongside the article"""
   metas: JSONObject
 
-  # Optional, link this new article with some tags at creation
-  tags: ArticleTagsReverseEdgeCreateInput
+  """Is the article highlighted?"""
+  highlighted: Boolean
+
+  """Is the article a partnership?"""
+  sponsored: Boolean
+  tags: ArticleNestedTagsReverseEdgeUpdateInput
+
+  """It is possible to provide the article's body as raw HTML"""
+  htmlBody: String
 }
 
-# The \\"User.updated\\" reverse edge's nested mutations
-input UserUpdatedReverseEdgeCreateInput {
-  # Connect the new \\"User\\" to an existing \\"Article\\" through \\"User.updated\\"
-  connect: [ArticleWhereUniqueInput]
-
-  # Connect the new \\"User\\" to a new \\"Article\\" through \\"User.updated\\"
-  create: [ArticleWithoutUpdatedByCreateInput]
+input ArticleNestedCategoryEdgeUpdateInput {
+  connect: CategoryUniqueFilterInput
+  connectIfExists: CategoryUniqueFilterInput
+  connectOrCreate: ArticleNestedConnectOrCreateCategoryEdgeUpdateInput
+  create: CategoryCreationInput
+  disconnect: Boolean
 }
 
-# Data provided to create a(n) \\"Article\\" node
-input ArticleWithoutUpdatedByCreateInput {
-  # You can either provide an UUID or let one be generated
-  id: UUID
-  status: ArticleStatus = Draft
-  title: NonEmptyTrimmedString!
-
-  # You can either provide a slug or let the title be \\"slugified\\" for you
-  slug: NonEmptyTrimmedString
-
-  # The article's body
-  body: NonEmptyTrimmedString
-  category: ArticleCategoryEdgeCreateInput = {connect: {parent: null, slug: \\"home\\"}}
-
-  # Contains any arbitrary data you want to store alongside the article
-  metas: JSONObject
-
-  # Optional, link this new article with some tags at creation
-  tags: ArticleTagsReverseEdgeCreateInput
+input ArticleNestedConnectOrCreateCategoryEdgeUpdateInput {
+  where: CategoryUniqueFilterInput!
+  create: CategoryCreationInput!
 }
 
-# The \\"User.profile\\" reverse edge's nested mutations
-input UserProfileReverseEdgeCreateInput {
-  # Connect the new \\"User\\" to a new \\"UserProfile\\" through \\"User.profile\\"
-  create: UserProfileWithoutUserCreateInput
+input ArticleNestedUpdatedByEdgeUpdateInput {
+  connect: UserUniqueFilterInput
+  connectIfExists: UserUniqueFilterInput
+  disconnect: Boolean
 }
 
-# Data provided to create a(n) \\"UserProfile\\" node
-input UserProfileWithoutUserCreateInput {
+input ArticleNestedTagsReverseEdgeUpdateInput {
+  deleteAll: Boolean
+  deleteMany: ArticleTagFilterInput
+  deleteSome: [ArticleTagUniqueFilterInput!]
+  deleteSomeIfExists: [ArticleTagUniqueFilterInput!]
+  createSome: [ArticleTagCreationWithoutArticleInput!]
+}
+
+"""The "Category" node's update"""
+input CategoryUpdateInput {
+  parent: CategoryNestedParentEdgeUpdateInput
+  order: UnsignedInt
+
+  """This category's children"""
+  children: CategoryNestedChildrenReverseEdgeUpdateInput
+
+  """The articles attached to this category"""
+  articles: CategoryNestedArticlesReverseEdgeUpdateInput
+}
+
+input CategoryNestedParentEdgeUpdateInput {
+  connect: CategoryUniqueFilterInput
+  connectIfExists: CategoryUniqueFilterInput
+  connectOrCreate: CategoryNestedConnectOrCreateParentEdgeUpdateInput
+  create: CategoryCreationInput
+  disconnect: Boolean
+}
+
+input CategoryNestedConnectOrCreateParentEdgeUpdateInput {
+  where: CategoryUniqueFilterInput!
+  create: CategoryCreationInput!
+}
+
+input CategoryNestedChildrenReverseEdgeUpdateInput {
+  deleteAll: Boolean
+  deleteMany: CategoryFilterInput
+  deleteSome: [CategoryUniqueFilterInput!]
+  deleteSomeIfExists: [CategoryUniqueFilterInput!]
+  disconnectAll: Boolean
+  disconnectMany: CategoryFilterInput
+  disconnectSome: [CategoryUniqueFilterInput!]
+  disconnectSomeIfExists: [CategoryUniqueFilterInput!]
+  connectMany: CategoryFilterInput
+  connectOrCreateSome: [CategoryNestedConnectOrCreateSomeChildrenReverseEdgeUpdateInput!]
+  connectSome: [CategoryUniqueFilterInput!]
+  connectSomeIfExists: [CategoryUniqueFilterInput!]
+  createSome: [CategoryCreationWithoutParentInput!]
+}
+
+input CategoryNestedConnectOrCreateSomeChildrenReverseEdgeUpdateInput {
+  where: CategoryUniqueFilterInput!
+  create: CategoryCreationWithoutParentInput!
+}
+
+input CategoryNestedArticlesReverseEdgeUpdateInput {
+  deleteAll: Boolean
+  deleteMany: ArticleFilterInput
+  deleteSome: [ArticleUniqueFilterInput!]
+  deleteSomeIfExists: [ArticleUniqueFilterInput!]
+  disconnectAll: Boolean
+  disconnectMany: ArticleFilterInput
+  disconnectSome: [ArticleUniqueFilterInput!]
+  disconnectSomeIfExists: [ArticleUniqueFilterInput!]
+  connectMany: ArticleFilterInput
+  connectOrCreateSome: [CategoryNestedConnectOrCreateSomeArticlesReverseEdgeUpdateInput!]
+  connectSome: [ArticleUniqueFilterInput!]
+  connectSomeIfExists: [ArticleUniqueFilterInput!]
+  createSome: [ArticleCreationWithoutCategoryInput!]
+}
+
+input CategoryNestedConnectOrCreateSomeArticlesReverseEdgeUpdateInput {
+  where: ArticleUniqueFilterInput!
+  create: ArticleCreationWithoutCategoryInput!
+}
+
+"""The "Tag" node's update"""
+input TagUpdateInput {
+  """A tag can be deprecated"""
+  deprecated: Boolean
+  articles: TagNestedArticlesReverseEdgeUpdateInput
+}
+
+input TagNestedArticlesReverseEdgeUpdateInput {
+  deleteAll: Boolean
+  deleteMany: ArticleTagFilterInput
+  deleteSome: [ArticleTagUniqueFilterInput!]
+  deleteSomeIfExists: [ArticleTagUniqueFilterInput!]
+  createSome: [ArticleTagCreationWithoutTagInput!]
+}
+
+"""The "ArticleTag" node's creation"""
+input ArticleTagCreationInput {
+  article: ArticleTagNestedArticleEdgeCreationInput!
+  tag: ArticleTagNestedTagEdgeCreationInput!
+  order: UnsignedInt!
+}
+
+"""The "ArticleTag" node's update"""
+input ArticleTagUpdateInput {
+  order: UnsignedInt
+}
+
+"""The "UserProfile" node's creation"""
+input UserProfileCreationInput {
+  user: UserProfileNestedUserEdgeCreationInput!
   birthday: Date
   facebookId: ID
   googleId: ID
-  twitterId: ID
+  twitterHandle: ID
 }
 
-# Data provided to create a(n) \\"UserProfile\\" node
-input UserProfileCreateInput {
-  user: UserProfileUserEdgeCreateInput!
+input UserProfileNestedUserEdgeCreationInput {
+  """
+  Connect a "User" to this new "UserProfile" through the "UserProfile.user" edge, throw an error if it does not exist.
+  """
+  connect: UserUniqueFilterInput
+}
+
+"""The "UserProfile" node's update"""
+input UserProfileUpdateInput {
   birthday: Date
   facebookId: ID
   googleId: ID
-  twitterId: ID
-}
-
-# The \\"UserProfile.user\\" edge's nested mutations
-input UserProfileUserEdgeCreateInput {
-  # Connect the new \\"UserProfile\\" to an existing \\"User\\" through \\"UserProfile.user\\"
-  connect: UserWhereUniqueInput
-
-  # Connect the new \\"UserProfile\\" to a new \\"User\\" through \\"UserProfile.user\\"
-  create: UserCreateInput
-}
-"
+  twitterHandle: ID
+}"
 `;

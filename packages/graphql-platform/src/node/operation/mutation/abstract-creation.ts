@@ -1,0 +1,87 @@
+import {
+  MutationType,
+  type InputConfig,
+  type Nillable,
+  type NonNillable,
+  type PlainObject,
+} from '@prismamedia/graphql-platform-utils';
+import type { Promisable } from 'type-fest';
+import type { ConnectorInterface } from '../../../connector-interface.js';
+import type { CreatedNode } from '../../change.js';
+import type { NodeCreationProxy } from '../../statement/creation.js';
+import type { NodeCreationInputValue } from '../../type/input/creation.js';
+import {
+  AbstractMutation,
+  type AbstractMutationConfig,
+  type AbstractMutationHookArgs,
+} from '../abstract-mutation.js';
+
+interface AbstractCreationHookArgs<
+  TRequestContext extends object,
+  TConnector extends ConnectorInterface,
+> extends AbstractMutationHookArgs<TRequestContext, TConnector> {
+  /**
+   * The provided "data" argument
+   */
+  readonly data: Readonly<NonNillable<NodeCreationInputValue>>;
+}
+
+export interface PreCreateArgs<
+  TRequestContext extends object,
+  TConnector extends ConnectorInterface,
+> extends AbstractCreationHookArgs<TRequestContext, TConnector> {
+  /**
+   * The creation statement as a convenient object
+   */
+  readonly creation: NodeCreationProxy;
+}
+
+export interface PostCreateArgs<
+  TRequestContext extends object,
+  TConnector extends ConnectorInterface,
+> extends AbstractCreationHookArgs<TRequestContext, TConnector> {
+  /**
+   * The uncommitted change
+   */
+  readonly change: CreatedNode<TRequestContext, TConnector>;
+}
+
+/**
+ * Optional, fine-tune the "creation"
+ */
+export interface CreationConfig<
+  TRequestContext extends object,
+  TConnector extends ConnectorInterface,
+> extends AbstractMutationConfig<TRequestContext, TConnector> {
+  /**
+   * Optional, add some "virtual" fields whose values can be used in the hooks
+   */
+  virtualFields?: Record<InputConfig['name'], Omit<InputConfig, 'name'>>;
+
+  /**
+   * Optional, add some custom validation/logic over the "creation" statement that is about to be sent to the connector,
+   *
+   * Throwing an Error here will prevent the creation
+   */
+  preCreate?(
+    args: PreCreateArgs<TRequestContext, TConnector>,
+  ): Promisable<void>;
+
+  /**
+   * Optional, given the created node, add some custom logic before the result is returned
+   *
+   * Throwing an Error here will fail the creation
+   */
+  postCreate?(
+    args: PostCreateArgs<TRequestContext, TConnector>,
+  ): Promisable<void>;
+}
+
+export abstract class AbstractCreation<
+  TRequestContext extends object,
+  TConnector extends ConnectorInterface,
+  TArgs extends Nillable<PlainObject>,
+  TResult,
+> extends AbstractMutation<TRequestContext, TConnector, TArgs, TResult> {
+  public override readonly mutationTypes = [MutationType.CREATION] as const;
+}

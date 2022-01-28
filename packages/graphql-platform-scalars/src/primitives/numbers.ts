@@ -1,28 +1,10 @@
-import { GraphQLFloat, GraphQLInt } from 'graphql';
-import {
-  GraphQLNegativeFloat,
-  GraphQLNegativeInt,
-  GraphQLNonNegativeFloat,
-  GraphQLNonNegativeInt,
-  GraphQLNonPositiveFloat,
-  GraphQLNonPositiveInt,
-  GraphQLPositiveFloat,
-  GraphQLPositiveInt,
-} from 'graphql-scalars';
-import { TypedGraphQLScalarType } from '../types';
+import { floatScalarTypesByName } from './numbers/floats.js';
+import { integerScalarTypesByName } from './numbers/integers.js';
 
-export const numberScalarTypes = Object.freeze([
-  // floats
-  GraphQLFloat as TypedGraphQLScalarType<'Float', number>,
-  GraphQLNegativeFloat as TypedGraphQLScalarType<'NegativeFloat', number>,
-  GraphQLNonNegativeFloat as TypedGraphQLScalarType<'NonNegativeFloat', number>,
-  GraphQLNonPositiveFloat as TypedGraphQLScalarType<'NonPositiveFloat', number>,
-  GraphQLPositiveFloat as TypedGraphQLScalarType<'PositiveFloat', number>,
+export * from './numbers/floats.js';
+export * from './numbers/integers.js';
 
-  // integers
-  GraphQLInt as TypedGraphQLScalarType<'Int', number>,
-  GraphQLNegativeInt as TypedGraphQLScalarType<'NegativeInt', number>,
-  GraphQLNonNegativeInt as TypedGraphQLScalarType<'NonNegativeInt', number>,
-  GraphQLNonPositiveInt as TypedGraphQLScalarType<'NonPositiveInt', number>,
-  GraphQLPositiveInt as TypedGraphQLScalarType<'PositiveInt', number>,
-]);
+export const numberScalarTypesByName = {
+  ...floatScalarTypesByName,
+  ...integerScalarTypesByName,
+} as const;

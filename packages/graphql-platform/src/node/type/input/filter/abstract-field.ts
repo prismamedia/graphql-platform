@@ -1,0 +1,35 @@
+import {
+  Input,
+  type InputConfig,
+  type Path,
+} from '@prismamedia/graphql-platform-utils';
+import type { Except } from 'type-fest';
+import type { ConnectorInterface } from '../../../../connector-interface.js';
+import type { OperationContext } from '../../../operation/context.js';
+import type { BooleanFilter } from '../../../statement/filter/boolean.js';
+
+export type AbstractFieldFilterInputTypeConfig<TValue> = Except<
+  InputConfig<TValue>,
+  'defaultValue' | 'validateValue'
+> & {
+  filter<TRequestContext extends object, TConnector extends ConnectorInterface>(
+    value: Exclude<TValue, undefined>,
+    context: OperationContext<TRequestContext, TConnector> | undefined,
+    path: Path,
+  ): BooleanFilter;
+};
+
+export abstract class AbstractFieldFilterInputType<
+  TValue,
+> extends Input<TValue> {
+  public readonly filter: AbstractFieldFilterInputTypeConfig<TValue>['filter'];
+
+  public constructor({
+    filter,
+    ...config
+  }: AbstractFieldFilterInputTypeConfig<TValue>) {
+    super(config);
+
+    this.filter = filter;
+  }
+}

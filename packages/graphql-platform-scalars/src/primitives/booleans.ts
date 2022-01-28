@@ -1,6 +1,5 @@
-import { GraphQLBoolean } from 'graphql';
-import { TypedGraphQLScalarType } from '../types';
+import * as graphql from 'graphql';
 
-export const booleanScalarTypes = Object.freeze([
-  GraphQLBoolean as TypedGraphQLScalarType<'Boolean', boolean>,
-]);
+export const booleanScalarTypesByName = {
+  Boolean: graphql.GraphQLBoolean,
+} as const;

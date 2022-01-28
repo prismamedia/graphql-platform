@@ -1,0 +1,77 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`NodeUniqueFilterInputType Definition Article has a unique filter input type: ArticleUniqueFilterInput 1`] = `
+""""
+Identifies exactly one "Article" given one of the following combination of components' value:
+- id
+- category / slug
+"""
+input ArticleUniqueFilterInput {
+  """This UUID identifies an Article publicly"""
+  id: UUIDv4
+  category: CategoryUniqueFilterInput
+  slug: NonEmptyTrimmedString
+}"
+`;
+
+exports[`NodeUniqueFilterInputType Definition ArticleTag has a unique filter input type: ArticleTagUniqueFilterInput 1`] = `
+""""
+Identifies exactly one "ArticleTag" given one of the following combination of components' value:
+- article / tag
+- article / order
+"""
+input ArticleTagUniqueFilterInput {
+  article: ArticleUniqueFilterInput!
+  tag: TagUniqueFilterInput
+  order: UnsignedInt
+}"
+`;
+
+exports[`NodeUniqueFilterInputType Definition Category has a unique filter input type: CategoryUniqueFilterInput 1`] = `
+""""
+Identifies exactly one "Category" given one of the following combination of components' value:
+- id
+- parent / slug
+- parent / order
+"""
+input CategoryUniqueFilterInput {
+  id: UUIDv4
+  parent: CategoryUniqueFilterInput
+  slug: NonEmptyTrimmedString
+  order: UnsignedInt
+}"
+`;
+
+exports[`NodeUniqueFilterInputType Definition Tag has a unique filter input type: TagUniqueFilterInput 1`] = `
+""""
+Identifies exactly one "Tag" given one of the following combination of components' value:
+- id
+- slug
+"""
+input TagUniqueFilterInput {
+  id: UUIDv4
+  slug: NonEmptyTrimmedString
+}"
+`;
+
+exports[`NodeUniqueFilterInputType Definition User has a unique filter input type: UserUniqueFilterInput 1`] = `
+""""
+Identifies exactly one "User" given one of the following combination of components' value:
+- id
+- username
+"""
+input UserUniqueFilterInput {
+  id: UUIDv4
+  username: NonEmptyTrimmedString
+}"
+`;
+
+exports[`NodeUniqueFilterInputType Definition UserProfile has a unique filter input type: UserProfileUniqueFilterInput 1`] = `
+""""
+Identifies exactly one "UserProfile" given one of the following combination of components' value:
+- user
+"""
+input UserProfileUniqueFilterInput {
+  user: UserUniqueFilterInput!
+}"
+`;

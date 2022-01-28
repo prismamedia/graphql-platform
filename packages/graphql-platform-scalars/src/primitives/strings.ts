@@ -1,29 +1,18 @@
-import { GraphQLID, GraphQLString } from 'graphql';
-import {
-  GraphQLDuration,
-  GraphQLEmailAddress,
-  GraphQLIBAN,
-  GraphQLIPv4,
-  GraphQLIPv6,
-  GraphQLISBN,
-  GraphQLMAC,
-  GraphQLNonEmptyString,
-  GraphQLUUID,
-} from 'graphql-scalars';
-import { TypedGraphQLScalarType } from '../types';
-import { GraphQLNonEmptyTrimmedString } from './strings/non-empty-trimmed-string';
+import * as graphql from 'graphql';
+import { GraphQLEmailAddress } from './strings/email-address.js';
+import { GraphQLNonEmptyString } from './strings/non-empty-string.js';
+import { GraphQLNonEmptyTrimmedString } from './strings/non-empty-trimmed-string.js';
+import { uuidScalarTypesByName } from './strings/uuids.js';
 
-export const stringScalarTypes = Object.freeze([
-  GraphQLDuration as TypedGraphQLScalarType<'Duration', string>,
-  GraphQLEmailAddress as TypedGraphQLScalarType<'EmailAddress', string>,
-  GraphQLIBAN as TypedGraphQLScalarType<'IBAN', string>,
-  GraphQLID as TypedGraphQLScalarType<'ID', string>,
-  GraphQLIPv4 as TypedGraphQLScalarType<'IPv4', string>,
-  GraphQLIPv6 as TypedGraphQLScalarType<'IPv6', string>,
-  GraphQLISBN as TypedGraphQLScalarType<'ISBN', string>,
-  GraphQLMAC as TypedGraphQLScalarType<'MAC', string>,
-  GraphQLNonEmptyString as TypedGraphQLScalarType<'NonEmptyString', string>,
-  GraphQLNonEmptyTrimmedString,
-  GraphQLString as TypedGraphQLScalarType<'String', string>,
-  GraphQLUUID as TypedGraphQLScalarType<'UUID', string>,
-]);
+export * from './strings/non-empty-string.js';
+export * from './strings/non-empty-trimmed-string.js';
+export * from './strings/uuids.js';
+
+export const stringScalarTypesByName = {
+  EmailAddress: GraphQLEmailAddress,
+  ID: graphql.GraphQLID,
+  NonEmptyString: GraphQLNonEmptyString,
+  NonEmptyTrimmedString: GraphQLNonEmptyTrimmedString,
+  String: graphql.GraphQLString,
+  ...uuidScalarTypesByName,
+} as const;
