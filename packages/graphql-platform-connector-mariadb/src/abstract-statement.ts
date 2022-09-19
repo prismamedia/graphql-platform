@@ -19,6 +19,8 @@ export abstract class AbstractStatement<TResult = unknown> {
   public async execute(
     maybeConnection?: utils.Nillable<mariadb.Connection>,
   ): Promise<TResult> {
+    console.debug(this.statement);
+
     return maybeConnection
       ? maybeConnection.query(this.statement)
       : this.connector.withConnection((connection) =>

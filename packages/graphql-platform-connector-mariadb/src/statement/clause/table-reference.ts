@@ -15,7 +15,7 @@ export abstract class AbstractTableReference {
   public constructor(public readonly table: Table) {}
 
   public toString(): string {
-    return `TABLE_REFERENCE`;
+    return [`${this.table.name} AS ${this.alias}`].join();
   }
 
   /**
