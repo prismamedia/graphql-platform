@@ -12,8 +12,10 @@ export interface AbstractSelectStatementConfig {}
  * @see https://mariadb.com/kb/en/selecting-data/
  */
 export abstract class AbstractSelectStatement<
-  TTuple extends utils.PlainObject,
-> extends AbstractStatement<TTuple[]> {
+  TTuple extends utils.PlainObject[],
+> extends AbstractStatement<TTuple> {
+  protected abstract readonly select: string;
+
   /**
    * @see https://mariadb.com/kb/en/join-syntax/
    */
@@ -22,7 +24,7 @@ export abstract class AbstractSelectStatement<
 
   public constructor(
     table: Table,
-    public readonly config?: AbstractSelectStatementConfig,
+    protected readonly config?: AbstractSelectStatementConfig,
   ) {
     super(table.schema.connector);
 
@@ -32,7 +34,7 @@ export abstract class AbstractSelectStatement<
   @Memoize()
   public override get statement(): string {
     return [
-      `SELECT *`,
+      `SELECT ${this.select}`,
       `FROM ${this.from}`,
       this.where && `WHERE ${this.where}`,
     ]
