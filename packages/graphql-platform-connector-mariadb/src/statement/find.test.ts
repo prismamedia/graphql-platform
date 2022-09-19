@@ -9,7 +9,9 @@ import {
   myUserContext,
   nodes,
 } from '@prismamedia/graphql-platform/__tests__/config.js';
+import * as rxjs from 'rxjs';
 import { MariaDBConnector } from '../index.js';
+import { FindStatement } from './find.js';
 
 describe('Find statement', () => {
   let gp: MyGP<MariaDBConnector>;
@@ -87,13 +89,28 @@ describe('Find statement', () => {
   });
 
   it('generates valid select statements', async () => {
-    await expect(
-      gp.api.query.articles(
-        {
-          where: {},
-          orderBy: ['createdAt_DESC'],
-          first: 5,
-          selection: `{ 
+    const statements: FindStatement['statement'][] = [];
+
+    const subscriber = gp.connector.queries
+      .pipe(
+        rxjs.filter(
+          (statement): statement is FindStatement =>
+            statement instanceof FindStatement &&
+            statement.table.name === 'articles',
+        ),
+      )
+      .subscribe(({ statement }) => {
+        statements.push(statement);
+      });
+
+    try {
+      await expect(
+        gp.api.query.articles(
+          {
+            where: {},
+            orderBy: ['createdAt_DESC'],
+            first: 5,
+            selection: `{ 
             title 
             category {
               title 
@@ -104,9 +121,16 @@ describe('Find statement', () => {
               }
             }
           }`,
-        },
-        myUserContext,
-      ),
-    ).resolves.toEqual([]);
+          },
+          myUserContext,
+        ),
+      ).resolves.toEqual([]);
+    } finally {
+      subscriber.unsubscribe();
+    }
+
+    expect(statements).toEqual([
+      'SELECT * FROM `test_find`.`articles` AS `articles`',
+    ]);
   });
 });

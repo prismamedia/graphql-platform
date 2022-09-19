@@ -1,4 +1,5 @@
 import type * as core from '@prismamedia/graphql-platform';
+import { escapeIdentifier } from '../../escape.js';
 import type { Table } from '../../schema.js';
 
 export abstract class AbstractTableReference {
@@ -15,7 +16,11 @@ export abstract class AbstractTableReference {
   public constructor(public readonly table: Table) {}
 
   public toString(): string {
-    return [`${this.table.name} AS ${this.alias}`].join();
+    return [
+      `${escapeIdentifier(this.table.qualifiedName)} AS ${escapeIdentifier(
+        this.alias,
+      )}`,
+    ].join();
   }
 
   /**

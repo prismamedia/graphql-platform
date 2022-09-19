@@ -28,7 +28,7 @@ export interface FindStatementConfig {}
  * @see https://mariadb.com/kb/en/selecting-data/
  */
 export class FindStatement<
-  TTuple extends utils.PlainObject,
+  TTuple extends utils.PlainObject = any,
 > extends AbstractSelectStatement<TTuple[]> {
   public constructor(
     table: Table,
@@ -39,6 +39,6 @@ export class FindStatement<
   }
 
   protected override get select(): string {
-    return '`a`.`title`, `a>category`.`title`';
+    return '*';
   }
 }

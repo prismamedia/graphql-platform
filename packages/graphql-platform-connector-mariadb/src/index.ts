@@ -2,6 +2,7 @@ import * as core from '@prismamedia/graphql-platform';
 import * as utils from '@prismamedia/graphql-platform-utils';
 import { Memoize } from '@prismamedia/ts-memoize';
 import * as mariadb from 'mariadb';
+import * as rxjs from 'rxjs';
 import * as semver from 'semver';
 import {
   Schema,
@@ -12,6 +13,7 @@ import {
   type TableConfig,
   type UniqueIndexConfig,
 } from './schema.js';
+import type { Statement } from './statement.js';
 
 export * from './schema.js';
 export * from './statement.js';
@@ -68,6 +70,11 @@ export class MariaDBConnector implements core.ConnectorInterface {
     core.MutationContext,
     mariadb.PoolConnection
   >();
+
+  /**
+   * An Observable of the executed statements
+   */
+  public readonly queries = new rxjs.Subject<Statement>();
 
   public constructor(
     public readonly gp: core.GraphQLPlatform,

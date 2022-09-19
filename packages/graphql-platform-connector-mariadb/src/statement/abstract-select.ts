@@ -23,7 +23,7 @@ export abstract class AbstractSelectStatement<
   protected readonly where?: WhereClause;
 
   public constructor(
-    table: Table,
+    public readonly table: Table,
     protected readonly config?: AbstractSelectStatementConfig,
   ) {
     super(table.schema.connector);

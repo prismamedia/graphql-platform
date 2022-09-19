@@ -18,7 +18,7 @@ export interface InsertStatementConfig {
  * @see https://mariadb.com/kb/en/insertreturning/
  */
 export class InsertStatement<
-  TRow extends utils.PlainObject,
+  TRow extends utils.PlainObject = any,
 > extends AbstractStatement<TRow[]> {
   protected readonly creations: ReadonlyArray<core.NodeCreation>;
 
