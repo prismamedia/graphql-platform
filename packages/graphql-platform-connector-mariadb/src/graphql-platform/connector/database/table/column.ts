@@ -122,7 +122,7 @@ export interface ColumnConfig {
   default?: Maybe<string>;
 
   /** Optional, will activate FullText search, default: 4 */
-  fullText: Maybe<number>;
+  fullText?: Maybe<number>;
 }
 
 export type ColumnValue = null | number | string;
@@ -241,7 +241,11 @@ export class Column {
 
   @Memoize()
   public get fullText(): number | null {
-    return Number.isInteger(this.config.fullText) && this.config.fullText > 0 ? this.config.fullText : null;
+    return typeof this.config.fullText === 'number' &&
+      Number.isInteger(this.config.fullText) &&
+      this.config.fullText > 0
+      ? this.config.fullText
+      : null;
   }
 
   public get comment(): string | undefined {
