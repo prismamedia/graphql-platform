@@ -1,5 +1,6 @@
-import type * as core from '@prismamedia/graphql-platform';
+import * as core from '@prismamedia/graphql-platform';
 import { Memoize } from '@prismamedia/ts-memoize';
+import assert from 'assert/strict';
 import { EOL } from 'node:os';
 import { escapeIdentifier } from '../../../escape.js';
 import { AbstractTableReference } from '../abstract-table-reference.js';
@@ -32,6 +33,8 @@ export class JoinTable extends AbstractTableReference {
      */
     key?: string,
   ) {
+    assert.equal(edge.tail, parent.table.node);
+
     const head = parent.table.schema.getTableByNode(edge.head);
     super(head);
 
@@ -45,7 +48,27 @@ export class JoinTable extends AbstractTableReference {
 
   @Memoize()
   public get condition(): string {
-    return 'test = test';
+    return (
+      this.edge instanceof core.Edge
+        ? this.parent.table
+            .getForeignKeyByEdge(this.edge)
+            .columns.map(
+              (column) =>
+                `${escapeIdentifier(
+                  `${this.parent.alias}.${column.name}`,
+                )} = ${escapeIdentifier(
+                  `${this.alias}.${column.referencedColumn.name}`,
+                )}`,
+            )
+        : this.table
+            .getForeignKeyByEdge(this.edge.originalEdge)
+            .columns.map(
+              (column) =>
+                `${escapeIdentifier(
+                  `${this.parent.alias}.${column.referencedColumn.name}`,
+                )} = ${escapeIdentifier(`${this.alias}.${column.name}`)}`,
+            )
+    ).join(' AND ');
   }
 
   public override toString(): string {
