@@ -89,18 +89,18 @@ describe('Find statement', () => {
   });
 
   it('generates valid select statements', async () => {
-    const statements: FindStatement['statement'][] = [];
+    const statements: FindStatement['sql'][] = [];
 
-    const subscriber = gp.connector.queries
+    const subscriber = gp.connector.executedStatements
       .pipe(
         rxjs.filter(
-          (statement): statement is FindStatement =>
+          ({ statement }) =>
             statement instanceof FindStatement &&
             statement.table.name === 'articles',
         ),
       )
       .subscribe(({ statement }) => {
-        statements.push(statement);
+        statements.push(statement.sql);
       });
 
     try {
@@ -130,7 +130,8 @@ describe('Find statement', () => {
     }
 
     expect(statements).toEqual([
-      'SELECT * FROM `test_find`.`articles` AS `articles`',
+      `SELECT *
+FROM \`test_find\`.\`articles\` AS \`articles\``,
     ]);
   });
 });

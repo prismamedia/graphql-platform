@@ -13,7 +13,7 @@ import {
   type TableConfig,
   type UniqueIndexConfig,
 } from './schema.js';
-import type { Statement } from './statement.js';
+import type { ExecutedStatement } from './statement.js';
 
 export * from './schema.js';
 export * from './statement.js';
@@ -74,7 +74,7 @@ export class MariaDBConnector implements core.ConnectorInterface {
   /**
    * An Observable of the executed statements
    */
-  public readonly queries = new rxjs.Subject<Statement>();
+  public readonly executedStatements = new rxjs.Subject<ExecutedStatement>();
 
   public constructor(
     public readonly gp: core.GraphQLPlatform,

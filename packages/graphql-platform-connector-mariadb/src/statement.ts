@@ -22,3 +22,9 @@ export type Statement =
   | DropSchemaStatement
   | FindStatement
   | InsertStatement;
+
+export type ExecutedStatement<TStatement extends Statement = Statement> = {
+  statement: TStatement;
+  result: Awaited<ReturnType<TStatement['execute']>>;
+  sql: string;
+};

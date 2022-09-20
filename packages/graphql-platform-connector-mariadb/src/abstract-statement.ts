@@ -1,4 +1,5 @@
 import type * as utils from '@prismamedia/graphql-platform-utils';
+import { Memoize } from '@prismamedia/ts-memoize';
 import type * as mariadb from 'mariadb';
 import type { MariaDBConnector } from './index.js';
 import type { Statement } from './statement.js';
@@ -17,6 +18,13 @@ export abstract class AbstractStatement<TResult = unknown> {
 
   public constructor(public readonly connector: MariaDBConnector) {}
 
+  @Memoize()
+  public get sql(): string {
+    return typeof this.statement === 'string'
+      ? this.statement
+      : this.statement.sql;
+  }
+
   public async execute(
     maybeConnection?: utils.Nillable<mariadb.Connection>,
   ): Promise<TResult> {
@@ -26,7 +34,11 @@ export abstract class AbstractStatement<TResult = unknown> {
           connection.query(this.statement),
         ));
 
-    this.connector.queries.next(this as Statement);
+    this.connector.executedStatements.next({
+      statement: this as Statement,
+      result,
+      sql: this.sql,
+    });
 
     return result;
   }
