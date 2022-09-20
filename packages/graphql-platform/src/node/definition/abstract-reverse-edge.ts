@@ -151,11 +151,16 @@ export abstract class AbstractReverseEdge<
     return isPublic;
   }
 
+  public isNullable(): boolean {
+    return true;
+  }
+
   @Memoize()
   public validateDefinition(): void {
     this.isMutable();
     this.isUnique();
     this.isPublic();
+    this.isNullable();
 
     // Resolve the lazy property
     this.originalEdge.reverseEdge;
