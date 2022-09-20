@@ -120,6 +120,9 @@ export interface ColumnConfig {
 
   /** Optional, either this column has a default value or not, default: NULL */
   default?: Maybe<string>;
+
+  /** Optional, will activate FullText search, default: 4 */
+  fullText: Maybe<number>;
 }
 
 export type ColumnValue = null | number | string;
@@ -234,6 +237,11 @@ export class Column {
     return typeof this.config.default === 'string'
       ? this.config.default
       : undefined;
+  }
+
+  @Memoize()
+  public get fullText(): number | null {
+    return Number.isInteger(this.config.fullText) && this.config.fullText > 0 ? this.config.fullText : null;
   }
 
   public get comment(): string | undefined {
