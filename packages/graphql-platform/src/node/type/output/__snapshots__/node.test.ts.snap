@@ -45,6 +45,20 @@ exports[`NodeOutputType Definition ArticleTag has an output type 1`] = `
   article: Article!
   tag: Tag!
   order: UnsignedInt!
+  moderations(where: ArticleTagModerationFilterInput, skip: UnsignedInt, first: UnsignedInt!): [ArticleTagModeration!]!
+
+  """
+  Number of "moderations"
+  """
+  moderationCount(where: ArticleTagModerationFilterInput): UnsignedInt!
+}"
+`;
+
+exports[`NodeOutputType Definition ArticleTagModeration has an output type 1`] = `
+"type ArticleTagModeration {
+  articleTag: ArticleTag!
+  moderator: User!
+  moderation: NonEmptyTrimmedString
 }"
 `;
 
@@ -116,6 +130,12 @@ exports[`NodeOutputType Definition User has an output type 1`] = `
 
   """This user's profile, only the optional informations"""
   profile: UserProfile
+  articleTagModerations(where: ArticleTagModerationFilterInput, skip: UnsignedInt, first: UnsignedInt!): [ArticleTagModeration!]!
+
+  """
+  Number of "articleTagModerations"
+  """
+  articleTagModerationCount(where: ArticleTagModerationFilterInput): UnsignedInt!
 }"
 `;
 

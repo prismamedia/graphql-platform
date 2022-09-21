@@ -108,9 +108,42 @@ input ArticleTagFilterInput {
   order_gte: UnsignedInt
   order_lt: UnsignedInt
   order_lte: UnsignedInt
+  moderations_every: ArticleTagModerationFilterInput
+  moderations_some: ArticleTagModerationFilterInput
+  moderations_none: ArticleTagModerationFilterInput
+  moderationCount: UnsignedInt
+  moderationCount_not: UnsignedInt
+  moderationCount_gt: UnsignedInt
+  moderationCount_gte: UnsignedInt
+  moderationCount_lt: UnsignedInt
+  moderationCount_lte: UnsignedInt
   AND: [ArticleTagFilterInput]
   OR: [ArticleTagFilterInput]
   NOT: ArticleTagFilterInput
+}"
+`;
+
+exports[`NodeFilterInputType Definition ArticleTagModeration has a filter input type: ArticleTagModerationFilterInput 1`] = `
+""""The "ArticleTagModeration" nodes' filter"""
+input ArticleTagModerationFilterInput {
+  articleTag: ArticleTagFilterInput
+  articleTag_not: ArticleTagFilterInput
+  moderator: UserFilterInput
+  moderator_not: UserFilterInput
+  moderation: NonEmptyTrimmedString
+  moderation_not: NonEmptyTrimmedString
+  moderation_is_null: Boolean
+  moderation_in: [NonEmptyTrimmedString]
+  moderation_not_in: [NonEmptyTrimmedString]
+  moderation_contains: NonEmptyString
+  moderation_not_contains: NonEmptyString
+  moderation_starts_with: NonEmptyString
+  moderation_not_starts_with: NonEmptyString
+  moderation_ends_with: NonEmptyString
+  moderation_not_ends_with: NonEmptyString
+  AND: [ArticleTagModerationFilterInput]
+  OR: [ArticleTagModerationFilterInput]
+  NOT: ArticleTagModerationFilterInput
 }"
 `;
 
@@ -295,6 +328,15 @@ input UserFilterInput {
   profile: UserProfileFilterInput
   profile_not: UserProfileFilterInput
   profile_is_null: Boolean
+  articleTagModerations_every: ArticleTagModerationFilterInput
+  articleTagModerations_some: ArticleTagModerationFilterInput
+  articleTagModerations_none: ArticleTagModerationFilterInput
+  articleTagModerationCount: UnsignedInt
+  articleTagModerationCount_not: UnsignedInt
+  articleTagModerationCount_gt: UnsignedInt
+  articleTagModerationCount_gte: UnsignedInt
+  articleTagModerationCount_lt: UnsignedInt
+  articleTagModerationCount_lte: UnsignedInt
   AND: [UserFilterInput]
   OR: [UserFilterInput]
   NOT: UserFilterInput

@@ -51,6 +51,7 @@ describe('GraphQL Platform', () => {
         'Category',
         'Tag',
         'ArticleTag',
+        'ArticleTagModeration',
         'User',
         'UserProfile',
         'Log',
@@ -64,8 +65,8 @@ describe('GraphQL Platform', () => {
         publicCount: number,
       ]
     >([
-      [graphql.OperationTypeNode.QUERY, 49, 42],
-      [graphql.OperationTypeNode.MUTATION, 52, 45],
+      [graphql.OperationTypeNode.QUERY, 56, 49],
+      [graphql.OperationTypeNode.MUTATION, 61, 54],
       [graphql.OperationTypeNode.SUBSCRIPTION, 0, 0],
     ])(
       `generates %s: %d enabled / %d public`,

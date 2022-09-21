@@ -37,7 +37,7 @@ describe('Seeding', () => {
   it('orders by dependencies', () => {
     const seeding = new Seeding(gp, fixtures);
 
-    expect(seeding.fixturesByReference.size).toBe(14);
+    expect(seeding.fixturesByReference.size).toBe(16);
     expect(Array.from(seeding.fixturesByReference.keys())).toEqual([
       'category_root',
       'category_home',
@@ -50,8 +50,10 @@ describe('Seeding', () => {
       'article_03-tag_01',
       'tag_02',
       'article_03-tag_02',
-      'user_marine',
       'user_yvann',
+      'article_03-tag_02-moderator_user_yvann',
+      'user_marine',
+      'article_03-tag_02-moderator_user_marine',
       'user_profile_yvann',
     ]);
   });
@@ -201,6 +203,9 @@ describe('Seeding', () => {
                 }
               });
 
+            case 'ArticleTagModeration':
+              return creations.map((creation) => ({ ...creation.proxy }));
+
             case 'User':
               return creations.map((creation) => ({ ...creation.proxy }));
 
@@ -253,6 +258,14 @@ describe('Seeding', () => {
                 where.filter.leaf.name === 'id'
                 ? [{ id: where.filter.value }]
                 : [];
+
+            case 'ArticleTag':
+              return [
+                {
+                  article: { _id: 3 },
+                  tag: { id: 'db414952-b5e4-4a91-a013-584d10521714' },
+                },
+              ];
 
             case 'User':
               return where?.filter instanceof LeafComparisonFilter &&

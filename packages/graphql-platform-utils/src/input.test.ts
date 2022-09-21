@@ -235,42 +235,42 @@ describe('Input', () => {
 
     expect(() => objectInputType.parseValue(invalidObject, testPath))
       .toThrowErrorMatchingInlineSnapshot(`
-      "\\"test\\" - 2 errors:
-      └ \\"firstname\\" - Expects a non-undefined \\"String\\"
-      └ \\"friends\\" - 3 errors:
-        └ \\"0.friends\\" - Expects a non-null \\"[User!]\\"
-        └ \\"1\\" - 2 errors:
-          └ \\"firstname\\" - Expects a non-undefined \\"String\\"
-          └ \\"age\\" - Custom validation error
+      ""test" - 2 errors:
+      └ "firstname" - Expects a non-undefined "String"
+      └ "friends" - 3 errors:
+        └ "0.friends" - Expects a non-null "[User!]"
+        └ "1" - 2 errors:
+          └ "firstname" - Expects a non-undefined "String"
+          └ "age" - Custom validation error
             └ Cause: Must be greater than 18
-        └ \\"2.friends\\" - 4 errors:
-          └ \\"0.friends\\" - Expects a non-null \\"[User!]\\"
-          └ \\"1.friends\\" - Expects a plain-object, got: 5
-          └ \\"2\\" - Expects a non-null \\"User\\"
-          └ \\"3\\" - 2 errors:
-            └ \\"firstname\\" - Expects a non-undefined \\"String\\"
-            └ \\"age\\" - Custom validation error
+        └ "2.friends" - 4 errors:
+          └ "0.friends" - Expects a non-null "[User!]"
+          └ "1.friends" - Expects a plain-object, got: 5
+          └ "2" - Expects a non-null "User"
+          └ "3" - 2 errors:
+            └ "firstname" - Expects a non-undefined "String"
+            └ "age" - Custom validation error
               └ Cause: Must be greater than 18"
     `);
 
     expect(() =>
       objectInputType.parseValue(invalidObject, addPath(testPath, 'MyUser')),
     ).toThrowErrorMatchingInlineSnapshot(`
-      "\\"test.MyUser\\" - 2 errors:
-      └ \\"firstname\\" - Expects a non-undefined \\"String\\"
-      └ \\"friends\\" - 3 errors:
-        └ \\"0.friends\\" - Expects a non-null \\"[User!]\\"
-        └ \\"1\\" - 2 errors:
-          └ \\"firstname\\" - Expects a non-undefined \\"String\\"
-          └ \\"age\\" - Custom validation error
+      ""test.MyUser" - 2 errors:
+      └ "firstname" - Expects a non-undefined "String"
+      └ "friends" - 3 errors:
+        └ "0.friends" - Expects a non-null "[User!]"
+        └ "1" - 2 errors:
+          └ "firstname" - Expects a non-undefined "String"
+          └ "age" - Custom validation error
             └ Cause: Must be greater than 18
-        └ \\"2.friends\\" - 4 errors:
-          └ \\"0.friends\\" - Expects a non-null \\"[User!]\\"
-          └ \\"1.friends\\" - Expects a plain-object, got: 5
-          └ \\"2\\" - Expects a non-null \\"User\\"
-          └ \\"3\\" - 2 errors:
-            └ \\"firstname\\" - Expects a non-undefined \\"String\\"
-            └ \\"age\\" - Custom validation error
+        └ "2.friends" - 4 errors:
+          └ "0.friends" - Expects a non-null "[User!]"
+          └ "1.friends" - Expects a plain-object, got: 5
+          └ "2" - Expects a non-null "User"
+          └ "3" - 2 errors:
+            └ "firstname" - Expects a non-undefined "String"
+            └ "age" - Custom validation error
               └ Cause: Must be greater than 18"
     `);
   });

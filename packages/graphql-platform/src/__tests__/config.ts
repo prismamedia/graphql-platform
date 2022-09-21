@@ -709,8 +709,6 @@ export const ArticleTagModeration: NodeConfig<MyContext> = {
     moderation: {
       kind: 'Leaf',
       type: 'NonEmptyTrimmedString',
-      nullable: true,
-      mutable: true,
     },
   },
 

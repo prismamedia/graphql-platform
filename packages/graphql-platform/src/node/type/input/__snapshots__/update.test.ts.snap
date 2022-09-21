@@ -31,6 +31,14 @@ exports[`NodeUpdateInputType Definition ArticleTag has an update input type: Art
 """"The "ArticleTag" node's update"""
 input ArticleTagUpdateInput {
   order: UnsignedInt
+  moderations: ArticleTagNestedModerationsReverseEdgeUpdateInput
+}"
+`;
+
+exports[`NodeUpdateInputType Definition ArticleTagModeration has an update input type: ArticleTagModerationUpdateInput 1`] = `
+""""The "ArticleTagModeration" node's update"""
+input ArticleTagModerationUpdateInput {
+  moderation: NonEmptyTrimmedString
 }"
 `;
 

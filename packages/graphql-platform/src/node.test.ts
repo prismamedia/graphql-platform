@@ -118,7 +118,7 @@ describe('Node', () => {
                 },
               }),
           ).toThrowError(
-            '"GraphQLPlatformConfig.nodes.Article.components.edgeToAMissingModel.head" - Expects a "node"\'s name among "Article, Category, Tag, ArticleTag, User, UserProfile, Log", got: \'MissingModel\'',
+            '"GraphQLPlatformConfig.nodes.Article.components.edgeToAMissingModel.head" - Expects a "node"\'s name among "Article, Category, Tag, ArticleTag, ArticleTagModeration, User, UserProfile, Log", got: \'MissingModel\'',
           );
         });
 
@@ -333,7 +333,7 @@ describe('Node', () => {
               },
             }),
         ).toThrowError(
-          `\"GraphQLPlatformConfig.nodes.User.reverseEdges.invalidEdge.originalEdge\" - Expects a node having an edge heading to the \"User\" node (= a value among \"Article, UserProfile\"), got: 'UnknownModel'`,
+          `\"GraphQLPlatformConfig.nodes.User.reverseEdges.invalidEdge.originalEdge\" - Expects a node having an edge heading to the \"User\" node (= a value among \"Article, ArticleTagModeration, UserProfile\"), got: 'UnknownModel'`,
         );
       });
 
@@ -490,13 +490,18 @@ describe('Node', () => {
         'ArticleTag',
         ['article', 'tag', 'order'],
         ['article_tag', 'article_order'],
-        [],
+        ['moderations'],
       ],
       [
         'User',
         ['id', 'username', 'createdAt', 'lastLoggedInAt'],
         ['id', 'username'],
-        ['createdArticles', 'updatedArticles', 'profile'],
+        [
+          'createdArticles',
+          'updatedArticles',
+          'profile',
+          'articleTagModerations',
+        ],
       ],
       [
         'UserProfile',

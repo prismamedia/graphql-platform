@@ -36,6 +36,16 @@ input ArticleTagCreationInput {
   article: ArticleTagNestedArticleEdgeCreationInput!
   tag: ArticleTagNestedTagEdgeCreationInput!
   order: UnsignedInt!
+  moderations: ArticleTagNestedModerationsReverseEdgeCreationInput
+}"
+`;
+
+exports[`NodeCreationInputType Definition ArticleTagModeration has a creation input type: ArticleTagModerationCreationInput 1`] = `
+""""The "ArticleTagModeration" node's creation"""
+input ArticleTagModerationCreationInput {
+  articleTag: ArticleTagModerationNestedArticleTagEdgeCreationInput!
+  moderator: ArticleTagModerationNestedModeratorEdgeCreationInput!
+  moderation: NonEmptyTrimmedString
 }"
 `;
 

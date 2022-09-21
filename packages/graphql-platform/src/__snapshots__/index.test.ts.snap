@@ -124,6 +124,39 @@ type query {
   articleTagsInOrderIfExists(where: [ArticleTagUniqueFilterInput!]!): [ArticleTag]!
 
   """
+  Gets the number of "ArticleTagModerations"
+  """
+  articleTagModerationCount(where: ArticleTagModerationFilterInput): UnsignedInt!
+
+  """Either the "ArticleTagModeration" exists or not?"""
+  articleTagModerationExists(where: ArticleTagModerationUniqueFilterInput!): Boolean!
+
+  """
+  Retrieves a list of "ArticleTagModerations"
+  """
+  articleTagModerations(where: ArticleTagModerationFilterInput, skip: UnsignedInt, first: UnsignedInt!): [ArticleTagModeration!]!
+
+  """
+  Retrieves one "ArticleTagModeration", throws an error if it does not exist
+  """
+  articleTagModeration(where: ArticleTagModerationUniqueFilterInput!): ArticleTagModeration!
+
+  """
+  Retrieves one "ArticleTagModeration" if it exists, returns null otherwise
+  """
+  articleTagModerationIfExists(where: ArticleTagModerationUniqueFilterInput!): ArticleTagModeration
+
+  """
+  Given a list of unique-filter's value, retrieves the corresponding "ArticleTagModerations" in the same order, throws an error if one does not exist
+  """
+  articleTagModerationsInOrder(where: [ArticleTagModerationUniqueFilterInput!]!): [ArticleTagModeration!]!
+
+  """
+  Given a list of unique-filter's value, retrieves the corresponding "ArticleTagModerations", or null, in the same order
+  """
+  articleTagModerationsInOrderIfExists(where: [ArticleTagModerationUniqueFilterInput!]!): [ArticleTagModeration]!
+
+  """
   Gets the number of "Users"
   """
   userCount(where: UserFilterInput): UnsignedInt!
@@ -409,6 +442,15 @@ input UserFilterInput {
   profile: UserProfileFilterInput
   profile_not: UserProfileFilterInput
   profile_is_null: Boolean
+  articleTagModerations_every: ArticleTagModerationFilterInput
+  articleTagModerations_some: ArticleTagModerationFilterInput
+  articleTagModerations_none: ArticleTagModerationFilterInput
+  articleTagModerationCount: UnsignedInt
+  articleTagModerationCount_not: UnsignedInt
+  articleTagModerationCount_gt: UnsignedInt
+  articleTagModerationCount_gte: UnsignedInt
+  articleTagModerationCount_lt: UnsignedInt
+  articleTagModerationCount_lte: UnsignedInt
   AND: [UserFilterInput]
   OR: [UserFilterInput]
   NOT: UserFilterInput
@@ -470,13 +512,27 @@ A date string, such as "2007-12-03", compliant with the ISO 8601 extended format
 """
 scalar Date @specifiedBy(url: "https://en.wikipedia.org/wiki/ISO_8601")
 
-"""
-A date-time string, such as "2007-12-03T10:15:30.123Z", compliant with the ISO 8601 extended format.
-"""
-scalar DateTime @specifiedBy(url: "https://en.wikipedia.org/wiki/ISO_8601")
-
-"""The \`JSONObject\` scalar type represents JSON objects."""
-scalar JSONObject @specifiedBy(url: "http://www.ecma-international.org/publications/files/ECMA-ST/ECMA-404.pdf")
+"""The "ArticleTagModeration" nodes' filter"""
+input ArticleTagModerationFilterInput {
+  articleTag: ArticleTagFilterInput
+  articleTag_not: ArticleTagFilterInput
+  moderator: UserFilterInput
+  moderator_not: UserFilterInput
+  moderation: NonEmptyTrimmedString
+  moderation_not: NonEmptyTrimmedString
+  moderation_is_null: Boolean
+  moderation_in: [NonEmptyTrimmedString]
+  moderation_not_in: [NonEmptyTrimmedString]
+  moderation_contains: NonEmptyString
+  moderation_not_contains: NonEmptyString
+  moderation_starts_with: NonEmptyString
+  moderation_not_starts_with: NonEmptyString
+  moderation_ends_with: NonEmptyString
+  moderation_not_ends_with: NonEmptyString
+  AND: [ArticleTagModerationFilterInput]
+  OR: [ArticleTagModerationFilterInput]
+  NOT: ArticleTagModerationFilterInput
+}
 
 """The "ArticleTag" nodes' filter"""
 input ArticleTagFilterInput {
@@ -492,6 +548,15 @@ input ArticleTagFilterInput {
   order_gte: UnsignedInt
   order_lt: UnsignedInt
   order_lte: UnsignedInt
+  moderations_every: ArticleTagModerationFilterInput
+  moderations_some: ArticleTagModerationFilterInput
+  moderations_none: ArticleTagModerationFilterInput
+  moderationCount: UnsignedInt
+  moderationCount_not: UnsignedInt
+  moderationCount_gt: UnsignedInt
+  moderationCount_gte: UnsignedInt
+  moderationCount_lt: UnsignedInt
+  moderationCount_lte: UnsignedInt
   AND: [ArticleTagFilterInput]
   OR: [ArticleTagFilterInput]
   NOT: ArticleTagFilterInput
@@ -563,6 +628,14 @@ input TagFilterInput {
   OR: [TagFilterInput]
   NOT: TagFilterInput
 }
+
+"""
+A date-time string, such as "2007-12-03T10:15:30.123Z", compliant with the ISO 8601 extended format.
+"""
+scalar DateTime @specifiedBy(url: "https://en.wikipedia.org/wiki/ISO_8601")
+
+"""The \`JSONObject\` scalar type represents JSON objects."""
+scalar JSONObject @specifiedBy(url: "http://www.ecma-international.org/publications/files/ECMA-ST/ECMA-404.pdf")
 
 """
 Identifies exactly one "Article" given one of the following combination of components' value:
@@ -721,6 +794,12 @@ type User implements PublicNodeInterface {
 
   """This user's profile, only the optional informations"""
   profile: UserProfile
+  articleTagModerations(where: ArticleTagModerationFilterInput, skip: UnsignedInt, first: UnsignedInt!): [ArticleTagModeration!]!
+
+  """
+  Number of "articleTagModerations"
+  """
+  articleTagModerationCount(where: ArticleTagModerationFilterInput): UnsignedInt!
 }
 
 type UserProfile {
@@ -731,10 +810,22 @@ type UserProfile {
   twitterHandle: ID
 }
 
+type ArticleTagModeration {
+  articleTag: ArticleTag!
+  moderator: User!
+  moderation: NonEmptyTrimmedString
+}
+
 type ArticleTag {
   article: Article!
   tag: Tag!
   order: UnsignedInt!
+  moderations(where: ArticleTagModerationFilterInput, skip: UnsignedInt, first: UnsignedInt!): [ArticleTagModeration!]!
+
+  """
+  Number of "moderations"
+  """
+  moderationCount(where: ArticleTagModerationFilterInput): UnsignedInt!
 }
 
 type Tag implements PublicNodeInterface {
@@ -761,6 +852,12 @@ enum ArticleTagOrderingInput {
 
   """from the highest "order" to the lowest"""
   order_DESC
+
+  """from the lowest number of "moderations" to the highest"""
+  moderationCount_ASC
+
+  """from the highest number of "moderations" to the lowest"""
+  moderationCount_DESC
 }
 
 """
@@ -806,6 +903,15 @@ input ArticleTagUniqueFilterInput {
 }
 
 """
+Identifies exactly one "ArticleTagModeration" given one of the following combination of components' value:
+- articleTag / moderator
+"""
+input ArticleTagModerationUniqueFilterInput {
+  articleTag: ArticleTagUniqueFilterInput!
+  moderator: UserUniqueFilterInput!
+}
+
+"""
 Identifies exactly one "User" given one of the following combination of components' value:
 - id
 - username
@@ -828,6 +934,12 @@ enum UserOrderingInput {
 
   """from the highest number of "updatedArticles" to the lowest"""
   updatedArticleCount_DESC
+
+  """from the lowest number of "articleTagModerations" to the highest"""
+  articleTagModerationCount_ASC
+
+  """from the highest number of "articleTagModerations" to the lowest"""
+  articleTagModerationCount_DESC
 }
 
 """
@@ -971,6 +1083,49 @@ type mutation {
 
   """Updates an existing "ArticleTag" or creates a new one"""
   upsertArticleTag(where: ArticleTagUniqueFilterInput!, create: ArticleTagCreationInput!, update: ArticleTagUpdateInput): ArticleTag!
+
+  """
+  Creates one "ArticleTagModeration", throws an error if it already exists
+  """
+  createArticleTagModeration(data: ArticleTagModerationCreationInput!): ArticleTagModeration!
+
+  """
+  Creates some "ArticleTagModeration", throws an error if they already exist
+  """
+  createArticleTagModerations(data: [ArticleTagModerationCreationInput!]!): [ArticleTagModeration!]!
+
+  """
+  Deletes many "ArticleTagModerations"
+  """
+  deleteArticleTagModerations(where: ArticleTagModerationFilterInput, first: UnsignedInt!): [ArticleTagModeration!]!
+
+  """
+  Deletes one "ArticleTagModeration", throws an error if it does not exists
+  """
+  deleteArticleTagModeration(where: ArticleTagModerationUniqueFilterInput!): ArticleTagModeration!
+
+  """
+  Deletes one "ArticleTagModeration" if it exists, returns null otherwise
+  """
+  deleteArticleTagModerationIfExists(where: ArticleTagModerationUniqueFilterInput!): ArticleTagModeration
+
+  """
+  Updates many "ArticleTagModerations"
+  """
+  updateArticleTagModerations(where: ArticleTagModerationFilterInput, first: UnsignedInt!, data: ArticleTagModerationUpdateInput!): [ArticleTagModeration!]!
+
+  """
+  Updates one "ArticleTagModeration", throws an error if it does not exists
+  """
+  updateArticleTagModeration(where: ArticleTagModerationUniqueFilterInput!, data: ArticleTagModerationUpdateInput!): ArticleTagModeration!
+
+  """
+  Updates one "ArticleTagModeration" if it exists, returns null otherwise
+  """
+  updateArticleTagModerationIfExists(where: ArticleTagModerationUniqueFilterInput!, data: ArticleTagModerationUpdateInput!): ArticleTagModeration
+
+  """Updates an existing "ArticleTagModeration" or creates a new one"""
+  upsertArticleTagModeration(where: ArticleTagModerationUniqueFilterInput!, create: ArticleTagModerationCreationInput!, update: ArticleTagModerationUpdateInput): ArticleTagModeration!
 
   """Creates one "UserProfile", throws an error if it already exists"""
   createUserProfile(data: UserProfileCreationInput!): UserProfile!
@@ -1183,6 +1338,7 @@ input ArticleNestedTagsReverseEdgeCreationInput {
 input ArticleTagCreationWithoutArticleInput {
   tag: ArticleTagNestedTagEdgeCreationInput!
   order: UnsignedInt!
+  moderations: ArticleTagNestedModerationsReverseEdgeCreationInput
 }
 
 input ArticleTagNestedTagEdgeCreationInput {
@@ -1224,6 +1380,7 @@ input TagNestedArticlesReverseEdgeCreationInput {
 input ArticleTagCreationWithoutTagInput {
   article: ArticleTagNestedArticleEdgeCreationInput!
   order: UnsignedInt!
+  moderations: ArticleTagNestedModerationsReverseEdgeCreationInput
 }
 
 input ArticleTagNestedArticleEdgeCreationInput {
@@ -1246,6 +1403,23 @@ input ArticleTagNestedArticleEdgeCreationInput {
 input ArticleTagNestedConnectOrCreateArticleEdgeCreationInput {
   where: ArticleUniqueFilterInput!
   create: ArticleCreationInput!
+}
+
+input ArticleTagNestedModerationsReverseEdgeCreationInput {
+  createSome: [ArticleTagModerationCreationWithoutArticletagInput!]
+}
+
+"""The "ArticleTagModeration" node's creation"""
+input ArticleTagModerationCreationWithoutArticletagInput {
+  moderator: ArticleTagModerationNestedModeratorEdgeCreationInput!
+  moderation: NonEmptyTrimmedString
+}
+
+input ArticleTagModerationNestedModeratorEdgeCreationInput {
+  """
+  Connect a "User" to this new "ArticleTagModeration" through the "ArticleTagModeration.moderator" edge, throw an error if it does not exist.
+  """
+  connect: UserUniqueFilterInput
 }
 
 input ArticleTagNestedConnectOrCreateTagEdgeCreationInput {
@@ -1397,11 +1571,55 @@ input ArticleTagCreationInput {
   article: ArticleTagNestedArticleEdgeCreationInput!
   tag: ArticleTagNestedTagEdgeCreationInput!
   order: UnsignedInt!
+  moderations: ArticleTagNestedModerationsReverseEdgeCreationInput
 }
 
 """The "ArticleTag" node's update"""
 input ArticleTagUpdateInput {
   order: UnsignedInt
+  moderations: ArticleTagNestedModerationsReverseEdgeUpdateInput
+}
+
+input ArticleTagNestedModerationsReverseEdgeUpdateInput {
+  deleteAll: Boolean
+  deleteMany: ArticleTagModerationFilterInput
+  deleteSome: [ArticleTagModerationUniqueFilterInput!]
+  deleteSomeIfExists: [ArticleTagModerationUniqueFilterInput!]
+  createSome: [ArticleTagModerationCreationWithoutArticletagInput!]
+}
+
+"""The "ArticleTagModeration" node's creation"""
+input ArticleTagModerationCreationInput {
+  articleTag: ArticleTagModerationNestedArticleTagEdgeCreationInput!
+  moderator: ArticleTagModerationNestedModeratorEdgeCreationInput!
+  moderation: NonEmptyTrimmedString
+}
+
+input ArticleTagModerationNestedArticleTagEdgeCreationInput {
+  """
+  Connect an "ArticleTag" to this new "ArticleTagModeration" through the "ArticleTagModeration.articleTag" edge, throw an error if it does not exist.
+  """
+  connect: ArticleTagUniqueFilterInput
+
+  """
+  Create an "ArticleTag" and connect it to this new "ArticleTagModeration" through the "ArticleTagModeration.articleTag" edge.
+  """
+  create: ArticleTagCreationInput
+
+  """
+  Create an "ArticleTag" if it does not exist, and connect it to this new "ArticleTagModeration" through the "ArticleTagModeration.articleTag" edge.
+  """
+  connectOrCreate: ArticleTagModerationNestedConnectOrCreateArticleTagEdgeCreationInput
+}
+
+input ArticleTagModerationNestedConnectOrCreateArticleTagEdgeCreationInput {
+  where: ArticleTagUniqueFilterInput!
+  create: ArticleTagCreationInput!
+}
+
+"""The "ArticleTagModeration" node's update"""
+input ArticleTagModerationUpdateInput {
+  moderation: NonEmptyTrimmedString
 }
 
 """The "UserProfile" node's creation"""

@@ -39,15 +39,15 @@ describe('InputEnumType', () => {
     ]);
 
     expect(printType(enumType.getGraphQLInputType())).toMatchInlineSnapshot(`
-"\\"\\"\\"My status\\"\\"\\"
-enum Status {
-  DRAFT
-  FROZEN @deprecated(reason: \\"\\\\\\"FROZEN\\\\\\" is deprecated\\")
+      """"My status"""
+      enum Status {
+        DRAFT
+        FROZEN @deprecated(reason: "\\"FROZEN\\" is deprecated")
 
-  \\"\\"\\"The item is published\\"\\"\\"
-  UsedToBePublished
-}"
-`);
+        """The item is published"""
+        UsedToBePublished
+      }"
+    `);
   });
 
   it.each([

@@ -27,6 +27,17 @@ input ArticleTagUniqueFilterInput {
 }"
 `;
 
+exports[`NodeUniqueFilterInputType Definition ArticleTagModeration has a unique filter input type: ArticleTagModerationUniqueFilterInput 1`] = `
+""""
+Identifies exactly one "ArticleTagModeration" given one of the following combination of components' value:
+- articleTag / moderator
+"""
+input ArticleTagModerationUniqueFilterInput {
+  articleTag: ArticleTagUniqueFilterInput!
+  moderator: UserUniqueFilterInput!
+}"
+`;
+
 exports[`NodeUniqueFilterInputType Definition Category has a unique filter input type: CategoryUniqueFilterInput 1`] = `
 """"
 Identifies exactly one "Category" given one of the following combination of components' value:

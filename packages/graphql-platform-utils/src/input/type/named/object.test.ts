@@ -175,10 +175,10 @@ describe('ObjectInputType', () => {
 
     it(`${type} has GraphQL`, () => {
       expect(printType(type.getGraphQLInputType())).toMatchInlineSnapshot(`
-        "\\"\\"\\"My profile\\"\\"\\"
+        """"My profile"""
         input ProfileInput {
           username: String!
-          age: Int @deprecated(reason: \\"\\\\\\"age\\\\\\" is deprecated\\")
+          age: Int @deprecated(reason: "\\"age\\" is deprecated")
           friends: [ProfileInput!]! = []
         }"
       `);

@@ -31,6 +31,12 @@ enum ArticleTagOrderingInput {
 
   """from the highest "order" to the lowest"""
   order_DESC
+
+  """from the lowest number of "moderations" to the highest"""
+  moderationCount_ASC
+
+  """from the highest number of "moderations" to the lowest"""
+  moderationCount_DESC
 }"
 `;
 
@@ -94,6 +100,12 @@ enum UserOrderingInput {
 
   """from the highest number of "updatedArticles" to the lowest"""
   updatedArticleCount_DESC
+
+  """from the lowest number of "articleTagModerations" to the highest"""
+  articleTagModerationCount_ASC
+
+  """from the highest number of "articleTagModerations" to the lowest"""
+  articleTagModerationCount_DESC
 }"
 `;
 
