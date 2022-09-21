@@ -69,35 +69,37 @@ export class GetSomeInOrderIfExistsQuery<
     context: OperationContext<TRequestContext, TConnector>,
     path: Path,
   ): Promise<GetSomeInOrderIfExistsQueryResult> {
-    const unorderedNodeValues = await this.node.getQuery('find-many').execute(
-      {
-        where: { OR: args.where },
-        first: args.where.length,
-        selection: args.selection
-          /**
-           * We need to select the data provided in the "unique-filters" to discriminate the returned nodes, imagine the following use:
-           *
-           * someArticlesIfExists(where: [
-           *  { id: "8c75f992-083e-4849-8020-4b3c156f484b" },
-           *  { _id: 3 },
-           *  { category: null, slug: "Welcome" },
-           *  { _id: 6 },
-           *  { category: { _id: 2 }, slug: "news" }
-           * ]) {
-           *   status
-           * }
-           *
-           * We need the following selection: { id _id category { _id } slug status }
-           */
-          .mergeWith(
-            args.where.map((filter) =>
-              this.node.outputType.selectShape(filter, context),
+    const unorderedNodeValues = await this.node
+      .getQueryByKey('find-many')
+      .execute(
+        {
+          where: { OR: args.where },
+          first: args.where.length,
+          selection: args.selection
+            /**
+             * We need to select the data provided in the "unique-filters" to discriminate the returned nodes, imagine the following use:
+             *
+             * someArticlesIfExists(where: [
+             *  { id: "8c75f992-083e-4849-8020-4b3c156f484b" },
+             *  { _id: 3 },
+             *  { category: null, slug: "Welcome" },
+             *  { _id: 6 },
+             *  { category: { _id: 2 }, slug: "news" }
+             * ]) {
+             *   status
+             * }
+             *
+             * We need the following selection: { id _id category { _id } slug status }
+             */
+            .mergeWith(
+              args.where.map((filter) =>
+                this.node.outputType.selectShape(filter, context),
+              ),
             ),
-          ),
-      },
-      context,
-      path,
-    );
+        },
+        context,
+        path,
+      );
 
     return args.where.map((key) => {
       const maybeNodeValue = unorderedNodeValues.find((nodeValue) =>

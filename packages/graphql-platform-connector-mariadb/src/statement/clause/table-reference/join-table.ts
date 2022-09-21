@@ -82,10 +82,10 @@ export class JoinTable extends AbstractTableReference {
     ].join(EOL);
   }
 
-  public toIndentedString(): string {
+  public toIndentedString(indentation: string = '  '): string {
     return this.toString()
       .split(EOL)
-      .map((line) => `  ${line}`)
+      .map((line) => `${indentation}${line}`)
       .join(EOL);
   }
 }

@@ -21,7 +21,7 @@ describe('NodeFilterInputType', () => {
 
   describe('Definition', () => {
     it.each(nodeNames)('%s has a filter input type', (nodeName) => {
-      const node = gp.getNode(nodeName);
+      const node = gp.getNodeByName(nodeName);
 
       const filterInputType = node.filterInputType;
       expect(filterInputType).toBeInstanceOf(NodeFilterInputType);
@@ -78,7 +78,7 @@ describe('NodeFilterInputType', () => {
       ])(
         '%# - %sFilterInput.parseAndFilter(%p) throws the error %p',
         (nodeName, input, requestContext, error) => {
-          const node = gp.getNode(nodeName);
+          const node = gp.getNodeByName(nodeName);
           const filterInputType = node.filterInputType;
 
           expect(() =>
@@ -109,7 +109,7 @@ describe('NodeFilterInputType', () => {
           { NOT: {} },
           { NOT: { id: undefined } },
         ])('%# - ArticleFilterInput.filter(%p) = FALSE', (input) => {
-          const node = gp.getNode('Article');
+          const node = gp.getNodeByName('Article');
           const filterInputType = node.filterInputType;
 
           expect(
@@ -140,7 +140,7 @@ describe('NodeFilterInputType', () => {
           { OR: [{ id: undefined }] },
           { NOT: undefined },
         ])('%# - ArticleFilterInput.filter(%p) = TRUE', (input) => {
-          const node = gp.getNode('Article');
+          const node = gp.getNodeByName('Article');
           const filterInputType = node.filterInputType;
 
           expect(
@@ -430,7 +430,7 @@ describe('NodeFilterInputType', () => {
                 },
               ],
             ])('%s', (_label, input, filter) => {
-              const node = gp.getNode('Article');
+              const node = gp.getNodeByName('Article');
               const filterInputType = node.filterInputType;
 
               expect(
@@ -610,7 +610,7 @@ describe('NodeFilterInputType', () => {
                 },
               ],
             ])('%s', (_label, input, filter) => {
-              const node = gp.getNode('Article');
+              const node = gp.getNodeByName('Article');
               const filterInputType = node.filterInputType;
 
               expect(
@@ -832,7 +832,7 @@ describe('NodeFilterInputType', () => {
                 },
               ],
             ])('%s', (_label, input, filter) => {
-              const node = gp.getNode('User');
+              const node = gp.getNodeByName('User');
               const filterInputType = node.filterInputType;
 
               expect(
@@ -932,7 +932,7 @@ describe('NodeFilterInputType', () => {
                 },
               ],
             ])('%s', (_label, input, filter) => {
-              const node = gp.getNode('Article');
+              const node = gp.getNodeByName('Article');
               const filterInputType = node.filterInputType;
 
               expect(
@@ -1063,7 +1063,7 @@ describe('NodeFilterInputType', () => {
               },
             ],
           ])('%s', (_label, input, filter) => {
-            const node = gp.getNode('Article');
+            const node = gp.getNodeByName('Article');
             const filterInputType = node.filterInputType;
 
             expect(

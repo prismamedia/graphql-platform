@@ -47,7 +47,9 @@ export const createAPI = <
               OperationInterface<TRequestContext, TConnector>['execute']
             >
           ) =>
-            gp.getOperation(type, name).execute(args, context, path),
+            gp
+              .getOperationByTypeAndName(type, name)
+              .execute(args, context, path),
       }),
     ]),
   ) as any;
@@ -91,7 +93,7 @@ export const createContextBoundAPI = <
               OperationInterface<TRequestContext, TConnector>['execute']
             >[0],
           ) =>
-            gp.getOperation(type, name).execute(args, context),
+            gp.getOperationByTypeAndName(type, name).execute(args, context),
       }),
     ]),
   ) as any;

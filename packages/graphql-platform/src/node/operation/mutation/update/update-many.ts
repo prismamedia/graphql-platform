@@ -104,7 +104,7 @@ export class UpdateManyMutation<
     const filter = new NodeFilter(
       this.node,
       new AndOperation([
-        this.node.getAuthorization(
+        this.node.getAuthorizationByRequestContext(
           context.requestContext,
           path,
           MutationType.UPDATE,
@@ -218,7 +218,7 @@ export class UpdateManyMutation<
       }
 
       updatedAt = new Date();
-      newValues = (await this.node.getQuery('get-some-in-order').execute(
+      newValues = (await this.node.getQueryByKey('get-some-in-order').execute(
         {
           where: ids,
           selection: this.node.selection,
@@ -277,7 +277,7 @@ export class UpdateManyMutation<
       );
     }
 
-    return this.node.getQuery('get-some-in-order').execute(
+    return this.node.getQueryByKey('get-some-in-order').execute(
       {
         where: ids,
         selection: args.selection,

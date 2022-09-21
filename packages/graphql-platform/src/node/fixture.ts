@@ -93,7 +93,7 @@ export class NodeFixture<
     const data = await this.getCreationInputValue(context);
 
     return this.node
-      .getMutation('create-one')
+      .getMutationByKey('create-one')
       .execute({ data, selection: this.node.selection }, context) as any;
   }
 

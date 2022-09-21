@@ -95,7 +95,7 @@ export class DeleteManyMutation<
     const filter = new NodeFilter(
       this.node,
       new AndOperation([
-        this.node.getAuthorization(
+        this.node.getAuthorizationByRequestContext(
           context.requestContext,
           path,
           MutationType.DELETION,
@@ -161,7 +161,7 @@ export class DeleteManyMutation<
               break;
 
             case OnHeadDeletion.SET_NULL:
-              return reverseEdge.head.getMutation('update-many').execute(
+              return reverseEdge.head.getMutationByKey('update-many').execute(
                 {
                   where: {
                     [reverseEdge.originalEdge.name]: {
@@ -182,7 +182,7 @@ export class DeleteManyMutation<
               );
 
             case OnHeadDeletion.CASCADE:
-              return reverseEdge.head.getMutation('delete-many').execute(
+              return reverseEdge.head.getMutationByKey('delete-many').execute(
                 {
                   where: {
                     [reverseEdge.originalEdge.name]: {

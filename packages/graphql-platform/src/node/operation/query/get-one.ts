@@ -31,7 +31,7 @@ export class GetOneQuery<
 
   @Memoize()
   public override get arguments() {
-    return this.node.getQuery('get-one-if-exists').arguments;
+    return this.node.getQueryByKey('get-one-if-exists').arguments;
   }
 
   @Memoize()
@@ -47,7 +47,7 @@ export class GetOneQuery<
     path: Path,
   ): Promise<GetOneQueryResult> {
     const nodeValue = await this.node
-      .getQuery('get-one-if-exists')
+      .getQueryByKey('get-one-if-exists')
       .execute(args, context, path);
 
     if (!nodeValue) {

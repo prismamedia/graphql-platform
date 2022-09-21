@@ -20,7 +20,7 @@ describe(`NodeOutputType`, () => {
 
   describe('Definition', () => {
     it.each(nodeNames)('%s has an output type', (nodeName) => {
-      const node = gp.getNode(nodeName);
+      const node = gp.getNodeByName(nodeName);
 
       const nodeOutputType = node.outputType;
       expect(nodeOutputType).toBeInstanceOf(NodeOutputType);
@@ -123,7 +123,7 @@ describe(`NodeOutputType`, () => {
       ])(
         '%p.select(%p) throws the error %p',
         (nodeName, input, requestContext, error) => {
-          const node = gp.getNode(nodeName);
+          const node = gp.getNodeByName(nodeName);
           const outputType = node.outputType;
 
           expect(() =>
@@ -220,7 +220,7 @@ describe(`NodeOutputType`, () => {
 }`,
         ],
       ])('%p.select(%p) = %p', (nodeName, fragment, selectionSet) => {
-        const node = gp.getNode(nodeName);
+        const node = gp.getNodeByName(nodeName);
         const outputType = node.outputType;
 
         expect(

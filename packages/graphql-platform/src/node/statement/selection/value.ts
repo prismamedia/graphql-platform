@@ -21,7 +21,7 @@ export function doesSelectedValueMatchUniqueFilter(
       return filterValue === componentSelectedValue;
     }
 
-    const component = node.getComponent(filterName);
+    const component = node.getComponentByName(filterName);
 
     return component.kind === 'Leaf'
       ? component.areValuesEqual(

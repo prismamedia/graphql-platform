@@ -1,15 +1,15 @@
 // Jest Snapshot v1, https://goo.gl/fbAQLP
 
-exports[`GraphQL Platform Connector MariaDB generates valid and stable schema & statements 1`] = `"DROP SCHEMA IF EXISTS \`test\`"`;
+exports[`GraphQL Platform Connector MariaDB generates valid and stable schema & statements 1`] = `"DROP SCHEMA IF EXISTS \`tests_index\`"`;
 
 exports[`GraphQL Platform Connector MariaDB generates valid and stable schema & statements 2`] = `
-"CREATE OR REPLACE SCHEMA \`test\`
+"CREATE OR REPLACE SCHEMA \`tests_index\`
 DEFAULT CHARSET = 'utf8mb4'
 DEFAULT COLLATE = 'utf8mb4_unicode_520_ci'"
 `;
 
 exports[`GraphQL Platform Connector MariaDB generates valid and stable schema & statements 3`] = `
-"CREATE TABLE \`test\`.\`articles\` (
+"CREATE TABLE \`tests_index\`.\`articles\` (
   \`privateId\` INT UNSIGNED AUTO_INCREMENT NOT NULL COMMENT 'This id is used to identify an Article internally',
   \`id\` CHAR(36) CHARSET 'utf8mb4' COLLATE 'utf8mb4_unicode_520_ci' NOT NULL COMMENT 'This UUID identifies an Article publicly',
   \`status\` ENUM('draft','published','deleted') NOT NULL,
@@ -36,7 +36,7 @@ DEFAULT CHARSET = 'utf8mb4'
 DEFAULT COLLATE = 'utf8mb4_unicode_520_ci'
 COMMENT 'The article is the main resource, written by the journalists'
 
-CREATE TABLE \`test\`.\`categories\` (
+CREATE TABLE \`tests_index\`.\`categories\` (
   \`privateId\` INT UNSIGNED AUTO_INCREMENT NOT NULL,
   \`id\` CHAR(36) CHARSET 'utf8mb4' COLLATE 'utf8mb4_unicode_520_ci' NOT NULL,
   \`title\` VARCHAR(255) CHARSET 'utf8mb4' COLLATE 'utf8mb4_unicode_520_ci' NOT NULL,
@@ -53,7 +53,7 @@ ENGINE = 'InnoDB'
 DEFAULT CHARSET = 'utf8mb4'
 DEFAULT COLLATE = 'utf8mb4_unicode_520_ci'
 
-CREATE TABLE \`test\`.\`tags\` (
+CREATE TABLE \`tests_index\`.\`tags\` (
   \`id\` CHAR(36) CHARSET 'utf8mb4' COLLATE 'utf8mb4_unicode_520_ci' NOT NULL,
   \`deprecated\` BOOLEAN COMMENT 'A tag can be deprecated',
   \`title\` VARCHAR(255) CHARSET 'utf8mb4' COLLATE 'utf8mb4_unicode_520_ci' NOT NULL,
@@ -67,7 +67,7 @@ ENGINE = 'InnoDB'
 DEFAULT CHARSET = 'utf8mb4'
 DEFAULT COLLATE = 'utf8mb4_unicode_520_ci'
 
-CREATE TABLE \`test\`.\`article_tags\` (
+CREATE TABLE \`tests_index\`.\`article_tags\` (
   \`article_privateId\` INT UNSIGNED NOT NULL,
   \`tag_id\` CHAR(36) CHARSET 'utf8mb4' COLLATE 'utf8mb4_unicode_520_ci' NOT NULL,
   \`order\` INT UNSIGNED NOT NULL,
@@ -80,7 +80,7 @@ ENGINE = 'InnoDB'
 DEFAULT CHARSET = 'utf8mb4'
 DEFAULT COLLATE = 'utf8mb4_unicode_520_ci'
 
-CREATE TABLE \`test\`.\`article_tag_moderations\` (
+CREATE TABLE \`tests_index\`.\`article_tag_moderations\` (
   \`theArticlePrivateId\` INT UNSIGNED NOT NULL,
   \`theTagId\` CHAR(36) CHARSET 'utf8mb4' COLLATE 'utf8mb4_unicode_520_ci' NOT NULL,
   \`moderator_id\` CHAR(36) CHARSET 'utf8mb4' COLLATE 'utf8mb4_unicode_520_ci' NOT NULL,
@@ -93,7 +93,7 @@ ENGINE = 'InnoDB'
 DEFAULT CHARSET = 'utf8mb4'
 DEFAULT COLLATE = 'utf8mb4_unicode_520_ci'
 
-CREATE TABLE \`test\`.\`users\` (
+CREATE TABLE \`tests_index\`.\`users\` (
   \`id\` CHAR(36) CHARSET 'utf8mb4' COLLATE 'utf8mb4_unicode_520_ci' NOT NULL,
   \`username\` VARCHAR(255) CHARSET 'utf8mb4' COLLATE 'utf8mb4_unicode_520_ci' NOT NULL,
   \`created_at\` DATETIME(3) NOT NULL,
@@ -105,7 +105,7 @@ ENGINE = 'InnoDB'
 DEFAULT CHARSET = 'utf8mb4'
 DEFAULT COLLATE = 'utf8mb4_unicode_520_ci'
 
-CREATE TABLE \`test\`.\`user_profiles\` (
+CREATE TABLE \`tests_index\`.\`user_profiles\` (
   \`theUserId\` CHAR(36) CHARSET 'utf8mb4' COLLATE 'utf8mb4_unicode_520_ci' NOT NULL,
   \`birthday\` DATE,
   \`facebook_id\` VARCHAR(255) CHARSET 'utf8mb4' COLLATE 'utf8mb4_unicode_520_ci',
@@ -118,7 +118,7 @@ ENGINE = 'InnoDB'
 DEFAULT CHARSET = 'utf8mb4'
 DEFAULT COLLATE = 'utf8mb4_unicode_520_ci'
 
-CREATE TABLE \`test\`.\`logs\` (
+CREATE TABLE \`tests_index\`.\`logs\` (
   \`privateId\` INT UNSIGNED AUTO_INCREMENT NOT NULL,
   \`message\` VARCHAR(255) CHARSET 'utf8mb4' COLLATE 'utf8mb4_unicode_520_ci' NOT NULL,
   \`created_at\` DATETIME(3) NOT NULL,
@@ -130,22 +130,22 @@ DEFAULT COLLATE = 'utf8mb4_unicode_520_ci'"
 `;
 
 exports[`GraphQL Platform Connector MariaDB generates valid and stable schema & statements 4`] = `
-"ALTER TABLE \`test\`.\`articles\`
+"ALTER TABLE \`tests_index\`.\`articles\`
 ADD FOREIGN KEY \`fk_articles_category_privateId\` (\`category_privateId\`) REFERENCES \`categories\` (\`privateId\`) ON UPDATE RESTRICT ON DELETE RESTRICT,
 ADD FOREIGN KEY \`fk_articles_created_by_id\` (\`created_by_id\`) REFERENCES \`users\` (\`id\`) ON UPDATE RESTRICT ON DELETE RESTRICT,
 ADD FOREIGN KEY \`fk_articles_updated_by_username\` (\`updated_by_username\`) REFERENCES \`users\` (\`username\`) ON UPDATE RESTRICT ON DELETE RESTRICT
 
-ALTER TABLE \`test\`.\`categories\`
+ALTER TABLE \`tests_index\`.\`categories\`
 ADD FOREIGN KEY \`fk_categories_parent_privateId\` (\`parent_privateId\`) REFERENCES \`categories\` (\`privateId\`) ON UPDATE RESTRICT ON DELETE RESTRICT
 
-ALTER TABLE \`test\`.\`article_tags\`
+ALTER TABLE \`tests_index\`.\`article_tags\`
 ADD FOREIGN KEY \`fk_article_tags_article_privateId\` (\`article_privateId\`) REFERENCES \`articles\` (\`privateId\`) ON UPDATE RESTRICT ON DELETE RESTRICT,
 ADD FOREIGN KEY \`fk_article_tags_tag_id\` (\`tag_id\`) REFERENCES \`tags\` (\`id\`) ON UPDATE RESTRICT ON DELETE RESTRICT
 
-ALTER TABLE \`test\`.\`article_tag_moderations\`
+ALTER TABLE \`tests_index\`.\`article_tag_moderations\`
 ADD FOREIGN KEY \`my_custom_fk_name\` (\`theArticlePrivateId\`,\`theTagId\`) REFERENCES \`article_tags\` (\`article_privateId\`,\`tag_id\`) ON UPDATE RESTRICT ON DELETE RESTRICT,
 ADD FOREIGN KEY \`fk_article_tag_moderations_moderator_id\` (\`moderator_id\`) REFERENCES \`users\` (\`id\`) ON UPDATE RESTRICT ON DELETE RESTRICT
 
-ALTER TABLE \`test\`.\`user_profiles\`
+ALTER TABLE \`tests_index\`.\`user_profiles\`
 ADD FOREIGN KEY \`fk_user_profiles_theUserId\` (\`theUserId\`) REFERENCES \`users\` (\`id\`) ON UPDATE RESTRICT ON DELETE RESTRICT"
 `;

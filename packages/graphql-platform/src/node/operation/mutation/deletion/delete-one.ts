@@ -33,7 +33,7 @@ export class DeleteOneMutation<
 
   @Memoize()
   public override get arguments() {
-    return this.node.getMutation('delete-one-if-exists').arguments;
+    return this.node.getMutationByKey('delete-one-if-exists').arguments;
   }
 
   @Memoize()
@@ -49,7 +49,7 @@ export class DeleteOneMutation<
     path: Path,
   ): Promise<DeleteOneMutationResult> {
     const nodeValue = await this.node
-      .getMutation('delete-one-if-exists')
+      .getMutationByKey('delete-one-if-exists')
       .execute(args, context, path);
 
     if (!nodeValue) {

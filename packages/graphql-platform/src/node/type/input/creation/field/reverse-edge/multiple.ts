@@ -195,16 +195,18 @@ export class ReverseEdgeMultipleCreationInput extends AbstractReverseEdgeCreatio
             case ReverseEdgeMultipleCreationInputAction.CONNECT_MANY: {
               const actionData = inputValue[actionName]!;
 
-              await this.reverseEdge.head.getMutation('update-many').execute(
-                {
-                  where: actionData,
-                  first: 1_000_000,
-                  data: originalEdgeValue,
-                  selection,
-                },
-                context,
-                actionPath,
-              );
+              await this.reverseEdge.head
+                .getMutationByKey('update-many')
+                .execute(
+                  {
+                    where: actionData,
+                    first: 1_000_000,
+                    data: originalEdgeValue,
+                    selection,
+                  },
+                  context,
+                  actionPath,
+                );
               break;
             }
 
@@ -214,7 +216,7 @@ export class ReverseEdgeMultipleCreationInput extends AbstractReverseEdgeCreatio
               await aggregateConcurrentError(
                 actionData,
                 ({ where, create }, index) =>
-                  this.reverseEdge.head.getMutation('upsert').execute(
+                  this.reverseEdge.head.getMutationByKey('upsert').execute(
                     {
                       where,
                       create: {
@@ -238,7 +240,7 @@ export class ReverseEdgeMultipleCreationInput extends AbstractReverseEdgeCreatio
               await aggregateConcurrentError(
                 actionData,
                 (where, index) =>
-                  this.reverseEdge.head.getMutation('update-one').execute(
+                  this.reverseEdge.head.getMutationByKey('update-one').execute(
                     {
                       where,
                       data: originalEdgeValue,
@@ -259,7 +261,7 @@ export class ReverseEdgeMultipleCreationInput extends AbstractReverseEdgeCreatio
                 actionData,
                 (where, index) =>
                   this.reverseEdge.head
-                    .getMutation('update-one-if-exists')
+                    .getMutationByKey('update-one-if-exists')
                     .execute(
                       {
                         where,
@@ -277,17 +279,19 @@ export class ReverseEdgeMultipleCreationInput extends AbstractReverseEdgeCreatio
             case ReverseEdgeMultipleCreationInputAction.CREATE_SOME: {
               const actionData = inputValue[actionName]!;
 
-              await this.reverseEdge.head.getMutation('create-some').execute(
-                {
-                  data: actionData.map((data) => ({
-                    ...data,
-                    ...originalEdgeValue,
-                  })),
-                  selection,
-                },
-                context,
-                actionPath,
-              );
+              await this.reverseEdge.head
+                .getMutationByKey('create-some')
+                .execute(
+                  {
+                    data: actionData.map((data) => ({
+                      ...data,
+                      ...originalEdgeValue,
+                    })),
+                    selection,
+                  },
+                  context,
+                  actionPath,
+                );
               break;
             }
 

@@ -36,7 +36,7 @@ export class GetSomeInOrderQuery<
 
   @Memoize()
   public override get arguments() {
-    return this.node.getQuery('get-some-in-order-if-exists').arguments;
+    return this.node.getQueryByKey('get-some-in-order-if-exists').arguments;
   }
 
   @Memoize()
@@ -54,7 +54,7 @@ export class GetSomeInOrderQuery<
     path: Path,
   ): Promise<GetSomeInOrderQueryResult> {
     const maybeNodeValues = await this.node
-      .getQuery('get-some-in-order-if-exists')
+      .getQueryByKey('get-some-in-order-if-exists')
       .execute(args, context, path);
 
     return aggregateError<NodeSelectedValue | null, GetSomeInOrderQueryResult>(

@@ -73,7 +73,7 @@ describe('FindManyQuery', () => {
         expect(gp.connector.find).toHaveBeenCalledTimes(1);
         expect(gp.connector.find).toHaveBeenLastCalledWith(
           {
-            node: gp.getNode('Article'),
+            node: gp.getNodeByName('Article'),
             limit: 10,
             selection: expect.any(NodeSelection),
           },
@@ -99,7 +99,7 @@ describe('FindManyQuery', () => {
         expect(gp.connector.find).toHaveBeenCalledTimes(1);
         expect(gp.connector.find).toHaveBeenLastCalledWith(
           {
-            node: gp.getNode('Article'),
+            node: gp.getNodeByName('Article'),
             where: expect.any(NodeFilter),
             orderBy: expect.any(NodeOrdering),
             offset: 5,

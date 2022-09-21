@@ -16,7 +16,7 @@ describe('NodeUniqueFilterInputType', () => {
 
   describe('Definition', () => {
     it.each(nodeNames)('%s has a unique filter input type', (nodeName) => {
-      const node = gp.getNode(nodeName);
+      const node = gp.getNodeByName(nodeName);
 
       const uniqueFilterInputType = node.uniqueFilterInputType;
       expect(uniqueFilterInputType).toBeInstanceOf(NodeUniqueFilterInputType);
@@ -63,7 +63,7 @@ describe('NodeUniqueFilterInputType', () => {
       ])(
         '%sUniqueFilterInput.parseValue(%p) throws the error %p',
         (nodeName, value, error) => {
-          const node = gp.getNode(nodeName);
+          const node = gp.getNodeByName(nodeName);
           const uniqueFilterInputType = node.uniqueFilterInputType;
 
           expect(() =>
@@ -125,7 +125,7 @@ describe('NodeUniqueFilterInputType', () => {
         '%sUniqueFilterInput.parseValue(%p) = %p',
         (nodeName, inputValue, parsedValue) => {
           const uniqueFilterInputType =
-            gp.getNode(nodeName).uniqueFilterInputType;
+            gp.getNodeByName(nodeName).uniqueFilterInputType;
 
           expect(uniqueFilterInputType.parseValue(inputValue)).toEqual(
             parsedValue,

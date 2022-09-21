@@ -26,7 +26,7 @@ describe('NodeCreationInputType', () => {
             node.name === 'Category' &&
             where?.filter.equals(
               new LeafComparisonFilter(
-                node.getLeaf('id'),
+                node.getLeafByName('id'),
                 'eq',
                 '91a7c846-b030-4ef3-aaaa-747fe7b11519',
               ),
@@ -37,7 +37,7 @@ describe('NodeCreationInputType', () => {
             node.name === 'User' &&
             where?.filter.equals(
               new LeafComparisonFilter(
-                node.getLeaf('id'),
+                node.getLeafByName('id'),
                 'eq',
                 '2059b77a-a735-41fe-b415-5b12944b6ba6',
               ),
@@ -56,7 +56,7 @@ describe('NodeCreationInputType', () => {
 
   describe('Definition', () => {
     it.each(nodeNames)('%s has a creation input type', (nodeName) => {
-      const node = gp.getNode(nodeName);
+      const node = gp.getNodeByName(nodeName);
 
       const creationInputType = node.creationInputType;
       expect(creationInputType).toBeInstanceOf(NodeCreationInputType);
@@ -107,7 +107,7 @@ describe('NodeCreationInputType', () => {
       ])(
         '%sCreationInput.parseValue(%p) throws an error',
         (nodeName, value, error) => {
-          const node = gp.getNode(nodeName);
+          const node = gp.getNodeByName(nodeName);
           const creationInputType = node.creationInputType;
 
           expect(() => creationInputType.parseValue(value)).toThrowError(error);
@@ -117,7 +117,7 @@ describe('NodeCreationInputType', () => {
 
     describe('Works', () => {
       it('creates a valid statement', async () => {
-        const Article = gp.getNode('Article');
+        const Article = gp.getNodeByName('Article');
         const ArticleCreationInputType = Article.creationInputType;
 
         const input: PlainObject = {

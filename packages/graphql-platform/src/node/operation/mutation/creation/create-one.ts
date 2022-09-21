@@ -57,7 +57,7 @@ export class CreateOneMutation<
     context: MutationContext<TRequestContext, TConnector>,
     path: Path,
   ): Promise<CreateOneMutationResult> {
-    const [nodeValue] = await this.node.getMutation('create-some').execute(
+    const [nodeValue] = await this.node.getMutationByKey('create-some').execute(
       {
         data: [args.data],
         selection: args.selection,

@@ -38,7 +38,7 @@ export class UpdateOneMutation<
 
   @Memoize()
   public override get arguments() {
-    return this.node.getMutation('update-one-if-exists').arguments;
+    return this.node.getMutationByKey('update-one-if-exists').arguments;
   }
 
   @Memoize()
@@ -54,7 +54,7 @@ export class UpdateOneMutation<
     path: Path,
   ): Promise<UpdateOneMutationResult> {
     const nodeValue = await this.node
-      .getMutation('update-one-if-exists')
+      .getMutationByKey('update-one-if-exists')
       .execute(args, context, path);
 
     if (!nodeValue) {

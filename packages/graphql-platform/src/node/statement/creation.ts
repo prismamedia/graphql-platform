@@ -41,11 +41,11 @@ const nodeCreationProxyHandler: ProxyHandler<NodeCreation> = {
   },
   get: (creation, componentName) =>
     creation.valuesByComponent.get(
-      creation.node.getComponent(componentName as any),
+      creation.node.getComponentByName(componentName as any),
     ),
   set: (creation, componentName, componentValue) => {
     creation.setComponentValue(
-      creation.node.getComponent(componentName as any),
+      creation.node.getComponentByName(componentName as any),
       componentValue,
     );
 
@@ -53,7 +53,7 @@ const nodeCreationProxyHandler: ProxyHandler<NodeCreation> = {
   },
   deleteProperty: (creation, componentName) => {
     creation.setComponentValue(
-      creation.node.getComponent(componentName as any),
+      creation.node.getComponentByName(componentName as any),
     );
 
     return true;

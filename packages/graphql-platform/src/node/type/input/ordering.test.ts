@@ -23,7 +23,7 @@ describe('NodeOrderingInputType', () => {
 
   describe('Definition', () => {
     it.each(nodeNames)('%s has an ordering input type', (nodeName) => {
-      const node = gp.getNode(nodeName);
+      const node = gp.getNodeByName(nodeName);
 
       const orderingInputType = node.orderingInputType;
       expect(orderingInputType).toBeInstanceOf(NodeOrderingInputType);
@@ -61,7 +61,7 @@ describe('NodeOrderingInputType', () => {
       ])(
         'throws an Error on %sOrderingInput.sort(%p)',
         (nodeName, input, requestContext, error) => {
-          const node = gp.getNode(nodeName);
+          const node = gp.getNodeByName(nodeName);
           const orderingInputType = node.orderingInputType;
 
           expect(() =>
@@ -114,7 +114,7 @@ describe('NodeOrderingInputType', () => {
           ],
         ],
       ])('%sOrderingInput.sort(%p)', (nodeName, input, expressions) => {
-        const node = gp.getNode(nodeName);
+        const node = gp.getNodeByName(nodeName);
         const orderingInputType = node.orderingInputType;
 
         expect(

@@ -159,7 +159,7 @@ export class EdgeCreationInput extends AbstractComponentCreationInput<EdgeCreati
         const actionData = inputValue[actionName]!;
 
         return this.edge.head
-          .getQuery('get-one')
+          .getQueryByKey('get-one')
           .execute(
             { where: actionData, selection },
             context,
@@ -171,7 +171,7 @@ export class EdgeCreationInput extends AbstractComponentCreationInput<EdgeCreati
         const actionData = inputValue[actionName]!;
 
         return this.edge.head
-          .getQuery('get-one-if-exists')
+          .getQueryByKey('get-one-if-exists')
           .execute(
             { where: actionData, selection },
             context,
@@ -184,14 +184,14 @@ export class EdgeCreationInput extends AbstractComponentCreationInput<EdgeCreati
 
         return (
           (await this.edge.head
-            .getQuery('get-one-if-exists')
+            .getQueryByKey('get-one-if-exists')
             .execute(
               { where: actionData.where, selection },
               context,
               actionPath,
             )) ??
           ((await this.edge.head
-            .getMutation('create-one')
+            .getMutationByKey('create-one')
             .execute(
               { data: actionData.create, selection },
               context,
@@ -204,7 +204,7 @@ export class EdgeCreationInput extends AbstractComponentCreationInput<EdgeCreati
         const actionData = inputValue[actionName]!;
 
         return this.edge.head
-          .getMutation('create-one')
+          .getMutationByKey('create-one')
           .execute({ data: actionData, selection }, context, actionPath) as any;
       }
 

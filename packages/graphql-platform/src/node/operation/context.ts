@@ -31,7 +31,11 @@ export class OperationContext<
     path: Path,
     mutationType?: MutationType,
   ): NodeFilter<TRequestContext, TConnector> | undefined {
-    return node.getAuthorization(this.requestContext, path, mutationType);
+    return node.getAuthorizationByRequestContext(
+      this.requestContext,
+      path,
+      mutationType,
+    );
   }
 
   /**

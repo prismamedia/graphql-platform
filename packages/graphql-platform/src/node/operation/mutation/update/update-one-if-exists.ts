@@ -55,7 +55,7 @@ export class UpdateOneIfExistsMutation<
     path: Path,
   ): Promise<UpdateOneIfExistsMutationResult> {
     const [nodeValue = null] = await this.node
-      .getMutation('update-many')
+      .getMutationByKey('update-many')
       .execute(
         {
           where: args.where,

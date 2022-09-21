@@ -33,15 +33,18 @@ const nodeUpdateProxyHandler: ProxyHandler<NodeUpdate> = {
   },
   get: (update, componentName) =>
     update.updatesByComponent.get(
-      update.node.getComponent(componentName as any),
+      update.node.getComponentByName(componentName as any),
     ),
   set: (update, componentName, componentUpdate) => {
-    update.set(update.node.getComponent(componentName as any), componentUpdate);
+    update.set(
+      update.node.getComponentByName(componentName as any),
+      componentUpdate,
+    );
 
     return true;
   },
   deleteProperty: (update, componentName) => {
-    update.set(update.node.getComponent(componentName as any));
+    update.set(update.node.getComponentByName(componentName as any));
 
     return true;
   },

@@ -58,15 +58,17 @@ export class GetOneIfExistsQuery<
     context: OperationContext<TRequestContext, TConnector>,
     path: Path,
   ): Promise<GetOneIfExistsQueryResult> {
-    const [nodeValue = null] = await this.node.getQuery('find-many').execute(
-      {
-        where: args.where,
-        first: 1,
-        selection: args.selection,
-      },
-      context,
-      path,
-    );
+    const [nodeValue = null] = await this.node
+      .getQueryByKey('find-many')
+      .execute(
+        {
+          where: args.where,
+          first: 1,
+          selection: args.selection,
+        },
+        context,
+        path,
+      );
 
     return nodeValue;
   }

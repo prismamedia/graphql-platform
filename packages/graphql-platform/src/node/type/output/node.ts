@@ -257,7 +257,7 @@ export class NodeOutputType {
         aggregateError<Component['name'], ComponentSelection[]>(
           componentNames,
           (expressions, componentName, index) => {
-            const component = this.node.getComponent(
+            const component = this.node.getComponentByName(
               componentName,
               addPath(path, index),
             );

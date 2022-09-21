@@ -571,7 +571,7 @@ export class Node<
     return isPublic;
   }
 
-  public getComponent(
+  public getComponentByName(
     name: Component['name'],
     path?: Path,
   ): Component<TRequestContext, TConnector> {
@@ -589,7 +589,7 @@ export class Node<
     return component;
   }
 
-  public getLeaf(
+  public getLeafByName(
     name: Leaf['name'],
     path?: Path,
   ): Leaf<TRequestContext, TConnector> {
@@ -607,7 +607,7 @@ export class Node<
     return leaf;
   }
 
-  public getEdge(
+  public getEdgeByName(
     name: Edge['name'],
     path?: Path,
   ): Edge<TRequestContext, TConnector> {
@@ -625,7 +625,7 @@ export class Node<
     return edge;
   }
 
-  public getUniqueConstraint(
+  public getUniqueConstraintByName(
     name: UniqueConstraint['name'],
     path?: Path,
   ): UniqueConstraint<TRequestContext, TConnector> {
@@ -842,7 +842,7 @@ export class Node<
     return reverseEdges;
   }
 
-  public getReverseEdge(
+  public getReverseEdgeByName(
     name: ReverseEdge['name'],
     path?: Path,
   ): ReverseEdge<TRequestContext, TConnector> {
@@ -873,7 +873,7 @@ export class Node<
     );
   }
 
-  public getReverseEdgeUnique(
+  public getReverseEdgeUniqueByName(
     name: ReverseEdgeUnique['name'],
     path?: Path,
   ): ReverseEdgeUnique<TRequestContext, TConnector> {
@@ -904,7 +904,7 @@ export class Node<
     );
   }
 
-  public getReverseEdgeMultiple(
+  public getReverseEdgeMultipleByName(
     name: ReverseEdgeMultiple['name'],
     path?: Path,
   ): ReverseEdgeMultiple<TRequestContext, TConnector> {
@@ -977,7 +977,7 @@ export class Node<
     ) as any;
   }
 
-  public getMutation<TKey extends MutationKey>(
+  public getMutationByKey<TKey extends MutationKey>(
     key: TKey,
     path?: Path,
   ): MutationsByKey<TRequestContext, TConnector>[TKey] {
@@ -1006,7 +1006,7 @@ export class Node<
     ) as any;
   }
 
-  public getQuery<TKey extends QueryKey>(
+  public getQueryByKey<TKey extends QueryKey>(
     key: TKey,
     path?: Path,
   ): QueriesByKey<TRequestContext, TConnector>[TKey] {
@@ -1032,7 +1032,7 @@ export class Node<
     ) as any;
   }
 
-  public getSubscription<TKey extends NodeSubscriptionKey>(
+  public getSubscriptionByKey<TKey extends NodeSubscriptionKey>(
     key: TKey,
     path?: Path,
   ): NodeSubscriptionsByKey<TRequestContext, TConnector>[TKey] {
@@ -1161,7 +1161,7 @@ export class Node<
     );
   }
 
-  public getAuthorization(
+  public getAuthorizationByRequestContext(
     requestContext: TRequestContext,
     path: Path,
     mutationType?: MutationType,

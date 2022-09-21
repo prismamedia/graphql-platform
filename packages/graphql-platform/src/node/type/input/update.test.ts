@@ -25,7 +25,7 @@ describe('NodeUpdateInputType', () => {
             node.name === 'Category' &&
             where?.filter.equals(
               new LeafComparisonFilter(
-                node.getLeaf('id'),
+                node.getLeafByName('id'),
                 'eq',
                 '91a7c846-b030-4ef3-aaaa-747fe7b11519',
               ),
@@ -36,7 +36,7 @@ describe('NodeUpdateInputType', () => {
             node.name === 'User' &&
             where?.filter.equals(
               new LeafComparisonFilter(
-                node.getLeaf('id'),
+                node.getLeafByName('id'),
                 'eq',
                 '2059b77a-a735-41fe-b415-5b12944b6ba6',
               ),
@@ -55,7 +55,7 @@ describe('NodeUpdateInputType', () => {
 
   describe('Definition', () => {
     it.each(nodeNames)('%s has an update input type', (nodeName) => {
-      const node = gp.getNode(nodeName);
+      const node = gp.getNodeByName(nodeName);
 
       const updateInputType = node.updateInputType;
       expect(updateInputType).toBeInstanceOf(NodeUpdateInputType);
@@ -99,7 +99,7 @@ describe('NodeUpdateInputType', () => {
       ])(
         '%sUpdateInput.parseValue(%p) throws an error',
         (nodeName, value, error) => {
-          const node = gp.getNode(nodeName);
+          const node = gp.getNodeByName(nodeName);
           const updateInputType = node.updateInputType;
 
           expect(() => updateInputType.parseValue(value)).toThrowError(error);
@@ -129,14 +129,14 @@ describe('NodeUpdateInputType', () => {
           },
         ],
       ])('%sUpdateInput.parseValue(%p)', (nodeName, value, update) => {
-        const node = gp.getNode(nodeName);
+        const node = gp.getNodeByName(nodeName);
         const updateInputType = node.updateInputType;
 
         expect(updateInputType.parseValue(value)).toEqual(update);
       });
 
       it('creates a valid statement', async () => {
-        const Article = gp.getNode('Article');
+        const Article = gp.getNodeByName('Article');
         const ArticleUpdateInputType = Article.updateInputType;
 
         const input: PlainObject = {

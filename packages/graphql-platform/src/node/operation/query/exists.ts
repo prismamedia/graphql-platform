@@ -54,7 +54,7 @@ export class ExistsQuery<
     path: Path,
   ): Promise<ExistsQueryResult> {
     const count = await this.node
-      .getQuery('count')
+      .getQueryByKey('count')
       .execute({ where: args.where }, context, path);
 
     return count > 0;

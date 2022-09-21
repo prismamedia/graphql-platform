@@ -51,7 +51,7 @@ export class DeleteOneIfExistsMutation<
     path: Path,
   ): Promise<DeleteOneIfExistsMutationResult> {
     const [nodeValue = null] = await this.node
-      .getMutation('delete-many')
+      .getMutationByKey('delete-many')
       .execute(
         {
           where: args.where,

@@ -281,14 +281,16 @@ export class ReverseEdgeUniqueUpdateInput extends AbstractReverseEdgeUpdateInput
             const actionData = inputValue[maybeActionName]!;
 
             if (actionData === true) {
-              await this.reverseEdge.head.getMutation('delete-one').execute(
-                {
-                  where: originalEdgeValue,
-                  selection,
-                },
-                context,
-                actionPath,
-              );
+              await this.reverseEdge.head
+                .getMutationByKey('delete-one')
+                .execute(
+                  {
+                    where: originalEdgeValue,
+                    selection,
+                  },
+                  context,
+                  actionPath,
+                );
             }
             break;
           }
@@ -298,7 +300,7 @@ export class ReverseEdgeUniqueUpdateInput extends AbstractReverseEdgeUpdateInput
 
             if (actionData === true) {
               await this.reverseEdge.head
-                .getMutation('delete-one-if-exists')
+                .getMutationByKey('delete-one-if-exists')
                 .execute(
                   {
                     where: originalEdgeValue,
@@ -315,15 +317,17 @@ export class ReverseEdgeUniqueUpdateInput extends AbstractReverseEdgeUpdateInput
             const actionData = inputValue[maybeActionName]!;
 
             if (actionData === true) {
-              await this.reverseEdge.head.getMutation('update-one').execute(
-                {
-                  where: originalEdgeValue,
-                  data: { [this.reverseEdge.originalEdge.name]: null },
-                  selection,
-                },
-                context,
-                actionPath,
-              );
+              await this.reverseEdge.head
+                .getMutationByKey('update-one')
+                .execute(
+                  {
+                    where: originalEdgeValue,
+                    data: { [this.reverseEdge.originalEdge.name]: null },
+                    selection,
+                  },
+                  context,
+                  actionPath,
+                );
             }
             break;
           }
@@ -333,7 +337,7 @@ export class ReverseEdgeUniqueUpdateInput extends AbstractReverseEdgeUpdateInput
 
             if (actionData === true) {
               await this.reverseEdge.head
-                .getMutation('update-one-if-exists')
+                .getMutationByKey('update-one-if-exists')
                 .execute(
                   {
                     where: originalEdgeValue,
@@ -367,7 +371,7 @@ export class ReverseEdgeUniqueUpdateInput extends AbstractReverseEdgeUpdateInput
           case ReverseEdgeUniqueUpdateInputAction.CONNECT: {
             const actionData = inputValue[maybeActionName]!;
 
-            await this.reverseEdge.head.getMutation('update-one').execute(
+            await this.reverseEdge.head.getMutationByKey('update-one').execute(
               {
                 where: actionData,
                 data: originalEdgeValue,
@@ -383,7 +387,7 @@ export class ReverseEdgeUniqueUpdateInput extends AbstractReverseEdgeUpdateInput
             const actionData = inputValue[maybeActionName]!;
 
             await this.reverseEdge.head
-              .getMutation('update-one-if-exists')
+              .getMutationByKey('update-one-if-exists')
               .execute(
                 {
                   where: actionData,
@@ -399,7 +403,7 @@ export class ReverseEdgeUniqueUpdateInput extends AbstractReverseEdgeUpdateInput
           case ReverseEdgeUniqueUpdateInputAction.CONNECT_OR_CREATE: {
             const { where, create } = inputValue[maybeActionName]!;
 
-            await this.reverseEdge.head.getMutation('upsert').execute(
+            await this.reverseEdge.head.getMutationByKey('upsert').execute(
               {
                 where,
                 create: { ...create, ...originalEdgeValue },
@@ -416,7 +420,7 @@ export class ReverseEdgeUniqueUpdateInput extends AbstractReverseEdgeUpdateInput
             const actionData = inputValue[maybeActionName]!;
 
             await this.reverseEdge.head
-              .getMutation('create-one')
+              .getMutationByKey('create-one')
               .execute(
                 { data: { ...actionData, ...originalEdgeValue }, selection },
                 context,

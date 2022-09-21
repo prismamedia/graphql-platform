@@ -26,7 +26,7 @@ export function createNodeLoader<
   return new DataLoader(
     async (keys) => {
       const maybeValues = await node
-        .getQuery('get-some-in-order-if-exists')
+        .getQueryByKey('get-some-in-order-if-exists')
         .execute({ where: keys, selection }, context);
 
       return maybeValues.map(

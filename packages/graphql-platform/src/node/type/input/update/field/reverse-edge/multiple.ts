@@ -336,15 +336,17 @@ export class ReverseEdgeMultipleUpdateInput extends AbstractReverseEdgeUpdateInp
             const actionData = inputValue[actionName]!;
 
             if (actionData === true) {
-              await this.reverseEdge.head.getMutation('delete-many').execute(
-                {
-                  where: originalEdgeValue,
-                  first: 1_000_000,
-                  selection,
-                },
-                context,
-                actionPath,
-              );
+              await this.reverseEdge.head
+                .getMutationByKey('delete-many')
+                .execute(
+                  {
+                    where: originalEdgeValue,
+                    first: 1_000_000,
+                    selection,
+                  },
+                  context,
+                  actionPath,
+                );
             }
             break;
           }
@@ -352,7 +354,7 @@ export class ReverseEdgeMultipleUpdateInput extends AbstractReverseEdgeUpdateInp
           case ReverseEdgeMultipleUpdateInputAction.DELETE_MANY: {
             const actionData = inputValue[actionName]!;
 
-            await this.reverseEdge.head.getMutation('delete-many').execute(
+            await this.reverseEdge.head.getMutationByKey('delete-many').execute(
               {
                 where: { AND: [originalEdgeValue, actionData] },
                 first: 1_000_000,
@@ -370,7 +372,7 @@ export class ReverseEdgeMultipleUpdateInput extends AbstractReverseEdgeUpdateInp
             await aggregateConcurrentError(
               actionData,
               (where, index) =>
-                this.reverseEdge.head.getMutation('delete-one').execute(
+                this.reverseEdge.head.getMutationByKey('delete-one').execute(
                   {
                     where: { ...where, ...originalEdgeValue },
                     selection,
@@ -390,7 +392,7 @@ export class ReverseEdgeMultipleUpdateInput extends AbstractReverseEdgeUpdateInp
               actionData,
               (where, index) =>
                 this.reverseEdge.head
-                  .getMutation('delete-one-if-exists')
+                  .getMutationByKey('delete-one-if-exists')
                   .execute(
                     {
                       where: { ...where, ...originalEdgeValue },
@@ -408,16 +410,18 @@ export class ReverseEdgeMultipleUpdateInput extends AbstractReverseEdgeUpdateInp
             const actionData = inputValue[actionName]!;
 
             if (actionData === true) {
-              await this.reverseEdge.head.getMutation('update-many').execute(
-                {
-                  where: originalEdgeValue,
-                  data: { [this.reverseEdge.originalEdge.name]: null },
-                  first: 1_000_000,
-                  selection,
-                },
-                context,
-                actionPath,
-              );
+              await this.reverseEdge.head
+                .getMutationByKey('update-many')
+                .execute(
+                  {
+                    where: originalEdgeValue,
+                    data: { [this.reverseEdge.originalEdge.name]: null },
+                    first: 1_000_000,
+                    selection,
+                  },
+                  context,
+                  actionPath,
+                );
             }
             break;
           }
@@ -425,7 +429,7 @@ export class ReverseEdgeMultipleUpdateInput extends AbstractReverseEdgeUpdateInp
           case ReverseEdgeMultipleUpdateInputAction.DISCONNECT_MANY: {
             const actionData = inputValue[actionName]!;
 
-            await this.reverseEdge.head.getMutation('update-many').execute(
+            await this.reverseEdge.head.getMutationByKey('update-many').execute(
               {
                 where: { AND: [originalEdgeValue, actionData] },
                 data: { [this.reverseEdge.originalEdge.name]: null },
@@ -444,7 +448,7 @@ export class ReverseEdgeMultipleUpdateInput extends AbstractReverseEdgeUpdateInp
             await aggregateConcurrentError(
               actionData,
               (where, index) =>
-                this.reverseEdge.head.getMutation('update-one').execute(
+                this.reverseEdge.head.getMutationByKey('update-one').execute(
                   {
                     where: { ...where, ...originalEdgeValue },
                     data: { [this.reverseEdge.originalEdge.name]: null },
@@ -465,7 +469,7 @@ export class ReverseEdgeMultipleUpdateInput extends AbstractReverseEdgeUpdateInp
               actionData,
               (where, index) =>
                 this.reverseEdge.head
-                  .getMutation('update-one-if-exists')
+                  .getMutationByKey('update-one-if-exists')
                   .execute(
                     {
                       where: { ...where, ...originalEdgeValue },
@@ -498,7 +502,7 @@ export class ReverseEdgeMultipleUpdateInput extends AbstractReverseEdgeUpdateInp
           case ReverseEdgeMultipleUpdateInputAction.CONNECT_MANY: {
             const actionData = inputValue[actionName]!;
 
-            await this.reverseEdge.head.getMutation('update-many').execute(
+            await this.reverseEdge.head.getMutationByKey('update-many').execute(
               {
                 where: actionData,
                 first: 1_000_000,
@@ -517,7 +521,7 @@ export class ReverseEdgeMultipleUpdateInput extends AbstractReverseEdgeUpdateInp
             await aggregateConcurrentError(
               actionData,
               ({ where, create }, index) =>
-                this.reverseEdge.head.getMutation('upsert').execute(
+                this.reverseEdge.head.getMutationByKey('upsert').execute(
                   {
                     where,
                     create: {
@@ -541,7 +545,7 @@ export class ReverseEdgeMultipleUpdateInput extends AbstractReverseEdgeUpdateInp
             await aggregateConcurrentError(
               actionData,
               (where, index) =>
-                this.reverseEdge.head.getMutation('update-one').execute(
+                this.reverseEdge.head.getMutationByKey('update-one').execute(
                   {
                     where,
                     data: originalEdgeValue,
@@ -562,7 +566,7 @@ export class ReverseEdgeMultipleUpdateInput extends AbstractReverseEdgeUpdateInp
               actionData,
               (where, index) =>
                 this.reverseEdge.head
-                  .getMutation('update-one-if-exists')
+                  .getMutationByKey('update-one-if-exists')
                   .execute(
                     {
                       where,
@@ -580,7 +584,7 @@ export class ReverseEdgeMultipleUpdateInput extends AbstractReverseEdgeUpdateInp
           case ReverseEdgeMultipleUpdateInputAction.CREATE_SOME: {
             const actionData = inputValue[actionName]!;
 
-            await this.reverseEdge.head.getMutation('create-some').execute(
+            await this.reverseEdge.head.getMutationByKey('create-some').execute(
               {
                 data: actionData.map((data) => ({
                   ...data,

@@ -50,7 +50,7 @@ export class Seeding<
       Object.entries(dataByReference).forEach(([reference, data]) =>
         depGraph.addNode(
           reference,
-          new NodeFixture(this, gp.getNode(nodeName), reference, data),
+          new NodeFixture(this, gp.getNodeByName(nodeName), reference, data),
         ),
       ),
     );

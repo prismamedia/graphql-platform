@@ -286,13 +286,15 @@ export const Article: NodeConfig<MyContext> = {
         creation['createdBy'] ??= await api.query.userIfExists({
           where: { id: requestContext.user.id },
           selection:
-            node.getEdge('createdBy').referencedUniqueConstraint.selection,
+            node.getEdgeByName('createdBy').referencedUniqueConstraint
+              .selection,
         });
 
         creation['updatedBy'] ??= await api.query.userIfExists({
           where: { id: requestContext.user.id },
           selection:
-            node.getEdge('updatedBy').referencedUniqueConstraint.selection,
+            node.getEdgeByName('updatedBy').referencedUniqueConstraint
+              .selection,
         });
       },
 
@@ -343,7 +345,8 @@ export const Article: NodeConfig<MyContext> = {
         update['updatedBy'] ??= await api.query.userIfExists({
           where: { id: requestContext.user.id },
           selection:
-            node.getEdge('updatedBy').referencedUniqueConstraint.selection,
+            node.getEdgeByName('updatedBy').referencedUniqueConstraint
+              .selection,
         });
       },
 
@@ -373,7 +376,7 @@ export const Article: NodeConfig<MyContext> = {
       upperCasedTitle: {
         dependsOn:
           '{ status title category { title } tags(orderBy: [order_ASC], first: 2) { tag { title } } }',
-        type: new GraphQLNonNull(node.getLeaf('title').type),
+        type: new GraphQLNonNull(node.getLeafByName('title').type),
         description: `A custom field with a dependency`,
         resolve: ({ status, title, category }: any, args, context) =>
           (<string[]>[status, title, category?.title])
@@ -505,7 +508,7 @@ export const Category: NodeConfig<MyContext> = {
 
         if (creation['parent'] == null) {
           const categoryWithoutParentCount = await node
-            .getQuery('count')
+            .getQueryByKey('count')
             .execute({ where: { parent: null } }, context);
 
           if (categoryWithoutParentCount !== 0) {

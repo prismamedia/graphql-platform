@@ -164,7 +164,7 @@ export class CreateSomeMutation<
 
     return this.node.selection.includes(args.selection)
       ? newValues.map((newValue) => args.selection.parseValue(newValue))
-      : this.node.getQuery('get-some-in-order').execute(
+      : this.node.getQueryByKey('get-some-in-order').execute(
           {
             where: newValues.map((newValue) =>
               this.node.identifier.parseValue(newValue),

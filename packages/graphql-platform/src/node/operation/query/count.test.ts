@@ -62,7 +62,7 @@ describe('CountQuery', () => {
 
         expect(gp.connector.count).toHaveBeenCalledTimes(1);
         expect(gp.connector.count).toHaveBeenLastCalledWith(
-          { node: gp.getNode('Article') },
+          { node: gp.getNodeByName('Article') },
           expect.any(OperationContext),
         );
       });
@@ -77,7 +77,7 @@ describe('CountQuery', () => {
 
         expect(gp.connector.count).toHaveBeenCalledTimes(1);
         expect(gp.connector.count).toHaveBeenLastCalledWith(
-          { node: gp.getNode('Article'), where: expect.any(NodeFilter) },
+          { node: gp.getNodeByName('Article'), where: expect.any(NodeFilter) },
           expect.any(OperationContext),
         );
       });

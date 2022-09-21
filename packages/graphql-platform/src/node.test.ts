@@ -513,7 +513,7 @@ describe('Node', () => {
     ])(
       '"%s" has valid definition',
       (nodeName, componentNames, uniqueConstraintNames, reverseEdgeNames) => {
-        const node = gp.getNode(nodeName);
+        const node = gp.getNodeByName(nodeName);
 
         expect(node.name).toBe(nodeName);
         expect([...node.componentsByName.keys()]).toEqual(componentNames);
@@ -540,7 +540,7 @@ describe('Node', () => {
         privateUniqueConstraintNames,
         privateReverseEdgeNames,
       ) => {
-        const node = gp.getNode(nodeName);
+        const node = gp.getNodeByName(nodeName);
 
         expect(node.isPublic()).toBeTruthy();
 
@@ -567,7 +567,7 @@ describe('Node', () => {
     it.each(['Log'])(
       '"%s" is private so cannot have public component(s) / unique-constraint(s) / reverse-edge(s)',
       (nodeName) => {
-        const node = gp.getNode(nodeName);
+        const node = gp.getNodeByName(nodeName);
 
         expect(node.isPublic()).toBeFalsy();
 
@@ -592,14 +592,14 @@ describe('Node', () => {
     );
 
     it(`can have (reverse-)edge heading to itself`, () => {
-      const Category = gp.getNode('Category');
+      const Category = gp.getNodeByName('Category');
 
-      const parent = Category.getEdge('parent');
+      const parent = Category.getEdgeByName('parent');
       expect(parent).toBeInstanceOf(Edge);
       expect(parent.head).toBe(Category);
       expect(parent.referencedUniqueConstraint.name).toEqual('_id');
 
-      const children = Category.getReverseEdge('children');
+      const children = Category.getReverseEdgeByName('children');
       expect(children).toBeInstanceOf(ReverseEdgeMultiple);
       expect(children.head).toBe(Category);
 

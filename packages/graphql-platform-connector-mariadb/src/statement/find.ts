@@ -37,24 +37,6 @@ export class FindStatement<
     protected readonly config?: FindStatementConfig,
   ) {
     super(table);
-
-    const Article = table.node;
-    const ArticleCategory = Article.edgesByName.get('category')!;
-    const ArticleCategoryParent =
-      ArticleCategory.head.edgesByName.get('parent')!;
-
-    this.from
-      .join(ArticleCategory)
-      .join(ArticleCategoryParent)
-      .join(ArticleCategoryParent);
-
-    const ArticleCreatedBy = Article.edgesByName.get('createdBy')!;
-
-    this.from.join(ArticleCreatedBy);
-
-    const ArticleTags = Article.reverseEdgesByName.get('tags')!;
-
-    this.from.join(ArticleTags);
   }
 
   protected override get select(): string {

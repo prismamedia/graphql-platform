@@ -173,7 +173,7 @@ export class ReverseEdgeUniqueCreationInput extends AbstractReverseEdgeCreationI
       case ReverseEdgeUniqueCreationInputAction.CONNECT: {
         const actionData = inputValue[maybeActionName]!;
 
-        await this.reverseEdge.head.getMutation('update-one').execute(
+        await this.reverseEdge.head.getMutationByKey('update-one').execute(
           {
             where: actionData,
             data: originalEdgeValue,
@@ -188,22 +188,24 @@ export class ReverseEdgeUniqueCreationInput extends AbstractReverseEdgeCreationI
       case ReverseEdgeUniqueCreationInputAction.CONNECT_IF_EXISTS: {
         const actionData = inputValue[maybeActionName]!;
 
-        await this.reverseEdge.head.getMutation('update-one-if-exists').execute(
-          {
-            where: actionData,
-            data: originalEdgeValue,
-            selection,
-          },
-          context,
-          actionPath,
-        );
+        await this.reverseEdge.head
+          .getMutationByKey('update-one-if-exists')
+          .execute(
+            {
+              where: actionData,
+              data: originalEdgeValue,
+              selection,
+            },
+            context,
+            actionPath,
+          );
         break;
       }
 
       case ReverseEdgeUniqueCreationInputAction.CONNECT_OR_CREATE: {
         const { where, create } = inputValue[maybeActionName]!;
 
-        await this.reverseEdge.head.getMutation('upsert').execute(
+        await this.reverseEdge.head.getMutationByKey('upsert').execute(
           {
             where,
             create: { ...create, ...originalEdgeValue },
@@ -220,7 +222,7 @@ export class ReverseEdgeUniqueCreationInput extends AbstractReverseEdgeCreationI
         const actionData = inputValue[maybeActionName]!;
 
         await this.reverseEdge.head
-          .getMutation('create-one')
+          .getMutationByKey('create-one')
           .execute(
             { data: { ...actionData, ...originalEdgeValue }, selection },
             context,

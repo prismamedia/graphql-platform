@@ -215,7 +215,7 @@ export class GraphQLPlatform<
     }
   }
 
-  public getNode(
+  public getNodeByName(
     name: Node['name'],
     path?: Path,
   ): Node<TRequestContext, TConnector> {
@@ -231,7 +231,7 @@ export class GraphQLPlatform<
     return node;
   }
 
-  public getOperation(
+  public getOperationByTypeAndName(
     type: graphql.OperationTypeNode,
     name: string,
     path?: Path,
