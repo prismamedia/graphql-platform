@@ -77,13 +77,15 @@ export class JoinTable extends AbstractTableReference {
         this.table.qualifiedName,
       )} AS ${escapeIdentifier(this.alias)} ON ${this.condition}`,
       ...Array.from(this.children.values(), (joinTable) =>
-        joinTable
-          .toString()
-          // Indent the children for better visibility
-          .split(EOL)
-          .map((line) => `  ${line}`)
-          .join(EOL),
+        joinTable.toIndentedString(),
       ),
     ].join(EOL);
+  }
+
+  public toIndentedString(): string {
+    return this.toString()
+      .split(EOL)
+      .map((line) => `  ${line}`)
+      .join(EOL);
   }
 }

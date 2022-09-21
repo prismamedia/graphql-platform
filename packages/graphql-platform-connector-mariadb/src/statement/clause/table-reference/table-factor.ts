@@ -1,3 +1,5 @@
+import { EOL } from 'node:os';
+import { escapeIdentifier } from '../../../escape.js';
 import type { Table } from '../../../schema.js';
 import { AbstractTableReference } from '../abstract-table-reference.js';
 
@@ -12,5 +14,16 @@ export class TableFactor extends AbstractTableReference {
     super(table);
 
     this.alias = table.name;
+  }
+
+  public override toString(): string {
+    return [
+      `${escapeIdentifier(this.table.qualifiedName)} AS ${escapeIdentifier(
+        this.alias,
+      )}`,
+      ...Array.from(this.children.values(), (joinTable) =>
+        joinTable.toIndentedString(),
+      ),
+    ].join(EOL);
   }
 }

@@ -26,5 +26,10 @@ export type Statement =
 export type ExecutedStatement<TStatement extends Statement = Statement> = {
   statement: TStatement;
   result: Awaited<ReturnType<TStatement['execute']>>;
-  sql: string;
+  sql: TStatement['sql'];
+
+  /**
+   * Time spent by this statement to be executed, in seconds
+   */
+  took: number;
 };

@@ -1,6 +1,4 @@
 import type * as core from '@prismamedia/graphql-platform';
-import { EOL } from 'node:os';
-import { escapeIdentifier } from '../../escape.js';
 import type { Table } from '../../schema.js';
 import { JoinTable } from './table-reference/join-table.js';
 
@@ -17,21 +15,7 @@ export abstract class AbstractTableReference {
 
   public constructor(public readonly table: Table) {}
 
-  public toString(): string {
-    return [
-      `${escapeIdentifier(this.table.qualifiedName)} AS ${escapeIdentifier(
-        this.alias,
-      )}`,
-      ...Array.from(this.children.values(), (joinTable) =>
-        joinTable
-          .toString()
-          // Indent the children for better visibility
-          .split(EOL)
-          .map((line) => `  ${line}`)
-          .join(EOL),
-      ),
-    ].join(EOL);
-  }
+  public abstract toString(): string;
 
   /**
    * The height of a node is the number of edges on the longest path from the node to a leaf.

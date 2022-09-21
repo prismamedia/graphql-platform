@@ -111,16 +111,16 @@ describe('Find statement', () => {
             orderBy: ['createdAt_DESC'],
             first: 5,
             selection: `{ 
-            title 
-            category {
               title 
-            }
-            tags(first: 5) {
-              tag {
-                title
+              category {
+                title 
               }
-            }
-          }`,
+              tags(first: 5) {
+                tag {
+                  title
+                }
+              }
+            }`,
           },
           myUserContext,
         ),
