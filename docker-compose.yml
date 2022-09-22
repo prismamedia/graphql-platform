@@ -2,11 +2,9 @@ version: '3.8'
 
 services:
   mariadb:
-    image: mariadb:10.6
-    command: --skip-bind-address
+    image: bitnami/mariadb:10.6
     environment:
-      MARIADB_ROOT_PASSWORD: test
-      MARIADB_DATABASE: test
+      MARIADB_ROOT_PASSWORD: my_root_password_for_local
     ports:
       - 3306:3306
     logging:
@@ -19,6 +17,9 @@ services:
     image: node:18
     command: sleep infinity
     environment:
+      MARIADB_HOST: mariadb
+      MARIADB_PORT: 3306
+      MARIADB_ROOT_PASSWORD: my_root_password_for_local
       TZ: Europe/Paris
     working_dir: /workspace
     volumes:

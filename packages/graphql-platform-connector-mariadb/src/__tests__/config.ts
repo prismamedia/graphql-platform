@@ -7,11 +7,23 @@ import {
   MyContext,
   nodes,
 } from '@prismamedia/graphql-platform/__tests__/config.js';
+import assert from 'node:assert/strict';
 import { MariaDBConnector } from '../index.js';
 
 export function makeGraphQLPlatform(
   schemaName: string,
 ): GraphQLPlatform<MyContext, MariaDBConnector> {
+  const host = process.env.MARIADB_HOST;
+  assert(host, `The "MARIADB_HOST" variable must be provided`);
+
+  const port = process.env.MARIADB_PORT
+    ? Number.parseInt(process.env.MARIADB_PORT)
+    : undefined;
+  assert(port, `The "MARIADB_PORT" variable must be provided`);
+
+  const password = process.env.MARIADB_ROOT_PASSWORD;
+  assert(password, `The "MARIADB_ROOT_PASSWORD" variable must be provided`);
+
   return new GraphQLPlatform<MyContext, MariaDBConnector>({
     nodes: Object.fromEntries<NodeConfig>(
       Object.entries(nodes).map<[string, NodeConfig]>(([nodeName, config]) => [
@@ -61,9 +73,10 @@ export function makeGraphQLPlatform(
           name: `tests_${schemaName}`,
         },
         pool: {
-          host: 'mariadb',
+          host,
+          port,
           user: 'root',
-          password: 'test',
+          password,
           idleTimeout: 30,
         },
       },

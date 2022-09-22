@@ -56,14 +56,30 @@ export class Schema {
 
     // name
     {
-      const name = this.config?.name || connector.config.pool?.database;
-      if (typeof name !== 'string' || !name) {
-        throw new utils.UnexpectedConfigError(`a non-empty string`, name, {
-          path: utils.addPath(this.configPath, 'name'),
-        });
-      }
+      const nameConfig = this.config?.name || undefined;
+      const nameConfigPath = utils.addPath(this.configPath, 'name');
 
-      this.name = name;
+      if (connector.databasePoolConfig !== undefined) {
+        if (nameConfig !== undefined) {
+          throw new utils.UnexpectedConfigError(
+            `not to be defined as the database is selected`,
+            nameConfig,
+            { path: nameConfigPath },
+          );
+        }
+
+        this.name = connector.databasePoolConfig;
+      } else {
+        if (nameConfig === undefined) {
+          throw new utils.UnexpectedConfigError(
+            `a non-empty string`,
+            nameConfig,
+            { path: nameConfigPath },
+          );
+        }
+
+        this.name = nameConfig;
+      }
     }
 
     // default-charset
