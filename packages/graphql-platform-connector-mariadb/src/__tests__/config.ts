@@ -10,7 +10,7 @@ import {
 import { MariaDBConnector } from '../index.js';
 
 export function makeGraphQLPlatform(
-  schema: string,
+  schemaName: string,
 ): GraphQLPlatform<MyContext, MariaDBConnector> {
   return new GraphQLPlatform<MyContext, MariaDBConnector>({
     nodes: Object.fromEntries<NodeConfig>(
@@ -58,7 +58,7 @@ export function makeGraphQLPlatform(
       MariaDBConnector,
       {
         schema: {
-          name: `tests_${schema}`,
+          name: `tests_${schemaName}`,
         },
         pool: {
           host: 'mariadb',

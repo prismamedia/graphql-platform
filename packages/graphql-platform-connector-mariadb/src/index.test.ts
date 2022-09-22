@@ -13,37 +13,31 @@ describe('GraphQL Platform Connector MariaDB', () => {
   beforeAll(async () => {
     gp = makeGraphQLPlatform('index');
 
-    await gp.connector.reset();
+    await gp.connector.setup();
   });
 
   afterAll(async () => {
-    try {
-      await gp.connector.schema.drop({ ifExists: true });
-    } finally {
-      await gp.connector.pool.end();
-    }
+    await gp.connector.teardown();
   });
 
   it('generates valid and stable schema & statements', async () => {
-    const schema = gp.connector.schema;
-
     expect(
-      schema.makeDropStatement({ ifExists: true }).statement,
+      gp.connector.schema.makeDropStatement({ ifExists: true }).statement,
     ).toMatchSnapshot();
 
     expect(
-      schema.makeCreateStatement({ orReplace: true }).statement,
+      gp.connector.schema.makeCreateStatement({ orReplace: true }).statement,
     ).toMatchSnapshot();
 
     expect(
       Array.from(
-        schema.tablesByNode.values(),
+        gp.connector.schema.tablesByNode.values(),
         (table) => table.makeCreateStatement().statement,
       ).join(EOL.repeat(2)),
     ).toMatchSnapshot();
 
     expect(
-      Array.from(schema.tablesByNode.values(), (table) =>
+      Array.from(gp.connector.schema.tablesByNode.values(), (table) =>
         table.foreignKeysByEdge.size
           ? table.makeAddForeignKeysStatement().statement
           : undefined,
@@ -53,7 +47,7 @@ describe('GraphQL Platform Connector MariaDB', () => {
     ).toMatchSnapshot();
   });
 
-  it('loads the fixtures', async () => {
-    await gp.seed(fixtures, myAdminContext, false);
+  it.skip('loads the fixtures', async () => {
+    await gp.seed(fixtures, myAdminContext);
   });
 });

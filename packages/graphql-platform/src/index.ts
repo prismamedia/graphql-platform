@@ -335,14 +335,8 @@ export class GraphQLPlatform<
   public async seed(
     fixtures: NodeFixtureDataByReferenceByNodeName,
     context: TRequestContext,
-    reset: boolean = false,
   ): Promise<void> {
     const seeding = new Seeding(this, fixtures);
-
-    if (reset) {
-      await this.connector.reset?.();
-    }
-
     await seeding.load(context);
   }
 }

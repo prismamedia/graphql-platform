@@ -76,11 +76,6 @@ export interface ConnectorInterface {
   >;
 
   /**
-   * This method, if provided, wipes all the data and the structure then setups the structure back
-   */
-  reset?(): Promise<void>;
-
-  /**
    * Returns the number of nodes
    */
   count(

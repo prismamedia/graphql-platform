@@ -38,6 +38,6 @@
     "graphql": "16.6.0",
     "indefinite": "2.4.1",
     "lodash": "4.17.21",
-    "type-fest": "2.19.0"
+    "type-fest": "3.0.0"
   }
 }

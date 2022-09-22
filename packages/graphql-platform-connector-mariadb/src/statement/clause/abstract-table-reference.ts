@@ -3,6 +3,10 @@ import type { Table } from '../../schema.js';
 import { JoinTable } from './table-reference/join-table.js';
 
 export abstract class AbstractTableReference {
+  /**
+   * Depending on the database is selected or not, the table is identified either by its name or by its qualified name
+   */
+  protected readonly tableIdentifier: string;
   public abstract readonly alias: string;
 
   /**
@@ -13,7 +17,11 @@ export abstract class AbstractTableReference {
 
   public readonly children = new Map<JoinTable['alias'], JoinTable>();
 
-  public constructor(public readonly table: Table) {}
+  public constructor(public readonly table: Table) {
+    this.tableIdentifier = this.table.schema.connector.isDatabaseSelected()
+      ? this.table.name
+      : this.table.qualifiedName;
+  }
 
   public abstract toString(): string;
 

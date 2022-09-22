@@ -74,7 +74,7 @@ export class JoinTable extends AbstractTableReference {
   public override toString(): string {
     return [
       `${JoinTableKind[this.kind]} JOIN ${escapeIdentifier(
-        this.table.qualifiedName,
+        this.tableIdentifier,
       )} AS ${escapeIdentifier(this.alias)} ON ${this.condition}`,
       ...Array.from(this.children.values(), (joinTable) =>
         joinTable.toIndentedString(),

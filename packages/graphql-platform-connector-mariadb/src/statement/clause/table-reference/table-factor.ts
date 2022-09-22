@@ -18,7 +18,7 @@ export class TableFactor extends AbstractTableReference {
 
   public override toString(): string {
     return [
-      `${escapeIdentifier(this.table.qualifiedName)} AS ${escapeIdentifier(
+      `${escapeIdentifier(this.tableIdentifier)} AS ${escapeIdentifier(
         this.alias,
       )}`,
       ...Array.from(this.children.values(), (joinTable) =>

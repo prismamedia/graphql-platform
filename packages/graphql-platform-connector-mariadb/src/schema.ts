@@ -16,6 +16,8 @@ export * from './schema/table.js';
 export interface SchemaConfig {
   /**
    * Optional, the schema's name
+   *
+   * Default: the pool's database name
    */
   name?: utils.Nillable<string>;
 
@@ -54,8 +56,12 @@ export class Schema {
 
     // name
     {
-      const name = this.config?.name || connector.config.pool.database;
-      assert(name, `The SCHEMA must be named`);
+      const name = this.config?.name || connector.config.pool?.database;
+      if (typeof name !== 'string' || !name) {
+        throw new utils.UnexpectedConfigError(`a non-empty string`, name, {
+          path: utils.addPath(this.configPath, 'name'),
+        });
+      }
 
       this.name = name;
     }

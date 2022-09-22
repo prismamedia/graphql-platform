@@ -1,5 +1,6 @@
 import * as core from '@prismamedia/graphql-platform';
 import * as utils from '@prismamedia/graphql-platform-utils';
+import { UnexpectedConfigError } from '@prismamedia/graphql-platform-utils';
 import { Memoize } from '@prismamedia/ts-memoize';
 import * as mariadb from 'mariadb';
 import * as rxjs from 'rxjs';
@@ -23,7 +24,7 @@ export interface MariaDBConnectorConfig {
   collation?: string;
   version?: string;
   schema?: SchemaConfig;
-  pool: mariadb.PoolConfig;
+  pool?: mariadb.PoolConfig;
 }
 
 /**
@@ -62,6 +63,9 @@ export class MariaDBConnector implements core.ConnectorInterface {
     };
   };
 
+  public readonly poolConfig: mariadb.PoolConfig | undefined;
+  public readonly poolConfigPath: utils.Path;
+
   public readonly charset: string;
   public readonly collation: string;
   public readonly version?: semver.SemVer;
@@ -86,6 +90,17 @@ export class MariaDBConnector implements core.ConnectorInterface {
   ) {
     utils.assertPlainObjectConfig(config, configPath);
 
+    // pool-config
+    {
+      this.poolConfig = config.pool ?? undefined;
+      this.poolConfigPath = utils.addPath(configPath, 'pool');
+
+      utils.assertNillablePlainObjectConfig(
+        this.poolConfig,
+        this.poolConfigPath,
+      );
+    }
+
     this.charset = config.charset || 'utf8mb4';
     this.collation = config.collation || 'utf8mb4_unicode_520_ci';
     this.version =
@@ -95,8 +110,25 @@ export class MariaDBConnector implements core.ConnectorInterface {
 
   @Memoize()
   public get pool(): mariadb.Pool {
+    utils.assertPlainObjectConfig(this.poolConfig, this.poolConfigPath);
+
+    // database
+    {
+      const databaseConfig = this.poolConfig.database;
+      const databaseConfigPath = utils.addPath(this.poolConfigPath, 'database');
+
+      if (
+        databaseConfig !== undefined &&
+        (typeof databaseConfig !== 'string' || !databaseConfig)
+      ) {
+        throw new UnexpectedConfigError('a non-empty string', databaseConfig, {
+          path: databaseConfigPath,
+        });
+      }
+    }
+
     return mariadb.createPool({
-      ...this.config.pool,
+      ...this.poolConfig,
       charset: this.charset,
       collation: this.collation,
       dateStrings: true,
@@ -110,6 +142,14 @@ export class MariaDBConnector implements core.ConnectorInterface {
         bitOneIsBoolean: false,
       } as any),
     });
+  }
+
+  @Memoize()
+  public isDatabaseSelected(): boolean {
+    return (
+      typeof this.config.pool?.database === 'string' &&
+      this.config.pool.database.length > 0
+    );
   }
 
   public async withConnection<TResult = unknown>(
@@ -145,12 +185,17 @@ export class MariaDBConnector implements core.ConnectorInterface {
     });
   }
 
-  public async reset(): Promise<void> {
+  /**
+   * WARNING: For test-use only!
+   *
+   * It will DESTROY all the structure & data
+   */
+  public async setup(): Promise<void> {
     await this.withConnectionInTransaction(async (connection) => {
-      // Drop the schema, if any
+      // Drop the schema, if exists
       await this.schema.drop({ ifExists: true }, connection);
 
-      // Then create a new one
+      // Then create it
       await this.schema.create(undefined, connection);
 
       // Create the tables without their foreign-keys
@@ -167,6 +212,19 @@ export class MariaDBConnector implements core.ConnectorInterface {
         ),
       );
     });
+  }
+
+  /**
+   * WARNING: For test-use only!
+   *
+   * It will DESTROY all the structure & data
+   */
+  public async teardown(): Promise<void> {
+    try {
+      await this.schema.drop({ ifExists: true });
+    } finally {
+      await this.pool.end();
+    }
   }
 
   public async preMutation(context: core.MutationContext): Promise<void> {

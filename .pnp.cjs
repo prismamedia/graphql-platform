@@ -1349,7 +1349,7 @@ function $$SETUP_STATE(hydrateRuntimeState, basePath) {
             ["lodash", "npm:4.17.21"],\
             ["rxjs", "npm:7.5.6"],\
             ["slug", "npm:8.0.0"],\
-            ["type-fest", "npm:2.19.0"],\
+            ["type-fest", "npm:3.0.0"],\
             ["typescript", "patch:typescript@npm%3A4.8.3#~builtin<compat/typescript>::version=4.8.3&hash=a1c5e5"]\
           ],\
           "linkType": "SOFT"\
@@ -1377,7 +1377,7 @@ function $$SETUP_STATE(hydrateRuntimeState, basePath) {
             ["mariadb", "npm:3.0.1"],\
             ["rxjs", "npm:7.5.6"],\
             ["semver", "npm:7.3.7"],\
-            ["type-fest", "npm:2.19.0"],\
+            ["type-fest", "npm:3.0.0"],\
             ["typescript", "patch:typescript@npm%3A4.8.3#~builtin<compat/typescript>::version=4.8.3&hash=a1c5e5"]\
           ],\
           "linkType": "SOFT"\
@@ -1397,7 +1397,7 @@ function $$SETUP_STATE(hydrateRuntimeState, basePath) {
             ["@types/node", "npm:18.7.18"],\
             ["graphql", "npm:16.6.0"],\
             ["jest", "virtual:dc3fc578bfa5e06182a4d2be39ede0bc5b74940b1ffe0d70c26892ab140a4699787750fba175dc306292e80b4aa2c8c5f68c2a821e69b2c37e360c0dff36ff66#npm:29.0.3"],\
-            ["type-fest", "npm:2.19.0"],\
+            ["type-fest", "npm:3.0.0"],\
             ["typescript", "patch:typescript@npm%3A4.8.3#~builtin<compat/typescript>::version=4.8.3&hash=a1c5e5"]\
           ],\
           "linkType": "SOFT"\
@@ -1420,7 +1420,7 @@ function $$SETUP_STATE(hydrateRuntimeState, basePath) {
             ["indefinite", "npm:2.4.1"],\
             ["jest", "virtual:dc3fc578bfa5e06182a4d2be39ede0bc5b74940b1ffe0d70c26892ab140a4699787750fba175dc306292e80b4aa2c8c5f68c2a821e69b2c37e360c0dff36ff66#npm:29.0.3"],\
             ["lodash", "npm:4.17.21"],\
-            ["type-fest", "npm:2.19.0"],\
+            ["type-fest", "npm:3.0.0"],\
             ["typescript", "patch:typescript@npm%3A4.8.3#~builtin<compat/typescript>::version=4.8.3&hash=a1c5e5"]\
           ],\
           "linkType": "SOFT"\
@@ -5737,10 +5737,10 @@ function $$SETUP_STATE(hydrateRuntimeState, basePath) {
           ],\
           "linkType": "HARD"\
         }],\
-        ["npm:2.19.0", {\
-          "packageLocation": "./.yarn/cache/type-fest-npm-2.19.0-918b953248-a4ef07ece2.zip/node_modules/type-fest/",\
+        ["npm:3.0.0", {\
+          "packageLocation": "./.yarn/cache/type-fest-npm-3.0.0-d9e1a435b6-04c00bb3db.zip/node_modules/type-fest/",\
           "packageDependencies": [\
-            ["type-fest", "npm:2.19.0"]\
+            ["type-fest", "npm:3.0.0"]\
           ],\
           "linkType": "HARD"\
         }]\
