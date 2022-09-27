@@ -1,7 +1,4 @@
-import {
-  isPlainObject,
-  UnexpectedValueError,
-} from '@prismamedia/graphql-platform-utils';
+import * as utils from '@prismamedia/graphql-platform-utils';
 import { DepGraph } from 'dependency-graph';
 import type { ConnectorInterface } from './connector-interface.js';
 import type { GraphQLPlatform } from './index.js';
@@ -38,8 +35,8 @@ export class Seeding<
     public readonly gp: GraphQLPlatform<TRequestContext, TConnector>,
     fixtures: NodeFixtureDataByReferenceByNodeName,
   ) {
-    if (!isPlainObject(fixtures)) {
-      throw new UnexpectedValueError('a plain-object', fixtures);
+    if (!utils.isPlainObject(fixtures)) {
+      throw new utils.UnexpectedValueError('a plain-object', fixtures);
     }
 
     const depGraph = new DepGraph<NodeFixture<TRequestContext, TConnector>>({

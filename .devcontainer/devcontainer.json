@@ -3,6 +3,6 @@
   "dockerComposeFile": "../docker-compose.yml",
   "service": "project",
   "workspaceFolder": "/workspace",
-  "extensions": ["esbenp.prettier-vscode"],
-  "postStartCommand": "yarn install && yarn sdks vscode && yarn rebuild"
+  "extensions": ["esbenp.prettier-vscode", "arcanis.vscode-zipfs"],
+  "postStartCommand": "yarn install && yarn rebuild && yarn sdks vscode"
 }

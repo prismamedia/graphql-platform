@@ -1,11 +1,4 @@
-import {
-  Input,
-  MutationType,
-  nonNillableInputType,
-  NonNullableInputType,
-  type NonNillable,
-  type Path,
-} from '@prismamedia/graphql-platform-utils';
+import * as utils from '@prismamedia/graphql-platform-utils';
 import { Memoize } from '@prismamedia/ts-memoize';
 import * as graphql from 'graphql';
 import type { ConnectorInterface } from '../../../connector-interface.js';
@@ -13,6 +6,7 @@ import type {
   NodeSelectionAwareArgs,
   RawNodeSelectionAwareArgs,
 } from '../../abstract-operation.js';
+import type { NodeFilter } from '../../statement/filter.js';
 import type { NodeSelectedValue } from '../../statement/selection.js';
 import type { NodeCreationInputValue } from '../../type/input/creation.js';
 import type { NodeUniqueFilterInputValue } from '../../type/input/unique-filter.js';
@@ -21,9 +15,9 @@ import { AbstractMutation } from '../abstract-mutation.js';
 import type { MutationContext } from './context.js';
 
 export type UpsertMutationArgs = RawNodeSelectionAwareArgs<{
-  where: NonNillable<NodeUniqueFilterInputValue>;
-  create: NonNillable<NodeCreationInputValue>;
-  update?: Exclude<NodeUpdateInputValue, null>;
+  where: utils.NonNillable<NodeUniqueFilterInputValue>;
+  create: utils.NonNillable<NodeCreationInputValue>;
+  update: utils.NonNillable<NodeUpdateInputValue>;
 }>;
 
 export type UpsertMutationResult = NodeSelectedValue;
@@ -38,28 +32,28 @@ export class UpsertMutation<
   UpsertMutationResult
 > {
   public override readonly mutationTypes = [
-    MutationType.CREATION,
-    MutationType.UPDATE,
+    utils.MutationType.CREATION,
+    utils.MutationType.UPDATE,
   ] as const;
 
   protected override readonly selectionAware = true;
-  public override readonly name = `upsert${this.node.name}`;
-  public override readonly description = `Updates an existing "${this.node.name}" or creates a new one`;
+  public override readonly name = `upsert${this.node}`;
+  public override readonly description = `Updates an existing "${this.node}" or creates a new one`;
 
   @Memoize()
   public override get arguments() {
     return [
-      new Input({
+      new utils.Input({
         name: 'where',
-        type: nonNillableInputType(this.node.uniqueFilterInputType),
+        type: utils.nonNillableInputType(this.node.uniqueFilterInputType),
       }),
-      new Input({
+      new utils.Input({
         name: 'create',
-        type: nonNillableInputType(this.node.creationInputType),
+        type: utils.nonNillableInputType(this.node.creationInputType),
       }),
-      new Input({
+      new utils.Input({
         name: 'update',
-        type: new NonNullableInputType(this.node.updateInputType),
+        type: utils.nonNillableInputType(this.node.updateInputType),
       }),
     ];
   }
@@ -72,10 +66,28 @@ export class UpsertMutation<
   }
 
   protected override async executeWithValidArgumentsAndContext(
+    authorization: NodeFilter<TRequestContext, TConnector> | undefined,
     args: NodeSelectionAwareArgs<UpsertMutationArgs>,
     context: MutationContext<TRequestContext, TConnector>,
-    path: Path,
+    path: utils.Path,
   ): Promise<UpsertMutationResult> {
-    return {};
+    return (
+      (await this.node
+        .getMutationByKey('update-one-if-exists')
+        .internal(
+          authorization,
+          { where: args.where, data: args.update, selection: args.selection },
+          context,
+          path,
+        )) ??
+      (await this.node
+        .getMutationByKey('create-one')
+        .internal(
+          authorization,
+          { data: args.create, selection: args.selection },
+          context,
+          path,
+        ))
+    );
   }
 }

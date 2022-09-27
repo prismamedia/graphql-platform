@@ -8,11 +8,12 @@ import {
 } from '../../abstract-data-type.js';
 import type { NumericDataTypeModifier } from './modifier.js';
 
-export interface DecimalTypeConfig<TLeafValue extends core.LeafValue = any>
-  extends AbstractDataTypeConfig<
+export interface DecimalTypeConfig<
+  TLeafValue extends NonNullable<core.LeafValue> = any,
+> extends AbstractDataTypeConfig<
     DecimalType['kind'] | 'DEC' | 'FIXED' | 'NUMERIC',
-    number,
-    TLeafValue
+    TLeafValue,
+    number
   > {
   precision?: number;
   scale?: number;
@@ -23,8 +24,8 @@ export interface DecimalTypeConfig<TLeafValue extends core.LeafValue = any>
  * @see https://mariadb.com/kb/en/decimal/
  */
 export class DecimalType<
-  TLeafValue extends core.LeafValue = any,
-> extends AbstractDataType<'DECIMAL', number, TLeafValue> {
+  TLeafValue extends NonNullable<core.LeafValue> = any,
+> extends AbstractDataType<'DECIMAL', TLeafValue, number> {
   public readonly precision: number;
   public readonly scale: number;
   public readonly modifiers: ReadonlyArray<NumericDataTypeModifier>;
@@ -37,6 +38,7 @@ export class DecimalType<
       kind: 'DECIMAL',
       serialize: (value) => value.toString(10),
       fromColumnValue: config?.fromColumnValue,
+      fromJsonValue: config?.fromJsonValue,
       toColumnValue: config?.toColumnValue,
     });
 

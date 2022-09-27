@@ -23,6 +23,7 @@ input ArticleCreationInput {
 
   """Is the article a partnership?"""
   sponsored: Boolean
+  machineTags: JSONArray
   tags: ArticleNestedTagsReverseEdgeCreationInput
 
   """It is possible to provide the article's body as raw HTML"""

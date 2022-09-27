@@ -1,4 +1,4 @@
-import { operationTypes } from '@prismamedia/graphql-platform-utils';
+import * as utils from '@prismamedia/graphql-platform-utils';
 import type * as graphql from 'graphql';
 import type { ConnectorInterface } from '../../connector-interface.js';
 import type { GraphQLPlatform } from '../../index.js';
@@ -37,7 +37,7 @@ export const createAPI = <
   gp: GraphQLPlatform<TRequestContext, TConnector>,
 ): API<TRequestContext, TConnector> =>
   Object.fromEntries(
-    operationTypes.map((type) => [
+    utils.operationTypes.map((type) => [
       type,
       new Proxy<any>(Object.create(null), {
         get:
@@ -83,7 +83,7 @@ export const createContextBoundAPI = <
   context: OperationContext<TRequestContext, TConnector>,
 ): ContextBoundAPI<TRequestContext, TConnector> =>
   Object.fromEntries(
-    operationTypes.map((type) => [
+    utils.operationTypes.map((type) => [
       type,
       new Proxy<any>(Object.create(null), {
         get:

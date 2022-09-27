@@ -3,26 +3,36 @@ import * as utils from '@prismamedia/graphql-platform-utils';
 
 export type AbstractDataTypeConfig<
   TKind extends string,
+  TLeafValue extends NonNullable<core.LeafValue>,
   TColumnValue,
-  TLeafValue extends core.LeafValue,
+  TJsonValue = TColumnValue,
 > = {
   kind: TKind;
   fromColumnValue?: (columnValue: TColumnValue) => TLeafValue;
+  fromJsonValue?: (jsonValue: TJsonValue) => TLeafValue;
   toColumnValue?: (leafValue: TLeafValue) => TColumnValue;
 };
 
 export abstract class AbstractDataType<
   TKind extends string,
+  TLeafValue extends NonNullable<core.LeafValue>,
   TColumnValue,
-  TLeafValue extends core.LeafValue,
+  TJsonValue = TColumnValue,
 > {
   public readonly kind: TKind;
+  public abstract readonly definition: string;
   readonly #serialize: (columnValue: TColumnValue) => string;
   readonly #fromColumnValue?: (columnValue: TColumnValue) => TLeafValue;
+  readonly #fromJsonValue?: (jsonValue: TJsonValue) => TLeafValue;
   readonly #toColumnValue?: (leafValue: TLeafValue) => TColumnValue;
 
   public constructor(
-    config: AbstractDataTypeConfig<TKind, TColumnValue, TLeafValue> & {
+    config: AbstractDataTypeConfig<
+      TKind,
+      TLeafValue,
+      TColumnValue,
+      TJsonValue
+    > & {
       serialize: (columnValue: TColumnValue) => string;
     },
     configPath?: utils.Path,
@@ -43,11 +53,9 @@ export abstract class AbstractDataType<
 
     this.#serialize = config.serialize;
     this.#fromColumnValue = config.fromColumnValue;
+    this.#fromJsonValue =
+      config.fromJsonValue || (config.fromColumnValue as any);
     this.#toColumnValue = config.toColumnValue;
-  }
-
-  public get definition(): string {
-    return this.kind;
   }
 
   public toString(): string {
@@ -57,16 +65,24 @@ export abstract class AbstractDataType<
   public fromColumnValue(columnValue: TColumnValue | null): TLeafValue | null {
     return columnValue !== null && this.#fromColumnValue
       ? this.#fromColumnValue(columnValue)
-      : (columnValue as TLeafValue | null);
+      : (columnValue as any);
+  }
+
+  public fromJsonValue(jsonValue: TJsonValue | null): TLeafValue | null {
+    return jsonValue !== null && this.#fromJsonValue
+      ? this.#fromJsonValue(jsonValue)
+      : (jsonValue as any);
   }
 
   public toColumnValue(leafValue: TLeafValue | null): TColumnValue | null {
     return leafValue !== null && this.#toColumnValue
       ? this.#toColumnValue(leafValue)
-      : (leafValue as TColumnValue | null);
+      : (leafValue as any);
   }
 
-  public serialize(columnValue: TColumnValue | null): string {
+  public serialize(leafValue: TLeafValue | null): string {
+    const columnValue: TColumnValue | null = this.toColumnValue(leafValue);
+
     return columnValue !== null ? this.#serialize(columnValue) : 'NULL';
   }
 }

@@ -11,12 +11,6 @@ export class MutationContext<
    */
   readonly #changes: Array<ChangedNode<TRequestContext, TConnector>> = [];
 
-  public get changes(): ReadonlyArray<
-    ChangedNode<TRequestContext, TConnector>
-  > {
-    return this.#changes;
-  }
-
   public trackChange(change: ChangedNode<TRequestContext, TConnector>): void {
     this.#changes.push(change);
   }
@@ -28,7 +22,7 @@ export class MutationContext<
     while ((change = this.#changes.shift())) {
       change.commit(committedAt);
 
-      change.node.changes.next(change);
+      this.gp.changes.next(change);
     }
   }
 }

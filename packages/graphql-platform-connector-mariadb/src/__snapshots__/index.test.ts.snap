@@ -1,14 +1,14 @@
 // Jest Snapshot v1, https://goo.gl/fbAQLP
 
-exports[`GraphQL Platform Connector MariaDB generates valid and stable schema & statements 1`] = `"DROP SCHEMA IF EXISTS \`tests_index\`"`;
+exports[`GraphQL Platform Connector MariaDB generates valid and stable schema 1`] = `"DROP SCHEMA IF EXISTS \`tests_index\`"`;
 
-exports[`GraphQL Platform Connector MariaDB generates valid and stable schema & statements 2`] = `
+exports[`GraphQL Platform Connector MariaDB generates valid and stable schema 2`] = `
 "CREATE OR REPLACE SCHEMA \`tests_index\`
 DEFAULT CHARSET = 'utf8mb4'
 DEFAULT COLLATE = 'utf8mb4_unicode_520_ci'"
 `;
 
-exports[`GraphQL Platform Connector MariaDB generates valid and stable schema & statements 3`] = `
+exports[`GraphQL Platform Connector MariaDB generates valid and stable schema 3`] = `
 "CREATE TABLE \`tests_index\`.\`articles\` (
   \`privateId\` INT UNSIGNED AUTO_INCREMENT NOT NULL COMMENT 'This id is used to identify an Article internally',
   \`id\` CHAR(36) CHARSET 'utf8mb4' COLLATE 'utf8mb4_unicode_520_ci' NOT NULL COMMENT 'This UUID identifies an Article publicly',
@@ -24,9 +24,13 @@ exports[`GraphQL Platform Connector MariaDB generates valid and stable schema & 
   \`metas\` JSON COMMENT 'Contains any arbitrary data you want to store alongside the article',
   \`highlighted\` BOOLEAN COMMENT 'Is the article highlighted?',
   \`sponsored\` BOOLEAN COMMENT 'Is the article a partnership?',
+  \`views\` BIGINT UNSIGNED NOT NULL,
+  \`score\` DOUBLE(10,2) UNSIGNED NOT NULL,
+  \`machine_tags\` TEXT CHARSET 'utf8mb4' COLLATE 'utf8mb4_unicode_520_ci',
   PRIMARY KEY (\`privateId\`),
   UNIQUE \`unq_id\` (\`id\`),
   UNIQUE \`unq_category_slug\` (\`category_privateId\`,\`slug\`),
+  FULLTEXT \`txt_body\` (\`body\`),
   FOREIGN KEY \`fk_articles_category_privateId\` (\`category_privateId\`) REFERENCES \`categories\` (\`privateId\`) ON UPDATE RESTRICT ON DELETE RESTRICT,
   FOREIGN KEY \`fk_articles_created_by_id\` (\`created_by_id\`) REFERENCES \`users\` (\`id\`) ON UPDATE RESTRICT ON DELETE RESTRICT,
   FOREIGN KEY \`fk_articles_updated_by_username\` (\`updated_by_username\`) REFERENCES \`users\` (\`username\`) ON UPDATE RESTRICT ON DELETE RESTRICT
@@ -129,7 +133,7 @@ DEFAULT CHARSET = 'utf8mb4'
 DEFAULT COLLATE = 'utf8mb4_unicode_520_ci'"
 `;
 
-exports[`GraphQL Platform Connector MariaDB generates valid and stable schema & statements 4`] = `
+exports[`GraphQL Platform Connector MariaDB generates valid and stable schema 4`] = `
 "ALTER TABLE \`tests_index\`.\`articles\`
 ADD FOREIGN KEY \`fk_articles_category_privateId\` (\`category_privateId\`) REFERENCES \`categories\` (\`privateId\`) ON UPDATE RESTRICT ON DELETE RESTRICT,
 ADD FOREIGN KEY \`fk_articles_created_by_id\` (\`created_by_id\`) REFERENCES \`users\` (\`id\`) ON UPDATE RESTRICT ON DELETE RESTRICT,

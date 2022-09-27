@@ -1,27 +1,14 @@
-import {
-  addPath,
-  aggregateConfigError,
-  aggregateError,
-  assertGraphQLASTNode,
-  assertNillablePlainObjectConfig,
-  castToError,
-  ConfigError,
-  isGraphQLResolveInfo,
-  isPlainObject,
-  UnexpectedValueError,
-  UnreachableValueError,
-  type Name,
-  type Path,
-} from '@prismamedia/graphql-platform-utils';
+import * as utils from '@prismamedia/graphql-platform-utils';
 import { Memoize } from '@prismamedia/ts-memoize';
 import * as graphql from 'graphql';
 import assert from 'node:assert/strict';
 import type { ConnectorInterface } from '../../../connector-interface.js';
 import type { Node } from '../../../node.js';
 import type { Component } from '../../definition.js';
+import { Leaf } from '../../definition/component/leaf.js';
+import { ReverseEdgeUnique } from '../../definition/reverse-edge/unique.js';
 import type { OperationContext } from '../../operation/context.js';
 import {
-  ComponentSelection,
   mergeSelectionExpressions,
   NodeSelectedValue,
   NodeSelection,
@@ -93,15 +80,15 @@ export interface NodeOutputTypeConfig<
 
 export class NodeOutputType {
   readonly #config?: NodeOutputTypeConfig<any, any>;
-  readonly #configPath: Path;
+  readonly #configPath: utils.Path;
 
   public constructor(public readonly node: Node) {
     // config
     {
       this.#config = node.config.output || undefined;
-      this.#configPath = addPath(node.configPath, 'output');
+      this.#configPath = utils.addPath(node.configPath, 'output');
 
-      assertNillablePlainObjectConfig(this.#config, this.#configPath);
+      utils.assertNillablePlainObjectConfig(this.#config, this.#configPath);
     }
   }
 
@@ -117,7 +104,7 @@ export class NodeOutputType {
     const fields: NodeFieldOutputType[] = [];
 
     for (const component of this.node.componentsByName.values()) {
-      if (component.kind === 'Leaf') {
+      if (component instanceof Leaf) {
         fields.push(new LeafOutputType(component));
       } else {
         fields.push(new EdgeHeadOutputType(component));
@@ -125,7 +112,7 @@ export class NodeOutputType {
     }
 
     for (const reverseEdge of this.node.reverseEdgesByName.values()) {
-      if (reverseEdge.kind === 'Unique') {
+      if (reverseEdge instanceof ReverseEdgeUnique) {
         fields.push(new ReverseEdgeUniqueHeadOutputType(reverseEdge));
       } else {
         fields.push(
@@ -136,7 +123,7 @@ export class NodeOutputType {
     }
 
     if (this.#config?.virtualFields) {
-      const virtualFieldsConfigPath = addPath(
+      const virtualFieldsConfigPath = utils.addPath(
         this.#configPath,
         'virtualFields',
       );
@@ -146,19 +133,19 @@ export class NodeOutputType {
         this.#config.virtualFields,
       );
 
-      assertNillablePlainObjectConfig(
+      utils.assertNillablePlainObjectConfig(
         virtualFieldsConfig,
         virtualFieldsConfigPath,
       );
 
       if (virtualFieldsConfig) {
-        aggregateConfigError<
-          [Name, VirtualFieldOutputTypeConfig<any, any>],
+        utils.aggregateConfigError<
+          [utils.Name, VirtualFieldOutputTypeConfig<any, any>],
           void
         >(
           Object.entries(virtualFieldsConfig),
           (_, [virtualFieldName, virtualFieldConfig]) => {
-            const virtualFieldConfigPath = addPath(
+            const virtualFieldConfigPath = utils.addPath(
               virtualFieldsConfigPath,
               virtualFieldName,
             );
@@ -171,9 +158,10 @@ export class NodeOutputType {
             );
 
             if (fields.some((field) => field.name === virtualField.name)) {
-              throw new ConfigError(`At least 1 field already have this name`, {
-                path: virtualFieldConfigPath,
-              });
+              throw new utils.ConfigError(
+                `At least 1 field already have this name`,
+                { path: virtualFieldConfigPath },
+              );
             }
 
             fields.push(virtualField);
@@ -189,7 +177,7 @@ export class NodeOutputType {
 
   @Memoize()
   public getGraphQLObjectType(): graphql.GraphQLObjectType {
-    assert(this.node.isPublic(), `The "${this.node.name}" node is private`);
+    assert(this.node.isPublic(), `The "${this.node}" node is private`);
 
     return new graphql.GraphQLObjectType({
       ...this.#config?.graphql,
@@ -197,7 +185,7 @@ export class NodeOutputType {
       description: this.node.description,
       fields: () =>
         Object.fromEntries(
-          aggregateConfigError<
+          utils.aggregateConfigError<
             NodeFieldOutputType,
             [string, graphql.GraphQLFieldConfig<any, any>][]
           >(
@@ -215,7 +203,7 @@ export class NodeOutputType {
 
   @Memoize()
   public validate(): void {
-    aggregateConfigError<NodeFieldOutputType, void>(
+    utils.aggregateConfigError<NodeFieldOutputType, void>(
       this.fieldsByName.values(),
       (_, field) => field.validate(),
       undefined,
@@ -227,12 +215,14 @@ export class NodeOutputType {
     }
   }
 
-  public getField(name: string, path?: Path): NodeFieldOutputType {
+  public getField(name: string, path?: utils.Path): NodeFieldOutputType {
     const field = this.fieldsByName.get(name);
     if (!field) {
-      throw new UnexpectedValueError(`${this.node.indefinite}'s field`, name, {
-        path,
-      });
+      throw new utils.UnexpectedValueError(
+        `${this.node.indefinite}'s field`,
+        name,
+        { path },
+      );
     }
 
     return field;
@@ -240,11 +230,11 @@ export class NodeOutputType {
 
   public selectComponents(
     componentNames: Component['name'][],
-    operationContext?: OperationContext,
-    path?: Path,
+    _operationContext?: OperationContext,
+    path?: utils.Path,
   ): NodeSelection {
     if (!Array.isArray(componentNames)) {
-      throw new UnexpectedValueError(
+      throw new utils.UnexpectedValueError(
         `an array of component's name`,
         componentNames,
         { path },
@@ -254,25 +244,12 @@ export class NodeOutputType {
     return new NodeSelection(
       this.node,
       mergeSelectionExpressions(
-        aggregateError<Component['name'], ComponentSelection[]>(
-          componentNames,
-          (expressions, componentName, index) => {
-            const component = this.node.getComponentByName(
+        componentNames.map(
+          (componentName, index) =>
+            this.node.getComponentByName(
               componentName,
-              addPath(path, index),
-            );
-
-            if (component.kind === 'Edge') {
-              operationContext?.getNodeAuthorization(
-                component.head,
-                addPath(path, component.name),
-              );
-            }
-
-            return [...expressions, component.selection];
-          },
-          [],
-          { path },
+              utils.addPath(path, index),
+            ).selection,
         ),
         path,
       ),
@@ -283,10 +260,10 @@ export class NodeOutputType {
     fragment: GraphQLFragment,
     operationContext?: OperationContext,
     selectionContext?: GraphQLSelectionContext,
-    path?: Path,
+    path?: utils.Path,
   ): NodeSelection {
     if (typeof fragment !== 'string') {
-      throw new UnexpectedValueError(`a GraphQL fragment`, fragment, {
+      throw new utils.UnexpectedValueError(`a GraphQL fragment`, fragment, {
         path,
       });
     }
@@ -302,17 +279,21 @@ export class NodeOutputType {
           : // An anonymous or inline fragment
             trimmedFragment.replace(
               /(^|\.\.\.[^\{]*){/,
-              `fragment MyFragment on ${this.node.name} {`,
+              `fragment MyFragment on ${this.node} {`,
             ),
       );
     } catch (error) {
-      throw new UnexpectedValueError(`a valid GraphQL fragment`, fragment, {
-        path,
-        cause: castToError(error),
-      });
+      throw new utils.UnexpectedValueError(
+        `a valid GraphQL fragment`,
+        fragment,
+        {
+          path,
+          cause: utils.castToError(error),
+        },
+      );
     }
 
-    return this.selectGraphQLDocument(
+    return this.selectGraphQLDocumentNode(
       document,
       operationContext,
       selectionContext,
@@ -320,13 +301,13 @@ export class NodeOutputType {
     );
   }
 
-  public selectGraphQLDocument(
+  public selectGraphQLDocumentNode(
     ast: graphql.DocumentNode,
     operationContext?: OperationContext,
     selectionContext?: GraphQLSelectionContext,
-    path?: Path,
+    path?: utils.Path,
   ): NodeSelection {
-    assertGraphQLASTNode(ast, graphql.Kind.DOCUMENT, path);
+    utils.assertGraphQLASTNode(ast, graphql.Kind.DOCUMENT, path);
 
     const fragmentDefinitions = ast.definitions.filter(
       (definitionNode): definitionNode is graphql.FragmentDefinitionNode =>
@@ -339,14 +320,14 @@ export class NodeOutputType {
     );
 
     if (!fragmentDefinition) {
-      throw new UnexpectedValueError(
-        `a GraphQL ${graphql.Kind.FRAGMENT_DEFINITION} on "${this.node.name}"`,
+      throw new utils.UnexpectedValueError(
+        `a GraphQL ${graphql.Kind.FRAGMENT_DEFINITION} on "${this.node}"`,
         ast,
         { path },
       );
     }
 
-    return this.selectGraphQLFragmentDefinition(
+    return this.selectGraphQLFragmentDefinitionNode(
       fragmentDefinition,
       operationContext,
       {
@@ -365,23 +346,23 @@ export class NodeOutputType {
     );
   }
 
-  public selectGraphQLFragmentDefinition(
+  public selectGraphQLFragmentDefinitionNode(
     ast: graphql.FragmentDefinitionNode,
     operationContext?: OperationContext,
     selectionContext?: GraphQLSelectionContext,
-    path?: Path,
+    path?: utils.Path,
   ): NodeSelection {
-    assertGraphQLASTNode(ast, graphql.Kind.FRAGMENT_DEFINITION, path);
+    utils.assertGraphQLASTNode(ast, graphql.Kind.FRAGMENT_DEFINITION, path);
 
     if (ast.typeCondition.name.value !== this.node.name) {
-      throw new UnexpectedValueError(
-        `a GraphQL ${graphql.Kind.FRAGMENT_DEFINITION} on "${this.node.name}"`,
+      throw new utils.UnexpectedValueError(
+        `a GraphQL ${graphql.Kind.FRAGMENT_DEFINITION} on "${this.node}"`,
         ast,
         { path },
       );
     }
 
-    return this.selectGraphQLSelectionSet(
+    return this.selectGraphQLSelectionSetNode(
       ast.selectionSet,
       operationContext,
       selectionContext,
@@ -389,23 +370,23 @@ export class NodeOutputType {
     );
   }
 
-  public selectGraphQLInlineFragment(
+  public selectGraphQLInlineFragmentNode(
     ast: graphql.InlineFragmentNode,
     operationContext?: OperationContext,
     selectionContext?: GraphQLSelectionContext,
-    path?: Path,
+    path?: utils.Path,
   ): NodeSelection {
-    assertGraphQLASTNode(ast, graphql.Kind.INLINE_FRAGMENT, path);
+    utils.assertGraphQLASTNode(ast, graphql.Kind.INLINE_FRAGMENT, path);
 
     if (ast.typeCondition && ast.typeCondition.name.value !== this.node.name) {
-      throw new UnexpectedValueError(
-        `a GraphQL ${graphql.Kind.INLINE_FRAGMENT} on "${this.node.name}"`,
+      throw new utils.UnexpectedValueError(
+        `a GraphQL ${graphql.Kind.INLINE_FRAGMENT} on "${this.node}"`,
         ast,
         { path },
       );
     }
 
-    return this.selectGraphQLSelectionSet(
+    return this.selectGraphQLSelectionSetNode(
       ast.selectionSet,
       operationContext,
       selectionContext,
@@ -413,117 +394,97 @@ export class NodeOutputType {
     );
   }
 
-  public selectGraphQLSelectionSet(
+  public selectGraphQLSelectionSetNode(
     ast: graphql.SelectionSetNode,
     operationContext?: OperationContext,
     selectionContext?: GraphQLSelectionContext,
-    path?: Path,
+    path?: utils.Path,
   ): NodeSelection {
-    assertGraphQLASTNode(ast, graphql.Kind.SELECTION_SET, path);
+    utils.assertGraphQLASTNode(ast, graphql.Kind.SELECTION_SET, path);
 
     return new NodeSelection(
       this.node,
       mergeSelectionExpressions(
-        aggregateError<graphql.SelectionNode, SelectionExpression[]>(
-          ast.selections,
-          (expressions, ast, index) => {
-            const selectionPath = addPath(path, index);
+        ast.selections.flatMap<SelectionExpression>((ast) => {
+          /**
+           * "[...] the field or fragment must not be queried if either the @skip condition is true or the @include condition is false [...]"
+           *
+           * @see http://spec.graphql.org/draft/#note-f3059
+           */
+          if (
+            ast.directives?.some((directive) =>
+              directive.name.value === 'skip'
+                ? directive.arguments?.find(
+                    (argument) =>
+                      argument.name.value === 'if' &&
+                      graphql.valueFromASTUntyped(
+                        argument.value,
+                        selectionContext?.variableValues,
+                      ) === true,
+                  )
+                : directive.name.value === 'include'
+                ? directive.arguments?.find(
+                    (argument) =>
+                      argument.name.value === 'if' &&
+                      graphql.valueFromASTUntyped(
+                        argument.value,
+                        selectionContext?.variableValues,
+                      ) === false,
+                  )
+                : false,
+            )
+          ) {
+            return [];
+          }
 
-            /**
-             * "[...] the field or fragment must not be queried if either the @skip condition is true or the @include condition is false [...]"
-             *
-             * @see http://spec.graphql.org/draft/#note-f3059
-             */
-            if (
-              ast.directives?.some((directive) =>
-                directive.name.value === 'skip'
-                  ? directive.arguments?.find(
-                      (argument) =>
-                        argument.name.value === 'if' &&
-                        graphql.valueFromASTUntyped(
-                          argument.value,
-                          selectionContext?.variableValues,
-                        ) === true,
-                    )
-                  : directive.name.value === 'include'
-                  ? directive.arguments?.find(
-                      (argument) =>
-                        argument.name.value === 'if' &&
-                        graphql.valueFromASTUntyped(
-                          argument.value,
-                          selectionContext?.variableValues,
-                        ) === false,
-                    )
-                  : false,
-              )
-            ) {
-              return expressions;
-            }
+          switch (ast.kind) {
+            case graphql.Kind.FIELD: {
+              const field = this.getField(ast.name.value, path);
 
-            switch (ast.kind) {
-              case graphql.Kind.FIELD: {
-                const field = this.getField(ast.name.value, path);
-
-                return field instanceof VirtualFieldOutputType
-                  ? field.dependsOn
-                    ? [
-                        ...expressions,
-                        ...field.dependsOn.expressionsByKey.values(),
-                      ]
-                    : expressions
-                  : [
-                      ...expressions,
-                      field.selectGraphQLField(
-                        ast,
-                        operationContext,
-                        selectionContext,
-                        addPath(path, ast.alias?.value || ast.name.value),
-                      ),
-                    ];
-              }
-
-              case graphql.Kind.FRAGMENT_SPREAD: {
-                const fragmentDefinition =
-                  selectionContext?.fragments?.[ast.name.value];
-
-                if (!fragmentDefinition) {
-                  throw new UnexpectedValueError(
-                    `the GraphQL fragment definition named "${ast.name.value}"`,
-                    selectionContext?.fragments,
-                    { path: selectionPath },
-                  );
-                }
-
-                return [
-                  ...expressions,
-                  ...this.selectGraphQLFragmentDefinition(
-                    fragmentDefinition,
-                    operationContext,
-                    selectionContext,
-                    selectionPath,
-                  ).expressionsByKey.values(),
-                ];
-              }
-
-              case graphql.Kind.INLINE_FRAGMENT: {
-                return [
-                  ...expressions,
-                  ...this.selectGraphQLInlineFragment(
+              return field instanceof VirtualFieldOutputType
+                ? field.dependsOn?.expressions ?? []
+                : field.selectGraphQLFieldNode(
                     ast,
                     operationContext,
                     selectionContext,
-                    selectionPath,
-                  ).expressionsByKey.values(),
-                ];
+                    utils.addPath(path, ast.alias?.value || ast.name.value),
+                  );
+            }
+
+            case graphql.Kind.FRAGMENT_SPREAD: {
+              const fragmentName = ast.name.value;
+              const fragmentDefinition =
+                selectionContext?.fragments?.[fragmentName];
+
+              if (!fragmentDefinition) {
+                throw new utils.UnexpectedValueError(
+                  `the GraphQL fragment definition named "${fragmentName}"`,
+                  selectionContext?.fragments,
+                  { path },
+                );
               }
 
-              default:
-                throw new UnreachableValueError(ast, { path: selectionPath });
+              return this.selectGraphQLFragmentDefinitionNode(
+                fragmentDefinition,
+                operationContext,
+                selectionContext,
+                path,
+              ).expressions;
             }
-          },
-          [],
-          { path },
-        ),
+
+            case graphql.Kind.INLINE_FRAGMENT: {
+              return this.selectGraphQLInlineFragmentNode(
+                ast,
+                operationContext,
+                selectionContext,
+                path,
+              ).expressions;
+            }
+
+            default:
+              throw new utils.UnreachableValueError(ast, { path });
+          }
+        }),
         path,
       ),
     );
@@ -541,14 +502,14 @@ export class NodeOutputType {
   ): NodeSelection {
     const namedReturnType = graphql.getNamedType(returnType);
     if (namedReturnType !== this.getGraphQLObjectType()) {
-      throw new UnexpectedValueError(
+      throw new utils.UnexpectedValueError(
         `a resolver returning ${this.node.indefinite}`,
         String(namedReturnType),
         { path },
       );
     }
 
-    return this.selectGraphQLSelectionSet(
+    return this.selectGraphQLSelectionSetNode(
       fieldNodes[0].selectionSet!,
       operationContext,
       { fragments, variableValues },
@@ -560,10 +521,10 @@ export class NodeOutputType {
     selection: RawNodeSelection,
     operationContext?: OperationContext,
     selectionContext?: GraphQLSelectionContext,
-    path?: Path,
+    path?: utils.Path,
   ): NodeSelection {
     if (selection == null) {
-      throw new UnexpectedValueError(
+      throw new utils.UnexpectedValueError(
         `${this.node.indefinite}'s selection`,
         selection,
         { path },
@@ -590,10 +551,10 @@ export class NodeOutputType {
     }
 
     // GraphQL AST
-    if (isPlainObject(selection) && 'kind' in selection) {
+    if (utils.isPlainObject(selection) && 'kind' in selection) {
       switch (selection.kind) {
         case graphql.Kind.DOCUMENT:
-          return this.selectGraphQLDocument(
+          return this.selectGraphQLDocumentNode(
             selection,
             operationContext,
             selectionContext,
@@ -601,7 +562,7 @@ export class NodeOutputType {
           );
 
         case graphql.Kind.FRAGMENT_DEFINITION:
-          return this.selectGraphQLFragmentDefinition(
+          return this.selectGraphQLFragmentDefinitionNode(
             selection,
             operationContext,
             selectionContext,
@@ -609,7 +570,7 @@ export class NodeOutputType {
           );
 
         case graphql.Kind.INLINE_FRAGMENT:
-          return this.selectGraphQLInlineFragment(
+          return this.selectGraphQLInlineFragmentNode(
             selection,
             operationContext,
             selectionContext,
@@ -617,7 +578,7 @@ export class NodeOutputType {
           );
 
         case graphql.Kind.SELECTION_SET:
-          return this.selectGraphQLSelectionSet(
+          return this.selectGraphQLSelectionSetNode(
             selection,
             operationContext,
             selectionContext,
@@ -625,17 +586,17 @@ export class NodeOutputType {
           );
 
         default:
-          throw new UnreachableValueError(selection, { path });
+          throw new utils.UnreachableValueError(selection, { path });
       }
     }
 
     // GraphQL resolve info
-    if (isGraphQLResolveInfo(selection)) {
+    if (utils.isGraphQLResolveInfo(selection)) {
       return this.selectGraphQLResolveInfo(selection, operationContext);
     }
 
-    throw new UnexpectedValueError(
-      `a supported "${this.node.name}"'s selection`,
+    throw new utils.UnexpectedValueError(
+      `a supported "${this.node}"'s selection`,
       selection,
       { path },
     );
@@ -644,35 +605,27 @@ export class NodeOutputType {
   public selectShape(
     shape: unknown,
     operationContext?: OperationContext,
-    path?: Path,
+    path?: utils.Path,
   ): NodeSelection {
-    if (!isPlainObject(shape)) {
-      throw new UnexpectedValueError('a plain-object', shape, { path });
+    if (!utils.isPlainObject(shape)) {
+      throw new utils.UnexpectedValueError('a plain-object', shape, { path });
     }
 
     return new NodeSelection(
       this.node,
       mergeSelectionExpressions(
-        aggregateError<[string, unknown], SelectionExpression[]>(
-          Object.entries(shape),
-          (expressions, [fieldName, fieldValue]) => {
+        Object.entries(shape).flatMap<SelectionExpression>(
+          ([fieldName, fieldValue]) => {
             const field = this.getField(fieldName, path);
 
             return field instanceof VirtualFieldOutputType
-              ? field.dependsOn
-                ? [...expressions, ...field.dependsOn.expressionsByKey.values()]
-                : expressions
-              : [
-                  ...expressions,
-                  field.selectShape(
-                    fieldValue,
-                    operationContext,
-                    addPath(path, fieldName),
-                  ),
-                ];
+              ? field.dependsOn?.expressions ?? []
+              : field.selectShape(
+                  fieldValue,
+                  operationContext,
+                  utils.addPath(path, fieldName),
+                );
           },
-          [],
-          { path },
         ),
         path,
       ),

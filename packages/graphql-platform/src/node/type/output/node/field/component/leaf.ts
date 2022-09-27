@@ -1,4 +1,4 @@
-import { Name, NestableError, Path } from '@prismamedia/graphql-platform-utils';
+import * as utils from '@prismamedia/graphql-platform-utils';
 import * as graphql from 'graphql';
 import type {
   Leaf,
@@ -10,7 +10,7 @@ import type { GraphQLSelectionContext } from '../../../node.js';
 import { AbstractComponentOutputType } from '../abstract-component.js';
 
 export class LeafOutputType extends AbstractComponentOutputType<undefined> {
-  public override readonly name: Name;
+  public override readonly name: utils.Name;
   public override readonly description?: string;
   public override readonly deprecationReason?: string;
   public override readonly arguments?: undefined;
@@ -29,16 +29,16 @@ export class LeafOutputType extends AbstractComponentOutputType<undefined> {
     this.#selection = leaf.selection;
   }
 
-  public override selectGraphQLField(
+  public override selectGraphQLFieldNode(
     ast: graphql.FieldNode,
-    operationContext: OperationContext | undefined,
+    _operationContext: OperationContext | undefined,
     selectionContext: GraphQLSelectionContext | undefined,
-    path: Path,
+    path: utils.Path,
   ): LeafSelection {
     this.parseGraphQLFieldArguments(ast.arguments, selectionContext, path);
 
     if (ast.selectionSet) {
-      throw new NestableError(`Expects no selection-set`, { path });
+      throw new utils.NestableError(`Expects no selection-set`, { path });
     }
 
     return this.#selection;
@@ -47,7 +47,7 @@ export class LeafOutputType extends AbstractComponentOutputType<undefined> {
   public override selectShape(
     _value: unknown,
     _operationContext: OperationContext | undefined,
-    _path: Path,
+    _path: utils.Path,
   ): LeafSelection {
     return this.#selection;
   }

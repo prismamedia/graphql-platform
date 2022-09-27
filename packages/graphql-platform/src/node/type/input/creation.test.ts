@@ -1,4 +1,4 @@
-import { MutationType, PlainObject } from '@prismamedia/graphql-platform-utils';
+import * as utils from '@prismamedia/graphql-platform-utils';
 import * as graphql from 'graphql';
 import { GraphQLPlatform } from '../../../index.js';
 import {
@@ -21,10 +21,10 @@ describe('NodeCreationInputType', () => {
     gp = new GraphQLPlatform({
       nodes,
       connector: mockConnector({
-        find: async ({ node, where }) => {
+        find: async ({ node, filter }) => {
           if (
             node.name === 'Category' &&
-            where?.filter.equals(
+            filter?.filter.equals(
               new LeafComparisonFilter(
                 node.getLeafByName('id'),
                 'eq',
@@ -35,7 +35,7 @@ describe('NodeCreationInputType', () => {
             return [{ _id: 4 }];
           } else if (
             node.name === 'User' &&
-            where?.filter.equals(
+            filter?.filter.equals(
               new LeafComparisonFilter(
                 node.getLeafByName('id'),
                 'eq',
@@ -61,7 +61,7 @@ describe('NodeCreationInputType', () => {
       const creationInputType = node.creationInputType;
       expect(creationInputType).toBeInstanceOf(NodeCreationInputType);
 
-      if (node.isMutationPublic(MutationType.CREATION)) {
+      if (node.isMutationPublic(utils.MutationType.CREATION)) {
         expect(creationInputType.getGraphQLInputType()).toBeInstanceOf(
           graphql.GraphQLInputObjectType,
         );
@@ -120,7 +120,7 @@ describe('NodeCreationInputType', () => {
         const Article = gp.getNodeByName('Article');
         const ArticleCreationInputType = Article.creationInputType;
 
-        const input: PlainObject = {
+        const input: utils.PlainObject = {
           title: "My article's title",
           category: {
             connectIfExists: { id: '91a7c846-b030-4ef3-aaaa-747fe7b11519' },
@@ -150,6 +150,8 @@ describe('NodeCreationInputType', () => {
             connect: { id: '2059b77a-a735-41fe-b415-5b12944b6ba6' },
           },
           updatedAt: expect.any(Date),
+          views: 0n,
+          score: 0.5,
         });
 
         const creation = await ArticleCreationInputType.createStatement(
@@ -170,6 +172,8 @@ describe('NodeCreationInputType', () => {
           createdAt: expect.any(Date),
           updatedBy: { username: 'yvann' },
           updatedAt: expect.any(Date),
+          views: 0n,
+          score: 0.5,
         });
       });
     });

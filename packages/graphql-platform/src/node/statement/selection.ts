@@ -1,11 +1,6 @@
-import {
-  addPath,
-  aggregateError,
-  isPlainObject,
-  UnexpectedValueError,
-  type Path,
-} from '@prismamedia/graphql-platform-utils';
+import * as utils from '@prismamedia/graphql-platform-utils';
 import * as graphql from 'graphql';
+import assert from 'node:assert/strict';
 import type { Node } from '../../node.js';
 import {
   mergeSelectionExpressions,
@@ -31,17 +26,18 @@ export class NodeSelection<
     this.expressions = Object.freeze(Array.from(expressionsByKey.values()));
   }
 
-  public isAkinTo(nodeSelection: unknown): nodeSelection is NodeSelection {
+  public isAkinTo(maybeSelection: unknown): maybeSelection is NodeSelection {
     return (
-      nodeSelection instanceof NodeSelection && nodeSelection.node === this.node
+      maybeSelection instanceof NodeSelection &&
+      maybeSelection.node === this.node
     );
   }
 
-  public equals(nodeSelection: unknown): boolean {
+  public equals(maybeSelection: unknown): boolean {
     return (
-      this.isAkinTo(nodeSelection) &&
-      nodeSelection.expressionsByKey.size === this.expressionsByKey.size &&
-      nodeSelection.expressions.every((expression) =>
+      this.isAkinTo(maybeSelection) &&
+      maybeSelection.expressionsByKey.size === this.expressionsByKey.size &&
+      maybeSelection.expressions.every((expression) =>
         expression.equals(this.expressionsByKey.get(expression.key)),
       )
     );
@@ -50,65 +46,43 @@ export class NodeSelection<
   /**
    * Returns true if the provided selection is a subset of the current one
    */
-  public includes(nodeSelection: NodeSelection): boolean {
-    return (
-      this.isAkinTo(nodeSelection) &&
-      nodeSelection.expressions.every((expression) =>
-        this.expressionsByKey.get(expression.key)?.includes(expression),
-      )
+  public includes(selection: NodeSelection): boolean {
+    assert(this.isAkinTo(selection));
+
+    return selection.expressions.every((expression) =>
+      this.expressionsByKey.get(expression.key)?.includes(expression),
     );
   }
 
   public mergeWith(
-    nodeSelection:
-      | NodeSelection
-      | undefined
-      | ReadonlyArray<NodeSelection | undefined>,
-    path?: Path,
+    selection: NodeSelection,
+    path?: utils.Path,
   ): NodeSelection | this {
-    if (!nodeSelection) {
-      return this;
-    }
-
-    if (Array.isArray(nodeSelection)) {
-      return aggregateError<NodeSelection | undefined, NodeSelection>(
-        nodeSelection,
-        (mergedNodeSelection, nodeSelection, index) =>
-          mergedNodeSelection.mergeWith(nodeSelection, addPath(path, index)),
-        this,
-        { path },
-      );
-    }
-
-    if (!this.isAkinTo(nodeSelection)) {
-      throw new UnexpectedValueError(
-        `${this.node.indefinite}'s selection`,
-        nodeSelection,
-        { path },
-      );
-    }
+    assert(this.isAkinTo(selection));
 
     return new NodeSelection(
       this.node,
       mergeSelectionExpressions(
-        [...this.expressions, ...nodeSelection.expressions],
+        [...this.expressions, ...selection.expressions],
         path,
       ),
     );
   }
 
-  public parseValue(maybeValue: unknown, path?: Path): TValue {
-    if (!isPlainObject(maybeValue)) {
-      throw new UnexpectedValueError('a plain-object', maybeValue, { path });
+  public parseValue(maybeValue: unknown, path?: utils.Path): TValue {
+    if (!utils.isPlainObject(maybeValue)) {
+      throw new utils.UnexpectedValueError('a plain-object', maybeValue, {
+        path,
+      });
     }
 
-    return aggregateError<SelectionExpression, TValue>(
+    return utils.aggregateError<SelectionExpression, TValue>(
       this.expressionsByKey.values(),
       (nodeValue, fieldSelection) =>
         Object.assign(nodeValue, {
           [fieldSelection.key]: fieldSelection.parseValue(
             maybeValue[fieldSelection.key],
-            addPath(path, fieldSelection.key),
+            utils.addPath(path, fieldSelection.key),
           ),
         }),
       Object.create(null),

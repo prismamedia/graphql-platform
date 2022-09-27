@@ -1,14 +1,14 @@
-import { Name, NestableError, Path } from '@prismamedia/graphql-platform-utils';
+import * as utils from '@prismamedia/graphql-platform-utils';
 import { Memoize } from '@prismamedia/ts-memoize';
 import * as graphql from 'graphql';
 import type { Edge } from '../../../../../definition/component/edge.js';
 import type { OperationContext } from '../../../../../operation/context.js';
-import { EdgeHeadSelection } from '../../../../../statement/selection/expression/component/edge-head.js';
+import { EdgeHeadSelection } from '../../../../../statement/selection/expression/component/edge/head.js';
 import type { GraphQLSelectionContext } from '../../../node.js';
 import { AbstractComponentOutputType } from '../abstract-component.js';
 
 export class EdgeHeadOutputType extends AbstractComponentOutputType<undefined> {
-  public override readonly name: Name;
+  public override readonly name: utils.Name;
   public override readonly description?: string;
   public override readonly deprecationReason?: string;
   public override readonly arguments?: undefined;
@@ -30,26 +30,28 @@ export class EdgeHeadOutputType extends AbstractComponentOutputType<undefined> {
         );
   }
 
-  public override selectGraphQLField(
+  public override selectGraphQLFieldNode(
     ast: graphql.FieldNode,
     operationContext: OperationContext | undefined,
     selectionContext: GraphQLSelectionContext | undefined,
-    path: Path,
+    path: utils.Path,
   ): EdgeHeadSelection {
-    operationContext?.getNodeAuthorization(this.edge.head, path);
-
     this.parseGraphQLFieldArguments(ast.arguments, selectionContext, path);
 
     if (!ast.selectionSet) {
-      throw new NestableError(
-        `Expects ${this.edge.head.indefinite}'s selection`,
+      throw new utils.NestableError(
+        `Expects ${this.edge.head.indefinite}'s selection-set`,
         { path },
       );
     }
 
+    if (!this.edge.isNullable()) {
+      operationContext?.ensureAuthorization(this.edge.head, path);
+    }
+
     return new EdgeHeadSelection(
       this.edge,
-      this.edge.head.outputType.selectGraphQLSelectionSet(
+      this.edge.head.outputType.selectGraphQLSelectionSetNode(
         ast.selectionSet,
         operationContext,
         selectionContext,
@@ -61,9 +63,11 @@ export class EdgeHeadOutputType extends AbstractComponentOutputType<undefined> {
   public override selectShape(
     value: unknown,
     operationContext: OperationContext | undefined,
-    path: Path,
+    path: utils.Path,
   ): EdgeHeadSelection {
-    operationContext?.getNodeAuthorization(this.edge.head, path);
+    if (!this.edge.isNullable()) {
+      operationContext?.ensureAuthorization(this.edge.head, path);
+    }
 
     return value === null
       ? this.edge.selection

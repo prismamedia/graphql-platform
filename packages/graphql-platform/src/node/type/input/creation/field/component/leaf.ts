@@ -1,10 +1,4 @@
-import {
-  addPath,
-  InputConfig,
-  MutationType,
-  type NonNillable,
-  type Path,
-} from '@prismamedia/graphql-platform-utils';
+import * as utils from '@prismamedia/graphql-platform-utils';
 import type { SetOptional } from 'type-fest';
 import type {
   Leaf,
@@ -14,7 +8,7 @@ import type { MutationContext } from '../../../../../operation/mutation/context.
 import { AbstractComponentCreationInput } from '../abstract-component.js';
 
 export type LeafCreationInputConfig = Omit<
-  SetOptional<InputConfig<LeafValue | undefined>, 'type'>,
+  SetOptional<utils.InputConfig<LeafValue | undefined>, 'type'>,
   'name'
 >;
 
@@ -26,16 +20,16 @@ export class LeafCreationInput extends AbstractComponentCreationInput<
       leaf,
       {
         type: leaf.type,
-        ...leaf.config[MutationType.CREATION],
+        ...leaf.config[utils.MutationType.CREATION],
       },
-      addPath(leaf.configPath, MutationType.CREATION),
+      utils.addPath(leaf.configPath, utils.MutationType.CREATION),
     );
   }
 
   public override async resolveComponentValue(
-    inputValue: NonNillable<LeafValue>,
+    inputValue: utils.NonNillable<LeafValue>,
     _context: MutationContext,
-    _path: Path,
+    _path: utils.Path,
   ): Promise<LeafValue | undefined> {
     return inputValue;
   }

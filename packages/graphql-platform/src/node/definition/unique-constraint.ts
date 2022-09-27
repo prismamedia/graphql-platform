@@ -1,14 +1,4 @@
-import {
-  addPath,
-  aggregateConfigError,
-  aggregateError,
-  ensureName,
-  isPlainObject,
-  UnexpectedConfigError,
-  UnexpectedValueError,
-  type Name,
-  type Path,
-} from '@prismamedia/graphql-platform-utils';
+import * as utils from '@prismamedia/graphql-platform-utils';
 import { Memoize } from '@prismamedia/ts-memoize';
 import type {
   ConnectorConfigOverrideKind,
@@ -33,7 +23,7 @@ type FullUniqueConstraintConfig<
   TConnector extends ConnectorInterface,
 > = {
   components: Component['name'][];
-  name?: Name;
+  name?: utils.Name;
 } & GetConnectorConfigOverride<
   TConnector,
   ConnectorConfigOverrideKind.UNIQUE_CONSTRAINT
@@ -67,7 +57,7 @@ export class UniqueConstraint<
     TRequestContext,
     TConnector
   >;
-  public readonly name: Name;
+  public readonly name: utils.Name;
   public readonly componentsByName: ReadonlyMap<
     Component['name'],
     Component<TRequestContext, TConnector>
@@ -86,9 +76,9 @@ export class UniqueConstraint<
   public constructor(
     public readonly node: Node<TRequestContext, TConnector>,
     config: UniqueConstraintConfig<TRequestContext, TConnector>,
-    public readonly configPath: Path,
+    public readonly configPath: utils.Path,
   ) {
-    let componentsConfigPath: Path;
+    let componentsConfigPath: utils.Path;
     if (isShortConfig(config)) {
       this.config = { components: config } as FullUniqueConstraintConfig<
         TRequestContext,
@@ -97,7 +87,7 @@ export class UniqueConstraint<
       componentsConfigPath = configPath;
     } else {
       this.config = config;
-      componentsConfigPath = addPath(configPath, 'components');
+      componentsConfigPath = utils.addPath(configPath, 'components');
     }
 
     // components
@@ -106,7 +96,7 @@ export class UniqueConstraint<
         !Array.isArray(this.config.components) ||
         !this.config.components.length
       ) {
-        throw new UnexpectedValueError(
+        throw new utils.UnexpectedValueError(
           `at least one "component"`,
           this.config.components,
           { path: componentsConfigPath },
@@ -114,7 +104,7 @@ export class UniqueConstraint<
       }
 
       this.componentsByName = new Map(
-        aggregateConfigError<
+        utils.aggregateConfigError<
           string,
           [Component['name'], Component<TRequestContext, TConnector>][]
         >(
@@ -122,12 +112,12 @@ export class UniqueConstraint<
           (entries, componentName, index) => {
             const component = node.componentsByName.get(componentName);
             if (!component) {
-              throw new UnexpectedConfigError(
+              throw new utils.UnexpectedConfigError(
                 `a "component"'s name among "${[
                   ...node.componentsByName.keys(),
                 ].join(', ')}"`,
                 componentName,
-                { path: addPath(componentsConfigPath, index) },
+                { path: utils.addPath(componentsConfigPath, index) },
               );
             }
 
@@ -161,10 +151,10 @@ export class UniqueConstraint<
     // name
     {
       const nameConfig = this.config.name;
-      const nameConfigPath = addPath(configPath, 'name');
+      const nameConfigPath = utils.addPath(configPath, 'name');
 
       this.name = nameConfig
-        ? ensureName(nameConfig, nameConfigPath)
+        ? utils.ensureName(nameConfig, nameConfigPath)
         : [...this.componentsByName.keys()].join('_');
     }
   }
@@ -235,19 +225,21 @@ export class UniqueConstraint<
 
   public parseValue(
     maybeValue: unknown,
-    path: Path = addPath(undefined, this.toString()),
+    path: utils.Path = utils.addPath(undefined, this.toString()),
   ): UniqueConstraintValue {
-    if (!isPlainObject(maybeValue)) {
-      throw new UnexpectedValueError('a plain-object', maybeValue, { path });
+    if (!utils.isPlainObject(maybeValue)) {
+      throw new utils.UnexpectedValueError('a plain-object', maybeValue, {
+        path,
+      });
     }
 
-    const value = aggregateError<Component, UniqueConstraintValue>(
+    const value = utils.aggregateError<Component, UniqueConstraintValue>(
       this.componentsByName.values(),
       (value, component) =>
         Object.assign(value, {
           [component.name]: component.parseValue(
             maybeValue[component.name],
-            addPath(path, component.name),
+            utils.addPath(path, component.name),
           ),
         }),
       Object.create(null),
@@ -259,7 +251,7 @@ export class UniqueConstraint<
         (componentName) => value[componentName] === null,
       )
     ) {
-      throw new UnexpectedValueError(
+      throw new utils.UnexpectedValueError(
         `at least one non-null component's value`,
         maybeValue,
         { path },

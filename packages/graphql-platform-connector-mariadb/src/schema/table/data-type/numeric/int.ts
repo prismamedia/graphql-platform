@@ -8,11 +8,12 @@ import {
 } from '../../abstract-data-type.js';
 import type { NumericDataTypeModifier } from './modifier.js';
 
-export interface IntTypeConfig<TLeafValue extends core.LeafValue = any>
-  extends AbstractDataTypeConfig<
+export interface IntTypeConfig<
+  TLeafValue extends NonNullable<core.LeafValue> = any,
+> extends AbstractDataTypeConfig<
     IntType['kind'] | 'INT4' | 'INT3' | 'INT2' | 'INT1',
-    number,
-    TLeafValue
+    TLeafValue,
+    number
   > {
   length?: number;
   modifiers?: ReadonlyArray<NumericDataTypeModifier>;
@@ -22,11 +23,11 @@ export interface IntTypeConfig<TLeafValue extends core.LeafValue = any>
  * @see https://mariadb.com/kb/en/int/
  */
 export class IntType<
-  TLeafValue extends core.LeafValue = any,
+  TLeafValue extends NonNullable<core.LeafValue> = any,
 > extends AbstractDataType<
   'INT' | 'MEDIUMINT' | 'SMALLINT' | 'TINYINT',
-  number,
-  TLeafValue
+  TLeafValue,
+  number
 > {
   public readonly length?: number;
   public readonly modifiers: ReadonlyArray<NumericDataTypeModifier>;
@@ -49,6 +50,7 @@ export class IntType<
             : config.kind,
         serialize: (value) => value.toString(10),
         fromColumnValue: config?.fromColumnValue,
+        fromJsonValue: config?.fromJsonValue,
         toColumnValue: config?.toColumnValue,
       },
       configPath,

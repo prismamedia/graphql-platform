@@ -1,4 +1,4 @@
-import type { MutationType } from '@prismamedia/graphql-platform-utils';
+import type * as utils from '@prismamedia/graphql-platform-utils';
 import type { ConnectorInterface } from '../../../connector-interface.js';
 import type { CreationConfig } from './abstract-creation.js';
 import type { DeletionConfig } from './abstract-deletion.js';
@@ -24,7 +24,7 @@ export interface MutationConfig<
   TRequestContext extends object,
   TConnector extends ConnectorInterface,
 > {
-  [MutationType.CREATION]: CreationConfig<TRequestContext, TConnector>;
-  [MutationType.UPDATE]: UpdateConfig<TRequestContext, TConnector>;
-  [MutationType.DELETION]: DeletionConfig<TRequestContext, TConnector>;
+  [utils.MutationType.CREATION]: CreationConfig<TRequestContext, TConnector>;
+  [utils.MutationType.UPDATE]: UpdateConfig<TRequestContext, TConnector>;
+  [utils.MutationType.DELETION]: DeletionConfig<TRequestContext, TConnector>;
 }

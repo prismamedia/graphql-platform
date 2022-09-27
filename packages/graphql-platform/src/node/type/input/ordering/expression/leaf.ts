@@ -1,4 +1,4 @@
-import { EnumInputValue, Path } from '@prismamedia/graphql-platform-utils';
+import * as utils from '@prismamedia/graphql-platform-utils';
 import type { ConnectorInterface } from '../../../../../connector-interface.js';
 import type { Leaf } from '../../../../definition/component/leaf.js';
 import type { OperationContext } from '../../../../operation/context.js';
@@ -7,7 +7,7 @@ import {
   OrderingDirection,
 } from '../../../../statement/ordering.js';
 
-export class LeafOrderingInputType extends EnumInputValue {
+export class LeafOrderingInputType extends utils.EnumInputValue {
   readonly #expression: LeafOrdering;
 
   public constructor(
@@ -34,7 +34,7 @@ export class LeafOrderingInputType extends EnumInputValue {
     TConnector extends ConnectorInterface,
   >(
     _context: OperationContext<TRequestContext, TConnector> | undefined,
-    _path: Path,
+    _path: utils.Path,
   ): LeafOrdering {
     return this.#expression;
   }

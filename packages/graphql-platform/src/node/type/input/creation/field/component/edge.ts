@@ -1,16 +1,4 @@
-import {
-  addPath,
-  Input,
-  MutationType,
-  nonNillableInputType,
-  ObjectInputType,
-  UnexpectedValueError,
-  UnreachableValueError,
-  type InputConfig,
-  type Nillable,
-  type NonNillable,
-  type Path,
-} from '@prismamedia/graphql-platform-utils';
+import * as utils from '@prismamedia/graphql-platform-utils';
 import inflection from 'inflection';
 import type { RequireExactlyOne } from 'type-fest';
 import type {
@@ -29,20 +17,20 @@ export enum EdgeCreationInputAction {
   CREATE = 'create',
 }
 
-export type EdgeCreationInputValue = Nillable<
+export type EdgeCreationInputValue = utils.Nillable<
   RequireExactlyOne<{
-    [EdgeCreationInputAction.CONNECT]: NonNillable<NodeUniqueFilterInputValue>;
-    [EdgeCreationInputAction.CONNECT_IF_EXISTS]: NonNillable<NodeUniqueFilterInputValue>;
-    [EdgeCreationInputAction.CONNECT_OR_CREATE]: NonNillable<{
-      where: NonNillable<NodeUniqueFilterInputValue>;
-      create: NonNillable<NodeCreationInputValue>;
+    [EdgeCreationInputAction.CONNECT]: utils.NonNillable<NodeUniqueFilterInputValue>;
+    [EdgeCreationInputAction.CONNECT_IF_EXISTS]: utils.NonNillable<NodeUniqueFilterInputValue>;
+    [EdgeCreationInputAction.CONNECT_OR_CREATE]: utils.NonNillable<{
+      where: utils.NonNillable<NodeUniqueFilterInputValue>;
+      create: utils.NonNillable<NodeCreationInputValue>;
     }>;
-    [EdgeCreationInputAction.CREATE]: NonNillable<NodeCreationInputValue>;
+    [EdgeCreationInputAction.CREATE]: utils.NonNillable<NodeCreationInputValue>;
   }>
 >;
 
 export type EdgeCreationInputConfig = Omit<
-  InputConfig<EdgeCreationInputValue>,
+  utils.InputConfig<EdgeCreationInputValue>,
   'name' | 'type' | 'publicType'
 >;
 
@@ -51,18 +39,18 @@ export class EdgeCreationInput extends AbstractComponentCreationInput<EdgeCreati
     super(
       edge,
       {
-        type: new ObjectInputType({
+        type: new utils.ObjectInputType({
           name: [
             edge.tail.name,
             'Nested',
             edge.pascalCasedName,
             'Edge',
-            inflection.camelize(MutationType.CREATION),
+            inflection.camelize(utils.MutationType.CREATION),
             'Input',
           ].join(''),
           fields: () => {
-            const fields: Input[] = [
-              new Input({
+            const fields: utils.Input[] = [
+              new utils.Input({
                 name: EdgeCreationInputAction.CONNECT,
                 description: `Connect ${edge.head.indefinite} to this new "${edge.tail}" through the "${edge}" edge, throw an error if it does not exist.`,
                 type: edge.head.uniqueFilterInputType,
@@ -72,7 +60,7 @@ export class EdgeCreationInput extends AbstractComponentCreationInput<EdgeCreati
 
             if (edge.isNullable()) {
               fields.push(
-                new Input({
+                new utils.Input({
                   name: EdgeCreationInputAction.CONNECT_IF_EXISTS,
                   description: `Connect ${edge.head.indefinite} to this new "${edge.tail}" through the "${edge}" edge, if it exists.`,
                   type: edge.head.uniqueFilterInputType,
@@ -81,19 +69,21 @@ export class EdgeCreationInput extends AbstractComponentCreationInput<EdgeCreati
               );
             }
 
-            if (edge.head.isMutationEnabled(MutationType.CREATION)) {
+            if (edge.head.isMutationEnabled(utils.MutationType.CREATION)) {
               fields.push(
-                new Input({
+                new utils.Input({
                   name: EdgeCreationInputAction.CREATE,
                   description: `Create ${edge.head.indefinite} and connect it to this new "${edge.tail}" through the "${edge}" edge.`,
                   type: edge.head.creationInputType,
                   nullable: false,
-                  public: edge.head.isMutationPublic(MutationType.CREATION),
+                  public: edge.head.isMutationPublic(
+                    utils.MutationType.CREATION,
+                  ),
                 }),
-                new Input({
+                new utils.Input({
                   name: EdgeCreationInputAction.CONNECT_OR_CREATE,
                   description: `Create ${edge.head.indefinite} if it does not exist, and connect it to this new "${edge.tail}" through the "${edge}" edge.`,
-                  type: new ObjectInputType({
+                  type: new utils.ObjectInputType({
                     name: [
                       edge.tail.name,
                       'Nested',
@@ -102,24 +92,28 @@ export class EdgeCreationInput extends AbstractComponentCreationInput<EdgeCreati
                       ),
                       edge.pascalCasedName,
                       'Edge',
-                      inflection.camelize(MutationType.CREATION),
+                      inflection.camelize(utils.MutationType.CREATION),
                       'Input',
                     ].join(''),
                     fields: () => [
-                      new Input({
+                      new utils.Input({
                         name: 'where',
-                        type: nonNillableInputType(
+                        type: utils.nonNillableInputType(
                           edge.head.uniqueFilterInputType,
                         ),
                       }),
-                      new Input({
+                      new utils.Input({
                         name: 'create',
-                        type: nonNillableInputType(edge.head.creationInputType),
+                        type: utils.nonNillableInputType(
+                          edge.head.creationInputType,
+                        ),
                       }),
                     ],
                   }),
                   nullable: false,
-                  public: edge.head.isMutationPublic(MutationType.CREATION),
+                  public: edge.head.isMutationPublic(
+                    utils.MutationType.CREATION,
+                  ),
                 }),
               );
             }
@@ -130,7 +124,7 @@ export class EdgeCreationInput extends AbstractComponentCreationInput<EdgeCreati
         validateValue(inputValue, path) {
           if (inputValue != null) {
             if (Object.keys(inputValue).length !== 1) {
-              throw new UnexpectedValueError(
+              throw new utils.UnexpectedValueError(
                 `one and only one action`,
                 inputValue,
                 { path },
@@ -138,21 +132,21 @@ export class EdgeCreationInput extends AbstractComponentCreationInput<EdgeCreati
             }
           }
         },
-        ...edge.config[MutationType.CREATION],
+        ...edge.config[utils.MutationType.CREATION],
       },
-      addPath(edge.configPath, MutationType.CREATION),
+      utils.addPath(edge.configPath, utils.MutationType.CREATION),
     );
   }
 
   public override async resolveComponentValue(
-    inputValue: Readonly<NonNillable<EdgeCreationInputValue>>,
+    inputValue: Readonly<utils.NonNillable<EdgeCreationInputValue>>,
     context: MutationContext,
-    path: Path,
+    path: utils.Path,
   ): Promise<EdgeValue | undefined> {
     const selection = this.edge.referencedUniqueConstraint.selection;
 
     const actionName = Object.keys(inputValue)[0] as EdgeCreationInputAction;
-    const actionPath = addPath(path, actionName);
+    const actionPath = utils.addPath(path, actionName);
 
     switch (actionName) {
       case EdgeCreationInputAction.CONNECT: {
@@ -209,7 +203,9 @@ export class EdgeCreationInput extends AbstractComponentCreationInput<EdgeCreati
       }
 
       default:
-        throw new UnreachableValueError(actionName, { path });
+        throw new utils.UnreachableValueError(actionName, {
+          path,
+        });
     }
   }
 }

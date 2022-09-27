@@ -1,12 +1,4 @@
-import {
-  addPath,
-  getOptionalFlag,
-  Input,
-  MutationType,
-  UnexpectedConfigError,
-  type InputConfig,
-  type Path,
-} from '@prismamedia/graphql-platform-utils';
+import * as utils from '@prismamedia/graphql-platform-utils';
 import assert from 'node:assert/strict';
 import type {
   Component,
@@ -16,16 +8,16 @@ import type { MutationContext } from '../../../../operation/mutation/context.js'
 
 export abstract class AbstractComponentUpdateInput<
   TInputValue,
-> extends Input<TInputValue> {
+> extends utils.Input<TInputValue> {
   public constructor(
     public readonly component: Component,
-    config: Omit<InputConfig<TInputValue>, 'name' | 'optional'>,
-    configPath: Path,
+    config: Omit<utils.InputConfig<TInputValue>, 'name' | 'optional'>,
+    configPath: utils.Path,
   ) {
     assert(component.isMutable());
 
     const publicConfig = config.public;
-    const publicConfigPath = addPath(configPath, 'public');
+    const publicConfigPath = utils.addPath(configPath, 'public');
 
     super(
       {
@@ -33,10 +25,10 @@ export abstract class AbstractComponentUpdateInput<
         deprecated: component.deprecationReason,
         ...config,
         name: component.name,
-        public: getOptionalFlag(
+        public: utils.getOptionalFlag(
           publicConfig,
           component.isPublic() &&
-            component.node.isMutationPublic(MutationType.UPDATE),
+            component.node.isMutationPublic(utils.MutationType.UPDATE),
           publicConfigPath,
         ),
         optional: true,
@@ -45,9 +37,9 @@ export abstract class AbstractComponentUpdateInput<
     );
 
     if (this.isPublic()) {
-      if (!component.node.isMutationPublic(MutationType.UPDATE)) {
-        throw new UnexpectedConfigError(
-          `not to be "true" as the "${component.node.name}"'s ${MutationType.UPDATE} is private`,
+      if (!component.node.isMutationPublic(utils.MutationType.UPDATE)) {
+        throw new utils.UnexpectedConfigError(
+          `not to be "true" as the "${component.node.name}"'s ${utils.MutationType.UPDATE} is private`,
           publicConfig,
           { path: publicConfigPath },
         );
@@ -58,6 +50,6 @@ export abstract class AbstractComponentUpdateInput<
   public abstract resolveComponentUpdate(
     inputValue: TInputValue,
     context: MutationContext,
-    path: Path,
+    path: utils.Path,
   ): Promise<ComponentUpdate | undefined>;
 }

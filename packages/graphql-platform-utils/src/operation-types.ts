@@ -1,10 +1,10 @@
 import * as graphql from 'graphql';
 
-export const operationTypes = Object.freeze([
+export const operationTypes = [
   graphql.OperationTypeNode.QUERY,
   graphql.OperationTypeNode.MUTATION,
   graphql.OperationTypeNode.SUBSCRIPTION,
-] as const);
+] as const;
 
 export enum MutationType {
   CREATION = 'creation',
@@ -12,8 +12,8 @@ export enum MutationType {
   UPDATE = 'update',
 }
 
-export const mutationTypes = Object.freeze([
+export const mutationTypes = [
   MutationType.CREATION,
   MutationType.DELETION,
   MutationType.UPDATE,
-] as const);
+] as const;

@@ -1,0 +1,34 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`Table reference generates valid SQL with authorization 1`] = `
+"SELECT *
+FROM \`articles\`
+  LEFT JOIN \`categories\` AS \`articles>categories\` ON \`articles\`.\`category_privateId\` <= > \`articles>categories\`.\`privateId\`
+  LEFT JOIN \`users\` AS \`articles>users\` ON \`articles\`.\`created_by_id\` <= > \`articles>users\`.\`id\`
+  AND FALSE
+  LEFT JOIN \`user_profiles\` AS \`articles>users>user_profiles\` ON \`articles>users\`.\`id\` <= > \`articles>users>user_profiles\`.\`theUserId\`"
+`;
+
+exports[`Table reference generates valid SQL with authorization 2`] = `
+"SELECT *
+FROM \`articles\`
+  LEFT JOIN \`categories\` AS \`articles>categories\` ON \`articles\`.\`category_privateId\` <= > \`articles>categories\`.\`privateId\`
+  LEFT JOIN \`users\` AS \`articles>users\` ON \`articles\`.\`created_by_id\` <= > \`articles>users\`.\`id\`
+  LEFT JOIN \`user_profiles\` AS \`articles>users>user_profiles\` ON \`articles>users\`.\`id\` <= > \`articles>users>user_profiles\`.\`theUserId\`"
+`;
+
+exports[`Table reference generates valid SQL with authorization 3`] = `
+"SELECT *
+FROM \`articles\`
+  LEFT JOIN \`categories\` AS \`articles>categories\` ON \`articles\`.\`category_privateId\` <= > \`articles>categories\`.\`privateId\`
+  LEFT JOIN \`users\` AS \`articles>users\` ON \`articles\`.\`created_by_id\` <= > \`articles>users\`.\`id\`
+  LEFT JOIN \`user_profiles\` AS \`articles>users>user_profiles\` ON \`articles>users\`.\`id\` <= > \`articles>users>user_profiles\`.\`theUserId\`"
+`;
+
+exports[`Table reference generates valid SQL with authorization 4`] = `
+"SELECT *
+FROM \`articles\`
+  LEFT JOIN \`categories\` AS \`articles>categories\` ON \`articles\`.\`category_privateId\` <= > \`articles>categories\`.\`privateId\`
+  LEFT JOIN \`users\` AS \`articles>users\` ON \`articles\`.\`created_by_id\` <= > \`articles>users\`.\`id\`
+  LEFT JOIN \`user_profiles\` AS \`articles>users>user_profiles\` ON \`articles>users\`.\`id\` <= > \`articles>users>user_profiles\`.\`theUserId\`"
+`;

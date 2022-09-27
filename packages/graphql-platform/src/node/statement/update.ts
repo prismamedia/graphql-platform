@@ -36,7 +36,7 @@ const nodeUpdateProxyHandler: ProxyHandler<NodeUpdate> = {
       update.node.getComponentByName(componentName as any),
     ),
   set: (update, componentName, componentUpdate) => {
-    update.set(
+    update.setComponentUpdate(
       update.node.getComponentByName(componentName as any),
       componentUpdate,
     );
@@ -44,7 +44,9 @@ const nodeUpdateProxyHandler: ProxyHandler<NodeUpdate> = {
     return true;
   },
   deleteProperty: (update, componentName) => {
-    update.set(update.node.getComponentByName(componentName as any));
+    update.setComponentUpdate(
+      update.node.getComponentByName(componentName as any),
+    );
 
     return true;
   },
@@ -75,7 +77,7 @@ export class NodeUpdate<
     return this.#updatesByComponent;
   }
 
-  public set(
+  public setComponentUpdate(
     component: Component<TRequestContext, TConnector>,
     update?: ComponentUpdate,
   ): void {
@@ -88,7 +90,7 @@ export class NodeUpdate<
     const clone = new NodeUpdate(this.node);
 
     this.#updatesByComponent.forEach((update, component) =>
-      clone.set(component, update),
+      clone.setComponentUpdate(component, update),
     );
 
     return clone;

@@ -20,6 +20,9 @@ input ArticleUpdateInput {
 
   """Is the article a partnership?"""
   sponsored: Boolean
+  views: UnsignedBigInt
+  score: UnsignedFloat
+  machineTags: JSONArray
   tags: ArticleNestedTagsReverseEdgeUpdateInput
 
   """It is possible to provide the article's body as raw HTML"""

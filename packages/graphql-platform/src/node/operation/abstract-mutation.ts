@@ -1,12 +1,4 @@
-import {
-  addPath,
-  castToError,
-  MutationType,
-  type Nillable,
-  type OptionalFlag,
-  type Path,
-  type PlainObject,
-} from '@prismamedia/graphql-platform-utils';
+import * as utils from '@prismamedia/graphql-platform-utils';
 import { Memoize } from '@prismamedia/ts-memoize';
 import * as graphql from 'graphql';
 import type { ConnectorInterface } from '../../connector-interface.js';
@@ -16,7 +8,9 @@ import {
   AbstractOperation,
   type NodeSelectionAwareArgs,
 } from '../abstract-operation.js';
+import { AndOperation, NodeFilter } from '../statement/filter.js';
 import type { ContextBoundAPI } from './api.js';
+import { catchConnectorError } from './error.js';
 import { MutationContext } from './mutation/context.js';
 import type { MutationInterface } from './mutation/interface.js';
 
@@ -52,25 +46,25 @@ export interface AbstractMutationConfig<
   /**
    * Optional, either the mutation is enabled or not
    */
-  enabled?: OptionalFlag;
+  enabled?: utils.OptionalFlag;
 
   /**
    * Optional, either the mutation is exposed publicly (= in the GraphQL API) or not
    */
-  public?: OptionalFlag;
+  public?: utils.OptionalFlag;
 }
 
 export abstract class AbstractMutation<
     TRequestContext extends object,
     TConnector extends ConnectorInterface,
-    TArgs extends Nillable<PlainObject>,
+    TArgs extends utils.Nillable<utils.PlainObject>,
     TResult,
   >
   extends AbstractOperation<TRequestContext, TConnector, TArgs, TResult>
   implements MutationInterface<TRequestContext, TConnector>
 {
   public override readonly operationType = graphql.OperationTypeNode.MUTATION;
-  public abstract readonly mutationTypes: ReadonlyArray<MutationType>;
+  public abstract readonly mutationTypes: ReadonlyArray<utils.MutationType>;
 
   @Memoize()
   public override isEnabled(): boolean {
@@ -89,28 +83,37 @@ export abstract class AbstractMutation<
     );
   }
 
-  protected override assertAuthorization(
+  protected override ensureAuthorization(
     context: MutationContext<TRequestContext, TConnector>,
-    path: Path,
-  ): void {
-    [undefined, ...this.mutationTypes].forEach((mutationType) =>
-      context.getNodeAuthorization(this.node, path, mutationType),
+    path: utils.Path,
+  ): NodeFilter<TRequestContext, TConnector> | undefined {
+    return this.mutationTypes.reduce<NodeFilter | undefined>(
+      (authorization, mutationType) =>
+        new NodeFilter(
+          this.node,
+          new AndOperation([
+            authorization?.filter,
+            context.ensureAuthorization(this.node, path, mutationType)?.filter,
+          ]),
+        ).normalized,
+      super.ensureAuthorization(context, path),
     );
   }
 
-  /**
-   * The actual implementation with valid arguments and context
-   */
   protected abstract override executeWithValidArgumentsAndContext(
+    authorization: NodeFilter<TRequestContext, TConnector> | undefined,
     args: NodeSelectionAwareArgs<TArgs>,
     context: MutationContext<TRequestContext, TConnector>,
-    path: Path,
+    path: utils.Path,
   ): Promise<TResult>;
 
   public override async execute(
     args: TArgs,
     context: TRequestContext | MutationContext<TRequestContext, TConnector>,
-    path: Path = addPath(addPath(undefined, this.operationType), this.name),
+    path: utils.Path = utils.addPath(
+      utils.addPath(undefined, this.operationType),
+      this.name,
+    ),
   ): Promise<TResult> {
     if (context instanceof MutationContext) {
       return super.execute(args, context, path);
@@ -120,33 +123,56 @@ export abstract class AbstractMutation<
 
     const mutationContext = new MutationContext(this.gp, context);
 
-    this.assertAuthorization(mutationContext, path);
+    const authorization = this.ensureAuthorization(mutationContext, path);
 
     const parsedArguments = this.parseArguments(args, mutationContext, path);
 
-    await this.connector.preMutation?.(mutationContext);
+    if (this.connector.preMutation) {
+      await catchConnectorError(
+        () => this.connector.preMutation!(mutationContext),
+        path,
+      );
+    }
 
     let result: TResult;
 
     try {
       result = await this.executeWithValidArgumentsAndContext(
+        authorization,
         parsedArguments,
         mutationContext,
         path,
       );
 
-      await this.connector.postSuccessfulMutation?.(mutationContext);
+      if (this.connector.postSuccessfulMutation) {
+        await catchConnectorError(
+          () => this.connector.postSuccessfulMutation!(mutationContext),
+          path,
+        );
+      }
 
       // "Commit" deferred changes in case of success
       mutationContext.commitChanges();
     } catch (error) {
-      const castedError = castToError(error);
+      if (this.connector.postFailedMutation) {
+        await catchConnectorError(
+          () =>
+            this.connector.postFailedMutation!(
+              mutationContext,
+              utils.castToError(error),
+            ),
+          path,
+        );
+      }
 
-      await this.connector.postFailedMutation?.(mutationContext, castedError);
-
-      throw castedError;
+      throw error;
     } finally {
-      await this.connector.postMutation?.(mutationContext);
+      if (this.connector.postMutation) {
+        await catchConnectorError(
+          () => this.connector.postMutation!(mutationContext),
+          path,
+        );
+      }
     }
 
     return result;

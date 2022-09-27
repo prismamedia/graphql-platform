@@ -27,6 +27,7 @@ import {
   type DataType,
   type DataTypeConfig,
 } from '../data-type.js';
+import { FullTextIndex } from '../index/full-text.js';
 
 export const forbiddenReferenceDataTypeConstructors: ReadonlyArray<
   Constructor<DataType>
@@ -53,15 +54,23 @@ export interface LeafColumnConfig {
    * Default: false
    */
   autoIncrement?: utils.OptionalFlag;
+
+  /**
+   * Optional, either this column has a full-text index or not
+   *
+   * Default: false
+   */
+  fullTextIndex?: utils.OptionalFlag;
 }
 
 export class LeafColumn extends AbstractColumn {
-  public readonly config: LeafColumnConfig | undefined;
+  public readonly config?: LeafColumnConfig;
   public readonly configPath: utils.Path;
 
   public readonly name: string;
   public readonly description?: string;
   public readonly dataType: DataType;
+  public readonly fullTextIndex?: FullTextIndex;
 
   public constructor(
     table: Table,
@@ -155,6 +164,7 @@ export class LeafColumn extends AbstractColumn {
             this.dataType = new DoubleType<number>({
               modifiers:
                 leafTypeName === 'UnsignedFloat' ? ['UNSIGNED'] : undefined,
+              scale: 2,
             });
             break;
 
@@ -226,6 +236,7 @@ export class LeafColumn extends AbstractColumn {
             this.dataType = new JsonType<scalars.RawDraftContentState>({
               toColumnValue: (value) => JSON.stringify(value),
               fromColumnValue: (value) => JSON.parse(value),
+              fromJsonValue: (value: any) => value,
             });
             break;
 
@@ -233,6 +244,7 @@ export class LeafColumn extends AbstractColumn {
             this.dataType = new JsonType<JsonObject>({
               toColumnValue: (value) => JSON.stringify(value),
               fromColumnValue: (value) => JSON.parse(value),
+              fromJsonValue: (value: any) => value,
             });
             break;
 
@@ -261,6 +273,37 @@ export class LeafColumn extends AbstractColumn {
           dataTypeConfig,
           { path: dataTypeConfigPath },
         );
+      }
+    }
+
+    // full-text-index
+    {
+      const fullTextIndexConfig = this.config?.fullTextIndex;
+      const fullTextIndexConfigPath = utils.addPath(
+        this.configPath,
+        'fullTextIndex',
+      );
+
+      if (
+        utils.getOptionalFlag(
+          fullTextIndexConfig,
+          false,
+          fullTextIndexConfigPath,
+        )
+      ) {
+        if (
+          ![CharType, JsonType, TextType, VarCharType].some(
+            (constructor) => this.dataType instanceof constructor,
+          )
+        ) {
+          throw new utils.UnexpectedConfigError(
+            `not to be true as the "${this.dataType.kind}" data-type does not support it`,
+            fullTextIndexConfig,
+            { path: fullTextIndexConfigPath },
+          );
+        }
+
+        this.fullTextIndex = new FullTextIndex(this);
       }
     }
   }

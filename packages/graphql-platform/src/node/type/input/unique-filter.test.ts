@@ -1,4 +1,4 @@
-import { addPath } from '@prismamedia/graphql-platform-utils';
+import * as utils from '@prismamedia/graphql-platform-utils';
 import { GraphQLInputObjectType, printType } from 'graphql';
 import { GraphQLPlatform } from '../../../index.js';
 import { MyGP, nodeNames, nodes } from '../../../__tests__/config.js';
@@ -69,7 +69,7 @@ describe('NodeUniqueFilterInputType', () => {
           expect(() =>
             uniqueFilterInputType.parseValue(
               value,
-              addPath(undefined, uniqueFilterInputType.name),
+              utils.addPath(undefined, uniqueFilterInputType.name),
             ),
           ).toThrowError(error);
         },

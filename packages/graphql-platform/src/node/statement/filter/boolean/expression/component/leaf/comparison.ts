@@ -6,7 +6,6 @@ import type {
 } from '../../../../../../definition/component/leaf.js';
 import type { BooleanFilter } from '../../../../boolean.js';
 import type { BooleanExpressionInterface } from '../../../expression-interface.js';
-import { NotOperation } from '../../../operation/not.js';
 import { BooleanValue } from '../../../value.js';
 import { LeafInFilter } from './in.js';
 
@@ -22,43 +21,37 @@ export class LeafComparisonFilter implements BooleanExpressionInterface {
 
   public constructor(
     public readonly leaf: Leaf,
-    public readonly operator: 'eq' | 'not' | 'gt' | 'gte' | 'lt' | 'lte',
+    public readonly operator: 'eq' | 'gt' | 'gte' | 'lt' | 'lte',
     public readonly value: LeafValue,
   ) {
     assert.notEqual(value, undefined);
 
     if (['gt', 'gte', 'lt', 'lte'].includes(operator)) {
-      assert(leaf.sortable, `The "${leaf}" leaf is not sortable`);
+      assert(leaf.isSortable(), `The "${leaf}" leaf is not sortable`);
       assert.notEqual(value, null);
     }
 
     this.reduced =
-      !leaf.isNullable() && value === null
-        ? operator === 'eq'
-          ? new BooleanValue(false)
-          : operator === 'not'
-          ? new BooleanValue(true)
-          : this
+      !leaf.isNullable() && operator === 'eq' && value === null
+        ? new BooleanValue(false)
         : this;
   }
 
   @Memoize()
-  public get complement(): LeafComparisonFilter {
-    return new LeafComparisonFilter(
-      this.leaf,
-      this.operator === 'eq'
-        ? 'not'
-        : this.operator === 'not'
-        ? 'eq'
-        : this.operator === 'gt'
-        ? 'lte'
-        : this.operator === 'gte'
-        ? 'lt'
-        : this.operator === 'lt'
-        ? 'gte'
-        : 'gt',
-      this.value,
-    );
+  public get complement(): LeafComparisonFilter | undefined {
+    return this.operator === 'eq'
+      ? undefined
+      : new LeafComparisonFilter(
+          this.leaf,
+          this.operator === 'gt'
+            ? 'lte'
+            : this.operator === 'gte'
+            ? 'lt'
+            : this.operator === 'lt'
+            ? 'gte'
+            : 'gt',
+          this.value,
+        );
   }
 
   public equals(expression: unknown): boolean {
@@ -80,10 +73,6 @@ export class LeafComparisonFilter implements BooleanExpressionInterface {
           if (!this.leaf.areValuesEqual(this.value, expression.value)) {
             return new BooleanValue(false);
           }
-        } else if (expression.operator === 'not') {
-          if (this.leaf.areValuesEqual(this.value, expression.value)) {
-            return new BooleanValue(false);
-          }
         } else if (this.value !== null && expression.value !== null) {
           if (expression.operator === 'gt') {
             return this.value <= expression.value
@@ -101,15 +90,6 @@ export class LeafComparisonFilter implements BooleanExpressionInterface {
             return this.value > expression.value
               ? new BooleanValue(false)
               : this;
-          }
-        }
-      } else if (this.operator === 'not') {
-        if (expression.operator === 'not') {
-          if (!this.leaf.areValuesEqual(this.value, expression.value)) {
-            // De Morgan's laws: (NOT A) AND (NOT B) = NOT (A OR B)
-            return new NotOperation(
-              new LeafInFilter(this.leaf, [this.value, expression.value]),
-            );
           }
         }
       } else if (this.value !== null && expression.value !== null) {
@@ -136,10 +116,6 @@ export class LeafComparisonFilter implements BooleanExpressionInterface {
       if (this.operator === 'eq') {
         if (expression.operator === 'eq') {
           return new LeafInFilter(this.leaf, [this.value, expression.value]);
-        } else if (expression.operator === 'not') {
-          if (this.leaf.areValuesEqual(this.value, expression.value)) {
-            return new BooleanValue(true);
-          }
         }
       }
     }

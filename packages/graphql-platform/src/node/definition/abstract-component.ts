@@ -1,19 +1,4 @@
-import {
-  addPath,
-  assertName,
-  getOptionalDeprecation,
-  getOptionalDescription,
-  getOptionalFlag,
-  indefinite,
-  MutationType,
-  Nillable,
-  UnexpectedConfigError,
-  type Name,
-  type OptionalDeprecation,
-  type OptionalDescription,
-  type OptionalFlag,
-  type Path,
-} from '@prismamedia/graphql-platform-utils';
+import * as utils from '@prismamedia/graphql-platform-utils';
 import { Memoize } from '@prismamedia/ts-memoize';
 import type { ConnectorInterface } from '../../connector-interface.js';
 import type { Node } from '../../node.js';
@@ -25,33 +10,33 @@ export type AbstractComponentConfig = {
   /**
    * Optional, provide a description for this component
    */
-  description?: OptionalDescription;
+  description?: utils.OptionalDescription;
 
   /**
    * Optional, either this component is deprecated or not
    *
    * The information will be shown in all the operations
    */
-  deprecated?: OptionalDeprecation;
+  deprecated?: utils.OptionalDeprecation;
 
   /**
    * Optional, either this component is exposed publicly (in the GraphQL API) or not (only available in the internal API)
    */
-  public?: OptionalFlag;
+  public?: utils.OptionalFlag;
 
   /**
    * Optional, either its value can be "null" or not
    *
    * Default: true
    */
-  nullable?: OptionalFlag;
+  nullable?: utils.OptionalFlag;
 
   /**
    * Optional, either its value can be updated or not
    *
    * Default: true
    */
-  mutable?: OptionalFlag;
+  mutable?: utils.OptionalFlag;
 };
 
 export abstract class AbstractComponent<
@@ -61,30 +46,29 @@ export abstract class AbstractComponent<
   public readonly indefinite: string;
   public readonly description?: string;
   public readonly deprecationReason?: string;
-  public abstract readonly kind: string;
   public abstract readonly selection: any;
   public abstract readonly creationInput?: AbstractComponentCreationInput<any>;
   public abstract readonly updateInput?: AbstractComponentUpdateInput<any>;
 
   public constructor(
     public readonly node: Node<TRequestContext, TConnector>,
-    public readonly name: Name,
+    public readonly name: utils.Name,
     protected readonly config: AbstractComponentConfig,
-    protected readonly configPath: Path,
+    protected readonly configPath: utils.Path,
   ) {
-    assertName(name, configPath);
+    utils.assertName(name, configPath);
 
     // indefinite
     {
-      this.indefinite = indefinite(name);
+      this.indefinite = utils.indefinite(name);
     }
 
     // description
     {
       const descriptionConfig = config.description;
-      const descriptionConfigPath = addPath(configPath, 'description');
+      const descriptionConfigPath = utils.addPath(configPath, 'description');
 
-      this.description = getOptionalDescription(
+      this.description = utils.getOptionalDescription(
         descriptionConfig,
         descriptionConfigPath,
       );
@@ -93,9 +77,9 @@ export abstract class AbstractComponent<
     // deprecated
     {
       const deprecatedConfig = config.deprecated;
-      const deprecatedConfigPath = addPath(configPath, 'deprecated');
+      const deprecatedConfigPath = utils.addPath(configPath, 'deprecated');
 
-      this.deprecationReason = getOptionalDeprecation(
+      this.deprecationReason = utils.getOptionalDeprecation(
         deprecatedConfig,
         `The "${this.name}" component is deprecated`,
         deprecatedConfigPath,
@@ -122,17 +106,17 @@ export abstract class AbstractComponent<
   @Memoize()
   public isMutable(): boolean {
     const mutableConfig = this.config.mutable;
-    const mutableConfigPath = addPath(this.configPath, 'mutable');
+    const mutableConfigPath = utils.addPath(this.configPath, 'mutable');
 
-    const isMutable = getOptionalFlag(
+    const isMutable = utils.getOptionalFlag(
       mutableConfig,
-      this.node.isMutationEnabled(MutationType.UPDATE),
+      this.node.isMutationEnabled(utils.MutationType.UPDATE),
       mutableConfigPath,
     );
 
-    if (isMutable && !this.node.isMutationEnabled(MutationType.UPDATE)) {
-      throw new UnexpectedConfigError(
-        `not to be "true" as the "${this.node}"'s ${MutationType.UPDATE} is disabled`,
+    if (isMutable && !this.node.isMutationEnabled(utils.MutationType.UPDATE)) {
+      throw new utils.UnexpectedConfigError(
+        `not to be "true" as the "${this.node}"'s ${utils.MutationType.UPDATE} is disabled`,
         mutableConfig,
         { path: mutableConfigPath },
       );
@@ -144,9 +128,9 @@ export abstract class AbstractComponent<
   @Memoize()
   public isNullable(): boolean {
     const nullableConfig = this.config.nullable;
-    const nullableConfigPath = addPath(this.configPath, 'nullable');
+    const nullableConfigPath = utils.addPath(this.configPath, 'nullable');
 
-    return getOptionalFlag(nullableConfig, true, nullableConfigPath);
+    return utils.getOptionalFlag(nullableConfig, true, nullableConfigPath);
   }
 
   public abstract isPublic(): boolean;
@@ -183,15 +167,18 @@ export abstract class AbstractComponent<
     this.updateInput?.validate();
   }
 
-  public abstract parseValue(maybeValue: unknown, path?: Path): ComponentValue;
+  public abstract parseValue(
+    maybeValue: unknown,
+    path?: utils.Path,
+  ): ComponentValue;
 
   public abstract parseUpdate(
     maybeUpdate: unknown,
-    path?: Path,
+    path?: utils.Path,
   ): ComponentUpdate;
 
   public abstract areValuesEqual(
-    a: Nillable<ComponentValue>,
-    b: Nillable<ComponentValue>,
+    a: utils.Nillable<ComponentValue>,
+    b: utils.Nillable<ComponentValue>,
   ): boolean;
 }

@@ -1,13 +1,7 @@
-import { addPath } from '@prismamedia/graphql-platform-utils';
+import * as utils from '@prismamedia/graphql-platform-utils';
 import { GraphQLEnumType, printType } from 'graphql';
 import { GraphQLPlatform } from '../../../index.js';
-import {
-  MyGP,
-  myVisitorContext,
-  nodeNames,
-  nodes,
-} from '../../../__tests__/config.js';
-import { OperationContext } from '../../operation/context.js';
+import { MyGP, nodeNames, nodes } from '../../../__tests__/config.js';
 import {
   OrderingDirection,
   OrderingExpression,
@@ -49,28 +43,15 @@ describe('NodeOrderingInputType', () => {
         [
           'Article',
           ['_id_DESCS'],
-          myVisitorContext,
-          '"ArticleOrderingInput.0" - Expects a value among "_id_ASC, _id_DESC, createdAt_ASC, createdAt_DESC, updatedAt_ASC, updatedAt_DESC, tagCount_ASC, tagCount_DESC", got: \'_id_DESCS\'',
-        ],
-        [
-          'Article',
-          ['_id_DESC', 'tagCount_DESC'],
-          myVisitorContext,
-          '"ArticleOrderingInput.1.tagCount_DESC" - Unauthorized access to "ArticleTag"',
+          '"ArticleOrderingInput.0" - Expects a value among "_id_ASC, _id_DESC, createdAt_ASC, createdAt_DESC, updatedAt_ASC, updatedAt_DESC, views_ASC, views_DESC, score_ASC, score_DESC, tagCount_ASC, tagCount_DESC", got: \'_id_DESCS\'',
         ],
       ])(
         'throws an Error on %sOrderingInput.sort(%p)',
-        (nodeName, input, requestContext, error) => {
+        (nodeName, input, error) => {
           const node = gp.getNodeByName(nodeName);
           const orderingInputType = node.orderingInputType;
 
-          expect(() =>
-            orderingInputType.sort(
-              input,
-              new OperationContext(gp, requestContext),
-              addPath(undefined, orderingInputType.name),
-            ),
-          ).toThrowError(error);
+          expect(() => orderingInputType.sort(input)).toThrowError(error);
         },
       );
     });
@@ -121,7 +102,7 @@ describe('NodeOrderingInputType', () => {
           orderingInputType.sort(
             input,
             undefined,
-            addPath(undefined, orderingInputType.name),
+            utils.addPath(undefined, orderingInputType.name),
           ).normalized?.ast.expressions,
         ).toEqual(expressions);
       });

@@ -211,36 +211,6 @@ export function aggregateError<TInputElement, TOutput>(
   return output;
 }
 
-export async function aggregateConcurrentError<TInputElement, TOutputElement>(
-  inputs: Iterable<TInputElement>,
-  mapper: (
-    currentInput: TInputElement,
-    currentIndex: number,
-  ) => Promise<TOutputElement>,
-  options?: NestableAggregateErrorOptions,
-): Promise<TOutputElement[]> {
-  const errors: Error[] = [];
-
-  const outputs = await Promise.all(
-    Array.from(inputs, async (currentInput, currentIndex) => {
-      try {
-        return await mapper(currentInput, currentIndex);
-      } catch (error) {
-        errors.push(castToError(error));
-      }
-    }),
-  );
-
-  if (errors.length > 0) {
-    throw errors.length === 1
-      ? errors[0]
-      : new NestableAggregateError(errors, options);
-  }
-
-  // @ts-expect-error
-  return outputs;
-}
-
 export interface ConfigErrorOptions extends NestableErrorOptions {
   path: Path;
 }

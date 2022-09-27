@@ -19,7 +19,7 @@ export const Category = {
 
 export const Article = {
   article_01: {
-    category: 'category_news',
+    category: 'category_home',
     title: 'My first draft article',
     body: {
       blocks: [],
@@ -28,16 +28,33 @@ export const Article = {
     metas: {
       myArbitraryKey: 'with my arbitrary value',
     },
+    createdAt: new Date('2022-01-01T00:00:00Z'),
   },
   article_02: {
-    category: 'category_news',
+    category: 'category_home',
     title: 'My second draft article',
     status: ArticleStatus.DRAFT,
+    createdAt: new Date('2022-02-01T00:00:00Z'),
   },
   article_03: {
     category: 'category_news',
     title: 'My first published article',
     status: ArticleStatus.PUBLISHED,
+    createdAt: new Date('2022-03-01T00:00:00Z'),
+  },
+  article_04: {
+    category: 'category_home',
+    title: 'My second published article',
+    status: ArticleStatus.PUBLISHED,
+    body: {
+      blocks: [],
+      entityMap: {},
+    },
+    createdAt: new Date('2022-04-01T00:00:00Z'),
+    views: 1234567890n,
+    score: 0.123,
+    machineTags: ['namespace:key=a_value', 'namespace:key=other_value'],
+    metas: { aKey: 'withAnyValue' },
   },
 } as const;
 
@@ -64,6 +81,11 @@ export const ArticleTag = {
     article: 'article_03',
     tag: 'tag_02',
     order: 1,
+  },
+  'article_04-tag_03': {
+    article: 'article_04',
+    tag: 'tag_03',
+    order: 0,
   },
 } as const;
 

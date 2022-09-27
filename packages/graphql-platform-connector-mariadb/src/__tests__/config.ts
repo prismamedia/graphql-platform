@@ -41,6 +41,13 @@ export function makeGraphQLPlatform(
                       ...config,
                       column: { name: 'privateId', autoIncrement: true },
                     }
+                  : nodeName === 'Article' &&
+                    componentName === 'body' &&
+                    config.kind === 'Leaf'
+                  ? {
+                      ...config,
+                      column: { fullTextIndex: true },
+                    }
                   : nodeName === 'UserProfile' &&
                     componentName === 'user' &&
                     config.kind === 'Edge'

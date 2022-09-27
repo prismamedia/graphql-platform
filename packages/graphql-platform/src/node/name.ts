@@ -1,8 +1,4 @@
-import {
-  assertName,
-  UnexpectedConfigError,
-  type Path,
-} from '@prismamedia/graphql-platform-utils';
+import * as utils from '@prismamedia/graphql-platform-utils';
 import inflection from 'inflection';
 
 /**
@@ -14,9 +10,9 @@ export type NodeName = string;
 
 export function assertNodeName(
   maybeNodeName: unknown,
-  path: Path,
+  path: utils.Path,
 ): asserts maybeNodeName is NodeName {
-  assertName(maybeNodeName, path);
+  utils.assertName(maybeNodeName, path);
 
   // if (maybeNodeName.includes('_')) {
   //   throw new UnexpectedConfigError(
@@ -36,7 +32,7 @@ export function assertNodeName(
 
   const pascalCasedName = inflection.camelize(maybeNodeName, false);
   if (maybeNodeName !== pascalCasedName) {
-    throw new UnexpectedConfigError(
+    throw new utils.UnexpectedConfigError(
       `to be in PascalCase (= "${pascalCasedName}")`,
       maybeNodeName,
       { path },

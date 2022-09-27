@@ -2,14 +2,15 @@ import type * as core from '@prismamedia/graphql-platform';
 import * as utils from '@prismamedia/graphql-platform-utils';
 import { Memoize } from '@prismamedia/ts-memoize';
 import type { SetOptional } from 'type-fest';
-import { escapeStringValue } from '../../../../escape.js';
+import { escapeStringValue } from '../../../../escaping.js';
 import {
   AbstractDataType,
   type AbstractDataTypeConfig,
 } from '../../abstract-data-type.js';
 
-export interface EnumTypeConfig<TLeafValue extends core.LeafValue = any>
-  extends AbstractDataTypeConfig<EnumType['kind'], string, TLeafValue> {
+export interface EnumTypeConfig<
+  TLeafValue extends NonNullable<core.LeafValue> = any,
+> extends AbstractDataTypeConfig<EnumType['kind'], TLeafValue, string> {
   values: ReadonlyArray<string>;
 }
 
@@ -17,8 +18,8 @@ export interface EnumTypeConfig<TLeafValue extends core.LeafValue = any>
  * @see https://mariadb.com/kb/en/enum/
  */
 export class EnumType<
-  TLeafValue extends core.LeafValue = any,
-> extends AbstractDataType<'ENUM', string, TLeafValue> {
+  TLeafValue extends NonNullable<core.LeafValue> = any,
+> extends AbstractDataType<'ENUM', TLeafValue, string> {
   public readonly values: ReadonlyArray<string>;
 
   public constructor(
@@ -30,6 +31,7 @@ export class EnumType<
         kind: 'ENUM',
         serialize: (value) => escapeStringValue(value),
         fromColumnValue: config?.fromColumnValue,
+        fromJsonValue: config?.fromJsonValue,
         toColumnValue: config?.toColumnValue,
       },
       configPath,

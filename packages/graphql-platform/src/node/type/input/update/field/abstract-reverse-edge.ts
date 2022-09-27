@@ -1,20 +1,15 @@
-import {
-  Input,
-  NonNillable,
-  type InputConfig,
-  type Path,
-} from '@prismamedia/graphql-platform-utils';
+import * as utils from '@prismamedia/graphql-platform-utils';
 import type { NodeValue } from '../../../../../node.js';
 import type { ReverseEdge } from '../../../../definition/reverse-edge.js';
 import type { MutationContext } from '../../../../operation/mutation/context.js';
 
 export abstract class AbstractReverseEdgeUpdateInput<
   TInputValue,
-> extends Input<TInputValue> {
+> extends utils.Input<TInputValue> {
   public constructor(
     public readonly reverseEdge: ReverseEdge,
     config: Omit<
-      InputConfig<TInputValue>,
+      utils.InputConfig<TInputValue>,
       'name' | 'public' | 'optional' | 'nullable'
     >,
   ) {
@@ -31,8 +26,8 @@ export abstract class AbstractReverseEdgeUpdateInput<
 
   public abstract applyActions(
     nodeValue: Readonly<NodeValue>,
-    inputValue: Readonly<NonNillable<TInputValue>>,
+    inputValue: Readonly<utils.NonNillable<TInputValue>>,
     context: MutationContext,
-    path: Path,
+    path: utils.Path,
   ): Promise<void>;
 }

@@ -1,9 +1,4 @@
-import {
-  Input,
-  nonNillableInputType,
-  type NonNillable,
-  type Path,
-} from '@prismamedia/graphql-platform-utils';
+import * as utils from '@prismamedia/graphql-platform-utils';
 import { Memoize } from '@prismamedia/ts-memoize';
 import * as graphql from 'graphql';
 import type { ConnectorInterface } from '../../../../connector-interface.js';
@@ -11,13 +6,14 @@ import type {
   NodeSelectionAwareArgs,
   RawNodeSelectionAwareArgs,
 } from '../../../abstract-operation.js';
+import type { NodeFilter } from '../../../statement/filter.js';
 import type { NodeSelectedValue } from '../../../statement/selection/value.js';
 import type { NodeCreationInputValue } from '../../../type/input/creation.js';
 import { AbstractCreation } from '../abstract-creation.js';
 import type { MutationContext } from './../context.js';
 
 export type CreateOneMutationArgs = RawNodeSelectionAwareArgs<{
-  data: NonNillable<NodeCreationInputValue>;
+  data: utils.NonNillable<NodeCreationInputValue>;
 }>;
 
 export type CreateOneMutationResult = NodeSelectedValue;
@@ -32,15 +28,15 @@ export class CreateOneMutation<
   CreateOneMutationResult
 > {
   protected override readonly selectionAware = true;
-  public override readonly name = `create${this.node.name}`;
-  public override readonly description = `Creates one "${this.node.name}", throws an error if it already exists`;
+  public override readonly name = `create${this.node}`;
+  public override readonly description = `Creates one "${this.node}", throws an error if it already exists`;
 
   @Memoize()
   public override get arguments() {
     return [
-      new Input({
+      new utils.Input({
         name: 'data',
-        type: nonNillableInputType(this.node.creationInputType),
+        type: utils.nonNillableInputType(this.node.creationInputType),
       }),
     ];
   }
@@ -53,18 +49,22 @@ export class CreateOneMutation<
   }
 
   protected override async executeWithValidArgumentsAndContext(
+    authorization: NodeFilter<TRequestContext, TConnector> | undefined,
     args: NodeSelectionAwareArgs<CreateOneMutationArgs>,
     context: MutationContext<TRequestContext, TConnector>,
-    path: Path,
+    path: utils.Path,
   ): Promise<CreateOneMutationResult> {
-    const [nodeValue] = await this.node.getMutationByKey('create-some').execute(
-      {
-        data: [args.data],
-        selection: args.selection,
-      },
-      context,
-      path,
-    );
+    const [nodeValue] = await this.node
+      .getMutationByKey('create-some')
+      .internal(
+        authorization,
+        {
+          data: [args.data],
+          selection: args.selection,
+        },
+        context,
+        path,
+      );
 
     return nodeValue;
   }

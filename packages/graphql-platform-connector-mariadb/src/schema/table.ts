@@ -5,22 +5,29 @@ import { Memoize } from '@prismamedia/ts-memoize';
 import inflection from 'inflection';
 import type * as mariadb from 'mariadb';
 import assert from 'node:assert/strict';
-import type { MariaDBConnector } from '../index.js';
+import type { MariaDBConnector, OkPacket } from '../index.js';
 import type { Schema } from '../schema.js';
 import {
   AddTableForeignKeysStatement,
   AddTableForeignKeysStatementConfig,
   CountStatement,
-  CountStatementConfig,
   CreateTableStatement,
   CreateTableStatementConfig,
+  DeleteStatement,
+  DeleteStatementConfig,
   FindStatement,
-  FindStatementConfig,
   InsertStatement,
   InsertStatementConfig,
+  UpdateStatement,
+  UpdateStatementConfig,
 } from '../statement.js';
 import { Column, LeafColumn, ReferenceColumnTree } from './table/column.js';
-import { ForeignKey, PrimaryKey, UniqueIndex } from './table/index.js';
+import {
+  ForeignKeyIndex,
+  FullTextIndex,
+  PrimaryKey,
+  UniqueIndex,
+} from './table/index.js';
 
 export * from './table/column.js';
 export * from './table/data-type.js';
@@ -50,7 +57,7 @@ export interface TableConfig {
 }
 
 export class Table {
-  public readonly config: TableConfig | undefined;
+  public readonly config?: TableConfig;
   public readonly configPath: utils.Path;
 
   public readonly name: string;
@@ -67,7 +74,11 @@ export class Table {
     core.UniqueConstraint,
     UniqueIndex
   >;
-  public readonly foreignKeysByEdge: ReadonlyMap<core.Edge, ForeignKey>;
+  public readonly fullTextIndexesByLeaf: ReadonlyMap<core.Leaf, FullTextIndex>;
+  public readonly foreignKeyIndexesByEdge: ReadonlyMap<
+    core.Edge,
+    ForeignKeyIndex
+  >;
 
   public constructor(
     public readonly schema: Schema,
@@ -135,12 +146,27 @@ export class Table {
       );
     }
 
-    // foreign-keys-by-edge
+    // full-text-indexes-by-leaf
     {
-      this.foreignKeysByEdge = new Map(
+      this.fullTextIndexesByLeaf = new Map(
+        Array.from(this.columnsByLeaf.values()).reduce<
+          [core.Leaf, FullTextIndex][]
+        >(
+          (entries, column) =>
+            column.fullTextIndex
+              ? [...entries, [column.leaf, column.fullTextIndex]]
+              : entries,
+          [],
+        ),
+      );
+    }
+
+    // foreign-key-indexes-by-edge
+    {
+      this.foreignKeyIndexesByEdge = new Map(
         Array.from(node.edgesByName.values(), (edge) => [
           edge,
-          new ForeignKey(this, edge),
+          new ForeignKeyIndex(this, edge),
         ]),
       );
     }
@@ -207,8 +233,8 @@ export class Table {
     return uniqueIndex;
   }
 
-  public getForeignKeyByEdge(edge: core.Edge): ForeignKey {
-    const foreignKey = this.foreignKeysByEdge.get(edge);
+  public getForeignKeyByEdge(edge: core.Edge): ForeignKeyIndex {
+    const foreignKey = this.foreignKeyIndexesByEdge.get(edge);
     assert(
       foreignKey,
       `The edge "${edge}" is not part of the node "${this.node}"`,
@@ -224,13 +250,17 @@ export class Table {
       throw new utils.UnexpectedValueError('a plain-object', row);
     }
 
-    for (const column of this.columns) {
-      if (typeof row[column.name] === 'undefined') {
-        throw new utils.UnexpectedValueError(
-          `the column "${column}"'s value to be defined`,
-          row[column.name],
-        );
-      }
+    const emptyColumns = this.columns.filter(
+      (column) => typeof row[column.name] === 'undefined',
+    );
+
+    if (emptyColumns.length) {
+      throw new utils.UnexpectedValueError(
+        `the column(s) "${emptyColumns
+          .map((column) => column.name)
+          .join(', ')}" to be defined`,
+        row,
+      );
     }
 
     return Array.from(this.node.componentsByName.values()).reduce<TValue>(
@@ -254,143 +284,147 @@ export class Table {
       throw new utils.UnexpectedValueError('a plain-object', selectedValue);
     }
 
-    return Array.from(selection.expressionsByKey.values()).reduce(
-      (nodeSelectedValue, expression) => {
-        const expressionPath = utils.addPath(undefined, expression.key);
-        let expressionValue: any;
+    return selection.expressions.reduce((nodeSelectedValue, expression) => {
+      const expressionPath = utils.addPath(undefined, expression.key);
+      const rawExpressionValue = selectedValue[expression.key];
+      let expressionValue: any;
 
-        if (expression instanceof core.LeafSelection) {
-          const column = this.getColumnByLeaf(expression.leaf);
-          const columnValue = selectedValue[column.name];
+      if (expression instanceof core.LeafSelection) {
+        const column = this.getColumnByLeaf(expression.leaf);
 
-          expressionValue = column.dataType.fromColumnValue(columnValue);
-        } else if (expression instanceof core.EdgeHeadSelection) {
-          // const foreignKey = this.getForeignKeyByEdge(expression.edge);
+        expressionValue = column.dataType.fromJsonValue(rawExpressionValue);
+      } else if (expression instanceof core.EdgeHeadSelection) {
+        const head = this.schema.getTableByNode(expression.edge.head);
 
-          // WRONG, on ne cherche pas que dans la foreign key, on cherche dans tout le head
-          // Genre Article { category { title }}
-          // if (foreignKey.columns.some((column) => row[column.name] !== null)) {
-          //   console.debug(
-          //     foreignKey.columns.reduce(
-          //       (edgeValue, column) => edgeValue,
-          //       Object.create(null),
-          //     ),
-          //   );
-          // } else {
-          //   expressionValue = null;
-          // }
+        expressionValue = rawExpressionValue
+          ? head.parseSelectedValue(
+              rawExpressionValue,
+              expression.headSelection,
+            )
+          : null;
+      } else if (expression instanceof core.ReverseEdgeMultipleCountSelection) {
+        expressionValue = Number.parseInt(rawExpressionValue, 10);
+      } else if (expression instanceof core.ReverseEdgeMultipleHeadSelection) {
+        const head = this.schema.getTableByNode(expression.reverseEdge.head);
 
-          expressionValue = null;
-        } else if (
-          expression instanceof core.ReverseEdgeMultipleCountSelection
-        ) {
-          expressionValue = null;
-        } else if (
-          expression instanceof core.ReverseEdgeMultipleHeadSelection
-        ) {
-          expressionValue = null;
-        } else if (expression instanceof core.ReverseEdgeUniqueHeadSelection) {
-          expressionValue = null;
-        } else {
-          throw new UnreachableValueError(expression);
-        }
+        expressionValue = Array.isArray(rawExpressionValue)
+          ? rawExpressionValue.map((value) =>
+              head.parseSelectedValue(value, expression.headSelection),
+            )
+          : [];
+      } else if (expression instanceof core.ReverseEdgeUniqueHeadSelection) {
+        const head = this.schema.getTableByNode(expression.reverseEdge.head);
 
-        return Object.assign(nodeSelectedValue, {
-          [expression.key]: expression.parseValue(
-            expressionValue,
-            expressionPath,
-          ),
-        });
-      },
-      Object.create(null),
-    );
-  }
+        expressionValue = rawExpressionValue
+          ? head.parseSelectedValue(
+              rawExpressionValue,
+              expression.headSelection,
+            )
+          : null;
+      } else {
+        throw new UnreachableValueError(expression);
+      }
 
-  public makeCreateStatement(
-    config?: CreateTableStatementConfig,
-  ): CreateTableStatement {
-    return new CreateTableStatement(this, config);
+      return Object.assign(nodeSelectedValue, {
+        [expression.key]: expression.parseValue(
+          expressionValue,
+          expressionPath,
+        ),
+      });
+    }, Object.create(null));
   }
 
   public async create(
     config?: CreateTableStatementConfig,
-    maybeConnection?: utils.Nillable<mariadb.Connection>,
+    maybeConnection?: mariadb.Connection,
   ): Promise<void> {
-    await this.makeCreateStatement(config).execute(maybeConnection);
-  }
-
-  public makeAddForeignKeysStatement(
-    config?: AddTableForeignKeysStatementConfig,
-  ): AddTableForeignKeysStatement {
-    return new AddTableForeignKeysStatement(this, config);
+    await this.schema.connector.executeStatement(
+      new CreateTableStatement(this, config),
+      maybeConnection,
+    );
   }
 
   public async addForeignKeys(
     config?: AddTableForeignKeysStatementConfig,
-    maybeConnection?: utils.Nillable<mariadb.Connection>,
+    maybeConnection?: mariadb.Connection,
   ): Promise<void> {
-    if (this.foreignKeysByEdge.size) {
-      await this.makeAddForeignKeysStatement(config).execute(maybeConnection);
+    if (this.foreignKeyIndexesByEdge.size) {
+      await this.schema.connector.executeStatement(
+        new AddTableForeignKeysStatement(this, config),
+        maybeConnection,
+      );
     }
-  }
-
-  public makeCountStatement(
-    statement: core.ConnectorCountStatement,
-    config?: CountStatementConfig,
-  ): CountStatement {
-    return new CountStatement(this, statement, config);
   }
 
   public async count(
     statement: core.ConnectorCountStatement,
-    config?: CountStatementConfig,
-    maybeConnection?: utils.Nillable<mariadb.Connection>,
+    context: core.OperationContext,
+    maybeConnection?: mariadb.Connection,
   ): Promise<number> {
-    const [{ COUNT }] = await this.makeCountStatement(
-      statement,
-      config,
-    ).execute(maybeConnection);
+    const [{ COUNT }] = await this.schema.connector.executeStatement<
+      [{ COUNT: bigint }]
+    >(new CountStatement(this, statement, context), maybeConnection);
 
     return Number(COUNT);
   }
 
-  public makeInsertStatement<TRow extends utils.PlainObject>(
-    statement: core.ConnectorCreateStatement,
-    config?: InsertStatementConfig,
-  ): InsertStatement<TRow> {
-    return new InsertStatement(this, statement, config);
+  public async find(
+    statement: core.ConnectorFindStatement,
+    context: core.OperationContext,
+    maybeConnection?: mariadb.Connection,
+  ): Promise<core.NodeSelectedValue[]> {
+    const tuples = await this.schema.connector.executeStatement<
+      utils.PlainObject[]
+    >(new FindStatement(this, statement, context), maybeConnection);
+
+    return tuples.map((tuple) =>
+      this.parseSelectedValue(
+        JSON.parse(tuple[this.node.name]),
+        statement.selection,
+      ),
+    );
   }
 
   public async insert(
     statement: core.ConnectorCreateStatement,
+    context: core.MutationContext,
+    connection: mariadb.Connection,
     config?: InsertStatementConfig,
-    maybeConnection?: utils.Nillable<mariadb.Connection>,
   ): Promise<core.NodeValue[]> {
-    const rows = await this.makeInsertStatement(statement, config).execute(
-      maybeConnection,
-    );
+    const rows = await this.schema.connector.executeStatement<
+      utils.PlainObject[]
+    >(new InsertStatement(this, statement, context, config), connection);
 
     return rows.map((row) => this.parseRow(row));
   }
 
-  public makeFindStatement<TTuple extends utils.PlainObject>(
-    statement: core.ConnectorFindStatement,
-    config?: FindStatementConfig,
-  ): FindStatement<TTuple> {
-    return new FindStatement(this, statement, config);
+  public async update(
+    statement: core.ConnectorUpdateStatement,
+    context: core.MutationContext,
+    connection: mariadb.Connection,
+    config?: UpdateStatementConfig,
+  ): Promise<number> {
+    const { affectedRows } =
+      await this.schema.connector.executeStatement<OkPacket>(
+        new UpdateStatement(this, statement, context, config),
+        connection,
+      );
+
+    return affectedRows;
   }
 
-  public async find(
-    statement: core.ConnectorFindStatement,
-    config?: FindStatementConfig,
-    maybeConnection?: utils.Nillable<mariadb.Connection>,
-  ): Promise<core.NodeSelectedValue[]> {
-    const tuples = await this.makeFindStatement(statement, config).execute(
-      maybeConnection,
-    );
+  public async delete(
+    statement: core.ConnectorDeleteStatement,
+    context: core.MutationContext,
+    connection: mariadb.Connection,
+    config?: DeleteStatementConfig,
+  ): Promise<number> {
+    const { affectedRows } =
+      await this.schema.connector.executeStatement<OkPacket>(
+        new DeleteStatement(this, statement, context, config),
+        connection,
+      );
 
-    return tuples.map((tuple) =>
-      this.parseSelectedValue(tuple, statement.selection),
-    );
+    return affectedRows;
   }
 }

@@ -1,10 +1,8 @@
-import assert from 'node:assert/strict';
 import type { ConnectorInterface } from '../../connector-interface.js';
 import type { Node } from '../../node.js';
 import type {
   Component,
   ComponentValue,
-  Edge,
   EdgeValue,
   Leaf,
   LeafValue,
@@ -85,54 +83,15 @@ export class NodeCreation<
     return this.#valuesByComponent;
   }
 
-  public get valuesByLeaf(): ReadonlyMap<
-    Leaf<TRequestContext, TConnector>,
-    LeafValue
-  > {
-    return new Map(
-      Array.from(this.#valuesByComponent).filter(
-        (entry): entry is [Leaf<TRequestContext, TConnector>, LeafValue] =>
-          entry[0].kind === 'Leaf',
-      ),
-    );
+  public getComponentValue<TComponent extends Component>(
+    component: TComponent,
+  ): (TComponent extends Leaf ? LeafValue : EdgeValue) | undefined {
+    return this.#valuesByComponent.get(component) as any;
   }
 
-  public get valuesByEdge(): ReadonlyMap<
-    Edge<TRequestContext, TConnector>,
-    EdgeValue
-  > {
-    return new Map(
-      Array.from(this.#valuesByComponent).filter(
-        (entry): entry is [Edge<TRequestContext, TConnector>, EdgeValue] =>
-          entry[0].kind === 'Edge',
-      ),
-    );
-  }
-
-  public setComponentValue(
-    component: Component<TRequestContext, TConnector>,
-    value?: ComponentValue,
-  ): void {
+  public setComponentValue(component: Component, value?: ComponentValue): void {
     value === undefined
       ? this.#valuesByComponent.delete(component)
       : this.#valuesByComponent.set(component, component.parseValue(value));
-  }
-
-  public setLeafValue(
-    leaf: Leaf<TRequestContext, TConnector>,
-    value?: LeafValue,
-  ): void {
-    assert.equal(leaf.kind, 'Leaf');
-
-    return this.setComponentValue(leaf, value);
-  }
-
-  public setEdgeValue(
-    edge: Edge<TRequestContext, TConnector>,
-    value?: EdgeValue,
-  ): void {
-    assert.equal(edge.kind, 'Edge');
-
-    return this.setComponentValue(edge, value);
   }
 }

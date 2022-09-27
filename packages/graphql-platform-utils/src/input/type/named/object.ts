@@ -47,24 +47,22 @@ export class ObjectInputType<
         ? this.#fieldsConfig(this)
         : this.#fieldsConfig;
 
-    return Object.freeze(
-      fields?.length
-        ? aggregateConfigError<TField, TField[]>(
-            fields,
-            (fields, field, index) => {
-              if (!(field instanceof Input)) {
-                throw new UnexpectedConfigError(`an input`, field, {
-                  path: addPath(this.#fieldsConfigPath, index),
-                });
-              }
+    return fields?.length
+      ? aggregateConfigError<TField, TField[]>(
+          fields,
+          (fields, field, index) => {
+            if (!(field instanceof Input)) {
+              throw new UnexpectedConfigError(`an input`, field, {
+                path: addPath(this.#fieldsConfigPath, index),
+              });
+            }
 
-              return [...fields, field];
-            },
-            [],
-            { path: this.#fieldsConfigPath },
-          )
-        : [],
-    );
+            return [...fields, field];
+          },
+          [],
+          { path: this.#fieldsConfigPath },
+        )
+      : [];
   }
 
   @Memoize()
@@ -81,7 +79,7 @@ export class ObjectInputType<
 
   @Memoize()
   public get requiredFields(): ReadonlyArray<TField> {
-    return Object.freeze(Array.from(this.requiredFieldsByName.values()));
+    return Array.from(this.requiredFieldsByName.values());
   }
 
   public override isPublic(): boolean {
@@ -105,7 +103,7 @@ export class ObjectInputType<
 
   @Memoize()
   public get publicFields(): ReadonlyArray<TField> {
-    return Object.freeze(Array.from(this.publicFieldsByName.values()));
+    return Array.from(this.publicFieldsByName.values());
   }
 
   @Memoize()

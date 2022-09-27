@@ -1,11 +1,4 @@
-import {
-  addPath,
-  assertName,
-  castToError,
-  UnexpectedConfigError,
-  type Name,
-  type Path,
-} from '@prismamedia/graphql-platform-utils';
+import * as utils from '@prismamedia/graphql-platform-utils';
 import { Memoize } from '@prismamedia/ts-memoize';
 import * as graphql from 'graphql';
 import type { ConnectorInterface } from '../../../../../connector-interface.js';
@@ -35,12 +28,12 @@ export type VirtualFieldOutputTypeConfigMap<
 > = MaybeNodeAwareConfig<
   TRequestContext,
   TConnector,
-  Record<Name, VirtualFieldOutputTypeConfig<TRequestContext, TConnector>>
+  Record<utils.Name, VirtualFieldOutputTypeConfig<TRequestContext, TConnector>>
 >;
 
 export class VirtualFieldOutputType {
   readonly #dependsOnConfig?: RawNodeSelection;
-  readonly #dependsOnConfigPath: Path;
+  readonly #dependsOnConfigPath: utils.Path;
 
   public readonly graphql: graphql.GraphQLFieldConfig<
     NodeSelectedValue,
@@ -50,18 +43,18 @@ export class VirtualFieldOutputType {
 
   public constructor(
     public readonly parent: NodeOutputType,
-    public readonly name: Name,
+    public readonly name: utils.Name,
     { dependsOn, ...graphql }: VirtualFieldOutputTypeConfig<any, any>,
-    public readonly configPath: Path,
+    public readonly configPath: utils.Path,
   ) {
-    assertName(name, configPath);
+    utils.assertName(name, configPath);
 
     this.graphql = graphql;
 
     // dependsOn
     {
       this.#dependsOnConfig = dependsOn;
-      this.#dependsOnConfigPath = addPath(configPath, 'dependsOn');
+      this.#dependsOnConfigPath = utils.addPath(configPath, 'dependsOn');
     }
   }
 
@@ -71,12 +64,12 @@ export class VirtualFieldOutputType {
       try {
         return this.parent.select(this.#dependsOnConfig);
       } catch (error) {
-        throw new UnexpectedConfigError(
+        throw new utils.UnexpectedConfigError(
           `a valid fragment`,
           this.#dependsOnConfig,
           {
             path: this.#dependsOnConfigPath,
-            cause: castToError(error),
+            cause: utils.castToError(error),
           },
         );
       }

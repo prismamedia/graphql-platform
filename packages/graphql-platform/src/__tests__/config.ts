@@ -1,8 +1,5 @@
 import { Scalars } from '@prismamedia/graphql-platform-scalars';
-import {
-  MutationType,
-  UnexpectedValueError,
-} from '@prismamedia/graphql-platform-utils';
+import * as utils from '@prismamedia/graphql-platform-utils';
 import {
   GraphQLEnumType,
   GraphQLInterfaceType,
@@ -16,8 +13,8 @@ import {
   CustomOperationMap,
   GraphQLPlatform,
   NodeConfig,
+  OnEdgeHeadDeletion,
 } from '../index.js';
-import { OnHeadDeletion } from '../node.js';
 
 export type MyUser = {
   id: string;
@@ -92,10 +89,10 @@ export const Article: NodeConfig<MyContext> = {
 
         case 'JOURNALIST':
           return mutationType
-            ? mutationType === MutationType.CREATION
+            ? mutationType === utils.MutationType.CREATION
               ? // They can "create" new articles
                 true
-              : mutationType === MutationType.UPDATE
+              : mutationType === utils.MutationType.UPDATE
               ? // They can "update" the articles they have created
                 { createdBy: { id: user.id } }
               : // They cannot "delete" articles
@@ -174,7 +171,7 @@ export const Article: NodeConfig<MyContext> = {
       kind: 'Edge',
       head: 'Category',
       // head: 'Category.parent_slug',
-      onHeadDeletion: OnHeadDeletion.SET_NULL,
+      onHeadDeletion: OnEdgeHeadDeletion.SET_NULL,
     },
     createdBy: {
       kind: 'Edge',
@@ -237,6 +234,30 @@ export const Article: NodeConfig<MyContext> = {
       type: 'Boolean',
       description: 'Is the article a partnership?',
     },
+    views: {
+      kind: 'Leaf',
+      type: 'UnsignedBigInt',
+      nullable: false,
+
+      creation: {
+        public: false,
+        defaultValue: 0,
+      },
+    },
+    score: {
+      kind: 'Leaf',
+      type: 'UnsignedFloat',
+      nullable: false,
+
+      creation: {
+        public: false,
+        defaultValue: 0.5,
+      },
+    },
+    machineTags: {
+      kind: 'Leaf',
+      type: 'JSONArray',
+    },
   },
 
   uniques: [['_id'], ['id'], ['category', 'slug']],
@@ -275,7 +296,7 @@ export const Article: NodeConfig<MyContext> = {
           }
 
           // Custom logic with this field's value
-          // creation.set('body', '');
+          // creation['body'] = myHtmlToDraftService(data['htmlBody']);
         }
 
         creation['slug'] ??= slugify(
@@ -283,19 +304,20 @@ export const Article: NodeConfig<MyContext> = {
           slugify.defaults.modes.rfc3986,
         );
 
-        creation['createdBy'] ??= await api.query.userIfExists({
-          where: { id: requestContext.user.id },
-          selection:
-            node.getEdgeByName('createdBy').referencedUniqueConstraint
-              .selection,
-        });
+        if (!creation['createdBy'] || !creation['updatedBy']) {
+          const currentUser = await api.query.userIfExists({
+            where: { id: requestContext.user.id },
+            selection: node
+              .getEdgeByName('createdBy')
+              .referencedUniqueConstraint.selection.mergeWith(
+                node.getEdgeByName('updatedBy').referencedUniqueConstraint
+                  .selection,
+              ),
+          });
 
-        creation['updatedBy'] ??= await api.query.userIfExists({
-          where: { id: requestContext.user.id },
-          selection:
-            node.getEdgeByName('updatedBy').referencedUniqueConstraint
-              .selection,
-        });
+          creation['createdBy'] ??= currentUser;
+          creation['updatedBy'] ??= currentUser;
+        }
       },
 
       postCreate({ change }) {},
@@ -329,7 +351,7 @@ export const Article: NodeConfig<MyContext> = {
           }
 
           // Custom logic with this field's value
-          // creation.set('body', '');
+          // update['body'] = myHtmlToDraftService(data['htmlBody']);
         }
 
         if (currentValue['status'] === ArticleStatus.DELETED) {
@@ -460,7 +482,7 @@ export const Category: NodeConfig<MyContext> = {
     parent: {
       kind: 'Edge',
       head: 'Category',
-      onHeadDeletion: OnHeadDeletion.CASCADE,
+      onHeadDeletion: OnEdgeHeadDeletion.CASCADE,
 
       creation: {
         nullable: false,
@@ -512,7 +534,7 @@ export const Category: NodeConfig<MyContext> = {
             .execute({ where: { parent: null } }, context);
 
           if (categoryWithoutParentCount !== 0) {
-            throw new UnexpectedValueError(
+            throw new utils.UnexpectedValueError(
               `a parent as the "root" category already exists`,
               data['parent'],
             );
@@ -549,7 +571,7 @@ export const Tag: NodeConfig<MyContext> = {
           true
         : user?.role === 'JOURNALIST'
         ? // The "journalists" can only "create" tags
-          mutationType === MutationType.CREATION
+          mutationType === utils.MutationType.CREATION
         : // Others cannot mutate the tags
           false
       : // Everybody can read all the tags
@@ -651,7 +673,7 @@ export const ArticleTag: NodeConfig<MyContext> = {
         ? // The "admins" can do as they please
           true
         : user?.role === 'JOURNALIST'
-        ? mutationType === MutationType.CREATION
+        ? mutationType === utils.MutationType.CREATION
           ? // The "journalists" can link tags to the articles
             true
           : // The "journalists" can re-order/unlink tags to the articles they have created only
@@ -666,12 +688,14 @@ export const ArticleTag: NodeConfig<MyContext> = {
       head: 'Article',
       nullable: false,
       mutable: false,
+      onHeadDeletion: OnEdgeHeadDeletion.CASCADE,
     },
     tag: {
       kind: 'Edge',
       head: 'Tag',
       nullable: false,
       mutable: false,
+      onHeadDeletion: OnEdgeHeadDeletion.CASCADE,
     },
     order: {
       kind: 'Leaf',
@@ -702,6 +726,7 @@ export const ArticleTagModeration: NodeConfig<MyContext> = {
       head: 'ArticleTag',
       nullable: false,
       mutable: false,
+      onHeadDeletion: OnEdgeHeadDeletion.CASCADE,
     },
     moderator: {
       kind: 'Edge',
@@ -808,7 +833,7 @@ export const UserProfile: NodeConfig<MyContext> = {
         ? // The "admins" can do as they please
           true
         : user !== undefined
-        ? mutationType === MutationType.UPDATE
+        ? mutationType === utils.MutationType.UPDATE
           ? // Every connected user can "update" its profile only
             { user: { id: user.id } }
           : false

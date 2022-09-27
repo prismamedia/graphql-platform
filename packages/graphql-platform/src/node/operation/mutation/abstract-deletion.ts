@@ -1,8 +1,4 @@
-import {
-  MutationType,
-  type Nillable,
-  type PlainObject,
-} from '@prismamedia/graphql-platform-utils';
+import * as utils from '@prismamedia/graphql-platform-utils';
 import type { Promisable } from 'type-fest';
 import type { ConnectorInterface } from '../../../connector-interface.js';
 import type { NodeValue } from '../../../node.js';
@@ -67,8 +63,10 @@ export interface DeletionConfig<
 export abstract class AbstractDeletion<
   TRequestContext extends object,
   TConnector extends ConnectorInterface,
-  TArgs extends Nillable<PlainObject>,
+  TArgs extends utils.Nillable<utils.PlainObject>,
   TResult,
 > extends AbstractMutation<TRequestContext, TConnector, TArgs, TResult> {
-  public override readonly mutationTypes = [MutationType.DELETION] as const;
+  public override readonly mutationTypes = [
+    utils.MutationType.DELETION,
+  ] as const;
 }

@@ -9,4 +9,5 @@ export * from './nil.js';
 export * from './operation-types.js';
 export * from './path.js';
 export * from './plain-object.js';
+export * from './stringifiable.js';
 export * from './thunk-or-value.js';

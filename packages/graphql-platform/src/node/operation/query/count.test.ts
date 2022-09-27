@@ -14,6 +14,7 @@ import {
   clearAllConnectorMocks,
   mockConnector,
 } from '../../../__tests__/connector-mock.js';
+import { UnauthorizedError } from '../error.js';
 import { CountQueryArgs } from './count.js';
 
 describe('CountQuery', () => {
@@ -22,7 +23,7 @@ describe('CountQuery', () => {
   beforeAll(() => {
     gp = new GraphQLPlatform({
       nodes,
-      connector: mockConnector({ count: async () => 0 }),
+      connector: mockConnector({ count: async () => 5 }),
     });
   });
 
@@ -32,15 +33,16 @@ describe('CountQuery', () => {
     beforeEach(() => clearAllConnectorMocks(gp.connector));
 
     describe('Fails', () => {
-      it('throws an error on unauthorized node', async () => {
-        await expect(
-          gp.api.query.articleCount(undefined, myVisitorContext),
-        ).rejects.toThrowError(
-          '"query.articleCount" - Unauthorized access to "Article"',
-        );
+      it.each<[CountQueryArgs, MyContext]>([[undefined, myVisitorContext]])(
+        'throws an UnauthorizedError',
+        async (args, context) => {
+          await expect(
+            gp.api.query.articleCount(args, context),
+          ).rejects.toThrowError(UnauthorizedError);
 
-        expect(gp.connector.count).toHaveBeenCalledTimes(0);
-      });
+          expect(gp.connector.count).toHaveBeenCalledTimes(0);
+        },
+      );
     });
 
     describe('Works', () => {
@@ -58,7 +60,7 @@ describe('CountQuery', () => {
       it('calls the connector properly', async () => {
         await expect(
           gp.api.query.articleCount({}, myAdminContext),
-        ).resolves.toEqual(0);
+        ).resolves.toEqual(5);
 
         expect(gp.connector.count).toHaveBeenCalledTimes(1);
         expect(gp.connector.count).toHaveBeenLastCalledWith(
@@ -73,11 +75,11 @@ describe('CountQuery', () => {
             { where: { tagCount_gt: 0 } },
             myAdminContext,
           ),
-        ).resolves.toEqual(0);
+        ).resolves.toEqual(5);
 
         expect(gp.connector.count).toHaveBeenCalledTimes(1);
         expect(gp.connector.count).toHaveBeenLastCalledWith(
-          { node: gp.getNodeByName('Article'), where: expect.any(NodeFilter) },
+          { node: gp.getNodeByName('Article'), filter: expect.any(NodeFilter) },
           expect.any(OperationContext),
         );
       });

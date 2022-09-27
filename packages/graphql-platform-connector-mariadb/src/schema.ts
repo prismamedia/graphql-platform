@@ -2,7 +2,7 @@ import type * as core from '@prismamedia/graphql-platform';
 import * as utils from '@prismamedia/graphql-platform-utils';
 import type * as mariadb from 'mariadb';
 import assert from 'node:assert/strict';
-import type { MariaDBConnector } from './index.js';
+import type { MariaDBConnector, OkPacket } from './index.js';
 import { Table } from './schema/table.js';
 import {
   CreateSchemaStatement,
@@ -37,7 +37,7 @@ export interface SchemaConfig {
 }
 
 export class Schema {
-  public readonly config: SchemaConfig | undefined;
+  public readonly config?: SchemaConfig;
   public readonly configPath: utils.Path;
 
   public readonly name: string;
@@ -115,29 +115,23 @@ export class Schema {
     return table;
   }
 
-  public makeDropStatement(
-    config?: DropSchemaStatementConfig,
-  ): DropSchemaStatement {
-    return new DropSchemaStatement(this, config);
-  }
-
   public async drop(
     config?: DropSchemaStatementConfig,
-    maybeConnection?: utils.Nillable<mariadb.Connection>,
+    maybeConnection?: mariadb.Connection,
   ): Promise<void> {
-    await this.makeDropStatement(config).execute(maybeConnection);
-  }
-
-  public makeCreateStatement(
-    config?: CreateSchemaStatementConfig,
-  ): CreateSchemaStatement {
-    return new CreateSchemaStatement(this, config);
+    await this.connector.executeStatement<OkPacket>(
+      new DropSchemaStatement(this, config),
+      maybeConnection,
+    );
   }
 
   public async create(
     config?: CreateSchemaStatementConfig,
-    maybeConnection?: utils.Nillable<mariadb.Connection>,
+    maybeConnection?: mariadb.Connection,
   ): Promise<void> {
-    await this.makeCreateStatement(config).execute(maybeConnection);
+    await this.connector.executeStatement<OkPacket>(
+      new CreateSchemaStatement(this, config),
+      maybeConnection,
+    );
   }
 }

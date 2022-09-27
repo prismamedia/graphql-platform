@@ -1,7 +1,7 @@
 import type * as core from '@prismamedia/graphql-platform';
 import type * as utils from '@prismamedia/graphql-platform-utils';
 import { Memoize } from '@prismamedia/ts-memoize';
-import { escapeStringValue } from '../../escape.js';
+import { escapeStringValue } from '../../escaping.js';
 import type { Table } from '../table.js';
 import type { DataType } from './data-type.js';
 

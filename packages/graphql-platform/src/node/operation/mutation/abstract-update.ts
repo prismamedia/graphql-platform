@@ -1,10 +1,4 @@
-import {
-  MutationType,
-  type InputConfig,
-  type Nillable,
-  type NonNillable,
-  type PlainObject,
-} from '@prismamedia/graphql-platform-utils';
+import * as utils from '@prismamedia/graphql-platform-utils';
 import type { Promisable } from 'type-fest';
 import type { ConnectorInterface } from '../../../connector-interface.js';
 import type { NodeValue } from '../../../node.js';
@@ -24,7 +18,7 @@ interface AbstractUpdateHookArgs<
   /**
    * The provided "data" argument
    */
-  readonly data: Readonly<NonNillable<NodeUpdateInputValue>>;
+  readonly data: Readonly<utils.NonNillable<NodeUpdateInputValue>>;
 }
 
 export interface PreUpdateArgs<
@@ -37,7 +31,7 @@ export interface PreUpdateArgs<
   readonly currentValue: Readonly<NodeValue>;
 
   /**
-   * The update statement as a convenient object
+   * The update statement, as a convenient object
    */
   readonly update: NodeUpdateProxy;
 }
@@ -62,7 +56,10 @@ export interface UpdateConfig<
   /**
    * Optional, add some "virtual" fields whose values can be used in the hooks
    */
-  virtualFields?: Record<InputConfig['name'], Omit<InputConfig, 'name'>>;
+  virtualFields?: Record<
+    utils.InputConfig['name'],
+    Omit<utils.InputConfig, 'name'>
+  >;
 
   /**
    * Optional, add some custom validation/logic over the "update" statement that is about to be sent to the connector,
@@ -86,8 +83,8 @@ export interface UpdateConfig<
 export abstract class AbstractUpdate<
   TRequestContext extends object,
   TConnector extends ConnectorInterface,
-  TArgs extends Nillable<PlainObject>,
+  TArgs extends utils.Nillable<utils.PlainObject>,
   TResult,
 > extends AbstractMutation<TRequestContext, TConnector, TArgs, TResult> {
-  public override readonly mutationTypes = [MutationType.UPDATE] as const;
+  public override readonly mutationTypes = [utils.MutationType.UPDATE] as const;
 }

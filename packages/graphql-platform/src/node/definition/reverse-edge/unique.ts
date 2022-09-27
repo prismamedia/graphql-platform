@@ -1,12 +1,4 @@
-import {
-  addPath,
-  getOptionalFlag,
-  MutationType,
-  OptionalFlag,
-  UnexpectedConfigError,
-  type Name,
-  type Path,
-} from '@prismamedia/graphql-platform-utils';
+import * as utils from '@prismamedia/graphql-platform-utils';
 import { Memoize } from '@prismamedia/ts-memoize';
 import inflection from 'inflection';
 import assert from 'node:assert/strict';
@@ -33,22 +25,18 @@ export interface ReverseEdgeUniqueConfig<
    *
    * Default: false
    */
-  forceName?: OptionalFlag;
+  forceName?: utils.OptionalFlag;
 }
 
 export class ReverseEdgeUnique<
   TRequestContext extends object = any,
   TConnector extends ConnectorInterface = any,
 > extends AbstractReverseEdge<TRequestContext, TConnector> {
-  public override readonly kind: NonNullable<
-    ReverseEdgeUniqueConfig<any, any>['kind']
-  > = 'Unique';
-
   public constructor(
     edge: Edge<TRequestContext, TConnector>,
-    name: Name,
+    name: utils.Name,
     config: ReverseEdgeUniqueConfig<TRequestContext, TConnector>,
-    configPath: Path,
+    configPath: utils.Path,
   ) {
     assert(edge.isUnique());
     super(edge, name, config, configPath);
@@ -56,8 +44,8 @@ export class ReverseEdgeUnique<
     // name
     {
       const forceNameConfig = config.forceName;
-      const forceNameConfigPath = addPath(configPath, 'forceName');
-      const forceName = getOptionalFlag(
+      const forceNameConfigPath = utils.addPath(configPath, 'forceName');
+      const forceName = utils.getOptionalFlag(
         forceNameConfig,
         false,
         forceNameConfigPath,
@@ -67,7 +55,7 @@ export class ReverseEdgeUnique<
         const singularizedName = inflection.singularize(name);
 
         if (name !== singularizedName) {
-          throw new UnexpectedConfigError(
+          throw new utils.UnexpectedConfigError(
             `a singular (= "${singularizedName}" ?)`,
             name,
             { path: configPath },
@@ -81,8 +69,8 @@ export class ReverseEdgeUnique<
   public override get creationInput():
     | ReverseEdgeUniqueCreationInput
     | undefined {
-    return this.head.isMutationEnabled(MutationType.CREATION) ||
-      (this.head.isMutationEnabled(MutationType.UPDATE) &&
+    return this.head.isMutationEnabled(utils.MutationType.CREATION) ||
+      (this.head.isMutationEnabled(utils.MutationType.UPDATE) &&
         this.originalEdge.isMutable())
       ? new ReverseEdgeUniqueCreationInput(this)
       : undefined;
@@ -90,10 +78,10 @@ export class ReverseEdgeUnique<
 
   @Memoize()
   public override get updateInput(): ReverseEdgeUniqueUpdateInput | undefined {
-    return this.head.isMutationEnabled(MutationType.CREATION) ||
-      (this.head.isMutationEnabled(MutationType.UPDATE) &&
+    return this.head.isMutationEnabled(utils.MutationType.CREATION) ||
+      (this.head.isMutationEnabled(utils.MutationType.UPDATE) &&
         this.originalEdge.isMutable()) ||
-      this.head.isMutationEnabled(MutationType.DELETION)
+      this.head.isMutationEnabled(utils.MutationType.DELETION)
       ? new ReverseEdgeUniqueUpdateInput(this)
       : undefined;
   }

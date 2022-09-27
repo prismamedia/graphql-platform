@@ -1,13 +1,13 @@
 import * as core from '@prismamedia/graphql-platform';
 import * as utils from '@prismamedia/graphql-platform-utils';
 import { Memoize } from '@prismamedia/ts-memoize';
-import { escapeIdentifier } from '../../../escape.js';
+import { escapeIdentifier } from '../../../escaping.js';
 import type { MariaDBConnector } from '../../../index.js';
 import type { Table } from '../../table.js';
 import { AbstractIndex } from '../abstract-index.js';
 import { ReferenceColumn } from '../column/reference.js';
 
-export interface ForeignKeyConfig {
+export interface ForeignKeyIndexConfig {
   /**
    * Optional, the index's name
    */
@@ -17,8 +17,8 @@ export interface ForeignKeyConfig {
 /**
  * @see https://www.sqlitetutorial.net/sqlite-foreign-key/
  */
-export class ForeignKey extends AbstractIndex {
-  public readonly config: ForeignKeyConfig | undefined;
+export class ForeignKeyIndex extends AbstractIndex {
+  public readonly config?: ForeignKeyIndexConfig;
   public readonly configPath: utils.Path;
 
   public constructor(
@@ -41,6 +41,7 @@ export class ForeignKey extends AbstractIndex {
     return this.table.schema.getTableByNode(this.edge.head);
   }
 
+  @Memoize()
   public get columns(): ReadonlyArray<ReferenceColumn> {
     return this.table.getColumnTreeByEdge(this.edge).columns;
   }

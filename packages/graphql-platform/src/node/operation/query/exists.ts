@@ -1,14 +1,11 @@
 import { Scalars } from '@prismamedia/graphql-platform-scalars';
-import {
-  Input,
-  nonNillableInputType,
-  type Path,
-} from '@prismamedia/graphql-platform-utils';
+import * as utils from '@prismamedia/graphql-platform-utils';
 import { Memoize } from '@prismamedia/ts-memoize';
 import * as graphql from 'graphql';
 import inflection from 'inflection';
 import type { ConnectorInterface } from '../../../connector-interface.js';
 import { type NodeSelectionAwareArgs } from '../../abstract-operation.js';
+import type { NodeFilter } from '../../statement/filter.js';
 import type { NodeUniqueFilterInputValue } from '../../type.js';
 import { AbstractQuery } from '../abstract-query.js';
 import type { OperationContext } from '../context.js';
@@ -31,14 +28,14 @@ export class ExistsQuery<
     this.node.name,
     true,
   )}Exists`;
-  public override readonly description = `Either the "${this.node.name}" exists or not?`;
+  public override readonly description = `Either the "${this.node}" exists or not?`;
 
   @Memoize()
   public override get arguments() {
     return [
-      new Input({
+      new utils.Input({
         name: 'where',
-        type: nonNillableInputType(this.node.uniqueFilterInputType),
+        type: utils.nonNillableInputType(this.node.uniqueFilterInputType),
       }),
     ];
   }
@@ -49,13 +46,14 @@ export class ExistsQuery<
   }
 
   protected override async executeWithValidArgumentsAndContext(
+    authorization: NodeFilter<TRequestContext, TConnector> | undefined,
     args: NodeSelectionAwareArgs<ExistsQueryArgs>,
     context: OperationContext<TRequestContext, TConnector>,
-    path: Path,
+    path: utils.Path,
   ): Promise<ExistsQueryResult> {
     const count = await this.node
       .getQueryByKey('count')
-      .execute({ where: args.where }, context, path);
+      .internal(authorization, { where: args.where }, context, path);
 
     return count > 0;
   }

@@ -1,35 +1,21 @@
-import type { AddTableForeignKeysStatement } from './statement/add-table-foreign-keys.js';
-import type { CountStatement } from './statement/count.js';
-import type { CreateSchemaStatement } from './statement/create-schema.js';
-import type { CreateTableStatement } from './statement/create-table.js';
-import type { DropSchemaStatement } from './statement/drop-schema.js';
-import type { FindStatement } from './statement/find.js';
-import type { InsertStatement } from './statement/insert.js';
+import type { DefinitionStatement } from './statement/definition.js';
+import type { ManipulationStatement } from './statement/manipulation.js';
 
-export * from './statement/add-table-foreign-keys.js';
-export * from './statement/count.js';
-export * from './statement/create-schema.js';
-export * from './statement/create-table.js';
-export * from './statement/drop-schema.js';
-export * from './statement/find.js';
-export * from './statement/insert.js';
+export * from './statement/definition.js';
+export * from './statement/kind.js';
+export * from './statement/manipulation.js';
 
-export type Statement =
-  | AddTableForeignKeysStatement
-  | CountStatement
-  | CreateSchemaStatement
-  | CreateTableStatement
-  | DropSchemaStatement
-  | FindStatement
-  | InsertStatement;
+/**
+ * @see https://mariadb.com/kb/en/sql-statements/
+ */
+export type Statement = DefinitionStatement | ManipulationStatement;
 
-export type ExecutedStatement<TStatement extends Statement = Statement> = {
-  statement: TStatement;
-  result: Awaited<ReturnType<TStatement['execute']>>;
-  sql: TStatement['sql'];
+export type ExecutedStatement = {
+  statement: Statement;
+  result: any;
 
   /**
-   * Time spent by this statement to be executed, in seconds
+   * Time spent to execute this statement, including the transport, in seconds
    */
   took: number;
 };

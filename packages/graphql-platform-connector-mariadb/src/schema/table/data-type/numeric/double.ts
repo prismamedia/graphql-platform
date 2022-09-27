@@ -8,11 +8,12 @@ import {
 } from '../../abstract-data-type.js';
 import type { NumericDataTypeModifier } from './modifier.js';
 
-export interface DoubleTypeConfig<TLeafValue extends core.LeafValue = any>
-  extends AbstractDataTypeConfig<
+export interface DoubleTypeConfig<
+  TLeafValue extends NonNullable<core.LeafValue> = any,
+> extends AbstractDataTypeConfig<
     DoubleType['kind'] | 'DOUBLE PRECISION' | 'REAL',
-    number,
-    TLeafValue
+    TLeafValue,
+    number
   > {
   precision?: number;
   scale?: number;
@@ -23,8 +24,8 @@ export interface DoubleTypeConfig<TLeafValue extends core.LeafValue = any>
  * @see https://mariadb.com/kb/en/double/
  */
 export class DoubleType<
-  TLeafValue extends core.LeafValue = any,
-> extends AbstractDataType<'DOUBLE', number, TLeafValue> {
+  TLeafValue extends NonNullable<core.LeafValue> = any,
+> extends AbstractDataType<'DOUBLE', TLeafValue, number> {
   public readonly precision?: number;
   public readonly scale?: number;
   public readonly modifiers: ReadonlyArray<NumericDataTypeModifier>;
@@ -37,6 +38,7 @@ export class DoubleType<
       kind: 'DOUBLE',
       serialize: (value) => value.toString(10),
       fromColumnValue: config?.fromColumnValue,
+      fromJsonValue: config?.fromJsonValue,
       toColumnValue: config?.toColumnValue,
     });
 

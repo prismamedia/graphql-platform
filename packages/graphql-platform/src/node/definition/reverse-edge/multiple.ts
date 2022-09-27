@@ -1,12 +1,4 @@
-import {
-  addPath,
-  getOptionalFlag,
-  MutationType,
-  OptionalFlag,
-  UnexpectedConfigError,
-  type Name,
-  type Path,
-} from '@prismamedia/graphql-platform-utils';
+import * as utils from '@prismamedia/graphql-platform-utils';
 import { Memoize } from '@prismamedia/ts-memoize';
 import inflection from 'inflection';
 import assert from 'node:assert/strict';
@@ -33,7 +25,7 @@ export interface ReverseEdgeMultipleConfig<
    *
    * Default: false
    */
-  forceName?: OptionalFlag;
+  forceName?: utils.OptionalFlag;
 
   /**
    * Optional, you can provide this referrer's singular form if the one guessed is not what you expect
@@ -47,16 +39,13 @@ export class ReverseEdgeMultiple<
   TRequestContext extends object = any,
   TConnector extends ConnectorInterface = any,
 > extends AbstractReverseEdge<TRequestContext, TConnector> {
-  public override readonly kind: NonNullable<
-    ReverseEdgeMultipleConfig<any, any>['kind']
-  > = 'Multiple';
   public readonly countFieldName: string;
 
   public constructor(
     edge: Edge<TRequestContext, TConnector>,
-    name: Name,
+    name: utils.Name,
     config: ReverseEdgeMultipleConfig<TRequestContext, TConnector>,
-    configPath: Path,
+    configPath: utils.Path,
   ) {
     assert(!edge.isUnique());
     super(edge, name, config, configPath);
@@ -64,8 +53,8 @@ export class ReverseEdgeMultiple<
     // name
     {
       const forceNameConfig = config.forceName;
-      const forceNameConfigPath = addPath(configPath, 'forceName');
-      const forceName = getOptionalFlag(
+      const forceNameConfigPath = utils.addPath(configPath, 'forceName');
+      const forceName = utils.getOptionalFlag(
         forceNameConfig,
         false,
         forceNameConfigPath,
@@ -75,7 +64,7 @@ export class ReverseEdgeMultiple<
         const pluralizedName = inflection.pluralize(name);
 
         if (name !== pluralizedName) {
-          throw new UnexpectedConfigError(
+          throw new utils.UnexpectedConfigError(
             `a plural (= "${pluralizedName}" ?)`,
             name,
             { path: configPath },
@@ -91,8 +80,8 @@ export class ReverseEdgeMultiple<
   public override get creationInput():
     | ReverseEdgeMultipleCreationInput
     | undefined {
-    return this.head.isMutationEnabled(MutationType.CREATION) ||
-      (this.head.isMutationEnabled(MutationType.UPDATE) &&
+    return this.head.isMutationEnabled(utils.MutationType.CREATION) ||
+      (this.head.isMutationEnabled(utils.MutationType.UPDATE) &&
         this.originalEdge.isMutable())
       ? new ReverseEdgeMultipleCreationInput(this)
       : undefined;
@@ -102,10 +91,10 @@ export class ReverseEdgeMultiple<
   public override get updateInput():
     | ReverseEdgeMultipleUpdateInput
     | undefined {
-    return this.head.isMutationEnabled(MutationType.CREATION) ||
-      (this.head.isMutationEnabled(MutationType.UPDATE) &&
+    return this.head.isMutationEnabled(utils.MutationType.CREATION) ||
+      (this.head.isMutationEnabled(utils.MutationType.UPDATE) &&
         this.originalEdge.isMutable()) ||
-      this.head.isMutationEnabled(MutationType.DELETION)
+      this.head.isMutationEnabled(utils.MutationType.DELETION)
       ? new ReverseEdgeMultipleUpdateInput(this)
       : undefined;
   }

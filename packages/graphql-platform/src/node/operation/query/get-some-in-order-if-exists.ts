@@ -1,18 +1,14 @@
-import {
-  Input,
-  ListableInputType,
-  nonNillableInputType,
-  type NonNillable,
-  type Path,
-} from '@prismamedia/graphql-platform-utils';
+import * as utils from '@prismamedia/graphql-platform-utils';
 import { Memoize } from '@prismamedia/ts-memoize';
 import * as graphql from 'graphql';
 import inflection from 'inflection';
 import type { ConnectorInterface } from '../../../connector-interface.js';
-import type {
+import {
+  argsPathKey,
   NodeSelectionAwareArgs,
   RawNodeSelectionAwareArgs,
 } from '../../abstract-operation.js';
+import type { NodeFilter } from '../../statement/filter.js';
 import {
   doesSelectedValueMatchUniqueFilter,
   type NodeSelectedValue,
@@ -22,7 +18,7 @@ import { AbstractQuery } from '../abstract-query.js';
 import type { OperationContext } from '../context.js';
 
 export type GetSomeInOrderIfExistsQueryArgs = RawNodeSelectionAwareArgs<{
-  where: ReadonlyArray<NonNillable<NodeUniqueFilterInputValue>>;
+  where: ReadonlyArray<utils.NonNillable<NodeUniqueFilterInputValue>>;
 }>;
 
 export type GetSomeInOrderIfExistsQueryResult = Array<NodeSelectedValue | null>;
@@ -46,11 +42,11 @@ export class GetSomeInOrderIfExistsQuery<
   @Memoize()
   public override get arguments() {
     return [
-      new Input({
+      new utils.Input({
         name: 'where',
-        type: nonNillableInputType(
-          new ListableInputType(
-            nonNillableInputType(this.node.uniqueFilterInputType),
+        type: utils.nonNillableInputType(
+          new utils.ListableInputType(
+            utils.nonNillableInputType(this.node.uniqueFilterInputType),
           ),
         ),
       }),
@@ -65,37 +61,48 @@ export class GetSomeInOrderIfExistsQuery<
   }
 
   protected override async executeWithValidArgumentsAndContext(
+    authorization: NodeFilter<TRequestContext, TConnector> | undefined,
     args: NodeSelectionAwareArgs<GetSomeInOrderIfExistsQueryArgs>,
     context: OperationContext<TRequestContext, TConnector>,
-    path: Path,
+    path: utils.Path,
   ): Promise<GetSomeInOrderIfExistsQueryResult> {
+    const argsPath = utils.addPath(path, argsPathKey);
+    const whereArgPath = utils.addPath(argsPath, 'where');
+
     const unorderedNodeValues = await this.node
       .getQueryByKey('find-many')
-      .execute(
+      .internal(
+        authorization,
         {
           where: { OR: args.where },
           first: args.where.length,
-          selection: args.selection
-            /**
-             * We need to select the data provided in the "unique-filters" to discriminate the returned nodes, imagine the following use:
-             *
-             * someArticlesIfExists(where: [
-             *  { id: "8c75f992-083e-4849-8020-4b3c156f484b" },
-             *  { _id: 3 },
-             *  { category: null, slug: "Welcome" },
-             *  { _id: 6 },
-             *  { category: { _id: 2 }, slug: "news" }
-             * ]) {
-             *   status
-             * }
-             *
-             * We need the following selection: { id _id category { _id } slug status }
-             */
-            .mergeWith(
-              args.where.map((filter) =>
-                this.node.outputType.selectShape(filter, context),
+          /**
+           * We need to select the data provided in the "unique-filters" to discriminate the returned nodes, imagine the following use:
+           *
+           * someArticlesIfExists(where: [
+           *  { id: "8c75f992-083e-4849-8020-4b3c156f484b" },
+           *  { _id: 3 },
+           *  { category: null, slug: "Welcome" },
+           *  { _id: 6 },
+           *  { category: { _id: 2 }, slug: "news" }
+           * ]) {
+           *   status
+           * }
+           *
+           * We need the following selection: { id _id category { _id } slug status }
+           */
+          selection: args.where.reduce(
+            (mergedSelection, filter, index) =>
+              mergedSelection.mergeWith(
+                this.node.outputType.selectShape(
+                  filter,
+                  context,
+                  utils.addPath(whereArgPath, index),
+                ),
+                path,
               ),
-            ),
+            args.selection,
+          ),
         },
         context,
         path,

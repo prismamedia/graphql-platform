@@ -1,17 +1,4 @@
-import {
-  addPath,
-  getGraphQLFieldConfigArgumentMap,
-  Input,
-  NestableError,
-  parseGraphQLUntypedArgumentNodes,
-  parseInputs,
-  type Name,
-  type Nillable,
-  type OptionalDeprecation,
-  type OptionalDescription,
-  type Path,
-  type PlainObject,
-} from '@prismamedia/graphql-platform-utils';
+import * as utils from '@prismamedia/graphql-platform-utils';
 import { Memoize } from '@prismamedia/ts-memoize';
 import * as graphql from 'graphql';
 import assert from 'node:assert/strict';
@@ -24,19 +11,19 @@ import type {
 import type { GraphQLSelectionContext } from '../node.js';
 
 export interface AbstractNodeFieldOutputTypeConfig {
-  name: Name;
+  name: utils.Name;
   public: boolean;
-  description?: OptionalDescription;
-  deprecated?: OptionalDeprecation;
+  description?: utils.OptionalDescription;
+  deprecated?: utils.OptionalDeprecation;
 }
 
 export abstract class AbstractNodeFieldOutputType<
-  TArgs extends Nillable<PlainObject>,
+  TArgs extends utils.Nillable<utils.PlainObject>,
 > {
-  public abstract readonly name: Name;
+  public abstract readonly name: utils.Name;
   public abstract readonly description?: string;
   public abstract readonly deprecationReason?: string;
-  public abstract readonly arguments?: ReadonlyArray<Input>;
+  public abstract readonly arguments?: ReadonlyArray<utils.Input>;
   public abstract readonly type: graphql.GraphQLOutputType;
 
   public abstract isPublic(): boolean;
@@ -55,7 +42,7 @@ export abstract class AbstractNodeFieldOutputType<
         deprecationReason: this.deprecationReason,
       }),
       ...(this.arguments?.length && {
-        args: getGraphQLFieldConfigArgumentMap(this.arguments),
+        args: utils.getGraphQLFieldConfigArgumentMap(this.arguments),
       }),
       type: this.type,
     };
@@ -70,38 +57,36 @@ export abstract class AbstractNodeFieldOutputType<
 
   protected parseGraphQLFieldArguments(
     args: graphql.FieldNode['arguments'],
-    context?: GraphQLSelectionContext,
-    path?: Path,
+    context: GraphQLSelectionContext | undefined,
+    path: utils.Path,
   ): Exclude<TArgs, null> {
     if (!this.arguments?.length) {
       if (args?.length) {
-        throw new NestableError(`Expects no arguments`, { path });
+        throw new utils.NestableError(`Expects no arguments`, { path });
       }
 
       return undefined as any;
     }
 
-    return Object.freeze<any>(
-      parseInputs(
-        this.arguments,
-        args?.length
-          ? parseGraphQLUntypedArgumentNodes(args, context?.variableValues)
-          : undefined,
-        addPath(path, argsPathKey),
-      ),
-    );
+    return utils.parseInputs(
+      this.arguments,
+      args?.length
+        ? utils.parseGraphQLUntypedArgumentNodes(args, context?.variableValues)
+        : undefined,
+      utils.addPath(path, argsPathKey),
+    ) as any;
   }
 
-  public abstract selectGraphQLField(
+  public abstract selectGraphQLFieldNode(
     ast: graphql.FieldNode,
     operationContext: OperationContext | undefined,
     selectionContext: GraphQLSelectionContext | undefined,
-    path: Path,
+    path: utils.Path,
   ): SelectionExpression;
 
   public abstract selectShape(
     value: unknown,
     operationContext: OperationContext | undefined,
-    path: Path,
+    path: utils.Path,
   ): SelectionExpression;
 }

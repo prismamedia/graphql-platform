@@ -25,6 +25,9 @@ type Article implements PublicNodeInterface {
 
   """Is the article a partnership?"""
   sponsored: Boolean
+  views: UnsignedBigInt!
+  score: UnsignedFloat!
+  machineTags: JSONArray
   tags(where: ArticleTagFilterInput, orderBy: [ArticleTagOrderingInput!], skip: UnsignedInt, first: UnsignedInt!): [ArticleTag!]!
 
   """

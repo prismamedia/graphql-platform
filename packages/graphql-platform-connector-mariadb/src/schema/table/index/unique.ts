@@ -3,7 +3,7 @@ import * as utils from '@prismamedia/graphql-platform-utils';
 import { Memoize } from '@prismamedia/ts-memoize';
 import inflection from 'inflection';
 import assert from 'node:assert/strict';
-import { escapeIdentifier } from '../../../escape.js';
+import { escapeIdentifier } from '../../../escaping.js';
 import type { MariaDBConnector } from '../../../index.js';
 import type { Column, Table } from '../../table.js';
 import { AbstractIndex } from '../abstract-index.js';
@@ -19,7 +19,7 @@ export interface UniqueIndexConfig {
  * @see https://mariadb.com/kb/en/getting-started-with-indexes/#unique-index
  */
 export class UniqueIndex extends AbstractIndex {
-  public readonly config: UniqueIndexConfig | undefined;
+  public readonly config?: UniqueIndexConfig;
   public readonly configPath: utils.Path;
 
   public constructor(

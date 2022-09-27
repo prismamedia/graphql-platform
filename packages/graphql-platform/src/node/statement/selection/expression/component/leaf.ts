@@ -1,8 +1,6 @@
-import {
-  Path,
-  UnexpectedValueError,
-} from '@prismamedia/graphql-platform-utils';
+import * as utils from '@prismamedia/graphql-platform-utils';
 import * as graphql from 'graphql';
+import assert from 'node:assert/strict';
 import type { Component } from '../../../../definition/component.js';
 import type { Leaf, LeafValue } from '../../../../definition/component/leaf.js';
 import type { SelectionExpressionInterface } from '../../expression-interface.js';
@@ -30,19 +28,13 @@ export class LeafSelection implements SelectionExpressionInterface {
     return this.isAkinTo(expression);
   }
 
-  public mergeWith(expression: LeafSelection, path?: Path): this {
-    if (!this.isAkinTo(expression)) {
-      throw new UnexpectedValueError(
-        `${this.leaf.indefinite}'s selection`,
-        expression,
-        { path },
-      );
-    }
+  public mergeWith(expression: LeafSelection, _path?: utils.Path): this {
+    assert(this.isAkinTo(expression));
 
     return this;
   }
 
-  public parseValue(maybeValue: unknown, path: Path): LeafValue {
+  public parseValue(maybeValue: unknown, path: utils.Path): LeafValue {
     return this.leaf.parseValue(maybeValue, path);
   }
 

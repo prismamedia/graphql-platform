@@ -1,13 +1,5 @@
 import { Scalars } from '@prismamedia/graphql-platform-scalars';
-import {
-  addPath,
-  aggregateConcurrentError,
-  Input,
-  ListableInputType,
-  MutationType,
-  nonNillableInputType,
-  type Path,
-} from '@prismamedia/graphql-platform-utils';
+import * as utils from '@prismamedia/graphql-platform-utils';
 import { Memoize } from '@prismamedia/ts-memoize';
 import * as graphql from 'graphql';
 import type { ConnectorInterface } from '../../../../connector-interface.js';
@@ -17,11 +9,16 @@ import {
   type RawNodeSelectionAwareArgs,
 } from '../../../abstract-operation.js';
 import { DeletedNode } from '../../../change.js';
-import { OnHeadDeletion } from '../../../definition/component/edge.js';
+import { OnEdgeHeadDeletion } from '../../../definition/component/edge.js';
 import { AndOperation, NodeFilter } from '../../../statement/filter.js';
 import type { NodeSelectedValue } from '../../../statement/selection.js';
 import type { NodeFilterInputValue, OrderByInputValue } from '../../../type.js';
 import { createContextBoundAPI } from '../../api.js';
+import {
+  catchConnectorError,
+  catchLifecycleHookError,
+  LifecycleHookKind,
+} from '../../error.js';
 import { AbstractDeletion, type DeletionConfig } from '../abstract-deletion.js';
 import type { MutationContext } from '../context.js';
 
@@ -43,9 +40,9 @@ export class DeleteManyMutation<
   DeleteManyMutationResult
 > {
   readonly #config?: DeletionConfig<TRequestContext, TConnector> =
-    this.node.getMutationConfig(MutationType.DELETION).config;
-  readonly #configPath: Path = this.node.getMutationConfig(
-    MutationType.DELETION,
+    this.node.getMutationConfig(utils.MutationType.DELETION).config;
+  readonly #configPath: utils.Path = this.node.getMutationConfig(
+    utils.MutationType.DELETION,
   ).configPath;
 
   protected override readonly selectionAware = true;
@@ -55,19 +52,19 @@ export class DeleteManyMutation<
   @Memoize()
   public override get arguments() {
     return [
-      new Input({
+      new utils.Input({
         name: 'where',
         type: this.node.filterInputType,
       }),
-      new Input({
+      new utils.Input({
         name: 'orderBy',
-        type: new ListableInputType(
-          nonNillableInputType(this.node.orderingInputType),
+        type: new utils.ListableInputType(
+          utils.nonNillableInputType(this.node.orderingInputType),
         ),
       }),
-      new Input({
+      new utils.Input({
         name: 'first',
-        type: nonNillableInputType(Scalars.UnsignedInt),
+        type: utils.nonNillableInputType(Scalars.UnsignedInt),
       }),
     ];
   }
@@ -82,28 +79,25 @@ export class DeleteManyMutation<
   }
 
   protected override async executeWithValidArgumentsAndContext(
+    authorization: NodeFilter<TRequestContext, TConnector> | undefined,
     args: NodeSelectionAwareArgs<DeleteManyMutationArgs>,
     context: MutationContext<TRequestContext, TConnector>,
-    path: Path,
+    path: utils.Path,
   ): Promise<DeleteManyMutationResult> {
     if (args.first === 0) {
       return [];
     }
 
-    const argsPath = addPath(path, argsPathKey);
+    const argsPath = utils.addPath(path, argsPathKey);
 
     const filter = new NodeFilter(
       this.node,
       new AndOperation([
-        this.node.getAuthorizationByRequestContext(
-          context.requestContext,
-          path,
-          MutationType.DELETION,
-        )?.filter,
+        authorization?.filter,
         this.node.filterInputType.filter(
           args.where,
           context,
-          addPath(argsPath, 'where'),
+          utils.addPath(argsPath, 'where'),
         ).filter,
       ]),
     ).normalized;
@@ -115,39 +109,48 @@ export class DeleteManyMutation<
     const ordering = this.node.orderingInputType.sort(
       args.orderBy,
       context,
-      addPath(argsPath, 'orderBy'),
+      utils.addPath(argsPath, 'orderBy'),
     ).normalized;
 
     // Fetch the current nodes' value
-    const currentValues = await this.connector.find(
-      {
-        node: this.node,
-        ...(filter && { where: filter }),
-        ...(ordering && { orderBy: ordering }),
-        limit: args.first,
-        selection: args.selection.mergeWith(this.node.selection),
-        forMutation: MutationType.DELETION,
-      },
-      context,
+    const currentValues = await catchConnectorError(
+      () =>
+        this.connector.find(
+          {
+            node: this.node,
+            ...(filter && { filter }),
+            ...(ordering && { ordering }),
+            limit: args.first,
+            selection: this.node.selection.mergeWith(args.selection),
+            forMutation: utils.MutationType.DELETION,
+          },
+          context,
+        ),
+      path,
     );
 
     if (currentValues.length === 0) {
       return [];
     }
 
-    // Apply the "preDelete"-hook
+    // Apply the "preDelete"-hook, if any
     if (this.#config?.preDelete) {
-      await aggregateConcurrentError<NodeSelectedValue, void>(
-        currentValues,
-        async (currentValue) =>
-          this.#config!.preDelete!({
-            gp: this.gp,
-            node: this.node,
-            context,
-            api: createContextBoundAPI(this.gp, context),
-            currentValue: Object.freeze(this.node.parseValue(currentValue)),
-          }),
-        { path },
+      await Promise.all(
+        currentValues.map(async (currentValue) =>
+          catchLifecycleHookError(
+            () =>
+              this.#config!.preDelete!({
+                gp: this.gp,
+                node: this.node,
+                context,
+                api: createContextBoundAPI(this.gp, context),
+                currentValue: Object.freeze(this.node.parseValue(currentValue)),
+              }),
+            this.node,
+            LifecycleHookKind.PRE_DELETE,
+            path,
+          ),
+        ),
       );
     }
 
@@ -156,22 +159,20 @@ export class DeleteManyMutation<
       await Promise.all(
         Array.from(this.node.reverseEdgesByName.values()).map((reverseEdge) => {
           switch (reverseEdge.originalEdge.onHeadDeletion) {
-            case OnHeadDeletion.RESTRICT:
+            case OnEdgeHeadDeletion.RESTRICT:
               // Nothing to do, the database will take care of it
               break;
 
-            case OnHeadDeletion.SET_NULL:
+            case OnEdgeHeadDeletion.SET_NULL:
               return reverseEdge.head.getMutationByKey('update-many').execute(
                 {
                   where: {
                     [reverseEdge.originalEdge.name]: {
-                      OR: currentValues
-                        .map((currentValue) =>
-                          reverseEdge.originalEdge.referencedUniqueConstraint.parseValue(
-                            currentValue,
-                          ),
-                        )
-                        .filter(Boolean),
+                      OR: currentValues.map((currentValue) =>
+                        reverseEdge.originalEdge.referencedUniqueConstraint.parseValue(
+                          currentValue,
+                        ),
+                      ),
                     },
                   },
                   first: 1_000_000,
@@ -181,18 +182,16 @@ export class DeleteManyMutation<
                 context,
               );
 
-            case OnHeadDeletion.CASCADE:
+            case OnEdgeHeadDeletion.CASCADE:
               return reverseEdge.head.getMutationByKey('delete-many').execute(
                 {
                   where: {
                     [reverseEdge.originalEdge.name]: {
-                      OR: currentValues
-                        .map((currentValue) =>
-                          reverseEdge.originalEdge.referencedUniqueConstraint.parseValue(
-                            currentValue,
-                          ),
-                        )
-                        .filter(Boolean),
+                      OR: currentValues.map((currentValue) =>
+                        reverseEdge.originalEdge.referencedUniqueConstraint.parseValue(
+                          currentValue,
+                        ),
+                      ),
                     },
                   },
                   first: 1_000_000,
@@ -206,46 +205,52 @@ export class DeleteManyMutation<
     }
 
     // Actually delete the nodes
-    await this.connector.delete(
-      {
-        node: this.node,
-        where: this.node.filterInputType.parseAndFilter({
-          OR: currentValues.map((currentValue) =>
-            this.node.identifier.parseValue(currentValue),
-          ),
-        }),
-        limit: currentValues.length,
-      },
-      context,
+    await catchConnectorError(
+      () =>
+        this.connector.delete(
+          {
+            node: this.node,
+            filter: this.node.filterInputType.parseAndFilter({
+              OR: currentValues.map((currentValue) =>
+                this.node.identifier.parseValue(currentValue),
+              ),
+            }),
+          },
+          context,
+        ),
+      path,
     );
 
-    const deletedAt = new Date();
-
-    return aggregateConcurrentError<NodeSelectedValue, NodeSelectedValue>(
-      currentValues,
-      async (oldValue) => {
+    return Promise.all(
+      currentValues.map(async (oldValue) => {
         const change = new DeletedNode(
           this.node,
           context.requestContext,
           oldValue,
-          deletedAt,
         );
 
         // Let's everybody know about this deleted node
         context.trackChange(change);
 
-        // Apply the "postDelete"-hook
-        await this.#config?.postDelete?.({
-          gp: this.gp,
-          node: this.node,
-          context,
-          api: createContextBoundAPI(this.gp, context),
-          change,
-        });
+        // Apply the "postDelete"-hook, if any
+        if (this.#config?.postDelete) {
+          await catchLifecycleHookError(
+            () =>
+              this.#config!.postDelete!({
+                gp: this.gp,
+                node: this.node,
+                context,
+                api: createContextBoundAPI(this.gp, context),
+                change,
+              }),
+            this.node,
+            LifecycleHookKind.POST_DELETE,
+            path,
+          );
+        }
 
         return args.selection.parseValue(oldValue);
-      },
-      { path },
+      }),
     );
   }
 }

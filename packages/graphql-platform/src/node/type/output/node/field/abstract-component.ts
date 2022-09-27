@@ -1,13 +1,10 @@
-import type {
-  Nillable,
-  PlainObject,
-} from '@prismamedia/graphql-platform-utils';
+import type * as utils from '@prismamedia/graphql-platform-utils';
 import { Memoize } from '@prismamedia/ts-memoize';
 import type { Component } from '../../../../definition/component.js';
 import { AbstractNodeFieldOutputType } from '../abstract-field.js';
 
 export abstract class AbstractComponentOutputType<
-  TArgs extends Nillable<PlainObject>,
+  TArgs extends utils.Nillable<utils.PlainObject>,
 > extends AbstractNodeFieldOutputType<TArgs> {
   public constructor(public readonly component: Component) {
     super();

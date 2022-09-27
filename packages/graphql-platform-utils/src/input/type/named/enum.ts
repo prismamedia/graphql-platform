@@ -201,24 +201,22 @@ export class EnumInputType<
   public get enumValues(): ReadonlyArray<TValue> {
     const values = resolveThunkOrValue(this.#valuesConfig);
 
-    return Object.freeze(
-      values?.length
-        ? aggregateConfigError<TValue, TValue[]>(
-            values,
-            (values, value, index) => {
-              if (!(value instanceof EnumInputValue)) {
-                throw new UnexpectedConfigError(`an enum input value`, value, {
-                  path: addPath(this.#valuesConfigPath, index),
-                });
-              }
+    return values?.length
+      ? aggregateConfigError<TValue, TValue[]>(
+          values,
+          (values, value, index) => {
+            if (!(value instanceof EnumInputValue)) {
+              throw new UnexpectedConfigError(`an enum input value`, value, {
+                path: addPath(this.#valuesConfigPath, index),
+              });
+            }
 
-              return [...values, value];
-            },
-            [],
-            { path: this.#valuesConfigPath },
-          )
-        : [],
-    );
+            return [...values, value];
+          },
+          [],
+          { path: this.#valuesConfigPath },
+        )
+      : [];
   }
 
   @Memoize()

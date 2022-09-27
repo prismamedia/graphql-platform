@@ -1,14 +1,4 @@
-import {
-  addPath,
-  aggregateConfigError,
-  getGraphQLFieldConfigArgumentMap,
-  isPlainObject,
-  parseInputs,
-  type Input,
-  type Nillable,
-  type Path,
-  type PlainObject,
-} from '@prismamedia/graphql-platform-utils';
+import * as utils from '@prismamedia/graphql-platform-utils';
 import { Memoize } from '@prismamedia/ts-memoize';
 import * as graphql from 'graphql';
 import _ from 'lodash';
@@ -18,32 +8,35 @@ import type { ConnectorInterface } from '../connector-interface.js';
 import type { GraphQLPlatform } from '../index.js';
 import type { Node } from '../node.js';
 import { OperationContext } from './operation/context.js';
-import { RuntimeError } from './operation/error.js';
+import { ConnectorError, InternalError } from './operation/error.js';
 import type { OperationInterface } from './operation/interface.js';
+import type { NodeFilter } from './statement/filter.js';
 import type { NodeSelection } from './statement/selection.js';
 import type { RawNodeSelection } from './type/output/node.js';
 
-export const argsPathKey: Path['key'] = '@args';
+export const argsPathKey: utils.Path['key'] = '@args';
 
-export type RawNodeSelectionAwareArgs<TArgs extends Nillable<PlainObject>> =
-  TArgs & {
-    selection: RawNodeSelection;
-  };
+export type RawNodeSelectionAwareArgs<
+  TArgs extends utils.Nillable<utils.PlainObject>,
+> = TArgs & {
+  selection: RawNodeSelection;
+};
 
-export type NodeSelectionAwareArgs<TArgs extends Nillable<PlainObject>> =
-  Readonly<
-    Exclude<
-      TArgs extends { selection: RawNodeSelection }
-        ? Merge<TArgs, { selection: NodeSelection }>
-        : TArgs,
-      null
-    >
-  >;
+export type NodeSelectionAwareArgs<
+  TArgs extends utils.Nillable<utils.PlainObject>,
+> = Readonly<
+  Exclude<
+    TArgs extends { selection: RawNodeSelection }
+      ? Merge<TArgs, { selection: NodeSelection }>
+      : TArgs,
+    null
+  >
+>;
 
 export abstract class AbstractOperation<
   TRequestContext extends object,
   TConnector extends ConnectorInterface,
-  TArgs extends Nillable<PlainObject>,
+  TArgs extends utils.Nillable<utils.PlainObject>,
   TResult,
 > implements OperationInterface<TRequestContext, TConnector>
 {
@@ -58,7 +51,7 @@ export abstract class AbstractOperation<
   public abstract readonly operationType: graphql.OperationTypeNode;
   public abstract readonly name: string;
   public abstract readonly description: string;
-  public abstract readonly arguments: ReadonlyArray<Input>;
+  public abstract readonly arguments: ReadonlyArray<utils.Input>;
 
   public constructor(public readonly node: Node<TRequestContext, TConnector>) {
     this.gp = node.gp;
@@ -85,7 +78,7 @@ export abstract class AbstractOperation<
     this.description;
 
     if (this.arguments.length) {
-      aggregateConfigError<Input, void>(
+      utils.aggregateConfigError<utils.Input, void>(
         this.arguments,
         (_, argument) => argument.validate(),
         undefined,
@@ -104,33 +97,33 @@ export abstract class AbstractOperation<
     return this.gp.connector;
   }
 
-  protected assertIsEnabled(path: Path): void {
+  protected assertIsEnabled(path: utils.Path): void {
     if (!this.isEnabled()) {
-      throw new RuntimeError(
-        `The "${this.name}" ${this.operationType} is disabled`,
+      throw new utils.NestableError(
+        `The "${this}" ${this.operationType} is disabled`,
         { path },
       );
     }
   }
 
-  protected assertAuthorization(
+  protected ensureAuthorization(
     context: OperationContext<TRequestContext, TConnector>,
-    path: Path,
-  ): void {
-    context.getNodeAuthorization(this.node, path);
+    path: utils.Path,
+  ): NodeFilter<TRequestContext, TConnector> | undefined {
+    return context.ensureAuthorization(this.node, path);
   }
 
   protected parseArguments(
     args: TArgs,
     context: OperationContext<TRequestContext, TConnector>,
-    path: Path,
+    path: utils.Path,
   ): NodeSelectionAwareArgs<TArgs> {
-    const parsedArgs = parseInputs(
+    const parsedArgs = utils.parseInputs(
       this.arguments,
-      this.selectionAware && isPlainObject(args)
+      this.selectionAware && utils.isPlainObject(args)
         ? _.omit(args, ['selection'])
         : args,
-      addPath(path, argsPathKey),
+      utils.addPath(path, argsPathKey),
     );
 
     if (this.selectionAware) {
@@ -144,22 +137,44 @@ export abstract class AbstractOperation<
       });
     }
 
-    return Object.freeze<any>(parsedArgs);
+    return parsedArgs as any;
   }
 
   /**
-   * The actual implementation with valid arguments and context
+   * The actual implementation with authorization, parsed arguments and context
    */
   protected abstract executeWithValidArgumentsAndContext(
+    authorization: NodeFilter<TRequestContext, TConnector> | undefined,
     args: NodeSelectionAwareArgs<TArgs>,
     context: OperationContext<TRequestContext, TConnector>,
-    path: Path,
+    path: utils.Path,
   ): Promise<TResult>;
+
+  public async internal(
+    authorization: NodeFilter<TRequestContext, TConnector> | undefined,
+    args: TArgs,
+    context: OperationContext<TRequestContext, TConnector>,
+    path: utils.Path,
+  ): Promise<TResult> {
+    this.assertIsEnabled(path);
+
+    const parsedArguments = this.parseArguments(args, context, path);
+
+    return this.executeWithValidArgumentsAndContext(
+      authorization,
+      parsedArguments,
+      context,
+      path,
+    );
+  }
 
   public async execute(
     args: TArgs,
     context: TRequestContext | OperationContext<TRequestContext, TConnector>,
-    path: Path = addPath(addPath(undefined, this.operationType), this.name),
+    path: utils.Path = utils.addPath(
+      utils.addPath(undefined, this.operationType),
+      this.name,
+    ),
   ): Promise<TResult> {
     this.assertIsEnabled(path);
 
@@ -168,15 +183,9 @@ export abstract class AbstractOperation<
         ? context
         : new OperationContext(this.gp, context);
 
-    this.assertAuthorization(operationContext, path);
+    const authorization = this.ensureAuthorization(operationContext, path);
 
-    const parsedArguments = this.parseArguments(args, operationContext, path);
-
-    return this.executeWithValidArgumentsAndContext(
-      parsedArguments,
-      operationContext,
-      path,
-    );
+    return this.internal(authorization, args, operationContext, path);
   }
 
   public abstract getGraphQLOutputType(): graphql.GraphQLOutputType;
@@ -194,15 +203,27 @@ export abstract class AbstractOperation<
         deprecationReason: this.node.deprecationReason,
       }),
       ...(this.arguments.length && {
-        args: getGraphQLFieldConfigArgumentMap(this.arguments),
+        args: utils.getGraphQLFieldConfigArgumentMap(this.arguments),
       }),
       type: this.getGraphQLOutputType(),
-      resolve: (_, args, context, info) =>
-        this.execute(
-          <TArgs>(this.selectionAware ? { ...args, selection: info } : args),
-          context,
-          info.path,
-        ),
+      resolve: async (_, args, context, info) => {
+        try {
+          return await this.execute(
+            (this.selectionAware
+              ? { ...args, selection: info }
+              : args) as TArgs,
+            context,
+            info.path,
+          );
+        } catch (error) {
+          throw utils.isConfigError(error) || error instanceof ConnectorError
+            ? new InternalError({
+                path: info.path,
+                cause: error,
+              })
+            : error;
+        }
+      },
     };
   }
 }

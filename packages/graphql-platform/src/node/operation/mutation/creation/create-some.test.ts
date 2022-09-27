@@ -3,7 +3,6 @@ import {
   myAdminContext,
   MyContext,
   MyGP,
-  myUserContext,
   myVisitorContext,
   nodes,
 } from '../../../../__tests__/config.js';
@@ -11,6 +10,7 @@ import {
   clearAllConnectorMocks,
   mockConnector,
 } from '../../../../__tests__/connector-mock.js';
+import { UnauthorizedError } from '../../error.js';
 import { CreateSomeMutationArgs } from './create-some.js';
 
 describe('CreateSomeMutation', () => {
@@ -29,18 +29,18 @@ describe('CreateSomeMutation', () => {
     beforeEach(() => clearAllConnectorMocks(gp.connector));
 
     describe('Fails', () => {
-      it.each([myVisitorContext, myUserContext])(
-        'throws an error on unauthorized node',
-        async (context) => {
-          await expect(
-            gp.api.mutation.createArticles(undefined, context),
-          ).rejects.toThrowError(
-            '"mutation.createArticles" - Unauthorized access to "Article"',
-          );
+      it.each<[CreateSomeMutationArgs, MyContext]>([
+        [
+          { data: [{ title: 'A title' }], selection: '{ id }' },
+          myVisitorContext,
+        ],
+      ])('throws an UnauthorizedError', async (args, context) => {
+        await expect(
+          gp.api.mutation.createArticles(args, context),
+        ).rejects.toThrowError(UnauthorizedError);
 
-          expect(gp.connector.create).toHaveBeenCalledTimes(0);
-        },
-      );
+        expect(gp.connector.create).toHaveBeenCalledTimes(0);
+      });
     });
 
     describe('Works', () => {

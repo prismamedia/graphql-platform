@@ -1,18 +1,5 @@
 import { Scalars } from '@prismamedia/graphql-platform-scalars';
-import {
-  addPath,
-  Input,
-  MutationType,
-  nonNillableInputType,
-  nonNullableInputTypeDecorator,
-  ObjectInputType,
-  UnexpectedValueError,
-  UnreachableValueError,
-  type InputConfig,
-  type Nillable,
-  type NonNillable,
-  type Path,
-} from '@prismamedia/graphql-platform-utils';
+import * as utils from '@prismamedia/graphql-platform-utils';
 import inflection from 'inflection';
 import type { RequireExactlyOne } from 'type-fest';
 import type {
@@ -32,21 +19,21 @@ export enum EdgeUpdateInputAction {
   DISCONNECT = 'disconnect',
 }
 
-export type EdgeUpdateInputValue = Nillable<
+export type EdgeUpdateInputValue = utils.Nillable<
   RequireExactlyOne<{
-    [EdgeUpdateInputAction.CONNECT]: NonNillable<NodeUniqueFilterInputValue>;
-    [EdgeUpdateInputAction.CONNECT_IF_EXISTS]: NonNillable<NodeUniqueFilterInputValue>;
-    [EdgeUpdateInputAction.CONNECT_OR_CREATE]: NonNillable<{
-      where: NonNillable<NodeUniqueFilterInputValue>;
-      create: NonNillable<NodeCreationInputValue>;
+    [EdgeUpdateInputAction.CONNECT]: utils.NonNillable<NodeUniqueFilterInputValue>;
+    [EdgeUpdateInputAction.CONNECT_IF_EXISTS]: utils.NonNillable<NodeUniqueFilterInputValue>;
+    [EdgeUpdateInputAction.CONNECT_OR_CREATE]: utils.NonNillable<{
+      where: utils.NonNillable<NodeUniqueFilterInputValue>;
+      create: utils.NonNillable<NodeCreationInputValue>;
     }>;
-    [EdgeUpdateInputAction.CREATE]: NonNillable<NodeCreationInputValue>;
+    [EdgeUpdateInputAction.CREATE]: utils.NonNillable<NodeCreationInputValue>;
     [EdgeUpdateInputAction.DISCONNECT]: boolean;
   }>
 >;
 
 export type EdgeUpdateInputConfig = Omit<
-  InputConfig<EdgeUpdateInputValue>,
+  utils.InputConfig<EdgeUpdateInputValue>,
   'name' | 'optional' | 'type' | 'publicType'
 >;
 
@@ -55,19 +42,19 @@ export class EdgeUpdateInput extends AbstractComponentUpdateInput<EdgeUpdateInpu
     super(
       edge,
       {
-        type: nonNullableInputTypeDecorator(
-          new ObjectInputType({
+        type: utils.nonNullableInputTypeDecorator(
+          new utils.ObjectInputType({
             name: [
               edge.tail.name,
               'Nested',
               edge.pascalCasedName,
               'Edge',
-              inflection.camelize(MutationType.UPDATE),
+              inflection.camelize(utils.MutationType.UPDATE),
               'Input',
             ].join(''),
             fields: () => {
-              const fields: Input[] = [
-                new Input({
+              const fields: utils.Input[] = [
+                new utils.Input({
                   name: EdgeUpdateInputAction.CONNECT,
                   type: edge.head.uniqueFilterInputType,
                   nullable: false,
@@ -76,7 +63,7 @@ export class EdgeUpdateInput extends AbstractComponentUpdateInput<EdgeUpdateInpu
 
               if (edge.isNullable()) {
                 fields.push(
-                  new Input({
+                  new utils.Input({
                     name: EdgeUpdateInputAction.CONNECT_IF_EXISTS,
                     type: edge.head.uniqueFilterInputType,
                     nullable: false,
@@ -84,11 +71,11 @@ export class EdgeUpdateInput extends AbstractComponentUpdateInput<EdgeUpdateInpu
                 );
               }
 
-              if (edge.head.isMutationEnabled(MutationType.CREATION)) {
+              if (edge.head.isMutationEnabled(utils.MutationType.CREATION)) {
                 fields.push(
-                  new Input({
+                  new utils.Input({
                     name: EdgeUpdateInputAction.CONNECT_OR_CREATE,
-                    type: new ObjectInputType({
+                    type: new utils.ObjectInputType({
                       name: [
                         edge.tail.name,
                         'Nested',
@@ -97,39 +84,43 @@ export class EdgeUpdateInput extends AbstractComponentUpdateInput<EdgeUpdateInpu
                         ),
                         edge.pascalCasedName,
                         'Edge',
-                        inflection.camelize(MutationType.UPDATE),
+                        inflection.camelize(utils.MutationType.UPDATE),
                         'Input',
                       ].join(''),
                       fields: () => [
-                        new Input({
+                        new utils.Input({
                           name: 'where',
-                          type: nonNillableInputType(
+                          type: utils.nonNillableInputType(
                             edge.head.uniqueFilterInputType,
                           ),
                         }),
-                        new Input({
+                        new utils.Input({
                           name: 'create',
-                          type: nonNillableInputType(
+                          type: utils.nonNillableInputType(
                             edge.head.creationInputType,
                           ),
                         }),
                       ],
                     }),
                     nullable: false,
-                    public: edge.head.isMutationPublic(MutationType.CREATION),
+                    public: edge.head.isMutationPublic(
+                      utils.MutationType.CREATION,
+                    ),
                   }),
-                  new Input({
+                  new utils.Input({
                     name: EdgeUpdateInputAction.CREATE,
                     type: edge.head.creationInputType,
                     nullable: false,
-                    public: edge.head.isMutationPublic(MutationType.CREATION),
+                    public: edge.head.isMutationPublic(
+                      utils.MutationType.CREATION,
+                    ),
                   }),
                 );
               }
 
               if (edge.isNullable()) {
                 fields.push(
-                  new Input({
+                  new utils.Input({
                     name: EdgeUpdateInputAction.DISCONNECT,
                     type: Scalars.Boolean,
                     nullable: false,
@@ -145,7 +136,7 @@ export class EdgeUpdateInput extends AbstractComponentUpdateInput<EdgeUpdateInpu
         validateValue(inputValue, path) {
           if (inputValue) {
             if (Object.keys(inputValue).length !== 1) {
-              throw new UnexpectedValueError(
+              throw new utils.UnexpectedValueError(
                 `one and only one action`,
                 inputValue,
                 { path },
@@ -153,21 +144,21 @@ export class EdgeUpdateInput extends AbstractComponentUpdateInput<EdgeUpdateInpu
             }
           }
         },
-        ...edge.config[MutationType.UPDATE],
+        ...edge.config[utils.MutationType.UPDATE],
       },
-      addPath(edge.configPath, MutationType.UPDATE),
+      utils.addPath(edge.configPath, utils.MutationType.UPDATE),
     );
   }
 
   public override async resolveComponentUpdate(
-    inputValue: Readonly<NonNillable<EdgeUpdateInputValue>>,
+    inputValue: Readonly<utils.NonNillable<EdgeUpdateInputValue>>,
     context: MutationContext,
-    path: Path,
+    path: utils.Path,
   ): Promise<EdgeUpdate | undefined> {
     const selection = this.edge.referencedUniqueConstraint.selection;
 
     const actionName = Object.keys(inputValue)[0] as EdgeUpdateInputAction;
-    const actionPath = addPath(path, actionName);
+    const actionPath = utils.addPath(path, actionName);
 
     switch (actionName) {
       case EdgeUpdateInputAction.CONNECT: {
@@ -230,7 +221,7 @@ export class EdgeUpdateInput extends AbstractComponentUpdateInput<EdgeUpdateInpu
       }
 
       default:
-        throw new UnreachableValueError(actionName, { path });
+        throw new utils.UnreachableValueError(actionName, { path });
     }
   }
 }

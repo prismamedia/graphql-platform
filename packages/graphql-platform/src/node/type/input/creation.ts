@@ -1,19 +1,4 @@
-import {
-  addPath,
-  aggregateConcurrentError,
-  aggregateConfigError,
-  assertNillablePlainObjectConfig,
-  Input,
-  MutationType,
-  ObjectInputType,
-  UnexpectedConfigError,
-  type InputConfig,
-  type Name,
-  type Nillable,
-  type NonNillable,
-  type Path,
-  type PlainObject,
-} from '@prismamedia/graphql-platform-utils';
+import * as utils from '@prismamedia/graphql-platform-utils';
 import { Memoize } from '@prismamedia/ts-memoize';
 import inflection from 'inflection';
 import assert from 'node:assert/strict';
@@ -29,12 +14,12 @@ import type {
   ReverseEdgeCreationInput,
 } from './creation/field.js';
 
-export type NodeCreationInputValue = Nillable<PlainObject>;
+export type NodeCreationInputValue = utils.Nillable<utils.PlainObject>;
 
 export class NodeCreationInputType<
   TRequestContext extends object = any,
   TConnector extends ConnectorInterface = any,
-> extends ObjectInputType<FieldCreationInput> {
+> extends utils.ObjectInputType<FieldCreationInput> {
   public constructor(
     public readonly node: Node<TRequestContext, TConnector>,
     public readonly forcedEdge?: Edge,
@@ -43,11 +28,9 @@ export class NodeCreationInputType<
 
     super({
       name: forcedEdge
-        ? `${node.name}CreationWithout${inflection.capitalize(
-            forcedEdge.name,
-          )}Input`
-        : `${node.name}CreationInput`,
-      description: `The "${node.name}" node's ${MutationType.CREATION}`,
+        ? `${node}CreationWithout${inflection.capitalize(forcedEdge.name)}Input`
+        : `${node}CreationInput`,
+      description: `The "${node}" node's ${utils.MutationType.CREATION}`,
     });
   }
 
@@ -78,31 +61,34 @@ export class NodeCreationInputType<
   }
 
   @Memoize()
-  protected get virtualFields(): ReadonlyArray<Input> {
+  protected get virtualFields(): ReadonlyArray<utils.Input> {
     const { config, configPath } = this.node.getMutationConfig(
-      MutationType.CREATION,
+      utils.MutationType.CREATION,
     );
 
     const virtualFieldsConfig = config?.virtualFields;
-    const virtualFieldsConfigPath = addPath(configPath, 'virtualFields');
+    const virtualFieldsConfigPath = utils.addPath(configPath, 'virtualFields');
 
-    assertNillablePlainObjectConfig(
+    utils.assertNillablePlainObjectConfig(
       virtualFieldsConfig,
       virtualFieldsConfigPath,
     );
 
     return virtualFieldsConfig
-      ? aggregateConfigError<[Name, Except<InputConfig, 'name'>], Input[]>(
+      ? utils.aggregateConfigError<
+          [utils.Name, Except<utils.InputConfig, 'name'>],
+          utils.Input[]
+        >(
           Object.entries(virtualFieldsConfig),
           (fields, [virtualFieldName, virtualFieldConfig]) => {
             if (this.node.componentsByName.has(virtualFieldName)) {
-              throw new UnexpectedConfigError(
+              throw new utils.UnexpectedConfigError(
                 `not to have a component's name`,
                 virtualFieldName,
                 { path: virtualFieldsConfigPath },
               );
             } else if (this.node.reverseEdgesByName.has(virtualFieldName)) {
-              throw new UnexpectedConfigError(
+              throw new utils.UnexpectedConfigError(
                 `not to have a reverse-edge's name`,
                 virtualFieldName,
                 { path: virtualFieldsConfigPath },
@@ -111,9 +97,9 @@ export class NodeCreationInputType<
 
             return [
               ...fields,
-              new Input(
+              new utils.Input(
                 { ...virtualFieldConfig, name: virtualFieldName },
-                addPath(virtualFieldsConfigPath, virtualFieldName),
+                utils.addPath(virtualFieldsConfigPath, virtualFieldName),
               ),
             ];
           },
@@ -125,32 +111,31 @@ export class NodeCreationInputType<
 
   @Memoize()
   public override get fields(): ReadonlyArray<FieldCreationInput> {
-    return Object.freeze([
+    return [
       ...this.componentFields,
       ...this.reverseEdgeFields,
       ...this.virtualFields,
-    ]);
+    ];
   }
 
   @Memoize()
   public override isPublic(): boolean {
     return (
-      this.node.isMutationPublic(MutationType.CREATION) &&
+      this.node.isMutationPublic(utils.MutationType.CREATION) &&
       super.isPublic() &&
       this.componentFields.some((field) => field.isPublic())
     );
   }
 
   public async createStatement(
-    data: Readonly<NonNillable<NodeCreationInputValue>>,
+    data: Readonly<utils.NonNillable<NodeCreationInputValue>>,
     context: MutationContext,
-    path: Path = addPath(undefined, this.name),
+    path: utils.Path = utils.addPath(undefined, this.name),
   ): Promise<NodeCreation<TRequestContext, TConnector>> {
     const statement = new NodeCreation(this.node);
 
-    await aggregateConcurrentError(
-      this.componentFields,
-      async (field) => {
+    await Promise.all(
+      this.componentFields.map(async (field) => {
         const fieldData = data[field.name];
 
         statement.setComponentValue(
@@ -160,42 +145,40 @@ export class NodeCreationInputType<
             : await field.resolveComponentValue(
                 fieldData,
                 context,
-                addPath(path, field.name),
+                utils.addPath(path, field.name),
               ),
         );
-      },
-      { path },
+      }),
     );
 
     return statement;
   }
 
   public hasReverseEdgeActions(
-    data: Readonly<NonNillable<NodeCreationInputValue>>,
+    data: Readonly<utils.NonNillable<NodeCreationInputValue>>,
   ): boolean {
     return this.reverseEdgeFields.some((field) => data[field.name] != null);
   }
 
   public async applyReverseEdgeActions(
     nodeValue: Readonly<NodeValue>,
-    data: Readonly<NonNillable<NodeCreationInputValue>>,
+    data: Readonly<utils.NonNillable<NodeCreationInputValue>>,
     context: MutationContext,
-    path?: Path,
+    path?: utils.Path,
   ): Promise<void> {
-    await aggregateConcurrentError(
-      this.reverseEdgeFields,
-      async (field) => {
+    await Promise.all(
+      this.reverseEdgeFields.map(async (field) => {
         const fieldData = data[field.name];
+
         if (fieldData != null) {
           await field.applyActions(
             nodeValue,
             fieldData,
             context,
-            addPath(path, field.name),
+            utils.addPath(path, field.name),
           );
         }
-      },
-      { path },
+      }),
     );
   }
 }

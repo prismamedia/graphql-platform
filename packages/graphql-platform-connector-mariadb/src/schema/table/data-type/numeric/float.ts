@@ -8,8 +8,9 @@ import {
 } from '../../abstract-data-type.js';
 import type { NumericDataTypeModifier } from './modifier.js';
 
-export interface FloatTypeConfig<TLeafValue extends core.LeafValue = any>
-  extends AbstractDataTypeConfig<FloatType['kind'], number, TLeafValue> {
+export interface FloatTypeConfig<
+  TLeafValue extends NonNullable<core.LeafValue> = any,
+> extends AbstractDataTypeConfig<FloatType['kind'], TLeafValue, number> {
   precision?: number;
   scale?: number;
   modifiers?: ReadonlyArray<NumericDataTypeModifier>;
@@ -19,8 +20,8 @@ export interface FloatTypeConfig<TLeafValue extends core.LeafValue = any>
  * @see https://mariadb.com/kb/en/float/
  */
 export class FloatType<
-  TLeafValue extends core.LeafValue = any,
-> extends AbstractDataType<'FLOAT', number, TLeafValue> {
+  TLeafValue extends NonNullable<core.LeafValue> = any,
+> extends AbstractDataType<'FLOAT', TLeafValue, number> {
   public readonly precision?: number;
   public readonly scale?: number;
   public readonly modifiers: ReadonlyArray<NumericDataTypeModifier>;
@@ -33,6 +34,7 @@ export class FloatType<
       kind: 'FLOAT',
       serialize: (value) => value.toString(10),
       fromColumnValue: config?.fromColumnValue,
+      fromJsonValue: config?.fromJsonValue,
       toColumnValue: config?.toColumnValue,
     });
 

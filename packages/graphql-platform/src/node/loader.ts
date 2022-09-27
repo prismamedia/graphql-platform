@@ -1,4 +1,4 @@
-import { addPath, type NonNillable } from '@prismamedia/graphql-platform-utils';
+import * as utils from '@prismamedia/graphql-platform-utils';
 import DataLoader from 'dataloader';
 import type { ConnectorInterface } from '../connector-interface.js';
 import type { Node } from '../node.js';
@@ -11,7 +11,7 @@ import type {
 import type { NodeUniqueFilterInputValue } from './type/input/unique-filter.js';
 
 export type NodeLoader = DataLoader<
-  NonNillable<NodeUniqueFilterInputValue>,
+  utils.NonNillable<NodeUniqueFilterInputValue>,
   NodeSelectedValue
 >;
 
@@ -33,7 +33,7 @@ export function createNodeLoader<
         (maybeValue, index): NodeSelectedValue | Error =>
           maybeValue ??
           new NotFoundError(node, keys[index], {
-            path: addPath(undefined, index),
+            path: utils.addPath(undefined, index),
           }),
       );
     },

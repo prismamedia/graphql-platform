@@ -1,14 +1,12 @@
-import { addPath } from '@prismamedia/graphql-platform-utils';
+import * as utils from '@prismamedia/graphql-platform-utils';
 import * as graphql from 'graphql';
 import { GraphQLPlatform } from '../../../index.js';
 import {
   ArticleStatus,
   MyGP,
-  myVisitorContext,
   nodeNames,
   nodes,
 } from '../../../__tests__/config.js';
-import { OperationContext } from '../../operation.js';
 import { BooleanFilter } from '../../statement.js';
 import { NodeFilterInputType, NodeFilterInputValue } from './filter.js';
 
@@ -47,47 +45,33 @@ describe('NodeFilterInputType', () => {
         [
           'Article',
           { id_is_null: true },
-          myVisitorContext,
           '"ArticleFilterInput" - Expects not to contain the extra key(s): id_is_null',
         ],
         [
           'Article',
           { id: null },
-          myVisitorContext,
           '"ArticleFilterInput.id" - Expects a non-null "UUIDv4"',
         ],
         [
           'Article',
           { id: 123 },
-          myVisitorContext,
           `"ArticleFilterInput.id" - Expects an "UUIDv4", got: 123
 └ Cause: \"UUIDv4\" - Expects an UUID version 4, got: 123`,
         ],
         [
           'Article',
           { category: { parent: { title: null } } },
-          myVisitorContext,
           '"ArticleFilterInput.category.parent.title" - Expects a non-null "NonEmptyTrimmedString"',
-        ],
-        [
-          'Article',
-          { tags_some: {} },
-          myVisitorContext,
-          '"ArticleFilterInput.tags_some" - Unauthorized access to "ArticleTag"',
         ],
       ])(
         '%# - %sFilterInput.parseAndFilter(%p) throws the error %p',
-        (nodeName, input, requestContext, error) => {
+        (nodeName, input, error) => {
           const node = gp.getNodeByName(nodeName);
           const filterInputType = node.filterInputType;
 
-          expect(() =>
-            filterInputType.parseAndFilter(
-              input,
-              new OperationContext(gp, requestContext),
-              addPath(undefined, filterInputType.name),
-            ),
-          ).toThrowError(error);
+          expect(() => filterInputType.parseAndFilter(input)).toThrowError(
+            error,
+          );
         },
       );
 
@@ -117,7 +101,7 @@ describe('NodeFilterInputType', () => {
               .parseAndFilter(
                 input,
                 undefined,
-                addPath(undefined, filterInputType.name),
+                utils.addPath(undefined, filterInputType.name),
               )
               .isFalse(),
           ).toBeTruthy();
@@ -148,7 +132,7 @@ describe('NodeFilterInputType', () => {
               .parseAndFilter(
                 input,
                 undefined,
-                addPath(undefined, filterInputType.name),
+                utils.addPath(undefined, filterInputType.name),
               )
               .isTrue(),
           ).toBeTruthy();
@@ -437,7 +421,7 @@ describe('NodeFilterInputType', () => {
                 filterInputType.parseAndFilter(
                   input,
                   undefined,
-                  addPath(undefined, filterInputType.name),
+                  utils.addPath(undefined, filterInputType.name),
                 ).filter.ast,
               ).toEqual(filter);
             });
@@ -617,7 +601,7 @@ describe('NodeFilterInputType', () => {
                 filterInputType.parseAndFilter(
                   input,
                   undefined,
-                  addPath(undefined, filterInputType.name),
+                  utils.addPath(undefined, filterInputType.name),
                 ).filter.ast,
               ).toEqual(filter);
             });
@@ -670,10 +654,14 @@ describe('NodeFilterInputType', () => {
                     kind: 'NodeFilter',
                     node: 'UserProfile',
                     filter: {
-                      kind: 'LeafFilter',
-                      leaf: 'birthday',
-                      operator: 'not',
-                      value: null,
+                      kind: 'BooleanOperation',
+                      operator: 'Not',
+                      operand: {
+                        kind: 'LeafFilter',
+                        leaf: 'birthday',
+                        operator: 'eq',
+                        value: null,
+                      },
                     },
                   },
                 },
@@ -719,7 +707,7 @@ describe('NodeFilterInputType', () => {
               ],
 
               [
-                'A user not in the specified "profile"',
+                'A user not having the specified "profile"',
                 { profile_not: { birthday_not: null } },
                 {
                   kind: 'BooleanOperation',
@@ -731,10 +719,14 @@ describe('NodeFilterInputType', () => {
                       kind: 'NodeFilter',
                       node: 'UserProfile',
                       filter: {
-                        kind: 'LeafFilter',
-                        leaf: 'birthday',
-                        operator: 'not',
-                        value: null,
+                        kind: 'BooleanOperation',
+                        operator: 'Not',
+                        operand: {
+                          kind: 'LeafFilter',
+                          leaf: 'birthday',
+                          operator: 'eq',
+                          value: null,
+                        },
                       },
                     },
                   },
@@ -839,7 +831,7 @@ describe('NodeFilterInputType', () => {
                 filterInputType.parseAndFilter(
                   input,
                   undefined,
-                  addPath(undefined, filterInputType.name),
+                  utils.addPath(undefined, filterInputType.name),
                 ).filter.ast,
               ).toEqual(filter);
             });
@@ -939,7 +931,7 @@ describe('NodeFilterInputType', () => {
                 filterInputType.parseAndFilter(
                   input,
                   undefined,
-                  addPath(undefined, filterInputType.name),
+                  utils.addPath(undefined, filterInputType.name),
                 ).filter.ast,
               ).toEqual(filter);
             });
@@ -976,10 +968,14 @@ describe('NodeFilterInputType', () => {
                 operator: 'Or',
                 operands: [
                   {
-                    kind: 'LeafFilter',
-                    leaf: '_id',
-                    operator: 'not',
-                    value: 20,
+                    kind: 'BooleanOperation',
+                    operator: 'Not',
+                    operand: {
+                      kind: 'LeafFilter',
+                      leaf: '_id',
+                      operator: 'eq',
+                      value: 20,
+                    },
                   },
                   {
                     kind: 'BooleanOperation',
@@ -1070,7 +1066,7 @@ describe('NodeFilterInputType', () => {
               filterInputType.parseAndFilter(
                 input,
                 undefined,
-                addPath(undefined, filterInputType.name),
+                utils.addPath(undefined, filterInputType.name),
               ).filter.ast,
             ).toEqual(filter);
           });

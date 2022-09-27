@@ -8,11 +8,12 @@ import {
 } from '../../abstract-data-type.js';
 import type { NumericDataTypeModifier } from './modifier.js';
 
-export interface BigIntTypeConfig<TLeafValue extends core.LeafValue = any>
-  extends AbstractDataTypeConfig<
+export interface BigIntTypeConfig<
+  TLeafValue extends NonNullable<core.LeafValue> = any,
+> extends AbstractDataTypeConfig<
     BigIntType['kind'] | 'INT8',
-    bigint,
-    TLeafValue
+    TLeafValue,
+    bigint
   > {
   length?: number;
   modifiers?: ReadonlyArray<NumericDataTypeModifier>;
@@ -22,8 +23,8 @@ export interface BigIntTypeConfig<TLeafValue extends core.LeafValue = any>
  * @see https://mariadb.com/kb/en/int/
  */
 export class BigIntType<
-  TLeafValue extends core.LeafValue = any,
-> extends AbstractDataType<'BIGINT', bigint, TLeafValue> {
+  TLeafValue extends NonNullable<core.LeafValue> = any,
+> extends AbstractDataType<'BIGINT', TLeafValue, bigint> {
   public readonly length?: number;
   public readonly modifiers: ReadonlyArray<NumericDataTypeModifier>;
 
@@ -35,6 +36,7 @@ export class BigIntType<
       kind: 'BIGINT',
       serialize: (value) => value.toString(10),
       fromColumnValue: config?.fromColumnValue,
+      fromJsonValue: config?.fromJsonValue,
       toColumnValue: config?.toColumnValue,
     });
 

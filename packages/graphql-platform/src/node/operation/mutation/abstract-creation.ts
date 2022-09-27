@@ -1,10 +1,4 @@
-import {
-  MutationType,
-  type InputConfig,
-  type Nillable,
-  type NonNillable,
-  type PlainObject,
-} from '@prismamedia/graphql-platform-utils';
+import * as utils from '@prismamedia/graphql-platform-utils';
 import type { Promisable } from 'type-fest';
 import type { ConnectorInterface } from '../../../connector-interface.js';
 import type { CreatedNode } from '../../change.js';
@@ -23,7 +17,7 @@ interface AbstractCreationHookArgs<
   /**
    * The provided "data" argument
    */
-  readonly data: Readonly<NonNillable<NodeCreationInputValue>>;
+  readonly data: Readonly<utils.NonNillable<NodeCreationInputValue>>;
 }
 
 export interface PreCreateArgs<
@@ -31,7 +25,7 @@ export interface PreCreateArgs<
   TConnector extends ConnectorInterface,
 > extends AbstractCreationHookArgs<TRequestContext, TConnector> {
   /**
-   * The creation statement as a convenient object
+   * The creation statement, as a convenient object
    */
   readonly creation: NodeCreationProxy;
 }
@@ -56,7 +50,10 @@ export interface CreationConfig<
   /**
    * Optional, add some "virtual" fields whose values can be used in the hooks
    */
-  virtualFields?: Record<InputConfig['name'], Omit<InputConfig, 'name'>>;
+  virtualFields?: Record<
+    utils.InputConfig['name'],
+    Omit<utils.InputConfig, 'name'>
+  >;
 
   /**
    * Optional, add some custom validation/logic over the "creation" statement that is about to be sent to the connector,
@@ -80,8 +77,10 @@ export interface CreationConfig<
 export abstract class AbstractCreation<
   TRequestContext extends object,
   TConnector extends ConnectorInterface,
-  TArgs extends Nillable<PlainObject>,
+  TArgs extends utils.Nillable<utils.PlainObject>,
   TResult,
 > extends AbstractMutation<TRequestContext, TConnector, TArgs, TResult> {
-  public override readonly mutationTypes = [MutationType.CREATION] as const;
+  public override readonly mutationTypes = [
+    utils.MutationType.CREATION,
+  ] as const;
 }

@@ -1,26 +1,4 @@
-import {
-  addPath,
-  aggregateConfigError,
-  aggregateError,
-  assertPlainObjectConfig,
-  castToError,
-  ConfigError,
-  ensureName,
-  getOptionalDeprecation,
-  getOptionalDescription,
-  getOptionalFlag,
-  indefinite,
-  isPlainObject,
-  MutationType,
-  UnexpectedConfigError,
-  UnexpectedValueError,
-  UnreachableConfigError,
-  type Name,
-  type OptionalDeprecation,
-  type OptionalDescription,
-  type OptionalFlag,
-  type Path,
-} from '@prismamedia/graphql-platform-utils';
+import * as utils from '@prismamedia/graphql-platform-utils';
 import { Memoize } from '@prismamedia/ts-memoize';
 import inflection from 'inflection';
 import * as rxjs from 'rxjs';
@@ -50,7 +28,6 @@ import {
   mutationConstructorsByKey,
   nodeSubscriptionConstructorsByKey,
   queryConstructorsByKey,
-  UnauthorizedError,
   type MutationConfig,
   type MutationInterface,
   type MutationKey,
@@ -61,6 +38,7 @@ import {
   type QueriesByKey,
   type QueryKey,
 } from './node/operation.js';
+import { OperationContext } from './node/operation/context.js';
 import {
   mergeSelectionExpressions,
   NodeFilter,
@@ -98,7 +76,7 @@ export type NodeValue = NodeSelectedValue &
 
 export type NodeAuthorizationConfig<TRequestContext extends object> = (
   requestContext: TRequestContext,
-  mutationType?: MutationType,
+  mutationType?: utils.MutationType,
 ) => boolean | NodeFilterInputValue;
 
 export type NodeConfig<
@@ -115,14 +93,14 @@ export type NodeConfig<
   /**
    * Optional, provide a description for this node
    */
-  description?: OptionalDescription;
+  description?: utils.OptionalDescription;
 
   /**
    * Optional, either this node is deprecated or not
    *
    * The information will be shown in all its operations
    */
-  deprecated?: OptionalDeprecation;
+  deprecated?: utils.OptionalDeprecation;
 
   /**
    * A component is either a leaf (= an enum or a scalar) or an edge (= a link to another node)
@@ -135,7 +113,7 @@ export type NodeConfig<
      *
      * @see https://spec.graphql.org/draft/#sec-Names
      */
-    [componentName: Name]: ComponentConfig<TRequestContext, TConnector>;
+    [componentName: utils.Name]: ComponentConfig<TRequestContext, TConnector>;
   };
 
   /**
@@ -160,7 +138,7 @@ export type NodeConfig<
      *
      * @see https://spec.graphql.org/draft/#sec-Names
      */
-    [reverseEdge: Name]: ReverseEdgeConfig<TRequestContext, TConnector>;
+    [reverseEdge: utils.Name]: ReverseEdgeConfig<TRequestContext, TConnector>;
   };
 
   /**
@@ -168,7 +146,7 @@ export type NodeConfig<
    *
    * Default: true
    */
-  public?: OptionalFlag;
+  public?: utils.OptionalFlag;
 
   /**
    * Optional, fine-tune the output type generated from this node's definition
@@ -190,16 +168,15 @@ export type NodeConfig<
       };
 
   /**
-   * Optional, fine-tune the access to this node given the request-context and the access-type among: query (= !mutationType) / creation / update / deletion
-   *
-   * Either it can proceed (= true or undefined) or an UnauthorizedError is thrown (= false or null)
-   *
-   * A third option is possible: it is to return a filter (= the "where" argument), it will restrict the client's operation to a subset of the nodes
+   * Optional, fine-tune the access to these nodes, given the request-context and the access-type among "query" (= !mutationType) / "creation" / "update" / "deletion":
+   * - deny all access by returning either "false" or "null"
+   * - grant full access by returning either "true" or "undefined"
+   * - grant access to a subset by returning a filter (= the "where" argument)
    */
   authorization?: NodeAuthorizationConfig<TRequestContext>;
 
   /**
-   * Optional, subscribe to this node's changes Observable
+   * Optional, subscribe to this node's changes
    */
   onChange?: (change: ChangedNode<TRequestContext, TConnector>) => void;
 } & GetConnectorConfigOverride<TConnector, ConnectorConfigOverrideKind.NODE>;
@@ -230,37 +207,29 @@ export class Node<
   >;
   public readonly identifier: UniqueConstraint<TRequestContext, TConnector>;
   readonly #authorizationConfig?: NodeAuthorizationConfig<TRequestContext>;
-  readonly #authorizationConfigPath: Path;
-
-  /**
-   * An Observable of this node's changes
-   */
-  public readonly changes = new rxjs.Subject<
-    ChangedNode<TRequestContext, TConnector>
-  >();
 
   public constructor(
     public readonly gp: GraphQLPlatform<TRequestContext, TConnector>,
     public readonly name: NodeName,
     public readonly config: NodeConfig<TRequestContext, TConnector>,
-    public readonly configPath: Path,
+    public readonly configPath: utils.Path,
   ) {
     assertNodeName(name, configPath);
-    assertPlainObjectConfig(config, configPath);
+    utils.assertPlainObjectConfig(config, configPath);
 
     // plural
     {
       const pluralConfig = config.plural;
-      const pluralConfigPath = addPath(configPath, 'plural');
+      const pluralConfigPath = utils.addPath(configPath, 'plural');
 
-      this.plural = ensureName(
+      this.plural = utils.ensureName(
         pluralConfig ?? inflection.pluralize(name),
         pluralConfigPath,
       );
 
       const pascalCasedPlural = inflection.camelize(this.plural, false);
       if (this.plural !== pascalCasedPlural) {
-        throw new UnexpectedConfigError(
+        throw new utils.UnexpectedConfigError(
           `a "plural" form in PascalCase (= "${pascalCasedPlural}")`,
           pluralConfig,
           { path: pluralConfigPath },
@@ -268,7 +237,7 @@ export class Node<
       }
 
       if (name === this.plural) {
-        throw new UnexpectedConfigError(
+        throw new utils.UnexpectedConfigError(
           `differents "singular" and "plural" forms, you have to define the "plural" parameter as we were not able to guess a valid one`,
           pluralConfig,
           { path: pluralConfigPath },
@@ -278,15 +247,15 @@ export class Node<
 
     // indefinite
     {
-      this.indefinite = indefinite(name);
+      this.indefinite = utils.indefinite(name);
     }
 
     // description
     {
       const descriptionConfig = config.description;
-      const descriptionConfigPath = addPath(configPath, 'description');
+      const descriptionConfigPath = utils.addPath(configPath, 'description');
 
-      this.description = getOptionalDescription(
+      this.description = utils.getOptionalDescription(
         descriptionConfig,
         descriptionConfigPath,
       );
@@ -295,9 +264,9 @@ export class Node<
     // deprecated
     {
       const deprecatedConfig = config.deprecated;
-      const deprecatedConfigPath = addPath(configPath, 'deprecated');
+      const deprecatedConfigPath = utils.addPath(configPath, 'deprecated');
 
-      this.deprecationReason = getOptionalDeprecation(
+      this.deprecationReason = utils.getOptionalDeprecation(
         deprecatedConfig,
         `The "${this.name}" node is deprecated`,
         deprecatedConfigPath,
@@ -307,13 +276,13 @@ export class Node<
     // components
     {
       const componentsConfig = config.components;
-      const componentsConfigPath = addPath(configPath, 'components');
+      const componentsConfigPath = utils.addPath(configPath, 'components');
 
       if (
-        !isPlainObject(componentsConfig) ||
+        !utils.isPlainObject(componentsConfig) ||
         !Object.entries(componentsConfig).length
       ) {
-        throw new UnexpectedConfigError(
+        throw new utils.UnexpectedConfigError(
           `at least one "component"`,
           componentsConfig,
           { path: componentsConfigPath },
@@ -321,25 +290,25 @@ export class Node<
       }
 
       this.componentsByName = new Map(
-        aggregateConfigError<
+        utils.aggregateConfigError<
           [Component['name'], ComponentConfig<any, any>],
           [Component['name'], Component][]
         >(
           Object.entries(componentsConfig),
           (entries, [componentName, componentConfig]) => {
-            const componentConfigPath = addPath(
+            const componentConfigPath = utils.addPath(
               componentsConfigPath,
               componentName,
             );
 
-            assertPlainObjectConfig(componentConfig, componentConfigPath);
+            utils.assertPlainObjectConfig(componentConfig, componentConfigPath);
 
             let component: Component;
 
             const kindConfig = componentConfig.kind;
-            const kindConfigPath = addPath(componentConfigPath, 'kind');
+            const kindConfigPath = utils.addPath(componentConfigPath, 'kind');
 
-            if (kindConfig === 'Leaf') {
+            if (!kindConfig || kindConfig === 'Leaf') {
               component = new Leaf(
                 this,
                 componentName,
@@ -354,7 +323,7 @@ export class Node<
                 componentConfigPath,
               );
             } else {
-              throw new UnreachableConfigError(kindConfig, {
+              throw new utils.UnreachableConfigError(kindConfig, {
                 path: kindConfigPath,
               });
             }
@@ -382,10 +351,10 @@ export class Node<
     // uniques
     {
       const uniquesConfig = config.uniques;
-      const uniquesConfigPath = addPath(configPath, 'uniques');
+      const uniquesConfigPath = utils.addPath(configPath, 'uniques');
 
       if (!Array.isArray(uniquesConfig) || !uniquesConfig.length) {
-        throw new UnexpectedConfigError(
+        throw new utils.UnexpectedConfigError(
           `at least one "unique-constraint"`,
           uniquesConfig,
           { path: uniquesConfigPath },
@@ -393,7 +362,7 @@ export class Node<
       }
 
       this.uniqueConstraintsByName = new Map(
-        aggregateConfigError<
+        utils.aggregateConfigError<
           UniqueConstraintConfig<any, any>,
           [UniqueConstraint['name'], UniqueConstraint][]
         >(
@@ -402,7 +371,7 @@ export class Node<
             const unique = new UniqueConstraint(
               this,
               uniqueConstraintConfig,
-              addPath(uniquesConfigPath, index),
+              utils.addPath(uniquesConfigPath, index),
             );
 
             return [...entries, [unique.name, unique]];
@@ -414,12 +383,12 @@ export class Node<
 
       // identifier (= the first unique constraint)
       {
-        const identifierConfigPath = addPath(uniquesConfigPath, 0);
+        const identifierConfigPath = utils.addPath(uniquesConfigPath, 0);
 
         this.identifier = this.uniqueConstraintsByName.values().next().value;
 
         if (this.identifier.isNullable()) {
-          throw new ConfigError(
+          throw new utils.ConfigError(
             `Expects its identifier (= the first unique constraint, composed of the component${
               this.identifier.composite ? 's' : ''
             } "${[...this.identifier.componentsByName.keys()].join(
@@ -430,7 +399,7 @@ export class Node<
         }
 
         if (this.identifier.isMutable()) {
-          throw new ConfigError(
+          throw new utils.ConfigError(
             `Expects its identifier (= the first unique constraint, composed of the component${
               this.identifier.composite ? 's' : ''
             } "${[...this.identifier.componentsByName.keys()].join(
@@ -445,24 +414,53 @@ export class Node<
     // authorization
     {
       const authorizationConfig = config.authorization;
-      const authorizationConfigPath = addPath(configPath, 'authorization');
+      const authorizationConfigPath = utils.addPath(
+        configPath,
+        'authorization',
+      );
 
-      if (
-        authorizationConfig !== undefined &&
-        typeof authorizationConfig !== 'function'
-      ) {
-        throw new UnexpectedConfigError(
-          `a request-authorizer`,
-          authorizationConfig,
-          { path: authorizationConfigPath },
-        );
+      if (authorizationConfig != null) {
+        if (typeof authorizationConfig !== 'function') {
+          throw new utils.UnexpectedConfigError(
+            `a function`,
+            authorizationConfig,
+            { path: authorizationConfigPath },
+          );
+        }
+
+        this.#authorizationConfig = (...args) => {
+          try {
+            return authorizationConfig(...args);
+          } catch (error) {
+            throw new utils.ConfigError(
+              `The request-authorizer threw an error`,
+              {
+                path: authorizationConfigPath,
+                cause: utils.castToError(error),
+              },
+            );
+          }
+        };
       }
-
-      this.#authorizationConfig = authorizationConfig;
-      this.#authorizationConfigPath = authorizationConfigPath;
     }
 
-    config.onChange && this.changes.subscribe(config.onChange);
+    // on-change
+    {
+      const onChangeConfig = config.onChange;
+      const onChangeConfigPath = utils.addPath(configPath, 'onChange');
+
+      if (onChangeConfig != null) {
+        if (typeof onChangeConfig !== 'function') {
+          throw new utils.UnexpectedConfigError(`a function`, onChangeConfig, {
+            path: onChangeConfigPath,
+          });
+        }
+
+        gp.changes
+          .pipe(rxjs.filter((change) => change.node === this))
+          .subscribe(onChangeConfig);
+      }
+    }
   }
 
   public toString(): string {
@@ -472,49 +470,52 @@ export class Node<
   @Memoize()
   public isPublic(): boolean {
     const publicConfig = this.config.public;
-    const publicConfigPath = addPath(this.configPath, 'public');
+    const publicConfigPath = utils.addPath(this.configPath, 'public');
 
-    return getOptionalFlag(publicConfig, true, publicConfigPath);
+    return utils.getOptionalFlag(publicConfig, true, publicConfigPath);
   }
 
-  @Memoize((mutationType: MutationType) => mutationType)
-  public getMutationConfig<TType extends MutationType>(
+  @Memoize((mutationType: utils.MutationType) => mutationType)
+  public getMutationConfig<TType extends utils.MutationType>(
     mutationType: TType,
   ): {
     config?: MutationConfig<TRequestContext, TConnector>[TType];
-    configPath: Path;
+    configPath: utils.Path;
   } {
     const mutationsConfig = this.config.mutation;
-    const mutationsConfigPath = addPath(this.configPath, 'mutation');
+    const mutationsConfigPath = utils.addPath(this.configPath, 'mutation');
 
     if (typeof mutationsConfig === 'boolean') {
       return {
         config: { enabled: mutationsConfig },
         configPath: mutationsConfigPath,
       };
-    } else if (isPlainObject(mutationsConfig)) {
+    } else if (utils.isPlainObject(mutationsConfig)) {
       const mutationConfig = mutationsConfig[mutationType];
-      const mutationConfigPath = addPath(mutationsConfigPath, mutationType);
+      const mutationConfigPath = utils.addPath(
+        mutationsConfigPath,
+        mutationType,
+      );
 
       if (typeof mutationConfig === 'boolean') {
         return {
           config: { enabled: mutationConfig },
           configPath: mutationConfigPath,
         };
-      } else if (isPlainObject(mutationConfig)) {
+      } else if (utils.isPlainObject(mutationConfig)) {
         return {
           config: mutationConfig,
           configPath: mutationConfigPath,
         };
       } else if (mutationConfig != null) {
-        throw new UnexpectedConfigError(
+        throw new utils.UnexpectedConfigError(
           `a boolean or a plain-object`,
           mutationConfig,
           { path: mutationConfigPath },
         );
       }
     } else if (mutationsConfig != null) {
-      throw new UnexpectedConfigError(
+      throw new utils.UnexpectedConfigError(
         `a boolean or a plain-object`,
         mutationsConfig,
         { path: mutationsConfigPath },
@@ -526,25 +527,25 @@ export class Node<
     };
   }
 
-  @Memoize((mutationType: MutationType) => mutationType)
-  public isMutationEnabled(mutationType: MutationType): boolean {
+  @Memoize((mutationType: utils.MutationType) => mutationType)
+  public isMutationEnabled(mutationType: utils.MutationType): boolean {
     const { config, configPath } = this.getMutationConfig(mutationType);
 
-    return getOptionalFlag(
+    return utils.getOptionalFlag(
       config?.enabled,
       true,
-      addPath(configPath, 'enabled'),
+      utils.addPath(configPath, 'enabled'),
     );
   }
 
-  @Memoize((mutationType: MutationType) => mutationType)
-  public isMutationPublic(mutationType: MutationType): boolean {
+  @Memoize((mutationType: utils.MutationType) => mutationType)
+  public isMutationPublic(mutationType: utils.MutationType): boolean {
     const { config, configPath } = this.getMutationConfig(mutationType);
 
     const publicConfig = config?.public;
-    const publicConfigPath = addPath(configPath, 'public');
+    const publicConfigPath = utils.addPath(configPath, 'public');
 
-    const isPublic = getOptionalFlag(
+    const isPublic = utils.getOptionalFlag(
       publicConfig,
       this.isPublic() && this.isMutationEnabled(mutationType),
       publicConfigPath,
@@ -552,7 +553,7 @@ export class Node<
 
     if (isPublic) {
       if (!this.isPublic()) {
-        throw new UnexpectedConfigError(
+        throw new utils.UnexpectedConfigError(
           `not to be "true" as the "${this}" node is private`,
           publicConfig,
           { path: publicConfigPath },
@@ -560,7 +561,7 @@ export class Node<
       }
 
       if (!this.isMutationEnabled(mutationType)) {
-        throw new UnexpectedConfigError(
+        throw new utils.UnexpectedConfigError(
           `not to be "true" as the "${this}" node's ${mutationType} is disabled`,
           publicConfig,
           { path: publicConfigPath },
@@ -573,11 +574,11 @@ export class Node<
 
   public getComponentByName(
     name: Component['name'],
-    path?: Path,
+    path?: utils.Path,
   ): Component<TRequestContext, TConnector> {
     const component = this.componentsByName.get(name);
     if (!component) {
-      throw new UnexpectedValueError(
+      throw new utils.UnexpectedValueError(
         `${this.indefinite}'s component among "${[
           ...this.componentsByName.keys(),
         ].join(', ')}"`,
@@ -591,11 +592,11 @@ export class Node<
 
   public getLeafByName(
     name: Leaf['name'],
-    path?: Path,
+    path?: utils.Path,
   ): Leaf<TRequestContext, TConnector> {
     const leaf = this.leavesByName.get(name);
     if (!leaf) {
-      throw new UnexpectedValueError(
+      throw new utils.UnexpectedValueError(
         `${this.indefinite}'s leaf among "${[...this.leavesByName.keys()].join(
           ', ',
         )}"`,
@@ -609,11 +610,11 @@ export class Node<
 
   public getEdgeByName(
     name: Edge['name'],
-    path?: Path,
+    path?: utils.Path,
   ): Edge<TRequestContext, TConnector> {
     const edge = this.edgesByName.get(name);
     if (!edge) {
-      throw new UnexpectedValueError(
+      throw new utils.UnexpectedValueError(
         `${this.indefinite}'s edge among "${[...this.edgesByName.keys()].join(
           ', ',
         )}"`,
@@ -627,11 +628,11 @@ export class Node<
 
   public getUniqueConstraintByName(
     name: UniqueConstraint['name'],
-    path?: Path,
+    path?: utils.Path,
   ): UniqueConstraint<TRequestContext, TConnector> {
     const uniqueConstraint = this.uniqueConstraintsByName.get(name);
     if (!uniqueConstraint) {
-      throw new UnexpectedValueError(
+      throw new utils.UnexpectedValueError(
         `${this.indefinite}'s unique-constraint among "${[
           ...this.uniqueConstraintsByName.keys(),
         ].join(', ')}"`,
@@ -677,16 +678,19 @@ export class Node<
     );
 
     const reverseEdgesConfig = this.config.reverseEdges;
-    const reverseEdgesConfigPath = addPath(this.configPath, 'reverseEdges');
+    const reverseEdgesConfigPath = utils.addPath(
+      this.configPath,
+      'reverseEdges',
+    );
 
     // No reverse-edge
     if (!referrersByNameByNodeName.size) {
       if (
         reverseEdgesConfig != null &&
-        (!isPlainObject(reverseEdgesConfig) ||
+        (!utils.isPlainObject(reverseEdgesConfig) ||
           Object.entries(reverseEdgesConfig).length)
       ) {
-        throw new UnexpectedConfigError(
+        throw new utils.UnexpectedConfigError(
           `no configuration as there is no node having an edge heading to the "${this}" node`,
           reverseEdgesConfig,
           { path: reverseEdgesConfigPath },
@@ -696,23 +700,23 @@ export class Node<
       return new Map();
     }
 
-    assertPlainObjectConfig(reverseEdgesConfig, reverseEdgesConfigPath);
+    utils.assertPlainObjectConfig(reverseEdgesConfig, reverseEdgesConfigPath);
 
     const reverseEdges = new Map(
       reverseEdgesConfig
-        ? aggregateConfigError<
+        ? utils.aggregateConfigError<
             [ReverseEdge['name'], ReverseEdgeConfig<any, any>],
             [ReverseEdge['name'], ReverseEdge][]
           >(
             Object.entries(reverseEdgesConfig),
             (entries, [reverseEdgeName, reverseEdgeConfig]) => {
-              const reverseEdgeConfigPath = addPath(
+              const reverseEdgeConfigPath = utils.addPath(
                 reverseEdgesConfigPath,
                 reverseEdgeName,
               );
 
               if (this.componentsByName.has(reverseEdgeName)) {
-                throw new UnexpectedConfigError(
+                throw new utils.UnexpectedConfigError(
                   `a "name" not among "${[...this.componentsByName.keys()].join(
                     ', ',
                   )}"`,
@@ -721,10 +725,13 @@ export class Node<
                 );
               }
 
-              assertPlainObjectConfig(reverseEdgeConfig, reverseEdgeConfigPath);
+              utils.assertPlainObjectConfig(
+                reverseEdgeConfig,
+                reverseEdgeConfigPath,
+              );
 
               const originalEdgeConfig = reverseEdgeConfig.originalEdge;
-              const originalEdgeConfigPath = addPath(
+              const originalEdgeConfigPath = utils.addPath(
                 reverseEdgeConfigPath,
                 'originalEdge',
               );
@@ -733,7 +740,7 @@ export class Node<
                 typeof originalEdgeConfig !== 'string' ||
                 !originalEdgeConfig
               ) {
-                throw new UnexpectedConfigError(
+                throw new utils.UnexpectedConfigError(
                   `a non-empty string`,
                   originalEdgeConfig,
                   { path: originalEdgeConfigPath },
@@ -747,7 +754,7 @@ export class Node<
                 referrersByNameByNodeName.get(nodeEdgeConfig);
 
               if (!referrersByName) {
-                throw new UnexpectedConfigError(
+                throw new utils.UnexpectedConfigError(
                   `a node having an edge heading to the "${this}" node (= a value among "${[
                     ...referrersByNameByNodeName.keys(),
                   ].join(', ')}")`,
@@ -755,7 +762,7 @@ export class Node<
                   { path: originalEdgeConfigPath },
                 );
               } else if (!referrersByName.size) {
-                throw new ConfigError(
+                throw new utils.ConfigError(
                   `Expects no more configuration for "${nodeEdgeConfig}"'s edge as there is no more edge heading to the "${this}" node`,
                   { path: originalEdgeConfigPath },
                 );
@@ -765,7 +772,7 @@ export class Node<
 
               if (edgeEdgeConfig) {
                 if (!referrersByName.has(edgeEdgeConfig)) {
-                  throw new UnexpectedConfigError(
+                  throw new utils.UnexpectedConfigError(
                     `an edge heading to the "${this}" node (= a value among "${[
                       ...referrersByName.keys(),
                     ].join(', ')}")`,
@@ -784,11 +791,14 @@ export class Node<
               let reverseEdge: ReverseEdge;
 
               const kindConfig = reverseEdgeConfig.kind;
-              const kindConfigPath = addPath(reverseEdgeConfigPath, 'kind');
+              const kindConfigPath = utils.addPath(
+                reverseEdgeConfigPath,
+                'kind',
+              );
 
               if (originalEdge.isUnique()) {
                 if (kindConfig != null && kindConfig !== 'Unique') {
-                  throw new UnexpectedConfigError(
+                  throw new utils.UnexpectedConfigError(
                     `"Unique" as the "${originalEdge}" edge is unique`,
                     kindConfig,
                     { path: kindConfigPath },
@@ -803,7 +813,7 @@ export class Node<
                 );
               } else {
                 if (kindConfig != null && kindConfig !== 'Multiple') {
-                  throw new UnexpectedConfigError(
+                  throw new utils.UnexpectedConfigError(
                     `"Multiple" as the "${originalEdge}" edge is not unique`,
                     kindConfig,
                     { path: kindConfigPath },
@@ -831,7 +841,7 @@ export class Node<
     );
 
     if (missingConfigs.length) {
-      throw new ConfigError(
+      throw new utils.ConfigError(
         `Expects a configuration for the following referrer(s): ${missingConfigs.join(
           ', ',
         )}`,
@@ -844,11 +854,11 @@ export class Node<
 
   public getReverseEdgeByName(
     name: ReverseEdge['name'],
-    path?: Path,
+    path?: utils.Path,
   ): ReverseEdge<TRequestContext, TConnector> {
     const reverseEdge = this.reverseEdgesByName.get(name);
     if (!reverseEdge) {
-      throw new UnexpectedValueError(
+      throw new utils.UnexpectedValueError(
         `${this.indefinite}'s reverse-edge among "${[
           ...this.reverseEdgesByName.keys(),
         ].join(', ')}"`,
@@ -875,11 +885,11 @@ export class Node<
 
   public getReverseEdgeUniqueByName(
     name: ReverseEdgeUnique['name'],
-    path?: Path,
+    path?: utils.Path,
   ): ReverseEdgeUnique<TRequestContext, TConnector> {
     const reverseEdge = this.reverseEdgeUniquesByName.get(name);
     if (!reverseEdge) {
-      throw new UnexpectedValueError(
+      throw new utils.UnexpectedValueError(
         `${this.indefinite}'s reverse-edge-unique among "${[
           ...this.reverseEdgeUniquesByName.keys(),
         ].join(', ')}"`,
@@ -906,11 +916,11 @@ export class Node<
 
   public getReverseEdgeMultipleByName(
     name: ReverseEdgeMultiple['name'],
-    path?: Path,
+    path?: utils.Path,
   ): ReverseEdgeMultiple<TRequestContext, TConnector> {
     const reverseEdge = this.reverseEdgeMultiplesByName.get(name);
     if (!reverseEdge) {
-      throw new UnexpectedValueError(
+      throw new utils.UnexpectedValueError(
         `${this.indefinite}'s reverse-edge-multiple among "${[
           ...this.reverseEdgeMultiplesByName.keys(),
         ].join(', ')}"`,
@@ -979,10 +989,10 @@ export class Node<
 
   public getMutationByKey<TKey extends MutationKey>(
     key: TKey,
-    path?: Path,
+    path?: utils.Path,
   ): MutationsByKey<TRequestContext, TConnector>[TKey] {
     if (!this.mutationsByKey[key]) {
-      throw new UnexpectedValueError(
+      throw new utils.UnexpectedValueError(
         `a mutation's key among "${Object.keys(this.mutationsByKey).join(
           ', ',
         )}"`,
@@ -1008,10 +1018,10 @@ export class Node<
 
   public getQueryByKey<TKey extends QueryKey>(
     key: TKey,
-    path?: Path,
+    path?: utils.Path,
   ): QueriesByKey<TRequestContext, TConnector>[TKey] {
     if (!this.queriesByKey[key]) {
-      throw new UnexpectedValueError(
+      throw new utils.UnexpectedValueError(
         `a query's key among "${Object.keys(this.queriesByKey).join(', ')}"`,
         key,
         { path },
@@ -1034,10 +1044,10 @@ export class Node<
 
   public getSubscriptionByKey<TKey extends NodeSubscriptionKey>(
     key: TKey,
-    path?: Path,
+    path?: utils.Path,
   ): NodeSubscriptionsByKey<TRequestContext, TConnector>[TKey] {
     if (!this.subscriptionsByKey[key]) {
-      throw new UnexpectedValueError(
+      throw new utils.UnexpectedValueError(
         `a subscription's key among "${Object.keys(
           this.subscriptionsByKey,
         ).join(', ')}"`,
@@ -1063,14 +1073,14 @@ export class Node<
 
   @Memoize()
   public validateDefinition(): void {
-    aggregateConfigError<Component, void>(
+    utils.aggregateConfigError<Component, void>(
       this.componentsByName.values(),
       (_, component) => component.validateDefinition(),
       undefined,
       { path: this.configPath },
     );
 
-    aggregateConfigError<UniqueConstraint, void>(
+    utils.aggregateConfigError<UniqueConstraint, void>(
       this.uniqueConstraintsByName.values(),
       (_, uniqueConstraint) => uniqueConstraint.validateDefinition(),
       undefined,
@@ -1079,14 +1089,14 @@ export class Node<
 
     this.selection;
 
-    if (this.isMutationEnabled(MutationType.UPDATE)) {
+    if (this.isMutationEnabled(utils.MutationType.UPDATE)) {
       if (
         ![...this.componentsByName.values()].some((component) =>
           component.isMutable(),
         )
       ) {
-        throw new ConfigError(
-          `Expects at least one mutable component as it is mutable: either disable the "${MutationType.UPDATE}" or enable it on one of its components`,
+        throw new utils.ConfigError(
+          `Expects at least one mutable component as it is mutable: either disable the "${utils.MutationType.UPDATE}" or enable it on one of its components`,
           { path: this.configPath },
         );
       }
@@ -1098,7 +1108,7 @@ export class Node<
           component.isPublic(),
         )
       ) {
-        throw new ConfigError(
+        throw new utils.ConfigError(
           `Expects at least one public component as it is public: either set it private or set one of its components public`,
           { path: this.configPath },
         );
@@ -1109,14 +1119,14 @@ export class Node<
           uniqueConstraint.isPublic(),
         )
       ) {
-        throw new ConfigError(
+        throw new utils.ConfigError(
           `Expects at least one public unique constraint (= with all its components being public) as it is public`,
           { path: this.configPath },
         );
       }
     }
 
-    aggregateConfigError<ReverseEdge, void>(
+    utils.aggregateConfigError<ReverseEdge, void>(
       this.reverseEdgesByName.values(),
       (_, reverseEdge) => reverseEdge.validateDefinition(),
       undefined,
@@ -1129,14 +1139,14 @@ export class Node<
 
   @Memoize()
   public validateTypes(): void {
-    aggregateConfigError<Component, void>(
+    utils.aggregateConfigError<Component, void>(
       this.componentsByName.values(),
       (_, component) => component.validateTypes(),
       undefined,
       { path: this.configPath },
     );
 
-    aggregateConfigError<ReverseEdge, void>(
+    utils.aggregateConfigError<ReverseEdge, void>(
       this.reverseEdgesByName.values(),
       (_, reverseEdge) => reverseEdge.validateTypes(),
       undefined,
@@ -1153,7 +1163,7 @@ export class Node<
 
   @Memoize()
   public validateOperations(): void {
-    aggregateConfigError<OperationInterface, void>(
+    utils.aggregateConfigError<OperationInterface, void>(
       this.operations,
       (_, operation) => operation.validate(),
       undefined,
@@ -1161,74 +1171,41 @@ export class Node<
     );
   }
 
-  public getAuthorizationByRequestContext(
-    requestContext: TRequestContext,
-    path: Path,
-    mutationType?: MutationType,
+  public getAuthorization(
+    context: OperationContext<TRequestContext, TConnector>,
+    mutationType?: utils.MutationType,
   ): NodeFilter<TRequestContext, TConnector> | undefined {
-    let rawAuthorization: boolean | NodeFilterInputValue;
-    try {
-      rawAuthorization = this.#authorizationConfig?.(
-        requestContext,
-        mutationType,
-      );
-    } catch (error) {
-      throw new UnauthorizedError(this, {
-        path,
-        cause: new ConfigError(
-          `Expects a valid authorization for "${mutationType ?? 'query'}"`,
-          {
-            path: this.#authorizationConfigPath,
-            cause: castToError(error),
-          },
-        ),
-      });
-    }
+    const authorization = this.#authorizationConfig?.(
+      context.requestContext,
+      mutationType,
+    );
 
-    let authorization: NodeFilter<TRequestContext, TConnector> | undefined;
-    try {
-      authorization = this.filterInputType.parseAndFilter(
-        rawAuthorization === true
-          ? undefined
-          : rawAuthorization === false
-          ? null
-          : rawAuthorization,
-      ).normalized;
-    } catch (error) {
-      throw new UnauthorizedError(this, {
-        path,
-        cause: new ConfigError(
-          `Expects a valid authorization for "${mutationType ?? 'query'}"`,
-          {
-            path: this.#authorizationConfigPath,
-            cause: castToError(error),
-          },
-        ),
-      });
-    }
-
-    if (authorization?.isFalse()) {
-      throw new UnauthorizedError(this, { path });
-    }
-
-    return authorization;
+    return this.filterInputType.parseAndFilter(
+      authorization === true
+        ? undefined
+        : authorization === false
+        ? null
+        : authorization,
+    ).normalized;
   }
 
   public parseValue(
     maybeValue: unknown,
-    path: Path = addPath(undefined, this.toString()),
+    path: utils.Path = utils.addPath(undefined, this.toString()),
   ): NodeValue {
-    if (!isPlainObject(maybeValue)) {
-      throw new UnexpectedValueError('a plain-object', maybeValue, { path });
+    if (!utils.isPlainObject(maybeValue)) {
+      throw new utils.UnexpectedValueError('a plain-object', maybeValue, {
+        path,
+      });
     }
 
-    return aggregateError<Component, NodeValue>(
+    return utils.aggregateError<Component, NodeValue>(
       this.componentsByName.values(),
       (value, component) =>
         Object.assign(value, {
           [component.name]: component.parseValue(
             maybeValue[component.name],
-            addPath(path, component.name),
+            utils.addPath(path, component.name),
           ),
         }),
       Object.create(null),

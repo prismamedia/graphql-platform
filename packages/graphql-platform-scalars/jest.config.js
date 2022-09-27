@@ -2,12 +2,7 @@ export default {
   displayName: 'Scalars',
   testMatch: ['<rootDir>/src/**/*.test.ts'],
   moduleNameMapper: { '^(\\.{1,2}/.*)\\.js$': '$1' },
-
-  // // ts-jest
-  // preset: 'ts-jest/presets/default-esm',
-  // globals: { 'ts-jest': { useESM: true } },
-
-  // swc
+  extensionsToTreatAsEsm: ['.ts'],
   transform: {
     '^.+\\.ts?$': [
       '@swc/jest',
@@ -19,5 +14,4 @@ export default {
       },
     ],
   },
-  extensionsToTreatAsEsm: ['.ts'],
 };

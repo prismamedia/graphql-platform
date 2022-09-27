@@ -6,19 +6,22 @@ import {
   type AbstractDataTypeConfig,
 } from '../../abstract-data-type.js';
 
-export interface BooleanTypeConfig<TLeafValue extends core.LeafValue = any>
-  extends AbstractDataTypeConfig<
+export interface BooleanTypeConfig<
+  TLeafValue extends NonNullable<core.LeafValue> = any,
+> extends AbstractDataTypeConfig<
     BooleanType['kind'] | 'BOOL',
-    1 | 0,
-    TLeafValue
+    TLeafValue,
+    1 | 0
   > {}
 
 /**
  * @see https://mariadb.com/kb/en/boolean/
  */
 export class BooleanType<
-  TLeafValue extends core.LeafValue = any,
-> extends AbstractDataType<'BOOLEAN', 1 | 0, TLeafValue> {
+  TLeafValue extends NonNullable<core.LeafValue> = any,
+> extends AbstractDataType<'BOOLEAN', TLeafValue, 1 | 0> {
+  public readonly definition: string;
+
   public constructor(
     config?: SetOptional<BooleanTypeConfig<TLeafValue>, 'kind'>,
     configPath?: utils.Path,
@@ -28,9 +31,12 @@ export class BooleanType<
         kind: 'BOOLEAN',
         serialize: (value) => value.toString(10),
         fromColumnValue: config?.fromColumnValue,
+        fromJsonValue: config?.fromJsonValue,
         toColumnValue: config?.toColumnValue,
       },
       configPath,
     );
+
+    this.definition = this.kind;
   }
 }

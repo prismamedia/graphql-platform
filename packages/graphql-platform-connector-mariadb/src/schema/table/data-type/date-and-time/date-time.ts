@@ -2,14 +2,15 @@ import type * as core from '@prismamedia/graphql-platform';
 import * as utils from '@prismamedia/graphql-platform-utils';
 import { Memoize } from '@prismamedia/ts-memoize';
 import type { SetOptional } from 'type-fest';
-import { escapeStringValue } from '../../../../escape.js';
+import { escapeStringValue } from '../../../../escaping.js';
 import {
   AbstractDataType,
   type AbstractDataTypeConfig,
 } from '../../abstract-data-type.js';
 
-export interface DateTimeTypeConfig<TLeafValue extends core.LeafValue = any>
-  extends AbstractDataTypeConfig<DateTimeType['kind'], string, TLeafValue> {
+export interface DateTimeTypeConfig<
+  TLeafValue extends NonNullable<core.LeafValue> = any,
+> extends AbstractDataTypeConfig<DateTimeType['kind'], TLeafValue, string> {
   microsecondPrecision?: number;
 }
 
@@ -17,12 +18,12 @@ export interface DateTimeTypeConfig<TLeafValue extends core.LeafValue = any>
  * @see https://mariadb.com/kb/en/datetime/
  */
 export class DateTimeType<
-  TLeafValue extends core.LeafValue = any,
+  TLeafValue extends NonNullable<core.LeafValue> = any,
 > extends AbstractDataType<
   'DATETIME',
+  TLeafValue,
   // As the connection is configured with "dateStrings: true"
-  string,
-  TLeafValue
+  string
 > {
   public readonly microsecondPrecision: number;
 
@@ -35,6 +36,7 @@ export class DateTimeType<
         kind: 'DATETIME',
         serialize: (value) => escapeStringValue(value),
         fromColumnValue: config?.fromColumnValue,
+        fromJsonValue: config?.fromJsonValue,
         toColumnValue: config?.toColumnValue,
       },
       configPath,

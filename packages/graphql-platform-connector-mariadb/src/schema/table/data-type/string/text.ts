@@ -2,17 +2,18 @@ import type * as core from '@prismamedia/graphql-platform';
 import * as utils from '@prismamedia/graphql-platform-utils';
 import { Memoize } from '@prismamedia/ts-memoize';
 import type { SetOptional } from 'type-fest';
-import { escapeStringValue } from '../../../../escape.js';
+import { escapeStringValue } from '../../../../escaping.js';
 import {
   AbstractDataType,
   type AbstractDataTypeConfig,
 } from '../../abstract-data-type.js';
 
-export interface TextTypeConfig<TLeafValue extends core.LeafValue = any>
-  extends AbstractDataTypeConfig<
+export interface TextTypeConfig<
+  TLeafValue extends NonNullable<core.LeafValue> = any,
+> extends AbstractDataTypeConfig<
     TextType['kind'] | 'LONG' | 'LONG VARCHAR',
-    string,
-    TLeafValue
+    TLeafValue,
+    string
   > {
   length?: number;
   charset?: string;
@@ -23,11 +24,11 @@ export interface TextTypeConfig<TLeafValue extends core.LeafValue = any>
  * @see https://mariadb.com/kb/en/text/
  */
 export class TextType<
-  TLeafValue extends core.LeafValue = any,
+  TLeafValue extends NonNullable<core.LeafValue> = any,
 > extends AbstractDataType<
   'LONGTEXT' | 'MEDIUMTEXT' | 'TEXT' | 'TINYTEXT',
-  string,
-  TLeafValue
+  TLeafValue,
+  string
 > {
   public readonly length?: number;
   public readonly charset?: string;
@@ -46,6 +47,7 @@ export class TextType<
           : config.kind,
         serialize: (value) => escapeStringValue(value),
         fromColumnValue: config?.fromColumnValue,
+        fromJsonValue: config?.fromJsonValue,
         toColumnValue: config?.toColumnValue,
       },
       configPath,

@@ -1,13 +1,5 @@
 import { Scalars } from '@prismamedia/graphql-platform-scalars';
-import {
-  addPath,
-  Input,
-  ListableInputType,
-  MutationType,
-  nonNillableInputType,
-  type Path,
-  type PlainObject,
-} from '@prismamedia/graphql-platform-utils';
+import * as utils from '@prismamedia/graphql-platform-utils';
 import { Memoize } from '@prismamedia/ts-memoize';
 import * as graphql from 'graphql';
 import type { ConnectorInterface } from '../../../../connector-interface.js';
@@ -24,6 +16,11 @@ import type { NodeUpdate } from '../../../statement/update.js';
 import type { NodeFilterInputValue } from '../../../type/input/filter.js';
 import type { OrderByInputValue } from '../../../type/input/ordering.js';
 import { createContextBoundAPI } from '../../api.js';
+import {
+  catchConnectorError,
+  catchLifecycleHookError,
+  LifecycleHookKind,
+} from '../../error.js';
 import { AbstractUpdate, type UpdateConfig } from '../abstract-update.js';
 import type { MutationContext } from '../context.js';
 
@@ -31,7 +28,7 @@ export type UpdateManyMutationArgs = RawNodeSelectionAwareArgs<{
   where?: NodeFilterInputValue;
   orderBy?: OrderByInputValue;
   first: number;
-  data: PlainObject;
+  data: utils.PlainObject;
 }>;
 
 export type UpdateManyMutationResult = NodeSelectedValue[];
@@ -46,9 +43,10 @@ export class UpdateManyMutation<
   UpdateManyMutationResult
 > {
   readonly #config?: UpdateConfig<TRequestContext, TConnector> =
-    this.node.getMutationConfig(MutationType.UPDATE).config;
-  readonly #configPath: Path = this.node.getMutationConfig(MutationType.UPDATE)
-    .configPath;
+    this.node.getMutationConfig(utils.MutationType.UPDATE).config;
+  readonly #configPath: utils.Path = this.node.getMutationConfig(
+    utils.MutationType.UPDATE,
+  ).configPath;
 
   protected override readonly selectionAware = true;
   public override readonly name = `update${this.node.plural}`;
@@ -57,23 +55,23 @@ export class UpdateManyMutation<
   @Memoize()
   public override get arguments() {
     return [
-      new Input({
+      new utils.Input({
         name: 'where',
         type: this.node.filterInputType,
       }),
-      new Input({
+      new utils.Input({
         name: 'orderBy',
-        type: new ListableInputType(
-          nonNillableInputType(this.node.orderingInputType),
+        type: new utils.ListableInputType(
+          utils.nonNillableInputType(this.node.orderingInputType),
         ),
       }),
-      new Input({
+      new utils.Input({
         name: 'first',
-        type: nonNillableInputType(Scalars.UnsignedInt),
+        type: utils.nonNillableInputType(Scalars.UnsignedInt),
       }),
-      new Input({
+      new utils.Input({
         name: 'data',
-        type: nonNillableInputType(this.node.updateInputType),
+        type: utils.nonNillableInputType(this.node.updateInputType),
       }),
     ];
   }
@@ -88,31 +86,35 @@ export class UpdateManyMutation<
   }
 
   protected override async executeWithValidArgumentsAndContext(
-    args: NodeSelectionAwareArgs<UpdateManyMutationArgs>,
+    authorization: NodeFilter<TRequestContext, TConnector> | undefined,
+    { data, ...args }: NodeSelectionAwareArgs<UpdateManyMutationArgs>,
     context: MutationContext<TRequestContext, TConnector>,
-    path: Path,
+    path: utils.Path,
   ): Promise<UpdateManyMutationResult> {
-    // As the "data" will be provided to the hooks, we freeze it
-    Object.freeze(args.data);
+    if (Object.keys(data).length === 0) {
+      // An "empty" update is just a "find"
+      return this.node
+        .getQueryByKey('find-many')
+        .internal(authorization, args, context, path);
+    } else {
+      // As the "data" will be provided to the hooks, we freeze it
+      Object.freeze(data);
+    }
 
     if (args.first === 0) {
       return [];
     }
 
-    const argsPath = addPath(path, argsPathKey);
+    const argsPath = utils.addPath(path, argsPathKey);
 
     const filter = new NodeFilter(
       this.node,
       new AndOperation([
-        this.node.getAuthorizationByRequestContext(
-          context.requestContext,
-          path,
-          MutationType.UPDATE,
-        )?.filter,
+        authorization?.filter,
         this.node.filterInputType.filter(
           args.where,
           context,
-          addPath(argsPath, 'where'),
+          utils.addPath(argsPath, 'where'),
         ).filter,
       ]),
     ).normalized;
@@ -124,136 +126,150 @@ export class UpdateManyMutation<
     const ordering = this.node.orderingInputType.sort(
       args.orderBy,
       context,
-      addPath(argsPath, 'orderBy'),
+      utils.addPath(argsPath, 'orderBy'),
     ).normalized;
 
-    // An "empty" update is just a "find"
-    if (!Object.values(args.data).length) {
-      return this.connector.find(
-        {
-          node: this.node,
-          ...(filter && { where: filter }),
-          ...(ordering && { orderBy: ordering }),
-          limit: args.first,
-          selection: args.selection,
-        },
-        context,
-      );
-    }
-
-    const currentValues = (await this.connector.find(
-      {
-        node: this.node,
-        ...(filter && { where: filter }),
-        ...(ordering && { orderBy: ordering }),
-        limit: args.first,
-        selection: this.node.selection,
-        forMutation: MutationType.UPDATE,
-      },
-      context,
+    const currentValues = (await catchConnectorError(
+      () =>
+        this.connector.find(
+          {
+            node: this.node,
+            ...(filter && { filter }),
+            ...(ordering && { ordering }),
+            limit: args.first,
+            selection: this.node.selection,
+            forMutation: utils.MutationType.UPDATE,
+          },
+          context,
+        ),
+      path,
     )) as NodeValue[];
 
     if (currentValues.length === 0) {
       return [];
     }
 
-    const ids = currentValues.map((currentValue) =>
+    const currentIds = currentValues.map((currentValue) =>
       this.node.identifier.parseValue(currentValue),
     );
 
     const update: NodeUpdate = await this.node.updateInputType.createStatement(
-      args.data,
+      data,
       context,
       path,
     );
 
-    let updatedAt: Date | undefined;
-    let newValues: NodeValue[];
-
     if (update.updatesByComponent.size) {
       if (this.#config?.preUpdate) {
         await Promise.all(
-          currentValues.map(async (currentValue) => {
+          currentValues.map(async (currentValue, index) => {
             // Because we provide the "currentValue", the update might be "individualized/customized" using it
-            const maybeIndividualizedUpdate = update.clone();
+            const individualizedUpdate = update.clone();
 
             // Apply the "preUpdate"-hook
-            await this.#config!.preUpdate!({
-              gp: this.gp,
-              node: this.node,
-              context,
-              api: createContextBoundAPI(this.gp, context),
-              data: args.data,
-              currentValue: Object.freeze(this.node.parseValue(currentValue)),
-              update: maybeIndividualizedUpdate.proxy,
-            });
-
-            if (maybeIndividualizedUpdate.updatesByComponent.size) {
-              // Actually update the node
-              await this.connector.update(
-                {
+            await catchLifecycleHookError(
+              () =>
+                this.#config!.preUpdate!({
+                  gp: this.gp,
                   node: this.node,
-                  where: this.node.filterInputType.parseAndFilter(
-                    this.node.identifier.parseValue(currentValue),
+                  context,
+                  api: createContextBoundAPI(this.gp, context),
+                  data,
+                  currentValue: Object.freeze(
+                    this.node.parseValue(currentValue),
                   ),
-                  limit: 1,
-                  update: maybeIndividualizedUpdate,
-                },
-                context,
+                  update: individualizedUpdate.proxy,
+                }),
+              this.node,
+              LifecycleHookKind.PRE_UPDATE,
+              path,
+            );
+
+            if (individualizedUpdate.updatesByComponent.size) {
+              // Actually update the node
+              await catchConnectorError(
+                () =>
+                  this.connector.update(
+                    {
+                      node: this.node,
+                      update: individualizedUpdate,
+                      filter: this.node.filterInputType.parseAndFilter(
+                        currentIds[index],
+                      ),
+                    },
+                    context,
+                  ),
+                path,
               );
             }
           }),
         );
       } else {
         // Actually update the nodes
-        await this.connector.update(
-          {
-            node: this.node,
-            where: this.node.filterInputType.parseAndFilter({ OR: ids }),
-            limit: ids.length,
-            update,
-          },
-          context,
+        await catchConnectorError(
+          () =>
+            this.connector.update(
+              {
+                node: this.node,
+                update,
+                filter: this.node.filterInputType.parseAndFilter({
+                  OR: currentIds,
+                }),
+              },
+              context,
+            ),
+          path,
         );
       }
+    }
 
-      updatedAt = new Date();
-      newValues = (await this.node.getQueryByKey('get-some-in-order').execute(
+    const maybeUpdateAfterwards =
+      (this.node.updateInputType.hasReverseEdgeActions(data) ||
+        this.#config?.postUpdate != null) &&
+      !this.node.selection.includes(args.selection);
+
+    const newValues = (await this.node
+      .getQueryByKey('get-some-in-order')
+      .internal(
+        authorization,
         {
-          where: ids,
-          selection: this.node.selection,
+          where: currentIds,
+          selection: maybeUpdateAfterwards
+            ? this.node.selection
+            : this.node.selection.mergeWith(args.selection),
         },
         context,
         path,
       )) as NodeValue[];
-    } else {
-      newValues = currentValues;
-    }
 
-    const changes = currentValues.map((oldValue, index) => {
-      const change = new UpdatedNode(
-        this.node,
-        context.requestContext,
-        oldValue,
-        newValues[index],
-        updatedAt,
-      );
+    const changes = currentValues.reduce<UpdatedNode[]>(
+      (changes, oldValue, index) => {
+        const change = new UpdatedNode(
+          this.node,
+          context.requestContext,
+          oldValue,
+          newValues[index],
+        );
 
-      // Let's everybody know about the changes, if any
-      if (change.hasDifference()) {
-        context.trackChange(change);
-      }
+        if (change.updatesByComponent.size) {
+          // Let's everybody know about the update, if any
+          context.trackChange(change);
 
-      return change;
-    });
+          changes.push(change);
+        }
+
+        return changes;
+      },
+      [],
+    );
 
     // Apply the reverse-edges' actions
-    if (this.node.updateInputType.hasReverseEdgeActions(args.data)) {
+    if (this.node.updateInputType.hasReverseEdgeActions(data)) {
       await Promise.all(
-        changes.map((change) =>
+        newValues.map((newValue) =>
           this.node.updateInputType.applyReverseEdgeActions(
-            change.newValue,
-            args.data,
+            newValue,
+            data,
             context,
             path,
           ),
@@ -265,25 +281,34 @@ export class UpdateManyMutation<
     if (this.#config?.postUpdate) {
       await Promise.all(
         changes.map((change) =>
-          this.#config!.postUpdate!({
-            gp: this.gp,
-            node: this.node,
-            context,
-            api: createContextBoundAPI(this.gp, context),
-            data: args.data,
-            change,
-          }),
+          catchLifecycleHookError(
+            () =>
+              this.#config!.postUpdate!({
+                gp: this.gp,
+                node: this.node,
+                context,
+                api: createContextBoundAPI(this.gp, context),
+                data,
+                change,
+              }),
+            this.node,
+            LifecycleHookKind.POST_UPDATE,
+            path,
+          ),
         ),
       );
     }
 
-    return this.node.getQueryByKey('get-some-in-order').execute(
-      {
-        where: ids,
-        selection: args.selection,
-      },
-      context,
-      path,
-    );
+    return maybeUpdateAfterwards
+      ? this.node.getQueryByKey('get-some-in-order').internal(
+          authorization,
+          {
+            where: currentIds,
+            selection: args.selection,
+          },
+          context,
+          path,
+        )
+      : newValues.map((newValue) => args.selection.parseValue(newValue));
   }
 }

@@ -1,11 +1,8 @@
-import {
-  Input,
-  nonNillableInputType,
-  type Path,
-} from '@prismamedia/graphql-platform-utils';
+import * as utils from '@prismamedia/graphql-platform-utils';
 import { Memoize } from '@prismamedia/ts-memoize';
 import type { ConnectorInterface } from '../../../../connector-interface.js';
 import type { NodeSelectionAwareArgs } from '../../../abstract-operation.js';
+import type { NodeFilter } from '../../../statement/filter.js';
 import { AbstractDeletion } from '../abstract-deletion.js';
 import type { MutationContext } from '../context.js';
 import type {
@@ -27,15 +24,15 @@ export class DeleteOneIfExistsMutation<
   DeleteOneIfExistsMutationResult
 > {
   protected override readonly selectionAware = true;
-  public override readonly name = `delete${this.node.name}IfExists`;
-  public override readonly description = `Deletes one "${this.node.name}" if it exists, returns null otherwise`;
+  public override readonly name = `delete${this.node}IfExists`;
+  public override readonly description = `Deletes one "${this.node}" if it exists, returns null otherwise`;
 
   @Memoize()
   public override get arguments() {
     return [
-      new Input({
+      new utils.Input({
         name: 'where',
-        type: nonNillableInputType(this.node.uniqueFilterInputType),
+        type: utils.nonNillableInputType(this.node.uniqueFilterInputType),
       }),
     ];
   }
@@ -46,13 +43,15 @@ export class DeleteOneIfExistsMutation<
   }
 
   protected override async executeWithValidArgumentsAndContext(
+    authorization: NodeFilter<TRequestContext, TConnector> | undefined,
     args: NodeSelectionAwareArgs<DeleteOneIfExistsMutationArgs>,
     context: MutationContext<TRequestContext, TConnector>,
-    path: Path,
+    path: utils.Path,
   ): Promise<DeleteOneIfExistsMutationResult> {
     const [nodeValue = null] = await this.node
       .getMutationByKey('delete-many')
-      .execute(
+      .internal(
+        authorization,
         {
           where: args.where,
           first: 1,

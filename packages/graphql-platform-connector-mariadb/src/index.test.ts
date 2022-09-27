@@ -4,7 +4,13 @@ import {
 } from '@prismamedia/graphql-platform/__tests__/config.js';
 import { fixtures } from '@prismamedia/graphql-platform/__tests__/fixture.js';
 import { EOL } from 'node:os';
-import { MariaDBConnector } from './index.js';
+import {
+  AddTableForeignKeysStatement,
+  CreateSchemaStatement,
+  CreateTableStatement,
+  DropSchemaStatement,
+  MariaDBConnector,
+} from './index.js';
 import { makeGraphQLPlatform } from './__tests__/config.js';
 
 describe('GraphQL Platform Connector MariaDB', () => {
@@ -20,26 +26,26 @@ describe('GraphQL Platform Connector MariaDB', () => {
     await gp.connector.teardown();
   });
 
-  it('generates valid and stable schema & statements', async () => {
+  it('generates valid and stable schema', async () => {
     expect(
-      gp.connector.schema.makeDropStatement({ ifExists: true }).statement,
+      new DropSchemaStatement(gp.connector.schema, { ifExists: true }).sql,
     ).toMatchSnapshot();
 
     expect(
-      gp.connector.schema.makeCreateStatement({ orReplace: true }).statement,
+      new CreateSchemaStatement(gp.connector.schema, { orReplace: true }).sql,
     ).toMatchSnapshot();
 
     expect(
       Array.from(
         gp.connector.schema.tablesByNode.values(),
-        (table) => table.makeCreateStatement().statement,
+        (table) => new CreateTableStatement(table).sql,
       ).join(EOL.repeat(2)),
     ).toMatchSnapshot();
 
     expect(
       Array.from(gp.connector.schema.tablesByNode.values(), (table) =>
-        table.foreignKeysByEdge.size
-          ? table.makeAddForeignKeysStatement().statement
+        table.foreignKeyIndexesByEdge.size
+          ? new AddTableForeignKeysStatement(table).sql
           : undefined,
       )
         .filter(Boolean)

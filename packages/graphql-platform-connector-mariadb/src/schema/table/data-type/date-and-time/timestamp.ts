@@ -7,8 +7,9 @@ import {
   type AbstractDataTypeConfig,
 } from '../../abstract-data-type.js';
 
-export interface TimestampTypeConfig<TLeafValue extends core.LeafValue = any>
-  extends AbstractDataTypeConfig<TimestampType['kind'], number, TLeafValue> {
+export interface TimestampTypeConfig<
+  TLeafValue extends NonNullable<core.LeafValue> = any,
+> extends AbstractDataTypeConfig<TimestampType['kind'], TLeafValue, number> {
   microsecondPrecision?: number;
 }
 
@@ -16,8 +17,8 @@ export interface TimestampTypeConfig<TLeafValue extends core.LeafValue = any>
  * @see https://mariadb.com/kb/en/timestamp/
  */
 export class TimestampType<
-  TLeafValue extends core.LeafValue = any,
-> extends AbstractDataType<'TIMESTAMP', number, TLeafValue> {
+  TLeafValue extends NonNullable<core.LeafValue> = any,
+> extends AbstractDataType<'TIMESTAMP', TLeafValue, number> {
   public readonly microsecondPrecision: number;
 
   public constructor(
@@ -29,6 +30,7 @@ export class TimestampType<
         kind: 'TIMESTAMP',
         serialize: (value) => value.toString(10),
         fromColumnValue: config?.fromColumnValue,
+        fromJsonValue: config?.fromJsonValue,
         toColumnValue: config?.toColumnValue,
       },
       configPath,

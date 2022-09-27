@@ -1,4 +1,4 @@
-import { UnreachableValueError } from '@prismamedia/graphql-platform-utils';
+import * as utils from '@prismamedia/graphql-platform-utils';
 import { Memoize } from '@prismamedia/ts-memoize';
 import { isBooleanFilter, type BooleanFilter } from '../../boolean.js';
 import type { BooleanExpressionInterface } from '../expression-interface.js';
@@ -94,7 +94,7 @@ export class OrOperation implements BooleanExpressionInterface {
           operandSet.add(operand);
         }
       } else {
-        throw new UnreachableValueError(rawOperand);
+        throw new utils.UnreachableValueError(rawOperand);
       }
     }
 

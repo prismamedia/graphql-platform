@@ -37,25 +37,30 @@ describe('Seeding', () => {
   it('orders by dependencies', () => {
     const seeding = new Seeding(gp, fixtures);
 
-    expect(seeding.fixturesByReference.size).toBe(16);
-    expect(Array.from(seeding.fixturesByReference.keys())).toEqual([
-      'category_root',
-      'category_home',
-      'category_news',
-      'article_01',
-      'article_02',
-      'tag_03',
-      'article_03',
-      'tag_01',
-      'article_03-tag_01',
-      'tag_02',
-      'article_03-tag_02',
-      'user_yvann',
-      'article_03-tag_02-moderator_user_yvann',
-      'user_marine',
-      'article_03-tag_02-moderator_user_marine',
-      'user_profile_yvann',
-    ]);
+    expect(seeding.fixturesByReference.size).toMatchInlineSnapshot(`18`);
+    expect(Array.from(seeding.fixturesByReference.keys()))
+      .toMatchInlineSnapshot(`
+      [
+        "category_root",
+        "category_home",
+        "article_01",
+        "article_02",
+        "category_news",
+        "article_03",
+        "tag_01",
+        "article_03-tag_01",
+        "article_04",
+        "tag_03",
+        "article_04-tag_03",
+        "tag_02",
+        "article_03-tag_02",
+        "user_yvann",
+        "article_03-tag_02-moderator_user_yvann",
+        "user_marine",
+        "article_03-tag_02-moderator_user_marine",
+        "user_profile_yvann",
+      ]
+    `);
   });
 
   it('loads the fixtures', async () => {
@@ -78,6 +83,7 @@ describe('Seeding', () => {
                       metas: null,
                       highlighted: null,
                       sponsored: null,
+                      machineTags: null,
                     };
 
                   case 'My second draft article':
@@ -89,6 +95,7 @@ describe('Seeding', () => {
                       metas: null,
                       highlighted: null,
                       sponsored: null,
+                      machineTags: null,
                     };
 
                   case 'My first published article':
@@ -100,6 +107,19 @@ describe('Seeding', () => {
                       metas: null,
                       highlighted: null,
                       sponsored: null,
+                      machineTags: null,
+                    };
+
+                  case 'My second published article':
+                    return {
+                      ...creation.proxy,
+                      _id: 4,
+                      id: 'bffaac46-f6dd-42c9-bc25-5d327d304ae8',
+                      body: null,
+                      metas: null,
+                      highlighted: null,
+                      sponsored: null,
+                      machineTags: null,
                     };
 
                   default:
@@ -222,41 +242,48 @@ describe('Seeding', () => {
               throw new Error(`"create" not implemented for "${node.name}"`);
           }
         },
-        count: async ({ node, where }) => {
+        count: async ({ node, filter }) => {
           switch (node.name) {
             case 'Category':
               if (
-                where?.filter instanceof NotOperation &&
-                where.filter.operand instanceof EdgeExistsFilter &&
-                where.filter.operand.edge.name === 'parent'
+                filter?.filter instanceof NotOperation &&
+                filter.filter.operand instanceof EdgeExistsFilter &&
+                filter.filter.operand.edge.name === 'parent'
               ) {
                 return hasRootCategory ? 1 : 0;
               }
 
             default:
               throw new Error(
-                `"count" not implemented for "${node.name}/${where?.filter.ast}"`,
+                `"count" not implemented for "${node.name}/${filter?.filter.ast}"`,
               );
           }
         },
-        find: async ({ node, where, orderBy, offset, limit, forMutation }) => {
+        find: async ({
+          node,
+          filter,
+          ordering,
+          offset,
+          limit,
+          forMutation,
+        }) => {
           switch (node.name) {
             case 'Article':
-              return where?.filter instanceof LeafComparisonFilter &&
-                where.filter.leaf.name === '_id'
-                ? [{ _id: where.filter.value }]
+              return filter?.filter instanceof LeafComparisonFilter &&
+                filter.filter.leaf.name === '_id'
+                ? [{ _id: filter.filter.value }]
                 : [];
 
             case 'Category':
-              return where?.filter instanceof LeafComparisonFilter &&
-                where.filter.leaf.name === '_id'
-                ? [{ _id: where.filter.value }]
+              return filter?.filter instanceof LeafComparisonFilter &&
+                filter.filter.leaf.name === '_id'
+                ? [{ _id: filter.filter.value }]
                 : [];
 
             case 'Tag':
-              return where?.filter instanceof LeafComparisonFilter &&
-                where.filter.leaf.name === 'id'
-                ? [{ id: where.filter.value }]
+              return filter?.filter instanceof LeafComparisonFilter &&
+                filter.filter.leaf.name === 'id'
+                ? [{ id: filter.filter.value }]
                 : [];
 
             case 'ArticleTag':
@@ -268,25 +295,25 @@ describe('Seeding', () => {
               ];
 
             case 'User':
-              return where?.filter instanceof LeafComparisonFilter &&
-                where.filter.leaf.name === 'id'
-                ? where.filter.value === 'c395757e-8a40-456a-b006-221ef3490456'
-                  ? [{ id: where.filter.value, username: 'yvann' }]
-                  : where.filter.value ===
+              return filter?.filter instanceof LeafComparisonFilter &&
+                filter.filter.leaf.name === 'id'
+                ? filter.filter.value === 'c395757e-8a40-456a-b006-221ef3490456'
+                  ? [{ id: filter.filter.value, username: 'yvann' }]
+                  : filter.filter.value ===
                     '654173f4-8fa6-42df-9941-f5a6a4d0b97e'
-                  ? [{ id: where.filter.value, username: 'marine' }]
+                  ? [{ id: filter.filter.value, username: 'marine' }]
                   : []
                 : [];
 
             case 'UserProfile':
-              return where?.filter instanceof EdgeExistsFilter &&
-                where.filter.edge.name === 'user' &&
-                where.filter.headFilter?.filter instanceof LeafComparisonFilter
-                ? where.filter.headFilter.filter.value ===
+              return filter?.filter instanceof EdgeExistsFilter &&
+                filter.filter.edge.name === 'user' &&
+                filter.filter.headFilter?.filter instanceof LeafComparisonFilter
+                ? filter.filter.headFilter.filter.value ===
                   'c395757e-8a40-456a-b006-221ef3490456'
                   ? [
                       {
-                        user: { id: where.filter.headFilter.filter.value },
+                        user: { id: filter.filter.headFilter.filter.value },
                         birthday: '1987-04-28',
                         facebookId: null,
                         googleId: null,
@@ -298,7 +325,7 @@ describe('Seeding', () => {
 
             default:
               throw new Error(
-                `"find" not implemented for "${node.name}/${where?.filter.ast}/${orderBy?.ast}/${offset}/${limit}/${forMutation}"`,
+                `"find" not implemented for "${node.name}/${filter?.filter.ast}/${ordering?.ast}/${offset}/${limit}/${forMutation}"`,
               );
           }
         },

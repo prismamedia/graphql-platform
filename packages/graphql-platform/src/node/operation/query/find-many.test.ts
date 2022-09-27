@@ -15,6 +15,7 @@ import {
   mockConnector,
 } from '../../../__tests__/connector-mock.js';
 import { NodeFilter, NodeOrdering } from '../../statement.js';
+import { UnauthorizedError } from '../error.js';
 import { FindManyQueryArgs } from './find-many.js';
 
 describe('FindManyQuery', () => {
@@ -33,14 +34,11 @@ describe('FindManyQuery', () => {
     beforeEach(() => clearAllConnectorMocks(gp.connector));
 
     describe('Fails', () => {
-      it('throws an error on unauthorized node', async () => {
-        await expect(
-          gp.api.query.articles(
-            { first: 5, selection: ['id'] },
-            myVisitorContext,
-          ),
-        ).rejects.toThrowError(
-          '"query.articles" - Unauthorized access to "Article"',
+      it.each<[FindManyQueryArgs, MyContext]>([
+        [{ first: 5, selection: ['id'] }, myVisitorContext],
+      ])('throws an UnauthorizedError', async (args, context) => {
+        await expect(gp.api.query.articles(args, context)).rejects.toThrowError(
+          UnauthorizedError,
         );
 
         expect(gp.connector.find).toHaveBeenCalledTimes(0);
@@ -100,8 +98,8 @@ describe('FindManyQuery', () => {
         expect(gp.connector.find).toHaveBeenLastCalledWith(
           {
             node: gp.getNodeByName('Article'),
-            where: expect.any(NodeFilter),
-            orderBy: expect.any(NodeOrdering),
+            filter: expect.any(NodeFilter),
+            ordering: expect.any(NodeOrdering),
             offset: 5,
             limit: 10,
             selection: expect.any(NodeSelection),

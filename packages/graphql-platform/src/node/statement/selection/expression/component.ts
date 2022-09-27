@@ -1,13 +1,12 @@
-import { EdgeHeadSelection } from './component/edge-head.js';
+import { EdgeSelection, isEdgeSelection } from './component/edge.js';
 import { LeafSelection } from './component/leaf.js';
 
-export * from './component/edge-head.js';
+export * from './component/edge.js';
 export * from './component/leaf.js';
 
-export type ComponentSelection = LeafSelection | EdgeHeadSelection;
+export type ComponentSelection = EdgeSelection | LeafSelection;
 
 export const isComponentSelection = (
-  maybeComponentSelection: unknown,
-): maybeComponentSelection is ComponentSelection =>
-  maybeComponentSelection instanceof LeafSelection ||
-  maybeComponentSelection instanceof EdgeHeadSelection;
+  maybeSelection: unknown,
+): maybeSelection is ComponentSelection =>
+  isEdgeSelection(maybeSelection) || maybeSelection instanceof LeafSelection;

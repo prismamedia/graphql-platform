@@ -1,4 +1,4 @@
-import { MutationType, PlainObject } from '@prismamedia/graphql-platform-utils';
+import * as utils from '@prismamedia/graphql-platform-utils';
 import { GraphQLInputObjectType, printType } from 'graphql';
 import { GraphQLPlatform } from '../../../index.js';
 import {
@@ -20,10 +20,10 @@ describe('NodeUpdateInputType', () => {
     gp = new GraphQLPlatform({
       nodes,
       connector: mockConnector({
-        find: async ({ node, where }) => {
+        find: async ({ node, filter }) => {
           if (
             node.name === 'Category' &&
-            where?.filter.equals(
+            filter?.filter.equals(
               new LeafComparisonFilter(
                 node.getLeafByName('id'),
                 'eq',
@@ -34,7 +34,7 @@ describe('NodeUpdateInputType', () => {
             return [{ _id: 4 }];
           } else if (
             node.name === 'User' &&
-            where?.filter.equals(
+            filter?.filter.equals(
               new LeafComparisonFilter(
                 node.getLeafByName('id'),
                 'eq',
@@ -60,7 +60,7 @@ describe('NodeUpdateInputType', () => {
       const updateInputType = node.updateInputType;
       expect(updateInputType).toBeInstanceOf(NodeUpdateInputType);
 
-      if (node.isMutationPublic(MutationType.UPDATE)) {
+      if (node.isMutationPublic(utils.MutationType.UPDATE)) {
         expect(updateInputType.getGraphQLInputType()).toBeInstanceOf(
           GraphQLInputObjectType,
         );
@@ -139,7 +139,7 @@ describe('NodeUpdateInputType', () => {
         const Article = gp.getNodeByName('Article');
         const ArticleUpdateInputType = Article.updateInputType;
 
-        const input: PlainObject = {
+        const input: utils.PlainObject = {
           title: "My new article's title",
           category: { disconnect: true },
         };

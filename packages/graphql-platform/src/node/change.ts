@@ -1,6 +1,6 @@
-import { Memoize } from '@prismamedia/ts-memoize';
+import { MutationType } from '@prismamedia/graphql-platform-utils';
 import type { ConnectorInterface } from '../connector-interface.js';
-import type { Node, NodeValue } from '../node.js';
+import type { Component, ComponentValue, Node, NodeValue } from '../node.js';
 
 abstract class AbstractChangedNode<
   TRequestContext extends object,
@@ -10,6 +10,7 @@ abstract class AbstractChangedNode<
 
   public constructor(
     public readonly node: Node<TRequestContext, TConnector>,
+    public readonly kind: MutationType,
     public readonly requestContext: TRequestContext,
     at: Date = new Date(),
   ) {
@@ -38,7 +39,7 @@ export class CreatedNode<
     maybeNewValue: unknown,
     at?: Date,
   ) {
-    super(node, requestContext, at);
+    super(node, MutationType.CREATION, requestContext, at);
 
     this.newValue = Object.freeze(node.parseValue(maybeNewValue));
   }
@@ -57,7 +58,7 @@ export class DeletedNode<
     maybeOldValue: unknown,
     at?: Date,
   ) {
-    super(node, requestContext, at);
+    super(node, MutationType.DELETION, requestContext, at);
 
     this.oldValue = Object.freeze(node.parseValue(maybeOldValue));
   }
@@ -69,6 +70,11 @@ export class UpdatedNode<
 > extends AbstractChangedNode<TRequestContext, TConnector> {
   public readonly oldValue: Readonly<NodeValue>;
   public readonly newValue: Readonly<NodeValue>;
+  public readonly updatesByComponent: ReadonlyMap<
+    Component<TRequestContext, TConnector>,
+    Readonly<{ oldValue: ComponentValue; newValue: ComponentValue }>
+  >;
+  public readonly updatedComponents: ReadonlyArray<Component['name']>;
 
   public constructor(
     node: Node<TRequestContext, TConnector>,
@@ -77,15 +83,33 @@ export class UpdatedNode<
     maybeNewValue: unknown,
     at?: Date,
   ) {
-    super(node, requestContext, at);
+    super(node, MutationType.UPDATE, requestContext, at);
 
     this.oldValue = Object.freeze(node.parseValue(maybeOldValue));
     this.newValue = Object.freeze(node.parseValue(maybeNewValue));
-  }
+    this.updatesByComponent = new Map(
+      Array.from(node.componentsByName.values()).reduce<
+        [Component, { oldValue: ComponentValue; newValue: ComponentValue }][]
+      >((entries, component) => {
+        const oldComponentValue: any = this.oldValue[component.name];
+        const newComponentValue: any = this.newValue[component.name];
 
-  @Memoize()
-  public hasDifference(): boolean {
-    return !this.node.areValuesEqual(this.oldValue, this.newValue);
+        if (!component.areValuesEqual(oldComponentValue, newComponentValue)) {
+          entries.push([
+            component,
+            Object.freeze({
+              oldValue: oldComponentValue,
+              newValue: newComponentValue,
+            }),
+          ]);
+        }
+
+        return entries;
+      }, []),
+    );
+    this.updatedComponents = Object.freeze(
+      Array.from(this.updatesByComponent.keys(), (component) => component.name),
+    );
   }
 }
 

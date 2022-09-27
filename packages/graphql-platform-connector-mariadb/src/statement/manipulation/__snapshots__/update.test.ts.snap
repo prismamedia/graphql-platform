@@ -1,0 +1,125 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`Update statement generates statements 1`] = `
+[
+  {
+    "score": 0,
+    "status": "deleted",
+    "tags": [],
+    "title": "My first published article",
+  },
+  {
+    "score": 0,
+    "status": "deleted",
+    "tags": [],
+    "title": "My second published article",
+  },
+]
+`;
+
+exports[`Update statement generates statements 2`] = `
+Map {
+  "Article" => Map {
+    "update" => 2,
+  },
+  "ArticleTagModeration" => Map {
+    "deletion" => 2,
+  },
+  "ArticleTag" => Map {
+    "deletion" => 3,
+  },
+}
+`;
+
+exports[`Update statement generates statements 3`] = `
+[
+  {
+    "score": 1,
+    "status": "published",
+    "tags": [
+      {
+        "order": 0,
+        "tag": {
+          "title": "fashion",
+        },
+      },
+    ],
+    "title": "My first draft article",
+  },
+  {
+    "score": 1,
+    "status": "published",
+    "tags": [
+      {
+        "order": 0,
+        "tag": {
+          "title": "fashion",
+        },
+      },
+    ],
+    "title": "My second draft article",
+  },
+]
+`;
+
+exports[`Update statement generates statements 4`] = `
+Map {
+  "Article" => Map {
+    "update" => 2,
+  },
+  "ArticleTag" => Map {
+    "creation" => 2,
+  },
+}
+`;
+
+exports[`Update statement generates statements 5`] = `
+[
+  {
+    "score": 1,
+    "status": "published",
+    "tags": [
+      {
+        "order": 0,
+        "tag": {
+          "title": "fashion",
+        },
+      },
+      {
+        "order": 1,
+        "tag": {
+          "title": "high-tech",
+        },
+      },
+    ],
+    "title": "My first draft article",
+  },
+  {
+    "score": 1,
+    "status": "published",
+    "tags": [
+      {
+        "order": 0,
+        "tag": {
+          "title": "fashion",
+        },
+      },
+      {
+        "order": 1,
+        "tag": {
+          "title": "high-tech",
+        },
+      },
+    ],
+    "title": "My second draft article",
+  },
+]
+`;
+
+exports[`Update statement generates statements 6`] = `
+Map {
+  "ArticleTag" => Map {
+    "creation" => 2,
+  },
+}
+`;

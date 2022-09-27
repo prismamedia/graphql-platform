@@ -1,8 +1,4 @@
-import {
-  isPlainObject,
-  UnexpectedValueError,
-  type PlainObject,
-} from '@prismamedia/graphql-platform-utils';
+import * as utils from '@prismamedia/graphql-platform-utils';
 import { Memoize } from '@prismamedia/ts-memoize';
 import type { ConnectorInterface } from '../connector-interface.js';
 import type { Node, NodeValue } from '../node.js';
@@ -13,7 +9,7 @@ import { EdgeCreationInputAction } from './type/input/creation/field.js';
 
 export type NodeFixtureReference = string;
 
-export type NodeFixtureData = PlainObject;
+export type NodeFixtureData = utils.PlainObject;
 
 export class NodeFixture<
   TRequestContext extends object,
@@ -28,11 +24,11 @@ export class NodeFixture<
     public readonly data: NodeFixtureData,
   ) {
     if (typeof reference !== 'string') {
-      throw new UnexpectedValueError('a string', reference);
+      throw new utils.UnexpectedValueError('a string', reference);
     }
 
-    if (!isPlainObject(data)) {
-      throw new UnexpectedValueError('a plain-object', data);
+    if (!utils.isPlainObject(data)) {
+      throw new utils.UnexpectedValueError('a plain-object', data);
     }
 
     this.dependencies = new Set(

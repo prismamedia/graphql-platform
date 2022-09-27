@@ -3,7 +3,6 @@ import {
   myAdminContext,
   MyContext,
   MyGP,
-  myUserContext,
   myVisitorContext,
   nodes,
 } from '../../../../__tests__/config.js';
@@ -11,6 +10,7 @@ import {
   clearAllConnectorMocks,
   mockConnector,
 } from '../../../../__tests__/connector-mock.js';
+import { UnauthorizedError } from '../../error.js';
 import { UpdateManyMutationArgs } from './update-many.js';
 
 describe('UpdateManyMutation', () => {
@@ -29,28 +29,25 @@ describe('UpdateManyMutation', () => {
     beforeEach(() => clearAllConnectorMocks(gp.connector));
 
     describe('Fails', () => {
-      it.each([myVisitorContext, myUserContext])(
-        'throws an error on unauthorized node',
-        async (context) => {
-          await expect(
-            gp.api.mutation.updateArticles(undefined, context),
-          ).rejects.toThrowError(
-            '"mutation.updateArticles" - Unauthorized access to "Article"',
-          );
+      it.each<[UpdateManyMutationArgs, MyContext]>([
+        [{ data: {}, first: 5, selection: '{ id }' }, myVisitorContext],
+      ])('throws an UnauthorizedError', async (args, context) => {
+        await expect(
+          gp.api.mutation.updateArticles(args, context),
+        ).rejects.toThrowError(UnauthorizedError);
 
-          expect(gp.connector.find).toHaveBeenCalledTimes(0);
-          expect(gp.connector.update).toHaveBeenCalledTimes(0);
-        },
-      );
+        expect(gp.connector.find).toHaveBeenCalledTimes(0);
+        expect(gp.connector.update).toHaveBeenCalledTimes(0);
+      });
     });
 
     describe('Works', () => {
       it.each<[UpdateManyMutationArgs, MyContext]>([
+        [{ data: {}, first: 0, selection: '{ id }' }, myAdminContext],
         [
-          { where: null, first: 5, data: {}, selection: '{ id }' },
+          { data: {}, where: null, first: 5, selection: '{ id }' },
           myAdminContext,
         ],
-        [{ first: 0, data: {}, selection: '{ id }' }, myAdminContext],
       ])(
         'does no call the connector when it is not needed',
         async (args, context) => {

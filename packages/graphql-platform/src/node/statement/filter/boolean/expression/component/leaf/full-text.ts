@@ -1,5 +1,4 @@
-import { UnexpectedValueError } from '@prismamedia/graphql-platform-utils';
-import { Memoize } from '@prismamedia/ts-memoize';
+import * as utils from '@prismamedia/graphql-platform-utils';
 import type { Leaf } from '../../../../../../definition/component/leaf.js';
 import type { BooleanExpressionInterface } from '../../../expression-interface.js';
 
@@ -15,39 +14,14 @@ export class LeafFullTextFilter implements BooleanExpressionInterface {
 
   public constructor(
     public readonly leaf: Leaf,
-    public readonly operator:
-      | 'contains'
-      | 'not_contains'
-      | 'starts_with'
-      | 'not_starts_with'
-      | 'ends_with'
-      | 'not_ends_with',
+    public readonly operator: 'contains' | 'starts_with' | 'ends_with',
     public readonly value: string,
   ) {
     if (typeof value !== 'string' || !value) {
-      throw new UnexpectedValueError(value, `a non-empty string`);
+      throw new utils.UnexpectedValueError(value, `a non-empty string`);
     }
 
     this.reduced = this;
-  }
-
-  @Memoize()
-  public get complement(): LeafFullTextFilter {
-    return new LeafFullTextFilter(
-      this.leaf,
-      this.operator === 'contains'
-        ? 'not_contains'
-        : this.operator === 'not_contains'
-        ? 'contains'
-        : this.operator === 'starts_with'
-        ? 'not_starts_with'
-        : this.operator === 'not_starts_with'
-        ? 'starts_with'
-        : this.operator === 'ends_with'
-        ? 'not_ends_with'
-        : 'ends_with',
-      this.value,
-    );
   }
 
   public equals(expression: unknown): boolean {

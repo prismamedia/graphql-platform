@@ -1,13 +1,4 @@
-import {
-  addPath,
-  ConfigError,
-  getOptionalFlag,
-  MutationType,
-  Name,
-  Path,
-  UnexpectedConfigError,
-  UnexpectedValueError,
-} from '@prismamedia/graphql-platform-utils';
+import * as utils from '@prismamedia/graphql-platform-utils';
 import { Memoize } from '@prismamedia/ts-memoize';
 import inflection from 'inflection';
 import type {
@@ -16,7 +7,7 @@ import type {
   GetConnectorConfigOverride,
 } from '../../../connector-interface.js';
 import type { Node } from '../../../node.js';
-import { EdgeHeadSelection } from '../../statement/selection/expression/component/edge-head.js';
+import { EdgeHeadSelection } from '../../statement/selection/expression/component/edge/head.js';
 import {
   EdgeCreationInput,
   EdgeCreationInputConfig,
@@ -39,10 +30,10 @@ export type EdgeValue = null | UniqueConstraintValue;
 
 export type EdgeUpdate = EdgeValue;
 
-export enum OnHeadDeletion {
-  RESTRICT = 'RESTRICT',
-  SET_NULL = 'SET_NULL',
-  CASCADE = 'CASCADE',
+export enum OnEdgeHeadDeletion {
+  RESTRICT,
+  SET_NULL,
+  CASCADE,
 }
 
 export type EdgeConfig<
@@ -65,17 +56,17 @@ export type EdgeConfig<
    *
    * Default: RESTRICT
    */
-  onHeadDeletion?: OnHeadDeletion;
+  onHeadDeletion?: OnEdgeHeadDeletion;
 
   /**
    * Optional, fine-tune the "creation"'s input
    */
-  [MutationType.CREATION]?: EdgeCreationInputConfig;
+  [utils.MutationType.CREATION]?: EdgeCreationInputConfig;
 
   /**
    * Optional, fine-tune the "update"'s input
    */
-  [MutationType.UPDATE]?: EdgeUpdateInputConfig;
+  [utils.MutationType.UPDATE]?: EdgeUpdateInputConfig;
 } & GetConnectorConfigOverride<TConnector, ConnectorConfigOverrideKind.EDGE>;
 
 /**
@@ -90,18 +81,17 @@ export class Edge<
   TRequestContext extends object = any,
   TConnector extends ConnectorInterface = any,
 > extends AbstractComponent<TRequestContext, TConnector> {
-  public override readonly kind: EdgeConfig['kind'] = 'Edge';
-  readonly #headConfigPath: Path;
+  readonly #headConfigPath: utils.Path;
   readonly #nodeHeadConfig: string;
   readonly #uniqueConstraintHeadConfig?: string;
   public readonly pascalCasedName: string;
-  public readonly onHeadDeletion: OnHeadDeletion;
+  public readonly onHeadDeletion: OnEdgeHeadDeletion;
 
   public constructor(
     public readonly tail: Node<TRequestContext, TConnector>,
-    name: Name,
+    name: utils.Name,
     public override readonly config: EdgeConfig<TRequestContext, TConnector>,
-    public override readonly configPath: Path,
+    public override readonly configPath: utils.Path,
   ) {
     super(tail, name, config, configPath);
 
@@ -113,12 +103,16 @@ export class Edge<
     // head
     {
       const headConfig = config.head;
-      this.#headConfigPath = addPath(configPath, 'head');
+      this.#headConfigPath = utils.addPath(configPath, 'head');
 
       if (typeof headConfig !== 'string' || !headConfig) {
-        throw new UnexpectedConfigError(`a non-empty string`, headConfig, {
-          path: this.#headConfigPath,
-        });
+        throw new utils.UnexpectedConfigError(
+          `a non-empty string`,
+          headConfig,
+          {
+            path: this.#headConfigPath,
+          },
+        );
       }
 
       [this.#nodeHeadConfig, this.#uniqueConstraintHeadConfig] =
@@ -128,32 +122,41 @@ export class Edge<
     // onHeadDeletion
     {
       const onHeadDeletionConfig = config.onHeadDeletion;
-      const onHeadDeletionConfigPath = addPath(configPath, 'onHeadDeletion');
+      const onHeadDeletionConfigPath = utils.addPath(
+        configPath,
+        'onHeadDeletion',
+      );
 
       if (onHeadDeletionConfig) {
         switch (onHeadDeletionConfig) {
-          case OnHeadDeletion.SET_NULL: {
+          case OnEdgeHeadDeletion.SET_NULL: {
             if (!this.isMutable()) {
-              throw new UnexpectedConfigError(
-                `not to be "${OnHeadDeletion.SET_NULL}" as the edge "${this}" is immutable`,
-                onHeadDeletionConfig,
+              throw new utils.UnexpectedConfigError(
+                `not to be "${
+                  OnEdgeHeadDeletion[OnEdgeHeadDeletion.SET_NULL]
+                }" as the edge "${this}" is immutable`,
+                OnEdgeHeadDeletion[onHeadDeletionConfig],
                 { path: onHeadDeletionConfigPath },
               );
             } else if (!this.isNullable()) {
-              throw new UnexpectedConfigError(
-                `not to be "${OnHeadDeletion.SET_NULL}" as the edge "${this}" is not nullable`,
-                onHeadDeletionConfig,
+              throw new utils.UnexpectedConfigError(
+                `not to be "${
+                  OnEdgeHeadDeletion[OnEdgeHeadDeletion.SET_NULL]
+                }" as the edge "${this}" is not nullable`,
+                OnEdgeHeadDeletion[onHeadDeletionConfig],
                 { path: onHeadDeletionConfigPath },
               );
             }
             break;
           }
 
-          case OnHeadDeletion.CASCADE: {
-            if (!this.node.isMutationEnabled(MutationType.DELETION)) {
-              throw new UnexpectedConfigError(
-                `not to be "${OnHeadDeletion.CASCADE}" as the node "${this.node}" cannot be deleted`,
-                onHeadDeletionConfig,
+          case OnEdgeHeadDeletion.CASCADE: {
+            if (!this.node.isMutationEnabled(utils.MutationType.DELETION)) {
+              throw new utils.UnexpectedConfigError(
+                `not to be "${
+                  OnEdgeHeadDeletion[OnEdgeHeadDeletion.CASCADE]
+                }" as the node "${this.node}" cannot be deleted`,
+                OnEdgeHeadDeletion[onHeadDeletionConfig],
                 { path: onHeadDeletionConfigPath },
               );
             }
@@ -162,7 +165,7 @@ export class Edge<
         }
       }
 
-      this.onHeadDeletion = onHeadDeletionConfig ?? OnHeadDeletion.RESTRICT;
+      this.onHeadDeletion = onHeadDeletionConfig ?? OnEdgeHeadDeletion.RESTRICT;
     }
   }
 
@@ -170,7 +173,7 @@ export class Edge<
   public get head(): Node<TRequestContext, TConnector> {
     const node = this.node.gp.nodesByName.get(this.#nodeHeadConfig);
     if (!node) {
-      throw new UnexpectedConfigError(
+      throw new utils.UnexpectedConfigError(
         `a "node"'s name among "${[...this.node.gp.nodesByName.keys()].join(
           ', ',
         )}"`,
@@ -195,7 +198,7 @@ export class Edge<
       );
 
       if (!uniqueConstraint) {
-        throw new UnexpectedConfigError(
+        throw new utils.UnexpectedConfigError(
           `a "unique-constraint"'s name among "${[
             ...this.head.uniqueConstraintsByName.keys(),
           ].join(', ')}"`,
@@ -214,25 +217,25 @@ export class Edge<
         (component) => component instanceof Edge && component === this,
       )
     ) {
-      throw new UnexpectedConfigError(
+      throw new utils.UnexpectedConfigError(
         `a "unique-constraint" not refering itself`,
         this.#uniqueConstraintHeadConfig,
         { path: this.#headConfigPath },
       );
     }
 
-    // Nullable "unique-constraint" are not yet support
+    // Nullable "unique-constraint" are not yet supported
     if (referencedUniqueConstraint.isNullable()) {
-      throw new UnexpectedConfigError(
+      throw new utils.UnexpectedConfigError(
         `an non-nullable "unique-constraint"`,
         this.#uniqueConstraintHeadConfig,
         { path: this.#headConfigPath },
       );
     }
 
-    // Mutable "unique-constraint" are not yet support as it is not trivial to keep track of the updates
+    // Mutable "unique-constraint" are not yet supported as it is not trivial to keep track of the updates
     if (referencedUniqueConstraint.isMutable()) {
-      throw new UnexpectedConfigError(
+      throw new utils.UnexpectedConfigError(
         `an immutable "unique-constraint"`,
         this.#uniqueConstraintHeadConfig,
         { path: this.#headConfigPath },
@@ -262,17 +265,17 @@ export class Edge<
 
   public parseValue(
     maybeValue: unknown,
-    path: Path = addPath(undefined, this.toString()),
+    path: utils.Path = utils.addPath(undefined, this.toString()),
   ): EdgeValue {
     if (maybeValue === undefined) {
-      throw new UnexpectedValueError(
+      throw new utils.UnexpectedValueError(
         `a non-undefined "${this.referencedUniqueConstraint}"`,
         maybeValue,
         { path },
       );
     } else if (maybeValue === null) {
       if (!this.isNullable()) {
-        throw new UnexpectedValueError(
+        throw new utils.UnexpectedValueError(
           `a non-null "${this.referencedUniqueConstraint}"`,
           maybeValue,
           { path },
@@ -287,7 +290,7 @@ export class Edge<
 
   public parseUpdate(
     maybeUpdate: unknown,
-    path: Path = addPath(undefined, this.toString()),
+    path: utils.Path = utils.addPath(undefined, this.toString()),
   ): EdgeUpdate {
     return this.parseValue(maybeUpdate, path) as any;
   }
@@ -301,9 +304,9 @@ export class Edge<
   @Memoize()
   public override isPublic(): boolean {
     const publicConfig = this.config.public;
-    const publicConfigPath = addPath(this.configPath, 'public');
+    const publicConfigPath = utils.addPath(this.configPath, 'public');
 
-    const isPublic = getOptionalFlag(
+    const isPublic = utils.getOptionalFlag(
       publicConfig,
       this.tail.isPublic() && this.head.isPublic(),
       publicConfigPath,
@@ -311,7 +314,7 @@ export class Edge<
 
     if (isPublic) {
       if (!this.tail.isPublic()) {
-        throw new UnexpectedConfigError(
+        throw new utils.UnexpectedConfigError(
           `not to be "true" as its tail, the "${this.tail}" node, is private`,
           publicConfig,
           { path: publicConfigPath },
@@ -319,7 +322,7 @@ export class Edge<
       }
 
       if (!this.head.isPublic()) {
-        throw new UnexpectedConfigError(
+        throw new utils.UnexpectedConfigError(
           `not to be "true" as its head, the "${this.head}" node, is private`,
           publicConfig,
           { path: publicConfigPath },
@@ -337,7 +340,7 @@ export class Edge<
     );
 
     if (!reverseEdge) {
-      throw new ConfigError('Unexpected', { path: this.configPath });
+      throw new utils.ConfigError('Unexpected', { path: this.configPath });
     }
 
     return reverseEdge;

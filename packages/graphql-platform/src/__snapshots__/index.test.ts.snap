@@ -259,6 +259,12 @@ input ArticleFilterInput {
   body: DraftJS
   body_not: DraftJS
   body_is_null: Boolean
+  body_contains: NonEmptyString
+  body_not_contains: NonEmptyString
+  body_starts_with: NonEmptyString
+  body_not_starts_with: NonEmptyString
+  body_ends_with: NonEmptyString
+  body_not_ends_with: NonEmptyString
   category: CategoryFilterInput
   category_not: CategoryFilterInput
   category_is_null: Boolean
@@ -287,6 +293,12 @@ input ArticleFilterInput {
   metas: JSONObject
   metas_not: JSONObject
   metas_is_null: Boolean
+  metas_contains: NonEmptyString
+  metas_not_contains: NonEmptyString
+  metas_starts_with: NonEmptyString
+  metas_not_starts_with: NonEmptyString
+  metas_ends_with: NonEmptyString
+  metas_not_ends_with: NonEmptyString
   highlighted: Boolean
   highlighted_not: Boolean
   highlighted_is_null: Boolean
@@ -297,6 +309,25 @@ input ArticleFilterInput {
   sponsored_is_null: Boolean
   sponsored_in: [Boolean]
   sponsored_not_in: [Boolean]
+  views: UnsignedBigInt
+  views_not: UnsignedBigInt
+  views_in: [UnsignedBigInt!]
+  views_not_in: [UnsignedBigInt!]
+  views_gt: UnsignedBigInt
+  views_gte: UnsignedBigInt
+  views_lt: UnsignedBigInt
+  views_lte: UnsignedBigInt
+  score: UnsignedFloat
+  score_not: UnsignedFloat
+  score_in: [UnsignedFloat!]
+  score_not_in: [UnsignedFloat!]
+  score_gt: UnsignedFloat
+  score_gte: UnsignedFloat
+  score_lt: UnsignedFloat
+  score_lte: UnsignedFloat
+  machineTags: JSONArray
+  machineTags_not: JSONArray
+  machineTags_is_null: Boolean
   tags_every: ArticleTagFilterInput
   tags_some: ArticleTagFilterInput
   tags_none: ArticleTagFilterInput
@@ -638,6 +669,19 @@ scalar DateTime @specifiedBy(url: "https://en.wikipedia.org/wiki/ISO_8601")
 scalar JSONObject @specifiedBy(url: "http://www.ecma-international.org/publications/files/ECMA-ST/ECMA-404.pdf")
 
 """
+The \`UnsignedBigInt\` scalar type represents non-fractional unsigned whole numeric values.
+"""
+scalar UnsignedBigInt @specifiedBy(url: "https://tc39.es/ecma262/multipage/numbers-and-dates.html#sec-bigint-objects")
+
+"""
+The \`UnsignedFloat\` scalar type represents unsigned double-precision fractional values.
+"""
+scalar UnsignedFloat @specifiedBy(url: "https://en.wikipedia.org/wiki/IEEE_floating_point")
+
+"""The \`JSONArray\` scalar type represents JSON arrays."""
+scalar JSONArray @specifiedBy(url: "http://www.ecma-international.org/publications/files/ECMA-ST/ECMA-404.pdf")
+
+"""
 Identifies exactly one "Article" given one of the following combination of components' value:
 - id
 - category / slug
@@ -686,6 +730,9 @@ type Article implements PublicNodeInterface {
 
   """Is the article a partnership?"""
   sponsored: Boolean
+  views: UnsignedBigInt!
+  score: UnsignedFloat!
+  machineTags: JSONArray
   tags(where: ArticleTagFilterInput, orderBy: [ArticleTagOrderingInput!], skip: UnsignedInt, first: UnsignedInt!): [ArticleTag!]!
 
   """
@@ -764,6 +811,18 @@ enum ArticleOrderingInput {
 
   """from the highest "updatedAt" to the lowest"""
   updatedAt_DESC
+
+  """from the lowest "views" to the highest"""
+  views_ASC
+
+  """from the highest "views" to the lowest"""
+  views_DESC
+
+  """from the lowest "score" to the highest"""
+  score_ASC
+
+  """from the highest "score" to the lowest"""
+  score_DESC
 
   """from the lowest number of "tags" to the highest"""
   tagCount_ASC
@@ -989,7 +1048,7 @@ type mutation {
   updateArticleIfExists(where: ArticleUniqueFilterInput!, data: ArticleUpdateInput!): Article
 
   """Updates an existing "Article" or creates a new one"""
-  upsertArticle(where: ArticleUniqueFilterInput!, create: ArticleCreationInput!, update: ArticleUpdateInput): Article!
+  upsertArticle(where: ArticleUniqueFilterInput!, create: ArticleCreationInput!, update: ArticleUpdateInput!): Article!
 
   """Creates one "Category", throws an error if it already exists"""
   createCategory(data: CategoryCreationInput!): Category!
@@ -1020,7 +1079,7 @@ type mutation {
   updateCategoryIfExists(where: CategoryUniqueFilterInput!, data: CategoryUpdateInput!): Category
 
   """Updates an existing "Category" or creates a new one"""
-  upsertCategory(where: CategoryUniqueFilterInput!, create: CategoryCreationInput!, update: CategoryUpdateInput): Category!
+  upsertCategory(where: CategoryUniqueFilterInput!, create: CategoryCreationInput!, update: CategoryUpdateInput!): Category!
 
   """Creates one "Tag", throws an error if it already exists"""
   createTag(data: TagCreationInput!): Tag!
@@ -1051,7 +1110,7 @@ type mutation {
   updateTagIfExists(where: TagUniqueFilterInput!, data: TagUpdateInput!): Tag
 
   """Updates an existing "Tag" or creates a new one"""
-  upsertTag(where: TagUniqueFilterInput!, create: TagCreationInput!, update: TagUpdateInput): Tag!
+  upsertTag(where: TagUniqueFilterInput!, create: TagCreationInput!, update: TagUpdateInput!): Tag!
 
   """Creates one "ArticleTag", throws an error if it already exists"""
   createArticleTag(data: ArticleTagCreationInput!): ArticleTag!
@@ -1082,7 +1141,7 @@ type mutation {
   updateArticleTagIfExists(where: ArticleTagUniqueFilterInput!, data: ArticleTagUpdateInput!): ArticleTag
 
   """Updates an existing "ArticleTag" or creates a new one"""
-  upsertArticleTag(where: ArticleTagUniqueFilterInput!, create: ArticleTagCreationInput!, update: ArticleTagUpdateInput): ArticleTag!
+  upsertArticleTag(where: ArticleTagUniqueFilterInput!, create: ArticleTagCreationInput!, update: ArticleTagUpdateInput!): ArticleTag!
 
   """
   Creates one "ArticleTagModeration", throws an error if it already exists
@@ -1125,7 +1184,7 @@ type mutation {
   updateArticleTagModerationIfExists(where: ArticleTagModerationUniqueFilterInput!, data: ArticleTagModerationUpdateInput!): ArticleTagModeration
 
   """Updates an existing "ArticleTagModeration" or creates a new one"""
-  upsertArticleTagModeration(where: ArticleTagModerationUniqueFilterInput!, create: ArticleTagModerationCreationInput!, update: ArticleTagModerationUpdateInput): ArticleTagModeration!
+  upsertArticleTagModeration(where: ArticleTagModerationUniqueFilterInput!, create: ArticleTagModerationCreationInput!, update: ArticleTagModerationUpdateInput!): ArticleTagModeration!
 
   """Creates one "UserProfile", throws an error if it already exists"""
   createUserProfile(data: UserProfileCreationInput!): UserProfile!
@@ -1156,7 +1215,7 @@ type mutation {
   updateUserProfileIfExists(where: UserProfileUniqueFilterInput!, data: UserProfileUpdateInput!): UserProfile
 
   """Updates an existing "UserProfile" or creates a new one"""
-  upsertUserProfile(where: UserProfileUniqueFilterInput!, create: UserProfileCreationInput!, update: UserProfileUpdateInput): UserProfile!
+  upsertUserProfile(where: UserProfileUniqueFilterInput!, create: UserProfileCreationInput!, update: UserProfileUpdateInput!): UserProfile!
 }
 
 """The "Article" node's creation"""
@@ -1181,6 +1240,7 @@ input ArticleCreationInput {
 
   """Is the article a partnership?"""
   sponsored: Boolean
+  machineTags: JSONArray
   tags: ArticleNestedTagsReverseEdgeCreationInput
 
   """It is possible to provide the article's body as raw HTML"""
@@ -1259,13 +1319,13 @@ input CategoryNestedConnectOrCreateParentEdgeCreationInput {
 
 input CategoryNestedChildrenReverseEdgeCreationInput {
   connectMany: CategoryFilterInput
-  connectOrCreateSome: [CategoryNestedConnectOrCreateSomeChildrenReverseEdgeCreationInput!]
-  connectSome: [CategoryUniqueFilterInput!]
-  connectSomeIfExists: [CategoryUniqueFilterInput!]
-  createSome: [CategoryCreationWithoutParentInput!]
+  connectOrCreate: [CategoryNestedConnectOrCreateChildrenReverseEdgeCreationInput!]
+  connect: [CategoryUniqueFilterInput!]
+  connectIfExists: [CategoryUniqueFilterInput!]
+  create: [CategoryCreationWithoutParentInput!]
 }
 
-input CategoryNestedConnectOrCreateSomeChildrenReverseEdgeCreationInput {
+input CategoryNestedConnectOrCreateChildrenReverseEdgeCreationInput {
   where: CategoryUniqueFilterInput!
   create: CategoryCreationWithoutParentInput!
 }
@@ -1292,13 +1352,13 @@ input CategoryCreationWithoutParentInput {
 
 input CategoryNestedArticlesReverseEdgeCreationInput {
   connectMany: ArticleFilterInput
-  connectOrCreateSome: [CategoryNestedConnectOrCreateSomeArticlesReverseEdgeCreationInput!]
-  connectSome: [ArticleUniqueFilterInput!]
-  connectSomeIfExists: [ArticleUniqueFilterInput!]
-  createSome: [ArticleCreationWithoutCategoryInput!]
+  connectOrCreate: [CategoryNestedConnectOrCreateArticlesReverseEdgeCreationInput!]
+  connect: [ArticleUniqueFilterInput!]
+  connectIfExists: [ArticleUniqueFilterInput!]
+  create: [ArticleCreationWithoutCategoryInput!]
 }
 
-input CategoryNestedConnectOrCreateSomeArticlesReverseEdgeCreationInput {
+input CategoryNestedConnectOrCreateArticlesReverseEdgeCreationInput {
   where: ArticleUniqueFilterInput!
   create: ArticleCreationWithoutCategoryInput!
 }
@@ -1324,6 +1384,7 @@ input ArticleCreationWithoutCategoryInput {
 
   """Is the article a partnership?"""
   sponsored: Boolean
+  machineTags: JSONArray
   tags: ArticleNestedTagsReverseEdgeCreationInput
 
   """It is possible to provide the article's body as raw HTML"""
@@ -1331,7 +1392,7 @@ input ArticleCreationWithoutCategoryInput {
 }
 
 input ArticleNestedTagsReverseEdgeCreationInput {
-  createSome: [ArticleTagCreationWithoutArticleInput!]
+  create: [ArticleTagCreationWithoutArticleInput!]
 }
 
 """The "ArticleTag" node's creation"""
@@ -1373,7 +1434,7 @@ input TagCreationInput {
 }
 
 input TagNestedArticlesReverseEdgeCreationInput {
-  createSome: [ArticleTagCreationWithoutTagInput!]
+  create: [ArticleTagCreationWithoutTagInput!]
 }
 
 """The "ArticleTag" node's creation"""
@@ -1406,7 +1467,7 @@ input ArticleTagNestedConnectOrCreateArticleEdgeCreationInput {
 }
 
 input ArticleTagNestedModerationsReverseEdgeCreationInput {
-  createSome: [ArticleTagModerationCreationWithoutArticletagInput!]
+  create: [ArticleTagModerationCreationWithoutArticletagInput!]
 }
 
 """The "ArticleTagModeration" node's creation"""
@@ -1451,6 +1512,9 @@ input ArticleUpdateInput {
 
   """Is the article a partnership?"""
   sponsored: Boolean
+  views: UnsignedBigInt
+  score: UnsignedFloat
+  machineTags: JSONArray
   tags: ArticleNestedTagsReverseEdgeUpdateInput
 
   """It is possible to provide the article's body as raw HTML"""
@@ -1479,9 +1543,9 @@ input ArticleNestedUpdatedByEdgeUpdateInput {
 input ArticleNestedTagsReverseEdgeUpdateInput {
   deleteAll: Boolean
   deleteMany: ArticleTagFilterInput
-  deleteSome: [ArticleTagUniqueFilterInput!]
-  deleteSomeIfExists: [ArticleTagUniqueFilterInput!]
-  createSome: [ArticleTagCreationWithoutArticleInput!]
+  delete: [ArticleTagUniqueFilterInput!]
+  deleteIfExists: [ArticleTagUniqueFilterInput!]
+  create: [ArticleTagCreationWithoutArticleInput!]
 }
 
 """The "Category" node's update"""
@@ -1512,20 +1576,20 @@ input CategoryNestedConnectOrCreateParentEdgeUpdateInput {
 input CategoryNestedChildrenReverseEdgeUpdateInput {
   deleteAll: Boolean
   deleteMany: CategoryFilterInput
-  deleteSome: [CategoryUniqueFilterInput!]
-  deleteSomeIfExists: [CategoryUniqueFilterInput!]
+  delete: [CategoryUniqueFilterInput!]
+  deleteIfExists: [CategoryUniqueFilterInput!]
   disconnectAll: Boolean
   disconnectMany: CategoryFilterInput
-  disconnectSome: [CategoryUniqueFilterInput!]
-  disconnectSomeIfExists: [CategoryUniqueFilterInput!]
+  disconnect: [CategoryUniqueFilterInput!]
+  disconnectIfExists: [CategoryUniqueFilterInput!]
   connectMany: CategoryFilterInput
-  connectOrCreateSome: [CategoryNestedConnectOrCreateSomeChildrenReverseEdgeUpdateInput!]
-  connectSome: [CategoryUniqueFilterInput!]
-  connectSomeIfExists: [CategoryUniqueFilterInput!]
-  createSome: [CategoryCreationWithoutParentInput!]
+  connectOrCreate: [CategoryNestedConnectOrCreateChildrenReverseEdgeUpdateInput!]
+  connect: [CategoryUniqueFilterInput!]
+  connectIfExists: [CategoryUniqueFilterInput!]
+  create: [CategoryCreationWithoutParentInput!]
 }
 
-input CategoryNestedConnectOrCreateSomeChildrenReverseEdgeUpdateInput {
+input CategoryNestedConnectOrCreateChildrenReverseEdgeUpdateInput {
   where: CategoryUniqueFilterInput!
   create: CategoryCreationWithoutParentInput!
 }
@@ -1533,20 +1597,20 @@ input CategoryNestedConnectOrCreateSomeChildrenReverseEdgeUpdateInput {
 input CategoryNestedArticlesReverseEdgeUpdateInput {
   deleteAll: Boolean
   deleteMany: ArticleFilterInput
-  deleteSome: [ArticleUniqueFilterInput!]
-  deleteSomeIfExists: [ArticleUniqueFilterInput!]
+  delete: [ArticleUniqueFilterInput!]
+  deleteIfExists: [ArticleUniqueFilterInput!]
   disconnectAll: Boolean
   disconnectMany: ArticleFilterInput
-  disconnectSome: [ArticleUniqueFilterInput!]
-  disconnectSomeIfExists: [ArticleUniqueFilterInput!]
+  disconnect: [ArticleUniqueFilterInput!]
+  disconnectIfExists: [ArticleUniqueFilterInput!]
   connectMany: ArticleFilterInput
-  connectOrCreateSome: [CategoryNestedConnectOrCreateSomeArticlesReverseEdgeUpdateInput!]
-  connectSome: [ArticleUniqueFilterInput!]
-  connectSomeIfExists: [ArticleUniqueFilterInput!]
-  createSome: [ArticleCreationWithoutCategoryInput!]
+  connectOrCreate: [CategoryNestedConnectOrCreateArticlesReverseEdgeUpdateInput!]
+  connect: [ArticleUniqueFilterInput!]
+  connectIfExists: [ArticleUniqueFilterInput!]
+  create: [ArticleCreationWithoutCategoryInput!]
 }
 
-input CategoryNestedConnectOrCreateSomeArticlesReverseEdgeUpdateInput {
+input CategoryNestedConnectOrCreateArticlesReverseEdgeUpdateInput {
   where: ArticleUniqueFilterInput!
   create: ArticleCreationWithoutCategoryInput!
 }
@@ -1561,9 +1625,9 @@ input TagUpdateInput {
 input TagNestedArticlesReverseEdgeUpdateInput {
   deleteAll: Boolean
   deleteMany: ArticleTagFilterInput
-  deleteSome: [ArticleTagUniqueFilterInput!]
-  deleteSomeIfExists: [ArticleTagUniqueFilterInput!]
-  createSome: [ArticleTagCreationWithoutTagInput!]
+  delete: [ArticleTagUniqueFilterInput!]
+  deleteIfExists: [ArticleTagUniqueFilterInput!]
+  create: [ArticleTagCreationWithoutTagInput!]
 }
 
 """The "ArticleTag" node's creation"""
@@ -1583,9 +1647,9 @@ input ArticleTagUpdateInput {
 input ArticleTagNestedModerationsReverseEdgeUpdateInput {
   deleteAll: Boolean
   deleteMany: ArticleTagModerationFilterInput
-  deleteSome: [ArticleTagModerationUniqueFilterInput!]
-  deleteSomeIfExists: [ArticleTagModerationUniqueFilterInput!]
-  createSome: [ArticleTagModerationCreationWithoutArticletagInput!]
+  delete: [ArticleTagModerationUniqueFilterInput!]
+  deleteIfExists: [ArticleTagModerationUniqueFilterInput!]
+  create: [ArticleTagModerationCreationWithoutArticletagInput!]
 }
 
 """The "ArticleTagModeration" node's creation"""

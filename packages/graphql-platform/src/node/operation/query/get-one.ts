@@ -1,9 +1,10 @@
-import type { NonNillable, Path } from '@prismamedia/graphql-platform-utils';
+import type * as utils from '@prismamedia/graphql-platform-utils';
 import { Memoize } from '@prismamedia/ts-memoize';
 import * as graphql from 'graphql';
 import inflection from 'inflection';
 import type { ConnectorInterface } from '../../../connector-interface.js';
 import type { NodeSelectionAwareArgs } from '../../abstract-operation.js';
+import type { NodeFilter } from '../../statement/filter.js';
 import { AbstractQuery } from '../abstract-query.js';
 import type { OperationContext } from '../context.js';
 import { NotFoundError } from '../error.js';
@@ -14,7 +15,7 @@ import type {
 
 export type GetOneQueryArgs = GetOneIfExistsQueryArgs;
 
-export type GetOneQueryResult = NonNillable<GetOneIfExistsQueryResult>;
+export type GetOneQueryResult = utils.NonNillable<GetOneIfExistsQueryResult>;
 
 export class GetOneQuery<
   TRequestContext extends object,
@@ -27,7 +28,7 @@ export class GetOneQuery<
 > {
   protected override readonly selectionAware = true;
   public override readonly name = inflection.camelize(this.node.name, true);
-  public override readonly description = `Retrieves one "${this.node.name}", throws an error if it does not exist`;
+  public override readonly description = `Retrieves one "${this.node}", throws an error if it does not exist`;
 
   @Memoize()
   public override get arguments() {
@@ -42,13 +43,14 @@ export class GetOneQuery<
   }
 
   protected override async executeWithValidArgumentsAndContext(
+    authorization: NodeFilter<TRequestContext, TConnector> | undefined,
     args: NodeSelectionAwareArgs<GetOneQueryArgs>,
     context: OperationContext<TRequestContext, TConnector>,
-    path: Path,
+    path: utils.Path,
   ): Promise<GetOneQueryResult> {
     const nodeValue = await this.node
       .getQueryByKey('get-one-if-exists')
-      .execute(args, context, path);
+      .internal(authorization, args, context, path);
 
     if (!nodeValue) {
       throw new NotFoundError(this.node, args.where, { path });

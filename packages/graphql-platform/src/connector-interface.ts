@@ -1,7 +1,4 @@
-import type {
-  MutationType,
-  PlainObject,
-} from '@prismamedia/graphql-platform-utils';
+import type * as utils from '@prismamedia/graphql-platform-utils';
 import type {
   MutationContext,
   Node,
@@ -32,17 +29,19 @@ export type GetConnectorConfigOverride<
 
 export interface ConnectorCountStatement {
   readonly node: Node;
-  readonly where?: NodeFilter;
+  readonly filter?: NodeFilter;
 }
 
 export interface ConnectorFindStatement {
   readonly node: Node;
-  readonly where?: NodeFilter;
-  readonly orderBy?: NodeOrdering;
+  readonly filter?: NodeFilter;
+  readonly ordering?: NodeOrdering;
   readonly offset?: number;
   readonly limit: number;
   readonly selection: NodeSelection;
-  readonly forMutation?: MutationType.DELETION | MutationType.UPDATE;
+  readonly forMutation?:
+    | utils.MutationType.DELETION
+    | utils.MutationType.UPDATE;
 }
 
 export interface ConnectorCreateStatement {
@@ -52,27 +51,23 @@ export interface ConnectorCreateStatement {
 
 export interface ConnectorDeleteStatement {
   readonly node: Node;
-  readonly where?: NodeFilter;
-  readonly orderBy?: NodeOrdering;
-  readonly limit: number;
+  readonly filter: NodeFilter;
 }
 
 export interface ConnectorUpdateStatement {
   readonly node: Node;
-  readonly where?: NodeFilter;
-  readonly orderBy?: NodeOrdering;
-  readonly limit: number;
   readonly update: NodeUpdate;
+  readonly filter: NodeFilter;
 }
 
 export interface ConnectorInterface {
-  readonly config?: PlainObject;
+  readonly config?: utils.PlainObject;
 
   /**
    * This property has no other purpose than carrying the "TypeScript typing" provided by the connector, it will never be filled by anything
    */
   readonly configOverrides?: Partial<
-    Record<ConnectorConfigOverrideKind, PlainObject>
+    Record<ConnectorConfigOverrideKind, utils.PlainObject>
   >;
 
   /**

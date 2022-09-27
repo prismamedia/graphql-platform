@@ -1,13 +1,10 @@
-import {
-  addPath,
-  aggregateError,
-  type Path,
-} from '@prismamedia/graphql-platform-utils';
+import * as utils from '@prismamedia/graphql-platform-utils';
 import { Memoize } from '@prismamedia/ts-memoize';
 import * as graphql from 'graphql';
 import inflection from 'inflection';
 import type { ConnectorInterface } from '../../../connector-interface.js';
 import type { NodeSelectionAwareArgs } from '../../abstract-operation.js';
+import type { NodeFilter } from '../../statement/filter.js';
 import type { NodeSelectedValue } from '../../statement/selection/value.js';
 import { AbstractQuery } from '../abstract-query.js';
 import type { OperationContext } from '../context.js';
@@ -49,20 +46,24 @@ export class GetSomeInOrderQuery<
   }
 
   protected override async executeWithValidArgumentsAndContext(
+    authorization: NodeFilter<TRequestContext, TConnector> | undefined,
     args: NodeSelectionAwareArgs<GetSomeInOrderQueryArgs>,
     context: OperationContext<TRequestContext, TConnector>,
-    path: Path,
+    path: utils.Path,
   ): Promise<GetSomeInOrderQueryResult> {
     const maybeNodeValues = await this.node
       .getQueryByKey('get-some-in-order-if-exists')
-      .execute(args, context, path);
+      .internal(authorization, args, context, path);
 
-    return aggregateError<NodeSelectedValue | null, GetSomeInOrderQueryResult>(
+    return utils.aggregateError<
+      NodeSelectedValue | null,
+      GetSomeInOrderQueryResult
+    >(
       maybeNodeValues,
       (nodeValues, maybeNodeValue, index) => {
         if (!maybeNodeValue) {
           throw new NotFoundError(this.node, args.where[index], {
-            path: addPath(path, index),
+            path: utils.addPath(path, index),
           });
         }
 

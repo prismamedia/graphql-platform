@@ -1,10 +1,11 @@
-import { MutationType, type Path } from '@prismamedia/graphql-platform-utils';
+import * as utils from '@prismamedia/graphql-platform-utils';
 import { Memoize } from '@prismamedia/ts-memoize';
 import type { ConnectorInterface } from '../../connector-interface.js';
 import type { GraphQLPlatform } from '../../index.js';
 import type { Node } from '../../node.js';
 import type { NodeFilter } from '../statement/filter.js';
 import { createContextBoundAPI, type ContextBoundAPI } from './api.js';
+import { UnauthorizedError } from './error.js';
 
 export class OperationContext<
   TRequestContext extends object = any,
@@ -26,16 +27,28 @@ export class OperationContext<
     gp.assertRequestContext(requestContext);
   }
 
-  public getNodeAuthorization(
+  @Memoize(
+    (node: Node, mutationType?: utils.MutationType) =>
+      `${node}-${mutationType ?? ''}`,
+  )
+  public getAuthorization(
     node: Node<TRequestContext, TConnector>,
-    path: Path,
-    mutationType?: MutationType,
+    mutationType?: utils.MutationType,
   ): NodeFilter<TRequestContext, TConnector> | undefined {
-    return node.getAuthorizationByRequestContext(
-      this.requestContext,
-      path,
-      mutationType,
-    );
+    return node.getAuthorization(this, mutationType);
+  }
+
+  public ensureAuthorization(
+    node: Node<TRequestContext, TConnector>,
+    path: utils.Path,
+    mutationType?: utils.MutationType,
+  ): NodeFilter<TRequestContext, TConnector> | undefined {
+    const authorization = this.getAuthorization(node, mutationType);
+    if (authorization?.isFalse()) {
+      throw new UnauthorizedError(node, mutationType, { path });
+    }
+
+    return authorization;
   }
 
   /**

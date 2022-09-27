@@ -1,17 +1,4 @@
-import {
-  addPath,
-  assertName,
-  getOptionalDeprecation,
-  getOptionalDescription,
-  getOptionalFlag,
-  MutationType,
-  UnexpectedConfigError,
-  type Name,
-  type OptionalDeprecation,
-  type OptionalDescription,
-  type OptionalFlag,
-  type Path,
-} from '@prismamedia/graphql-platform-utils';
+import * as utils from '@prismamedia/graphql-platform-utils';
 import { Memoize } from '@prismamedia/ts-memoize';
 import inflection from 'inflection';
 import type { ConnectorInterface } from '../../connector-interface.js';
@@ -36,26 +23,25 @@ export interface AbstractReverseEdgeConfig<
   /**
    * Optional, provide a description for this reverse-edge
    */
-  description?: OptionalDescription;
+  description?: utils.OptionalDescription;
 
   /**
    * Optional, either this reverse edge is deprecated or not
    *
    * The information will be shown in all the operations
    */
-  deprecated?: OptionalDeprecation;
+  deprecated?: utils.OptionalDeprecation;
 
   /**
    * Optional, either this reverse edge is exposed publicly (in the GraphQL API) or not (only available in the internal API)
    */
-  public?: OptionalFlag;
+  public?: utils.OptionalFlag;
 }
 
 export abstract class AbstractReverseEdge<
   TRequestContext extends object = any,
   TConnector extends ConnectorInterface = any,
 > {
-  public abstract readonly kind: string;
   public readonly tail: Node<TRequestContext, TConnector>;
   public readonly head: Node<TRequestContext, TConnector>;
   public readonly description?: string;
@@ -66,14 +52,14 @@ export abstract class AbstractReverseEdge<
 
   public constructor(
     public readonly originalEdge: Edge<TRequestContext, TConnector>,
-    public readonly name: Name,
+    public readonly name: utils.Name,
     public readonly config: AbstractReverseEdgeConfig<
       TRequestContext,
       TConnector
     >,
-    public readonly configPath: Path,
+    public readonly configPath: utils.Path,
   ) {
-    assertName(name, configPath);
+    utils.assertName(name, configPath);
 
     // tail & head
     {
@@ -84,9 +70,9 @@ export abstract class AbstractReverseEdge<
     // description
     {
       const descriptionConfig = config.description;
-      const descriptionConfigPath = addPath(configPath, 'description');
+      const descriptionConfigPath = utils.addPath(configPath, 'description');
 
-      this.description = getOptionalDescription(
+      this.description = utils.getOptionalDescription(
         descriptionConfig,
         descriptionConfigPath,
       );
@@ -95,9 +81,9 @@ export abstract class AbstractReverseEdge<
     // deprecated
     {
       const deprecatedConfig = config.deprecated;
-      const deprecatedConfigPath = addPath(configPath, 'deprecated');
+      const deprecatedConfigPath = utils.addPath(configPath, 'deprecated');
 
-      this.deprecationReason = getOptionalDeprecation(
+      this.deprecationReason = utils.getOptionalDeprecation(
         deprecatedConfig,
         `The "${this.name}" reverse-edge is deprecated`,
         deprecatedConfigPath,
@@ -119,8 +105,8 @@ export abstract class AbstractReverseEdge<
   public isMutable(): boolean {
     return (
       this.originalEdge.isMutable() ||
-      this.head.isMutationEnabled(MutationType.CREATION) ||
-      this.head.isMutationEnabled(MutationType.DELETION)
+      this.head.isMutationEnabled(utils.MutationType.CREATION) ||
+      this.head.isMutationEnabled(utils.MutationType.DELETION)
     );
   }
 
@@ -132,16 +118,16 @@ export abstract class AbstractReverseEdge<
   @Memoize()
   public isPublic(): boolean {
     const publicConfig = this.config.public;
-    const publicConfigPath = addPath(this.configPath, 'public');
+    const publicConfigPath = utils.addPath(this.configPath, 'public');
 
-    const isPublic = getOptionalFlag(
+    const isPublic = utils.getOptionalFlag(
       publicConfig,
       this.originalEdge.isPublic(),
       publicConfigPath,
     );
 
     if (isPublic && !this.originalEdge.isPublic()) {
-      throw new UnexpectedConfigError(
+      throw new utils.UnexpectedConfigError(
         `not to be "true" as the "${this.originalEdge}" edge is private`,
         publicConfig,
         { path: publicConfigPath },

@@ -1,7 +1,7 @@
 import * as core from '@prismamedia/graphql-platform';
 import { Memoize } from '@prismamedia/ts-memoize';
 import assert from 'node:assert/strict';
-import { escapeIdentifier } from '../../../escape.js';
+import { escapeIdentifier } from '../../../escaping.js';
 import type { MariaDBConnector } from '../../../index.js';
 import type { Column, Table } from '../../table.js';
 import { AbstractIndex } from '../abstract-index.js';

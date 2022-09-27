@@ -1,0 +1,314 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`Find statement generates statements 1`] = `
+[
+  {
+    "body": null,
+    "createdAt": 2022-03-01T00:00:00.000Z,
+    "machineTags": null,
+    "metas": null,
+    "score": 0.5,
+    "status": "published",
+    "tagCount": 2,
+    "title": "My first published article",
+    "views": 0n,
+  },
+  {
+    "body": {
+      "blocks": [],
+      "entityMap": {},
+    },
+    "createdAt": 2022-04-01T00:00:00.000Z,
+    "machineTags": [
+      "namespace:key=a_value",
+      "namespace:key=other_value",
+    ],
+    "metas": {
+      "aKey": "withAnyValue",
+    },
+    "score": 0.12,
+    "status": "published",
+    "tagCount": 1,
+    "title": "My second published article",
+    "views": 1234567890n,
+  },
+]
+`;
+
+exports[`Find statement generates statements 2`] = `
+[
+  "SELECT JSON_OBJECT(
+    "status",
+    \`articles\`.\`status\`,
+    "title",
+    \`articles\`.\`title\`,
+    "body",
+    \`articles\`.\`body\`,
+    "views",
+    \`articles\`.\`views\`,
+    "score",
+    \`articles\`.\`score\`,
+    "machineTags",
+    \`articles\`.\`machine_tags\`,
+    "metas",
+    \`articles\`.\`metas\`,
+    "tagCount",
+    (
+      SELECT COUNT(*)
+      FROM \`article_tags\`
+      WHERE \`articles\`.\`privateId\` <=> \`article_tags\`.\`article_privateId\`
+    ),
+    "createdAt",
+    \`articles\`.\`created_at\`
+  ) as \`Article\`
+FROM \`articles\`
+WHERE \`articles\`.\`status\` <=> 'published'
+ORDER BY \`articles\`.\`created_at\` ASC
+LIMIT 5",
+]
+`;
+
+exports[`Find statement generates statements 3`] = `
+[
+  {
+    "body": {
+      "blocks": [],
+      "entityMap": {},
+    },
+    "createdAt": 2022-01-01T00:00:00.000Z,
+    "machineTags": null,
+    "metas": {
+      "myArbitraryKey": "with my arbitrary value",
+    },
+    "score": 0.5,
+    "status": "draft",
+    "tagCount": 0,
+    "title": "My first draft article",
+    "views": 0n,
+  },
+  {
+    "body": null,
+    "createdAt": 2022-02-01T00:00:00.000Z,
+    "machineTags": null,
+    "metas": null,
+    "score": 0.5,
+    "status": "draft",
+    "tagCount": 0,
+    "title": "My second draft article",
+    "views": 0n,
+  },
+  {
+    "body": null,
+    "createdAt": 2022-03-01T00:00:00.000Z,
+    "machineTags": null,
+    "metas": null,
+    "score": 0.5,
+    "status": "published",
+    "tagCount": 2,
+    "title": "My first published article",
+    "views": 0n,
+  },
+  {
+    "body": {
+      "blocks": [],
+      "entityMap": {},
+    },
+    "createdAt": 2022-04-01T00:00:00.000Z,
+    "machineTags": [
+      "namespace:key=a_value",
+      "namespace:key=other_value",
+    ],
+    "metas": {
+      "aKey": "withAnyValue",
+    },
+    "score": 0.12,
+    "status": "published",
+    "tagCount": 1,
+    "title": "My second published article",
+    "views": 1234567890n,
+  },
+]
+`;
+
+exports[`Find statement generates statements 4`] = `
+[
+  "SELECT JSON_OBJECT(
+    "status",
+    \`articles\`.\`status\`,
+    "title",
+    \`articles\`.\`title\`,
+    "body",
+    \`articles\`.\`body\`,
+    "views",
+    \`articles\`.\`views\`,
+    "score",
+    \`articles\`.\`score\`,
+    "machineTags",
+    \`articles\`.\`machine_tags\`,
+    "metas",
+    \`articles\`.\`metas\`,
+    "tagCount",
+    (
+      SELECT COUNT(*)
+      FROM \`article_tags\`
+      WHERE \`articles\`.\`privateId\` <=> \`article_tags\`.\`article_privateId\`
+    ),
+    "createdAt",
+    \`articles\`.\`created_at\`
+  ) as \`Article\`
+FROM \`articles\`
+ORDER BY \`articles\`.\`created_at\` ASC
+LIMIT 5",
+]
+`;
+
+exports[`Find statement generates statements 5`] = `[]`;
+
+exports[`Find statement generates statements 6`] = `
+[
+  "SELECT JSON_OBJECT(
+    "status",
+    \`articles\`.\`status\`,
+    "title",
+    \`articles\`.\`title\`,
+    "category",
+    IF(
+      \`articles>categories\`.\`privateId\` IS NOT NULL,
+      JSON_OBJECT("title", \`articles>categories\`.\`title\`),
+      NULL
+    ),
+    "createdBy",
+    IF(
+      \`articles>users\`.\`id\` IS NOT NULL,
+      JSON_OBJECT(
+        "username",
+        \`articles>users\`.\`username\`,
+        "profile",
+        IF(
+          \`articles>users>user_profiles\`.\`theUserId\` IS NOT NULL,
+          JSON_OBJECT(
+            "facebookId",
+            \`articles>users>user_profiles\`.\`facebook_id\`,
+            "googleId",
+            \`articles>users>user_profiles\`.\`google_id\`,
+            "twitterHandle",
+            \`articles>users>user_profiles\`.\`twitter_handle\`
+          ),
+          NULL
+        )
+      ),
+      NULL
+    ),
+    "allTagCount",
+    (
+      SELECT COUNT(*)
+      FROM \`article_tags\`
+      WHERE \`articles\`.\`privateId\` <=> \`article_tags\`.\`article_privateId\`
+    ),
+    "filteredTagCount",
+    (
+      SELECT COUNT(*)
+      FROM \`article_tags\`
+        INNER JOIN \`tags\` AS \`article_tags>tags\` ON \`article_tags\`.\`tag_id\` <=> \`article_tags>tags\`.\`id\`
+      WHERE \`articles\`.\`privateId\` <=> \`article_tags\`.\`article_privateId\`
+        AND NOT (
+          \`article_tags>tags\`.\`id\` IS NOT NULL
+          AND \`article_tags>tags\`.\`deprecated\` <=> 1
+        )
+    ),
+    "allTags",
+    (
+      SELECT JSON_ARRAYAGG(
+          JSON_OBJECT(
+            "order",
+            \`article_tags\`.\`order\`,
+            "tag",
+            IF(
+              \`article_tags>tags\`.\`id\` IS NOT NULL,
+              JSON_OBJECT(
+                "title",
+                \`article_tags>tags\`.\`title\`,
+                "deprecated",
+                \`article_tags>tags\`.\`deprecated\`
+              ),
+              NULL
+            )
+          )
+          ORDER BY \`article_tags\`.\`order\` ASC
+        )
+      FROM \`article_tags\`
+        INNER JOIN \`tags\` AS \`article_tags>tags\` ON \`article_tags\`.\`tag_id\` <=> \`article_tags>tags\`.\`id\`
+      WHERE \`articles\`.\`privateId\` <=> \`article_tags\`.\`article_privateId\`
+      ORDER BY \`article_tags\`.\`order\` ASC
+      LIMIT 5
+    ), "filteredTags", (
+      SELECT JSON_ARRAYAGG(
+          JSON_OBJECT(
+            "order",
+            \`article_tags\`.\`order\`,
+            "tag",
+            IF(
+              \`article_tags>tags\`.\`id\` IS NOT NULL,
+              JSON_OBJECT("title", \`article_tags>tags\`.\`title\`),
+              NULL
+            )
+          )
+          ORDER BY \`article_tags\`.\`order\` ASC
+        )
+      FROM \`article_tags\`
+        INNER JOIN \`tags\` AS \`article_tags>tags\` ON \`article_tags\`.\`tag_id\` <=> \`article_tags>tags\`.\`id\`
+      WHERE \`articles\`.\`privateId\` <=> \`article_tags\`.\`article_privateId\`
+        AND NOT (
+          \`article_tags>tags\`.\`id\` IS NOT NULL
+          AND \`article_tags>tags\`.\`deprecated\` <=> 1
+        )
+      ORDER BY \`article_tags\`.\`order\` ASC
+      LIMIT 5
+    )
+  ) as \`Article\`
+FROM \`articles\`
+  LEFT JOIN \`categories\` AS \`articles>categories\` ON \`articles\`.\`category_privateId\` <=> \`articles>categories\`.\`privateId\`
+  LEFT JOIN \`users\` AS \`articles>users\` ON \`articles\`.\`created_by_id\` <=> \`articles>users\`.\`id\`
+  LEFT JOIN \`user_profiles\` AS \`articles>users>user_profiles\` ON \`articles>users\`.\`id\` <=> \`articles>users>user_profiles\`.\`theUserId\`
+WHERE (
+    \`articles\`.\`status\` <=> 'published'
+    AND (
+      \`articles>categories\`.\`privateId\` IS NOT NULL
+      AND \`articles>categories\`.\`slug\` <=> 'tv'
+    )
+    AND (
+      \`articles>users\`.\`id\` IS NOT NULL
+      AND (
+        \`articles>users>user_profiles\`.\`theUserId\` IS NOT NULL
+        AND (
+          NOT \`articles>users>user_profiles\`.\`facebook_id\` <=> NULL
+          OR NOT \`articles>users>user_profiles\`.\`google_id\` <=> NULL
+          OR NOT \`articles>users>user_profiles\`.\`twitter_handle\` <=> NULL
+        )
+      )
+    )
+    AND \`articles\`.\`created_at\` >= '2022-01-01 00:00:00.000'
+    AND EXISTS (
+      SELECT *
+      FROM \`article_tags\`
+        INNER JOIN \`tags\` AS \`article_tags>tags\` ON \`article_tags\`.\`tag_id\` <=> \`article_tags>tags\`.\`id\`
+      WHERE \`articles\`.\`privateId\` <=> \`article_tags\`.\`article_privateId\`
+        AND (
+          \`article_tags>tags\`.\`id\` IS NOT NULL
+          AND NOT \`article_tags>tags\`.\`deprecated\` <=> 1
+        )
+    )
+    AND (
+      SELECT COUNT(*)
+      FROM \`article_tags\`
+      WHERE \`articles\`.\`privateId\` <=> \`article_tags\`.\`article_privateId\`
+    ) > 5
+    AND (
+      \`articles\`.\`body\` <=> NULL
+      OR MATCH (\`articles\`.\`body\`) AGAINST ('my searched text here')
+    )
+  )
+ORDER BY \`articles\`.\`created_at\` ASC
+LIMIT 5",
+]
+`;

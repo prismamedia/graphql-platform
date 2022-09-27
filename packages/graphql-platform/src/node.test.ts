@@ -1,9 +1,4 @@
-import {
-  isPlainObject,
-  MutationType,
-  mutationTypes,
-  type Name,
-} from '@prismamedia/graphql-platform-utils';
+import * as utils from '@prismamedia/graphql-platform-utils';
 import * as graphql from 'graphql';
 import _ from 'lodash';
 import { GraphQLPlatform } from './index.js';
@@ -13,14 +8,14 @@ import {
   NodeConfig,
   NodeName,
   NodeSelection,
-  OnHeadDeletion,
+  OnEdgeHeadDeletion,
   ReverseEdgeMultiple,
 } from './node.js';
 import { Article, Category, nodes } from './__tests__/config.js';
 
 const hasEnabledMutationByType = (
   gp: GraphQLPlatform,
-  type?: MutationType,
+  type?: utils.MutationType,
 ): boolean =>
   [...gp.operationsByNameByType.mutation.values()].some(
     (mutation) =>
@@ -29,7 +24,7 @@ const hasEnabledMutationByType = (
 
 const hasPublicMutationByType = (
   gp: GraphQLPlatform,
-  type?: MutationType,
+  type?: utils.MutationType,
 ): boolean =>
   [...gp.operationsByNameByType.mutation.values()].some(
     (mutation) =>
@@ -185,12 +180,12 @@ describe('Node', () => {
                       parent: {
                         kind: 'Edge',
                         head: 'Test',
-                        onHeadDeletion: OnHeadDeletion.CASCADE,
+                        onHeadDeletion: OnEdgeHeadDeletion.CASCADE,
                       },
                       brother: {
                         kind: 'Edge',
                         head: 'Test',
-                        onHeadDeletion: OnHeadDeletion.SET_NULL,
+                        onHeadDeletion: OnEdgeHeadDeletion.SET_NULL,
                       },
                     },
 
@@ -291,7 +286,7 @@ describe('Node', () => {
               },
             }),
         ).toThrowError(
-          `\"GraphQLPlatformConfig.nodes.Article.uniques.0.0\" - Expects a \"component\"'s name among \"_id, id, status, title, slug, body, category, createdBy, createdAt, updatedBy, updatedAt, metas, highlighted, sponsored\", got: 'missingComponent'`,
+          `\"GraphQLPlatformConfig.nodes.Article.uniques.0.0\" - Expects a \"component\"'s name among \"_id, id, status, title, slug, body, category, createdBy, createdAt, updatedBy, updatedAt, metas, highlighted, sponsored, views, score, machineTags\", got: 'missingComponent'`,
         );
       });
     });
@@ -470,6 +465,9 @@ describe('Node', () => {
           'metas',
           'highlighted',
           'sponsored',
+          'views',
+          'score',
+          'machineTags',
         ],
         ['_id', 'id', 'category_slug'],
         ['tags'],
@@ -618,7 +616,7 @@ describe('Node', () => {
                   mutation: false,
                   components: Object.fromEntries(
                     Object.entries(config.components).map<
-                      [Name, ComponentConfig<any, any>]
+                      [utils.Name, ComponentConfig<any, any>]
                     >(([name, config]) => [
                       name,
                       (config.kind === 'Edge'
@@ -636,45 +634,48 @@ describe('Node', () => {
       });
     });
 
-    describe.each(mutationTypes)('%s can be configured', (mutationType) => {
-      it.each([
-        { [mutationType]: false },
-        { [mutationType]: { enabled: false } },
-      ])(
-        'can be disabled using the following configuration: %p',
-        (mutationConfig) => {
-          const gp = new GraphQLPlatform({
-            nodes: Object.fromEntries(
-              Object.entries(nodes).map<[Name, NodeConfig]>(
-                ([name, config]) => [
-                  name,
-                  {
-                    ...config,
-                    mutation: {
-                      ...(isPlainObject(config.mutation)
-                        ? config.mutation
-                        : {}),
-                      ...mutationConfig,
+    describe.each(utils.mutationTypes)(
+      '%s can be configured',
+      (mutationType) => {
+        it.each([
+          { [mutationType]: false },
+          { [mutationType]: { enabled: false } },
+        ])(
+          'can be disabled using the following configuration: %p',
+          (mutationConfig) => {
+            const gp = new GraphQLPlatform({
+              nodes: Object.fromEntries(
+                Object.entries(nodes).map<[utils.Name, NodeConfig]>(
+                  ([name, config]) => [
+                    name,
+                    {
+                      ...config,
+                      mutation: {
+                        ...(utils.isPlainObject(config.mutation)
+                          ? config.mutation
+                          : {}),
+                        ...mutationConfig,
+                      },
+                      components: Object.fromEntries(
+                        Object.entries(config.components).map<
+                          [utils.Name, ComponentConfig<any, any>]
+                        >(([name, config]) => [
+                          name,
+                          (config.kind === 'Edge'
+                            ? _.omit(config, ['onHeadDeletion'])
+                            : config) as any,
+                        ]),
+                      ),
                     },
-                    components: Object.fromEntries(
-                      Object.entries(config.components).map<
-                        [Name, ComponentConfig<any, any>]
-                      >(([name, config]) => [
-                        name,
-                        (config.kind === 'Edge'
-                          ? _.omit(config, ['onHeadDeletion'])
-                          : config) as any,
-                      ]),
-                    ),
-                  },
-                ],
+                  ],
+                ),
               ),
-            ),
-          });
+            });
 
-          expect(hasEnabledMutationByType(gp, mutationType)).toBeFalsy();
-        },
-      );
-    });
+            expect(hasEnabledMutationByType(gp, mutationType)).toBeFalsy();
+          },
+        );
+      },
+    );
   });
 });

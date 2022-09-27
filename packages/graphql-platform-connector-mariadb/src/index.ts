@@ -1,22 +1,32 @@
 import * as core from '@prismamedia/graphql-platform';
 import * as utils from '@prismamedia/graphql-platform-utils';
-import { Memoize } from '@prismamedia/ts-memoize';
 import * as mariadb from 'mariadb';
+import { hrtime } from 'node:process';
 import * as rxjs from 'rxjs';
 import * as semver from 'semver';
 import {
   Schema,
-  type ForeignKeyConfig,
+  type ForeignKeyIndexConfig,
   type LeafColumnConfig,
   type ReferenceColumnTreeConfig,
   type SchemaConfig,
   type TableConfig,
   type UniqueIndexConfig,
 } from './schema.js';
-import type { ExecutedStatement } from './statement.js';
+import { ExecutedStatement, Statement, StatementKind } from './statement.js';
 
+export * from './escaping.js';
 export * from './schema.js';
 export * from './statement.js';
+
+/**
+ * @see https://mariadb.com/kb/en/ok_packet/
+ */
+export type OkPacket = {
+  affectedRows: number;
+  insertId: BigInt;
+  warningStatus: number;
+};
 
 export interface MariaDBConnectorConfig {
   charset?: string;
@@ -52,7 +62,7 @@ export class MariaDBConnector implements core.ConnectorInterface {
       /**
        * Optional, customize the edge's foreign-key
        */
-      foreignKey?: ForeignKeyConfig;
+      foreignKey?: ForeignKeyIndexConfig;
     };
     [core.ConnectorConfigOverrideKind.UNIQUE_CONSTRAINT]: {
       /**
@@ -62,15 +72,18 @@ export class MariaDBConnector implements core.ConnectorInterface {
     };
   };
 
-  public readonly poolConfig: mariadb.PoolConfig | undefined;
+  public readonly poolConfig?: mariadb.PoolConfig;
   public readonly poolConfigPath: utils.Path;
-  public readonly databasePoolConfig: string | undefined;
+  public readonly databasePoolConfig?: string;
   public readonly databasePoolConfigPath: utils.Path;
 
   public readonly charset: string;
   public readonly collation: string;
   public readonly version?: semver.SemVer;
   public readonly schema: Schema;
+
+  readonly #poolsByStatementKind = new Map<StatementKind, mariadb.Pool>();
+
   readonly #connectionsByContext = new Map<
     core.MutationContext,
     mariadb.PoolConnection
@@ -129,37 +142,44 @@ export class MariaDBConnector implements core.ConnectorInterface {
     this.schema = new Schema(this);
   }
 
-  @Memoize()
-  public get pool(): mariadb.Pool {
-    utils.assertPlainObjectConfig(this.poolConfig, this.poolConfigPath);
+  public getPool(
+    kind: StatementKind = StatementKind.MANIPULATION,
+  ): mariadb.Pool {
+    let pool = this.#poolsByStatementKind.get(kind);
+    if (!pool) {
+      utils.assertPlainObjectConfig(this.poolConfig, this.poolConfigPath);
 
-    return mariadb.createPool({
-      ...this.poolConfig,
-      database: this.databasePoolConfig,
-      charset: this.charset,
-      collation: this.collation,
-      dateStrings: true,
-      bigIntAsNumber: false,
-      decimalAsNumber: true,
-      insertIdAsNumber: false,
-      multipleStatements: false,
-      timezone: 'Z',
-      autoJsonMap: false,
-      ...({
-        bitOneIsBoolean: false,
-      } as any),
-    });
-  }
+      this.#poolsByStatementKind.set(
+        kind,
+        (pool = mariadb.createPool(
+          kind === StatementKind.DEFINITION
+            ? { ...this.poolConfig, connectionLimit: 1 }
+            : {
+                ...this.poolConfig,
+                database: this.schema.name,
+                charset: this.charset,
+                collation: this.collation,
+                dateStrings: true,
+                bigIntAsNumber: false,
+                decimalAsNumber: true,
+                insertIdAsNumber: false,
+                multipleStatements: false,
+                timezone: 'Z',
+                autoJsonMap: false,
+                ...({ bitOneIsBoolean: false } as any),
+              },
+        )),
+      );
+    }
 
-  @Memoize()
-  public isDatabaseSelected(): boolean {
-    return this.databasePoolConfig !== undefined;
+    return pool;
   }
 
   public async withConnection<TResult = unknown>(
     callback: (connection: mariadb.Connection) => Promise<TResult>,
+    kind?: StatementKind,
   ): Promise<TResult> {
-    const connection = await this.pool.getConnection();
+    const connection = await this.getPool(kind).getConnection();
     try {
       return await callback(connection);
     } finally {
@@ -169,6 +189,7 @@ export class MariaDBConnector implements core.ConnectorInterface {
 
   public async withConnectionInTransaction<TResult = unknown>(
     callback: (connection: mariadb.Connection) => Promise<TResult>,
+    kind?: StatementKind,
   ): Promise<TResult> {
     return this.withConnection(async (connection) => {
       let result: TResult;
@@ -186,13 +207,35 @@ export class MariaDBConnector implements core.ConnectorInterface {
       }
 
       return result;
+    }, kind);
+  }
+
+  public async executeStatement<TResult extends OkPacket | utils.PlainObject[]>(
+    statement: Statement,
+    maybeConnection?: mariadb.Connection,
+  ): Promise<TResult> {
+    const startedAt = hrtime.bigint();
+
+    const result = await (maybeConnection
+      ? maybeConnection.query(statement)
+      : this.withConnection(
+          (connection) => connection.query(statement),
+          statement.kind,
+        ));
+
+    this.executedStatements.next({
+      statement,
+      result,
+      took: Math.round(Number(hrtime.bigint() - startedAt) / 10 ** 6) / 10 ** 3,
     });
+
+    return result;
   }
 
   /**
    * WARNING: For test-use only!
    *
-   * It will DESTROY all the structure & data
+   * It will DESTROY all the schema's structure & data
    */
   public async setup(): Promise<void> {
     await this.withConnectionInTransaction(async (connection) => {
@@ -215,25 +258,42 @@ export class MariaDBConnector implements core.ConnectorInterface {
           table.addForeignKeys(undefined, connection),
         ),
       );
-    });
+    }, StatementKind.DEFINITION);
   }
 
   /**
    * WARNING: For test-use only!
    *
-   * It will DESTROY all the structure & data
+   * It will DESTROY all the schema's structure & data
    */
   public async teardown(): Promise<void> {
     try {
       await this.schema.drop({ ifExists: true });
     } finally {
-      await this.pool.end();
+      await Promise.all(
+        Array.from(this.#poolsByStatementKind).map(async ([kind, pool]) => {
+          try {
+            await pool.end();
+          } finally {
+            this.#poolsByStatementKind.delete(kind);
+          }
+        }),
+      );
     }
   }
 
   public async preMutation(context: core.MutationContext): Promise<void> {
-    const connection = await this.pool.getConnection();
-    await connection.beginTransaction();
+    const connection = await this.getPool(
+      StatementKind.MANIPULATION,
+    ).getConnection();
+
+    try {
+      await connection.beginTransaction();
+    } catch (error) {
+      await connection.release();
+
+      throw error;
+    }
 
     this.#connectionsByContext.set(context, connection);
   }
@@ -268,7 +328,7 @@ export class MariaDBConnector implements core.ConnectorInterface {
         ? this.#connectionsByContext.get(context)
         : undefined;
 
-    return table.count(statement, undefined, maybeConnection);
+    return table.count(statement, context, maybeConnection);
   }
 
   public async find(
@@ -281,7 +341,7 @@ export class MariaDBConnector implements core.ConnectorInterface {
         ? this.#connectionsByContext.get(context)
         : undefined;
 
-    return table.find(statement, undefined, maybeConnection);
+    return table.find(statement, context, maybeConnection);
   }
 
   public async create(
@@ -289,12 +349,9 @@ export class MariaDBConnector implements core.ConnectorInterface {
     context: core.MutationContext,
   ): Promise<core.NodeValue[]> {
     const table = this.schema.getTableByNode(statement.node);
+    const connection = this.#connectionsByContext.get(context)!;
 
-    return table.insert(
-      statement,
-      undefined,
-      this.#connectionsByContext.get(context),
-    );
+    return table.insert(statement, context, connection);
   }
 
   public async update(
@@ -302,8 +359,9 @@ export class MariaDBConnector implements core.ConnectorInterface {
     context: core.MutationContext,
   ): Promise<number> {
     const table = this.schema.getTableByNode(statement.node);
+    const connection = this.#connectionsByContext.get(context)!;
 
-    throw new Error('Method not implemented.');
+    return table.update(statement, context, connection);
   }
 
   public async delete(
@@ -311,7 +369,8 @@ export class MariaDBConnector implements core.ConnectorInterface {
     context: core.MutationContext,
   ): Promise<number> {
     const table = this.schema.getTableByNode(statement.node);
+    const connection = this.#connectionsByContext.get(context)!;
 
-    throw new Error('Method not implemented.');
+    return table.delete(statement, context, connection);
   }
 }

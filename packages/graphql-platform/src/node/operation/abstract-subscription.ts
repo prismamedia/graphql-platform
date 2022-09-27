@@ -1,8 +1,4 @@
-import {
-  getGraphQLFieldConfigArgumentMap,
-  type Nillable,
-  type PlainObject,
-} from '@prismamedia/graphql-platform-utils';
+import * as utils from '@prismamedia/graphql-platform-utils';
 import { Memoize } from '@prismamedia/ts-memoize';
 import * as graphql from 'graphql';
 import assert from 'node:assert/strict';
@@ -12,7 +8,7 @@ import { AbstractOperation } from '../abstract-operation.js';
 export abstract class AbstractSubscription<
   TRequestContext extends object,
   TConnector extends ConnectorInterface,
-  TArgs extends Nillable<PlainObject>,
+  TArgs extends utils.Nillable<utils.PlainObject>,
   TResult extends AsyncIterator<any>,
 > extends AbstractOperation<TRequestContext, TConnector, TArgs, TResult> {
   public override readonly operationType =
@@ -36,12 +32,12 @@ export abstract class AbstractSubscription<
         deprecationReason: this.node.deprecationReason,
       }),
       ...(this.arguments.length && {
-        args: getGraphQLFieldConfigArgumentMap(this.arguments),
+        args: utils.getGraphQLFieldConfigArgumentMap(this.arguments),
       }),
       type: this.getGraphQLOutputType(),
       subscribe: (_, args, context, info) =>
         this.execute(
-          <TArgs>(this.selectionAware ? { ...args, selection: info } : args),
+          (this.selectionAware ? { ...args, selection: info } : args) as TArgs,
           context,
           info.path,
         ),

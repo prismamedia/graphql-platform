@@ -1,9 +1,5 @@
-import {
-  addPath,
-  aggregateError,
-  UnexpectedValueError,
-  type Path,
-} from '@prismamedia/graphql-platform-utils';
+import * as utils from '@prismamedia/graphql-platform-utils';
+import assert from 'node:assert/strict';
 import {
   isComponentSelection,
   type ComponentSelection,
@@ -19,46 +15,35 @@ export * from './expression/reverse-edge.js';
 export type SelectionExpression = ComponentSelection | ReverseEdgeSelection;
 
 export const isSelectionExpression = (
-  maybeSelectionExpression: unknown,
-): maybeSelectionExpression is SelectionExpression =>
-  isComponentSelection(maybeSelectionExpression) ||
-  isReverseEdgeSelection(maybeSelectionExpression);
+  maybeSelection: unknown,
+): maybeSelection is SelectionExpression =>
+  isComponentSelection(maybeSelection) ||
+  isReverseEdgeSelection(maybeSelection);
 
 export function mergeSelectionExpressions(
-  fieldSelections: Iterable<SelectionExpression>,
-  path?: Path,
+  expressions: Iterable<SelectionExpression>,
+  path?: utils.Path,
 ): Map<SelectionExpression['key'], SelectionExpression> {
-  const fieldSelectionsByKey = new Map<
+  const expressionsByKey = new Map<
     SelectionExpression['key'],
     SelectionExpression
   >();
 
-  aggregateError<SelectionExpression, void>(
-    fieldSelections,
-    (_, fieldSelection, index) => {
-      if (!isSelectionExpression(fieldSelection)) {
-        throw new UnexpectedValueError(`a field-selection`, fieldSelection, {
-          path: addPath(path, index),
-        });
-      }
+  for (const expression of expressions) {
+    assert(isSelectionExpression(expression));
 
-      const maybeSameKeyFieldSelection = fieldSelectionsByKey.get(
-        fieldSelection.key,
-      );
+    const maybeSameKeyExpression = expressionsByKey.get(expression.key);
 
-      fieldSelectionsByKey.set(
-        fieldSelection.key,
-        maybeSameKeyFieldSelection
-          ? maybeSameKeyFieldSelection.mergeWith(
-              fieldSelection as any,
-              addPath(path, fieldSelection.key),
-            )
-          : fieldSelection,
-      );
-    },
-    undefined,
-    { path },
-  );
+    expressionsByKey.set(
+      expression.key,
+      maybeSameKeyExpression
+        ? maybeSameKeyExpression.mergeWith(
+            expression as any,
+            utils.addPath(path, expression.key),
+          )
+        : expression,
+    );
+  }
 
-  return fieldSelectionsByKey;
+  return expressionsByKey;
 }

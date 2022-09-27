@@ -2,14 +2,15 @@ import type * as core from '@prismamedia/graphql-platform';
 import * as utils from '@prismamedia/graphql-platform-utils';
 import { Memoize } from '@prismamedia/ts-memoize';
 import type { SetOptional } from 'type-fest';
-import { escapeStringValue } from '../../../../escape.js';
+import { escapeStringValue } from '../../../../escaping.js';
 import {
   AbstractDataType,
   type AbstractDataTypeConfig,
 } from '../../abstract-data-type.js';
 
-export interface VarCharTypeConfig<TLeafValue extends core.LeafValue = any>
-  extends AbstractDataTypeConfig<VarCharType['kind'], string, TLeafValue> {
+export interface VarCharTypeConfig<
+  TLeafValue extends NonNullable<core.LeafValue> = any,
+> extends AbstractDataTypeConfig<VarCharType['kind'], TLeafValue, string> {
   length: number;
   charset?: string;
   collation?: string;
@@ -21,8 +22,8 @@ export interface VarCharTypeConfig<TLeafValue extends core.LeafValue = any>
  * @see https://mariadb.com/kb/en/varchar/
  */
 export class VarCharType<
-  TLeafValue extends core.LeafValue = any,
-> extends AbstractDataType<'VARCHAR', string, TLeafValue> {
+  TLeafValue extends NonNullable<core.LeafValue> = any,
+> extends AbstractDataType<'VARCHAR', TLeafValue, string> {
   public readonly length: number;
   public readonly charset?: string;
   public readonly collation?: string;
@@ -36,6 +37,7 @@ export class VarCharType<
         kind: 'VARCHAR',
         serialize: (value) => escapeStringValue(value),
         fromColumnValue: config.fromColumnValue,
+        fromJsonValue: config?.fromJsonValue,
         toColumnValue: config.toColumnValue,
       },
       configPath,

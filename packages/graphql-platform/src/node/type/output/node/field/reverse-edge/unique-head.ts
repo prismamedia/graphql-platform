@@ -1,17 +1,13 @@
-import {
-  NestableError,
-  type Name,
-  type Path,
-} from '@prismamedia/graphql-platform-utils';
+import * as utils from '@prismamedia/graphql-platform-utils';
 import * as graphql from 'graphql';
 import type { ReverseEdgeUnique } from '../../../../../definition/reverse-edge/unique.js';
 import type { OperationContext } from '../../../../../operation/context.js';
-import { ReverseEdgeUniqueHeadSelection } from '../../../../../statement/selection/expression/reverse-edge/unique-head.js';
+import { ReverseEdgeUniqueHeadSelection } from '../../../../../statement/selection/expression/reverse-edge/unique/head.js';
 import type { GraphQLSelectionContext } from '../../../node.js';
 import { AbstractReverseEdgeOutputType } from '../abstract-reverse-edge.js';
 
 export class ReverseEdgeUniqueHeadOutputType extends AbstractReverseEdgeOutputType<undefined> {
-  public override readonly name: Name;
+  public override readonly name: utils.Name;
   public override readonly description?: string;
   public override readonly deprecationReason?: string;
   public override readonly arguments?: undefined;
@@ -28,26 +24,24 @@ export class ReverseEdgeUniqueHeadOutputType extends AbstractReverseEdgeOutputTy
     return this.reverseEdge.head.outputType.getGraphQLObjectType();
   }
 
-  public override selectGraphQLField(
+  public override selectGraphQLFieldNode(
     ast: graphql.FieldNode,
     operationContext: OperationContext | undefined,
     selectionContext: GraphQLSelectionContext | undefined,
-    path: Path,
+    path: utils.Path,
   ): ReverseEdgeUniqueHeadSelection {
-    operationContext?.getNodeAuthorization(this.reverseEdge.head, path);
-
     this.parseGraphQLFieldArguments(ast.arguments, selectionContext, path);
 
     if (!ast.selectionSet) {
-      throw new NestableError(
-        `${this.reverseEdge.head.indefinite}'s selection`,
+      throw new utils.NestableError(
+        `${this.reverseEdge.head.indefinite}'s selection-set`,
         { path },
       );
     }
 
     return new ReverseEdgeUniqueHeadSelection(
       this.reverseEdge,
-      this.reverseEdge.head.outputType.selectGraphQLSelectionSet(
+      this.reverseEdge.head.outputType.selectGraphQLSelectionSetNode(
         ast.selectionSet,
         operationContext,
         selectionContext,
@@ -59,10 +53,8 @@ export class ReverseEdgeUniqueHeadOutputType extends AbstractReverseEdgeOutputTy
   public override selectShape(
     value: unknown,
     operationContext: OperationContext | undefined,
-    path: Path,
+    path: utils.Path,
   ): ReverseEdgeUniqueHeadSelection {
-    operationContext?.getNodeAuthorization(this.reverseEdge.head, path);
-
     return new ReverseEdgeUniqueHeadSelection(
       this.reverseEdge,
       value === null

@@ -1,12 +1,4 @@
-import {
-  addPath,
-  getOptionalFlag,
-  Input,
-  MutationType,
-  UnexpectedConfigError,
-  type InputConfig,
-  type Path,
-} from '@prismamedia/graphql-platform-utils';
+import * as utils from '@prismamedia/graphql-platform-utils';
 import type {
   Component,
   ComponentValue,
@@ -15,14 +7,14 @@ import type { MutationContext } from '../../../../operation/mutation/context.js'
 
 export abstract class AbstractComponentCreationInput<
   TInputValue,
-> extends Input<TInputValue> {
+> extends utils.Input<TInputValue> {
   public constructor(
     public readonly component: Component,
-    config: Omit<InputConfig<TInputValue>, 'name'>,
-    configPath: Path,
+    config: Omit<utils.InputConfig<TInputValue>, 'name'>,
+    configPath: utils.Path,
   ) {
     const publicConfig = config.public;
-    const publicConfigPath = addPath(configPath, 'public');
+    const publicConfigPath = utils.addPath(configPath, 'public');
 
     super(
       {
@@ -32,10 +24,10 @@ export abstract class AbstractComponentCreationInput<
         nullable: component.isNullable(),
         ...config,
         name: component.name,
-        public: getOptionalFlag(
+        public: utils.getOptionalFlag(
           publicConfig,
           component.isPublic() &&
-            component.node.isMutationPublic(MutationType.CREATION),
+            component.node.isMutationPublic(utils.MutationType.CREATION),
           publicConfigPath,
         ),
       },
@@ -43,20 +35,20 @@ export abstract class AbstractComponentCreationInput<
     );
 
     if (this.isPublic()) {
-      if (!component.node.isMutationPublic(MutationType.CREATION)) {
-        throw new UnexpectedConfigError(
-          `not to be "true" as the "${component.node.name}"'s ${MutationType.CREATION} is private`,
+      if (!component.node.isMutationPublic(utils.MutationType.CREATION)) {
+        throw new utils.UnexpectedConfigError(
+          `not to be "true" as the "${component.node.name}"'s ${utils.MutationType.CREATION} is private`,
           publicConfig,
           { path: publicConfigPath },
         );
       }
     } else {
       if (
-        component.node.isMutationPublic(MutationType.CREATION) &&
+        component.node.isMutationPublic(utils.MutationType.CREATION) &&
         this.isRequired()
       ) {
-        throw new UnexpectedConfigError(
-          `to be "true" as the "${component.name}" is required in the public "${component.node.name}"'s ${MutationType.CREATION}`,
+        throw new utils.UnexpectedConfigError(
+          `to be "true" as the "${component.name}" is required in the public "${component.node.name}"'s ${utils.MutationType.CREATION}`,
           publicConfig,
           { path: publicConfigPath },
         );
@@ -67,6 +59,6 @@ export abstract class AbstractComponentCreationInput<
   public abstract resolveComponentValue(
     inputValue: Readonly<TInputValue>,
     context: MutationContext,
-    path: Path,
+    path: utils.Path,
   ): Promise<ComponentValue | undefined>;
 }

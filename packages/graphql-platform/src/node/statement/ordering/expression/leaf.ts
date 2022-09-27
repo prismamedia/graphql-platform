@@ -16,7 +16,7 @@ export class LeafOrdering implements OrderingExpressionInterface {
     public readonly leaf: Leaf,
     public readonly direction: OrderingDirection,
   ) {
-    assert(leaf.sortable, `The leaf "${leaf}" is not sortable`);
+    assert(leaf.isSortable(), `The leaf "${leaf}" is not sortable`);
 
     this.reduced = this;
   }

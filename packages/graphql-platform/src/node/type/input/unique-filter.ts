@@ -1,35 +1,27 @@
-import {
-  Input,
-  nonNullableInputTypeDecorator,
-  nonOptionalInputTypeDecorator,
-  ObjectInputType,
-  UnexpectedValueError,
-  type NestableErrorOptions,
-  type Nillable,
-  type NonNillable,
-  type NonOptional,
-  type Path,
-} from '@prismamedia/graphql-platform-utils';
+import * as utils from '@prismamedia/graphql-platform-utils';
 import { Memoize } from '@prismamedia/ts-memoize';
 import inflection from 'inflection';
 import assert from 'node:assert/strict';
-import type { Component, Edge, LeafValue, Node } from '../../../node.js';
+import type { Component, Edge, Node } from '../../../node.js';
+import { Leaf, type LeafValue } from '../../definition/component/leaf.js';
 
-export class NodeUniqueFilterNotFoundError extends UnexpectedValueError {
+export class NodeUniqueFilterNotFoundError extends utils.UnexpectedValueError {
   public constructor(
     node: Node,
     value: unknown,
-    options?: NestableErrorOptions,
+    options?: utils.NestableErrorOptions,
   ) {
     super(`${node.indefinite}'s unique-filter`, value, options);
   }
 }
 
-export type NodeUniqueFilterInputValue = Nillable<{
-  [componentName: string]: LeafValue | NonOptional<NodeUniqueFilterInputValue>;
+export type NodeUniqueFilterInputValue = utils.Nillable<{
+  [componentName: string]:
+    | LeafValue
+    | utils.NonOptional<NodeUniqueFilterInputValue>;
 }>;
 
-export class NodeUniqueFilterInputType extends ObjectInputType {
+export class NodeUniqueFilterInputType extends utils.ObjectInputType {
   public constructor(
     public readonly node: Node,
     public readonly forcedEdge?: Edge,
@@ -62,49 +54,47 @@ export class NodeUniqueFilterInputType extends ObjectInputType {
   }
 
   @Memoize()
-  public override get fields(): ReadonlyArray<Input> {
+  public override get fields(): ReadonlyArray<utils.Input> {
     const componentSet = new Set<Component>(
       Array.from(this.node.uniqueConstraintsByName.values())
         .flatMap(({ componentsByName }) => [...componentsByName.values()])
         .filter((component) => component !== this.forcedEdge),
     );
 
-    return Object.freeze(
-      Array.from(componentSet, (component) => {
-        const type = nonNullableInputTypeDecorator(
-          component.kind === 'Leaf'
-            ? component.type
-            : component.head.uniqueFilterInputType,
-          !component.isNullable(),
-        );
+    return Array.from(componentSet, (component) => {
+      const type = utils.nonNullableInputTypeDecorator(
+        component instanceof Leaf
+          ? component.type
+          : component.head.uniqueFilterInputType,
+        !component.isNullable(),
+      );
 
-        return new Input({
-          name: component.name,
-          description: component.description,
-          public: component.isPublic(),
-          deprecated: component.deprecationReason,
-          type: nonOptionalInputTypeDecorator(
-            type,
-            [...this.node.uniqueConstraintsByName.values()].every(
-              ({ componentsByName }) => componentsByName.has(component.name),
+      return new utils.Input({
+        name: component.name,
+        description: component.description,
+        public: component.isPublic(),
+        deprecated: component.deprecationReason,
+        type: utils.nonOptionalInputTypeDecorator(
+          type,
+          [...this.node.uniqueConstraintsByName.values()].every(
+            ({ componentsByName }) => componentsByName.has(component.name),
+          ),
+        ),
+        publicType: utils.nonOptionalInputTypeDecorator(
+          type,
+          [...this.node.uniqueConstraintsByName.values()]
+            .filter((uniqueConstraint) => uniqueConstraint.isPublic())
+            .every(({ componentsByName }) =>
+              componentsByName.has(component.name),
             ),
-          ),
-          publicType: nonOptionalInputTypeDecorator(
-            type,
-            [...this.node.uniqueConstraintsByName.values()]
-              .filter((uniqueConstraint) => uniqueConstraint.isPublic())
-              .every(({ componentsByName }) =>
-                componentsByName.has(component.name),
-              ),
-          ),
-        });
-      }),
-    );
+        ),
+      });
+    });
   }
 
   public override parseValue(
     maybeValue: unknown,
-    path?: Path,
+    path?: utils.Path,
   ): NodeUniqueFilterInputValue {
     const parsedValue = super.parseValue(maybeValue, path);
     if (!parsedValue) {
@@ -112,7 +102,7 @@ export class NodeUniqueFilterInputType extends ObjectInputType {
     }
 
     for (const uniqueConstraint of this.node.uniqueConstraintsByName.values()) {
-      const uniqueFilterInputValue: NonNillable<NodeUniqueFilterInputValue> =
+      const uniqueFilterInputValue: utils.NonNillable<NodeUniqueFilterInputValue> =
         Object.create(null);
 
       if (

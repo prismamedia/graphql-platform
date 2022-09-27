@@ -1,18 +1,7 @@
-import {
-  addPath,
-  aggregateConfigError,
-  assertPlainObjectConfig,
-  castToError,
-  ConfigError,
-  isConstructor,
-  isPlainObject,
-  operationTypes,
-  UnexpectedConfigError,
-  UnexpectedValueError,
-  type Path,
-} from '@prismamedia/graphql-platform-utils';
+import * as utils from '@prismamedia/graphql-platform-utils';
 import { Memoize } from '@prismamedia/ts-memoize';
 import * as graphql from 'graphql';
+import * as rxjs from 'rxjs';
 import type { Constructor, Except } from 'type-fest';
 import type { ConnectorInterface } from './connector-interface.js';
 import {
@@ -20,8 +9,9 @@ import {
   type CustomOperationMap,
 } from './custom-operations.js';
 import {
+  ChangedNode,
   createAPI,
-  InvalidContextError,
+  InvalidRequestContextError,
   Node,
   type API,
   type NodeConfig,
@@ -69,12 +59,15 @@ export type GraphQLPlatformConfig<
     | TConnector
     | Constructor<TConnector, [GraphQLPlatform]>
     | [
-        Constructor<TConnector, [GraphQLPlatform, TConnector['config'], Path]>,
+        Constructor<
+          TConnector,
+          [GraphQLPlatform, TConnector['config'], utils.Path]
+        >,
         TConnector['config'],
       ];
 
   /**
-   * Optional, a method which asserts the request context validity
+   * Optional, a method which asserts the request-context validity
    *
    * Convenient when the GraphQL Platform is used with multiple integrations and you want to validate its context
    *
@@ -85,6 +78,11 @@ export type GraphQLPlatformConfig<
   assertRequestContext?(
     maybeRequestContext: unknown,
   ): asserts maybeRequestContext is TRequestContext;
+
+  /**
+   * Optional, subscribe to the nodes' changes
+   */
+  onChange?: (change: ChangedNode<TRequestContext, TConnector>) => void;
 };
 
 export class GraphQLPlatform<
@@ -102,28 +100,42 @@ export class GraphQLPlatform<
   public readonly api: API<TRequestContext, TConnector>;
   readonly #connector?: TConnector;
 
+  /**
+   * An Observable of the nodes' changes
+   */
+  public readonly changes = new rxjs.Subject<
+    ChangedNode<TRequestContext, TConnector>
+  >();
+
   public constructor(
     public readonly config: GraphQLPlatformConfig<TRequestContext, TConnector>,
-    public readonly configPath: Path = addPath(
+    public readonly configPath: utils.Path = utils.addPath(
       undefined,
       'GraphQLPlatformConfig',
     ),
   ) {
-    assertPlainObjectConfig(config, configPath);
+    utils.assertPlainObjectConfig(config, configPath);
 
     // nodes
     {
       const nodesConfig = config.nodes;
-      const nodesConfigPath = addPath(configPath, 'nodes');
+      const nodesConfigPath = utils.addPath(configPath, 'nodes');
 
-      if (!isPlainObject(nodesConfig) || !Object.entries(nodesConfig).length) {
-        throw new UnexpectedConfigError(`at least one "node"`, nodesConfig, {
-          path: nodesConfigPath,
-        });
+      if (
+        !utils.isPlainObject(nodesConfig) ||
+        !Object.entries(nodesConfig).length
+      ) {
+        throw new utils.UnexpectedConfigError(
+          `at least one "node"`,
+          nodesConfig,
+          {
+            path: nodesConfigPath,
+          },
+        );
       }
 
       this.nodesByName = new Map(
-        aggregateConfigError<
+        utils.aggregateConfigError<
           [Node['name'], NodeConfig<any, any>],
           [Node['name'], Node][]
         >(
@@ -136,7 +148,7 @@ export class GraphQLPlatform<
                 this,
                 nodeName,
                 nodeConfig,
-                addPath(nodesConfigPath, nodeName),
+                utils.addPath(nodesConfigPath, nodeName),
               ),
             ],
           ],
@@ -150,21 +162,21 @@ export class GraphQLPlatform<
        * It is done step by step in order to have meaningful errors.
        */
       {
-        aggregateConfigError<Node, void>(
+        utils.aggregateConfigError<Node, void>(
           this.nodesByName.values(),
           (_, node) => node.validateDefinition(),
           undefined,
           { path: nodesConfigPath },
         );
 
-        aggregateConfigError<Node, void>(
+        utils.aggregateConfigError<Node, void>(
           this.nodesByName.values(),
           (_, node) => node.validateTypes(),
           undefined,
           { path: nodesConfigPath },
         );
 
-        aggregateConfigError<Node, void>(
+        utils.aggregateConfigError<Node, void>(
           this.nodesByName.values(),
           (_, node) => node.validateOperations(),
           undefined,
@@ -176,7 +188,7 @@ export class GraphQLPlatform<
     // operations
     {
       this.operationsByNameByType = Object.fromEntries(
-        operationTypes.map((type): any => [
+        utils.operationTypes.map((type): any => [
           type,
           new Map(
             Array.from(this.nodesByName.values()).flatMap((node) =>
@@ -197,32 +209,50 @@ export class GraphQLPlatform<
     // connector
     {
       const connectorConfig = this.config.connector;
-      const connectorConfigPath = addPath(this.configPath, 'connector');
+      const connectorConfigPath = utils.addPath(this.configPath, 'connector');
 
       this.#connector = connectorConfig
-        ? isConstructor<TConnector, [GraphQLPlatform]>(connectorConfig)
+        ? utils.isConstructor<TConnector, [GraphQLPlatform]>(connectorConfig)
           ? new connectorConfig(this)
           : Array.isArray(connectorConfig)
           ? connectorConfig.length
             ? new connectorConfig[0](
                 this,
                 connectorConfig[1],
-                addPath(connectorConfigPath, 1),
+                utils.addPath(connectorConfigPath, 1),
               )
             : undefined
           : connectorConfig
         : undefined;
     }
+
+    // on-change
+    {
+      const onChangeConfig = config.onChange;
+      const onChangeConfigPath = utils.addPath(configPath, 'onChange');
+
+      if (onChangeConfig != null) {
+        if (typeof onChangeConfig !== 'function') {
+          throw new utils.UnexpectedConfigError(`a function`, onChangeConfig, {
+            path: onChangeConfigPath,
+          });
+        }
+
+        this.changes.subscribe(onChangeConfig);
+      }
+    }
   }
 
   public getNodeByName(
     name: Node['name'],
-    path?: Path,
+    path?: utils.Path,
   ): Node<TRequestContext, TConnector> {
     const node = this.nodesByName.get(name);
     if (!node) {
-      throw new UnexpectedValueError(
-        `a node's name among "${[...this.nodesByName.keys()].join(', ')}"`,
+      throw new utils.UnexpectedValueError(
+        `a node's name among "${Array.from(this.nodesByName.keys()).join(
+          ', ',
+        )}"`,
         name,
         { path },
       );
@@ -234,11 +264,11 @@ export class GraphQLPlatform<
   public getOperationByTypeAndName(
     type: graphql.OperationTypeNode,
     name: string,
-    path?: Path,
+    path?: utils.Path,
   ): OperationInterface<TRequestContext, TConnector> {
-    if (!operationTypes.includes(type)) {
-      throw new UnexpectedValueError(
-        `an operation's type among "${operationTypes.join(', ')}"`,
+    if (!utils.operationTypes.includes(type)) {
+      throw new utils.UnexpectedValueError(
+        `an operation's type among "${utils.operationTypes.join(', ')}"`,
         type,
         { path },
       );
@@ -246,7 +276,7 @@ export class GraphQLPlatform<
 
     const operation = this.operationsByNameByType[type].get(name);
     if (!operation) {
-      throw new UnexpectedValueError(
+      throw new utils.UnexpectedValueError(
         `an operation's name among "${[
           ...this.operationsByNameByType[type].keys(),
         ].join(', ')}"`,
@@ -264,7 +294,7 @@ export class GraphQLPlatform<
       ...this.config.schema,
 
       ...Object.fromEntries(
-        operationTypes.map((type) => {
+        utils.operationTypes.map((type) => {
           const fields: graphql.GraphQLFieldConfigMap<
             undefined,
             TRequestContext
@@ -301,8 +331,8 @@ export class GraphQLPlatform<
   @Memoize()
   public get connector(): TConnector {
     if (!this.#connector) {
-      throw new ConfigError(`No connector has been provided`, {
-        path: addPath(this.configPath, 'connector'),
+      throw new utils.ConfigError(`No connector has been provided`, {
+        path: utils.addPath(this.configPath, 'connector'),
       });
     }
 
@@ -311,22 +341,22 @@ export class GraphQLPlatform<
 
   public assertRequestContext(
     maybeRequestContext: unknown,
-    path?: Path,
+    path?: utils.Path,
   ): asserts maybeRequestContext is TRequestContext {
     try {
       if (
         typeof maybeRequestContext !== 'object' ||
         maybeRequestContext === null
       ) {
-        throw new UnexpectedValueError('an object', maybeRequestContext, {
+        throw new utils.UnexpectedValueError('an object', maybeRequestContext, {
           path,
         });
       }
 
       this.config.assertRequestContext?.(maybeRequestContext);
     } catch (error) {
-      throw new InvalidContextError({
-        cause: castToError(error),
+      throw new InvalidRequestContextError({
+        cause: utils.castToError(error),
         path,
       });
     }

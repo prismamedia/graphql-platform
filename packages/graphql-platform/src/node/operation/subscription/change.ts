@@ -1,4 +1,4 @@
-import { Input, NonNillable, Path } from '@prismamedia/graphql-platform-utils';
+import * as utils from '@prismamedia/graphql-platform-utils';
 import { Memoize } from '@prismamedia/ts-memoize';
 import * as graphql from 'graphql';
 import type { ConnectorInterface } from '../../../connector-interface.js';
@@ -6,6 +6,7 @@ import type {
   NodeSelectionAwareArgs,
   RawNodeSelectionAwareArgs,
 } from '../../abstract-operation.js';
+import type { NodeFilter } from '../../statement/filter.js';
 import type { NodeSelectedValue } from '../../statement/selection.js';
 import type { NodeFilterInputValue } from '../../type/input/filter.js';
 import { AbstractSubscription } from '../abstract-subscription.js';
@@ -16,7 +17,7 @@ export type ChangeSubscriptionArgs = RawNodeSelectionAwareArgs<{
 }>;
 
 export type ChangeSubscriptionResult = AsyncIterator<
-  NonNillable<NodeSelectedValue>
+  utils.NonNillable<NodeSelectedValue>
 >;
 
 export class ChangeSubscription<
@@ -29,13 +30,13 @@ export class ChangeSubscription<
   ChangeSubscriptionResult
 > {
   protected override readonly selectionAware = true;
-  public override readonly name = `changed${this.node.name}`;
+  public override readonly name = `changed${this.node}`;
   public override readonly description = `Gets the "${this.node.plural}"' change, either it is a creation, an update or a deletion`;
 
   @Memoize()
   public override get arguments() {
     return [
-      new Input({
+      new utils.Input({
         name: 'where',
         type: this.node.filterInputType,
       }),
@@ -50,9 +51,10 @@ export class ChangeSubscription<
   }
 
   protected override async executeWithValidArgumentsAndContext(
+    authorization: NodeFilter<TRequestContext, TConnector> | undefined,
     args: NodeSelectionAwareArgs<ChangeSubscriptionArgs>,
     context: OperationContext<TRequestContext, TConnector>,
-    path: Path,
+    path: utils.Path,
   ): Promise<ChangeSubscriptionResult> {
     return {
       next: async () => ({

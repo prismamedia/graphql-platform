@@ -1,10 +1,9 @@
-import { addPath } from '@prismamedia/graphql-platform-utils';
+import * as utils from '@prismamedia/graphql-platform-utils';
 import * as graphql from 'graphql';
 import { GraphQLPlatform } from '../../../index.js';
 import {
   myAdminContext,
   MyGP,
-  myVisitorContext,
   nodeNames,
   nodes,
 } from '../../../__tests__/config.js';
@@ -114,12 +113,6 @@ describe(`NodeOutputType`, () => {
           myAdminContext,
           '"Article.category" - Expects a "Category"\'s selection',
         ],
-        [
-          'Article',
-          `{ title tags(first: 5) { tag { title } } }`,
-          myVisitorContext,
-          '"Article.tags" - Unauthorized access to "ArticleTag"',
-        ],
       ])(
         '%p.select(%p) throws the error %p',
         (nodeName, input, requestContext, error) => {
@@ -132,7 +125,7 @@ describe(`NodeOutputType`, () => {
               input,
               new OperationContext(gp, requestContext),
               undefined,
-              addPath(undefined, node.name),
+              utils.addPath(undefined, node.name),
             ),
           ).toThrowError(error);
         },

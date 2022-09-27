@@ -40,6 +40,12 @@ input ArticleFilterInput {
   body: DraftJS
   body_not: DraftJS
   body_is_null: Boolean
+  body_contains: NonEmptyString
+  body_not_contains: NonEmptyString
+  body_starts_with: NonEmptyString
+  body_not_starts_with: NonEmptyString
+  body_ends_with: NonEmptyString
+  body_not_ends_with: NonEmptyString
   category: CategoryFilterInput
   category_not: CategoryFilterInput
   category_is_null: Boolean
@@ -68,6 +74,12 @@ input ArticleFilterInput {
   metas: JSONObject
   metas_not: JSONObject
   metas_is_null: Boolean
+  metas_contains: NonEmptyString
+  metas_not_contains: NonEmptyString
+  metas_starts_with: NonEmptyString
+  metas_not_starts_with: NonEmptyString
+  metas_ends_with: NonEmptyString
+  metas_not_ends_with: NonEmptyString
   highlighted: Boolean
   highlighted_not: Boolean
   highlighted_is_null: Boolean
@@ -78,6 +90,25 @@ input ArticleFilterInput {
   sponsored_is_null: Boolean
   sponsored_in: [Boolean]
   sponsored_not_in: [Boolean]
+  views: UnsignedBigInt
+  views_not: UnsignedBigInt
+  views_in: [UnsignedBigInt!]
+  views_not_in: [UnsignedBigInt!]
+  views_gt: UnsignedBigInt
+  views_gte: UnsignedBigInt
+  views_lt: UnsignedBigInt
+  views_lte: UnsignedBigInt
+  score: UnsignedFloat
+  score_not: UnsignedFloat
+  score_in: [UnsignedFloat!]
+  score_not_in: [UnsignedFloat!]
+  score_gt: UnsignedFloat
+  score_gte: UnsignedFloat
+  score_lt: UnsignedFloat
+  score_lte: UnsignedFloat
+  machineTags: JSONArray
+  machineTags_not: JSONArray
+  machineTags_is_null: Boolean
   tags_every: ArticleTagFilterInput
   tags_some: ArticleTagFilterInput
   tags_none: ArticleTagFilterInput

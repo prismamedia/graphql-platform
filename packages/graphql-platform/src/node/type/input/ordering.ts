@@ -1,21 +1,10 @@
-import {
-  addPath,
-  aggregateError,
-  EnumInputType,
-  type Nil,
-  type Nillable,
-  type NonNillable,
-  type Path,
-} from '@prismamedia/graphql-platform-utils';
+import * as utils from '@prismamedia/graphql-platform-utils';
 import { Memoize } from '@prismamedia/ts-memoize';
 import type { ConnectorInterface } from '../../../connector-interface.js';
 import type { Node } from '../../../node.js';
+import { ReverseEdgeUnique } from '../../definition/reverse-edge/unique.js';
 import type { OperationContext } from '../../operation/context.js';
-import {
-  NodeOrdering,
-  OrderingDirection,
-  OrderingExpression,
-} from '../../statement/ordering.js';
+import { NodeOrdering, OrderingDirection } from '../../statement/ordering.js';
 import {
   LeafOrderingInputType,
   OrderingExpressionInputType,
@@ -24,27 +13,29 @@ import {
 
 export * from './ordering/expression.js';
 
-export type NodeOrderingInputValue = Nillable<
+export type NodeOrderingInputValue = utils.Nillable<
   OrderingExpressionInputType['value']
 >;
 
-export type OrderByInputValue = NonNillable<NodeOrderingInputValue>[] | Nil;
+export type OrderByInputValue =
+  | utils.NonNillable<NodeOrderingInputValue>[]
+  | utils.Nil;
 
-export class NodeOrderingInputType extends EnumInputType<OrderingExpressionInputType> {
+export class NodeOrderingInputType extends utils.EnumInputType<OrderingExpressionInputType> {
   public constructor(public readonly node: Node) {
     super({
-      name: `${node.name}OrderingInput`,
-      description: `Order the "${node.name}" nodes`,
+      name: `${node}OrderingInput`,
+      description: `Order the "${node}" nodes`,
     });
   }
 
   @Memoize()
   public override get enumValues(): ReadonlyArray<OrderingExpressionInputType> {
-    return Object.freeze([
+    return [
       ...Array.from(
         this.node.leavesByName.values(),
       ).flatMap<OrderingExpressionInputType>((leaf) =>
-        leaf.sortable
+        leaf.isSortable()
           ? [
               new LeafOrderingInputType(leaf, OrderingDirection.ASCENDING),
               new LeafOrderingInputType(leaf, OrderingDirection.DESCENDING),
@@ -54,8 +45,9 @@ export class NodeOrderingInputType extends EnumInputType<OrderingExpressionInput
       ...Array.from(
         this.node.reverseEdgesByName.values(),
       ).flatMap<OrderingExpressionInputType>((reverseEdge) =>
-        reverseEdge.kind === 'Multiple'
-          ? [
+        reverseEdge instanceof ReverseEdgeUnique
+          ? []
+          : [
               new ReverseEdgeMultipleCountOrderingInputType(
                 reverseEdge,
                 OrderingDirection.ASCENDING,
@@ -64,10 +56,9 @@ export class NodeOrderingInputType extends EnumInputType<OrderingExpressionInput
                 reverseEdge,
                 OrderingDirection.DESCENDING,
               ),
-            ]
-          : [],
+            ],
       ),
-    ]);
+    ];
   }
 
   public sort<
@@ -75,30 +66,17 @@ export class NodeOrderingInputType extends EnumInputType<OrderingExpressionInput
     TConnector extends ConnectorInterface,
   >(
     value: OrderByInputValue,
-    context: OperationContext<TRequestContext, TConnector> | undefined,
-    path: Path,
+    context?: OperationContext<TRequestContext, TConnector>,
+    path: utils.Path = utils.addPath(undefined, this.name),
   ): NodeOrdering<TRequestContext, TConnector> {
     return new NodeOrdering(
       this.node,
       value?.length
-        ? aggregateError<
-            NonNillable<NodeOrderingInputValue>,
-            OrderingExpression[]
-          >(
-            value,
-            (expressions, value, index) => {
-              const valuePath = addPath(path, index);
-
-              return [
-                ...expressions,
-                this.getEnumValue(value, valuePath).sort(
-                  context,
-                  addPath(valuePath, value),
-                ),
-              ];
-            },
-            [],
-            { path },
+        ? value.map((value, index) =>
+            this.getEnumValue(value, utils.addPath(path, index)).sort(
+              context,
+              utils.addPath(path, value),
+            ),
           )
         : [],
     );
