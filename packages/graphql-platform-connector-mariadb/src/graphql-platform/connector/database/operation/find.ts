@@ -11,6 +11,7 @@ import {
   mergeWith,
   POJO,
 } from '@prismamedia/graphql-platform-utils';
+import { escape } from 'mysql';
 import { AbstractOperationResolver } from '../abstract-operation';
 import { OperationResolverParams } from '../operation';
 import { Column } from '../table/column';
@@ -207,11 +208,15 @@ export class FindOperation extends AbstractOperationResolver<
               break;
 
             case 'contains':
-              value !== null && (
-                column.fullText !== null && value.length >= column.fullText
-                  ? where.addRaw(`MATCH(${column.name}) AGAINST('${value}' IN NATURAL LANGUAGE MODE)`)
-                  : where.addFilter(column, 'LIKE', `%${value}%`)
-              );
+              value !== null &&
+                (column.fullText !== null && value.length >= column.fullText
+                  ? // @see https://mariadb.com/kb/en/match-against/#syntax
+                    where.addRaw(
+                      `MATCH (${column.getEscapedName(
+                        where.tableReference.alias,
+                      )}) AGAINST (${escape(value)} IN NATURAL LANGUAGE MODE)`,
+                    )
+                  : where.addFilter(column, 'LIKE', `%${value}%`));
               break;
 
             case 'not_contains':
