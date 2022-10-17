@@ -10,7 +10,7 @@ import {
 import assert from 'node:assert/strict';
 import { MariaDBConnector } from '../index.js';
 
-export function makeGraphQLPlatform(
+export function createGraphQLPlatform(
   schemaName: string,
 ): GraphQLPlatform<MyContext, MariaDBConnector> {
   const host = process.env.MARIADB_HOST;

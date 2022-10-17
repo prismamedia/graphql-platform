@@ -2,6 +2,7 @@
   "files": [],
   "references": [
     { "path": "./packages/graphql-platform-connector-mariadb" },
+    { "path": "./packages/graphql-platform-integration-apollo-server" },
     { "path": "./packages/graphql-platform-scalars" },
     { "path": "./packages/graphql-platform-utils" },
     { "path": "./packages/graphql-platform" }

@@ -1,8 +1,4 @@
-import {
-  myAdminContext,
-  MyGP,
-} from '@prismamedia/graphql-platform/__tests__/config.js';
-import { fixtures } from '@prismamedia/graphql-platform/__tests__/fixture.js';
+import { MyGP } from '@prismamedia/graphql-platform/__tests__/config.js';
 import { EOL } from 'node:os';
 import {
   AddTableForeignKeysStatement,
@@ -11,19 +7,13 @@ import {
   DropSchemaStatement,
   MariaDBConnector,
 } from './index.js';
-import { makeGraphQLPlatform } from './__tests__/config.js';
+import { createGraphQLPlatform } from './__tests__/config.js';
 
 describe('GraphQL Platform Connector MariaDB', () => {
   let gp: MyGP<MariaDBConnector>;
 
   beforeAll(async () => {
-    gp = makeGraphQLPlatform('index');
-
-    await gp.connector.setup();
-  });
-
-  afterAll(async () => {
-    await gp.connector.teardown();
+    gp = createGraphQLPlatform('connector_mariadb');
   });
 
   it('generates valid and stable schema', async () => {
@@ -51,9 +41,5 @@ describe('GraphQL Platform Connector MariaDB', () => {
         .filter(Boolean)
         .join(EOL.repeat(2)),
     ).toMatchSnapshot();
-  });
-
-  it.skip('loads the fixtures', async () => {
-    await gp.seed(fixtures, myAdminContext);
   });
 });

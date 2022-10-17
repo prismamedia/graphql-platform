@@ -289,46 +289,6 @@ export class GraphQLPlatform<
   }
 
   @Memoize()
-  public get schema(): graphql.GraphQLSchema {
-    const schema = new graphql.GraphQLSchema({
-      ...this.config.schema,
-
-      ...Object.fromEntries(
-        utils.operationTypes.map((type) => {
-          const fields: graphql.GraphQLFieldConfigMap<
-            undefined,
-            TRequestContext
-          > = {
-            // Native operations
-            ...Object.fromEntries(
-              [...this.operationsByNameByType[type].values()]
-                .filter((operation) => operation.isPublic())
-                .map((operation) => [
-                  operation.name,
-                  operation.getGraphQLFieldConfig(),
-                ]),
-            ),
-
-            // Custom operations
-            ...getCustomOperationMap(this, this.config.customOperations, type),
-          };
-
-          return [
-            type,
-            Object.keys(fields).length > 0
-              ? new graphql.GraphQLObjectType({ name: type, fields })
-              : undefined,
-          ];
-        }),
-      ),
-    });
-
-    graphql.assertValidSchema(schema);
-
-    return schema;
-  }
-
-  @Memoize()
   public get connector(): TConnector {
     if (!this.#connector) {
       throw new utils.ConfigError(`No connector has been provided`, {
@@ -368,5 +328,45 @@ export class GraphQLPlatform<
   ): Promise<void> {
     const seeding = new Seeding(this, fixtures);
     await seeding.load(context);
+  }
+
+  @Memoize()
+  public get schema(): graphql.GraphQLSchema {
+    const schema = new graphql.GraphQLSchema({
+      ...this.config.schema,
+
+      ...Object.fromEntries(
+        utils.operationTypes.map((type) => {
+          const fields: graphql.GraphQLFieldConfigMap<
+            undefined,
+            TRequestContext
+          > = {
+            // Native operations
+            ...Object.fromEntries(
+              [...this.operationsByNameByType[type].values()]
+                .filter((operation) => operation.isPublic())
+                .map((operation) => [
+                  operation.name,
+                  operation.getGraphQLFieldConfig(),
+                ]),
+            ),
+
+            // Custom operations
+            ...getCustomOperationMap(this, this.config.customOperations, type),
+          };
+
+          return [
+            type,
+            Object.keys(fields).length > 0
+              ? new graphql.GraphQLObjectType({ name: type, fields })
+              : undefined,
+          ];
+        }),
+      ),
+    });
+
+    graphql.assertValidSchema(schema);
+
+    return schema;
   }
 }

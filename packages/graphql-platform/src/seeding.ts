@@ -1,4 +1,5 @@
 import * as utils from '@prismamedia/graphql-platform-utils';
+import { Memoize } from '@prismamedia/ts-memoize';
 import { DepGraph } from 'dependency-graph';
 import type { ConnectorInterface } from './connector-interface.js';
 import type { GraphQLPlatform } from './index.js';
@@ -43,14 +44,22 @@ export class Seeding<
       circular: false,
     });
 
-    Object.entries(fixtures).forEach(([nodeName, dataByReference]) =>
+    Object.entries(fixtures).forEach(([nodeName, dataByReference]) => {
+      if (typeof nodeName !== 'string') {
+        throw new utils.UnexpectedValueError('a string', nodeName);
+      }
+
+      if (!utils.isPlainObject(dataByReference)) {
+        throw new utils.UnexpectedValueError('a plain-object', dataByReference);
+      }
+
       Object.entries(dataByReference).forEach(([reference, data]) =>
         depGraph.addNode(
           reference,
           new NodeFixture(this, gp.getNodeByName(nodeName), reference, data),
         ),
-      ),
-    );
+      );
+    });
 
     Object.values(fixtures).forEach((dataByReference) =>
       Object.keys(dataByReference).forEach((reference) =>
@@ -69,6 +78,7 @@ export class Seeding<
     );
   }
 
+  @Memoize((context: TRequestContext) => context)
   public async load(context: TRequestContext): Promise<void> {
     await Promise.all(
       Array.from(this.fixturesByReference.values(), (fixture) =>

@@ -4,7 +4,6 @@ import type { ConnectorInterface } from '../connector-interface.js';
 import type { Node, NodeValue } from '../node.js';
 import type { Seeding } from '../seeding.js';
 import type { UniqueConstraintValue } from './definition.js';
-import type { NodeCreationInputValue } from './type.js';
 import { EdgeCreationInputAction } from './type/input/creation/field.js';
 
 export type NodeFixtureReference = string;
@@ -62,31 +61,26 @@ export class NodeFixture<
   }
 
   @Memoize((context: TRequestContext) => context)
-  public async getCreationInputValue(
-    context: TRequestContext,
-  ): Promise<NonNullable<NodeCreationInputValue>> {
-    const maybeValue = Object.fromEntries(
-      await Promise.all(
-        Object.entries(this.data).map(async ([componentName, value]) => [
-          componentName,
-          this.node.edgesByName.has(componentName)
-            ? {
-                [EdgeCreationInputAction.CONNECT]:
-                  await this.seeding.fixturesByReference
-                    .get(value)!
-                    .getIdentifier(context),
-              }
-            : value,
-        ]),
-      ),
-    );
-
-    return this.node.creationInputType.parseValue(maybeValue) as any;
-  }
-
-  @Memoize((context: TRequestContext) => context)
   public async load(context: TRequestContext): Promise<NodeValue> {
-    const data = await this.getCreationInputValue(context);
+    const data = this.node.creationInputType.parseValue(
+      Object.fromEntries(
+        await Promise.all(
+          Object.entries(this.data).map(
+            async ([componentName, componentValue]) => [
+              componentName,
+              this.node.edgesByName.has(componentName)
+                ? {
+                    [EdgeCreationInputAction.CONNECT]:
+                      await this.seeding.fixturesByReference
+                        .get(componentValue)!
+                        .getIdentifier(context),
+                  }
+                : componentValue,
+            ],
+          ),
+        ),
+      ),
+    ) as any;
 
     return this.node
       .getMutationByKey('create-one')

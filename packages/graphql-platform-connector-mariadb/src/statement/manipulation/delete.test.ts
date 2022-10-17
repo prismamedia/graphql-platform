@@ -7,13 +7,13 @@ import {
 } from '@prismamedia/graphql-platform/__tests__/config.js';
 import { fixtures } from '@prismamedia/graphql-platform/__tests__/fixture.js';
 import { MariaDBConnector } from '../../index.js';
-import { makeGraphQLPlatform } from '../../__tests__/config.js';
+import { createGraphQLPlatform } from '../../__tests__/config.js';
 
 describe('Delete statement', () => {
   let gp: MyGP<MariaDBConnector>;
 
   beforeAll(async () => {
-    gp = makeGraphQLPlatform('delete_statement');
+    gp = createGraphQLPlatform('connector_mariadb_delete_statement');
 
     await gp.connector.setup();
     await gp.seed(fixtures, myAdminContext);

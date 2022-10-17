@@ -1,15 +1,15 @@
 // Jest Snapshot v1, https://goo.gl/fbAQLP
 
-exports[`GraphQL Platform Connector MariaDB generates valid and stable schema 1`] = `"DROP SCHEMA IF EXISTS \`tests_index\`"`;
+exports[`GraphQL Platform Connector MariaDB generates valid and stable schema 1`] = `"DROP SCHEMA IF EXISTS \`tests_connector_mariadb\`"`;
 
 exports[`GraphQL Platform Connector MariaDB generates valid and stable schema 2`] = `
-"CREATE OR REPLACE SCHEMA \`tests_index\`
+"CREATE OR REPLACE SCHEMA \`tests_connector_mariadb\`
 DEFAULT CHARSET = 'utf8mb4'
 DEFAULT COLLATE = 'utf8mb4_unicode_520_ci'"
 `;
 
 exports[`GraphQL Platform Connector MariaDB generates valid and stable schema 3`] = `
-"CREATE TABLE \`tests_index\`.\`articles\` (
+"CREATE TABLE \`tests_connector_mariadb\`.\`articles\` (
   \`privateId\` INT UNSIGNED AUTO_INCREMENT NOT NULL COMMENT 'This id is used to identify an Article internally',
   \`id\` CHAR(36) CHARSET 'utf8mb4' COLLATE 'utf8mb4_unicode_520_ci' NOT NULL COMMENT 'This UUID identifies an Article publicly',
   \`status\` ENUM('draft','published','deleted') NOT NULL,
@@ -40,7 +40,7 @@ DEFAULT CHARSET = 'utf8mb4'
 DEFAULT COLLATE = 'utf8mb4_unicode_520_ci'
 COMMENT 'The article is the main resource, written by the journalists'
 
-CREATE TABLE \`tests_index\`.\`categories\` (
+CREATE TABLE \`tests_connector_mariadb\`.\`categories\` (
   \`privateId\` INT UNSIGNED AUTO_INCREMENT NOT NULL,
   \`id\` CHAR(36) CHARSET 'utf8mb4' COLLATE 'utf8mb4_unicode_520_ci' NOT NULL,
   \`title\` VARCHAR(255) CHARSET 'utf8mb4' COLLATE 'utf8mb4_unicode_520_ci' NOT NULL,
@@ -57,7 +57,7 @@ ENGINE = 'InnoDB'
 DEFAULT CHARSET = 'utf8mb4'
 DEFAULT COLLATE = 'utf8mb4_unicode_520_ci'
 
-CREATE TABLE \`tests_index\`.\`tags\` (
+CREATE TABLE \`tests_connector_mariadb\`.\`tags\` (
   \`id\` CHAR(36) CHARSET 'utf8mb4' COLLATE 'utf8mb4_unicode_520_ci' NOT NULL,
   \`deprecated\` BOOLEAN COMMENT 'A tag can be deprecated',
   \`title\` VARCHAR(255) CHARSET 'utf8mb4' COLLATE 'utf8mb4_unicode_520_ci' NOT NULL,
@@ -71,7 +71,7 @@ ENGINE = 'InnoDB'
 DEFAULT CHARSET = 'utf8mb4'
 DEFAULT COLLATE = 'utf8mb4_unicode_520_ci'
 
-CREATE TABLE \`tests_index\`.\`article_tags\` (
+CREATE TABLE \`tests_connector_mariadb\`.\`article_tags\` (
   \`article_privateId\` INT UNSIGNED NOT NULL,
   \`tag_id\` CHAR(36) CHARSET 'utf8mb4' COLLATE 'utf8mb4_unicode_520_ci' NOT NULL,
   \`order\` INT UNSIGNED NOT NULL,
@@ -84,7 +84,7 @@ ENGINE = 'InnoDB'
 DEFAULT CHARSET = 'utf8mb4'
 DEFAULT COLLATE = 'utf8mb4_unicode_520_ci'
 
-CREATE TABLE \`tests_index\`.\`article_tag_moderations\` (
+CREATE TABLE \`tests_connector_mariadb\`.\`article_tag_moderations\` (
   \`theArticlePrivateId\` INT UNSIGNED NOT NULL,
   \`theTagId\` CHAR(36) CHARSET 'utf8mb4' COLLATE 'utf8mb4_unicode_520_ci' NOT NULL,
   \`moderator_id\` CHAR(36) CHARSET 'utf8mb4' COLLATE 'utf8mb4_unicode_520_ci' NOT NULL,
@@ -97,7 +97,7 @@ ENGINE = 'InnoDB'
 DEFAULT CHARSET = 'utf8mb4'
 DEFAULT COLLATE = 'utf8mb4_unicode_520_ci'
 
-CREATE TABLE \`tests_index\`.\`users\` (
+CREATE TABLE \`tests_connector_mariadb\`.\`users\` (
   \`id\` CHAR(36) CHARSET 'utf8mb4' COLLATE 'utf8mb4_unicode_520_ci' NOT NULL,
   \`username\` VARCHAR(255) CHARSET 'utf8mb4' COLLATE 'utf8mb4_unicode_520_ci' NOT NULL,
   \`created_at\` DATETIME(3) NOT NULL,
@@ -109,7 +109,7 @@ ENGINE = 'InnoDB'
 DEFAULT CHARSET = 'utf8mb4'
 DEFAULT COLLATE = 'utf8mb4_unicode_520_ci'
 
-CREATE TABLE \`tests_index\`.\`user_profiles\` (
+CREATE TABLE \`tests_connector_mariadb\`.\`user_profiles\` (
   \`theUserId\` CHAR(36) CHARSET 'utf8mb4' COLLATE 'utf8mb4_unicode_520_ci' NOT NULL,
   \`birthday\` DATE,
   \`facebook_id\` VARCHAR(255) CHARSET 'utf8mb4' COLLATE 'utf8mb4_unicode_520_ci',
@@ -122,7 +122,7 @@ ENGINE = 'InnoDB'
 DEFAULT CHARSET = 'utf8mb4'
 DEFAULT COLLATE = 'utf8mb4_unicode_520_ci'
 
-CREATE TABLE \`tests_index\`.\`logs\` (
+CREATE TABLE \`tests_connector_mariadb\`.\`logs\` (
   \`privateId\` INT UNSIGNED AUTO_INCREMENT NOT NULL,
   \`message\` VARCHAR(255) CHARSET 'utf8mb4' COLLATE 'utf8mb4_unicode_520_ci' NOT NULL,
   \`created_at\` DATETIME(3) NOT NULL,
@@ -134,22 +134,22 @@ DEFAULT COLLATE = 'utf8mb4_unicode_520_ci'"
 `;
 
 exports[`GraphQL Platform Connector MariaDB generates valid and stable schema 4`] = `
-"ALTER TABLE \`tests_index\`.\`articles\`
+"ALTER TABLE \`tests_connector_mariadb\`.\`articles\`
 ADD FOREIGN KEY \`fk_articles_category_privateId\` (\`category_privateId\`) REFERENCES \`categories\` (\`privateId\`) ON UPDATE RESTRICT ON DELETE RESTRICT,
 ADD FOREIGN KEY \`fk_articles_created_by_id\` (\`created_by_id\`) REFERENCES \`users\` (\`id\`) ON UPDATE RESTRICT ON DELETE RESTRICT,
 ADD FOREIGN KEY \`fk_articles_updated_by_username\` (\`updated_by_username\`) REFERENCES \`users\` (\`username\`) ON UPDATE RESTRICT ON DELETE RESTRICT
 
-ALTER TABLE \`tests_index\`.\`categories\`
+ALTER TABLE \`tests_connector_mariadb\`.\`categories\`
 ADD FOREIGN KEY \`fk_categories_parent_privateId\` (\`parent_privateId\`) REFERENCES \`categories\` (\`privateId\`) ON UPDATE RESTRICT ON DELETE RESTRICT
 
-ALTER TABLE \`tests_index\`.\`article_tags\`
+ALTER TABLE \`tests_connector_mariadb\`.\`article_tags\`
 ADD FOREIGN KEY \`fk_article_tags_article_privateId\` (\`article_privateId\`) REFERENCES \`articles\` (\`privateId\`) ON UPDATE RESTRICT ON DELETE RESTRICT,
 ADD FOREIGN KEY \`fk_article_tags_tag_id\` (\`tag_id\`) REFERENCES \`tags\` (\`id\`) ON UPDATE RESTRICT ON DELETE RESTRICT
 
-ALTER TABLE \`tests_index\`.\`article_tag_moderations\`
+ALTER TABLE \`tests_connector_mariadb\`.\`article_tag_moderations\`
 ADD FOREIGN KEY \`my_custom_fk_name\` (\`theArticlePrivateId\`,\`theTagId\`) REFERENCES \`article_tags\` (\`article_privateId\`,\`tag_id\`) ON UPDATE RESTRICT ON DELETE RESTRICT,
 ADD FOREIGN KEY \`fk_article_tag_moderations_moderator_id\` (\`moderator_id\`) REFERENCES \`users\` (\`id\`) ON UPDATE RESTRICT ON DELETE RESTRICT
 
-ALTER TABLE \`tests_index\`.\`user_profiles\`
+ALTER TABLE \`tests_connector_mariadb\`.\`user_profiles\`
 ADD FOREIGN KEY \`fk_user_profiles_theUserId\` (\`theUserId\`) REFERENCES \`users\` (\`id\`) ON UPDATE RESTRICT ON DELETE RESTRICT"
 `;

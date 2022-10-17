@@ -8,14 +8,14 @@ import {
 } from '@prismamedia/graphql-platform/__tests__/config.js';
 import { format } from '@sqltools/formatter';
 import { MariaDBConnector } from '../../../index.js';
-import { makeGraphQLPlatform } from '../../../__tests__/config.js';
+import { createGraphQLPlatform } from '../../../__tests__/config.js';
 import { TableFactor } from './table-reference.js';
 
 describe('Table reference', () => {
   let gp: MyGP<MariaDBConnector>;
 
   beforeAll(async () => {
-    gp = makeGraphQLPlatform('table_reference_clause');
+    gp = createGraphQLPlatform('connector_mariadb_table_reference_clause');
 
     await gp.connector.setup();
   });

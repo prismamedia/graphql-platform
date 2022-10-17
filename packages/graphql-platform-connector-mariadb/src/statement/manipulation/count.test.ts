@@ -7,13 +7,13 @@ import {
 import { fixtures } from '@prismamedia/graphql-platform/__tests__/fixture.js';
 import { format } from '@sqltools/formatter';
 import { MariaDBConnector } from '../../index.js';
-import { makeGraphQLPlatform } from '../../__tests__/config.js';
+import { createGraphQLPlatform } from '../../__tests__/config.js';
 
 describe('Count statement', () => {
   let gp: MyGP<MariaDBConnector>;
 
   beforeAll(async () => {
-    gp = makeGraphQLPlatform('count_statement');
+    gp = createGraphQLPlatform('connector_mariadb_count_statement');
 
     await gp.connector.setup();
     await gp.seed(fixtures, myAdminContext);
