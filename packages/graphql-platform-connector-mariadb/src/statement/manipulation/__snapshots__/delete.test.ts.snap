@@ -3,10 +3,10 @@
 exports[`Delete statement generates statements 1`] = `
 [
   {
-    "title": "My second published article",
+    "title": "My first published article",
   },
   {
-    "title": "My first published article",
+    "title": "My second published article",
   },
 ]
 `;

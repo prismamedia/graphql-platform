@@ -11,22 +11,26 @@ export const castToError = (error: unknown): Error =>
     ? Object.assign(new Error(error.message), error)
     : new Error(error as any);
 
-export interface NestableErrorOptions extends ErrorOptions {
+export interface NestableErrorOptions {
+  cause?: unknown;
   path?: Path;
 }
 
 export class NestableError extends Error {
+  public readonly cause?: Error;
   public readonly path?: Path;
   readonly #message?: string;
 
   public constructor(
     message: Nillable<string>,
-    { path, ...options }: NestableErrorOptions = {},
+    { cause, path, ...options }: NestableErrorOptions = {},
   ) {
-    super(undefined, options);
+    super(undefined);
 
-    this.path = path != null && isPath(path) ? path : undefined;
+    this.cause = cause ? castToError(cause) : undefined;
+    Object.defineProperty(this, 'cause', { enumerable: false });
 
+    this.path = isPath(path) ? path : undefined;
     Object.defineProperty(this, 'path', { enumerable: false });
 
     this.#message = message || undefined;
@@ -97,21 +101,23 @@ export interface NestableAggregateErrorOptions extends NestableErrorOptions {
 }
 
 export class NestableAggregateError extends AggregateError {
+  public readonly cause?: Error;
   public readonly path?: Path;
   readonly #message?: string;
 
   public constructor(
     errors: Iterable<unknown>,
-    { path, message, ...options }: NestableAggregateErrorOptions = {},
+    { cause, path, message, ...options }: NestableAggregateErrorOptions = {},
   ) {
     super(
       Array.from(errors, (error) => castToError(error)),
       undefined,
-      options,
     );
 
-    this.path = path != null && isPath(path) ? path : undefined;
+    this.cause = cause ? castToError(cause) : undefined;
+    Object.defineProperty(this, 'cause', { enumerable: false });
 
+    this.path = path != null && isPath(path) ? path : undefined;
     Object.defineProperty(this, 'path', { enumerable: false });
 
     this.#message = message || undefined;

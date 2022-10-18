@@ -28,7 +28,8 @@ describe('Delete statement', () => {
       'Article',
       {
         where: { status: ArticleStatus.PUBLISHED },
-        first: 5,
+        orderBy: ['createdAt_ASC'],
+        first: 10,
         selection: '{ title }',
       },
       myAdminContext,
@@ -37,7 +38,8 @@ describe('Delete statement', () => {
       'Article',
       {
         where: { status: ArticleStatus.DRAFT },
-        first: 5,
+        orderBy: ['createdAt_ASC'],
+        first: 10,
         selection: '{ title }',
       },
       myAdminContext,
