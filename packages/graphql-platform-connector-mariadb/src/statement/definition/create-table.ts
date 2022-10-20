@@ -1,5 +1,4 @@
-import * as utils from '@prismamedia/graphql-platform-utils';
-import { OptionalFlag } from '@prismamedia/graphql-platform-utils';
+import type * as utils from '@prismamedia/graphql-platform-utils';
 import type * as mariadb from 'mariadb';
 import { EOL } from 'node:os';
 import { escapeIdentifier, escapeStringValue } from '../../escaping.js';
@@ -9,7 +8,7 @@ import { StatementKind } from '../kind.js';
 export interface CreateTableStatementConfig {
   orReplace?: utils.OptionalFlag;
   ifNotExists?: utils.OptionalFlag;
-  withoutForeignKeys?: OptionalFlag;
+  withoutForeignKeys?: utils.OptionalFlag;
 }
 
 /**
@@ -31,17 +30,12 @@ export class CreateTableStatement implements mariadb.QueryOptions {
         config?.ifNotExists && 'IF NOT EXISTS',
         `${escapeIdentifier(table.qualifiedName)}`,
         `(${EOL}${[
-          ...Array.from(
-            table.columns,
+          ...table.columns.map(
             ({ name, definition }) => `${escapeIdentifier(name)} ${definition}`,
           ),
           table.primaryKey.definition,
           ...Array.from(
             table.uniqueIndexesByUniqueConstraint.values(),
-            ({ definition }) => definition,
-          ),
-          ...Array.from(
-            table.fullTextIndexesByLeaf.values(),
             ({ definition }) => definition,
           ),
           ...(config?.withoutForeignKeys !== true
@@ -50,6 +44,8 @@ export class CreateTableStatement implements mariadb.QueryOptions {
                 ({ definition }) => definition,
               )
             : []),
+          ...table.fullTextIndexes.map(({ definition }) => definition),
+          ...table.plainIndexes.map(({ definition }) => definition),
         ]
           .filter(Boolean)
           .map((line) => `  ${line}`)

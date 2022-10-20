@@ -1,4 +1,4 @@
-import { Scalars } from '@prismamedia/graphql-platform-scalars';
+import * as scalars from '@prismamedia/graphql-platform-scalars';
 import * as utils from '@prismamedia/graphql-platform-utils';
 import inflection from 'inflection';
 import _ from 'lodash';
@@ -84,14 +84,18 @@ export class ReverseEdgeUniqueUpdateInput extends AbstractReverseEdgeUpdateInput
             fields.push(
               new utils.Input({
                 name: ReverseEdgeUniqueUpdateInputAction.DELETE,
-                type: new utils.NonNullableInputType(Scalars.Boolean),
+                type: new utils.NonNullableInputType(
+                  scalars.typesByName.Boolean,
+                ),
                 public: reverseEdge.head.isMutationPublic(
                   utils.MutationType.DELETION,
                 ),
               }),
               new utils.Input({
                 name: ReverseEdgeUniqueUpdateInputAction.DELETE_IF_EXISTS,
-                type: new utils.NonNullableInputType(Scalars.Boolean),
+                type: new utils.NonNullableInputType(
+                  scalars.typesByName.Boolean,
+                ),
                 public: reverseEdge.head.isMutationPublic(
                   utils.MutationType.DELETION,
                 ),
@@ -107,14 +111,18 @@ export class ReverseEdgeUniqueUpdateInput extends AbstractReverseEdgeUpdateInput
               fields.push(
                 new utils.Input({
                   name: ReverseEdgeUniqueUpdateInputAction.DISCONNECT,
-                  type: new utils.NonNullableInputType(Scalars.Boolean),
+                  type: new utils.NonNullableInputType(
+                    scalars.typesByName.Boolean,
+                  ),
                   public: reverseEdge.head.isMutationPublic(
                     utils.MutationType.UPDATE,
                   ),
                 }),
                 new utils.Input({
                   name: ReverseEdgeUniqueUpdateInputAction.DISCONNECT_IF_EXISTS,
-                  type: new utils.NonNullableInputType(Scalars.Boolean),
+                  type: new utils.NonNullableInputType(
+                    scalars.typesByName.Boolean,
+                  ),
                   public: reverseEdge.head.isMutationPublic(
                     utils.MutationType.UPDATE,
                   ),

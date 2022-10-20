@@ -1,30 +1,34 @@
 import { Memoize } from '@prismamedia/ts-memoize';
-import inflection from 'inflection';
 import { escapeIdentifier } from '../../../escaping.js';
-import type { LeafColumn } from '../../table.js';
+import type { Table } from '../../table.js';
 import { AbstractIndex } from '../abstract-index.js';
+import { LeafColumn } from '../column/leaf.js';
 
 /**
- * @see https://mariadb.com/kb/en/full-text-index-overview/
+ * @see https://mariadb.com/kb/en/full-text-indexes/
  */
 export class FullTextIndex extends AbstractIndex {
   public readonly name: string;
 
-  public constructor(public readonly column: LeafColumn) {
-    super(column.table);
+  public constructor(
+    table: Table,
+    public readonly columns: ReadonlyArray<LeafColumn>,
+  ) {
+    super(table);
 
-    this.name = `txt_${inflection.underscore(column.name)}`
+    this.name = ['ft', ...this.columns.map(({ name }) => name)]
+      .join('_')
       // @see https://mariadb.com/kb/en/identifier-names/#maximum-length
       .substring(0, 64);
   }
 
   /**
-   * @see https://mariadb.com/kb/en/create-table/#unique
+   * @see https://mariadb.com/kb/en/create-table/#fulltext
    */
   @Memoize()
   public get definition(): string {
-    return `FULLTEXT ${escapeIdentifier(this.name)} (${escapeIdentifier(
-      this.column.name,
-    )})`;
+    return `FULLTEXT ${escapeIdentifier(this.name)} (${this.columns
+      .map(({ name }) => escapeIdentifier(name))
+      .join(',')})`;
   }
 }

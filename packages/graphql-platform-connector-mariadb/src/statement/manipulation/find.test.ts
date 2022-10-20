@@ -68,7 +68,7 @@ describe('Find statement', () => {
         where: {
           OR: [
             { body_is_null: true },
-            { body_contains: 'my searched text here' },
+            { body_contains: 'my +searched -text here' },
           ],
           status: ArticleStatus.PUBLISHED,
           category: { slug: 'tv' },

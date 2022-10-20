@@ -1,20 +1,29 @@
 import { isDeepStrictEqual } from 'node:util';
-import { GetScalarInternalValue, Scalars, ScalarType } from './index.js';
+import {
+  GetInternalValueByType,
+  GraphQLDate,
+  GraphQLDateTime,
+  GraphQLDraftJS,
+  GraphQLJSONArray,
+  GraphQLJSONObject,
+  GraphQLURL,
+  Type,
+} from './type.js';
 
-export type ScalarComparator<TScalarType extends ScalarType> = (
-  a: GetScalarInternalValue<TScalarType>,
-  b: GetScalarInternalValue<TScalarType>,
+export type Comparator<TScalarType extends Type> = (
+  a: GetInternalValueByType<TScalarType>,
+  b: GetInternalValueByType<TScalarType>,
 ) => boolean;
 
-export const getScalarComparator = <TScalarType extends ScalarType>(
-  type: TScalarType,
-): ScalarComparator<TScalarType> =>
-  (type === Scalars.DateTime || type === Scalars.Date
+export const getComparatorByType = <TType extends Type>(
+  type: TType,
+): Comparator<TType> =>
+  (type === GraphQLDateTime || type === GraphQLDate
     ? (a: Date, b: Date) => a.getTime() === b.getTime()
-    : type === Scalars.URL
+    : type === GraphQLURL
     ? (a: URL, b: URL) => a.toString() === b.toString()
-    : type === Scalars.DraftJS ||
-      type === Scalars.JSONArray ||
-      type === Scalars.JSONObject
+    : type === GraphQLDraftJS ||
+      type === GraphQLJSONArray ||
+      type === GraphQLJSONObject
     ? (a: any, b: any) => isDeepStrictEqual(a, b)
     : (a: any, b: any) => a === b) as any;

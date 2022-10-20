@@ -1,4 +1,4 @@
-import { Scalars } from '@prismamedia/graphql-platform-scalars';
+import * as scalars from '@prismamedia/graphql-platform-scalars';
 import * as utils from '@prismamedia/graphql-platform-utils';
 import { Memoize } from '@prismamedia/ts-memoize';
 import * as graphql from 'graphql';
@@ -53,11 +53,11 @@ export class FindManyQuery<
       }),
       new utils.Input({
         name: 'skip',
-        type: Scalars.UnsignedInt,
+        type: scalars.typesByName.UnsignedInt,
       }),
       new utils.Input({
         name: 'first',
-        type: utils.nonNillableInputType(Scalars.UnsignedInt),
+        type: utils.nonNillableInputType(scalars.typesByName.UnsignedInt),
       }),
     ];
   }

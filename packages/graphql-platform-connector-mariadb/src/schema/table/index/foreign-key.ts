@@ -15,7 +15,7 @@ export interface ForeignKeyIndexConfig {
 }
 
 /**
- * @see https://www.sqlitetutorial.net/sqlite-foreign-key/
+ * @see https://mariadb.com/kb/en/foreign-keys/
  */
 export class ForeignKeyIndex extends AbstractIndex {
   public readonly config?: ForeignKeyIndexConfig;

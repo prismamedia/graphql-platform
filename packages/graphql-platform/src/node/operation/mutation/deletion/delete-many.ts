@@ -1,4 +1,4 @@
-import { Scalars } from '@prismamedia/graphql-platform-scalars';
+import * as scalars from '@prismamedia/graphql-platform-scalars';
 import * as utils from '@prismamedia/graphql-platform-utils';
 import { Memoize } from '@prismamedia/ts-memoize';
 import * as graphql from 'graphql';
@@ -64,7 +64,7 @@ export class DeleteManyMutation<
       }),
       new utils.Input({
         name: 'first',
-        type: utils.nonNillableInputType(Scalars.UnsignedInt),
+        type: utils.nonNillableInputType(scalars.typesByName.UnsignedInt),
       }),
     ];
   }

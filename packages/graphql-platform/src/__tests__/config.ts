@@ -1,4 +1,4 @@
-import { Scalars } from '@prismamedia/graphql-platform-scalars';
+import * as scalars from '@prismamedia/graphql-platform-scalars';
 import * as utils from '@prismamedia/graphql-platform-utils';
 import {
   GraphQLEnumType,
@@ -56,7 +56,7 @@ export const PublicNodeInterfaceType = new GraphQLInterfaceType({
   description: 'Exemple of interface',
   fields: {
     id: {
-      type: new GraphQLNonNull(Scalars.UUIDv4),
+      type: new GraphQLNonNull(scalars.typesByName.UUIDv4),
       description: 'Every public node have a public id',
     },
   },
@@ -386,7 +386,7 @@ export const Article: NodeConfig<MyContext> = {
     virtualFields: (node) => ({
       lowerCasedTitle: {
         dependsOn: '{ status title category { title } }',
-        type: new GraphQLNonNull(Scalars.NonEmptyTrimmedString),
+        type: new GraphQLNonNull(scalars.typesByName.NonEmptyTrimmedString),
         description: `A custom field with a dependency`,
         resolve: ({ status, title, category }: any) =>
           (<string[]>[status, title, category?.title])

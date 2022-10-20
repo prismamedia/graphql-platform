@@ -1,8 +1,4 @@
-import {
-  jsonScalarTypes,
-  Scalars,
-  stringScalarTypesByName,
-} from '@prismamedia/graphql-platform-scalars';
+import * as scalars from '@prismamedia/graphql-platform-scalars';
 import * as utils from '@prismamedia/graphql-platform-utils';
 import { Memoize } from '@prismamedia/ts-memoize';
 import * as graphql from 'graphql';
@@ -74,7 +70,7 @@ export class NodeFilterInputType extends utils.ObjectInputType<FieldFilterInputT
     if (leaf.isNullable()) {
       fields.push(
         new LeafFilterInputType<boolean>(leaf, 'is_null', {
-          type: new utils.NonNullableInputType(Scalars.Boolean),
+          type: new utils.NonNullableInputType(scalars.typesByName.Boolean),
           filter: (value, _context, _path) =>
             value
               ? new LeafComparisonFilter(leaf, 'eq', null)
@@ -86,8 +82,12 @@ export class NodeFilterInputType extends utils.ObjectInputType<FieldFilterInputT
     // in, not_in
     if (
       graphql.isEnumType(leaf.type) ||
-      (leaf.type === Scalars.Boolean && leaf.isNullable()) ||
-      ![...jsonScalarTypes, Scalars.DraftJS].includes(leaf.type as any)
+      (leaf.type === scalars.typesByName.Boolean && leaf.isNullable()) ||
+      ![
+        scalars.typesByName.DraftJS,
+        scalars.typesByName.JSONArray,
+        scalars.typesByName.JSONObject,
+      ].includes(leaf.type as any)
     ) {
       fields.push(
         new LeafFilterInputType<LeafValue[]>(leaf, 'in', {
@@ -137,9 +137,10 @@ export class NodeFilterInputType extends utils.ObjectInputType<FieldFilterInputT
     // contains, starts_with, ends_with
     if (
       [
-        ...Object.values(stringScalarTypesByName),
-        Scalars.DraftJS,
-        Scalars.JSONObject,
+        scalars.typesByName.DraftJS,
+        scalars.typesByName.NonEmptyString,
+        scalars.typesByName.NonEmptyTrimmedString,
+        scalars.typesByName.String,
       ].includes(leaf.type as any)
     ) {
       for (const operator of [
@@ -149,12 +150,16 @@ export class NodeFilterInputType extends utils.ObjectInputType<FieldFilterInputT
       ] as const) {
         fields.push(
           new LeafFilterInputType<string>(leaf, operator, {
-            type: new utils.NonNullableInputType(Scalars.NonEmptyString),
+            type: new utils.NonNullableInputType(
+              scalars.typesByName.NonEmptyString,
+            ),
             filter: (value, _context, _path) =>
               new LeafFullTextFilter(leaf, operator, value),
           }),
           new LeafFilterInputType<string>(leaf, `not_${operator}`, {
-            type: new utils.NonNullableInputType(Scalars.NonEmptyString),
+            type: new utils.NonNullableInputType(
+              scalars.typesByName.NonEmptyString,
+            ),
             filter: (value, _context, _path) =>
               new NotOperation(new LeafFullTextFilter(leaf, operator, value)),
           }),
@@ -203,7 +208,7 @@ export class NodeFilterInputType extends utils.ObjectInputType<FieldFilterInputT
     if (edge.isNullable()) {
       fields.push(
         new EdgeFilterInputType<boolean>(edge, 'is_null', {
-          type: new utils.NonNullableInputType(Scalars.Boolean),
+          type: new utils.NonNullableInputType(scalars.typesByName.Boolean),
           filter: (value, _context, _path) =>
             value
               ? new NotOperation(new EdgeExistsFilter(edge))
@@ -245,7 +250,7 @@ export class NodeFilterInputType extends utils.ObjectInputType<FieldFilterInputT
         reverseEdge,
         'is_null',
         {
-          type: new utils.NonNullableInputType(Scalars.Boolean),
+          type: new utils.NonNullableInputType(scalars.typesByName.Boolean),
           filter: (value, _context, _path) =>
             value
               ? new NotOperation(new ReverseEdgeUniqueExistsFilter(reverseEdge))
@@ -335,7 +340,9 @@ export class NodeFilterInputType extends utils.ObjectInputType<FieldFilterInputT
               operator === 'eq'
                 ? reverseEdge.countFieldName
                 : `${reverseEdge.countFieldName}_${operator}`,
-            type: new utils.NonNullableInputType(Scalars.UnsignedInt),
+            type: new utils.NonNullableInputType(
+              scalars.typesByName.UnsignedInt,
+            ),
             filter: (value, _context, _path) =>
               operator === 'not'
                 ? new NotOperation(

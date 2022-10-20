@@ -56,7 +56,7 @@ describe('NodeFilterInputType', () => {
           'Article',
           { id: 123 },
           `"ArticleFilterInput.id" - Expects an "UUIDv4", got: 123
-└ Cause: \"UUIDv4\" - Expects an UUID version 4, got: 123`,
+└ Cause: Expects an UUID version 4, got: 123`,
         ],
         [
           'Article',

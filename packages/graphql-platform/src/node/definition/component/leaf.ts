@@ -1,14 +1,4 @@
-import {
-  bigintScalarTypesByName,
-  dateScalarTypesByName,
-  ensureScalarType,
-  getScalarComparator,
-  getScalarTypeByName,
-  numberScalarTypesByName,
-  ScalarType,
-  ScalarTypeName,
-  scalarTypeNames,
-} from '@prismamedia/graphql-platform-scalars';
+import * as scalars from '@prismamedia/graphql-platform-scalars';
 import * as utils from '@prismamedia/graphql-platform-utils';
 import { Memoize } from '@prismamedia/ts-memoize';
 import * as graphql from 'graphql';
@@ -37,7 +27,7 @@ export type EnumType = graphql.GraphQLEnumType & {
   parseValue: SetReturnType<graphql.GraphQLEnumType['parseValue'], string>;
 };
 
-export type LeafType = ScalarType | EnumType;
+export type LeafType = scalars.Type | EnumType;
 
 export type LeafValue = null | ReturnType<LeafType['parseValue']>;
 
@@ -54,7 +44,7 @@ export type LeafConfig<
    *
    * ex: { kind: "Leaf", type: "UUID" }
    */
-  type: ScalarTypeName | LeafType;
+  type: scalars.TypeName | LeafType;
 
   /**
    * Optional, is the node sortable using this component's value ?
@@ -96,17 +86,15 @@ export class Leaf<
       const typeConfigPath = utils.addPath(configPath, 'type');
 
       if (typeof typeConfig === 'string') {
-        this.type = getScalarTypeByName(typeConfig, typeConfigPath);
+        this.type = scalars.getTypeByName(typeConfig, typeConfigPath);
       } else if (graphql.isScalarType(typeConfig)) {
-        this.type = ensureScalarType(typeConfig, typeConfigPath);
+        this.type = scalars.ensureType(typeConfig, typeConfigPath);
       } else if (graphql.isEnumType(typeConfig)) {
         if (!typeConfig.getValues().length) {
           throw new utils.UnexpectedConfigError(
             `a non-empty Enum type`,
             typeConfig,
-            {
-              path: typeConfigPath,
-            },
+            { path: typeConfigPath },
           );
         }
 
@@ -130,7 +118,7 @@ export class Leaf<
         this.type = typeConfig;
       } else {
         throw new utils.UnexpectedConfigError(
-          `an Enum or a Scalar among "${scalarTypeNames.join(', ')}"`,
+          `an Enum or a Scalar among "${scalars.typeNames.join(', ')}"`,
           typeConfig,
           { path: typeConfigPath },
         );
@@ -147,7 +135,7 @@ export class Leaf<
       this.#comparator =
         this.type instanceof graphql.GraphQLEnumType
           ? (a: string, b: string) => a === b
-          : getScalarComparator(this.type);
+          : scalars.getComparatorByType(this.type);
     }
   }
 
@@ -218,11 +206,16 @@ export class Leaf<
 
     return utils.getOptionalFlag(
       sortableConfig,
-      Object.values({
-        ...bigintScalarTypesByName,
-        ...dateScalarTypesByName,
-        ...numberScalarTypesByName,
-      }).includes(this.type as any),
+      [
+        scalars.typesByName.BigInt,
+        scalars.typesByName.Date,
+        scalars.typesByName.DateTime,
+        scalars.typesByName.Float,
+        scalars.typesByName.Int,
+        scalars.typesByName.UnsignedBigInt,
+        scalars.typesByName.UnsignedFloat,
+        scalars.typesByName.UnsignedInt,
+      ].includes(this.type as any),
       sortableConfigPath,
     );
   }

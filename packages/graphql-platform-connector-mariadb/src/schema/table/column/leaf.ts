@@ -1,5 +1,5 @@
 import type * as core from '@prismamedia/graphql-platform';
-import type * as scalars from '@prismamedia/graphql-platform-scalars';
+import * as scalars from '@prismamedia/graphql-platform-scalars';
 import * as utils from '@prismamedia/graphql-platform-utils';
 import { Memoize } from '@prismamedia/ts-memoize';
 import * as graphql from 'graphql';
@@ -7,6 +7,7 @@ import inflection from 'inflection';
 import type { URL } from 'node:url';
 import * as semver from 'semver';
 import type { Constructor, JsonArray, JsonObject } from 'type-fest';
+import { escapeStringValue } from '../../../escaping.js';
 import type { MariaDBConnector } from '../../../index.js';
 import type { Table } from '../../table.js';
 import { AbstractColumn } from '../abstract-column.js';
@@ -134,7 +135,7 @@ export class LeafColumn extends AbstractColumn {
           values: leaf.type.getValues().map(({ value }) => value),
         });
       } else {
-        const leafTypeName = leaf.type.name as scalars.ScalarTypeName;
+        const leafTypeName = leaf.type.name as scalars.TypeName;
         switch (leafTypeName) {
           case 'Boolean':
             this.dataType = new BooleanType<boolean>({
@@ -244,6 +245,7 @@ export class LeafColumn extends AbstractColumn {
             this.dataType = new JsonType<JsonObject>({
               toColumnValue: (value) => JSON.stringify(value),
               fromColumnValue: (value) => JSON.parse(value),
+              // MariaDB automatically parses the JSON column, so we do not do it twice
               fromJsonValue: (value: any) => value,
             });
             break;
@@ -303,7 +305,7 @@ export class LeafColumn extends AbstractColumn {
           );
         }
 
-        this.fullTextIndex = new FullTextIndex(this);
+        this.fullTextIndex = new FullTextIndex(table, [this]);
       }
     }
   }
@@ -336,5 +338,21 @@ export class LeafColumn extends AbstractColumn {
   @Memoize()
   public isNullable(): boolean {
     return this.leaf.isNullable();
+  }
+
+  /**
+   * @see https://mariadb.com/kb/en/create-table/#column-definitions
+   */
+  @Memoize()
+  public get definition(): string {
+    return [
+      this.dataType.definition,
+      this.isAutoIncrement() && 'AUTO_INCREMENT',
+      !this.isNullable() && 'NOT NULL',
+      this.description &&
+        `COMMENT ${escapeStringValue(this.description.substring(0, 1024))}`,
+    ]
+      .filter(Boolean)
+      .join(' ');
   }
 }

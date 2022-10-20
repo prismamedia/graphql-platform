@@ -27,7 +27,7 @@ exports[`Count statement generates statements 6`] = `
 FROM \`articles\`
 WHERE (
     \`articles\`.\`status\` <=> 'published'
-    AND MATCH (\`articles\`.\`body\`) AGAINST ('my searched content')
+    AND MATCH (\`articles\`.\`body\`) AGAINST ('my searched content' IN BOOLEAN MODE)
     AND (
       SELECT COUNT(*)
       FROM \`article_tags\`

@@ -1,4 +1,4 @@
-import { Scalars } from '@prismamedia/graphql-platform-scalars';
+import * as scalars from '@prismamedia/graphql-platform-scalars';
 import * as utils from '@prismamedia/graphql-platform-utils';
 import { Memoize } from '@prismamedia/ts-memoize';
 import * as graphql from 'graphql';
@@ -42,7 +42,7 @@ export class ExistsQuery<
 
   @Memoize()
   public override getGraphQLOutputType() {
-    return new graphql.GraphQLNonNull(Scalars.Boolean);
+    return new graphql.GraphQLNonNull(scalars.typesByName.Boolean);
   }
 
   protected override async executeWithValidArgumentsAndContext(

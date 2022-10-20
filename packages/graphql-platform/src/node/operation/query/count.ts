@@ -1,4 +1,4 @@
-import { Scalars } from '@prismamedia/graphql-platform-scalars';
+import * as scalars from '@prismamedia/graphql-platform-scalars';
 import * as utils from '@prismamedia/graphql-platform-utils';
 import { Memoize } from '@prismamedia/ts-memoize';
 import * as graphql from 'graphql';
@@ -48,7 +48,7 @@ export class CountQuery<
 
   @Memoize()
   public override getGraphQLOutputType() {
-    return new graphql.GraphQLNonNull(Scalars.UnsignedInt);
+    return new graphql.GraphQLNonNull(scalars.typesByName.UnsignedInt);
   }
 
   protected override async executeWithValidArgumentsAndContext(

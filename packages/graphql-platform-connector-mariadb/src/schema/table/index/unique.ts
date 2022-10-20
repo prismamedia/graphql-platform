@@ -69,7 +69,8 @@ export class UniqueIndex extends AbstractIndex {
     }
 
     return (
-      `unq_${inflection.underscore(this.uniqueConstraint.name)}`
+      ['unq', inflection.underscore(this.uniqueConstraint.name)]
+        .join('_')
         // @see https://mariadb.com/kb/en/identifier-names/#maximum-length
         .substring(0, 64)
     );

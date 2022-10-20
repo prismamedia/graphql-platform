@@ -25,6 +25,8 @@ import { Column, LeafColumn, ReferenceColumnTree } from './table/column.js';
 import {
   ForeignKeyIndex,
   FullTextIndex,
+  PlainIndex,
+  PlainIndexConfig,
   PrimaryKey,
   UniqueIndex,
 } from './table/index.js';
@@ -54,6 +56,11 @@ export interface TableConfig {
    * Default: the schema's default collation
    */
   defaultCollation?: utils.Nillable<string>;
+
+  /**
+   * Optional, some additional plain indexes
+   */
+  indexes?: (PlainIndexConfig | PlainIndexConfig['columns'])[];
 }
 
 export class Table {
@@ -74,11 +81,12 @@ export class Table {
     core.UniqueConstraint,
     UniqueIndex
   >;
-  public readonly fullTextIndexesByLeaf: ReadonlyMap<core.Leaf, FullTextIndex>;
   public readonly foreignKeyIndexesByEdge: ReadonlyMap<
     core.Edge,
     ForeignKeyIndex
   >;
+  public readonly fullTextIndexes: ReadonlyArray<FullTextIndex>;
+  public readonly plainIndexes: ReadonlyArray<PlainIndex>;
 
   public constructor(
     public readonly schema: Schema,
@@ -146,21 +154,6 @@ export class Table {
       );
     }
 
-    // full-text-indexes-by-leaf
-    {
-      this.fullTextIndexesByLeaf = new Map(
-        Array.from(this.columnsByLeaf.values()).reduce<
-          [core.Leaf, FullTextIndex][]
-        >(
-          (entries, column) =>
-            column.fullTextIndex
-              ? [...entries, [column.leaf, column.fullTextIndex]]
-              : entries,
-          [],
-        ),
-      );
-    }
-
     // foreign-key-indexes-by-edge
     {
       this.foreignKeyIndexesByEdge = new Map(
@@ -168,6 +161,45 @@ export class Table {
           edge,
           new ForeignKeyIndex(this, edge),
         ]),
+      );
+    }
+
+    // full-text-indexes-by-leaf
+    {
+      this.fullTextIndexes = Object.freeze(
+        Array.from(this.columnsByLeaf.values()).reduce<FullTextIndex[]>(
+          (indexes, column) =>
+            column.fullTextIndex ? [...indexes, column.fullTextIndex] : indexes,
+          [],
+        ),
+      );
+    }
+
+    // plain-indexes
+    {
+      const indexesConfig = this.config?.indexes;
+      const indexesConfigPath = utils.addPath(this.configPath, 'indexes');
+
+      if (indexesConfig !== undefined && !Array.isArray(indexesConfig)) {
+        throw new utils.UnexpectedConfigError(`an array`, indexesConfig, {
+          path: indexesConfigPath,
+        });
+      }
+
+      this.plainIndexes = Object.freeze(
+        (indexesConfig ?? []).reduce<PlainIndex[]>(
+          (indexes, config, index) => [
+            ...indexes,
+            new PlainIndex(
+              this,
+              (Array.isArray(config)
+                ? { columns: config }
+                : config) as PlainIndexConfig,
+              utils.addPath(indexesConfigPath, index),
+            ),
+          ],
+          [],
+        ),
       );
     }
   }

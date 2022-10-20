@@ -1,4 +1,4 @@
-import { Scalars } from '@prismamedia/graphql-platform-scalars';
+import * as scalars from '@prismamedia/graphql-platform-scalars';
 import * as utils from '@prismamedia/graphql-platform-utils';
 import inflection from 'inflection';
 import _ from 'lodash';
@@ -94,7 +94,9 @@ export class ReverseEdgeMultipleUpdateInput extends AbstractReverseEdgeUpdateInp
             fields.push(
               new utils.Input({
                 name: ReverseEdgeMultipleUpdateInputAction.DELETE_ALL,
-                type: new utils.NonNullableInputType(Scalars.Boolean),
+                type: new utils.NonNullableInputType(
+                  scalars.typesByName.Boolean,
+                ),
                 public: reverseEdge.head.isMutationPublic(
                   utils.MutationType.DELETION,
                 ),
@@ -145,7 +147,9 @@ export class ReverseEdgeMultipleUpdateInput extends AbstractReverseEdgeUpdateInp
               fields.push(
                 new utils.Input({
                   name: ReverseEdgeMultipleUpdateInputAction.DISCONNECT_ALL,
-                  type: new utils.NonNullableInputType(Scalars.Boolean),
+                  type: new utils.NonNullableInputType(
+                    scalars.typesByName.Boolean,
+                  ),
                   public: reverseEdge.head.isMutationPublic(
                     utils.MutationType.UPDATE,
                   ),

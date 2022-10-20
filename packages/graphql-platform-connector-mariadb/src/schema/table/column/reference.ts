@@ -3,6 +3,7 @@ import * as utils from '@prismamedia/graphql-platform-utils';
 import { Memoize } from '@prismamedia/ts-memoize';
 import inflection from 'inflection';
 import assert from 'node:assert/strict';
+import { escapeStringValue } from '../../../escaping.js';
 import type { MariaDBConnector } from '../../../index.js';
 import type { Column, Schema, Table } from '../../../schema.js';
 import { AbstractColumn } from '../abstract-column.js';
@@ -55,13 +56,24 @@ export class ReferenceColumn extends AbstractColumn {
     }
   }
 
-  public isAutoIncrement(): boolean {
-    return false;
-  }
-
   @Memoize()
   public isNullable(): boolean {
     return this.edge.isNullable() || this.referencedColumn.isNullable();
+  }
+
+  /**
+   * @see https://mariadb.com/kb/en/create-table/#column-definitions
+   */
+  @Memoize()
+  public get definition(): string {
+    return [
+      this.dataType.definition,
+      !this.isNullable() && 'NOT NULL',
+      this.description &&
+        `COMMENT ${escapeStringValue(this.description.substring(0, 1024))}`,
+    ]
+      .filter(Boolean)
+      .join(' ');
   }
 
   /**

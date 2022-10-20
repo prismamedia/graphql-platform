@@ -30,6 +30,9 @@ export function createGraphQLPlatform(
         nodeName,
         {
           ...config,
+          ...(nodeName === 'Article'
+            ? { table: { indexes: [['slug'], ['status', 'slug']] } }
+            : {}),
           components: Object.fromEntries<ComponentConfig>(
             Object.entries(config.components).map<[string, ComponentConfig]>(
               ([componentName, config]) => [

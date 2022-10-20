@@ -305,7 +305,7 @@ WHERE (
     ) > 5
     AND (
       \`articles\`.\`body\` <=> NULL
-      OR MATCH (\`articles\`.\`body\`) AGAINST ('my searched text here')
+      OR MATCH (\`articles\`.\`body\`) AGAINST ('my +searched -text here' IN BOOLEAN MODE)
     )
   )
 ORDER BY \`articles\`.\`created_at\` ASC

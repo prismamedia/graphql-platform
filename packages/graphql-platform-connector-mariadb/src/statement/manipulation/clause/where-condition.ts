@@ -62,7 +62,7 @@ function parseLeafFilter(
           ? // @see https://mariadb.com/kb/en/match-against/
             `MATCH (${columnIdentifier}) AGAINST (${escapeStringValue(
               filter.value,
-            )})`
+            )} IN BOOLEAN MODE)`
           : `${columnIdentifier} LIKE ${escapeStringValue(
               `%${filter.value}%`,
             )}`;

@@ -30,10 +30,12 @@ exports[`GraphQL Platform Connector MariaDB generates valid and stable schema 3`
   PRIMARY KEY (\`privateId\`),
   UNIQUE \`unq_id\` (\`id\`),
   UNIQUE \`unq_category_slug\` (\`category_privateId\`,\`slug\`),
-  FULLTEXT \`txt_body\` (\`body\`),
   FOREIGN KEY \`fk_articles_category_privateId\` (\`category_privateId\`) REFERENCES \`categories\` (\`privateId\`) ON UPDATE RESTRICT ON DELETE RESTRICT,
   FOREIGN KEY \`fk_articles_created_by_id\` (\`created_by_id\`) REFERENCES \`users\` (\`id\`) ON UPDATE RESTRICT ON DELETE RESTRICT,
-  FOREIGN KEY \`fk_articles_updated_by_username\` (\`updated_by_username\`) REFERENCES \`users\` (\`username\`) ON UPDATE RESTRICT ON DELETE RESTRICT
+  FOREIGN KEY \`fk_articles_updated_by_username\` (\`updated_by_username\`) REFERENCES \`users\` (\`username\`) ON UPDATE RESTRICT ON DELETE RESTRICT,
+  FULLTEXT \`ft_body\` (\`body\`),
+  INDEX \`idx_slug\` (\`slug\`),
+  INDEX \`idx_status_slug\` (\`status\`,\`slug\`)
 )
 ENGINE = 'InnoDB'
 DEFAULT CHARSET = 'utf8mb4'

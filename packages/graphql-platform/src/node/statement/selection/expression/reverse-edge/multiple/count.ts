@@ -1,4 +1,4 @@
-import { Scalars } from '@prismamedia/graphql-platform-scalars';
+import * as scalars from '@prismamedia/graphql-platform-scalars';
 import * as utils from '@prismamedia/graphql-platform-utils';
 import { Memoize } from '@prismamedia/ts-memoize';
 import * as graphql from 'graphql';
@@ -68,14 +68,14 @@ export class ReverseEdgeMultipleCountSelection
   public parseValue(maybeValue: unknown, path: utils.Path): number {
     if (maybeValue == null) {
       throw new utils.UnexpectedValueError(
-        `a non-nil "${Scalars.UnsignedInt}"`,
+        `a non-nil "${scalars.typesByName.UnsignedInt}"`,
         maybeValue,
         { path },
       );
     }
 
     return utils.parseGraphQLScalarValue(
-      Scalars.UnsignedInt,
+      scalars.typesByName.UnsignedInt,
       maybeValue,
       path,
     )!;

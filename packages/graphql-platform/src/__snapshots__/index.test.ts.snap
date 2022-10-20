@@ -226,12 +226,6 @@ input ArticleFilterInput {
   id_not: UUIDv4
   id_in: [UUIDv4!]
   id_not_in: [UUIDv4!]
-  id_contains: NonEmptyString
-  id_not_contains: NonEmptyString
-  id_starts_with: NonEmptyString
-  id_not_starts_with: NonEmptyString
-  id_ends_with: NonEmptyString
-  id_not_ends_with: NonEmptyString
   status: ArticleStatus
   status_not: ArticleStatus
   status_in: [ArticleStatus!]
@@ -293,12 +287,6 @@ input ArticleFilterInput {
   metas: JSONObject
   metas_not: JSONObject
   metas_is_null: Boolean
-  metas_contains: NonEmptyString
-  metas_not_contains: NonEmptyString
-  metas_starts_with: NonEmptyString
-  metas_not_starts_with: NonEmptyString
-  metas_ends_with: NonEmptyString
-  metas_not_ends_with: NonEmptyString
   highlighted: Boolean
   highlighted_not: Boolean
   highlighted_is_null: Boolean
@@ -345,9 +333,6 @@ input ArticleFilterInput {
 """A field whose value is a generic Universally Unique Identifier."""
 scalar UUIDv4 @specifiedBy(url: "https://en.wikipedia.org/wiki/Universally_unique_identifier")
 
-"""A non-empty string."""
-scalar NonEmptyString
-
 enum ArticleStatus {
   DRAFT
   PUBLISHED
@@ -358,6 +343,9 @@ enum ArticleStatus {
 A string in which the leading and trailing whitespace characters are removed and cannot be empty afterwards.
 """
 scalar NonEmptyTrimmedString
+
+"""A non-empty string."""
+scalar NonEmptyString
 
 """
 The DraftJS raw state contains a list of content blocks, as well as a map of all relevant entity objects.
@@ -370,12 +358,6 @@ input CategoryFilterInput {
   id_not: UUIDv4
   id_in: [UUIDv4!]
   id_not_in: [UUIDv4!]
-  id_contains: NonEmptyString
-  id_not_contains: NonEmptyString
-  id_starts_with: NonEmptyString
-  id_not_starts_with: NonEmptyString
-  id_ends_with: NonEmptyString
-  id_not_ends_with: NonEmptyString
   title: NonEmptyTrimmedString
   title_not: NonEmptyTrimmedString
   title_in: [NonEmptyTrimmedString!]
@@ -436,12 +418,6 @@ input UserFilterInput {
   id_not: UUIDv4
   id_in: [UUIDv4!]
   id_not_in: [UUIDv4!]
-  id_contains: NonEmptyString
-  id_not_contains: NonEmptyString
-  id_starts_with: NonEmptyString
-  id_not_starts_with: NonEmptyString
-  id_ends_with: NonEmptyString
-  id_not_ends_with: NonEmptyString
   username: NonEmptyTrimmedString
   username_not: NonEmptyTrimmedString
   username_in: [NonEmptyTrimmedString!]
@@ -505,34 +481,16 @@ input UserProfileFilterInput {
   facebookId_is_null: Boolean
   facebookId_in: [ID]
   facebookId_not_in: [ID]
-  facebookId_contains: NonEmptyString
-  facebookId_not_contains: NonEmptyString
-  facebookId_starts_with: NonEmptyString
-  facebookId_not_starts_with: NonEmptyString
-  facebookId_ends_with: NonEmptyString
-  facebookId_not_ends_with: NonEmptyString
   googleId: ID
   googleId_not: ID
   googleId_is_null: Boolean
   googleId_in: [ID]
   googleId_not_in: [ID]
-  googleId_contains: NonEmptyString
-  googleId_not_contains: NonEmptyString
-  googleId_starts_with: NonEmptyString
-  googleId_not_starts_with: NonEmptyString
-  googleId_ends_with: NonEmptyString
-  googleId_not_ends_with: NonEmptyString
   twitterHandle: ID
   twitterHandle_not: ID
   twitterHandle_is_null: Boolean
   twitterHandle_in: [ID]
   twitterHandle_not_in: [ID]
-  twitterHandle_contains: NonEmptyString
-  twitterHandle_not_contains: NonEmptyString
-  twitterHandle_starts_with: NonEmptyString
-  twitterHandle_not_starts_with: NonEmptyString
-  twitterHandle_ends_with: NonEmptyString
-  twitterHandle_not_ends_with: NonEmptyString
   AND: [UserProfileFilterInput]
   OR: [UserProfileFilterInput]
   NOT: UserProfileFilterInput
@@ -599,12 +557,6 @@ input TagFilterInput {
   id_not: UUIDv4
   id_in: [UUIDv4!]
   id_not_in: [UUIDv4!]
-  id_contains: NonEmptyString
-  id_not_contains: NonEmptyString
-  id_starts_with: NonEmptyString
-  id_not_starts_with: NonEmptyString
-  id_ends_with: NonEmptyString
-  id_not_ends_with: NonEmptyString
   deprecated: Boolean
   deprecated_not: Boolean
   deprecated_is_null: Boolean

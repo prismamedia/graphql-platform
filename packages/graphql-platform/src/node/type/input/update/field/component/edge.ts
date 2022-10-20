@@ -1,4 +1,4 @@
-import { Scalars } from '@prismamedia/graphql-platform-scalars';
+import * as scalars from '@prismamedia/graphql-platform-scalars';
 import * as utils from '@prismamedia/graphql-platform-utils';
 import inflection from 'inflection';
 import type { RequireExactlyOne } from 'type-fest';
@@ -122,7 +122,7 @@ export class EdgeUpdateInput extends AbstractComponentUpdateInput<EdgeUpdateInpu
                 fields.push(
                   new utils.Input({
                     name: EdgeUpdateInputAction.DISCONNECT,
-                    type: Scalars.Boolean,
+                    type: scalars.typesByName.Boolean,
                     nullable: false,
                   }),
                 );

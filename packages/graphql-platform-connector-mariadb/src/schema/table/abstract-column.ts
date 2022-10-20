@@ -1,7 +1,6 @@
 import type * as core from '@prismamedia/graphql-platform';
 import type * as utils from '@prismamedia/graphql-platform-utils';
 import { Memoize } from '@prismamedia/ts-memoize';
-import { escapeStringValue } from '../../escaping.js';
 import type { Table } from '../table.js';
 import type { DataType } from './data-type.js';
 
@@ -9,8 +8,7 @@ export abstract class AbstractColumn {
   public abstract readonly name: string;
   public abstract readonly description?: string;
   public abstract readonly dataType: DataType;
-  public abstract isAutoIncrement(): boolean;
-  public abstract isNullable(): boolean;
+  public abstract readonly definition: string;
 
   public constructor(public readonly table: Table) {}
 
@@ -32,22 +30,6 @@ export abstract class AbstractColumn {
 
   public toString(): string {
     return this.fullyQualifiedName;
-  }
-
-  /**
-   * @see https://mariadb.com/kb/en/create-table/#column-definitions
-   */
-  @Memoize()
-  public get definition(): string {
-    return [
-      this.dataType.definition,
-      this.isAutoIncrement() && 'AUTO_INCREMENT',
-      !this.isNullable() && 'NOT NULL',
-      this.description &&
-        `COMMENT ${escapeStringValue(this.description.substring(0, 1024))}`,
-    ]
-      .filter(Boolean)
-      .join(' ');
   }
 
   public pickLeafValueFromRow(row: utils.PlainObject): core.LeafValue {

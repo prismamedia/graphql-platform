@@ -1,4 +1,4 @@
-import { Scalars } from '@prismamedia/graphql-platform-scalars';
+import * as scalars from '@prismamedia/graphql-platform-scalars';
 import * as utils from '@prismamedia/graphql-platform-utils';
 import { Memoize } from '@prismamedia/ts-memoize';
 import * as graphql from 'graphql';
@@ -41,7 +41,7 @@ export class ReverseEdgeMultipleCountOutputType extends AbstractReverseEdgeOutpu
 
   @Memoize()
   public override get type() {
-    return new graphql.GraphQLNonNull(Scalars.UnsignedInt);
+    return new graphql.GraphQLNonNull(scalars.typesByName.UnsignedInt);
   }
 
   public override selectGraphQLFieldNode(

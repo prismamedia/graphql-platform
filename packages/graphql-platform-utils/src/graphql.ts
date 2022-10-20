@@ -1,5 +1,6 @@
 import * as graphql from 'graphql';
 import { isDeepStrictEqual } from 'node:util';
+import { getEnumKeys } from './enum.js';
 import { castToError, UnexpectedValueError } from './error.js';
 import { indefinite } from './indefinite.js';
 import { isNil, type Nillable } from './nil.js';
@@ -122,4 +123,24 @@ export function parseGraphQLLeafValue(
   return graphql.isScalarType(type)
     ? parseGraphQLScalarValue(type, maybeLeafValue, path)
     : parseGraphQLEnumValue(type, maybeLeafValue, path);
+}
+
+export function createGraphQLEnumType(
+  name: string,
+  enumerable: PlainObject,
+  description?: Nillable<string>,
+  useKeyAsValue: boolean = false,
+): graphql.GraphQLEnumType {
+  return new graphql.GraphQLEnumType({
+    name,
+    description,
+    values: Object.fromEntries(
+      getEnumKeys(enumerable).map(
+        (key): [string, graphql.GraphQLEnumValueConfig] => [
+          key,
+          { value: useKeyAsValue ? undefined : enumerable[key] },
+        ],
+      ),
+    ),
+  });
 }
