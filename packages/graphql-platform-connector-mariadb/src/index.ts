@@ -85,7 +85,7 @@ export class MariaDBConnector implements core.ConnectorInterface {
 
   readonly #poolsByStatementKind = new Map<StatementKind, mariadb.Pool>();
 
-  readonly #connectionsByMutationContext = new Map<
+  readonly #connectionsByMutation = new Map<
     core.MutationContext,
     mariadb.PoolConnection
   >();
@@ -296,13 +296,16 @@ export class MariaDBConnector implements core.ConnectorInterface {
       throw error;
     }
 
-    this.#connectionsByMutationContext.set(context, connection);
+    this.#connectionsByMutation.set(context, connection);
   }
 
+  /**
+   * Gets the current mutation's transactional connection
+   */
   public getConnectionForMutation(
     context: core.MutationContext,
   ): mariadb.PoolConnection {
-    const connection = this.#connectionsByMutationContext.get(context);
+    const connection = this.#connectionsByMutation.get(context);
     assert(connection, `The connection has been released`);
 
     return connection;
@@ -324,7 +327,7 @@ export class MariaDBConnector implements core.ConnectorInterface {
     try {
       await this.getConnectionForMutation(context).release();
     } finally {
-      this.#connectionsByMutationContext.delete(context);
+      this.#connectionsByMutation.delete(context);
     }
   }
 
@@ -335,7 +338,7 @@ export class MariaDBConnector implements core.ConnectorInterface {
     const table = this.schema.getTableByNode(statement.node);
     const maybeConnection =
       context instanceof core.MutationContext
-        ? this.#connectionsByMutationContext.get(context)
+        ? this.#connectionsByMutation.get(context)
         : undefined;
 
     return table.count(statement, context, maybeConnection);
@@ -348,7 +351,7 @@ export class MariaDBConnector implements core.ConnectorInterface {
     const table = this.schema.getTableByNode(statement.node);
     const maybeConnection =
       context instanceof core.MutationContext
-        ? this.#connectionsByMutationContext.get(context)
+        ? this.#connectionsByMutation.get(context)
         : undefined;
 
     return table.find(statement, context, maybeConnection);
