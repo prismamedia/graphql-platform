@@ -38,8 +38,8 @@ describe('Seeding', () => {
   it('orders by dependencies', () => {
     const seeding = new Seeding(gp, fixtures);
 
-    expect(seeding.fixturesByReference.size).toMatchInlineSnapshot(`18`);
-    expect(Array.from(seeding.fixturesByReference.keys()))
+    expect(seeding.fixtures.length).toMatchInlineSnapshot(`18`);
+    expect(seeding.fixtures.map(({ reference }) => reference))
       .toMatchInlineSnapshot(`
       [
         "category_root",

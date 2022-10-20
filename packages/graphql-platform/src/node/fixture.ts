@@ -14,27 +14,41 @@ export class NodeFixture<
   TRequestContext extends object,
   TConnector extends ConnectorInterface,
 > {
-  public readonly dependencies: ReadonlySet<NodeFixtureReference>;
-
   public constructor(
     public readonly seeding: Seeding<TRequestContext, TConnector>,
     public readonly node: Node<TRequestContext, TConnector>,
     public readonly reference: NodeFixtureReference,
     public readonly data: NodeFixtureData,
+    public readonly path: utils.Path,
   ) {
-    if (typeof reference !== 'string') {
-      throw new utils.UnexpectedValueError('a string', reference);
-    }
-
     if (!utils.isPlainObject(data)) {
-      throw new utils.UnexpectedValueError('a plain-object', data);
+      throw new utils.UnexpectedConfigError('a plain-object', data, { path });
     }
+  }
 
-    this.dependencies = new Set(
+  @Memoize()
+  public get dependencies(): ReadonlySet<NodeFixtureReference> {
+    return new Set(
       Array.from(this.node.edgesByName.values()).reduce<NodeFixtureReference[]>(
         (dependencies, edge) => {
-          const maybeEdgeReference = data[edge.name];
+          const maybeEdgeReference = this.data[edge.name];
           if (maybeEdgeReference != null) {
+            if (typeof maybeEdgeReference !== 'string') {
+              throw new utils.UnexpectedConfigError(
+                'a string',
+                maybeEdgeReference,
+                { path: utils.addPath(this.path, edge.name) },
+              );
+            } else if (
+              !this.seeding.dependencyGraph.hasNode(maybeEdgeReference)
+            ) {
+              throw new utils.UnexpectedConfigError(
+                "an existing fixture's reference",
+                maybeEdgeReference,
+                { path: utils.addPath(this.path, edge.name) },
+              );
+            }
+
             dependencies.push(maybeEdgeReference);
           }
 
@@ -48,15 +62,16 @@ export class NodeFixture<
   @Memoize()
   public get dependents(): ReadonlySet<NodeFixtureReference> {
     return new Set(
-      Array.from(this.seeding.fixturesByReference.values()).reduce<
-        NodeFixtureReference[]
-      >((dependents, fixture) => {
-        if (fixture.dependencies.has(this.reference)) {
-          dependents.push(fixture.reference);
-        }
+      Array.from(this.seeding.fixtures.values()).reduce<NodeFixtureReference[]>(
+        (dependents, fixture) => {
+          if (fixture.dependencies.has(this.reference)) {
+            dependents.push(fixture.reference);
+          }
 
-        return dependents;
-      }, []),
+          return dependents;
+        },
+        [],
+      ),
     );
   }
 
@@ -71,8 +86,8 @@ export class NodeFixture<
               this.node.edgesByName.has(componentName)
                 ? {
                     [EdgeCreationInputAction.CONNECT]:
-                      await this.seeding.fixturesByReference
-                        .get(componentValue)!
+                      await this.seeding.dependencyGraph
+                        .getNodeData(componentValue)
                         .getIdentifier(context),
                   }
                 : componentValue,
@@ -80,12 +95,16 @@ export class NodeFixture<
           ),
         ),
       ),
-      utils.addPath(undefined, this.reference),
+      this.path,
     ) as any;
 
     return this.node
       .getMutationByKey('create-one')
-      .execute({ data, selection: this.node.selection }, context) as any;
+      .execute(
+        { data, selection: this.node.selection },
+        context,
+        this.path,
+      ) as any;
   }
 
   @Memoize((context: TRequestContext) => context)

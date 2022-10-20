@@ -24,11 +24,14 @@ export class Seeding<
   TRequestContext extends object,
   TConnector extends ConnectorInterface,
 > {
+  public readonly dependencyGraph = new DepGraph<
+    NodeFixture<TRequestContext, TConnector>
+  >({ circular: false });
+
   /**
    * The fixtures are ordered by their dependencies
    */
-  public readonly fixturesByReference: Map<
-    NodeFixtureReference,
+  public readonly fixtures: ReadonlyArray<
     NodeFixture<TRequestContext, TConnector>
   >;
 
@@ -36,54 +39,67 @@ export class Seeding<
     public readonly gp: GraphQLPlatform<TRequestContext, TConnector>,
     fixtures: NodeFixtureDataByReferenceByNodeName,
   ) {
+    const fixturesPath = utils.addPath(undefined, 'fixtures');
+
     if (!utils.isPlainObject(fixtures)) {
-      throw new utils.UnexpectedValueError('a plain-object', fixtures);
+      throw new utils.UnexpectedConfigError('a plain-object', fixtures, {
+        path: fixturesPath,
+      });
     }
 
-    const depGraph = new DepGraph<NodeFixture<TRequestContext, TConnector>>({
-      circular: false,
-    });
-
     Object.entries(fixtures).forEach(([nodeName, dataByReference]) => {
-      if (typeof nodeName !== 'string') {
-        throw new utils.UnexpectedValueError('a string', nodeName);
+      const node = gp.nodesByName.get(nodeName);
+      if (!node) {
+        throw new utils.UnexpectedConfigError(
+          `an existing node's name`,
+          nodeName,
+          { path: fixturesPath },
+        );
       }
 
+      const dataByReferencePath = utils.addPath(fixturesPath, nodeName);
+
       if (!utils.isPlainObject(dataByReference)) {
-        throw new utils.UnexpectedValueError('a plain-object', dataByReference);
+        throw new utils.UnexpectedConfigError(
+          'a plain-object',
+          dataByReference,
+          { path: dataByReferencePath },
+        );
       }
 
       Object.entries(dataByReference).forEach(([reference, data]) =>
-        depGraph.addNode(
+        this.dependencyGraph.addNode(
           reference,
-          new NodeFixture(this, gp.getNodeByName(nodeName), reference, data),
+          new NodeFixture(
+            this,
+            node,
+            reference,
+            data,
+            utils.addPath(dataByReferencePath, reference),
+          ),
         ),
       );
     });
 
-    Object.values(fixtures).forEach((dataByReference) =>
-      Object.keys(dataByReference).forEach((reference) =>
-        depGraph
+    this.dependencyGraph
+      .entryNodes()
+      .forEach((reference) =>
+        this.dependencyGraph
           .getNodeData(reference)
           .dependencies.forEach((dependency) =>
-            depGraph.addDependency(reference, dependency),
+            this.dependencyGraph.addDependency(reference, dependency),
           ),
-      ),
-    );
+      );
 
-    this.fixturesByReference = new Map(
-      depGraph
+    this.fixtures = Object.freeze(
+      this.dependencyGraph
         .overallOrder()
-        .map((reference) => [reference, depGraph.getNodeData(reference)]),
+        .map((reference) => this.dependencyGraph.getNodeData(reference)),
     );
   }
 
   @Memoize((context: TRequestContext) => context)
   public async load(context: TRequestContext): Promise<void> {
-    await Promise.all(
-      Array.from(this.fixturesByReference.values(), (fixture) =>
-        fixture.load(context),
-      ),
-    );
+    await Promise.all(this.fixtures.map((fixture) => fixture.load(context)));
   }
 }
