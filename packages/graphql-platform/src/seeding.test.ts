@@ -2,6 +2,7 @@ import {
   EdgeExistsFilter,
   GraphQLPlatform,
   LeafComparisonFilter,
+  NodeValue,
   NotOperation,
 } from './index.js';
 import { Seeding } from './seeding.js';
@@ -72,7 +73,7 @@ describe('Seeding', () => {
         create: async ({ node, creations }) => {
           switch (node.name) {
             case 'Article':
-              return creations.map((creation) => {
+              return creations.map((creation): NodeValue => {
                 switch (creation.proxy.title) {
                   case 'My first draft article':
                     return {
@@ -130,7 +131,7 @@ describe('Seeding', () => {
               });
 
             case 'Category':
-              return creations.map((creation) => {
+              return creations.map((creation): NodeValue => {
                 switch (creation.proxy.title) {
                   case 'ROOT':
                     hasRootCategory = true;
@@ -169,7 +170,7 @@ describe('Seeding', () => {
               });
 
             case 'Tag':
-              return creations.map((creation) => {
+              return creations.map((creation): NodeValue => {
                 switch (creation.proxy.title) {
                   case 'TV':
                     return {
@@ -200,7 +201,7 @@ describe('Seeding', () => {
               });
 
             case 'ArticleTag':
-              return creations.map((creation) => {
+              return creations.map((creation): NodeValue => {
                 switch (creation.proxy.order) {
                   case 0:
                     return {
@@ -224,19 +225,25 @@ describe('Seeding', () => {
               });
 
             case 'ArticleTagModeration':
-              return creations.map((creation) => ({ ...creation.proxy }));
+              return creations.map(
+                (creation): NodeValue => ({ ...creation.proxy } as NodeValue),
+              );
 
             case 'User':
-              return creations.map((creation) => ({ ...creation.proxy }));
+              return creations.map(
+                (creation): NodeValue => ({ ...creation.proxy } as NodeValue),
+              );
 
             case 'UserProfile':
-              return creations.map((creation) => ({
-                birthday: null,
-                facebookId: null,
-                googleId: null,
-                twitterHandle: null,
-                ...creation.proxy,
-              }));
+              return creations.map(
+                (creation): NodeValue => ({
+                  birthday: null,
+                  facebookId: null,
+                  googleId: null,
+                  twitterHandle: null,
+                  ...creation.proxy,
+                }),
+              );
 
             default:
               throw new Error(`"create" not implemented for "${node.name}"`);

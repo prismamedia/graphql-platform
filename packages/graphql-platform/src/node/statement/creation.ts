@@ -8,7 +8,10 @@ import type {
   LeafValue,
 } from '../definition/component.js';
 
-export type NodeCreationProxy = Record<Component['name'], ComponentValue>;
+export type NodeCreationProxy = Record<
+  Component['name'],
+  ComponentValue | undefined
+>;
 
 const nodeCreationProxyHandler: ProxyHandler<NodeCreation> = {
   ownKeys: (creation) =>

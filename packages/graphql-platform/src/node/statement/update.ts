@@ -2,7 +2,10 @@ import type { ConnectorInterface } from '../../connector-interface.js';
 import type { Node } from '../../node.js';
 import type { Component, ComponentUpdate } from '../definition/component.js';
 
-export type NodeUpdateProxy = Record<Component['name'], ComponentUpdate>;
+export type NodeUpdateProxy = Record<
+  Component['name'],
+  ComponentUpdate | undefined
+>;
 
 const nodeUpdateProxyHandler: ProxyHandler<NodeUpdate> = {
   ownKeys: (update) =>

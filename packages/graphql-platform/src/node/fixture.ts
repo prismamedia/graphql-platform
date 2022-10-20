@@ -80,6 +80,7 @@ export class NodeFixture<
           ),
         ),
       ),
+      utils.addPath(undefined, this.reference),
     ) as any;
 
     return this.node
