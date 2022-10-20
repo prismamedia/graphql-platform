@@ -1,6 +1,7 @@
 import * as core from '@prismamedia/graphql-platform';
 import * as utils from '@prismamedia/graphql-platform-utils';
 import * as mariadb from 'mariadb';
+import assert from 'node:assert/strict';
 import { hrtime } from 'node:process';
 import * as rxjs from 'rxjs';
 import * as semver from 'semver';
@@ -84,7 +85,7 @@ export class MariaDBConnector implements core.ConnectorInterface {
 
   readonly #poolsByStatementKind = new Map<StatementKind, mariadb.Pool>();
 
-  readonly #connectionsByContext = new Map<
+  readonly #connectionsByMutationContext = new Map<
     core.MutationContext,
     mariadb.PoolConnection
   >();
@@ -295,26 +296,35 @@ export class MariaDBConnector implements core.ConnectorInterface {
       throw error;
     }
 
-    this.#connectionsByContext.set(context, connection);
+    this.#connectionsByMutationContext.set(context, connection);
+  }
+
+  public getConnectionForMutation(
+    context: core.MutationContext,
+  ): mariadb.PoolConnection {
+    const connection = this.#connectionsByMutationContext.get(context);
+    assert(connection, `The connection has been released`);
+
+    return connection;
   }
 
   public async postSuccessfulMutation(
     context: core.MutationContext,
   ): Promise<void> {
-    await this.#connectionsByContext.get(context)!.commit();
+    await this.getConnectionForMutation(context).commit();
   }
 
   public async postFailedMutation(
     context: core.MutationContext,
   ): Promise<void> {
-    await this.#connectionsByContext.get(context)!.rollback();
+    await this.getConnectionForMutation(context).rollback();
   }
 
   public async postMutation(context: core.MutationContext): Promise<void> {
     try {
-      await this.#connectionsByContext.get(context)!.release();
+      await this.getConnectionForMutation(context).release();
     } finally {
-      this.#connectionsByContext.delete(context);
+      this.#connectionsByMutationContext.delete(context);
     }
   }
 
@@ -325,7 +335,7 @@ export class MariaDBConnector implements core.ConnectorInterface {
     const table = this.schema.getTableByNode(statement.node);
     const maybeConnection =
       context instanceof core.MutationContext
-        ? this.#connectionsByContext.get(context)
+        ? this.#connectionsByMutationContext.get(context)
         : undefined;
 
     return table.count(statement, context, maybeConnection);
@@ -338,7 +348,7 @@ export class MariaDBConnector implements core.ConnectorInterface {
     const table = this.schema.getTableByNode(statement.node);
     const maybeConnection =
       context instanceof core.MutationContext
-        ? this.#connectionsByContext.get(context)
+        ? this.#connectionsByMutationContext.get(context)
         : undefined;
 
     return table.find(statement, context, maybeConnection);
@@ -349,7 +359,7 @@ export class MariaDBConnector implements core.ConnectorInterface {
     context: core.MutationContext,
   ): Promise<core.NodeValue[]> {
     const table = this.schema.getTableByNode(statement.node);
-    const connection = this.#connectionsByContext.get(context)!;
+    const connection = this.getConnectionForMutation(context);
 
     return table.insert(statement, context, connection);
   }
@@ -359,7 +369,7 @@ export class MariaDBConnector implements core.ConnectorInterface {
     context: core.MutationContext,
   ): Promise<number> {
     const table = this.schema.getTableByNode(statement.node);
-    const connection = this.#connectionsByContext.get(context)!;
+    const connection = this.getConnectionForMutation(context);
 
     return table.update(statement, context, connection);
   }
@@ -369,7 +379,7 @@ export class MariaDBConnector implements core.ConnectorInterface {
     context: core.MutationContext,
   ): Promise<number> {
     const table = this.schema.getTableByNode(statement.node);
-    const connection = this.#connectionsByContext.get(context)!;
+    const connection = this.getConnectionForMutation(context);
 
     return table.delete(statement, context, connection);
   }
