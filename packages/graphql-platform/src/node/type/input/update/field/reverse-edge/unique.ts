@@ -219,7 +219,7 @@ export class ReverseEdgeUniqueUpdateInput extends AbstractReverseEdgeUpdateInput
           return fields;
         },
       }),
-      validateValue(inputValue, path) {
+      assertValue(inputValue, path) {
         if (inputValue) {
           const inputActionNames = Object.keys(
             inputValue,

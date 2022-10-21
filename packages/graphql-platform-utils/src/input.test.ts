@@ -39,7 +39,7 @@ describe('Input', () => {
       {
         name: 'InputWithCustomValidationAndInvalidThunkedDefaultValue',
         type: graphql.GraphQLInt,
-        validateValue: (value) => {
+        assertValue: (value) => {
           if (value < 18) {
             throw new Error('Must be greater than 18');
           }
@@ -47,8 +47,7 @@ describe('Input', () => {
         defaultValue: () => 16,
       },
       `"InputWithCustomValidationAndInvalidThunkedDefaultValue.defaultValue" - Expects to be valid against the type "Int" and the custom validation, got: 16
-└ Cause: "InputWithCustomValidationAndInvalidThunkedDefaultValue" - Custom validation error
-  └ Cause: Must be greater than 18`,
+└ Cause: "InputWithCustomValidationAndInvalidThunkedDefaultValue" - Must be greater than 18`,
     ],
   ])('cannot have an invalid defaultValue', (config, error) => {
     expect(() => new Input(config)).toThrowError(error);
@@ -197,7 +196,7 @@ describe('Input', () => {
         new Input<Nillable<number>>({
           name: 'age',
           type: graphql.GraphQLInt,
-          validateValue: (value) => {
+          assertValue: (value) => {
             if (value != null && value < 18) {
               throw new Error('Must be greater than 18');
             }
@@ -241,16 +240,14 @@ describe('Input', () => {
         └ "0.friends" - Expects a non-null "[User!]"
         └ "1" - 2 errors:
           └ "firstname" - Expects a non-undefined "String"
-          └ "age" - Custom validation error
-            └ Cause: Must be greater than 18
+          └ "age" - Must be greater than 18
         └ "2.friends" - 4 errors:
           └ "0.friends" - Expects a non-null "[User!]"
           └ "1.friends" - Expects a plain-object, got: 5
           └ "2" - Expects a non-null "User"
           └ "3" - 2 errors:
             └ "firstname" - Expects a non-undefined "String"
-            └ "age" - Custom validation error
-              └ Cause: Must be greater than 18"
+            └ "age" - Must be greater than 18"
     `);
 
     expect(() =>
@@ -262,16 +259,14 @@ describe('Input', () => {
         └ "0.friends" - Expects a non-null "[User!]"
         └ "1" - 2 errors:
           └ "firstname" - Expects a non-undefined "String"
-          └ "age" - Custom validation error
-            └ Cause: Must be greater than 18
+          └ "age" - Must be greater than 18
         └ "2.friends" - 4 errors:
           └ "0.friends" - Expects a non-null "[User!]"
           └ "1.friends" - Expects a plain-object, got: 5
           └ "2" - Expects a non-null "User"
           └ "3" - 2 errors:
             └ "firstname" - Expects a non-undefined "String"
-            └ "age" - Custom validation error
-              └ Cause: Must be greater than 18"
+            └ "age" - Must be greater than 18"
     `);
   });
 });

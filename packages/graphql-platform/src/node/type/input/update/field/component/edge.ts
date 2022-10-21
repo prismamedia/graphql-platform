@@ -133,7 +133,7 @@ export class EdgeUpdateInput extends AbstractComponentUpdateInput<EdgeUpdateInpu
           }),
           !edge.isNullable(),
         ),
-        validateValue(inputValue, path) {
+        assertValue(inputValue, path) {
           if (inputValue) {
             if (Object.keys(inputValue).length !== 1) {
               throw new utils.UnexpectedValueError(

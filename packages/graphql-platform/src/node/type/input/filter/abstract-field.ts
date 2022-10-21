@@ -6,7 +6,7 @@ import type { BooleanFilter } from '../../../statement/filter/boolean.js';
 
 export type AbstractFieldFilterInputTypeConfig<TValue> = Except<
   utils.InputConfig<TValue>,
-  'defaultValue' | 'validateValue'
+  'defaultValue' | 'assertValue'
 > & {
   filter<TRequestContext extends object, TConnector extends ConnectorInterface>(
     value: Exclude<TValue, undefined>,

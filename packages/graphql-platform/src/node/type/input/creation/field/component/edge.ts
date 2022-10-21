@@ -121,7 +121,7 @@ export class EdgeCreationInput extends AbstractComponentCreationInput<EdgeCreati
             return fields;
           },
         }),
-        validateValue(inputValue, path) {
+        assertValue(inputValue, path) {
           if (inputValue != null) {
             if (Object.keys(inputValue).length !== 1) {
               throw new utils.UnexpectedValueError(

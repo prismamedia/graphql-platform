@@ -38,7 +38,7 @@ import { resolveThunkOrValue, type ThunkOrValue } from './thunk-or-value.js';
 
 export * from './input/type.js';
 
-export type InputValidation<TValue = any> = (value: TValue, path: Path) => void;
+export type InputAssertion<TValue = any> = (value: TValue, path: Path) => void;
 
 export interface InputConfig<TValue = any> {
   /**
@@ -97,7 +97,7 @@ export interface InputConfig<TValue = any> {
   /**
    * Optional, add some custom validation
    */
-  validateValue?: InputValidation<TValue> | null;
+  assertValue?: InputAssertion<TValue> | null;
 }
 
 export class Input<TValue = any> {
@@ -106,10 +106,8 @@ export class Input<TValue = any> {
   public readonly deprecationReason?: string;
   public readonly type: InputType;
 
-  readonly #defaultValue: InputConfig<TValue>['defaultValue'] | undefined;
-  readonly #validateValue:
-    | Exclude<InputConfig<TValue>['validateValue'], null>
-    | undefined;
+  readonly #defaultValue?: ThunkOrValue<TValue>;
+  readonly #assertValue?: InputAssertion<TValue>;
 
   #isPublic?: null | boolean;
   #isValid?: null | true;
@@ -179,18 +177,21 @@ export class Input<TValue = any> {
       this.type = type;
     }
 
-    // validate value
+    // assert value
     {
-      const validationConfig = config.validateValue;
-      const validationConfigPath = addPath(configPath, 'validateValue');
+      const assertValueConfig = config.assertValue;
+      const assertValueConfigPath = addPath(configPath, 'assertValue');
 
-      if (validationConfig != null && typeof validationConfig !== 'function') {
-        throw new UnexpectedConfigError(`a function`, validationConfig, {
-          path: validationConfigPath,
+      if (
+        assertValueConfig != null &&
+        typeof assertValueConfig !== 'function'
+      ) {
+        throw new UnexpectedConfigError(`a function`, assertValueConfig, {
+          path: assertValueConfigPath,
         });
       }
 
-      this.#validateValue = validationConfig || undefined;
+      this.#assertValue = assertValueConfig || undefined;
     }
 
     // default value
@@ -322,16 +323,13 @@ export class Input<TValue = any> {
   ): TValue {
     const value = parseInputValue(this.type, maybeValue, path);
 
-    if (this.#validateValue) {
+    if (this.#assertValue) {
       try {
-        this.#validateValue(value, path);
+        this.#assertValue(value, path);
       } catch (error) {
         throw isNestableError(error)
           ? error
-          : new NestableError('Custom validation error', {
-              path,
-              cause: castToError(error),
-            });
+          : new NestableError(castToError(error).message, { path });
       }
     }
 

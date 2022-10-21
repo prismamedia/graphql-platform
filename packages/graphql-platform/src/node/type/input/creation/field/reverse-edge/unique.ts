@@ -136,7 +136,7 @@ export class ReverseEdgeUniqueCreationInput extends AbstractReverseEdgeCreationI
           return fields;
         },
       }),
-      validateValue(inputValue, path) {
+      assertValue(inputValue, path) {
         if (inputValue) {
           if (Object.keys(inputValue).length > 1) {
             throw new utils.UnexpectedValueError(
