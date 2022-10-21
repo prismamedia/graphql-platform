@@ -197,7 +197,7 @@ describe('Input', () => {
           name: 'age',
           type: graphql.GraphQLInt,
           assertValue: (value) => {
-            if (value != null && value < 18) {
+            if (value < 18) {
               throw new Error('Must be greater than 18');
             }
 

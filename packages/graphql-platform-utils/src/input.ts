@@ -38,7 +38,10 @@ import { resolveThunkOrValue, type ThunkOrValue } from './thunk-or-value.js';
 
 export * from './input/type.js';
 
-export type InputAssertion<TValue = any> = (value: TValue, path: Path) => void;
+export type InputAssertion<TValue = any> = (
+  value: NonNullable<TValue>,
+  path: Path,
+) => void;
 
 export interface InputConfig<TValue = any> {
   /**
@@ -323,7 +326,7 @@ export class Input<TValue = any> {
   ): TValue {
     const value = parseInputValue(this.type, maybeValue, path);
 
-    if (this.#assertValue) {
+    if (value != null && this.#assertValue) {
       try {
         this.#assertValue(value, path);
       } catch (error) {

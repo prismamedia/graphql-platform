@@ -134,14 +134,12 @@ export class EdgeUpdateInput extends AbstractComponentUpdateInput<EdgeUpdateInpu
           !edge.isNullable(),
         ),
         assertValue(inputValue, path) {
-          if (inputValue) {
-            if (Object.keys(inputValue).length !== 1) {
-              throw new utils.UnexpectedValueError(
-                `one and only one action`,
-                inputValue,
-                { path },
-              );
-            }
+          if (Object.keys(inputValue).length !== 1) {
+            throw new utils.UnexpectedValueError(
+              `one and only one action`,
+              inputValue,
+              { path },
+            );
           }
         },
         ...edge.config[utils.MutationType.UPDATE],

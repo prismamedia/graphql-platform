@@ -122,14 +122,12 @@ export class EdgeCreationInput extends AbstractComponentCreationInput<EdgeCreati
           },
         }),
         assertValue(inputValue, path) {
-          if (inputValue != null) {
-            if (Object.keys(inputValue).length !== 1) {
-              throw new utils.UnexpectedValueError(
-                `one and only one action`,
-                inputValue,
-                { path },
-              );
-            }
+          if (Object.keys(inputValue).length !== 1) {
+            throw new utils.UnexpectedValueError(
+              `one and only one action`,
+              inputValue,
+              { path },
+            );
           }
         },
         ...edge.config[utils.MutationType.CREATION],

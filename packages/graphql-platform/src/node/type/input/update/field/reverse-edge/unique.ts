@@ -220,35 +220,32 @@ export class ReverseEdgeUniqueUpdateInput extends AbstractReverseEdgeUpdateInput
         },
       }),
       assertValue(inputValue, path) {
-        if (inputValue) {
-          const inputActionNames = Object.keys(
+        const inputActionNames = Object.keys(
+          inputValue,
+        ) as ReverseEdgeUniqueUpdateInputAction[];
+
+        if (
+          _.intersection(inputActionNames, destructiveActionNames).length > 1
+        ) {
+          throw new utils.UnexpectedValueError(
+            `no more than one destructive action among ${destructiveActionNames.join(
+              ', ',
+            )}`,
             inputValue,
-          ) as ReverseEdgeUniqueUpdateInputAction[];
+            { path },
+          );
+        }
 
-          if (
-            _.intersection(inputActionNames, destructiveActionNames).length > 1
-          ) {
-            throw new utils.UnexpectedValueError(
-              `no more than one destructive action among ${destructiveActionNames.join(
-                ', ',
-              )}`,
-              inputValue,
-              { path },
-            );
-          }
-
-          if (
-            _.intersection(inputActionNames, nonDestructiveActionNames).length >
-            1
-          ) {
-            throw new utils.UnexpectedValueError(
-              `no more than one action among ${nonDestructiveActionNames.join(
-                ', ',
-              )}`,
-              inputValue,
-              { path },
-            );
-          }
+        if (
+          _.intersection(inputActionNames, nonDestructiveActionNames).length > 1
+        ) {
+          throw new utils.UnexpectedValueError(
+            `no more than one action among ${nonDestructiveActionNames.join(
+              ', ',
+            )}`,
+            inputValue,
+            { path },
+          );
         }
       },
     });

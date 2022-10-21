@@ -137,16 +137,12 @@ export class ReverseEdgeUniqueCreationInput extends AbstractReverseEdgeCreationI
         },
       }),
       assertValue(inputValue, path) {
-        if (inputValue) {
-          if (Object.keys(inputValue).length > 1) {
-            throw new utils.UnexpectedValueError(
-              `at most one action`,
-              inputValue,
-              {
-                path,
-              },
-            );
-          }
+        if (Object.keys(inputValue).length > 1) {
+          throw new utils.UnexpectedValueError(
+            `at most one action`,
+            inputValue,
+            { path },
+          );
         }
       },
     });
