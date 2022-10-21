@@ -38,10 +38,10 @@ import { resolveThunkOrValue, type ThunkOrValue } from './thunk-or-value.js';
 
 export * from './input/type.js';
 
-export type InputAssertion<TValue = any> = (
+export type InputParser<TValue = any> = (
   value: NonNullable<TValue>,
   path: Path,
-) => void;
+) => TValue;
 
 export interface InputConfig<TValue = any> {
   /**
@@ -98,9 +98,9 @@ export interface InputConfig<TValue = any> {
   defaultValue?: ThunkOrValue<TValue>;
 
   /**
-   * Optional, add some custom validation
+   * Optional, add some custom validation or normalization
    */
-  assertValue?: InputAssertion<TValue> | null;
+  parser?: InputParser<TValue> | null;
 }
 
 export class Input<TValue = any> {
@@ -110,7 +110,7 @@ export class Input<TValue = any> {
   public readonly type: InputType;
 
   readonly #defaultValue?: ThunkOrValue<TValue>;
-  readonly #assertValue?: InputAssertion<TValue>;
+  readonly #parser?: InputParser<TValue>;
 
   #isPublic?: null | boolean;
   #isValid?: null | true;
@@ -180,21 +180,18 @@ export class Input<TValue = any> {
       this.type = type;
     }
 
-    // assert value
+    // parser
     {
-      const assertValueConfig = config.assertValue;
-      const assertValueConfigPath = addPath(configPath, 'assertValue');
+      const parserConfig = config.parser;
+      const parserConfigPath = addPath(configPath, 'parser');
 
-      if (
-        assertValueConfig != null &&
-        typeof assertValueConfig !== 'function'
-      ) {
-        throw new UnexpectedConfigError(`a function`, assertValueConfig, {
-          path: assertValueConfigPath,
+      if (parserConfig != null && typeof parserConfig !== 'function') {
+        throw new UnexpectedConfigError(`a function`, parserConfig, {
+          path: parserConfigPath,
         });
       }
 
-      this.#assertValue = assertValueConfig || undefined;
+      this.#parser = parserConfig || undefined;
     }
 
     // default value
@@ -326,14 +323,17 @@ export class Input<TValue = any> {
   ): TValue {
     const value = parseInputValue(this.type, maybeValue, path);
 
-    if (value != null && this.#assertValue) {
+    if (value != null && this.#parser) {
+      let customValue: unknown;
       try {
-        this.#assertValue(value, path);
+        customValue = this.#parser(value, path);
       } catch (error) {
         throw isNestableError(error)
           ? error
           : new NestableError(castToError(error).message, { path });
       }
+
+      return parseInputValue(this.type, customValue, path);
     }
 
     return value;

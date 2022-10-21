@@ -121,7 +121,7 @@ export class EdgeCreationInput extends AbstractComponentCreationInput<EdgeCreati
             return fields;
           },
         }),
-        assertValue(inputValue, path) {
+        parser(inputValue, path) {
           if (Object.keys(inputValue).length !== 1) {
             throw new utils.UnexpectedValueError(
               `one and only one action`,
@@ -129,6 +129,8 @@ export class EdgeCreationInput extends AbstractComponentCreationInput<EdgeCreati
               { path },
             );
           }
+
+          return inputValue;
         },
         ...edge.config[utils.MutationType.CREATION],
       },

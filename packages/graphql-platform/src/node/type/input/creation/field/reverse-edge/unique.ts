@@ -136,7 +136,7 @@ export class ReverseEdgeUniqueCreationInput extends AbstractReverseEdgeCreationI
           return fields;
         },
       }),
-      assertValue(inputValue, path) {
+      parser(inputValue, path) {
         if (Object.keys(inputValue).length > 1) {
           throw new utils.UnexpectedValueError(
             `at most one action`,
@@ -144,6 +144,8 @@ export class ReverseEdgeUniqueCreationInput extends AbstractReverseEdgeCreationI
             { path },
           );
         }
+
+        return inputValue;
       },
     });
   }

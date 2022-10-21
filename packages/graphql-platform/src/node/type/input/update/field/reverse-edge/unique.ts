@@ -219,7 +219,7 @@ export class ReverseEdgeUniqueUpdateInput extends AbstractReverseEdgeUpdateInput
           return fields;
         },
       }),
-      assertValue(inputValue, path) {
+      parser(inputValue, path) {
         const inputActionNames = Object.keys(
           inputValue,
         ) as ReverseEdgeUniqueUpdateInputAction[];
@@ -247,6 +247,8 @@ export class ReverseEdgeUniqueUpdateInput extends AbstractReverseEdgeUpdateInput
             { path },
           );
         }
+
+        return inputValue;
       },
     });
   }
