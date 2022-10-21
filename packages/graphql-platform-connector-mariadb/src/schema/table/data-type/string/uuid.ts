@@ -29,9 +29,9 @@ export class UuidType<
       {
         kind: 'UUID',
         serialize: (value) => escapeStringValue(value),
+        toColumnValue: config?.toColumnValue,
         fromColumnValue: config?.fromColumnValue,
         fromJsonValue: config?.fromJsonValue,
-        toColumnValue: config?.toColumnValue,
       },
       configPath,
     );

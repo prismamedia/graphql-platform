@@ -46,9 +46,9 @@ export class TextType<
           ? 'MEDIUMTEXT'
           : config.kind,
         serialize: (value) => escapeStringValue(value),
+        toColumnValue: config?.toColumnValue ?? String,
         fromColumnValue: config?.fromColumnValue,
         fromJsonValue: config?.fromJsonValue,
-        toColumnValue: config?.toColumnValue,
       },
       configPath,
     );

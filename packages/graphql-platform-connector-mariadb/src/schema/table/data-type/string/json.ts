@@ -38,9 +38,10 @@ export class JsonType<
       {
         kind: 'JSON',
         serialize: (value) => escapeStringValue(value),
-        fromColumnValue: config?.fromColumnValue,
-        fromJsonValue: config?.fromJsonValue,
-        toColumnValue: config?.toColumnValue,
+        toColumnValue: config?.toColumnValue ?? JSON.stringify,
+        fromColumnValue: config?.fromColumnValue ?? JSON.parse,
+        // MariaDB automatically parses the JSON column, so we do not do it twice
+        fromJsonValue: config?.fromJsonValue ?? ((value: any) => value),
       },
       configPath,
     );

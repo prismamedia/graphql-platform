@@ -36,9 +36,9 @@ export class VarCharType<
       {
         kind: 'VARCHAR',
         serialize: (value) => escapeStringValue(value),
+        toColumnValue: config.toColumnValue ?? String,
         fromColumnValue: config.fromColumnValue,
-        fromJsonValue: config?.fromJsonValue,
-        toColumnValue: config.toColumnValue,
+        fromJsonValue: config.fromJsonValue,
       },
       configPath,
     );

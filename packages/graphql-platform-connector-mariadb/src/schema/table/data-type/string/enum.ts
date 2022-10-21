@@ -30,9 +30,9 @@ export class EnumType<
       {
         kind: 'ENUM',
         serialize: (value) => escapeStringValue(value),
-        fromColumnValue: config?.fromColumnValue,
-        fromJsonValue: config?.fromJsonValue,
-        toColumnValue: config?.toColumnValue,
+        toColumnValue: config.toColumnValue,
+        fromColumnValue: config.fromColumnValue,
+        fromJsonValue: config.fromJsonValue,
       },
       configPath,
     );
