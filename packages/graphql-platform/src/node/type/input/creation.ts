@@ -14,6 +14,8 @@ import type {
   ReverseEdgeCreationInput,
 } from './creation/field.js';
 
+export * from './creation/field.js';
+
 export type NodeCreationInputValue = utils.Nillable<utils.PlainObject>;
 
 export class NodeCreationInputType<

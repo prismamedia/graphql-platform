@@ -14,8 +14,11 @@
   },
   "type": "module",
   "exports": {
-    ".": "./dist/index.js",
-    "./*": "./dist/*"
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js"
+    },
+    "./__tests__/*": "./dist/__tests__/*"
   },
   "sideEffects": false,
   "scripts": {
@@ -26,7 +29,7 @@
   },
   "devDependencies": {
     "@jest/globals": "29.2.1",
-    "@swc/core": "1.3.9",
+    "@swc/core": "1.3.10",
     "@swc/jest": "0.2.23",
     "@tsconfig/node16": "1.0.3",
     "@types/inflection": "1.13.0",

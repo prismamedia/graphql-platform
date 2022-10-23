@@ -11,6 +11,8 @@ import type {
   ReverseEdgeUpdateInput,
 } from './update/field.js';
 
+export * from './update/field.js';
+
 export type NodeUpdateInputValue = utils.Nillable<utils.PlainObject>;
 
 export class NodeUpdateInputType<
