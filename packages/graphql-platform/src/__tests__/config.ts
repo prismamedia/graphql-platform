@@ -535,7 +535,7 @@ export const Category: NodeConfig<MyContext> = {
 
           if (categoryWithoutParentCount !== 0) {
             throw new utils.UnexpectedValueError(
-              `a parent as the "root" category already exists`,
+              `a parent, as the "root" category already exists`,
               data['parent'],
             );
           }
@@ -550,7 +550,7 @@ export const Category: NodeConfig<MyContext> = {
             selection: '{ order }',
           });
 
-          return categories[0]?.order ?? 0;
+          return (categories[0]?.order ?? 0) + 1;
         }
       },
     },

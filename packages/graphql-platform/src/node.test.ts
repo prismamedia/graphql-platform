@@ -438,7 +438,39 @@ describe('Node', () => {
               },
             }),
         ).toThrowError(
-          `\"GraphQLPlatformConfig.nodes.Hit\" - Expects at least one mutable component as it is mutable: either disable the \"update\" or enable it on one of its components`,
+          '"GraphQLPlatformConfig.nodes.Hit" - Expects at least one mutable component as it is mutable',
+        );
+      });
+
+      it('throws an Error on publicly update-able node without publicly update-able component', () => {
+        expect(
+          () =>
+            new GraphQLPlatform({
+              nodes: {
+                Test: {
+                  components: {
+                    id: { type: 'UUIDv4', nullable: false, mutable: false },
+                    updatedAt: {
+                      type: 'DateTime',
+                      nullable: false,
+
+                      creation: {
+                        public: false,
+                        defaultValue: () => new Date(),
+                      },
+
+                      update: {
+                        public: false,
+                        defaultValue: () => new Date(),
+                      },
+                    },
+                  },
+                  uniques: [['id']],
+                },
+              },
+            }),
+        ).toThrowError(
+          '"GraphQLPlatformConfig.nodes.Test" - Expects at least one publicly mutable component as it is publicly mutable',
         );
       });
     });

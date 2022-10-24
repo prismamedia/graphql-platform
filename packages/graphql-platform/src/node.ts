@@ -1096,7 +1096,7 @@ export class Node<
         )
       ) {
         throw new utils.ConfigError(
-          `Expects at least one mutable component as it is mutable: either disable the "${utils.MutationType.UPDATE}" or enable it on one of its components`,
+          `Expects at least one mutable component as it is mutable`,
           { path: this.configPath },
         );
       }
@@ -1109,7 +1109,7 @@ export class Node<
         )
       ) {
         throw new utils.ConfigError(
-          `Expects at least one public component as it is public: either set it private or set one of its components public`,
+          `Expects at least one public component as it is public`,
           { path: this.configPath },
         );
       }
@@ -1123,6 +1123,19 @@ export class Node<
           `Expects at least one public unique constraint (= with all its components being public) as it is public`,
           { path: this.configPath },
         );
+      }
+
+      if (this.isMutationPublic(utils.MutationType.UPDATE)) {
+        if (
+          ![...this.componentsByName.values()].some((component) =>
+            component.updateInput?.isPublic(),
+          )
+        ) {
+          throw new utils.ConfigError(
+            `Expects at least one publicly mutable component as it is publicly mutable`,
+            { path: this.configPath },
+          );
+        }
       }
     }
 

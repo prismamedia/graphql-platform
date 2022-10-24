@@ -1709,7 +1709,7 @@ function $$SETUP_STATE(hydrateRuntimeState, basePath) {
             ["@types/inflection", "npm:1.13.0"],\
             ["@types/jest", "npm:29.2.0"],\
             ["@types/lodash", "npm:4.14.186"],\
-            ["@types/node", "npm:16.11.68"],\
+            ["@types/node", "npm:16.18.0"],\
             ["@types/slug", "npm:5.0.3"],\
             ["dataloader", "npm:2.1.0"],\
             ["dependency-graph", "npm:0.11.0"],\
@@ -1742,7 +1742,7 @@ function $$SETUP_STATE(hydrateRuntimeState, basePath) {
             ["@types/inflection", "npm:1.13.0"],\
             ["@types/jest", "npm:29.2.0"],\
             ["@types/lodash", "npm:4.14.186"],\
-            ["@types/node", "npm:16.11.68"],\
+            ["@types/node", "npm:16.18.0"],\
             ["@types/slug", "npm:5.0.3"],\
             ["dataloader", "npm:2.1.0"],\
             ["dependency-graph", "npm:0.11.0"],\
@@ -1774,7 +1774,7 @@ function $$SETUP_STATE(hydrateRuntimeState, basePath) {
             ["@types/graphql", null],\
             ["@types/inflection", "npm:1.13.0"],\
             ["@types/jest", "npm:29.2.0"],\
-            ["@types/node", "npm:16.11.68"],\
+            ["@types/node", "npm:16.18.0"],\
             ["@types/semver", "npm:7.3.12"],\
             ["graphql", "npm:16.6.0"],\
             ["inflection", "npm:1.13.4"],\
@@ -1805,7 +1805,7 @@ function $$SETUP_STATE(hydrateRuntimeState, basePath) {
             ["@tsconfig/node16", "npm:1.0.3"],\
             ["@types/inflection", "npm:1.13.0"],\
             ["@types/jest", "npm:29.2.0"],\
-            ["@types/node", "npm:16.11.68"],\
+            ["@types/node", "npm:16.18.0"],\
             ["@types/semver", "npm:7.3.12"],\
             ["graphql", "npm:16.6.0"],\
             ["inflection", "npm:1.13.4"],\
@@ -1831,7 +1831,7 @@ function $$SETUP_STATE(hydrateRuntimeState, basePath) {
             ["@swc/jest", "virtual:6aa5de53097a6ad89dd6f5bb86e7514117f570cb46a75f75d77cb5990bf91bfadeda913e418fca44e97d5e167ac1fd89ff92fff8bd06a4e0277076b42b3c17dd#npm:0.2.23"],\
             ["@tsconfig/node16", "npm:1.0.3"],\
             ["@types/jest", "npm:29.2.0"],\
-            ["@types/node", "npm:16.11.68"],\
+            ["@types/node", "npm:16.18.0"],\
             ["graphql", "npm:16.6.0"],\
             ["jest", "virtual:dc3fc578bfa5e06182a4d2be39ede0bc5b74940b1ffe0d70c26892ab140a4699787750fba175dc306292e80b4aa2c8c5f68c2a821e69b2c37e360c0dff36ff66#npm:29.2.1"],\
             ["typescript", "patch:typescript@npm%3A4.8.4#~builtin<compat/typescript>::version=4.8.4&hash=701156"]\
@@ -1851,7 +1851,7 @@ function $$SETUP_STATE(hydrateRuntimeState, basePath) {
             ["@types/draft-js", "npm:0.11.9"],\
             ["@types/graphql", null],\
             ["@types/jest", "npm:29.2.0"],\
-            ["@types/node", "npm:16.11.68"],\
+            ["@types/node", "npm:16.18.0"],\
             ["graphql", "npm:16.6.0"],\
             ["jest", "virtual:dc3fc578bfa5e06182a4d2be39ede0bc5b74940b1ffe0d70c26892ab140a4699787750fba175dc306292e80b4aa2c8c5f68c2a821e69b2c37e360c0dff36ff66#npm:29.2.1"],\
             ["type-fest", "npm:3.1.0"],\
@@ -1873,7 +1873,7 @@ function $$SETUP_STATE(hydrateRuntimeState, basePath) {
             ["@tsconfig/node16", "npm:1.0.3"],\
             ["@types/draft-js", "npm:0.11.9"],\
             ["@types/jest", "npm:29.2.0"],\
-            ["@types/node", "npm:16.11.68"],\
+            ["@types/node", "npm:16.18.0"],\
             ["graphql", "npm:16.6.0"],\
             ["jest", "virtual:dc3fc578bfa5e06182a4d2be39ede0bc5b74940b1ffe0d70c26892ab140a4699787750fba175dc306292e80b4aa2c8c5f68c2a821e69b2c37e360c0dff36ff66#npm:29.2.1"],\
             ["type-fest", "npm:3.1.0"],\
@@ -1895,7 +1895,7 @@ function $$SETUP_STATE(hydrateRuntimeState, basePath) {
             ["@types/indefinite", "npm:2.3.1"],\
             ["@types/jest", "npm:29.2.0"],\
             ["@types/lodash", "npm:4.14.186"],\
-            ["@types/node", "npm:16.11.68"],\
+            ["@types/node", "npm:16.18.0"],\
             ["graphql", "npm:16.6.0"],\
             ["indefinite", "npm:2.4.2"],\
             ["jest", "virtual:dc3fc578bfa5e06182a4d2be39ede0bc5b74940b1ffe0d70c26892ab140a4699787750fba175dc306292e80b4aa2c8c5f68c2a821e69b2c37e360c0dff36ff66#npm:29.2.1"],\
@@ -1920,7 +1920,7 @@ function $$SETUP_STATE(hydrateRuntimeState, basePath) {
             ["@types/indefinite", "npm:2.3.1"],\
             ["@types/jest", "npm:29.2.0"],\
             ["@types/lodash", "npm:4.14.186"],\
-            ["@types/node", "npm:16.11.68"],\
+            ["@types/node", "npm:16.18.0"],\
             ["graphql", "npm:16.6.0"],\
             ["indefinite", "npm:2.4.2"],\
             ["jest", "virtual:dc3fc578bfa5e06182a4d2be39ede0bc5b74940b1ffe0d70c26892ab140a4699787750fba175dc306292e80b4aa2c8c5f68c2a821e69b2c37e360c0dff36ff66#npm:29.2.1"],\
@@ -2547,10 +2547,10 @@ function $$SETUP_STATE(hydrateRuntimeState, basePath) {
           ],\
           "linkType": "HARD"\
         }],\
-        ["npm:16.11.68", {\
-          "packageLocation": "./.yarn/cache/@types-node-npm-16.11.68-c2f2ea9840-a35293b6b8.zip/node_modules/@types/node/",\
+        ["npm:16.18.0", {\
+          "packageLocation": "./.yarn/cache/@types-node-npm-16.18.0-93523c19bb-4eb4b88012.zip/node_modules/@types/node/",\
           "packageDependencies": [\
-            ["@types/node", "npm:16.11.68"]\
+            ["@types/node", "npm:16.18.0"]\
           ],\
           "linkType": "HARD"\
         }],\

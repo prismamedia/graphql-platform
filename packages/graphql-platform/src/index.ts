@@ -99,6 +99,9 @@ export class GraphQLPlatform<
   >;
   public readonly api: API<TRequestContext, TConnector>;
   readonly #connector?: TConnector;
+  readonly #assertRequestContext?: (
+    maybeRequestContext: unknown,
+  ) => asserts maybeRequestContext is TRequestContext;
 
   /**
    * An Observable of the nodes' changes
@@ -226,6 +229,27 @@ export class GraphQLPlatform<
         : undefined;
     }
 
+    // assert-request-context
+    {
+      const assertRequestContextConfig = config.assertRequestContext;
+      const assertRequestContextConfigPath = utils.addPath(
+        configPath,
+        'assertRequestContext',
+      );
+
+      if (assertRequestContextConfig != null) {
+        if (typeof assertRequestContextConfig !== 'function') {
+          throw new utils.UnexpectedConfigError(
+            `a function`,
+            assertRequestContextConfig,
+            { path: assertRequestContextConfigPath },
+          );
+        }
+
+        this.#assertRequestContext = assertRequestContextConfig;
+      }
+    }
+
     // on-change
     {
       const onChangeConfig = config.onChange;
@@ -313,7 +337,7 @@ export class GraphQLPlatform<
         });
       }
 
-      this.config.assertRequestContext?.(maybeRequestContext);
+      this.#assertRequestContext?.(maybeRequestContext);
     } catch (error) {
       throw new InvalidRequestContextError({
         cause: utils.castToError(error),

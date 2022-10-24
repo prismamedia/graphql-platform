@@ -60,7 +60,7 @@ export interface NodeOutputTypeConfig<
   TConnector extends ConnectorInterface,
 > {
   /**
-   * Optional, add some "virtual" fields whose value is computed from the other fields' value
+   * Optional, add some "virtual" fields whose value is computed from the components' value
    *
    * They are called "virtual" because their value is not stored
    */
