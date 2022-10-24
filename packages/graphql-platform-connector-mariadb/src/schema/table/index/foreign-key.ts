@@ -67,6 +67,12 @@ export class ForeignKeyIndex extends AbstractIndex {
       }
 
       return nameConfig;
+    } else if (this.table.schema.config?.naming?.foreignKeyIndex) {
+      return this.table.schema.config.naming.foreignKeyIndex(
+        this.table.name,
+        this.edge,
+        this.columns,
+      );
     }
 
     return (

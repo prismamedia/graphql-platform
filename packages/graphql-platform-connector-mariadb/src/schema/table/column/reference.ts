@@ -41,6 +41,12 @@ export class ReferenceColumn extends AbstractColumn {
         }
 
         this.name = nameConfig;
+      } else if (table.schema.config?.naming?.reference) {
+        this.name = table.schema.config.naming.reference(
+          table.name,
+          edge,
+          referencedColumn,
+        );
       } else {
         this.name = `${inflection.underscore(edge.name)}_${
           referencedColumn.name

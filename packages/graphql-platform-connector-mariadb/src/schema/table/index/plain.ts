@@ -76,6 +76,11 @@ export class PlainIndex extends AbstractIndex {
       }
 
       return config;
+    } else if (this.table.schema.config?.naming?.plainIndex) {
+      return this.table.schema.config.naming.plainIndex(
+        this.table.name,
+        this.columns,
+      );
     }
 
     return (

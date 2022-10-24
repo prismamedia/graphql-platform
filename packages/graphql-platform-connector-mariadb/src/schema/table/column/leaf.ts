@@ -102,6 +102,8 @@ export class LeafColumn extends AbstractColumn {
         }
 
         this.name = nameConfig;
+      } else if (table.schema.config?.naming?.leaf) {
+        this.name = table.schema.config.naming.leaf(table.name, leaf);
       } else {
         if (leaf.name.startsWith('_')) {
           throw new utils.UnexpectedConfigError(

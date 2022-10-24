@@ -3,7 +3,7 @@ import * as utils from '@prismamedia/graphql-platform-utils';
 import type * as mariadb from 'mariadb';
 import assert from 'node:assert/strict';
 import type { MariaDBConnector, OkPacket } from './index.js';
-import { Table } from './schema/table.js';
+import { Column, ReferenceColumn, Table } from './schema/table.js';
 import {
   CreateSchemaStatement,
   CreateSchemaStatementConfig,
@@ -12,6 +12,29 @@ import {
 } from './statement.js';
 
 export * from './schema/table.js';
+
+export interface SchemaNamingConfig {
+  table?: (node: core.Node) => string;
+  leaf?: (tableName: Table['name'], leaf: core.Leaf) => string;
+  reference?: (
+    tableName: Table['name'],
+    edge: core.Edge,
+    referencedColumn: Column,
+  ) => string;
+  foreignKeyIndex?: (
+    tableName: Table['name'],
+    edge: core.Edge,
+    references: ReadonlyArray<ReferenceColumn>,
+  ) => string;
+  uniqueIndex?: (
+    tableName: Table['name'],
+    uniqueConstraint: core.UniqueConstraint,
+  ) => string;
+  plainIndex?: (
+    tableName: Table['name'],
+    columns: ReadonlyArray<Column>,
+  ) => string;
+}
 
 export interface SchemaConfig {
   /**
@@ -34,6 +57,11 @@ export interface SchemaConfig {
    * Default: the connector's collation
    */
   defaultCollation?: utils.Nillable<string>;
+
+  /**
+   * Optional, customize how the resources are named
+   */
+  naming?: SchemaNamingConfig;
 }
 
 export class Schema {

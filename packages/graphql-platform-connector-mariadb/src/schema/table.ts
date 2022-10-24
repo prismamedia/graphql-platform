@@ -102,7 +102,10 @@ export class Table {
 
     // name
     {
-      this.name = this.config?.name ?? inflection.tableize(node.name);
+      this.name =
+        this.config?.name ||
+        schema.config?.naming?.table?.(node) ||
+        inflection.tableize(node.name);
     }
 
     // qualified-name

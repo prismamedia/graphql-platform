@@ -66,6 +66,11 @@ export class UniqueIndex extends AbstractIndex {
       }
 
       return nameConfig;
+    } else if (this.table.schema.config?.naming?.uniqueIndex) {
+      return this.table.schema.config.naming.uniqueIndex(
+        this.table.name,
+        this.uniqueConstraint,
+      );
     }
 
     return (
