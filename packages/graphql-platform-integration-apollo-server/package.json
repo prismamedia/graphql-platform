@@ -1,6 +1,6 @@
 {
   "name": "@prismamedia/graphql-platform-integration-apollo-server",
-  "version": "1.0.0-alpha.11",
+  "version": "1.0.0-alpha.12",
   "license": "MIT",
   "contributors": [
     "Yvann Boucher <yvann.boucher@gmail.com>"

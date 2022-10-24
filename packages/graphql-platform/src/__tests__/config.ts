@@ -388,7 +388,15 @@ export const Article: NodeConfig<MyContext> = {
         dependsOn: '{ status title category { title } }',
         type: new GraphQLNonNull(scalars.typesByName.NonEmptyTrimmedString),
         description: `A custom field with a dependency`,
-        resolve: ({ status, title, category }: any) =>
+        resolve: ({
+          status,
+          title,
+          category,
+        }: {
+          status: ArticleStatus;
+          title: string;
+          category: any;
+        }) =>
           (<string[]>[status, title, category?.title])
             .filter(Boolean)
             .join('-')
@@ -400,7 +408,19 @@ export const Article: NodeConfig<MyContext> = {
           '{ status title category { title } tags(orderBy: [order_ASC], first: 2) { tag { title } } }',
         type: new GraphQLNonNull(node.getLeafByName('title').type),
         description: `A custom field with a dependency`,
-        resolve: ({ status, title, category }: any, args, context) =>
+        resolve: (
+          {
+            status,
+            title,
+            category,
+          }: {
+            status: ArticleStatus;
+            title: string;
+            category: any;
+          },
+          args,
+          context,
+        ) =>
           (<string[]>[status, title, category?.title])
             .filter(Boolean)
             .join('-')

@@ -12,7 +12,7 @@ import { NodeOutputType, RawNodeSelection } from '../../node.js';
 export interface VirtualFieldOutputTypeConfig<
   TRequestContext extends object,
   TConnector extends ConnectorInterface,
-> extends graphql.GraphQLFieldConfig<NodeSelectedValue, TRequestContext, any> {
+> extends graphql.GraphQLFieldConfig<any, TRequestContext, any> {
   /**
    * Optional, in order to compute this virtual field value, you certainly need some other fields' value in the resolver's source,
    * you can configure the dependency here, as a fragment/selectionSet
