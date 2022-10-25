@@ -67,19 +67,12 @@ export class ForeignKeyIndex extends AbstractIndex {
       }
 
       return nameConfig;
-    } else if (this.table.schema.config?.naming?.foreignKeyIndex) {
-      return this.table.schema.config.naming.foreignKeyIndex(
-        this.table.name,
-        this.edge,
-        this.columns,
-      );
     }
 
-    return (
-      ['fk', this.table.name, ...this.columns.map(({ name }) => name)]
-        .join('_')
-        // @see https://mariadb.com/kb/en/identifier-names/#maximum-length
-        .substring(0, 64)
+    return this.table.schema.namingStrategy.getForeignKeyIndexName(
+      this.table.name,
+      this.edge,
+      this.columns,
     );
   }
 

@@ -3,7 +3,11 @@ import * as utils from '@prismamedia/graphql-platform-utils';
 import type * as mariadb from 'mariadb';
 import assert from 'node:assert/strict';
 import type { MariaDBConnector, OkPacket } from './index.js';
-import { Column, ReferenceColumn, Table } from './schema/table.js';
+import {
+  SchemaNamingStrategy,
+  type SchemaNamingStrategyConfig,
+} from './schema/naming-strategy.js';
+import { Table } from './schema/table.js';
 import {
   CreateSchemaStatement,
   CreateSchemaStatementConfig,
@@ -11,30 +15,8 @@ import {
   DropSchemaStatementConfig,
 } from './statement.js';
 
+export * from './schema/naming-strategy.js';
 export * from './schema/table.js';
-
-export interface SchemaNamingConfig {
-  table?: (node: core.Node) => string;
-  leaf?: (tableName: Table['name'], leaf: core.Leaf) => string;
-  reference?: (
-    tableName: Table['name'],
-    edge: core.Edge,
-    referencedColumn: Column,
-  ) => string;
-  foreignKeyIndex?: (
-    tableName: Table['name'],
-    edge: core.Edge,
-    references: ReadonlyArray<ReferenceColumn>,
-  ) => string;
-  uniqueIndex?: (
-    tableName: Table['name'],
-    uniqueConstraint: core.UniqueConstraint,
-  ) => string;
-  plainIndex?: (
-    tableName: Table['name'],
-    columns: ReadonlyArray<Column>,
-  ) => string;
-}
 
 export interface SchemaConfig {
   /**
@@ -61,7 +43,7 @@ export interface SchemaConfig {
   /**
    * Optional, customize how the resources are named
    */
-  naming?: SchemaNamingConfig;
+  namingStrategy?: SchemaNamingStrategyConfig;
 }
 
 export class Schema {
@@ -69,6 +51,7 @@ export class Schema {
   public readonly configPath: utils.Path;
 
   public readonly name: string;
+  public readonly namingStrategy: SchemaNamingStrategy;
   public readonly defaultCharset: string;
   public readonly defaultCollation: string;
   public readonly tablesByNode: ReadonlyMap<core.Node, Table>;
@@ -108,6 +91,13 @@ export class Schema {
 
         this.name = nameConfig;
       }
+    }
+
+    // naming-strategy
+    {
+      this.namingStrategy = new SchemaNamingStrategy(
+        this.config?.namingStrategy,
+      );
     }
 
     // default-charset

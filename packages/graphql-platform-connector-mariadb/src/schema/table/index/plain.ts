@@ -76,18 +76,11 @@ export class PlainIndex extends AbstractIndex {
       }
 
       return config;
-    } else if (this.table.schema.config?.naming?.plainIndex) {
-      return this.table.schema.config.naming.plainIndex(
-        this.table.name,
-        this.columns,
-      );
     }
 
-    return (
-      ['idx', ...this.columns.map(({ name }) => name)]
-        .join('_')
-        // @see https://mariadb.com/kb/en/identifier-names/#maximum-length
-        .substring(0, 64)
+    return this.table.schema.namingStrategy.getPlainIndexName(
+      this.table.name,
+      this.columns,
     );
   }
 

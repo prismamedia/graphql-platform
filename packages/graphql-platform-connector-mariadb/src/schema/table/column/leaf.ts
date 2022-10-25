@@ -3,7 +3,6 @@ import * as scalars from '@prismamedia/graphql-platform-scalars';
 import * as utils from '@prismamedia/graphql-platform-utils';
 import { Memoize } from '@prismamedia/ts-memoize';
 import * as graphql from 'graphql';
-import inflection from 'inflection';
 import type { URL } from 'node:url';
 import * as semver from 'semver';
 import type { Constructor, JsonArray, JsonObject } from 'type-fest';
@@ -93,6 +92,12 @@ export class LeafColumn extends AbstractColumn {
       const nameConfigPath = utils.addPath(this.configPath, 'name');
 
       if (nameConfig) {
+        if (typeof nameConfig !== 'string') {
+          throw new utils.UnexpectedConfigError('a string', nameConfig, {
+            path: nameConfigPath,
+          });
+        }
+
         if (nameConfig.startsWith('_')) {
           throw new utils.UnexpectedConfigError(
             `not to start with "_"`,
@@ -101,9 +106,16 @@ export class LeafColumn extends AbstractColumn {
           );
         }
 
+        // @see https://mariadb.com/kb/en/identifier-names/#maximum-length
+        if (nameConfig.length > 64) {
+          throw new utils.UnexpectedConfigError(
+            'an identifier shorter than 64 characters',
+            nameConfig,
+            { path: nameConfigPath },
+          );
+        }
+
         this.name = nameConfig;
-      } else if (table.schema.config?.naming?.leaf) {
-        this.name = table.schema.config.naming.leaf(table.name, leaf);
       } else {
         if (leaf.name.startsWith('_')) {
           throw new utils.UnexpectedConfigError(
@@ -113,7 +125,10 @@ export class LeafColumn extends AbstractColumn {
           );
         }
 
-        this.name = inflection.underscore(leaf.name);
+        this.name = table.schema.namingStrategy.getLeafColumnName(
+          table.name,
+          leaf,
+        );
       }
     }
 

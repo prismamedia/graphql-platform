@@ -1,7 +1,6 @@
 import * as core from '@prismamedia/graphql-platform';
 import * as utils from '@prismamedia/graphql-platform-utils';
 import { Memoize } from '@prismamedia/ts-memoize';
-import inflection from 'inflection';
 import assert from 'node:assert/strict';
 import { escapeStringValue } from '../../../escaping.js';
 import type { MariaDBConnector } from '../../../index.js';
@@ -32,6 +31,7 @@ export class ReferenceColumn extends AbstractColumn {
           });
         }
 
+        // @see https://mariadb.com/kb/en/identifier-names/#maximum-length
         if (nameConfig.length > 64) {
           throw new utils.UnexpectedConfigError(
             'an identifier shorter than 64 characters',
@@ -41,18 +41,12 @@ export class ReferenceColumn extends AbstractColumn {
         }
 
         this.name = nameConfig;
-      } else if (table.schema.config?.naming?.reference) {
-        this.name = table.schema.config.naming.reference(
+      } else {
+        this.name = table.schema.namingStrategy.getReferenceColumnName(
           table.name,
           edge,
           referencedColumn,
         );
-      } else {
-        this.name = `${inflection.underscore(edge.name)}_${
-          referencedColumn.name
-        }`
-          // @see https://mariadb.com/kb/en/identifier-names/#maximum-length
-          .substring(0, 64);
       }
     }
 

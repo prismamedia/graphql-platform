@@ -1,7 +1,6 @@
 import * as core from '@prismamedia/graphql-platform';
 import * as utils from '@prismamedia/graphql-platform-utils';
 import { Memoize } from '@prismamedia/ts-memoize';
-import inflection from 'inflection';
 import assert from 'node:assert/strict';
 import { escapeIdentifier } from '../../../escaping.js';
 import type { MariaDBConnector } from '../../../index.js';
@@ -46,6 +45,15 @@ export class UniqueIndex extends AbstractIndex {
   }
 
   @Memoize()
+  public get columns(): ReadonlyArray<Column> {
+    return Object.freeze(
+      this.table.getColumnsByComponents(
+        ...this.uniqueConstraint.componentsByName.values(),
+      ),
+    );
+  }
+
+  @Memoize()
   public get name(): string {
     const nameConfig = this.config?.name;
     const nameConfigPath = utils.addPath(this.configPath, 'name');
@@ -66,27 +74,12 @@ export class UniqueIndex extends AbstractIndex {
       }
 
       return nameConfig;
-    } else if (this.table.schema.config?.naming?.uniqueIndex) {
-      return this.table.schema.config.naming.uniqueIndex(
-        this.table.name,
-        this.uniqueConstraint,
-      );
     }
 
-    return (
-      ['unq', inflection.underscore(this.uniqueConstraint.name)]
-        .join('_')
-        // @see https://mariadb.com/kb/en/identifier-names/#maximum-length
-        .substring(0, 64)
-    );
-  }
-
-  @Memoize()
-  public get columns(): ReadonlyArray<Column> {
-    return Object.freeze(
-      this.table.getColumnsByComponents(
-        ...this.uniqueConstraint.componentsByName.values(),
-      ),
+    return this.table.schema.namingStrategy.getUniqueIndexName(
+      this.table.name,
+      this.uniqueConstraint,
+      this.columns,
     );
   }
 

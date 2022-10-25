@@ -2,7 +2,6 @@ import * as core from '@prismamedia/graphql-platform';
 import * as utils from '@prismamedia/graphql-platform-utils';
 import { UnreachableValueError } from '@prismamedia/graphql-platform-utils';
 import { Memoize } from '@prismamedia/ts-memoize';
-import inflection from 'inflection';
 import type * as mariadb from 'mariadb';
 import assert from 'node:assert/strict';
 import type { MariaDBConnector, OkPacket } from '../index.js';
@@ -102,10 +101,29 @@ export class Table {
 
     // name
     {
-      this.name =
-        this.config?.name ||
-        schema.config?.naming?.table?.(node) ||
-        inflection.tableize(node.name);
+      const nameConfig = this.config?.name;
+      const nameConfigPath = utils.addPath(this.configPath, 'name');
+
+      if (nameConfig) {
+        if (typeof nameConfig !== 'string') {
+          throw new utils.UnexpectedConfigError('a string', nameConfig, {
+            path: nameConfigPath,
+          });
+        }
+
+        // @see https://mariadb.com/kb/en/identifier-names/#maximum-length
+        if (nameConfig.length > 64) {
+          throw new utils.UnexpectedConfigError(
+            'an identifier shorter than 64 characters',
+            nameConfig,
+            { path: nameConfigPath },
+          );
+        }
+
+        this.name = nameConfig;
+      } else {
+        this.name = schema.namingStrategy.getTableName(node);
+      }
     }
 
     // qualified-name
