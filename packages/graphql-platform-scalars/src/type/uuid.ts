@@ -3,7 +3,7 @@ import * as graphql from 'graphql';
 
 type GraphQLUUIDVersion = 1 | 2 | 3 | 4 | 5;
 
-function parseUUID(
+export function parseUUID(
   value: unknown,
   version?: GraphQLUUIDVersion,
   path?: utils.Path,

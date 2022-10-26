@@ -1,15 +1,15 @@
 import type * as core from '@prismamedia/graphql-platform';
 import * as utils from '@prismamedia/graphql-platform-utils';
-import { Memoize } from '@prismamedia/ts-memoize';
+import assert from 'node:assert/strict';
 import type { SetOptional } from 'type-fest';
+import { escapeStringValue } from '../../../../escaping.js';
 import {
   AbstractDataType,
   type AbstractDataTypeConfig,
 } from '../../abstract-data-type.js';
 
-export interface TimestampTypeConfig<
-  TLeafValue extends NonNullable<core.LeafValue> = any,
-> extends AbstractDataTypeConfig<TimestampType['kind'], TLeafValue, number> {
+export interface TimestampTypeConfig<TLeafValue extends core.LeafValue = any>
+  extends AbstractDataTypeConfig<TimestampType['kind'], TLeafValue, Date> {
   microsecondPrecision?: number;
 }
 
@@ -17,24 +17,16 @@ export interface TimestampTypeConfig<
  * @see https://mariadb.com/kb/en/timestamp/
  */
 export class TimestampType<
-  TLeafValue extends NonNullable<core.LeafValue> = any,
-> extends AbstractDataType<'TIMESTAMP', TLeafValue, number> {
+  TLeafValue extends core.LeafValue = any,
+> extends AbstractDataType<'TIMESTAMP', TLeafValue, Date> {
   public readonly microsecondPrecision: number;
+  public readonly definition: string;
 
   public constructor(
     config?: SetOptional<TimestampTypeConfig<TLeafValue>, 'kind'>,
     configPath?: utils.Path,
   ) {
-    super(
-      {
-        kind: 'TIMESTAMP',
-        serialize: (value) => value.toString(10),
-        fromColumnValue: config?.fromColumnValue,
-        fromJsonValue: config?.fromJsonValue,
-        toColumnValue: config?.toColumnValue,
-      },
-      configPath,
-    );
+    super({ ...config, kind: 'TIMESTAMP' }, configPath);
 
     if (config?.microsecondPrecision != null) {
       const microsecondPrecisionConfig = config?.microsecondPrecision;
@@ -59,10 +51,28 @@ export class TimestampType<
     } else {
       this.microsecondPrecision = 0;
     }
+
+    this.definition = `${this.kind}(${this.microsecondPrecision})`;
   }
 
-  @Memoize()
-  public override get definition(): string {
-    return `${this.kind}(${this.microsecondPrecision})`;
+  protected override doParseColumnValue(
+    // As the connection is configured with "dateStrings: true"
+    columnValue: string,
+  ): Date {
+    assert.equal(typeof columnValue, 'string');
+
+    return new Date(
+      columnValue.replace(/^(?<date>[^ ]+) (?<time>.+)$/, '$<date>T$<time>Z'),
+    );
+  }
+
+  protected override doSerialize(value: Date): string {
+    assert(value instanceof Date);
+
+    return escapeStringValue(
+      value
+        .toISOString()
+        .replace(/^(?<date>[^T]+)T(?<time>[^Z]+)Z$/, '$<date> $<time>'),
+    );
   }
 }

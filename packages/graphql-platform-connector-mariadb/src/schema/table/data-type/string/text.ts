@@ -1,6 +1,6 @@
 import type * as core from '@prismamedia/graphql-platform';
 import * as utils from '@prismamedia/graphql-platform-utils';
-import { Memoize } from '@prismamedia/ts-memoize';
+import assert from 'node:assert/strict';
 import type { SetOptional } from 'type-fest';
 import { escapeStringValue } from '../../../../escaping.js';
 import {
@@ -8,9 +8,8 @@ import {
   type AbstractDataTypeConfig,
 } from '../../abstract-data-type.js';
 
-export interface TextTypeConfig<
-  TLeafValue extends NonNullable<core.LeafValue> = any,
-> extends AbstractDataTypeConfig<
+export interface TextTypeConfig<TLeafValue extends core.LeafValue = any>
+  extends AbstractDataTypeConfig<
     TextType['kind'] | 'LONG' | 'LONG VARCHAR',
     TLeafValue,
     string
@@ -24,7 +23,7 @@ export interface TextTypeConfig<
  * @see https://mariadb.com/kb/en/text/
  */
 export class TextType<
-  TLeafValue extends NonNullable<core.LeafValue> = any,
+  TLeafValue extends core.LeafValue = any,
 > extends AbstractDataType<
   'LONGTEXT' | 'MEDIUMTEXT' | 'TEXT' | 'TINYTEXT',
   TLeafValue,
@@ -33,6 +32,7 @@ export class TextType<
   public readonly length?: number;
   public readonly charset?: string;
   public readonly collation?: string;
+  public readonly definition: string;
 
   public constructor(
     config?: SetOptional<TextTypeConfig<TLeafValue>, 'kind'>,
@@ -40,15 +40,13 @@ export class TextType<
   ) {
     super(
       {
+        ...config,
         kind: !config?.kind
           ? 'TEXT'
           : config.kind === 'LONG' || config.kind === 'LONG VARCHAR'
           ? 'MEDIUMTEXT'
           : config.kind,
-        serialize: (value) => escapeStringValue(value),
-        toColumnValue: config?.toColumnValue ?? String,
-        fromColumnValue: config?.fromColumnValue,
-        fromJsonValue: config?.fromJsonValue,
+        serializer: config?.serializer ?? String,
       },
       configPath,
     );
@@ -74,16 +72,19 @@ export class TextType<
 
     this.charset = config?.charset || undefined;
     this.collation = config?.collation || undefined;
-  }
 
-  @Memoize()
-  public override get definition(): string {
-    return [
+    this.definition = [
       `${this.kind}${this.length ? `(${this.length})` : ''}`,
       this.charset && `CHARSET ${escapeStringValue(this.charset)}`,
       this.collation && `COLLATE ${escapeStringValue(this.collation)}`,
     ]
       .filter(Boolean)
       .join(' ');
+  }
+
+  protected override doSerialize(value: string): string {
+    assert.equal(typeof value, 'string');
+
+    return escapeStringValue(value);
   }
 }

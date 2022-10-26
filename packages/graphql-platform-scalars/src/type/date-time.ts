@@ -4,7 +4,7 @@ import * as graphql from 'graphql';
 const GRAPHQL_DATE_TIME_REGEX =
   /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}(\.\d+)?(Z|([+-]\d{2}(:?\d{2})?))$/;
 
-function parseDateTime(value: unknown, path?: utils.Path): Date {
+export function parseDateTime(value: unknown, path?: utils.Path): Date {
   if (value instanceof Date) {
     if (Number.isNaN(value.getTime())) {
       throw new utils.UnexpectedValueError('a valid Date instance', value, {

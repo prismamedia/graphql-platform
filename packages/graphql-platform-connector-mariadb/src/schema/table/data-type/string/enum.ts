@@ -1,6 +1,6 @@
 import type * as core from '@prismamedia/graphql-platform';
 import * as utils from '@prismamedia/graphql-platform-utils';
-import { Memoize } from '@prismamedia/ts-memoize';
+import assert from 'node:assert/strict';
 import type { SetOptional } from 'type-fest';
 import { escapeStringValue } from '../../../../escaping.js';
 import {
@@ -8,9 +8,8 @@ import {
   type AbstractDataTypeConfig,
 } from '../../abstract-data-type.js';
 
-export interface EnumTypeConfig<
-  TLeafValue extends NonNullable<core.LeafValue> = any,
-> extends AbstractDataTypeConfig<EnumType['kind'], TLeafValue, string> {
+export interface EnumTypeConfig<TLeafValue extends core.LeafValue = any>
+  extends AbstractDataTypeConfig<EnumType['kind'], TLeafValue, string> {
   values: ReadonlyArray<string>;
 }
 
@@ -18,24 +17,16 @@ export interface EnumTypeConfig<
  * @see https://mariadb.com/kb/en/enum/
  */
 export class EnumType<
-  TLeafValue extends NonNullable<core.LeafValue> = any,
+  TLeafValue extends core.LeafValue = any,
 > extends AbstractDataType<'ENUM', TLeafValue, string> {
   public readonly values: ReadonlyArray<string>;
+  public readonly definition: string;
 
   public constructor(
     config: SetOptional<EnumTypeConfig<TLeafValue>, 'kind'>,
     configPath?: utils.Path,
   ) {
-    super(
-      {
-        kind: 'ENUM',
-        serialize: (value) => escapeStringValue(value),
-        toColumnValue: config.toColumnValue,
-        fromColumnValue: config.fromColumnValue,
-        fromJsonValue: config.fromJsonValue,
-      },
-      configPath,
-    );
+    super({ ...config, kind: 'ENUM' }, configPath);
 
     // values
     {
@@ -60,12 +51,16 @@ export class EnumType<
 
       this.values = Object.freeze([...new Set(valuesConfig)]);
     }
-  }
 
-  @Memoize()
-  public override get definition(): string {
-    return `${this.kind}(${this.values
+    this.definition = `${this.kind}(${this.values
       .map((value) => escapeStringValue(value))
       .join(',')})`;
+  }
+
+  protected override doSerialize(value: string): string {
+    assert.equal(typeof value, 'string');
+    assert(this.values.includes(value as any));
+
+    return escapeStringValue(value);
   }
 }

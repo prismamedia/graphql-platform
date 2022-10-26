@@ -1,7 +1,7 @@
 import * as utils from '@prismamedia/graphql-platform-utils';
 import * as graphql from 'graphql';
 
-function parseNonEmptyString(value: unknown, path?: utils.Path): string {
+export function parseNonEmptyString(value: unknown, path?: utils.Path): string {
   if (typeof value === 'string' && value.length) {
     return value;
   }

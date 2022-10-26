@@ -1,40 +1,29 @@
 import type * as core from '@prismamedia/graphql-platform';
 import * as utils from '@prismamedia/graphql-platform-utils';
 
-export type AbstractDataTypeConfig<
+export interface AbstractDataTypeConfig<
   TKind extends string,
-  TLeafValue extends NonNullable<core.LeafValue>,
-  TColumnValue,
-  TJsonValue = TColumnValue,
-> = {
+  TLeafValue extends core.LeafValue,
+  TValue,
+> {
   kind: TKind;
-  fromColumnValue?: (columnValue: TColumnValue) => TLeafValue;
-  fromJsonValue?: (jsonValue: TJsonValue) => TLeafValue;
-  toColumnValue?: (leafValue: TLeafValue) => TColumnValue;
-};
+  parser?: (value: NonNullable<TValue>) => TLeafValue | null;
+  serializer?: (value: NonNullable<TLeafValue>) => TValue | null;
+}
 
 export abstract class AbstractDataType<
   TKind extends string,
-  TLeafValue extends NonNullable<core.LeafValue>,
-  TColumnValue,
-  TJsonValue = TColumnValue,
+  TLeafValue extends core.LeafValue,
+  TValue,
 > {
   public readonly kind: TKind;
   public abstract readonly definition: string;
-  readonly #serialize: (columnValue: TColumnValue) => string;
-  readonly #fromColumnValue?: (columnValue: TColumnValue) => TLeafValue;
-  readonly #fromJsonValue?: (jsonValue: TJsonValue) => TLeafValue;
-  readonly #toColumnValue?: (leafValue: TLeafValue) => TColumnValue;
+
+  readonly #parser?: (value: NonNullable<TValue>) => TLeafValue | null;
+  readonly #serializer?: (value: NonNullable<TLeafValue>) => TValue | null;
 
   public constructor(
-    config: AbstractDataTypeConfig<
-      TKind,
-      TLeafValue,
-      TColumnValue,
-      TJsonValue
-    > & {
-      serialize: (columnValue: TColumnValue) => string;
-    },
+    config: AbstractDataTypeConfig<TKind, TLeafValue, TValue>,
     configPath?: utils.Path,
   ) {
     // kind
@@ -51,38 +40,57 @@ export abstract class AbstractDataType<
       this.kind = config.kind;
     }
 
-    this.#serialize = config.serialize;
-    this.#fromColumnValue = config.fromColumnValue;
-    this.#fromJsonValue =
-      config.fromJsonValue || (config.fromColumnValue as any);
-    this.#toColumnValue = config.toColumnValue;
+    this.#parser = config.parser;
+    this.#serializer = config.serializer;
   }
 
   public toString(): string {
     return this.definition;
   }
 
-  public fromColumnValue(columnValue: TColumnValue | null): TLeafValue | null {
-    return columnValue !== null && this.#fromColumnValue
-      ? this.#fromColumnValue(columnValue)
-      : (columnValue as any);
+  protected doParseColumnValue(columnValue: unknown): TValue | null {
+    return columnValue as any;
   }
 
-  public fromJsonValue(jsonValue: TJsonValue | null): TLeafValue | null {
-    return jsonValue !== null && this.#fromJsonValue
-      ? this.#fromJsonValue(jsonValue)
-      : (jsonValue as any);
+  public parseColumnValue(columnValue: unknown): TLeafValue | null {
+    if (columnValue != null) {
+      const value = this.doParseColumnValue(columnValue);
+      if (value != null) {
+        return this.#parser ? this.#parser(value) : (value as any);
+      }
+    }
+
+    return null;
   }
 
-  public toColumnValue(leafValue: TLeafValue | null): TColumnValue | null {
-    return leafValue !== null && this.#toColumnValue
-      ? this.#toColumnValue(leafValue)
-      : (leafValue as any);
+  protected doParseJsonValue(jsonValue: unknown): TValue | null {
+    return this.doParseColumnValue(jsonValue);
   }
+
+  public parseJsonValue(jsonValue: unknown): TLeafValue | null {
+    if (jsonValue != null) {
+      const value = this.doParseJsonValue(jsonValue);
+      if (value != null) {
+        return this.#parser ? this.#parser(value) : (value as any);
+      }
+    }
+
+    return null;
+  }
+
+  protected abstract doSerialize(value: TValue): string;
 
   public serialize(leafValue: TLeafValue | null): string {
-    const columnValue: TColumnValue | null = this.toColumnValue(leafValue);
+    if (leafValue != null) {
+      const value = this.#serializer
+        ? this.#serializer(leafValue)
+        : (leafValue as any);
 
-    return columnValue !== null ? this.#serialize(columnValue) : 'NULL';
+      if (value != null) {
+        return this.doSerialize(value);
+      }
+    }
+
+    return 'NULL';
   }
 }

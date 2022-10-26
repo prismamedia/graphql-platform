@@ -1,6 +1,6 @@
 import type * as core from '@prismamedia/graphql-platform';
 import * as utils from '@prismamedia/graphql-platform-utils';
-import { Memoize } from '@prismamedia/ts-memoize';
+import assert from 'node:assert/strict';
 import type { SetOptional } from 'type-fest';
 import {
   AbstractDataType,
@@ -8,9 +8,8 @@ import {
 } from '../../abstract-data-type.js';
 import type { NumericDataTypeModifier } from './modifier.js';
 
-export interface DoubleTypeConfig<
-  TLeafValue extends NonNullable<core.LeafValue> = any,
-> extends AbstractDataTypeConfig<
+export interface DoubleTypeConfig<TLeafValue extends core.LeafValue = any>
+  extends AbstractDataTypeConfig<
     DoubleType['kind'] | 'DOUBLE PRECISION' | 'REAL',
     TLeafValue,
     number
@@ -24,23 +23,18 @@ export interface DoubleTypeConfig<
  * @see https://mariadb.com/kb/en/double/
  */
 export class DoubleType<
-  TLeafValue extends NonNullable<core.LeafValue> = any,
+  TLeafValue extends core.LeafValue = any,
 > extends AbstractDataType<'DOUBLE', TLeafValue, number> {
   public readonly precision?: number;
   public readonly scale?: number;
   public readonly modifiers: ReadonlyArray<NumericDataTypeModifier>;
+  public readonly definition: string;
 
   public constructor(
     config?: SetOptional<DoubleTypeConfig<TLeafValue>, 'kind'>,
     configPath?: utils.Path,
   ) {
-    super({
-      kind: 'DOUBLE',
-      serialize: (value) => value.toString(10),
-      fromColumnValue: config?.fromColumnValue,
-      fromJsonValue: config?.fromJsonValue,
-      toColumnValue: config?.toColumnValue,
-    });
+    super({ ...config, kind: 'DOUBLE' });
 
     if (config?.precision != null) {
       const precisionConfig = config?.precision;
@@ -97,15 +91,18 @@ export class DoubleType<
     }
 
     this.modifiers = Object.freeze([...new Set(config?.modifiers)]);
-  }
 
-  @Memoize()
-  public override get definition(): string {
-    return [
+    this.definition = [
       `${this.kind}(${this.precision},${this.scale})`,
       this.modifiers?.join(' '),
     ]
       .filter(Boolean)
       .join(' ');
+  }
+
+  protected override doSerialize(value: number): string {
+    assert.equal(typeof value, 'number');
+
+    return value.toString(10);
   }
 }

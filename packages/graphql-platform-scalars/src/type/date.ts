@@ -3,15 +3,15 @@ import * as graphql from 'graphql';
 
 const GRAPHQL_DATE_REGEX = /^(?<year>\d{4})-(?<month>\d{2})-(?<day>\d{2})$/;
 
-function parseDate(value: unknown, path?: utils.Path): Date {
+export function parseDate(value: unknown, path?: utils.Path): Date {
   if (typeof value === 'string') {
     const matches = GRAPHQL_DATE_REGEX.exec(value);
     if (matches) {
       const coercedValue = new Date(
         Date.UTC(
-          parseInt(matches.groups!.year, 10),
-          parseInt(matches.groups!.month, 10) - 1,
-          parseInt(matches.groups!.day, 10),
+          Number.parseInt(matches.groups!.year, 10),
+          Number.parseInt(matches.groups!.month, 10) - 1,
+          Number.parseInt(matches.groups!.day, 10),
           0,
           0,
           0,

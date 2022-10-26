@@ -345,7 +345,7 @@ export class Table {
       if (expression instanceof core.LeafSelection) {
         const column = this.getColumnByLeaf(expression.leaf);
 
-        expressionValue = column.dataType.fromJsonValue(rawExpressionValue);
+        expressionValue = column.dataType.parseJsonValue(rawExpressionValue);
       } else if (expression instanceof core.EdgeHeadSelection) {
         const head = this.schema.getTableByNode(expression.edge.head);
 

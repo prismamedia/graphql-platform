@@ -217,10 +217,7 @@ export abstract class AbstractOperation<
           );
         } catch (error) {
           throw utils.isConfigError(error) || error instanceof ConnectorError
-            ? new InternalError({
-                path: info.path,
-                cause: error,
-              })
+            ? new InternalError({ path: info.path, cause: error })
             : error;
         }
       },

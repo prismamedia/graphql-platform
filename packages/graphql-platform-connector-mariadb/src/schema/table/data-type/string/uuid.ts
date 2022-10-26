@@ -1,5 +1,6 @@
 import type * as core from '@prismamedia/graphql-platform';
 import * as utils from '@prismamedia/graphql-platform-utils';
+import assert from 'node:assert/strict';
 import type { SetOptional } from 'type-fest';
 import { escapeStringValue } from '../../../../escaping.js';
 import {
@@ -7,9 +8,8 @@ import {
   type AbstractDataTypeConfig,
 } from '../../abstract-data-type.js';
 
-export interface UuidTypeConfig<
-  TLeafValue extends NonNullable<core.LeafValue> = any,
-> extends AbstractDataTypeConfig<UuidType['kind'], TLeafValue, string> {}
+export interface UuidTypeConfig<TLeafValue extends core.LeafValue = any>
+  extends AbstractDataTypeConfig<UuidType['kind'], TLeafValue, string> {}
 
 /**
  * The UUID data type is intended for the storage of 128-bit UUID (Universally Unique Identifier) data
@@ -17,7 +17,7 @@ export interface UuidTypeConfig<
  * @see https://mariadb.com/kb/en/uuid-data-type/
  */
 export class UuidType<
-  TLeafValue extends NonNullable<core.LeafValue> = any,
+  TLeafValue extends core.LeafValue = any,
 > extends AbstractDataType<'UUID', TLeafValue, string> {
   public readonly definition: string;
 
@@ -25,17 +25,14 @@ export class UuidType<
     config?: SetOptional<UuidTypeConfig<TLeafValue>, 'kind'>,
     configPath?: utils.Path,
   ) {
-    super(
-      {
-        kind: 'UUID',
-        serialize: (value) => escapeStringValue(value),
-        toColumnValue: config?.toColumnValue,
-        fromColumnValue: config?.fromColumnValue,
-        fromJsonValue: config?.fromJsonValue,
-      },
-      configPath,
-    );
+    super({ ...config, kind: 'UUID' }, configPath);
 
     this.definition = this.kind;
+  }
+
+  protected override doSerialize(value: string): string {
+    assert.equal(typeof value, 'string');
+
+    return escapeStringValue(value);
   }
 }

@@ -33,6 +33,6 @@ export abstract class AbstractColumn {
   }
 
   public pickLeafValueFromRow(row: utils.PlainObject): core.LeafValue {
-    return this.dataType.fromColumnValue(row[this.name]);
+    return this.dataType.parseColumnValue(row[this.name]);
   }
 }

@@ -2,7 +2,7 @@ import * as utils from '@prismamedia/graphql-platform-utils';
 import * as graphql from 'graphql';
 import { URL } from 'node:url';
 
-function parseURL(value: unknown, path?: utils.Path): URL {
+export function parseURL(value: unknown, path?: utils.Path): URL {
   if (value instanceof URL) {
     return value;
   } else if (typeof value === 'string') {

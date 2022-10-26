@@ -38,8 +38,6 @@ export type DataTypeConfig =
 
 export type DataType = NumericDataType | StringDataType | DateAndTimeDataType;
 
-export type DataTypeValue = ReturnType<DataType['toColumnValue']>;
-
 export function createDataTypeFromConfig(
   config: DataTypeConfig,
   configPath: utils.Path,

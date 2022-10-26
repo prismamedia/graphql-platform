@@ -155,10 +155,7 @@ export class LeafColumn extends AbstractColumn {
         const leafTypeName = leaf.type.name as scalars.TypeName;
         switch (leafTypeName) {
           case 'Boolean':
-            this.dataType = new BooleanType<boolean>({
-              toColumnValue: (value) => (value ? 1 : 0),
-              fromColumnValue: (value) => value === 1,
-            });
+            this.dataType = new BooleanType<boolean>();
             break;
 
           case 'BigInt':
@@ -216,63 +213,37 @@ export class LeafColumn extends AbstractColumn {
             break;
 
           case 'Date':
-            this.dataType = new DateType<Date>({
-              toColumnValue: (value) => value.toISOString().split('T')[0],
-            });
+            this.dataType = new DateType<Date>();
             break;
 
           case 'DateTime':
-            this.dataType = new DateTimeType<Date>({
-              microsecondPrecision: 3,
-              toColumnValue: (value) =>
-                value
-                  .toISOString()
-                  .replace(
-                    /^(?<date>[^T]+)T(?<time>[^Z]+)Z$/,
-                    '$<date> $<time>',
-                  ),
-              fromColumnValue: (value) =>
-                new Date(
-                  value.replace(
-                    /^(?<date>[^ ]+) (?<time>.+)$/,
-                    '$<date>T$<time>Z',
-                  ),
-                ),
-            });
+            this.dataType = new DateTimeType<Date>({ microsecondPrecision: 3 });
             break;
 
           case 'URL':
             this.dataType = new VarCharType<URL>({
-              length: 2048,
+              length: 255,
               charset: this.table.defaultCharset,
               collation: this.table.defaultCollation,
-              toColumnValue: (value) => value.toString(),
+              parser: (value) => scalars.parseURL(value),
+              serializer: (value) => value.toString(),
             });
             break;
 
           case 'DraftJS':
-            this.dataType = new JsonType<scalars.RawDraftContentState>({
-              toColumnValue: (value) => JSON.stringify(value),
-              fromColumnValue: (value) => JSON.parse(value),
-              fromJsonValue: (value: any) => value,
-            });
+            this.dataType = new JsonType<scalars.RawDraftContentState>();
             break;
 
           case 'JSONObject':
-            this.dataType = new JsonType<JsonObject>({
-              toColumnValue: (value) => JSON.stringify(value),
-              fromColumnValue: (value) => JSON.parse(value),
-              // MariaDB automatically parses the JSON column, so we do not do it twice
-              fromJsonValue: (value: any) => value,
-            });
+            this.dataType = new JsonType<JsonObject>();
             break;
 
           case 'JSONArray':
             this.dataType = new TextType<JsonArray>({
               charset: this.table.defaultCharset,
               collation: this.table.defaultCollation,
-              toColumnValue: (value) => JSON.stringify(value),
-              fromColumnValue: (value) => JSON.parse(value),
+              parser: (value) => JSON.parse(value),
+              serializer: (value) => JSON.stringify(value),
             });
             break;
 

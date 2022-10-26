@@ -5,7 +5,7 @@ import * as graphql from 'graphql';
 const GRAPHQL_EMAIL_ADDRESS_REGEX =
   /^[A-Z0-9.!#$%&'*+\/=?^_`{|}~-]+@[A-Z0-9](?:[A-Z0-9-]{0,61}[A-Z0-9])?(?:\.[A-Z0-9](?:[A-Z0-9-]{0,61}[A-Z0-9])?)*$/i;
 
-function parseEmailAddress(value: unknown, path?: utils.Path): string {
+export function parseEmailAddress(value: unknown, path?: utils.Path): string {
   if (typeof value === 'string' && GRAPHQL_EMAIL_ADDRESS_REGEX.test(value)) {
     return value;
   }
