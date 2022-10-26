@@ -231,7 +231,8 @@ describe('Seeding', () => {
 
             case 'User':
               return creations.map(
-                (creation): NodeValue => ({ ...creation.proxy } as NodeValue),
+                (creation): NodeValue =>
+                  ({ lastLoggedInAt: null, ...creation.proxy } as NodeValue),
               );
 
             case 'UserProfile':

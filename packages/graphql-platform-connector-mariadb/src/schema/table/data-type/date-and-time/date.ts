@@ -32,10 +32,10 @@ export class DateType<
   protected override doParseColumnValue(
     // As the connection is configured with "dateStrings: true"
     columnValue: string,
-  ): Date {
+  ): Date | null {
     assert.equal(typeof columnValue, 'string');
 
-    return scalars.parseDate(columnValue);
+    return columnValue === '0000-00-00' ? null : scalars.parseDate(columnValue);
   }
 
   protected override doSerialize(value: Date): string {

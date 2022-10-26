@@ -336,7 +336,7 @@ export class LeafColumn extends AbstractColumn {
     return [
       this.dataType.definition,
       this.isAutoIncrement() && 'AUTO_INCREMENT',
-      !this.isNullable() && 'NOT NULL',
+      this.isNullable() ? 'NULL' : 'NOT NULL',
       this.description &&
         `COMMENT ${escapeStringValue(this.description.substring(0, 1024))}`,
     ]

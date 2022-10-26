@@ -106,10 +106,14 @@ export const User = {
   user_yvann: {
     id: 'c395757e-8a40-456a-b006-221ef3490456',
     username: 'yvann',
+    createdAt: new Date('2022-01-01T10:00:00Z'),
+    lastLoggedInAt: new Date('2022-01-01T12:00:00Z'),
   },
   user_marine: {
     id: '654173f4-8fa6-42df-9941-f5a6a4d0b97e',
     username: 'marine',
+    createdAt: new Date('2022-02-01T12:00:00Z'),
+    lastLoggedInAt: null,
   },
 } as const;
 

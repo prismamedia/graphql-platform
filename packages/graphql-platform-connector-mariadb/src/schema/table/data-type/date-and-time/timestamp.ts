@@ -58,12 +58,17 @@ export class TimestampType<
   protected override doParseColumnValue(
     // As the connection is configured with "dateStrings: true"
     columnValue: string,
-  ): Date {
+  ): Date | null {
     assert.equal(typeof columnValue, 'string');
 
-    return new Date(
-      columnValue.replace(/^(?<date>[^ ]+) (?<time>.+)$/, '$<date>T$<time>Z'),
-    );
+    return /^0000-00-00 00:00:00($|\.0+$)/.test(columnValue)
+      ? null
+      : new Date(
+          columnValue.replace(
+            /^(?<date>[^ ]+) (?<time>.+)$/,
+            '$<date>T$<time>Z',
+          ),
+        );
   }
 
   protected override doSerialize(value: Date): string {

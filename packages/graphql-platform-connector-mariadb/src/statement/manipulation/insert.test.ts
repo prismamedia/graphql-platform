@@ -1,9 +1,11 @@
 import {
+  myAdminContext,
   MyGP,
   myJournalistContext,
 } from '@prismamedia/graphql-platform/__tests__/config.js';
 import { MariaDBConnector } from '../../index.js';
 import { createGraphQLPlatform } from '../../__tests__/config.js';
+import { InsertStatement } from './insert.js';
 
 describe('Insert statement', () => {
   let gp: MyGP<MariaDBConnector>;
@@ -18,12 +20,70 @@ describe('Insert statement', () => {
     await gp.connector.teardown();
   });
 
-  it('generates statements', async () => {
+  it('generates a single creation', async () => {
     const statements: string[] = [];
 
     const subscriber = gp.connector.executedStatements.subscribe(
       ({ statement }) => {
-        statements.push(statement.sql);
+        if (
+          statement instanceof InsertStatement &&
+          statement.table.name === 'users'
+        ) {
+          statements.push(statement.sql);
+        }
+      },
+    );
+
+    try {
+      await expect(
+        gp.api.mutation.createUser(
+          {
+            data: {
+              id: '484ae4db-a944-421d-828c-3b514a438146',
+              username: 'myTestUser',
+              createdAt: new Date('2022-02-01T12:00:00Z'),
+              lastLoggedInAt: null,
+            },
+            selection: `{ 
+              id
+              username
+              createdAt
+              lastLoggedInAt
+            }`,
+          },
+          myAdminContext,
+        ),
+      ).resolves.toEqual({
+        id: '484ae4db-a944-421d-828c-3b514a438146',
+        username: 'myTestUser',
+        createdAt: new Date('2022-02-01T12:00:00Z'),
+        lastLoggedInAt: null,
+      });
+    } finally {
+      subscriber.unsubscribe();
+    }
+
+    expect(statements).toEqual([
+      `INSERT INTO \`users\`
+  (\`id\`,\`username\`,\`created_at\`,\`last_logged_in_at\`)
+VALUES
+  ('484ae4db-a944-421d-828c-3b514a438146','myTestUser','2022-02-01 12:00:00.000',NULL)
+RETURNING
+  \`id\`,\`username\`,\`created_at\`,\`last_logged_in_at\``,
+    ]);
+  });
+
+  it('generates multiple creations', async () => {
+    const statements: string[] = [];
+
+    const subscriber = gp.connector.executedStatements.subscribe(
+      ({ statement }) => {
+        if (
+          statement instanceof InsertStatement &&
+          statement.table.name === 'articles'
+        ) {
+          statements.push(statement.sql);
+        }
       },
     );
 
@@ -80,7 +140,9 @@ describe('Insert statement', () => {
           title: 'My first title',
           body: null,
           createdAt: now,
-          updatedAt: now,
+          updatedAt: new Date(
+            now.toISOString().replace(/^([^.]+).+$/, '$1.000Z'),
+          ),
           sponsored: null,
           views: 0n,
           score: 0.5,
@@ -95,7 +157,9 @@ describe('Insert statement', () => {
             entityMap: {},
           },
           createdAt: now,
-          updatedAt: now,
+          updatedAt: new Date(
+            now.toISOString().replace(/^([^.]+).+$/, '$1.000Z'),
+          ),
           sponsored: true,
           views: 12n,
           score: 0.75,
@@ -112,14 +176,6 @@ describe('Insert statement', () => {
       .replace(/^(?<date>[^T]+)T(?<time>[^Z]+)Z$/, '$<date> $<time>');
 
     expect(statements).toEqual([
-      `SELECT JSON_OBJECT(\"id\", \`users\`.\`id\`, \"username\", \`users\`.\`username\`) as \`User\`
-FROM \`users\`
-WHERE \`users\`.\`id\` <=> '5ff01840-8e75-4b18-baa1-90b51e7318cd'
-LIMIT 1`,
-      `SELECT JSON_OBJECT(\"id\", \`users\`.\`id\`, \"username\", \`users\`.\`username\`) as \`User\`
-FROM \`users\`
-WHERE \`users\`.\`id\` <=> '5ff01840-8e75-4b18-baa1-90b51e7318cd'
-LIMIT 1`,
       `INSERT INTO \`articles\`
   (\`privateId\`,\`id\`,\`status\`,\`title\`,\`slug\`,\`body\`,\`category_privateId\`,\`created_by_id\`,\`created_at\`,\`updated_by_username\`,\`updated_at\`,\`metas\`,\`highlighted\`,\`sponsored\`,\`views\`,\`score\`,\`machine_tags\`)
 VALUES

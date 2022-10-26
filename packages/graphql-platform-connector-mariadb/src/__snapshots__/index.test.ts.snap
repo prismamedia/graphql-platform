@@ -15,18 +15,18 @@ exports[`GraphQL Platform Connector MariaDB generates valid and stable schema 3`
   \`status\` ENUM('draft','published','deleted') NOT NULL,
   \`title\` VARCHAR(255) CHARSET 'utf8mb4' COLLATE 'utf8mb4_unicode_520_ci' NOT NULL,
   \`slug\` VARCHAR(255) CHARSET 'utf8mb4' COLLATE 'utf8mb4_unicode_520_ci' NOT NULL,
-  \`body\` JSON COMMENT 'The article\\'s body',
+  \`body\` JSON NULL COMMENT 'The article\\'s body',
   \`category_privateId\` INT UNSIGNED,
   \`created_by_id\` CHAR(36) CHARSET 'utf8mb4' COLLATE 'utf8mb4_unicode_520_ci',
   \`created_at\` DATETIME(3) NOT NULL,
   \`updated_by_username\` VARCHAR(255) CHARSET 'utf8mb4' COLLATE 'utf8mb4_unicode_520_ci',
-  \`updated_at\` DATETIME(3) NOT NULL,
-  \`metas\` JSON COMMENT 'Contains any arbitrary data you want to store alongside the article',
-  \`highlighted\` BOOLEAN COMMENT 'Is the article highlighted?',
-  \`sponsored\` BOOLEAN COMMENT 'Is the article a partnership?',
+  \`updated_at\` TIMESTAMP(0) NOT NULL,
+  \`metas\` JSON NULL COMMENT 'Contains any arbitrary data you want to store alongside the article',
+  \`highlighted\` BOOLEAN NULL COMMENT 'Is the article highlighted?',
+  \`sponsored\` BOOLEAN NULL COMMENT 'Is the article a partnership?',
   \`views\` BIGINT UNSIGNED NOT NULL,
   \`score\` DOUBLE(10,2) UNSIGNED NOT NULL,
-  \`machine_tags\` TEXT CHARSET 'utf8mb4' COLLATE 'utf8mb4_unicode_520_ci',
+  \`machine_tags\` TEXT CHARSET 'utf8mb4' COLLATE 'utf8mb4_unicode_520_ci' NULL,
   PRIMARY KEY (\`privateId\`),
   UNIQUE \`unq_id\` (\`id\`),
   UNIQUE \`unq_category_slug\` (\`category_privateId\`,\`slug\`),
@@ -61,7 +61,7 @@ DEFAULT COLLATE = 'utf8mb4_unicode_520_ci'
 
 CREATE TABLE \`tests_connector_mariadb\`.\`tags\` (
   \`id\` CHAR(36) CHARSET 'utf8mb4' COLLATE 'utf8mb4_unicode_520_ci' NOT NULL,
-  \`deprecated\` BOOLEAN COMMENT 'A tag can be deprecated',
+  \`deprecated\` BOOLEAN NULL COMMENT 'A tag can be deprecated',
   \`title\` VARCHAR(255) CHARSET 'utf8mb4' COLLATE 'utf8mb4_unicode_520_ci' NOT NULL,
   \`slug\` VARCHAR(255) CHARSET 'utf8mb4' COLLATE 'utf8mb4_unicode_520_ci' NOT NULL,
   \`created_at\` DATETIME(3) NOT NULL,
@@ -90,7 +90,7 @@ CREATE TABLE \`tests_connector_mariadb\`.\`article_tag_moderations\` (
   \`theArticlePrivateId\` INT UNSIGNED NOT NULL,
   \`theTagId\` CHAR(36) CHARSET 'utf8mb4' COLLATE 'utf8mb4_unicode_520_ci' NOT NULL,
   \`moderator_id\` CHAR(36) CHARSET 'utf8mb4' COLLATE 'utf8mb4_unicode_520_ci' NOT NULL,
-  \`moderation\` VARCHAR(255) CHARSET 'utf8mb4' COLLATE 'utf8mb4_unicode_520_ci',
+  \`moderation\` VARCHAR(255) CHARSET 'utf8mb4' COLLATE 'utf8mb4_unicode_520_ci' NULL,
   PRIMARY KEY (\`theArticlePrivateId\`,\`theTagId\`,\`moderator_id\`),
   FOREIGN KEY \`my_custom_fk_name\` (\`theArticlePrivateId\`,\`theTagId\`) REFERENCES \`article_tags\` (\`article_privateId\`,\`tag_id\`) ON UPDATE RESTRICT ON DELETE RESTRICT,
   FOREIGN KEY \`fk_article_tag_moderations_moderator_id\` (\`moderator_id\`) REFERENCES \`users\` (\`id\`) ON UPDATE RESTRICT ON DELETE RESTRICT
@@ -103,7 +103,7 @@ CREATE TABLE \`tests_connector_mariadb\`.\`users\` (
   \`id\` CHAR(36) CHARSET 'utf8mb4' COLLATE 'utf8mb4_unicode_520_ci' NOT NULL,
   \`username\` VARCHAR(255) CHARSET 'utf8mb4' COLLATE 'utf8mb4_unicode_520_ci' NOT NULL,
   \`created_at\` DATETIME(3) NOT NULL,
-  \`last_logged_in_at\` DATETIME(3) NOT NULL,
+  \`last_logged_in_at\` TIMESTAMP(0) NULL,
   PRIMARY KEY (\`id\`),
   UNIQUE \`unq_username\` (\`username\`)
 )
@@ -113,10 +113,10 @@ DEFAULT COLLATE = 'utf8mb4_unicode_520_ci'
 
 CREATE TABLE \`tests_connector_mariadb\`.\`user_profiles\` (
   \`theUserId\` CHAR(36) CHARSET 'utf8mb4' COLLATE 'utf8mb4_unicode_520_ci' NOT NULL,
-  \`birthday\` DATE,
-  \`facebook_id\` VARCHAR(255) CHARSET 'utf8mb4' COLLATE 'utf8mb4_unicode_520_ci',
-  \`google_id\` VARCHAR(255) CHARSET 'utf8mb4' COLLATE 'utf8mb4_unicode_520_ci',
-  \`twitter_handle\` VARCHAR(255) CHARSET 'utf8mb4' COLLATE 'utf8mb4_unicode_520_ci',
+  \`birthday\` DATE NULL,
+  \`facebook_id\` VARCHAR(255) CHARSET 'utf8mb4' COLLATE 'utf8mb4_unicode_520_ci' NULL,
+  \`google_id\` VARCHAR(255) CHARSET 'utf8mb4' COLLATE 'utf8mb4_unicode_520_ci' NULL,
+  \`twitter_handle\` VARCHAR(255) CHARSET 'utf8mb4' COLLATE 'utf8mb4_unicode_520_ci' NULL,
   PRIMARY KEY (\`theUserId\`),
   FOREIGN KEY \`fk_user_profiles_theUserId\` (\`theUserId\`) REFERENCES \`users\` (\`id\`) ON UPDATE RESTRICT ON DELETE RESTRICT
 )

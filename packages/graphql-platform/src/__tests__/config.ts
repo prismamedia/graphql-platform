@@ -805,11 +805,7 @@ export const User: NodeConfig<MyContext> = {
       kind: 'Leaf',
       type: 'DateTime',
       public: false,
-      nullable: false,
-
-      creation: {
-        defaultValue: () => new Date(),
-      },
+      nullable: true,
     },
   },
 

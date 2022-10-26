@@ -51,6 +51,30 @@ export function createGraphQLPlatform(
                       ...config,
                       column: { fullTextIndex: true },
                     }
+                  : nodeName === 'Article' &&
+                    componentName === 'updatedAt' &&
+                    config.kind === 'Leaf'
+                  ? {
+                      ...config,
+                      column: {
+                        dataType: {
+                          kind: 'TIMESTAMP',
+                          microsecondPrecision: 0,
+                        },
+                      },
+                    }
+                  : nodeName === 'User' &&
+                    componentName === 'lastLoggedInAt' &&
+                    config.kind === 'Leaf'
+                  ? {
+                      ...config,
+                      column: {
+                        dataType: {
+                          kind: 'TIMESTAMP',
+                          microsecondPrecision: 0,
+                        },
+                      },
+                    }
                   : nodeName === 'UserProfile' &&
                     componentName === 'user' &&
                     config.kind === 'Edge'
