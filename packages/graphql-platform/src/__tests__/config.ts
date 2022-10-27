@@ -434,11 +434,11 @@ export const Article: NodeConfig<MyContext> = {
   },
 
   // onChange(change) {
-  //   if (change instanceof CreatedNode) {
+  //   if (change.kind === utils.MutationType.CREATION) {
   //     console.debug(
   //       `The article "${change.newValue.id}" has been created at "${change.at}"`,
   //     );
-  //   } else if (change instanceof UpdatedNode) {
+  //   } else if (change.kind === utils.MutationType.UPDATE) {
   //     console.debug(
   //       `The article "${change.newValue.id}" has been updated at "${change.at}"`,
   //     );

@@ -6,11 +6,11 @@ abstract class AbstractChangedNode<
   TRequestContext extends object,
   TConnector extends ConnectorInterface,
 > {
+  public abstract readonly kind: MutationType;
   #at: Date;
 
   public constructor(
     public readonly node: Node<TRequestContext, TConnector>,
-    public readonly kind: MutationType,
     public readonly requestContext: TRequestContext,
     at: Date = new Date(),
   ) {
@@ -30,6 +30,8 @@ export class CreatedNode<
   TRequestContext extends object = any,
   TConnector extends ConnectorInterface = any,
 > extends AbstractChangedNode<TRequestContext, TConnector> {
+  public override readonly kind = MutationType.CREATION;
+
   public readonly oldValue: undefined;
   public readonly newValue: Readonly<NodeValue>;
 
@@ -39,7 +41,7 @@ export class CreatedNode<
     maybeNewValue: unknown,
     at?: Date,
   ) {
-    super(node, MutationType.CREATION, requestContext, at);
+    super(node, requestContext, at);
 
     this.newValue = Object.freeze(node.parseValue(maybeNewValue));
   }
@@ -49,6 +51,8 @@ export class DeletedNode<
   TRequestContext extends object = any,
   TConnector extends ConnectorInterface = any,
 > extends AbstractChangedNode<TRequestContext, TConnector> {
+  public override readonly kind = MutationType.DELETION;
+
   public readonly oldValue: Readonly<NodeValue>;
   public readonly newValue: undefined;
 
@@ -58,7 +62,7 @@ export class DeletedNode<
     maybeOldValue: unknown,
     at?: Date,
   ) {
-    super(node, MutationType.DELETION, requestContext, at);
+    super(node, requestContext, at);
 
     this.oldValue = Object.freeze(node.parseValue(maybeOldValue));
   }
@@ -68,13 +72,17 @@ export class UpdatedNode<
   TRequestContext extends object = any,
   TConnector extends ConnectorInterface = any,
 > extends AbstractChangedNode<TRequestContext, TConnector> {
+  public override readonly kind = MutationType.UPDATE;
+
   public readonly oldValue: Readonly<NodeValue>;
   public readonly newValue: Readonly<NodeValue>;
+
   public readonly updatesByComponent: ReadonlyMap<
     Component<TRequestContext, TConnector>,
     Readonly<{ oldValue: ComponentValue; newValue: ComponentValue }>
   >;
-  public readonly updatedComponents: ReadonlyArray<Component['name']>;
+
+  public readonly updatedComponentNames: ReadonlyArray<Component['name']>;
 
   public constructor(
     node: Node<TRequestContext, TConnector>,
@@ -83,13 +91,17 @@ export class UpdatedNode<
     maybeNewValue: unknown,
     at?: Date,
   ) {
-    super(node, MutationType.UPDATE, requestContext, at);
+    super(node, requestContext, at);
 
     this.oldValue = Object.freeze(node.parseValue(maybeOldValue));
     this.newValue = Object.freeze(node.parseValue(maybeNewValue));
+
     this.updatesByComponent = new Map(
       Array.from(node.componentsByName.values()).reduce<
-        [Component, { oldValue: ComponentValue; newValue: ComponentValue }][]
+        [
+          Component,
+          Readonly<{ oldValue: ComponentValue; newValue: ComponentValue }>,
+        ][]
       >((entries, component) => {
         const oldComponentValue: any = this.oldValue[component.name];
         const newComponentValue: any = this.newValue[component.name];
@@ -107,7 +119,8 @@ export class UpdatedNode<
         return entries;
       }, []),
     );
-    this.updatedComponents = Object.freeze(
+
+    this.updatedComponentNames = Object.freeze(
       Array.from(this.updatesByComponent.keys(), (component) => component.name),
     );
   }
