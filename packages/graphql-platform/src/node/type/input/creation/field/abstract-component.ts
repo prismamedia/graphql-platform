@@ -37,7 +37,7 @@ export abstract class AbstractComponentCreationInput<
     if (this.isPublic()) {
       if (!component.node.isMutationPublic(utils.MutationType.CREATION)) {
         throw new utils.UnexpectedConfigError(
-          `not to be "true" as the "${component.node.name}"'s ${utils.MutationType.CREATION} is private`,
+          `not to be "true" as the ${utils.MutationType.CREATION} is private`,
           publicConfig,
           { path: publicConfigPath },
         );
@@ -48,7 +48,7 @@ export abstract class AbstractComponentCreationInput<
         this.isRequired()
       ) {
         throw new utils.UnexpectedConfigError(
-          `to be "true" as the "${component.name}" is required in the public "${component.node.name}"'s ${utils.MutationType.CREATION}`,
+          `to be "true" as it is required in the public ${utils.MutationType.CREATION}, you may want to set it "optional: true"`,
           publicConfig,
           { path: publicConfigPath },
         );

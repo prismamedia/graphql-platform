@@ -8,7 +8,11 @@ import type { ConnectorInterface } from '../connector-interface.js';
 import type { GraphQLPlatform } from '../index.js';
 import type { Node } from '../node.js';
 import { OperationContext } from './operation/context.js';
-import { ConnectorError, InternalError } from './operation/error.js';
+import {
+  ConnectorError,
+  InternalError,
+  LifecycleHookError,
+} from './operation/error.js';
 import type { OperationInterface } from './operation/interface.js';
 import type { NodeFilter } from './statement/filter.js';
 import type { NodeSelection } from './statement/selection.js';
@@ -216,7 +220,9 @@ export abstract class AbstractOperation<
             info.path,
           );
         } catch (error) {
-          throw utils.isConfigError(error) || error instanceof ConnectorError
+          throw utils.isConfigError(error) ||
+            error instanceof ConnectorError ||
+            error instanceof LifecycleHookError
             ? new InternalError({ path: info.path, cause: error })
             : error;
         }

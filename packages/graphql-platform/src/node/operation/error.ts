@@ -56,7 +56,7 @@ export class LifecycleHookError extends utils.NestableError {
     options?: utils.NestableErrorOptions,
   ) {
     super(
-      `${node}'s "${LifecycleHookKind[kind]}" lifecycle hook error:`,
+      `${node}'s "${LifecycleHookKind[kind]}" lifecycle hook error`,
       options,
     );
   }

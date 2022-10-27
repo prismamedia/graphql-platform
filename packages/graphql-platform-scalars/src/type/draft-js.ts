@@ -7,6 +7,13 @@ import type {
 } from 'draft-js';
 import * as graphql from 'graphql';
 
+export type {
+  RawDraftContentBlock,
+  RawDraftEntity,
+  RawDraftEntityRange,
+  RawDraftInlineStyleRange,
+};
+
 export function parseRawDraftEntity(
   maybeRawDraftEntity: unknown,
   path?: utils.Path,
@@ -275,7 +282,7 @@ export function parseRawDraftContentBlock(
 }
 
 export interface RawDraftContentState {
-  entityMap: Record<string, RawDraftEntity> | RawDraftEntity[];
+  entityMap: Record<string, RawDraftEntity>;
   blocks: RawDraftContentBlock[];
 }
 
@@ -292,48 +299,50 @@ export function parseRawDraftContentState(
   }
 
   // entityMap
-  let entityMap: RawDraftContentState['entityMap'];
+  let entityMap: RawDraftContentState['entityMap'] = Object.create(null);
   {
-    const entityMapPath = utils.addPath(path, 'entityMap');
+    if (maybeRawDraftContentState.entityMap != null) {
+      const entityMapPath = utils.addPath(path, 'entityMap');
 
-    if (utils.isPlainObject(maybeRawDraftContentState.entityMap)) {
-      entityMap = utils.aggregateError<
-        [string, RawDraftEntity],
-        Record<string, RawDraftEntity>
-      >(
-        Object.entries(maybeRawDraftContentState.entityMap),
-        (entityMap, [key, value]) =>
-          Object.assign(entityMap, {
-            [key]: parseRawDraftEntity(
-              value,
-              utils.addPath(entityMapPath, key),
-            ),
-          }),
-        Object.create(null),
-        { path: entityMapPath },
-      );
-    } else if (Array.isArray(maybeRawDraftContentState.entityMap)) {
-      entityMap = utils.aggregateError<
-        RawDraftEntity,
-        Record<string, RawDraftEntity>
-      >(
-        maybeRawDraftContentState.entityMap,
-        (entityMap, value, index) =>
-          Object.assign(entityMap, {
-            [index]: parseRawDraftEntity(
-              value,
-              utils.addPath(entityMapPath, index),
-            ),
-          }),
-        Object.create(null),
-        { path: entityMapPath },
-      );
-    } else {
-      throw new utils.UnexpectedValueError(
-        maybeRawDraftContentState.entityMap,
-        `a RawDraftEntityMap or an array of RawDraftEntity`,
-        { path: entityMapPath },
-      );
+      if (utils.isPlainObject(maybeRawDraftContentState.entityMap)) {
+        entityMap = utils.aggregateError<
+          [string, RawDraftEntity],
+          Record<string, RawDraftEntity>
+        >(
+          Object.entries(maybeRawDraftContentState.entityMap),
+          (entityMap, [key, value]) =>
+            Object.assign(entityMap, {
+              [key]: parseRawDraftEntity(
+                value,
+                utils.addPath(entityMapPath, key),
+              ),
+            }),
+          entityMap,
+          { path: entityMapPath },
+        );
+      } else if (Array.isArray(maybeRawDraftContentState.entityMap)) {
+        entityMap = utils.aggregateError<
+          RawDraftEntity,
+          Record<string, RawDraftEntity>
+        >(
+          maybeRawDraftContentState.entityMap,
+          (entityMap, value, index) =>
+            Object.assign(entityMap, {
+              [index]: parseRawDraftEntity(
+                value,
+                utils.addPath(entityMapPath, index),
+              ),
+            }),
+          entityMap,
+          { path: entityMapPath },
+        );
+      } else {
+        throw new utils.UnexpectedValueError(
+          maybeRawDraftContentState.entityMap,
+          `a RawDraftEntityMap or an array of RawDraftEntity`,
+          { path: entityMapPath },
+        );
+      }
     }
   }
 

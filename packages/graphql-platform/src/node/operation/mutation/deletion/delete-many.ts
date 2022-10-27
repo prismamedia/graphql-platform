@@ -136,7 +136,7 @@ export class DeleteManyMutation<
     // Apply the "preDelete"-hook, if any
     if (this.#config?.preDelete) {
       await Promise.all(
-        currentValues.map(async (currentValue) =>
+        currentValues.map((currentValue) =>
           catchLifecycleHookError(
             () =>
               this.#config!.preDelete!({
