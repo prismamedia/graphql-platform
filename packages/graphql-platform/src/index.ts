@@ -82,7 +82,9 @@ export type GraphQLPlatformConfig<
   /**
    * Optional, subscribe to the nodes' changes
    */
-  onChange?: (change: ChangedNode<TRequestContext, TConnector>) => void;
+  onChange?:
+    | ((change: ChangedNode<TRequestContext, TConnector>) => void)
+    | Array<(change: ChangedNode<TRequestContext, TConnector>) => void>;
 };
 
 export class GraphQLPlatform<
@@ -256,13 +258,18 @@ export class GraphQLPlatform<
       const onChangeConfigPath = utils.addPath(configPath, 'onChange');
 
       if (onChangeConfig != null) {
-        if (typeof onChangeConfig !== 'function') {
-          throw new utils.UnexpectedConfigError(`a function`, onChangeConfig, {
-            path: onChangeConfigPath,
-          });
-        }
+        (Array.isArray(onChangeConfig)
+          ? onChangeConfig
+          : [onChangeConfig]
+        ).forEach((subscriber, index) => {
+          if (typeof subscriber !== 'function') {
+            throw new utils.UnexpectedConfigError(`a function`, subscriber, {
+              path: utils.addPath(onChangeConfigPath, index),
+            });
+          }
 
-        this.changes.subscribe(onChangeConfig);
+          this.changes.subscribe(subscriber);
+        });
       }
     }
   }

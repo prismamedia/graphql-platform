@@ -178,7 +178,9 @@ export type NodeConfig<
   /**
    * Optional, subscribe to this node's changes
    */
-  onChange?: (change: ChangedNode<TRequestContext, TConnector>) => void;
+  onChange?:
+    | ((change: ChangedNode<TRequestContext, TConnector>) => void)
+    | Array<(change: ChangedNode<TRequestContext, TConnector>) => void>;
 } & GetConnectorConfigOverride<TConnector, ConnectorConfigOverrideKind.NODE>;
 
 export class Node<
@@ -450,15 +452,22 @@ export class Node<
       const onChangeConfigPath = utils.addPath(configPath, 'onChange');
 
       if (onChangeConfig != null) {
-        if (typeof onChangeConfig !== 'function') {
-          throw new utils.UnexpectedConfigError(`a function`, onChangeConfig, {
-            path: onChangeConfigPath,
-          });
-        }
+        const changes = gp.changes.pipe(
+          rxjs.filter((change) => change.node === this),
+        );
 
-        gp.changes
-          .pipe(rxjs.filter((change) => change.node === this))
-          .subscribe(onChangeConfig);
+        (Array.isArray(onChangeConfig)
+          ? onChangeConfig
+          : [onChangeConfig]
+        ).forEach((subscriber, index) => {
+          if (typeof subscriber !== 'function') {
+            throw new utils.UnexpectedConfigError(`a function`, subscriber, {
+              path: utils.addPath(onChangeConfigPath, index),
+            });
+          }
+
+          changes.subscribe(subscriber);
+        });
       }
     }
   }
