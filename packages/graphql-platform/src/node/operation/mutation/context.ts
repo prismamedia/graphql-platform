@@ -15,16 +15,14 @@ export class MutationContext<
     this.#changes.push(change);
   }
 
-  public commitChanges(): void {
-    const committedAt = new Date();
+  public commitChanges(at: Date = new Date()): void {
+    this.#changes.forEach((change) => change.commit(at));
+  }
 
+  public notifyChanges(): void {
     let change: ChangedNode | undefined;
     while ((change = this.#changes.shift())) {
-      change.commit(committedAt);
-
       this.gp.changes.next(change);
     }
-
-    this.gp.commits.next(this.requestContext);
   }
 }

@@ -105,14 +105,6 @@ export class GraphQLPlatform<
     ChangedNode<TRequestContext, TConnector>
   >;
 
-  /**
-   * An Observable of the commits, convenient to group the changes by their initiator
-   *
-   * @see https://rxjs.dev/api/operators/groupBy
-   * @see https://rxjs.dev/api/operators/buffer
-   */
-  public readonly commits = new rxjs.Subject<TRequestContext>();
-
   public constructor(
     public readonly config: GraphQLPlatformConfig<TRequestContext, TConnector>,
     public readonly configPath: utils.Path = utils.addPath(

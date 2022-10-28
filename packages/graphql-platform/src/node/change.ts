@@ -17,7 +17,7 @@ abstract class AbstractChangedNode<
     this.#at = at;
   }
 
-  public commit(at: Date = new Date()): void {
+  public commit(at: Date): void {
     this.#at = at;
   }
 

@@ -433,21 +433,21 @@ export const Article: NodeConfig<MyContext> = {
     },
   },
 
-  // onChange(change) {
-  //   if (change.kind === utils.MutationType.CREATION) {
-  //     console.debug(
-  //       `The article "${change.newValue.id}" has been created at "${change.at}"`,
-  //     );
-  //   } else if (change.kind === utils.MutationType.UPDATE) {
-  //     console.debug(
-  //       `The article "${change.newValue.id}" has been updated at "${change.at}"`,
-  //     );
-  //   } else {
-  //     console.debug(
-  //       `The article "${change.oldValue.id}" has been deleted at "${change.at}"`,
-  //     );
-  //   }
-  // },
+  async onChange(change) {
+    // if (change.kind === utils.MutationType.CREATION) {
+    //   console.debug(
+    //     `The article "${change.newValue.id}" has been created at "${change.at}"`,
+    //   );
+    // } else if (change.kind === utils.MutationType.UPDATE) {
+    //   console.debug(
+    //     `The article "${change.newValue.id}" has been updated at "${change.at}"`,
+    //   );
+    // } else {
+    //   console.debug(
+    //     `The article "${change.oldValue.id}" has been deleted at "${change.at}"`,
+    //   );
+    // }
+  },
 };
 
 export const Category: NodeConfig<MyContext> = {

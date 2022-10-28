@@ -125,7 +125,17 @@ export abstract class AbstractMutation<
 
     const authorization = this.ensureAuthorization(mutationContext, path);
 
-    const parsedArguments = this.parseArguments(args, mutationContext, path);
+    const parsedArguments = this.parseArguments(
+      {
+        ...args,
+        // For the mutations, it is allowed to forget the "selection" as we may don't need the result
+        ...(typeof args?.selection === 'undefined' && this.selectionAware
+          ? { selection: this.node.identifier.selection }
+          : {}),
+      },
+      mutationContext,
+      path,
+    );
 
     if (this.connector.preMutation) {
       await catchConnectorError(
@@ -134,8 +144,10 @@ export abstract class AbstractMutation<
       );
     }
 
+    let result: TResult;
+
     try {
-      const result = await this.executeWithValidArgumentsAndContext(
+      result = await this.executeWithValidArgumentsAndContext(
         authorization,
         parsedArguments,
         mutationContext,
@@ -150,8 +162,6 @@ export abstract class AbstractMutation<
       }
 
       mutationContext.commitChanges();
-
-      return result;
     } catch (error) {
       if (this.connector.postFailedMutation) {
         await catchConnectorError(
@@ -173,5 +183,9 @@ export abstract class AbstractMutation<
         );
       }
     }
+
+    mutationContext.notifyChanges();
+
+    return result;
   }
 }
