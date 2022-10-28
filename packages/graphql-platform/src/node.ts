@@ -176,11 +176,16 @@ export type NodeConfig<
   authorization?: NodeAuthorizationConfig<TRequestContext>;
 
   /**
-   * Optional, subscribe to this node's changes
+   * Optional, subscribe to this node's changes Observable
    */
-  onChange?:
-    | ((change: ChangedNode<TRequestContext, TConnector>) => void)
-    | Array<(change: ChangedNode<TRequestContext, TConnector>) => void>;
+  onChange?: (change: ChangedNode<TRequestContext, TConnector>) => void;
+
+  /**
+   * Optional, if the "onChange" is not enought for you, you can manipulate the Observable directly
+   */
+  withChanges?: (
+    changes: rxjs.Observable<ChangedNode<TRequestContext, TConnector>>,
+  ) => void;
 } & GetConnectorConfigOverride<TConnector, ConnectorConfigOverrideKind.NODE>;
 
 export class Node<
@@ -210,6 +215,13 @@ export class Node<
   public readonly identifier: UniqueConstraint<TRequestContext, TConnector>;
   readonly #authorizationConfig?: NodeAuthorizationConfig<TRequestContext>;
 
+  /**
+   * An Observable of this node's changes
+   */
+  public readonly changes: rxjs.Observable<
+    ChangedNode<TRequestContext, TConnector>
+  >;
+
   public constructor(
     public readonly gp: GraphQLPlatform<TRequestContext, TConnector>,
     public readonly name: NodeName,
@@ -218,6 +230,11 @@ export class Node<
   ) {
     assertNodeName(name, configPath);
     utils.assertPlainObjectConfig(config, configPath);
+
+    // changes
+    this.changes = gp.changes.pipe(
+      rxjs.filter((change) => change.node === this),
+    );
 
     // plural
     {
@@ -452,22 +469,38 @@ export class Node<
       const onChangeConfigPath = utils.addPath(configPath, 'onChange');
 
       if (onChangeConfig != null) {
-        const changes = gp.changes.pipe(
-          rxjs.filter((change) => change.node === this),
-        );
+        if (typeof onChangeConfig !== 'function') {
+          throw new utils.UnexpectedConfigError(`a function`, onChangeConfig, {
+            path: onChangeConfigPath,
+          });
+        }
 
-        (Array.isArray(onChangeConfig)
-          ? onChangeConfig
-          : [onChangeConfig]
-        ).forEach((subscriber, index) => {
-          if (typeof subscriber !== 'function') {
-            throw new utils.UnexpectedConfigError(`a function`, subscriber, {
-              path: utils.addPath(onChangeConfigPath, index),
-            });
-          }
+        this.changes.subscribe(onChangeConfig);
+      }
+    }
 
-          changes.subscribe(subscriber);
-        });
+    // with-changes
+    {
+      const withChangesConfig = config.withChanges;
+      const withChangesConfigPath = utils.addPath(configPath, 'withChanges');
+
+      if (withChangesConfig != null) {
+        if (typeof withChangesConfig !== 'function') {
+          throw new utils.UnexpectedConfigError(
+            `a function`,
+            withChangesConfig,
+            { path: withChangesConfigPath },
+          );
+        }
+
+        try {
+          withChangesConfig(this.changes);
+        } catch (error) {
+          throw new utils.ConfigError(undefined, {
+            path: withChangesConfigPath,
+            cause: utils.castToError(error),
+          });
+        }
       }
     }
   }

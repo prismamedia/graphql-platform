@@ -61,15 +61,6 @@ function $$SETUP_STATE(hydrateRuntimeState, basePath) {
           "linkType": "SOFT"\
         }]\
       ]],\
-      ["@alloc/quick-lru", [\
-        ["npm:5.2.0", {\
-          "packageLocation": "./.yarn/cache/@alloc-quick-lru-npm-5.2.0-eb83517088-bdc35758b5.zip/node_modules/@alloc/quick-lru/",\
-          "packageDependencies": [\
-            ["@alloc/quick-lru", "npm:5.2.0"]\
-          ],\
-          "linkType": "HARD"\
-        }]\
-      ]],\
       ["@ampproject/remapping", [\
         ["npm:2.2.0", {\
           "packageLocation": "./.yarn/cache/@ampproject-remapping-npm-2.2.0-114878fa50-d74d170d06.zip/node_modules/@ampproject/remapping/",\
@@ -1787,7 +1778,7 @@ function $$SETUP_STATE(hydrateRuntimeState, basePath) {
             ["graphql", "npm:16.6.0"],\
             ["inflection", "npm:1.13.4"],\
             ["jest", "virtual:dc3fc578bfa5e06182a4d2be39ede0bc5b74940b1ffe0d70c26892ab140a4699787750fba175dc306292e80b4aa2c8c5f68c2a821e69b2c37e360c0dff36ff66#npm:29.2.2"],\
-            ["mariadb", "npm:3.0.1"],\
+            ["mariadb", "npm:3.0.2"],\
             ["rxjs", "npm:7.5.7"],\
             ["semver", "npm:7.3.8"],\
             ["type-fest", "npm:3.1.0"],\
@@ -1818,7 +1809,7 @@ function $$SETUP_STATE(hydrateRuntimeState, basePath) {
             ["graphql", "npm:16.6.0"],\
             ["inflection", "npm:1.13.4"],\
             ["jest", "virtual:dc3fc578bfa5e06182a4d2be39ede0bc5b74940b1ffe0d70c26892ab140a4699787750fba175dc306292e80b4aa2c8c5f68c2a821e69b2c37e360c0dff36ff66#npm:29.2.2"],\
-            ["mariadb", "npm:3.0.1"],\
+            ["mariadb", "npm:3.0.2"],\
             ["rxjs", "npm:7.5.7"],\
             ["semver", "npm:7.3.8"],\
             ["type-fest", "npm:3.1.0"],\
@@ -5611,17 +5602,16 @@ function $$SETUP_STATE(hydrateRuntimeState, basePath) {
         }]\
       ]],\
       ["mariadb", [\
-        ["npm:3.0.1", {\
-          "packageLocation": "./.yarn/cache/mariadb-npm-3.0.1-00deceb8d3-e6db454b0b.zip/node_modules/mariadb/",\
+        ["npm:3.0.2", {\
+          "packageLocation": "./.yarn/cache/mariadb-npm-3.0.2-18a425651c-1d84f9ab76.zip/node_modules/mariadb/",\
           "packageDependencies": [\
-            ["mariadb", "npm:3.0.1"],\
-            ["@alloc/quick-lru", "npm:5.2.0"],\
+            ["mariadb", "npm:3.0.2"],\
             ["@types/geojson", "npm:7946.0.10"],\
             ["@types/node", "npm:17.0.45"],\
             ["denque", "npm:2.1.0"],\
             ["iconv-lite", "npm:0.6.3"],\
-            ["moment-timezone", "npm:0.5.38"],\
-            ["please-upgrade-node", "npm:3.2.0"]\
+            ["lru-cache", "npm:7.14.0"],\
+            ["moment-timezone", "npm:0.5.38"]\
           ],\
           "linkType": "HARD"\
         }]\
@@ -6224,16 +6214,6 @@ function $$SETUP_STATE(hydrateRuntimeState, basePath) {
           "linkType": "HARD"\
         }]\
       ]],\
-      ["please-upgrade-node", [\
-        ["npm:3.2.0", {\
-          "packageLocation": "./.yarn/cache/please-upgrade-node-npm-3.2.0-3f653350ed-d87c41581a.zip/node_modules/please-upgrade-node/",\
-          "packageDependencies": [\
-            ["please-upgrade-node", "npm:3.2.0"],\
-            ["semver-compare", "npm:1.0.0"]\
-          ],\
-          "linkType": "HARD"\
-        }]\
-      ]],\
       ["prettier", [\
         ["npm:2.7.1", {\
           "packageLocation": "./.yarn/cache/prettier-npm-2.7.1-d1f40f5e1a-55a4409182.zip/node_modules/prettier/",\
@@ -6568,15 +6548,6 @@ function $$SETUP_STATE(hydrateRuntimeState, basePath) {
           "packageDependencies": [\
             ["semver", "npm:7.3.8"],\
             ["lru-cache", "npm:6.0.0"]\
-          ],\
-          "linkType": "HARD"\
-        }]\
-      ]],\
-      ["semver-compare", [\
-        ["npm:1.0.0", {\
-          "packageLocation": "./.yarn/cache/semver-compare-npm-1.0.0-33f7033df0-dd1d7e2909.zip/node_modules/semver-compare/",\
-          "packageDependencies": [\
-            ["semver-compare", "npm:1.0.0"]\
           ],\
           "linkType": "HARD"\
         }]\

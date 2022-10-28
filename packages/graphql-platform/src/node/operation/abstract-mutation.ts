@@ -134,10 +134,8 @@ export abstract class AbstractMutation<
       );
     }
 
-    let result: TResult;
-
     try {
-      result = await this.executeWithValidArgumentsAndContext(
+      const result = await this.executeWithValidArgumentsAndContext(
         authorization,
         parsedArguments,
         mutationContext,
@@ -151,8 +149,9 @@ export abstract class AbstractMutation<
         );
       }
 
-      // "Commit" deferred changes in case of success
       mutationContext.commitChanges();
+
+      return result;
     } catch (error) {
       if (this.connector.postFailedMutation) {
         await catchConnectorError(
@@ -174,7 +173,5 @@ export abstract class AbstractMutation<
         );
       }
     }
-
-    return result;
   }
 }

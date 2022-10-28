@@ -78,13 +78,6 @@ export type GraphQLPlatformConfig<
   assertRequestContext?(
     maybeRequestContext: unknown,
   ): asserts maybeRequestContext is TRequestContext;
-
-  /**
-   * Optional, subscribe to the nodes' changes
-   */
-  onChange?:
-    | ((change: ChangedNode<TRequestContext, TConnector>) => void)
-    | Array<(change: ChangedNode<TRequestContext, TConnector>) => void>;
 };
 
 export class GraphQLPlatform<
@@ -108,9 +101,17 @@ export class GraphQLPlatform<
   /**
    * An Observable of the nodes' changes
    */
-  public readonly changes = new rxjs.Subject<
+  public readonly changes: rxjs.Subject<
     ChangedNode<TRequestContext, TConnector>
-  >();
+  >;
+
+  /**
+   * An Observable of the commits, convenient to group the changes by their initiator
+   *
+   * @see https://rxjs.dev/api/operators/groupBy
+   * @see https://rxjs.dev/api/operators/buffer
+   */
+  public readonly commits = new rxjs.Subject<TRequestContext>();
 
   public constructor(
     public readonly config: GraphQLPlatformConfig<TRequestContext, TConnector>,
@@ -120,6 +121,9 @@ export class GraphQLPlatform<
     ),
   ) {
     utils.assertPlainObjectConfig(config, configPath);
+
+    // changes
+    this.changes = new rxjs.Subject();
 
     // nodes
     {
@@ -249,27 +253,6 @@ export class GraphQLPlatform<
         }
 
         this.#assertRequestContext = assertRequestContextConfig;
-      }
-    }
-
-    // on-change
-    {
-      const onChangeConfig = config.onChange;
-      const onChangeConfigPath = utils.addPath(configPath, 'onChange');
-
-      if (onChangeConfig != null) {
-        (Array.isArray(onChangeConfig)
-          ? onChangeConfig
-          : [onChangeConfig]
-        ).forEach((subscriber, index) => {
-          if (typeof subscriber !== 'function') {
-            throw new utils.UnexpectedConfigError(`a function`, subscriber, {
-              path: utils.addPath(onChangeConfigPath, index),
-            });
-          }
-
-          this.changes.subscribe(subscriber);
-        });
       }
     }
   }

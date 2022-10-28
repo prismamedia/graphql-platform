@@ -16,13 +16,15 @@ export class MutationContext<
   }
 
   public commitChanges(): void {
-    let change: ChangedNode<TRequestContext, TConnector> | undefined;
-
     const committedAt = new Date();
+
+    let change: ChangedNode | undefined;
     while ((change = this.#changes.shift())) {
       change.commit(committedAt);
 
       this.gp.changes.next(change);
     }
+
+    this.gp.commits.next(this.requestContext);
   }
 }
