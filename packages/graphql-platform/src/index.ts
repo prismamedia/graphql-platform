@@ -1,8 +1,7 @@
 import * as utils from '@prismamedia/graphql-platform-utils';
 import { Memoize } from '@prismamedia/ts-memoize';
 import * as graphql from 'graphql';
-import * as rxjs from 'rxjs';
-import type { Constructor, Except } from 'type-fest';
+import type { Constructor, Except, Promisable } from 'type-fest';
 import type { ConnectorInterface } from './connector-interface.js';
 import {
   getCustomOperationMap,
@@ -78,6 +77,16 @@ export type GraphQLPlatformConfig<
   assertRequestContext?(
     maybeRequestContext: unknown,
   ): asserts maybeRequestContext is TRequestContext;
+
+  /**
+   * Optional, act on the nodes' changes AFTER they have been committed
+   *
+   * Please keep in mind that any error thrown inside would be silently hidden: it is your responsability to catch these errors.
+   */
+  onChange?(
+    this: GraphQLPlatform<TRequestContext, TConnector>,
+    change: ChangedNode<TRequestContext, TConnector>,
+  ): Promisable<void>;
 };
 
 export class GraphQLPlatform<
@@ -98,12 +107,10 @@ export class GraphQLPlatform<
     maybeRequestContext: unknown,
   ) => asserts maybeRequestContext is TRequestContext;
 
-  /**
-   * An Observable of the nodes' changes
-   */
-  public readonly changes: rxjs.Subject<
-    ChangedNode<TRequestContext, TConnector>
-  >;
+  public onChange?(
+    this: GraphQLPlatform<TRequestContext, TConnector>,
+    change: ChangedNode<TRequestContext, TConnector>,
+  ): Promisable<void>;
 
   public constructor(
     public readonly config: GraphQLPlatformConfig<TRequestContext, TConnector>,
@@ -113,9 +120,6 @@ export class GraphQLPlatform<
     ),
   ) {
     utils.assertPlainObjectConfig(config, configPath);
-
-    // changes
-    this.changes = new rxjs.Subject();
 
     // nodes
     {
@@ -245,6 +249,22 @@ export class GraphQLPlatform<
         }
 
         this.#assertRequestContext = assertRequestContextConfig;
+      }
+    }
+
+    // on-change
+    {
+      const onChangeConfig = config.onChange;
+      const onChangeConfigPath = utils.addPath(configPath, 'onChange');
+
+      if (onChangeConfig != null) {
+        if (typeof onChangeConfig !== 'function') {
+          throw new utils.UnexpectedConfigError(`a function`, onChangeConfig, {
+            path: onChangeConfigPath,
+          });
+        }
+
+        this.onChange = onChangeConfig.bind(this);
       }
     }
   }

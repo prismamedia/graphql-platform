@@ -230,7 +230,7 @@ export class DeleteManyMutation<
         );
 
         // Let's everybody know about this deleted node
-        context.trackChange(change);
+        context.changes.push(change);
 
         // Apply the "postDelete"-hook, if any
         if (this.#config?.postDelete) {

@@ -7,22 +7,16 @@ abstract class AbstractChangedNode<
   TConnector extends ConnectorInterface,
 > {
   public abstract readonly kind: MutationType;
-  #at: Date;
 
   public constructor(
     public readonly node: Node<TRequestContext, TConnector>,
     public readonly requestContext: TRequestContext,
-    at: Date = new Date(),
-  ) {
-    this.#at = at;
-  }
-
-  public commit(at: Date): void {
-    this.#at = at;
-  }
+    public readonly createdAt: Date = new Date(),
+    public committedAt?: Date,
+  ) {}
 
   public get at(): Date {
-    return this.#at;
+    return this.committedAt ?? this.createdAt;
   }
 }
 
@@ -39,9 +33,10 @@ export class CreatedNode<
     node: Node<TRequestContext, TConnector>,
     requestContext: TRequestContext,
     maybeNewValue: unknown,
-    at?: Date,
+    createdAt?: Date,
+    committedAt?: Date,
   ) {
-    super(node, requestContext, at);
+    super(node, requestContext, createdAt, committedAt);
 
     this.newValue = Object.freeze(node.parseValue(maybeNewValue));
   }
@@ -60,9 +55,10 @@ export class DeletedNode<
     node: Node<TRequestContext, TConnector>,
     requestContext: TRequestContext,
     maybeOldValue: unknown,
-    at?: Date,
+    createdAt?: Date,
+    committedAt?: Date,
   ) {
-    super(node, requestContext, at);
+    super(node, requestContext, createdAt, committedAt);
 
     this.oldValue = Object.freeze(node.parseValue(maybeOldValue));
   }
@@ -89,9 +85,10 @@ export class UpdatedNode<
     requestContext: TRequestContext,
     maybeOldValue: unknown,
     maybeNewValue: unknown,
-    at?: Date,
+    createdAt?: Date,
+    committedAt?: Date,
   ) {
-    super(node, requestContext, at);
+    super(node, requestContext, createdAt, committedAt);
 
     this.oldValue = Object.freeze(node.parseValue(maybeOldValue));
     this.newValue = Object.freeze(node.parseValue(maybeNewValue));

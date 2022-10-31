@@ -3,8 +3,8 @@ import * as utils from '@prismamedia/graphql-platform-utils';
 import * as mariadb from 'mariadb';
 import assert from 'node:assert/strict';
 import { hrtime } from 'node:process';
-import * as rxjs from 'rxjs';
 import * as semver from 'semver';
+import type { Promisable } from 'type-fest';
 import {
   Schema,
   type ForeignKeyIndexConfig,
@@ -35,6 +35,14 @@ export interface MariaDBConnectorConfig {
   version?: string;
   schema?: SchemaConfig;
   pool?: mariadb.PoolConfig;
+
+  /**
+   * Optional, act on the executed-statements
+   */
+  onExecutedStatement?(
+    this: MariaDBConnector,
+    executedStatement: ExecutedStatement,
+  ): Promisable<void>;
 }
 
 /**
@@ -90,10 +98,10 @@ export class MariaDBConnector implements core.ConnectorInterface {
     mariadb.PoolConnection
   >();
 
-  /**
-   * An Observable of the executed statements
-   */
-  public readonly executedStatements = new rxjs.Subject<ExecutedStatement>();
+  public onExecutedStatement?(
+    this: MariaDBConnector,
+    executedStatement: ExecutedStatement,
+  ): Promisable<void>;
 
   public constructor(
     public readonly gp: core.GraphQLPlatform,
@@ -141,6 +149,27 @@ export class MariaDBConnector implements core.ConnectorInterface {
     this.version =
       (config.version && semver.coerce(config.version)) || undefined;
     this.schema = new Schema(this);
+
+    // on-executed-statement
+    {
+      const onExecutedStatementConfig = config.onExecutedStatement;
+      const onExecutedStatementConfigPath = utils.addPath(
+        configPath,
+        'onExecutedStatement',
+      );
+
+      if (onExecutedStatementConfig != null) {
+        if (typeof onExecutedStatementConfig !== 'function') {
+          throw new utils.UnexpectedConfigError(
+            `a function`,
+            onExecutedStatementConfig,
+            { path: onExecutedStatementConfigPath },
+          );
+        }
+
+        this.onExecutedStatement = onExecutedStatementConfig.bind(this);
+      }
+    }
   }
 
   public getPool(
@@ -224,7 +253,7 @@ export class MariaDBConnector implements core.ConnectorInterface {
           statement.kind,
         ));
 
-    this.executedStatements.next({
+    await this.onExecutedStatement?.({
       statement,
       result,
       took: Math.round(Number(hrtime.bigint() - startedAt) / 10 ** 6) / 10 ** 3,

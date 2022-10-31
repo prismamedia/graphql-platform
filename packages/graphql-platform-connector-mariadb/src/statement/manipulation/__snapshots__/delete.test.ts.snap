@@ -1,17 +1,6 @@
 // Jest Snapshot v1, https://goo.gl/fbAQLP
 
-exports[`Delete statement generates statements 1`] = `
-[
-  {
-    "title": "My first published article",
-  },
-  {
-    "title": "My second published article",
-  },
-]
-`;
-
-exports[`Delete statement generates statements 2`] = `
+exports[`Delete statement generates statements: changes 1`] = `
 Map {
   "ArticleTagModeration" => Map {
     "deletion" => 2,
@@ -25,7 +14,26 @@ Map {
 }
 `;
 
-exports[`Delete statement generates statements 3`] = `
+exports[`Delete statement generates statements: changes 2`] = `
+Map {
+  "Article" => Map {
+    "deletion" => 2,
+  },
+}
+`;
+
+exports[`Delete statement generates statements: result 1`] = `
+[
+  {
+    "title": "My first published article",
+  },
+  {
+    "title": "My second published article",
+  },
+]
+`;
+
+exports[`Delete statement generates statements: result 2`] = `
 [
   {
     "title": "My first draft article",
@@ -34,12 +42,4 @@ exports[`Delete statement generates statements 3`] = `
     "title": "My second draft article",
   },
 ]
-`;
-
-exports[`Delete statement generates statements 4`] = `
-Map {
-  "Article" => Map {
-    "deletion" => 2,
-  },
-}
 `;

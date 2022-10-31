@@ -8,6 +8,7 @@ import {
   AbstractOperation,
   type NodeSelectionAwareArgs,
 } from '../abstract-operation.js';
+import type { ChangedNode } from '../change.js';
 import { AndOperation, NodeFilter } from '../statement/filter.js';
 import type { ContextBoundAPI } from './api.js';
 import { catchConnectorError } from './error.js';
@@ -160,8 +161,6 @@ export abstract class AbstractMutation<
           path,
         );
       }
-
-      mutationContext.commitChanges();
     } catch (error) {
       if (this.connector.postFailedMutation) {
         await catchConnectorError(
@@ -184,7 +183,25 @@ export abstract class AbstractMutation<
       }
     }
 
-    mutationContext.notifyChanges();
+    // changes' notification
+    {
+      const committedAt = new Date();
+
+      let change: ChangedNode | undefined;
+      while ((change = mutationContext.changes.shift())) {
+        change.committedAt = committedAt;
+
+        try {
+          await Promise.allSettled([
+            change.node.onChange?.(change),
+            this.gp.onChange?.(change),
+          ]);
+        } catch (error) {
+          // The errors are silently hidden here, it is done on purpose.
+          // As the changes reached the database we want the client to get the corresponding state no matter what happens inside the hooks.
+        }
+      }
+    }
 
     return result;
   }

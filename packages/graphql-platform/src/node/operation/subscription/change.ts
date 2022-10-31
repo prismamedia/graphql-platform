@@ -31,7 +31,7 @@ export class ChangeSubscription<
 > {
   protected override readonly selectionAware = true;
   public override readonly name = `changed${this.node}`;
-  public override readonly description = `Gets the "${this.node.plural}"' change, either it is a creation, an update or a deletion`;
+  public override readonly description = `Gets the "${this.node.plural}"' changes, either it is a creation, an update or a deletion`;
 
   @Memoize()
   public override get arguments() {
@@ -56,6 +56,8 @@ export class ChangeSubscription<
     context: OperationContext<TRequestContext, TConnector>,
     path: utils.Path,
   ): Promise<ChangeSubscriptionResult> {
+    // Initialize the subscription here
+
     return {
       next: async () => ({
         value: undefined,

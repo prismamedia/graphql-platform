@@ -1,6 +1,7 @@
 import * as utils from '@prismamedia/graphql-platform-utils';
 import { Memoize } from '@prismamedia/ts-memoize';
 import inflection from 'inflection';
+import type { JsonValue } from 'type-fest';
 import type {
   ConnectorConfigOverrideKind,
   ConnectorInterface,
@@ -299,6 +300,10 @@ export class Edge<
     return a === null || b === null
       ? a === b
       : this.referencedUniqueConstraint.areValuesEqual(a, b);
+  }
+
+  public serialize(value: EdgeValue): JsonValue {
+    return value ? this.referencedUniqueConstraint.serialize(value) : null;
   }
 
   @Memoize()

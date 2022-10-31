@@ -11,9 +11,16 @@ import { createGraphQLPlatform } from '../../__tests__/config.js';
 
 describe('Find statement', () => {
   let gp: MyGP<MariaDBConnector>;
+  const executedStatements: string[] = [];
 
   beforeAll(async () => {
-    gp = createGraphQLPlatform('connector_mariadb_find_statement');
+    gp = createGraphQLPlatform(`connector_mariadb_find_statement`, {
+      onExecutedStatement({ statement }) {
+        executedStatements.push(
+          format(statement.sql).replaceAll('<= >', '<=>'),
+        );
+      },
+    });
 
     await gp.connector.setup();
     await gp.seed(fixtures, myAdminContext);
@@ -121,25 +128,15 @@ describe('Find statement', () => {
       myAdminContext,
     ],
   ])('generates statements', async (nodeName, args, context) => {
-    const statements: string[] = [];
+    executedStatements.length = 0;
 
-    const subscriber = gp.connector.executedStatements.subscribe(
-      ({ statement }) => {
-        statements.push(format(statement.sql).replaceAll('<= >', '<=>'));
-      },
-    );
+    await expect(
+      gp
+        .getNodeByName(nodeName)
+        .getQueryByKey('find-many')
+        .execute(args, context),
+    ).resolves.toMatchSnapshot('result');
 
-    try {
-      await expect(
-        gp
-          .getNodeByName(nodeName)
-          .getQueryByKey('find-many')
-          .execute(args, context),
-      ).resolves.toMatchSnapshot();
-    } finally {
-      subscriber.unsubscribe();
-    }
-
-    expect(statements).toMatchSnapshot();
+    expect(executedStatements).toMatchSnapshot('statements');
   });
 });

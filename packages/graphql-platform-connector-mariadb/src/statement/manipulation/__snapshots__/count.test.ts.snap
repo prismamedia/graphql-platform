@@ -1,8 +1,12 @@
 // Jest Snapshot v1, https://goo.gl/fbAQLP
 
-exports[`Count statement generates statements 1`] = `2`;
+exports[`Count statement generates statements: result 1`] = `2`;
 
-exports[`Count statement generates statements 2`] = `
+exports[`Count statement generates statements: result 2`] = `4`;
+
+exports[`Count statement generates statements: result 3`] = `0`;
+
+exports[`Count statement generates statements: statements 1`] = `
 [
   "SELECT COUNT(*) AS COUNT
 FROM \`articles\`
@@ -10,18 +14,14 @@ WHERE \`articles\`.\`status\` <=> 'published'",
 ]
 `;
 
-exports[`Count statement generates statements 3`] = `4`;
-
-exports[`Count statement generates statements 4`] = `
+exports[`Count statement generates statements: statements 2`] = `
 [
   "SELECT COUNT(*) AS COUNT
 FROM \`articles\`",
 ]
 `;
 
-exports[`Count statement generates statements 5`] = `0`;
-
-exports[`Count statement generates statements 6`] = `
+exports[`Count statement generates statements: statements 3`] = `
 [
   "SELECT COUNT(*) AS COUNT
 FROM \`articles\`

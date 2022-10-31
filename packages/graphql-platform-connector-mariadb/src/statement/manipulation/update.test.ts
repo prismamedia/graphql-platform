@@ -11,9 +11,14 @@ import { createGraphQLPlatform } from '../../__tests__/config.js';
 
 describe('Update statement', () => {
   let gp: MyGP<MariaDBConnector>;
+  const changes: ChangedNode[] = [];
 
   beforeAll(async () => {
-    gp = createGraphQLPlatform('connector_mariadb_update_statement');
+    gp = createGraphQLPlatform(`connector_mariadb_update_statement`, {
+      onChange(change) {
+        changes.push(change);
+      },
+    });
 
     await gp.connector.setup();
     await gp.seed(fixtures, myAdminContext);
@@ -122,22 +127,14 @@ describe('Update statement', () => {
       myAdminContext,
     ],
   ])('generates statements', async (nodeName, args, context) => {
-    const changes: ChangedNode[] = [];
+    changes.length = 0;
 
-    const subscriber = gp.changes.subscribe((change) => {
-      changes.push(change);
-    });
-
-    try {
-      await expect(
-        gp
-          .getNodeByName(nodeName)
-          .getMutationByKey('update-many')
-          .execute(args, context),
-      ).resolves.toMatchSnapshot();
-    } finally {
-      subscriber.unsubscribe();
-    }
+    await expect(
+      gp
+        .getNodeByName(nodeName)
+        .getMutationByKey('update-many')
+        .execute(args, context),
+    ).resolves.toMatchSnapshot('result');
 
     expect(
       changes.reduce<Map<Node['name'], Map<MutationType, number>>>(
@@ -162,6 +159,6 @@ describe('Update statement', () => {
         },
         new Map(),
       ),
-    ).toMatchSnapshot();
+    ).toMatchSnapshot('changes');
   });
 });

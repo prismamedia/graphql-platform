@@ -253,7 +253,7 @@ export class UpdateManyMutation<
 
         if (change.updatesByComponent.size) {
           // Let's everybody know about the update, if any
-          context.trackChange(change);
+          context.changes.push(change);
 
           changes.push(change);
         }

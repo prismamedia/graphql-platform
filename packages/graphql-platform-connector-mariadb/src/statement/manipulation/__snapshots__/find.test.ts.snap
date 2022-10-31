@@ -1,6 +1,6 @@
 // Jest Snapshot v1, https://goo.gl/fbAQLP
 
-exports[`Find statement generates statements 1`] = `
+exports[`Find statement generates statements: result 1`] = `
 [
   {
     "body": null,
@@ -35,40 +35,7 @@ exports[`Find statement generates statements 1`] = `
 ]
 `;
 
-exports[`Find statement generates statements 2`] = `
-[
-  "SELECT JSON_OBJECT(
-    "status",
-    \`articles\`.\`status\`,
-    "title",
-    \`articles\`.\`title\`,
-    "body",
-    \`articles\`.\`body\`,
-    "views",
-    \`articles\`.\`views\`,
-    "score",
-    \`articles\`.\`score\`,
-    "machineTags",
-    \`articles\`.\`machine_tags\`,
-    "metas",
-    \`articles\`.\`metas\`,
-    "tagCount",
-    (
-      SELECT COUNT(*)
-      FROM \`article_tags\`
-      WHERE \`articles\`.\`privateId\` <=> \`article_tags\`.\`article_privateId\`
-    ),
-    "createdAt",
-    \`articles\`.\`created_at\`
-  ) as \`Article\`
-FROM \`articles\`
-WHERE \`articles\`.\`status\` <=> 'published'
-ORDER BY \`articles\`.\`created_at\` ASC
-LIMIT 5",
-]
-`;
-
-exports[`Find statement generates statements 3`] = `
+exports[`Find statement generates statements: result 2`] = `
 [
   {
     "body": {
@@ -130,7 +97,42 @@ exports[`Find statement generates statements 3`] = `
 ]
 `;
 
-exports[`Find statement generates statements 4`] = `
+exports[`Find statement generates statements: result 3`] = `[]`;
+
+exports[`Find statement generates statements: statements 1`] = `
+[
+  "SELECT JSON_OBJECT(
+    "status",
+    \`articles\`.\`status\`,
+    "title",
+    \`articles\`.\`title\`,
+    "body",
+    \`articles\`.\`body\`,
+    "views",
+    \`articles\`.\`views\`,
+    "score",
+    \`articles\`.\`score\`,
+    "machineTags",
+    \`articles\`.\`machine_tags\`,
+    "metas",
+    \`articles\`.\`metas\`,
+    "tagCount",
+    (
+      SELECT COUNT(*)
+      FROM \`article_tags\`
+      WHERE \`articles\`.\`privateId\` <=> \`article_tags\`.\`article_privateId\`
+    ),
+    "createdAt",
+    \`articles\`.\`created_at\`
+  ) as \`Article\`
+FROM \`articles\`
+WHERE \`articles\`.\`status\` <=> 'published'
+ORDER BY \`articles\`.\`created_at\` ASC
+LIMIT 5",
+]
+`;
+
+exports[`Find statement generates statements: statements 2`] = `
 [
   "SELECT JSON_OBJECT(
     "status",
@@ -162,9 +164,7 @@ LIMIT 5",
 ]
 `;
 
-exports[`Find statement generates statements 5`] = `[]`;
-
-exports[`Find statement generates statements 6`] = `
+exports[`Find statement generates statements: statements 3`] = `
 [
   "SELECT JSON_OBJECT(
     "status",

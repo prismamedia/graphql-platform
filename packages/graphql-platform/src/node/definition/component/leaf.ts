@@ -2,7 +2,7 @@ import * as scalars from '@prismamedia/graphql-platform-scalars';
 import * as utils from '@prismamedia/graphql-platform-utils';
 import { Memoize } from '@prismamedia/ts-memoize';
 import * as graphql from 'graphql';
-import type { SetReturnType } from 'type-fest';
+import type { JsonValue, SetReturnType } from 'type-fest';
 import type {
   ConnectorConfigOverrideKind,
   ConnectorInterface,
@@ -175,6 +175,10 @@ export class Leaf<
 
   public areValuesEqual(a: LeafValue, b: LeafValue): boolean {
     return a === null || b === null ? a === b : this.#comparator(a, b);
+  }
+
+  public serialize(value: LeafValue): JsonValue {
+    return this.type.serialize(value) as any;
   }
 
   @Memoize()

@@ -1,7 +1,7 @@
 import * as utils from '@prismamedia/graphql-platform-utils';
 import { Memoize } from '@prismamedia/ts-memoize';
 import inflection from 'inflection';
-import * as rxjs from 'rxjs';
+import type { JsonObject, Promisable } from 'type-fest';
 import type {
   ConnectorConfigOverrideKind,
   ConnectorInterface,
@@ -176,16 +176,14 @@ export type NodeConfig<
   authorization?: NodeAuthorizationConfig<TRequestContext>;
 
   /**
-   * Optional, subscribe to this node's changes Observable
+   * Optional, act on this node's changes AFTER they have been committed
+   *
+   * Please keep in mind that any error thrown inside would be silently hidden: it is your responsability to catch these errors.
    */
-  onChange?: (change: ChangedNode<TRequestContext, TConnector>) => void;
-
-  /**
-   * Optional, if the "onChange" is not enought for you, you can manipulate the Observable directly
-   */
-  withChanges?: (
-    changes: rxjs.Observable<ChangedNode<TRequestContext, TConnector>>,
-  ) => void;
+  onChange?(
+    this: Node<TRequestContext, TConnector>,
+    change: ChangedNode<TRequestContext, TConnector>,
+  ): Promisable<void>;
 } & GetConnectorConfigOverride<TConnector, ConnectorConfigOverrideKind.NODE>;
 
 export class Node<
@@ -215,12 +213,10 @@ export class Node<
   public readonly identifier: UniqueConstraint<TRequestContext, TConnector>;
   readonly #authorizationConfig?: NodeAuthorizationConfig<TRequestContext>;
 
-  /**
-   * An Observable of this node's changes
-   */
-  public readonly changes: rxjs.Observable<
-    ChangedNode<TRequestContext, TConnector>
-  >;
+  public onChange?(
+    this: Node<TRequestContext, TConnector>,
+    change: ChangedNode<TRequestContext, TConnector>,
+  ): Promisable<void>;
 
   public constructor(
     public readonly gp: GraphQLPlatform<TRequestContext, TConnector>,
@@ -230,11 +226,6 @@ export class Node<
   ) {
     assertNodeName(name, configPath);
     utils.assertPlainObjectConfig(config, configPath);
-
-    // changes
-    this.changes = gp.changes.pipe(
-      rxjs.filter((change) => change.node === this),
-    );
 
     // plural
     {
@@ -475,32 +466,7 @@ export class Node<
           });
         }
 
-        this.changes.subscribe(onChangeConfig);
-      }
-    }
-
-    // with-changes
-    {
-      const withChangesConfig = config.withChanges;
-      const withChangesConfigPath = utils.addPath(configPath, 'withChanges');
-
-      if (withChangesConfig != null) {
-        if (typeof withChangesConfig !== 'function') {
-          throw new utils.UnexpectedConfigError(
-            `a function`,
-            withChangesConfig,
-            { path: withChangesConfigPath },
-          );
-        }
-
-        try {
-          withChangesConfig(this.changes);
-        } catch (error) {
-          throw new utils.ConfigError(undefined, {
-            path: withChangesConfigPath,
-            cause: utils.castToError(error),
-          });
-        }
+        this.onChange = onChangeConfig.bind(this);
       }
     }
   }
@@ -1256,8 +1222,8 @@ export class Node<
 
     return utils.aggregateError<Component, NodeValue>(
       this.componentsByName.values(),
-      (value, component) =>
-        Object.assign(value, {
+      (output, component) =>
+        Object.assign(output, {
           [component.name]: component.parseValue(
             maybeValue[component.name],
             utils.addPath(path, component.name),
@@ -1274,6 +1240,16 @@ export class Node<
         a[component.name] as any,
         b[component.name] as any,
       ),
+    );
+  }
+
+  public serialize(value: NodeValue): JsonObject {
+    return Array.from(this.componentsByName.values()).reduce<JsonObject>(
+      (output, component) =>
+        Object.assign(output, {
+          [component.name]: component.serialize(value[component.name] as any),
+        }),
+      Object.create(null),
     );
   }
 }

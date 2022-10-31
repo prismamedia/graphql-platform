@@ -1,5 +1,6 @@
 import * as utils from '@prismamedia/graphql-platform-utils';
 import { Memoize } from '@prismamedia/ts-memoize';
+import { JsonObject } from 'type-fest';
 import type {
   ConnectorConfigOverrideKind,
   ConnectorInterface,
@@ -270,6 +271,16 @@ export class UniqueConstraint<
         a[component.name] as any,
         b[component.name] as any,
       ),
+    );
+  }
+
+  public serialize(value: UniqueConstraintValue): JsonObject {
+    return Array.from(this.componentsByName.values()).reduce<JsonObject>(
+      (output, component) =>
+        Object.assign(output, {
+          [component.name]: component.serialize(value[component.name] as any),
+        }),
+      Object.create(null),
     );
   }
 }

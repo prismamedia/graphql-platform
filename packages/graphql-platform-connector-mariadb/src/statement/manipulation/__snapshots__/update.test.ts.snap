@@ -1,6 +1,39 @@
 // Jest Snapshot v1, https://goo.gl/fbAQLP
 
-exports[`Update statement generates statements 1`] = `
+exports[`Update statement generates statements: changes 1`] = `
+Map {
+  "Article" => Map {
+    "update" => 2,
+  },
+  "ArticleTagModeration" => Map {
+    "deletion" => 2,
+  },
+  "ArticleTag" => Map {
+    "deletion" => 3,
+  },
+}
+`;
+
+exports[`Update statement generates statements: changes 2`] = `
+Map {
+  "Article" => Map {
+    "update" => 2,
+  },
+  "ArticleTag" => Map {
+    "creation" => 2,
+  },
+}
+`;
+
+exports[`Update statement generates statements: changes 3`] = `
+Map {
+  "ArticleTag" => Map {
+    "creation" => 2,
+  },
+}
+`;
+
+exports[`Update statement generates statements: result 1`] = `
 [
   {
     "score": 0,
@@ -17,21 +50,7 @@ exports[`Update statement generates statements 1`] = `
 ]
 `;
 
-exports[`Update statement generates statements 2`] = `
-Map {
-  "Article" => Map {
-    "update" => 2,
-  },
-  "ArticleTagModeration" => Map {
-    "deletion" => 2,
-  },
-  "ArticleTag" => Map {
-    "deletion" => 3,
-  },
-}
-`;
-
-exports[`Update statement generates statements 3`] = `
+exports[`Update statement generates statements: result 2`] = `
 [
   {
     "score": 1,
@@ -62,18 +81,7 @@ exports[`Update statement generates statements 3`] = `
 ]
 `;
 
-exports[`Update statement generates statements 4`] = `
-Map {
-  "Article" => Map {
-    "update" => 2,
-  },
-  "ArticleTag" => Map {
-    "creation" => 2,
-  },
-}
-`;
-
-exports[`Update statement generates statements 5`] = `
+exports[`Update statement generates statements: result 3`] = `
 [
   {
     "score": 1,
@@ -114,12 +122,4 @@ exports[`Update statement generates statements 5`] = `
     "title": "My second draft article",
   },
 ]
-`;
-
-exports[`Update statement generates statements 6`] = `
-Map {
-  "ArticleTag" => Map {
-    "creation" => 2,
-  },
-}
 `;

@@ -1,6 +1,7 @@
 import {
   ComponentConfig,
   GraphQLPlatform,
+  GraphQLPlatformConfig,
   NodeConfig,
 } from '@prismamedia/graphql-platform';
 import {
@@ -8,10 +9,14 @@ import {
   nodes,
 } from '@prismamedia/graphql-platform/__tests__/config.js';
 import assert from 'node:assert/strict';
-import { MariaDBConnector } from '../index.js';
+import { MariaDBConnector, MariaDBConnectorConfig } from '../index.js';
 
 export function createGraphQLPlatform(
   schemaName: string,
+  options?: {
+    onChange?: GraphQLPlatformConfig<MyContext, MariaDBConnector>['onChange'];
+    onExecutedStatement?: MariaDBConnectorConfig['onExecutedStatement'];
+  },
 ): GraphQLPlatform<MyContext, MariaDBConnector> {
   const host = process.env.MARIADB_HOST;
   assert(host, `The "MARIADB_HOST" variable must be provided`);
@@ -100,6 +105,7 @@ export function createGraphQLPlatform(
         },
       ]),
     ),
+    onChange: options?.onChange,
     connector: [
       MariaDBConnector,
       {
@@ -113,6 +119,7 @@ export function createGraphQLPlatform(
           password,
           idleTimeout: 30,
         },
+        onExecutedStatement: options?.onExecutedStatement,
       },
     ],
   });
