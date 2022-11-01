@@ -193,8 +193,8 @@ export abstract class AbstractMutation<
 
         try {
           await Promise.allSettled([
-            change.node.onChange?.(change),
-            this.gp.onChange?.(change),
+            change.node.emitChange?.(change),
+            this.gp.emitChange?.(change),
           ]);
         } catch (error) {
           // The errors are silently hidden here, it is done on purpose.

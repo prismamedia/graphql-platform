@@ -1,3 +1,4 @@
+import assert from 'node:assert/strict';
 import {
   EdgeExistsFilter,
   GraphQLPlatform,
@@ -69,6 +70,7 @@ describe('Seeding', () => {
 
     const gp = new GraphQLPlatform({
       nodes,
+
       connector: mockConnector({
         create: async ({ node, creations }) => {
           switch (node.name) {
@@ -338,6 +340,15 @@ describe('Seeding', () => {
           }
         },
       }),
+
+      onChange: [
+        function (change) {
+          assert(
+            this instanceof GraphQLPlatform,
+            'Should be an instance of GraphQLPlatform',
+          );
+        },
+      ],
     });
 
     const seeding = new Seeding(gp, fixtures);

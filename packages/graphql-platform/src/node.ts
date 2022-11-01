@@ -180,10 +180,13 @@ export type NodeConfig<
    *
    * Please keep in mind that any error thrown inside would be silently hidden: it is your responsability to catch these errors.
    */
-  onChange?(
-    this: Node<TRequestContext, TConnector>,
-    change: ChangedNode<TRequestContext, TConnector>,
-  ): Promisable<void>;
+  onChange?: utils.ArrayOrValue<
+    | ((
+        this: Node<TRequestContext, TConnector>,
+        change: ChangedNode<TRequestContext, TConnector>,
+      ) => Promisable<void>)
+    | undefined
+  >;
 } & GetConnectorConfigOverride<TConnector, ConnectorConfigOverrideKind.NODE>;
 
 export class Node<
@@ -213,10 +216,9 @@ export class Node<
   public readonly identifier: UniqueConstraint<TRequestContext, TConnector>;
   readonly #authorizationConfig?: NodeAuthorizationConfig<TRequestContext>;
 
-  public onChange?(
-    this: Node<TRequestContext, TConnector>,
+  public async emitChange?(
     change: ChangedNode<TRequestContext, TConnector>,
-  ): Promisable<void>;
+  ): Promise<void>;
 
   public constructor(
     public readonly gp: GraphQLPlatform<TRequestContext, TConnector>,
@@ -459,14 +461,41 @@ export class Node<
       const onChangeConfig = config.onChange;
       const onChangeConfigPath = utils.addPath(configPath, 'onChange');
 
-      if (onChangeConfig != null) {
-        if (typeof onChangeConfig !== 'function') {
-          throw new utils.UnexpectedConfigError(`a function`, onChangeConfig, {
-            path: onChangeConfigPath,
-          });
-        }
+      const hooks = Object.freeze(
+        onChangeConfig != null
+          ? utils
+              .resolveArrayOrValue(onChangeConfig)
+              .reduce<
+                ((
+                  this: Node<TRequestContext, TConnector>,
+                  change: ChangedNode<TRequestContext, TConnector>,
+                ) => Promisable<void>)[]
+              >((hooks, maybeHook, index) => {
+                if (maybeHook != null) {
+                  if (typeof maybeHook !== 'function') {
+                    throw new utils.UnexpectedConfigError(
+                      `a function`,
+                      maybeHook,
+                      { path: utils.addPath(onChangeConfigPath, index) },
+                    );
+                  }
 
-        this.onChange = onChangeConfig.bind(this);
+                  return [...hooks, maybeHook];
+                }
+
+                return hooks;
+              }, [])
+          : [],
+      );
+
+      if (hooks?.length) {
+        this.emitChange = async (
+          change: ChangedNode<TRequestContext, TConnector>,
+        ) => {
+          await Promise.allSettled(
+            hooks.map((hook) => hook.call(this, change)),
+          );
+        };
       }
     }
   }

@@ -1,6 +1,6 @@
 {
   "name": "@prismamedia/graphql-platform-connector-mariadb",
-  "version": "1.0.0-alpha.22",
+  "version": "1.0.0-alpha.23",
   "license": "MIT",
   "contributors": [
     "Yvann Boucher <yvann.boucher@gmail.com>"
@@ -33,7 +33,7 @@
     "@swc/jest": "0.2.23",
     "@tsconfig/node16": "1.0.3",
     "@types/inflection": "1.13.0",
-    "@types/jest": "29.2.0",
+    "@types/jest": "29.2.1",
     "@types/node": "16.18.3",
     "@types/semver": "7.3.13",
     "graphql": "16.6.0",

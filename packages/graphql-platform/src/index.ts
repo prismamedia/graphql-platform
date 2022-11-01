@@ -75,6 +75,7 @@ export type GraphQLPlatformConfig<
    * @see: https://www.apollographql.com/docs/apollo-server/data/resolvers/#the-context-argument
    */
   assertRequestContext?(
+    this: GraphQLPlatform<TRequestContext, TConnector>,
     maybeRequestContext: unknown,
   ): asserts maybeRequestContext is TRequestContext;
 
@@ -83,10 +84,13 @@ export type GraphQLPlatformConfig<
    *
    * Please keep in mind that any error thrown inside would be silently hidden: it is your responsability to catch these errors.
    */
-  onChange?(
-    this: GraphQLPlatform<TRequestContext, TConnector>,
-    change: ChangedNode<TRequestContext, TConnector>,
-  ): Promisable<void>;
+  onChange?: utils.ArrayOrValue<
+    | ((
+        this: GraphQLPlatform<TRequestContext, TConnector>,
+        change: ChangedNode<TRequestContext, TConnector>,
+      ) => Promisable<void>)
+    | undefined
+  >;
 };
 
 export class GraphQLPlatform<
@@ -97,20 +101,24 @@ export class GraphQLPlatform<
     Node['name'],
     Node<TRequestContext, TConnector>
   >;
+
   public readonly operationsByNameByType: OperationsByNameByType<
     TRequestContext,
     TConnector
   >;
+
   public readonly api: API<TRequestContext, TConnector>;
+
   readonly #connector?: TConnector;
+
   readonly #assertRequestContext?: (
+    this: GraphQLPlatform<TRequestContext, TConnector>,
     maybeRequestContext: unknown,
   ) => asserts maybeRequestContext is TRequestContext;
 
-  public onChange?(
-    this: GraphQLPlatform<TRequestContext, TConnector>,
+  public async emitChange?(
     change: ChangedNode<TRequestContext, TConnector>,
-  ): Promisable<void>;
+  ): Promise<void>;
 
   public constructor(
     public readonly config: GraphQLPlatformConfig<TRequestContext, TConnector>,
@@ -257,14 +265,41 @@ export class GraphQLPlatform<
       const onChangeConfig = config.onChange;
       const onChangeConfigPath = utils.addPath(configPath, 'onChange');
 
-      if (onChangeConfig != null) {
-        if (typeof onChangeConfig !== 'function') {
-          throw new utils.UnexpectedConfigError(`a function`, onChangeConfig, {
-            path: onChangeConfigPath,
-          });
-        }
+      const hooks = Object.freeze(
+        onChangeConfig != null
+          ? utils
+              .resolveArrayOrValue(onChangeConfig)
+              .reduce<
+                ((
+                  this: GraphQLPlatform<TRequestContext, TConnector>,
+                  change: ChangedNode<TRequestContext, TConnector>,
+                ) => Promisable<void>)[]
+              >((hooks, maybeHook, index) => {
+                if (maybeHook != null) {
+                  if (typeof maybeHook !== 'function') {
+                    throw new utils.UnexpectedConfigError(
+                      `a function`,
+                      maybeHook,
+                      { path: utils.addPath(onChangeConfigPath, index) },
+                    );
+                  }
 
-        this.onChange = onChangeConfig.bind(this);
+                  return [...hooks, maybeHook];
+                }
+
+                return hooks;
+              }, [])
+          : [],
+      );
+
+      if (hooks?.length) {
+        this.emitChange = async (
+          change: ChangedNode<TRequestContext, TConnector>,
+        ) => {
+          await Promise.allSettled(
+            hooks.map((hook) => hook.call(this, change)),
+          );
+        };
       }
     }
   }
@@ -339,7 +374,7 @@ export class GraphQLPlatform<
         });
       }
 
-      this.#assertRequestContext?.(maybeRequestContext);
+      this.#assertRequestContext?.call(this, maybeRequestContext);
     } catch (error) {
       throw new InvalidRequestContextError({
         cause: utils.castToError(error),
