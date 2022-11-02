@@ -1058,7 +1058,7 @@ __metadata:
     "@prismamedia/graphql-platform": "workspace:packages/graphql-platform"
     "@prismamedia/graphql-platform-scalars": "workspace:packages/graphql-platform-scalars"
     "@prismamedia/graphql-platform-utils": "workspace:packages/graphql-platform-utils"
-    "@prismamedia/ts-memoize": 3.0.0
+    "@prismamedia/ts-memoize": ^3.0.0
     "@sqltools/formatter": 1.2.5
     "@swc/core": 1.3.11
     "@swc/jest": 0.2.23
@@ -1068,11 +1068,11 @@ __metadata:
     "@types/node": 16.18.3
     "@types/semver": 7.3.13
     graphql: 16.6.0
-    inflection: 1.13.4
+    inflection: ^1.13.4
     jest: 29.2.2
-    mariadb: 3.0.2
-    semver: 7.3.8
-    type-fest: 3.1.0
+    mariadb: ^3.0.2
+    semver: ^7.3.8
+    type-fest: ^3.1.0
     typescript: 4.8.4
   peerDependencies:
     graphql: ^16.6.0
@@ -1095,7 +1095,7 @@ __metadata:
     jest: 29.2.2
     typescript: 4.8.4
   peerDependencies:
-    "@apollo/server": ^4.0.1
+    "@apollo/server": ^4.0.5
     graphql: ^16.6.0
   languageName: unknown
   linkType: soft
@@ -1108,12 +1108,12 @@ __metadata:
     "@swc/core": 1.3.11
     "@swc/jest": 0.2.23
     "@tsconfig/node16": 1.0.3
-    "@types/draft-js": 0.11.9
+    "@types/draft-js": ^0.11.9
     "@types/jest": 29.2.1
     "@types/node": 16.18.3
     graphql: 16.6.0
     jest: 29.2.2
-    type-fest: 3.1.0
+    type-fest: ^3.1.0
     typescript: 4.8.4
   peerDependencies:
     graphql: ^16.6.0
@@ -1150,7 +1150,7 @@ __metadata:
     "@jest/globals": 29.2.2
     "@prismamedia/graphql-platform-scalars": "workspace:packages/graphql-platform-scalars"
     "@prismamedia/graphql-platform-utils": "workspace:packages/graphql-platform-utils"
-    "@prismamedia/ts-memoize": 3.0.0
+    "@prismamedia/ts-memoize": ^3.0.0
     "@swc/core": 1.3.11
     "@swc/jest": 0.2.23
     "@tsconfig/node16": 1.0.3
@@ -1159,21 +1159,21 @@ __metadata:
     "@types/lodash": 4.14.187
     "@types/node": 16.18.3
     "@types/slug": 5.0.3
-    dataloader: 2.1.0
-    dependency-graph: 0.11.0
+    dataloader: ^2.1.0
+    dependency-graph: ^0.11.0
     graphql: 16.6.0
-    inflection: 1.13.4
+    inflection: ^1.13.4
     jest: 29.2.2
-    lodash: 4.17.21
+    lodash: ^4.17.21
     slug: 8.2.2
-    type-fest: 3.1.0
+    type-fest: ^3.1.0
     typescript: 4.8.4
   peerDependencies:
     graphql: ^16.6.0
   languageName: unknown
   linkType: soft
 
-"@prismamedia/ts-memoize@npm:3.0.0":
+"@prismamedia/ts-memoize@npm:3.0.0, @prismamedia/ts-memoize@npm:^3.0.0":
   version: 3.0.0
   resolution: "@prismamedia/ts-memoize@npm:3.0.0"
   checksum: 20d58c9cffb44d597f74849faf7bdf3340dd3bbac166cdb1709ba8c0122459ffcccc5f3d0ee0d84ddc50e3034f81852e20c54e11bc57826db5f94f345cb4d017
@@ -1566,7 +1566,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@types/draft-js@npm:0.11.9":
+"@types/draft-js@npm:^0.11.9":
   version: 0.11.9
   resolution: "@types/draft-js@npm:0.11.9"
   dependencies:
@@ -2648,7 +2648,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"dataloader@npm:2.1.0":
+"dataloader@npm:^2.1.0":
   version: 2.1.0
   resolution: "dataloader@npm:2.1.0"
   checksum: bbd43496c41697766f8611f60ed3bae437b450985499140b9603a2447c10d45975d3a0661caaebaa9750bc1bc9fd154676a314423294916c8b8ca1a59a08d139
@@ -2741,7 +2741,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"dependency-graph@npm:0.11.0":
+"dependency-graph@npm:^0.11.0":
   version: 0.11.0
   resolution: "dependency-graph@npm:0.11.0"
   checksum: 477204beaa9be69e642bc31ffe7a8c383d0cf48fa27acbc91c5df01431ab913e65c154213d2ef83d034c98d77280743ec85e5da018a97a18dd43d3c0b78b28cd
@@ -3485,7 +3485,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"inflection@npm:1.13.4":
+"inflection@npm:^1.13.4":
   version: 1.13.4
   resolution: "inflection@npm:1.13.4"
   checksum: 6744feede9998ad8abd2b1db4af79f494a166e656a0aa949d90c8f4a945c1d07038a3756bf7af78c8f6fce368ba213a7ebf35da3edeffd39f1da0ff465eed6eb
@@ -4207,7 +4207,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"lodash@npm:4.17.21, lodash@npm:^4.17.15":
+"lodash@npm:4.17.21, lodash@npm:^4.17.15, lodash@npm:^4.17.21":
   version: 4.17.21
   resolution: "lodash@npm:4.17.21"
   checksum: eb835a2e51d381e561e508ce932ea50a8e5a68f4ebdd771ea240d3048244a8d13658acbd502cd4829768c56f2e16bdd4340b9ea141297d472517b83868e677f7
@@ -4293,7 +4293,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"mariadb@npm:3.0.2":
+"mariadb@npm:^3.0.2":
   version: 3.0.2
   resolution: "mariadb@npm:3.0.2"
   dependencies:
@@ -5101,7 +5101,16 @@ __metadata:
   languageName: node
   linkType: hard
 
-"semver@npm:7.3.8, semver@npm:^7.1.2, semver@npm:^7.3.5":
+"semver@npm:^6.0.0, semver@npm:^6.3.0":
+  version: 6.3.0
+  resolution: "semver@npm:6.3.0"
+  bin:
+    semver: ./bin/semver.js
+  checksum: 1b26ecf6db9e8292dd90df4e781d91875c0dcc1b1909e70f5d12959a23c7eebb8f01ea581c00783bbee72ceeaad9505797c381756326073850dc36ed284b21b9
+  languageName: node
+  linkType: hard
+
+"semver@npm:^7.1.2, semver@npm:^7.3.5, semver@npm:^7.3.8":
   version: 7.3.8
   resolution: "semver@npm:7.3.8"
   dependencies:
@@ -5109,15 +5118,6 @@ __metadata:
   bin:
     semver: bin/semver.js
   checksum: ba9c7cbbf2b7884696523450a61fee1a09930d888b7a8d7579025ad93d459b2d1949ee5bbfeb188b2be5f4ac163544c5e98491ad6152df34154feebc2cc337c1
-  languageName: node
-  linkType: hard
-
-"semver@npm:^6.0.0, semver@npm:^6.3.0":
-  version: 6.3.0
-  resolution: "semver@npm:6.3.0"
-  bin:
-    semver: ./bin/semver.js
-  checksum: 1b26ecf6db9e8292dd90df4e781d91875c0dcc1b1909e70f5d12959a23c7eebb8f01ea581c00783bbee72ceeaad9505797c381756326073850dc36ed284b21b9
   languageName: node
   linkType: hard
 
@@ -5512,7 +5512,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"type-fest@npm:3.1.0":
+"type-fest@npm:3.1.0, type-fest@npm:^3.1.0":
   version: 3.1.0
   resolution: "type-fest@npm:3.1.0"
   checksum: 22a0402afafab05edb7b45456d6ebfdcfc616f84a98266857e89bd656a14b5007e86d1a50b12746624b6aafb17dad3f437065df8adfa1b04bb970894db1fe940

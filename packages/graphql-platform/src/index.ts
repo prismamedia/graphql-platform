@@ -83,6 +83,7 @@ export type GraphQLPlatformConfig<
    * Optional, act on the nodes' changes AFTER they have been committed
    *
    * Please keep in mind that any error thrown inside would be silently hidden: it is your responsability to catch these errors.
+   * As the changes reached the database we want the client to get the corresponding state no matter what happens inside these hooks.
    */
   onChange?: utils.ArrayOrValue<
     | ((
@@ -91,6 +92,15 @@ export type GraphQLPlatformConfig<
       ) => Promisable<void>)
     | undefined
   >;
+
+  /**
+   * Optional, catch any error thrown in the "onChange" hooks
+   */
+  onChangeError?: (
+    this: GraphQLPlatform<TRequestContext, TConnector>,
+    error: Error,
+    change: ChangedNode<TRequestContext, TConnector>,
+  ) => void;
 };
 
 export class GraphQLPlatform<
@@ -260,7 +270,7 @@ export class GraphQLPlatform<
       }
     }
 
-    // on-change
+    // on-change & on-change-error
     {
       const onChangeConfig = config.onChange;
       const onChangeConfigPath = utils.addPath(configPath, 'onChange');
@@ -271,7 +281,6 @@ export class GraphQLPlatform<
               .resolveArrayOrValue(onChangeConfig)
               .reduce<
                 ((
-                  this: GraphQLPlatform<TRequestContext, TConnector>,
                   change: ChangedNode<TRequestContext, TConnector>,
                 ) => Promisable<void>)[]
               >((hooks, maybeHook, index) => {
@@ -296,10 +305,37 @@ export class GraphQLPlatform<
         this.emitChange = async (
           change: ChangedNode<TRequestContext, TConnector>,
         ) => {
-          await Promise.allSettled(
-            hooks.map((hook) => hook.call(this, change)),
+          await Promise.all(
+            hooks.map(async (hook) => {
+              try {
+                await hook.call(this, change);
+              } catch (error) {
+                this.config.onChangeError?.call(
+                  this,
+                  utils.castToError(error),
+                  change,
+                );
+              }
+            }),
           );
         };
+      }
+
+      const onChangeErrorConfig = config.onChangeError;
+      const onChangeErrorConfigPath = utils.addPath(
+        configPath,
+        'onChangeError',
+      );
+
+      if (
+        onChangeErrorConfig != null &&
+        typeof onChangeErrorConfig !== 'function'
+      ) {
+        throw new utils.UnexpectedConfigError(
+          `a function`,
+          onChangeErrorConfig,
+          { path: onChangeErrorConfigPath },
+        );
       }
     }
   }

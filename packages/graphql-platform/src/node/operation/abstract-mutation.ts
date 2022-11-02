@@ -191,15 +191,10 @@ export abstract class AbstractMutation<
       while ((change = mutationContext.changes.shift())) {
         change.committedAt = committedAt;
 
-        try {
-          await Promise.allSettled([
-            change.node.emitChange?.(change),
-            this.gp.emitChange?.(change),
-          ]);
-        } catch (error) {
-          // The errors are silently hidden here, it is done on purpose.
-          // As the changes reached the database we want the client to get the corresponding state no matter what happens inside the hooks.
-        }
+        await Promise.all([
+          change.node.emitChange?.(change),
+          this.gp.emitChange?.(change),
+        ]);
       }
     }
 

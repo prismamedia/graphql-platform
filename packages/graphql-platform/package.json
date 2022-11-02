@@ -1,6 +1,6 @@
 {
   "name": "@prismamedia/graphql-platform",
-  "version": "1.0.0-alpha.23",
+  "version": "1.0.0-alpha.24",
   "license": "MIT",
   "contributors": [
     "Yvann Boucher <yvann.boucher@gmail.com>"
@@ -45,12 +45,12 @@
   "dependencies": {
     "@prismamedia/graphql-platform-scalars": "workspace:packages/graphql-platform-scalars",
     "@prismamedia/graphql-platform-utils": "workspace:packages/graphql-platform-utils",
-    "@prismamedia/ts-memoize": "3.0.0",
-    "dataloader": "2.1.0",
-    "dependency-graph": "0.11.0",
-    "inflection": "1.13.4",
-    "lodash": "4.17.21",
-    "type-fest": "3.1.0"
+    "@prismamedia/ts-memoize": "^3.0.0",
+    "dataloader": "^2.1.0",
+    "dependency-graph": "^0.11.0",
+    "inflection": "^1.13.4",
+    "lodash": "^4.17.21",
+    "type-fest": "^3.1.0"
   },
   "peerDependencies": {
     "graphql": "^16.6.0"

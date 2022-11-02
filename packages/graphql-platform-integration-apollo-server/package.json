@@ -1,6 +1,6 @@
 {
   "name": "@prismamedia/graphql-platform-integration-apollo-server",
-  "version": "1.0.0-alpha.23",
+  "version": "1.0.0-alpha.24",
   "license": "MIT",
   "contributors": [
     "Yvann Boucher <yvann.boucher@gmail.com>"
@@ -42,7 +42,7 @@
     "@prismamedia/graphql-platform": "workspace:packages/graphql-platform"
   },
   "peerDependencies": {
-    "@apollo/server": "^4.0.1",
+    "@apollo/server": "^4.0.5",
     "graphql": "^16.6.0"
   }
 }

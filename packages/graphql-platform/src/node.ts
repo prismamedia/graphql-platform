@@ -179,6 +179,7 @@ export type NodeConfig<
    * Optional, act on this node's changes AFTER they have been committed
    *
    * Please keep in mind that any error thrown inside would be silently hidden: it is your responsability to catch these errors.
+   * As the changes reached the database we want the client to get the corresponding state no matter what happens inside these hooks.
    */
   onChange?: utils.ArrayOrValue<
     | ((
@@ -467,7 +468,6 @@ export class Node<
               .resolveArrayOrValue(onChangeConfig)
               .reduce<
                 ((
-                  this: Node<TRequestContext, TConnector>,
                   change: ChangedNode<TRequestContext, TConnector>,
                 ) => Promisable<void>)[]
               >((hooks, maybeHook, index) => {
@@ -492,8 +492,18 @@ export class Node<
         this.emitChange = async (
           change: ChangedNode<TRequestContext, TConnector>,
         ) => {
-          await Promise.allSettled(
-            hooks.map((hook) => hook.call(this, change)),
+          await Promise.all(
+            hooks.map(async (hook) => {
+              try {
+                await hook.call(this, change);
+              } catch (error) {
+                this.gp.config.onChangeError?.call(
+                  this.gp,
+                  utils.castToError(error),
+                  change,
+                );
+              }
+            }),
           );
         };
       }
