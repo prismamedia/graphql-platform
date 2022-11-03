@@ -408,16 +408,12 @@ export class NodeFilterInputType extends utils.ObjectInputType<FieldFilterInputT
   @Memoize()
   public override get fields(): ReadonlyArray<FieldFilterInputType> {
     return [
-      ...Array.from(
-        this.node.componentsByName.values(),
-      ).flatMap<FieldFilterInputType>((component) =>
+      ...this.node.components.flatMap<FieldFilterInputType>((component) =>
         component instanceof Leaf
           ? this.getLeafFields(component)
           : this.getEdgeFields(component),
       ),
-      ...Array.from(
-        this.node.reverseEdgesByName.values(),
-      ).flatMap<FieldFilterInputType>((reverseEdge) =>
+      ...this.node.reverseEdges.flatMap<FieldFilterInputType>((reverseEdge) =>
         reverseEdge instanceof ReverseEdgeUnique
           ? this.getReverseEdgeUniqueFields(reverseEdge)
           : this.getReverseEdgeMultipleFields(reverseEdge),

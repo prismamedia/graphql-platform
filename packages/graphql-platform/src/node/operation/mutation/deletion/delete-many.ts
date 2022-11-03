@@ -157,7 +157,7 @@ export class DeleteManyMutation<
     // Apply the related nodes' "OnHeadDeletion"
     if (this.node.reverseEdgesByName.size) {
       await Promise.all(
-        Array.from(this.node.reverseEdgesByName.values()).map((reverseEdge) => {
+        this.node.reverseEdges.map((reverseEdge) => {
           switch (reverseEdge.originalEdge.onHeadDeletion) {
             case OnEdgeHeadDeletion.RESTRICT:
               // Nothing to do, the database will take care of it

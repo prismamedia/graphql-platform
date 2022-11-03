@@ -59,7 +59,7 @@ export interface TableConfig {
   /**
    * Optional, some additional plain indexes
    */
-  indexes?: (PlainIndexConfig | PlainIndexConfig['columns'])[];
+  indexes?: (PlainIndexConfig | PlainIndexConfig['components'])[];
 }
 
 export class Table {
@@ -151,10 +151,7 @@ export class Table {
     // columns-by-leaf
     {
       this.columnsByLeaf = new Map(
-        Array.from(node.leavesByName.values(), (leaf) => [
-          leaf,
-          new LeafColumn(this, leaf),
-        ]),
+        node.leaves.map((leaf) => [leaf, new LeafColumn(this, leaf)]),
       );
     }
 
@@ -166,7 +163,7 @@ export class Table {
     // unique-indexes-by-unique-constraint
     {
       this.uniqueIndexesByUniqueConstraint = new Map(
-        Array.from(node.uniqueConstraintsByName.values())
+        node.uniqueConstraints
           .filter((uniqueConstraint) => !uniqueConstraint.isIdentifier())
           .map((uniqueConstraint) => [
             uniqueConstraint,
@@ -178,10 +175,7 @@ export class Table {
     // foreign-key-indexes-by-edge
     {
       this.foreignKeyIndexesByEdge = new Map(
-        Array.from(node.edgesByName.values(), (edge) => [
-          edge,
-          new ForeignKeyIndex(this, edge),
-        ]),
+        node.edges.map((edge) => [edge, new ForeignKeyIndex(this, edge)]),
       );
     }
 
@@ -214,7 +208,7 @@ export class Table {
             new PlainIndex(
               this,
               (Array.isArray(config)
-                ? { columns: config }
+                ? { components: config }
                 : config) as PlainIndexConfig,
               utils.addPath(indexesConfigPath, index),
             ),
@@ -239,7 +233,7 @@ export class Table {
   @Memoize()
   public get columnTreesByEdge(): ReadonlyMap<core.Edge, ReferenceColumnTree> {
     return new Map(
-      Array.from(this.node.edgesByName.values(), (edge) => [
+      this.node.edges.map((edge) => [
         edge,
         new ReferenceColumnTree(this.schema, edge),
       ]),
@@ -268,9 +262,7 @@ export class Table {
 
   @Memoize()
   public get columns(): ReadonlyArray<Column> {
-    return Object.freeze(
-      this.getColumnsByComponents(...this.node.componentsByName.values()),
-    );
+    return Object.freeze(this.getColumnsByComponents(...this.node.components));
   }
 
   public getUniqueIndexByUniqueConstraint(
@@ -316,7 +308,7 @@ export class Table {
       );
     }
 
-    return Array.from(this.node.componentsByName.values()).reduce<TValue>(
+    return this.node.components.reduce<TValue>(
       (nodeValue, component) =>
         Object.assign(nodeValue, {
           [component.name]: component.parseValue(

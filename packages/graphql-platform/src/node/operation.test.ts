@@ -11,7 +11,7 @@ describe('Operation', () => {
   });
 
   it('are actually registered', () => {
-    for (const node of gp.nodesByName.values()) {
+    for (const node of gp.nodes) {
       for (const query of Object.values(node.queriesByKey)) {
         expect(query).toBeInstanceOf(AbstractQuery);
         expect(typeof query.isEnabled()).toBe('boolean');

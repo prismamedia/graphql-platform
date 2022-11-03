@@ -575,19 +575,19 @@ describe('Node', () => {
         expect(node.isPublic()).toBeTruthy();
 
         expect(
-          [...node.componentsByName.values()]
+          node.components
             .filter((component) => !component.isPublic())
             .map((component) => component.name),
         ).toEqual(privateComponentNames);
 
         expect(
-          [...node.uniqueConstraintsByName.values()]
+          node.uniqueConstraints
             .filter((uniqueConstraint) => !uniqueConstraint.isPublic())
             .map((uniqueConstraint) => uniqueConstraint.name),
         ).toEqual(privateUniqueConstraintNames);
 
         expect(
-          [...node.reverseEdgesByName.values()]
+          node.reverseEdges
             .filter((reverseEdge) => !reverseEdge.isPublic())
             .map((reverseEdge) => reverseEdge.name),
         ).toEqual(privateReverseEdgeNames);
@@ -602,21 +602,17 @@ describe('Node', () => {
         expect(node.isPublic()).toBeFalsy();
 
         expect(
-          [...node.componentsByName.values()].some((component) =>
-            component.isPublic(),
-          ),
+          node.components.some((component) => component.isPublic()),
         ).toBeFalsy();
 
         expect(
-          [...node.uniqueConstraintsByName.values()].some((uniqueConstraint) =>
+          node.uniqueConstraints.some((uniqueConstraint) =>
             uniqueConstraint.isPublic(),
           ),
         ).toBeFalsy();
 
         expect(
-          [...node.reverseEdgesByName.values()].some((reverseEdge) =>
-            reverseEdge.isPublic(),
-          ),
+          node.reverseEdges.some((reverseEdge) => reverseEdge.isPublic()),
         ).toBeFalsy();
       },
     );

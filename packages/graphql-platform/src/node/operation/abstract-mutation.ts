@@ -8,7 +8,6 @@ import {
   AbstractOperation,
   type NodeSelectionAwareArgs,
 } from '../abstract-operation.js';
-import type { ChangedNode } from '../change.js';
 import { AndOperation, NodeFilter } from '../statement/filter.js';
 import type { ContextBoundAPI } from './api.js';
 import { catchConnectorError } from './error.js';
@@ -161,6 +160,15 @@ export abstract class AbstractMutation<
           path,
         );
       }
+
+      // changes
+      {
+        const committedAt = new Date();
+
+        mutationContext.changes.forEach((change) => {
+          change.committedAt = committedAt;
+        });
+      }
     } catch (error) {
       if (this.connector.postFailedMutation) {
         await catchConnectorError(
@@ -183,20 +191,7 @@ export abstract class AbstractMutation<
       }
     }
 
-    // changes' notification
-    {
-      const committedAt = new Date();
-
-      let change: ChangedNode | undefined;
-      while ((change = mutationContext.changes.shift())) {
-        change.committedAt = committedAt;
-
-        await Promise.all([
-          change.node.emitChange?.(change),
-          this.gp.emitChange?.(change),
-        ]);
-      }
-    }
+    await this.gp.notifyChanges(...mutationContext.changes);
 
     return result;
   }

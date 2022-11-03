@@ -35,9 +35,7 @@ export class PrimaryKey extends AbstractIndex {
   @Memoize()
   public get columns(): ReadonlyArray<Column> {
     return Object.freeze(
-      this.table.getColumnsByComponents(
-        ...this.uniqueConstraint.componentsByName.values(),
-      ),
+      this.table.getColumnsByComponents(...this.uniqueConstraint.components),
     );
   }
 

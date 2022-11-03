@@ -214,7 +214,7 @@ export class Edge<
     }
 
     if (
-      [...referencedUniqueConstraint.componentsByName.values()].some(
+      referencedUniqueConstraint.components.some(
         (component) => component instanceof Edge && component === this,
       )
     ) {
@@ -252,7 +252,7 @@ export class Edge<
   > {
     return new Set([
       this.referencedUniqueConstraint,
-      ...this.head.uniqueConstraintsByName.values(),
+      ...this.head.uniqueConstraints,
     ]);
   }
 
@@ -269,16 +269,14 @@ export class Edge<
     path: utils.Path = utils.addPath(undefined, this.toString()),
   ): EdgeValue {
     if (maybeValue === undefined) {
-      throw new utils.UnexpectedValueError(
-        `a non-undefined "${this.referencedUniqueConstraint}"`,
-        maybeValue,
+      throw new utils.UnexpectedUndefinedError(
+        `"${this.referencedUniqueConstraint}"`,
         { path },
       );
     } else if (maybeValue === null) {
       if (!this.isNullable()) {
-        throw new utils.UnexpectedValueError(
-          `a non-null "${this.referencedUniqueConstraint}"`,
-          maybeValue,
+        throw new utils.UnexpectedNullError(
+          `"${this.referencedUniqueConstraint}"`,
           { path },
         );
       }
@@ -303,7 +301,9 @@ export class Edge<
   }
 
   public serialize(value: EdgeValue): JsonValue {
-    return value ? this.referencedUniqueConstraint.serialize(value) : null;
+    return value !== null
+      ? this.referencedUniqueConstraint.serialize(value)
+      : null;
   }
 
   @Memoize()
@@ -340,7 +340,7 @@ export class Edge<
 
   @Memoize()
   public get reverseEdge(): ReverseEdge<TRequestContext, TConnector> {
-    const reverseEdge = Array.from(this.head.reverseEdgesByName.values()).find(
+    const reverseEdge = this.head.reverseEdges.find(
       (reverseEdge) => reverseEdge.originalEdge === this,
     );
 

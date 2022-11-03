@@ -146,18 +146,10 @@ export class Leaf<
     const value = utils.parseGraphQLLeafValue(this.type, maybeValue, path);
 
     if (value === undefined) {
-      throw new utils.UnexpectedValueError(
-        `a non-undefined "${this.type}"`,
-        maybeValue,
-        { path },
-      );
+      throw new utils.UnexpectedUndefinedError(`"${this.type}"`, { path });
     } else if (value === null) {
       if (!this.isNullable()) {
-        throw new utils.UnexpectedValueError(
-          `a non-null "${this.type}"`,
-          maybeValue,
-          { path },
-        );
+        throw new utils.UnexpectedNullError(`"${this.type}"`, { path });
       }
 
       return null;
@@ -178,7 +170,7 @@ export class Leaf<
   }
 
   public serialize(value: LeafValue): JsonValue {
-    return this.type.serialize(value) as any;
+    return value !== null ? (this.type.serialize(value) as any) : null;
   }
 
   @Memoize()

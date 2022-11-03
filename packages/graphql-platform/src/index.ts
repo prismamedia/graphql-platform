@@ -9,6 +9,7 @@ import {
 } from './custom-operations.js';
 import {
   ChangedNode,
+  ChangesAggregation,
   createAPI,
   InvalidRequestContextError,
   Node,
@@ -111,6 +112,7 @@ export class GraphQLPlatform<
     Node['name'],
     Node<TRequestContext, TConnector>
   >;
+  public readonly nodes: ReadonlyArray<Node<TRequestContext, TConnector>>;
 
   public readonly operationsByNameByType: OperationsByNameByType<
     TRequestContext,
@@ -126,9 +128,14 @@ export class GraphQLPlatform<
     maybeRequestContext: unknown,
   ) => asserts maybeRequestContext is TRequestContext;
 
-  public async emitChange?(
+  readonly #onChangeHooks: ReadonlyArray<
+    (change: ChangedNode<TRequestContext, TConnector>) => Promisable<void>
+  >;
+
+  readonly #onChangeHookError?: (
+    error: Error,
     change: ChangedNode<TRequestContext, TConnector>,
-  ): Promise<void>;
+  ) => void;
 
   public constructor(
     public readonly config: GraphQLPlatformConfig<TRequestContext, TConnector>,
@@ -180,27 +187,29 @@ export class GraphQLPlatform<
         ),
       );
 
+      this.nodes = Object.freeze(Array.from(this.nodesByName.values()));
+
       /**
        * In order to fail as soon as possible, we validate/build everything right away.
        * It is done step by step in order to have meaningful errors.
        */
       {
         utils.aggregateConfigError<Node, void>(
-          this.nodesByName.values(),
+          this.nodes,
           (_, node) => node.validateDefinition(),
           undefined,
           { path: nodesConfigPath },
         );
 
         utils.aggregateConfigError<Node, void>(
-          this.nodesByName.values(),
+          this.nodes,
           (_, node) => node.validateTypes(),
           undefined,
           { path: nodesConfigPath },
         );
 
         utils.aggregateConfigError<Node, void>(
-          this.nodesByName.values(),
+          this.nodes,
           (_, node) => node.validateOperations(),
           undefined,
           { path: nodesConfigPath },
@@ -214,7 +223,7 @@ export class GraphQLPlatform<
         utils.operationTypes.map((type): any => [
           type,
           new Map(
-            Array.from(this.nodesByName.values()).flatMap((node) =>
+            this.nodes.flatMap((node) =>
               node.operations
                 .filter((operation) => operation.operationType === type)
                 .map((operation) => [operation.name, operation]),
@@ -275,12 +284,13 @@ export class GraphQLPlatform<
       const onChangeConfig = config.onChange;
       const onChangeConfigPath = utils.addPath(configPath, 'onChange');
 
-      const hooks = Object.freeze(
+      this.#onChangeHooks = Object.freeze(
         onChangeConfig != null
           ? utils
               .resolveArrayOrValue(onChangeConfig)
               .reduce<
                 ((
+                  this: GraphQLPlatform<TRequestContext, TConnector>,
                   change: ChangedNode<TRequestContext, TConnector>,
                 ) => Promisable<void>)[]
               >((hooks, maybeHook, index) => {
@@ -293,7 +303,7 @@ export class GraphQLPlatform<
                     );
                   }
 
-                  return [...hooks, maybeHook];
+                  return [...hooks, maybeHook.bind(this)];
                 }
 
                 return hooks;
@@ -301,41 +311,22 @@ export class GraphQLPlatform<
           : [],
       );
 
-      if (hooks?.length) {
-        this.emitChange = async (
-          change: ChangedNode<TRequestContext, TConnector>,
-        ) => {
-          await Promise.all(
-            hooks.map(async (hook) => {
-              try {
-                await hook.call(this, change);
-              } catch (error) {
-                this.config.onChangeError?.call(
-                  this,
-                  utils.castToError(error),
-                  change,
-                );
-              }
-            }),
-          );
-        };
-      }
-
       const onChangeErrorConfig = config.onChangeError;
       const onChangeErrorConfigPath = utils.addPath(
         configPath,
         'onChangeError',
       );
 
-      if (
-        onChangeErrorConfig != null &&
-        typeof onChangeErrorConfig !== 'function'
-      ) {
-        throw new utils.UnexpectedConfigError(
-          `a function`,
-          onChangeErrorConfig,
-          { path: onChangeErrorConfigPath },
-        );
+      if (onChangeErrorConfig != null) {
+        if (typeof onChangeErrorConfig !== 'function') {
+          throw new utils.UnexpectedConfigError(
+            `a function`,
+            onChangeErrorConfig,
+            { path: onChangeErrorConfigPath },
+          );
+        }
+
+        this.#onChangeHookError = onChangeErrorConfig.bind(this);
       }
     }
   }
@@ -417,6 +408,28 @@ export class GraphQLPlatform<
         path,
       });
     }
+  }
+
+  public async notifyChanges(
+    ...changes: ReadonlyArray<ChangedNode<TRequestContext, TConnector>>
+  ): Promise<void> {
+    const aggregation = new ChangesAggregation(changes);
+
+    await Promise.all(
+      Array.from(aggregation, (change) =>
+        Promise.all(
+          [...change.node.onChangeHooks, ...this.#onChangeHooks].map(
+            async (hook) => {
+              try {
+                await hook(change);
+              } catch (error) {
+                this.#onChangeHookError?.(utils.castToError(error), change);
+              }
+            },
+          ),
+        ),
+      ),
+    );
   }
 
   public async seed(

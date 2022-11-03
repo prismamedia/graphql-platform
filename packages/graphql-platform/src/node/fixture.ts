@@ -29,33 +29,30 @@ export class NodeFixture<
   @Memoize()
   public get dependencies(): ReadonlySet<NodeFixtureReference> {
     return new Set(
-      Array.from(this.node.edgesByName.values()).reduce<NodeFixtureReference[]>(
-        (dependencies, edge) => {
-          const maybeEdgeReference = this.data[edge.name];
-          if (maybeEdgeReference != null) {
-            if (typeof maybeEdgeReference !== 'string') {
-              throw new utils.UnexpectedConfigError(
-                'a string',
-                maybeEdgeReference,
-                { path: utils.addPath(this.path, edge.name) },
-              );
-            } else if (
-              !this.seeding.dependencyGraph.hasNode(maybeEdgeReference)
-            ) {
-              throw new utils.UnexpectedConfigError(
-                "an existing fixture's reference",
-                maybeEdgeReference,
-                { path: utils.addPath(this.path, edge.name) },
-              );
-            }
-
-            dependencies.push(maybeEdgeReference);
+      this.node.edges.reduce<NodeFixtureReference[]>((dependencies, edge) => {
+        const maybeEdgeReference = this.data[edge.name];
+        if (maybeEdgeReference != null) {
+          if (typeof maybeEdgeReference !== 'string') {
+            throw new utils.UnexpectedConfigError(
+              'a string',
+              maybeEdgeReference,
+              { path: utils.addPath(this.path, edge.name) },
+            );
+          } else if (
+            !this.seeding.dependencyGraph.hasNode(maybeEdgeReference)
+          ) {
+            throw new utils.UnexpectedConfigError(
+              "an existing fixture's reference",
+              maybeEdgeReference,
+              { path: utils.addPath(this.path, edge.name) },
+            );
           }
 
-          return dependencies;
-        },
-        [],
-      ),
+          dependencies.push(maybeEdgeReference);
+        }
+
+        return dependencies;
+      }, []),
     );
   }
 

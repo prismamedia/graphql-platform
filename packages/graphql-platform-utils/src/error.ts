@@ -90,6 +90,18 @@ export class UnexpectedValueError extends NestableError {
   }
 }
 
+export class UnexpectedUndefinedError extends NestableError {
+  public constructor(expectation: string, options?: NestableErrorOptions) {
+    super(`Expects a non-undefined ${expectation}`, options);
+  }
+}
+
+export class UnexpectedNullError extends NestableError {
+  public constructor(expectation: string, options?: NestableErrorOptions) {
+    super(`Expects a non-null ${expectation}`, options);
+  }
+}
+
 export class UnreachableValueError extends UnexpectedValueError {
   public constructor(value: never, options?: NestableErrorOptions) {
     super(`not to be reached`, value, options);

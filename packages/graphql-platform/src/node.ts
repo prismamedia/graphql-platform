@@ -198,28 +198,43 @@ export class Node<
   public readonly indefinite: string;
   public readonly description: string | undefined;
   public readonly deprecationReason: string | undefined;
+
   public readonly componentsByName: ReadonlyMap<
     Component['name'],
     Component<TRequestContext, TConnector>
   >;
+  public readonly components: ReadonlyArray<
+    Component<TRequestContext, TConnector>
+  >;
+  public readonly componentSet: Set<Component<TRequestContext, TConnector>>;
+
   public readonly leavesByName: ReadonlyMap<
     Leaf['name'],
     Leaf<TRequestContext, TConnector>
   >;
+  public readonly leaves: ReadonlyArray<Leaf<TRequestContext, TConnector>>;
+
   public readonly edgesByName: ReadonlyMap<
     Edge['name'],
     Edge<TRequestContext, TConnector>
   >;
+  public readonly edges: ReadonlyArray<Edge<TRequestContext, TConnector>>;
+
   public readonly uniqueConstraintsByName: ReadonlyMap<
     UniqueConstraint['name'],
     UniqueConstraint<TRequestContext, TConnector>
   >;
+  public readonly uniqueConstraints: ReadonlyArray<
+    UniqueConstraint<TRequestContext, TConnector>
+  >;
+
   public readonly identifier: UniqueConstraint<TRequestContext, TConnector>;
+
   readonly #authorizationConfig?: NodeAuthorizationConfig<TRequestContext>;
 
-  public async emitChange?(
-    change: ChangedNode<TRequestContext, TConnector>,
-  ): Promise<void>;
+  public readonly onChangeHooks: ReadonlyArray<
+    (change: ChangedNode<TRequestContext, TConnector>) => Promisable<void>
+  >;
 
   public constructor(
     public readonly gp: GraphQLPlatform<TRequestContext, TConnector>,
@@ -348,17 +363,33 @@ export class Node<
         ),
       );
 
-      this.leavesByName = new Map(
-        Array.from(this.componentsByName).filter(
-          (entry): entry is [string, Leaf] => entry[1] instanceof Leaf,
-        ),
+      this.components = Object.freeze(
+        Array.from(this.componentsByName.values()),
       );
 
-      this.edgesByName = new Map(
-        Array.from(this.componentsByName).filter(
-          (entry): entry is [string, Edge] => entry[1] instanceof Edge,
-        ),
-      );
+      this.componentSet = new Set(this.components);
+
+      // leaves
+      {
+        this.leavesByName = new Map(
+          Array.from(this.componentsByName).filter(
+            (entry): entry is [string, Leaf] => entry[1] instanceof Leaf,
+          ),
+        );
+
+        this.leaves = Object.freeze(Array.from(this.leavesByName.values()));
+      }
+
+      // edges
+      {
+        this.edgesByName = new Map(
+          Array.from(this.componentsByName).filter(
+            (entry): entry is [string, Edge] => entry[1] instanceof Edge,
+          ),
+        );
+
+        this.edges = Object.freeze(Array.from(this.edgesByName.values()));
+      }
     }
 
     // uniques
@@ -394,16 +425,20 @@ export class Node<
         ),
       );
 
+      this.uniqueConstraints = Object.freeze(
+        Array.from(this.uniqueConstraintsByName.values()),
+      );
+
       // identifier (= the first unique constraint)
       {
         const identifierConfigPath = utils.addPath(uniquesConfigPath, 0);
 
-        this.identifier = this.uniqueConstraintsByName.values().next().value;
+        this.identifier = this.uniqueConstraints[0];
 
         if (this.identifier.isNullable()) {
           throw new utils.ConfigError(
             `Expects its identifier (= the first unique constraint, composed of the component${
-              this.identifier.composite ? 's' : ''
+              this.identifier.isComposite() ? 's' : ''
             } "${[...this.identifier.componentsByName.keys()].join(
               ', ',
             )}") to be non-nullable (= at least one of its components being non-nullable)`,
@@ -414,7 +449,7 @@ export class Node<
         if (this.identifier.isMutable()) {
           throw new utils.ConfigError(
             `Expects its identifier (= the first unique constraint, composed of the component${
-              this.identifier.composite ? 's' : ''
+              this.identifier.isComposite() ? 's' : ''
             } "${[...this.identifier.componentsByName.keys()].join(
               ', ',
             )}") to be immutable (= all its components being immutable)`,
@@ -462,12 +497,13 @@ export class Node<
       const onChangeConfig = config.onChange;
       const onChangeConfigPath = utils.addPath(configPath, 'onChange');
 
-      const hooks = Object.freeze(
+      this.onChangeHooks = Object.freeze(
         onChangeConfig != null
           ? utils
               .resolveArrayOrValue(onChangeConfig)
               .reduce<
                 ((
+                  this: Node<TRequestContext, TConnector>,
                   change: ChangedNode<TRequestContext, TConnector>,
                 ) => Promisable<void>)[]
               >((hooks, maybeHook, index) => {
@@ -480,33 +516,13 @@ export class Node<
                     );
                   }
 
-                  return [...hooks, maybeHook];
+                  return [...hooks, maybeHook.bind(this)];
                 }
 
                 return hooks;
               }, [])
           : [],
       );
-
-      if (hooks?.length) {
-        this.emitChange = async (
-          change: ChangedNode<TRequestContext, TConnector>,
-        ) => {
-          await Promise.all(
-            hooks.map(async (hook) => {
-              try {
-                await hook.call(this, change);
-              } catch (error) {
-                this.gp.config.onChangeError?.call(
-                  this.gp,
-                  utils.castToError(error),
-                  change,
-                );
-              }
-            }),
-          );
-        };
-      }
     }
   }
 
@@ -696,10 +712,7 @@ export class Node<
     return new NodeSelection(
       this,
       mergeSelectionExpressions(
-        Array.from(
-          this.componentsByName.values(),
-          ({ selection }) => selection,
-        ),
+        this.components.map(({ selection }) => selection),
       ),
     );
   }
@@ -714,11 +727,13 @@ export class Node<
       Node['name'],
       Map<Edge['name'], Edge>
     >(
-      [...this.gp.nodesByName.values()]
+      this.gp.nodes
         .map((node): [Node['name'], Map<Edge['name'], Edge>] => [
           node.name,
           new Map(
-            [...node.edgesByName].filter(([, edge]) => edge.head === this),
+            Array.from(node.edgesByName).filter(
+              ([, edge]) => edge.head === this,
+            ),
           ),
         ])
         .filter(([, referrersByName]) => referrersByName.size),
@@ -897,6 +912,13 @@ export class Node<
     }
 
     return reverseEdges;
+  }
+
+  @Memoize()
+  public get reverseEdges(): ReadonlyArray<
+    ReverseEdge<TRequestContext, TConnector>
+  > {
+    return Object.freeze(Array.from(this.reverseEdgesByName.values()));
   }
 
   public getReverseEdgeByName(
@@ -1121,14 +1143,14 @@ export class Node<
   @Memoize()
   public validateDefinition(): void {
     utils.aggregateConfigError<Component, void>(
-      this.componentsByName.values(),
+      this.components,
       (_, component) => component.validateDefinition(),
       undefined,
       { path: this.configPath },
     );
 
     utils.aggregateConfigError<UniqueConstraint, void>(
-      this.uniqueConstraintsByName.values(),
+      this.uniqueConstraints,
       (_, uniqueConstraint) => uniqueConstraint.validateDefinition(),
       undefined,
       { path: this.configPath },
@@ -1137,11 +1159,7 @@ export class Node<
     this.selection;
 
     if (this.isMutationEnabled(utils.MutationType.UPDATE)) {
-      if (
-        ![...this.componentsByName.values()].some((component) =>
-          component.isMutable(),
-        )
-      ) {
+      if (!this.components.some((component) => component.isMutable())) {
         throw new utils.ConfigError(
           `Expects at least one mutable component as it is mutable`,
           { path: this.configPath },
@@ -1150,11 +1168,7 @@ export class Node<
     }
 
     if (this.isPublic()) {
-      if (
-        ![...this.componentsByName.values()].some((component) =>
-          component.isPublic(),
-        )
-      ) {
+      if (!this.components.some((component) => component.isPublic())) {
         throw new utils.ConfigError(
           `Expects at least one public component as it is public`,
           { path: this.configPath },
@@ -1162,7 +1176,7 @@ export class Node<
       }
 
       if (
-        ![...this.uniqueConstraintsByName.values()].some((uniqueConstraint) =>
+        !this.uniqueConstraints.some((uniqueConstraint) =>
           uniqueConstraint.isPublic(),
         )
       ) {
@@ -1174,7 +1188,7 @@ export class Node<
 
       if (this.isMutationPublic(utils.MutationType.UPDATE)) {
         if (
-          ![...this.componentsByName.values()].some((component) =>
+          !this.components.some((component) =>
             component.updateInput?.isPublic(),
           )
         ) {
@@ -1187,11 +1201,12 @@ export class Node<
     }
 
     utils.aggregateConfigError<ReverseEdge, void>(
-      this.reverseEdgesByName.values(),
+      this.reverseEdges,
       (_, reverseEdge) => reverseEdge.validateDefinition(),
       undefined,
       { path: this.configPath },
     );
+    this.reverseEdges;
 
     this.reverseEdgeUniquesByName;
     this.reverseEdgeMultiplesByName;
@@ -1200,14 +1215,14 @@ export class Node<
   @Memoize()
   public validateTypes(): void {
     utils.aggregateConfigError<Component, void>(
-      this.componentsByName.values(),
+      this.components,
       (_, component) => component.validateTypes(),
       undefined,
       { path: this.configPath },
     );
 
     utils.aggregateConfigError<ReverseEdge, void>(
-      this.reverseEdgesByName.values(),
+      this.reverseEdges,
       (_, reverseEdge) => reverseEdge.validateTypes(),
       undefined,
       { path: this.configPath },
@@ -1260,7 +1275,7 @@ export class Node<
     }
 
     return utils.aggregateError<Component, NodeValue>(
-      this.componentsByName.values(),
+      this.components,
       (output, component) =>
         Object.assign(output, {
           [component.name]: component.parseValue(
@@ -1274,7 +1289,7 @@ export class Node<
   }
 
   public areValuesEqual(a: NodeValue, b: NodeValue): boolean {
-    return Array.from(this.componentsByName.values()).every((component) =>
+    return this.components.every((component) =>
       component.areValuesEqual(
         a[component.name] as any,
         b[component.name] as any,
@@ -1283,7 +1298,7 @@ export class Node<
   }
 
   public serialize(value: NodeValue): JsonObject {
-    return Array.from(this.componentsByName.values()).reduce<JsonObject>(
+    return this.components.reduce<JsonObject>(
       (output, component) =>
         Object.assign(output, {
           [component.name]: component.serialize(value[component.name] as any),

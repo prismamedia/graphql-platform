@@ -1,3 +1,4 @@
+import type * as core from '@prismamedia/graphql-platform';
 import * as utils from '@prismamedia/graphql-platform-utils';
 import { Memoize } from '@prismamedia/ts-memoize';
 import { escapeIdentifier } from '../../../escaping.js';
@@ -12,9 +13,9 @@ export interface PlainIndexConfig {
   name?: utils.Nillable<string>;
 
   /**
-   * Required, the index's columns' name
+   * Required, the index's components' name
    */
-  columns: ReadonlyArray<Column['name']>;
+  components: ReadonlyArray<core.Component['name']>;
 }
 
 /**
@@ -33,24 +34,17 @@ export class PlainIndex extends AbstractIndex {
 
   @Memoize()
   public get columns(): ReadonlyArray<Column> {
-    const config = this.config.columns;
-    const configPath = utils.addPath(this.configPath, 'columns');
+    const config = this.config.components;
+    const configPath = utils.addPath(this.configPath, 'components');
 
     return Object.freeze(
-      config.map((columnName, index) => {
-        const column = this.table.columns.find(
-          (column) => column.name === columnName,
+      config.flatMap((componentName, index) => {
+        const component = this.table.node.getComponentByName(
+          componentName,
+          utils.addPath(configPath, index),
         );
 
-        if (!column) {
-          throw new utils.UnexpectedConfigError(
-            'an existing column',
-            columnName,
-            { path: utils.addPath(configPath, index) },
-          );
-        }
-
-        return column;
+        return this.table.getColumnsByComponents(component);
       }),
     );
   }

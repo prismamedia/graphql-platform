@@ -13,7 +13,7 @@ import {
 } from '../statement/selection.js';
 import type { Component, ComponentValue } from './component.js';
 import { Edge } from './component/edge.js';
-import { Leaf } from './component/leaf.js';
+import { Leaf, LeafValue } from './component/leaf.js';
 
 export type UniqueConstraintValue = {
   [componentName: string]: ComponentValue;
@@ -59,20 +59,27 @@ export class UniqueConstraint<
     TConnector
   >;
   public readonly name: utils.Name;
+
   public readonly componentsByName: ReadonlyMap<
     Component['name'],
     Component<TRequestContext, TConnector>
   >;
+  public readonly components: ReadonlyArray<
+    Component<TRequestContext, TConnector>
+  >;
+  public readonly componentSet: Set<Component<TRequestContext, TConnector>>;
+
   public readonly leavesByName: ReadonlyMap<
     Leaf['name'],
     Leaf<TRequestContext, TConnector>
   >;
+  public readonly leaves: ReadonlyArray<Leaf<TRequestContext, TConnector>>;
+
   public readonly edgesByName: ReadonlyMap<
     Edge['name'],
     Edge<TRequestContext, TConnector>
   >;
-  public readonly componentSet: Set<Component<TRequestContext, TConnector>>;
-  public readonly composite: boolean;
+  public readonly edges: ReadonlyArray<Edge<TRequestContext, TConnector>>;
 
   public constructor(
     public readonly node: Node<TRequestContext, TConnector>,
@@ -129,24 +136,33 @@ export class UniqueConstraint<
         ),
       );
 
-      this.leavesByName = new Map(
-        Array.from(this.componentsByName).filter(
-          (entry): entry is [string, Leaf] => entry[1] instanceof Leaf,
-        ),
+      this.components = Object.freeze(
+        Array.from(this.componentsByName.values()),
       );
 
-      this.edgesByName = new Map(
-        Array.from(this.componentsByName).filter(
-          (entry): entry is [string, Edge] => entry[1] instanceof Edge,
-        ),
-      );
+      this.componentSet = new Set(this.components);
 
-      this.componentSet = new Set(this.componentsByName.values());
-    }
+      // leaves
+      {
+        this.leavesByName = new Map(
+          Array.from(this.componentsByName).filter(
+            (entry): entry is [string, Leaf] => entry[1] instanceof Leaf,
+          ),
+        );
 
-    // composite
-    {
-      this.composite = this.componentsByName.size > 1;
+        this.leaves = Object.freeze(Array.from(this.leavesByName.values()));
+      }
+
+      // edges
+      {
+        this.edgesByName = new Map(
+          Array.from(this.componentsByName).filter(
+            (entry): entry is [string, Edge] => entry[1] instanceof Edge,
+          ),
+        );
+
+        this.edges = Object.freeze(Array.from(this.edgesByName.values()));
+      }
     }
 
     // name
@@ -156,22 +172,20 @@ export class UniqueConstraint<
 
       this.name = nameConfig
         ? utils.ensureName(nameConfig, nameConfigPath)
-        : [...this.componentsByName.keys()].join('_');
+        : Array.from(this.componentsByName.keys()).join('_');
     }
   }
 
   @Memoize()
   public toString(): string {
-    return `${this.node.name}.${this.name}`;
+    return `${this.node.name}.#${this.name}`;
   }
 
   @Memoize()
   public get referrers(): Set<Edge> {
     return new Set(
-      Array.from(this.node.gp.nodesByName.values()).flatMap((node) =>
-        Array.from(node.edgesByName.values()).filter(
-          (edge) => edge.referencedUniqueConstraint === this,
-        ),
+      this.node.gp.nodes.flatMap((node) =>
+        node.edges.filter((edge) => edge.referencedUniqueConstraint === this),
       ),
     );
   }
@@ -182,24 +196,23 @@ export class UniqueConstraint<
   }
 
   @Memoize()
+  public isComposite(): boolean {
+    return this.components.length > 1;
+  }
+
+  @Memoize()
   public isMutable(): boolean {
-    return Array.from(this.componentsByName.values()).some((component) =>
-      component.isMutable(),
-    );
+    return this.components.some((component) => component.isMutable());
   }
 
   @Memoize()
   public isNullable(): boolean {
-    return Array.from(this.componentsByName.values()).every((component) =>
-      component.isNullable(),
-    );
+    return this.components.every((component) => component.isNullable());
   }
 
   @Memoize()
   public isPublic(): boolean {
-    return Array.from(this.componentsByName.values()).every((component) =>
-      component.isPublic(),
-    );
+    return this.components.every((component) => component.isPublic());
   }
 
   @Memoize()
@@ -207,10 +220,7 @@ export class UniqueConstraint<
     return new NodeSelection(
       this.node,
       mergeSelectionExpressions(
-        Array.from(
-          this.componentsByName.values(),
-          ({ selection }) => selection,
-        ),
+        this.components.map(({ selection }) => selection),
       ),
     );
   }
@@ -218,6 +228,7 @@ export class UniqueConstraint<
   public validateDefinition(): void {
     this.referrers;
     this.isIdentifier();
+    this.isComposite();
     this.isMutable();
     this.isNullable();
     this.isPublic();
@@ -235,7 +246,7 @@ export class UniqueConstraint<
     }
 
     const value = utils.aggregateError<Component, UniqueConstraintValue>(
-      this.componentsByName.values(),
+      this.components,
       (value, component) =>
         Object.assign(value, {
           [component.name]: component.parseValue(
@@ -266,7 +277,7 @@ export class UniqueConstraint<
     a: UniqueConstraintValue,
     b: UniqueConstraintValue,
   ): boolean {
-    return Array.from(this.componentsByName.values()).every((component) =>
+    return this.components.every((component) =>
       component.areValuesEqual(
         a[component.name] as any,
         b[component.name] as any,
@@ -275,12 +286,31 @@ export class UniqueConstraint<
   }
 
   public serialize(value: UniqueConstraintValue): JsonObject {
-    return Array.from(this.componentsByName.values()).reduce<JsonObject>(
+    return this.components.reduce<JsonObject>(
       (output, component) =>
         Object.assign(output, {
           [component.name]: component.serialize(value[component.name] as any),
         }),
       Object.create(null),
     );
+  }
+
+  /**
+   * Gets a convenient "flattened" ID (= a string)
+   */
+  public flatten(value: UniqueConstraintValue): string {
+    return this.components
+      .map((component) => {
+        const componentValue = value[component.name];
+
+        return componentValue === null
+          ? 'NULL'
+          : component instanceof Leaf
+          ? component.serialize(componentValue as LeafValue)
+          : component.referencedUniqueConstraint.flatten(
+              componentValue as UniqueConstraintValue,
+            );
+      })
+      .join(':');
   }
 }

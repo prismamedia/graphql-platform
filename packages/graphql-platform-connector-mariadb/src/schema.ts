@@ -114,10 +114,7 @@ export class Schema {
     // tables-by-node
     {
       this.tablesByNode = new Map(
-        Array.from(connector.gp.nodesByName.values(), (node) => [
-          node,
-          new Table(this, node),
-        ]),
+        connector.gp.nodes.map((node) => [node, new Table(this, node)]),
       );
     }
   }

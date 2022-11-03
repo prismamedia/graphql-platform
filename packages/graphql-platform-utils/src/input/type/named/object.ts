@@ -131,7 +131,7 @@ export class ObjectInputType<
     }
 
     aggregateConfigError<TField, void>(
-      this.fieldsByName.values(),
+      this.fields,
       (_, field) => field.validate(),
       undefined,
       { path: this.#fieldsConfigPath },

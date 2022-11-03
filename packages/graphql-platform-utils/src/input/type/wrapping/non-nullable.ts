@@ -1,6 +1,6 @@
 import { Memoize } from '@prismamedia/ts-memoize';
 import * as graphql from 'graphql';
-import { NestableError } from '../../../error.js';
+import { UnexpectedNullError } from '../../../error.js';
 import { type Path } from '../../../path.js';
 import { getGraphQLInputType, InputType, parseInputValue } from '../../type.js';
 import { AbstractWrappingInputType } from './abstract.js';
@@ -39,7 +39,7 @@ export class NonNullableInputType extends AbstractWrappingInputType {
     const wrappedValue = parseInputValue(this.ofType, maybeValue, path);
 
     if (wrappedValue === null) {
-      throw new NestableError(`Expects a non-null "${this.ofType}"`, { path });
+      throw new UnexpectedNullError(`"${this.ofType}"`, { path });
     }
 
     return wrappedValue;

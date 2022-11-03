@@ -103,7 +103,7 @@ export class NodeOutputType {
   > {
     const fields: NodeFieldOutputType[] = [];
 
-    for (const component of this.node.componentsByName.values()) {
+    for (const component of this.node.components) {
       if (component instanceof Leaf) {
         fields.push(new LeafOutputType(component));
       } else {
@@ -111,7 +111,7 @@ export class NodeOutputType {
       }
     }
 
-    for (const reverseEdge of this.node.reverseEdgesByName.values()) {
+    for (const reverseEdge of this.node.reverseEdges) {
       if (reverseEdge instanceof ReverseEdgeUnique) {
         fields.push(new ReverseEdgeUniqueHeadOutputType(reverseEdge));
       } else {

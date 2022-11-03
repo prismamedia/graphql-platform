@@ -95,8 +95,8 @@ export abstract class AbstractComponent<
   @Memoize()
   public get referrerSet(): ReadonlySet<Edge> {
     return new Set(
-      Array.from(this.node.gp.nodesByName.values()).flatMap((node) =>
-        Array.from(node.edgesByName.values()).filter((edge) =>
+      this.node.gp.nodes.flatMap((node) =>
+        node.edges.filter((edge) =>
           edge.referencedUniqueConstraint.componentSet.has(this as any),
         ),
       ),
@@ -138,16 +138,16 @@ export abstract class AbstractComponent<
   @Memoize()
   public isIdentifier(): boolean {
     return (
-      this.node.identifier.componentsByName.size === 1 &&
-      this.node.identifier.componentsByName.has(this.name)
+      this.node.identifier.componentSet.size === 1 &&
+      this.node.identifier.componentSet.has(this as any)
     );
   }
 
   @Memoize()
   public isUnique(): boolean {
-    return [...this.node.uniqueConstraintsByName.values()].some(
-      ({ componentsByName }) =>
-        componentsByName.size === 1 && componentsByName.has(this.name),
+    return this.node.uniqueConstraints.some(
+      ({ componentSet }) =>
+        componentSet.size === 1 && componentSet.has(this as any),
     );
   }
 

@@ -1,6 +1,6 @@
 import { Memoize } from '@prismamedia/ts-memoize';
 import * as graphql from 'graphql';
-import { NestableError } from '../../../error.js';
+import { UnexpectedUndefinedError } from '../../../error.js';
 import { type Path } from '../../../path.js';
 import { getGraphQLInputType, InputType, parseInputValue } from '../../type.js';
 import { AbstractWrappingInputType } from './abstract.js';
@@ -39,7 +39,7 @@ export class NonOptionalInputType extends AbstractWrappingInputType {
     const wrappedValue = parseInputValue(this.ofType, maybeValue, path);
 
     if (wrappedValue === undefined) {
-      throw new NestableError(`Expects a non-undefined "${this.ofType}"`, {
+      throw new UnexpectedUndefinedError(`"${this.ofType}"`, {
         path,
       });
     }
