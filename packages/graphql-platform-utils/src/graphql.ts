@@ -1,23 +1,10 @@
 import * as graphql from 'graphql';
-import { isDeepStrictEqual } from 'node:util';
 import { getEnumKeys } from './enum.js';
 import { castToError, UnexpectedValueError } from './error.js';
 import { indefinite } from './indefinite.js';
 import { isNil, type Nillable } from './nil.js';
 import { type Path } from './path.js';
 import { isPlainObject, type PlainObject } from './plain-object.js';
-
-export const parseGraphQLUntypedArgumentNodes = (
-  argumentNodes: ReadonlyArray<graphql.ArgumentNode>,
-  variables?: graphql.GraphQLResolveInfo['variableValues'],
-) =>
-  argumentNodes.reduce<PlainObject>((result, argument) => {
-    const value = graphql.valueFromASTUntyped(argument.value, variables);
-
-    return value !== undefined
-      ? Object.assign(result, { [argument.name.value]: value })
-      : result;
-  }, Object.create(null));
 
 export function isGraphQLResolveInfo(
   maybeGraphQLResolveInfo: unknown,
@@ -95,7 +82,7 @@ export function parseGraphQLEnumValue<TInternal = any>(
 
   const enumValue = type
     .getValues()
-    .find(({ value }) => isDeepStrictEqual(value, maybeEnumValue));
+    .find(({ value }) => value === maybeEnumValue);
 
   if (!enumValue) {
     throw new UnexpectedValueError(

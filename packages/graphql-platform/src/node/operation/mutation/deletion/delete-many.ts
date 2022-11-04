@@ -8,7 +8,7 @@ import {
   type NodeSelectionAwareArgs,
   type RawNodeSelectionAwareArgs,
 } from '../../../abstract-operation.js';
-import { DeletedNode } from '../../../change.js';
+import { NodeDeletion } from '../../../change.js';
 import { OnEdgeHeadDeletion } from '../../../definition/component/edge.js';
 import { AndOperation, NodeFilter } from '../../../statement/filter.js';
 import type { NodeSelectedValue } from '../../../statement/selection.js';
@@ -223,7 +223,7 @@ export class DeleteManyMutation<
 
     return Promise.all(
       currentValues.map(async (oldValue) => {
-        const change = new DeletedNode(
+        const change = new NodeDeletion(
           this.node,
           context.requestContext,
           oldValue,

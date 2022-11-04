@@ -50,7 +50,7 @@ export class ReverseEdgeMultipleCountOutputType extends AbstractReverseEdgeOutpu
     selectionContext: GraphQLSelectionContext | undefined,
     path: utils.Path,
   ): ReverseEdgeMultipleCountSelection {
-    const args = this.parseGraphQLFieldArguments(
+    const args = this.parseGraphQLArgumentNodes(
       ast.arguments,
       selectionContext,
       path,

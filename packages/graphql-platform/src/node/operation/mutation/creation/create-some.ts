@@ -6,8 +6,8 @@ import type {
   NodeSelectionAwareArgs,
   RawNodeSelectionAwareArgs,
 } from '../../../abstract-operation.js';
-import { CreatedNode } from '../../../change.js';
-import type { NodeCreation } from '../../../statement/creation.js';
+import { NodeCreation } from '../../../change.js';
+import { NodeCreationStatement } from '../../../statement.js';
 import type { NodeFilter } from '../../../statement/filter.js';
 import type { NodeSelectedValue } from '../../../statement/selection.js';
 import type { NodeCreationInputValue } from '../../../type/input/creation.js';
@@ -84,7 +84,7 @@ export class CreateSomeMutation<
         // As the "data" will be provided to the hooks, we freeze it
         Object.freeze(data);
 
-        const creation: NodeCreation =
+        const creation: NodeCreationStatement =
           await this.node.creationInputType.createStatement(
             data,
             context,
@@ -121,7 +121,7 @@ export class CreateSomeMutation<
 
     await Promise.all(
       newValues.map(async (newValue, index) => {
-        const change = new CreatedNode(
+        const change = new NodeCreation(
           this.node,
           context.requestContext,
           newValue,

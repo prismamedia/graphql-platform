@@ -14,7 +14,10 @@ import { MariaDBConnector, MariaDBConnectorConfig } from '../index.js';
 export function createGraphQLPlatform(
   schemaName: string,
   options?: {
-    onChange?: GraphQLPlatformConfig<MyContext, MariaDBConnector>['onChange'];
+    onNodeChange?: GraphQLPlatformConfig<
+      MyContext,
+      MariaDBConnector
+    >['onNodeChange'];
     onExecutedStatement?: MariaDBConnectorConfig['onExecutedStatement'];
   },
 ): GraphQLPlatform<MyContext, MariaDBConnector> {
@@ -113,7 +116,9 @@ export function createGraphQLPlatform(
         },
       ]),
     ),
-    onChange: options?.onChange,
+
+    onNodeChange: options?.onNodeChange,
+
     connector: [
       MariaDBConnector,
       {

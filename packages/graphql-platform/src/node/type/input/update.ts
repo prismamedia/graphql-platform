@@ -4,7 +4,7 @@ import type { Except } from 'type-fest';
 import type { ConnectorInterface } from '../../../connector-interface.js';
 import type { Node, NodeValue } from '../../../node.js';
 import type { MutationContext } from '../../operation.js';
-import { NodeUpdate } from '../../statement/update.js';
+import { NodeUpdateStatement } from '../../statement/update.js';
 import type {
   ComponentUpdateInput,
   FieldUpdateInput,
@@ -115,8 +115,8 @@ export class NodeUpdateInputType<
     data: Readonly<utils.NonNillable<NodeUpdateInputValue>>,
     context: MutationContext,
     path: utils.Path = utils.addPath(undefined, this.name),
-  ): Promise<NodeUpdate<TRequestContext, TConnector>> {
-    const statement = new NodeUpdate(this.node);
+  ): Promise<NodeUpdateStatement<TRequestContext, TConnector>> {
+    const statement = new NodeUpdateStatement(this.node);
 
     await Promise.all(
       this.componentFields.map(async (field) => {

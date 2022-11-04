@@ -10,7 +10,7 @@ import {
 import { mockConnector } from '../../../__tests__/connector-mock.js';
 import { MutationContext } from '../../operation.js';
 import { LeafComparisonFilter } from '../../statement/filter.js';
-import { NodeUpdate } from '../../statement/update.js';
+import { NodeUpdateStatement } from '../../statement/update.js';
 import { NodeUpdateInputType } from './update.js';
 
 describe('NodeUpdateInputType', () => {
@@ -157,10 +157,10 @@ describe('NodeUpdateInputType', () => {
           new MutationContext(gp, myUserContext),
         );
 
-        expect(update).toBeInstanceOf(NodeUpdate);
+        expect(update).toBeInstanceOf(NodeUpdateStatement);
 
         const proxy = update.proxy;
-        expect(proxy).toBeInstanceOf(NodeUpdate);
+        expect(proxy).toBeInstanceOf(NodeUpdateStatement);
         expect({ ...proxy }).toEqual({
           title: "My new article's title",
           category: null,

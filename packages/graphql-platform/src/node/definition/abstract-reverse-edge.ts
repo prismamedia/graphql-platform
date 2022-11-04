@@ -53,11 +53,11 @@ export abstract class AbstractReverseEdge<
   public constructor(
     public readonly originalEdge: Edge<TRequestContext, TConnector>,
     public readonly name: utils.Name,
-    public readonly config: AbstractReverseEdgeConfig<
+    protected readonly config: AbstractReverseEdgeConfig<
       TRequestContext,
       TConnector
     >,
-    public readonly configPath: utils.Path,
+    protected readonly configPath: utils.Path,
   ) {
     utils.assertName(name, configPath);
 

@@ -35,7 +35,7 @@ export class LeafOutputType extends AbstractComponentOutputType<undefined> {
     selectionContext: GraphQLSelectionContext | undefined,
     path: utils.Path,
   ): LeafSelection {
-    this.parseGraphQLFieldArguments(ast.arguments, selectionContext, path);
+    this.parseGraphQLArgumentNodes(ast.arguments, selectionContext, path);
 
     if (ast.selectionSet) {
       throw new utils.NestableError(`Expects no selection-set`, { path });

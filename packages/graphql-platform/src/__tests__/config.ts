@@ -13,7 +13,6 @@ import {
   ConnectorInterface,
   CustomOperationMap,
   GraphQLPlatform,
-  Node,
   NodeConfig,
   OnEdgeHeadDeletion,
 } from '../index.js';
@@ -436,21 +435,24 @@ export const Article: NodeConfig<MyContext> = {
   },
 
   onChange(change) {
-    assert(this instanceof Node, 'Should be an instance of Node');
+    assert(
+      this instanceof GraphQLPlatform,
+      'Should be an instance of GraphQLPlatform',
+    );
 
-    //   if (change.kind === utils.MutationType.CREATION) {
-    //     console.debug(
-    //       `The article "${change.newValue.id}" has been created at "${change.at}"`,
-    //     );
-    //   } else if (change.kind === utils.MutationType.UPDATE) {
-    //     console.debug(
-    //       `The article "${change.newValue.id}" has been updated at "${change.at}"`,
-    //     );
-    //   } else {
-    //     console.debug(
-    //       `The article "${change.oldValue.id}" has been deleted at "${change.at}"`,
-    //     );
-    //   }
+    // if (change.kind === utils.MutationType.CREATION) {
+    //   console.debug(
+    //     `The article "${change.newValue.id}" has been created at "${change.at}"`,
+    //   );
+    // } else if (change.kind === utils.MutationType.UPDATE) {
+    //   console.debug(
+    //     `The article "${change.newValue.id}" has been updated at "${change.at}"`,
+    //   );
+    // } else {
+    //   console.debug(
+    //     `The article "${change.oldValue.id}" has been deleted at "${change.at}"`,
+    //   );
+    // }
   },
 };
 

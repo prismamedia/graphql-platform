@@ -415,4 +415,12 @@ export class MariaDBConnector implements core.ConnectorInterface {
 
     return table.delete(statement, context, connection);
   }
+
+  // public async enqueueChanges(
+  //   ...changes: ReadonlyArray<core.ChangedNode>
+  // ): Promise<void> {}
+
+  // public async dequeueChanges(batch: number = 1): Promise<core.ChangedNode[]> {
+  //   return [];
+  // }
 }

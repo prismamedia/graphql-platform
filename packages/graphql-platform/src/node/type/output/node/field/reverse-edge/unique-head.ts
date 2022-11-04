@@ -30,7 +30,7 @@ export class ReverseEdgeUniqueHeadOutputType extends AbstractReverseEdgeOutputTy
     selectionContext: GraphQLSelectionContext | undefined,
     path: utils.Path,
   ): ReverseEdgeUniqueHeadSelection {
-    this.parseGraphQLFieldArguments(ast.arguments, selectionContext, path);
+    this.parseGraphQLArgumentNodes(ast.arguments, selectionContext, path);
 
     if (!ast.selectionSet) {
       throw new utils.NestableError(

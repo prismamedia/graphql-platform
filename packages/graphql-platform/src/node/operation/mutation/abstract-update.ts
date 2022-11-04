@@ -2,8 +2,8 @@ import * as utils from '@prismamedia/graphql-platform-utils';
 import type { Promisable } from 'type-fest';
 import type { ConnectorInterface } from '../../../connector-interface.js';
 import type { NodeValue } from '../../../node.js';
-import type { UpdatedNode } from '../../change.js';
-import type { NodeUpdateProxy } from '../../statement/update.js';
+import type { NodeUpdate } from '../../change.js';
+import type { NodeUpdateStatementProxy } from '../../statement/update.js';
 import type { NodeUpdateInputValue } from '../../type/input/update.js';
 import {
   AbstractMutation,
@@ -33,7 +33,7 @@ export interface PreUpdateArgs<
   /**
    * The update statement, as a convenient object
    */
-  readonly update: NodeUpdateProxy;
+  readonly update: NodeUpdateStatementProxy;
 }
 
 export interface PostUpdateArgs<
@@ -43,7 +43,7 @@ export interface PostUpdateArgs<
   /**
    * The uncommitted change
    */
-  readonly change: UpdatedNode<TRequestContext, TConnector>;
+  readonly change: NodeUpdate<TRequestContext, TConnector>;
 }
 
 /**

@@ -9,10 +9,10 @@ import {
   type NodeSelectionAwareArgs,
   type RawNodeSelectionAwareArgs,
 } from '../../../abstract-operation.js';
-import { UpdatedNode } from '../../../change.js';
+import { NodeUpdate } from '../../../change.js';
 import { AndOperation, NodeFilter } from '../../../statement/filter.js';
 import type { NodeSelectedValue } from '../../../statement/selection.js';
-import type { NodeUpdate } from '../../../statement/update.js';
+import type { NodeUpdateStatement } from '../../../statement/update.js';
 import type { NodeFilterInputValue } from '../../../type/input/filter.js';
 import type { OrderByInputValue } from '../../../type/input/ordering.js';
 import { createContextBoundAPI } from '../../api.js';
@@ -153,11 +153,8 @@ export class UpdateManyMutation<
       this.node.identifier.parseValue(currentValue),
     );
 
-    const update: NodeUpdate = await this.node.updateInputType.createStatement(
-      data,
-      context,
-      path,
-    );
+    const update: NodeUpdateStatement =
+      await this.node.updateInputType.createStatement(data, context, path);
 
     if (update.updatesByComponent.size) {
       if (this.#config?.preUpdate) {
@@ -242,9 +239,9 @@ export class UpdateManyMutation<
         path,
       )) as NodeValue[];
 
-    const changes = currentValues.reduce<UpdatedNode[]>(
+    const changes = currentValues.reduce<NodeUpdate[]>(
       (changes, oldValue, index) => {
-        const change = new UpdatedNode(
+        const change = new NodeUpdate(
           this.node,
           context.requestContext,
           oldValue,

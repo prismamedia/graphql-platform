@@ -1,11 +1,12 @@
 import * as graphql from 'graphql';
 import { UnexpectedConfigError } from '../error.js';
-import { Path } from '../path.js';
+import type { Path } from '../path.js';
 import {
   getGraphQLNamedInputType,
   isNamedInputType,
   isNamedInputTypePublic,
   NamedInputType,
+  parseNamedInputLiteral,
   parseNamedInputValue,
   validateNamedInputType,
 } from './type/named.js';
@@ -62,12 +63,34 @@ export function getGraphQLInputType(type: InputType): graphql.GraphQLInputType {
 
 export function parseInputValue(
   type: InputType,
-  maybeValue: unknown,
+  value: unknown,
   path?: Path,
 ): any {
   return isNamedInputType(type)
-    ? parseNamedInputValue(type, maybeValue, path)
-    : type.parseValue(maybeValue, path);
+    ? parseNamedInputValue(type, value, path)
+    : type.parseValue(value, path);
+}
+
+export type NonNullNonVariableGraphQLValueNode = Exclude<
+  graphql.ValueNode,
+  graphql.NullValueNode | graphql.VariableNode
+>;
+
+export function parseInputLiteral(
+  type: InputType,
+  value: graphql.ValueNode,
+  variableValues?: graphql.GraphQLResolveInfo['variableValues'],
+  path?: Path,
+): any {
+  if (value.kind === graphql.Kind.NULL) {
+    return parseInputValue(type, null, path);
+  } else if (value.kind === graphql.Kind.VARIABLE) {
+    return parseInputValue(type, variableValues?.[value.name.value], path);
+  }
+
+  return isNamedInputType(type)
+    ? parseNamedInputLiteral(type, value, variableValues, path)
+    : type.parseLiteral(value, variableValues, path);
 }
 
 export function getNamedInputType(inputType: InputType): NamedInputType {

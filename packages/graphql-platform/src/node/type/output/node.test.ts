@@ -2,13 +2,14 @@ import * as utils from '@prismamedia/graphql-platform-utils';
 import * as graphql from 'graphql';
 import { GraphQLPlatform } from '../../../index.js';
 import {
+  ArticleStatus,
   myAdminContext,
   MyGP,
   nodeNames,
   nodes,
 } from '../../../__tests__/config.js';
 import { OperationContext } from '../../operation/context.js';
-import { NodeOutputType } from './node.js';
+import { GraphQLSelectionContext, NodeOutputType } from './node.js';
 
 describe(`NodeOutputType`, () => {
   let gp: MyGP;
@@ -133,10 +134,18 @@ describe(`NodeOutputType`, () => {
     });
 
     describe('Works', () => {
-      it.each<[nodeName: string, fragment: string, selection: string]>([
+      it.each<
+        [
+          nodeName: string,
+          fragment: string,
+          context: GraphQLSelectionContext | undefined,
+          selection: string,
+        ]
+      >([
         [
           'Article',
           `{ id }`,
+          undefined,
           `{
   id
 }`,
@@ -144,6 +153,7 @@ describe(`NodeOutputType`, () => {
         [
           'Article',
           `... { id }`,
+          undefined,
           `{
   id
 }`,
@@ -151,6 +161,7 @@ describe(`NodeOutputType`, () => {
         [
           'Article',
           `... on Article { id }`,
+          undefined,
           `{
   id
 }`,
@@ -158,6 +169,7 @@ describe(`NodeOutputType`, () => {
         [
           'Article',
           `fragment MyTestFragment on Article { id }`,
+          undefined,
           `{
   id
 }`,
@@ -165,6 +177,7 @@ describe(`NodeOutputType`, () => {
         [
           'Article',
           `{ id lowerCasedTitle category { id _a: parent { _id } } }`,
+          undefined,
           `{
   id
   status
@@ -192,12 +205,13 @@ describe(`NodeOutputType`, () => {
                 birthday
               }
             }
-            createdArticles(where: { status: published }, orderBy: [updatedAt_DESC], first: 10) {
+            createdArticles(where: { status: PUBLISHED }, orderBy: [updatedAt_DESC], first: 10) {
               _id
               id
             }
-            createdArticleCount(where: { status: published })
+            createdArticleCount(where: { status: PUBLISHED })
           }`,
+          undefined,
           `{
   username
   profile {
@@ -212,12 +226,51 @@ describe(`NodeOutputType`, () => {
   createdArticleCount
 }`,
         ],
-      ])('%p.select(%p) = %p', (nodeName, fragment, selectionSet) => {
+        [
+          'User',
+          `{
+            username
+            profile {
+              birthday
+              twitterHandle
+            }
+            ... {
+              profile {
+                facebookId
+                birthday
+              }
+            }
+            createdArticles(where: $filter, orderBy: [updatedAt_DESC], first: 10) {
+              _id
+              id
+            }
+            createdArticleCount(where: $filter)
+          }`,
+          { variableValues: { filter: { status: ArticleStatus.PUBLISHED } } },
+          `{
+  username
+  profile {
+    birthday
+    twitterHandle
+    facebookId
+  }
+  createdArticles(first: 10) {
+    _id
+    id
+  }
+  createdArticleCount
+}`,
+        ],
+      ])('%p.select(%p) = %p', (nodeName, fragment, context, selectionSet) => {
         const node = gp.getNodeByName(nodeName);
         const outputType = node.outputType;
 
         expect(
-          graphql.print(outputType.select(fragment).toGraphQLSelectionSet()),
+          graphql.print(
+            outputType
+              .select(fragment, undefined, context)
+              .toGraphQLSelectionSet(),
+          ),
         ).toEqual(selectionSet);
       });
     });

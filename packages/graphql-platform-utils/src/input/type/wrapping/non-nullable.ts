@@ -1,8 +1,14 @@
 import { Memoize } from '@prismamedia/ts-memoize';
 import * as graphql from 'graphql';
 import { UnexpectedNullError } from '../../../error.js';
-import { type Path } from '../../../path.js';
-import { getGraphQLInputType, InputType, parseInputValue } from '../../type.js';
+import type { Path } from '../../../path.js';
+import {
+  getGraphQLInputType,
+  parseInputLiteral,
+  parseInputValue,
+  type InputType,
+  type NonNullNonVariableGraphQLValueNode,
+} from '../../type.js';
 import { AbstractWrappingInputType } from './abstract.js';
 import { NonOptionalInputType } from './non-optional.js';
 
@@ -35,8 +41,27 @@ export class NonNullableInputType extends AbstractWrappingInputType {
       : getGraphQLInputType(this.ofType);
   }
 
-  public parseValue(maybeValue: unknown, path?: Path): any {
-    const wrappedValue = parseInputValue(this.ofType, maybeValue, path);
+  public override parseValue(value: unknown, path?: Path): any {
+    const wrappedValue = parseInputValue(this.ofType, value, path);
+
+    if (wrappedValue === null) {
+      throw new UnexpectedNullError(`"${this.ofType}"`, { path });
+    }
+
+    return wrappedValue;
+  }
+
+  public override parseLiteral(
+    value: NonNullNonVariableGraphQLValueNode,
+    variableValues?: graphql.GraphQLResolveInfo['variableValues'],
+    path?: Path,
+  ): any {
+    const wrappedValue = parseInputLiteral(
+      this.ofType,
+      value,
+      variableValues,
+      path,
+    );
 
     if (wrappedValue === null) {
       throw new UnexpectedNullError(`"${this.ofType}"`, { path });

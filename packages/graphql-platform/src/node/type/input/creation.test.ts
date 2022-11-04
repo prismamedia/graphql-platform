@@ -10,7 +10,7 @@ import {
 } from '../../../__tests__/config.js';
 import { mockConnector } from '../../../__tests__/connector-mock.js';
 import { MutationContext } from '../../operation.js';
-import { NodeCreation } from '../../statement/creation.js';
+import { NodeCreationStatement } from '../../statement/creation.js';
 import { LeafComparisonFilter } from '../../statement/filter.js';
 import { NodeCreationInputType } from './creation.js';
 
@@ -159,10 +159,10 @@ describe('NodeCreationInputType', () => {
           new MutationContext(gp, myUserContext),
         );
 
-        expect(creation).toBeInstanceOf(NodeCreation);
+        expect(creation).toBeInstanceOf(NodeCreationStatement);
 
         const proxy = creation.proxy;
-        expect(proxy).toBeInstanceOf(NodeCreation);
+        expect(proxy).toBeInstanceOf(NodeCreationStatement);
         expect({ ...proxy }).toEqual({
           id: expect.any(String),
           title: "My article's title",

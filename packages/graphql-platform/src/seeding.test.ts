@@ -341,7 +341,7 @@ describe('Seeding', () => {
         },
       }),
 
-      onChange: [
+      onNodeChange: [
         function (change) {
           assert(
             this instanceof GraphQLPlatform,

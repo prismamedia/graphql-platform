@@ -122,7 +122,7 @@ export abstract class AbstractOperation<
     context: OperationContext<TRequestContext, TConnector>,
     path: utils.Path,
   ): NodeSelectionAwareArgs<TArgs> {
-    const parsedArgs = utils.parseInputs(
+    const parsedArgs = utils.parseInputValues(
       this.arguments,
       this.selectionAware && utils.isPlainObject(args)
         ? _.omit(args, ['selection'])

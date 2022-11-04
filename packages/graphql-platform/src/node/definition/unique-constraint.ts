@@ -296,7 +296,7 @@ export class UniqueConstraint<
   }
 
   /**
-   * Gets a convenient "flattened" ID (= a string)
+   * Gets a convenient "flattened" ID (= a string identifying a single node)
    */
   public flatten(value: UniqueConstraintValue): string {
     return this.components

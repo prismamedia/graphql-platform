@@ -1,19 +1,21 @@
 import * as utils from '@prismamedia/graphql-platform-utils';
 import { Memoize } from '@prismamedia/ts-memoize';
 import * as graphql from 'graphql';
-import type { Constructor, Except, Promisable } from 'type-fest';
+import type { Constructor, Except } from 'type-fest';
 import type { ConnectorInterface } from './connector-interface.js';
 import {
   getCustomOperationMap,
   type CustomOperationMap,
 } from './custom-operations.js';
 import {
-  ChangedNode,
-  ChangesAggregation,
   createAPI,
   InvalidRequestContextError,
   Node,
+  NodeChangeAggregation,
+  NodeChangeSubscriber,
   type API,
+  type NodeChange,
+  type NodeChangeSubscriberConfig,
   type NodeConfig,
   type NodeName,
   type OperationInterface,
@@ -41,6 +43,28 @@ export type GraphQLPlatformConfig<
      */
     [nodeName: NodeName]: NodeConfig<TRequestContext, TConnector>;
   };
+
+  /**
+   * Optional, act on the nodes' changes "AFTER" they have been committed
+   */
+  onNodeChange?: utils.Nillable<
+    utils.ArrayOrValue<
+      utils.Nillable<
+        | NodeChangeSubscriberConfig<TRequestContext, TConnector>
+        | NodeChangeSubscriberConfig['next']
+      >
+    >
+  >;
+
+  /**
+   * Optional, catch any error thrown in the local nodes' changes subscribers
+   */
+  onLocalNodeChangeSubscriberError?: (
+    this: GraphQLPlatform<TRequestContext, TConnector>,
+    error: Error,
+    subscriber: NodeChangeSubscriber,
+    change: NodeChange,
+  ) => void;
 
   /**
    * Optional, add some "custom" operations
@@ -79,29 +103,6 @@ export type GraphQLPlatformConfig<
     this: GraphQLPlatform<TRequestContext, TConnector>,
     maybeRequestContext: unknown,
   ): asserts maybeRequestContext is TRequestContext;
-
-  /**
-   * Optional, act on the nodes' changes AFTER they have been committed
-   *
-   * Please keep in mind that any error thrown inside would be silently hidden: it is your responsability to catch these errors.
-   * As the changes reached the database we want the client to get the corresponding state no matter what happens inside these hooks.
-   */
-  onChange?: utils.ArrayOrValue<
-    | ((
-        this: GraphQLPlatform<TRequestContext, TConnector>,
-        change: ChangedNode<TRequestContext, TConnector>,
-      ) => Promisable<void>)
-    | undefined
-  >;
-
-  /**
-   * Optional, catch any error thrown in the "onChange" hooks
-   */
-  onChangeError?: (
-    this: GraphQLPlatform<TRequestContext, TConnector>,
-    error: Error,
-    change: ChangedNode<TRequestContext, TConnector>,
-  ) => void;
 };
 
 export class GraphQLPlatform<
@@ -114,6 +115,14 @@ export class GraphQLPlatform<
   >;
   public readonly nodes: ReadonlyArray<Node<TRequestContext, TConnector>>;
 
+  public readonly nodeChangeSubscribers: ReadonlyArray<NodeChangeSubscriber>;
+
+  readonly #onLocalNodeChangeSubscriberError: (
+    error: Error,
+    subscriber: NodeChangeSubscriber,
+    change: NodeChange,
+  ) => void;
+
   public readonly operationsByNameByType: OperationsByNameByType<
     TRequestContext,
     TConnector
@@ -124,18 +133,8 @@ export class GraphQLPlatform<
   readonly #connector?: TConnector;
 
   readonly #assertRequestContext?: (
-    this: GraphQLPlatform<TRequestContext, TConnector>,
     maybeRequestContext: unknown,
   ) => asserts maybeRequestContext is TRequestContext;
-
-  readonly #onChangeHooks: ReadonlyArray<
-    (change: ChangedNode<TRequestContext, TConnector>) => Promisable<void>
-  >;
-
-  readonly #onChangeHookError?: (
-    error: Error,
-    change: ChangedNode<TRequestContext, TConnector>,
-  ) => void;
 
   public constructor(
     public readonly config: GraphQLPlatformConfig<TRequestContext, TConnector>,
@@ -275,58 +274,74 @@ export class GraphQLPlatform<
           );
         }
 
-        this.#assertRequestContext = assertRequestContextConfig;
+        this.#assertRequestContext = assertRequestContextConfig.bind(this);
       }
     }
 
-    // on-change & on-change-error
+    // on-node-change
     {
-      const onChangeConfig = config.onChange;
-      const onChangeConfigPath = utils.addPath(configPath, 'onChange');
+      const onNodeChangeConfig = config.onNodeChange;
+      const onNodeChangeConfigPath = utils.addPath(configPath, 'onNodeChange');
 
-      this.#onChangeHooks = Object.freeze(
-        onChangeConfig != null
-          ? utils
-              .resolveArrayOrValue(onChangeConfig)
-              .reduce<
-                ((
-                  this: GraphQLPlatform<TRequestContext, TConnector>,
-                  change: ChangedNode<TRequestContext, TConnector>,
-                ) => Promisable<void>)[]
-              >((hooks, maybeHook, index) => {
-                if (maybeHook != null) {
-                  if (typeof maybeHook !== 'function') {
-                    throw new utils.UnexpectedConfigError(
-                      `a function`,
-                      maybeHook,
-                      { path: utils.addPath(onChangeConfigPath, index) },
-                    );
-                  }
-
-                  return [...hooks, maybeHook.bind(this)];
-                }
-
-                return hooks;
-              }, [])
-          : [],
+      this.nodeChangeSubscribers = Object.freeze(
+        utils.aggregateConfigError<
+          utils.Nillable<
+            NodeChangeSubscriberConfig | NodeChangeSubscriberConfig['next']
+          >,
+          NodeChangeSubscriber[]
+        >(
+          utils.resolveArrayOrValue(onNodeChangeConfig),
+          (subscribers, config, index) =>
+            config != null
+              ? [
+                  ...subscribers,
+                  new NodeChangeSubscriber(
+                    this,
+                    typeof config === 'function'
+                      ? {
+                          name: `on_node_change_${index}`,
+                          next: config,
+                        }
+                      : config,
+                    utils.addPath(onNodeChangeConfigPath, index),
+                  ),
+                ]
+              : subscribers,
+          [],
+          { path: configPath },
+        ),
       );
 
-      const onChangeErrorConfig = config.onChangeError;
-      const onChangeErrorConfigPath = utils.addPath(
-        configPath,
-        'onChangeError',
-      );
+      // on-local-node-change-subscriber-error
+      {
+        const onLocalNodeChangeSubscriberErrorConfig =
+          config.onLocalNodeChangeSubscriberError;
+        const onLocalNodeChangeSubscriberErrorConfigPath = utils.addPath(
+          configPath,
+          'onLocalNodeChangeSubscriberError',
+        );
 
-      if (onChangeErrorConfig != null) {
-        if (typeof onChangeErrorConfig !== 'function') {
-          throw new utils.UnexpectedConfigError(
-            `a function`,
-            onChangeErrorConfig,
-            { path: onChangeErrorConfigPath },
-          );
+        if (onLocalNodeChangeSubscriberErrorConfig != null) {
+          if (typeof onLocalNodeChangeSubscriberErrorConfig !== 'function') {
+            throw new utils.UnexpectedConfigError(
+              `a function`,
+              onLocalNodeChangeSubscriberErrorConfig,
+              { path: onLocalNodeChangeSubscriberErrorConfigPath },
+            );
+          }
+
+          this.#onLocalNodeChangeSubscriberError =
+            onLocalNodeChangeSubscriberErrorConfig.bind(this);
+        } else {
+          this.#onLocalNodeChangeSubscriberError = (
+            error,
+            subscriber,
+            change,
+          ) =>
+            console.warn(
+              `An error occured in the node-change-subscriber "${subscriber}" while processing the change "${change}": ${error.message}`,
+            );
         }
-
-        this.#onChangeHookError = onChangeErrorConfig.bind(this);
       }
     }
   }
@@ -376,17 +391,6 @@ export class GraphQLPlatform<
     return operation;
   }
 
-  @Memoize()
-  public get connector(): TConnector {
-    if (!this.#connector) {
-      throw new utils.ConfigError(`No connector has been provided`, {
-        path: utils.addPath(this.configPath, 'connector'),
-      });
-    }
-
-    return this.#connector;
-  }
-
   public assertRequestContext(
     maybeRequestContext: unknown,
     path?: utils.Path,
@@ -401,7 +405,7 @@ export class GraphQLPlatform<
         });
       }
 
-      this.#assertRequestContext?.call(this, maybeRequestContext);
+      this.#assertRequestContext?.(maybeRequestContext);
     } catch (error) {
       throw new InvalidRequestContextError({
         cause: utils.castToError(error),
@@ -410,24 +414,101 @@ export class GraphQLPlatform<
     }
   }
 
-  public async notifyChanges(
-    ...changes: ReadonlyArray<ChangedNode<TRequestContext, TConnector>>
-  ): Promise<void> {
-    const aggregation = new ChangesAggregation(changes);
+  @Memoize()
+  public get connector(): TConnector {
+    if (!this.#connector) {
+      throw new utils.ConfigError(`No connector has been provided`, {
+        path: utils.addPath(this.configPath, 'connector'),
+      });
+    }
 
-    await Promise.all(
-      Array.from(aggregation, (change) =>
-        Promise.all(
-          [...change.node.onChangeHooks, ...this.#onChangeHooks].map(
-            async (hook) => {
-              try {
-                await hook(change);
-              } catch (error) {
-                this.#onChangeHookError?.(utils.castToError(error), change);
+    return this.#connector;
+  }
+
+  @Memoize((node) => node)
+  protected getNodeChangeSubscribersByNode(
+    node: Node,
+  ): ReadonlyArray<NodeChangeSubscriber> {
+    return Object.freeze(
+      [...node.changeSubscribers, ...this.nodeChangeSubscribers].filter(
+        (subscriber) => !subscriber.nodeSet || subscriber.nodeSet.has(node),
+      ),
+    );
+  }
+
+  @Memoize((node) => node)
+  protected getDistributedNodeChangeSubscribersByNode(
+    node: Node,
+  ): ReadonlyArray<NodeChangeSubscriber> {
+    return Object.freeze(
+      this.getNodeChangeSubscribersByNode(node).filter((subscriber) =>
+        subscriber.isDistributed(),
+      ),
+    );
+  }
+
+  @Memoize((node) => node)
+  protected getLocalNodeChangeSubscribersByNode(
+    node: Node,
+  ): ReadonlyArray<NodeChangeSubscriber> {
+    return Object.freeze(
+      this.getNodeChangeSubscribersByNode(node).filter(
+        (subscriber) => !subscriber.isDistributed(),
+      ),
+    );
+  }
+
+  // protected async notifyDistributedNodeChangeSubscribers(
+  //   node: Node<TRequestContext, TConnector>,
+  //   changes: ReadonlyArray<NodeChange<TRequestContext, TConnector>>,
+  // ): Promise<void> {
+  //   const subscribers = this.getDistributedNodeChangeSubscribersByNode(node);
+  //   if (subscribers.length) {
+  //     await Promise.all(
+  //       changes.map(async (change) => this.pubSub.publish(change)),
+  //     );
+  //   }
+  // }
+
+  protected async notifyLocalNodeChangeSubscribers(
+    node: Node<TRequestContext, TConnector>,
+    changes: ReadonlyArray<NodeChange<TRequestContext, TConnector>>,
+  ): Promise<void> {
+    const subscribers = this.getLocalNodeChangeSubscribersByNode(node);
+    if (subscribers.length) {
+      await Promise.all(
+        subscribers.map((subscriber) =>
+          Promise.all(
+            changes.map(async (change) => {
+              if (subscriber.filter(change)) {
+                try {
+                  await subscriber.next(change);
+                } catch (error) {
+                  this.#onLocalNodeChangeSubscriberError(
+                    utils.castToError(error),
+                    subscriber,
+                    change,
+                  );
+                }
               }
-            },
+            }),
           ),
         ),
+      );
+    }
+  }
+
+  public async emitChanges(
+    ...changes: ReadonlyArray<NodeChange<TRequestContext, TConnector>>
+  ): Promise<void> {
+    const aggregation = new NodeChangeAggregation(changes);
+
+    await Promise.all(
+      Array.from(aggregation.changesByNode, ([node, changes]) =>
+        Promise.all([
+          // this.notifyDistributedNodeChangeSubscribers(node, changes),
+          this.notifyLocalNodeChangeSubscribers(node, changes),
+        ]),
       ),
     );
   }

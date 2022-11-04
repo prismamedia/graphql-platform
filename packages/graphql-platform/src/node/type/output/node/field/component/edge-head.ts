@@ -36,7 +36,7 @@ export class EdgeHeadOutputType extends AbstractComponentOutputType<undefined> {
     selectionContext: GraphQLSelectionContext | undefined,
     path: utils.Path,
   ): EdgeHeadSelection {
-    this.parseGraphQLFieldArguments(ast.arguments, selectionContext, path);
+    this.parseGraphQLArgumentNodes(ast.arguments, selectionContext, path);
 
     if (!ast.selectionSet) {
       throw new utils.NestableError(

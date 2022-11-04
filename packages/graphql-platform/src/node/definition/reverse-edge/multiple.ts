@@ -44,8 +44,11 @@ export class ReverseEdgeMultiple<
   public constructor(
     edge: Edge<TRequestContext, TConnector>,
     name: utils.Name,
-    config: ReverseEdgeMultipleConfig<TRequestContext, TConnector>,
-    configPath: utils.Path,
+    public override readonly config: ReverseEdgeMultipleConfig<
+      TRequestContext,
+      TConnector
+    >,
+    public override readonly configPath: utils.Path,
   ) {
     assert(!edge.isUnique());
     super(edge, name, config, configPath);

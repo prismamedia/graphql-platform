@@ -5,20 +5,26 @@ import {
   getOptionalDeprecation,
   getOptionalDescription,
   getOptionalFlag,
-  Name,
-  OptionalDeprecation,
-  OptionalDescription,
-  OptionalFlag,
+  type Name,
+  type OptionalDeprecation,
+  type OptionalDescription,
+  type OptionalFlag,
 } from '../../../config.js';
 import {
   aggregateConfigError,
   castToError,
+  NestableError,
   UnexpectedConfigError,
   UnexpectedValueError,
 } from '../../../error.js';
-import { isNil, Nillable } from '../../../nil.js';
-import { addPath, Path } from '../../../path.js';
-import { resolveThunkOrValue, ThunkOrValue } from '../../../thunk-or-value.js';
+import { indefinite } from '../../../indefinite.js';
+import { isNil, type Nillable } from '../../../nil.js';
+import { addPath, type Path } from '../../../path.js';
+import {
+  resolveThunkOrValue,
+  type ThunkOrValue,
+} from '../../../thunk-or-value.js';
+import type { NonNullNonVariableGraphQLValueNode } from '../../type.js';
 import {
   AbstractNamedInputType,
   AbstractNamedInputTypeConfig,
@@ -289,14 +295,44 @@ export class EnumInputType<
     return enumValue;
   }
 
-  public parseValue(
-    maybeValue: unknown,
+  public override parseValue(
+    value: unknown,
     path: Path = addPath(undefined, this.name),
   ): Nillable<TValue['value']> {
-    if (isNil(maybeValue)) {
-      return maybeValue;
+    if (isNil(value)) {
+      return value;
     }
 
-    return this.getEnumValue(maybeValue, path).value;
+    return this.getEnumValue(value, path).value;
+  }
+
+  public override parseLiteral(
+    value: NonNullNonVariableGraphQLValueNode,
+    variableValues?: graphql.GraphQLResolveInfo['variableValues'],
+    path?: Path,
+  ): Nillable<TValue['value']> {
+    if (value.kind === graphql.Kind.STRING) {
+      return this.parseValue(value.value);
+    } else if (value.kind === graphql.Kind.ENUM) {
+      const enumValue = this.enumValues.find(
+        ({ name }) => name === value.value,
+      );
+
+      if (!enumValue) {
+        throw new UnexpectedValueError(
+          `${indefinite(this.name)} (= a value among "${this.enumValues
+            .map(({ name }) => name)
+            .join(', ')}")`,
+          graphql.print(value),
+          { path },
+        );
+      }
+
+      return enumValue.value;
+    } else {
+      throw new NestableError(`Cannot parse literal: ${graphql.print(value)}`, {
+        path,
+      });
+    }
   }
 }

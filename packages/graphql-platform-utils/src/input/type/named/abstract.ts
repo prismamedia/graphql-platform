@@ -2,11 +2,12 @@ import * as graphql from 'graphql';
 import {
   ensureName,
   getOptionalDescription,
-  Name,
-  OptionalDescription,
+  type Name,
+  type OptionalDescription,
 } from '../../../config.js';
 import type { Nillable } from '../../../nil.js';
-import { addPath, Path } from '../../../path.js';
+import { addPath, type Path } from '../../../path.js';
+import type { NonNullNonVariableGraphQLValueNode } from '../../type.js';
 
 export interface AbstractNamedInputTypeConfig {
   /**
@@ -61,8 +62,11 @@ export abstract class AbstractNamedInputType<TValue = any> {
 
   public abstract validate(): void;
 
-  public abstract parseValue(
-    maybeValue: unknown,
+  public abstract parseValue(value: unknown, path?: Path): Nillable<TValue>;
+
+  public abstract parseLiteral(
+    value: NonNullNonVariableGraphQLValueNode,
+    variableValues?: graphql.GraphQLResolveInfo['variableValues'],
     path?: Path,
   ): Nillable<TValue>;
 }

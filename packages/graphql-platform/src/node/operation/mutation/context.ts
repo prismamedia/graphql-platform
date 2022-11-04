@@ -1,5 +1,5 @@
 import type { ConnectorInterface } from '../../../connector-interface.js';
-import type { ChangedNode } from '../../change.js';
+import type { NodeChange } from '../../change.js';
 import { OperationContext } from '../context.js';
 
 export class MutationContext<
@@ -9,5 +9,5 @@ export class MutationContext<
   /**
    * Contains the nodes' changes that will be fired after the success of the whole mutation, including all the nested actions
    */
-  readonly changes: ChangedNode<TRequestContext, TConnector>[] = [];
+  readonly changes: NodeChange<TRequestContext, TConnector>[] = [];
 }

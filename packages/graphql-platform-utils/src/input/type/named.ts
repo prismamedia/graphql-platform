@@ -1,7 +1,14 @@
 import * as graphql from 'graphql';
-import { UnexpectedConfigError } from '../../error.js';
-import { parseGraphQLLeafValue } from '../../graphql.js';
+import {
+  castToError,
+  NestableError,
+  UnexpectedConfigError,
+  UnexpectedValueError,
+} from '../../error.js';
+import { parseGraphQLEnumValue, parseGraphQLLeafValue } from '../../graphql.js';
+import { indefinite } from '../../indefinite.js';
 import { Path } from '../../path.js';
+import { NonNullNonVariableGraphQLValueNode } from '../type.js';
 import { EnumInputType } from './named/enum.js';
 import { ObjectInputType } from './named/object.js';
 
@@ -49,30 +56,83 @@ export function ensureNamedInputType(
   return maybeNamedInputType;
 }
 
-export function isNamedInputTypePublic(type: NamedInputType): boolean {
-  return graphql.isLeafType(type) ? true : type.isPublic();
+export function isNamedInputTypePublic(
+  namedInputType: NamedInputType,
+): boolean {
+  return graphql.isLeafType(namedInputType) ? true : namedInputType.isPublic();
 }
 
-export function validateNamedInputType(type: NamedInputType): void {
-  if (graphql.isLeafType(type)) {
+export function validateNamedInputType(namedInputType: NamedInputType): void {
+  if (graphql.isLeafType(namedInputType)) {
     // Nothing to validate
   } else {
-    type.validate();
+    namedInputType.validate();
   }
 }
 
 export function getGraphQLNamedInputType(
-  type: NamedInputType,
+  namedInputType: NamedInputType,
 ): Extract<graphql.GraphQLNamedType, graphql.GraphQLInputType> {
-  return graphql.isLeafType(type) ? type : type.getGraphQLInputType();
+  return graphql.isLeafType(namedInputType)
+    ? namedInputType
+    : namedInputType.getGraphQLInputType();
 }
 
 export function parseNamedInputValue(
   type: NamedInputType,
-  maybeValue: unknown,
+  value: unknown,
   path?: Path,
 ): any {
   return graphql.isLeafType(type)
-    ? parseGraphQLLeafValue(type, maybeValue, path)
-    : type.parseValue(maybeValue, path);
+    ? parseGraphQLLeafValue(type, value, path)
+    : type.parseValue(value, path);
+}
+
+export function parseNamedInputLiteral(
+  type: NamedInputType,
+  value: NonNullNonVariableGraphQLValueNode,
+  variableValues?: graphql.GraphQLResolveInfo['variableValues'],
+  path?: Path,
+): any {
+  if (graphql.isLeafType(type)) {
+    if (graphql.isScalarType(type)) {
+      try {
+        return type.parseLiteral(value, variableValues);
+      } catch (error) {
+        throw new UnexpectedValueError(
+          indefinite(type.name),
+          graphql.print(value),
+          { path, cause: castToError(error) },
+        );
+      }
+    } else {
+      if (value.kind === graphql.Kind.STRING) {
+        return parseGraphQLEnumValue(type, value.value, path);
+      } else if (value.kind === graphql.Kind.ENUM) {
+        const enumValue = type
+          .getValues()
+          .find(({ name }) => name === value.value);
+
+        if (!enumValue) {
+          throw new UnexpectedValueError(
+            `${indefinite(type.name)} (= a value among "${type
+              .getValues()
+              .map(({ name }) => name)
+              .join(', ')}")`,
+            graphql.print(value),
+            { path },
+          );
+        }
+
+        return enumValue.value;
+      } else {
+        throw new NestableError(
+          `Cannot parse literal: ${graphql.print(value)}`,
+          { path },
+        );
+      }
+    }
+  }
+
+  return type.parseLiteral(value, variableValues, path);
 }

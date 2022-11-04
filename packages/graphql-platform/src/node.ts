@@ -1,14 +1,17 @@
 import * as utils from '@prismamedia/graphql-platform-utils';
 import { Memoize } from '@prismamedia/ts-memoize';
 import inflection from 'inflection';
-import type { JsonObject, Promisable } from 'type-fest';
+import type { JsonObject } from 'type-fest';
 import type {
   ConnectorConfigOverrideKind,
   ConnectorInterface,
   GetConnectorConfigOverride,
 } from './connector-interface.js';
 import type { GraphQLPlatform } from './index.js';
-import type { ChangedNode } from './node/change.js';
+import {
+  NodeChangeSubscriber,
+  NodeChangeSubscriberConfig,
+} from './node/change-subscriber.js';
 import {
   Edge,
   Leaf,
@@ -27,6 +30,7 @@ import { assertNodeName, type NodeName } from './node/name.js';
 import {
   mutationConstructorsByKey,
   nodeSubscriptionConstructorsByKey,
+  OperationContext,
   queryConstructorsByKey,
   type MutationConfig,
   type MutationInterface,
@@ -38,7 +42,6 @@ import {
   type QueriesByKey,
   type QueryKey,
 } from './node/operation.js';
-import { OperationContext } from './node/operation/context.js';
 import {
   mergeSelectionExpressions,
   NodeFilter,
@@ -56,6 +59,7 @@ import {
   type NodeOutputTypeConfig,
 } from './node/type.js';
 
+export * from './node/change-subscriber.js';
 export * from './node/change.js';
 export * from './node/definition.js';
 export * from './node/fixture.js';
@@ -177,16 +181,14 @@ export type NodeConfig<
 
   /**
    * Optional, act on this node's changes AFTER they have been committed
-   *
-   * Please keep in mind that any error thrown inside would be silently hidden: it is your responsability to catch these errors.
-   * As the changes reached the database we want the client to get the corresponding state no matter what happens inside these hooks.
    */
-  onChange?: utils.ArrayOrValue<
-    | ((
-        this: Node<TRequestContext, TConnector>,
-        change: ChangedNode<TRequestContext, TConnector>,
-      ) => Promisable<void>)
-    | undefined
+  onChange?: utils.Nillable<
+    utils.ArrayOrValue<
+      utils.Nillable<
+        | Omit<NodeChangeSubscriberConfig<TRequestContext, TConnector>, 'nodes'>
+        | Omit<NodeChangeSubscriberConfig, 'nodes'>['next']
+      >
+    >
   >;
 } & GetConnectorConfigOverride<TConnector, ConnectorConfigOverrideKind.NODE>;
 
@@ -232,9 +234,7 @@ export class Node<
 
   readonly #authorizationConfig?: NodeAuthorizationConfig<TRequestContext>;
 
-  public readonly onChangeHooks: ReadonlyArray<
-    (change: ChangedNode<TRequestContext, TConnector>) => Promisable<void>
-  >;
+  public readonly changeSubscribers: ReadonlyArray<NodeChangeSubscriber>;
 
   public constructor(
     public readonly gp: GraphQLPlatform<TRequestContext, TConnector>,
@@ -492,36 +492,43 @@ export class Node<
       }
     }
 
-    // on-change
+    // change-listeners
     {
       const onChangeConfig = config.onChange;
       const onChangeConfigPath = utils.addPath(configPath, 'onChange');
 
-      this.onChangeHooks = Object.freeze(
-        onChangeConfig != null
-          ? utils
-              .resolveArrayOrValue(onChangeConfig)
-              .reduce<
-                ((
-                  this: Node<TRequestContext, TConnector>,
-                  change: ChangedNode<TRequestContext, TConnector>,
-                ) => Promisable<void>)[]
-              >((hooks, maybeHook, index) => {
-                if (maybeHook != null) {
-                  if (typeof maybeHook !== 'function') {
-                    throw new utils.UnexpectedConfigError(
-                      `a function`,
-                      maybeHook,
-                      { path: utils.addPath(onChangeConfigPath, index) },
-                    );
-                  }
-
-                  return [...hooks, maybeHook.bind(this)];
-                }
-
-                return hooks;
-              }, [])
-          : [],
+      this.changeSubscribers = Object.freeze(
+        utils.aggregateConfigError<
+          utils.Nillable<
+            | Omit<NodeChangeSubscriberConfig, 'nodes'>
+            | Omit<NodeChangeSubscriberConfig, 'nodes'>['next']
+          >,
+          NodeChangeSubscriber[]
+        >(
+          utils.resolveArrayOrValue(onChangeConfig),
+          (subscribers, config, index) =>
+            config != null
+              ? [
+                  ...subscribers,
+                  new NodeChangeSubscriber(
+                    this.gp,
+                    typeof config === 'function'
+                      ? {
+                          name: `on_${inflection.underscore(
+                            name,
+                            false,
+                          )}_change_${index}`,
+                          nodes: [this],
+                          next: config,
+                        }
+                      : { ...config, nodes: [this] },
+                    utils.addPath(onChangeConfigPath, index),
+                  ),
+                ]
+              : subscribers,
+          [],
+          { path: configPath },
+        ),
       );
     }
   }

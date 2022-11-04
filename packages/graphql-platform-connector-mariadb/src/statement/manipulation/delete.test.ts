@@ -1,4 +1,4 @@
-import { ChangedNode, Node } from '@prismamedia/graphql-platform';
+import { Node, NodeChange } from '@prismamedia/graphql-platform';
 import { MutationType } from '@prismamedia/graphql-platform-utils';
 import {
   ArticleStatus,
@@ -11,11 +11,11 @@ import { createGraphQLPlatform } from '../../__tests__/config.js';
 
 describe('Delete statement', () => {
   let gp: MyGP<MariaDBConnector>;
-  const changes: ChangedNode[] = [];
+  const changes: NodeChange[] = [];
 
   beforeAll(async () => {
     gp = createGraphQLPlatform(`connector_mariadb_delete_statement`, {
-      onChange(change) {
+      onNodeChange(change) {
         changes.push(change);
       },
     });

@@ -2,7 +2,7 @@ import * as utils from '@prismamedia/graphql-platform-utils';
 import type { Promisable } from 'type-fest';
 import type { ConnectorInterface } from '../../../connector-interface.js';
 import type { NodeValue } from '../../../node.js';
-import type { DeletedNode } from '../../change.js';
+import type { NodeDeletion } from '../../change.js';
 import {
   AbstractMutation,
   type AbstractMutationConfig,
@@ -31,7 +31,7 @@ export interface PostDeleteArgs<
   /**
    * The uncommitted change
    */
-  readonly change: DeletedNode<TRequestContext, TConnector>;
+  readonly change: NodeDeletion<TRequestContext, TConnector>;
 }
 
 /**

@@ -8,12 +8,12 @@ import type {
   LeafValue,
 } from '../definition/component.js';
 
-export type NodeCreationProxy = Record<
+export type NodeCreationStatementProxy = Record<
   Component['name'],
   ComponentValue | undefined
 >;
 
-const nodeCreationProxyHandler: ProxyHandler<NodeCreation> = {
+const nodeCreationProxyHandler: ProxyHandler<NodeCreationStatement> = {
   ownKeys: (creation) =>
     Array.from(creation.valuesByComponent.keys()).map(
       (component) => component.name,
@@ -61,14 +61,14 @@ const nodeCreationProxyHandler: ProxyHandler<NodeCreation> = {
   },
 };
 
-export class NodeCreation<
+export class NodeCreationStatement<
   TRequestContext extends object = any,
   TConnector extends ConnectorInterface = any,
 > {
   /**
    * A convenient proxy to use this as an object
    */
-  public readonly proxy: NodeCreationProxy;
+  public readonly proxy: NodeCreationStatementProxy;
   readonly #valuesByComponent: Map<
     Component<TRequestContext, TConnector>,
     ComponentValue

@@ -4,7 +4,13 @@ import { aggregateError } from '../../../error.js';
 import { isIterableObject } from '../../../is-iterable-object.js';
 import { isNil, type Nillable } from '../../../nil.js';
 import { addPath, type Path } from '../../../path.js';
-import { getGraphQLInputType, InputType, parseInputValue } from '../../type.js';
+import {
+  getGraphQLInputType,
+  parseInputLiteral,
+  parseInputValue,
+  type InputType,
+  type NonNullNonVariableGraphQLValueNode,
+} from '../../type.js';
 import { AbstractWrappingInputType } from './abstract.js';
 
 export class ListableInputType extends AbstractWrappingInputType {
@@ -17,22 +23,51 @@ export class ListableInputType extends AbstractWrappingInputType {
     return new graphql.GraphQLList(getGraphQLInputType(this.ofType));
   }
 
-  public parseValue(maybeValue: unknown, path?: Path): Nillable<any[]> {
-    if (isNil(maybeValue)) {
-      return maybeValue;
+  public override parseValue(value: unknown, path?: Path): Nillable<any[]> {
+    if (isNil(value)) {
+      return value;
     }
 
-    return isIterableObject(maybeValue)
+    return isIterableObject(value)
       ? aggregateError<any, any[]>(
-          maybeValue,
-          (values, maybeValue, index) => [
-            ...values,
-            parseInputValue(this.ofType, maybeValue, addPath(path, index)),
-          ],
+          value,
+          (values, maybeValue, index) => {
+            values.push(
+              parseInputValue(this.ofType, maybeValue, addPath(path, index)),
+            );
+
+            return values;
+          },
           [],
           { path },
         )
-      : [parseInputValue(this.ofType, maybeValue, path)];
+      : [parseInputValue(this.ofType, value, path)];
+  }
+
+  public override parseLiteral(
+    value: NonNullNonVariableGraphQLValueNode,
+    variableValues?: graphql.GraphQLResolveInfo['variableValues'],
+    path?: Path,
+  ): Nillable<any[]> {
+    return value.kind === graphql.Kind.LIST
+      ? aggregateError<graphql.ValueNode, any[]>(
+          value.values,
+          (values, value, index) => {
+            values.push(
+              parseInputLiteral(
+                this.ofType,
+                value,
+                variableValues,
+                addPath(path, index),
+              ),
+            );
+
+            return values;
+          },
+          [],
+          { path },
+        )
+      : [parseInputLiteral(this.ofType, value, variableValues, path)];
   }
 }
 

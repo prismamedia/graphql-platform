@@ -1,4 +1,5 @@
 import * as graphql from 'graphql';
+import { createGraphQLEnumType } from './graphql.js';
 
 export const operationTypes = [
   graphql.OperationTypeNode.QUERY,
@@ -17,3 +18,8 @@ export const mutationTypes = [
   MutationType.DELETION,
   MutationType.UPDATE,
 ] as const;
+
+export const MutationTypeType = createGraphQLEnumType(
+  'MutationType',
+  MutationType,
+);

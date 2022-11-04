@@ -76,7 +76,7 @@ export class ReverseEdgeMultipleHeadOutputType extends AbstractReverseEdgeOutput
     selectionContext: GraphQLSelectionContext | undefined,
     path: utils.Path,
   ): ReverseEdgeMultipleHeadSelection {
-    const args = this.parseGraphQLFieldArguments(
+    const args = this.parseGraphQLArgumentNodes(
       ast.arguments,
       selectionContext,
       path,

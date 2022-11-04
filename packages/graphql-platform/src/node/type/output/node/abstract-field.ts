@@ -55,30 +55,29 @@ export abstract class AbstractNodeFieldOutputType<
     }
   }
 
-  protected parseGraphQLFieldArguments(
-    args: graphql.FieldNode['arguments'],
+  protected parseGraphQLArgumentNodes(
+    argumentNodes: graphql.FieldNode['arguments'],
     context: GraphQLSelectionContext | undefined,
     path: utils.Path,
   ): Exclude<TArgs, null> {
     if (!this.arguments?.length) {
-      if (args?.length) {
+      if (argumentNodes?.length) {
         throw new utils.NestableError(`Expects no arguments`, { path });
       }
 
       return undefined as any;
     }
 
-    return utils.parseInputs(
+    return utils.parseInputLiterals(
       this.arguments,
-      args?.length
-        ? utils.parseGraphQLUntypedArgumentNodes(args, context?.variableValues)
-        : undefined,
+      argumentNodes,
+      context?.variableValues,
       utils.addPath(path, argsPathKey),
     ) as any;
   }
 
   public abstract selectGraphQLFieldNode(
-    ast: graphql.FieldNode,
+    fieldNode: graphql.FieldNode,
     operationContext: OperationContext | undefined,
     selectionContext: GraphQLSelectionContext | undefined,
     path: utils.Path,

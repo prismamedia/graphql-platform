@@ -2,12 +2,12 @@ import type { ConnectorInterface } from '../../connector-interface.js';
 import type { Node } from '../../node.js';
 import type { Component, ComponentUpdate } from '../definition/component.js';
 
-export type NodeUpdateProxy = Record<
+export type NodeUpdateStatementProxy = Record<
   Component['name'],
   ComponentUpdate | undefined
 >;
 
-const nodeUpdateProxyHandler: ProxyHandler<NodeUpdate> = {
+const nodeUpdateProxyHandler: ProxyHandler<NodeUpdateStatement> = {
   ownKeys: (update) =>
     Array.from(update.updatesByComponent.keys()).map(
       (component) => component.name,
@@ -55,14 +55,14 @@ const nodeUpdateProxyHandler: ProxyHandler<NodeUpdate> = {
   },
 };
 
-export class NodeUpdate<
+export class NodeUpdateStatement<
   TRequestContext extends object = any,
   TConnector extends ConnectorInterface = any,
 > {
   /**
    * A convenient proxy to use this as an object
    */
-  public readonly proxy: NodeUpdateProxy;
+  public readonly proxy: NodeUpdateStatementProxy;
   readonly #updatesByComponent: Map<
     Component<TRequestContext, TConnector>,
     ComponentUpdate
@@ -89,8 +89,8 @@ export class NodeUpdate<
       : this.#updatesByComponent.set(component, component.parseUpdate(update));
   }
 
-  public clone(): NodeUpdate<TRequestContext, TConnector> {
-    const clone = new NodeUpdate(this.node);
+  public clone(): NodeUpdateStatement<TRequestContext, TConnector> {
+    const clone = new NodeUpdateStatement(this.node);
 
     this.#updatesByComponent.forEach((update, component) =>
       clone.setComponentUpdate(component, update),

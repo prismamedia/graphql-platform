@@ -1,9 +1,9 @@
 import {
-  ChangesAggregation,
-  CreatedNode,
-  DeletedNode,
   GraphQLPlatform,
-  UpdatedNode,
+  NodeChangeAggregation,
+  NodeCreation,
+  NodeDeletion,
+  NodeUpdate,
 } from '../index.js';
 
 describe('Change', () => {
@@ -70,13 +70,13 @@ describe('Change', () => {
     const Tag = gp.getNodeByName('Tag');
     const ArticleTag = gp.getNodeByName('ArticleTag');
 
-    expect(() => new CreatedNode(Article, {}, {})).toThrowError(
+    expect(() => new NodeCreation(Article, {}, {})).toThrowError(
       '"Article" - 2 errors:',
     );
-    expect(() => new CreatedNode(Tag, {}, {})).toThrowError(
+    expect(() => new NodeCreation(Tag, {}, {})).toThrowError(
       '"Tag" - 2 errors:',
     );
-    expect(() => new CreatedNode(ArticleTag, {}, {})).toThrowError(
+    expect(() => new NodeCreation(ArticleTag, {}, {})).toThrowError(
       '"ArticleTag" - 3 errors:',
     );
   });
@@ -86,21 +86,21 @@ describe('Change', () => {
     const Tag = gp.getNodeByName('Tag');
     const ArticleTag = gp.getNodeByName('ArticleTag');
 
-    const aggregate = new ChangesAggregation([
+    const aggregate = new NodeChangeAggregation([
       // These 2 changes are aggregated
-      new CreatedNode(
+      new NodeCreation(
         Article,
         {},
         { id: '2e9b5020-b9fe-4dab-bb59-59c986fffc12', title: 'My title' },
       ),
-      new UpdatedNode(
+      new NodeUpdate(
         Article,
         {},
         { id: '2e9b5020-b9fe-4dab-bb59-59c986fffc12', title: 'My title' },
         { id: '2e9b5020-b9fe-4dab-bb59-59c986fffc12', title: 'My new title' },
       ),
       // These 2 changes are removed
-      new CreatedNode(
+      new NodeCreation(
         Article,
         {},
         {
@@ -108,7 +108,7 @@ describe('Change', () => {
           title: 'My other title',
         },
       ),
-      new DeletedNode(
+      new NodeDeletion(
         Article,
         {},
         {
@@ -116,7 +116,7 @@ describe('Change', () => {
           title: 'My other title',
         },
       ),
-      new CreatedNode(
+      new NodeCreation(
         Tag,
         {},
         {
@@ -125,7 +125,7 @@ describe('Change', () => {
         },
       ),
       // These 2 changes are aggregated
-      new CreatedNode(
+      new NodeCreation(
         ArticleTag,
         {},
         {
@@ -134,7 +134,7 @@ describe('Change', () => {
           order: 1,
         },
       ),
-      new UpdatedNode(
+      new NodeUpdate(
         ArticleTag,
         {},
         {
@@ -149,7 +149,7 @@ describe('Change', () => {
         },
       ),
       // These 2 changes are removed
-      new UpdatedNode(
+      new NodeUpdate(
         Article,
         {},
         { id: 'fbc99af4-429d-49fd-be05-8fdba83559c5', title: 'My title' },
@@ -158,7 +158,7 @@ describe('Change', () => {
           title: 'My updated title',
         },
       ),
-      new UpdatedNode(
+      new NodeUpdate(
         Article,
         {},
         {

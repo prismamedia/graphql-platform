@@ -129,7 +129,7 @@ export abstract class AbstractMutation<
       {
         ...args,
         // For the mutations, it is allowed to forget the "selection" as we may don't need the result
-        ...(typeof args?.selection === 'undefined' && this.selectionAware
+        ...(args?.selection == null && this.selectionAware
           ? { selection: this.node.identifier.selection }
           : {}),
       },
@@ -191,7 +191,7 @@ export abstract class AbstractMutation<
       }
     }
 
-    await this.gp.notifyChanges(...mutationContext.changes);
+    await this.gp.emitChanges(...mutationContext.changes);
 
     return result;
   }

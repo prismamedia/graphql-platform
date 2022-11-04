@@ -29,6 +29,7 @@ import {
   isNonOptionalInputType,
   nonNullableInputTypeDecorator,
   nonOptionalInputTypeDecorator,
+  parseInputLiteral,
   parseInputValue,
   validateInputType,
 } from './input/type.js';
@@ -324,16 +325,16 @@ export class Input<TValue = any> {
     const value = parseInputValue(this.type, maybeValue, path);
 
     if (value != null && this.#parser) {
-      let customValue: unknown;
+      let customizedValue: unknown;
       try {
-        customValue = this.#parser(value, path);
+        customizedValue = this.#parser(value, path);
       } catch (error) {
         throw isNestableError(error)
           ? error
           : new NestableError(castToError(error).message, { path });
       }
 
-      return parseInputValue(this.type, customValue, path);
+      return parseInputValue(this.type, customizedValue, path);
     }
 
     return value;
@@ -356,32 +357,35 @@ export const getGraphQLFieldConfigArgumentMap = (
       .map((argument) => [argument.name, argument.getGraphQLConfig()]),
   );
 
-export function parseInputs(
-  inputs: Iterable<Input>,
-  maybeInputsValues: unknown,
+export function parseInputValues(
+  inputs: ReadonlyArray<Input>,
+  argumentOrObjectFields: unknown,
   path?: Path,
 ): PlainObject {
-  if (maybeInputsValues != null && !isPlainObject(maybeInputsValues)) {
-    throw new UnexpectedValueError(`a plain-object`, maybeInputsValues, {
+  if (
+    argumentOrObjectFields != null &&
+    !isPlainObject(argumentOrObjectFields)
+  ) {
+    throw new UnexpectedValueError(`a plain-object`, argumentOrObjectFields, {
       path,
     });
   }
 
   /**
-   * We keep the provided object's keys here, in order to check
+   * We keep the provided inputs' key here, in order to check
    * further if some extra have been provided
    */
-  const extraKeySet = new Set(
-    maybeInputsValues ? Object.keys(maybeInputsValues) : [],
+  const inputKeySet = new Set(
+    argumentOrObjectFields ? Object.keys(argumentOrObjectFields) : undefined,
   );
 
   const result = aggregateError<Input, PlainObject>(
     inputs,
     (result, input) => {
-      extraKeySet.delete(input.name);
+      inputKeySet.delete(input.name);
 
       const parsedValue = input.parseValue(
-        maybeInputsValues?.[input.name],
+        argumentOrObjectFields?.[input.name],
         addPath(path, input.name, input.type),
       );
 
@@ -393,9 +397,60 @@ export function parseInputs(
     { path },
   );
 
-  if (extraKeySet.size > 0) {
+  if (inputKeySet.size > 0) {
     throw new NestableError(
-      `Expects not to contain the extra key(s): ${[...extraKeySet].join(', ')}`,
+      `Expects not to contain the extra key(s): ${[...inputKeySet].join(', ')}`,
+      { path },
+    );
+  }
+
+  return result;
+}
+
+export function parseInputLiterals(
+  inputs: ReadonlyArray<Input>,
+  argumentOrObjectFields:
+    | ReadonlyArray<graphql.ArgumentNode | graphql.ObjectFieldNode>
+    | undefined,
+  variableValues?: graphql.GraphQLResolveInfo['variableValues'],
+  path?: Path,
+): PlainObject {
+  /**
+   * We keep the provided inputs' key here, in order to check
+   * further if some extra have been provided
+   */
+  const inputKeySet = new Set(
+    argumentOrObjectFields?.map(({ name }) => name.value),
+  );
+
+  const result = aggregateError<Input, PlainObject>(
+    inputs,
+    (result, input) => {
+      inputKeySet.delete(input.name);
+
+      const maybeValue = argumentOrObjectFields?.find(
+        ({ name }) => name.value === input.name,
+      )?.value;
+
+      const inputPath = addPath(path, input.name, input.type);
+
+      const parsedValue = input.parseValue(
+        maybeValue &&
+          parseInputLiteral(input.type, maybeValue, variableValues, inputPath),
+        inputPath,
+      );
+
+      return parsedValue !== undefined
+        ? Object.assign(result, { [input.name]: parsedValue })
+        : result;
+    },
+    Object.create(null),
+    { path },
+  );
+
+  if (inputKeySet.size > 0) {
+    throw new NestableError(
+      `Expects not to contain the extra key(s): ${[...inputKeySet].join(', ')}`,
       { path },
     );
   }

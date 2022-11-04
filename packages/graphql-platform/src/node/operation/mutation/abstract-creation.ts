@@ -1,8 +1,8 @@
 import * as utils from '@prismamedia/graphql-platform-utils';
 import type { Promisable } from 'type-fest';
 import type { ConnectorInterface } from '../../../connector-interface.js';
-import type { CreatedNode } from '../../change.js';
-import type { NodeCreationProxy } from '../../statement/creation.js';
+import type { NodeCreation } from '../../change.js';
+import type { NodeCreationStatementProxy } from '../../statement/creation.js';
 import type { NodeCreationInputValue } from '../../type/input/creation.js';
 import {
   AbstractMutation,
@@ -27,7 +27,7 @@ export interface PreCreateArgs<
   /**
    * The creation statement, as a convenient object
    */
-  readonly creation: NodeCreationProxy;
+  readonly creation: NodeCreationStatementProxy;
 }
 
 export interface PostCreateArgs<
@@ -37,7 +37,7 @@ export interface PostCreateArgs<
   /**
    * The uncommitted change
    */
-  readonly change: CreatedNode<TRequestContext, TConnector>;
+  readonly change: NodeCreation<TRequestContext, TConnector>;
 }
 
 /**

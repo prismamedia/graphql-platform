@@ -1,15 +1,17 @@
 import { Memoize } from '@prismamedia/ts-memoize';
-import { GraphQLInputObjectType } from 'graphql';
+import * as graphql from 'graphql';
 import assert from 'node:assert/strict';
 import {
   aggregateConfigError,
+  NestableError,
   UnexpectedConfigError,
   UnexpectedValueError,
 } from '../../../error.js';
-import { Input, parseInputs } from '../../../input.js';
-import { isNil, Nillable } from '../../../nil.js';
-import { addPath, Path } from '../../../path.js';
-import { isPlainObject, PlainObject } from '../../../plain-object.js';
+import { Input, parseInputLiterals, parseInputValues } from '../../../input.js';
+import { isNil, type Nillable } from '../../../nil.js';
+import { addPath, type Path } from '../../../path.js';
+import { isPlainObject, type PlainObject } from '../../../plain-object.js';
+import type { NonNullNonVariableGraphQLValueNode } from '../../type.js';
 import {
   AbstractNamedInputType,
   AbstractNamedInputTypeConfig,
@@ -107,10 +109,10 @@ export class ObjectInputType<
   }
 
   @Memoize()
-  public override getGraphQLInputType(): GraphQLInputObjectType {
+  public override getGraphQLInputType(): graphql.GraphQLInputObjectType {
     assert(this.isPublic(), `The "${this}" input type is private`);
 
-    return new GraphQLInputObjectType({
+    return new graphql.GraphQLInputObjectType({
       name: this.name,
       description: this.description,
       fields: () =>
@@ -164,20 +166,39 @@ export class ObjectInputType<
     return field;
   }
 
-  public parseValue(
-    maybeObject: unknown,
+  public override parseValue(
+    value: unknown,
     path: Path = addPath(undefined, this.name),
   ): Nillable<PlainObject> {
-    if (isNil(maybeObject)) {
-      return maybeObject;
+    if (isNil(value)) {
+      return value;
     }
 
-    if (!isPlainObject(maybeObject)) {
-      throw new UnexpectedValueError('a plain-object', maybeObject, {
+    if (!isPlainObject(value)) {
+      throw new UnexpectedValueError('a plain-object', value, {
         path,
       });
     }
 
-    return parseInputs(this.fields, maybeObject, path);
+    return parseInputValues(this.fields, value, path);
+  }
+
+  public override parseLiteral(
+    value: NonNullNonVariableGraphQLValueNode,
+    variableValues?: graphql.GraphQLResolveInfo['variableValues'],
+    path?: Path,
+  ): Nillable<PlainObject> {
+    if (value.kind === graphql.Kind.OBJECT) {
+      return parseInputLiterals(
+        this.fields,
+        value.fields,
+        variableValues,
+        path,
+      );
+    }
+
+    throw new NestableError(`Cannot parse literal: ${graphql.print(value)}`, {
+      path,
+    });
   }
 }

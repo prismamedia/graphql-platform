@@ -7,7 +7,7 @@ import type { ConnectorInterface } from '../../../connector-interface.js';
 import type { Node, NodeValue } from '../../../node.js';
 import type { Edge } from '../../definition.js';
 import type { MutationContext } from '../../operation.js';
-import { NodeCreation } from '../../statement/creation.js';
+import { NodeCreationStatement } from '../../statement/creation.js';
 import type {
   ComponentCreationInput,
   FieldCreationInput,
@@ -129,8 +129,8 @@ export class NodeCreationInputType<
     data: Readonly<utils.NonNillable<NodeCreationInputValue>>,
     context: MutationContext,
     path: utils.Path = utils.addPath(undefined, this.name),
-  ): Promise<NodeCreation<TRequestContext, TConnector>> {
-    const statement = new NodeCreation(this.node);
+  ): Promise<NodeCreationStatement<TRequestContext, TConnector>> {
+    const statement = new NodeCreationStatement(this.node);
 
     await Promise.all(
       this.componentFields.map(async (field) => {

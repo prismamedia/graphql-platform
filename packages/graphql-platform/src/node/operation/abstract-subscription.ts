@@ -4,7 +4,7 @@ import * as graphql from 'graphql';
 import assert from 'node:assert/strict';
 import type { ConnectorInterface } from '../../connector-interface.js';
 import { AbstractOperation } from '../abstract-operation.js';
-import { ConnectorError, InternalError, LifecycleHookError } from './error.js';
+import { ConnectorError, InternalError } from './error.js';
 
 export abstract class AbstractSubscription<
   TRequestContext extends object,
@@ -46,9 +46,7 @@ export abstract class AbstractSubscription<
             info.path,
           );
         } catch (error) {
-          throw utils.isConfigError(error) ||
-            error instanceof ConnectorError ||
-            error instanceof LifecycleHookError
+          throw utils.isConfigError(error) || error instanceof ConnectorError
             ? new InternalError({ path: info.path, cause: error })
             : error;
         }

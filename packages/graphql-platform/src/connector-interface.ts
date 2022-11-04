@@ -2,12 +2,12 @@ import type * as utils from '@prismamedia/graphql-platform-utils';
 import type {
   MutationContext,
   Node,
-  NodeCreation,
+  NodeCreationStatement,
   NodeFilter,
   NodeOrdering,
   NodeSelectedValue,
   NodeSelection,
-  NodeUpdate,
+  NodeUpdateStatement,
   NodeValue,
   OperationContext,
 } from './node.js';
@@ -46,7 +46,7 @@ export interface ConnectorFindStatement {
 
 export interface ConnectorCreateStatement {
   readonly node: Node;
-  readonly creations: ReadonlyArray<NodeCreation>;
+  readonly creations: ReadonlyArray<NodeCreationStatement>;
 }
 
 export interface ConnectorDeleteStatement {
@@ -56,7 +56,7 @@ export interface ConnectorDeleteStatement {
 
 export interface ConnectorUpdateStatement {
   readonly node: Node;
-  readonly update: NodeUpdate;
+  readonly update: NodeUpdateStatement;
   readonly filter: NodeFilter;
 }
 
