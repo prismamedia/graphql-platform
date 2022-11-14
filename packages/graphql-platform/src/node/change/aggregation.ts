@@ -12,8 +12,8 @@ export class NodeChangeAggregation<
 > implements Iterable<NodeChange<TRequestContext, TConnector>>
 {
   readonly #changesByIdByNode = new Map<
-    Node<TRequestContext, TConnector>,
-    Map<NodeChange['flattenedId'], NodeChange<TRequestContext, TConnector>>
+    Node,
+    Map<NodeChange['flattenedId'], NodeChange>
   >();
 
   public readonly changesByNode: ReadonlyMap<
@@ -162,15 +162,15 @@ export class NodeChangeAggregation<
       ),
     );
 
-    this.length = Array.from(this.#changesByIdByNode.values()).reduce<number>(
-      (sum, changes) => sum + changes.size,
+    this.length = Array.from(this.changesByNode.values()).reduce<number>(
+      (sum, changes) => sum + changes.length,
       0,
     );
 
     this.nodes = Object.freeze(Array.from(this.changesByNode.keys()));
   }
 
-  protected delete(change: NodeChange<TRequestContext, TConnector>): void {
+  protected delete(change: NodeChange): void {
     let changeByFlattenedId = this.#changesByIdByNode.get(change.node);
 
     if (
@@ -184,8 +184,8 @@ export class NodeChangeAggregation<
   *[Symbol.iterator](): IterableIterator<
     NodeChange<TRequestContext, TConnector>
   > {
-    for (const changesByFlattenedId of this.#changesByIdByNode.values()) {
-      yield* changesByFlattenedId.values();
+    for (const changes of this.changesByNode.values()) {
+      yield* changes;
     }
   }
 }

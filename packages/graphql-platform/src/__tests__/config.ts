@@ -13,6 +13,7 @@ import {
   ConnectorInterface,
   CustomOperationMap,
   GraphQLPlatform,
+  Node,
   NodeConfig,
   OnEdgeHeadDeletion,
 } from '../index.js';
@@ -435,10 +436,7 @@ export const Article: NodeConfig<MyContext> = {
   },
 
   onChange(change) {
-    assert(
-      this instanceof GraphQLPlatform,
-      'Should be an instance of GraphQLPlatform',
-    );
+    assert(this instanceof Node, 'Should be an instance of Node');
 
     // if (change.kind === utils.MutationType.CREATION) {
     //   console.debug(

@@ -1,17 +1,14 @@
 import * as utils from '@prismamedia/graphql-platform-utils';
 import { Memoize } from '@prismamedia/ts-memoize';
 import inflection from 'inflection';
-import type { JsonObject } from 'type-fest';
+import type { JsonObject, Promisable } from 'type-fest';
 import type {
   ConnectorConfigOverrideKind,
   ConnectorInterface,
   GetConnectorConfigOverride,
 } from './connector-interface.js';
 import type { GraphQLPlatform } from './index.js';
-import {
-  NodeChangeSubscriber,
-  NodeChangeSubscriberConfig,
-} from './node/change-subscriber.js';
+import type { NodeChange, NodeChangeSubscriber } from './node/change.js';
 import {
   Edge,
   Leaf,
@@ -59,7 +56,6 @@ import {
   type NodeOutputTypeConfig,
 } from './node/type.js';
 
-export * from './node/change-subscriber.js';
 export * from './node/change.js';
 export * from './node/definition.js';
 export * from './node/fixture.js';
@@ -182,13 +178,11 @@ export type NodeConfig<
   /**
    * Optional, act on this node's changes AFTER they have been committed
    */
-  onChange?: utils.Nillable<
-    utils.ArrayOrValue<
-      utils.Nillable<
-        | Omit<NodeChangeSubscriberConfig<TRequestContext, TConnector>, 'nodes'>
-        | Omit<NodeChangeSubscriberConfig, 'nodes'>['next']
-      >
-    >
+  onChange?: utils.ArrayOrValue<
+    (
+      this: Node<TRequestContext, TConnector>,
+      change: NodeChange<TRequestContext, TConnector>,
+    ) => Promisable<void>
   >;
 } & GetConnectorConfigOverride<TConnector, ConnectorConfigOverrideKind.NODE>;
 
@@ -499,33 +493,23 @@ export class Node<
 
       this.changeSubscribers = Object.freeze(
         utils.aggregateConfigError<
-          utils.Nillable<
-            | Omit<NodeChangeSubscriberConfig, 'nodes'>
-            | Omit<NodeChangeSubscriberConfig, 'nodes'>['next']
-          >,
+          NodeChangeSubscriber | undefined,
           NodeChangeSubscriber[]
         >(
           utils.resolveArrayOrValue(onChangeConfig),
-          (subscribers, config, index) =>
-            config != null
-              ? [
-                  ...subscribers,
-                  new NodeChangeSubscriber(
-                    this.gp,
-                    typeof config === 'function'
-                      ? {
-                          name: `on_${inflection.underscore(
-                            name,
-                            false,
-                          )}_change_${index}`,
-                          nodes: [this],
-                          next: config,
-                        }
-                      : { ...config, nodes: [this] },
-                    utils.addPath(onChangeConfigPath, index),
-                  ),
-                ]
-              : subscribers,
+          (subscribers, config, index) => {
+            if (config != null) {
+              if (typeof config !== 'function') {
+                throw new utils.UnexpectedConfigError(`a function`, config, {
+                  path: utils.addPath(onChangeConfigPath, index),
+                });
+              }
+
+              subscribers.push(config.bind(this));
+            }
+
+            return subscribers;
+          },
           [],
           { path: configPath },
         ),
