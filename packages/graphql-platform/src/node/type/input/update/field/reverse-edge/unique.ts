@@ -34,13 +34,13 @@ export type ReverseEdgeUniqueUpdateInputValue = utils.Optional<
     [ReverseEdgeUniqueUpdateInputAction.DISCONNECT_IF_EXISTS]: boolean;
 
     // Non-destructive actions
-    [ReverseEdgeUniqueUpdateInputAction.CONNECT]: utils.NonNillable<NodeUniqueFilterInputValue>;
-    [ReverseEdgeUniqueUpdateInputAction.CONNECT_IF_EXISTS]: utils.NonNillable<NodeUniqueFilterInputValue>;
-    [ReverseEdgeUniqueUpdateInputAction.CONNECT_OR_CREATE]: utils.NonNillable<{
-      where: utils.NonNillable<NodeUniqueFilterInputValue>;
-      create: utils.NonNillable<NodeCreationInputValue>;
+    [ReverseEdgeUniqueUpdateInputAction.CONNECT]: NonNullable<NodeUniqueFilterInputValue>;
+    [ReverseEdgeUniqueUpdateInputAction.CONNECT_IF_EXISTS]: NonNullable<NodeUniqueFilterInputValue>;
+    [ReverseEdgeUniqueUpdateInputAction.CONNECT_OR_CREATE]: NonNullable<{
+      where: NonNullable<NodeUniqueFilterInputValue>;
+      create: NonNullable<NodeCreationInputValue>;
     }>;
-    [ReverseEdgeUniqueUpdateInputAction.CREATE]: utils.NonNillable<NodeCreationInputValue>;
+    [ReverseEdgeUniqueUpdateInputAction.CREATE]: NonNullable<NodeCreationInputValue>;
   }>
 >;
 
@@ -219,7 +219,7 @@ export class ReverseEdgeUniqueUpdateInput extends AbstractReverseEdgeUpdateInput
           return fields;
         },
       }),
-      parser(inputValue, path) {
+      customParser(inputValue, path) {
         const inputActionNames = Object.keys(
           inputValue,
         ) as ReverseEdgeUniqueUpdateInputAction[];
@@ -255,7 +255,7 @@ export class ReverseEdgeUniqueUpdateInput extends AbstractReverseEdgeUpdateInput
 
   public override async applyActions(
     nodeValue: Readonly<NodeValue>,
-    inputValue: Readonly<utils.NonNillable<ReverseEdgeUniqueUpdateInputValue>>,
+    inputValue: Readonly<NonNullable<ReverseEdgeUniqueUpdateInputValue>>,
     context: MutationContext,
     path: utils.Path,
   ): Promise<void> {

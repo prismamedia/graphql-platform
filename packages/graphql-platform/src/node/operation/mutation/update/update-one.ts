@@ -14,7 +14,7 @@ import { AbstractUpdate } from '../abstract-update.js';
 import type { MutationContext } from '../context.js';
 
 export type UpdateOneMutationArgs = RawNodeSelectionAwareArgs<{
-  where: utils.NonNillable<NodeUniqueFilterInputValue>;
+  where: NonNullable<NodeUniqueFilterInputValue>;
   data: utils.PlainObject;
 }>;
 

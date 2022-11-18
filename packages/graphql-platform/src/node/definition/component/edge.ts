@@ -1,6 +1,7 @@
 import * as utils from '@prismamedia/graphql-platform-utils';
 import { Memoize } from '@prismamedia/ts-memoize';
 import inflection from 'inflection';
+import assert from 'node:assert/strict';
 import type { JsonValue } from 'type-fest';
 import type {
   ConnectorConfigOverrideKind,
@@ -27,9 +28,7 @@ import type {
   UniqueConstraintValue,
 } from '../unique-constraint.js';
 
-export type EdgeValue = null | UniqueConstraintValue;
-
-export type EdgeUpdate = EdgeValue;
+export type EdgeValue = UniqueConstraintValue | null;
 
 export enum OnEdgeHeadDeletion {
   RESTRICT,
@@ -228,7 +227,7 @@ export class Edge<
     // Nullable "unique-constraint" are not yet supported
     if (referencedUniqueConstraint.isNullable()) {
       throw new utils.UnexpectedConfigError(
-        `an non-nullable "unique-constraint"`,
+        `a non-nullable "unique-constraint"`,
         this.#uniqueConstraintHeadConfig,
         { path: this.#headConfigPath },
       );
@@ -264,7 +263,7 @@ export class Edge<
     );
   }
 
-  public parseValue(
+  public override parseValue(
     maybeValue: unknown,
     path: utils.Path = utils.addPath(undefined, this.toString()),
   ): EdgeValue {
@@ -285,13 +284,6 @@ export class Edge<
     }
 
     return this.referencedUniqueConstraint.parseValue(maybeValue, path);
-  }
-
-  public parseUpdate(
-    maybeUpdate: unknown,
-    path: utils.Path = utils.addPath(undefined, this.toString()),
-  ): EdgeUpdate {
-    return this.parseValue(maybeUpdate, path) as any;
   }
 
   public areValuesEqual(a: EdgeValue, b: EdgeValue): boolean {
@@ -344,20 +336,20 @@ export class Edge<
       (reverseEdge) => reverseEdge.originalEdge === this,
     );
 
-    if (!reverseEdge) {
-      throw new utils.ConfigError('Unexpected', { path: this.configPath });
-    }
+    assert(reverseEdge);
 
     return reverseEdge;
   }
 
   @Memoize()
-  public override get creationInput(): EdgeCreationInput | undefined {
+  public override get creationInput(): EdgeCreationInput {
     return new EdgeCreationInput(this);
   }
 
   @Memoize()
-  public override get updateInput(): EdgeUpdateInput | undefined {
-    return this.isMutable() ? new EdgeUpdateInput(this) : undefined;
+  public override get updateInput(): EdgeUpdateInput {
+    assert(this.isMutable(), `The "${this}" edge is immutable`);
+
+    return new EdgeUpdateInput(this);
   }
 }

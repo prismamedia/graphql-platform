@@ -2,8 +2,8 @@ import { ArticleStatus } from './config.js';
 
 export const Category = {
   category_root: {
-    title: 'ROOT',
     order: 0,
+    title: 'ROOT',
   },
   category_home: {
     parent: 'category_root',

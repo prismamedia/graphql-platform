@@ -19,14 +19,14 @@ export enum ReverseEdgeMultipleCreationInputAction {
 
 export type ReverseEdgeMultipleCreationInputValue = utils.Optional<
   Partial<{
-    [ReverseEdgeMultipleCreationInputAction.CONNECT_MANY]: utils.NonNillable<NodeFilterInputValue>;
-    [ReverseEdgeMultipleCreationInputAction.CONNECT_OR_CREATE_SOME]: utils.NonNillable<{
-      where: utils.NonNillable<NodeUniqueFilterInputValue>;
-      create: utils.NonNillable<NodeCreationInputValue>;
+    [ReverseEdgeMultipleCreationInputAction.CONNECT_MANY]: NonNullable<NodeFilterInputValue>;
+    [ReverseEdgeMultipleCreationInputAction.CONNECT_OR_CREATE_SOME]: NonNullable<{
+      where: NonNullable<NodeUniqueFilterInputValue>;
+      create: NonNullable<NodeCreationInputValue>;
     }>[];
-    [ReverseEdgeMultipleCreationInputAction.CONNECT_SOME]: utils.NonNillable<NodeUniqueFilterInputValue>[];
-    [ReverseEdgeMultipleCreationInputAction.CONNECT_SOME_IF_EXISTS]: utils.NonNillable<NodeUniqueFilterInputValue>[];
-    [ReverseEdgeMultipleCreationInputAction.CREATE_SOME]: utils.NonNillable<NodeCreationInputValue>[];
+    [ReverseEdgeMultipleCreationInputAction.CONNECT_SOME]: NonNullable<NodeUniqueFilterInputValue>[];
+    [ReverseEdgeMultipleCreationInputAction.CONNECT_SOME_IF_EXISTS]: NonNullable<NodeUniqueFilterInputValue>[];
+    [ReverseEdgeMultipleCreationInputAction.CREATE_SOME]: NonNullable<NodeCreationInputValue>[];
   }>
 >;
 
@@ -173,9 +173,7 @@ export class ReverseEdgeMultipleCreationInput extends AbstractReverseEdgeCreatio
 
   public override async applyActions(
     nodeValue: Readonly<NodeValue>,
-    inputValue: Readonly<
-      utils.NonNillable<ReverseEdgeMultipleCreationInputValue>
-    >,
+    inputValue: Readonly<NonNullable<ReverseEdgeMultipleCreationInputValue>>,
     context: MutationContext,
     path: utils.Path,
   ): Promise<void> {

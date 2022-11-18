@@ -1,4 +1,3 @@
-import type * as utils from '@prismamedia/graphql-platform-utils';
 import type { Node } from '../../../node.js';
 import { Leaf } from '../../definition/component/leaf.js';
 import type { NodeUniqueFilterInputValue } from '../../type/input/unique-filter.js';
@@ -13,7 +12,7 @@ export interface NodeSelectedValue {
 export function doesSelectedValueMatchUniqueFilter(
   node: Node,
   nodeSelectedValue: NodeSelectedValue,
-  filter: utils.NonNillable<NodeUniqueFilterInputValue>,
+  filter: NonNullable<NodeUniqueFilterInputValue>,
 ): boolean {
   return Object.entries(filter).every(([filterName, filterValue]) => {
     const componentSelectedValue = nodeSelectedValue[filterName];
@@ -32,7 +31,7 @@ export function doesSelectedValueMatchUniqueFilter(
       : doesSelectedValueMatchUniqueFilter(
           component.head,
           componentSelectedValue as NodeSelectedValue,
-          filterValue as utils.NonNillable<NodeUniqueFilterInputValue>,
+          filterValue as NonNullable<NodeUniqueFilterInputValue>,
         );
   });
 }

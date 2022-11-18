@@ -2,6 +2,7 @@ import * as utils from '@prismamedia/graphql-platform-utils';
 import { Memoize } from '@prismamedia/ts-memoize';
 import * as graphql from 'graphql';
 import assert from 'node:assert/strict';
+import type { Except } from 'type-fest';
 import type { ConnectorInterface } from '../../../connector-interface.js';
 import type { Node } from '../../../node.js';
 import type { Component } from '../../definition.js';
@@ -69,7 +70,7 @@ export interface NodeOutputTypeConfig<
   /**
    * Optional, fine-tune the node's GraphQL output type
    */
-  graphql?: Omit<
+  graphql?: Except<
     graphql.GraphQLObjectTypeConfig<
       Readonly<NodeSelectedValue>,
       TRequestContext

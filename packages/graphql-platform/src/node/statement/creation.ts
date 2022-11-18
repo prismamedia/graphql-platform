@@ -1,100 +1,138 @@
-import type { ConnectorInterface } from '../../connector-interface.js';
-import type { Node } from '../../node.js';
+import * as utils from '@prismamedia/graphql-platform-utils';
+import assert from 'node:assert/strict';
 import type {
   Component,
-  ComponentValue,
+  Edge,
   EdgeValue,
   Leaf,
   LeafValue,
-} from '../definition/component.js';
+  Node,
+} from '../../node.js';
 
-export type NodeCreationStatementProxy = Record<
+export type LeafCreationValue = LeafValue | undefined;
+
+export type EdgeCreationValue = EdgeValue | undefined;
+
+export type ComponentCreationValue = LeafCreationValue | EdgeCreationValue;
+
+export type NodeCreationValue = Record<
   Component['name'],
-  ComponentValue | undefined
+  ComponentCreationValue
 >;
 
-const nodeCreationProxyHandler: ProxyHandler<NodeCreationStatement> = {
-  ownKeys: (creation) =>
-    Array.from(creation.valuesByComponent.keys()).map(
-      (component) => component.name,
-    ),
-  has: (creation, componentName) => {
-    const component = creation.node.componentsByName.get(componentName as any);
+const proxyHandler: ProxyHandler<NodeCreationStatement> = {
+  ownKeys: (statement) =>
+    Array.from(statement.valuesByComponent.keys(), ({ name }) => name),
+  has: (statement, maybeComponentName) => {
+    const component = statement.node.componentsByName.get(
+      maybeComponentName as any,
+    );
 
-    return component ? creation.valuesByComponent.has(component) : false;
+    return component ? statement.valuesByComponent.has(component) : false;
   },
-  getOwnPropertyDescriptor: (creation, componentName) => {
-    const component = creation.node.componentsByName.get(componentName as any);
+  getOwnPropertyDescriptor: (statement, componentName) => {
+    const component = statement.node.componentsByName.get(componentName as any);
     if (!component) {
       return;
     }
 
-    const componentValue = creation.valuesByComponent.get(component);
-    if (componentValue === undefined) {
+    const value = statement.valuesByComponent.get(component);
+    if (value === undefined) {
       return;
     }
 
     return {
       configurable: true,
       enumerable: true,
-      value: componentValue,
+      value,
     };
   },
-  get: (creation, componentName) =>
-    creation.valuesByComponent.get(
-      creation.node.getComponentByName(componentName as any),
-    ),
-  set: (creation, componentName, componentValue) => {
-    creation.setComponentValue(
-      creation.node.getComponentByName(componentName as any),
-      componentValue,
-    );
+  get: (statement, maybeComponentName) =>
+    statement.getComponentValue(maybeComponentName as any),
+  set: (statement, maybeComponentName, maybeComponentValue) => {
+    statement.setComponentValue(maybeComponentName as any, maybeComponentValue);
 
     return true;
   },
-  deleteProperty: (creation, componentName) => {
-    creation.setComponentValue(
-      creation.node.getComponentByName(componentName as any),
+  deleteProperty: (statement, maybeComponentName) => {
+    const component = statement.node.componentsByName.get(
+      maybeComponentName as any,
     );
 
-    return true;
+    return component ? statement.valuesByComponent.delete(component) : false;
   },
 };
 
-export class NodeCreationStatement<
-  TRequestContext extends object = any,
-  TConnector extends ConnectorInterface = any,
-> {
+export class NodeCreationStatement {
+  public readonly valuesByComponent = new Map<
+    Component,
+    utils.NonOptional<ComponentCreationValue>
+  >();
+
   /**
-   * A convenient proxy to use this as an object
+   * A convenient proxy to use this as a mutable-object
    */
-  public readonly proxy: NodeCreationStatementProxy;
-  readonly #valuesByComponent: Map<
-    Component<TRequestContext, TConnector>,
-    ComponentValue
-  >;
+  public readonly proxy: NodeCreationValue = new Proxy(
+    this,
+    proxyHandler,
+  ) as any;
 
-  public constructor(public readonly node: Node<TRequestContext, TConnector>) {
-    this.proxy = new Proxy(this, nodeCreationProxyHandler) as any;
-    this.#valuesByComponent = new Map();
+  public constructor(public readonly node: Node, value?: NodeCreationValue) {
+    value != null && this.setValue(value);
   }
 
-  public get valuesByComponent(): ReadonlyMap<
-    Component<TRequestContext, TConnector>,
-    ComponentValue
-  > {
-    return this.#valuesByComponent;
-  }
+  public setComponentValue(
+    componentOrName: Component | Component['name'],
+    value?: ComponentCreationValue,
+  ): void {
+    const component = this.node.ensureComponentOrName(componentOrName);
 
-  public getComponentValue<TComponent extends Component>(
-    component: TComponent,
-  ): (TComponent extends Leaf ? LeafValue : EdgeValue) | undefined {
-    return this.#valuesByComponent.get(component) as any;
-  }
-
-  public setComponentValue(component: Component, value?: ComponentValue): void {
     value === undefined
-      ? this.#valuesByComponent.delete(component)
-      : this.#valuesByComponent.set(component, component.parseValue(value));
+      ? this.valuesByComponent.delete(component)
+      : this.valuesByComponent.set(component, component.parseValue(value));
+  }
+
+  public setValue(value: NodeCreationValue): void {
+    assert(utils.isPlainObject(value), `Expects a plain-object`);
+
+    Object.entries(value).forEach(([componentName, componentValue]) =>
+      this.setComponentValue(componentName, componentValue),
+    );
+  }
+
+  public getComponentValue(
+    componentOrName: Component | Component['name'],
+  ): ComponentCreationValue {
+    return this.valuesByComponent.get(
+      this.node.ensureComponentOrName(componentOrName),
+    );
+  }
+
+  public getLeafValue(leafOrName: Leaf | Leaf['name']): LeafCreationValue {
+    return this.valuesByComponent.get(
+      this.node.ensureLeafOrName(leafOrName),
+    ) as any;
+  }
+
+  public getEdgeValue(edgeOrName: Edge | Edge['name']): EdgeCreationValue {
+    return this.valuesByComponent.get(
+      this.node.ensureEdgeOrName(edgeOrName),
+    ) as any;
+  }
+
+  public get value(): NodeCreationValue {
+    return Object.assign(
+      Object.create(null),
+      Object.fromEntries(
+        Array.from(this.valuesByComponent, ([component, value]) => [
+          component.name,
+          value,
+        ]),
+      ),
+    );
+  }
+
+  public clone(): NodeCreationStatement {
+    return new NodeCreationStatement(this.node, this.value);
   }
 }

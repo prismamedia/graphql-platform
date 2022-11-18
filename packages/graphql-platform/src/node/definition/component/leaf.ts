@@ -2,6 +2,7 @@ import * as scalars from '@prismamedia/graphql-platform-scalars';
 import * as utils from '@prismamedia/graphql-platform-utils';
 import { Memoize } from '@prismamedia/ts-memoize';
 import * as graphql from 'graphql';
+import assert from 'node:assert/strict';
 import type { JsonValue, SetReturnType } from 'type-fest';
 import type {
   ConnectorConfigOverrideKind,
@@ -29,9 +30,12 @@ export type EnumType = graphql.GraphQLEnumType & {
 
 export type LeafType = scalars.Type | EnumType;
 
-export type LeafValue = null | ReturnType<LeafType['parseValue']>;
+export type LeafValue = ReturnType<LeafType['parseValue']> | null;
 
-export type LeafUpdate = LeafValue;
+export type LeafCustomParser<TValue extends LeafValue = any> = (
+  value: NonNullable<TValue>,
+  path: utils.Path,
+) => TValue;
 
 export type LeafConfig<
   TRequestContext extends object = any,
@@ -45,6 +49,11 @@ export type LeafConfig<
    * ex: { kind: "Leaf", type: "UUID" }
    */
   type: scalars.TypeName | LeafType;
+
+  /**
+   * Optional, add some custom validation or normalization on top of the "type"'s parser
+   */
+  customParser?: LeafCustomParser;
 
   /**
    * Optional, is the node sortable using this component's value ?
@@ -69,6 +78,7 @@ export class Leaf<
   TConnector extends ConnectorInterface = any,
 > extends AbstractComponent<TRequestContext, TConnector> {
   public readonly type: LeafType;
+  public readonly customParser?: LeafCustomParser;
   public override readonly selection: LeafSelection;
   readonly #comparator: (a: any, b: any) => boolean;
 
@@ -125,6 +135,24 @@ export class Leaf<
       }
     }
 
+    // custom-parser
+    {
+      const customParserConfig = config.customParser;
+      const customParserConfigPath = utils.addPath(configPath, 'customParser');
+
+      if (customParserConfig != null) {
+        if (typeof customParserConfig !== 'function') {
+          throw new utils.UnexpectedConfigError(
+            `a function`,
+            customParserConfig,
+            { path: customParserConfigPath },
+          );
+        }
+
+        this.customParser = customParserConfig;
+      }
+    }
+
     // selection
     {
       this.selection = new LeafSelection(this);
@@ -139,7 +167,7 @@ export class Leaf<
     }
   }
 
-  public parseValue(
+  public override parseValue(
     maybeValue: unknown,
     path: utils.Path = utils.addPath(undefined, this.toString()),
   ): LeafValue {
@@ -155,14 +183,20 @@ export class Leaf<
       return null;
     }
 
-    return value;
-  }
+    if (this.customParser) {
+      try {
+        return this.customParser(value, path);
+      } catch (error) {
+        throw utils.isNestableError(error)
+          ? error
+          : new utils.NestableError(utils.castToError(error).message, {
+              path,
+              cause: error,
+            });
+      }
+    }
 
-  public parseUpdate(
-    maybeUpdate: unknown,
-    path: utils.Path = utils.addPath(undefined, this.toString()),
-  ): LeafUpdate {
-    return this.parseValue(maybeUpdate, path) as any;
+    return value;
   }
 
   public areValuesEqual(a: LeafValue, b: LeafValue): boolean {
@@ -224,12 +258,14 @@ export class Leaf<
   }
 
   @Memoize()
-  public override get creationInput(): LeafCreationInput | undefined {
+  public override get creationInput(): LeafCreationInput {
     return new LeafCreationInput(this);
   }
 
   @Memoize()
-  public override get updateInput(): LeafUpdateInput | undefined {
-    return this.isMutable() ? new LeafUpdateInput(this) : undefined;
+  public override get updateInput(): LeafUpdateInput {
+    assert(this.isMutable(), `The "${this}" leaf is immutable`);
+
+    return new LeafUpdateInput(this);
   }
 }

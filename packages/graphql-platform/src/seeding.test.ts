@@ -76,10 +76,10 @@ describe('Seeding', () => {
           switch (node.name) {
             case 'Article':
               return creations.map((creation): NodeValue => {
-                switch (creation.proxy.title) {
+                switch (creation.value.title) {
                   case 'My first draft article':
                     return {
-                      ...creation.proxy,
+                      ...creation.value,
                       _id: 1,
                       id: 'adb64be5-650b-4332-8932-89a1943157a0',
                       body: null,
@@ -91,7 +91,7 @@ describe('Seeding', () => {
 
                   case 'My second draft article':
                     return {
-                      ...creation.proxy,
+                      ...creation.value,
                       _id: 2,
                       id: '2b13f049-9987-4d19-b7ae-357f9c2177d1',
                       body: null,
@@ -103,7 +103,7 @@ describe('Seeding', () => {
 
                   case 'My first published article':
                     return {
-                      ...creation.proxy,
+                      ...creation.value,
                       _id: 3,
                       id: 'b816e1d9-9e24-44a7-a3bb-5886e83de9d7',
                       body: null,
@@ -115,7 +115,7 @@ describe('Seeding', () => {
 
                   case 'My second published article':
                     return {
-                      ...creation.proxy,
+                      ...creation.value,
                       _id: 4,
                       id: 'bffaac46-f6dd-42c9-bc25-5d327d304ae8',
                       body: null,
@@ -127,19 +127,19 @@ describe('Seeding', () => {
 
                   default:
                     throw new Error(
-                      `"create" not implemented for "${node.name}/${creation.proxy.title}"`,
+                      `"create" not implemented for "${node.name}/${creation.value.title}"`,
                     );
                 }
               });
 
             case 'Category':
               return creations.map((creation): NodeValue => {
-                switch (creation.proxy.title) {
+                switch (creation.value.title) {
                   case 'ROOT':
                     hasRootCategory = true;
 
                     return {
-                      ...creation.proxy,
+                      ...creation.value,
                       _id: 1,
                       id: '1e84dfcb-1bba-4633-ad6f-d2e2aa1b5689',
                       parent: null,
@@ -148,7 +148,7 @@ describe('Seeding', () => {
 
                   case 'Home':
                     return {
-                      ...creation.proxy,
+                      ...creation.value,
                       _id: 2,
                       id: '91966ab3-6f7d-4c48-885f-d07c98af6106',
                       parent: { _id: 1 },
@@ -157,7 +157,7 @@ describe('Seeding', () => {
 
                   case 'News':
                     return {
-                      ...creation.proxy,
+                      ...creation.value,
                       _id: 3,
                       id: 'e06a3383-aa44-410d-a1a1-72dca83b5743',
                       parent: { _id: 1 },
@@ -166,75 +166,75 @@ describe('Seeding', () => {
 
                   default:
                     throw new Error(
-                      `"create" not implemented for "${node.name}/${creation.proxy.title}"`,
+                      `"create" not implemented for "${node.name}/${creation.value.title}"`,
                     );
                 }
               });
 
             case 'Tag':
               return creations.map((creation): NodeValue => {
-                switch (creation.proxy.title) {
+                switch (creation.value.title) {
                   case 'TV':
                     return {
-                      ...creation.proxy,
+                      ...creation.value,
                       id: '98aaaccb-e73e-4e9b-9aa6-383b05a15974',
-                      deprecated: creation.proxy.deprecated ?? null,
+                      deprecated: creation.value.deprecated ?? null,
                     };
 
                   case 'high-tech':
                     return {
-                      ...creation.proxy,
+                      ...creation.value,
                       id: 'db414952-b5e4-4a91-a013-584d10521714',
-                      deprecated: creation.proxy.deprecated ?? null,
+                      deprecated: creation.value.deprecated ?? null,
                     };
 
                   case 'fashion':
                     return {
-                      ...creation.proxy,
+                      ...creation.value,
                       id: '189c1ccb-de49-484a-bcfe-50c242adf754',
-                      deprecated: creation.proxy.deprecated ?? null,
+                      deprecated: creation.value.deprecated ?? null,
                     };
 
                   default:
                     throw new Error(
-                      `"create" not implemented for "${node.name}/${creation.proxy.title}"`,
+                      `"create" not implemented for "${node.name}/${creation.value.title}"`,
                     );
                 }
               });
 
             case 'ArticleTag':
               return creations.map((creation): NodeValue => {
-                switch (creation.proxy.order) {
+                switch (creation.value.order) {
                   case 0:
                     return {
-                      ...creation.proxy,
+                      ...creation.value,
                       article: { _id: 3 },
                       tag: { id: '98aaaccb-e73e-4e9b-9aa6-383b05a15974' },
                     };
 
                   case 1:
                     return {
-                      ...creation.proxy,
+                      ...creation.value,
                       article: { _id: 3 },
                       tag: { id: 'db414952-b5e4-4a91-a013-584d10521714' },
                     };
 
                   default:
                     throw new Error(
-                      `"create" not implemented for "${node.name}/${creation.proxy}"`,
+                      `"create" not implemented for "${node.name}/${creation.value}"`,
                     );
                 }
               });
 
             case 'ArticleTagModeration':
               return creations.map(
-                (creation): NodeValue => ({ ...creation.proxy } as NodeValue),
+                (creation): NodeValue => ({ ...creation.value } as NodeValue),
               );
 
             case 'User':
               return creations.map(
                 (creation): NodeValue =>
-                  ({ lastLoggedInAt: null, ...creation.proxy } as NodeValue),
+                  ({ lastLoggedInAt: null, ...creation.value } as NodeValue),
               );
 
             case 'UserProfile':
@@ -244,7 +244,7 @@ describe('Seeding', () => {
                   facebookId: null,
                   googleId: null,
                   twitterHandle: null,
-                  ...creation.proxy,
+                  ...creation.value,
                 }),
               );
 
@@ -342,7 +342,7 @@ describe('Seeding', () => {
       }),
 
       onNodeChange: [
-        function (change) {
+        function (_change) {
           assert(
             this instanceof GraphQLPlatform,
             'Should be an instance of GraphQLPlatform',

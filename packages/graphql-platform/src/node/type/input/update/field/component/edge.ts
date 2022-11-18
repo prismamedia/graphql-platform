@@ -1,12 +1,10 @@
 import * as scalars from '@prismamedia/graphql-platform-scalars';
 import * as utils from '@prismamedia/graphql-platform-utils';
 import inflection from 'inflection';
-import type { RequireExactlyOne } from 'type-fest';
-import type {
-  Edge,
-  EdgeUpdate,
-} from '../../../../../definition/component/edge.js';
+import type { Except, RequireExactlyOne } from 'type-fest';
+import type { Edge } from '../../../../../definition/component/edge.js';
 import type { MutationContext } from '../../../../../operation/mutation/context.js';
+import type { EdgeUpdateValue } from '../../../../../statement/update.js';
 import type { NodeCreationInputValue } from '../../../creation.js';
 import type { NodeUniqueFilterInputValue } from '../../../unique-filter.js';
 import { AbstractComponentUpdateInput } from '../abstract-component.js';
@@ -21,24 +19,30 @@ export enum EdgeUpdateInputAction {
 
 export type EdgeUpdateInputValue = utils.Nillable<
   RequireExactlyOne<{
-    [EdgeUpdateInputAction.CONNECT]: utils.NonNillable<NodeUniqueFilterInputValue>;
-    [EdgeUpdateInputAction.CONNECT_IF_EXISTS]: utils.NonNillable<NodeUniqueFilterInputValue>;
-    [EdgeUpdateInputAction.CONNECT_OR_CREATE]: utils.NonNillable<{
-      where: utils.NonNillable<NodeUniqueFilterInputValue>;
-      create: utils.NonNillable<NodeCreationInputValue>;
+    [EdgeUpdateInputAction.CONNECT]: NonNullable<NodeUniqueFilterInputValue>;
+    [EdgeUpdateInputAction.CONNECT_IF_EXISTS]: NonNullable<NodeUniqueFilterInputValue>;
+    [EdgeUpdateInputAction.CONNECT_OR_CREATE]: NonNullable<{
+      where: NonNullable<NodeUniqueFilterInputValue>;
+      create: NonNullable<NodeCreationInputValue>;
     }>;
-    [EdgeUpdateInputAction.CREATE]: utils.NonNillable<NodeCreationInputValue>;
+    [EdgeUpdateInputAction.CREATE]: NonNullable<NodeCreationInputValue>;
     [EdgeUpdateInputAction.DISCONNECT]: boolean;
   }>
 >;
 
-export type EdgeUpdateInputConfig = Omit<
+export type EdgeUpdateInputConfig = Except<
   utils.InputConfig<EdgeUpdateInputValue>,
   'name' | 'optional' | 'type' | 'publicType'
 >;
 
 export class EdgeUpdateInput extends AbstractComponentUpdateInput<EdgeUpdateInputValue> {
   public constructor(public readonly edge: Edge) {
+    const config = edge.config[utils.MutationType.UPDATE];
+    const configPath = utils.addPath(
+      edge.configPath,
+      utils.MutationType.UPDATE,
+    );
+
     super(
       edge,
       {
@@ -133,7 +137,7 @@ export class EdgeUpdateInput extends AbstractComponentUpdateInput<EdgeUpdateInpu
           }),
           !edge.isNullable(),
         ),
-        parser(inputValue, path) {
+        customParser(inputValue, path) {
           if (Object.keys(inputValue).length !== 1) {
             throw new utils.UnexpectedValueError(
               `one and only one action`,
@@ -144,17 +148,17 @@ export class EdgeUpdateInput extends AbstractComponentUpdateInput<EdgeUpdateInpu
 
           return inputValue;
         },
-        ...edge.config[utils.MutationType.UPDATE],
+        ...config,
       },
-      utils.addPath(edge.configPath, utils.MutationType.UPDATE),
+      configPath,
     );
   }
 
-  public override async resolveComponentUpdate(
-    inputValue: Readonly<utils.NonNillable<EdgeUpdateInputValue>>,
+  public async resolveValue(
+    inputValue: Readonly<NonNullable<EdgeUpdateInputValue>>,
     context: MutationContext,
     path: utils.Path,
-  ): Promise<EdgeUpdate | undefined> {
+  ): Promise<EdgeUpdateValue> {
     const selection = this.edge.referencedUniqueConstraint.selection;
 
     const actionName = Object.keys(inputValue)[0] as EdgeUpdateInputAction;

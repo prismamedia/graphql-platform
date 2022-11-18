@@ -1,22 +1,26 @@
 import * as utils from '@prismamedia/graphql-platform-utils';
-import type { SetOptional } from 'type-fest';
+import type { Except, SetOptional } from 'type-fest';
 import type {
   Leaf,
-  LeafUpdate,
   LeafValue,
 } from '../../../../../definition/component/leaf.js';
-import type { MutationContext } from '../../../../../operation/mutation/context.js';
 import { AbstractComponentUpdateInput } from '../abstract-component.js';
 
-export type LeafUpdateInputConfig = Omit<
-  SetOptional<utils.InputConfig<LeafUpdate | undefined>, 'type'>,
+export type LeafUpdateInputValue = utils.Nillable<LeafValue>;
+
+export type LeafUpdateInputConfig = Except<
+  SetOptional<utils.InputConfig<LeafUpdateInputValue>, 'type' | 'customParser'>,
   'name' | 'optional'
 >;
 
-export class LeafUpdateInput extends AbstractComponentUpdateInput<
-  LeafValue | undefined
-> {
+export class LeafUpdateInput extends AbstractComponentUpdateInput<LeafUpdateInputValue> {
   public constructor(public readonly leaf: Leaf) {
+    const config = leaf.config[utils.MutationType.UPDATE];
+    const configPath = utils.addPath(
+      leaf.configPath,
+      utils.MutationType.UPDATE,
+    );
+
     super(
       leaf,
       {
@@ -24,17 +28,9 @@ export class LeafUpdateInput extends AbstractComponentUpdateInput<
           leaf.type,
           !leaf.isNullable(),
         ),
-        ...leaf.config[utils.MutationType.UPDATE],
+        ...config,
       },
-      utils.addPath(leaf.configPath, utils.MutationType.UPDATE),
+      configPath,
     );
-  }
-
-  public override async resolveComponentUpdate(
-    inputValue: LeafValue | undefined,
-    _context: MutationContext,
-    _path: utils.Path,
-  ): Promise<LeafValue | undefined> {
-    return inputValue;
   }
 }

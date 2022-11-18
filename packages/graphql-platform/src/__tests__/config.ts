@@ -172,7 +172,6 @@ export const Article: NodeConfig<MyContext> = {
     category: {
       kind: 'Edge',
       head: 'Category',
-      // head: 'Category.parent_slug',
       onHeadDeletion: OnEdgeHeadDeletion.SET_NULL,
     },
     createdBy: {
@@ -345,8 +344,8 @@ export const Article: NodeConfig<MyContext> = {
           throw new Error(`Must be logged-in`);
         }
 
-        if (typeof data['htmlBody'] !== 'undefined') {
-          if (typeof data['body'] !== 'undefined') {
+        if (data['htmlBody'] !== undefined) {
+          if (data['body'] !== undefined) {
             throw new Error(
               `Cannot provide both the 'htmlBody' and the 'body'`,
             );
@@ -360,7 +359,7 @@ export const Article: NodeConfig<MyContext> = {
           throw new Error(`Cannot update a deleted article`);
         }
 
-        if (typeof update['title'] !== 'undefined') {
+        if (update['title'] !== undefined) {
           update['slug'] = update['title']
             ? slugify(update['title'] as string, slugify.defaults.modes.rfc3986)
             : null;

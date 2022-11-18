@@ -1,16 +1,13 @@
 import * as utils from '@prismamedia/graphql-platform-utils';
-import type {
-  Component,
-  ComponentValue,
-} from '../../../../definition/component.js';
-import type { MutationContext } from '../../../../operation/mutation/context.js';
+import type { Except } from 'type-fest';
+import type { Component } from '../../../../definition/component.js';
 
 export abstract class AbstractComponentCreationInput<
   TInputValue,
 > extends utils.Input<TInputValue> {
   public constructor(
     public readonly component: Component,
-    config: Omit<utils.InputConfig<TInputValue>, 'name'>,
+    config: Except<utils.InputConfig<TInputValue>, 'name'>,
     configPath: utils.Path,
   ) {
     const publicConfig = config.public;
@@ -55,10 +52,4 @@ export abstract class AbstractComponentCreationInput<
       }
     }
   }
-
-  public abstract resolveComponentValue(
-    inputValue: Readonly<TInputValue>,
-    context: MutationContext,
-    path: utils.Path,
-  ): Promise<ComponentValue | undefined>;
 }

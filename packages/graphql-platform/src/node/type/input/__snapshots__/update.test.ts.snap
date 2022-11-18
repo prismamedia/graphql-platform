@@ -1,6 +1,6 @@
 // Jest Snapshot v1, https://goo.gl/fbAQLP
 
-exports[`NodeUpdateInputType Definition Article has an update input type: ArticleUpdateInput 1`] = `
+exports[`NodeUpdateInputType Definition Article may have an update input type: ArticleUpdateInput 1`] = `
 """"The "Article" node's update"""
 input ArticleUpdateInput {
   status: ArticleStatus
@@ -30,7 +30,7 @@ input ArticleUpdateInput {
 }"
 `;
 
-exports[`NodeUpdateInputType Definition ArticleTag has an update input type: ArticleTagUpdateInput 1`] = `
+exports[`NodeUpdateInputType Definition ArticleTag may have an update input type: ArticleTagUpdateInput 1`] = `
 """"The "ArticleTag" node's update"""
 input ArticleTagUpdateInput {
   order: UnsignedInt
@@ -38,14 +38,14 @@ input ArticleTagUpdateInput {
 }"
 `;
 
-exports[`NodeUpdateInputType Definition ArticleTagModeration has an update input type: ArticleTagModerationUpdateInput 1`] = `
+exports[`NodeUpdateInputType Definition ArticleTagModeration may have an update input type: ArticleTagModerationUpdateInput 1`] = `
 """"The "ArticleTagModeration" node's update"""
 input ArticleTagModerationUpdateInput {
   moderation: NonEmptyTrimmedString
 }"
 `;
 
-exports[`NodeUpdateInputType Definition Category has an update input type: CategoryUpdateInput 1`] = `
+exports[`NodeUpdateInputType Definition Category may have an update input type: CategoryUpdateInput 1`] = `
 """"The "Category" node's update"""
 input CategoryUpdateInput {
   parent: CategoryNestedParentEdgeUpdateInput
@@ -59,7 +59,7 @@ input CategoryUpdateInput {
 }"
 `;
 
-exports[`NodeUpdateInputType Definition Tag has an update input type: TagUpdateInput 1`] = `
+exports[`NodeUpdateInputType Definition Tag may have an update input type: TagUpdateInput 1`] = `
 """"The "Tag" node's update"""
 input TagUpdateInput {
   """A tag can be deprecated"""
@@ -68,7 +68,7 @@ input TagUpdateInput {
 }"
 `;
 
-exports[`NodeUpdateInputType Definition UserProfile has an update input type: UserProfileUpdateInput 1`] = `
+exports[`NodeUpdateInputType Definition UserProfile may have an update input type: UserProfileUpdateInput 1`] = `
 """"The "UserProfile" node's update"""
 input UserProfileUpdateInput {
   birthday: Date

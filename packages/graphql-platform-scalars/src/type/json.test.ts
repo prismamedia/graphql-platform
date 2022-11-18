@@ -1,5 +1,5 @@
 import * as graphql from 'graphql';
-import { JsonValue } from 'type-fest';
+import type { JsonValue } from 'type-fest';
 import { GraphQLJSONArray, GraphQLJSONObject } from './json.js';
 
 describe('JSON', () => {

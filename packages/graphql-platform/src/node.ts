@@ -1,6 +1,7 @@
 import * as utils from '@prismamedia/graphql-platform-utils';
 import { Memoize } from '@prismamedia/ts-memoize';
 import inflection from 'inflection';
+import assert from 'node:assert/strict';
 import type { JsonObject, Promisable } from 'type-fest';
 import type {
   ConnectorConfigOverrideKind,
@@ -70,9 +71,8 @@ export * from './node/type.js';
  * -> think of a "row" in SQL or a "document" in NoSQL
  */
 export type NodeValue = NodeSelectedValue &
-  UniqueConstraintValue & {
-    [componentName: string]: ComponentValue;
-  };
+  UniqueConstraintValue &
+  Record<Component['name'], ComponentValue>;
 
 export type NodeAuthorizationConfig<TRequestContext extends object> = (
   requestContext: TRequestContext,
@@ -202,25 +202,32 @@ export class Node<
   public readonly components: ReadonlyArray<
     Component<TRequestContext, TConnector>
   >;
-  public readonly componentSet: Set<Component<TRequestContext, TConnector>>;
+  public readonly componentSet: ReadonlySet<
+    Component<TRequestContext, TConnector>
+  >;
 
   public readonly leavesByName: ReadonlyMap<
     Leaf['name'],
     Leaf<TRequestContext, TConnector>
   >;
   public readonly leaves: ReadonlyArray<Leaf<TRequestContext, TConnector>>;
+  public readonly leaveSet: ReadonlySet<Leaf<TRequestContext, TConnector>>;
 
   public readonly edgesByName: ReadonlyMap<
     Edge['name'],
     Edge<TRequestContext, TConnector>
   >;
   public readonly edges: ReadonlyArray<Edge<TRequestContext, TConnector>>;
+  public readonly edgeSet: ReadonlySet<Edge<TRequestContext, TConnector>>;
 
   public readonly uniqueConstraintsByName: ReadonlyMap<
     UniqueConstraint['name'],
     UniqueConstraint<TRequestContext, TConnector>
   >;
   public readonly uniqueConstraints: ReadonlyArray<
+    UniqueConstraint<TRequestContext, TConnector>
+  >;
+  public readonly uniqueConstraintSet: ReadonlySet<
     UniqueConstraint<TRequestContext, TConnector>
   >;
 
@@ -357,9 +364,7 @@ export class Node<
         ),
       );
 
-      this.components = Object.freeze(
-        Array.from(this.componentsByName.values()),
-      );
+      this.components = Array.from(this.componentsByName.values());
 
       this.componentSet = new Set(this.components);
 
@@ -371,7 +376,8 @@ export class Node<
           ),
         );
 
-        this.leaves = Object.freeze(Array.from(this.leavesByName.values()));
+        this.leaves = Array.from(this.leavesByName.values());
+        this.leaveSet = new Set(this.leaves);
       }
 
       // edges
@@ -382,7 +388,8 @@ export class Node<
           ),
         );
 
-        this.edges = Object.freeze(Array.from(this.edgesByName.values()));
+        this.edges = Array.from(this.edgesByName.values());
+        this.edgeSet = new Set(this.edges);
       }
     }
 
@@ -419,9 +426,10 @@ export class Node<
         ),
       );
 
-      this.uniqueConstraints = Object.freeze(
-        Array.from(this.uniqueConstraintsByName.values()),
+      this.uniqueConstraints = Array.from(
+        this.uniqueConstraintsByName.values(),
       );
+      this.uniqueConstraintSet = new Set(this.uniqueConstraints);
 
       // identifier (= the first unique constraint)
       {
@@ -491,28 +499,26 @@ export class Node<
       const onChangeConfig = config.onChange;
       const onChangeConfigPath = utils.addPath(configPath, 'onChange');
 
-      this.changeSubscribers = Object.freeze(
-        utils.aggregateConfigError<
-          NodeChangeSubscriber | undefined,
-          NodeChangeSubscriber[]
-        >(
-          utils.resolveArrayOrValue(onChangeConfig),
-          (subscribers, config, index) => {
-            if (config != null) {
-              if (typeof config !== 'function') {
-                throw new utils.UnexpectedConfigError(`a function`, config, {
-                  path: utils.addPath(onChangeConfigPath, index),
-                });
-              }
-
-              subscribers.push(config.bind(this));
+      this.changeSubscribers = utils.aggregateConfigError<
+        NodeChangeSubscriber | undefined,
+        NodeChangeSubscriber[]
+      >(
+        utils.resolveArrayOrValue(onChangeConfig),
+        (subscribers, config, index) => {
+          if (config != null) {
+            if (typeof config !== 'function') {
+              throw new utils.UnexpectedConfigError(`a function`, config, {
+                path: utils.addPath(onChangeConfigPath, index),
+              });
             }
 
-            return subscribers;
-          },
-          [],
-          { path: configPath },
-        ),
+            subscribers.push(config.bind(this));
+          }
+
+          return subscribers;
+        },
+        [],
+        { path: configPath },
       );
     }
   }
@@ -644,6 +650,25 @@ export class Node<
     return component;
   }
 
+  public ensureComponentOrName(
+    componentOrName: Component | Component['name'],
+    path?: utils.Path,
+  ): Component<TRequestContext, TConnector> {
+    if (typeof componentOrName === 'string') {
+      return this.getComponentByName(componentOrName, path);
+    } else if (this.componentSet.has(componentOrName)) {
+      return componentOrName;
+    }
+
+    throw new utils.UnexpectedValueError(
+      `${this.indefinite}'s component among "${[
+        ...this.componentsByName.keys(),
+      ].join(', ')}"`,
+      String(componentOrName),
+      { path },
+    );
+  }
+
   public getLeafByName(
     name: Leaf['name'],
     path?: utils.Path,
@@ -660,6 +685,25 @@ export class Node<
     }
 
     return leaf;
+  }
+
+  public ensureLeafOrName(
+    leafOrName: Leaf | Leaf['name'],
+    path?: utils.Path,
+  ): Leaf<TRequestContext, TConnector> {
+    if (typeof leafOrName === 'string') {
+      return this.getLeafByName(leafOrName, path);
+    } else if (this.leaveSet.has(leafOrName)) {
+      return leafOrName;
+    }
+
+    throw new utils.UnexpectedValueError(
+      `${this.indefinite}'s leaf among "${[...this.leavesByName.keys()].join(
+        ', ',
+      )}"`,
+      String(leafOrName),
+      { path },
+    );
   }
 
   public getEdgeByName(
@@ -680,6 +724,25 @@ export class Node<
     return edge;
   }
 
+  public ensureEdgeOrName(
+    edgeOrName: Edge | Edge['name'],
+    path?: utils.Path,
+  ): Edge<TRequestContext, TConnector> {
+    if (typeof edgeOrName === 'string') {
+      return this.getEdgeByName(edgeOrName, path);
+    } else if (this.edgeSet.has(edgeOrName)) {
+      return edgeOrName;
+    }
+
+    throw new utils.UnexpectedValueError(
+      `${this.indefinite}'s edge among "${[...this.edgesByName.keys()].join(
+        ', ',
+      )}"`,
+      String(edgeOrName),
+      { path },
+    );
+  }
+
   public getUniqueConstraintByName(
     name: UniqueConstraint['name'],
     path?: utils.Path,
@@ -696,6 +759,25 @@ export class Node<
     }
 
     return uniqueConstraint;
+  }
+
+  public ensureUniqueConstraintOrName(
+    uniqueConstraintOrName: UniqueConstraint | UniqueConstraint['name'],
+    path?: utils.Path,
+  ): UniqueConstraint<TRequestContext, TConnector> {
+    if (typeof uniqueConstraintOrName === 'string') {
+      return this.getUniqueConstraintByName(uniqueConstraintOrName, path);
+    } else if (this.uniqueConstraintSet.has(uniqueConstraintOrName)) {
+      return uniqueConstraintOrName;
+    }
+
+    throw new utils.UnexpectedValueError(
+      `${this.indefinite}'s unique-constraint among "${[
+        ...this.uniqueConstraintsByName.keys(),
+      ].join(', ')}"`,
+      String(uniqueConstraintOrName),
+      { path },
+    );
   }
 
   @Memoize()
@@ -909,7 +991,7 @@ export class Node<
   public get reverseEdges(): ReadonlyArray<
     ReverseEdge<TRequestContext, TConnector>
   > {
-    return Object.freeze(Array.from(this.reverseEdgesByName.values()));
+    return Array.from(this.reverseEdgesByName.values());
   }
 
   public getReverseEdgeByName(
@@ -1013,25 +1095,22 @@ export class Node<
   }
 
   @Memoize()
-  public get creationInputType(): NodeCreationInputType<
-    TRequestContext,
-    TConnector
-  > {
+  public get creationInputType(): NodeCreationInputType {
     return new NodeCreationInputType(this);
   }
 
   @Memoize((edge: Edge) => edge)
-  public getCreationWithoutEdgeInputType(
-    edge: Edge,
-  ): NodeCreationInputType<TRequestContext, TConnector> {
+  public getCreationWithoutEdgeInputType(edge: Edge): NodeCreationInputType {
     return new NodeCreationInputType(this, edge);
   }
 
   @Memoize()
-  public get updateInputType(): NodeUpdateInputType<
-    TRequestContext,
-    TConnector
-  > {
+  public get updateInputType(): NodeUpdateInputType {
+    assert(
+      this.isMutationEnabled(utils.MutationType.UPDATE),
+      `The "${this}" node is immutable`,
+    );
+
     return new NodeUpdateInputType(this);
   }
 
@@ -1040,10 +1119,13 @@ export class Node<
     MutationsByKey<TRequestContext, TConnector>
   > {
     return Object.fromEntries(
-      Object.entries(mutationConstructorsByKey).map(([name, constructor]) => [
-        name,
-        new constructor(this),
-      ]),
+      Object.entries(mutationConstructorsByKey).reduce<
+        [OperationInterface['name'], OperationInterface][]
+      >((entries, [name, constructor]) => {
+        const mutation = new constructor(this);
+
+        return mutation.isEnabled() ? [...entries, [name, mutation]] : entries;
+      }, []),
     ) as any;
   }
 
@@ -1069,10 +1151,13 @@ export class Node<
     QueriesByKey<TRequestContext, TConnector>
   > {
     return Object.fromEntries(
-      Object.entries(queryConstructorsByKey).map(([name, constructor]) => [
-        name,
-        new constructor(this),
-      ]),
+      Object.entries(queryConstructorsByKey).reduce<
+        [OperationInterface['name'], OperationInterface][]
+      >((entries, [name, constructor]) => {
+        const query = new constructor(this);
+
+        return query.isEnabled() ? [...entries, [name, query]] : entries;
+      }, []),
     ) as any;
   }
 
@@ -1096,9 +1181,15 @@ export class Node<
     NodeSubscriptionsByKey<TRequestContext, TConnector>
   > {
     return Object.fromEntries(
-      Object.entries(nodeSubscriptionConstructorsByKey).map(
-        ([name, constructor]) => [name, new constructor(this)],
-      ),
+      Object.entries(nodeSubscriptionConstructorsByKey).reduce<
+        [OperationInterface['name'], OperationInterface][]
+      >((entries, [name, constructor]) => {
+        const subscription = new constructor(this);
+
+        return subscription.isEnabled()
+          ? [...entries, [name, subscription]]
+          : entries;
+      }, []),
     ) as any;
   }
 
@@ -1179,8 +1270,9 @@ export class Node<
 
       if (this.isMutationPublic(utils.MutationType.UPDATE)) {
         if (
-          !this.components.some((component) =>
-            component.updateInput?.isPublic(),
+          !this.components.some(
+            (component) =>
+              component.isMutable() && component.updateInput.isPublic(),
           )
         ) {
           throw new utils.ConfigError(
@@ -1222,9 +1314,11 @@ export class Node<
     this.filterInputType.validate();
     this.orderingInputType.validate();
     this.uniqueFilterInputType.validate();
-    this.outputType.validate();
     this.creationInputType.validate();
-    this.updateInputType.validate();
+    this.isMutationEnabled(utils.MutationType.UPDATE) &&
+      this.updateInputType.validate();
+
+    this.outputType.validate();
   }
 
   @Memoize()
@@ -1257,7 +1351,7 @@ export class Node<
 
   public parseValue(
     maybeValue: unknown,
-    path: utils.Path = utils.addPath(undefined, this.toString()),
+    path: utils.Path = utils.addPath(undefined, this.name),
   ): NodeValue {
     if (!utils.isPlainObject(maybeValue)) {
       throw new utils.UnexpectedValueError('a plain-object', maybeValue, {

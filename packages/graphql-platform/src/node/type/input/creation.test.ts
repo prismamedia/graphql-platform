@@ -1,6 +1,6 @@
 import * as utils from '@prismamedia/graphql-platform-utils';
 import * as graphql from 'graphql';
-import { GraphQLPlatform } from '../../../index.js';
+import { GraphQLPlatform, NodeCreationStatement } from '../../../index.js';
 import {
   ArticleStatus,
   MyGP,
@@ -10,7 +10,6 @@ import {
 } from '../../../__tests__/config.js';
 import { mockConnector } from '../../../__tests__/connector-mock.js';
 import { MutationContext } from '../../operation.js';
-import { NodeCreationStatement } from '../../statement/creation.js';
 import { LeafComparisonFilter } from '../../statement/filter.js';
 import { NodeCreationInputType } from './creation.js';
 
@@ -21,7 +20,7 @@ describe('NodeCreationInputType', () => {
     gp = new GraphQLPlatform({
       nodes,
       connector: mockConnector({
-        find: async ({ node, filter }) => {
+        find: async ({ node, filter, selection }) => {
           if (
             node.name === 'Category' &&
             filter?.filter.equals(
@@ -44,7 +43,9 @@ describe('NodeCreationInputType', () => {
             )
           ) {
             return [
-              { id: '2059b77a-a735-41fe-b415-5b12944b6ba6', username: 'yvann' },
+              (selection.expressionsByKey.has('id')
+                ? { id: '2059b77a-a735-41fe-b415-5b12944b6ba6' }
+                : { username: 'yvann' }) as any,
             ];
           }
 
@@ -122,6 +123,7 @@ describe('NodeCreationInputType', () => {
 
         const input: utils.PlainObject = {
           title: "My article's title",
+          status: undefined,
           category: {
             connectIfExists: { id: '91a7c846-b030-4ef3-aaaa-747fe7b11519' },
           },
@@ -133,9 +135,9 @@ describe('NodeCreationInputType', () => {
           },
         };
 
-        const parsedInput = ArticleCreationInputType.parseValue(input);
+        const parsedValue = ArticleCreationInputType.parseValue(input)!;
 
-        expect(parsedInput).toEqual({
+        expect(parsedValue).toEqual({
           id: expect.any(String),
           title: "My article's title",
           status: ArticleStatus.DRAFT,
@@ -154,16 +156,28 @@ describe('NodeCreationInputType', () => {
           score: 0.5,
         });
 
-        const creation = await ArticleCreationInputType.createStatement(
-          parsedInput!,
+        const resolvedValue = await ArticleCreationInputType.resolveValue(
+          parsedValue,
           new MutationContext(gp, myUserContext),
         );
 
-        expect(creation).toBeInstanceOf(NodeCreationStatement);
+        expect(resolvedValue).toEqual({
+          id: expect.any(String),
+          title: "My article's title",
+          status: ArticleStatus.DRAFT,
+          category: { _id: 4 },
+          createdBy: { id: '2059b77a-a735-41fe-b415-5b12944b6ba6' },
+          createdAt: expect.any(Date),
+          updatedBy: { username: 'yvann' },
+          updatedAt: expect.any(Date),
+          views: 0n,
+          score: 0.5,
+        });
 
-        const proxy = creation.proxy;
-        expect(proxy).toBeInstanceOf(NodeCreationStatement);
-        expect({ ...proxy }).toEqual({
+        const statement = new NodeCreationStatement(Article, resolvedValue);
+        expect(statement).toBeInstanceOf(NodeCreationStatement);
+
+        expect(statement.value).toEqual({
           id: expect.any(String),
           title: "My article's title",
           status: ArticleStatus.DRAFT,

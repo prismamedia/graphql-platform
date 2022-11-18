@@ -14,7 +14,7 @@ import { AbstractDeletion } from '../abstract-deletion.js';
 import type { MutationContext } from '../context.js';
 
 export type DeleteOneMutationArgs = RawNodeSelectionAwareArgs<{
-  where: utils.NonNillable<NodeUniqueFilterInputValue>;
+  where: NonNullable<NodeUniqueFilterInputValue>;
 }>;
 
 export type DeleteOneMutationResult = NodeSelectedValue;

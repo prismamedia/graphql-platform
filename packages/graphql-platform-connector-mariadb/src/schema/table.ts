@@ -296,7 +296,7 @@ export class Table {
     }
 
     const emptyColumns = this.columns.filter(
-      (column) => typeof row[column.name] === 'undefined',
+      (column) => row[column.name] === undefined,
     );
 
     if (emptyColumns.length) {

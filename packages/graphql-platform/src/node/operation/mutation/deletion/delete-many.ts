@@ -84,6 +84,9 @@ export class DeleteManyMutation<
     context: MutationContext<TRequestContext, TConnector>,
     path: utils.Path,
   ): Promise<DeleteManyMutationResult> {
+    const preDelete = this.#config?.preDelete;
+    const postDelete = this.#config?.postDelete;
+
     if (args.first === 0) {
       return [];
     }
@@ -134,12 +137,12 @@ export class DeleteManyMutation<
     }
 
     // Apply the "preDelete"-hook, if any
-    if (this.#config?.preDelete) {
+    if (preDelete) {
       await Promise.all(
         currentValues.map((currentValue) =>
           catchLifecycleHookError(
             () =>
-              this.#config!.preDelete!({
+              preDelete({
                 gp: this.gp,
                 node: this.node,
                 context,
@@ -233,10 +236,10 @@ export class DeleteManyMutation<
         context.changes.push(change);
 
         // Apply the "postDelete"-hook, if any
-        if (this.#config?.postDelete) {
+        if (postDelete) {
           await catchLifecycleHookError(
             () =>
-              this.#config!.postDelete!({
+              postDelete({
                 gp: this.gp,
                 node: this.node,
                 context,

@@ -1,4 +1,5 @@
 import * as core from '@prismamedia/graphql-platform';
+import * as utils from '@prismamedia/graphql-platform-utils';
 import type * as mariadb from 'mariadb';
 import { EOL } from 'node:os';
 import { Table } from '../../schema.js';
@@ -41,7 +42,9 @@ export class UpdateStatement implements mariadb.QueryOptions {
 
             return `${tableReference.getEscapedColumnIdentifier(
               column,
-            )}=${column.dataType.serialize(update as core.LeafUpdate)}`;
+            )}=${column.dataType.serialize(
+              update as utils.NonOptional<core.LeafUpdateValue>,
+            )}`;
           } else {
             return table
               .getColumnTreeByEdge(component)
@@ -51,7 +54,7 @@ export class UpdateStatement implements mariadb.QueryOptions {
                     column,
                   )}=${column.dataType.serialize(
                     column.pickLeafValueFromEdgeValue(
-                      update as core.EdgeUpdate,
+                      update as utils.NonOptional<core.EdgeUpdateValue>,
                     ),
                   )}`,
               );

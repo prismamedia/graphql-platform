@@ -35,23 +35,23 @@ export type ReverseEdgeMultipleUpdateInputValue = utils.Optional<
   Partial<{
     // Destructive actions
     [ReverseEdgeMultipleUpdateInputAction.DELETE_ALL]: boolean;
-    [ReverseEdgeMultipleUpdateInputAction.DELETE_MANY]: utils.NonNillable<NodeFilterInputValue>;
-    [ReverseEdgeMultipleUpdateInputAction.DELETE_SOME]: utils.NonNillable<NodeUniqueFilterInputValue>[];
-    [ReverseEdgeMultipleUpdateInputAction.DELETE_SOME_IF_EXISTS]: utils.NonNillable<NodeUniqueFilterInputValue>[];
+    [ReverseEdgeMultipleUpdateInputAction.DELETE_MANY]: NonNullable<NodeFilterInputValue>;
+    [ReverseEdgeMultipleUpdateInputAction.DELETE_SOME]: NonNullable<NodeUniqueFilterInputValue>[];
+    [ReverseEdgeMultipleUpdateInputAction.DELETE_SOME_IF_EXISTS]: NonNullable<NodeUniqueFilterInputValue>[];
     [ReverseEdgeMultipleUpdateInputAction.DISCONNECT_ALL]: boolean;
-    [ReverseEdgeMultipleUpdateInputAction.DISCONNECT_MANY]: utils.NonNillable<NodeFilterInputValue>;
-    [ReverseEdgeMultipleUpdateInputAction.DISCONNECT_SOME]: utils.NonNillable<NodeUniqueFilterInputValue>[];
-    [ReverseEdgeMultipleUpdateInputAction.DISCONNECT_SOME_IF_EXISTS]: utils.NonNillable<NodeUniqueFilterInputValue>[];
+    [ReverseEdgeMultipleUpdateInputAction.DISCONNECT_MANY]: NonNullable<NodeFilterInputValue>;
+    [ReverseEdgeMultipleUpdateInputAction.DISCONNECT_SOME]: NonNullable<NodeUniqueFilterInputValue>[];
+    [ReverseEdgeMultipleUpdateInputAction.DISCONNECT_SOME_IF_EXISTS]: NonNullable<NodeUniqueFilterInputValue>[];
 
     // Non-destructive actions
-    [ReverseEdgeMultipleUpdateInputAction.CONNECT_MANY]: utils.NonNillable<NodeFilterInputValue>;
-    [ReverseEdgeMultipleUpdateInputAction.CONNECT_OR_CREATE_SOME]: utils.NonNillable<{
-      where: utils.NonNillable<NodeUniqueFilterInputValue>;
-      create: utils.NonNillable<NodeCreationInputValue>;
+    [ReverseEdgeMultipleUpdateInputAction.CONNECT_MANY]: NonNullable<NodeFilterInputValue>;
+    [ReverseEdgeMultipleUpdateInputAction.CONNECT_OR_CREATE_SOME]: NonNullable<{
+      where: NonNullable<NodeUniqueFilterInputValue>;
+      create: NonNullable<NodeCreationInputValue>;
     }>[];
-    [ReverseEdgeMultipleUpdateInputAction.CONNECT_SOME]: utils.NonNillable<NodeUniqueFilterInputValue>[];
-    [ReverseEdgeMultipleUpdateInputAction.CONNECT_SOME_IF_EXISTS]: utils.NonNillable<NodeUniqueFilterInputValue>[];
-    [ReverseEdgeMultipleUpdateInputAction.CREATE_SOME]: utils.NonNillable<NodeCreationInputValue>[];
+    [ReverseEdgeMultipleUpdateInputAction.CONNECT_SOME]: NonNullable<NodeUniqueFilterInputValue>[];
+    [ReverseEdgeMultipleUpdateInputAction.CONNECT_SOME_IF_EXISTS]: NonNullable<NodeUniqueFilterInputValue>[];
+    [ReverseEdgeMultipleUpdateInputAction.CREATE_SOME]: NonNullable<NodeCreationInputValue>[];
   }>
 >;
 
@@ -314,9 +314,7 @@ export class ReverseEdgeMultipleUpdateInput extends AbstractReverseEdgeUpdateInp
 
   public override async applyActions(
     nodeValue: Readonly<NodeValue>,
-    inputValue: Readonly<
-      utils.NonNillable<ReverseEdgeMultipleUpdateInputValue>
-    >,
+    inputValue: Readonly<NonNullable<ReverseEdgeMultipleUpdateInputValue>>,
     context: MutationContext,
     path: utils.Path,
   ): Promise<void> {

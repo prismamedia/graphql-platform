@@ -10,7 +10,7 @@ import type {
 } from './statement/selection.js';
 import type { NodeUniqueFilterInputValue } from './type/input/unique-filter.js';
 
-export type NodeLoaderKey = utils.NonNillable<NodeUniqueFilterInputValue>;
+export type NodeLoaderKey = NonNullable<NodeUniqueFilterInputValue>;
 
 export type NodeLoaderValue = NodeSelectedValue;
 

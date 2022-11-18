@@ -1,4 +1,4 @@
-import { Except, SetOptional } from 'type-fest';
+import type { Except, SetOptional } from 'type-fest';
 import type { Leaf } from '../../../../definition/component/leaf.js';
 import {
   AbstractFieldFilterInputType,

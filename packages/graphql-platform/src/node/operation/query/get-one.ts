@@ -15,7 +15,7 @@ import type {
 
 export type GetOneQueryArgs = GetOneIfExistsQueryArgs;
 
-export type GetOneQueryResult = utils.NonNillable<GetOneIfExistsQueryResult>;
+export type GetOneQueryResult = NonNullable<GetOneIfExistsQueryResult>;
 
 export class GetOneQuery<
   TRequestContext extends object,

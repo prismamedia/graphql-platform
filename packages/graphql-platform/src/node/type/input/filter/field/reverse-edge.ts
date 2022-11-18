@@ -1,4 +1,4 @@
-import { Except, SetOptional } from 'type-fest';
+import type { Except, SetOptional } from 'type-fest';
 import type { ReverseEdge } from '../../../../definition/reverse-edge.js';
 import {
   AbstractFieldFilterInputType,

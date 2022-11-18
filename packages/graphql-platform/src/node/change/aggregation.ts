@@ -157,7 +157,7 @@ export class NodeChangeAggregation<
       Array.from(this.#changesByIdByNode.entries()).map(
         ([node, changesByFlattenedId]) => [
           node,
-          Object.freeze(Array.from(changesByFlattenedId.values())),
+          Array.from(changesByFlattenedId.values()),
         ],
       ),
     );
@@ -167,7 +167,7 @@ export class NodeChangeAggregation<
       0,
     );
 
-    this.nodes = Object.freeze(Array.from(this.changesByNode.keys()));
+    this.nodes = Array.from(this.changesByNode.keys());
   }
 
   protected delete(change: NodeChange): void {

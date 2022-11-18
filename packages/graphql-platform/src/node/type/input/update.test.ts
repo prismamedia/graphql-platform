@@ -54,24 +54,26 @@ describe('NodeUpdateInputType', () => {
   });
 
   describe('Definition', () => {
-    it.each(nodeNames)('%s has an update input type', (nodeName) => {
+    it.each(nodeNames)('%s may have an update input type', (nodeName) => {
       const node = gp.getNodeByName(nodeName);
 
-      const updateInputType = node.updateInputType;
-      expect(updateInputType).toBeInstanceOf(NodeUpdateInputType);
+      if (node.isMutationEnabled(utils.MutationType.UPDATE)) {
+        const updateInputType = node.updateInputType;
+        expect(updateInputType).toBeInstanceOf(NodeUpdateInputType);
 
-      if (node.isMutationPublic(utils.MutationType.UPDATE)) {
-        expect(updateInputType.getGraphQLInputType()).toBeInstanceOf(
-          GraphQLInputObjectType,
-        );
+        if (node.isMutationPublic(utils.MutationType.UPDATE)) {
+          expect(updateInputType.getGraphQLInputType()).toBeInstanceOf(
+            GraphQLInputObjectType,
+          );
 
-        expect(
-          printType(updateInputType.getGraphQLInputType()),
-        ).toMatchSnapshot(updateInputType.name);
-      } else {
-        expect(() => updateInputType.getGraphQLInputType()).toThrowError(
-          `The "${nodeName}UpdateInput" input type is private`,
-        );
+          expect(
+            printType(updateInputType.getGraphQLInputType()),
+          ).toMatchSnapshot(updateInputType.name);
+        } else {
+          expect(() => updateInputType.getGraphQLInputType()).toThrowError(
+            `The "${nodeName}UpdateInput" input type is private`,
+          );
+        }
       }
     });
   });
@@ -144,7 +146,7 @@ describe('NodeUpdateInputType', () => {
           category: { disconnect: true },
         };
 
-        const parsedInput = ArticleUpdateInputType.parseValue(input);
+        const parsedInput = ArticleUpdateInputType.parseValue(input)!;
 
         expect(parsedInput).toEqual({
           title: "My new article's title",
@@ -152,16 +154,21 @@ describe('NodeUpdateInputType', () => {
           updatedAt: expect.any(Date),
         });
 
-        const update = await ArticleUpdateInputType.createStatement(
-          parsedInput!,
+        const resolvedValue = await ArticleUpdateInputType.resolveValue(
+          parsedInput,
           new MutationContext(gp, myUserContext),
         );
 
-        expect(update).toBeInstanceOf(NodeUpdateStatement);
+        expect(resolvedValue).toEqual({
+          title: "My new article's title",
+          category: null,
+          updatedAt: expect.any(Date),
+        });
 
-        const proxy = update.proxy;
-        expect(proxy).toBeInstanceOf(NodeUpdateStatement);
-        expect({ ...proxy }).toEqual({
+        const statement = new NodeUpdateStatement(Article, resolvedValue);
+        expect(statement).toBeInstanceOf(NodeUpdateStatement);
+
+        expect(statement.value).toEqual({
           title: "My new article's title",
           category: null,
           updatedAt: expect.any(Date),

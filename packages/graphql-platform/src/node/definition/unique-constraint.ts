@@ -1,6 +1,6 @@
 import * as utils from '@prismamedia/graphql-platform-utils';
 import { Memoize } from '@prismamedia/ts-memoize';
-import { JsonObject } from 'type-fest';
+import type { JsonObject } from 'type-fest';
 import type {
   ConnectorConfigOverrideKind,
   ConnectorInterface,
@@ -136,9 +136,7 @@ export class UniqueConstraint<
         ),
       );
 
-      this.components = Object.freeze(
-        Array.from(this.componentsByName.values()),
-      );
+      this.components = Array.from(this.componentsByName.values());
 
       this.componentSet = new Set(this.components);
 
@@ -150,7 +148,7 @@ export class UniqueConstraint<
           ),
         );
 
-        this.leaves = Object.freeze(Array.from(this.leavesByName.values()));
+        this.leaves = Array.from(this.leavesByName.values());
       }
 
       // edges
@@ -161,7 +159,7 @@ export class UniqueConstraint<
           ),
         );
 
-        this.edges = Object.freeze(Array.from(this.edgesByName.values()));
+        this.edges = Array.from(this.edgesByName.values());
       }
     }
 
@@ -258,11 +256,7 @@ export class UniqueConstraint<
       { path },
     );
 
-    if (
-      Array.from(this.componentsByName.keys()).every(
-        (componentName) => value[componentName] === null,
-      )
-    ) {
+    if (this.components.every(({ name }) => value[name] === null)) {
       throw new utils.UnexpectedValueError(
         `at least one non-null component's value`,
         maybeValue,

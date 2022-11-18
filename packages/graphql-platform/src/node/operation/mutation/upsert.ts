@@ -15,9 +15,9 @@ import { AbstractMutation } from '../abstract-mutation.js';
 import type { MutationContext } from './context.js';
 
 export type UpsertMutationArgs = RawNodeSelectionAwareArgs<{
-  where: utils.NonNillable<NodeUniqueFilterInputValue>;
-  create: utils.NonNillable<NodeCreationInputValue>;
-  update: utils.NonNillable<NodeUpdateInputValue>;
+  where: NonNullable<NodeUniqueFilterInputValue>;
+  create: NonNullable<NodeCreationInputValue>;
+  update: NonNullable<NodeUpdateInputValue>;
 }>;
 
 export type UpsertMutationResult = NodeSelectedValue;

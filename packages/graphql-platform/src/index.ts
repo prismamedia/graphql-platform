@@ -181,7 +181,7 @@ export class GraphQLPlatform<
         ),
       );
 
-      this.nodes = Object.freeze(Array.from(this.nodesByName.values()));
+      this.nodes = Array.from(this.nodesByName.values());
 
       /**
        * In order to fail as soon as possible, we validate/build everything right away.
@@ -219,7 +219,10 @@ export class GraphQLPlatform<
           new Map(
             this.nodes.flatMap((node) =>
               node.operations
-                .filter((operation) => operation.operationType === type)
+                .filter(
+                  (operation) =>
+                    operation.operationType === type && operation.isEnabled(),
+                )
                 .map((operation) => [operation.name, operation]),
             ),
           ),
@@ -278,28 +281,26 @@ export class GraphQLPlatform<
       const onNodeChangeConfig = config.onNodeChange;
       const onNodeChangeConfigPath = utils.addPath(configPath, 'onNodeChange');
 
-      this.nodeChangeSubscribers = Object.freeze(
-        utils.aggregateConfigError<
-          NodeChangeSubscriber | undefined,
-          NodeChangeSubscriber[]
-        >(
-          utils.resolveArrayOrValue(onNodeChangeConfig),
-          (subscribers, config, index) => {
-            if (config != null) {
-              if (typeof config !== 'function') {
-                throw new utils.UnexpectedConfigError(`a function`, config, {
-                  path: utils.addPath(onNodeChangeConfigPath, index),
-                });
-              }
-
-              subscribers.push(config.bind(this));
+      this.nodeChangeSubscribers = utils.aggregateConfigError<
+        NodeChangeSubscriber | undefined,
+        NodeChangeSubscriber[]
+      >(
+        utils.resolveArrayOrValue(onNodeChangeConfig),
+        (subscribers, config, index) => {
+          if (config != null) {
+            if (typeof config !== 'function') {
+              throw new utils.UnexpectedConfigError(`a function`, config, {
+                path: utils.addPath(onNodeChangeConfigPath, index),
+              });
             }
 
-            return subscribers;
-          },
-          [],
-          { path: configPath },
-        ),
+            subscribers.push(config.bind(this));
+          }
+
+          return subscribers;
+        },
+        [],
+        { path: configPath },
       );
 
       // on-local-node-change-subscriber-error

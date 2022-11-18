@@ -13,7 +13,7 @@ import { AbstractQuery } from '../abstract-query.js';
 import type { OperationContext } from '../context.js';
 
 export type GetOneIfExistsQueryArgs = RawNodeSelectionAwareArgs<{
-  where: utils.NonNillable<NodeUniqueFilterInputValue>;
+  where: NonNullable<NodeUniqueFilterInputValue>;
 }>;
 
 export type GetOneIfExistsQueryResult = NodeSelectedValue | null;

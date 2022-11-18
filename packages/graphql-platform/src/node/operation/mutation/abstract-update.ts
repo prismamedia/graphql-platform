@@ -1,9 +1,9 @@
 import * as utils from '@prismamedia/graphql-platform-utils';
-import type { Promisable } from 'type-fest';
+import type { Except, Promisable } from 'type-fest';
 import type { ConnectorInterface } from '../../../connector-interface.js';
 import type { NodeValue } from '../../../node.js';
 import type { NodeUpdate } from '../../change.js';
-import type { NodeUpdateStatementProxy } from '../../statement/update.js';
+import type { NodeUpdateValue } from '../../statement/update.js';
 import type { NodeUpdateInputValue } from '../../type/input/update.js';
 import {
   AbstractMutation,
@@ -18,7 +18,7 @@ interface AbstractUpdateHookArgs<
   /**
    * The provided "data" argument
    */
-  readonly data: Readonly<utils.NonNillable<NodeUpdateInputValue>>;
+  readonly data: Readonly<NonNullable<NodeUpdateInputValue>>;
 }
 
 export interface PreUpdateArgs<
@@ -31,9 +31,9 @@ export interface PreUpdateArgs<
   readonly currentValue: Readonly<NodeValue>;
 
   /**
-   * The update statement, as a convenient object
+   * The update statement, as a mutable object
    */
-  readonly update: NodeUpdateStatementProxy;
+  readonly update: NodeUpdateValue;
 }
 
 export interface PostUpdateArgs<
@@ -58,7 +58,7 @@ export interface UpdateConfig<
    */
   virtualFields?: Record<
     utils.InputConfig['name'],
-    Omit<utils.InputConfig, 'name'>
+    Except<utils.InputConfig, 'name'>
   >;
 
   /**

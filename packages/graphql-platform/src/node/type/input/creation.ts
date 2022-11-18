@@ -3,14 +3,13 @@ import { Memoize } from '@prismamedia/ts-memoize';
 import inflection from 'inflection';
 import assert from 'node:assert/strict';
 import type { Except } from 'type-fest';
-import type { ConnectorInterface } from '../../../connector-interface.js';
-import type { Node, NodeValue } from '../../../node.js';
-import type { Edge } from '../../definition.js';
+import type { Edge, Node, NodeValue } from '../../../node.js';
 import type { MutationContext } from '../../operation.js';
-import { NodeCreationStatement } from '../../statement/creation.js';
-import type {
+import type { NodeCreationValue } from '../../statement/creation.js';
+import {
   ComponentCreationInput,
   FieldCreationInput,
+  LeafCreationInput,
   ReverseEdgeCreationInput,
 } from './creation/field.js';
 
@@ -18,12 +17,9 @@ export * from './creation/field.js';
 
 export type NodeCreationInputValue = utils.Nillable<utils.PlainObject>;
 
-export class NodeCreationInputType<
-  TRequestContext extends object = any,
-  TConnector extends ConnectorInterface = any,
-> extends utils.ObjectInputType<FieldCreationInput> {
+export class NodeCreationInputType extends utils.ObjectInputType<FieldCreationInput> {
   public constructor(
-    public readonly node: Node<TRequestContext, TConnector>,
+    public readonly node: Node,
     public readonly forcedEdge?: Edge,
   ) {
     forcedEdge && assert.equal(forcedEdge.tail, node);
@@ -40,7 +36,7 @@ export class NodeCreationInputType<
   protected get componentFields(): ReadonlyArray<ComponentCreationInput> {
     return this.node.components.reduce<ComponentCreationInput[]>(
       (fields, component) =>
-        component !== this.forcedEdge && component.creationInput
+        component !== this.forcedEdge
           ? [...fields, component.creationInput]
           : fields,
       [],
@@ -125,42 +121,40 @@ export class NodeCreationInputType<
     );
   }
 
-  public async createStatement(
-    data: Readonly<utils.NonNillable<NodeCreationInputValue>>,
+  public async resolveValue(
+    data: Readonly<NonNullable<NodeCreationInputValue>>,
     context: MutationContext,
     path: utils.Path = utils.addPath(undefined, this.name),
-  ): Promise<NodeCreationStatement<TRequestContext, TConnector>> {
-    const statement = new NodeCreationStatement(this.node);
+  ): Promise<NodeCreationValue> {
+    const resolvedValue: NodeCreationValue = Object.create(null);
 
     await Promise.all(
       this.componentFields.map(async (field) => {
         const fieldData = data[field.name];
 
-        statement.setComponentValue(
-          field.component,
-          fieldData == null
+        resolvedValue[field.name] =
+          fieldData == null || field instanceof LeafCreationInput
             ? fieldData
-            : await field.resolveComponentValue(
+            : await field.resolveValue(
                 fieldData,
                 context,
                 utils.addPath(path, field.name),
-              ),
-        );
+              );
       }),
     );
 
-    return statement;
+    return resolvedValue;
   }
 
   public hasReverseEdgeActions(
-    data: Readonly<utils.NonNillable<NodeCreationInputValue>>,
+    data: Readonly<NonNullable<NodeCreationInputValue>>,
   ): boolean {
     return this.reverseEdgeFields.some((field) => data[field.name] != null);
   }
 
   public async applyReverseEdgeActions(
     nodeValue: Readonly<NodeValue>,
-    data: Readonly<utils.NonNillable<NodeCreationInputValue>>,
+    data: Readonly<NonNullable<NodeCreationInputValue>>,
     context: MutationContext,
     path?: utils.Path,
   ): Promise<void> {

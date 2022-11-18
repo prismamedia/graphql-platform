@@ -28,7 +28,7 @@ export class UnauthorizedError extends utils.NestableError {
 export class NotFoundError extends utils.NestableError {
   public constructor(
     node: Node,
-    where: utils.NonNillable<NodeUniqueFilterInputValue>,
+    where: NonNullable<NodeUniqueFilterInputValue>,
     options?: utils.NestableErrorOptions,
   ) {
     super(

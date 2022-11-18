@@ -100,7 +100,7 @@ export class NodeUniqueFilterInputType extends utils.ObjectInputType {
     }
 
     for (const uniqueConstraint of this.node.uniqueConstraints) {
-      const uniqueFilterInputValue: utils.NonNillable<NodeUniqueFilterInputValue> =
+      const uniqueFilterInputValue: NonNullable<NodeUniqueFilterInputValue> =
         Object.create(null);
 
       if (

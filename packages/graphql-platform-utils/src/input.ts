@@ -39,7 +39,7 @@ import { resolveThunkOrValue, type ThunkOrValue } from './thunk-or-value.js';
 
 export * from './input/type.js';
 
-export type InputParser<TValue = any> = (
+export type InputCustomParser<TValue = any> = (
   value: NonNullable<TValue>,
   path: Path,
 ) => TValue;
@@ -99,9 +99,9 @@ export interface InputConfig<TValue = any> {
   defaultValue?: ThunkOrValue<TValue>;
 
   /**
-   * Optional, add some custom validation or normalization
+   * Optional, add some custom validation or normalization on top of the "type"'s parser
    */
-  parser?: InputParser<TValue> | null;
+  customParser?: InputCustomParser<TValue>;
 }
 
 export class Input<TValue = any> {
@@ -111,7 +111,7 @@ export class Input<TValue = any> {
   public readonly type: InputType;
 
   readonly #defaultValue?: ThunkOrValue<TValue>;
-  readonly #parser?: InputParser<TValue>;
+  readonly #customParser?: InputCustomParser<TValue>;
 
   #isPublic?: null | boolean;
   #isValid?: null | true;
@@ -181,18 +181,20 @@ export class Input<TValue = any> {
       this.type = type;
     }
 
-    // parser
+    // custom-parser
     {
-      const parserConfig = config.parser;
-      const parserConfigPath = addPath(configPath, 'parser');
+      const customParserConfig = config.customParser;
+      const customParserConfigPath = addPath(configPath, 'customParser');
 
-      if (parserConfig != null && typeof parserConfig !== 'function') {
-        throw new UnexpectedConfigError(`a function`, parserConfig, {
-          path: parserConfigPath,
-        });
+      if (customParserConfig != null) {
+        if (typeof customParserConfig !== 'function') {
+          throw new UnexpectedConfigError(`a function`, customParserConfig, {
+            path: customParserConfigPath,
+          });
+        }
+
+        this.#customParser = customParserConfig;
       }
-
-      this.#parser = parserConfig || undefined;
     }
 
     // default value
@@ -233,7 +235,7 @@ export class Input<TValue = any> {
   }
 
   public isPublic(): boolean {
-    if (typeof this.#isPublic !== 'undefined') {
+    if (this.#isPublic !== undefined) {
       return this.#isPublic ?? false;
     } else {
       this.#isPublic = null;
@@ -297,7 +299,7 @@ export class Input<TValue = any> {
   }
 
   public validate(): void {
-    if (typeof this.#isValid !== 'undefined') {
+    if (this.#isValid !== undefined) {
       return;
     } else {
       this.#isValid = null;
@@ -324,17 +326,14 @@ export class Input<TValue = any> {
   ): TValue {
     const value = parseInputValue(this.type, maybeValue, path);
 
-    if (value != null && this.#parser) {
-      let customizedValue: unknown;
+    if (value != null && this.#customParser) {
       try {
-        customizedValue = this.#parser(value, path);
+        return this.#customParser(value, path);
       } catch (error) {
         throw isNestableError(error)
           ? error
           : new NestableError(castToError(error).message, { path });
       }
-
-      return parseInputValue(this.type, customizedValue, path);
     }
 
     return value;

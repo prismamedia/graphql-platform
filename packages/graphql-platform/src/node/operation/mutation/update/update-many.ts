@@ -3,7 +3,7 @@ import * as utils from '@prismamedia/graphql-platform-utils';
 import { Memoize } from '@prismamedia/ts-memoize';
 import * as graphql from 'graphql';
 import type { ConnectorInterface } from '../../../../connector-interface.js';
-import { NodeValue } from '../../../../node.js';
+import type { NodeValue } from '../../../../node.js';
 import {
   argsPathKey,
   type NodeSelectionAwareArgs,
@@ -12,7 +12,10 @@ import {
 import { NodeUpdate } from '../../../change.js';
 import { AndOperation, NodeFilter } from '../../../statement/filter.js';
 import type { NodeSelectedValue } from '../../../statement/selection.js';
-import type { NodeUpdateStatement } from '../../../statement/update.js';
+import {
+  NodeUpdateStatement,
+  NodeUpdateValue,
+} from '../../../statement/update.js';
 import type { NodeFilterInputValue } from '../../../type/input/filter.js';
 import type { OrderByInputValue } from '../../../type/input/ordering.js';
 import { createContextBoundAPI } from '../../api.js';
@@ -91,6 +94,9 @@ export class UpdateManyMutation<
     context: MutationContext<TRequestContext, TConnector>,
     path: utils.Path,
   ): Promise<UpdateManyMutationResult> {
+    const preUpdate = this.#config?.preUpdate;
+    const postUpdate = this.#config?.postUpdate;
+
     if (Object.keys(data).length === 0) {
       // An "empty" update is just a "find"
       return this.node
@@ -153,20 +159,27 @@ export class UpdateManyMutation<
       this.node.identifier.parseValue(currentValue),
     );
 
-    const update: NodeUpdateStatement =
-      await this.node.updateInputType.createStatement(data, context, path);
+    // Resolve the edges' nested-actions into their value
+    const value: NodeUpdateValue = await this.node.updateInputType.resolveValue(
+      data,
+      context,
+      path,
+    );
 
-    if (update.updatesByComponent.size) {
-      if (this.#config?.preUpdate) {
+    // Create a statement with it
+    const statement = new NodeUpdateStatement(this.node, value);
+
+    if (statement.updatesByComponent.size) {
+      if (preUpdate) {
         await Promise.all(
           currentValues.map(async (currentValue, index) => {
-            // Because we provide the "currentValue", the update might be "individualized/customized" using it
-            const individualizedUpdate = update.clone();
+            // Because we provide the "currentValue", the statement might be "individualized/customized" using it
+            const individualizedStatement = statement.clone();
 
             // Apply the "preUpdate"-hook
             await catchLifecycleHookError(
               () =>
-                this.#config!.preUpdate!({
+                preUpdate({
                   gp: this.gp,
                   node: this.node,
                   context,
@@ -175,21 +188,21 @@ export class UpdateManyMutation<
                   currentValue: Object.freeze(
                     this.node.parseValue(currentValue),
                   ),
-                  update: individualizedUpdate.proxy,
+                  update: individualizedStatement.proxy,
                 }),
               this.node,
               LifecycleHookKind.PRE_UPDATE,
               path,
             );
 
-            if (individualizedUpdate.updatesByComponent.size) {
+            if (individualizedStatement.updatesByComponent.size) {
               // Actually update the node
               await catchConnectorError(
                 () =>
                   this.connector.update(
                     {
                       node: this.node,
-                      update: individualizedUpdate,
+                      update: individualizedStatement,
                       filter: this.node.filterInputType.parseAndFilter(
                         currentIds[index],
                       ),
@@ -208,7 +221,7 @@ export class UpdateManyMutation<
             this.connector.update(
               {
                 node: this.node,
-                update,
+                update: statement,
                 filter: this.node.filterInputType.parseAndFilter({
                   OR: currentIds,
                 }),
@@ -221,8 +234,7 @@ export class UpdateManyMutation<
     }
 
     const maybeUpdateAfterwards =
-      (this.node.updateInputType.hasReverseEdgeActions(data) ||
-        this.#config?.postUpdate != null) &&
+      (this.node.updateInputType.hasReverseEdgeActions(data) || postUpdate) &&
       !this.node.selection.includes(args.selection);
 
     const newValues = (await this.node
@@ -275,12 +287,12 @@ export class UpdateManyMutation<
     }
 
     // Apply the "postUpdate"-hook
-    if (this.#config?.postUpdate) {
+    if (postUpdate) {
       await Promise.all(
         changes.map((change) =>
           catchLifecycleHookError(
             () =>
-              this.#config!.postUpdate!({
+              postUpdate({
                 gp: this.gp,
                 node: this.node,
                 context,

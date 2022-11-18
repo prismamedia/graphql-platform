@@ -18,7 +18,7 @@ import { AbstractQuery } from '../abstract-query.js';
 import type { OperationContext } from '../context.js';
 
 export type GetSomeInOrderIfExistsQueryArgs = RawNodeSelectionAwareArgs<{
-  where: ReadonlyArray<utils.NonNillable<NodeUniqueFilterInputValue>>;
+  where: ReadonlyArray<NonNullable<NodeUniqueFilterInputValue>>;
 }>;
 
 export type GetSomeInOrderIfExistsQueryResult = Array<NodeSelectedValue | null>;

@@ -4,7 +4,7 @@ import type { ConnectorInterface } from '../../connector-interface.js';
 import type { Node } from '../../node.js';
 import type { AbstractComponentCreationInput } from '../type/input/creation/field/abstract-component.js';
 import type { AbstractComponentUpdateInput } from '../type/input/update/field/abstract-component.js';
-import type { ComponentUpdate, ComponentValue, Edge } from './component.js';
+import type { Edge } from './component.js';
 
 export type AbstractComponentConfig = {
   /**
@@ -47,8 +47,8 @@ export abstract class AbstractComponent<
   public readonly description?: string;
   public readonly deprecationReason?: string;
   public abstract readonly selection: any;
-  public abstract readonly creationInput?: AbstractComponentCreationInput<any>;
-  public abstract readonly updateInput?: AbstractComponentUpdateInput<any>;
+  public abstract readonly creationInput: AbstractComponentCreationInput<any>;
+  public abstract readonly updateInput: AbstractComponentUpdateInput<any>;
 
   public constructor(
     public readonly node: Node<TRequestContext, TConnector>,
@@ -163,22 +163,11 @@ export abstract class AbstractComponent<
 
   @Memoize()
   public validateTypes(): void {
-    this.creationInput?.validate();
-    this.updateInput?.validate();
+    this.creationInput.validate();
+    this.isMutable() && this.updateInput.validate();
   }
 
-  public abstract parseValue(
-    maybeValue: unknown,
-    path?: utils.Path,
-  ): ComponentValue;
+  public abstract parseValue(maybeValue: unknown, path?: utils.Path): any;
 
-  public abstract parseUpdate(
-    maybeUpdate: unknown,
-    path?: utils.Path,
-  ): ComponentUpdate;
-
-  public abstract areValuesEqual(
-    a: utils.Nillable<ComponentValue>,
-    b: utils.Nillable<ComponentValue>,
-  ): boolean;
+  public abstract areValuesEqual(a: any, b: any): boolean;
 }

@@ -1,8 +1,8 @@
 import * as utils from '@prismamedia/graphql-platform-utils';
-import type { Promisable } from 'type-fest';
+import type { Except, Promisable } from 'type-fest';
 import type { ConnectorInterface } from '../../../connector-interface.js';
 import type { NodeCreation } from '../../change.js';
-import type { NodeCreationStatementProxy } from '../../statement/creation.js';
+import type { NodeCreationValue } from '../../statement/creation.js';
 import type { NodeCreationInputValue } from '../../type/input/creation.js';
 import {
   AbstractMutation,
@@ -17,7 +17,7 @@ interface AbstractCreationHookArgs<
   /**
    * The provided "data" argument
    */
-  readonly data: Readonly<utils.NonNillable<NodeCreationInputValue>>;
+  readonly data: Readonly<NonNullable<NodeCreationInputValue>>;
 }
 
 export interface PreCreateArgs<
@@ -25,9 +25,9 @@ export interface PreCreateArgs<
   TConnector extends ConnectorInterface,
 > extends AbstractCreationHookArgs<TRequestContext, TConnector> {
   /**
-   * The creation statement, as a convenient object
+   * The creation statement, as a mutable object
    */
-  readonly creation: NodeCreationStatementProxy;
+  readonly creation: NodeCreationValue;
 }
 
 export interface PostCreateArgs<
@@ -52,7 +52,7 @@ export interface CreationConfig<
    */
   virtualFields?: Record<
     utils.InputConfig['name'],
-    Omit<utils.InputConfig, 'name'>
+    Except<utils.InputConfig, 'name'>
   >;
 
   /**

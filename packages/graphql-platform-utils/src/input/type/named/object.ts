@@ -85,7 +85,7 @@ export class ObjectInputType<
   }
 
   public override isPublic(): boolean {
-    if (typeof this.#isPublic !== 'undefined') {
+    if (this.#isPublic !== undefined) {
       return this.#isPublic ?? false;
     } else {
       this.#isPublic = null;
@@ -126,7 +126,7 @@ export class ObjectInputType<
   }
 
   public override validate(): void {
-    if (typeof this.#isValid !== 'undefined') {
+    if (this.#isValid !== undefined) {
       return;
     } else {
       this.#isValid = null;

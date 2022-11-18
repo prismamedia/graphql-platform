@@ -1,17 +1,14 @@
 import * as utils from '@prismamedia/graphql-platform-utils';
 import assert from 'node:assert/strict';
-import type {
-  Component,
-  ComponentUpdate,
-} from '../../../../definition/component.js';
-import type { MutationContext } from '../../../../operation/mutation/context.js';
+import type { Except } from 'type-fest';
+import type { Component } from '../../../../definition/component.js';
 
 export abstract class AbstractComponentUpdateInput<
   TInputValue,
 > extends utils.Input<TInputValue> {
   public constructor(
     public readonly component: Component,
-    config: Omit<utils.InputConfig<TInputValue>, 'name' | 'optional'>,
+    config: Except<utils.InputConfig<TInputValue>, 'name' | 'optional'>,
     configPath: utils.Path,
   ) {
     assert(component.isMutable());
@@ -46,10 +43,4 @@ export abstract class AbstractComponentUpdateInput<
       }
     }
   }
-
-  public abstract resolveComponentUpdate(
-    inputValue: TInputValue,
-    context: MutationContext,
-    path: utils.Path,
-  ): Promise<ComponentUpdate | undefined>;
 }

@@ -1,13 +1,13 @@
 import * as utils from '@prismamedia/graphql-platform-utils';
 import { Memoize } from '@prismamedia/ts-memoize';
 import type { Except } from 'type-fest';
-import type { ConnectorInterface } from '../../../connector-interface.js';
 import type { Node, NodeValue } from '../../../node.js';
 import type { MutationContext } from '../../operation.js';
-import { NodeUpdateStatement } from '../../statement/update.js';
-import type {
+import type { NodeUpdateValue } from '../../statement/update.js';
+import {
   ComponentUpdateInput,
   FieldUpdateInput,
+  LeafUpdateInput,
   ReverseEdgeUpdateInput,
 } from './update/field.js';
 
@@ -15,11 +15,8 @@ export * from './update/field.js';
 
 export type NodeUpdateInputValue = utils.Nillable<utils.PlainObject>;
 
-export class NodeUpdateInputType<
-  TRequestContext extends object = any,
-  TConnector extends ConnectorInterface = any,
-> extends utils.ObjectInputType<FieldUpdateInput> {
-  public constructor(public readonly node: Node<TRequestContext, TConnector>) {
+export class NodeUpdateInputType extends utils.ObjectInputType<FieldUpdateInput> {
+  public constructor(public readonly node: Node) {
     super({
       name: `${node}UpdateInput`,
       description: `The "${node}" node's ${utils.MutationType.UPDATE}`,
@@ -30,7 +27,7 @@ export class NodeUpdateInputType<
   protected get componentFields(): ReadonlyArray<ComponentUpdateInput> {
     return this.node.components.reduce<ComponentUpdateInput[]>(
       (fields, component) =>
-        component.updateInput ? [...fields, component.updateInput] : fields,
+        component.isMutable() ? [...fields, component.updateInput] : fields,
       [],
     );
   }
@@ -111,42 +108,40 @@ export class NodeUpdateInputType<
     );
   }
 
-  public async createStatement(
-    data: Readonly<utils.NonNillable<NodeUpdateInputValue>>,
+  public async resolveValue(
+    data: Readonly<NonNullable<NodeUpdateInputValue>>,
     context: MutationContext,
     path: utils.Path = utils.addPath(undefined, this.name),
-  ): Promise<NodeUpdateStatement<TRequestContext, TConnector>> {
-    const statement = new NodeUpdateStatement(this.node);
+  ): Promise<NodeUpdateValue> {
+    const resolvedValue: NodeUpdateValue = Object.create(null);
 
     await Promise.all(
       this.componentFields.map(async (field) => {
         const fieldData = data[field.name];
 
-        statement.setComponentUpdate(
-          field.component,
-          fieldData == null
+        resolvedValue[field.name] =
+          fieldData == null || field instanceof LeafUpdateInput
             ? fieldData
-            : await field.resolveComponentUpdate(
+            : await field.resolveValue(
                 fieldData,
                 context,
                 utils.addPath(path, field.name),
-              ),
-        );
+              );
       }),
     );
 
-    return statement;
+    return resolvedValue;
   }
 
   public hasReverseEdgeActions(
-    data: Readonly<utils.NonNillable<NodeUpdateInputValue>>,
+    data: Readonly<NonNullable<NodeUpdateInputValue>>,
   ): boolean {
     return this.reverseEdgeFields.some((field) => data[field.name] != null);
   }
 
   public async applyReverseEdgeActions(
     nodeValue: NodeValue,
-    data: Readonly<utils.NonNillable<NodeUpdateInputValue>>,
+    data: Readonly<NonNullable<NodeUpdateInputValue>>,
     context: MutationContext,
     path?: utils.Path,
   ): Promise<void> {

@@ -91,11 +91,9 @@ export class Seeding<
           ),
       );
 
-    this.fixtures = Object.freeze(
-      this.dependencyGraph
-        .overallOrder()
-        .map((reference) => this.dependencyGraph.getNodeData(reference)),
-    );
+    this.fixtures = this.dependencyGraph
+      .overallOrder()
+      .map((reference) => this.dependencyGraph.getNodeData(reference));
   }
 
   @Memoize((context: TRequestContext) => context)

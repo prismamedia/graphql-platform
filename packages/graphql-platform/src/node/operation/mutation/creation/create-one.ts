@@ -13,7 +13,7 @@ import { AbstractCreation } from '../abstract-creation.js';
 import type { MutationContext } from './../context.js';
 
 export type CreateOneMutationArgs = RawNodeSelectionAwareArgs<{
-  data: utils.NonNillable<NodeCreationInputValue>;
+  data: NonNullable<NodeCreationInputValue>;
 }>;
 
 export type CreateOneMutationResult = NodeSelectedValue;

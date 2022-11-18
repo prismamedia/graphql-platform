@@ -18,13 +18,13 @@ export enum ReverseEdgeUniqueCreationInputAction {
 
 export type ReverseEdgeUniqueCreationInputValue = utils.Optional<
   RequireExactlyOne<{
-    [ReverseEdgeUniqueCreationInputAction.CONNECT]: utils.NonNillable<NodeUniqueFilterInputValue>;
-    [ReverseEdgeUniqueCreationInputAction.CONNECT_IF_EXISTS]: utils.NonNillable<NodeUniqueFilterInputValue>;
-    [ReverseEdgeUniqueCreationInputAction.CONNECT_OR_CREATE]: utils.NonNillable<{
-      where: utils.NonNillable<NodeUniqueFilterInputValue>;
-      create: utils.NonNillable<NodeCreationInputValue>;
+    [ReverseEdgeUniqueCreationInputAction.CONNECT]: NonNullable<NodeUniqueFilterInputValue>;
+    [ReverseEdgeUniqueCreationInputAction.CONNECT_IF_EXISTS]: NonNullable<NodeUniqueFilterInputValue>;
+    [ReverseEdgeUniqueCreationInputAction.CONNECT_OR_CREATE]: NonNullable<{
+      where: NonNullable<NodeUniqueFilterInputValue>;
+      create: NonNullable<NodeCreationInputValue>;
     }>;
-    [ReverseEdgeUniqueCreationInputAction.CREATE]: utils.NonNillable<NodeCreationInputValue>;
+    [ReverseEdgeUniqueCreationInputAction.CREATE]: NonNullable<NodeCreationInputValue>;
   }>
 >;
 
@@ -136,7 +136,7 @@ export class ReverseEdgeUniqueCreationInput extends AbstractReverseEdgeCreationI
           return fields;
         },
       }),
-      parser(inputValue, path) {
+      customParser(inputValue, path) {
         if (Object.keys(inputValue).length > 1) {
           throw new utils.UnexpectedValueError(
             `at most one action`,
@@ -152,9 +152,7 @@ export class ReverseEdgeUniqueCreationInput extends AbstractReverseEdgeCreationI
 
   public override async applyActions(
     nodeValue: Readonly<NodeValue>,
-    inputValue: Readonly<
-      utils.NonNillable<ReverseEdgeUniqueCreationInputValue>
-    >,
+    inputValue: Readonly<NonNullable<ReverseEdgeUniqueCreationInputValue>>,
     context: MutationContext,
     path: utils.Path,
   ): Promise<void> {

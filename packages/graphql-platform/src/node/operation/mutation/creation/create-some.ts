@@ -7,7 +7,7 @@ import type {
   RawNodeSelectionAwareArgs,
 } from '../../../abstract-operation.js';
 import { NodeCreation } from '../../../change.js';
-import { NodeCreationStatement } from '../../../statement.js';
+import { NodeCreationStatement } from '../../../statement/creation.js';
 import type { NodeFilter } from '../../../statement/filter.js';
 import type { NodeSelectedValue } from '../../../statement/selection.js';
 import type { NodeCreationInputValue } from '../../../type/input/creation.js';
@@ -21,7 +21,7 @@ import { AbstractCreation, type CreationConfig } from '../abstract-creation.js';
 import type { MutationContext } from '../context.js';
 
 export type CreateSomeMutationArgs = RawNodeSelectionAwareArgs<{
-  data: ReadonlyArray<utils.NonNillable<NodeCreationInputValue>>;
+  data: ReadonlyArray<NonNullable<NodeCreationInputValue>>;
 }>;
 
 export type CreateSomeMutationResult = NodeSelectedValue[];
@@ -74,6 +74,9 @@ export class CreateSomeMutation<
     context: MutationContext<TRequestContext, TConnector>,
     path: utils.Path,
   ): Promise<CreateSomeMutationResult> {
+    const preCreate = this.#config?.preCreate;
+    const postCreate = this.#config?.postCreate;
+
     if (args.data.length === 0) {
       return [];
     }
@@ -81,35 +84,40 @@ export class CreateSomeMutation<
     // Build the "creation" statements based on the provided "data" argument
     const creations = await Promise.all(
       args.data.map(async (data, index) => {
+        const indexedPath = utils.addPath(path, index);
+
         // As the "data" will be provided to the hooks, we freeze it
         Object.freeze(data);
 
-        const creation: NodeCreationStatement =
-          await this.node.creationInputType.createStatement(
-            data,
-            context,
-            utils.addPath(path, index),
-          );
+        // Resolve the edges' nested-actions into their value
+        const value = await this.node.creationInputType.resolveValue(
+          data,
+          context,
+          indexedPath,
+        );
+
+        // Create a statement with it
+        const statement = new NodeCreationStatement(this.node, value);
 
         // Apply the "preCreate"-hook, if any
-        if (this.#config?.preCreate) {
+        if (preCreate) {
           await catchLifecycleHookError(
             () =>
-              this.#config!.preCreate!({
+              preCreate({
                 gp: this.gp,
                 node: this.node,
                 context,
                 api: createContextBoundAPI(this.gp, context),
                 data,
-                creation: creation.proxy,
+                creation: statement.proxy,
               }),
             this.node,
             LifecycleHookKind.PRE_CREATE,
-            utils.addPath(path, index),
+            indexedPath,
           );
         }
 
-        return creation;
+        return statement;
       }),
     );
 
@@ -121,6 +129,8 @@ export class CreateSomeMutation<
 
     await Promise.all(
       newValues.map(async (newValue, index) => {
+        const indexedPath = utils.addPath(path, index);
+
         const change = new NodeCreation(
           this.node,
           context.requestContext,
@@ -138,14 +148,14 @@ export class CreateSomeMutation<
           change.newValue,
           data,
           context,
-          utils.addPath(path, index),
+          indexedPath,
         );
 
         // Apply the "postCreate"-hook, if any
-        if (this.#config?.postCreate) {
+        if (postCreate) {
           await catchLifecycleHookError(
             () =>
-              this.#config!.postCreate!({
+              postCreate({
                 gp: this.gp,
                 node: this.node,
                 context,
@@ -155,7 +165,7 @@ export class CreateSomeMutation<
               }),
             this.node,
             LifecycleHookKind.POST_CREATE,
-            utils.addPath(path, index),
+            indexedPath,
           );
         }
       }),

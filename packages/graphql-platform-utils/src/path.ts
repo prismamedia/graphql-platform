@@ -7,7 +7,7 @@ export * from 'graphql/jsutils/Path.js';
 export const isPath = (maybePath: unknown): maybePath is Path =>
   isPlainObject(maybePath) &&
   ['string', 'number'].includes(typeof maybePath.key) &&
-  (typeof maybePath.prev === 'undefined' || isPath(maybePath.prev));
+  (maybePath.prev === undefined || isPath(maybePath.prev));
 
 export const addPath = (
   prev: Path | undefined,

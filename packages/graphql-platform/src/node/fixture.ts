@@ -80,7 +80,7 @@ export class NodeFixture<
           Object.entries(this.data).map(
             async ([componentName, componentValue]) => [
               componentName,
-              this.node.edgesByName.has(componentName)
+              this.node.edgesByName.has(componentName) && componentValue != null
                 ? {
                     [EdgeCreationInputAction.CONNECT]:
                       await this.seeding.dependencyGraph
