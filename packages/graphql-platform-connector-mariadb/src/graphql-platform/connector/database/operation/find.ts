@@ -214,7 +214,7 @@ export class FindOperation extends AbstractOperationResolver<
                     where.addRaw(
                       `MATCH (${column.getEscapedName(
                         where.tableReference.alias,
-                      )}) AGAINST (${escape(value)} IN NATURAL LANGUAGE MODE)`,
+                      )}) AGAINST (${escape(value)} IN BOOLEAN MODE)`,
                     )
                   : where.addFilter(column, 'LIKE', `%${value}%`));
               break;
