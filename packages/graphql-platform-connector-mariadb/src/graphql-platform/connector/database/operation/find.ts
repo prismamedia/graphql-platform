@@ -209,7 +209,7 @@ export class FindOperation extends AbstractOperationResolver<
             case 'contains':
               value !== null && (
                 column.fullText !== null && value.length >= column.fullText
-                  ? where.addRaw(`MATCH(${column.name}) AGAINST('${value}' IN NATURAL LANGUAGE MODE)`)
+                  ? where.addRaw(`MATCH(${column.name}) AGAINST('${value}' IN NATURAL BOOLEAN MODE)`)
                   : where.addFilter(column, 'LIKE', `%${value}%`)
               );
               break;
