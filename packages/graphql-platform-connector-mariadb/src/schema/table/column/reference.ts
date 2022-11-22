@@ -148,7 +148,7 @@ export class ReferenceColumnTree {
 
     // current-edge
     {
-      this.#currentEdge = path[path.length - 1] ?? root;
+      this.#currentEdge = path.at(-1) ?? root;
     }
 
     // columns-by-leaf

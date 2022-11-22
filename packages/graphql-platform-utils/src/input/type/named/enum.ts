@@ -1,6 +1,7 @@
 import { Memoize } from '@prismamedia/ts-memoize';
 import * as graphql from 'graphql';
 import assert from 'node:assert/strict';
+import { castToError } from '../../../cast-to-error.js';
 import {
   getOptionalDeprecation,
   getOptionalDescription,
@@ -12,7 +13,6 @@ import {
 } from '../../../config.js';
 import {
   aggregateConfigError,
-  castToError,
   NestableError,
   UnexpectedConfigError,
   UnexpectedValueError,

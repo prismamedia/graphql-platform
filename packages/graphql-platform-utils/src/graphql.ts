@@ -1,6 +1,7 @@
 import * as graphql from 'graphql';
+import { castToError } from './cast-to-error.js';
 import { getEnumKeys } from './enum.js';
-import { castToError, UnexpectedValueError } from './error.js';
+import { UnexpectedValueError } from './error.js';
 import { indefinite } from './indefinite.js';
 import { isNil, type Nillable } from './nil.js';
 import { type Path } from './path.js';

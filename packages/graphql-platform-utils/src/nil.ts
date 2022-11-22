@@ -1,8 +1,6 @@
 export type Nil = undefined | null;
 
-export function isNil(maybeNil: unknown): maybeNil is Nil {
-  return maybeNil == null;
-}
+export const isNil = (maybeNil: unknown): maybeNil is Nil => maybeNil == null;
 
 export type Nillable<T> = T | Nil;
 

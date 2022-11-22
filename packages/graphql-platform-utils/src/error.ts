@@ -1,18 +1,10 @@
 import { EOL } from 'node:os';
 import { inspect } from 'node:util';
+import { castToError } from './cast-to-error.js';
 import { Nillable } from './nil.js';
 import { isPath, printPath, type Path } from './path.js';
-import { isPlainObject } from './plain-object.js';
 
-export const castToError = (error: unknown): Error =>
-  error instanceof Error
-    ? error
-    : isPlainObject(error)
-    ? Object.assign(new Error(error.message), error)
-    : new Error(error as any);
-
-export interface NestableErrorOptions {
-  cause?: unknown;
+export interface NestableErrorOptions extends ErrorOptions {
   path?: Path;
 }
 
@@ -23,14 +15,14 @@ export class NestableError extends Error {
 
   public constructor(
     message: Nillable<string>,
-    { cause, path, ...options }: NestableErrorOptions = {},
+    options?: NestableErrorOptions,
   ) {
-    super(undefined);
+    super(undefined, {
+      cause: options?.cause ? castToError(options.cause) : undefined,
+    });
 
-    this.cause = cause ? castToError(cause) : undefined;
-    Object.defineProperty(this, 'cause', { enumerable: false });
-
-    this.path = isPath(path) ? path : undefined;
+    this.path =
+      options?.path && isPath(options.path) ? options.path : undefined;
     Object.defineProperty(this, 'path', { enumerable: false });
 
     this.#message = message || undefined;
@@ -119,20 +111,19 @@ export class NestableAggregateError extends AggregateError {
 
   public constructor(
     errors: Iterable<unknown>,
-    { cause, path, message, ...options }: NestableAggregateErrorOptions = {},
+    options?: NestableAggregateErrorOptions,
   ) {
     super(
       Array.from(errors, (error) => castToError(error)),
       undefined,
+      { cause: options?.cause ? castToError(options.cause) : undefined },
     );
 
-    this.cause = cause ? castToError(cause) : undefined;
-    Object.defineProperty(this, 'cause', { enumerable: false });
-
-    this.path = path != null && isPath(path) ? path : undefined;
+    this.path =
+      options?.path && isPath(options.path) ? options.path : undefined;
     Object.defineProperty(this, 'path', { enumerable: false });
 
-    this.#message = message || undefined;
+    this.#message = options?.message || undefined;
 
     Object.defineProperty(this, 'name', {
       value: new.target.name,

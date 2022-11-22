@@ -1,6 +1,5 @@
 import * as graphql from 'graphql';
 import {
-  castToError,
   NestableError,
   UnexpectedConfigError,
   UnexpectedValueError,
@@ -102,7 +101,7 @@ export function parseNamedInputLiteral(
         throw new UnexpectedValueError(
           indefinite(type.name),
           graphql.print(value),
-          { path, cause: castToError(error) },
+          { path, cause: error },
         );
       }
     } else {

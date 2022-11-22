@@ -1,6 +1,7 @@
 import { Memoize } from '@prismamedia/ts-memoize';
 import * as graphql from 'graphql';
 import assert from 'node:assert/strict';
+import { castToError } from './cast-to-error.js';
 import {
   assertOptionalFlag,
   ensureName,
@@ -14,7 +15,6 @@ import {
 } from './config.js';
 import {
   aggregateError,
-  castToError,
   isNestableError,
   NestableError,
   UnexpectedConfigError,
@@ -211,10 +211,7 @@ export class Input<TValue = any> {
           throw new UnexpectedConfigError(
             `to be valid against the type "${this.type}" and the custom validation`,
             defaultValue,
-            {
-              path: defaultValueConfigPath,
-              cause: castToError(error),
-            },
+            { path: defaultValueConfigPath, cause: error },
           );
         }
 

@@ -1,4 +1,5 @@
 export * from './array-or-value.js';
+export * from './cast-to-error.js';
 export * from './config.js';
 export * from './enum.js';
 export * from './error.js';

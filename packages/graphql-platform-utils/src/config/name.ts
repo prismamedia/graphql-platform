@@ -1,5 +1,5 @@
 import * as graphql from 'graphql';
-import { castToError, UnexpectedConfigError } from '../error.js';
+import { UnexpectedConfigError } from '../error.js';
 import type { Path } from '../path.js';
 
 /**
@@ -28,7 +28,7 @@ export function assertName(
     throw new UnexpectedConfigError(
       'to be valid against the GraphQL "Names" specification (@see: https://spec.graphql.org/draft/#sec-Names)',
       maybeName,
-      { path, cause: castToError(error) },
+      { path, cause: error },
     );
   }
 }
