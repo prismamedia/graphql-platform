@@ -1,6 +1,6 @@
 {
   "name": "@prismamedia/graphql-platform-connector-mariadb",
-  "version": "0.1.0-alpha.71",
+  "version": "0.1.0-alpha.72",
   "license": "MIT",
   "contributors": [
     "Yvann Boucher <yvann.boucher@gmail.com>"
