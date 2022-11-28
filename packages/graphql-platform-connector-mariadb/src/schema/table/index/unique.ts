@@ -1,6 +1,6 @@
 import * as core from '@prismamedia/graphql-platform';
 import * as utils from '@prismamedia/graphql-platform-utils';
-import { Memoize } from '@prismamedia/ts-memoize';
+import { Memoize } from '@prismamedia/memoize';
 import assert from 'node:assert/strict';
 import { escapeIdentifier } from '../../../escaping.js';
 import type { MariaDBConnector } from '../../../index.js';

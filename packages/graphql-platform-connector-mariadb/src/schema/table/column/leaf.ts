@@ -1,7 +1,7 @@
 import type * as core from '@prismamedia/graphql-platform';
 import * as scalars from '@prismamedia/graphql-platform-scalars';
 import * as utils from '@prismamedia/graphql-platform-utils';
-import { Memoize } from '@prismamedia/ts-memoize';
+import { Memoize } from '@prismamedia/memoize';
 import * as graphql from 'graphql';
 import type { URL } from 'node:url';
 import * as semver from 'semver';

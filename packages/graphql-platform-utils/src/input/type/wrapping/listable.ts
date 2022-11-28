@@ -1,4 +1,4 @@
-import { Memoize } from '@prismamedia/ts-memoize';
+import { Memoize } from '@prismamedia/memoize';
 import * as graphql from 'graphql';
 import { aggregateError } from '../../../error.js';
 import { isIterableObject } from '../../../is-iterable-object.js';

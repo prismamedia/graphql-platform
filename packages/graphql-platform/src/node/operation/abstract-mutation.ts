@@ -1,5 +1,5 @@
 import * as utils from '@prismamedia/graphql-platform-utils';
-import { Memoize } from '@prismamedia/ts-memoize';
+import { Memoize } from '@prismamedia/memoize';
 import * as graphql from 'graphql';
 import type { ConnectorInterface } from '../../connector-interface.js';
 import type { GraphQLPlatform } from '../../index.js';
@@ -8,6 +8,7 @@ import {
   AbstractOperation,
   type NodeSelectionAwareArgs,
 } from '../abstract-operation.js';
+import { NodeChangeAggregation } from '../change.js';
 import { AndOperation, NodeFilter } from '../statement/filter.js';
 import type { ContextBoundAPI } from './api.js';
 import { catchConnectorError } from './error.js';
@@ -191,7 +192,18 @@ export abstract class AbstractMutation<
       }
     }
 
-    await this.gp.emitChanges(...mutationContext.changes);
+    // changes
+    {
+      const aggregation = new NodeChangeAggregation(mutationContext.changes);
+
+      if (aggregation.length) {
+        await Promise.all(
+          Array.from(aggregation.changesByNode, ([node, changes]) =>
+            node.emitChanges(...changes),
+          ),
+        );
+      }
+    }
 
     return result;
   }

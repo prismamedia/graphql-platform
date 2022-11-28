@@ -1,5 +1,5 @@
 import * as utils from '@prismamedia/graphql-platform-utils';
-import { Memoize } from '@prismamedia/ts-memoize';
+import { Memoize } from '@prismamedia/memoize';
 import inflection from 'inflection';
 import assert from 'node:assert/strict';
 import type { Except } from 'type-fest';

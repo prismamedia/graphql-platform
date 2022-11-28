@@ -1,15 +1,21 @@
 {
   "typescript.enablePromptUseWorkspaceTsdk": true,
   "search.exclude": {
-    "node_modules": true,
-    "packages/*/dist": true,
+    "dist/": true,
+    "node_modules/": true,
+    "tsconfig.tsbuildinfo": true,
+    "packages/*/dist/": true,
+    "packages/*/node_modules/": true,
     "packages/*/tsconfig.tsbuildinfo": true,
     "**/.yarn": true,
     "**/.pnp.*": true
   },
   "files.exclude": {
-    "node_modules": true,
-    "packages/*/dist": true,
+    "dist/": true,
+    "node_modules/": true,
+    "tsconfig.tsbuildinfo": true,
+    "packages/*/dist/": true,
+    "packages/*/node_modules/": true,
     "packages/*/tsconfig.tsbuildinfo": true,
     "**/.yarn": true,
     "**/.pnp.*": true

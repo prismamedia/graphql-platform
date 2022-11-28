@@ -1,5 +1,5 @@
 import * as utils from '@prismamedia/graphql-platform-utils';
-import { Memoize } from '@prismamedia/ts-memoize';
+import { Memoize } from '@prismamedia/memoize';
 import * as graphql from 'graphql';
 import _ from 'lodash';
 import assert from 'node:assert/strict';

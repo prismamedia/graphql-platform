@@ -1,5 +1,5 @@
 import * as utils from '@prismamedia/graphql-platform-utils';
-import { Memoize } from '@prismamedia/ts-memoize';
+import { Memoize } from '@prismamedia/memoize';
 import inflection from 'inflection';
 import type { ConnectorInterface } from '../../connector-interface.js';
 import type { Node } from '../../node.js';

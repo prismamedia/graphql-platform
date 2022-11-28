@@ -3,7 +3,7 @@ name: CI
 on: [push, pull_request]
 
 jobs:
-  setup-build-and-test:
+  setup-compile-test-and-publish:
     runs-on: ubuntu-latest
 
     services:

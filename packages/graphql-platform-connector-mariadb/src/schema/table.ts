@@ -1,7 +1,7 @@
 import * as core from '@prismamedia/graphql-platform';
 import * as utils from '@prismamedia/graphql-platform-utils';
 import { UnreachableValueError } from '@prismamedia/graphql-platform-utils';
-import { Memoize } from '@prismamedia/ts-memoize';
+import { Memoize } from '@prismamedia/memoize';
 import type * as mariadb from 'mariadb';
 import assert from 'node:assert/strict';
 import type { MariaDBConnector, OkPacket } from '../index.js';

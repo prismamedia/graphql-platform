@@ -1,4 +1,4 @@
-import { Memoize } from '@prismamedia/ts-memoize';
+import { Memoize } from '@prismamedia/memoize';
 import type { Table } from '../table.js';
 
 export abstract class AbstractIndex {

@@ -1,5 +1,5 @@
 import * as utils from '@prismamedia/graphql-platform-utils';
-import { Memoize } from '@prismamedia/ts-memoize';
+import { Memoize } from '@prismamedia/memoize';
 import * as graphql from 'graphql';
 import type { Edge } from '../../../../../definition/component/edge.js';
 import type { OperationContext } from '../../../../../operation/context.js';

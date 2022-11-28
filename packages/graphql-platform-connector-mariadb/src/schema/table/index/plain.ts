@@ -1,6 +1,6 @@
 import type * as core from '@prismamedia/graphql-platform';
 import * as utils from '@prismamedia/graphql-platform-utils';
-import { Memoize } from '@prismamedia/ts-memoize';
+import { Memoize } from '@prismamedia/memoize';
 import { escapeIdentifier } from '../../../escaping.js';
 import type { Table } from '../../table.js';
 import { AbstractIndex } from '../abstract-index.js';

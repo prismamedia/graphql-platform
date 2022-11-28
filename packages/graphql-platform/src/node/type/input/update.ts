@@ -1,5 +1,5 @@
 import * as utils from '@prismamedia/graphql-platform-utils';
-import { Memoize } from '@prismamedia/ts-memoize';
+import { Memoize } from '@prismamedia/memoize';
 import type { Except } from 'type-fest';
 import type { Node, NodeValue } from '../../../node.js';
 import type { MutationContext } from '../../operation.js';

@@ -28,7 +28,7 @@ export class NodeChangeAggregation<
   public constructor(
     changes: ReadonlyArray<NodeChange<TRequestContext, TConnector>>,
   ) {
-    changes.forEach((change) => {
+    for (const change of changes) {
       let changesById = this.#changesByIdByNode.get(change.node);
       if (!changesById) {
         this.#changesByIdByNode.set(change.node, (changesById = new Map()));
@@ -151,7 +151,7 @@ export class NodeChangeAggregation<
             break;
         }
       }
-    });
+    }
 
     this.changesByNode = new Map(
       Array.from(this.#changesByIdByNode.entries()).map(

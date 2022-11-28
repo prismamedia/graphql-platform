@@ -1,5 +1,5 @@
 import * as utils from '@prismamedia/graphql-platform-utils';
-import { Memoize } from '@prismamedia/ts-memoize';
+import { Memoize } from '@prismamedia/memoize';
 import { DepGraph } from 'dependency-graph';
 import type { ConnectorInterface } from './connector-interface.js';
 import type { GraphQLPlatform } from './index.js';

@@ -1,7 +1,8 @@
+import type { BoundOff } from '@prismamedia/async-event-emitter';
 import * as utils from '@prismamedia/graphql-platform-utils';
-import { Memoize } from '@prismamedia/ts-memoize';
+import { Memoize } from '@prismamedia/memoize';
 import * as graphql from 'graphql';
-import type { Constructor, Except, Promisable } from 'type-fest';
+import type { Constructor, Except } from 'type-fest';
 import type { ConnectorInterface } from './connector-interface.js';
 import {
   getCustomOperationMap,
@@ -11,10 +12,9 @@ import {
   createAPI,
   InvalidRequestContextError,
   Node,
-  NodeChangeAggregation,
   type API,
-  type NodeChange,
-  type NodeChangeSubscriber,
+  type NodeChangeErrorListener,
+  type NodeChangeListener,
   type NodeConfig,
   type NodeName,
   type OperationInterface,
@@ -47,20 +47,13 @@ export type GraphQLPlatformConfig<
    * Optional, act on the nodes' changes "AFTER" they have been committed
    */
   onNodeChange?: utils.ArrayOrValue<
-    (
-      this: GraphQLPlatform<TRequestContext, TConnector>,
-      change: NodeChange<TRequestContext, TConnector>,
-    ) => Promisable<void>
+    NodeChangeListener<TRequestContext, TConnector>
   >;
 
   /**
-   * Optional, catch any error thrown in a node-change-subscriber
+   * Optional, catch any error thrown in a node-change-listener
    */
-  onNodeChangeSubscriberError?: (
-    this: GraphQLPlatform<TRequestContext, TConnector>,
-    error: Error,
-    change: NodeChange,
-  ) => void;
+  onNodeChangeError?: NodeChangeErrorListener<TRequestContext, TConnector>;
 
   /**
    * Optional, add some "custom" operations
@@ -110,13 +103,6 @@ export class GraphQLPlatform<
     Node<TRequestContext, TConnector>
   >;
   public readonly nodes: ReadonlyArray<Node<TRequestContext, TConnector>>;
-
-  public readonly nodeChangeSubscribers: ReadonlyArray<NodeChangeSubscriber>;
-
-  readonly #onNodeChangeSubscriberError: (
-    error: Error,
-    change: NodeChange,
-  ) => void;
 
   public readonly operationsByNameByType: OperationsByNameByType<
     TRequestContext,
@@ -278,57 +264,46 @@ export class GraphQLPlatform<
 
     // on-node-change
     {
-      const onNodeChangeConfig = config.onNodeChange;
-      const onNodeChangeConfigPath = utils.addPath(configPath, 'onNodeChange');
+      const onChangeConfig = config.onNodeChange;
+      const onChangeConfigPath = utils.addPath(configPath, 'onNodeChange');
 
-      this.nodeChangeSubscribers = utils.aggregateConfigError<
-        NodeChangeSubscriber | undefined,
-        NodeChangeSubscriber[]
-      >(
-        utils.resolveArrayOrValue(onNodeChangeConfig),
-        (subscribers, config, index) => {
-          if (config != null) {
-            if (typeof config !== 'function') {
-              throw new utils.UnexpectedConfigError(`a function`, config, {
-                path: utils.addPath(onNodeChangeConfigPath, index),
-              });
+      utils.aggregateConfigError<NodeChangeListener | undefined, void>(
+        utils.resolveArrayOrValue(onChangeConfig),
+        (_, maybeListener, index) => {
+          if (maybeListener != null) {
+            if (typeof maybeListener !== 'function') {
+              throw new utils.UnexpectedConfigError(
+                `a function`,
+                maybeListener,
+                { path: utils.addPath(onChangeConfigPath, index) },
+              );
             }
 
-            subscribers.push(config.bind(this));
+            this.onNodeChange(maybeListener);
           }
-
-          return subscribers;
         },
-        [],
+        undefined,
         { path: configPath },
       );
 
-      // on-local-node-change-subscriber-error
+      // on-node-change-error
       {
-        const onNodeChangeSubscriberErrorConfig =
-          config.onNodeChangeSubscriberError;
-        const onNodeChangeSubscriberErrorConfigPath = utils.addPath(
+        const onChangeErrorConfig = config.onNodeChangeError;
+        const onChangeErrorConfigPath = utils.addPath(
           configPath,
-          'onNodeChangeSubscriberError',
+          'onNodeChangeError',
         );
 
-        if (onNodeChangeSubscriberErrorConfig != null) {
-          if (typeof onNodeChangeSubscriberErrorConfig !== 'function') {
+        if (onChangeErrorConfig != null) {
+          if (typeof onChangeErrorConfig !== 'function') {
             throw new utils.UnexpectedConfigError(
               `a function`,
-              onNodeChangeSubscriberErrorConfig,
-              { path: onNodeChangeSubscriberErrorConfigPath },
+              onChangeErrorConfig,
+              { path: onChangeErrorConfigPath },
             );
           }
 
-          this.#onNodeChangeSubscriberError =
-            onNodeChangeSubscriberErrorConfig.bind(this);
-        } else {
-          this.#onNodeChangeSubscriberError = (error, change) =>
-            console.warn(
-              `An error occured while processing the change "${change}": ${error.message}`,
-              { stack: error.stack },
-            );
+          this.onNodeChangeError(onChangeErrorConfig);
         }
       }
     }
@@ -402,6 +377,22 @@ export class GraphQLPlatform<
     }
   }
 
+  public onNodeChange(
+    listener: NodeChangeListener<TRequestContext, TConnector>,
+  ): BoundOff {
+    const offs = this.nodes.map((node) => node.onChange(listener));
+
+    return () => offs.map((off) => off());
+  }
+
+  public onNodeChangeError(
+    listener: NodeChangeErrorListener<TRequestContext, TConnector>,
+  ): BoundOff {
+    const offs = this.nodes.map((node) => node.onChangeError(listener));
+
+    return () => offs.map((off) => off());
+  }
+
   @Memoize()
   public get connector(): TConnector {
     if (!this.#connector) {
@@ -411,34 +402,6 @@ export class GraphQLPlatform<
     }
 
     return this.#connector;
-  }
-
-  public async emitChanges(
-    ...changes: ReadonlyArray<NodeChange<TRequestContext, TConnector>>
-  ): Promise<void> {
-    const aggregation = new NodeChangeAggregation(changes);
-
-    await Promise.all(
-      Array.from(aggregation.changesByNode, ([node, changes]) =>
-        Promise.all(
-          [...node.changeSubscribers, ...this.nodeChangeSubscribers].map(
-            (subscriber) =>
-              Promise.all(
-                changes.map(async (change) => {
-                  try {
-                    await subscriber(change);
-                  } catch (error) {
-                    this.#onNodeChangeSubscriberError(
-                      utils.castToError(error),
-                      change,
-                    );
-                  }
-                }),
-              ),
-          ),
-        ),
-      ),
-    );
   }
 
   public async seed(

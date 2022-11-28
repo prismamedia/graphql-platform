@@ -1,4 +1,4 @@
-import { Memoize } from '@prismamedia/ts-memoize';
+import { Memoize } from '@prismamedia/memoize';
 import assert from 'node:assert/strict';
 import type { ReverseEdgeMultiple } from '../../../../../../definition/reverse-edge/multiple.js';
 import { BooleanFilter } from '../../../../boolean.js';

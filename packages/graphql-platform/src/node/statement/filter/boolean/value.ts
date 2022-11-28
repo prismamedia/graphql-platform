@@ -1,4 +1,4 @@
-import { Memoize } from '@prismamedia/ts-memoize';
+import { Memoize } from '@prismamedia/memoize';
 import assert from 'node:assert/strict';
 import type { BooleanExpressionInterface } from './expression-interface.js';
 

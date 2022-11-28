@@ -1,5 +1,5 @@
 import * as core from '@prismamedia/graphql-platform';
-import { Memoize } from '@prismamedia/ts-memoize';
+import { Memoize } from '@prismamedia/memoize';
 import { escapeIdentifier } from '../../../../escaping.js';
 import { AbstractTableReference } from '../abstract-table-reference.js';
 import type { TableReference } from '../table-reference.js';

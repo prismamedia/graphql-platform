@@ -6,14 +6,12 @@ import {
   GraphQLNonNull,
   GraphQLString,
 } from 'graphql';
-import assert from 'node:assert/strict';
 import { randomUUID } from 'node:crypto';
 import slugify from 'slug';
 import {
   ConnectorInterface,
   CustomOperationMap,
   GraphQLPlatform,
-  Node,
   NodeConfig,
   OnEdgeHeadDeletion,
 } from '../index.js';
@@ -435,8 +433,6 @@ export const Article: NodeConfig<MyContext> = {
   },
 
   onChange(change) {
-    assert(this instanceof Node, 'Should be an instance of Node');
-
     // if (change.kind === utils.MutationType.CREATION) {
     //   console.debug(
     //     `The article "${change.newValue.id}" has been created at "${change.at}"`,

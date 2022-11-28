@@ -1,15 +1,23 @@
+import {
+  AsyncEventEmitter,
+  type BoundOff,
+} from '@prismamedia/async-event-emitter';
 import * as utils from '@prismamedia/graphql-platform-utils';
-import { Memoize } from '@prismamedia/ts-memoize';
+import { Memoize } from '@prismamedia/memoize';
 import inflection from 'inflection';
 import assert from 'node:assert/strict';
-import type { JsonObject, Promisable } from 'type-fest';
+import type { JsonObject } from 'type-fest';
 import type {
   ConnectorConfigOverrideKind,
   ConnectorInterface,
   GetConnectorConfigOverride,
 } from './connector-interface.js';
 import type { GraphQLPlatform } from './index.js';
-import type { NodeChange, NodeChangeSubscriber } from './node/change.js';
+import type {
+  NodeChange,
+  NodeChangeErrorListener,
+  NodeChangeListener,
+} from './node/change.js';
 import {
   Edge,
   Leaf,
@@ -179,11 +187,13 @@ export type NodeConfig<
    * Optional, act on this node's changes AFTER they have been committed
    */
   onChange?: utils.ArrayOrValue<
-    (
-      this: Node<TRequestContext, TConnector>,
-      change: NodeChange<TRequestContext, TConnector>,
-    ) => Promisable<void>
+    NodeChangeListener<TRequestContext, TConnector>
   >;
+
+  /**
+   * Optional, catch any error thrown in a change-listener
+   */
+  onChangeError?: NodeChangeErrorListener<TRequestContext, TConnector>;
 } & GetConnectorConfigOverride<TConnector, ConnectorConfigOverrideKind.NODE>;
 
 export class Node<
@@ -235,7 +245,7 @@ export class Node<
 
   readonly #authorizationConfig?: NodeAuthorizationConfig<TRequestContext>;
 
-  public readonly changeSubscribers: ReadonlyArray<NodeChangeSubscriber>;
+  readonly #changes = new AsyncEventEmitter<{ change: NodeChange }>();
 
   public constructor(
     public readonly gp: GraphQLPlatform<TRequestContext, TConnector>,
@@ -494,32 +504,50 @@ export class Node<
       }
     }
 
-    // change-listeners
+    // on-change
     {
       const onChangeConfig = config.onChange;
       const onChangeConfigPath = utils.addPath(configPath, 'onChange');
 
-      this.changeSubscribers = utils.aggregateConfigError<
-        NodeChangeSubscriber | undefined,
-        NodeChangeSubscriber[]
-      >(
+      utils.aggregateConfigError<NodeChangeListener | undefined, void>(
         utils.resolveArrayOrValue(onChangeConfig),
-        (subscribers, config, index) => {
-          if (config != null) {
-            if (typeof config !== 'function') {
-              throw new utils.UnexpectedConfigError(`a function`, config, {
-                path: utils.addPath(onChangeConfigPath, index),
-              });
+        (_, maybeListener, index) => {
+          if (maybeListener != null) {
+            if (typeof maybeListener !== 'function') {
+              throw new utils.UnexpectedConfigError(
+                `a function`,
+                maybeListener,
+                { path: utils.addPath(onChangeConfigPath, index) },
+              );
             }
 
-            subscribers.push(config.bind(this));
+            this.onChange(maybeListener);
           }
-
-          return subscribers;
         },
-        [],
+        undefined,
         { path: configPath },
       );
+
+      // on-change-error
+      {
+        const onChangeErrorConfig = config.onChangeError;
+        const onChangeErrorConfigPath = utils.addPath(
+          configPath,
+          'onChangeError',
+        );
+
+        if (onChangeErrorConfig != null) {
+          if (typeof onChangeErrorConfig !== 'function') {
+            throw new utils.UnexpectedConfigError(
+              `a function`,
+              onChangeErrorConfig,
+              { path: onChangeErrorConfigPath },
+            );
+          }
+
+          this.onChangeError(onChangeErrorConfig);
+        }
+      }
     }
   }
 
@@ -1390,5 +1418,29 @@ export class Node<
         }),
       Object.create(null),
     );
+  }
+
+  public onChange(
+    listener: NodeChangeListener<TRequestContext, TConnector>,
+  ): BoundOff {
+    return this.#changes.on('change', listener);
+  }
+
+  public onChangeError(
+    listener: NodeChangeErrorListener<TRequestContext, TConnector>,
+  ): BoundOff {
+    return this.#changes.on('error', (error) =>
+      listener(utils.castToError(error)),
+    );
+  }
+
+  public async emitChanges(
+    ...changes: ReadonlyArray<NodeChange<TRequestContext, TConnector>>
+  ): Promise<void> {
+    if (changes.length) {
+      await Promise.all(
+        changes.map((change) => this.#changes.emit('change', change)),
+      );
+    }
   }
 }
