@@ -10,11 +10,13 @@ import type {
   GetConnectorConfigOverride,
 } from '../../../connector-interface.js';
 import type { Node } from '../../../node.js';
+import type { OrderingDirection } from '../../statement/ordering/direction.js';
 import { LeafSelection } from '../../statement/selection/expression/component/leaf.js';
 import {
   LeafCreationInput,
   LeafCreationInputConfig,
 } from '../../type/input/creation/field/component/leaf.js';
+import { LeafOrderingInput } from '../../type/input/ordering/expression/leaf.js';
 import {
   LeafUpdateInput,
   LeafUpdateInputConfig,
@@ -255,6 +257,13 @@ export class Leaf<
     super.validateDefinition();
 
     this.isSortable();
+  }
+
+  @Memoize((direction: OrderingDirection) => direction)
+  public getOrderingInput(direction: OrderingDirection): LeafOrderingInput {
+    assert(this.isSortable(), `The "${this}" leaf is not sortable`);
+
+    return new LeafOrderingInput(this, direction);
   }
 
   @Memoize()

@@ -7,7 +7,7 @@ import {
   ReverseEdgeMultipleCountOrdering,
 } from '../../../../statement/ordering.js';
 
-export class ReverseEdgeMultipleCountOrderingInputType extends utils.EnumInputValue {
+export class ReverseEdgeMultipleCountOrderingInput extends utils.EnumInputValue {
   readonly #expression: ReverseEdgeMultipleCountOrdering;
 
   public constructor(

@@ -214,6 +214,16 @@ export class UniqueConstraint<
   }
 
   @Memoize()
+  public isSortable(): boolean {
+    return (
+      this.components.length === 1 &&
+      this.components.every(
+        (component) => component instanceof Leaf && component.isSortable(),
+      )
+    );
+  }
+
+  @Memoize()
   public get selection(): NodeSelection {
     return new NodeSelection(
       this.node,
@@ -230,6 +240,7 @@ export class UniqueConstraint<
     this.isMutable();
     this.isNullable();
     this.isPublic();
+    this.isSortable();
     this.selection;
   }
 
@@ -298,7 +309,7 @@ export class UniqueConstraint<
         const componentValue = value[component.name];
 
         return componentValue === null
-          ? 'NULL'
+          ? '__NULL__'
           : component instanceof Leaf
           ? component.serialize(componentValue as LeafValue)
           : component.referencedUniqueConstraint.flatten(

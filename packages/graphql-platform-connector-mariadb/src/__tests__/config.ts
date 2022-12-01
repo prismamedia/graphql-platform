@@ -125,6 +125,7 @@ export function createGraphQLPlatform(
         schema: {
           name: `tests_${schemaName}`,
         },
+
         pool: {
           host,
           port,
@@ -132,6 +133,7 @@ export function createGraphQLPlatform(
           password,
           idleTimeout: 30,
         },
+
         onExecutedStatement: options?.onExecutedStatement,
       },
     ],

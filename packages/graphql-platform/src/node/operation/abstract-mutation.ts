@@ -198,8 +198,8 @@ export abstract class AbstractMutation<
 
       if (aggregation.length) {
         await Promise.all(
-          Array.from(aggregation.changesByNode, ([node, changes]) =>
-            node.emitChanges(...changes),
+          Array.from(aggregation, (change) =>
+            this.gp.emit('node-change', change),
           ),
         );
       }

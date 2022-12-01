@@ -1,7 +1,4 @@
-import {
-  AsyncEventEmitter,
-  type BoundOff,
-} from '@prismamedia/async-event-emitter';
+import type { EventListener } from '@prismamedia/async-event-emitter';
 import * as utils from '@prismamedia/graphql-platform-utils';
 import { Memoize } from '@prismamedia/memoize';
 import inflection from 'inflection';
@@ -12,12 +9,11 @@ import type {
   ConnectorInterface,
   GetConnectorConfigOverride,
 } from './connector-interface.js';
-import type { GraphQLPlatform } from './index.js';
 import type {
-  NodeChange,
-  NodeChangeErrorListener,
-  NodeChangeListener,
-} from './node/change.js';
+  GraphQLPlatform,
+  GraphQLPlatformEventDataByName,
+} from './index.js';
+import { NodeCursor, type NodeCursorOptions } from './node/cursor.js';
 import {
   Edge,
   Leaf,
@@ -50,8 +46,8 @@ import {
 } from './node/operation.js';
 import {
   mergeSelectionExpressions,
-  NodeFilter,
   NodeSelection,
+  type NodeFilter,
   type NodeSelectedValue,
 } from './node/statement.js';
 import {
@@ -66,6 +62,7 @@ import {
 } from './node/type.js';
 
 export * from './node/change.js';
+export * from './node/cursor.js';
 export * from './node/definition.js';
 export * from './node/fixture.js';
 export * from './node/name.js';
@@ -184,16 +181,9 @@ export type NodeConfig<
   authorization?: NodeAuthorizationConfig<TRequestContext>;
 
   /**
-   * Optional, act on this node's changes AFTER they have been committed
+   * Optional, register some change-listeners
    */
-  onChange?: utils.ArrayOrValue<
-    NodeChangeListener<TRequestContext, TConnector>
-  >;
-
-  /**
-   * Optional, catch any error thrown in a change-listener
-   */
-  onChangeError?: NodeChangeErrorListener<TRequestContext, TConnector>;
+  onChange?: EventListener<GraphQLPlatformEventDataByName, 'node-change'>;
 } & GetConnectorConfigOverride<TConnector, ConnectorConfigOverrideKind.NODE>;
 
 export class Node<
@@ -245,8 +235,6 @@ export class Node<
 
   readonly #authorizationConfig?: NodeAuthorizationConfig<TRequestContext>;
 
-  readonly #changes = new AsyncEventEmitter<{ change: NodeChange }>();
-
   public constructor(
     public readonly gp: GraphQLPlatform<TRequestContext, TConnector>,
     public readonly name: NodeName,
@@ -255,6 +243,16 @@ export class Node<
   ) {
     assertNodeName(name, configPath);
     utils.assertPlainObjectConfig(config, configPath);
+
+    // on-change
+    {
+      config.onChange &&
+        gp.on('node-change', async (change) => {
+          if (change.node === this) {
+            await config.onChange!(change);
+          }
+        });
+    }
 
     // plural
     {
@@ -501,52 +499,6 @@ export class Node<
             );
           }
         };
-      }
-    }
-
-    // on-change
-    {
-      const onChangeConfig = config.onChange;
-      const onChangeConfigPath = utils.addPath(configPath, 'onChange');
-
-      utils.aggregateConfigError<NodeChangeListener | undefined, void>(
-        utils.resolveArrayOrValue(onChangeConfig),
-        (_, maybeListener, index) => {
-          if (maybeListener != null) {
-            if (typeof maybeListener !== 'function') {
-              throw new utils.UnexpectedConfigError(
-                `a function`,
-                maybeListener,
-                { path: utils.addPath(onChangeConfigPath, index) },
-              );
-            }
-
-            this.onChange(maybeListener);
-          }
-        },
-        undefined,
-        { path: configPath },
-      );
-
-      // on-change-error
-      {
-        const onChangeErrorConfig = config.onChangeError;
-        const onChangeErrorConfigPath = utils.addPath(
-          configPath,
-          'onChangeError',
-        );
-
-        if (onChangeErrorConfig != null) {
-          if (typeof onChangeErrorConfig !== 'function') {
-            throw new utils.UnexpectedConfigError(
-              `a function`,
-              onChangeErrorConfig,
-              { path: onChangeErrorConfigPath },
-            );
-          }
-
-          this.onChangeError(onChangeErrorConfig);
-        }
       }
     }
   }
@@ -1420,27 +1372,17 @@ export class Node<
     );
   }
 
-  public onChange(
-    listener: NodeChangeListener<TRequestContext, TConnector>,
-  ): BoundOff {
-    return this.#changes.on('change', listener);
-  }
-
-  public onChangeError(
-    listener: NodeChangeErrorListener<TRequestContext, TConnector>,
-  ): BoundOff {
-    return this.#changes.on('error', (error) =>
-      listener(utils.castToError(error)),
+  @Memoize()
+  public isScrollable(): boolean {
+    return this.uniqueConstraints.some((uniqueConstraint) =>
+      uniqueConstraint.isSortable(),
     );
   }
 
-  public async emitChanges(
-    ...changes: ReadonlyArray<NodeChange<TRequestContext, TConnector>>
-  ): Promise<void> {
-    if (changes.length) {
-      await Promise.all(
-        changes.map((change) => this.#changes.emit('change', change)),
-      );
-    }
+  public scroll<TValue extends NodeSelectedValue>(
+    context: TRequestContext,
+    options?: NodeCursorOptions,
+  ): AsyncIterable<TValue> {
+    return new NodeCursor(this, context, options);
   }
 }

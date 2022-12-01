@@ -1,10 +1,14 @@
+import {
+  AsyncEventEmitter,
+  EventConfigByName,
+  EventListener,
+} from '@prismamedia/async-event-emitter';
 import * as core from '@prismamedia/graphql-platform';
 import * as utils from '@prismamedia/graphql-platform-utils';
 import * as mariadb from 'mariadb';
 import assert from 'node:assert/strict';
 import { hrtime } from 'node:process';
 import * as semver from 'semver';
-import type { Promisable } from 'type-fest';
 import {
   Schema,
   type ForeignKeyIndexConfig,
@@ -29,6 +33,10 @@ export type OkPacket = {
   warningStatus: number;
 };
 
+export type MariaDBConnectorEventDataByName = {
+  'executed-statement': ExecutedStatement;
+};
+
 export interface MariaDBConnectorConfig {
   charset?: string;
   collation?: string;
@@ -36,19 +44,24 @@ export interface MariaDBConnectorConfig {
   schema?: SchemaConfig;
   pool?: mariadb.PoolConfig;
 
+  on?: EventConfigByName<MariaDBConnectorEventDataByName>;
+
   /**
    * Optional, act on the executed-statements
    */
-  onExecutedStatement?(
-    this: MariaDBConnector,
-    executedStatement: ExecutedStatement,
-  ): Promisable<void>;
+  onExecutedStatement?: EventListener<
+    MariaDBConnectorEventDataByName,
+    'executed-statement'
+  >;
 }
 
 /**
  * @see https://mariadb.com/kb/en/nodejs-connector/
  */
-export class MariaDBConnector implements core.ConnectorInterface {
+export class MariaDBConnector
+  extends AsyncEventEmitter<MariaDBConnectorEventDataByName>
+  implements core.ConnectorInterface
+{
   public readonly configOverrides?: {
     [core.ConnectorConfigOverrideKind.NODE]: {
       /**
@@ -98,11 +111,6 @@ export class MariaDBConnector implements core.ConnectorInterface {
     mariadb.PoolConnection
   >();
 
-  public onExecutedStatement?(
-    this: MariaDBConnector,
-    executedStatement: ExecutedStatement,
-  ): Promisable<void>;
-
   public constructor(
     public readonly gp: core.GraphQLPlatform,
     public readonly config: MariaDBConnectorConfig,
@@ -112,6 +120,14 @@ export class MariaDBConnector implements core.ConnectorInterface {
     ),
   ) {
     utils.assertPlainObjectConfig(config, configPath);
+
+    super(config.on);
+
+    // on-executed-statement
+    {
+      config.onExecutedStatement &&
+        this.on('executed-statement', config.onExecutedStatement);
+    }
 
     // pool-config
     {
@@ -149,27 +165,6 @@ export class MariaDBConnector implements core.ConnectorInterface {
     this.version =
       (config.version && semver.coerce(config.version)) || undefined;
     this.schema = new Schema(this);
-
-    // on-executed-statement
-    {
-      const onExecutedStatementConfig = config.onExecutedStatement;
-      const onExecutedStatementConfigPath = utils.addPath(
-        configPath,
-        'onExecutedStatement',
-      );
-
-      if (onExecutedStatementConfig != null) {
-        if (typeof onExecutedStatementConfig !== 'function') {
-          throw new utils.UnexpectedConfigError(
-            `a function`,
-            onExecutedStatementConfig,
-            { path: onExecutedStatementConfigPath },
-          );
-        }
-
-        this.onExecutedStatement = onExecutedStatementConfig.bind(this);
-      }
-    }
   }
 
   public getPool(
@@ -253,7 +248,7 @@ export class MariaDBConnector implements core.ConnectorInterface {
           statement.kind,
         ));
 
-    await this.onExecutedStatement?.({
+    await this.emit('executed-statement', {
       statement,
       result,
       took: Math.round(Number(hrtime.bigint() - startedAt) / 10 ** 6) / 10 ** 3,

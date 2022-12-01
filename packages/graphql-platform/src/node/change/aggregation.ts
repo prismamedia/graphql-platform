@@ -29,9 +29,11 @@ export class NodeChangeAggregation<
     changes: ReadonlyArray<NodeChange<TRequestContext, TConnector>>,
   ) {
     for (const change of changes) {
-      let changesById = this.#changesByIdByNode.get(change.node);
+      const node = change.node;
+
+      let changesById = this.#changesByIdByNode.get(node);
       if (!changesById) {
-        this.#changesByIdByNode.set(change.node, (changesById = new Map()));
+        this.#changesByIdByNode.set(node, (changesById = new Map()));
       }
 
       let previousChange = changesById.get(change.flattenedId);
@@ -56,7 +58,7 @@ export class NodeChangeAggregation<
                 changesById.set(
                   change.flattenedId,
                   new NodeCreation(
-                    change.node,
+                    node,
                     change.requestContext,
                     change.newValue,
                     change.createdAt,
@@ -67,7 +69,7 @@ export class NodeChangeAggregation<
               }
 
               case utils.MutationType.DELETION:
-                this.delete(change);
+                this.delete(previousChange);
                 break;
             }
             break;
@@ -82,13 +84,10 @@ export class NodeChangeAggregation<
 
               case utils.MutationType.UPDATE: {
                 if (
-                  change.node.areValuesEqual(
-                    previousChange.newValue,
-                    change.oldValue,
-                  )
+                  node.areValuesEqual(previousChange.newValue, change.oldValue)
                 ) {
                   const aggregate = new NodeUpdate(
-                    change.node,
+                    node,
                     change.requestContext,
                     previousChange.oldValue,
                     change.newValue,
@@ -100,7 +99,7 @@ export class NodeChangeAggregation<
                     changesById.set(change.flattenedId, aggregate);
                   } else {
                     // This "update" cancels the previous "update" => no change
-                    this.delete(change);
+                    this.delete(previousChange);
                   }
                 } else {
                   // Should not happen - we missed something
@@ -119,7 +118,7 @@ export class NodeChangeAggregation<
             switch (change.kind) {
               case utils.MutationType.CREATION: {
                 const aggregate = new NodeUpdate(
-                  change.node,
+                  node,
                   change.requestContext,
                   previousChange.oldValue,
                   change.newValue,
@@ -131,7 +130,7 @@ export class NodeChangeAggregation<
                   changesById.set(change.flattenedId, aggregate);
                 } else {
                   // This "creation" cancels the previous "deletion" => no change
-                  this.delete(change);
+                  this.delete(previousChange);
                 }
                 break;
               }

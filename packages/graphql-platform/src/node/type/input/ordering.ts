@@ -2,26 +2,26 @@ import * as utils from '@prismamedia/graphql-platform-utils';
 import { Memoize } from '@prismamedia/memoize';
 import type { ConnectorInterface } from '../../../connector-interface.js';
 import type { Node } from '../../../node.js';
+import { Leaf } from '../../definition.js';
 import { ReverseEdgeUnique } from '../../definition/reverse-edge/unique.js';
 import type { OperationContext } from '../../operation/context.js';
 import { NodeOrdering, OrderingDirection } from '../../statement/ordering.js';
 import {
-  LeafOrderingInputType,
-  OrderingExpressionInputType,
-  ReverseEdgeMultipleCountOrderingInputType,
+  OrderingExpressionInput,
+  ReverseEdgeMultipleCountOrderingInput,
 } from './ordering/expression.js';
 
 export * from './ordering/expression.js';
 
 export type NodeOrderingInputValue = utils.Nillable<
-  OrderingExpressionInputType['value']
+  OrderingExpressionInput['value']
 >;
 
 export type OrderByInputValue =
   | NonNullable<NodeOrderingInputValue>[]
   | utils.Nil;
 
-export class NodeOrderingInputType extends utils.EnumInputType<OrderingExpressionInputType> {
+export class NodeOrderingInputType extends utils.EnumInputType<OrderingExpressionInput> {
   public constructor(public readonly node: Node) {
     super({
       name: `${node}OrderingInput`,
@@ -30,26 +30,26 @@ export class NodeOrderingInputType extends utils.EnumInputType<OrderingExpressio
   }
 
   @Memoize()
-  public override get enumValues(): ReadonlyArray<OrderingExpressionInputType> {
+  public override get enumValues(): ReadonlyArray<OrderingExpressionInput> {
     return [
-      ...this.node.leaves.flatMap<OrderingExpressionInputType>((leaf) =>
-        leaf.isSortable()
+      ...this.node.components.flatMap<OrderingExpressionInput>((component) =>
+        component instanceof Leaf && component.isSortable()
           ? [
-              new LeafOrderingInputType(leaf, OrderingDirection.ASCENDING),
-              new LeafOrderingInputType(leaf, OrderingDirection.DESCENDING),
+              component.getOrderingInput(OrderingDirection.ASCENDING),
+              component.getOrderingInput(OrderingDirection.DESCENDING),
             ]
           : [],
       ),
-      ...this.node.reverseEdges.flatMap<OrderingExpressionInputType>(
+      ...this.node.reverseEdges.flatMap<OrderingExpressionInput>(
         (reverseEdge) =>
           reverseEdge instanceof ReverseEdgeUnique
             ? []
             : [
-                new ReverseEdgeMultipleCountOrderingInputType(
+                new ReverseEdgeMultipleCountOrderingInput(
                   reverseEdge,
                   OrderingDirection.ASCENDING,
                 ),
-                new ReverseEdgeMultipleCountOrderingInputType(
+                new ReverseEdgeMultipleCountOrderingInput(
                   reverseEdge,
                   OrderingDirection.DESCENDING,
                 ),

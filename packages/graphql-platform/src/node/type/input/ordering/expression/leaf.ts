@@ -1,4 +1,5 @@
 import * as utils from '@prismamedia/graphql-platform-utils';
+import assert from 'node:assert/strict';
 import type { ConnectorInterface } from '../../../../../connector-interface.js';
 import type { Leaf } from '../../../../definition/component/leaf.js';
 import type { OperationContext } from '../../../../operation/context.js';
@@ -7,13 +8,15 @@ import {
   OrderingDirection,
 } from '../../../../statement/ordering.js';
 
-export class LeafOrderingInputType extends utils.EnumInputValue {
+export class LeafOrderingInput extends utils.EnumInputValue {
   readonly #expression: LeafOrdering;
 
   public constructor(
     public readonly leaf: Leaf,
     public readonly direction: OrderingDirection,
   ) {
+    assert(leaf.isSortable(), `The "${leaf}" leaf is not sortable`);
+
     super({
       value: `${leaf.name}_${
         direction === OrderingDirection.ASCENDING ? 'ASC' : 'DESC'

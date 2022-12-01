@@ -1,4 +1,8 @@
-import type { BoundOff } from '@prismamedia/async-event-emitter';
+import {
+  AsyncEventEmitter,
+  type EventConfigByName,
+  type EventListener,
+} from '@prismamedia/async-event-emitter';
 import * as utils from '@prismamedia/graphql-platform-utils';
 import { Memoize } from '@prismamedia/memoize';
 import * as graphql from 'graphql';
@@ -13,8 +17,7 @@ import {
   InvalidRequestContextError,
   Node,
   type API,
-  type NodeChangeErrorListener,
-  type NodeChangeListener,
+  type NodeChange,
   type NodeConfig,
   type NodeName,
   type OperationInterface,
@@ -26,6 +29,11 @@ export * from './connector-interface.js';
 export * from './custom-operations.js';
 export * from './node.js';
 export * from './seeding.js';
+
+export type GraphQLPlatformEventDataByName<
+  TRequestContext extends object = any,
+  TConnector extends ConnectorInterface = any,
+> = { 'node-change': NodeChange<TRequestContext, TConnector> };
 
 export type GraphQLPlatformConfig<
   TRequestContext extends object = any,
@@ -42,18 +50,6 @@ export type GraphQLPlatformConfig<
      */
     [nodeName: NodeName]: NodeConfig<TRequestContext, TConnector>;
   };
-
-  /**
-   * Optional, act on the nodes' changes "AFTER" they have been committed
-   */
-  onNodeChange?: utils.ArrayOrValue<
-    NodeChangeListener<TRequestContext, TConnector>
-  >;
-
-  /**
-   * Optional, catch any error thrown in a node-change-listener
-   */
-  onNodeChangeError?: NodeChangeErrorListener<TRequestContext, TConnector>;
 
   /**
    * Optional, add some "custom" operations
@@ -92,12 +88,22 @@ export type GraphQLPlatformConfig<
     this: GraphQLPlatform<TRequestContext, TConnector>,
     maybeRequestContext: unknown,
   ): asserts maybeRequestContext is TRequestContext;
+
+  /**
+   * Optional, register some event-listeners, all at once
+   */
+  on?: EventConfigByName<GraphQLPlatformEventDataByName>;
+
+  /**
+   * Optional, register a node-change-listeners
+   */
+  onNodeChange?: EventListener<GraphQLPlatformEventDataByName, 'node-change'>;
 };
 
 export class GraphQLPlatform<
   TRequestContext extends object = any,
   TConnector extends ConnectorInterface = any,
-> {
+> extends AsyncEventEmitter<GraphQLPlatformEventDataByName> {
   public readonly nodesByName: ReadonlyMap<
     Node['name'],
     Node<TRequestContext, TConnector>
@@ -125,6 +131,11 @@ export class GraphQLPlatform<
     ),
   ) {
     utils.assertPlainObjectConfig(config, configPath);
+
+    super(config.on);
+
+    // on-node-change
+    config.onNodeChange && this.on('node-change', config.onNodeChange);
 
     // nodes
     {
@@ -261,52 +272,6 @@ export class GraphQLPlatform<
         this.#assertRequestContext = assertRequestContextConfig.bind(this);
       }
     }
-
-    // on-node-change
-    {
-      const onChangeConfig = config.onNodeChange;
-      const onChangeConfigPath = utils.addPath(configPath, 'onNodeChange');
-
-      utils.aggregateConfigError<NodeChangeListener | undefined, void>(
-        utils.resolveArrayOrValue(onChangeConfig),
-        (_, maybeListener, index) => {
-          if (maybeListener != null) {
-            if (typeof maybeListener !== 'function') {
-              throw new utils.UnexpectedConfigError(
-                `a function`,
-                maybeListener,
-                { path: utils.addPath(onChangeConfigPath, index) },
-              );
-            }
-
-            this.onNodeChange(maybeListener);
-          }
-        },
-        undefined,
-        { path: configPath },
-      );
-
-      // on-node-change-error
-      {
-        const onChangeErrorConfig = config.onNodeChangeError;
-        const onChangeErrorConfigPath = utils.addPath(
-          configPath,
-          'onNodeChangeError',
-        );
-
-        if (onChangeErrorConfig != null) {
-          if (typeof onChangeErrorConfig !== 'function') {
-            throw new utils.UnexpectedConfigError(
-              `a function`,
-              onChangeErrorConfig,
-              { path: onChangeErrorConfigPath },
-            );
-          }
-
-          this.onNodeChangeError(onChangeErrorConfig);
-        }
-      }
-    }
   }
 
   public getNodeByName(
@@ -375,22 +340,6 @@ export class GraphQLPlatform<
         path,
       });
     }
-  }
-
-  public onNodeChange(
-    listener: NodeChangeListener<TRequestContext, TConnector>,
-  ): BoundOff {
-    const offs = this.nodes.map((node) => node.onChange(listener));
-
-    return () => offs.map((off) => off());
-  }
-
-  public onNodeChangeError(
-    listener: NodeChangeErrorListener<TRequestContext, TConnector>,
-  ): BoundOff {
-    const offs = this.nodes.map((node) => node.onChangeError(listener));
-
-    return () => offs.map((off) => off());
   }
 
   @Memoize()

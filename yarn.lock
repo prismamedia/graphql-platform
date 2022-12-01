@@ -61,9 +61,9 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@apollo/server@npm:4.2.1":
-  version: 4.2.1
-  resolution: "@apollo/server@npm:4.2.1"
+"@apollo/server@npm:4.2.2":
+  version: 4.2.2
+  resolution: "@apollo/server@npm:4.2.2"
   dependencies:
     "@apollo/cache-control-types": ^1.0.2
     "@apollo/server-gateway-interface": ^1.0.7
@@ -93,7 +93,7 @@ __metadata:
     whatwg-mimetype: ^3.0.0
   peerDependencies:
     graphql: ^16.6.0
-  checksum: 703d39078c52393783260a1433c77ac4f0941849ce5ba91fcc4147db66c7ba9b61f3ac2a5dcb129ec600750ae8fb894b6202b8e65607125cd2992f335d33bc17
+  checksum: fe1eeec7693118f4846cd25d4469147e27d6edeaa0fd96ef6b797bec92486a5b88f48bf5f50be4c6e748b48f2424b34f5f38103b877836e2192af0870c6c4548
   languageName: node
   linkType: hard
 
@@ -1041,10 +1041,10 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@prismamedia/async-event-emitter@npm:^4.0.4":
-  version: 4.0.4
-  resolution: "@prismamedia/async-event-emitter@npm:4.0.4"
-  checksum: 85d594d0074ed2cc94b5c88df4f00ea002a0c31a7f7c42073855580c881dbc9287035227932a41ebcb0358eec45fccecfa9ce81b48bf4c616bca022a4eee0c45
+"@prismamedia/async-event-emitter@npm:^4.0.6":
+  version: 4.0.6
+  resolution: "@prismamedia/async-event-emitter@npm:4.0.6"
+  checksum: aeec2fbb7a78d84fc5dee04cb17fdb97133fe7fa4ba9980704b4f7d43069b4405167ca84b4a824079f99292a9877298e049f01c1f5e73ca1242f9722dd245d78
   languageName: node
   linkType: hard
 
@@ -1052,16 +1052,17 @@ __metadata:
   version: 0.0.0-use.local
   resolution: "@prismamedia/graphql-platform-connector-mariadb@workspace:packages/graphql-platform-connector-mariadb"
   dependencies:
+    "@prismamedia/async-event-emitter": ^4.0.6
     "@prismamedia/graphql-platform": "workspace:packages/graphql-platform"
     "@prismamedia/graphql-platform-scalars": "workspace:packages/graphql-platform-scalars"
     "@prismamedia/graphql-platform-utils": "workspace:packages/graphql-platform-utils"
     "@prismamedia/memoize": ^4.0.0
     "@sqltools/formatter": 1.2.5
-    "@swc/core": 1.3.20
+    "@swc/core": 1.3.21
     "@swc/jest": 0.2.23
     "@tsconfig/node16": 1.0.3
     "@types/jest": 29.2.3
-    "@types/node": 16.18.3
+    "@types/node": 16.18.4
     "@types/semver": 7.3.13
     graphql: 16.6.0
     inflection: ^2.0.0
@@ -1079,14 +1080,14 @@ __metadata:
   version: 0.0.0-use.local
   resolution: "@prismamedia/graphql-platform-integration-apollo-server@workspace:packages/graphql-platform-integration-apollo-server"
   dependencies:
-    "@apollo/server": 4.2.1
+    "@apollo/server": 4.2.2
     "@prismamedia/graphql-platform": "workspace:packages/graphql-platform"
     "@prismamedia/graphql-platform-connector-mariadb": "workspace:packages/graphql-platform-connector-mariadb"
-    "@swc/core": 1.3.20
+    "@swc/core": 1.3.21
     "@swc/jest": 0.2.23
     "@tsconfig/node16": 1.0.3
     "@types/jest": 29.2.3
-    "@types/node": 16.18.3
+    "@types/node": 16.18.4
     graphql: 16.6.0
     jest: 29.3.1
     typescript: 4.9.3
@@ -1101,12 +1102,12 @@ __metadata:
   resolution: "@prismamedia/graphql-platform-scalars@workspace:packages/graphql-platform-scalars"
   dependencies:
     "@prismamedia/graphql-platform-utils": "workspace:packages/graphql-platform-utils"
-    "@swc/core": 1.3.20
+    "@swc/core": 1.3.21
     "@swc/jest": 0.2.23
     "@tsconfig/node16": 1.0.3
     "@types/draft-js": ^0.11.9
     "@types/jest": 29.2.3
-    "@types/node": 16.18.3
+    "@types/node": 16.18.4
     graphql: 16.6.0
     jest: 29.3.1
     type-fest: ^3.3.0
@@ -1121,13 +1122,13 @@ __metadata:
   resolution: "@prismamedia/graphql-platform-utils@workspace:packages/graphql-platform-utils"
   dependencies:
     "@prismamedia/memoize": ^4.0.0
-    "@swc/core": 1.3.20
+    "@swc/core": 1.3.21
     "@swc/jest": 0.2.23
     "@tsconfig/node16": 1.0.3
     "@types/indefinite": 2.3.1
     "@types/jest": 29.2.3
-    "@types/lodash": 4.14.190
-    "@types/node": 16.18.3
+    "@types/lodash": 4.14.191
+    "@types/node": 16.18.4
     graphql: 16.6.0
     indefinite: ^2.4.2
     jest: 29.3.1
@@ -1144,16 +1145,16 @@ __metadata:
   resolution: "@prismamedia/graphql-platform@workspace:packages/graphql-platform"
   dependencies:
     "@jest/globals": 29.3.1
-    "@prismamedia/async-event-emitter": ^4.0.4
+    "@prismamedia/async-event-emitter": ^4.0.6
     "@prismamedia/graphql-platform-scalars": "workspace:packages/graphql-platform-scalars"
     "@prismamedia/graphql-platform-utils": "workspace:packages/graphql-platform-utils"
     "@prismamedia/memoize": ^4.0.0
-    "@swc/core": 1.3.20
+    "@swc/core": 1.3.21
     "@swc/jest": 0.2.23
     "@tsconfig/node16": 1.0.3
     "@types/jest": 29.2.3
-    "@types/lodash": 4.14.190
-    "@types/node": 16.18.3
+    "@types/lodash": 4.14.191
+    "@types/node": 16.18.4
     "@types/slug": 5.0.3
     dataloader: ^2.1.0
     dependency-graph: ^0.11.0
@@ -1288,90 +1289,90 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@swc/core-darwin-arm64@npm:1.3.20":
-  version: 1.3.20
-  resolution: "@swc/core-darwin-arm64@npm:1.3.20"
+"@swc/core-darwin-arm64@npm:1.3.21":
+  version: 1.3.21
+  resolution: "@swc/core-darwin-arm64@npm:1.3.21"
   conditions: os=darwin & cpu=arm64
   languageName: node
   linkType: hard
 
-"@swc/core-darwin-x64@npm:1.3.20":
-  version: 1.3.20
-  resolution: "@swc/core-darwin-x64@npm:1.3.20"
+"@swc/core-darwin-x64@npm:1.3.21":
+  version: 1.3.21
+  resolution: "@swc/core-darwin-x64@npm:1.3.21"
   conditions: os=darwin & cpu=x64
   languageName: node
   linkType: hard
 
-"@swc/core-linux-arm-gnueabihf@npm:1.3.20":
-  version: 1.3.20
-  resolution: "@swc/core-linux-arm-gnueabihf@npm:1.3.20"
+"@swc/core-linux-arm-gnueabihf@npm:1.3.21":
+  version: 1.3.21
+  resolution: "@swc/core-linux-arm-gnueabihf@npm:1.3.21"
   conditions: os=linux & cpu=arm
   languageName: node
   linkType: hard
 
-"@swc/core-linux-arm64-gnu@npm:1.3.20":
-  version: 1.3.20
-  resolution: "@swc/core-linux-arm64-gnu@npm:1.3.20"
+"@swc/core-linux-arm64-gnu@npm:1.3.21":
+  version: 1.3.21
+  resolution: "@swc/core-linux-arm64-gnu@npm:1.3.21"
   conditions: os=linux & cpu=arm64 & libc=glibc
   languageName: node
   linkType: hard
 
-"@swc/core-linux-arm64-musl@npm:1.3.20":
-  version: 1.3.20
-  resolution: "@swc/core-linux-arm64-musl@npm:1.3.20"
+"@swc/core-linux-arm64-musl@npm:1.3.21":
+  version: 1.3.21
+  resolution: "@swc/core-linux-arm64-musl@npm:1.3.21"
   conditions: os=linux & cpu=arm64 & libc=musl
   languageName: node
   linkType: hard
 
-"@swc/core-linux-x64-gnu@npm:1.3.20":
-  version: 1.3.20
-  resolution: "@swc/core-linux-x64-gnu@npm:1.3.20"
+"@swc/core-linux-x64-gnu@npm:1.3.21":
+  version: 1.3.21
+  resolution: "@swc/core-linux-x64-gnu@npm:1.3.21"
   conditions: os=linux & cpu=x64 & libc=glibc
   languageName: node
   linkType: hard
 
-"@swc/core-linux-x64-musl@npm:1.3.20":
-  version: 1.3.20
-  resolution: "@swc/core-linux-x64-musl@npm:1.3.20"
+"@swc/core-linux-x64-musl@npm:1.3.21":
+  version: 1.3.21
+  resolution: "@swc/core-linux-x64-musl@npm:1.3.21"
   conditions: os=linux & cpu=x64 & libc=musl
   languageName: node
   linkType: hard
 
-"@swc/core-win32-arm64-msvc@npm:1.3.20":
-  version: 1.3.20
-  resolution: "@swc/core-win32-arm64-msvc@npm:1.3.20"
+"@swc/core-win32-arm64-msvc@npm:1.3.21":
+  version: 1.3.21
+  resolution: "@swc/core-win32-arm64-msvc@npm:1.3.21"
   conditions: os=win32 & cpu=arm64
   languageName: node
   linkType: hard
 
-"@swc/core-win32-ia32-msvc@npm:1.3.20":
-  version: 1.3.20
-  resolution: "@swc/core-win32-ia32-msvc@npm:1.3.20"
+"@swc/core-win32-ia32-msvc@npm:1.3.21":
+  version: 1.3.21
+  resolution: "@swc/core-win32-ia32-msvc@npm:1.3.21"
   conditions: os=win32 & cpu=ia32
   languageName: node
   linkType: hard
 
-"@swc/core-win32-x64-msvc@npm:1.3.20":
-  version: 1.3.20
-  resolution: "@swc/core-win32-x64-msvc@npm:1.3.20"
+"@swc/core-win32-x64-msvc@npm:1.3.21":
+  version: 1.3.21
+  resolution: "@swc/core-win32-x64-msvc@npm:1.3.21"
   conditions: os=win32 & cpu=x64
   languageName: node
   linkType: hard
 
-"@swc/core@npm:1.3.20":
-  version: 1.3.20
-  resolution: "@swc/core@npm:1.3.20"
+"@swc/core@npm:1.3.21":
+  version: 1.3.21
+  resolution: "@swc/core@npm:1.3.21"
   dependencies:
-    "@swc/core-darwin-arm64": 1.3.20
-    "@swc/core-darwin-x64": 1.3.20
-    "@swc/core-linux-arm-gnueabihf": 1.3.20
-    "@swc/core-linux-arm64-gnu": 1.3.20
-    "@swc/core-linux-arm64-musl": 1.3.20
-    "@swc/core-linux-x64-gnu": 1.3.20
-    "@swc/core-linux-x64-musl": 1.3.20
-    "@swc/core-win32-arm64-msvc": 1.3.20
-    "@swc/core-win32-ia32-msvc": 1.3.20
-    "@swc/core-win32-x64-msvc": 1.3.20
+    "@swc/core-darwin-arm64": 1.3.21
+    "@swc/core-darwin-x64": 1.3.21
+    "@swc/core-linux-arm-gnueabihf": 1.3.21
+    "@swc/core-linux-arm64-gnu": 1.3.21
+    "@swc/core-linux-arm64-musl": 1.3.21
+    "@swc/core-linux-x64-gnu": 1.3.21
+    "@swc/core-linux-x64-musl": 1.3.21
+    "@swc/core-win32-arm64-msvc": 1.3.21
+    "@swc/core-win32-ia32-msvc": 1.3.21
+    "@swc/core-win32-x64-msvc": 1.3.21
   dependenciesMeta:
     "@swc/core-darwin-arm64":
       optional: true
@@ -1395,7 +1396,7 @@ __metadata:
       optional: true
   bin:
     swcx: run_swcx.js
-  checksum: 646c37e3521f04cd08061ab67a4388959e4b234c38eba2eb9fe0fd615dedb6ff9412264789e58af7c2d24b3e5a7ea456efd060e3760d7a91509234b5b5983ad7
+  checksum: c66cd9320c595c68b87c8d90dc9a978099dd25a84c5e9795a8c7fec95fecdd8481da82076a828880a226ad2c0e57155c0a2b97768e99dee042a74182056bda46
   languageName: node
   linkType: hard
 
@@ -1620,10 +1621,10 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@types/lodash@npm:4.14.190":
-  version: 4.14.190
-  resolution: "@types/lodash@npm:4.14.190"
-  checksum: 353a55a1222a57224ead8bd3379fabb2e3e3f6685f599c48b1b66f099d8e9e015e6c6352c6e2275954004c3bb510377804c63117233c6f187700b6ab78adfa02
+"@types/lodash@npm:4.14.191":
+  version: 4.14.191
+  resolution: "@types/lodash@npm:4.14.191"
+  checksum: ba0d5434e10690869f32d5ea49095250157cae502f10d57de0a723fd72229ce6c6a4979576f0f13e0aa9fbe3ce2457bfb9fa7d4ec3d6daba56730a51906d1491
   languageName: node
   linkType: hard
 
@@ -1658,10 +1659,10 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@types/node@npm:16.18.3":
-  version: 16.18.3
-  resolution: "@types/node@npm:16.18.3"
-  checksum: 6b8ba2ea5d842f7986e366cb9184c54d273d492784dc62e08fd5afeae938d9b61aec6e4222d2541cd18f9b1412ba361bbcb3f4204fb003608af80a2a6af959f9
+"@types/node@npm:16.18.4":
+  version: 16.18.4
+  resolution: "@types/node@npm:16.18.4"
+  checksum: c2da162df295d81eed199d2b12f1edf9618d9f4099ba84a8553859b40e1dac2d44131c75b57803bd35cf9da881434d0abebe46994a2936b6b9c16d8e52db9146
   languageName: node
   linkType: hard
 
@@ -1790,17 +1791,17 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@yarnpkg/core@npm:^4.0.0-rc.31":
-  version: 4.0.0-rc.31
-  resolution: "@yarnpkg/core@npm:4.0.0-rc.31"
+"@yarnpkg/core@npm:^4.0.0-rc.32":
+  version: 4.0.0-rc.32
+  resolution: "@yarnpkg/core@npm:4.0.0-rc.32"
   dependencies:
     "@arcanis/slice-ansi": ^1.1.1
     "@types/semver": ^7.1.0
     "@types/treeify": ^1.0.0
-    "@yarnpkg/fslib": ^3.0.0-rc.31
-    "@yarnpkg/libzip": ^3.0.0-rc.31
-    "@yarnpkg/parsers": ^3.0.0-rc.31
-    "@yarnpkg/shell": ^4.0.0-rc.31
+    "@yarnpkg/fslib": ^3.0.0-rc.32
+    "@yarnpkg/libzip": ^3.0.0-rc.32
+    "@yarnpkg/parsers": ^3.0.0-rc.32
+    "@yarnpkg/shell": ^4.0.0-rc.32
     camelcase: ^5.3.1
     chalk: ^3.0.0
     ci-info: ^3.2.0
@@ -1819,49 +1820,49 @@ __metadata:
     treeify: ^1.1.0
     tslib: ^2.4.0
     tunnel: ^0.0.6
-  checksum: 9f2f558d48ba19a4d3f871afadb636486badbfb8dab9fb7155445186267663e8e1af427b450456787312f099ced3fedc92a9a8486f8139d5f9454e5d541aac4f
+  checksum: f29f3ce0520feb900a64668eac4e69e91a865615537a7faff4b5a78a9d268824d1e1c4c9fcbcd140147166bc0b1a217cfcd5650bb50e0dff6b9051dd696757e4
   languageName: node
   linkType: hard
 
-"@yarnpkg/fslib@npm:^3.0.0-rc.31":
-  version: 3.0.0-rc.31
-  resolution: "@yarnpkg/fslib@npm:3.0.0-rc.31"
+"@yarnpkg/fslib@npm:^3.0.0-rc.32":
+  version: 3.0.0-rc.32
+  resolution: "@yarnpkg/fslib@npm:3.0.0-rc.32"
   dependencies:
     tslib: ^2.4.0
-  checksum: c900c3df1d09f8796146694fb072372122f8a534c2c88dc0ad73b9704cc323dccf49adf63ae54440131802a38171ee39768dbbba5edc8a77884d812212a6daf5
+  checksum: 9cf7dc8a65ebe7f7c923af0e318ba3d12c2215e9e4b545e6b81605d0213c709418c14c6f34f1c5d81203732c1452c930cbc2868feed18565d38fe354c03cce13
   languageName: node
   linkType: hard
 
-"@yarnpkg/libzip@npm:^3.0.0-rc.31":
-  version: 3.0.0-rc.31
-  resolution: "@yarnpkg/libzip@npm:3.0.0-rc.31"
+"@yarnpkg/libzip@npm:^3.0.0-rc.32":
+  version: 3.0.0-rc.32
+  resolution: "@yarnpkg/libzip@npm:3.0.0-rc.32"
   dependencies:
     "@types/emscripten": ^1.39.6
-    "@yarnpkg/fslib": ^3.0.0-rc.31
+    "@yarnpkg/fslib": ^3.0.0-rc.32
     tslib: ^2.4.0
   peerDependencies:
-    "@yarnpkg/fslib": ^3.0.0-rc.31
-  checksum: 5440b89ce618318bcdd903dffde41aa2ff7bff3d40da05c698f4331bcdf799c4e1fdaa954e2df21bf4090d4d3cfac9afffbe1b4c6d96b4c9a0452bbacf1cba4e
+    "@yarnpkg/fslib": ^3.0.0-rc.32
+  checksum: 56635f0c670df6ccecdf0688e2b587a2d65df1e8216414b4311ff27d20479983f7dac664c7b41f0e1ef6059f3832cab032b3b6021f46452634cc993c4b8594bf
   languageName: node
   linkType: hard
 
-"@yarnpkg/parsers@npm:^3.0.0-rc.31":
-  version: 3.0.0-rc.31
-  resolution: "@yarnpkg/parsers@npm:3.0.0-rc.31"
+"@yarnpkg/parsers@npm:^3.0.0-rc.32":
+  version: 3.0.0-rc.32
+  resolution: "@yarnpkg/parsers@npm:3.0.0-rc.32"
   dependencies:
     js-yaml: ^3.10.0
     tslib: ^2.4.0
-  checksum: 84aba51e28b5a5b5a982d4646b8cf9b160144487c231e3ca41f5cd12c3f52a8e4de40f0b3505052005155a11677c8ee4a47ed78521bee7da001094c8d09db1dd
+  checksum: b02796d019bb73ef024426cb0055a14f148696b19c5addf2fe4c9a1fc056efd7cb055023b4f3f4aff07bf01a5c2f52d5def1f779cb9b02b7e7a6b6e940d7bd57
   languageName: node
   linkType: hard
 
-"@yarnpkg/sdks@npm:3.0.0-rc.31":
-  version: 3.0.0-rc.31
-  resolution: "@yarnpkg/sdks@npm:3.0.0-rc.31"
+"@yarnpkg/sdks@npm:3.0.0-rc.32":
+  version: 3.0.0-rc.32
+  resolution: "@yarnpkg/sdks@npm:3.0.0-rc.32"
   dependencies:
-    "@yarnpkg/core": ^4.0.0-rc.31
-    "@yarnpkg/fslib": ^3.0.0-rc.31
-    "@yarnpkg/parsers": ^3.0.0-rc.31
+    "@yarnpkg/core": ^4.0.0-rc.32
+    "@yarnpkg/fslib": ^3.0.0-rc.32
+    "@yarnpkg/parsers": ^3.0.0-rc.32
     chalk: ^3.0.0
     clipanion: ^3.2.0-rc.10
     comment-json: ^2.2.0
@@ -1869,16 +1870,16 @@ __metadata:
     tslib: ^2.4.0
   bin:
     sdks: ./lib/cli.js
-  checksum: 5bedb3beebb64ef5008452c6a9b8a268c77970b735a7f206afd7bcddd76a8a6e8e5f488414c054df18e5be7f953e581d78424a9e50f7d28b337f5e13156f6afe
+  checksum: cc62fc6e93468d024cc14ca4d9616a143aa803fcae166fd8ca63b13bfb2dc8a8299b8631a9a0329c4edccd3ca1b2b6bcef7da2bfa4ff083a7cf45d8e278b30f6
   languageName: node
   linkType: hard
 
-"@yarnpkg/shell@npm:^4.0.0-rc.31":
-  version: 4.0.0-rc.31
-  resolution: "@yarnpkg/shell@npm:4.0.0-rc.31"
+"@yarnpkg/shell@npm:^4.0.0-rc.32":
+  version: 4.0.0-rc.32
+  resolution: "@yarnpkg/shell@npm:4.0.0-rc.32"
   dependencies:
-    "@yarnpkg/fslib": ^3.0.0-rc.31
-    "@yarnpkg/parsers": ^3.0.0-rc.31
+    "@yarnpkg/fslib": ^3.0.0-rc.32
+    "@yarnpkg/parsers": ^3.0.0-rc.32
     chalk: ^3.0.0
     clipanion: ^3.2.0-rc.10
     cross-spawn: 7.0.3
@@ -1887,7 +1888,7 @@ __metadata:
     tslib: ^2.4.0
   bin:
     shell: ./lib/cli.js
-  checksum: 3ac419729daf234c2eb342deff275fcfe703f8eb0885f0db12416262017367e90c4d042002e527750aaad9766fc81692bcb0f01bded0fff91bde15b7e71b12ea
+  checksum: 7bfc1ffd897cefc5d5c00f9c8d2efc62b4cea1f0faca4a48628b43ce52a282a3892709f61f19054cd630ea8724b121456f3484fa7a88d3c4e706ca3d1a77b279
   languageName: node
   linkType: hard
 
@@ -4963,7 +4964,7 @@ __metadata:
   version: 0.0.0-use.local
   resolution: "root-workspace-0b6124@workspace:."
   dependencies:
-    "@yarnpkg/sdks": 3.0.0-rc.31
+    "@yarnpkg/sdks": 3.0.0-rc.32
     jest: 29.3.1
     prettier: 2.8.0
     typescript: 4.9.3
