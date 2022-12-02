@@ -11,9 +11,7 @@ import type { NodeSelectedValue } from './selection/value.js';
 export * from './selection/expression.js';
 export * from './selection/value.js';
 
-export class NodeSelection<
-  TValue extends NodeSelectedValue = NodeSelectedValue,
-> {
+export class NodeSelection<TValue extends NodeSelectedValue = any> {
   public readonly expressions: ReadonlyArray<SelectionExpression>;
 
   public constructor(

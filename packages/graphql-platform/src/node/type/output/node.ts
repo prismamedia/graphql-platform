@@ -49,8 +49,8 @@ export type GraphQLSelectionContext = Partial<
  */
 export type GraphQLFragment = string;
 
-export type RawNodeSelection =
-  | NodeSelection
+export type RawNodeSelection<TValue extends NodeSelectedValue = any> =
+  | NodeSelection<TValue>
   | GraphQLSelectionAST
   | graphql.GraphQLResolveInfo
   | GraphQLFragment

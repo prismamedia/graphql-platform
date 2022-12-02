@@ -12,14 +12,6 @@ import type {
   RawNodeSelection,
 } from './type.js';
 
-export type NodeCursorOptions = {
-  filter?: NodeFilterInputValue;
-  direction?: OrderingDirection;
-  uniqueConstraint?: UniqueConstraint['name'];
-  selection?: RawNodeSelection;
-  chunkSize?: number;
-};
-
 function pickAfterFilterInputValue(
   uniqueConstraint: UniqueConstraint,
   value: NodeSelectedValue,
@@ -33,8 +25,16 @@ function pickAfterFilterInputValue(
   }, Object.create(null));
 }
 
+export type NodeCursorOptions<TValue extends NodeSelectedValue = any> = {
+  filter?: NodeFilterInputValue;
+  selection?: RawNodeSelection<TValue>;
+  direction?: OrderingDirection;
+  uniqueConstraint?: UniqueConstraint['name'];
+  chunkSize?: number;
+};
+
 export class NodeCursor<
-  TValue extends NodeSelectedValue = {},
+  TValue extends NodeSelectedValue = any,
   TRequestContext extends object = any,
 > implements AsyncIterable<TValue>
 {
@@ -49,7 +49,7 @@ export class NodeCursor<
   public constructor(
     protected readonly node: Node<TRequestContext>,
     protected readonly context: TRequestContext,
-    options?: NodeCursorOptions,
+    options?: NodeCursorOptions<TValue>,
   ) {
     assert(node.isScrollable(), `The "${node}" node is not scrollable`);
 
