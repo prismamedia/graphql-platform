@@ -14,13 +14,16 @@ import type {
 
 function pickAfterFilterInputValue(
   uniqueConstraint: UniqueConstraint,
+  direction: OrderingDirection,
   value: NodeSelectedValue,
 ): NonNullable<NodeFilterInputValue> {
   return uniqueConstraint.components.reduce((filter, component) => {
     assert(component instanceof Leaf);
 
     return Object.assign(filter, {
-      [`${component.name}_gt`]: value[component.name],
+      [`${component.name}_${
+        direction === OrderingDirection.ASCENDING ? 'gt' : 'lt'
+      }`]: value[component.name],
     });
   }, Object.create(null));
 }
@@ -121,6 +124,7 @@ export class NodeCursor<
 
         after = pickAfterFilterInputValue(
           this.uniqueConstraint,
+          this.direction,
           values.at(-1)!,
         );
       }
