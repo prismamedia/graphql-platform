@@ -33,7 +33,7 @@ describe('Cursor', () => {
 
     for await (const value of Article.scroll<{ id: string }>(myAdminContext, {
       selection: '{ id }',
-      chunkSize: 2,
+      bulkSize: 2,
     })) {
       values.push(value);
     }

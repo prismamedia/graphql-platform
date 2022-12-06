@@ -2,9 +2,9 @@ import assert from 'node:assert/strict';
 import type { Node } from '../node.js';
 import { Leaf, type UniqueConstraint } from './definition.js';
 import {
-  NodeSelectedValue,
-  NodeSelection,
   OrderingDirection,
+  type NodeSelectedValue,
+  type NodeSelection,
 } from './statement.js';
 import type {
   NodeFilterInputValue,
@@ -33,7 +33,7 @@ export type NodeCursorOptions<TValue extends NodeSelectedValue = any> = {
   selection?: RawNodeSelection<TValue>;
   direction?: OrderingDirection;
   uniqueConstraint?: UniqueConstraint['name'];
-  chunkSize?: number;
+  bulkSize?: number;
 };
 
 export class NodeCursor<
@@ -47,7 +47,7 @@ export class NodeCursor<
   protected readonly selection: NodeSelection<TValue>;
   protected readonly internalSelection: NodeSelection;
   protected readonly orderByInputValue: OrderByInputValue;
-  protected readonly chunkSize: number;
+  protected readonly bulkSize: number;
 
   public constructor(
     protected readonly node: Node<TRequestContext>,
@@ -82,11 +82,9 @@ export class NodeCursor<
       this.uniqueConstraint = uniqueConstraint;
     }
 
-    this.selection = (
-      options?.selection
-        ? node.outputType.select(options?.selection)
-        : node.selection
-    ) as NodeSelection<TValue>;
+    this.selection = options?.selection
+      ? node.outputType.select(options?.selection)
+      : node.selection;
 
     this.internalSelection = this.selection.mergeWith(
       this.uniqueConstraint.selection,
@@ -100,7 +98,7 @@ export class NodeCursor<
       },
     );
 
-    this.chunkSize = options?.chunkSize || 100;
+    this.bulkSize = Math.max(1, options?.bulkSize || 100);
   }
 
   async *[Symbol.asyncIterator](): AsyncIterator<TValue> {
@@ -111,7 +109,7 @@ export class NodeCursor<
         {
           where: { AND: [after, this.filter] },
           orderBy: this.orderByInputValue,
-          first: this.chunkSize,
+          first: this.bulkSize,
           selection: this.internalSelection,
         },
         this.context,
@@ -128,6 +126,6 @@ export class NodeCursor<
           values.at(-1)!,
         );
       }
-    } while (values.length === this.chunkSize);
+    } while (values.length === this.bulkSize);
   }
 }
