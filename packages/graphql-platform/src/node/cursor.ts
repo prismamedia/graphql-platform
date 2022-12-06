@@ -49,6 +49,9 @@ export class NodeCursor<
   protected readonly orderByInputValue: OrderByInputValue;
   protected readonly bulkSize: number;
 
+  public current: number = -1;
+  public completed: boolean = false;
+
   public constructor(
     protected readonly node: Node<TRequestContext>,
     protected readonly context: TRequestContext,
@@ -101,9 +104,16 @@ export class NodeCursor<
     this.bulkSize = Math.max(1, options?.bulkSize || 100);
   }
 
-  async *[Symbol.asyncIterator](): AsyncIterator<TValue> {
-    let after: NodeFilterInputValue = undefined;
+  public async count(): Promise<number> {
+    return this.node
+      .getQueryByKey('count')
+      .execute({ where: this.filter }, this.context);
+  }
+
+  public async *[Symbol.asyncIterator](): AsyncIterator<TValue> {
+    let after: NodeFilterInputValue;
     let values: NodeSelectedValue[];
+
     do {
       values = await this.node.getQueryByKey('find-many').execute(
         {
@@ -117,6 +127,8 @@ export class NodeCursor<
 
       if (values.length) {
         for (const value of values) {
+          this.current++;
+
           yield this.selection.parseValue(value);
         }
 
@@ -127,5 +139,7 @@ export class NodeCursor<
         );
       }
     } while (values.length === this.bulkSize);
+
+    this.completed = true;
   }
 }
