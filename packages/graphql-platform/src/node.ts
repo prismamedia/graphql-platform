@@ -1381,8 +1381,8 @@ export class Node<
 
   public scroll<TValue extends NodeSelectedValue>(
     context: TRequestContext,
-    options?: NodeCursorOptions,
-  ): AsyncIterable<TValue> {
+    options?: NodeCursorOptions<TValue>,
+  ): NodeCursor<TValue, TRequestContext> {
     return new NodeCursor(this, context, options);
   }
 }
