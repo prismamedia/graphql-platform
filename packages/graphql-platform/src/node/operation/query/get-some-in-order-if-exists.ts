@@ -13,12 +13,16 @@ import {
   doesSelectedValueMatchUniqueFilter,
   type NodeSelectedValue,
 } from '../../statement/selection.js';
-import type { NodeUniqueFilterInputValue } from '../../type.js';
+import type {
+  NodeFilterInputValue,
+  NodeUniqueFilterInputValue,
+} from '../../type.js';
 import { AbstractQuery } from '../abstract-query.js';
 import type { OperationContext } from '../context.js';
 
 export type GetSomeInOrderIfExistsQueryArgs = RawNodeSelectionAwareArgs<{
   where: ReadonlyArray<NonNullable<NodeUniqueFilterInputValue>>;
+  subset?: NodeFilterInputValue;
 }>;
 
 export type GetSomeInOrderIfExistsQueryResult = Array<NodeSelectedValue | null>;
@@ -50,6 +54,12 @@ export class GetSomeInOrderIfExistsQuery<
           ),
         ),
       }),
+      new utils.Input({
+        name: 'subset',
+        description:
+          'It is possible to provide a filter in order to perform this query in a subset of the documents',
+        type: this.node.filterInputType,
+      }),
     ];
   }
 
@@ -74,7 +84,7 @@ export class GetSomeInOrderIfExistsQuery<
       .internal(
         authorization,
         {
-          where: { OR: args.where },
+          where: { AND: [{ OR: args.where }, args.subset] },
           first: args.where.length,
           /**
            * We need to select the data provided in the "unique-filters" to discriminate the returned nodes, imagine the following use:

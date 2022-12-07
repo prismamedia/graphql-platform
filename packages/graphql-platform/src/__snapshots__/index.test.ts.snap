@@ -29,12 +29,26 @@ type query {
   """
   Given a list of unique-filter's value, retrieves the corresponding "Articles" in the same order, throws an error if one does not exist
   """
-  articlesInOrder(where: [ArticleUniqueFilterInput!]!): [Article!]!
+  articlesInOrder(
+    where: [ArticleUniqueFilterInput!]!
+
+    """
+    It is possible to provide a filter in order to perform this query in a subset of the documents
+    """
+    subset: ArticleFilterInput
+  ): [Article!]!
 
   """
   Given a list of unique-filter's value, retrieves the corresponding "Articles", or null, in the same order
   """
-  articlesInOrderIfExists(where: [ArticleUniqueFilterInput!]!): [Article]!
+  articlesInOrderIfExists(
+    where: [ArticleUniqueFilterInput!]!
+
+    """
+    It is possible to provide a filter in order to perform this query in a subset of the documents
+    """
+    subset: ArticleFilterInput
+  ): [Article]!
 
   """
   Gets the number of "Categories"
@@ -58,12 +72,26 @@ type query {
   """
   Given a list of unique-filter's value, retrieves the corresponding "Categories" in the same order, throws an error if one does not exist
   """
-  categoriesInOrder(where: [CategoryUniqueFilterInput!]!): [Category!]!
+  categoriesInOrder(
+    where: [CategoryUniqueFilterInput!]!
+
+    """
+    It is possible to provide a filter in order to perform this query in a subset of the documents
+    """
+    subset: CategoryFilterInput
+  ): [Category!]!
 
   """
   Given a list of unique-filter's value, retrieves the corresponding "Categories", or null, in the same order
   """
-  categoriesInOrderIfExists(where: [CategoryUniqueFilterInput!]!): [Category]!
+  categoriesInOrderIfExists(
+    where: [CategoryUniqueFilterInput!]!
+
+    """
+    It is possible to provide a filter in order to perform this query in a subset of the documents
+    """
+    subset: CategoryFilterInput
+  ): [Category]!
 
   """
   Gets the number of "Tags"
@@ -87,12 +115,26 @@ type query {
   """
   Given a list of unique-filter's value, retrieves the corresponding "Tags" in the same order, throws an error if one does not exist
   """
-  tagsInOrder(where: [TagUniqueFilterInput!]!): [Tag!]!
+  tagsInOrder(
+    where: [TagUniqueFilterInput!]!
+
+    """
+    It is possible to provide a filter in order to perform this query in a subset of the documents
+    """
+    subset: TagFilterInput
+  ): [Tag!]!
 
   """
   Given a list of unique-filter's value, retrieves the corresponding "Tags", or null, in the same order
   """
-  tagsInOrderIfExists(where: [TagUniqueFilterInput!]!): [Tag]!
+  tagsInOrderIfExists(
+    where: [TagUniqueFilterInput!]!
+
+    """
+    It is possible to provide a filter in order to perform this query in a subset of the documents
+    """
+    subset: TagFilterInput
+  ): [Tag]!
 
   """
   Gets the number of "ArticleTags"
@@ -116,12 +158,26 @@ type query {
   """
   Given a list of unique-filter's value, retrieves the corresponding "ArticleTags" in the same order, throws an error if one does not exist
   """
-  articleTagsInOrder(where: [ArticleTagUniqueFilterInput!]!): [ArticleTag!]!
+  articleTagsInOrder(
+    where: [ArticleTagUniqueFilterInput!]!
+
+    """
+    It is possible to provide a filter in order to perform this query in a subset of the documents
+    """
+    subset: ArticleTagFilterInput
+  ): [ArticleTag!]!
 
   """
   Given a list of unique-filter's value, retrieves the corresponding "ArticleTags", or null, in the same order
   """
-  articleTagsInOrderIfExists(where: [ArticleTagUniqueFilterInput!]!): [ArticleTag]!
+  articleTagsInOrderIfExists(
+    where: [ArticleTagUniqueFilterInput!]!
+
+    """
+    It is possible to provide a filter in order to perform this query in a subset of the documents
+    """
+    subset: ArticleTagFilterInput
+  ): [ArticleTag]!
 
   """
   Gets the number of "ArticleTagModerations"
@@ -149,12 +205,26 @@ type query {
   """
   Given a list of unique-filter's value, retrieves the corresponding "ArticleTagModerations" in the same order, throws an error if one does not exist
   """
-  articleTagModerationsInOrder(where: [ArticleTagModerationUniqueFilterInput!]!): [ArticleTagModeration!]!
+  articleTagModerationsInOrder(
+    where: [ArticleTagModerationUniqueFilterInput!]!
+
+    """
+    It is possible to provide a filter in order to perform this query in a subset of the documents
+    """
+    subset: ArticleTagModerationFilterInput
+  ): [ArticleTagModeration!]!
 
   """
   Given a list of unique-filter's value, retrieves the corresponding "ArticleTagModerations", or null, in the same order
   """
-  articleTagModerationsInOrderIfExists(where: [ArticleTagModerationUniqueFilterInput!]!): [ArticleTagModeration]!
+  articleTagModerationsInOrderIfExists(
+    where: [ArticleTagModerationUniqueFilterInput!]!
+
+    """
+    It is possible to provide a filter in order to perform this query in a subset of the documents
+    """
+    subset: ArticleTagModerationFilterInput
+  ): [ArticleTagModeration]!
 
   """
   Gets the number of "Users"
@@ -178,12 +248,26 @@ type query {
   """
   Given a list of unique-filter's value, retrieves the corresponding "Users" in the same order, throws an error if one does not exist
   """
-  usersInOrder(where: [UserUniqueFilterInput!]!): [User!]!
+  usersInOrder(
+    where: [UserUniqueFilterInput!]!
+
+    """
+    It is possible to provide a filter in order to perform this query in a subset of the documents
+    """
+    subset: UserFilterInput
+  ): [User!]!
 
   """
   Given a list of unique-filter's value, retrieves the corresponding "Users", or null, in the same order
   """
-  usersInOrderIfExists(where: [UserUniqueFilterInput!]!): [User]!
+  usersInOrderIfExists(
+    where: [UserUniqueFilterInput!]!
+
+    """
+    It is possible to provide a filter in order to perform this query in a subset of the documents
+    """
+    subset: UserFilterInput
+  ): [User]!
 
   """
   Gets the number of "UserProfiles"
@@ -207,12 +291,26 @@ type query {
   """
   Given a list of unique-filter's value, retrieves the corresponding "UserProfiles" in the same order, throws an error if one does not exist
   """
-  userProfilesInOrder(where: [UserProfileUniqueFilterInput!]!): [UserProfile!]!
+  userProfilesInOrder(
+    where: [UserProfileUniqueFilterInput!]!
+
+    """
+    It is possible to provide a filter in order to perform this query in a subset of the documents
+    """
+    subset: UserProfileFilterInput
+  ): [UserProfile!]!
 
   """
   Given a list of unique-filter's value, retrieves the corresponding "UserProfiles", or null, in the same order
   """
-  userProfilesInOrderIfExists(where: [UserProfileUniqueFilterInput!]!): [UserProfile]!
+  userProfilesInOrderIfExists(
+    where: [UserProfileUniqueFilterInput!]!
+
+    """
+    It is possible to provide a filter in order to perform this query in a subset of the documents
+    """
+    subset: UserProfileFilterInput
+  ): [UserProfile]!
 }
 
 """
