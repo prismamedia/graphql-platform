@@ -55,7 +55,7 @@ function $$SETUP_STATE(hydrateRuntimeState, basePath) {
           "packageDependencies": [\
             ["@yarnpkg/sdks", "npm:3.0.0-rc.32"],\
             ["jest", "virtual:dc3fc578bfa5e06182a4d2be39ede0bc5b74940b1ffe0d70c26892ab140a4699787750fba175dc306292e80b4aa2c8c5f68c2a821e69b2c37e360c0dff36ff66#npm:29.3.1"],\
-            ["prettier", "npm:2.8.0"],\
+            ["prettier", "npm:2.8.1"],\
             ["typescript", "patch:typescript@npm%3A4.9.3#~builtin<compat/typescript>::version=4.9.3&hash=d73830"]\
           ],\
           "linkType": "SOFT"\
@@ -6120,10 +6120,10 @@ function $$SETUP_STATE(hydrateRuntimeState, basePath) {
         }]\
       ]],\
       ["prettier", [\
-        ["npm:2.8.0", {\
-          "packageLocation": "./.yarn/cache/prettier-npm-2.8.0-746e3df53e-72004ce0cc.zip/node_modules/prettier/",\
+        ["npm:2.8.1", {\
+          "packageLocation": "./.yarn/cache/prettier-npm-2.8.1-be60b51821-4f21a0f126.zip/node_modules/prettier/",\
           "packageDependencies": [\
-            ["prettier", "npm:2.8.0"]\
+            ["prettier", "npm:2.8.1"]\
           ],\
           "linkType": "HARD"\
         }]\
@@ -6396,7 +6396,7 @@ function $$SETUP_STATE(hydrateRuntimeState, basePath) {
             ["root-workspace-0b6124", "workspace:."],\
             ["@yarnpkg/sdks", "npm:3.0.0-rc.32"],\
             ["jest", "virtual:dc3fc578bfa5e06182a4d2be39ede0bc5b74940b1ffe0d70c26892ab140a4699787750fba175dc306292e80b4aa2c8c5f68c2a821e69b2c37e360c0dff36ff66#npm:29.3.1"],\
-            ["prettier", "npm:2.8.0"],\
+            ["prettier", "npm:2.8.1"],\
             ["typescript", "patch:typescript@npm%3A4.9.3#~builtin<compat/typescript>::version=4.9.3&hash=d73830"]\
           ],\
           "linkType": "SOFT"\

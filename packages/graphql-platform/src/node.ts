@@ -373,7 +373,6 @@ export class Node<
       );
 
       this.components = Array.from(this.componentsByName.values());
-
       this.componentSet = new Set(this.components);
 
       // leaves

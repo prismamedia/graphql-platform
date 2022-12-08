@@ -109,6 +109,7 @@ export class GraphQLPlatform<
     Node<TRequestContext, TConnector>
   >;
   public readonly nodes: ReadonlyArray<Node<TRequestContext, TConnector>>;
+  public readonly nodeSet: ReadonlySet<Node<TRequestContext, TConnector>>;
 
   public readonly operationsByNameByType: OperationsByNameByType<
     TRequestContext,
@@ -179,6 +180,7 @@ export class GraphQLPlatform<
       );
 
       this.nodes = Array.from(this.nodesByName.values());
+      this.nodeSet = new Set(this.nodes);
 
       /**
        * In order to fail as soon as possible, we validate/build everything right away.
@@ -290,6 +292,23 @@ export class GraphQLPlatform<
     }
 
     return node;
+  }
+
+  public ensureNodeOrName(
+    nodeOrName: Node | Node['name'],
+    path?: utils.Path,
+  ): Node<TRequestContext, TConnector> {
+    if (typeof nodeOrName === 'string') {
+      return this.getNodeByName(nodeOrName, path);
+    } else if (this.nodeSet.has(nodeOrName)) {
+      return nodeOrName;
+    }
+
+    throw new utils.UnexpectedValueError(
+      `a node among "${[...this.nodesByName.keys()].join(', ')}"`,
+      String(nodeOrName),
+      { path },
+    );
   }
 
   public getOperationByTypeAndName(

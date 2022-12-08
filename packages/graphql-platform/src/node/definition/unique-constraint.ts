@@ -67,19 +67,23 @@ export class UniqueConstraint<
   public readonly components: ReadonlyArray<
     Component<TRequestContext, TConnector>
   >;
-  public readonly componentSet: Set<Component<TRequestContext, TConnector>>;
+  public readonly componentSet: ReadonlySet<
+    Component<TRequestContext, TConnector>
+  >;
 
   public readonly leavesByName: ReadonlyMap<
     Leaf['name'],
     Leaf<TRequestContext, TConnector>
   >;
   public readonly leaves: ReadonlyArray<Leaf<TRequestContext, TConnector>>;
+  public readonly leafSet: ReadonlySet<Leaf<TRequestContext, TConnector>>;
 
   public readonly edgesByName: ReadonlyMap<
     Edge['name'],
     Edge<TRequestContext, TConnector>
   >;
   public readonly edges: ReadonlyArray<Edge<TRequestContext, TConnector>>;
+  public readonly edgeSet: ReadonlySet<Edge<TRequestContext, TConnector>>;
 
   public constructor(
     public readonly node: Node<TRequestContext, TConnector>,
@@ -137,7 +141,6 @@ export class UniqueConstraint<
       );
 
       this.components = Array.from(this.componentsByName.values());
-
       this.componentSet = new Set(this.components);
 
       // leaves
@@ -149,6 +152,7 @@ export class UniqueConstraint<
         );
 
         this.leaves = Array.from(this.leavesByName.values());
+        this.leafSet = new Set(this.leaves);
       }
 
       // edges
@@ -160,6 +164,7 @@ export class UniqueConstraint<
         );
 
         this.edges = Array.from(this.edgesByName.values());
+        this.edgeSet = new Set(this.edges);
       }
     }
 
