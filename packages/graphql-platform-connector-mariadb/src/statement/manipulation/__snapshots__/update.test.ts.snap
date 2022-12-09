@@ -59,7 +59,7 @@ exports[`Update statement generates statements: result 2`] = `
       {
         "order": 0,
         "tag": {
-          "title": "fashion",
+          "title": "Fashion",
         },
       },
     ],
@@ -72,7 +72,7 @@ exports[`Update statement generates statements: result 2`] = `
       {
         "order": 0,
         "tag": {
-          "title": "fashion",
+          "title": "Fashion",
         },
       },
     ],
@@ -90,13 +90,13 @@ exports[`Update statement generates statements: result 3`] = `
       {
         "order": 0,
         "tag": {
-          "title": "fashion",
+          "title": "Fashion",
         },
       },
       {
         "order": 1,
         "tag": {
-          "title": "high-tech",
+          "title": "High-tech",
         },
       },
     ],
@@ -109,13 +109,13 @@ exports[`Update statement generates statements: result 3`] = `
       {
         "order": 0,
         "tag": {
-          "title": "fashion",
+          "title": "Fashion",
         },
       },
       {
         "order": 1,
         "tag": {
-          "title": "high-tech",
+          "title": "High-tech",
         },
       },
     ],

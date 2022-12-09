@@ -7,7 +7,6 @@ import {
   GraphQLString,
 } from 'graphql';
 import { randomUUID } from 'node:crypto';
-import slugify from 'slug';
 import {
   ConnectorInterface,
   CustomOperationMap,
@@ -15,6 +14,15 @@ import {
   NodeConfig,
   OnEdgeHeadDeletion,
 } from '../index.js';
+
+export const slugify = (input: string): string =>
+  input
+    .normalize('NFD') // split an accented letter in the base letter and the acent
+    .replace(/[\u0300-\u036f]/g, '') // remove all previously split accents
+    .toLowerCase()
+    .trim()
+    .replace(/[^a-z0-9 ]/g, '-') // remove all chars not letters, numbers and spaces (to be replaced)
+    .replace(/\s+/g, '-');
 
 export type MyUser = {
   id: string;
@@ -298,10 +306,7 @@ export const Article: NodeConfig<MyContext> = {
           // creation['body'] = myHtmlToDraftService(data['htmlBody']);
         }
 
-        creation['slug'] ??= slugify(
-          creation['title'] as string,
-          slugify.defaults.modes.rfc3986,
-        );
+        creation['slug'] ??= slugify(creation['title'] as string);
 
         if (!creation['createdBy'] || !creation['updatedBy']) {
           const currentUser = await api.query.userIfExists({
@@ -359,7 +364,7 @@ export const Article: NodeConfig<MyContext> = {
 
         if (update['title'] !== undefined) {
           update['slug'] = update['title']
-            ? slugify(update['title'] as string, slugify.defaults.modes.rfc3986)
+            ? slugify(update['title'] as string)
             : null;
         }
 
@@ -542,10 +547,7 @@ export const Category: NodeConfig<MyContext> = {
       },
 
       async preCreate({ node, api, context, data, creation }) {
-        creation['slug'] ??= slugify(
-          creation['title'] as string,
-          slugify.defaults.modes.rfc3986,
-        );
+        creation['slug'] ??= slugify(creation['title'] as string);
 
         if (creation['parent'] == null) {
           const categoryWithoutParentCount = await node
@@ -676,10 +678,7 @@ export const Tag: NodeConfig<MyContext> = {
   mutation: {
     creation: {
       preCreate({ creation }) {
-        creation['slug'] ??= slugify(
-          creation['title'] as string,
-          slugify.defaults.modes.rfc3986,
-        );
+        creation['slug'] ??= slugify(creation['title'] as string);
       },
     },
   },

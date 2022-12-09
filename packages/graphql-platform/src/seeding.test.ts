@@ -180,14 +180,14 @@ describe('Seeding', () => {
                       deprecated: creation.value.deprecated ?? null,
                     };
 
-                  case 'high-tech':
+                  case 'High-tech':
                     return {
                       ...creation.value,
                       id: 'db414952-b5e4-4a91-a013-584d10521714',
                       deprecated: creation.value.deprecated ?? null,
                     };
 
-                  case 'fashion':
+                  case 'Fashion':
                     return {
                       ...creation.value,
                       id: '189c1ccb-de49-484a-bcfe-50c242adf754',

@@ -54,7 +54,7 @@ exports[`GraphQL Platform Integration Apollo Server creates an ApolloServer inst
               {
                 "order": 1,
                 "tag": {
-                  "title": "high-tech",
+                  "title": "High-tech",
                 },
               },
             ],
@@ -81,7 +81,7 @@ exports[`GraphQL Platform Integration Apollo Server creates an ApolloServer inst
               {
                 "order": 0,
                 "tag": {
-                  "title": "fashion",
+                  "title": "Fashion",
                 },
               },
             ],

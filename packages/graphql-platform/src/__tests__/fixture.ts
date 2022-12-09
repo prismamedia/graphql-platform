@@ -63,10 +63,10 @@ export const Tag = {
     title: 'TV',
   },
   tag_02: {
-    title: 'high-tech',
+    title: 'High-tech',
   },
   tag_03: {
-    title: 'fashion',
+    title: 'Fashion',
     deprecated: true,
   },
 } as const;
