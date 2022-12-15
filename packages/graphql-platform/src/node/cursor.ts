@@ -33,7 +33,7 @@ export type NodeCursorOptions<TValue extends NodeSelectedValue = any> = {
   selection?: RawNodeSelection<TValue>;
   direction?: OrderingDirection;
   uniqueConstraint?: UniqueConstraint['name'];
-  bulkSize?: number;
+  chunkSize?: number;
 };
 
 export class NodeCursor<
@@ -47,7 +47,7 @@ export class NodeCursor<
   protected readonly selection: NodeSelection<TValue>;
   protected readonly internalSelection: NodeSelection;
   protected readonly orderByInputValue: OrderByInputValue;
-  protected readonly bulkSize: number;
+  protected readonly chunkSize: number;
 
   public current: number = -1;
   public completed: boolean = false;
@@ -101,7 +101,7 @@ export class NodeCursor<
       },
     );
 
-    this.bulkSize = Math.max(1, options?.bulkSize || 100);
+    this.chunkSize = Math.max(1, options?.chunkSize || 100);
   }
 
   public async count(): Promise<number> {
@@ -119,7 +119,7 @@ export class NodeCursor<
         {
           where: { AND: [after, this.filter] },
           orderBy: this.orderByInputValue,
-          first: this.bulkSize,
+          first: this.chunkSize,
           selection: this.internalSelection,
         },
         this.context,
@@ -138,7 +138,7 @@ export class NodeCursor<
           values.at(-1)!,
         );
       }
-    } while (values.length === this.bulkSize);
+    } while (values.length === this.chunkSize);
 
     this.completed = true;
   }

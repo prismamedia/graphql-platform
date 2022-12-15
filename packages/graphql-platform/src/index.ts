@@ -23,7 +23,10 @@ import {
   type OperationInterface,
   type OperationsByNameByType,
 } from './node.js';
-import { NodeFixtureDataByReferenceByNodeName, Seeding } from './seeding.js';
+import {
+  Seeding,
+  type NodeFixtureDataByReferenceByNodeName,
+} from './seeding.js';
 
 export * from './connector-interface.js';
 export * from './custom-operations.js';
