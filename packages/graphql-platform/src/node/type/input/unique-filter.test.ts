@@ -52,8 +52,7 @@ describe('NodeUniqueFilterInputType', () => {
         [
           'Article',
           { id: 123 },
-          `"ArticleUniqueFilterInput.id" - Expects an "UUIDv4", got: 123
-└ Cause: Expects an UUID version 4, got: 123`,
+          `"ArticleUniqueFilterInput.id" - Expects an "UUIDv4", got: 123`,
         ],
         [
           'Article',

@@ -37,8 +37,7 @@ describe('Node', () => {
       it.each([
         [
           '-InvalidName',
-          `\"GraphQLPlatformConfig.nodes.-InvalidName\" - Expects to be valid against the GraphQL \"Names\" specification (@see: https://spec.graphql.org/draft/#sec-Names), got: '-InvalidName'
-└ Cause: Names must start with [_a-zA-Z] but \"-InvalidName\" does not.`,
+          `\"GraphQLPlatformConfig.nodes.-InvalidName\" - Expects to be valid against the GraphQL \"Names\" specification (@see: https://spec.graphql.org/draft/#sec-Names), got: '-InvalidName'`,
         ],
         [
           'invalidName',
@@ -412,9 +411,9 @@ describe('Node', () => {
                 },
               },
             }),
-        )
-          .toThrowError(`\"GraphQLPlatformConfig.nodes.Article.output.virtualFields.myInvalidField.dependsOn\" - Expects a valid fragment, got: '{ unknownField }'
-└ Cause: Expects an \"Article\"'s field, got: 'unknownField'`);
+        ).toThrowError(
+          `\"GraphQLPlatformConfig.nodes.Article.output.virtualFields.myInvalidField.dependsOn\" - Expects a valid fragment, got: '{ unknownField }'`,
+        );
       });
     });
 

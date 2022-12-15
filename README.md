@@ -4,5 +4,5 @@
 
 _Requirements_
 
-- NodeJS 16
+- NodeJS >=18.12
 - GraphQL 16
