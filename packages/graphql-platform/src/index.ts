@@ -95,18 +95,25 @@ export type GraphQLPlatformConfig<
   /**
    * Optional, register some event-listeners, all at once
    */
-  on?: EventConfigByName<GraphQLPlatformEventDataByName>;
+  on?: EventConfigByName<
+    GraphQLPlatformEventDataByName<TRequestContext, TConnector>
+  >;
 
   /**
    * Optional, register a node-change-listeners
    */
-  onNodeChange?: EventListener<GraphQLPlatformEventDataByName, 'node-change'>;
+  onNodeChange?: EventListener<
+    GraphQLPlatformEventDataByName<TRequestContext, TConnector>,
+    'node-change'
+  >;
 };
 
 export class GraphQLPlatform<
   TRequestContext extends object = any,
   TConnector extends ConnectorInterface = any,
-> extends AsyncEventEmitter<GraphQLPlatformEventDataByName> {
+> extends AsyncEventEmitter<
+  GraphQLPlatformEventDataByName<TRequestContext, TConnector>
+> {
   public readonly nodesByName: ReadonlyMap<
     Node['name'],
     Node<TRequestContext, TConnector>

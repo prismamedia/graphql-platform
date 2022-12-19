@@ -183,7 +183,10 @@ export type NodeConfig<
   /**
    * Optional, register some change-listeners
    */
-  onChange?: EventListener<GraphQLPlatformEventDataByName, 'node-change'>;
+  onChange?: EventListener<
+    GraphQLPlatformEventDataByName<TRequestContext, TConnector>,
+    'node-change'
+  >;
 } & GetConnectorConfigOverride<TConnector, ConnectorConfigOverrideKind.NODE>;
 
 export class Node<
