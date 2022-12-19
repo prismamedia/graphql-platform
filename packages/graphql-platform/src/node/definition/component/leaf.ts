@@ -55,7 +55,7 @@ export type LeafConfig<
   /**
    * Optional, add some custom validation or normalization on top of the "type"'s parser
    */
-  customParser?: LeafCustomParser;
+  parser?: LeafCustomParser;
 
   /**
    * Optional, is the node sortable using this component's value ?
@@ -137,21 +137,19 @@ export class Leaf<
       }
     }
 
-    // custom-parser
+    // parser
     {
-      const customParserConfig = config.customParser;
-      const customParserConfigPath = utils.addPath(configPath, 'customParser');
+      const parserConfig = config.parser;
+      const parserConfigPath = utils.addPath(configPath, 'parser');
 
-      if (customParserConfig != null) {
-        if (typeof customParserConfig !== 'function') {
-          throw new utils.UnexpectedConfigError(
-            `a function`,
-            customParserConfig,
-            { path: customParserConfigPath },
-          );
+      if (parserConfig != null) {
+        if (typeof parserConfig !== 'function') {
+          throw new utils.UnexpectedConfigError(`a function`, parserConfig, {
+            path: parserConfigPath,
+          });
         }
 
-        this.customParser = customParserConfig;
+        this.customParser = parserConfig;
       }
     }
 

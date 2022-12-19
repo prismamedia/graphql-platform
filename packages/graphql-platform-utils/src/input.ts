@@ -101,7 +101,7 @@ export interface InputConfig<TValue = any> {
   /**
    * Optional, add some custom validation or normalization on top of the "type"'s parser
    */
-  customParser?: InputCustomParser<TValue>;
+  parser?: InputCustomParser<TValue>;
 }
 
 export class Input<TValue = any> {
@@ -181,19 +181,19 @@ export class Input<TValue = any> {
       this.type = type;
     }
 
-    // custom-parser
+    // parser
     {
-      const customParserConfig = config.customParser;
-      const customParserConfigPath = addPath(configPath, 'customParser');
+      const parserConfig = config.parser;
+      const parserConfigPath = addPath(configPath, 'parser');
 
-      if (customParserConfig != null) {
-        if (typeof customParserConfig !== 'function') {
-          throw new UnexpectedConfigError(`a function`, customParserConfig, {
-            path: customParserConfigPath,
+      if (parserConfig != null) {
+        if (typeof parserConfig !== 'function') {
+          throw new UnexpectedConfigError(`a function`, parserConfig, {
+            path: parserConfigPath,
           });
         }
 
-        this.#customParser = customParserConfig;
+        this.#customParser = parserConfig;
       }
     }
 

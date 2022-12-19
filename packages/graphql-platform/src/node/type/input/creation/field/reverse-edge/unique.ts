@@ -136,7 +136,7 @@ export class ReverseEdgeUniqueCreationInput extends AbstractReverseEdgeCreationI
           return fields;
         },
       }),
-      customParser(inputValue, path) {
+      parser(inputValue, path) {
         if (Object.keys(inputValue).length > 1) {
           throw new utils.UnexpectedValueError(
             `at most one action`,

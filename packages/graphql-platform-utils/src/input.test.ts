@@ -39,7 +39,7 @@ describe('Input', () => {
       {
         name: 'InputWithCustomValidationAndInvalidThunkedDefaultValue',
         type: graphql.GraphQLInt,
-        customParser: (value) => {
+        parser: (value) => {
           if (value < 18) {
             throw new Error('Must be greater than 18');
           }
@@ -198,7 +198,7 @@ describe('Input', () => {
         new Input<Nillable<number>>({
           name: 'age',
           type: graphql.GraphQLInt,
-          customParser: (value) => {
+          parser: (value) => {
             if (value < 18) {
               throw new Error('Must be greater than 18');
             }

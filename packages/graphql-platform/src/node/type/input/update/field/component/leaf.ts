@@ -9,7 +9,7 @@ import { AbstractComponentUpdateInput } from '../abstract-component.js';
 export type LeafUpdateInputValue = utils.Nillable<LeafValue>;
 
 export type LeafUpdateInputConfig = Except<
-  SetOptional<utils.InputConfig<LeafUpdateInputValue>, 'type' | 'customParser'>,
+  SetOptional<utils.InputConfig<LeafUpdateInputValue>, 'type'>,
   'name' | 'optional'
 >;
 
@@ -28,6 +28,7 @@ export class LeafUpdateInput extends AbstractComponentUpdateInput<LeafUpdateInpu
           leaf.type,
           !leaf.isNullable(),
         ),
+        parser: leaf.customParser,
         ...config,
       },
       configPath,

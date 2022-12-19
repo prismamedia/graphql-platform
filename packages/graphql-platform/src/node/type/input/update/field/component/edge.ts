@@ -137,7 +137,7 @@ export class EdgeUpdateInput extends AbstractComponentUpdateInput<EdgeUpdateInpu
           }),
           !edge.isNullable(),
         ),
-        customParser(inputValue, path) {
+        parser(inputValue, path) {
           if (Object.keys(inputValue).length !== 1) {
             throw new utils.UnexpectedValueError(
               `one and only one action`,

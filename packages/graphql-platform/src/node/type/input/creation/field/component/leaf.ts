@@ -9,10 +9,7 @@ import { AbstractComponentCreationInput } from '../abstract-component.js';
 export type LeafCreationInputValue = utils.Nillable<LeafValue>;
 
 export type LeafCreationInputConfig = Except<
-  SetOptional<
-    utils.InputConfig<LeafCreationInputValue>,
-    'type' | 'customParser'
-  >,
+  SetOptional<utils.InputConfig<LeafCreationInputValue>, 'type'>,
   'name'
 >;
 
@@ -24,6 +21,10 @@ export class LeafCreationInput extends AbstractComponentCreationInput<LeafCreati
       utils.MutationType.CREATION,
     );
 
-    super(leaf, { type: leaf.type, ...config }, configPath);
+    super(
+      leaf,
+      { type: leaf.type, parser: leaf.customParser, ...config },
+      configPath,
+    );
   }
 }

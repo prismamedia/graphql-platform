@@ -219,7 +219,7 @@ export class ReverseEdgeUniqueUpdateInput extends AbstractReverseEdgeUpdateInput
           return fields;
         },
       }),
-      customParser(inputValue, path) {
+      parser(inputValue, path) {
         const inputActionNames = Object.keys(
           inputValue,
         ) as ReverseEdgeUniqueUpdateInputAction[];
