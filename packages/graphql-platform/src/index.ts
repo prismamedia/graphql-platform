@@ -89,7 +89,7 @@ export type GraphQLPlatformConfig<
    */
   assertRequestContext?(
     this: GraphQLPlatform<TRequestContext, TConnector>,
-    maybeRequestContext: unknown,
+    maybeRequestContext: object,
   ): asserts maybeRequestContext is TRequestContext;
 
   /**
@@ -131,7 +131,7 @@ export class GraphQLPlatform<
   readonly #connector?: TConnector;
 
   readonly #assertRequestContext?: (
-    maybeRequestContext: unknown,
+    maybeRequestContext: object,
   ) => asserts maybeRequestContext is TRequestContext;
 
   public constructor(

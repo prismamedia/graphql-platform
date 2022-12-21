@@ -1,6 +1,6 @@
 {
   "name": "@prismamedia/graphql-platform-utils",
-  "version": "1.0.0-alpha.42",
+  "version": "1.0.0-alpha.43",
   "license": "MIT",
   "contributors": [
     "Yvann Boucher <yvann.boucher@gmail.com>"
@@ -27,7 +27,7 @@
     "test:watch": "yarn run test --watchAll"
   },
   "devDependencies": {
-    "@swc/core": "1.3.23",
+    "@swc/core": "1.3.24",
     "@swc/jest": "0.2.24",
     "@tsconfig/node18": "1.0.1",
     "@types/indefinite": "2.3.1",
