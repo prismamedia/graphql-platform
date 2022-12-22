@@ -33,6 +33,14 @@ export * from './custom-operations.js';
 export * from './node.js';
 export * from './seeding.js';
 
+export type RequestContextAssertion<
+  TRequestContext extends object = any,
+  TConnector extends ConnectorInterface = any,
+> = (
+  this: GraphQLPlatform<TRequestContext, TConnector>,
+  maybeRequestContext: object,
+) => asserts maybeRequestContext is TRequestContext;
+
 export type GraphQLPlatformEventDataByName<
   TRequestContext extends object = any,
   TConnector extends ConnectorInterface = any,
@@ -87,10 +95,10 @@ export type GraphQLPlatformConfig<
    *
    * @see: https://www.apollographql.com/docs/apollo-server/data/resolvers/#the-context-argument
    */
-  assertRequestContext?(
-    this: GraphQLPlatform<TRequestContext, TConnector>,
-    maybeRequestContext: object,
-  ): asserts maybeRequestContext is TRequestContext;
+  requestContextAssertion?: RequestContextAssertion<
+    TRequestContext,
+    TConnector
+  >;
 
   /**
    * Optional, register some event-listeners, all at once
@@ -130,7 +138,7 @@ export class GraphQLPlatform<
 
   readonly #connector?: TConnector;
 
-  readonly #assertRequestContext?: (
+  readonly #requestContextAssertion?: (
     maybeRequestContext: object,
   ) => asserts maybeRequestContext is TRequestContext;
 
@@ -264,24 +272,25 @@ export class GraphQLPlatform<
         : undefined;
     }
 
-    // assert-request-context
+    // request-context-assertion
     {
-      const assertRequestContextConfig = config.assertRequestContext;
-      const assertRequestContextConfigPath = utils.addPath(
+      const requestContextAssertionConfig = config.requestContextAssertion;
+      const requestContextAssertionConfigPath = utils.addPath(
         configPath,
-        'assertRequestContext',
+        'requestContextAssertion',
       );
 
-      if (assertRequestContextConfig != null) {
-        if (typeof assertRequestContextConfig !== 'function') {
+      if (requestContextAssertionConfig != null) {
+        if (typeof requestContextAssertionConfig !== 'function') {
           throw new utils.UnexpectedConfigError(
             `a function`,
-            assertRequestContextConfig,
-            { path: assertRequestContextConfigPath },
+            requestContextAssertionConfig,
+            { path: requestContextAssertionConfigPath },
           );
         }
 
-        this.#assertRequestContext = assertRequestContextConfig.bind(this);
+        this.#requestContextAssertion =
+          requestContextAssertionConfig.bind(this);
       }
     }
   }
@@ -362,7 +371,7 @@ export class GraphQLPlatform<
         });
       }
 
-      this.#assertRequestContext?.(maybeRequestContext);
+      this.#requestContextAssertion?.(maybeRequestContext);
     } catch (error) {
       throw new InvalidRequestContextError({
         cause: utils.castToError(error),
