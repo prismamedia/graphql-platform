@@ -1062,14 +1062,14 @@ __metadata:
     "@swc/jest": 0.2.24
     "@tsconfig/node18": 1.0.1
     "@types/jest": 29.2.4
-    "@types/node": 18.11.17
+    "@types/node": 18.11.18
     "@types/semver": 7.3.13
     graphql: 16.6.0
-    inflection: ^2.0.0
+    inflection: ^2.0.1
     jest: 29.3.1
     mariadb: ^3.0.2
     semver: ^7.3.8
-    type-fest: ^3.4.0
+    type-fest: ^3.5.0
     typescript: 4.9.4
   peerDependencies:
     graphql: ^16.6.0
@@ -1087,7 +1087,7 @@ __metadata:
     "@swc/jest": 0.2.24
     "@tsconfig/node18": 1.0.1
     "@types/jest": 29.2.4
-    "@types/node": 18.11.17
+    "@types/node": 18.11.18
     graphql: 16.6.0
     jest: 29.3.1
     typescript: 4.9.4
@@ -1107,10 +1107,10 @@ __metadata:
     "@tsconfig/node18": 1.0.1
     "@types/draft-js": ^0.11.10
     "@types/jest": 29.2.4
-    "@types/node": 18.11.17
+    "@types/node": 18.11.18
     graphql: 16.6.0
     jest: 29.3.1
-    type-fest: ^3.4.0
+    type-fest: ^3.5.0
     typescript: 4.9.4
   peerDependencies:
     graphql: ^16.6.0
@@ -1128,12 +1128,12 @@ __metadata:
     "@types/indefinite": 2.3.1
     "@types/jest": 29.2.4
     "@types/lodash": 4.14.191
-    "@types/node": 18.11.17
+    "@types/node": 18.11.18
     graphql: 16.6.0
     indefinite: ^2.4.2
     jest: 29.3.1
     lodash: ^4.17.21
-    type-fest: ^3.4.0
+    type-fest: ^3.5.0
     typescript: 4.9.4
   peerDependencies:
     graphql: ^16.6.0
@@ -1154,14 +1154,14 @@ __metadata:
     "@tsconfig/node18": 1.0.1
     "@types/jest": 29.2.4
     "@types/lodash": 4.14.191
-    "@types/node": 18.11.17
+    "@types/node": 18.11.18
     dataloader: ^2.1.0
     dependency-graph: ^0.11.0
     graphql: 16.6.0
-    inflection: ^2.0.0
+    inflection: ^2.0.1
     jest: 29.3.1
     lodash: ^4.17.21
-    type-fest: ^3.4.0
+    type-fest: ^3.5.0
     typescript: 4.9.4
   peerDependencies:
     graphql: ^16.6.0
@@ -1650,10 +1650,17 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@types/node@npm:*, @types/node@npm:18.11.17":
+"@types/node@npm:*":
   version: 18.11.17
   resolution: "@types/node@npm:18.11.17"
   checksum: 1933afd068d5c75c068c6c4df6d10edb3b0b2bb6503d544e2f0496ac007c90596e6a5e284a8ef032451bc16f871b7e46719d7d2bea60e9b25d13a77d52161cac
+  languageName: node
+  linkType: hard
+
+"@types/node@npm:18.11.18":
+  version: 18.11.18
+  resolution: "@types/node@npm:18.11.18"
+  checksum: 03f17f9480f8d775c8a72da5ea7e9383db5f6d85aa5fefde90dd953a1449bd5e4ffde376f139da4f3744b4c83942166d2a7603969a6f8ea826edfb16e6e3b49d
   languageName: node
   linkType: hard
 
@@ -3374,10 +3381,10 @@ __metadata:
   languageName: node
   linkType: hard
 
-"inflection@npm:^2.0.0":
-  version: 2.0.0
-  resolution: "inflection@npm:2.0.0"
-  checksum: 8fb7864705cea0fdd44768e1f7603632444ca9b8ff490c9b998979728ffa7cd5afc0ff8837fd7d9c2aa169b3921ab75ee3d44c9e1e85518fe2855049382611f7
+"inflection@npm:^2.0.1":
+  version: 2.0.1
+  resolution: "inflection@npm:2.0.1"
+  checksum: bb095b495e10a77afc043cc349ae0f7c8c53e4d1fbcd7781111c18d17bde87ce31ea08bd883774bcbb2ff50c301dd4835b5448c80eb50b5e4e080165b6030f3b
   languageName: node
   linkType: hard
 
@@ -5396,10 +5403,10 @@ __metadata:
   languageName: node
   linkType: hard
 
-"type-fest@npm:^3.4.0":
-  version: 3.4.0
-  resolution: "type-fest@npm:3.4.0"
-  checksum: 37e8559f07778b6a24a1d01f285d9b6904537cfde49f6231f080f146c6ff753ea12a9163bcbe8e9bcd24f72529cf4d3baf69874b9a6e1d2da47046c41e4567f6
+"type-fest@npm:^3.5.0":
+  version: 3.5.0
+  resolution: "type-fest@npm:3.5.0"
+  checksum: 9b82958ded0aedeb38fe6b172645a319522d11904b58e422dbab9ba40f85d48e749ff8fb7047cd72f4a2923c63927b741e2efc97ce7b0662b7e042923510132f
   languageName: node
   linkType: hard
 

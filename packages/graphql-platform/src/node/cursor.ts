@@ -125,6 +125,12 @@ export class NodeCursor<
         this.context,
       );
 
+      console.debug({
+        chunkSize: this.chunkSize,
+        valueLength: values.length,
+        after,
+      });
+
       if (values.length) {
         for (const value of values) {
           this.current++;
