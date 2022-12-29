@@ -125,23 +125,11 @@ export class NodeCursor<
         this.context,
       );
 
-      console.debug({
-        chunkSize: this.chunkSize,
-        valueLength: values.length,
-        after,
-      });
-
       if (values.length) {
         for (const value of values) {
-          console.debug(value);
-
           this.current++;
 
-          try {
-            yield this.selection.parseValue(value);
-          } catch (error) {
-            console.error(error);
-          }
+          yield this.selection.parseValue(value);
         }
 
         after = pickAfterFilterInputValue(
