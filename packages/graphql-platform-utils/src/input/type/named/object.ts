@@ -9,7 +9,7 @@ import {
 import { Input, parseInputLiterals, parseInputValues } from '../../../input.js';
 import { isNil, type Nillable } from '../../../nil.js';
 import { addPath, type Path } from '../../../path.js';
-import { isPlainObject, type PlainObject } from '../../../plain-object.js';
+import { assertPlainObject, type PlainObject } from '../../../plain-object.js';
 import type { NonNullNonVariableGraphQLValueNode } from '../../type.js';
 import {
   AbstractNamedInputType,
@@ -173,11 +173,7 @@ export class ObjectInputType<
       return value;
     }
 
-    if (!isPlainObject(value)) {
-      throw new UnexpectedValueError('a plain-object', value, {
-        path,
-      });
-    }
+    assertPlainObject(value, path);
 
     return parseInputValues(this.fields, value, path);
   }

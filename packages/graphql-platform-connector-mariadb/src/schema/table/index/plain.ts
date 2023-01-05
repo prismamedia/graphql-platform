@@ -27,7 +27,7 @@ export class PlainIndex extends AbstractIndex {
     public readonly config: PlainIndexConfig,
     public readonly configPath: utils.Path,
   ) {
-    utils.assertPlainObjectConfig(config, configPath);
+    utils.assertPlainObject(config, configPath);
 
     super(table);
   }

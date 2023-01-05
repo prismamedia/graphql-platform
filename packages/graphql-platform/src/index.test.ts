@@ -18,15 +18,15 @@ describe('GraphQL Platform', () => {
     it.each([
       [
         {},
-        `/GraphQLPlatformConfig/nodes - Expects at least one "node", got: undefined`,
+        `/GraphQLPlatformConfig/nodes - Expects a plain-object, got: undefined`,
       ],
       [
         { nodes: undefined },
-        `/GraphQLPlatformConfig/nodes - Expects at least one "node", got: undefined`,
+        `/GraphQLPlatformConfig/nodes - Expects a plain-object, got: undefined`,
       ],
       [
         { nodes: null },
-        `/GraphQLPlatformConfig/nodes - Expects at least one "node", got: null`,
+        `/GraphQLPlatformConfig/nodes - Expects a plain-object, got: null`,
       ],
       [
         { nodes: {} },

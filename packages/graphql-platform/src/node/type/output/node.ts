@@ -89,7 +89,7 @@ export class NodeOutputType {
       this.#config = node.config.output || undefined;
       this.#configPath = utils.addPath(node.configPath, 'output');
 
-      utils.assertNillablePlainObjectConfig(this.#config, this.#configPath);
+      utils.assertNillablePlainObject(this.#config, this.#configPath);
     }
   }
 
@@ -134,7 +134,7 @@ export class NodeOutputType {
         this.#config.virtualFields,
       );
 
-      utils.assertNillablePlainObjectConfig(
+      utils.assertNillablePlainObject(
         virtualFieldsConfig,
         virtualFieldsConfigPath,
       );
@@ -289,7 +289,7 @@ export class NodeOutputType {
         fragment,
         {
           path,
-          cause: utils.castToError(error),
+          cause: error,
         },
       );
     }
@@ -608,9 +608,7 @@ export class NodeOutputType {
     operationContext?: OperationContext,
     path?: utils.Path,
   ): NodeSelection {
-    if (!utils.isPlainObject(shape)) {
-      throw new utils.UnexpectedValueError('a plain-object', shape, { path });
-    }
+    utils.assertPlainObject(shape, path);
 
     return new NodeSelection(
       this.node,

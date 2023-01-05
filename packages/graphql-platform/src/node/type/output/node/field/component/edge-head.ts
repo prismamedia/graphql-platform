@@ -51,6 +51,7 @@ export class EdgeHeadOutputType extends AbstractComponentOutputType<undefined> {
 
     return new EdgeHeadSelection(
       this.edge,
+      ast.alias?.value,
       this.edge.head.outputType.selectGraphQLSelectionSetNode(
         ast.selectionSet,
         operationContext,
@@ -73,6 +74,7 @@ export class EdgeHeadOutputType extends AbstractComponentOutputType<undefined> {
       ? this.edge.selection
       : new EdgeHeadSelection(
           this.edge,
+          undefined,
           this.edge.head.outputType.selectShape(value, operationContext, path),
         );
   }

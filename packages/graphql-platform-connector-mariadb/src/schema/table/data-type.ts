@@ -42,7 +42,7 @@ export function createDataTypeFromConfig(
   config: DataTypeConfig,
   configPath: utils.Path,
 ): DataType {
-  utils.assertPlainObjectConfig(config, configPath);
+  utils.assertPlainObject(config, configPath);
 
   switch (config.kind) {
     /**

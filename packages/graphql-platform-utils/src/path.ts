@@ -29,6 +29,13 @@ export function isPathDescendantOf(path: Path, maybeAncestor: Path): boolean {
     : false;
 }
 
+export function isPathEqualOrDescendantOf(
+  path: Path,
+  maybeAncestor: Path,
+): boolean {
+  return path === maybeAncestor || isPathDescendantOf(path, maybeAncestor);
+}
+
 export function isPathAncestorOf(path: Path, maybeDescendant: Path): boolean {
   assert.notEqual(
     path,

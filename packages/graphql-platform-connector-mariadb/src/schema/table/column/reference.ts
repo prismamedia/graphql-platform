@@ -129,7 +129,7 @@ export class ReferenceColumnTree {
 
     // config
     {
-      utils.assertNillablePlainObjectConfig(columnsConfig, columnsConfigPath);
+      utils.assertNillablePlainObject(columnsConfig, columnsConfigPath);
 
       [columnsConfig, columnsConfigPath] = path.reduce<
         [utils.Optional<ReferenceColumnTreeConfig>, utils.Path]
@@ -138,7 +138,7 @@ export class ReferenceColumnTree {
           const edgeConfig = config?.[edge.name];
           const edgeConfigPath = utils.addPath(path, edge.name);
 
-          utils.assertNillablePlainObjectConfig(edgeConfig, edgeConfigPath);
+          utils.assertNillablePlainObject(edgeConfig, edgeConfigPath);
 
           return [edgeConfig ?? undefined, edgeConfigPath];
         },

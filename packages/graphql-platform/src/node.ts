@@ -245,7 +245,7 @@ export class Node<
     public readonly configPath: utils.Path,
   ) {
     assertNodeName(name, configPath);
-    utils.assertPlainObjectConfig(config, configPath);
+    utils.assertPlainObject(config, configPath);
 
     // on-change
     {
@@ -318,10 +318,9 @@ export class Node<
       const componentsConfig = config.components;
       const componentsConfigPath = utils.addPath(configPath, 'components');
 
-      if (
-        !utils.isPlainObject(componentsConfig) ||
-        !Object.entries(componentsConfig).length
-      ) {
+      utils.assertPlainObject(componentsConfig, componentsConfigPath);
+
+      if (!Object.entries(componentsConfig).length) {
         throw new utils.UnexpectedValueError(
           `at least one "component"`,
           componentsConfig,
@@ -341,7 +340,7 @@ export class Node<
               componentName,
             );
 
-            utils.assertPlainObjectConfig(componentConfig, componentConfigPath);
+            utils.assertPlainObject(componentConfig, componentConfigPath);
 
             let component: Component;
 
@@ -496,7 +495,7 @@ export class Node<
               `The request-authorizer threw an error`,
               {
                 path: authorizationConfigPath,
-                cause: utils.castToError(error),
+                cause: error,
               },
             );
           }
@@ -817,7 +816,7 @@ export class Node<
       return new Map();
     }
 
-    utils.assertPlainObjectConfig(reverseEdgesConfig, reverseEdgesConfigPath);
+    utils.assertPlainObject(reverseEdgesConfig, reverseEdgesConfigPath);
 
     const reverseEdges = new Map(
       reverseEdgesConfig
@@ -842,10 +841,7 @@ export class Node<
                 );
               }
 
-              utils.assertPlainObjectConfig(
-                reverseEdgeConfig,
-                reverseEdgeConfigPath,
-              );
+              utils.assertPlainObject(reverseEdgeConfig, reverseEdgeConfigPath);
 
               const originalEdgeConfig = reverseEdgeConfig.originalEdge;
               const originalEdgeConfigPath = utils.addPath(
@@ -1335,11 +1331,7 @@ export class Node<
     maybeValue: unknown,
     path: utils.Path = utils.addPath(undefined, this.name),
   ): NodeValue {
-    if (!utils.isPlainObject(maybeValue)) {
-      throw new utils.UnexpectedValueError('a plain-object', maybeValue, {
-        path,
-      });
-    }
+    utils.assertPlainObject(maybeValue, path);
 
     return utils.aggregateGraphError<Component, NodeValue>(
       this.components,

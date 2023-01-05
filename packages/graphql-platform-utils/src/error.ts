@@ -2,7 +2,7 @@ import _ from 'lodash';
 import { EOL } from 'node:os';
 import { inspect } from 'node:util';
 import { Nillable } from './nil.js';
-import { isPathDescendantOf, printPath, type Path } from './path.js';
+import { isPathEqualOrDescendantOf, printPath, type Path } from './path.js';
 import { isPlainObject } from './plain-object.js';
 import { Stringifiable } from './stringifiable.js';
 
@@ -19,7 +19,7 @@ export interface GraphErrorOptions extends ErrorOptions {
 
 export class GraphError extends Error {
   public readonly path?: Path;
-  readonly #message?: string;
+  public readonly reason?: string;
   #ancestor?: Path;
 
   public constructor(
@@ -40,14 +40,14 @@ export class GraphError extends Error {
       enumerable: false,
     });
 
-    this.#message = message || undefined;
+    Object.defineProperty(this, 'reason', {
+      value: message || undefined,
+      enumerable: false,
+    });
   }
 
   public setAncestor(ancestor: Path): void {
-    if (
-      this.path &&
-      (this.path === ancestor || isPathDescendantOf(this.path, ancestor))
-    ) {
+    if (this.path && isPathEqualOrDescendantOf(this.path, ancestor)) {
       this.#ancestor = ancestor;
     }
   }
@@ -57,7 +57,7 @@ export class GraphError extends Error {
       this.path && this.path !== this.#ancestor
         ? printPath(this.path, this.#ancestor)
         : undefined,
-      this.#message,
+      this.reason,
     ]
       .filter(Boolean)
       .join(' - ');
@@ -99,7 +99,7 @@ export interface AggregateGraphErrorOptions {
 
 export class AggregateGraphError extends AggregateError {
   public readonly path?: Path;
-  readonly #message?: string;
+  public readonly reason?: string;
   #ancestor?: Path;
 
   public constructor(
@@ -126,14 +126,14 @@ export class AggregateGraphError extends AggregateError {
       enumerable: false,
     });
 
-    this.#message = message || undefined;
+    Object.defineProperty(this, 'reason', {
+      value: message || undefined,
+      enumerable: false,
+    });
   }
 
   public setAncestor(ancestor: Path): void {
-    if (
-      this.path &&
-      (this.path === ancestor || isPathDescendantOf(this.path, ancestor))
-    ) {
+    if (this.path && isPathEqualOrDescendantOf(this.path, ancestor)) {
       this.#ancestor = ancestor;
     }
   }
@@ -145,7 +145,7 @@ export class AggregateGraphError extends AggregateError {
         this.path && this.path !== this.#ancestor
           ? printPath(this.path, this.#ancestor)
           : undefined,
-        this.#message,
+        this.reason,
         `${this.errors.length} errors:`,
       ]
         .filter(Boolean)
@@ -205,3 +205,11 @@ export const isGraphError = (
   error: unknown,
 ): error is GraphError | AggregateGraphError =>
   error instanceof GraphError || error instanceof AggregateGraphError;
+
+export const isGraphErrorWithPathEqualOrDescendantOf = (
+  error: unknown,
+  maybeAncestor: Path,
+) =>
+  isGraphError(error) &&
+  error.path &&
+  isPathEqualOrDescendantOf(error.path, maybeAncestor);

@@ -69,7 +69,7 @@ export class VirtualFieldOutputType {
           this.#dependsOnConfig,
           {
             path: this.#dependsOnConfigPath,
-            cause: utils.castToError(error),
+            cause: error,
           },
         );
       }

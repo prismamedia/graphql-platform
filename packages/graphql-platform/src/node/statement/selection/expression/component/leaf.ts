@@ -7,17 +7,23 @@ import type { SelectionExpressionInterface } from '../../expression-interface.js
 
 export class LeafSelection implements SelectionExpressionInterface {
   public readonly component: Component;
+  public readonly alias?: string;
   public readonly name: string;
   public readonly key: string;
 
-  public constructor(public readonly leaf: Leaf) {
+  public constructor(public readonly leaf: Leaf, alias: string | undefined) {
     this.component = leaf;
+    this.alias = alias || undefined;
     this.name = leaf.name;
-    this.key = this.name;
+    this.key = this.alias ?? this.name;
   }
 
   public isAkinTo(expression: unknown): expression is LeafSelection {
-    return expression instanceof LeafSelection && expression.leaf === this.leaf;
+    return (
+      expression instanceof LeafSelection &&
+      expression.leaf === this.leaf &&
+      expression.alias === this.alias
+    );
   }
 
   public equals(expression: unknown): expression is LeafSelection {

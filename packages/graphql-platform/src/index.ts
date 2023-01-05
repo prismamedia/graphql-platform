@@ -149,7 +149,7 @@ export class GraphQLPlatform<
       'GraphQLPlatformConfig',
     ),
   ) {
-    utils.assertPlainObjectConfig(config, configPath);
+    utils.assertPlainObject(config, configPath);
 
     super(config.on);
 
@@ -161,16 +161,13 @@ export class GraphQLPlatform<
       const nodesConfig = config.nodes;
       const nodesConfigPath = utils.addPath(configPath, 'nodes');
 
-      if (
-        !utils.isPlainObject(nodesConfig) ||
-        !Object.entries(nodesConfig).length
-      ) {
+      utils.assertPlainObject(nodesConfig, nodesConfigPath);
+
+      if (!Object.entries(nodesConfig).length) {
         throw new utils.UnexpectedValueError(
           `at least one "node"`,
           nodesConfig,
-          {
-            path: nodesConfigPath,
-          },
+          { path: nodesConfigPath },
         );
       }
 
@@ -374,7 +371,7 @@ export class GraphQLPlatform<
       this.#requestContextAssertion?.(maybeRequestContext);
     } catch (error) {
       throw new InvalidRequestContextError({
-        cause: utils.castToError(error),
+        cause: error,
         path,
       });
     }

@@ -41,11 +41,7 @@ export class Seeding<
   ) {
     const fixturesPath = utils.addPath(undefined, 'fixtures');
 
-    if (!utils.isPlainObject(fixtures)) {
-      throw new utils.UnexpectedValueError('a plain-object', fixtures, {
-        path: fixturesPath,
-      });
-    }
+    utils.assertPlainObject(fixtures, fixturesPath);
 
     Object.entries(fixtures).forEach(([nodeName, dataByReference]) => {
       const node = gp.nodesByName.get(nodeName);
@@ -59,13 +55,7 @@ export class Seeding<
 
       const dataByReferencePath = utils.addPath(fixturesPath, nodeName);
 
-      if (!utils.isPlainObject(dataByReference)) {
-        throw new utils.UnexpectedValueError(
-          'a plain-object',
-          dataByReference,
-          { path: dataByReferencePath },
-        );
-      }
+      utils.assertPlainObject(dataByReference, dataByReferencePath);
 
       Object.entries(dataByReference).forEach(([reference, data]) =>
         this.dependencyGraph.addNode(

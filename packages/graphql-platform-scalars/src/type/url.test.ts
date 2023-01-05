@@ -2,14 +2,15 @@ import { URL } from 'node:url';
 import { GraphQLURL } from './url.js';
 
 describe('URL', () => {
-  it.each(['https//www.ietf.org/rfc/rfc3986.txt', 'localhost'])(
-    'throws an Error on invalid value: %s',
-    (input) => {
-      expect(() => GraphQLURL.parseValue(input)).toThrowError(
-        `Expects a valid URL, got: '${input}'`,
-      );
-    },
-  );
+  it.each([
+    'https//www.ietf.org/rfc/rfc3986.txt',
+    'localhost',
+    'www.adrian-grenier.net',
+  ])('throws an Error on invalid value: %s', (input) => {
+    expect(() => GraphQLURL.parseValue(input)).toThrowError(
+      `Expects a valid URL, got: '${input}'`,
+    );
+  });
 
   it('serializes', () => {
     expect(

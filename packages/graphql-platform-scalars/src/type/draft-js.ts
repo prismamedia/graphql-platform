@@ -18,13 +18,7 @@ export function parseRawDraftEntity(
   maybeRawDraftEntity: unknown,
   path?: utils.Path,
 ): RawDraftEntity {
-  if (!utils.isPlainObject(maybeRawDraftEntity)) {
-    throw new utils.UnexpectedValueError(
-      `a plain-object`,
-      maybeRawDraftEntity,
-      { path },
-    );
-  }
+  utils.assertPlainObject(maybeRawDraftEntity, path);
 
   if (
     typeof maybeRawDraftEntity.type !== 'string' ||
@@ -48,13 +42,10 @@ export function parseRawDraftEntity(
     );
   }
 
-  if (!utils.isPlainObject(maybeRawDraftEntity.data)) {
-    throw new utils.UnexpectedValueError(
-      `a plain-object`,
-      maybeRawDraftEntity.data,
-      { path: utils.addPath(path, 'data') },
-    );
-  }
+  utils.assertPlainObject(
+    maybeRawDraftEntity.data,
+    utils.addPath(path, 'data'),
+  );
 
   return maybeRawDraftEntity as RawDraftEntity;
 }
@@ -63,13 +54,7 @@ export function parseRawDraftInlineStyleRange(
   maybeRawDraftInlineStyleRange: unknown,
   path?: utils.Path,
 ): RawDraftInlineStyleRange {
-  if (!utils.isPlainObject(maybeRawDraftInlineStyleRange)) {
-    throw new utils.UnexpectedValueError(
-      `a plain-object`,
-      maybeRawDraftInlineStyleRange,
-      { path },
-    );
-  }
+  utils.assertPlainObject(maybeRawDraftInlineStyleRange, path);
 
   if (typeof maybeRawDraftInlineStyleRange.style !== 'string') {
     throw new utils.UnexpectedValueError(
@@ -103,13 +88,7 @@ export function parseRawDraftEntityRange(
   entityMap: RawDraftContentState['entityMap'],
   path?: utils.Path,
 ): RawDraftEntityRange {
-  if (!utils.isPlainObject(maybeRawDraftEntityRange)) {
-    throw new utils.UnexpectedValueError(
-      `a plain-object`,
-      maybeRawDraftEntityRange,
-      { path },
-    );
-  }
+  utils.assertPlainObject(maybeRawDraftEntityRange, path);
 
   if (!(maybeRawDraftEntityRange.key in entityMap)) {
     throw new utils.UnexpectedValueError(
@@ -143,13 +122,7 @@ export function parseRawDraftContentBlock(
   entityMap: RawDraftContentState['entityMap'],
   path?: utils.Path,
 ): RawDraftContentBlock {
-  if (!utils.isPlainObject(maybeRawDraftContentBlock)) {
-    throw new utils.UnexpectedValueError(
-      `a plain-object`,
-      maybeRawDraftContentBlock,
-      { path },
-    );
-  }
+  utils.assertPlainObject(maybeRawDraftContentBlock, path);
 
   if (
     typeof maybeRawDraftContentBlock.key !== 'string' ||
@@ -250,27 +223,20 @@ export function parseRawDraftContentBlock(
   // data
   let data: RawDraftContentBlock['data'];
   {
-    if (maybeRawDraftContentBlock.data !== undefined) {
-      if (utils.isPlainObject(maybeRawDraftContentBlock.data)) {
-        data =
-          Object.entries(maybeRawDraftContentBlock.data).length > 0
-            ? maybeRawDraftContentBlock.data
-            : undefined;
-      } else if (Array.isArray(maybeRawDraftContentBlock.data)) {
-        data =
-          maybeRawDraftContentBlock.data.length > 0
-            ? maybeRawDraftContentBlock.data
-            : undefined;
+    const rawData = maybeRawDraftContentBlock.data;
+    const rawDataPath = utils.addPath(path, 'data');
+
+    if (rawData !== undefined) {
+      if (utils.isPlainObject(rawData)) {
+        data = Object.entries(rawData).length ? rawData : undefined;
+      } else if (Array.isArray(rawData)) {
+        data = rawData.length ? rawData : undefined;
       } else {
-        throw new utils.UnexpectedValueError(
-          `a plain object`,
-          maybeRawDraftContentBlock.data,
-          { path: utils.addPath(path, 'data') },
-        );
+        utils.assertPlainObject(rawData, rawDataPath);
       }
     }
 
-    data = maybeRawDraftContentBlock.data;
+    data = rawData;
   }
 
   return {
@@ -293,13 +259,7 @@ export function parseRawDraftContentState(
   maybeRawDraftContentState: unknown,
   path?: utils.Path,
 ): RawDraftContentState {
-  if (!utils.isPlainObject(maybeRawDraftContentState)) {
-    throw new utils.UnexpectedValueError(
-      `a plain object`,
-      maybeRawDraftContentState,
-      { path },
-    );
-  }
+  utils.assertPlainObject(maybeRawDraftContentState, path);
 
   // entityMap
   let entityMap: RawDraftContentState['entityMap'] = Object.create(null);

@@ -12,23 +12,28 @@ import type { SelectionExpressionInterface } from '../../../expression-interface
 
 export class EdgeHeadSelection implements SelectionExpressionInterface {
   public readonly component: Component;
+  public readonly alias?: string;
   public readonly name: string;
   public readonly key: string;
 
   public constructor(
     public readonly edge: Edge,
+    alias: string | undefined,
     public readonly headSelection: NodeSelection,
   ) {
     this.component = edge;
+    this.alias = alias || undefined;
     this.name = edge.name;
-    this.key = this.name;
+    this.key = this.alias ?? this.name;
 
     assert.equal(edge.head, headSelection.node);
   }
 
   public isAkinTo(expression: unknown): expression is EdgeHeadSelection {
     return (
-      expression instanceof EdgeHeadSelection && expression.edge === this.edge
+      expression instanceof EdgeHeadSelection &&
+      expression.edge === this.edge &&
+      expression.alias === this.alias
     );
   }
 
@@ -54,6 +59,7 @@ export class EdgeHeadSelection implements SelectionExpressionInterface {
 
     return new EdgeHeadSelection(
       this.edge,
+      this.alias,
       this.headSelection.mergeWith(expression.headSelection, path),
     );
   }

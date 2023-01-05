@@ -2,9 +2,9 @@ import { GraphQLDraftJS, RawDraftContentState } from './draft-js.js';
 
 describe('DraftJS', () => {
   it.each<[input: any, error: string]>([
-    ['', 'Expects a plain object, got: '],
-    [' ', 'Expects a plain object, got: '],
-    [' \n \t ', 'Expects a plain object, got: '],
+    ['', 'Expects a plain-object, got: '],
+    [' ', 'Expects a plain-object, got: '],
+    [' \n \t ', 'Expects a plain-object, got: '],
     [
       {
         blocks: [

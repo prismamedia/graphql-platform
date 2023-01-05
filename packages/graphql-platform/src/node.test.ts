@@ -61,15 +61,15 @@ describe('Node', () => {
       it.each([
         [
           {},
-          `/GraphQLPlatformConfig/nodes/Test/components - Expects at least one "component", got: undefined`,
+          `/GraphQLPlatformConfig/nodes/Test/components - Expects a plain-object, got: undefined`,
         ],
         [
           { components: undefined },
-          `/GraphQLPlatformConfig/nodes/Test/components - Expects at least one "component", got: undefined`,
+          `/GraphQLPlatformConfig/nodes/Test/components - Expects a plain-object, got: undefined`,
         ],
         [
           { components: null },
-          `/GraphQLPlatformConfig/nodes/Test/components - Expects at least one "component", got: null`,
+          `/GraphQLPlatformConfig/nodes/Test/components - Expects a plain-object, got: null`,
         ],
         [
           { components: {} },

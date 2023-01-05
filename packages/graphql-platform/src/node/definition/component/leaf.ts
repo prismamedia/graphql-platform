@@ -155,7 +155,7 @@ export class Leaf<
 
     // selection
     {
-      this.selection = new LeafSelection(this);
+      this.selection = new LeafSelection(this, undefined);
     }
 
     // comparator
@@ -187,10 +187,12 @@ export class Leaf<
       try {
         return this.customParser(value, path);
       } catch (error) {
-        throw new utils.GraphError(utils.castToError(error).message, {
-          cause: error,
-          path,
-        });
+        throw utils.isGraphErrorWithPathEqualOrDescendantOf(error, path)
+          ? error
+          : new utils.GraphError(utils.castToError(error).message, {
+              cause: error,
+              path,
+            });
       }
     }
 

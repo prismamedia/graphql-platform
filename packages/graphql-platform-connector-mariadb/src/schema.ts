@@ -62,7 +62,7 @@ export class Schema {
       this.config = connector.config?.schema;
       this.configPath = utils.addPath(connector.configPath, 'schema');
 
-      utils.assertNillablePlainObjectConfig(this.config, this.configPath);
+      utils.assertNillablePlainObject(this.config, this.configPath);
     }
 
     // name

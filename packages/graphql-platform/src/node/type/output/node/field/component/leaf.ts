@@ -5,7 +5,7 @@ import type {
   LeafType,
 } from '../../../../../definition/component/leaf.js';
 import type { OperationContext } from '../../../../../operation/context.js';
-import type { LeafSelection } from '../../../../../statement/selection/expression/component/leaf.js';
+import { LeafSelection } from '../../../../../statement/selection/expression/component/leaf.js';
 import type { GraphQLSelectionContext } from '../../../node.js';
 import { AbstractComponentOutputType } from '../abstract-component.js';
 
@@ -15,7 +15,6 @@ export class LeafOutputType extends AbstractComponentOutputType<undefined> {
   public override readonly deprecationReason?: string;
   public override readonly arguments?: undefined;
   public override readonly type: LeafType | graphql.GraphQLNonNull<LeafType>;
-  readonly #selection: LeafSelection;
 
   public constructor(public readonly leaf: Leaf) {
     super(leaf);
@@ -26,7 +25,6 @@ export class LeafOutputType extends AbstractComponentOutputType<undefined> {
     this.type = leaf.isNullable()
       ? leaf.type
       : new graphql.GraphQLNonNull(leaf.type);
-    this.#selection = leaf.selection;
   }
 
   public override selectGraphQLFieldNode(
@@ -41,7 +39,7 @@ export class LeafOutputType extends AbstractComponentOutputType<undefined> {
       throw new utils.GraphError(`Expects no selection-set`, { path });
     }
 
-    return this.#selection;
+    return new LeafSelection(this.leaf, ast.alias?.value);
   }
 
   public override selectShape(
@@ -49,6 +47,6 @@ export class LeafOutputType extends AbstractComponentOutputType<undefined> {
     _operationContext: OperationContext | undefined,
     _path: utils.Path,
   ): LeafSelection {
-    return this.#selection;
+    return this.leaf.selection;
   }
 }

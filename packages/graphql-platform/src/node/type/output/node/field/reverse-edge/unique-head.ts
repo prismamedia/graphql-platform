@@ -41,6 +41,7 @@ export class ReverseEdgeUniqueHeadOutputType extends AbstractReverseEdgeOutputTy
 
     return new ReverseEdgeUniqueHeadSelection(
       this.reverseEdge,
+      ast.alias?.value,
       this.reverseEdge.head.outputType.selectGraphQLSelectionSetNode(
         ast.selectionSet,
         operationContext,
@@ -57,6 +58,7 @@ export class ReverseEdgeUniqueHeadOutputType extends AbstractReverseEdgeOutputTy
   ): ReverseEdgeUniqueHeadSelection {
     return new ReverseEdgeUniqueHeadSelection(
       this.reverseEdge,
+      undefined,
       value === null
         ? this.reverseEdge.head.identifier.selection
         : this.reverseEdge.head.outputType.selectShape(

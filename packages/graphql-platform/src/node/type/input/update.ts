@@ -50,7 +50,7 @@ export class NodeUpdateInputType extends utils.ObjectInputType<FieldUpdateInput>
     const virtualFieldsConfig = config?.virtualFields;
     const virtualFieldsConfigPath = utils.addPath(configPath, 'virtualFields');
 
-    utils.assertNillablePlainObjectConfig(
+    utils.assertNillablePlainObject(
       virtualFieldsConfig,
       virtualFieldsConfigPath,
     );

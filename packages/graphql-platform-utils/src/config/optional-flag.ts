@@ -1,14 +1,14 @@
 import { UnexpectedValueError } from '../error.js';
-import type { Nil } from '../nil.js';
+import { isNil, Nillable } from '../nil.js';
 import type { Path } from '../path.js';
 
-export type OptionalFlag = boolean | Nil;
+export type OptionalFlag = Nillable<boolean>;
 
 export function assertOptionalFlag(
   maybeOptionalFlag: unknown,
   path?: Path,
 ): asserts maybeOptionalFlag is OptionalFlag {
-  if (maybeOptionalFlag != null && typeof maybeOptionalFlag !== 'boolean') {
+  if (!isNil(maybeOptionalFlag) && typeof maybeOptionalFlag !== 'boolean') {
     throw new UnexpectedValueError(`a boolean`, maybeOptionalFlag, { path });
   }
 }

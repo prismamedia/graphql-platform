@@ -83,7 +83,7 @@ export class LeafColumn extends AbstractColumn {
       this.config = leaf.config.column;
       this.configPath = utils.addPath(leaf.configPath, 'column');
 
-      utils.assertNillablePlainObjectConfig(this.config, this.configPath);
+      utils.assertNillablePlainObject(this.config, this.configPath);
     }
 
     // name

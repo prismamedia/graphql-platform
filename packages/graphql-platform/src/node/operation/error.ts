@@ -1,6 +1,6 @@
 import * as utils from '@prismamedia/graphql-platform-utils';
 import { inspect } from 'node:util';
-import type { Leaf, Node } from '../../node.js';
+import type { Node } from '../../node.js';
 import type { NodeUniqueFilterInputValue } from '../type/input/unique-filter.js';
 
 export class InvalidRequestContextError extends utils.GraphError {
@@ -36,26 +36,6 @@ export class NotFoundError extends utils.GraphError {
       )}`,
       options,
     );
-  }
-}
-
-export class UnexpectedLeafValueError extends utils.UnexpectedValueError {
-  public constructor(
-    leaf: Leaf,
-    unexpectedLeafValue: any,
-    options?: utils.GraphErrorOptions,
-  ) {
-    super('', unexpectedLeafValue, options);
-  }
-}
-
-export class UnexpectedNodeValueError extends utils.AggregateGraphError {
-  public constructor(
-    node: Node,
-    errors: Iterable<UnexpectedLeafValueError>,
-    options?: utils.AggregateGraphErrorOptions,
-  ) {
-    super(errors, options);
   }
 }
 

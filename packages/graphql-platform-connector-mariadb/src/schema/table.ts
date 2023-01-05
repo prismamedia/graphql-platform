@@ -96,7 +96,7 @@ export class Table {
       this.config = node.config.table;
       this.configPath = utils.addPath(node.configPath, 'table');
 
-      utils.assertNillablePlainObjectConfig(this.config, this.configPath);
+      utils.assertNillablePlainObject(this.config, this.configPath);
     }
 
     // name
@@ -322,25 +322,24 @@ export class Table {
   }
 
   public parseSelectedValue<TValue extends core.NodeSelectedValue>(
-    rawSelectedValue: utils.PlainObject,
+    maybeValue: utils.PlainObject,
     selection: core.NodeSelection<TValue>,
   ): TValue {
-    if (!utils.isPlainObject(rawSelectedValue)) {
-      throw new utils.UnexpectedValueError('a plain-object', rawSelectedValue);
-    }
+    utils.assertPlainObject(maybeValue);
+
+    const path = utils.addPath(undefined, this.node.name);
 
     return utils.aggregateGraphError(
       selection.expressions,
       (document, expression) => {
-        const expressionPath = utils.addPath(undefined, expression.key);
-        const rawExpressionValue = rawSelectedValue[expression.key];
+        const expressionPath = utils.addPath(path, expression.key);
+        const rawExpressionValue = maybeValue[expression.key];
         let expressionValue: any;
 
         if (expression instanceof core.LeafSelection) {
           const column = this.getColumnByLeaf(expression.leaf);
 
           expressionValue = column.dataType.parseJsonValue(rawExpressionValue);
-          expressionValue = 'lol';
         } else if (expression instanceof core.EdgeHeadSelection) {
           const head = this.schema.getTableByNode(expression.edge.head);
 

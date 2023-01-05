@@ -1,14 +1,15 @@
 import { UnexpectedValueError } from '../error.js';
+import { isNil, Nillable } from '../nil.js';
 import type { Path } from '../path.js';
 
-export type OptionalDeprecation = boolean | string | null | undefined;
+export type OptionalDeprecation = Nillable<boolean | string>;
 
 export function assertOptionalDeprecation(
   maybeOptionalDeprecation: unknown,
   path: Path,
 ): asserts maybeOptionalDeprecation is OptionalDeprecation {
   if (
-    maybeOptionalDeprecation != null &&
+    !isNil(maybeOptionalDeprecation) &&
     typeof maybeOptionalDeprecation !== 'boolean' &&
     typeof maybeOptionalDeprecation !== 'string'
   ) {

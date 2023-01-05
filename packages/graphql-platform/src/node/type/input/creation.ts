@@ -63,7 +63,7 @@ export class NodeCreationInputType extends utils.ObjectInputType<FieldCreationIn
     const virtualFieldsConfig = config?.virtualFields;
     const virtualFieldsConfigPath = utils.addPath(configPath, 'virtualFields');
 
-    utils.assertNillablePlainObjectConfig(
+    utils.assertNillablePlainObject(
       virtualFieldsConfig,
       virtualFieldsConfigPath,
     );

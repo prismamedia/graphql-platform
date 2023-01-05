@@ -32,7 +32,7 @@ export class ForeignKeyIndex extends AbstractIndex {
       this.config = edge.config.foreignKey;
       this.configPath = utils.addPath(edge.configPath, 'foreignKey');
 
-      utils.assertNillablePlainObjectConfig(this.config, this.configPath);
+      utils.assertNillablePlainObject(this.config, this.configPath);
     }
   }
 

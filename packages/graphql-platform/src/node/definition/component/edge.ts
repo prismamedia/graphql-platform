@@ -255,6 +255,7 @@ export class Edge<
   public override get selection(): EdgeHeadSelection {
     return new EdgeHeadSelection(
       this,
+      undefined,
       this.referencedUniqueConstraint.selection,
     );
   }

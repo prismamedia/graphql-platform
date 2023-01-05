@@ -21,9 +21,7 @@ export class NodeFixture<
     public readonly data: NodeFixtureData,
     public readonly path: utils.Path,
   ) {
-    if (!utils.isPlainObject(data)) {
-      throw new utils.UnexpectedValueError('a plain-object', data, { path });
-    }
+    utils.assertPlainObject(data, path);
   }
 
   @Memoize()

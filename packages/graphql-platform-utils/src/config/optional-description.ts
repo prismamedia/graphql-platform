@@ -1,14 +1,15 @@
 import { UnexpectedValueError } from '../error.js';
+import { isNil, Nillable } from '../nil.js';
 import type { Path } from '../path.js';
 
-export type OptionalDescription = string | null | undefined;
+export type OptionalDescription = Nillable<string>;
 
 export function assertOptionalDescription(
   maybeOptionalDescription: unknown,
   path: Path,
 ): asserts maybeOptionalDescription is OptionalDescription {
   if (
-    maybeOptionalDescription != null &&
+    !isNil(maybeOptionalDescription) &&
     typeof maybeOptionalDescription !== 'string'
   ) {
     throw new UnexpectedValueError(`a string`, maybeOptionalDescription, {

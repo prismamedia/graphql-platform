@@ -10,13 +10,13 @@ export function parseURL(value: unknown, path?: utils.Path): URL {
       return new URL(value);
     } catch (error) {
       throw new utils.UnexpectedValueError('a valid URL', value, {
+        cause: error,
         path,
-        cause: utils.castToError(error),
       });
     }
   }
 
-  throw new utils.UnexpectedValueError('an URL', value, { path });
+  throw new utils.UnexpectedValueError('a valid URL', value, { path });
 }
 
 export const GraphQLURL = new graphql.GraphQLScalarType({

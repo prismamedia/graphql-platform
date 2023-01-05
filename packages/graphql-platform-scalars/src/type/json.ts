@@ -8,11 +8,7 @@ import type {
 } from 'type-fest';
 
 export function parseJsonObject(value: unknown, path?: utils.Path): JsonObject {
-  if (!utils.isPlainObject(value)) {
-    throw new utils.UnexpectedValueError(`a plain-object`, value, {
-      path,
-    });
-  }
+  utils.assertPlainObject(value, path);
 
   return utils.aggregateGraphError<any, JsonObject>(
     Object.entries(value),

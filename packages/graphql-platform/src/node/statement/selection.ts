@@ -68,11 +68,7 @@ export class NodeSelection<TValue extends NodeSelectedValue = any> {
   }
 
   public parseValue(maybeValue: unknown, path?: utils.Path): TValue {
-    if (!utils.isPlainObject(maybeValue)) {
-      throw new utils.UnexpectedValueError('a plain-object', maybeValue, {
-        path,
-      });
-    }
+    utils.assertPlainObject(maybeValue, path);
 
     return utils.aggregateGraphError<SelectionExpression, TValue>(
       this.expressions,

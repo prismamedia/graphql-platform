@@ -40,7 +40,7 @@ export class UniqueIndex extends AbstractIndex {
       this.config = uniqueConstraint.config.index;
       this.configPath = utils.addPath(uniqueConstraint.configPath, 'index');
 
-      utils.assertNillablePlainObjectConfig(this.config, this.configPath);
+      utils.assertNillablePlainObject(this.config, this.configPath);
     }
   }
 

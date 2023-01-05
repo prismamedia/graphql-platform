@@ -12,15 +12,18 @@ import type { SelectionExpressionInterface } from '../../../expression-interface
 export class ReverseEdgeUniqueHeadSelection
   implements SelectionExpressionInterface
 {
+  public readonly alias?: string;
   public readonly name: string;
   public readonly key: string;
 
   public constructor(
     public readonly reverseEdge: ReverseEdgeUnique,
+    alias: string | undefined,
     public readonly headSelection: NodeSelection,
   ) {
+    this.alias = alias || undefined;
     this.name = reverseEdge.name;
-    this.key = this.name;
+    this.key = this.alias ?? this.name;
 
     assert.equal(reverseEdge.head, headSelection.node);
   }
@@ -30,7 +33,8 @@ export class ReverseEdgeUniqueHeadSelection
   ): expression is ReverseEdgeUniqueHeadSelection {
     return (
       expression instanceof ReverseEdgeUniqueHeadSelection &&
-      expression.reverseEdge === this.reverseEdge
+      expression.reverseEdge === this.reverseEdge &&
+      expression.alias === this.alias
     );
   }
 
@@ -58,6 +62,7 @@ export class ReverseEdgeUniqueHeadSelection
 
     return new ReverseEdgeUniqueHeadSelection(
       this.reverseEdge,
+      this.alias,
       this.headSelection.mergeWith(expression.headSelection, path),
     );
   }

@@ -16,6 +16,7 @@ import {
   aggregateGraphError,
   castToError,
   GraphError,
+  isGraphErrorWithPathEqualOrDescendantOf,
   UnexpectedValueError,
 } from './error.js';
 import {
@@ -32,7 +33,7 @@ import {
   validateInputType,
 } from './input/type.js';
 import { addPath, type Path } from './path.js';
-import { isPlainObject, type PlainObject } from './plain-object.js';
+import { assertNillablePlainObject, type PlainObject } from './plain-object.js';
 import { resolveThunkOrValue, type ThunkOrValue } from './thunk-or-value.js';
 
 export * from './input/type.js';
@@ -330,10 +331,12 @@ export class Input<TValue = any> {
       try {
         return this.#customParser(value, path);
       } catch (error) {
-        throw new GraphError(castToError(error).message, {
-          cause: error,
-          path,
-        });
+        throw isGraphErrorWithPathEqualOrDescendantOf(error, path)
+          ? error
+          : new GraphError(castToError(error).message, {
+              cause: error,
+              path,
+            });
       }
     }
 
@@ -362,14 +365,7 @@ export function parseInputValues(
   argumentOrObjectFields: unknown,
   path?: Path,
 ): PlainObject {
-  if (
-    argumentOrObjectFields != null &&
-    !isPlainObject(argumentOrObjectFields)
-  ) {
-    throw new UnexpectedValueError(`a plain-object`, argumentOrObjectFields, {
-      path,
-    });
-  }
+  assertNillablePlainObject(argumentOrObjectFields, path);
 
   /**
    * We keep the provided inputs' key here, in order to check

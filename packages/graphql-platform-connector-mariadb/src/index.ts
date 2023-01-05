@@ -119,7 +119,7 @@ export class MariaDBConnector
       'connector',
     ),
   ) {
-    utils.assertPlainObjectConfig(config, configPath);
+    utils.assertPlainObject(config, configPath);
 
     super(config.on);
 
@@ -134,10 +134,7 @@ export class MariaDBConnector
       this.poolConfig = config.pool || undefined;
       this.poolConfigPath = utils.addPath(configPath, 'pool');
 
-      utils.assertNillablePlainObjectConfig(
-        this.poolConfig,
-        this.poolConfigPath,
-      );
+      utils.assertNillablePlainObject(this.poolConfig, this.poolConfigPath);
 
       // database-pool-config
       {
@@ -172,7 +169,7 @@ export class MariaDBConnector
   ): mariadb.Pool {
     let pool = this.#poolsByStatementKind.get(kind);
     if (!pool) {
-      utils.assertPlainObjectConfig(this.poolConfig, this.poolConfigPath);
+      utils.assertPlainObject(this.poolConfig, this.poolConfigPath);
 
       this.#poolsByStatementKind.set(
         kind,
