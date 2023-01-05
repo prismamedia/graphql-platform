@@ -322,61 +322,77 @@ export class Table {
   }
 
   public parseSelectedValue<TValue extends core.NodeSelectedValue>(
-    selectedValue: utils.PlainObject,
+    rawSelectedValue: utils.PlainObject,
     selection: core.NodeSelection<TValue>,
+    path: utils.Path = utils.addPath(undefined, this.node.name),
   ): TValue {
-    if (!utils.isPlainObject(selectedValue)) {
-      throw new utils.UnexpectedValueError('a plain-object', selectedValue);
+    if (!utils.isPlainObject(rawSelectedValue)) {
+      throw new utils.UnexpectedValueError('a plain-object', rawSelectedValue);
     }
 
-    return selection.expressions.reduce((nodeSelectedValue, expression) => {
-      const expressionPath = utils.addPath(undefined, expression.key);
-      const rawExpressionValue = selectedValue[expression.key];
-      let expressionValue: any;
+    return utils.aggregateGraphError(
+      selection.expressions,
+      (document, expression) => {
+        const expressionPath = utils.addPath(path, expression.key);
+        const rawExpressionValue = rawSelectedValue[expression.key];
+        let expressionValue: any;
 
-      if (expression instanceof core.LeafSelection) {
-        const column = this.getColumnByLeaf(expression.leaf);
+        if (expression instanceof core.LeafSelection) {
+          const column = this.getColumnByLeaf(expression.leaf);
 
-        expressionValue = column.dataType.parseJsonValue(rawExpressionValue);
-      } else if (expression instanceof core.EdgeHeadSelection) {
-        const head = this.schema.getTableByNode(expression.edge.head);
+          expressionValue = column.dataType.parseJsonValue(rawExpressionValue);
+        } else if (expression instanceof core.EdgeHeadSelection) {
+          const head = this.schema.getTableByNode(expression.edge.head);
 
-        expressionValue = rawExpressionValue
-          ? head.parseSelectedValue(
-              rawExpressionValue,
-              expression.headSelection,
-            )
-          : null;
-      } else if (expression instanceof core.ReverseEdgeMultipleCountSelection) {
-        expressionValue = Number.parseInt(rawExpressionValue, 10);
-      } else if (expression instanceof core.ReverseEdgeMultipleHeadSelection) {
-        const head = this.schema.getTableByNode(expression.reverseEdge.head);
+          expressionValue = rawExpressionValue
+            ? head.parseSelectedValue(
+                rawExpressionValue,
+                expression.headSelection,
+                expressionPath,
+              )
+            : null;
+        } else if (
+          expression instanceof core.ReverseEdgeMultipleCountSelection
+        ) {
+          expressionValue = Number.parseInt(rawExpressionValue, 10);
+        } else if (
+          expression instanceof core.ReverseEdgeMultipleHeadSelection
+        ) {
+          const head = this.schema.getTableByNode(expression.reverseEdge.head);
 
-        expressionValue = Array.isArray(rawExpressionValue)
-          ? rawExpressionValue.map((value) =>
-              head.parseSelectedValue(value, expression.headSelection),
-            )
-          : [];
-      } else if (expression instanceof core.ReverseEdgeUniqueHeadSelection) {
-        const head = this.schema.getTableByNode(expression.reverseEdge.head);
+          expressionValue = Array.isArray(rawExpressionValue)
+            ? rawExpressionValue.map((value, index) =>
+                head.parseSelectedValue(
+                  value,
+                  expression.headSelection,
+                  utils.addPath(expressionPath, index),
+                ),
+              )
+            : [];
+        } else if (expression instanceof core.ReverseEdgeUniqueHeadSelection) {
+          const head = this.schema.getTableByNode(expression.reverseEdge.head);
 
-        expressionValue = rawExpressionValue
-          ? head.parseSelectedValue(
-              rawExpressionValue,
-              expression.headSelection,
-            )
-          : null;
-      } else {
-        throw new UnreachableValueError(expression);
-      }
+          expressionValue = rawExpressionValue
+            ? head.parseSelectedValue(
+                rawExpressionValue,
+                expression.headSelection,
+                expressionPath,
+              )
+            : null;
+        } else {
+          throw new UnreachableValueError(expression);
+        }
 
-      return Object.assign(nodeSelectedValue, {
-        [expression.key]: expression.parseValue(
-          expressionValue,
-          expressionPath,
-        ),
-      });
-    }, Object.create(null));
+        return Object.assign(document, {
+          [expression.key]: expression.parseValue(
+            expressionValue,
+            expressionPath,
+          ),
+        });
+      },
+      Object.create(null),
+      { path },
+    );
   }
 
   public async create(
