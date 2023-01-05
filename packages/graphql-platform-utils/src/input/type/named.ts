@@ -1,9 +1,5 @@
 import * as graphql from 'graphql';
-import {
-  NestableError,
-  UnexpectedConfigError,
-  UnexpectedValueError,
-} from '../../error.js';
+import { GraphError, UnexpectedValueError } from '../../error.js';
 import { parseGraphQLEnumValue, parseGraphQLLeafValue } from '../../graphql.js';
 import { indefinite } from '../../indefinite.js';
 import { Path } from '../../path.js';
@@ -40,7 +36,7 @@ export function assertNamedInputType(
   path: Path,
 ): asserts maybeNamedInputType is NamedInputType {
   if (!isNamedInputType(maybeNamedInputType)) {
-    throw new UnexpectedConfigError(`a named input type`, maybeNamedInputType, {
+    throw new UnexpectedValueError(`a named input type`, maybeNamedInputType, {
       path,
     });
   }
@@ -125,10 +121,9 @@ export function parseNamedInputLiteral(
 
         return enumValue.value;
       } else {
-        throw new NestableError(
-          `Cannot parse literal: ${graphql.print(value)}`,
-          { path },
-        );
+        throw new GraphError(`Cannot parse literal: ${graphql.print(value)}`, {
+          path,
+        });
       }
     }
   }

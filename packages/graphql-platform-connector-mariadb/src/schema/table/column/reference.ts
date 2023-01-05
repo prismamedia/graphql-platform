@@ -26,14 +26,14 @@ export class ReferenceColumn extends AbstractColumn {
     {
       if (nameConfig) {
         if (typeof nameConfig !== 'string') {
-          throw new utils.UnexpectedConfigError('a string', nameConfig, {
+          throw new utils.UnexpectedValueError('a string', nameConfig, {
             path: nameConfigPath,
           });
         }
 
         // @see https://mariadb.com/kb/en/identifier-names/#maximum-length
         if (nameConfig.length > 64) {
-          throw new utils.UnexpectedConfigError(
+          throw new utils.UnexpectedValueError(
             'an identifier shorter than 64 characters',
             nameConfig,
             { path: nameConfigPath },

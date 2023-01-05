@@ -110,7 +110,7 @@ export class ReverseEdgeMultipleHeadSelection
       );
     }
 
-    return utils.aggregateError<unknown, NodeSelectedValue[]>(
+    return utils.aggregateGraphError<unknown, NodeSelectedValue[]>(
       maybeValue,
       (nodeValues, maybeItem, index) => [
         ...nodeValues,

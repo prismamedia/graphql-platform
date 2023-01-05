@@ -1,7 +1,6 @@
 import { Memoize } from '@prismamedia/memoize';
 import * as graphql from 'graphql';
 import assert from 'node:assert/strict';
-import { castToError } from '../../../cast-to-error.js';
 import {
   getOptionalDeprecation,
   getOptionalDescription,
@@ -12,9 +11,8 @@ import {
   type OptionalFlag,
 } from '../../../config.js';
 import {
-  aggregateConfigError,
-  NestableError,
-  UnexpectedConfigError,
+  aggregateGraphError,
+  GraphError,
   UnexpectedValueError,
 } from '../../../error.js';
 import { indefinite } from '../../../indefinite.js';
@@ -77,7 +75,7 @@ export class EnumInputValue {
       const valueConfigPath = addPath(configPath, 'value');
 
       if (typeof valueConfig !== 'string' || !valueConfig) {
-        throw new UnexpectedConfigError(`a non-empty string`, valueConfig, {
+        throw new UnexpectedValueError(`a non-empty string`, valueConfig, {
           path: valueConfigPath,
         });
       }
@@ -86,10 +84,10 @@ export class EnumInputValue {
         try {
           this.name = graphql.assertEnumValueName(valueConfig);
         } catch (error) {
-          throw new UnexpectedConfigError(
+          throw new UnexpectedValueError(
             'to be valid against the GraphQL "EnumValue" specification (@see: https://spec.graphql.org/draft/#EnumValue)',
             valueConfig,
-            { path: valueConfigPath, cause: castToError(error) },
+            { path: valueConfigPath, cause: error },
           );
         }
       }
@@ -106,7 +104,7 @@ export class EnumInputValue {
         this.name = this.value;
       } else {
         if (typeof nameConfig !== 'string' || !nameConfig) {
-          throw new UnexpectedConfigError(`a non-empty string`, nameConfig, {
+          throw new UnexpectedValueError(`a non-empty string`, nameConfig, {
             path: nameConfigPath,
           });
         }
@@ -114,10 +112,10 @@ export class EnumInputValue {
         try {
           this.name = graphql.assertEnumValueName(nameConfig);
         } catch (error) {
-          throw new UnexpectedConfigError(
+          throw new UnexpectedValueError(
             'to be valid against the GraphQL "EnumValue"\'s name specification (@see: https://spec.graphql.org/draft/#EnumValue)',
             nameConfig,
-            { path: nameConfigPath, cause: castToError(error) },
+            { cause: error, path: nameConfigPath },
           );
         }
       }
@@ -208,11 +206,11 @@ export class EnumInputType<
     const values = resolveThunkOrValue(this.#valuesConfig);
 
     return values?.length
-      ? aggregateConfigError<TValue, TValue[]>(
+      ? aggregateGraphError<TValue, TValue[]>(
           values,
           (values, value, index) => {
             if (!(value instanceof EnumInputValue)) {
-              throw new UnexpectedConfigError(`an enum input value`, value, {
+              throw new UnexpectedValueError(`an enum input value`, value, {
                 path: addPath(this.#valuesConfigPath, index),
               });
             }
@@ -235,7 +233,7 @@ export class EnumInputType<
   @Memoize()
   public get publicEnumValuesByValue(): ReadonlyMap<TValue['value'], TValue> {
     return new Map(
-      aggregateConfigError<TValue, [TValue['value'], TValue][]>(
+      aggregateGraphError<TValue, [TValue['value'], TValue][]>(
         this.enumValuesByValue.values(),
         (entries, value) =>
           value.isPublic() ? [...entries, [value.value, value]] : entries,
@@ -268,7 +266,7 @@ export class EnumInputType<
 
   @Memoize()
   public override validate(): void {
-    aggregateConfigError<TValue, void>(
+    aggregateGraphError<TValue, void>(
       this.enumValuesByValue.values(),
       (_, value) => value.validate(),
       undefined,
@@ -297,7 +295,7 @@ export class EnumInputType<
 
   public override parseValue(
     value: unknown,
-    path: Path = addPath(undefined, this.name),
+    path?: Path,
   ): Nillable<TValue['value']> {
     if (isNil(value)) {
       return value;
@@ -330,7 +328,7 @@ export class EnumInputType<
 
       return enumValue.value;
     } else {
-      throw new NestableError(`Cannot parse literal: ${graphql.print(value)}`, {
+      throw new GraphError(`Cannot parse literal: ${graphql.print(value)}`, {
         path,
       });
     }

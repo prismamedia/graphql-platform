@@ -1,5 +1,5 @@
 import * as graphql from 'graphql';
-import { UnexpectedConfigError } from '../error.js';
+import { UnexpectedValueError } from '../error.js';
 import type { Path } from '../path.js';
 
 /**
@@ -17,7 +17,7 @@ export function assertName(
   path: Path,
 ): asserts maybeName is Name {
   if (typeof maybeName !== 'string' || !maybeName) {
-    throw new UnexpectedConfigError(`a non-empty string`, maybeName, {
+    throw new UnexpectedValueError(`a non-empty string`, maybeName, {
       path,
     });
   }
@@ -25,10 +25,10 @@ export function assertName(
   try {
     graphql.assertName(maybeName);
   } catch (error) {
-    throw new UnexpectedConfigError(
+    throw new UnexpectedValueError(
       'to be valid against the GraphQL "Names" specification (@see: https://spec.graphql.org/draft/#sec-Names)',
       maybeName,
-      { path, cause: error },
+      { cause: error, path },
     );
   }
 }

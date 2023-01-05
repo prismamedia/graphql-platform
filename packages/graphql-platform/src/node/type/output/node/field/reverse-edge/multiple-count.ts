@@ -57,7 +57,7 @@ export class ReverseEdgeMultipleCountOutputType extends AbstractReverseEdgeOutpu
     );
 
     if (ast.selectionSet) {
-      throw new utils.NestableError(`Expects no selection-set`, { path });
+      throw new utils.GraphError(`Expects no selection-set`, { path });
     }
 
     const argsPath = utils.addPath(path, argsPathKey);

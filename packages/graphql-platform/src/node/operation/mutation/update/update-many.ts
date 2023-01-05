@@ -20,8 +20,8 @@ import type { NodeFilterInputValue } from '../../../type/input/filter.js';
 import type { OrderByInputValue } from '../../../type/input/ordering.js';
 import { createContextBoundAPI } from '../../api.js';
 import {
-  catchConnectorError,
-  catchLifecycleHookError,
+  ConnectorError,
+  LifecycleHookError,
   LifecycleHookKind,
 } from '../../error.js';
 import { AbstractUpdate, type UpdateConfig } from '../abstract-update.js';
@@ -135,21 +135,22 @@ export class UpdateManyMutation<
       utils.addPath(argsPath, 'orderBy'),
     ).normalized;
 
-    const currentValues = (await catchConnectorError(
-      () =>
-        this.connector.find(
-          {
-            node: this.node,
-            ...(filter && { filter }),
-            ...(ordering && { ordering }),
-            limit: args.first,
-            selection: this.node.selection,
-            forMutation: utils.MutationType.UPDATE,
-          },
-          context,
-        ),
-      path,
-    )) as NodeValue[];
+    let currentValues: NodeValue[];
+    try {
+      currentValues = await this.connector.find(
+        {
+          node: this.node,
+          ...(filter && { filter }),
+          ...(ordering && { ordering }),
+          limit: args.first,
+          selection: this.node.selection,
+          forMutation: utils.MutationType.UPDATE,
+        },
+        context,
+      );
+    } catch (error) {
+      throw new ConnectorError({ cause: error, path });
+    }
 
     if (currentValues.length === 0) {
       return [];
@@ -177,59 +178,59 @@ export class UpdateManyMutation<
             const individualizedStatement = statement.clone();
 
             // Apply the "preUpdate"-hook
-            await catchLifecycleHookError(
-              () =>
-                preUpdate({
-                  gp: this.gp,
-                  node: this.node,
-                  context,
-                  api: createContextBoundAPI(this.gp, context),
-                  data,
-                  currentValue: Object.freeze(
-                    this.node.parseValue(currentValue),
-                  ),
-                  update: individualizedStatement.proxy,
-                }),
-              this.node,
-              LifecycleHookKind.PRE_UPDATE,
-              path,
-            );
+            try {
+              await preUpdate({
+                gp: this.gp,
+                node: this.node,
+                context,
+                api: createContextBoundAPI(this.gp, context),
+                data,
+                currentValue: Object.freeze(this.node.parseValue(currentValue)),
+                update: individualizedStatement.proxy,
+              });
+            } catch (error) {
+              throw new LifecycleHookError(
+                this.node,
+                LifecycleHookKind.PRE_UPDATE,
+                { cause: error, path },
+              );
+            }
 
             if (individualizedStatement.updatesByComponent.size) {
               // Actually update the node
-              await catchConnectorError(
-                () =>
-                  this.connector.update(
-                    {
-                      node: this.node,
-                      update: individualizedStatement,
-                      filter: this.node.filterInputType.parseAndFilter(
-                        currentIds[index],
-                      ),
-                    },
-                    context,
-                  ),
-                path,
-              );
+              try {
+                await this.connector.update(
+                  {
+                    node: this.node,
+                    update: individualizedStatement,
+                    filter: this.node.filterInputType.parseAndFilter(
+                      currentIds[index],
+                    ),
+                  },
+                  context,
+                );
+              } catch (error) {
+                throw new ConnectorError({ cause: error, path });
+              }
             }
           }),
         );
       } else {
         // Actually update the nodes
-        await catchConnectorError(
-          () =>
-            this.connector.update(
-              {
-                node: this.node,
-                update: statement,
-                filter: this.node.filterInputType.parseAndFilter({
-                  OR: currentIds,
-                }),
-              },
-              context,
-            ),
-          path,
-        );
+        try {
+          await this.connector.update(
+            {
+              node: this.node,
+              update: statement,
+              filter: this.node.filterInputType.parseAndFilter({
+                OR: currentIds,
+              }),
+            },
+            context,
+          );
+        } catch (error) {
+          throw new ConnectorError({ cause: error, path });
+        }
       }
     }
 
@@ -289,22 +290,24 @@ export class UpdateManyMutation<
     // Apply the "postUpdate"-hook
     if (postUpdate) {
       await Promise.all(
-        changes.map((change) =>
-          catchLifecycleHookError(
-            () =>
-              postUpdate({
-                gp: this.gp,
-                node: this.node,
-                context,
-                api: createContextBoundAPI(this.gp, context),
-                data,
-                change,
-              }),
-            this.node,
-            LifecycleHookKind.POST_UPDATE,
-            path,
-          ),
-        ),
+        changes.map(async (change) => {
+          try {
+            await postUpdate({
+              gp: this.gp,
+              node: this.node,
+              context,
+              api: createContextBoundAPI(this.gp, context),
+              data,
+              change,
+            });
+          } catch (error) {
+            throw new LifecycleHookError(
+              this.node,
+              LifecycleHookKind.POST_UPDATE,
+              { cause: error, path },
+            );
+          }
+        }),
       );
     }
 

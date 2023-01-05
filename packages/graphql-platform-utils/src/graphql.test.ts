@@ -43,11 +43,9 @@ describe('GraphQL', () => {
       THREE,
     }
 
-    const type = createGraphQLEnumType(
-      'MyNumericEnum',
-      MyNumericEnum,
-      'My numeric enum',
-    );
+    const type = createGraphQLEnumType('MyNumericEnum', MyNumericEnum, {
+      description: 'My numeric enum',
+    });
 
     expect(graphql.printType(type)).toMatchInlineSnapshot(`
       """"My numeric enum"""

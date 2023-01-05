@@ -38,9 +38,9 @@ export const basicTypesByName = {
   ID: graphql.GraphQLID,
   Int: graphql.GraphQLInt,
   String: graphql.GraphQLString,
-} as const;
+} satisfies Record<string, graphql.GraphQLScalarType>;
 
-export const typesByName = {
+export const typesByName = Object.freeze({
   // Basic
   ...basicTypesByName,
 
@@ -58,7 +58,7 @@ export const typesByName = {
   URL: GraphQLURL,
   ...jsonTypesByName,
   ...uuidTypesByName,
-} as const;
+} satisfies Record<string, graphql.GraphQLScalarType>);
 
 type TypesByName = typeof typesByName;
 
@@ -78,10 +78,13 @@ export type GetExternalValueByType<TType extends Type> =
     ? TExternalValue
     : never;
 
-export function getTypeByName(maybeTypeName: TypeName, path: utils.Path): Type {
+export function getTypeByName(
+  maybeTypeName: TypeName,
+  path?: utils.Path,
+): Type {
   const scalarType = typesByName[maybeTypeName];
   if (!scalarType) {
-    throw new utils.UnexpectedConfigError(
+    throw new utils.UnexpectedValueError(
       `a scalar type name among "${typeNames.join(', ')}"`,
       maybeTypeName,
       { path },
@@ -93,10 +96,10 @@ export function getTypeByName(maybeTypeName: TypeName, path: utils.Path): Type {
 
 export function assertType(
   maybeType: unknown,
-  path: utils.Path,
+  path?: utils.Path,
 ): asserts maybeType is Type {
   if (!types.includes(maybeType as any)) {
-    throw new utils.UnexpectedConfigError(
+    throw new utils.UnexpectedValueError(
       `a scalar type among "${typeNames.join(', ')}"`,
       maybeType,
       { path },

@@ -72,7 +72,7 @@ export class Schema {
 
       if (connector.databasePoolConfig !== undefined) {
         if (nameConfig !== undefined) {
-          throw new utils.UnexpectedConfigError(
+          throw new utils.UnexpectedValueError(
             `not to be defined as the database is selected`,
             nameConfig,
             { path: nameConfigPath },
@@ -82,7 +82,7 @@ export class Schema {
         this.name = connector.databasePoolConfig;
       } else {
         if (nameConfig === undefined) {
-          throw new utils.UnexpectedConfigError(
+          throw new utils.UnexpectedValueError(
             `a non-empty string`,
             nameConfig,
             { path: nameConfigPath },

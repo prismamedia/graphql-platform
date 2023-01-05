@@ -83,7 +83,7 @@ export class ReverseEdgeMultipleHeadOutputType extends AbstractReverseEdgeOutput
     );
 
     if (!ast.selectionSet) {
-      throw new utils.NestableError(
+      throw new utils.GraphError(
         `${this.reverseEdge.head.indefinite}'s selection-set`,
         { path },
       );

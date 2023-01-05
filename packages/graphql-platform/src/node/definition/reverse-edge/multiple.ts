@@ -67,7 +67,7 @@ export class ReverseEdgeMultiple<
         const pluralizedName = inflection.pluralize(name);
 
         if (name !== pluralizedName) {
-          throw new utils.UnexpectedConfigError(
+          throw new utils.UnexpectedValueError(
             `a plural (= "${pluralizedName}" ?)`,
             name,
             { path: configPath },

@@ -12,9 +12,9 @@ describe('JSON', () => {
       GraphQLJSONArray,
       [new Date('2022-01-28T14:52:09.306Z'), BigInt(123), undefined],
       `3 errors:
-└ \"0\" - Expects a JSON primitive (= a string, a number, a boolean or null), got: 2022-01-28T14:52:09.306Z
-└ \"1\" - Expects a JSON primitive (= a string, a number, a boolean or null), got: 123n
-└ \"2\" - Expects a JSON primitive (= a string, a number, a boolean or null), got: undefined`,
+└ /0 - Expects a JSON primitive (= a string, a number, a boolean or null), got: 2022-01-28T14:52:09.306Z
+└ /1 - Expects a JSON primitive (= a string, a number, a boolean or null), got: 123n
+└ /2 - Expects a JSON primitive (= a string, a number, a boolean or null), got: undefined`,
     ],
   ])(
     '%p.parseValue(%p) throws an Error on invalid value',

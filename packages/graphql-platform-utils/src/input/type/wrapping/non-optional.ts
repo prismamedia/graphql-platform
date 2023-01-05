@@ -45,7 +45,7 @@ export class NonOptionalInputType extends AbstractWrappingInputType {
     const wrappedValue = parseInputValue(this.ofType, value, path);
 
     if (wrappedValue === undefined) {
-      throw new UnexpectedUndefinedError(`"${this.ofType}"`, {
+      throw new UnexpectedUndefinedError(this.ofType, {
         path,
       });
     }
@@ -66,7 +66,7 @@ export class NonOptionalInputType extends AbstractWrappingInputType {
     );
 
     if (wrappedValue === undefined) {
-      throw new UnexpectedUndefinedError(`"${this.ofType}"`, {
+      throw new UnexpectedUndefinedError(this.ofType, {
         path,
       });
     }

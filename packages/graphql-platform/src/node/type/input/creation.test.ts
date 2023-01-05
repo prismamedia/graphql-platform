@@ -84,7 +84,7 @@ describe('NodeCreationInputType', () => {
         [
           'Article',
           {},
-          '"ArticleCreationInput.title" - Expects a non-undefined "NonEmptyTrimmedString"',
+          '/title - Expects a non-undefined "NonEmptyTrimmedString"',
         ],
         [
           'Article',
@@ -92,7 +92,7 @@ describe('NodeCreationInputType', () => {
             title: 'My valid title',
             category: {},
           },
-          '"ArticleCreationInput.category" - Expects one and only one action, got: [Object: null prototype] {}',
+          '/category - Expects one and only one action, got: [Object: null prototype] {}',
         ],
         [
           'Article',
@@ -103,7 +103,7 @@ describe('NodeCreationInputType', () => {
               connectIfExists: { id: '91a7c846-b030-4ef3-aaaa-747fe7b11519' },
             },
           },
-          '"ArticleCreationInput.category" - Expects one and only one action, got: [Object: null prototype] {',
+          '/category - Expects one and only one action, got: [Object: null prototype] {',
         ],
       ])(
         '%sCreationInput.parseValue(%p) throws an error',

@@ -35,7 +35,7 @@ export abstract class AbstractComponentUpdateInput<
 
     if (this.isPublic()) {
       if (!component.node.isMutationPublic(utils.MutationType.UPDATE)) {
-        throw new utils.UnexpectedConfigError(
+        throw new utils.UnexpectedValueError(
           `not to be "true" as the ${utils.MutationType.UPDATE} is private`,
           publicConfig,
           { path: publicConfigPath },

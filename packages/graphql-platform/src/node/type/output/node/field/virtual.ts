@@ -64,7 +64,7 @@ export class VirtualFieldOutputType {
       try {
         return this.parent.select(this.#dependsOnConfig);
       } catch (error) {
-        throw new utils.UnexpectedConfigError(
+        throw new utils.UnexpectedValueError(
           `a valid fragment`,
           this.#dependsOnConfig,
           {

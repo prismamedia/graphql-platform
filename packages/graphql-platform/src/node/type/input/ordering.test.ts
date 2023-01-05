@@ -1,4 +1,3 @@
-import * as utils from '@prismamedia/graphql-platform-utils';
 import { GraphQLEnumType, printType } from 'graphql';
 import { GraphQLPlatform } from '../../../index.js';
 import { MyGP, nodeNames, nodes } from '../../../__tests__/config.js';
@@ -43,7 +42,7 @@ describe('NodeOrderingInputType', () => {
         [
           'Article',
           ['_id_DESCS'],
-          '"ArticleOrderingInput.0" - Expects a value among "_id_ASC, _id_DESC, createdAt_ASC, createdAt_DESC, updatedAt_ASC, updatedAt_DESC, views_ASC, views_DESC, score_ASC, score_DESC, tagCount_ASC, tagCount_DESC", got: \'_id_DESCS\'',
+          '/0 - Expects a value among "_id_ASC, _id_DESC, createdAt_ASC, createdAt_DESC, updatedAt_ASC, updatedAt_DESC, views_ASC, views_DESC, score_ASC, score_DESC, tagCount_ASC, tagCount_DESC", got: \'_id_DESCS\'',
         ],
       ])(
         'throws an Error on %sOrderingInput.sort(%p)',
@@ -99,11 +98,7 @@ describe('NodeOrderingInputType', () => {
         const orderingInputType = node.orderingInputType;
 
         expect(
-          orderingInputType.sort(
-            input,
-            undefined,
-            utils.addPath(undefined, orderingInputType.name),
-          ).normalized?.ast.expressions,
+          orderingInputType.sort(input).normalized?.ast.expressions,
         ).toEqual(expressions);
       });
     });

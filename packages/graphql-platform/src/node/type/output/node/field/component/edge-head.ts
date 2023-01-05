@@ -39,7 +39,7 @@ export class EdgeHeadOutputType extends AbstractComponentOutputType<undefined> {
     this.parseGraphQLArgumentNodes(ast.arguments, selectionContext, path);
 
     if (!ast.selectionSet) {
-      throw new utils.NestableError(
+      throw new utils.GraphError(
         `Expects ${this.edge.head.indefinite}'s selection-set`,
         { path },
       );

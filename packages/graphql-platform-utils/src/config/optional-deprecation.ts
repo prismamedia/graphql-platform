@@ -1,4 +1,4 @@
-import { UnexpectedConfigError } from '../error.js';
+import { UnexpectedValueError } from '../error.js';
 import type { Path } from '../path.js';
 
 export type OptionalDeprecation = boolean | string | null | undefined;
@@ -12,7 +12,7 @@ export function assertOptionalDeprecation(
     typeof maybeOptionalDeprecation !== 'boolean' &&
     typeof maybeOptionalDeprecation !== 'string'
   ) {
-    throw new UnexpectedConfigError(
+    throw new UnexpectedValueError(
       `a boolean or a string`,
       maybeOptionalDeprecation,
       { path },

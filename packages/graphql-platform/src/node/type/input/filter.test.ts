@@ -45,22 +45,14 @@ describe('NodeFilterInputType', () => {
         [
           'Article',
           { id_is_null: true },
-          '"ArticleFilterInput" - Expects not to contain the extra key(s): id_is_null',
+          'Expects not to contain the extra key(s): id_is_null',
         ],
-        [
-          'Article',
-          { id: null },
-          '"ArticleFilterInput.id" - Expects a non-null "UUIDv4"',
-        ],
-        [
-          'Article',
-          { id: 123 },
-          `"ArticleFilterInput.id" - Expects an "UUIDv4", got: 123`,
-        ],
+        ['Article', { id: null }, '/id - Expects a non-null "UUIDv4"'],
+        ['Article', { id: 123 }, `/id - Expects an "UUIDv4", got: 123`],
         [
           'Article',
           { category: { parent: { title: null } } },
-          '"ArticleFilterInput.category.parent.title" - Expects a non-null "NonEmptyTrimmedString"',
+          '/category/parent/title - Expects a non-null "NonEmptyTrimmedString"',
         ],
       ])(
         '%# - %sFilterInput.parseAndFilter(%p) throws the error %p',

@@ -1,5 +1,5 @@
 import * as graphql from 'graphql';
-import { UnexpectedConfigError } from '../error.js';
+import { UnexpectedValueError } from '../error.js';
 import type { Path } from '../path.js';
 import {
   getGraphQLNamedInputType,
@@ -27,16 +27,16 @@ export function isInputType(
 
 export function assertInputType(
   maybeInputType: unknown,
-  path: Path,
+  path?: Path,
 ): asserts maybeInputType is InputType {
   if (!isInputType(maybeInputType)) {
-    throw new UnexpectedConfigError(`an input type`, maybeInputType, { path });
+    throw new UnexpectedValueError(`an input type`, maybeInputType, { path });
   }
 }
 
 export function ensureInputType(
   maybeInputType: unknown,
-  path: Path,
+  path?: Path,
 ): InputType {
   assertInputType(maybeInputType, path);
 

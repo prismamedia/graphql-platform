@@ -40,7 +40,7 @@ export class TimestampType<
         microsecondPrecisionConfig < 0 ||
         microsecondPrecisionConfig > 6
       ) {
-        throw new utils.UnexpectedConfigError(
+        throw new utils.UnexpectedValueError(
           'an integer between 0 and 6',
           microsecondPrecisionConfig,
           { path: microsecondPrecisionConfigPath },

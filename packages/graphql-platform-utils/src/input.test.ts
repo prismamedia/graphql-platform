@@ -21,9 +21,7 @@ describe('Input', () => {
         type: graphql.GraphQLInt,
         defaultValue: 'a string',
       },
-      `"InputWithInvalidStaticDefaultValue.defaultValue" - Expects to be valid against the type "Int" and the custom validation, got: 'a string'
-└ Cause: "InputWithInvalidStaticDefaultValue" - Expects an "Int", got: 'a string'
-  └ Cause: Int cannot represent non-integer value: "a string"`,
+      `/InputWithInvalidStaticDefaultValue/defaultValue - Expects to be valid against the type "Int", got: 'a string'`,
     ],
     [
       {
@@ -31,9 +29,7 @@ describe('Input', () => {
         type: graphql.GraphQLInt,
         defaultValue: () => 'a string',
       },
-      `"InputWithInvalidThunkedDefaultValue.defaultValue" - Expects to be valid against the type "Int" and the custom validation, got: 'a string'
-└ Cause: "InputWithInvalidThunkedDefaultValue" - Expects an "Int", got: 'a string'
-  └ Cause: Int cannot represent non-integer value: "a string"`,
+      `/InputWithInvalidThunkedDefaultValue/defaultValue - Expects to be valid against the type "Int", got: 'a string'`,
     ],
     [
       {
@@ -48,8 +44,7 @@ describe('Input', () => {
         },
         defaultValue: () => 16,
       },
-      `"InputWithCustomValidationAndInvalidThunkedDefaultValue.defaultValue" - Expects to be valid against the type "Int" and the custom validation, got: 16
-└ Cause: "InputWithCustomValidationAndInvalidThunkedDefaultValue" - Must be greater than 18`,
+      `/InputWithCustomValidationAndInvalidThunkedDefaultValue/defaultValue - Expects to be valid against the type "Int" and the custom-parser, got: 16`,
     ],
   ])('cannot have an invalid defaultValue', (config, error) => {
     expect(() => new Input(config)).toThrowError(error);
@@ -236,39 +231,39 @@ describe('Input', () => {
 
     expect(() => objectInputType.parseValue(invalidObject, testPath))
       .toThrowErrorMatchingInlineSnapshot(`
-      ""test" - 2 errors:
-      └ "firstname" - Expects a non-undefined "String"
-      └ "friends" - 3 errors:
-        └ "0.friends" - Expects a non-null "[User!]"
-        └ "1" - 2 errors:
-          └ "firstname" - Expects a non-undefined "String"
-          └ "age" - Must be greater than 18
-        └ "2.friends" - 4 errors:
-          └ "0.friends" - Expects a non-null "[User!]"
-          └ "1.friends" - Expects a plain-object, got: 5
-          └ "2" - Expects a non-null "User"
-          └ "3" - 2 errors:
-            └ "firstname" - Expects a non-undefined "String"
-            └ "age" - Must be greater than 18"
+      "/test - 2 errors:
+      └ ./firstname - Expects a non-undefined "String", got: undefined
+      └ ./friends - 3 errors:
+        └ ./0/friends - Expects a non-null "[User!]", got: null
+        └ ./1 - 2 errors:
+          └ ./firstname - Expects a non-undefined "String", got: undefined
+          └ ./age - Must be greater than 18
+        └ ./2/friends - 4 errors:
+          └ ./0/friends - Expects a non-null "[User!]", got: null
+          └ ./1/friends - Expects a plain-object, got: 5
+          └ ./2 - Expects a non-null "User", got: null
+          └ ./3 - 2 errors:
+            └ ./firstname - Expects a non-undefined "String", got: undefined
+            └ ./age - Must be greater than 18"
     `);
 
     expect(() =>
       objectInputType.parseValue(invalidObject, addPath(testPath, 'MyUser')),
     ).toThrowErrorMatchingInlineSnapshot(`
-      ""test.MyUser" - 2 errors:
-      └ "firstname" - Expects a non-undefined "String"
-      └ "friends" - 3 errors:
-        └ "0.friends" - Expects a non-null "[User!]"
-        └ "1" - 2 errors:
-          └ "firstname" - Expects a non-undefined "String"
-          └ "age" - Must be greater than 18
-        └ "2.friends" - 4 errors:
-          └ "0.friends" - Expects a non-null "[User!]"
-          └ "1.friends" - Expects a plain-object, got: 5
-          └ "2" - Expects a non-null "User"
-          └ "3" - 2 errors:
-            └ "firstname" - Expects a non-undefined "String"
-            └ "age" - Must be greater than 18"
+      "/test/MyUser - 2 errors:
+      └ ./firstname - Expects a non-undefined "String", got: undefined
+      └ ./friends - 3 errors:
+        └ ./0/friends - Expects a non-null "[User!]", got: null
+        └ ./1 - 2 errors:
+          └ ./firstname - Expects a non-undefined "String", got: undefined
+          └ ./age - Must be greater than 18
+        └ ./2/friends - 4 errors:
+          └ ./0/friends - Expects a non-null "[User!]", got: null
+          └ ./1/friends - Expects a plain-object, got: 5
+          └ ./2 - Expects a non-null "User", got: null
+          └ ./3 - 2 errors:
+            └ ./firstname - Expects a non-undefined "String", got: undefined
+            └ ./age - Must be greater than 18"
     `);
   });
 });

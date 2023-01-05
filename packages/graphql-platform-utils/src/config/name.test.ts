@@ -11,12 +11,11 @@ describe('Name', () => {
   );
 
   it.each<[invalidValue: any, error: string]>([
-    [{}, `"GraphQLPlatformConfig.name" - Expects a non-empty string, got: {}`],
-    ['', `"GraphQLPlatformConfig.name" - Expects a non-empty string, got: ''`],
+    [{}, `/GraphQLPlatformConfig/name - Expects a non-empty string, got: {}`],
+    ['', `/GraphQLPlatformConfig/name - Expects a non-empty string, got: ''`],
     [
       '-myInvalidName',
-      `"GraphQLPlatformConfig.name" - Expects to be valid against the GraphQL \"Names\" specification (@see: https://spec.graphql.org/draft/#sec-Names), got: '-myInvalidName'
-└ Cause: Names must start with [_a-zA-Z] but \"-myInvalidName\" does not.`,
+      `/GraphQLPlatformConfig/name - Expects to be valid against the GraphQL \"Names\" specification (@see: https://spec.graphql.org/draft/#sec-Names), got: '-myInvalidName'`,
     ],
   ])('assertName(%p) throws the error %p', (invalidValue, error) =>
     expect(() => assertName(invalidValue, nameConfigPath)).toThrowError(error),

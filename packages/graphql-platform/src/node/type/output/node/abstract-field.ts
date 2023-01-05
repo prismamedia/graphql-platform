@@ -62,7 +62,7 @@ export abstract class AbstractNodeFieldOutputType<
   ): Exclude<TArgs, null> {
     if (!this.arguments?.length) {
       if (argumentNodes?.length) {
-        throw new utils.NestableError(`Expects no arguments`, { path });
+        throw new utils.GraphError(`Expects no arguments`, { path });
       }
 
       return undefined as any;

@@ -165,7 +165,7 @@ export class GraphQLPlatform<
         !utils.isPlainObject(nodesConfig) ||
         !Object.entries(nodesConfig).length
       ) {
-        throw new utils.UnexpectedConfigError(
+        throw new utils.UnexpectedValueError(
           `at least one "node"`,
           nodesConfig,
           {
@@ -175,7 +175,7 @@ export class GraphQLPlatform<
       }
 
       this.nodesByName = new Map(
-        utils.aggregateConfigError<
+        utils.aggregateGraphError<
           [Node['name'], NodeConfig<any, any>],
           [Node['name'], Node][]
         >(
@@ -205,21 +205,21 @@ export class GraphQLPlatform<
        * It is done step by step in order to have meaningful errors.
        */
       {
-        utils.aggregateConfigError<Node, void>(
+        utils.aggregateGraphError<Node, void>(
           this.nodes,
           (_, node) => node.validateDefinition(),
           undefined,
           { path: nodesConfigPath },
         );
 
-        utils.aggregateConfigError<Node, void>(
+        utils.aggregateGraphError<Node, void>(
           this.nodes,
           (_, node) => node.validateTypes(),
           undefined,
           { path: nodesConfigPath },
         );
 
-        utils.aggregateConfigError<Node, void>(
+        utils.aggregateGraphError<Node, void>(
           this.nodes,
           (_, node) => node.validateOperations(),
           undefined,
@@ -282,7 +282,7 @@ export class GraphQLPlatform<
 
       if (requestContextAssertionConfig != null) {
         if (typeof requestContextAssertionConfig !== 'function') {
-          throw new utils.UnexpectedConfigError(
+          throw new utils.UnexpectedValueError(
             `a function`,
             requestContextAssertionConfig,
             { path: requestContextAssertionConfigPath },
@@ -383,7 +383,7 @@ export class GraphQLPlatform<
   @Memoize()
   public get connector(): TConnector {
     if (!this.#connector) {
-      throw new utils.ConfigError(`No connector has been provided`, {
+      throw new utils.GraphError(`No connector has been provided`, {
         path: utils.addPath(this.configPath, 'connector'),
       });
     }

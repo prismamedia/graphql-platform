@@ -275,7 +275,7 @@ describe('Seeding', () => {
           offset,
           limit,
           forMutation,
-        }) => {
+        }): Promise<any> => {
           switch (node.name) {
             case 'Article':
               return filter?.filter instanceof LeafComparisonFilter &&

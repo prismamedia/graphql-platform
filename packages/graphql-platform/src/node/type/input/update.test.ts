@@ -20,7 +20,7 @@ describe('NodeUpdateInputType', () => {
     gp = new GraphQLPlatform({
       nodes,
       connector: mockConnector({
-        find: async ({ node, filter }) => {
+        find: async ({ node, filter }): Promise<any> => {
           if (
             node.name === 'Category' &&
             filter?.filter.equals(
@@ -86,7 +86,7 @@ describe('NodeUpdateInputType', () => {
           {
             category: {},
           },
-          '"ArticleUpdateInput.category" - Expects one and only one action, got: [Object: null prototype] {}',
+          '/category - Expects one and only one action, got: [Object: null prototype] {}',
         ],
         [
           'Article',
@@ -96,7 +96,7 @@ describe('NodeUpdateInputType', () => {
               connectIfExists: { id: '91a7c846-b030-4ef3-aaaa-747fe7b11519' },
             },
           },
-          '"ArticleUpdateInput.category" - Expects one and only one action, got: [Object: null prototype] {',
+          '/category - Expects one and only one action, got: [Object: null prototype] {',
         ],
       ])(
         '%sUpdateInput.parseValue(%p) throws an error',

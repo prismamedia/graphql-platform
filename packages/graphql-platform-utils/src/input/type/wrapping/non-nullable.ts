@@ -45,7 +45,7 @@ export class NonNullableInputType extends AbstractWrappingInputType {
     const wrappedValue = parseInputValue(this.ofType, value, path);
 
     if (wrappedValue === null) {
-      throw new UnexpectedNullError(`"${this.ofType}"`, { path });
+      throw new UnexpectedNullError(this.ofType, { path });
     }
 
     return wrappedValue;
@@ -64,7 +64,7 @@ export class NonNullableInputType extends AbstractWrappingInputType {
     );
 
     if (wrappedValue === null) {
-      throw new UnexpectedNullError(`"${this.ofType}"`, { path });
+      throw new UnexpectedNullError(this.ofType, { path });
     }
 
     return wrappedValue;

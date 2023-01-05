@@ -21,11 +21,8 @@ describe('OptionalFlag', () => {
   );
 
   it.each<[invalidValue: any, error: string]>([
-    [{}, '"GraphQLPlatformConfig.private" - Expects a boolean, got: {}'],
-    [
-      'true',
-      `"GraphQLPlatformConfig.private" - Expects a boolean, got: 'true'`,
-    ],
+    [{}, '/GraphQLPlatformConfig/private - Expects a boolean, got: {}'],
+    ['true', `/GraphQLPlatformConfig/private - Expects a boolean, got: 'true'`],
   ])('getOptionalFlag(%p, true) throws the error %p', (invalidValue, error) =>
     expect(() =>
       getOptionalFlag(invalidValue, true, optionalFlagConfigPath),

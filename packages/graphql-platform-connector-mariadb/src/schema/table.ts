@@ -106,14 +106,14 @@ export class Table {
 
       if (nameConfig) {
         if (typeof nameConfig !== 'string') {
-          throw new utils.UnexpectedConfigError('a string', nameConfig, {
+          throw new utils.UnexpectedValueError('a string', nameConfig, {
             path: nameConfigPath,
           });
         }
 
         // @see https://mariadb.com/kb/en/identifier-names/#maximum-length
         if (nameConfig.length > 64) {
-          throw new utils.UnexpectedConfigError(
+          throw new utils.UnexpectedValueError(
             'an identifier shorter than 64 characters',
             nameConfig,
             { path: nameConfigPath },
@@ -196,7 +196,7 @@ export class Table {
       const indexesConfigPath = utils.addPath(this.configPath, 'indexes');
 
       if (indexesConfig !== undefined && !Array.isArray(indexesConfig)) {
-        throw new utils.UnexpectedConfigError(`an array`, indexesConfig, {
+        throw new utils.UnexpectedValueError(`an array`, indexesConfig, {
           path: indexesConfigPath,
         });
       }
@@ -413,11 +413,11 @@ export class Table {
     return Number(COUNT);
   }
 
-  public async find(
-    statement: core.ConnectorFindStatement,
+  public async find<TValue extends core.NodeSelectedValue>(
+    statement: core.ConnectorFindStatement<TValue>,
     context: core.OperationContext,
     maybeConnection?: mariadb.Connection,
-  ): Promise<core.NodeSelectedValue[]> {
+  ): Promise<TValue[]> {
     const tuples = await this.schema.connector.executeStatement<
       utils.PlainObject[]
     >(new FindStatement(this, statement, context), maybeConnection);

@@ -11,7 +11,7 @@ import {
 import { NodeChangeAggregation } from '../change.js';
 import { AndOperation, NodeFilter } from '../statement/filter.js';
 import type { ContextBoundAPI } from './api.js';
-import { catchConnectorError } from './error.js';
+import { ConnectorError } from './error.js';
 import { MutationContext } from './mutation/context.js';
 import type { MutationInterface } from './mutation/interface.js';
 
@@ -138,11 +138,10 @@ export abstract class AbstractMutation<
       path,
     );
 
-    if (this.connector.preMutation) {
-      await catchConnectorError(
-        () => this.connector.preMutation!(mutationContext),
-        path,
-      );
+    try {
+      await this.connector.preMutation?.(mutationContext);
+    } catch (error) {
+      throw new ConnectorError({ cause: error, path });
     }
 
     let result: TResult;
@@ -155,11 +154,10 @@ export abstract class AbstractMutation<
         path,
       );
 
-      if (this.connector.postSuccessfulMutation) {
-        await catchConnectorError(
-          () => this.connector.postSuccessfulMutation!(mutationContext),
-          path,
-        );
+      try {
+        await this.connector.postSuccessfulMutation?.(mutationContext);
+      } catch (error) {
+        throw new ConnectorError({ cause: error, path });
       }
 
       // changes
@@ -171,24 +169,21 @@ export abstract class AbstractMutation<
         });
       }
     } catch (error) {
-      if (this.connector.postFailedMutation) {
-        await catchConnectorError(
-          () =>
-            this.connector.postFailedMutation!(
-              mutationContext,
-              utils.castToError(error),
-            ),
-          path,
+      try {
+        await this.connector.postFailedMutation?.(
+          mutationContext,
+          utils.castToError(error),
         );
+      } catch (error) {
+        throw new ConnectorError({ cause: error, path });
       }
 
       throw error;
     } finally {
-      if (this.connector.postMutation) {
-        await catchConnectorError(
-          () => this.connector.postMutation!(mutationContext),
-          path,
-        );
+      try {
+        await this.connector.postMutation?.(mutationContext);
+      } catch (error) {
+        throw new ConnectorError({ cause: error, path });
       }
     }
 

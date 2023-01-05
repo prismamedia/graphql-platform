@@ -369,7 +369,7 @@ export class NodeFilterInputType extends utils.ObjectInputType<FieldFilterInputT
         type: new utils.NonNullableInputType(new utils.ListableInputType(this)),
         filter: (values, context, path) =>
           new AndOperation(
-            utils.aggregateError<NodeFilterInputValue, BooleanFilter[]>(
+            utils.aggregateGraphError<NodeFilterInputValue, BooleanFilter[]>(
               values,
               (operands, value, index) => [
                 ...operands,
@@ -385,7 +385,7 @@ export class NodeFilterInputType extends utils.ObjectInputType<FieldFilterInputT
         type: new utils.NonNullableInputType(new utils.ListableInputType(this)),
         filter: (values, context, path) =>
           new OrOperation(
-            utils.aggregateError<NodeFilterInputValue, BooleanFilter[]>(
+            utils.aggregateGraphError<NodeFilterInputValue, BooleanFilter[]>(
               values,
               (operands, value, index) => [
                 ...operands,
@@ -428,7 +428,7 @@ export class NodeFilterInputType extends utils.ObjectInputType<FieldFilterInputT
   >(
     value: NodeFilterInputValue,
     context?: OperationContext<TRequestContext, TConnector>,
-    path: utils.Path = utils.addPath(undefined, this.name),
+    path?: utils.Path,
   ): NodeFilter<TRequestContext, TConnector> {
     return new NodeFilter(
       this.node,
@@ -454,7 +454,7 @@ export class NodeFilterInputType extends utils.ObjectInputType<FieldFilterInputT
   >(
     maybeValue: unknown,
     context?: OperationContext<TRequestContext, TConnector>,
-    path: utils.Path = utils.addPath(undefined, this.name),
+    path?: utils.Path,
   ): NodeFilter<TRequestContext, TConnector> {
     return this.filter(this.parseValue(maybeValue, path), context, path);
   }

@@ -93,13 +93,13 @@ export class LeafColumn extends AbstractColumn {
 
       if (nameConfig) {
         if (typeof nameConfig !== 'string') {
-          throw new utils.UnexpectedConfigError('a string', nameConfig, {
+          throw new utils.UnexpectedValueError('a string', nameConfig, {
             path: nameConfigPath,
           });
         }
 
         if (nameConfig.startsWith('_')) {
-          throw new utils.UnexpectedConfigError(
+          throw new utils.UnexpectedValueError(
             `not to start with "_"`,
             nameConfig,
             { path: nameConfigPath },
@@ -108,7 +108,7 @@ export class LeafColumn extends AbstractColumn {
 
         // @see https://mariadb.com/kb/en/identifier-names/#maximum-length
         if (nameConfig.length > 64) {
-          throw new utils.UnexpectedConfigError(
+          throw new utils.UnexpectedValueError(
             'an identifier shorter than 64 characters',
             nameConfig,
             { path: nameConfigPath },
@@ -118,7 +118,7 @@ export class LeafColumn extends AbstractColumn {
         this.name = nameConfig;
       } else {
         if (leaf.name.startsWith('_')) {
-          throw new utils.UnexpectedConfigError(
+          throw new utils.UnexpectedValueError(
             `to be provided as the leaf's name starts with "_"`,
             nameConfig,
             { path: nameConfigPath },
@@ -258,7 +258,7 @@ export class LeafColumn extends AbstractColumn {
           (constructor) => this.dataType instanceof constructor,
         )
       ) {
-        throw new utils.UnexpectedConfigError(
+        throw new utils.UnexpectedValueError(
           `a "referenceable" data-type as the column has referrer(s)`,
           dataTypeConfig,
           { path: dataTypeConfigPath },
@@ -286,7 +286,7 @@ export class LeafColumn extends AbstractColumn {
             (constructor) => this.dataType instanceof constructor,
           )
         ) {
-          throw new utils.UnexpectedConfigError(
+          throw new utils.UnexpectedValueError(
             `not to be true as the "${this.dataType.kind}" data-type does not support it`,
             fullTextIndexConfig,
             { path: fullTextIndexConfigPath },
@@ -313,7 +313,7 @@ export class LeafColumn extends AbstractColumn {
     );
 
     if (isAutoIncrement && !this.leaf.isIdentifier()) {
-      throw new utils.UnexpectedConfigError(
+      throw new utils.UnexpectedValueError(
         `not to be true as "${this.leaf}" is not the identifier`,
         autoIncrementConfig,
         { path: autoIncrementConfigPath },

@@ -1,4 +1,3 @@
-import * as utils from '@prismamedia/graphql-platform-utils';
 import { GraphQLInputObjectType, printType } from 'graphql';
 import { GraphQLPlatform } from '../../../index.js';
 import { MyGP, nodeNames, nodes } from '../../../__tests__/config.js';
@@ -42,22 +41,14 @@ describe('NodeUniqueFilterInputType', () => {
         [
           'Article',
           { id_is_null: true },
-          '"ArticleUniqueFilterInput" - Expects not to contain the extra key(s): id_is_null',
+          'Expects not to contain the extra key(s): id_is_null',
         ],
-        [
-          'Article',
-          { id: null },
-          '"ArticleUniqueFilterInput.id" - Expects a non-null "UUIDv4"',
-        ],
-        [
-          'Article',
-          { id: 123 },
-          `"ArticleUniqueFilterInput.id" - Expects an "UUIDv4", got: 123`,
-        ],
+        ['Article', { id: null }, '/id - Expects a non-null "UUIDv4"'],
+        ['Article', { id: 123 }, `/id - Expects an "UUIDv4", got: 123`],
         [
           'Article',
           { category: { parent: { title: null } }, slug: 'you-re-welcome' },
-          '"ArticleUniqueFilterInput.category.parent" - Expects not to contain the extra key(s): title',
+          '/category/parent - Expects not to contain the extra key(s): title',
         ],
       ])(
         '%sUniqueFilterInput.parseValue(%p) throws the error %p',
@@ -65,12 +56,9 @@ describe('NodeUniqueFilterInputType', () => {
           const node = gp.getNodeByName(nodeName);
           const uniqueFilterInputType = node.uniqueFilterInputType;
 
-          expect(() =>
-            uniqueFilterInputType.parseValue(
-              value,
-              utils.addPath(undefined, uniqueFilterInputType.name),
-            ),
-          ).toThrowError(error);
+          expect(() => uniqueFilterInputType.parseValue(value)).toThrowError(
+            error,
+          );
         },
       );
     });

@@ -56,20 +56,20 @@ export class NodeUpdateInputType extends utils.ObjectInputType<FieldUpdateInput>
     );
 
     return virtualFieldsConfig
-      ? utils.aggregateConfigError<
+      ? utils.aggregateGraphError<
           [utils.Name, Except<utils.InputConfig, 'name'>],
           utils.Input[]
         >(
           Object.entries(virtualFieldsConfig),
           (fields, [virtualFieldName, virtualFieldConfig]) => {
             if (this.node.componentsByName.has(virtualFieldName)) {
-              throw new utils.UnexpectedConfigError(
+              throw new utils.UnexpectedValueError(
                 `not to have a component's name`,
                 virtualFieldName,
                 { path: virtualFieldsConfigPath },
               );
             } else if (this.node.reverseEdgesByName.has(virtualFieldName)) {
-              throw new utils.UnexpectedConfigError(
+              throw new utils.UnexpectedValueError(
                 `not to have a reverse-edge's name`,
                 virtualFieldName,
                 { path: virtualFieldsConfigPath },
@@ -111,7 +111,7 @@ export class NodeUpdateInputType extends utils.ObjectInputType<FieldUpdateInput>
   public async resolveValue(
     data: Readonly<NonNullable<NodeUpdateInputValue>>,
     context: MutationContext,
-    path: utils.Path = utils.addPath(undefined, this.name),
+    path?: utils.Path,
   ): Promise<NodeUpdateValue> {
     const resolvedValue: NodeUpdateValue = Object.create(null);
 

@@ -12,7 +12,7 @@ import { AndOperation, NodeFilter } from '../../statement/filter.js';
 import type { NodeFilterInputValue } from '../../type.js';
 import { AbstractQuery } from '../abstract-query.js';
 import type { OperationContext } from '../context.js';
-import { catchConnectorError } from '../error.js';
+import { ConnectorError } from '../error.js';
 
 export type CountQueryArgs = utils.Nillable<{
   where?: NodeFilterInputValue;
@@ -75,16 +75,16 @@ export class CountQuery<
       return 0;
     }
 
-    return catchConnectorError(
-      () =>
-        this.connector.count(
-          {
-            node: this.node,
-            ...(filter && { filter }),
-          },
-          context,
-        ),
-      path,
-    );
+    try {
+      return await this.connector.count(
+        {
+          node: this.node,
+          ...(filter && { filter }),
+        },
+        context,
+      );
+    } catch (error) {
+      throw new ConnectorError({ cause: error, path });
+    }
   }
 }

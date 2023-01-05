@@ -48,14 +48,14 @@ export class SchemaNamingStrategy {
     const name = config?.(node) ?? inflection.tableize(node.name);
 
     if (typeof name !== 'string') {
-      throw new utils.UnexpectedConfigError('a string', name, {
+      throw new utils.UnexpectedValueError('a string', name, {
         path: configPath,
       });
     }
 
     // @see https://mariadb.com/kb/en/identifier-names/#maximum-length
     if (name.length > 64) {
-      throw new utils.UnexpectedConfigError(
+      throw new utils.UnexpectedValueError(
         'an identifier shorter than 64 characters',
         name,
         { path: configPath },
@@ -75,14 +75,14 @@ export class SchemaNamingStrategy {
     const name = config?.(tableName, leaf) ?? inflection.underscore(leaf.name);
 
     if (typeof name !== 'string') {
-      throw new utils.UnexpectedConfigError('a string', name, {
+      throw new utils.UnexpectedValueError('a string', name, {
         path: configPath,
       });
     }
 
     // @see https://mariadb.com/kb/en/identifier-names/#maximum-length
     if (name.length > 64) {
-      throw new utils.UnexpectedConfigError(
+      throw new utils.UnexpectedValueError(
         'an identifier shorter than 64 characters',
         name,
         { path: configPath },
@@ -105,14 +105,14 @@ export class SchemaNamingStrategy {
       `${inflection.underscore(edge.name)}_${referencedColumn.name}`;
 
     if (typeof name !== 'string') {
-      throw new utils.UnexpectedConfigError('a string', name, {
+      throw new utils.UnexpectedValueError('a string', name, {
         path: configPath,
       });
     }
 
     // @see https://mariadb.com/kb/en/identifier-names/#maximum-length
     if (name.length > 64) {
-      throw new utils.UnexpectedConfigError(
+      throw new utils.UnexpectedValueError(
         'an identifier shorter than 64 characters',
         name,
         { path: configPath },
@@ -135,14 +135,14 @@ export class SchemaNamingStrategy {
       ['fk', tableName, ...references.map(({ name }) => name)].join('_');
 
     if (typeof name !== 'string') {
-      throw new utils.UnexpectedConfigError('a string', name, {
+      throw new utils.UnexpectedValueError('a string', name, {
         path: configPath,
       });
     }
 
     // @see https://mariadb.com/kb/en/identifier-names/#maximum-length
     if (name.length > 64) {
-      throw new utils.UnexpectedConfigError(
+      throw new utils.UnexpectedValueError(
         'an identifier shorter than 64 characters',
         name,
         { path: configPath },
@@ -165,14 +165,14 @@ export class SchemaNamingStrategy {
       ['unq', inflection.underscore(uniqueConstraint.name)].join('_');
 
     if (typeof name !== 'string') {
-      throw new utils.UnexpectedConfigError('a string', name, {
+      throw new utils.UnexpectedValueError('a string', name, {
         path: configPath,
       });
     }
 
     // @see https://mariadb.com/kb/en/identifier-names/#maximum-length
     if (name.length > 64) {
-      throw new utils.UnexpectedConfigError(
+      throw new utils.UnexpectedValueError(
         'an identifier shorter than 64 characters',
         name,
         { path: configPath },
@@ -194,14 +194,14 @@ export class SchemaNamingStrategy {
       ['idx', ...columns.map(({ name }) => name)].join('_');
 
     if (typeof name !== 'string') {
-      throw new utils.UnexpectedConfigError('a string', name, {
+      throw new utils.UnexpectedValueError('a string', name, {
         path: configPath,
       });
     }
 
     // @see https://mariadb.com/kb/en/identifier-names/#maximum-length
     if (name.length > 64) {
-      throw new utils.UnexpectedConfigError(
+      throw new utils.UnexpectedValueError(
         'an identifier shorter than 64 characters',
         name,
         { path: configPath },

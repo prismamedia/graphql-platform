@@ -42,7 +42,7 @@ export class Seeding<
     const fixturesPath = utils.addPath(undefined, 'fixtures');
 
     if (!utils.isPlainObject(fixtures)) {
-      throw new utils.UnexpectedConfigError('a plain-object', fixtures, {
+      throw new utils.UnexpectedValueError('a plain-object', fixtures, {
         path: fixturesPath,
       });
     }
@@ -50,7 +50,7 @@ export class Seeding<
     Object.entries(fixtures).forEach(([nodeName, dataByReference]) => {
       const node = gp.nodesByName.get(nodeName);
       if (!node) {
-        throw new utils.UnexpectedConfigError(
+        throw new utils.UnexpectedValueError(
           `an existing node's name`,
           nodeName,
           { path: fixturesPath },
@@ -60,7 +60,7 @@ export class Seeding<
       const dataByReferencePath = utils.addPath(fixturesPath, nodeName);
 
       if (!utils.isPlainObject(dataByReference)) {
-        throw new utils.UnexpectedConfigError(
+        throw new utils.UnexpectedValueError(
           'a plain-object',
           dataByReference,
           { path: dataByReferencePath },

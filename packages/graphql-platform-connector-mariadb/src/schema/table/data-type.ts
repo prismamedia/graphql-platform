@@ -134,6 +134,6 @@ export function createDataTypeFromConfig(
       return new TimestampType(config, configPath);
 
     default:
-      throw new utils.UnreachableConfigError(config, { path: configPath });
+      throw new utils.UnreachableValueError(config, { path: configPath });
   }
 }

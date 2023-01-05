@@ -127,7 +127,7 @@ export abstract class AbstractReverseEdge<
     );
 
     if (isPublic && !this.originalEdge.isPublic()) {
-      throw new utils.UnexpectedConfigError(
+      throw new utils.UnexpectedValueError(
         `not to be "true" as the "${this.originalEdge}" edge is private`,
         publicConfig,
         { path: publicConfigPath },

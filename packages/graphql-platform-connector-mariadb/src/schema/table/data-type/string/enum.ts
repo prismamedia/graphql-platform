@@ -34,7 +34,7 @@ export class EnumType<
       const valuesConfigPath = utils.addPath(configPath, 'values');
 
       if (!Array.isArray(valuesConfig) || !valuesConfig.length) {
-        throw new utils.UnexpectedConfigError(
+        throw new utils.UnexpectedValueError(
           'a non-empty array',
           valuesConfig,
           { path: valuesConfigPath },
@@ -43,7 +43,7 @@ export class EnumType<
 
       valuesConfig.forEach((value, index) => {
         if (typeof value !== 'string' || !value) {
-          throw new utils.UnexpectedConfigError('a non-empty string', value, {
+          throw new utils.UnexpectedValueError('a non-empty string', value, {
             path: utils.addPath(valuesConfigPath, index),
           });
         }

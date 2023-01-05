@@ -1,209 +1,186 @@
+import _ from 'lodash';
 import { EOL } from 'node:os';
 import { inspect } from 'node:util';
-import { castToError } from './cast-to-error.js';
 import { Nillable } from './nil.js';
-import { isPath, printPath, type Path } from './path.js';
+import { isPathDescendantOf, printPath, type Path } from './path.js';
+import { isPlainObject } from './plain-object.js';
+import { Stringifiable } from './stringifiable.js';
 
-export interface NestableErrorOptions extends ErrorOptions {
-  path?: Path;
+export const castToError = (error: unknown): Error =>
+  error instanceof Error
+    ? error
+    : isPlainObject(error)
+    ? Object.assign(new Error(error.message), error)
+    : new Error(error as any);
+
+export interface GraphErrorOptions extends ErrorOptions {
+  readonly path?: Path;
 }
 
-export class NestableError extends Error {
-  public readonly cause?: Error;
+export class GraphError extends Error {
   public readonly path?: Path;
   readonly #message?: string;
+  #ancestor?: Path;
 
   public constructor(
     message: Nillable<string>,
-    options?: NestableErrorOptions,
+    { path, ...options }: GraphErrorOptions = {},
   ) {
-    super(undefined, {
-      cause: options?.cause ? castToError(options.cause) : undefined,
-    });
+    if (options?.cause && isGraphError(options.cause) && path) {
+      options.cause.setAncestor(path);
+    }
 
-    this.path =
-      options?.path && isPath(options.path) ? options.path : undefined;
-    Object.defineProperty(this, 'path', { enumerable: false });
+    super(undefined, options);
 
-    this.#message = message || undefined;
+    this.name = new.target.name;
+    Object.setPrototypeOf(this, new.target.prototype);
 
-    Object.defineProperty(this, 'name', {
-      value: new.target.name,
-      configurable: false,
+    Object.defineProperty(this, 'path', {
+      value: path || undefined,
       enumerable: false,
     });
 
-    Object.setPrototypeOf(this, new.target.prototype);
+    this.#message = message || undefined;
   }
 
-  public getContextualizedMessage(ancestor?: Path): string {
-    const lines: string[] = [
-      // Head
-      [
-        this.path
-          ? this.path !== ancestor
-            ? `"${printPath(this.path, ancestor)}"`
-            : undefined
-          : undefined,
-        this.#message,
-      ]
-        .filter(Boolean)
-        .join(' - '),
-    ];
-
-    if (this.cause) {
-      lines.push(
-        ...(this.cause instanceof NestableError
-          ? this.cause.getContextualizedMessage(this.path)
-          : this.cause instanceof Error
-          ? this.cause.message
-          : String(this.cause)
-        )
-          .split(EOL)
-          .map((line, index) => `${index === 0 ? '└ Cause:' : ' '} ${line}`),
-      );
+  public setAncestor(ancestor: Path): void {
+    if (
+      this.path &&
+      (this.path === ancestor || isPathDescendantOf(this.path, ancestor))
+    ) {
+      this.#ancestor = ancestor;
     }
-
-    return lines.filter(Boolean).join(EOL);
   }
 
   public get message(): string {
-    return this.getContextualizedMessage();
+    return [
+      this.path && this.path !== this.#ancestor
+        ? printPath(this.path, this.#ancestor)
+        : undefined,
+      this.#message,
+    ]
+      .filter(Boolean)
+      .join(' - ');
   }
 }
 
-export class UnexpectedValueError extends NestableError {
+export class UnexpectedValueError extends GraphError {
   public constructor(
     expectation: string,
-    value: unknown,
-    options?: NestableErrorOptions,
+    unexpectedValue: any,
+    options?: GraphErrorOptions,
   ) {
-    super(`Expects ${expectation}, got: ${inspect(value)}`, options);
+    super(`Expects ${expectation}, got: ${inspect(unexpectedValue)}`, options);
   }
 }
 
-export class UnexpectedUndefinedError extends NestableError {
-  public constructor(expectation: string, options?: NestableErrorOptions) {
-    super(`Expects a non-undefined ${expectation}`, options);
+export class UnexpectedUndefinedError extends UnexpectedValueError {
+  public constructor(subject: Stringifiable, options?: GraphErrorOptions) {
+    super(`a non-undefined "${String(subject)}"`, undefined, options);
   }
 }
 
-export class UnexpectedNullError extends NestableError {
-  public constructor(expectation: string, options?: NestableErrorOptions) {
-    super(`Expects a non-null ${expectation}`, options);
+export class UnexpectedNullError extends UnexpectedValueError {
+  public constructor(subject: Stringifiable, options?: GraphErrorOptions) {
+    super(`a non-null "${String(subject)}"`, null, options);
   }
 }
 
 export class UnreachableValueError extends UnexpectedValueError {
-  public constructor(value: never, options?: NestableErrorOptions) {
-    super(`not to be reached`, value, options);
+  public constructor(unreachableValue: never, options?: GraphErrorOptions) {
+    super(`not to be reached`, unreachableValue, options);
   }
 }
 
-export interface NestableAggregateErrorOptions extends NestableErrorOptions {
-  message?: Nillable<string>;
+export interface AggregateGraphErrorOptions {
+  readonly path?: Path;
+  readonly message?: Nillable<string>;
 }
 
-export class NestableAggregateError extends AggregateError {
-  public readonly cause?: Error;
+export class AggregateGraphError extends AggregateError {
   public readonly path?: Path;
   readonly #message?: string;
+  #ancestor?: Path;
 
   public constructor(
-    errors: Iterable<unknown>,
-    options?: NestableAggregateErrorOptions,
+    errors: Iterable<any>,
+    { path, message }: AggregateGraphErrorOptions = {},
   ) {
     super(
-      Array.from(errors, (error) => castToError(error)),
-      undefined,
-      { cause: options?.cause ? castToError(options.cause) : undefined },
+      path
+        ? Array.from(errors, (error) => {
+            if (isGraphError(error)) {
+              error.setAncestor(path);
+            }
+
+            return error;
+          })
+        : errors,
     );
 
-    this.path =
-      options?.path && isPath(options.path) ? options.path : undefined;
-    Object.defineProperty(this, 'path', { enumerable: false });
+    this.name = new.target.name;
+    Object.setPrototypeOf(this, new.target.prototype);
 
-    this.#message = options?.message || undefined;
-
-    Object.defineProperty(this, 'name', {
-      value: new.target.name,
-      configurable: false,
+    Object.defineProperty(this, 'path', {
+      value: path || undefined,
       enumerable: false,
     });
 
-    Object.setPrototypeOf(this, new.target.prototype);
+    this.#message = message || undefined;
   }
 
-  public getContextualizedMessage(ancestor?: Path): string {
-    const lines: string[] = [
-      // Head
-      `${[
-        this.path
-          ? this.path !== ancestor
-            ? `"${printPath(this.path, ancestor)}"`
-            : undefined
-          : undefined,
-        `${this.errors.length} errors`,
-        this.#message,
-      ]
-        .filter(Boolean)
-        .join(' - ')}:`,
-
-      // Errors
-      ...this.errors.flatMap<string>((error: Error) =>
-        (isNestableError(error)
-          ? error.getContextualizedMessage(this.path)
-          : error.message
-        )
-          .split(EOL)
-          .map((line, index) => `${index === 0 ? '└' : ' '} ${line}`),
-      ),
-    ];
-
-    if (this.cause) {
-      lines.push(
-        ...(this.cause instanceof Error
-          ? this.cause.message
-          : String(this.cause)
-        )
-          .split(EOL)
-          .map((line, index) => `${index === 0 ? '└ Cause:' : ' '} ${line}`),
-      );
+  public setAncestor(ancestor: Path): void {
+    if (
+      this.path &&
+      (this.path === ancestor || isPathDescendantOf(this.path, ancestor))
+    ) {
+      this.#ancestor = ancestor;
     }
-
-    return lines.filter(Boolean).join(EOL);
   }
 
   public get message(): string {
-    return this.getContextualizedMessage();
+    return [
+      // First line
+      [
+        this.path && this.path !== this.#ancestor
+          ? printPath(this.path, this.#ancestor)
+          : undefined,
+        this.#message,
+        `${this.errors.length} errors:`,
+      ]
+        .filter(Boolean)
+        .join(' - '),
+      // Indented errors' message
+      ...this.errors.flatMap((error) =>
+        error instanceof Error && error.message
+          ? error.message
+              .split(EOL)
+              .map((line, index) => (index === 0 ? `└ ${line}` : `  ${line}`))
+          : [],
+      ),
+    ].join(EOL);
   }
 }
 
-export const isNestableError = (
-  maybeNestableError: unknown,
-): maybeNestableError is NestableError | NestableAggregateError =>
-  maybeNestableError instanceof NestableError ||
-  maybeNestableError instanceof NestableAggregateError;
-
-export function aggregateError<TInputElement, TOutput>(
-  inputs: Iterable<TInputElement>,
+export const aggregateGraphError = <TInput, TOuput>(
+  inputs: Iterable<TInput>,
   reducer: (
-    previousValue: TOutput,
-    currentInput: TInputElement,
+    previousValue: TOuput,
+    currentValue: TInput,
     currentIndex: number,
-    inputs: TInputElement[],
-  ) => TOutput,
-  initialValue: TOutput,
-  options?: NestableAggregateErrorOptions,
-): TOutput {
-  const errors: Error[] = [];
+    array: TInput[],
+  ) => TOuput,
+  initialValue: TOuput,
+  options?: AggregateGraphErrorOptions,
+): TOuput => {
+  const errors: any[] = [];
 
   const output = Array.from(inputs).reduce(
-    (previousValue, currentInput, currentIndex, inputs) => {
+    (previousValue, currentValue, currentIndex, array) => {
       try {
-        return reducer(previousValue, currentInput, currentIndex, inputs);
+        return reducer(previousValue, currentValue, currentIndex, array);
       } catch (error) {
-        errors.push(castToError(error));
+        errors.push(error);
 
         return previousValue;
       }
@@ -211,112 +188,20 @@ export function aggregateError<TInputElement, TOutput>(
     initialValue,
   );
 
-  if (errors.length > 0) {
-    throw errors.length === 1
-      ? errors[0]
-      : new NestableAggregateError(errors, options);
-  }
-
-  return output;
-}
-
-export interface ConfigErrorOptions extends NestableErrorOptions {
-  path: Path;
-}
-
-export class ConfigError extends NestableError {
-  public override readonly path: Path;
-
-  public constructor(
-    message: Nillable<string>,
-    { path, ...options }: ConfigErrorOptions,
-  ) {
-    super(message, options);
-
-    this.path = path;
-  }
-}
-
-export class UnexpectedConfigError extends ConfigError {
-  public constructor(
-    expectation: string,
-    value: unknown,
-    options: ConfigErrorOptions,
-  ) {
-    super(`Expects ${expectation}, got: ${inspect(value)}`, options);
-  }
-}
-
-export class UnreachableConfigError extends UnexpectedConfigError {
-  public constructor(value: never, options: ConfigErrorOptions) {
-    super(`not to be reached`, value, options);
-  }
-}
-
-export interface AggregateConfigErrorOptions extends ConfigErrorOptions {
-  message?: Nillable<string>;
-}
-
-export class AggregateConfigError extends NestableAggregateError {
-  public override readonly path: Path;
-
-  public constructor(
-    public override readonly errors: Array<AggregateConfigError | ConfigError>,
-    { path, ...options }: AggregateConfigErrorOptions,
-  ) {
-    super(errors, options);
-
-    this.path = path;
-  }
-}
-
-export const isConfigError = (
-  maybeConfigError: unknown,
-): maybeConfigError is ConfigError | AggregateConfigError =>
-  maybeConfigError instanceof ConfigError ||
-  maybeConfigError instanceof AggregateConfigError;
-
-export function aggregateConfigError<TInputElement, TOutput>(
-  inputs: Iterable<TInputElement>,
-  reducer: (
-    previousValue: TOutput,
-    currentInput: TInputElement,
-    currentIndex: number,
-    inputs: TInputElement[],
-  ) => TOutput,
-  initialValue: TOutput,
-  options: AggregateConfigErrorOptions,
-): TOutput {
-  const errors: Array<AggregateConfigError | ConfigError> = [];
-
-  const output = Array.from(inputs).reduce(
-    (previousValue, currentInput, currentIndex, inputs) => {
-      try {
-        return reducer(previousValue, currentInput, currentIndex, inputs);
-      } catch (error) {
-        if (isConfigError(error)) {
-          if (
-            !errors.some(
-              (previousError) => String(previousError) == String(error),
-            )
-          ) {
-            errors.push(error);
-          }
-
-          return previousValue;
-        } else {
-          throw error;
-        }
-      }
-    },
-    initialValue,
+  const deduplicatedErrors = _.uniqBy(errors, (error) =>
+    error instanceof Error ? error.message : String(error),
   );
 
-  if (errors.length > 0) {
-    throw errors.length === 1
-      ? errors[0]
-      : new AggregateConfigError(errors, options);
+  if (deduplicatedErrors.length > 1) {
+    throw new AggregateGraphError(deduplicatedErrors, options);
+  } else if (deduplicatedErrors.length === 1) {
+    throw deduplicatedErrors[0];
   }
 
   return output;
-}
+};
+
+export const isGraphError = (
+  error: unknown,
+): error is GraphError | AggregateGraphError =>
+  error instanceof GraphError || error instanceof AggregateGraphError;

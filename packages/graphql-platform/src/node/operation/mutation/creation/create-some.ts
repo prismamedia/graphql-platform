@@ -2,6 +2,7 @@ import * as utils from '@prismamedia/graphql-platform-utils';
 import { Memoize } from '@prismamedia/memoize';
 import * as graphql from 'graphql';
 import type { ConnectorInterface } from '../../../../connector-interface.js';
+import type { NodeValue } from '../../../../node.js';
 import type {
   NodeSelectionAwareArgs,
   RawNodeSelectionAwareArgs,
@@ -13,8 +14,8 @@ import type { NodeSelectedValue } from '../../../statement/selection.js';
 import type { NodeCreationInputValue } from '../../../type/input/creation.js';
 import { createContextBoundAPI } from '../../api.js';
 import {
-  catchConnectorError,
-  catchLifecycleHookError,
+  ConnectorError,
+  LifecycleHookError,
   LifecycleHookKind,
 } from '../../error.js';
 import { AbstractCreation, type CreationConfig } from '../abstract-creation.js';
@@ -100,20 +101,20 @@ export class CreateSomeMutation<
         const statement = new NodeCreationStatement(this.node, value);
 
         // Apply the "preCreate"-hook, if any
-        if (preCreate) {
-          await catchLifecycleHookError(
-            () =>
-              preCreate({
-                gp: this.gp,
-                node: this.node,
-                context,
-                api: createContextBoundAPI(this.gp, context),
-                data,
-                creation: statement.proxy,
-              }),
+        try {
+          await preCreate?.({
+            gp: this.gp,
+            node: this.node,
+            context,
+            api: createContextBoundAPI(this.gp, context),
+            data,
+            creation: statement.proxy,
+          });
+        } catch (error) {
+          throw new LifecycleHookError(
             this.node,
             LifecycleHookKind.PRE_CREATE,
-            indexedPath,
+            { cause: error, path: indexedPath },
           );
         }
 
@@ -122,10 +123,15 @@ export class CreateSomeMutation<
     );
 
     // Actually create the nodes
-    const newValues = await catchConnectorError(
-      () => this.connector.create({ node: this.node, creations }, context),
-      path,
-    );
+    let newValues: NodeValue[];
+    try {
+      newValues = await this.connector.create(
+        { node: this.node, creations },
+        context,
+      );
+    } catch (error) {
+      throw new ConnectorError({ cause: error, path });
+    }
 
     await Promise.all(
       newValues.map(async (newValue, index) => {
@@ -152,20 +158,20 @@ export class CreateSomeMutation<
         );
 
         // Apply the "postCreate"-hook, if any
-        if (postCreate) {
-          await catchLifecycleHookError(
-            () =>
-              postCreate({
-                gp: this.gp,
-                node: this.node,
-                context,
-                api: createContextBoundAPI(this.gp, context),
-                data,
-                change,
-              }),
+        try {
+          await postCreate?.({
+            gp: this.gp,
+            node: this.node,
+            context,
+            api: createContextBoundAPI(this.gp, context),
+            data,
+            change,
+          });
+        } catch (error) {
+          throw new LifecycleHookError(
             this.node,
             LifecycleHookKind.POST_CREATE,
-            indexedPath,
+            { cause: error, path: indexedPath },
           );
         }
       }),

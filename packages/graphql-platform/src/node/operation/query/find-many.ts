@@ -14,7 +14,7 @@ import type { NodeSelectedValue } from '../../statement/selection/value.js';
 import type { NodeFilterInputValue, OrderByInputValue } from '../../type.js';
 import { AbstractQuery } from '../abstract-query.js';
 import type { OperationContext } from '../context.js';
-import { catchConnectorError } from '../error.js';
+import { ConnectorError } from '../error.js';
 
 export type FindManyQueryArgs = RawNodeSelectionAwareArgs<{
   where?: NodeFilterInputValue;
@@ -105,20 +105,20 @@ export class FindManyQuery<
       utils.addPath(argsPath, 'orderBy'),
     ).normalized;
 
-    return catchConnectorError(
-      () =>
-        this.connector.find(
-          {
-            node: this.node,
-            ...(filter && { filter }),
-            ...(ordering && { ordering }),
-            ...(args.skip && { offset: args.skip }),
-            limit: args.first,
-            selection: args.selection,
-          },
-          context,
-        ),
-      path,
-    );
+    try {
+      return await this.connector.find(
+        {
+          node: this.node,
+          ...(filter && { filter }),
+          ...(ordering && { ordering }),
+          ...(args.skip && { offset: args.skip }),
+          limit: args.first,
+          selection: args.selection,
+        },
+        context,
+      );
+    } catch (error) {
+      throw new ConnectorError({ cause: error, path });
+    }
   }
 }

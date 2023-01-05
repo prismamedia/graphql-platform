@@ -56,11 +56,11 @@ export class TextType<
       const lengthConfigPath = utils.addPath(configPath, 'length');
 
       if (!Number.isInteger(lengthConfig)) {
-        throw new utils.UnexpectedConfigError('an integer', lengthConfig, {
+        throw new utils.UnexpectedValueError('an integer', lengthConfig, {
           path: lengthConfigPath,
         });
       } else if (lengthConfig < 1) {
-        throw new utils.UnexpectedConfigError(
+        throw new utils.UnexpectedValueError(
           'an integer greater-than-or-equal to 1',
           lengthConfig,
           { path: lengthConfigPath },

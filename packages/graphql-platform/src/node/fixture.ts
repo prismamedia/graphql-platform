@@ -22,7 +22,7 @@ export class NodeFixture<
     public readonly path: utils.Path,
   ) {
     if (!utils.isPlainObject(data)) {
-      throw new utils.UnexpectedConfigError('a plain-object', data, { path });
+      throw new utils.UnexpectedValueError('a plain-object', data, { path });
     }
   }
 
@@ -33,7 +33,7 @@ export class NodeFixture<
         const maybeEdgeReference = this.data[edge.name];
         if (maybeEdgeReference != null) {
           if (typeof maybeEdgeReference !== 'string') {
-            throw new utils.UnexpectedConfigError(
+            throw new utils.UnexpectedValueError(
               'a string',
               maybeEdgeReference,
               { path: utils.addPath(this.path, edge.name) },
@@ -41,7 +41,7 @@ export class NodeFixture<
           } else if (
             !this.seeding.dependencyGraph.hasNode(maybeEdgeReference)
           ) {
-            throw new utils.UnexpectedConfigError(
+            throw new utils.UnexpectedValueError(
               "an existing fixture's reference",
               maybeEdgeReference,
               { path: utils.addPath(this.path, edge.name) },

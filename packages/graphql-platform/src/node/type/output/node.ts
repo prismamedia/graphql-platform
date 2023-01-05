@@ -140,7 +140,7 @@ export class NodeOutputType {
       );
 
       if (virtualFieldsConfig) {
-        utils.aggregateConfigError<
+        utils.aggregateGraphError<
           [utils.Name, VirtualFieldOutputTypeConfig<any, any>],
           void
         >(
@@ -159,7 +159,7 @@ export class NodeOutputType {
             );
 
             if (fields.some((field) => field.name === virtualField.name)) {
-              throw new utils.ConfigError(
+              throw new utils.GraphError(
                 `At least 1 field already have this name`,
                 { path: virtualFieldConfigPath },
               );
@@ -186,7 +186,7 @@ export class NodeOutputType {
       description: this.node.description,
       fields: () =>
         Object.fromEntries(
-          utils.aggregateConfigError<
+          utils.aggregateGraphError<
             NodeFieldOutputType,
             [string, graphql.GraphQLFieldConfig<any, any>][]
           >(
@@ -204,7 +204,7 @@ export class NodeOutputType {
 
   @Memoize()
   public validate(): void {
-    utils.aggregateConfigError<NodeFieldOutputType, void>(
+    utils.aggregateGraphError<NodeFieldOutputType, void>(
       this.fieldsByName.values(),
       (_, field) => field.validate(),
       undefined,

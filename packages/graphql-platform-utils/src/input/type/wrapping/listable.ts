@@ -1,6 +1,6 @@
 import { Memoize } from '@prismamedia/memoize';
 import * as graphql from 'graphql';
-import { aggregateError } from '../../../error.js';
+import { aggregateGraphError } from '../../../error.js';
 import { isIterableObject } from '../../../is-iterable-object.js';
 import { isNil, type Nillable } from '../../../nil.js';
 import { addPath, type Path } from '../../../path.js';
@@ -29,7 +29,7 @@ export class ListableInputType extends AbstractWrappingInputType {
     }
 
     return isIterableObject(value)
-      ? aggregateError<any, any[]>(
+      ? aggregateGraphError<any, any[]>(
           value,
           (values, maybeValue, index) => {
             values.push(
@@ -50,7 +50,7 @@ export class ListableInputType extends AbstractWrappingInputType {
     path?: Path,
   ): Nillable<any[]> {
     return value.kind === graphql.Kind.LIST
-      ? aggregateError<graphql.ValueNode, any[]>(
+      ? aggregateGraphError<graphql.ValueNode, any[]>(
           value.values,
           (values, value, index) => {
             values.push(

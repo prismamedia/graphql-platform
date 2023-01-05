@@ -64,7 +64,7 @@ export class NodeOrderingInputType extends utils.EnumInputType<OrderingExpressio
   >(
     value: OrderByInputValue,
     context?: OperationContext<TRequestContext, TConnector>,
-    path: utils.Path = utils.addPath(undefined, this.name),
+    path?: utils.Path,
   ): NodeOrdering<TRequestContext, TConnector> {
     return new NodeOrdering(
       this.node,

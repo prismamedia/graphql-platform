@@ -1,7 +1,6 @@
 import { Memoize } from '@prismamedia/memoize';
 import * as graphql from 'graphql';
 import assert from 'node:assert/strict';
-import { castToError } from './cast-to-error.js';
 import {
   assertOptionalFlag,
   ensureName,
@@ -14,10 +13,9 @@ import {
   type OptionalFlag,
 } from './config.js';
 import {
-  aggregateError,
-  isNestableError,
-  NestableError,
-  UnexpectedConfigError,
+  aggregateGraphError,
+  castToError,
+  GraphError,
   UnexpectedValueError,
 } from './error.js';
 import {
@@ -188,7 +186,7 @@ export class Input<TValue = any> {
 
       if (parserConfig != null) {
         if (typeof parserConfig !== 'function') {
-          throw new UnexpectedConfigError(`a function`, parserConfig, {
+          throw new UnexpectedValueError(`a function`, parserConfig, {
             path: parserConfigPath,
           });
         }
@@ -205,11 +203,16 @@ export class Input<TValue = any> {
       const defaultValue = resolveThunkOrValue(defaultValueConfig);
       if (defaultValue !== undefined) {
         try {
-          // Validates the provided "defaultValue" against the "type" and the custom validation
+          // Validates the provided "defaultValue" against the "type" and the custom-parser
           this.parseValue(defaultValue);
         } catch (error) {
-          throw new UnexpectedConfigError(
-            `to be valid against the type "${this.type}" and the custom validation`,
+          throw new UnexpectedValueError(
+            [
+              `to be valid against the type "${this.type}"`,
+              this.#customParser && 'and the custom-parser',
+            ]
+              .filter(Boolean)
+              .join(' '),
             defaultValue,
             { path: defaultValueConfigPath, cause: error },
           );
@@ -250,7 +253,7 @@ export class Input<TValue = any> {
     );
 
     if (this.#isPublic && !isTypePublic) {
-      throw new UnexpectedConfigError(
+      throw new UnexpectedValueError(
         `not to be true as "${this.type}" is private`,
         publicConfig,
         { path: publicConfigPath },
@@ -327,9 +330,10 @@ export class Input<TValue = any> {
       try {
         return this.#customParser(value, path);
       } catch (error) {
-        throw isNestableError(error)
-          ? error
-          : new NestableError(castToError(error).message, { path });
+        throw new GraphError(castToError(error).message, {
+          cause: error,
+          path,
+        });
       }
     }
 
@@ -375,7 +379,7 @@ export function parseInputValues(
     argumentOrObjectFields ? Object.keys(argumentOrObjectFields) : undefined,
   );
 
-  const result = aggregateError<Input, PlainObject>(
+  const result = aggregateGraphError<Input, PlainObject>(
     inputs,
     (result, input) => {
       inputKeySet.delete(input.name);
@@ -394,7 +398,7 @@ export function parseInputValues(
   );
 
   if (inputKeySet.size > 0) {
-    throw new NestableError(
+    throw new GraphError(
       `Expects not to contain the extra key(s): ${[...inputKeySet].join(', ')}`,
       { path },
     );
@@ -419,7 +423,7 @@ export function parseInputLiterals(
     argumentOrObjectFields?.map(({ name }) => name.value),
   );
 
-  const result = aggregateError<Input, PlainObject>(
+  const result = aggregateGraphError<Input, PlainObject>(
     inputs,
     (result, input) => {
       inputKeySet.delete(input.name);
@@ -445,7 +449,7 @@ export function parseInputLiterals(
   );
 
   if (inputKeySet.size > 0) {
-    throw new NestableError(
+    throw new GraphError(
       `Expects not to contain the extra key(s): ${[...inputKeySet].join(', ')}`,
       { path },
     );

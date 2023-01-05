@@ -1,13 +1,13 @@
 import { isDeepStrictEqual } from 'node:util';
 import {
-  GetInternalValueByType,
   GraphQLDate,
   GraphQLDateTime,
   GraphQLDraftJS,
   GraphQLJSONArray,
   GraphQLJSONObject,
   GraphQLURL,
-  Type,
+  type GetInternalValueByType,
+  type Type,
 } from './type.js';
 
 export type Comparator<TScalarType extends Type> = (

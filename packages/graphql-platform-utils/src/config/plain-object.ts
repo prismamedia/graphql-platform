@@ -1,14 +1,14 @@
-import { UnexpectedConfigError } from '../error.js';
+import { UnexpectedValueError } from '../error.js';
 import { isNil, type Nillable } from '../nil.js';
 import type { Path } from '../path.js';
 import { isPlainObject, type PlainObject } from '../plain-object.js';
 
 export function assertPlainObjectConfig(
   maybePlainObject: unknown,
-  path: Path,
+  path?: Path,
 ): asserts maybePlainObject is PlainObject {
   if (!isPlainObject(maybePlainObject)) {
-    throw new UnexpectedConfigError(`a plain-object`, maybePlainObject, {
+    throw new UnexpectedValueError(`a plain-object`, maybePlainObject, {
       path,
     });
   }
@@ -16,7 +16,7 @@ export function assertPlainObjectConfig(
 
 export function ensurePlainObjectConfig(
   maybePlainObject: unknown,
-  path: Path,
+  path?: Path,
 ): PlainObject {
   assertPlainObjectConfig(maybePlainObject, path);
 
@@ -25,23 +25,21 @@ export function ensurePlainObjectConfig(
 
 export function assertNillablePlainObjectConfig(
   maybeNillablePlainObject: unknown,
-  path: Path,
+  path?: Path,
 ): asserts maybeNillablePlainObject is Nillable<PlainObject> {
   if (
     !isNil(maybeNillablePlainObject) &&
     !isPlainObject(maybeNillablePlainObject)
   ) {
-    throw new UnexpectedConfigError(
-      `a plain-object`,
-      maybeNillablePlainObject,
-      { path },
-    );
+    throw new UnexpectedValueError(`a plain-object`, maybeNillablePlainObject, {
+      path,
+    });
   }
 }
 
 export function ensureNillablePlainObjectConfig(
   maybeNillablePlainObject: unknown,
-  path: Path,
+  path?: Path,
 ): Nillable<PlainObject> {
   assertNillablePlainObjectConfig(maybeNillablePlainObject, path);
 

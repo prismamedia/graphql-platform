@@ -1,28 +1,25 @@
 import * as graphql from 'graphql';
-import { castToError } from './cast-to-error.js';
+import { getOptionalFlag, OptionalFlag } from './config.js';
 import { getEnumKeys } from './enum.js';
 import { UnexpectedValueError } from './error.js';
 import { indefinite } from './indefinite.js';
 import { isNil, type Nillable } from './nil.js';
-import { type Path } from './path.js';
+import type { Path } from './path.js';
 import { isPlainObject, type PlainObject } from './plain-object.js';
 
-export function isGraphQLResolveInfo(
+export const isGraphQLResolveInfo = (
   maybeGraphQLResolveInfo: unknown,
-): maybeGraphQLResolveInfo is graphql.GraphQLResolveInfo {
-  return (
-    isPlainObject(maybeGraphQLResolveInfo) &&
-    typeof maybeGraphQLResolveInfo.fieldName === 'string' &&
-    Array.isArray(maybeGraphQLResolveInfo.fieldNodes) &&
-    graphql.isOutputType(maybeGraphQLResolveInfo.returnType) &&
-    graphql.isOutputType(maybeGraphQLResolveInfo.parentType)
-  );
-}
+): maybeGraphQLResolveInfo is graphql.GraphQLResolveInfo =>
+  isPlainObject(maybeGraphQLResolveInfo) &&
+  typeof maybeGraphQLResolveInfo.fieldName === 'string' &&
+  Array.isArray(maybeGraphQLResolveInfo.fieldNodes) &&
+  graphql.isOutputType(maybeGraphQLResolveInfo.returnType) &&
+  graphql.isOutputType(maybeGraphQLResolveInfo.parentType);
 
-export function assertGraphQLResolveInfo(
+export const assertGraphQLResolveInfo = (
   maybeGraphQLResolveInfo: unknown,
   path?: Path,
-): asserts maybeGraphQLResolveInfo is graphql.GraphQLResolveInfo {
+): asserts maybeGraphQLResolveInfo is graphql.GraphQLResolveInfo => {
   if (!isGraphQLResolveInfo(maybeGraphQLResolveInfo)) {
     throw new UnexpectedValueError(
       `a GraphQLResolveInfo`,
@@ -30,34 +27,31 @@ export function assertGraphQLResolveInfo(
       { path },
     );
   }
-}
+};
 
-export function isGraphQLASTNode<TKind extends graphql.Kind>(
+export const isGraphQLASTNode = <TKind extends graphql.Kind>(
   maybeGraphQLASTNode: unknown,
   kind: TKind,
-): maybeGraphQLASTNode is graphql.ASTKindToNode[TKind] {
-  return (
-    isPlainObject(maybeGraphQLASTNode) && maybeGraphQLASTNode.kind === kind
-  );
-}
+): maybeGraphQLASTNode is graphql.ASTKindToNode[TKind] =>
+  isPlainObject(maybeGraphQLASTNode) && maybeGraphQLASTNode.kind === kind;
 
-export function assertGraphQLASTNode<TKind extends graphql.Kind>(
+export const assertGraphQLASTNode = <TKind extends graphql.Kind>(
   maybeGraphQLASTNode: unknown,
   kind: TKind,
   path?: Path,
-): asserts maybeGraphQLASTNode is graphql.ASTKindToNode[TKind] {
+): asserts maybeGraphQLASTNode is graphql.ASTKindToNode[TKind] => {
   if (!isGraphQLASTNode(maybeGraphQLASTNode, kind)) {
     throw new UnexpectedValueError(`a GraphQL ${kind}`, maybeGraphQLASTNode, {
       path,
     });
   }
-}
+};
 
-export function parseGraphQLScalarValue<TInternal>(
+export const parseGraphQLScalarValue = <TInternal>(
   type: graphql.GraphQLScalarType<TInternal, any>,
   maybeScalarValue: unknown,
   path?: Path,
-): Nillable<TInternal> {
+): Nillable<TInternal> => {
   if (isNil(maybeScalarValue)) {
     return maybeScalarValue;
   }
@@ -66,17 +60,17 @@ export function parseGraphQLScalarValue<TInternal>(
     return type.parseValue(maybeScalarValue);
   } catch (error) {
     throw new UnexpectedValueError(indefinite(type.name), maybeScalarValue, {
+      cause: error,
       path,
-      cause: castToError(error),
     });
   }
-}
+};
 
-export function parseGraphQLEnumValue<TInternal = any>(
+export const parseGraphQLEnumValue = <TInternal = any>(
   type: graphql.GraphQLEnumType,
   maybeEnumValue: unknown,
   path?: Path,
-): Nillable<TInternal> {
+): Nillable<TInternal> => {
   if (isNil(maybeEnumValue)) {
     return maybeEnumValue;
   }
@@ -97,13 +91,13 @@ export function parseGraphQLEnumValue<TInternal = any>(
   }
 
   return enumValue.value;
-}
+};
 
-export function parseGraphQLLeafValue(
+export const parseGraphQLLeafValue = (
   type: graphql.GraphQLLeafType,
   maybeLeafValue: unknown,
   path?: Path,
-): any {
+): any => {
   if (isNil(maybeLeafValue)) {
     return maybeLeafValue;
   }
@@ -111,24 +105,31 @@ export function parseGraphQLLeafValue(
   return graphql.isScalarType(type)
     ? parseGraphQLScalarValue(type, maybeLeafValue, path)
     : parseGraphQLEnumValue(type, maybeLeafValue, path);
-}
+};
 
-export function createGraphQLEnumType(
+export type CreateGraphQLEnumTypeOptions = {
+  description?: Nillable<string>;
+  useKeyAsValue?: OptionalFlag;
+};
+
+export const createGraphQLEnumType = (
   name: string,
   enumerable: PlainObject,
-  description?: Nillable<string>,
-  useKeyAsValue: boolean = false,
-): graphql.GraphQLEnumType {
-  return new graphql.GraphQLEnumType({
+  options?: CreateGraphQLEnumTypeOptions,
+): graphql.GraphQLEnumType =>
+  new graphql.GraphQLEnumType({
     name,
-    description,
+    description: options?.description,
     values: Object.fromEntries(
-      getEnumKeys(enumerable).map(
-        (key): [string, graphql.GraphQLEnumValueConfig] => [
+      getEnumKeys(enumerable).map<[string, graphql.GraphQLEnumValueConfig]>(
+        (key) => [
           key,
-          { value: useKeyAsValue ? undefined : enumerable[key] },
+          {
+            value: getOptionalFlag(options?.useKeyAsValue, false)
+              ? undefined
+              : enumerable[key],
+          },
         ],
       ),
     ),
   });
-}

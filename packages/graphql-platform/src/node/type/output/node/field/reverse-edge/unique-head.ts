@@ -33,7 +33,7 @@ export class ReverseEdgeUniqueHeadOutputType extends AbstractReverseEdgeOutputTy
     this.parseGraphQLArgumentNodes(ast.arguments, selectionContext, path);
 
     if (!ast.selectionSet) {
-      throw new utils.NestableError(
+      throw new utils.GraphError(
         `${this.reverseEdge.head.indefinite}'s selection-set`,
         { path },
       );

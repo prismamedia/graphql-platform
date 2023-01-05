@@ -46,11 +46,11 @@ export class CharType<
       const lengthConfigPath = utils.addPath(configPath, 'length');
 
       if (!Number.isInteger(lengthConfig)) {
-        throw new utils.UnexpectedConfigError('an integer', lengthConfig, {
+        throw new utils.UnexpectedValueError('an integer', lengthConfig, {
           path: lengthConfigPath,
         });
       } else if (lengthConfig < 0) {
-        throw new utils.UnexpectedConfigError(
+        throw new utils.UnexpectedValueError(
           'an integer greater-than-or-equal to 0',
           lengthConfig,
           { path: lengthConfigPath },

@@ -151,7 +151,7 @@ export class MariaDBConnector
           this.databasePoolConfig !== undefined &&
           typeof this.databasePoolConfig !== 'string'
         ) {
-          throw new utils.UnexpectedConfigError(
+          throw new utils.UnexpectedValueError(
             `a non-empty string`,
             this.databasePoolConfig,
             { path: this.databasePoolConfigPath },
@@ -368,10 +368,10 @@ export class MariaDBConnector
     return table.count(statement, context, maybeConnection);
   }
 
-  public async find(
-    statement: core.ConnectorFindStatement,
+  public async find<TValue extends core.NodeSelectedValue>(
+    statement: core.ConnectorFindStatement<TValue>,
     context: core.OperationContext,
-  ): Promise<core.NodeSelectedValue[]> {
+  ): Promise<TValue[]> {
     const table = this.schema.getTableByNode(statement.node);
     const maybeConnection =
       context instanceof core.MutationContext

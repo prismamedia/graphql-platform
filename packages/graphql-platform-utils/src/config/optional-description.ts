@@ -1,4 +1,4 @@
-import { UnexpectedConfigError } from '../error.js';
+import { UnexpectedValueError } from '../error.js';
 import type { Path } from '../path.js';
 
 export type OptionalDescription = string | null | undefined;
@@ -11,7 +11,7 @@ export function assertOptionalDescription(
     maybeOptionalDescription != null &&
     typeof maybeOptionalDescription !== 'string'
   ) {
-    throw new UnexpectedConfigError(`a string`, maybeOptionalDescription, {
+    throw new UnexpectedValueError(`a string`, maybeOptionalDescription, {
       path,
     });
   }

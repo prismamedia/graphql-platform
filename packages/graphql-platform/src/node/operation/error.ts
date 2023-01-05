@@ -1,20 +1,19 @@
 import * as utils from '@prismamedia/graphql-platform-utils';
 import { inspect } from 'node:util';
-import type { Promisable } from 'type-fest';
 import type { Node } from '../../node.js';
 import type { NodeUniqueFilterInputValue } from '../type/input/unique-filter.js';
 
-export class InvalidRequestContextError extends utils.NestableError {
-  public constructor(options?: utils.NestableErrorOptions) {
+export class InvalidRequestContextError extends utils.GraphError {
+  public constructor(options?: utils.GraphErrorOptions) {
     super(`Invalid request`, options);
   }
 }
 
-export class UnauthorizedError extends utils.NestableError {
+export class UnauthorizedError extends utils.GraphError {
   public constructor(
     node: Node,
     mutationType: utils.MutationType | undefined,
-    options?: utils.NestableErrorOptions,
+    options?: utils.GraphErrorOptions,
   ) {
     super(
       `Unauthorized access to "${node}"${
@@ -25,11 +24,11 @@ export class UnauthorizedError extends utils.NestableError {
   }
 }
 
-export class NotFoundError extends utils.NestableError {
+export class NotFoundError extends utils.GraphError {
   public constructor(
     node: Node,
     where: NonNullable<NodeUniqueFilterInputValue>,
-    options?: utils.NestableErrorOptions,
+    options?: utils.GraphErrorOptions,
   ) {
     super(
       `No "${node}" has been found given the following filter: ${inspect(
@@ -41,62 +40,26 @@ export class NotFoundError extends utils.NestableError {
 }
 
 export enum LifecycleHookKind {
-  PRE_CREATE,
-  POST_CREATE,
-  PRE_UPDATE,
-  POST_UPDATE,
-  PRE_DELETE,
-  POST_DELETE,
+  PRE_CREATE = 'pre-create',
+  POST_CREATE = 'post-create',
+  PRE_UPDATE = 'pre-update',
+  POST_UPDATE = 'post-update',
+  PRE_DELETE = 'pre-delete',
+  POST_DELETE = 'post-delete',
 }
 
-export class LifecycleHookError extends utils.NestableError {
+export class LifecycleHookError extends utils.GraphError {
   public constructor(
     node: Node,
     kind: LifecycleHookKind,
-    options?: utils.NestableErrorOptions,
+    options?: utils.GraphErrorOptions,
   ) {
-    super(
-      `${node}'s "${LifecycleHookKind[kind]}" lifecycle hook error`,
-      options,
-    );
+    super(`${node}'s "${kind}" lifecycle hook error`, options);
   }
 }
 
-export async function catchLifecycleHookError<T>(
-  call: () => Promisable<T>,
-  node: Node,
-  kind: LifecycleHookKind,
-  path: utils.Path,
-): Promise<T> {
-  try {
-    return await call();
-  } catch (error) {
-    throw new LifecycleHookError(node, kind, {
-      path,
-      cause: utils.castToError(error),
-    });
-  }
-}
-
-export class ConnectorError extends utils.NestableError {
-  public constructor(options?: utils.NestableErrorOptions) {
+export class ConnectorError extends utils.GraphError {
+  public constructor(options?: utils.GraphErrorOptions) {
     super('Connector error', options);
-  }
-}
-
-export async function catchConnectorError<T>(
-  call: () => Promise<T>,
-  path: utils.Path,
-): Promise<T> {
-  try {
-    return await call();
-  } catch (error) {
-    throw new ConnectorError({ path, cause: utils.castToError(error) });
-  }
-}
-
-export class InternalError extends utils.NestableError {
-  public constructor(options?: utils.NestableErrorOptions) {
-    super('Internal error', options);
   }
 }

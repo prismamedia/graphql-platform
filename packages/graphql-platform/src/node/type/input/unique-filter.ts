@@ -9,7 +9,7 @@ export class NodeUniqueFilterNotFoundError extends utils.UnexpectedValueError {
   public constructor(
     node: Node,
     value: unknown,
-    options?: utils.NestableErrorOptions,
+    options?: utils.GraphErrorOptions,
   ) {
     super(`${node.indefinite}'s unique-filter`, value, options);
   }

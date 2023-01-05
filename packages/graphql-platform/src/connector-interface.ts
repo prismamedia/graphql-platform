@@ -32,13 +32,15 @@ export interface ConnectorCountStatement {
   readonly filter?: NodeFilter;
 }
 
-export interface ConnectorFindStatement {
+export interface ConnectorFindStatement<
+  TValue extends NodeSelectedValue = any,
+> {
   readonly node: Node;
   readonly filter?: NodeFilter;
   readonly ordering?: NodeOrdering;
   readonly offset?: number;
   readonly limit: number;
-  readonly selection: NodeSelection;
+  readonly selection: NodeSelection<TValue>;
   readonly forMutation?:
     | utils.MutationType.DELETION
     | utils.MutationType.UPDATE;
@@ -81,10 +83,10 @@ export interface ConnectorInterface {
   /**
    * Returns a list of nodes
    */
-  find(
-    statement: ConnectorFindStatement,
+  find<TValue extends NodeSelectedValue>(
+    statement: ConnectorFindStatement<TValue>,
     context: OperationContext,
-  ): Promise<NodeSelectedValue[]>;
+  ): Promise<TValue[]>;
 
   /**
    * This method, if provided, is called at the beginning of a new mutation (= would be a good place to start a transaction)

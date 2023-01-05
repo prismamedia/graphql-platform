@@ -32,7 +32,7 @@ export abstract class AbstractDataType<
       const kindConfigPath = utils.addPath(configPath, 'kind');
 
       if (typeof kindConfig !== 'string' || !kindConfig) {
-        throw new utils.UnexpectedConfigError('a string', kindConfig, {
+        throw new utils.UnexpectedValueError('a string', kindConfig, {
           path: kindConfigPath,
         });
       }

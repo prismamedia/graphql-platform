@@ -8,11 +8,6 @@ import type { ConnectorInterface } from '../connector-interface.js';
 import type { GraphQLPlatform } from '../index.js';
 import type { Node } from '../node.js';
 import { OperationContext } from './operation/context.js';
-import {
-  ConnectorError,
-  InternalError,
-  LifecycleHookError,
-} from './operation/error.js';
 import type { OperationInterface } from './operation/interface.js';
 import type { NodeFilter } from './statement/filter.js';
 import type { NodeSelection } from './statement/selection.js';
@@ -82,7 +77,7 @@ export abstract class AbstractOperation<
     this.description;
 
     if (this.arguments.length) {
-      utils.aggregateConfigError<utils.Input, void>(
+      utils.aggregateGraphError<utils.Input, void>(
         this.arguments,
         (_, argument) => argument.validate(),
         undefined,
@@ -103,7 +98,7 @@ export abstract class AbstractOperation<
 
   protected assertIsEnabled(path: utils.Path): void {
     if (!this.isEnabled()) {
-      throw new utils.NestableError(
+      throw new utils.GraphError(
         `The "${this}" ${this.operationType} is disabled`,
         { path },
       );
@@ -210,23 +205,12 @@ export abstract class AbstractOperation<
         args: utils.getGraphQLFieldConfigArgumentMap(this.arguments),
       }),
       type: this.getGraphQLOutputType(),
-      resolve: async (_, args, context, info) => {
-        try {
-          return await this.execute(
-            (this.selectionAware
-              ? { ...args, selection: info }
-              : args) as TArgs,
-            context,
-            info.path,
-          );
-        } catch (error) {
-          throw utils.isConfigError(error) ||
-            error instanceof ConnectorError ||
-            error instanceof LifecycleHookError
-            ? new InternalError({ path: info.path, cause: error })
-            : error;
-        }
-      },
+      resolve: (_, args, context, info) =>
+        this.execute(
+          (this.selectionAware ? { ...args, selection: info } : args) as TArgs,
+          context,
+          info.path,
+        ),
     };
   }
 }

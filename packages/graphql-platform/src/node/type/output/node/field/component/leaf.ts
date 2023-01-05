@@ -38,7 +38,7 @@ export class LeafOutputType extends AbstractComponentOutputType<undefined> {
     this.parseGraphQLArgumentNodes(ast.arguments, selectionContext, path);
 
     if (ast.selectionSet) {
-      throw new utils.NestableError(`Expects no selection-set`, { path });
+      throw new utils.GraphError(`Expects no selection-set`, { path });
     }
 
     return this.#selection;

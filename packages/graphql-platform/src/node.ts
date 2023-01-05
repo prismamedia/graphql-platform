@@ -269,7 +269,7 @@ export class Node<
 
       const pascalCasedPlural = inflection.camelize(this.plural, false);
       if (this.plural !== pascalCasedPlural) {
-        throw new utils.UnexpectedConfigError(
+        throw new utils.UnexpectedValueError(
           `a "plural" form in PascalCase (= "${pascalCasedPlural}")`,
           pluralConfig,
           { path: pluralConfigPath },
@@ -277,7 +277,7 @@ export class Node<
       }
 
       if (name === this.plural) {
-        throw new utils.UnexpectedConfigError(
+        throw new utils.UnexpectedValueError(
           `differents "singular" and "plural" forms, you have to define the "plural" parameter as we were not able to guess a valid one`,
           pluralConfig,
           { path: pluralConfigPath },
@@ -322,7 +322,7 @@ export class Node<
         !utils.isPlainObject(componentsConfig) ||
         !Object.entries(componentsConfig).length
       ) {
-        throw new utils.UnexpectedConfigError(
+        throw new utils.UnexpectedValueError(
           `at least one "component"`,
           componentsConfig,
           { path: componentsConfigPath },
@@ -330,7 +330,7 @@ export class Node<
       }
 
       this.componentsByName = new Map(
-        utils.aggregateConfigError<
+        utils.aggregateGraphError<
           [Component['name'], ComponentConfig<any, any>],
           [Component['name'], Component][]
         >(
@@ -363,7 +363,7 @@ export class Node<
                 componentConfigPath,
               );
             } else {
-              throw new utils.UnreachableConfigError(kindConfig, {
+              throw new utils.UnreachableValueError(kindConfig, {
                 path: kindConfigPath,
               });
             }
@@ -409,7 +409,7 @@ export class Node<
       const uniquesConfigPath = utils.addPath(configPath, 'uniques');
 
       if (!Array.isArray(uniquesConfig) || !uniquesConfig.length) {
-        throw new utils.UnexpectedConfigError(
+        throw new utils.UnexpectedValueError(
           `at least one "unique-constraint"`,
           uniquesConfig,
           { path: uniquesConfigPath },
@@ -417,7 +417,7 @@ export class Node<
       }
 
       this.uniqueConstraintsByName = new Map(
-        utils.aggregateConfigError<
+        utils.aggregateGraphError<
           UniqueConstraintConfig<any, any>,
           [UniqueConstraint['name'], UniqueConstraint][]
         >(
@@ -448,7 +448,7 @@ export class Node<
         this.identifier = this.uniqueConstraints[0];
 
         if (this.identifier.isNullable()) {
-          throw new utils.ConfigError(
+          throw new utils.GraphError(
             `Expects its identifier (= the first unique constraint, composed of the component${
               this.identifier.isComposite() ? 's' : ''
             } "${[...this.identifier.componentsByName.keys()].join(
@@ -459,7 +459,7 @@ export class Node<
         }
 
         if (this.identifier.isMutable()) {
-          throw new utils.ConfigError(
+          throw new utils.GraphError(
             `Expects its identifier (= the first unique constraint, composed of the component${
               this.identifier.isComposite() ? 's' : ''
             } "${[...this.identifier.componentsByName.keys()].join(
@@ -481,7 +481,7 @@ export class Node<
 
       if (authorizationConfig != null) {
         if (typeof authorizationConfig !== 'function') {
-          throw new utils.UnexpectedConfigError(
+          throw new utils.UnexpectedValueError(
             `a function`,
             authorizationConfig,
             { path: authorizationConfigPath },
@@ -492,7 +492,7 @@ export class Node<
           try {
             return authorizationConfig(...args);
           } catch (error) {
-            throw new utils.ConfigError(
+            throw new utils.GraphError(
               `The request-authorizer threw an error`,
               {
                 path: authorizationConfigPath,
@@ -550,14 +550,14 @@ export class Node<
           configPath: mutationConfigPath,
         };
       } else if (mutationConfig != null) {
-        throw new utils.UnexpectedConfigError(
+        throw new utils.UnexpectedValueError(
           `a boolean or a plain-object`,
           mutationConfig,
           { path: mutationConfigPath },
         );
       }
     } else if (mutationsConfig != null) {
-      throw new utils.UnexpectedConfigError(
+      throw new utils.UnexpectedValueError(
         `a boolean or a plain-object`,
         mutationsConfig,
         { path: mutationsConfigPath },
@@ -595,7 +595,7 @@ export class Node<
 
     if (isPublic) {
       if (!this.isPublic()) {
-        throw new utils.UnexpectedConfigError(
+        throw new utils.UnexpectedValueError(
           `not to be "true" as the "${this}" node is private`,
           publicConfig,
           { path: publicConfigPath },
@@ -603,7 +603,7 @@ export class Node<
       }
 
       if (!this.isMutationEnabled(mutationType)) {
-        throw new utils.UnexpectedConfigError(
+        throw new utils.UnexpectedValueError(
           `not to be "true" as the "${this}" node's ${mutationType} is disabled`,
           publicConfig,
           { path: publicConfigPath },
@@ -807,7 +807,7 @@ export class Node<
         (!utils.isPlainObject(reverseEdgesConfig) ||
           Object.entries(reverseEdgesConfig).length)
       ) {
-        throw new utils.UnexpectedConfigError(
+        throw new utils.UnexpectedValueError(
           `no configuration as there is no node having an edge heading to the "${this}" node`,
           reverseEdgesConfig,
           { path: reverseEdgesConfigPath },
@@ -821,7 +821,7 @@ export class Node<
 
     const reverseEdges = new Map(
       reverseEdgesConfig
-        ? utils.aggregateConfigError<
+        ? utils.aggregateGraphError<
             [ReverseEdge['name'], ReverseEdgeConfig<any, any>],
             [ReverseEdge['name'], ReverseEdge][]
           >(
@@ -833,7 +833,7 @@ export class Node<
               );
 
               if (this.componentsByName.has(reverseEdgeName)) {
-                throw new utils.UnexpectedConfigError(
+                throw new utils.UnexpectedValueError(
                   `a "name" not among "${[...this.componentsByName.keys()].join(
                     ', ',
                   )}"`,
@@ -857,7 +857,7 @@ export class Node<
                 typeof originalEdgeConfig !== 'string' ||
                 !originalEdgeConfig
               ) {
-                throw new utils.UnexpectedConfigError(
+                throw new utils.UnexpectedValueError(
                   `a non-empty string`,
                   originalEdgeConfig,
                   { path: originalEdgeConfigPath },
@@ -871,7 +871,7 @@ export class Node<
                 referrersByNameByNodeName.get(nodeEdgeConfig);
 
               if (!referrersByName) {
-                throw new utils.UnexpectedConfigError(
+                throw new utils.UnexpectedValueError(
                   `a node having an edge heading to the "${this}" node (= a value among "${[
                     ...referrersByNameByNodeName.keys(),
                   ].join(', ')}")`,
@@ -879,7 +879,7 @@ export class Node<
                   { path: originalEdgeConfigPath },
                 );
               } else if (!referrersByName.size) {
-                throw new utils.ConfigError(
+                throw new utils.GraphError(
                   `Expects no more configuration for "${nodeEdgeConfig}"'s edge as there is no more edge heading to the "${this}" node`,
                   { path: originalEdgeConfigPath },
                 );
@@ -889,7 +889,7 @@ export class Node<
 
               if (edgeEdgeConfig) {
                 if (!referrersByName.has(edgeEdgeConfig)) {
-                  throw new utils.UnexpectedConfigError(
+                  throw new utils.UnexpectedValueError(
                     `an edge heading to the "${this}" node (= a value among "${[
                       ...referrersByName.keys(),
                     ].join(', ')}")`,
@@ -915,7 +915,7 @@ export class Node<
 
               if (originalEdge.isUnique()) {
                 if (kindConfig != null && kindConfig !== 'Unique') {
-                  throw new utils.UnexpectedConfigError(
+                  throw new utils.UnexpectedValueError(
                     `"Unique" as the "${originalEdge}" edge is unique`,
                     kindConfig,
                     { path: kindConfigPath },
@@ -930,7 +930,7 @@ export class Node<
                 );
               } else {
                 if (kindConfig != null && kindConfig !== 'Multiple') {
-                  throw new utils.UnexpectedConfigError(
+                  throw new utils.UnexpectedValueError(
                     `"Multiple" as the "${originalEdge}" edge is not unique`,
                     kindConfig,
                     { path: kindConfigPath },
@@ -958,7 +958,7 @@ export class Node<
     );
 
     if (missingConfigs.length) {
-      throw new utils.ConfigError(
+      throw new utils.GraphError(
         `Expects a configuration for the following referrer(s): ${missingConfigs.join(
           ', ',
         )}`,
@@ -1206,14 +1206,14 @@ export class Node<
 
   @Memoize()
   public validateDefinition(): void {
-    utils.aggregateConfigError<Component, void>(
+    utils.aggregateGraphError<Component, void>(
       this.components,
       (_, component) => component.validateDefinition(),
       undefined,
       { path: this.configPath },
     );
 
-    utils.aggregateConfigError<UniqueConstraint, void>(
+    utils.aggregateGraphError<UniqueConstraint, void>(
       this.uniqueConstraints,
       (_, uniqueConstraint) => uniqueConstraint.validateDefinition(),
       undefined,
@@ -1224,7 +1224,7 @@ export class Node<
 
     if (this.isMutationEnabled(utils.MutationType.UPDATE)) {
       if (!this.components.some((component) => component.isMutable())) {
-        throw new utils.ConfigError(
+        throw new utils.GraphError(
           `Expects at least one mutable component as it is mutable`,
           { path: this.configPath },
         );
@@ -1233,7 +1233,7 @@ export class Node<
 
     if (this.isPublic()) {
       if (!this.components.some((component) => component.isPublic())) {
-        throw new utils.ConfigError(
+        throw new utils.GraphError(
           `Expects at least one public component as it is public`,
           { path: this.configPath },
         );
@@ -1244,7 +1244,7 @@ export class Node<
           uniqueConstraint.isPublic(),
         )
       ) {
-        throw new utils.ConfigError(
+        throw new utils.GraphError(
           `Expects at least one public unique constraint (= with all its components being public) as it is public`,
           { path: this.configPath },
         );
@@ -1257,7 +1257,7 @@ export class Node<
               component.isMutable() && component.updateInput.isPublic(),
           )
         ) {
-          throw new utils.ConfigError(
+          throw new utils.GraphError(
             `Expects at least one publicly mutable component as it is publicly mutable`,
             { path: this.configPath },
           );
@@ -1265,7 +1265,7 @@ export class Node<
       }
     }
 
-    utils.aggregateConfigError<ReverseEdge, void>(
+    utils.aggregateGraphError<ReverseEdge, void>(
       this.reverseEdges,
       (_, reverseEdge) => reverseEdge.validateDefinition(),
       undefined,
@@ -1279,14 +1279,14 @@ export class Node<
 
   @Memoize()
   public validateTypes(): void {
-    utils.aggregateConfigError<Component, void>(
+    utils.aggregateGraphError<Component, void>(
       this.components,
       (_, component) => component.validateTypes(),
       undefined,
       { path: this.configPath },
     );
 
-    utils.aggregateConfigError<ReverseEdge, void>(
+    utils.aggregateGraphError<ReverseEdge, void>(
       this.reverseEdges,
       (_, reverseEdge) => reverseEdge.validateTypes(),
       undefined,
@@ -1305,7 +1305,7 @@ export class Node<
 
   @Memoize()
   public validateOperations(): void {
-    utils.aggregateConfigError<OperationInterface, void>(
+    utils.aggregateGraphError<OperationInterface, void>(
       this.operations,
       (_, operation) => operation.validate(),
       undefined,
@@ -1341,7 +1341,7 @@ export class Node<
       });
     }
 
-    return utils.aggregateError<Component, NodeValue>(
+    return utils.aggregateGraphError<Component, NodeValue>(
       this.components,
       (output, component) =>
         Object.assign(output, {

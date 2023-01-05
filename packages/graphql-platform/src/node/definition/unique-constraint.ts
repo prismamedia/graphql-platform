@@ -116,7 +116,7 @@ export class UniqueConstraint<
       }
 
       this.componentsByName = new Map(
-        utils.aggregateConfigError<
+        utils.aggregateGraphError<
           string,
           [Component['name'], Component<TRequestContext, TConnector>][]
         >(
@@ -124,7 +124,7 @@ export class UniqueConstraint<
           (entries, componentName, index) => {
             const component = node.componentsByName.get(componentName);
             if (!component) {
-              throw new utils.UnexpectedConfigError(
+              throw new utils.UnexpectedValueError(
                 `a "component"'s name among "${[
                   ...node.componentsByName.keys(),
                 ].join(', ')}"`,
@@ -259,7 +259,7 @@ export class UniqueConstraint<
       });
     }
 
-    const value = utils.aggregateError<Component, UniqueConstraintValue>(
+    const value = utils.aggregateGraphError<Component, UniqueConstraintValue>(
       this.components,
       (value, component) =>
         Object.assign(value, {

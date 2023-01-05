@@ -15,8 +15,8 @@ import type { NodeSelectedValue } from '../../../statement/selection.js';
 import type { NodeFilterInputValue, OrderByInputValue } from '../../../type.js';
 import { createContextBoundAPI } from '../../api.js';
 import {
-  catchConnectorError,
-  catchLifecycleHookError,
+  ConnectorError,
+  LifecycleHookError,
   LifecycleHookKind,
 } from '../../error.js';
 import { AbstractDeletion, type DeletionConfig } from '../abstract-deletion.js';
@@ -116,21 +116,22 @@ export class DeleteManyMutation<
     ).normalized;
 
     // Fetch the current nodes' value
-    const currentValues = await catchConnectorError(
-      () =>
-        this.connector.find(
-          {
-            node: this.node,
-            ...(filter && { filter }),
-            ...(ordering && { ordering }),
-            limit: args.first,
-            selection: this.node.selection.mergeWith(args.selection),
-            forMutation: utils.MutationType.DELETION,
-          },
-          context,
-        ),
-      path,
-    );
+    let currentValues: NodeSelectedValue[];
+    try {
+      currentValues = await this.connector.find(
+        {
+          node: this.node,
+          ...(filter && { filter }),
+          ...(ordering && { ordering }),
+          limit: args.first,
+          selection: this.node.selection.mergeWith(args.selection),
+          forMutation: utils.MutationType.DELETION,
+        },
+        context,
+      );
+    } catch (error) {
+      throw new ConnectorError({ cause: error, path });
+    }
 
     if (currentValues.length === 0) {
       return [];
@@ -139,21 +140,23 @@ export class DeleteManyMutation<
     // Apply the "preDelete"-hook, if any
     if (preDelete) {
       await Promise.all(
-        currentValues.map((currentValue) =>
-          catchLifecycleHookError(
-            () =>
-              preDelete({
-                gp: this.gp,
-                node: this.node,
-                context,
-                api: createContextBoundAPI(this.gp, context),
-                currentValue: Object.freeze(this.node.parseValue(currentValue)),
-              }),
-            this.node,
-            LifecycleHookKind.PRE_DELETE,
-            path,
-          ),
-        ),
+        currentValues.map(async (currentValue) => {
+          try {
+            await preDelete({
+              gp: this.gp,
+              node: this.node,
+              context,
+              api: createContextBoundAPI(this.gp, context),
+              currentValue: Object.freeze(this.node.parseValue(currentValue)),
+            });
+          } catch (error) {
+            throw new LifecycleHookError(
+              this.node,
+              LifecycleHookKind.PRE_DELETE,
+              { cause: error, path },
+            );
+          }
+        }),
       );
     }
 
@@ -208,21 +211,21 @@ export class DeleteManyMutation<
     }
 
     // Actually delete the nodes
-    await catchConnectorError(
-      () =>
-        this.connector.delete(
-          {
-            node: this.node,
-            filter: this.node.filterInputType.parseAndFilter({
-              OR: currentValues.map((currentValue) =>
-                this.node.identifier.parseValue(currentValue),
-              ),
-            }),
-          },
-          context,
-        ),
-      path,
-    );
+    try {
+      await this.connector.delete(
+        {
+          node: this.node,
+          filter: this.node.filterInputType.parseAndFilter({
+            OR: currentValues.map((currentValue) =>
+              this.node.identifier.parseValue(currentValue),
+            ),
+          }),
+        },
+        context,
+      );
+    } catch (error) {
+      throw new ConnectorError({ cause: error, path });
+    }
 
     return Promise.all(
       currentValues.map(async (oldValue) => {
@@ -236,19 +239,19 @@ export class DeleteManyMutation<
         context.changes.push(change);
 
         // Apply the "postDelete"-hook, if any
-        if (postDelete) {
-          await catchLifecycleHookError(
-            () =>
-              postDelete({
-                gp: this.gp,
-                node: this.node,
-                context,
-                api: createContextBoundAPI(this.gp, context),
-                change,
-              }),
+        try {
+          await postDelete?.({
+            gp: this.gp,
+            node: this.node,
+            context,
+            api: createContextBoundAPI(this.gp, context),
+            change,
+          });
+        } catch (error) {
+          throw new LifecycleHookError(
             this.node,
             LifecycleHookKind.POST_DELETE,
-            path,
+            { cause: error, path },
           );
         }
 

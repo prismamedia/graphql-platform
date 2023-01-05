@@ -55,7 +55,7 @@ export class GetSomeInOrderQuery<
       .getQueryByKey('get-some-in-order-if-exists')
       .internal(authorization, args, context, path);
 
-    return utils.aggregateError<
+    return utils.aggregateGraphError<
       NodeSelectedValue | null,
       GetSomeInOrderQueryResult
     >(

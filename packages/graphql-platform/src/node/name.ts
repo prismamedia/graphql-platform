@@ -15,7 +15,7 @@ export function assertNodeName(
   utils.assertName(maybeNodeName, path);
 
   // if (maybeNodeName.includes('_')) {
-  //   throw new UnexpectedConfigError(
+  //   throw new UnexpectedValueError(
   //     `not to contain underscore`,
   //     maybeNodeName,
   //     { path },
@@ -23,7 +23,7 @@ export function assertNodeName(
   // }
 
   // if (maybeNodeName.endsWith('Identifier')) {
-  //   throw new UnexpectedConfigError(
+  //   throw new UnexpectedValueError(
   //     `not to end with "Identifier"`,
   //     maybeNodeName,
   //     { path },
@@ -32,7 +32,7 @@ export function assertNodeName(
 
   const pascalCasedName = inflection.camelize(maybeNodeName, false);
   if (maybeNodeName !== pascalCasedName) {
-    throw new utils.UnexpectedConfigError(
+    throw new utils.UnexpectedValueError(
       `to be in PascalCase (= "${pascalCasedName}")`,
       maybeNodeName,
       { path },

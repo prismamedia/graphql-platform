@@ -14,7 +14,7 @@ export function parseJsonObject(value: unknown, path?: utils.Path): JsonObject {
     });
   }
 
-  return utils.aggregateError<any, JsonObject>(
+  return utils.aggregateGraphError<any, JsonObject>(
     Object.entries(value),
     (object, [key, value]) =>
       Object.assign(object, {
@@ -32,12 +32,13 @@ export function parseJsonArray(value: unknown, path?: utils.Path): JsonArray {
     });
   }
 
-  return utils.aggregateError<any, JsonArray>(
+  return utils.aggregateGraphError<any, JsonArray>(
     value,
-    (values, value, index) => [
-      ...values,
-      parseJsonValue(value, utils.addPath(path, index)),
-    ],
+    (values, value, index) => {
+      values.push(parseJsonValue(value, utils.addPath(path, index)));
+
+      return values;
+    },
     [],
     { path },
   );

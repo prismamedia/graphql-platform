@@ -25,7 +25,7 @@ describe('DraftJS', () => {
           },
         },
       },
-      '"blocks.0.entityRanges.0.key" - Expects a value among "myKey", got: \'myMissingKey\'',
+      '/blocks/0/entityRanges/0/key - Expects a value among "myKey", got: \'myMissingKey\'',
     ],
     [
       {
@@ -47,7 +47,7 @@ describe('DraftJS', () => {
           },
         ],
       },
-      '"blocks.0.entityRanges.0.key" - Expects a value among "0", got: 1',
+      '/blocks/0/entityRanges/0/key - Expects a value among "0", got: 1',
     ],
   ])('throws an Error on invalid value', (input, error) => {
     expect(() => GraphQLDraftJS.parseValue(input)).toThrowError(error);

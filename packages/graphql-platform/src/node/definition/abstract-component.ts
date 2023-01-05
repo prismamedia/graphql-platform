@@ -115,7 +115,7 @@ export abstract class AbstractComponent<
     );
 
     if (isMutable && !this.node.isMutationEnabled(utils.MutationType.UPDATE)) {
-      throw new utils.UnexpectedConfigError(
+      throw new utils.UnexpectedValueError(
         `not to be "true" as the "${this.node}"'s ${utils.MutationType.UPDATE} is disabled`,
         mutableConfig,
         { path: mutableConfigPath },

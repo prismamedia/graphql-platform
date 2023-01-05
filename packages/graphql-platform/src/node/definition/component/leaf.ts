@@ -103,18 +103,18 @@ export class Leaf<
         this.type = scalars.ensureType(typeConfig, typeConfigPath);
       } else if (graphql.isEnumType(typeConfig)) {
         if (!typeConfig.getValues().length) {
-          throw new utils.UnexpectedConfigError(
+          throw new utils.UnexpectedValueError(
             `a non-empty Enum type`,
             typeConfig,
             { path: typeConfigPath },
           );
         }
 
-        utils.aggregateConfigError<graphql.GraphQLEnumValue, void>(
+        utils.aggregateGraphError<graphql.GraphQLEnumValue, void>(
           typeConfig.getValues(),
           (_, { name, value }) => {
             if (typeof value !== 'string' || !value) {
-              throw new utils.UnexpectedConfigError(
+              throw new utils.UnexpectedValueError(
                 `a non-empty string`,
                 value,
                 {
@@ -129,7 +129,7 @@ export class Leaf<
 
         this.type = typeConfig;
       } else {
-        throw new utils.UnexpectedConfigError(
+        throw new utils.UnexpectedValueError(
           `an Enum or a Scalar among "${scalars.typeNames.join(', ')}"`,
           typeConfig,
           { path: typeConfigPath },
@@ -144,7 +144,7 @@ export class Leaf<
 
       if (parserConfig != null) {
         if (typeof parserConfig !== 'function') {
-          throw new utils.UnexpectedConfigError(`a function`, parserConfig, {
+          throw new utils.UnexpectedValueError(`a function`, parserConfig, {
             path: parserConfigPath,
           });
         }
@@ -174,10 +174,10 @@ export class Leaf<
     const value = utils.parseGraphQLLeafValue(this.type, maybeValue, path);
 
     if (value === undefined) {
-      throw new utils.UnexpectedUndefinedError(`"${this.type}"`, { path });
+      throw new utils.UnexpectedUndefinedError(this.type, { path });
     } else if (value === null) {
       if (!this.isNullable()) {
-        throw new utils.UnexpectedNullError(`"${this.type}"`, { path });
+        throw new utils.UnexpectedNullError(this.type, { path });
       }
 
       return null;
@@ -187,12 +187,10 @@ export class Leaf<
       try {
         return this.customParser(value, path);
       } catch (error) {
-        throw utils.isNestableError(error)
-          ? error
-          : new utils.NestableError(utils.castToError(error).message, {
-              path,
-              cause: error,
-            });
+        throw new utils.GraphError(utils.castToError(error).message, {
+          cause: error,
+          path,
+        });
       }
     }
 
@@ -219,7 +217,7 @@ export class Leaf<
     );
 
     if (isPublic && !this.node.isPublic()) {
-      throw new utils.UnexpectedConfigError(
+      throw new utils.UnexpectedValueError(
         `not to be "true" as the "${this.node}" node is private`,
         publicConfig,
         { path: publicConfigPath },

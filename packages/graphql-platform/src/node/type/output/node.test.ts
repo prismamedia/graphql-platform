@@ -1,4 +1,3 @@
-import * as utils from '@prismamedia/graphql-platform-utils';
 import * as graphql from 'graphql';
 import { GraphQLPlatform } from '../../../index.js';
 import {
@@ -88,31 +87,31 @@ describe(`NodeOutputType`, () => {
           'Article',
           `{ category { unknownDeepField } }`,
           myAdminContext,
-          '"Article.category" - Expects a "Category"\'s field, got: \'unknownDeepField\'',
+          "/category - Expects a \"Category\"'s field, got: 'unknownDeepField'",
         ],
         [
           'Article',
           `{ id(first: 5) }`,
           myAdminContext,
-          '"Article.id" - Expects no arguments',
+          '/id - Expects no arguments',
         ],
         [
           'Article',
           `{ id { id } }`,
           myAdminContext,
-          '"Article.id" - Expects no selection-set',
+          '/id - Expects no selection-set',
         ],
         [
           'Article',
           `{ tags { tag { title }} }`,
           myAdminContext,
-          '"Article.tags.@args.first" - Expects a non-undefined "UnsignedInt"',
+          '/tags/@args/first - Expects a non-undefined "UnsignedInt"',
         ],
         [
           'Article',
           `{ category }`,
           myAdminContext,
-          '"Article.category" - Expects a "Category"\'s selection',
+          '/category - Expects a "Category"\'s selection',
         ],
       ])(
         '%p.select(%p) throws the error %p',
@@ -125,8 +124,6 @@ describe(`NodeOutputType`, () => {
               // @ts-expect-error
               input,
               new OperationContext(gp, requestContext),
-              undefined,
-              utils.addPath(undefined, node.name),
             ),
           ).toThrowError(error);
         },

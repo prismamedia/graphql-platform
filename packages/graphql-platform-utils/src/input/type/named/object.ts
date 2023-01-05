@@ -2,9 +2,8 @@ import { Memoize } from '@prismamedia/memoize';
 import * as graphql from 'graphql';
 import assert from 'node:assert/strict';
 import {
-  aggregateConfigError,
-  NestableError,
-  UnexpectedConfigError,
+  aggregateGraphError,
+  GraphError,
   UnexpectedValueError,
 } from '../../../error.js';
 import { Input, parseInputLiterals, parseInputValues } from '../../../input.js';
@@ -50,11 +49,11 @@ export class ObjectInputType<
         : this.#fieldsConfig;
 
     return fields?.length
-      ? aggregateConfigError<TField, TField[]>(
+      ? aggregateGraphError<TField, TField[]>(
           fields,
           (fields, field, index) => {
             if (!(field instanceof Input)) {
-              throw new UnexpectedConfigError(`an input`, field, {
+              throw new UnexpectedValueError(`an input`, field, {
                 path: addPath(this.#fieldsConfigPath, index),
               });
             }
@@ -132,7 +131,7 @@ export class ObjectInputType<
       this.#isValid = null;
     }
 
-    aggregateConfigError<TField, void>(
+    aggregateGraphError<TField, void>(
       this.fields,
       (_, field) => field.validate(),
       undefined,
@@ -168,7 +167,7 @@ export class ObjectInputType<
 
   public override parseValue(
     value: unknown,
-    path: Path = addPath(undefined, this.name),
+    path?: Path,
   ): Nillable<PlainObject> {
     if (isNil(value)) {
       return value;
@@ -197,7 +196,7 @@ export class ObjectInputType<
       );
     }
 
-    throw new NestableError(`Cannot parse literal: ${graphql.print(value)}`, {
+    throw new GraphError(`Cannot parse literal: ${graphql.print(value)}`, {
       path,
     });
   }

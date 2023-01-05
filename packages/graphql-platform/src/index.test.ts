@@ -7,9 +7,9 @@ describe('GraphQL Platform', () => {
     it.each([
       [
         undefined,
-        `\"GraphQLPlatformConfig\" - Expects a plain-object, got: undefined`,
+        `/GraphQLPlatformConfig - Expects a plain-object, got: undefined`,
       ],
-      [null, `\"GraphQLPlatformConfig\" - Expects a plain-object, got: null`],
+      [null, `/GraphQLPlatformConfig - Expects a plain-object, got: null`],
     ])('throws an Error on invalid config: %p', (config, expectedError) => {
       // @ts-expect-error
       expect(() => new GraphQLPlatform(config)).toThrowError(expectedError);
@@ -18,19 +18,19 @@ describe('GraphQL Platform', () => {
     it.each([
       [
         {},
-        `"GraphQLPlatformConfig.nodes" - Expects at least one "node", got: undefined`,
+        `/GraphQLPlatformConfig/nodes - Expects at least one "node", got: undefined`,
       ],
       [
         { nodes: undefined },
-        `"GraphQLPlatformConfig.nodes" - Expects at least one "node", got: undefined`,
+        `/GraphQLPlatformConfig/nodes - Expects at least one "node", got: undefined`,
       ],
       [
         { nodes: null },
-        `"GraphQLPlatformConfig.nodes" - Expects at least one "node", got: null`,
+        `/GraphQLPlatformConfig/nodes - Expects at least one "node", got: null`,
       ],
       [
         { nodes: {} },
-        `"GraphQLPlatformConfig.nodes" - Expects at least one "node", got: {}`,
+        `/GraphQLPlatformConfig/nodes - Expects at least one "node", got: {}`,
       ],
     ])('throws an Error on invalid nodes: %p', (config, expectedError) => {
       // @ts-expect-error

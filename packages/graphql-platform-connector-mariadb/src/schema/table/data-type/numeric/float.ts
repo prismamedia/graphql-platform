@@ -37,11 +37,11 @@ export class FloatType<
       const precisionConfigPath = utils.addPath(configPath, 'precision');
 
       if (!Number.isInteger(precisionConfig)) {
-        throw new utils.UnexpectedConfigError('an integer', precisionConfig, {
+        throw new utils.UnexpectedValueError('an integer', precisionConfig, {
           path: precisionConfigPath,
         });
       } else if (precisionConfig < 1) {
-        throw new utils.UnexpectedConfigError(
+        throw new utils.UnexpectedValueError(
           'an integer greater-than-or-equal to 1',
           precisionConfig,
           { path: precisionConfigPath },
@@ -56,11 +56,11 @@ export class FloatType<
       const scaleConfigPath = utils.addPath(configPath, 'scale');
 
       if (!Number.isInteger(scaleConfig)) {
-        throw new utils.UnexpectedConfigError('an integer', scaleConfig, {
+        throw new utils.UnexpectedValueError('an integer', scaleConfig, {
           path: scaleConfigPath,
         });
       } else if (scaleConfig < 0) {
-        throw new utils.UnexpectedConfigError(
+        throw new utils.UnexpectedValueError(
           'an integer greater-than-or-equal to 0',
           scaleConfig,
           { path: scaleConfigPath },

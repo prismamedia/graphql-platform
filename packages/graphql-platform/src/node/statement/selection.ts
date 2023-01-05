@@ -74,7 +74,7 @@ export class NodeSelection<TValue extends NodeSelectedValue = any> {
       });
     }
 
-    return utils.aggregateError<SelectionExpression, TValue>(
+    return utils.aggregateGraphError<SelectionExpression, TValue>(
       this.expressionsByKey.values(),
       (nodeValue, fieldSelection) =>
         Object.assign(nodeValue, {

@@ -56,13 +56,13 @@ export class PlainIndex extends AbstractIndex {
 
     if (config) {
       if (typeof config !== 'string') {
-        throw new utils.UnexpectedConfigError('a string', config, {
+        throw new utils.UnexpectedValueError('a string', config, {
           path: configPath,
         });
       }
 
       if (config.length > 64) {
-        throw new utils.UnexpectedConfigError(
+        throw new utils.UnexpectedValueError(
           'an identifier shorter than 64 characters',
           config,
           { path: configPath },

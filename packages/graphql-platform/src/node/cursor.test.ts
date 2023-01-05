@@ -9,7 +9,7 @@ describe('Cursor', () => {
     const gp = new GraphQLPlatform({
       nodes,
       connector: mockConnector({
-        async find() {
+        async find(): Promise<any> {
           const values =
             callIndex === 0
               ? [

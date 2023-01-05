@@ -58,7 +58,7 @@ export class ReverseEdgeUnique<
         const singularizedName = inflection.singularize(name);
 
         if (name !== singularizedName) {
-          throw new utils.UnexpectedConfigError(
+          throw new utils.UnexpectedValueError(
             `a singular (= "${singularizedName}" ?)`,
             name,
             { path: configPath },

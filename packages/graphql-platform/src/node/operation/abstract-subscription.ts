@@ -4,7 +4,6 @@ import * as graphql from 'graphql';
 import assert from 'node:assert/strict';
 import type { ConnectorInterface } from '../../connector-interface.js';
 import { AbstractOperation } from '../abstract-operation.js';
-import { ConnectorError, InternalError } from './error.js';
 
 export abstract class AbstractSubscription<
   TRequestContext extends object,
@@ -36,21 +35,12 @@ export abstract class AbstractSubscription<
         args: utils.getGraphQLFieldConfigArgumentMap(this.arguments),
       }),
       type: this.getGraphQLOutputType(),
-      subscribe: async (_, args, context, info) => {
-        try {
-          return await this.execute(
-            (this.selectionAware
-              ? { ...args, selection: info }
-              : args) as TArgs,
-            context,
-            info.path,
-          );
-        } catch (error) {
-          throw utils.isConfigError(error) || error instanceof ConnectorError
-            ? new InternalError({ path: info.path, cause: error })
-            : error;
-        }
-      },
+      subscribe: (_, args, context, info) =>
+        this.execute(
+          (this.selectionAware ? { ...args, selection: info } : args) as TArgs,
+          context,
+          info.path,
+        ),
     };
   }
 }

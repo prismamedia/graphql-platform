@@ -1,35 +1,76 @@
-import { addPath, isPathDescendantOf, printPath } from './path.js';
+import {
+  addPath,
+  getRelativePath,
+  isPathDescendantOf,
+  printPath,
+} from './path.js';
 
 describe('Path', () => {
-  it('works', () => {
-    const root = addPath(undefined, 'Root');
+  const root = addPath(undefined, 'Root');
+  const firstLevel = addPath(root, 'FirstLevel');
+  const secondLevel = addPath(addPath(firstLevel, 0), 'SecondLevel');
+  const thirdLevel = addPath(addPath(secondLevel, 5), 'ThirdLevel');
 
-    const firstLevel = addPath(root, 'FirstLevel');
-    expect(printPath(firstLevel)).toEqual('Root.FirstLevel');
-    expect(isPathDescendantOf(firstLevel, root)).toBeTruthy();
+  it.each([
+    [firstLevel, root],
 
-    const secondLevel = addPath(addPath(firstLevel, 0), 'SecondLevel');
-    expect(printPath(secondLevel)).toEqual('Root.FirstLevel.0.SecondLevel');
-    expect(isPathDescendantOf(secondLevel, firstLevel)).toBeTruthy();
-    expect(isPathDescendantOf(secondLevel, root)).toBeTruthy();
+    [secondLevel, firstLevel],
+    [secondLevel, root],
 
-    const thirdLevel = addPath(addPath(secondLevel, 5), 'ThirdLevel');
-    expect(printPath(thirdLevel)).toEqual(
-      'Root.FirstLevel.0.SecondLevel.5.ThirdLevel',
-    );
-    expect(isPathDescendantOf(thirdLevel, secondLevel)).toBeTruthy();
-    expect(isPathDescendantOf(thirdLevel, firstLevel)).toBeTruthy();
-    expect(isPathDescendantOf(thirdLevel, root)).toBeTruthy();
+    [thirdLevel, secondLevel],
+    [thirdLevel, firstLevel],
+    [thirdLevel, root],
+  ])('.isPathDescendantOf()', (a, b) =>
+    expect(isPathDescendantOf(a, b)).toBeTruthy(),
+  );
 
-    expect(printPath(thirdLevel)).toBe(
-      'Root.FirstLevel.0.SecondLevel.5.ThirdLevel',
-    );
-    expect(printPath(thirdLevel, root)).toBe(
-      'FirstLevel.0.SecondLevel.5.ThirdLevel',
-    );
-    expect(printPath(thirdLevel, firstLevel)).toBe(
-      '0.SecondLevel.5.ThirdLevel',
-    );
-    expect(printPath(thirdLevel, secondLevel)).toBe('5.ThirdLevel');
-  });
+  it.each([
+    [firstLevel, root, addPath(undefined, 'FirstLevel')],
+
+    [secondLevel, firstLevel, addPath(addPath(undefined, 0), 'SecondLevel')],
+    [
+      secondLevel,
+      root,
+      addPath(addPath(addPath(undefined, 'FirstLevel'), 0), 'SecondLevel'),
+    ],
+
+    [thirdLevel, secondLevel, addPath(addPath(undefined, 5), 'ThirdLevel')],
+    [
+      thirdLevel,
+      firstLevel,
+      addPath(
+        addPath(addPath(addPath(undefined, 0), 'SecondLevel'), 5),
+        'ThirdLevel',
+      ),
+    ],
+    [
+      thirdLevel,
+      root,
+      addPath(
+        addPath(
+          addPath(addPath(addPath(undefined, 'FirstLevel'), 0), 'SecondLevel'),
+          5,
+        ),
+        'ThirdLevel',
+      ),
+    ],
+  ])('.getRelativePath()', (path, ancestor, expected) =>
+    expect(getRelativePath(path, ancestor)).toEqual(expected),
+  );
+
+  it.each([
+    [firstLevel, undefined, '/Root/FirstLevel'],
+    [firstLevel, root, './FirstLevel'],
+
+    [secondLevel, undefined, '/Root/FirstLevel/0/SecondLevel'],
+    [secondLevel, firstLevel, './0/SecondLevel'],
+    [secondLevel, root, './FirstLevel/0/SecondLevel'],
+
+    [thirdLevel, undefined, '/Root/FirstLevel/0/SecondLevel/5/ThirdLevel'],
+    [thirdLevel, secondLevel, './5/ThirdLevel'],
+    [thirdLevel, firstLevel, './0/SecondLevel/5/ThirdLevel'],
+    [thirdLevel, root, './FirstLevel/0/SecondLevel/5/ThirdLevel'],
+  ])('.printPath()', (path, ancestor, expected) =>
+    expect(printPath(path, ancestor)).toBe(expected),
+  );
 });

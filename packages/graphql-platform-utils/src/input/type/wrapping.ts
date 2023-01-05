@@ -1,4 +1,4 @@
-import { UnexpectedConfigError } from '../../error.js';
+import { UnexpectedValueError } from '../../error.js';
 import { Path } from '../../path.js';
 import { ListableInputType } from './wrapping/listable.js';
 import { NonNullableInputType } from './wrapping/non-nullable.js';
@@ -29,7 +29,7 @@ export function assertWrappingInputType(
   path: Path,
 ): asserts maybeWrappingInputType is WrappingInputType {
   if (!isWrappingInputType(maybeWrappingInputType)) {
-    throw new UnexpectedConfigError(
+    throw new UnexpectedValueError(
       `a wrapping input type`,
       maybeWrappingInputType,
       { path },

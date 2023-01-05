@@ -202,7 +202,10 @@ export function parseRawDraftContentBlock(
       );
     }
 
-    inlineStyleRanges = utils.aggregateError<any, RawDraftInlineStyleRange[]>(
+    inlineStyleRanges = utils.aggregateGraphError<
+      any,
+      RawDraftInlineStyleRange[]
+    >(
       maybeRawDraftContentBlock.inlineStyleRanges,
       (inlineStyleRanges, value, index) => [
         ...inlineStyleRanges,
@@ -229,7 +232,7 @@ export function parseRawDraftContentBlock(
       );
     }
 
-    entityRanges = utils.aggregateError<any, RawDraftEntityRange[]>(
+    entityRanges = utils.aggregateGraphError<any, RawDraftEntityRange[]>(
       maybeRawDraftContentBlock.entityRanges,
       (entityRanges, value, index) => [
         ...entityRanges,
@@ -305,7 +308,7 @@ export function parseRawDraftContentState(
       const entityMapPath = utils.addPath(path, 'entityMap');
 
       if (utils.isPlainObject(maybeRawDraftContentState.entityMap)) {
-        entityMap = utils.aggregateError<
+        entityMap = utils.aggregateGraphError<
           [string, RawDraftEntity],
           Record<string, RawDraftEntity>
         >(
@@ -321,7 +324,7 @@ export function parseRawDraftContentState(
           { path: entityMapPath },
         );
       } else if (Array.isArray(maybeRawDraftContentState.entityMap)) {
-        entityMap = utils.aggregateError<
+        entityMap = utils.aggregateGraphError<
           RawDraftEntity,
           Record<string, RawDraftEntity>
         >(
@@ -359,7 +362,7 @@ export function parseRawDraftContentState(
       );
     }
 
-    blocks = utils.aggregateError<any, RawDraftContentBlock[]>(
+    blocks = utils.aggregateGraphError<any, RawDraftContentBlock[]>(
       maybeRawDraftContentState.blocks,
       (blocks, block, index) => [
         ...blocks,
