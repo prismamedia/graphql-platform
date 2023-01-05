@@ -324,7 +324,6 @@ export class Table {
   public parseSelectedValue<TValue extends core.NodeSelectedValue>(
     rawSelectedValue: utils.PlainObject,
     selection: core.NodeSelection<TValue>,
-    path: utils.Path = utils.addPath(undefined, this.node.name),
   ): TValue {
     if (!utils.isPlainObject(rawSelectedValue)) {
       throw new utils.UnexpectedValueError('a plain-object', rawSelectedValue);
@@ -333,7 +332,7 @@ export class Table {
     return utils.aggregateGraphError(
       selection.expressions,
       (document, expression) => {
-        const expressionPath = utils.addPath(path, expression.key);
+        const expressionPath = utils.addPath(undefined, expression.key);
         const rawExpressionValue = rawSelectedValue[expression.key];
         let expressionValue: any;
 
@@ -341,6 +340,7 @@ export class Table {
           const column = this.getColumnByLeaf(expression.leaf);
 
           expressionValue = column.dataType.parseJsonValue(rawExpressionValue);
+          expressionValue = 'lol';
         } else if (expression instanceof core.EdgeHeadSelection) {
           const head = this.schema.getTableByNode(expression.edge.head);
 
@@ -348,7 +348,6 @@ export class Table {
             ? head.parseSelectedValue(
                 rawExpressionValue,
                 expression.headSelection,
-                expressionPath,
               )
             : null;
         } else if (
@@ -362,11 +361,7 @@ export class Table {
 
           expressionValue = Array.isArray(rawExpressionValue)
             ? rawExpressionValue.map((value, index) =>
-                head.parseSelectedValue(
-                  value,
-                  expression.headSelection,
-                  utils.addPath(expressionPath, index),
-                ),
+                head.parseSelectedValue(value, expression.headSelection),
               )
             : [];
         } else if (expression instanceof core.ReverseEdgeUniqueHeadSelection) {
@@ -376,7 +371,6 @@ export class Table {
             ? head.parseSelectedValue(
                 rawExpressionValue,
                 expression.headSelection,
-                expressionPath,
               )
             : null;
         } else {
@@ -391,7 +385,6 @@ export class Table {
         });
       },
       Object.create(null),
-      { path },
     );
   }
 

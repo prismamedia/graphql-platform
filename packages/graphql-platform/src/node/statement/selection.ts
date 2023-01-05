@@ -75,12 +75,12 @@ export class NodeSelection<TValue extends NodeSelectedValue = any> {
     }
 
     return utils.aggregateGraphError<SelectionExpression, TValue>(
-      this.expressionsByKey.values(),
-      (nodeValue, fieldSelection) =>
-        Object.assign(nodeValue, {
-          [fieldSelection.key]: fieldSelection.parseValue(
-            maybeValue[fieldSelection.key],
-            utils.addPath(path, fieldSelection.key),
+      this.expressions,
+      (document, expression) =>
+        Object.assign(document, {
+          [expression.key]: expression.parseValue(
+            maybeValue[expression.key],
+            utils.addPath(path, expression.key),
           ),
         }),
       Object.create(null),
