@@ -359,7 +359,7 @@ export class Table {
           const head = this.schema.getTableByNode(expression.reverseEdge.head);
 
           expressionValue = Array.isArray(rawExpressionValue)
-            ? rawExpressionValue.map((value, index) =>
+            ? rawExpressionValue.map((value) =>
                 head.parseSelectedValue(value, expression.headSelection),
               )
             : [];
