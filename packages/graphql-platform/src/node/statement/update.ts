@@ -1,5 +1,4 @@
 import * as utils from '@prismamedia/graphql-platform-utils';
-import assert from 'node:assert/strict';
 import type {
   Component,
   Edge,
@@ -90,7 +89,7 @@ export class NodeUpdateStatement {
   }
 
   public setValue(value: NodeUpdateValue): void {
-    assert(utils.isPlainObject(value), `Expects a plain-object`);
+    utils.assertPlainObject(value);
 
     Object.entries(value).forEach(([componentName, componentValue]) =>
       this.setComponentUpdate(componentName, componentValue),

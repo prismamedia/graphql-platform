@@ -181,7 +181,7 @@ export class UniqueConstraint<
 
   @Memoize()
   public toString(): string {
-    return `${this.node.name}.#${this.name}`;
+    return `${this.node.name}#${this.name}`;
   }
 
   @Memoize()

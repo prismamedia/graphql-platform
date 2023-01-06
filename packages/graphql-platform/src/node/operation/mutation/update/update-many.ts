@@ -21,8 +21,8 @@ import type { OrderByInputValue } from '../../../type/input/ordering.js';
 import { createContextBoundAPI } from '../../api.js';
 import {
   ConnectorError,
-  LifecycleHookError,
-  LifecycleHookKind,
+  NodeLifecycleHookError,
+  NodeLifecycleHookKind,
 } from '../../error.js';
 import { AbstractUpdate, type UpdateConfig } from '../abstract-update.js';
 import type { MutationContext } from '../context.js';
@@ -189,9 +189,9 @@ export class UpdateManyMutation<
                 update: individualizedStatement.proxy,
               });
             } catch (error) {
-              throw new LifecycleHookError(
+              throw new NodeLifecycleHookError(
                 this.node,
-                LifecycleHookKind.PRE_UPDATE,
+                NodeLifecycleHookKind.PRE_UPDATE,
                 { cause: error, path },
               );
             }
@@ -301,9 +301,9 @@ export class UpdateManyMutation<
               change,
             });
           } catch (error) {
-            throw new LifecycleHookError(
+            throw new NodeLifecycleHookError(
               this.node,
-              LifecycleHookKind.POST_UPDATE,
+              NodeLifecycleHookKind.POST_UPDATE,
               { cause: error, path },
             );
           }

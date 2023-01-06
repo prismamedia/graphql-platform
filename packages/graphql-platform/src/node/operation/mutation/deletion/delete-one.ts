@@ -9,7 +9,7 @@ import type {
 import type { NodeFilter } from '../../../statement/filter.js';
 import type { NodeSelectedValue } from '../../../statement/selection/value.js';
 import type { NodeUniqueFilterInputValue } from '../../../type.js';
-import { NotFoundError } from '../../error.js';
+import { NodeNotFoundError } from '../../error.js';
 import { AbstractDeletion } from '../abstract-deletion.js';
 import type { MutationContext } from '../context.js';
 
@@ -55,7 +55,7 @@ export class DeleteOneMutation<
       .internal(authorization, args, context, path);
 
     if (!nodeValue) {
-      throw new NotFoundError(this.node, args.where, { path });
+      throw new NodeNotFoundError(this.node, args.where, { path });
     }
 
     return nodeValue;

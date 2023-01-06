@@ -18,7 +18,13 @@ import {
   type TableConfig,
   type UniqueIndexConfig,
 } from './schema.js';
-import { ExecutedStatement, Statement, StatementKind } from './statement.js';
+import {
+  ExecutedStatement,
+  InsertStatement,
+  Statement,
+  StatementKind,
+  UpdateStatement,
+} from './statement.js';
 
 export * from './escaping.js';
 export * from './schema.js';
@@ -238,12 +244,41 @@ export class MariaDBConnector
   ): Promise<TResult> {
     const startedAt = hrtime.bigint();
 
-    const result = await (maybeConnection
-      ? maybeConnection.query(statement)
-      : this.withConnection(
-          (connection) => connection.query(statement),
-          statement.kind,
-        ));
+    let result: any;
+
+    try {
+      result = await (maybeConnection
+        ? maybeConnection.query(statement)
+        : this.withConnection(
+            (connection) => connection.query(statement),
+            statement.kind,
+          ));
+    } catch (error) {
+      if (error instanceof mariadb.SqlError) {
+        if (
+          error.errno === 1062 &&
+          (statement instanceof InsertStatement ||
+            statement instanceof UpdateStatement)
+        ) {
+          const match = error.text?.match(
+            /Duplicate entry '(?<value>.+)' for key '(?<unique>.+)'/,
+          );
+
+          const uniqueIndex = match?.groups?.unique
+            ? statement.table.uniqueIndexes.find(
+                (uniqueIndex) => uniqueIndex.name === match?.groups?.unique,
+              )
+            : undefined;
+
+          throw new core.DuplicateNodeError(statement.table.node, {
+            value: match?.groups?.value,
+            uniqueConstraint: uniqueIndex?.uniqueConstraint,
+          });
+        }
+      }
+
+      throw error;
+    }
 
     await this.emit('executed-statement', {
       statement,
@@ -407,12 +442,4 @@ export class MariaDBConnector
 
     return table.delete(statement, context, connection);
   }
-
-  // public async enqueueChanges(
-  //   ...changes: ReadonlyArray<core.ChangedNode>
-  // ): Promise<void> {}
-
-  // public async dequeueChanges(batch: number = 1): Promise<core.ChangedNode[]> {
-  //   return [];
-  // }
 }

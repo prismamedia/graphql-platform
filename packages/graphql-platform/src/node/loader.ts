@@ -3,7 +3,7 @@ import DataLoader from 'dataloader';
 import type { ConnectorInterface } from '../connector-interface.js';
 import type { Node } from '../node.js';
 import type { OperationContext } from './operation/context.js';
-import { NotFoundError } from './operation/error.js';
+import { NodeNotFoundError } from './operation/error.js';
 import type {
   NodeSelectedValue,
   NodeSelection,
@@ -34,7 +34,7 @@ export function createNodeLoader<
     return maybeValues.map(
       (maybeValue, index): NodeSelectedValue | Error =>
         maybeValue ??
-        new NotFoundError(node, keys[index], {
+        new NodeNotFoundError(node, keys[index], {
           path: utils.addPath(undefined, index),
         }),
     );

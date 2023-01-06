@@ -80,6 +80,7 @@ export class Table {
     core.UniqueConstraint,
     UniqueIndex
   >;
+  public readonly uniqueIndexes: ReadonlyArray<UniqueIndex>;
   public readonly foreignKeyIndexesByEdge: ReadonlyMap<
     core.Edge,
     ForeignKeyIndex
@@ -169,6 +170,10 @@ export class Table {
             uniqueConstraint,
             new UniqueIndex(this, uniqueConstraint),
           ]),
+      );
+
+      this.uniqueIndexes = Array.from(
+        this.uniqueIndexesByUniqueConstraint.values(),
       );
     }
 
@@ -290,10 +295,9 @@ export class Table {
 
   protected parseRow<TValue extends core.NodeValue>(
     row: utils.PlainObject,
+    path: utils.Path = utils.addPath(undefined, this.node.name),
   ): TValue {
-    if (!utils.isPlainObject(row)) {
-      throw new utils.UnexpectedValueError('a plain-object', row);
-    }
+    utils.assertPlainObject(row, path);
 
     const emptyColumns = this.columns.filter(
       (column) => row[column.name] === undefined,
@@ -305,71 +309,79 @@ export class Table {
           .map((column) => column.name)
           .join(', ')}" to be defined`,
         row,
+        { path },
       );
     }
 
-    return this.node.components.reduce<TValue>(
-      (nodeValue, component) =>
-        Object.assign(nodeValue, {
+    return utils.aggregateGraphError<core.Component, TValue>(
+      this.node.components,
+      (document, component) =>
+        Object.assign(document, {
           [component.name]: component.parseValue(
             component instanceof core.Leaf
               ? this.getColumnByLeaf(component).pickLeafValueFromRow(row)
               : this.getColumnTreeByEdge(component).pickEdgeValueFromRow(row),
+            utils.addPath(path, component.name),
           ),
         }),
       Object.create(null),
     );
   }
 
-  public parseSelectedValue<TValue extends core.NodeSelectedValue>(
-    maybeValue: utils.PlainObject,
+  public parseJsonDocument<TValue extends core.NodeSelectedValue>(
+    jsonDocument: utils.PlainObject,
     selection: core.NodeSelection<TValue>,
+    path: utils.Path = utils.addPath(undefined, this.node.name),
   ): TValue {
-    utils.assertPlainObject(maybeValue);
-
-    const path = utils.addPath(undefined, this.node.name);
+    utils.assertPlainObject(jsonDocument, path);
 
     return utils.aggregateGraphError(
       selection.expressions,
       (document, expression) => {
         const expressionPath = utils.addPath(path, expression.key);
-        const rawExpressionValue = maybeValue[expression.key];
+        const jsonValue = jsonDocument[expression.key];
         let expressionValue: any;
 
         if (expression instanceof core.LeafSelection) {
           const column = this.getColumnByLeaf(expression.leaf);
 
-          expressionValue = column.dataType.parseJsonValue(rawExpressionValue);
+          expressionValue = column.dataType.parseJsonValue(jsonValue);
         } else if (expression instanceof core.EdgeHeadSelection) {
           const head = this.schema.getTableByNode(expression.edge.head);
 
-          expressionValue = rawExpressionValue
-            ? head.parseSelectedValue(
-                rawExpressionValue,
+          expressionValue = jsonValue
+            ? head.parseJsonDocument(
+                jsonValue,
                 expression.headSelection,
+                expressionPath,
               )
             : null;
         } else if (
           expression instanceof core.ReverseEdgeMultipleCountSelection
         ) {
-          expressionValue = Number.parseInt(rawExpressionValue, 10);
+          expressionValue = Number.parseInt(jsonValue, 10);
         } else if (
           expression instanceof core.ReverseEdgeMultipleHeadSelection
         ) {
           const head = this.schema.getTableByNode(expression.reverseEdge.head);
 
-          expressionValue = Array.isArray(rawExpressionValue)
-            ? rawExpressionValue.map((value) =>
-                head.parseSelectedValue(value, expression.headSelection),
+          expressionValue = Array.isArray(jsonValue)
+            ? jsonValue.map((value, index) =>
+                head.parseJsonDocument(
+                  value,
+                  expression.headSelection,
+                  utils.addPath(expressionPath, index),
+                ),
               )
             : [];
         } else if (expression instanceof core.ReverseEdgeUniqueHeadSelection) {
           const head = this.schema.getTableByNode(expression.reverseEdge.head);
 
-          expressionValue = rawExpressionValue
-            ? head.parseSelectedValue(
-                rawExpressionValue,
+          expressionValue = jsonValue
+            ? head.parseJsonDocument(
+                jsonValue,
                 expression.headSelection,
+                expressionPath,
               )
             : null;
         } else {
@@ -431,7 +443,7 @@ export class Table {
     >(new FindStatement(this, statement, context), maybeConnection);
 
     return tuples.map((tuple) =>
-      this.parseSelectedValue(
+      this.parseJsonDocument(
         JSON.parse(tuple[this.node.name]),
         statement.selection,
       ),

@@ -7,7 +7,7 @@ import type { NodeSelectionAwareArgs } from '../../abstract-operation.js';
 import type { NodeFilter } from '../../statement/filter.js';
 import { AbstractQuery } from '../abstract-query.js';
 import type { OperationContext } from '../context.js';
-import { NotFoundError } from '../error.js';
+import { NodeNotFoundError } from '../error.js';
 import type {
   GetOneIfExistsQueryArgs,
   GetOneIfExistsQueryResult,
@@ -53,7 +53,7 @@ export class GetOneQuery<
       .internal(authorization, args, context, path);
 
     if (!nodeValue) {
-      throw new NotFoundError(this.node, args.where, { path });
+      throw new NodeNotFoundError(this.node, args.where, { path });
     }
 
     return nodeValue;

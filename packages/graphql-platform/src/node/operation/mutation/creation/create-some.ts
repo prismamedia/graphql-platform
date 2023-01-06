@@ -15,8 +15,8 @@ import type { NodeCreationInputValue } from '../../../type/input/creation.js';
 import { createContextBoundAPI } from '../../api.js';
 import {
   ConnectorError,
-  LifecycleHookError,
-  LifecycleHookKind,
+  NodeLifecycleHookError,
+  NodeLifecycleHookKind,
 } from '../../error.js';
 import { AbstractCreation, type CreationConfig } from '../abstract-creation.js';
 import type { MutationContext } from '../context.js';
@@ -111,9 +111,9 @@ export class CreateSomeMutation<
             creation: statement.proxy,
           });
         } catch (error) {
-          throw new LifecycleHookError(
+          throw new NodeLifecycleHookError(
             this.node,
-            LifecycleHookKind.PRE_CREATE,
+            NodeLifecycleHookKind.PRE_CREATE,
             { cause: error, path: indexedPath },
           );
         }
@@ -168,9 +168,9 @@ export class CreateSomeMutation<
             change,
           });
         } catch (error) {
-          throw new LifecycleHookError(
+          throw new NodeLifecycleHookError(
             this.node,
-            LifecycleHookKind.POST_CREATE,
+            NodeLifecycleHookKind.POST_CREATE,
             { cause: error, path: indexedPath },
           );
         }
