@@ -44,14 +44,7 @@ export class Seeding<
     utils.assertPlainObject(fixtures, fixturesPath);
 
     Object.entries(fixtures).forEach(([nodeName, dataByReference]) => {
-      const node = gp.nodesByName.get(nodeName);
-      if (!node) {
-        throw new utils.UnexpectedValueError(
-          `an existing node's name`,
-          nodeName,
-          { path: fixturesPath },
-        );
-      }
+      const node = gp.getNodeByName(nodeName, fixturesPath);
 
       const dataByReferencePath = utils.addPath(fixturesPath, nodeName);
 

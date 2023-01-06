@@ -81,13 +81,13 @@ describe(`NodeOutputType`, () => {
           'Article',
           `{ unknownField }`,
           myAdminContext,
-          "Expects an \"Article\"'s field, got: 'unknownField'",
+          'Expects an "Article"\'s field among "_id, id, status, title, slug, body, category, createdBy, createdAt, updatedBy, updatedAt, metas, highlighted, sponsored, views, score, machineTags, tags, tagCount, lowerCasedTitle, upperCasedTitle", got: \'unknownField\'',
         ],
         [
           'Article',
           `{ category { unknownDeepField } }`,
           myAdminContext,
-          "/category - Expects a \"Category\"'s field, got: 'unknownDeepField'",
+          '/category - Expects a "Category"\'s field among "_id, id, title, slug, parent, order, children, childCount, articles, articleCount", got: \'unknownDeepField\'',
         ],
         [
           'Article',

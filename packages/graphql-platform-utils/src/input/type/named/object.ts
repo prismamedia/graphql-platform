@@ -152,7 +152,7 @@ export class ObjectInputType<
     this.#isValid = true;
   }
 
-  public getField(name: string, path?: Path): TField {
+  public getFieldByName(name: string, path?: Path): TField {
     const field = this.fieldsByName.get(name);
     if (!field) {
       throw new UnexpectedValueError(

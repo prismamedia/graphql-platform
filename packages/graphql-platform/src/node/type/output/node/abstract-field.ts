@@ -45,6 +45,7 @@ export abstract class AbstractNodeFieldOutputType<
         args: utils.getGraphQLFieldConfigArgumentMap(this.arguments),
       }),
       type: this.type,
+      resolve: (source, _args, _context, info) => source[info.path.key],
     };
   }
 

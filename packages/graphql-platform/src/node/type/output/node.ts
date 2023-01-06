@@ -216,11 +216,13 @@ export class NodeOutputType {
     }
   }
 
-  public getField(name: string, path?: utils.Path): NodeFieldOutputType {
+  public getFieldByName(name: string, path?: utils.Path): NodeFieldOutputType {
     const field = this.fieldsByName.get(name);
     if (!field) {
       throw new utils.UnexpectedValueError(
-        `${this.node.indefinite}'s field`,
+        `${this.node.indefinite}'s field among "${[
+          ...this.fieldsByName.keys(),
+        ].join(', ')}"`,
         name,
         { path },
       );
@@ -440,7 +442,10 @@ export class NodeOutputType {
 
           switch (ast.kind) {
             case graphql.Kind.FIELD: {
-              const field = this.getField(ast.name.value, path);
+              const fieldAlias = ast.alias?.value || undefined;
+              const fieldName = ast.name.value;
+              const fieldKey = fieldAlias ?? fieldName;
+              const field = this.getFieldByName(fieldName, path);
 
               return field instanceof VirtualFieldOutputType
                 ? field.dependsOn?.expressions ?? []
@@ -448,7 +453,7 @@ export class NodeOutputType {
                     ast,
                     operationContext,
                     selectionContext,
-                    utils.addPath(path, ast.alias?.value || ast.name.value),
+                    utils.addPath(path, fieldKey),
                   );
             }
 
@@ -519,32 +524,32 @@ export class NodeOutputType {
   }
 
   public select(
-    selection: RawNodeSelection,
+    rawSelection: RawNodeSelection,
     operationContext?: OperationContext,
     selectionContext?: GraphQLSelectionContext,
     path?: utils.Path,
   ): NodeSelection {
-    if (selection == null) {
+    if (rawSelection == null) {
       throw new utils.UnexpectedValueError(
         `${this.node.indefinite}'s selection`,
-        selection,
+        rawSelection,
         { path },
       );
     }
 
-    if (selection instanceof NodeSelection) {
-      return selection;
+    if (rawSelection instanceof NodeSelection) {
+      return rawSelection;
     }
 
     // Components
-    if (Array.isArray(selection)) {
-      return this.selectComponents(selection, operationContext, path);
+    if (Array.isArray(rawSelection)) {
+      return this.selectComponents(rawSelection, operationContext, path);
     }
 
     // GraphQL fragment
-    if (typeof selection === 'string') {
+    if (typeof rawSelection === 'string') {
       return this.selectGraphQLFragment(
-        selection,
+        rawSelection,
         operationContext,
         selectionContext,
         path,
@@ -552,11 +557,11 @@ export class NodeOutputType {
     }
 
     // GraphQL AST
-    if (utils.isPlainObject(selection) && 'kind' in selection) {
-      switch (selection.kind) {
+    if (utils.isPlainObject(rawSelection) && 'kind' in rawSelection) {
+      switch (rawSelection.kind) {
         case graphql.Kind.DOCUMENT:
           return this.selectGraphQLDocumentNode(
-            selection,
+            rawSelection,
             operationContext,
             selectionContext,
             path,
@@ -564,7 +569,7 @@ export class NodeOutputType {
 
         case graphql.Kind.FRAGMENT_DEFINITION:
           return this.selectGraphQLFragmentDefinitionNode(
-            selection,
+            rawSelection,
             operationContext,
             selectionContext,
             path,
@@ -572,7 +577,7 @@ export class NodeOutputType {
 
         case graphql.Kind.INLINE_FRAGMENT:
           return this.selectGraphQLInlineFragmentNode(
-            selection,
+            rawSelection,
             operationContext,
             selectionContext,
             path,
@@ -580,25 +585,25 @@ export class NodeOutputType {
 
         case graphql.Kind.SELECTION_SET:
           return this.selectGraphQLSelectionSetNode(
-            selection,
+            rawSelection,
             operationContext,
             selectionContext,
             path,
           );
 
         default:
-          throw new utils.UnreachableValueError(selection, { path });
+          throw new utils.UnreachableValueError(rawSelection, { path });
       }
     }
 
     // GraphQL resolve info
-    if (utils.isGraphQLResolveInfo(selection)) {
-      return this.selectGraphQLResolveInfo(selection, operationContext);
+    if (utils.isGraphQLResolveInfo(rawSelection)) {
+      return this.selectGraphQLResolveInfo(rawSelection, operationContext);
     }
 
     throw new utils.UnexpectedValueError(
       `a supported "${this.node}"'s selection`,
-      selection,
+      rawSelection,
       { path },
     );
   }
@@ -615,7 +620,7 @@ export class NodeOutputType {
       mergeSelectionExpressions(
         Object.entries(shape).flatMap<SelectionExpression>(
           ([fieldName, fieldValue]) => {
-            const field = this.getField(fieldName, path);
+            const field = this.getFieldByName(fieldName, path);
 
             return field instanceof VirtualFieldOutputType
               ? field.dependsOn?.expressions ?? []

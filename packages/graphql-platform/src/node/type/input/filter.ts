@@ -438,7 +438,7 @@ export class NodeFilterInputType extends utils.ObjectInputType<FieldFilterInputT
         ? new BooleanValue(false)
         : new AndOperation(
             Object.entries(value).map(([filterName, filterValue]) =>
-              this.getField(filterName, path).filter(
+              this.getFieldByName(filterName, path).filter(
                 filterValue,
                 context,
                 utils.addPath(path, filterName),

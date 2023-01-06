@@ -16,10 +16,10 @@ export const isGraphQLResolveInfo = (
   graphql.isOutputType(maybeGraphQLResolveInfo.returnType) &&
   graphql.isOutputType(maybeGraphQLResolveInfo.parentType);
 
-export const assertGraphQLResolveInfo = (
+export function assertGraphQLResolveInfo(
   maybeGraphQLResolveInfo: unknown,
   path?: Path,
-): asserts maybeGraphQLResolveInfo is graphql.GraphQLResolveInfo => {
+): asserts maybeGraphQLResolveInfo is graphql.GraphQLResolveInfo {
   if (!isGraphQLResolveInfo(maybeGraphQLResolveInfo)) {
     throw new UnexpectedValueError(
       `a GraphQLResolveInfo`,
@@ -27,7 +27,7 @@ export const assertGraphQLResolveInfo = (
       { path },
     );
   }
-};
+}
 
 export const isGraphQLASTNode = <TKind extends graphql.Kind>(
   maybeGraphQLASTNode: unknown,
@@ -35,17 +35,17 @@ export const isGraphQLASTNode = <TKind extends graphql.Kind>(
 ): maybeGraphQLASTNode is graphql.ASTKindToNode[TKind] =>
   isPlainObject(maybeGraphQLASTNode) && maybeGraphQLASTNode.kind === kind;
 
-export const assertGraphQLASTNode = <TKind extends graphql.Kind>(
+export function assertGraphQLASTNode<TKind extends graphql.Kind>(
   maybeGraphQLASTNode: unknown,
   kind: TKind,
   path?: Path,
-): asserts maybeGraphQLASTNode is graphql.ASTKindToNode[TKind] => {
+): asserts maybeGraphQLASTNode is graphql.ASTKindToNode[TKind] {
   if (!isGraphQLASTNode(maybeGraphQLASTNode, kind)) {
     throw new UnexpectedValueError(`a GraphQL ${kind}`, maybeGraphQLASTNode, {
       path,
     });
   }
-};
+}
 
 export const parseGraphQLScalarValue = <TInternal>(
   type: graphql.GraphQLScalarType<TInternal, any>,
