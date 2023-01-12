@@ -91,16 +91,20 @@ export class ReferenceColumn extends AbstractColumn {
    * category_parent_slug: "root"
    * category_slug: "news"
    */
-  public pickLeafValueFromEdgeValue(edgeValue: core.EdgeValue): core.LeafValue {
-    if (edgeValue === null) {
+  public pickLeafValueFromReferenceValue(
+    referenceValue: core.ReferenceValue,
+  ): core.LeafValue {
+    if (referenceValue === null) {
       return null;
     }
 
     return this.referencedColumn instanceof ReferenceColumn
-      ? this.referencedColumn.pickLeafValueFromEdgeValue(
-          edgeValue[this.referencedColumn.edge.name] as core.EdgeValue,
+      ? this.referencedColumn.pickLeafValueFromReferenceValue(
+          referenceValue[
+            this.referencedColumn.edge.name
+          ] as core.ReferenceValue,
         )
-      : (edgeValue[this.referencedColumn.leaf.name] as core.LeafValue);
+      : (referenceValue[this.referencedColumn.leaf.name] as core.LeafValue);
   }
 }
 
@@ -228,7 +232,9 @@ export class ReferenceColumnTree {
     );
   }
 
-  public pickEdgeValueFromRow(row: utils.PlainObject): core.EdgeValue {
+  public pickReferenceValueFromRow(
+    row: utils.PlainObject,
+  ): core.ReferenceValue {
     return this.columns.some((column) => row[column.name] !== null)
       ? this.#currentEdge.referencedUniqueConstraint.components.reduce(
           (uniqueConstraintValue, component) =>
@@ -236,9 +242,9 @@ export class ReferenceColumnTree {
               [component.name]:
                 component instanceof core.Leaf
                   ? this.getColumnByLeaf(component).pickLeafValueFromRow(row)
-                  : this.getColumnTreeByEdge(component).pickEdgeValueFromRow(
-                      row,
-                    ),
+                  : this.getColumnTreeByEdge(
+                      component,
+                    ).pickReferenceValueFromRow(row),
             }),
           Object.create(null),
         )

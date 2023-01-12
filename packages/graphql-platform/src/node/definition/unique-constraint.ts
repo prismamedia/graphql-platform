@@ -13,7 +13,7 @@ import {
 } from '../statement/selection.js';
 import type { Component, ComponentValue } from './component.js';
 import { Edge } from './component/edge.js';
-import { Leaf, LeafValue } from './component/leaf.js';
+import { Leaf } from './component/leaf.js';
 
 export type UniqueConstraintValue = {
   [componentName: string]: ComponentValue;
@@ -175,7 +175,7 @@ export class UniqueConstraint<
 
       this.name = nameConfig
         ? utils.ensureName(nameConfig, nameConfigPath)
-        : Array.from(this.componentsByName.keys()).join('_');
+        : Array.from(this.componentsByName.keys()).join('-');
     }
   }
 
@@ -229,7 +229,7 @@ export class UniqueConstraint<
   }
 
   @Memoize()
-  public get selection(): NodeSelection {
+  public get selection(): NodeSelection<UniqueConstraintValue> {
     return new NodeSelection(
       this.node,
       mergeSelectionExpressions(
@@ -253,26 +253,12 @@ export class UniqueConstraint<
     maybeValue: unknown,
     path: utils.Path = utils.addPath(undefined, this.toString()),
   ): UniqueConstraintValue {
-    if (!utils.isPlainObject(maybeValue)) {
-      throw new utils.UnexpectedValueError('a plain-object', maybeValue, {
-        path,
-      });
-    }
+    const value = this.selection.parseValue(maybeValue, path);
 
-    const value = utils.aggregateGraphError<Component, UniqueConstraintValue>(
-      this.components,
-      (value, component) =>
-        Object.assign(value, {
-          [component.name]: component.parseValue(
-            maybeValue[component.name],
-            utils.addPath(path, component.name),
-          ),
-        }),
-      Object.create(null),
-      { path },
-    );
-
-    if (this.components.every(({ name }) => value[name] === null)) {
+    if (
+      this.isNullable() &&
+      this.components.every(({ name }) => value[name] === null)
+    ) {
       throw new utils.UnexpectedValueError(
         `at least one non-null component's value`,
         maybeValue,
@@ -280,47 +266,27 @@ export class UniqueConstraint<
       );
     }
 
-    return value;
+    return this.selection.parseValue(maybeValue, path);
   }
 
   public areValuesEqual(
     a: UniqueConstraintValue,
     b: UniqueConstraintValue,
   ): boolean {
-    return this.components.every((component) =>
-      component.areValuesEqual(
-        a[component.name] as any,
-        b[component.name] as any,
-      ),
-    );
+    return this.selection.areValuesEqual(a, b);
   }
 
-  public serialize(value: UniqueConstraintValue): JsonObject {
-    return this.components.reduce<JsonObject>(
-      (output, component) =>
-        Object.assign(output, {
-          [component.name]: component.serialize(value[component.name] as any),
-        }),
-      Object.create(null),
-    );
+  public serialize(
+    maybeValue: unknown,
+    path: utils.Path = utils.addPath(undefined, this.toString()),
+  ): JsonObject {
+    return this.selection.serialize(maybeValue, path);
   }
 
-  /**
-   * Gets a convenient "flattened" ID (= a string identifying a single node)
-   */
-  public flatten(value: UniqueConstraintValue): string {
-    return this.components
-      .map((component) => {
-        const componentValue = value[component.name];
-
-        return componentValue === null
-          ? '__NULL__'
-          : component instanceof Leaf
-          ? component.serialize(componentValue as LeafValue)
-          : component.referencedUniqueConstraint.flatten(
-              componentValue as UniqueConstraintValue,
-            );
-      })
-      .join(':');
+  public stringify(
+    maybeValue: unknown,
+    path: utils.Path = utils.addPath(undefined, this.toString()),
+  ): string {
+    return this.selection.stringify(maybeValue, path);
   }
 }

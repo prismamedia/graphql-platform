@@ -167,46 +167,6 @@ export class Leaf<
     }
   }
 
-  public override parseValue(
-    maybeValue: unknown,
-    path: utils.Path = utils.addPath(undefined, this.toString()),
-  ): LeafValue {
-    const value = utils.parseGraphQLLeafValue(this.type, maybeValue, path);
-
-    if (value === undefined) {
-      throw new utils.UnexpectedUndefinedError(this.type, { path });
-    } else if (value === null) {
-      if (!this.isNullable()) {
-        throw new utils.UnexpectedNullError(this.type, { path });
-      }
-
-      return null;
-    }
-
-    if (this.customParser) {
-      try {
-        return this.customParser(value, path);
-      } catch (error) {
-        throw utils.isGraphErrorWithPathEqualOrDescendantOf(error, path)
-          ? error
-          : new utils.GraphError(utils.castToError(error).message, {
-              cause: error,
-              path,
-            });
-      }
-    }
-
-    return value;
-  }
-
-  public areValuesEqual(a: LeafValue, b: LeafValue): boolean {
-    return a === null || b === null ? a === b : this.#comparator(a, b);
-  }
-
-  public serialize(value: LeafValue): JsonValue {
-    return value !== null ? (this.type.serialize(value) as any) : null;
-  }
-
   @Memoize()
   public override isPublic(): boolean {
     const publicConfig = this.config.public;
@@ -274,5 +234,57 @@ export class Leaf<
     assert(this.isMutable(), `The "${this}" leaf is immutable`);
 
     return new LeafUpdateInput(this);
+  }
+
+  public parseValue(
+    maybeValue: unknown,
+    path: utils.Path = utils.addPath(undefined, this.toString()),
+  ): LeafValue {
+    const value = utils.parseGraphQLLeafValue(this.type, maybeValue, path);
+
+    if (value === undefined) {
+      throw new utils.UnexpectedUndefinedError(this.type, { path });
+    } else if (value === null) {
+      if (!this.isNullable()) {
+        throw new utils.UnexpectedNullError(this.type, { path });
+      }
+
+      return null;
+    }
+
+    if (this.customParser) {
+      try {
+        return this.customParser(value, path);
+      } catch (error) {
+        throw utils.isGraphErrorWithPathEqualOrDescendantOf(error, path)
+          ? error
+          : new utils.GraphError(utils.castToError(error).message, {
+              cause: error,
+              path,
+            });
+      }
+    }
+
+    return value;
+  }
+
+  public areValuesEqual(a: LeafValue, b: LeafValue): boolean {
+    return a === null || b === null ? a === b : this.#comparator(a, b);
+  }
+
+  public serialize(
+    maybeValue: unknown,
+    path: utils.Path = utils.addPath(undefined, this.toString()),
+  ): JsonValue {
+    const value = this.parseValue(maybeValue, path);
+
+    return value === null ? null : (this.type.serialize(value) as any);
+  }
+
+  public stringify(
+    maybeValue: unknown,
+    path: utils.Path = utils.addPath(undefined, this.toString()),
+  ): string {
+    return JSON.stringify(this.serialize(maybeValue, path));
   }
 }

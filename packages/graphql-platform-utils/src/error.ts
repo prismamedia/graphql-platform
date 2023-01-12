@@ -19,7 +19,7 @@ export interface GraphErrorOptions extends ErrorOptions {
 
 export class GraphError extends Error {
   public readonly path?: Path;
-  public readonly reason?: string;
+  readonly #message?: string;
   #ancestor?: Path;
 
   public constructor(
@@ -40,10 +40,7 @@ export class GraphError extends Error {
       enumerable: false,
     });
 
-    Object.defineProperty(this, 'reason', {
-      value: message || undefined,
-      enumerable: false,
-    });
+    this.#message = message || undefined;
   }
 
   public setAncestor(ancestor: Path): void {
@@ -57,7 +54,7 @@ export class GraphError extends Error {
       this.path && this.path !== this.#ancestor
         ? printPath(this.path, this.#ancestor)
         : undefined,
-      this.reason,
+      this.#message,
     ]
       .filter(Boolean)
       .join(' - ');
@@ -99,7 +96,7 @@ export interface AggregateGraphErrorOptions {
 
 export class AggregateGraphError extends AggregateError {
   public readonly path?: Path;
-  public readonly reason?: string;
+  readonly #message?: string;
   #ancestor?: Path;
 
   public constructor(
@@ -126,10 +123,7 @@ export class AggregateGraphError extends AggregateError {
       enumerable: false,
     });
 
-    Object.defineProperty(this, 'reason', {
-      value: message || undefined,
-      enumerable: false,
-    });
+    this.#message = message || undefined;
   }
 
   public setAncestor(ancestor: Path): void {
@@ -145,7 +139,7 @@ export class AggregateGraphError extends AggregateError {
         this.path && this.path !== this.#ancestor
           ? printPath(this.path, this.#ancestor)
           : undefined,
-        this.reason,
+        this.#message,
         `${this.errors.length} errors:`,
       ]
         .filter(Boolean)
@@ -194,7 +188,7 @@ export const aggregateGraphError = <TInput, TOuput>(
 
   if (deduplicatedErrors.length > 1) {
     throw new AggregateGraphError(deduplicatedErrors, options);
-  } else if (deduplicatedErrors.length === 1) {
+  } else if (deduplicatedErrors.length) {
     throw deduplicatedErrors[0];
   }
 

@@ -31,18 +31,18 @@ import {
 import { assertNodeName, type NodeName } from './node/name.js';
 import {
   mutationConstructorsByKey,
-  nodeSubscriptionConstructorsByKey,
   OperationContext,
   queryConstructorsByKey,
+  subscriptionConstructorsByKey,
   type MutationConfig,
   type MutationInterface,
   type MutationKey,
   type MutationsByKey,
-  type NodeSubscriptionKey,
-  type NodeSubscriptionsByKey,
   type OperationInterface,
   type QueriesByKey,
   type QueryKey,
+  type SubscriptionKey,
+  type SubscriptionsByKey,
 } from './node/operation.js';
 import {
   mergeSelectionExpressions,
@@ -122,11 +122,11 @@ export type NodeConfig<
   };
 
   /**
-   * Define the unique constraints for this node
+   * Define the unique-constraints for this node
    *
    * At least one must be defined
    *
-   * The first one will become this node's identifier, a special unique constraint with some additional restrictions, it must be:
+   * The first one will become this node's identifier, a special unique-constraint with some additional restrictions, it must be:
    *  - non-nullable (= at least one of its components being non-nullable)
    *  - immutable (= all its components being immutable)
    */
@@ -249,12 +249,22 @@ export class Node<
 
     // on-change
     {
-      config.onChange &&
+      const onChange = config.onChange;
+      const onChangePath = utils.addPath(configPath, 'onChange');
+
+      if (onChange) {
+        if (typeof onChange !== 'function') {
+          throw new utils.UnexpectedValueError(`a function`, onChange, {
+            path: onChangePath,
+          });
+        }
+
         gp.on('node-change', async (change) => {
           if (change.node === this) {
-            await config.onChange!(change);
+            await onChange(change);
           }
         });
+      }
     }
 
     // plural
@@ -440,7 +450,7 @@ export class Node<
       );
       this.uniqueConstraintSet = new Set(this.uniqueConstraints);
 
-      // identifier (= the first unique constraint)
+      // identifier (= the first unique-constraint)
       {
         const identifierConfigPath = utils.addPath(uniquesConfigPath, 0);
 
@@ -448,7 +458,7 @@ export class Node<
 
         if (this.identifier.isNullable()) {
           throw new utils.GraphError(
-            `Expects its identifier (= the first unique constraint, composed of the component${
+            `Expects its identifier (= the first unique-constraint, composed of the component${
               this.identifier.isComposite() ? 's' : ''
             } "${[...this.identifier.componentsByName.keys()].join(
               ', ',
@@ -459,7 +469,7 @@ export class Node<
 
         if (this.identifier.isMutable()) {
           throw new utils.GraphError(
-            `Expects its identifier (= the first unique constraint, composed of the component${
+            `Expects its identifier (= the first unique-constraint, composed of the component${
               this.identifier.isComposite() ? 's' : ''
             } "${[...this.identifier.componentsByName.keys()].join(
               ', ',
@@ -1096,15 +1106,17 @@ export class Node<
   public get mutationsByKey(): Readonly<
     MutationsByKey<TRequestContext, TConnector>
   > {
-    return Object.fromEntries(
-      Object.entries(mutationConstructorsByKey).reduce<
-        [OperationInterface['name'], OperationInterface][]
-      >((entries, [name, constructor]) => {
+    return Object.entries(mutationConstructorsByKey).reduce(
+      (mutationsByKey, [name, constructor]) => {
         const mutation = new constructor(this);
+        if (mutation.isEnabled()) {
+          mutationsByKey[name] = mutation;
+        }
 
-        return mutation.isEnabled() ? [...entries, [name, mutation]] : entries;
-      }, []),
-    ) as any;
+        return mutationsByKey;
+      },
+      Object.create(null),
+    );
   }
 
   public getMutationByKey<TKey extends MutationKey>(
@@ -1128,15 +1140,17 @@ export class Node<
   public get queriesByKey(): Readonly<
     QueriesByKey<TRequestContext, TConnector>
   > {
-    return Object.fromEntries(
-      Object.entries(queryConstructorsByKey).reduce<
-        [OperationInterface['name'], OperationInterface][]
-      >((entries, [name, constructor]) => {
+    return Object.entries(queryConstructorsByKey).reduce(
+      (queriesByKey, [name, constructor]) => {
         const query = new constructor(this);
+        if (query.isEnabled()) {
+          queriesByKey[name] = query;
+        }
 
-        return query.isEnabled() ? [...entries, [name, query]] : entries;
-      }, []),
-    ) as any;
+        return queriesByKey;
+      },
+      Object.create(null),
+    );
   }
 
   public getQueryByKey<TKey extends QueryKey>(
@@ -1156,25 +1170,25 @@ export class Node<
 
   @Memoize()
   public get subscriptionsByKey(): Readonly<
-    NodeSubscriptionsByKey<TRequestContext, TConnector>
+    SubscriptionsByKey<TRequestContext, TConnector>
   > {
-    return Object.fromEntries(
-      Object.entries(nodeSubscriptionConstructorsByKey).reduce<
-        [OperationInterface['name'], OperationInterface][]
-      >((entries, [name, constructor]) => {
+    return Object.entries(subscriptionConstructorsByKey).reduce(
+      (subscriptionsByKey, [name, constructor]) => {
         const subscription = new constructor(this);
+        if (subscription.isEnabled()) {
+          subscriptionsByKey[name] = subscription;
+        }
 
-        return subscription.isEnabled()
-          ? [...entries, [name, subscription]]
-          : entries;
-      }, []),
-    ) as any;
+        return subscriptionsByKey;
+      },
+      Object.create(null),
+    );
   }
 
-  public getSubscriptionByKey<TKey extends NodeSubscriptionKey>(
+  public getSubscriptionByKey<TKey extends SubscriptionKey>(
     key: TKey,
     path?: utils.Path,
-  ): NodeSubscriptionsByKey<TRequestContext, TConnector>[TKey] {
+  ): SubscriptionsByKey<TRequestContext, TConnector>[TKey] {
     if (!this.subscriptionsByKey[key]) {
       throw new utils.UnexpectedValueError(
         `a subscription's key among "${Object.keys(
@@ -1241,7 +1255,7 @@ export class Node<
         )
       ) {
         throw new utils.GraphError(
-          `Expects at least one public unique constraint (= with all its components being public) as it is public`,
+          `Expects at least one public unique-constraint (= with all its components being public) as it is public`,
           { path: this.configPath },
         );
       }
@@ -1327,45 +1341,6 @@ export class Node<
     ).normalized;
   }
 
-  public parseValue(
-    maybeValue: unknown,
-    path: utils.Path = utils.addPath(undefined, this.name),
-  ): NodeValue {
-    utils.assertPlainObject(maybeValue, path);
-
-    return utils.aggregateGraphError<Component, NodeValue>(
-      this.components,
-      (output, component) =>
-        Object.assign(output, {
-          [component.name]: component.parseValue(
-            maybeValue[component.name],
-            utils.addPath(path, component.name),
-          ),
-        }),
-      Object.create(null),
-      { path },
-    );
-  }
-
-  public areValuesEqual(a: NodeValue, b: NodeValue): boolean {
-    return this.components.every((component) =>
-      component.areValuesEqual(
-        a[component.name] as any,
-        b[component.name] as any,
-      ),
-    );
-  }
-
-  public serialize(value: NodeValue): JsonObject {
-    return this.components.reduce<JsonObject>(
-      (output, component) =>
-        Object.assign(output, {
-          [component.name]: component.serialize(value[component.name] as any),
-        }),
-      Object.create(null),
-    );
-  }
-
   @Memoize()
   public isScrollable(): boolean {
     return this.uniqueConstraints.some((uniqueConstraint) =>
@@ -1378,5 +1353,21 @@ export class Node<
     options?: NodeCursorOptions<TValue>,
   ): NodeCursor<TValue, TRequestContext> {
     return new NodeCursor(this, context, options);
+  }
+
+  public parseValue(maybeValue: unknown, path?: utils.Path): NodeValue {
+    return this.selection.parseValue(maybeValue, path);
+  }
+
+  public areValuesEqual(a: NodeValue, b: NodeValue): boolean {
+    return this.selection.areValuesEqual(a, b);
+  }
+
+  public serialize(maybeValue: unknown, path?: utils.Path): JsonObject {
+    return this.selection.serialize(maybeValue, path);
+  }
+
+  public stringify(maybeValue: unknown, path?: utils.Path): string {
+    return this.selection.stringify(maybeValue, path);
   }
 }

@@ -1,5 +1,5 @@
 import type { ConnectorInterface } from '../../connector-interface.js';
-import type { Edge, EdgeConfig, EdgeValue } from './component/edge.js';
+import type { Edge, EdgeConfig, ReferenceValue } from './component/edge.js';
 import type { Leaf, LeafConfig, LeafValue } from './component/leaf.js';
 
 export * from './component/edge.js';
@@ -17,4 +17,4 @@ export type Component<
   TConnector extends ConnectorInterface = any,
 > = Leaf<TRequestContext, TConnector> | Edge<TRequestContext, TConnector>;
 
-export type ComponentValue = LeafValue | EdgeValue;
+export type ComponentValue = LeafValue | ReferenceValue;

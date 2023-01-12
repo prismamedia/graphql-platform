@@ -45,7 +45,7 @@ export class InsertStatement implements mariadb.QueryOptions {
                 column.dataType.serialize(
                   column instanceof LeafColumn
                     ? creation.getLeafValue(column.leaf) ?? null
-                    : column.pickLeafValueFromEdgeValue(
+                    : column.pickLeafValueFromReferenceValue(
                         creation.getEdgeValue(column.edge) ?? null,
                       ),
                 ),

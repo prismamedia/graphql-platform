@@ -53,7 +53,7 @@ export class UpdateStatement implements mariadb.QueryOptions {
                   `${tableReference.getEscapedColumnIdentifier(
                     column,
                   )}=${column.dataType.serialize(
-                    column.pickLeafValueFromEdgeValue(
+                    column.pickLeafValueFromReferenceValue(
                       update as utils.NonOptional<core.EdgeUpdateValue>,
                     ),
                   )}`,

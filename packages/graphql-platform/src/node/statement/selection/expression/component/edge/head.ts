@@ -2,6 +2,7 @@ import * as utils from '@prismamedia/graphql-platform-utils';
 import { Memoize } from '@prismamedia/memoize';
 import * as graphql from 'graphql';
 import assert from 'node:assert/strict';
+import type { JsonObject } from 'type-fest';
 import type { Component } from '../../../../../definition/component.js';
 import type { Edge } from '../../../../../definition/component/edge.js';
 import type {
@@ -10,7 +11,11 @@ import type {
 } from '../../../../selection.js';
 import type { SelectionExpressionInterface } from '../../../expression-interface.js';
 
-export class EdgeHeadSelection implements SelectionExpressionInterface {
+export type EdgeHeadValue = null | NodeSelectedValue;
+
+export class EdgeHeadSelection<TValue extends EdgeHeadValue = any>
+  implements SelectionExpressionInterface<TValue>
+{
   public readonly component: Component;
   public readonly alias?: string;
   public readonly name: string;
@@ -19,7 +24,7 @@ export class EdgeHeadSelection implements SelectionExpressionInterface {
   public constructor(
     public readonly edge: Edge,
     alias: string | undefined,
-    public readonly headSelection: NodeSelection,
+    public readonly headSelection: NodeSelection<NonNullable<TValue>>,
   ) {
     this.component = edge;
     this.alias = alias || undefined;
@@ -64,10 +69,19 @@ export class EdgeHeadSelection implements SelectionExpressionInterface {
     );
   }
 
-  public parseValue(
-    maybeValue: unknown,
-    path: utils.Path,
-  ): null | NodeSelectedValue {
+  @Memoize()
+  public toGraphQLField(): graphql.FieldNode {
+    return {
+      kind: graphql.Kind.FIELD,
+      name: {
+        kind: graphql.Kind.NAME,
+        value: this.name,
+      },
+      selectionSet: this.headSelection.toGraphQLSelectionSet(),
+    };
+  }
+
+  public parseValue(maybeValue: unknown, path?: utils.Path): TValue {
     if (maybeValue === undefined) {
       throw new utils.UnexpectedValueError(
         `a non-undefined "${this.edge.head}"`,
@@ -83,21 +97,27 @@ export class EdgeHeadSelection implements SelectionExpressionInterface {
         );
       }
 
-      return null;
+      return null as TValue;
     }
 
     return this.headSelection.parseValue(maybeValue, path);
   }
 
-  @Memoize()
-  public toGraphQLField(): graphql.FieldNode {
-    return {
-      kind: graphql.Kind.FIELD,
-      name: {
-        kind: graphql.Kind.NAME,
-        value: this.name,
-      },
-      selectionSet: this.headSelection.toGraphQLSelectionSet(),
-    };
+  public areValuesEqual(a: TValue, b: TValue): boolean {
+    return a === null || b === null
+      ? a === b
+      : this.headSelection.areValuesEqual(a, b);
+  }
+
+  public serialize(maybeValue: unknown, path?: utils.Path): JsonObject | null {
+    const value = this.parseValue(maybeValue, path);
+
+    return value === null ? null : this.headSelection.serialize(value, path);
+  }
+
+  public stringify(maybeValue: unknown, path?: utils.Path): string {
+    const value = this.parseValue(maybeValue, path);
+
+    return value === null ? 'null' : this.headSelection.stringify(value, path);
   }
 }

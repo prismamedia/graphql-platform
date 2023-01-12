@@ -2,15 +2,15 @@ import * as utils from '@prismamedia/graphql-platform-utils';
 import type {
   Component,
   Edge,
-  EdgeValue,
   Leaf,
   LeafValue,
   Node,
+  ReferenceValue,
 } from '../../node.js';
 
 export type LeafCreationValue = LeafValue | undefined;
 
-export type EdgeCreationValue = EdgeValue | undefined;
+export type EdgeCreationValue = ReferenceValue | undefined;
 
 export type ComponentCreationValue = LeafCreationValue | EdgeCreationValue;
 

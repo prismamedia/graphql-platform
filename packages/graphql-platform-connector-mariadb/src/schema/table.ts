@@ -8,26 +8,30 @@ import type { MariaDBConnector, OkPacket } from '../index.js';
 import type { Schema } from '../schema.js';
 import {
   AddTableForeignKeysStatement,
-  AddTableForeignKeysStatementConfig,
   CountStatement,
   CreateTableStatement,
-  CreateTableStatementConfig,
   DeleteStatement,
-  DeleteStatementConfig,
   FindStatement,
   InsertStatement,
-  InsertStatementConfig,
   UpdateStatement,
-  UpdateStatementConfig,
+  type AddTableForeignKeysStatementConfig,
+  type CreateTableStatementConfig,
+  type DeleteStatementConfig,
+  type InsertStatementConfig,
+  type UpdateStatementConfig,
 } from '../statement.js';
-import { Column, LeafColumn, ReferenceColumnTree } from './table/column.js';
+import {
+  LeafColumn,
+  ReferenceColumnTree,
+  type Column,
+} from './table/column.js';
 import {
   ForeignKeyIndex,
   FullTextIndex,
   PlainIndex,
-  PlainIndexConfig,
   PrimaryKey,
   UniqueIndex,
+  type PlainIndexConfig,
 } from './table/index.js';
 
 export * from './table/column.js';
@@ -320,7 +324,9 @@ export class Table {
           [component.name]: component.parseValue(
             component instanceof core.Leaf
               ? this.getColumnByLeaf(component).pickLeafValueFromRow(row)
-              : this.getColumnTreeByEdge(component).pickEdgeValueFromRow(row),
+              : this.getColumnTreeByEdge(component).pickReferenceValueFromRow(
+                  row,
+                ),
             utils.addPath(path, component.name),
           ),
         }),

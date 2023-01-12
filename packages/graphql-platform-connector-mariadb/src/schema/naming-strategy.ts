@@ -72,7 +72,9 @@ export class SchemaNamingStrategy {
     const config = this.config?.leaf;
     const configPath = utils.addPath(this.configPath, 'leaf');
 
-    const name = config?.(tableName, leaf) ?? inflection.underscore(leaf.name);
+    const name =
+      config?.(tableName, leaf) ??
+      inflection.underscore(leaf.name).replaceAll('-', '_');
 
     if (typeof name !== 'string') {
       throw new utils.UnexpectedValueError('a string', name, {
@@ -102,7 +104,9 @@ export class SchemaNamingStrategy {
 
     const name =
       config?.(tableName, edge, referencedColumn) ??
-      `${inflection.underscore(edge.name)}_${referencedColumn.name}`;
+      `${inflection.underscore(edge.name).replaceAll('-', '_')}_${
+        referencedColumn.name
+      }`;
 
     if (typeof name !== 'string') {
       throw new utils.UnexpectedValueError('a string', name, {
@@ -162,7 +166,10 @@ export class SchemaNamingStrategy {
 
     const name =
       config?.(tableName, uniqueConstraint, columns) ??
-      ['unq', inflection.underscore(uniqueConstraint.name)].join('_');
+      [
+        'unq',
+        inflection.underscore(uniqueConstraint.name).replaceAll('-', '_'),
+      ].join('_');
 
     if (typeof name !== 'string') {
       throw new utils.UnexpectedValueError('a string', name, {

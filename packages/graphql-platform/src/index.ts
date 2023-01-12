@@ -154,7 +154,20 @@ export class GraphQLPlatform<
     super(config.on);
 
     // on-node-change
-    config.onNodeChange && this.on('node-change', config.onNodeChange);
+    {
+      const onNodeChange = config.onNodeChange;
+      const onNodeChangePath = utils.addPath(configPath, 'onNodeChange');
+
+      if (onNodeChange) {
+        if (typeof onNodeChange !== 'function') {
+          throw new utils.UnexpectedValueError(`a function`, onNodeChange, {
+            path: onNodeChangePath,
+          });
+        }
+
+        this.on('node-change', onNodeChange);
+      }
+    }
 
     // nodes
     {

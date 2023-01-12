@@ -271,8 +271,8 @@ export class MariaDBConnector
             : undefined;
 
           throw new core.DuplicateNodeError(statement.table.node, {
-            value: match?.groups?.value,
             uniqueConstraint: uniqueIndex?.uniqueConstraint,
+            hint: match?.groups?.value,
           });
         }
       }

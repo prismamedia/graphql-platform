@@ -2,6 +2,7 @@ import * as utils from '@prismamedia/graphql-platform-utils';
 import { Memoize } from '@prismamedia/memoize';
 import * as graphql from 'graphql';
 import assert from 'node:assert/strict';
+import { JsonObject } from 'type-fest';
 import type { ReverseEdgeMultiple } from '../../../../../definition/reverse-edge/multiple.js';
 import { areFiltersEqual, NodeFilter } from '../../../../filter.js';
 import { areOrderingsEqual, type NodeOrdering } from '../../../../ordering.js';
@@ -11,8 +12,11 @@ import type {
 } from '../../../../selection.js';
 import type { SelectionExpressionInterface } from '../../../expression-interface.js';
 
-export class ReverseEdgeMultipleHeadSelection
-  implements SelectionExpressionInterface
+export type ReverseEdgeMultipleHeadValue = NodeSelectedValue[];
+
+export class ReverseEdgeMultipleHeadSelection<
+  TValue extends NodeSelectedValue = any,
+> implements SelectionExpressionInterface<TValue[]>
 {
   public readonly alias?: string;
   public readonly name: string;
@@ -28,7 +32,7 @@ export class ReverseEdgeMultipleHeadSelection
     headOrdering: NodeOrdering | undefined,
     offset: number | undefined,
     public readonly limit: number,
-    public readonly headSelection: NodeSelection,
+    public readonly headSelection: NodeSelection<TValue>,
   ) {
     this.alias = alias || undefined;
     this.name = reverseEdge.name;
@@ -98,29 +102,6 @@ export class ReverseEdgeMultipleHeadSelection
     );
   }
 
-  public parseValue(
-    maybeValue: unknown,
-    path: utils.Path,
-  ): NodeSelectedValue[] {
-    if (!utils.isIterableObject(maybeValue)) {
-      throw new utils.UnexpectedValueError(
-        `an iterable of "${this.reverseEdge.name}"`,
-        maybeValue,
-        { path },
-      );
-    }
-
-    return utils.aggregateGraphError<unknown, NodeSelectedValue[]>(
-      maybeValue,
-      (nodeValues, maybeItem, index) => [
-        ...nodeValues,
-        this.headSelection.parseValue(maybeItem, utils.addPath(path, index)),
-      ],
-      [],
-      { path },
-    );
-  }
-
   @Memoize()
   public toGraphQLField(): graphql.FieldNode {
     return {
@@ -150,5 +131,55 @@ export class ReverseEdgeMultipleHeadSelection
       ],
       selectionSet: this.headSelection.toGraphQLSelectionSet(),
     };
+  }
+
+  public parseValue(maybeValues: unknown, path?: utils.Path): TValue[] {
+    if (!utils.isIterableObject(maybeValues)) {
+      throw new utils.UnexpectedValueError(
+        `an iterable of "${this.reverseEdge.name}"`,
+        maybeValues,
+        { path },
+      );
+    }
+
+    return utils.aggregateGraphError<unknown, TValue[]>(
+      maybeValues,
+      (documents, maybeValue, index) => {
+        documents.push(
+          this.headSelection.parseValue(maybeValue, utils.addPath(path, index)),
+        );
+
+        return documents;
+      },
+      [],
+      { path },
+    );
+  }
+
+  public areValuesEqual(a: TValue[], b: TValue[]): boolean {
+    return (
+      a.length === b.length &&
+      a.every((_item, index) =>
+        this.headSelection.areValuesEqual(a[index], b[index]),
+      )
+    );
+  }
+
+  public serialize(maybeValues: unknown, path?: utils.Path): JsonObject[] {
+    const values = this.parseValue(maybeValues, path);
+
+    return values.map((value, index) =>
+      this.headSelection.serialize(value, utils.addPath(path, index)),
+    );
+  }
+
+  public stringify(maybeValues: unknown, path?: utils.Path): string {
+    const values = this.parseValue(maybeValues, path);
+
+    return `[${values
+      .map((value, index) =>
+        this.headSelection.stringify(value, utils.addPath(path, index)),
+      )
+      .join(',')}]`;
   }
 }

@@ -11,8 +11,10 @@ export type ReverseEdgeMultipleCountSelectionArgs = utils.Nillable<{
   filter?: NodeFilter;
 }>;
 
+export type ReverseEdgeMultipleCountValue = number;
+
 export class ReverseEdgeMultipleCountSelection
-  implements SelectionExpressionInterface
+  implements SelectionExpressionInterface<ReverseEdgeMultipleCountValue>
 {
   public readonly alias?: string;
   public readonly name: string;
@@ -65,22 +67,6 @@ export class ReverseEdgeMultipleCountSelection
     return this;
   }
 
-  public parseValue(maybeValue: unknown, path: utils.Path): number {
-    if (maybeValue == null) {
-      throw new utils.UnexpectedValueError(
-        `a non-nil "${scalars.typesByName.UnsignedInt}"`,
-        maybeValue,
-        { path },
-      );
-    }
-
-    return utils.parseGraphQLScalarValue(
-      scalars.typesByName.UnsignedInt,
-      maybeValue,
-      path,
-    )!;
-  }
-
   @Memoize()
   public toGraphQLField(): graphql.FieldNode {
     return {
@@ -96,5 +82,39 @@ export class ReverseEdgeMultipleCountSelection
         value: this.name,
       },
     };
+  }
+
+  public parseValue(
+    maybeValue: unknown,
+    path?: utils.Path,
+  ): ReverseEdgeMultipleCountValue {
+    if (maybeValue == null) {
+      throw new utils.UnexpectedValueError(
+        `a non-nil "${scalars.typesByName.UnsignedInt}"`,
+        maybeValue,
+        { path },
+      );
+    }
+
+    return utils.parseGraphQLScalarValue(
+      scalars.typesByName.UnsignedInt,
+      maybeValue,
+      path,
+    )!;
+  }
+
+  public areValuesEqual(
+    a: ReverseEdgeMultipleCountValue,
+    b: ReverseEdgeMultipleCountValue,
+  ): boolean {
+    return a === b;
+  }
+
+  public serialize(maybeValue: unknown, path?: utils.Path): number {
+    return this.parseValue(maybeValue, path);
+  }
+
+  public stringify(maybeValue: unknown, path?: utils.Path): string {
+    return JSON.stringify(this.serialize(maybeValue, path));
   }
 }

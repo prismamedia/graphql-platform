@@ -1,5 +1,6 @@
 import * as utils from '@prismamedia/graphql-platform-utils';
 import { Memoize } from '@prismamedia/memoize';
+import type { JsonValue } from 'type-fest';
 import type { ConnectorInterface } from '../../connector-interface.js';
 import type { Node } from '../../node.js';
 import type { AbstractComponentCreationInput } from '../type/input/creation/field/abstract-component.js';
@@ -170,4 +171,8 @@ export abstract class AbstractComponent<
   public abstract parseValue(maybeValue: unknown, path?: utils.Path): any;
 
   public abstract areValuesEqual(a: any, b: any): boolean;
+
+  public abstract serialize(maybeValue: unknown, path?: utils.Path): JsonValue;
+
+  public abstract stringify(maybeValue: unknown, path?: utils.Path): string;
 }

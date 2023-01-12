@@ -13,7 +13,7 @@ export class NodeChangeAggregation<
 {
   readonly #changesByIdByNode = new Map<
     Node,
-    Map<NodeChange['flattenedId'], NodeChange>
+    Map<NodeChange['stringifiedId'], NodeChange>
   >();
 
   public readonly changesByNode: ReadonlyMap<
@@ -36,9 +36,9 @@ export class NodeChangeAggregation<
         this.#changesByIdByNode.set(node, (changesById = new Map()));
       }
 
-      let previousChange = changesById.get(change.flattenedId);
+      let previousChange = changesById.get(change.stringifiedId);
       if (!previousChange) {
-        changesById.set(change.flattenedId, change);
+        changesById.set(change.stringifiedId, change);
       } else {
         assert(
           previousChange.createdAt <= change.createdAt,
@@ -50,13 +50,13 @@ export class NodeChangeAggregation<
             switch (change.kind) {
               case utils.MutationType.CREATION: {
                 // Should not happen - we missed something
-                changesById.set(change.flattenedId, change);
+                changesById.set(change.stringifiedId, change);
                 break;
               }
 
               case utils.MutationType.UPDATE: {
                 changesById.set(
-                  change.flattenedId,
+                  change.stringifiedId,
                   new NodeCreation(
                     node,
                     change.requestContext,
@@ -78,13 +78,16 @@ export class NodeChangeAggregation<
             switch (change.kind) {
               case utils.MutationType.CREATION: {
                 // Should not happen - we missed something
-                changesById.set(change.flattenedId, change);
+                changesById.set(change.stringifiedId, change);
                 break;
               }
 
               case utils.MutationType.UPDATE: {
                 if (
-                  node.areValuesEqual(previousChange.newValue, change.oldValue)
+                  node.selection.areValuesEqual(
+                    previousChange.newValue,
+                    change.oldValue,
+                  )
                 ) {
                   const aggregate = new NodeUpdate(
                     node,
@@ -96,20 +99,20 @@ export class NodeChangeAggregation<
                   );
 
                   if (aggregate.updatesByComponent.size) {
-                    changesById.set(change.flattenedId, aggregate);
+                    changesById.set(change.stringifiedId, aggregate);
                   } else {
                     // This "update" cancels the previous "update" => no change
                     this.delete(previousChange);
                   }
                 } else {
                   // Should not happen - we missed something
-                  changesById.set(change.flattenedId, change);
+                  changesById.set(change.stringifiedId, change);
                 }
                 break;
               }
 
               case utils.MutationType.DELETION:
-                changesById.set(change.flattenedId, change);
+                changesById.set(change.stringifiedId, change);
                 break;
             }
             break;
@@ -127,7 +130,7 @@ export class NodeChangeAggregation<
                 );
 
                 if (aggregate.updatesByComponent.size) {
-                  changesById.set(change.flattenedId, aggregate);
+                  changesById.set(change.stringifiedId, aggregate);
                 } else {
                   // This "creation" cancels the previous "deletion" => no change
                   this.delete(previousChange);
@@ -137,13 +140,13 @@ export class NodeChangeAggregation<
 
               case utils.MutationType.UPDATE: {
                 // Should not happen - we missed something
-                changesById.set(change.flattenedId, change);
+                changesById.set(change.stringifiedId, change);
                 break;
               }
 
               case utils.MutationType.DELETION: {
                 // Should not happen - we missed something
-                changesById.set(change.flattenedId, change);
+                changesById.set(change.stringifiedId, change);
                 break;
               }
             }
@@ -173,7 +176,7 @@ export class NodeChangeAggregation<
     let changeByFlattenedId = this.#changesByIdByNode.get(change.node);
 
     if (
-      changeByFlattenedId?.delete(change.flattenedId) &&
+      changeByFlattenedId?.delete(change.stringifiedId) &&
       changeByFlattenedId.size === 0
     ) {
       this.#changesByIdByNode.delete(change.node);

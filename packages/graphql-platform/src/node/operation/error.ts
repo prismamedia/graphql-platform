@@ -41,7 +41,7 @@ export class NodeNotFoundError extends utils.GraphError {
 
 export interface DuplicateNodeErrorOptions extends utils.GraphErrorOptions {
   readonly uniqueConstraint?: UniqueConstraint;
-  readonly value?: string;
+  readonly hint?: string;
 }
 
 export class DuplicateNodeError extends utils.GraphError {
@@ -49,7 +49,7 @@ export class DuplicateNodeError extends utils.GraphError {
     super(
       [
         `Duplicate "${options?.uniqueConstraint || node}"`,
-        options?.value ? `: ${options.value}` : undefined,
+        options?.hint ? `: ${options.hint}` : undefined,
       ]
         .filter(Boolean)
         .join(''),

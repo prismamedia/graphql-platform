@@ -1,6 +1,7 @@
 import * as utils from '@prismamedia/graphql-platform-utils';
 import * as graphql from 'graphql';
 import assert from 'node:assert/strict';
+import type { JsonObject } from 'type-fest';
 import type { Node } from '../../node.js';
 import {
   mergeSelectionExpressions,
@@ -67,7 +68,19 @@ export class NodeSelection<TValue extends NodeSelectedValue = any> {
     );
   }
 
-  public parseValue(maybeValue: unknown, path?: utils.Path): TValue {
+  public toGraphQLSelectionSet(): graphql.SelectionSetNode {
+    return {
+      kind: graphql.Kind.SELECTION_SET,
+      selections: Array.from(this.expressions, (expression) =>
+        expression.toGraphQLField(),
+      ),
+    };
+  }
+
+  public parseValue(
+    maybeValue: unknown,
+    path: utils.Path = utils.addPath(undefined, this.node.toString()),
+  ): TValue {
     utils.assertPlainObject(maybeValue, path);
 
     return utils.aggregateGraphError<SelectionExpression, TValue>(
@@ -84,12 +97,69 @@ export class NodeSelection<TValue extends NodeSelectedValue = any> {
     );
   }
 
-  public toGraphQLSelectionSet(): graphql.SelectionSetNode {
-    return {
-      kind: graphql.Kind.SELECTION_SET,
-      selections: Array.from(this.expressions, (expression) =>
-        expression.toGraphQLField(),
-      ),
-    };
+  public areValuesEqual(a: TValue, b: TValue): boolean {
+    const aKeySet = new Set(Object.keys(a));
+    const bKeySet = new Set(Object.keys(b));
+
+    return (
+      aKeySet.size === this.expressions.length &&
+      bKeySet.size === this.expressions.length &&
+      this.expressions.every(
+        (expression) =>
+          aKeySet.delete(expression.key) &&
+          bKeySet.delete(expression.key) &&
+          expression.areValuesEqual(
+            a[expression.key] as any,
+            b[expression.key] as any,
+          ),
+      ) &&
+      aKeySet.size === 0 &&
+      bKeySet.size === 0
+    );
+  }
+
+  public serialize(
+    maybeValue: unknown,
+    path: utils.Path = utils.addPath(undefined, this.node.toString()),
+  ): JsonObject {
+    utils.assertPlainObject(maybeValue, path);
+
+    return utils.aggregateGraphError<SelectionExpression, JsonObject>(
+      this.expressions,
+      (document, expression) =>
+        Object.assign(document, {
+          [expression.key]: expression.serialize(
+            maybeValue[expression.key],
+            utils.addPath(path, expression.key),
+          ),
+        }),
+      Object.create(null),
+      { path },
+    );
+  }
+
+  public stringify(
+    maybeValue: unknown,
+    path: utils.Path = utils.addPath(undefined, this.node.toString()),
+  ): string {
+    utils.assertPlainObject(maybeValue, path);
+
+    return `{${utils
+      .aggregateGraphError<SelectionExpression, string[]>(
+        this.expressions,
+        (stringifiedExpressions, expression) => {
+          stringifiedExpressions.push(
+            `"${expression.key}":${expression.stringify(
+              maybeValue[expression.key],
+              utils.addPath(path, expression.key),
+            )}`,
+          );
+
+          return stringifiedExpressions;
+        },
+        [],
+        { path },
+      )
+      .join(',')}}`;
   }
 }

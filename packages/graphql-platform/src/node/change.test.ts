@@ -174,23 +174,24 @@ describe('Change', () => {
     expect(
       Array.from(aggregate, (change) => ({
         node: change.node.name,
-        flattenedId: change.flattenedId,
+        stringifiedId: change.stringifiedId,
         kind: change.kind,
       })),
     ).toEqual([
       {
         node: 'Article',
-        flattenedId: '2e9b5020-b9fe-4dab-bb59-59c986fffc12',
+        stringifiedId: '{"id":"2e9b5020-b9fe-4dab-bb59-59c986fffc12"}',
         kind: 'creation',
       },
       {
         node: 'Tag',
-        flattenedId: '1',
+        stringifiedId: '{"id":1}',
         kind: 'creation',
       },
       {
         node: 'ArticleTag',
-        flattenedId: '2e9b5020-b9fe-4dab-bb59-59c986fffc12:1',
+        stringifiedId:
+          '{"article":{"id":"2e9b5020-b9fe-4dab-bb59-59c986fffc12"},"tag":{"id":1}}',
         kind: 'creation',
       },
     ]);

@@ -1,11 +1,12 @@
 import * as utils from '@prismamedia/graphql-platform-utils';
 import * as graphql from 'graphql';
 import assert from 'node:assert/strict';
+import type { JsonValue } from 'type-fest';
 import type { Component } from '../../../../definition/component.js';
 import type { Leaf, LeafValue } from '../../../../definition/component/leaf.js';
 import type { SelectionExpressionInterface } from '../../expression-interface.js';
 
-export class LeafSelection implements SelectionExpressionInterface {
+export class LeafSelection implements SelectionExpressionInterface<LeafValue> {
   public readonly component: Component;
   public readonly alias?: string;
   public readonly name: string;
@@ -40,10 +41,6 @@ export class LeafSelection implements SelectionExpressionInterface {
     return this;
   }
 
-  public parseValue(maybeValue: unknown, path: utils.Path): LeafValue {
-    return this.leaf.parseValue(maybeValue, path);
-  }
-
   public toGraphQLField(): graphql.FieldNode {
     return {
       kind: graphql.Kind.FIELD,
@@ -52,5 +49,21 @@ export class LeafSelection implements SelectionExpressionInterface {
         value: this.name,
       },
     };
+  }
+
+  public parseValue(maybeValue: unknown, path?: utils.Path): LeafValue {
+    return this.leaf.parseValue(maybeValue, path);
+  }
+
+  public areValuesEqual(a: LeafValue, b: LeafValue): boolean {
+    return this.leaf.areValuesEqual(a, b);
+  }
+
+  public serialize(maybeValue: unknown, path?: utils.Path): JsonValue {
+    return this.leaf.serialize(maybeValue, path);
+  }
+
+  public stringify(maybeValue: unknown, path?: utils.Path): string {
+    return this.leaf.stringify(maybeValue, path);
   }
 }

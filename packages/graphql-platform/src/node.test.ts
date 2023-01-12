@@ -135,7 +135,7 @@ describe('Node', () => {
                 },
               }),
           ).toThrowError(
-            '/GraphQLPlatformConfig/nodes/Article/components/edgeToAMissingReference/head - Expects a "unique-constraint"\'s name among "_id, id, category_slug", got: \'missingUnique\'',
+            '/GraphQLPlatformConfig/nodes/Article/components/edgeToAMissingReference/head - Expects a "unique-constraint"\'s name among "_id, id, category-slug", got: \'missingUnique\'',
           );
         });
 
@@ -150,14 +150,14 @@ describe('Node', () => {
                       ...Category.components,
                       parent: {
                         kind: 'Edge',
-                        head: 'Category.parent_slug',
+                        head: 'Category.parent-slug',
                       },
                     },
                   },
                 },
               }),
           ).toThrowError(
-            '/GraphQLPlatformConfig/nodes/Category/components/parent/head - Expects a "unique-constraint" not refering itself, got: \'parent_slug\'',
+            '/GraphQLPlatformConfig/nodes/Category/components/parent/head - Expects a "unique-constraint" not refering itself, got: \'parent-slug\'',
           );
         });
 
@@ -233,7 +233,7 @@ describe('Node', () => {
               },
             }),
         ).toThrowError(
-          '/GraphQLPlatformConfig/nodes/Test/uniques/0 - Expects its identifier (= the first unique constraint, composed of the component "_id") to be non-nullable (= at least one of its components being non-nullable)',
+          '/GraphQLPlatformConfig/nodes/Test/uniques/0 - Expects its identifier (= the first unique-constraint, composed of the component "_id") to be non-nullable (= at least one of its components being non-nullable)',
         );
       });
 
@@ -251,7 +251,7 @@ describe('Node', () => {
               },
             }),
         ).toThrowError(
-          '/GraphQLPlatformConfig/nodes/Test/uniques/0 - Expects its identifier (= the first unique constraint, composed of the component "_id") to be immutable (= all its components being immutable)',
+          '/GraphQLPlatformConfig/nodes/Test/uniques/0 - Expects its identifier (= the first unique-constraint, composed of the component "_id") to be immutable (= all its components being immutable)',
         );
       });
 
@@ -500,13 +500,13 @@ describe('Node', () => {
           'score',
           'machineTags',
         ],
-        ['_id', 'id', 'category_slug'],
+        ['_id', 'id', 'category-slug'],
         ['tags'],
       ],
       [
         'Category',
         ['_id', 'id', 'title', 'slug', 'parent', 'order'],
-        ['_id', 'id', 'parent_slug', 'parent_order'],
+        ['_id', 'id', 'parent-slug', 'parent-order'],
         ['children', 'articles'],
       ],
       [
@@ -518,7 +518,7 @@ describe('Node', () => {
       [
         'ArticleTag',
         ['article', 'tag', 'order'],
-        ['article_tag', 'article_order'],
+        ['article-tag', 'article-order'],
         ['moderations'],
       ],
       [

@@ -1,5 +1,4 @@
 import * as utils from '@prismamedia/graphql-platform-utils';
-import { Memoize } from '@prismamedia/memoize';
 import type { ConnectorInterface } from '../connector-interface.js';
 import type { Node, UniqueConstraintValue } from '../node.js';
 
@@ -9,7 +8,7 @@ export abstract class AbstractNodeChange<
 > {
   public abstract readonly kind: utils.MutationType;
 
-  public readonly flattenedId: string;
+  public readonly stringifiedId: string;
 
   public constructor(
     public readonly node: Node<TRequestContext, TConnector>,
@@ -18,12 +17,11 @@ export abstract class AbstractNodeChange<
     public readonly createdAt: Date = new Date(),
     public committedAt?: Date,
   ) {
-    this.flattenedId = node.identifier.flatten(id);
+    this.stringifiedId = node.identifier.stringify(id);
   }
 
-  @Memoize()
   public toString(): string {
-    return `${this.node}/${this.kind}/${this.flattenedId}`;
+    return `${this.node}/${this.stringifiedId}/${this.kind}`;
   }
 
   public get at(): Date {

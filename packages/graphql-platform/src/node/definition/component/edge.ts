@@ -2,7 +2,7 @@ import * as utils from '@prismamedia/graphql-platform-utils';
 import { Memoize } from '@prismamedia/memoize';
 import inflection from 'inflection';
 import assert from 'node:assert/strict';
-import type { JsonValue } from 'type-fest';
+import type { JsonObject } from 'type-fest';
 import type {
   ConnectorConfigOverrideKind,
   ConnectorInterface,
@@ -28,7 +28,7 @@ import type {
   UniqueConstraintValue,
 } from '../unique-constraint.js';
 
-export type EdgeValue = UniqueConstraintValue | null;
+export type ReferenceValue = UniqueConstraintValue | null;
 
 export enum OnEdgeHeadDeletion {
   RESTRICT,
@@ -45,9 +45,9 @@ export type EdgeConfig<
   /**
    * Required, the "head"'s name, ex: { kind: "Edge", head: "Category" }
    *
-   * Optional, specify the referenced unique constraint's name after a ".", ex: { kind: "Edge", head: "Category.parent-title" }
+   * Optional, specify the referenced unique-constraint's name after a ".", ex: { kind: "Edge", head: "Category.parent-title" }
    *
-   * Default: the "head"'s identifier (= its first unique constraint)
+   * Default: the "head"'s identifier (= its first unique-constraint)
    */
   head: Node['name'] | `${Node['name']}.${UniqueConstraint['name']}`;
 
@@ -252,46 +252,12 @@ export class Edge<
   }
 
   @Memoize()
-  public override get selection(): EdgeHeadSelection {
+  public override get selection(): EdgeHeadSelection<ReferenceValue> {
     return new EdgeHeadSelection(
       this,
       undefined,
       this.referencedUniqueConstraint.selection,
     );
-  }
-
-  public override parseValue(
-    maybeValue: unknown,
-    path: utils.Path = utils.addPath(undefined, this.toString()),
-  ): EdgeValue {
-    if (maybeValue === undefined) {
-      throw new utils.UnexpectedUndefinedError(
-        this.referencedUniqueConstraint,
-        { path },
-      );
-    } else if (maybeValue === null) {
-      if (!this.isNullable()) {
-        throw new utils.UnexpectedNullError(this.referencedUniqueConstraint, {
-          path,
-        });
-      }
-
-      return null;
-    }
-
-    return this.referencedUniqueConstraint.parseValue(maybeValue, path);
-  }
-
-  public areValuesEqual(a: EdgeValue, b: EdgeValue): boolean {
-    return a === null || b === null
-      ? a === b
-      : this.referencedUniqueConstraint.areValuesEqual(a, b);
-  }
-
-  public serialize(value: EdgeValue): JsonValue {
-    return value !== null
-      ? this.referencedUniqueConstraint.serialize(value)
-      : null;
   }
 
   @Memoize()
@@ -347,5 +313,30 @@ export class Edge<
     assert(this.isMutable(), `The "${this}" edge is immutable`);
 
     return new EdgeUpdateInput(this);
+  }
+
+  public parseValue(
+    maybeValue: unknown,
+    path: utils.Path = utils.addPath(undefined, this.toString()),
+  ): ReferenceValue {
+    return this.selection.parseValue(maybeValue, path);
+  }
+
+  public areValuesEqual(a: ReferenceValue, b: ReferenceValue): boolean {
+    return this.selection.areValuesEqual(a, b);
+  }
+
+  public serialize(
+    maybeValue: unknown,
+    path: utils.Path = utils.addPath(undefined, this.toString()),
+  ): JsonObject | null {
+    return this.selection.serialize(maybeValue, path);
+  }
+
+  public stringify(
+    maybeValue: unknown,
+    path: utils.Path = utils.addPath(undefined, this.toString()),
+  ): string {
+    return this.selection.stringify(maybeValue, path);
   }
 }

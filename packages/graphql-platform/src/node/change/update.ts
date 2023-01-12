@@ -65,7 +65,7 @@ export class NodeUpdate<
     );
 
     this.updatedComponentNames = Object.freeze(
-      Array.from(this.updatesByComponent.keys(), (component) => component.name),
+      Array.from(this.updatesByComponent.keys(), ({ name }) => name),
     );
   }
 }
