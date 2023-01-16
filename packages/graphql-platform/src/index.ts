@@ -30,6 +30,7 @@ import {
 
 export * from './connector-interface.js';
 export * from './custom-operations.js';
+export * from './graphql.js';
 export * from './node.js';
 export * from './seeding.js';
 

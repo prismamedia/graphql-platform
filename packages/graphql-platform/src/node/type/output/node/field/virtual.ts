@@ -1,18 +1,25 @@
 import * as utils from '@prismamedia/graphql-platform-utils';
 import { Memoize } from '@prismamedia/memoize';
-import * as graphql from 'graphql';
+import type * as graphql from 'graphql';
 import type { ConnectorInterface } from '../../../../../connector-interface.js';
-import {
+import type { GPBoundGraphQLFieldConfig } from '../../../../../graphql.js';
+import type {
   NodeSelectedValue,
   NodeSelection,
 } from '../../../../statement/selection.js';
-import { MaybeNodeAwareConfig } from '../../../maybe-node-aware-config.js';
-import { NodeOutputType, RawNodeSelection } from '../../node.js';
+import type { MaybeNodeAwareConfig } from '../../../maybe-node-aware-config.js';
+import type { NodeOutputType, RawNodeSelection } from '../../node.js';
 
 export interface VirtualFieldOutputTypeConfig<
   TRequestContext extends object,
   TConnector extends ConnectorInterface,
-> extends graphql.GraphQLFieldConfig<any, TRequestContext, any> {
+> extends GPBoundGraphQLFieldConfig<
+    TRequestContext,
+    TConnector,
+    any,
+    TRequestContext,
+    any
+  > {
   /**
    * Optional, in order to compute this virtual field value, you certainly need some other fields' value in the resolver's source,
    * you can configure the dependency here, as a fragment/selectionSet
@@ -35,47 +42,35 @@ export class VirtualFieldOutputType {
   readonly #dependsOnConfig?: RawNodeSelection;
   readonly #dependsOnConfigPath: utils.Path;
 
-  public readonly graphql: graphql.GraphQLFieldConfig<
-    NodeSelectedValue,
-    any,
-    any
-  >;
+  readonly #graphql: graphql.GraphQLFieldConfig<NodeSelectedValue, any>;
 
   public constructor(
     public readonly parent: NodeOutputType,
     public readonly name: utils.Name,
-    { dependsOn, ...graphql }: VirtualFieldOutputTypeConfig<any, any>,
+    { dependsOn, resolve, ...graphql }: VirtualFieldOutputTypeConfig<any, any>,
     public readonly configPath: utils.Path,
   ) {
     utils.assertName(name, configPath);
 
-    this.graphql = graphql;
-
-    // dependsOn
+    // depends-on
     {
       this.#dependsOnConfig = dependsOn;
       this.#dependsOnConfigPath = utils.addPath(configPath, 'dependsOn');
     }
+
+    this.#graphql = { ...graphql, resolve: resolve?.bind(parent.node.gp) };
   }
 
   @Memoize()
   public get dependsOn(): NodeSelection | undefined {
-    if (this.#dependsOnConfig) {
-      try {
-        return this.parent.select(this.#dependsOnConfig);
-      } catch (error) {
-        throw new utils.UnexpectedValueError(
-          `a valid fragment`,
+    return this.#dependsOnConfig
+      ? this.parent.select(
           this.#dependsOnConfig,
-          {
-            path: this.#dependsOnConfigPath,
-            cause: error,
-          },
-        );
-      }
-    }
-
-    return undefined;
+          undefined,
+          undefined,
+          this.#dependsOnConfigPath,
+        )
+      : undefined;
   }
 
   public isPublic(): boolean {
@@ -84,15 +79,15 @@ export class VirtualFieldOutputType {
 
   public getGraphQLFieldConfig(): graphql.GraphQLFieldConfig<
     NodeSelectedValue,
-    any,
     any
   > {
-    return this.graphql;
+    return this.#graphql;
   }
 
   @Memoize()
   public validate(): void {
     this.dependsOn;
+    this.isPublic();
     this.getGraphQLFieldConfig();
   }
 }

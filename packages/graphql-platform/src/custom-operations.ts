@@ -1,5 +1,6 @@
-import * as graphql from 'graphql';
+import type * as graphql from 'graphql';
 import type { ConnectorInterface } from './connector-interface.js';
+import type { GPBoundGraphQLFieldConfig } from './graphql.js';
 import type { GraphQLPlatform } from './index.js';
 
 type MaybeGraphQLPlatformAware<
@@ -27,7 +28,14 @@ type CustomOperationTypeMap<
   [operationName: string]: MaybeGraphQLPlatformAware<
     TRequestContext,
     TConnector,
-    graphql.GraphQLFieldConfig<undefined, TRequestContext, any> | undefined
+    | GPBoundGraphQLFieldConfig<
+        TRequestContext,
+        TConnector,
+        undefined,
+        TRequestContext,
+        any
+      >
+    | undefined
   >;
 };
 
@@ -67,7 +75,11 @@ export function getCustomOperationMap<
       );
 
       if (operation) {
-        fieldConfigMap[operationName] = operation;
+        fieldConfigMap[operationName] = {
+          ...operation,
+          resolve: operation.resolve?.bind(gp),
+          subscribe: operation.subscribe?.bind(gp),
+        };
       }
     }
   }

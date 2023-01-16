@@ -412,7 +412,7 @@ describe('Node', () => {
               },
             }),
         ).toThrowError(
-          `/GraphQLPlatformConfig/nodes/Article/output/virtualFields/myInvalidField/dependsOn - Expects a valid fragment, got: '{ unknownField }'`,
+          `/GraphQLPlatformConfig/nodes/Article/output/virtualFields/myInvalidField/dependsOn - Expects an \"Article\"'s field among`,
         );
       });
     });
