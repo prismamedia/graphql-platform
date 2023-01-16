@@ -6,14 +6,13 @@ export type GPBoundGraphQLFieldResolver<
   TRequestContext extends object,
   TConnector extends ConnectorInterface,
   TSource,
-  TContext,
   TArgs = any,
   TResult = unknown,
 > = (
   this: GraphQLPlatform<TRequestContext, TConnector>,
   source: TSource,
   args: TArgs,
-  context: TContext,
+  context: TRequestContext,
   info: graphql.GraphQLResolveInfo,
 ) => TResult;
 
@@ -21,23 +20,13 @@ export interface GPBoundGraphQLFieldConfig<
   TRequestContext extends object,
   TConnector extends ConnectorInterface,
   TSource,
-  TContext,
   TArgs = any,
   TResult = unknown,
-> extends graphql.GraphQLFieldConfig<TSource, TContext, TArgs> {
+> extends graphql.GraphQLFieldConfig<TSource, TRequestContext, TArgs> {
   resolve?: GPBoundGraphQLFieldResolver<
     TRequestContext,
     TConnector,
     TSource,
-    TContext,
-    TArgs,
-    TResult
-  >;
-  subscribe?: GPBoundGraphQLFieldResolver<
-    TRequestContext,
-    TConnector,
-    TSource,
-    TContext,
     TArgs,
     TResult
   >;

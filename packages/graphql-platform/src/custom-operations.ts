@@ -21,6 +21,19 @@ const resolveMaybeGraphQLPlatformAware = <
     ? ((typeof config === 'function' ? (config as any)(gp) : config) as T)
     : undefined;
 
+export type CustomOperation<
+  TRequestContext extends object,
+  TConnector extends ConnectorInterface,
+  TArgs = any,
+  TResult = unknown,
+> = GPBoundGraphQLFieldConfig<
+  TRequestContext,
+  TConnector,
+  undefined,
+  TArgs,
+  TResult
+>;
+
 type CustomOperationTypeMap<
   TRequestContext extends object,
   TConnector extends ConnectorInterface,
@@ -28,14 +41,7 @@ type CustomOperationTypeMap<
   [operationName: string]: MaybeGraphQLPlatformAware<
     TRequestContext,
     TConnector,
-    | GPBoundGraphQLFieldConfig<
-        TRequestContext,
-        TConnector,
-        undefined,
-        TRequestContext,
-        any
-      >
-    | undefined
+    CustomOperation<TRequestContext, TConnector> | undefined
   >;
 };
 

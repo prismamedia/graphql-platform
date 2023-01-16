@@ -13,12 +13,15 @@ import type { NodeOutputType, RawNodeSelection } from '../../node.js';
 export interface VirtualFieldOutputTypeConfig<
   TRequestContext extends object,
   TConnector extends ConnectorInterface,
+  TSource extends NodeSelectedValue = any,
+  TArgs = any,
+  TResult = unknown,
 > extends GPBoundGraphQLFieldConfig<
     TRequestContext,
     TConnector,
-    any,
-    TRequestContext,
-    any
+    TSource,
+    TArgs,
+    TResult
   > {
   /**
    * Optional, in order to compute this virtual field value, you certainly need some other fields' value in the resolver's source,
@@ -26,7 +29,7 @@ export interface VirtualFieldOutputTypeConfig<
    *
    * Example: '{ id title }'
    */
-  dependsOn?: RawNodeSelection;
+  dependsOn?: RawNodeSelection<TSource>;
 }
 
 export type VirtualFieldOutputTypeConfigMap<
