@@ -180,13 +180,16 @@ export function parseRawDraftContentBlock(
       RawDraftInlineStyleRange[]
     >(
       maybeRawDraftContentBlock.inlineStyleRanges,
-      (inlineStyleRanges, value, index) => [
-        ...inlineStyleRanges,
-        parseRawDraftInlineStyleRange(
-          value,
-          utils.addPath(inlineStyleRangesPath, index),
-        ),
-      ],
+      (inlineStyleRanges, value, index) => {
+        inlineStyleRanges.push(
+          parseRawDraftInlineStyleRange(
+            value,
+            utils.addPath(inlineStyleRangesPath, index),
+          ),
+        );
+
+        return inlineStyleRanges;
+      },
       [],
       { path: inlineStyleRangesPath },
     );
@@ -207,14 +210,17 @@ export function parseRawDraftContentBlock(
 
     entityRanges = utils.aggregateGraphError<any, RawDraftEntityRange[]>(
       maybeRawDraftContentBlock.entityRanges,
-      (entityRanges, value, index) => [
-        ...entityRanges,
-        parseRawDraftEntityRange(
-          value,
-          entityMap,
-          utils.addPath(entityRangesPath, index),
-        ),
-      ],
+      (entityRanges, value, index) => {
+        entityRanges.push(
+          parseRawDraftEntityRange(
+            value,
+            entityMap,
+            utils.addPath(entityRangesPath, index),
+          ),
+        );
+
+        return entityRanges;
+      },
       [],
       { path: entityRangesPath },
     );
@@ -239,7 +245,7 @@ export function parseRawDraftContentBlock(
     data = rawData;
   }
 
-  return {
+  return Object.assign(Object.create(null), {
     key: maybeRawDraftContentBlock.key,
     type: maybeRawDraftContentBlock.type,
     text: maybeRawDraftContentBlock.text,
@@ -247,7 +253,7 @@ export function parseRawDraftContentBlock(
     inlineStyleRanges,
     entityRanges,
     ...(data !== undefined && { data }),
-  } as RawDraftContentBlock;
+  });
 }
 
 export interface RawDraftContentState {
@@ -324,23 +330,26 @@ export function parseRawDraftContentState(
 
     blocks = utils.aggregateGraphError<any, RawDraftContentBlock[]>(
       maybeRawDraftContentState.blocks,
-      (blocks, block, index) => [
-        ...blocks,
-        parseRawDraftContentBlock(
-          block,
-          entityMap,
-          utils.addPath(blocksPath, index),
-        ),
-      ],
+      (blocks, block, index) => {
+        blocks.push(
+          parseRawDraftContentBlock(
+            block,
+            entityMap,
+            utils.addPath(blocksPath, index),
+          ),
+        );
+
+        return blocks;
+      },
       [],
       { path: blocksPath },
     );
   }
 
-  return {
+  return Object.assign(Object.create(null), {
     entityMap,
     blocks,
-  };
+  });
 }
 
 export const GraphQLDraftJS = new graphql.GraphQLScalarType({
