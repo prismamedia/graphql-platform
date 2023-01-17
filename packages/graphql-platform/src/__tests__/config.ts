@@ -9,7 +9,7 @@ import {
 import { randomUUID } from 'node:crypto';
 import {
   ConnectorInterface,
-  CustomOperationMap,
+  CustomOperationsByNameByTypeConfig,
   GraphQLPlatform,
   NodeConfig,
   OnEdgeHeadDeletion,
@@ -932,7 +932,7 @@ export const nodes: Record<string, NodeConfig<MyContext>> = {
 
 export const nodeNames = Object.keys(nodes);
 
-export const customOperations: CustomOperationMap<MyContext> = {
+export const customOperations: CustomOperationsByNameByTypeConfig<MyContext> = {
   query: {
     whoAmI: () => ({
       type: new GraphQLNonNull(GraphQLString),

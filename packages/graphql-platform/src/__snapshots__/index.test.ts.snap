@@ -311,6 +311,7 @@ type query {
     """
     subset: UserProfileFilterInput
   ): [UserProfile]!
+  whoAmI: String!
 }
 
 """

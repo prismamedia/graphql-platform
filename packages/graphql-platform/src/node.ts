@@ -65,6 +65,7 @@ export * from './node/change.js';
 export * from './node/cursor.js';
 export * from './node/definition.js';
 export * from './node/fixture.js';
+export * from './node/maybe-aware-config.js';
 export * from './node/name.js';
 export * from './node/operation.js';
 export * from './node/statement.js';

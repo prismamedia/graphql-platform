@@ -9,8 +9,8 @@ import * as graphql from 'graphql';
 import type { Constructor, Except } from 'type-fest';
 import type { ConnectorInterface } from './connector-interface.js';
 import {
-  getCustomOperationMap,
-  type CustomOperationMap,
+  getCustomOperationsByNameByType,
+  type CustomOperationsByNameByTypeConfig,
 } from './custom-operations.js';
 import {
   createAPI,
@@ -30,7 +30,8 @@ import {
 
 export * from './connector-interface.js';
 export * from './custom-operations.js';
-export * from './graphql.js';
+export * from './graphql-field-config.js';
+export * from './maybe-aware-config.js';
 export * from './node.js';
 export * from './seeding.js';
 
@@ -66,7 +67,10 @@ export type GraphQLPlatformConfig<
   /**
    * Optional, add some "custom" operations
    */
-  customOperations?: CustomOperationMap<TRequestContext, TConnector>;
+  customOperations?: CustomOperationsByNameByTypeConfig<
+    TRequestContext,
+    TConnector
+  >;
 
   /**
    * Optional, fine-tune the generated GraphQL Schema
@@ -416,32 +420,35 @@ export class GraphQLPlatform<
       ...this.config.schema,
 
       ...Object.fromEntries(
-        utils.operationTypes.map((type) => {
-          const fields: graphql.GraphQLFieldConfigMap<
-            undefined,
-            TRequestContext
-          > = {
-            // Native operations
-            ...Object.fromEntries(
-              [...this.operationsByNameByType[type].values()]
-                .filter((operation) => operation.isPublic())
-                .map((operation) => [
-                  operation.name,
-                  operation.getGraphQLFieldConfig(),
-                ]),
-            ),
+        utils.operationTypes
+          .map((type): [string, graphql.GraphQLObjectType] | undefined => {
+            const fields: graphql.GraphQLFieldConfigMap<any, any> = {
+              // Core-operations
+              ...Object.fromEntries(
+                [...this.operationsByNameByType[type].values()]
+                  .filter((operation) => operation.isPublic())
+                  .map((operation) => [
+                    operation.name,
+                    operation.getGraphQLFieldConfig(),
+                  ]),
+              ),
 
-            // Custom operations
-            ...getCustomOperationMap(this, this.config.customOperations, type),
-          };
+              // Custom-operations
+              ...getCustomOperationsByNameByType(
+                this,
+                this.config.customOperations,
+                type,
+              ),
+            };
 
-          return [
-            type,
-            Object.keys(fields).length > 0
-              ? new graphql.GraphQLObjectType({ name: type, fields })
-              : undefined,
-          ];
-        }),
+            return Object.keys(fields).length > 0
+              ? [type, new graphql.GraphQLObjectType({ name: type, fields })]
+              : undefined;
+          })
+          .filter(
+            (maybeEntry): maybeEntry is [string, graphql.GraphQLObjectType] =>
+              maybeEntry !== undefined,
+          ),
       ),
     });
 

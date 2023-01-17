@@ -8,6 +8,7 @@ import type { Node } from '../../../node.js';
 import type { Component } from '../../definition.js';
 import { Leaf } from '../../definition/component/leaf.js';
 import { ReverseEdgeUnique } from '../../definition/reverse-edge/unique.js';
+import { resolveMaybeNodeAwareConfig } from '../../maybe-aware-config.js';
 import type { OperationContext } from '../../operation/context.js';
 import {
   mergeSelectionExpressions,
@@ -15,7 +16,6 @@ import {
   NodeSelection,
   SelectionExpression,
 } from '../../statement/selection.js';
-import { resolveMaybeNodeAwareConfig } from '../maybe-node-aware-config.js';
 import {
   EdgeHeadOutputType,
   LeafOutputType,

@@ -1,94 +1,93 @@
+import type * as utils from '@prismamedia/graphql-platform-utils';
 import type * as graphql from 'graphql';
 import type { ConnectorInterface } from './connector-interface.js';
-import type { GPBoundGraphQLFieldConfig } from './graphql.js';
+import type { GPBoundGraphQLFieldConfig } from './graphql-field-config.js';
 import type { GraphQLPlatform } from './index.js';
+import {
+  resolveMaybeGPAwareConfig,
+  type MaybeGPAwareConfig,
+} from './maybe-aware-config.js';
 
-type MaybeGraphQLPlatformAware<
-  TRequestContext extends object,
-  TConnector extends ConnectorInterface,
-  T,
-> = T | ((gp: GraphQLPlatform<TRequestContext, TConnector>) => T);
-
-const resolveMaybeGraphQLPlatformAware = <
-  TRequestContext extends object,
-  TConnector extends ConnectorInterface,
-  T,
->(
-  gp: GraphQLPlatform<TRequestContext, TConnector>,
-  config?: MaybeGraphQLPlatformAware<TRequestContext, TConnector, T>,
-): T | undefined =>
-  config
-    ? ((typeof config === 'function' ? (config as any)(gp) : config) as T)
-    : undefined;
-
-export type CustomOperation<
-  TRequestContext extends object,
-  TConnector extends ConnectorInterface,
-  TArgs = any,
-  TResult = unknown,
-> = GPBoundGraphQLFieldConfig<
-  TRequestContext,
-  TConnector,
-  undefined,
-  TArgs,
-  TResult
->;
-
-type CustomOperationTypeMap<
-  TRequestContext extends object,
-  TConnector extends ConnectorInterface,
-> = {
-  [operationName: string]: MaybeGraphQLPlatformAware<
-    TRequestContext,
-    TConnector,
-    CustomOperation<TRequestContext, TConnector> | undefined
-  >;
-};
-
-export type CustomOperationMap<
+export interface CustomOperationConfig<
   TRequestContext extends object = any,
   TConnector extends ConnectorInterface = any,
-> = {
-  [operationType in graphql.OperationTypeNode]?: MaybeGraphQLPlatformAware<
+  TArgs = any,
+  TResult = unknown,
+> extends GPBoundGraphQLFieldConfig<
     TRequestContext,
     TConnector,
-    CustomOperationTypeMap<TRequestContext, TConnector> | undefined
-  >;
-};
+    undefined,
+    TArgs,
+    TResult
+  > {}
 
-export function getCustomOperationMap<
+export type CustomOperationsByNameConfig<
+  TRequestContext extends object = any,
+  TConnector extends ConnectorInterface = any,
+> = Partial<
+  Record<
+    utils.Name,
+    MaybeGPAwareConfig<
+      TRequestContext,
+      TConnector,
+      CustomOperationConfig<TRequestContext, TConnector> | undefined
+    >
+  >
+>;
+
+export type CustomOperationsByNameByTypeConfig<
+  TRequestContext extends object = any,
+  TConnector extends ConnectorInterface = any,
+> = Partial<
+  Record<
+    graphql.OperationTypeNode,
+    MaybeGPAwareConfig<
+      TRequestContext,
+      TConnector,
+      CustomOperationsByNameConfig<TRequestContext, TConnector> | undefined
+    >
+  >
+>;
+
+export function getCustomOperationsByNameByType<
   TRequestContext extends object,
   TConnector extends ConnectorInterface,
 >(
   gp: GraphQLPlatform<TRequestContext, TConnector>,
-  config: CustomOperationMap<TRequestContext, TConnector> | undefined,
+  maybeConfig:
+    | CustomOperationsByNameByTypeConfig<TRequestContext, TConnector>
+    | undefined,
   operationType: graphql.OperationTypeNode,
 ): graphql.GraphQLFieldConfigMap<undefined, TRequestContext> {
-  const fieldConfigMap: graphql.GraphQLFieldConfigMap<any, any> = {};
+  const customOperationsByName: graphql.GraphQLFieldConfigMap<any, any> = {};
 
-  const customOperations = resolveMaybeGraphQLPlatformAware(
+  const maybeCustomOperationsByName = resolveMaybeGPAwareConfig(
     gp,
-    config?.[operationType],
+    maybeConfig?.[operationType],
   );
 
-  if (customOperations) {
-    for (const [operationName, maybeGraphQLFieldConfig] of Object.entries(
-      customOperations,
+  if (maybeCustomOperationsByName) {
+    for (const [operationName, maybeCustomOperationConfig] of Object.entries(
+      maybeCustomOperationsByName,
     )) {
-      const operation = resolveMaybeGraphQLPlatformAware(
+      const maybeCustomOperation = resolveMaybeGPAwareConfig(
         gp,
-        maybeGraphQLFieldConfig,
+        maybeCustomOperationConfig,
       );
 
-      if (operation) {
-        fieldConfigMap[operationName] = {
-          ...operation,
-          resolve: operation.resolve?.bind(gp),
-          subscribe: operation.subscribe?.bind(gp),
+      if (maybeCustomOperation) {
+        customOperationsByName[operationName] = {
+          ...maybeCustomOperation,
+          ...(maybeCustomOperation.resolve && {
+            resolve: maybeCustomOperation.resolve.bind(gp),
+          }),
+          ...(maybeCustomOperation.subscribe && {
+            subscribe: maybeCustomOperation.subscribe.bind(gp),
+          }),
         };
       }
     }
   }
 
-  return fieldConfigMap;
+  return customOperationsByName;
 }

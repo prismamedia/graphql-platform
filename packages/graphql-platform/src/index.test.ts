@@ -1,6 +1,6 @@
 import * as graphql from 'graphql';
 import { GraphQLPlatform } from './index.js';
-import { nodes } from './__tests__/config.js';
+import { customOperations, nodes } from './__tests__/config.js';
 
 describe('GraphQL Platform', () => {
   describe('Fails', () => {
@@ -42,7 +42,7 @@ describe('GraphQL Platform', () => {
     let gp: GraphQLPlatform;
 
     beforeAll(() => {
-      gp = new GraphQLPlatform({ nodes });
+      gp = new GraphQLPlatform({ nodes, customOperations });
     });
 
     it(`has nodes' definition`, () => {

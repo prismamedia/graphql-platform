@@ -2,17 +2,17 @@ import * as utils from '@prismamedia/graphql-platform-utils';
 import { Memoize } from '@prismamedia/memoize';
 import type * as graphql from 'graphql';
 import type { ConnectorInterface } from '../../../../../connector-interface.js';
-import type { GPBoundGraphQLFieldConfig } from '../../../../../graphql.js';
+import type { GPBoundGraphQLFieldConfig } from '../../../../../graphql-field-config.js';
+import type { MaybeNodeAwareConfig } from '../../../../maybe-aware-config.js';
 import type {
   NodeSelectedValue,
   NodeSelection,
 } from '../../../../statement/selection.js';
-import type { MaybeNodeAwareConfig } from '../../../maybe-node-aware-config.js';
 import type { NodeOutputType, RawNodeSelection } from '../../node.js';
 
 export interface VirtualFieldOutputTypeConfig<
-  TRequestContext extends object,
-  TConnector extends ConnectorInterface,
+  TRequestContext extends object = any,
+  TConnector extends ConnectorInterface = any,
   TSource extends NodeSelectedValue = any,
   TArgs = any,
   TResult = unknown,
@@ -44,13 +44,12 @@ export type VirtualFieldOutputTypeConfigMap<
 export class VirtualFieldOutputType {
   readonly #dependsOnConfig?: RawNodeSelection;
   readonly #dependsOnConfigPath: utils.Path;
-
   readonly #graphql: graphql.GraphQLFieldConfig<NodeSelectedValue, any>;
 
   public constructor(
     public readonly parent: NodeOutputType,
     public readonly name: utils.Name,
-    { dependsOn, resolve, ...graphql }: VirtualFieldOutputTypeConfig<any, any>,
+    { dependsOn, ...config }: VirtualFieldOutputTypeConfig<any, any>,
     public readonly configPath: utils.Path,
   ) {
     utils.assertName(name, configPath);
@@ -61,7 +60,15 @@ export class VirtualFieldOutputType {
       this.#dependsOnConfigPath = utils.addPath(configPath, 'dependsOn');
     }
 
-    this.#graphql = { ...graphql, resolve: resolve?.bind(parent.node.gp) };
+    this.#graphql = {
+      ...config,
+      ...(config.resolve && {
+        resolve: config.resolve.bind(parent.node.gp),
+      }),
+      ...(config.subscribe && {
+        subscribe: config.subscribe.bind(parent.node.gp),
+      }),
+    };
   }
 
   @Memoize()
