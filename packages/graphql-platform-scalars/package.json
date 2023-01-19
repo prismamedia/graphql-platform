@@ -1,6 +1,6 @@
 {
   "name": "@prismamedia/graphql-platform-scalars",
-  "version": "1.0.0-alpha.59",
+  "version": "1.0.0-alpha.60",
   "license": "MIT",
   "contributors": [
     "Yvann Boucher <yvann.boucher@gmail.com>"
@@ -39,6 +39,7 @@
   "dependencies": {
     "@prismamedia/graphql-platform-utils": "workspace:packages/graphql-platform-utils",
     "@types/draft-js": "^0.11.10",
+    "entities": "^4.4.0",
     "type-fest": "^3.5.2"
   },
   "peerDependencies": {

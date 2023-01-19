@@ -5,6 +5,7 @@ import type {
   RawDraftEntityRange,
   RawDraftInlineStyleRange,
 } from 'draft-js';
+import * as entities from 'entities';
 import * as graphql from 'graphql';
 
 export type {
@@ -146,17 +147,30 @@ export function parseRawDraftContentBlock(
     );
   }
 
-  if (typeof maybeRawDraftContentBlock.text !== 'string') {
-    throw new utils.UnexpectedValueError(
-      `a string`,
-      maybeRawDraftContentBlock.text,
-      { path: utils.addPath(path, 'text') },
-    );
+  let text: string;
+  {
+    if (maybeRawDraftContentBlock.text != null) {
+      if (typeof maybeRawDraftContentBlock.text !== 'string') {
+        throw new utils.UnexpectedValueError(
+          `a string`,
+          maybeRawDraftContentBlock.text,
+          { path: utils.addPath(path, 'text') },
+        );
+      }
+
+      text = entities
+        // Decodes entities, we target UTF-8
+        .decodeHTMLStrict(maybeRawDraftContentBlock.text)
+        // Remove the leading and trailing whitespaces
+        .trim();
+    } else {
+      text = '';
+    }
   }
 
-  if (typeof maybeRawDraftContentBlock.depth !== 'number') {
+  if (!Number.isInteger(maybeRawDraftContentBlock.depth)) {
     throw new utils.UnexpectedValueError(
-      `a number`,
+      `an integer`,
       maybeRawDraftContentBlock.depth,
       { path: utils.addPath(path, 'depth') },
     );
@@ -248,11 +262,11 @@ export function parseRawDraftContentBlock(
   return Object.assign(Object.create(null), {
     key: maybeRawDraftContentBlock.key,
     type: maybeRawDraftContentBlock.type,
-    text: maybeRawDraftContentBlock.text,
+    text,
     depth: maybeRawDraftContentBlock.depth,
     inlineStyleRanges,
     entityRanges,
-    ...(data !== undefined && { data }),
+    ...(data && { data }),
   });
 }
 
