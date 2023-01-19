@@ -160,9 +160,7 @@ export function parseRawDraftContentBlock(
 
       text = entities
         // Decodes entities, we target UTF-8
-        .decodeHTMLStrict(maybeRawDraftContentBlock.text)
-        // Remove the leading and trailing whitespaces
-        .trim();
+        .decodeHTMLStrict(maybeRawDraftContentBlock.text);
     } else {
       text = '';
     }
@@ -255,8 +253,6 @@ export function parseRawDraftContentBlock(
         utils.assertPlainObject(rawData, rawDataPath);
       }
     }
-
-    data = rawData;
   }
 
   return Object.assign(Object.create(null), {
