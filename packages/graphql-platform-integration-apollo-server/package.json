@@ -1,6 +1,6 @@
 {
   "name": "@prismamedia/graphql-platform-integration-apollo-server",
-  "version": "1.0.0-alpha.61",
+  "version": "1.0.0-alpha.62",
   "license": "MIT",
   "contributors": [
     "Yvann Boucher <yvann.boucher@gmail.com>"
@@ -27,7 +27,7 @@
     "test:watch": "yarn run test --watchAll"
   },
   "devDependencies": {
-    "@apollo/server": "4.3.0",
+    "@apollo/server": "4.3.1",
     "@prismamedia/graphql-platform-connector-mariadb": "workspace:packages/graphql-platform-connector-mariadb",
     "@swc/core": "1.3.27",
     "@swc/jest": "0.2.24",

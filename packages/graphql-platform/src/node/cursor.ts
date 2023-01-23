@@ -1,4 +1,6 @@
 import assert from 'node:assert/strict';
+import PQueue, { Options as QueueOptions } from 'p-queue';
+import type { Except, Promisable } from 'type-fest';
 import type { Node } from '../node.js';
 import { Leaf, type UniqueConstraint } from './definition.js';
 import {
@@ -28,7 +30,7 @@ function pickAfterFilterInputValue(
   }, Object.create(null));
 }
 
-export type NodeCursorOptions<TValue extends NodeSelectedValue = any> = {
+export type NodeCursorOptions<TValue extends NodeSelectedValue> = {
   filter?: NodeFilterInputValue;
   selection?: RawNodeSelection<TValue>;
   direction?: OrderingDirection;
@@ -48,9 +50,6 @@ export class NodeCursor<
   protected readonly internalSelection: NodeSelection;
   protected readonly orderByInputValue: OrderByInputValue;
   protected readonly chunkSize: number;
-
-  public current: number = -1;
-  public completed: boolean = false;
 
   public constructor(
     protected readonly node: Node<TRequestContext>,
@@ -127,8 +126,6 @@ export class NodeCursor<
 
       if (values.length) {
         for (const value of values) {
-          this.current++;
-
           yield this.selection.parseValue(value);
         }
 
@@ -139,7 +136,26 @@ export class NodeCursor<
         );
       }
     } while (values.length === this.chunkSize);
+  }
 
-    this.completed = true;
+  public async forEach(
+    task: (value: TValue) => Promisable<void>,
+    options?: Except<QueueOptions<any, any>, 'autoStart' | 'queueClass'>,
+  ): Promise<void> {
+    const queue = new PQueue(options);
+
+    await new Promise<void>(async (resolve, reject) => {
+      queue.on('error', reject);
+
+      for await (const value of this) {
+        await queue.onEmpty();
+
+        queue.add(() => task(value));
+      }
+
+      await queue.onIdle();
+
+      resolve();
+    });
   }
 }
