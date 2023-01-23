@@ -147,15 +147,19 @@ export class NodeCursor<
     await new Promise<void>(async (resolve, reject) => {
       queue.on('error', reject);
 
-      for await (const value of this) {
-        await queue.onEmpty();
+      try {
+        for await (const value of this) {
+          await queue.onEmpty();
 
-        queue.add(() => task(value));
+          queue.add(() => task(value));
+        }
+
+        await queue.onIdle();
+
+        resolve();
+      } catch (error) {
+        reject(error);
       }
-
-      await queue.onIdle();
-
-      resolve();
     });
   }
 }
