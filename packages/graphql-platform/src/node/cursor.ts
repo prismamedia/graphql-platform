@@ -30,7 +30,7 @@ function pickAfterFilterInputValue(
   }, Object.create(null));
 }
 
-export type NodeCursorOptions<TValue extends NodeSelectedValue> = {
+export type NodeCursorOptions<TValue extends NodeSelectedValue = any> = {
   filter?: NodeFilterInputValue;
   selection?: RawNodeSelection<TValue>;
   direction?: OrderingDirection;
