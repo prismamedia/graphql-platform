@@ -14,6 +14,11 @@ import type {
   RawNodeSelection,
 } from './type.js';
 
+export type NodeCursorForEachOptions = Except<
+  QueueOptions<any, any>,
+  'autoStart' | 'queueClass'
+>;
+
 function pickAfterFilterInputValue(
   uniqueConstraint: UniqueConstraint,
   direction: OrderingDirection,
@@ -140,9 +145,13 @@ export class NodeCursor<
 
   public async forEach(
     task: (value: TValue) => Promisable<void>,
-    options?: Except<QueueOptions<any, any>, 'autoStart' | 'queueClass'>,
+    options?: NodeCursorForEachOptions,
   ): Promise<void> {
-    const queue = new PQueue(options);
+    const queue = new PQueue({
+      ...options,
+      concurrency: options?.concurrency ?? 1,
+      throwOnTimeout: options?.throwOnTimeout ?? true,
+    });
 
     await new Promise<void>(async (resolve, reject) => {
       queue.on('error', reject);
