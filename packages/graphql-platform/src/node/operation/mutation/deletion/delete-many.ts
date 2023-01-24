@@ -160,54 +160,61 @@ export class DeleteManyMutation<
       );
     }
 
-    // Apply the related nodes' "OnHeadDeletion"
-    if (this.node.reverseEdgesByName.size) {
-      await Promise.all(
-        this.node.reverseEdges.map((reverseEdge) => {
-          switch (reverseEdge.originalEdge.onHeadDeletion) {
-            case OnEdgeHeadDeletion.RESTRICT:
-              // Nothing to do, the database will take care of it
-              break;
-
-            case OnEdgeHeadDeletion.SET_NULL:
-              return reverseEdge.head.getMutationByKey('update-many').execute(
-                {
-                  where: {
-                    [reverseEdge.originalEdge.name]: {
-                      OR: currentValues.map((currentValue) =>
-                        reverseEdge.originalEdge.referencedUniqueConstraint.parseValue(
-                          currentValue,
-                        ),
-                      ),
-                    },
-                  },
-                  first: 1_000_000,
-                  data: { [reverseEdge.originalEdge.name]: null },
-                  selection: reverseEdge.head.identifier.selection,
-                },
-                context,
-              );
-
-            case OnEdgeHeadDeletion.CASCADE:
-              return reverseEdge.head.getMutationByKey('delete-many').execute(
-                {
-                  where: {
-                    [reverseEdge.originalEdge.name]: {
-                      OR: currentValues.map((currentValue) =>
-                        reverseEdge.originalEdge.referencedUniqueConstraint.parseValue(
-                          currentValue,
-                        ),
-                      ),
-                    },
-                  },
-                  first: 1_000_000,
-                  selection: reverseEdge.head.identifier.selection,
-                },
-                context,
-              );
-          }
-        }),
+    // Apply the related nodes' "OnHeadDeletion" action
+    {
+      const cascadeReverseEdgesByHead = this.node.getReverseEdgesByHeadByAction(
+        OnEdgeHeadDeletion.CASCADE,
       );
+      const setNullReverseEdges = this.node.getReverseEdgesByAction(
+        OnEdgeHeadDeletion.SET_NULL,
+      );
+
+      if (cascadeReverseEdgesByHead.size || setNullReverseEdges.length) {
+        await Promise.all([
+          // CASCADE
+          ...Array.from(cascadeReverseEdgesByHead, ([head, reverseEdges]) =>
+            head.getMutationByKey('delete-many').execute(
+              {
+                where: {
+                  OR: reverseEdges.map((reverseEdge) => ({
+                    [reverseEdge.originalEdge.name]: {
+                      OR: currentValues.map((currentValue) =>
+                        reverseEdge.originalEdge.referencedUniqueConstraint.parseValue(
+                          currentValue,
+                        ),
+                      ),
+                    },
+                  })),
+                },
+                first: scalars.GRAPHQL_MAX_UNSIGNED_INT,
+                selection: head.identifier.selection,
+              },
+              context,
+            ),
+          ),
+
+          // SET_NULL
+          ...setNullReverseEdges.map((reverseEdge) =>
+            reverseEdge.head.getMutationByKey('update-many').execute(
+              {
+                where: {
+                  [reverseEdge.originalEdge.name]: {
+                    OR: currentValues.map((currentValue) =>
+                      reverseEdge.originalEdge.referencedUniqueConstraint.parseValue(
+                        currentValue,
+                      ),
+                    ),
+                  },
+                },
+                first: scalars.GRAPHQL_MAX_UNSIGNED_INT,
+                data: { [reverseEdge.originalEdge.name]: null },
+                selection: reverseEdge.head.identifier.selection,
+              },
+              context,
+            ),
+          ),
+        ]);
+      }
     }
 
     // Actually delete the nodes

@@ -26,7 +26,7 @@ export class JoinTable extends AbstractTableReference {
     super(head, parent.context);
 
     this.authorization = parent.context.getAuthorization(edge.head);
-    this.alias = `${parent.alias}>${head.name}`;
+    this.alias = `${parent.alias}>${edge.name}`;
     this.depth = parent.depth + 1;
   }
 

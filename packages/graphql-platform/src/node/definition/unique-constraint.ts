@@ -266,7 +266,7 @@ export class UniqueConstraint<
       );
     }
 
-    return this.selection.parseValue(maybeValue, path);
+    return value;
   }
 
   public areValuesEqual(

@@ -12,6 +12,7 @@ import type {
 import type {
   GraphQLPlatform,
   GraphQLPlatformEventDataByName,
+  OnEdgeHeadDeletion,
 } from './index.js';
 import { NodeCursor, type NodeCursorOptions } from './node/cursor.js';
 import {
@@ -1061,6 +1062,37 @@ export class Node<
     }
 
     return reverseEdge;
+  }
+
+  @Memoize((onHeadDeletion: OnEdgeHeadDeletion) => onHeadDeletion)
+  public getReverseEdgesByAction(
+    onHeadDeletion: OnEdgeHeadDeletion,
+  ): ReadonlyArray<ReverseEdge<TRequestContext, TConnector>> {
+    return this.reverseEdges.filter(
+      (reverseEdge) =>
+        reverseEdge.originalEdge.onHeadDeletion === onHeadDeletion,
+    );
+  }
+
+  @Memoize((onHeadDeletion: OnEdgeHeadDeletion) => onHeadDeletion)
+  public getReverseEdgesByHeadByAction(
+    onHeadDeletion: OnEdgeHeadDeletion,
+  ): ReadonlyMap<
+    Node<TRequestContext, TConnector>,
+    ReadonlyArray<ReverseEdge<TRequestContext, TConnector>>
+  > {
+    const reverseEdgesByHead = new Map<Node, Array<ReverseEdge>>();
+
+    for (const reverseEdge of this.getReverseEdgesByAction(onHeadDeletion)) {
+      let reverseEdges = reverseEdgesByHead.get(reverseEdge.head);
+      if (!reverseEdges) {
+        reverseEdgesByHead.set(reverseEdge.head, (reverseEdges = []));
+      }
+
+      reverseEdges.push(reverseEdge);
+    }
+
+    return reverseEdgesByHead;
   }
 
   @Memoize()

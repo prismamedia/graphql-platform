@@ -344,7 +344,7 @@ export class ReverseEdgeMultipleUpdateInput extends AbstractReverseEdgeUpdateInp
                 .execute(
                   {
                     where: { [originalEdgeName]: originalEdgeValue },
-                    first: 1_000_000,
+                    first: scalars.GRAPHQL_MAX_UNSIGNED_INT,
                     selection,
                   },
                   context,
@@ -362,7 +362,7 @@ export class ReverseEdgeMultipleUpdateInput extends AbstractReverseEdgeUpdateInp
                 where: {
                   AND: [{ [originalEdgeName]: originalEdgeValue }, actionData],
                 },
-                first: 1_000_000,
+                first: scalars.GRAPHQL_MAX_UNSIGNED_INT,
                 selection,
               },
               context,
@@ -422,7 +422,7 @@ export class ReverseEdgeMultipleUpdateInput extends AbstractReverseEdgeUpdateInp
                   {
                     where: { [originalEdgeName]: originalEdgeValue },
                     data: { [originalEdgeName]: null },
-                    first: 1_000_000,
+                    first: scalars.GRAPHQL_MAX_UNSIGNED_INT,
                     selection,
                   },
                   context,
@@ -441,7 +441,7 @@ export class ReverseEdgeMultipleUpdateInput extends AbstractReverseEdgeUpdateInp
                   AND: [{ [originalEdgeName]: originalEdgeValue }, actionData],
                 },
                 data: { [originalEdgeName]: null },
-                first: 1_000_000,
+                first: scalars.GRAPHQL_MAX_UNSIGNED_INT,
                 selection,
               },
               context,
@@ -514,7 +514,7 @@ export class ReverseEdgeMultipleUpdateInput extends AbstractReverseEdgeUpdateInp
             await this.reverseEdge.head.getMutationByKey('update-many').execute(
               {
                 where: actionData,
-                first: 1_000_000,
+                first: scalars.GRAPHQL_MAX_UNSIGNED_INT,
                 data: {
                   [originalEdgeName]: {
                     [EdgeUpdateInputAction.CONNECT]: originalEdgeValue,

@@ -1,3 +1,4 @@
+import * as scalars from '@prismamedia/graphql-platform-scalars';
 import * as utils from '@prismamedia/graphql-platform-utils';
 import inflection from 'inflection';
 import type { NodeValue } from '../../../../../../node.js';
@@ -199,7 +200,7 @@ export class ReverseEdgeMultipleCreationInput extends AbstractReverseEdgeCreatio
                 .execute(
                   {
                     where: actionData,
-                    first: 1_000_000,
+                    first: scalars.GRAPHQL_MAX_UNSIGNED_INT,
                     data: {
                       [originalEdgeName]: {
                         [EdgeUpdateInputAction.CONNECT]: originalEdgeValue,

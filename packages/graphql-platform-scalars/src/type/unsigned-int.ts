@@ -4,18 +4,19 @@ import * as graphql from 'graphql';
 export const GRAPHQL_MAX_UNSIGNED_INT = 2 * graphql.GRAPHQL_MAX_INT;
 
 export function parseUnsignedInt(value: unknown, path?: utils.Path): number {
-  const parsedValue = graphql.GraphQLInt.parseValue(value);
   if (
-    Object.is(parsedValue, -0) ||
-    parsedValue < 0 ||
-    parsedValue > GRAPHQL_MAX_UNSIGNED_INT
+    typeof value !== 'number' ||
+    !Number.isSafeInteger(value) ||
+    Object.is(value, -0) ||
+    value < 0 ||
+    value > GRAPHQL_MAX_UNSIGNED_INT
   ) {
     throw new utils.UnexpectedValueError('an unsigned 32-bit integer', value, {
       path,
     });
   }
 
-  return parsedValue;
+  return value;
 }
 
 export const GraphQLUnsignedInt = new graphql.GraphQLScalarType({
