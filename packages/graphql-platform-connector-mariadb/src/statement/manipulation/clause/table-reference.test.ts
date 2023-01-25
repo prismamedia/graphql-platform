@@ -78,10 +78,10 @@ describe('Table reference', () => {
     expect(format(`SELECT * FROM ${from}`)).toMatchInlineSnapshot(`
       "SELECT *
       FROM \`articles\`
-        LEFT JOIN \`categories\` AS \`articles>category\` ON \`articles\`.\`category_privateId\` <= > \`articles>category\`.\`privateId\`
-        LEFT JOIN \`categories\` AS \`articles>category>parent\` ON \`articles>category\`.\`parent_privateId\` <= > \`articles>category>parent\`.\`privateId\`
-        LEFT JOIN \`categories\` AS \`articles>category>parent>parent\` ON \`articles>category>parent\`.\`parent_privateId\` <= > \`articles>category>parent>parent\`.\`privateId\`
-        LEFT JOIN \`categories\` AS \`articles>category>parent>parent>parent\` ON \`articles>category>parent>parent\`.\`parent_privateId\` <= > \`articles>category>parent>parent>parent\`.\`privateId\`
+        LEFT JOIN \`categories\` AS \`articles>category\` ON \`articles\`.\`category_private_id\` <= > \`articles>category\`.\`private_id\`
+        LEFT JOIN \`categories\` AS \`articles>category>parent\` ON \`articles>category\`.\`parent_private_id\` <= > \`articles>category>parent\`.\`private_id\`
+        LEFT JOIN \`categories\` AS \`articles>category>parent>parent\` ON \`articles>category>parent\`.\`parent_private_id\` <= > \`articles>category>parent>parent\`.\`private_id\`
+        LEFT JOIN \`categories\` AS \`articles>category>parent>parent>parent\` ON \`articles>category>parent>parent\`.\`parent_private_id\` <= > \`articles>category>parent>parent>parent\`.\`private_id\`
         LEFT JOIN \`users\` AS \`articles>createdBy\` ON \`articles\`.\`created_by_id\` <= > \`articles>createdBy\`.\`id\`
         LEFT JOIN \`user_profiles\` AS \`articles>createdBy>profile\` ON \`articles>createdBy\`.\`id\` <= > \`articles>createdBy>profile\`.\`theUserId\`"
     `);

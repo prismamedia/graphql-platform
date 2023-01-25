@@ -1,11 +1,6 @@
 import * as utils from '@prismamedia/graphql-platform-utils';
 import * as graphql from 'graphql';
-import type {
-  JsonArray,
-  JsonObject,
-  JsonPrimitive,
-  JsonValue,
-} from 'type-fest';
+import type { JsonObject, JsonPrimitive, JsonValue } from 'type-fest';
 
 export function parseJsonObject(value: unknown, path?: utils.Path): JsonObject {
   utils.assertPlainObject(value, path);
@@ -21,14 +16,14 @@ export function parseJsonObject(value: unknown, path?: utils.Path): JsonObject {
   );
 }
 
-export function parseJsonArray(value: unknown, path?: utils.Path): JsonArray {
+export function parseJsonArray(value: unknown, path?: utils.Path): JsonValue[] {
   if (!Array.isArray(value)) {
     throw new utils.UnexpectedValueError(`an array`, value, {
       path,
     });
   }
 
-  return utils.aggregateGraphError<any, JsonArray>(
+  return utils.aggregateGraphError<any, JsonValue[]>(
     value,
     (values, value, index) => {
       values.push(parseJsonValue(value, utils.addPath(path, index)));

@@ -120,7 +120,7 @@ exports[`Find statement generates statements: statements 1`] = `
     (
       SELECT COUNT(*)
       FROM \`article_tags\`
-      WHERE \`articles\`.\`privateId\` <=> \`article_tags\`.\`article_privateId\`
+      WHERE \`articles\`.\`private_id\` <=> \`article_tags\`.\`article_private_id\`
     ),
     "createdAt",
     \`articles\`.\`created_at\`
@@ -153,7 +153,7 @@ exports[`Find statement generates statements: statements 2`] = `
     (
       SELECT COUNT(*)
       FROM \`article_tags\`
-      WHERE \`articles\`.\`privateId\` <=> \`article_tags\`.\`article_privateId\`
+      WHERE \`articles\`.\`private_id\` <=> \`article_tags\`.\`article_private_id\`
     ),
     "createdAt",
     \`articles\`.\`created_at\`
@@ -173,7 +173,7 @@ exports[`Find statement generates statements: statements 3`] = `
     \`articles\`.\`title\`,
     "category",
     IF(
-      \`articles>category\`.\`privateId\` IS NOT NULL,
+      \`articles>category\`.\`private_id\` IS NOT NULL,
       JSON_OBJECT("title", \`articles>category\`.\`title\`),
       NULL
     ),
@@ -203,14 +203,14 @@ exports[`Find statement generates statements: statements 3`] = `
     (
       SELECT COUNT(*)
       FROM \`article_tags\`
-      WHERE \`articles\`.\`privateId\` <=> \`article_tags\`.\`article_privateId\`
+      WHERE \`articles\`.\`private_id\` <=> \`article_tags\`.\`article_private_id\`
     ),
     "filteredTagCount",
     (
       SELECT COUNT(*)
       FROM \`article_tags\`
         INNER JOIN \`tags\` AS \`article_tags>tag\` ON \`article_tags\`.\`tag_id\` <=> \`article_tags>tag\`.\`id\`
-      WHERE \`articles\`.\`privateId\` <=> \`article_tags\`.\`article_privateId\`
+      WHERE \`articles\`.\`private_id\` <=> \`article_tags\`.\`article_private_id\`
         AND NOT (
           \`article_tags>tag\`.\`id\` IS NOT NULL
           AND \`article_tags>tag\`.\`deprecated\` <=> 1
@@ -238,7 +238,7 @@ exports[`Find statement generates statements: statements 3`] = `
         )
       FROM \`article_tags\`
         INNER JOIN \`tags\` AS \`article_tags>tag\` ON \`article_tags\`.\`tag_id\` <=> \`article_tags>tag\`.\`id\`
-      WHERE \`articles\`.\`privateId\` <=> \`article_tags\`.\`article_privateId\`
+      WHERE \`articles\`.\`private_id\` <=> \`article_tags\`.\`article_private_id\`
       ORDER BY \`article_tags\`.\`order\` ASC
       LIMIT 5
     ), "filteredTags", (
@@ -257,7 +257,7 @@ exports[`Find statement generates statements: statements 3`] = `
         )
       FROM \`article_tags\`
         INNER JOIN \`tags\` AS \`article_tags>tag\` ON \`article_tags\`.\`tag_id\` <=> \`article_tags>tag\`.\`id\`
-      WHERE \`articles\`.\`privateId\` <=> \`article_tags\`.\`article_privateId\`
+      WHERE \`articles\`.\`private_id\` <=> \`article_tags\`.\`article_private_id\`
         AND NOT (
           \`article_tags>tag\`.\`id\` IS NOT NULL
           AND \`article_tags>tag\`.\`deprecated\` <=> 1
@@ -267,13 +267,13 @@ exports[`Find statement generates statements: statements 3`] = `
     )
   ) as \`Article\`
 FROM \`articles\`
-  LEFT JOIN \`categories\` AS \`articles>category\` ON \`articles\`.\`category_privateId\` <=> \`articles>category\`.\`privateId\`
+  LEFT JOIN \`categories\` AS \`articles>category\` ON \`articles\`.\`category_private_id\` <=> \`articles>category\`.\`private_id\`
   LEFT JOIN \`users\` AS \`articles>createdBy\` ON \`articles\`.\`created_by_id\` <=> \`articles>createdBy\`.\`id\`
   LEFT JOIN \`user_profiles\` AS \`articles>createdBy>profile\` ON \`articles>createdBy\`.\`id\` <=> \`articles>createdBy>profile\`.\`theUserId\`
 WHERE (
     \`articles\`.\`status\` <=> 'published'
     AND (
-      \`articles>category\`.\`privateId\` IS NOT NULL
+      \`articles>category\`.\`private_id\` IS NOT NULL
       AND \`articles>category\`.\`slug\` <=> 'tv'
     )
     AND (
@@ -292,7 +292,7 @@ WHERE (
       SELECT *
       FROM \`article_tags\`
         INNER JOIN \`tags\` AS \`article_tags>tag\` ON \`article_tags\`.\`tag_id\` <=> \`article_tags>tag\`.\`id\`
-      WHERE \`articles\`.\`privateId\` <=> \`article_tags\`.\`article_privateId\`
+      WHERE \`articles\`.\`private_id\` <=> \`article_tags\`.\`article_private_id\`
         AND (
           \`article_tags>tag\`.\`id\` IS NOT NULL
           AND NOT \`article_tags>tag\`.\`deprecated\` <=> 1
@@ -301,7 +301,7 @@ WHERE (
     AND (
       SELECT COUNT(*)
       FROM \`article_tags\`
-      WHERE \`articles\`.\`privateId\` <=> \`article_tags\`.\`article_privateId\`
+      WHERE \`articles\`.\`private_id\` <=> \`article_tags\`.\`article_private_id\`
     ) > 5
     AND (
       \`articles\`.\`body\` <=> NULL

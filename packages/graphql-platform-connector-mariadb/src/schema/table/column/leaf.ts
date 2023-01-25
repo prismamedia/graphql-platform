@@ -5,10 +5,10 @@ import { Memoize } from '@prismamedia/memoize';
 import * as graphql from 'graphql';
 import type { URL } from 'node:url';
 import * as semver from 'semver';
-import type { Constructor, JsonArray, JsonObject } from 'type-fest';
-import { escapeStringValue } from '../../../escaping.js';
+import type { Constructor, JsonObject, JsonValue } from 'type-fest';
 import type { MariaDBConnector } from '../../../index.js';
-import type { Table } from '../../table.js';
+import { ensureIdentifierName } from '../../naming-strategy.js';
+import { Table } from '../../table.js';
 import { AbstractColumn } from '../abstract-column.js';
 import {
   BigIntType,
@@ -28,6 +28,8 @@ import {
   type DataTypeConfig,
 } from '../data-type.js';
 import { FullTextIndex } from '../index/full-text.js';
+
+export * from './leaf/diagnosis.js';
 
 export const forbiddenReferenceDataTypeConstructors: ReadonlyArray<
   Constructor<DataType>
@@ -68,7 +70,7 @@ export class LeafColumn extends AbstractColumn {
   public readonly configPath: utils.Path;
 
   public readonly name: string;
-  public readonly description?: string;
+  public readonly comment?: string;
   public readonly dataType: DataType;
   public readonly fullTextIndex?: FullTextIndex;
 
@@ -76,7 +78,7 @@ export class LeafColumn extends AbstractColumn {
     table: Table,
     public readonly leaf: core.Leaf<any, MariaDBConnector>,
   ) {
-    super(table);
+    super(table, leaf);
 
     // config
     {
@@ -91,50 +93,14 @@ export class LeafColumn extends AbstractColumn {
       const nameConfig = this.config?.name;
       const nameConfigPath = utils.addPath(this.configPath, 'name');
 
-      if (nameConfig) {
-        if (typeof nameConfig !== 'string') {
-          throw new utils.UnexpectedValueError('a string', nameConfig, {
-            path: nameConfigPath,
-          });
-        }
-
-        if (nameConfig.startsWith('_')) {
-          throw new utils.UnexpectedValueError(
-            `not to start with "_"`,
-            nameConfig,
-            { path: nameConfigPath },
-          );
-        }
-
-        // @see https://mariadb.com/kb/en/identifier-names/#maximum-length
-        if (nameConfig.length > 64) {
-          throw new utils.UnexpectedValueError(
-            'an identifier shorter than 64 characters',
-            nameConfig,
-            { path: nameConfigPath },
-          );
-        }
-
-        this.name = nameConfig;
-      } else {
-        if (leaf.name.startsWith('_')) {
-          throw new utils.UnexpectedValueError(
-            `to be provided as the leaf's name starts with "_"`,
-            nameConfig,
-            { path: nameConfigPath },
-          );
-        }
-
-        this.name = table.schema.namingStrategy.getLeafColumnName(
-          table.name,
-          leaf,
-        );
-      }
+      this.name = nameConfig
+        ? ensureIdentifierName(nameConfig, nameConfigPath)
+        : table.schema.namingStrategy.getLeafColumnName(this);
     }
 
-    // description
+    // comment
     {
-      this.description = leaf.description;
+      this.comment = leaf.description?.substring(0, 1024);
     }
 
     // data-type
@@ -239,7 +205,7 @@ export class LeafColumn extends AbstractColumn {
             break;
 
           case 'JSONArray':
-            this.dataType = new TextType<JsonArray>({
+            this.dataType = new TextType<JsonValue[]>({
               charset: this.table.defaultCharset,
               collation: this.table.defaultCollation,
               parser: (value) => JSON.parse(value),
@@ -299,7 +265,7 @@ export class LeafColumn extends AbstractColumn {
   }
 
   @Memoize()
-  public isAutoIncrement(): boolean {
+  public override isAutoIncrement(): boolean {
     const autoIncrementConfig = this.config?.autoIncrement;
     const autoIncrementConfigPath = utils.addPath(
       this.configPath,
@@ -324,23 +290,7 @@ export class LeafColumn extends AbstractColumn {
   }
 
   @Memoize()
-  public isNullable(): boolean {
+  public override isNullable(): boolean {
     return this.leaf.isNullable();
-  }
-
-  /**
-   * @see https://mariadb.com/kb/en/create-table/#column-definitions
-   */
-  @Memoize()
-  public get definition(): string {
-    return [
-      this.dataType.definition,
-      this.isAutoIncrement() && 'AUTO_INCREMENT',
-      this.isNullable() ? 'NULL' : 'NOT NULL',
-      this.description &&
-        `COMMENT ${escapeStringValue(this.description.substring(0, 1024))}`,
-    ]
-      .filter(Boolean)
-      .join(' ');
   }
 }

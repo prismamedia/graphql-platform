@@ -3,6 +3,7 @@ import * as utils from '@prismamedia/graphql-platform-utils';
 import assert from 'node:assert/strict';
 import type { JsonObject, SetOptional } from 'type-fest';
 import { escapeStringValue } from '../../../../escaping.js';
+import { ColumnInformation } from '../../../../statement.js';
 import {
   AbstractDataType,
   type AbstractDataTypeConfig,
@@ -50,5 +51,15 @@ export class JsonType<
     assert.equal(typeof value, 'object');
 
     return escapeStringValue(JSON.stringify(value));
+  }
+
+  public override isInformationValid(
+    information: ColumnInformation['DATA_TYPE'],
+  ): boolean {
+    return (
+      'LONGTEXT'.localeCompare(information, undefined, {
+        sensitivity: 'base',
+      }) === 0
+    );
   }
 }

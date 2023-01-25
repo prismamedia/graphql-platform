@@ -1,5 +1,6 @@
 import type * as core from '@prismamedia/graphql-platform';
 import * as utils from '@prismamedia/graphql-platform-utils';
+import type { ColumnInformation } from '../../statement.js';
 
 export interface AbstractDataTypeConfig<
   TKind extends string,
@@ -92,5 +93,15 @@ export abstract class AbstractDataType<
     }
 
     return 'NULL';
+  }
+
+  public isInformationValid(
+    information: ColumnInformation['DATA_TYPE'],
+  ): boolean {
+    return (
+      this.kind.localeCompare(information, undefined, {
+        sensitivity: 'base',
+      }) === 0
+    );
   }
 }

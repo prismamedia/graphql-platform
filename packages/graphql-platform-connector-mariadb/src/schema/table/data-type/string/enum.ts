@@ -11,6 +11,8 @@ import {
 export interface EnumTypeConfig<TLeafValue extends core.LeafValue = any>
   extends AbstractDataTypeConfig<EnumType['kind'], TLeafValue, string> {
   values: ReadonlyArray<string>;
+  charset?: string;
+  collation?: string;
 }
 
 /**
@@ -20,6 +22,8 @@ export class EnumType<
   TLeafValue extends core.LeafValue = any,
 > extends AbstractDataType<'ENUM', TLeafValue, string> {
   public readonly values: ReadonlyArray<string>;
+  public readonly charset?: string;
+  public readonly collation?: string;
   public readonly definition: string;
 
   public constructor(
@@ -52,9 +56,18 @@ export class EnumType<
       this.values = Object.freeze([...new Set(valuesConfig)]);
     }
 
-    this.definition = `${this.kind}(${this.values
-      .map((value) => escapeStringValue(value))
-      .join(',')})`;
+    this.charset = config?.charset || undefined;
+    this.collation = config?.collation || undefined;
+
+    this.definition = [
+      `${this.kind}(${this.values
+        .map((value) => escapeStringValue(value))
+        .join(',')})`,
+      this.charset && `CHARSET ${escapeStringValue(this.charset)}`,
+      this.collation && `COLLATE ${escapeStringValue(this.collation)}`,
+    ]
+      .filter(Boolean)
+      .join(' ');
   }
 
   protected override doSerialize(value: string): string {

@@ -2,9 +2,12 @@ import type * as core from '@prismamedia/graphql-platform';
 import * as utils from '@prismamedia/graphql-platform-utils';
 import { Memoize } from '@prismamedia/memoize';
 import { escapeIdentifier } from '../../../escaping.js';
+import { ensureIdentifierName } from '../../naming-strategy.js';
 import type { Table } from '../../table.js';
 import { AbstractIndex } from '../abstract-index.js';
 import type { Column } from '../column.js';
+
+export * from './plain/diagnosis.js';
 
 export interface PlainIndexConfig {
   /**
@@ -33,7 +36,7 @@ export class PlainIndex extends AbstractIndex {
   }
 
   @Memoize()
-  public get columns(): ReadonlyArray<Column> {
+  public override get columns(): ReadonlyArray<Column> {
     const config = this.config.components;
     const configPath = utils.addPath(this.configPath, 'components');
 
@@ -51,38 +54,19 @@ export class PlainIndex extends AbstractIndex {
 
   @Memoize()
   public get name(): string {
-    const config = this.config?.name;
-    const configPath = utils.addPath(this.configPath, 'name');
+    const nameConfig = this.config?.name;
+    const nameConfigPath = utils.addPath(this.configPath, 'name');
 
-    if (config) {
-      if (typeof config !== 'string') {
-        throw new utils.UnexpectedValueError('a string', config, {
-          path: configPath,
-        });
-      }
-
-      if (config.length > 64) {
-        throw new utils.UnexpectedValueError(
-          'an identifier shorter than 64 characters',
-          config,
-          { path: configPath },
-        );
-      }
-
-      return config;
-    }
-
-    return this.table.schema.namingStrategy.getPlainIndexName(
-      this.table.name,
-      this.columns,
-    );
+    return nameConfig
+      ? ensureIdentifierName(nameConfig, nameConfigPath)
+      : this.table.schema.namingStrategy.getPlainIndexName(this);
   }
 
   /**
    * @see https://mariadb.com/kb/en/create-table/#plain-indexes
    */
   @Memoize()
-  public get definition(): string {
+  public override get definition(): string {
     return `INDEX ${escapeIdentifier(this.name)} (${this.columns
       .map(({ name }) => escapeIdentifier(name))
       .join(',')})`;

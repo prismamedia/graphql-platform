@@ -10,7 +10,7 @@ import { filterNode } from './clause/where-condition.js';
  * @see https://mariadb.com/kb/en/selecting-data/
  */
 export class CountStatement implements mariadb.QueryOptions {
-  public readonly kind = StatementKind.MANIPULATION;
+  public readonly kind = StatementKind.DATA_MANIPULATION;
   public readonly sql: string;
 
   public constructor(

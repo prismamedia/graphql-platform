@@ -102,8 +102,6 @@ export class MariaDBConnector
 
   public readonly poolConfig?: mariadb.PoolConfig;
   public readonly poolConfigPath: utils.Path;
-  public readonly databasePoolConfig?: string;
-  public readonly databasePoolConfigPath: utils.Path;
 
   public readonly charset: string;
   public readonly collation: string;
@@ -141,26 +139,6 @@ export class MariaDBConnector
       this.poolConfigPath = utils.addPath(configPath, 'pool');
 
       utils.assertNillablePlainObject(this.poolConfig, this.poolConfigPath);
-
-      // database-pool-config
-      {
-        this.databasePoolConfig = this.poolConfig?.database || undefined;
-        this.databasePoolConfigPath = utils.addPath(
-          this.poolConfigPath,
-          'database',
-        );
-
-        if (
-          this.databasePoolConfig !== undefined &&
-          typeof this.databasePoolConfig !== 'string'
-        ) {
-          throw new utils.UnexpectedValueError(
-            `a non-empty string`,
-            this.databasePoolConfig,
-            { path: this.databasePoolConfigPath },
-          );
-        }
-      }
     }
 
     this.charset = config.charset || 'utf8mb4';
@@ -171,7 +149,7 @@ export class MariaDBConnector
   }
 
   public getPool(
-    kind: StatementKind = StatementKind.MANIPULATION,
+    kind: StatementKind = StatementKind.DATA_MANIPULATION,
   ): mariadb.Pool {
     let pool = this.#poolsByStatementKind.get(kind);
     if (!pool) {
@@ -180,9 +158,8 @@ export class MariaDBConnector
       this.#poolsByStatementKind.set(
         kind,
         (pool = mariadb.createPool(
-          kind === StatementKind.DEFINITION
-            ? { ...this.poolConfig, connectionLimit: 1 }
-            : {
+          kind === StatementKind.DATA_MANIPULATION
+            ? {
                 ...this.poolConfig,
                 database: this.schema.name,
                 charset: this.charset,
@@ -195,7 +172,8 @@ export class MariaDBConnector
                 timezone: 'Z',
                 autoJsonMap: false,
                 ...({ bitOneIsBoolean: false } as any),
-              },
+              }
+            : { ...this.poolConfig, connectionLimit: 1 },
         )),
       );
     }
@@ -238,6 +216,13 @@ export class MariaDBConnector
     }, kind);
   }
 
+  public async executeQuery<TResult extends OkPacket | utils.PlainObject[]>(
+    query: string | mariadb.QueryOptions,
+    kind?: StatementKind,
+  ): Promise<TResult> {
+    return this.withConnection((connection) => connection.query(query), kind);
+  }
+
   public async executeStatement<TResult extends OkPacket | utils.PlainObject[]>(
     statement: Statement,
     maybeConnection?: mariadb.Connection,
@@ -249,10 +234,7 @@ export class MariaDBConnector
     try {
       result = await (maybeConnection
         ? maybeConnection.query(statement)
-        : this.withConnection(
-            (connection) => connection.query(statement),
-            statement.kind,
-          ));
+        : this.executeQuery(statement, statement.kind));
     } catch (error) {
       if (error instanceof mariadb.SqlError) {
         if (
@@ -315,7 +297,7 @@ export class MariaDBConnector
           table.addForeignKeys(undefined, connection),
         ),
       );
-    }, StatementKind.DEFINITION);
+    }, StatementKind.DATA_DEFINITION);
   }
 
   /**
@@ -341,7 +323,7 @@ export class MariaDBConnector
 
   public async preMutation(context: core.MutationContext): Promise<void> {
     const connection = await this.getPool(
-      StatementKind.MANIPULATION,
+      StatementKind.DATA_MANIPULATION,
     ).getConnection();
 
     try {

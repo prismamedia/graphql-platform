@@ -154,12 +154,12 @@ RETURNING
 
     expect(executedStatements).toEqual([
       `INSERT INTO \`articles\`
-  (\`privateId\`,\`id\`,\`status\`,\`title\`,\`slug\`,\`body\`,\`category_privateId\`,\`created_by_id\`,\`created_at\`,\`updated_by_username\`,\`updated_at\`,\`metas\`,\`highlighted\`,\`sponsored\`,\`views\`,\`score\`,\`machine_tags\`)
+  (\`private_id\`,\`id\`,\`status\`,\`title\`,\`slug\`,\`body\`,\`category_private_id\`,\`created_by_id\`,\`created_at\`,\`updated_by_username\`,\`updated_at\`,\`metas\`,\`highlighted\`,\`sponsored\`,\`views\`,\`score\`,\`machine_tags\`)
 VALUES
   (NULL,'484ae4db-a944-421d-828c-3b514a438146','draft','My first title','my-first-title',NULL,NULL,NULL,'${serializedNow}',NULL,'${serializedNow}',NULL,NULL,NULL,0,0.5,NULL),
   (NULL,'f96e220e-ae7b-487e-b62a-09dc446f0c7d','draft','My second title','my-second-title','{\\\"entityMap\\\":{},\\\"blocks\\\":[]}',NULL,NULL,'${serializedNow}',NULL,'${serializedNow}','{\\\"aKey\\\":\\\"withAnyValue\\\"}',NULL,1,12,0.753,'[\\\"namespace:key=a_value\\\",\\\"namespace:key=other_value\\\"]')
 RETURNING
-  \`privateId\`,\`id\`,\`status\`,\`title\`,\`slug\`,\`body\`,\`category_privateId\`,\`created_by_id\`,\`created_at\`,\`updated_by_username\`,\`updated_at\`,\`metas\`,\`highlighted\`,\`sponsored\`,\`views\`,\`score\`,\`machine_tags\``,
+  \`private_id\`,\`id\`,\`status\`,\`title\`,\`slug\`,\`body\`,\`category_private_id\`,\`created_by_id\`,\`created_at\`,\`updated_by_username\`,\`updated_at\`,\`metas\`,\`highlighted\`,\`sponsored\`,\`views\`,\`score\`,\`machine_tags\``,
     ]);
   });
 });

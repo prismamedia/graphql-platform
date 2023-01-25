@@ -2,19 +2,40 @@ import type * as core from '@prismamedia/graphql-platform';
 import * as utils from '@prismamedia/graphql-platform-utils';
 import type * as mariadb from 'mariadb';
 import assert from 'node:assert/strict';
-import type { MariaDBConnector, OkPacket } from './index.js';
+import { MariaDBConnector, OkPacket } from './index.js';
 import {
+  SchemaDiagnosis,
+  type SchemaDiagnosisOptions,
+} from './schema/diagnosis.js';
+import {
+  ensureIdentifierName,
   SchemaNamingStrategy,
   type SchemaNamingStrategyConfig,
 } from './schema/naming-strategy.js';
-import { Table } from './schema/table.js';
+import {
+  ColumnInformationsByColumnName,
+  ForeignKeyInformationsByForeignKeyName,
+  IndexInformationsByColumnNameByIndexName,
+  Table,
+} from './schema/table.js';
 import {
   CreateSchemaStatement,
   CreateSchemaStatementConfig,
   DropSchemaStatement,
   DropSchemaStatementConfig,
+  ForeignKeyInformation,
+  GetColumnInformationStatement,
+  GetForeignKeyInformationStatement,
+  GetIndexInformationStatement,
+  GetSchemaInformationStatement,
+  GetTableInformationStatement,
+  IndexInformation,
+  type ColumnInformation,
+  type SchemaInformation,
+  type TableInformation,
 } from './statement.js';
 
+export * from './schema/diagnosis.js';
 export * from './schema/naming-strategy.js';
 export * from './schema/table.js';
 
@@ -51,10 +72,12 @@ export class Schema {
   public readonly configPath: utils.Path;
 
   public readonly name: string;
+  public readonly comment?: string;
   public readonly namingStrategy: SchemaNamingStrategy;
   public readonly defaultCharset: string;
   public readonly defaultCollation: string;
   public readonly tablesByNode: ReadonlyMap<core.Node, Table>;
+  public readonly tables: ReadonlyArray<Table>;
 
   public constructor(public readonly connector: MariaDBConnector) {
     // config
@@ -67,29 +90,30 @@ export class Schema {
 
     // name
     {
-      const nameConfig = this.config?.name || undefined;
+      const databasePoolConfig = connector.poolConfig?.database;
+      const databasePoolConfigPath = utils.addPath(
+        connector.poolConfigPath,
+        'database',
+      );
+
+      const nameConfig = this.config?.name;
       const nameConfigPath = utils.addPath(this.configPath, 'name');
 
-      if (connector.databasePoolConfig !== undefined) {
-        if (nameConfig !== undefined) {
+      if (databasePoolConfig) {
+        if (nameConfig) {
           throw new utils.UnexpectedValueError(
-            `not to be defined as the database is selected`,
+            `not to be provided as the database is selected`,
             nameConfig,
             { path: nameConfigPath },
           );
         }
 
-        this.name = connector.databasePoolConfig;
+        this.name = ensureIdentifierName(
+          databasePoolConfig,
+          databasePoolConfigPath,
+        );
       } else {
-        if (nameConfig === undefined) {
-          throw new utils.UnexpectedValueError(
-            `a non-empty string`,
-            nameConfig,
-            { path: nameConfigPath },
-          );
-        }
-
-        this.name = nameConfig;
+        this.name = ensureIdentifierName(nameConfig, nameConfigPath);
       }
     }
 
@@ -97,6 +121,7 @@ export class Schema {
     {
       this.namingStrategy = new SchemaNamingStrategy(
         this.config?.namingStrategy,
+        utils.addPath(this.configPath, 'namingStrategy'),
       );
     }
 
@@ -116,6 +141,8 @@ export class Schema {
       this.tablesByNode = new Map(
         connector.gp.nodes.map((node) => [node, new Table(this, node)]),
       );
+
+      this.tables = Array.from(this.tablesByNode.values());
     }
   }
 
@@ -147,6 +174,143 @@ export class Schema {
     await this.connector.executeStatement<OkPacket>(
       new CreateSchemaStatement(this, config),
       maybeConnection,
+    );
+  }
+
+  public async diagnose(
+    options?: SchemaDiagnosisOptions,
+  ): Promise<SchemaDiagnosis> {
+    const [
+      schemaInformations,
+      tableInformations,
+      columnInformations,
+      indexInformations,
+      foreignKeyInformations,
+    ] = await Promise.all([
+      this.connector.executeStatement<SchemaInformation[]>(
+        new GetSchemaInformationStatement(this),
+      ),
+      this.connector.executeStatement<TableInformation[]>(
+        new GetTableInformationStatement(this),
+      ),
+      this.connector.executeStatement<ColumnInformation[]>(
+        new GetColumnInformationStatement(this),
+      ),
+      this.connector.executeStatement<IndexInformation[]>(
+        new GetIndexInformationStatement(this),
+      ),
+      this.connector.executeStatement<ForeignKeyInformation[]>(
+        new GetForeignKeyInformationStatement(this),
+      ),
+    ]);
+
+    assert(schemaInformations.length, `The schema "${this}" is missing`);
+    const schemaInformation = schemaInformations[0];
+
+    const tableInformationsByTableName = new Map<
+      Table['name'],
+      TableInformation
+    >(
+      tableInformations.map((information) => [
+        information.TABLE_NAME,
+        information,
+      ]),
+    );
+
+    const columnInformationsByColumnNameByTableName = new Map<
+      Table['name'],
+      ColumnInformationsByColumnName
+    >();
+
+    for (const columnInformation of columnInformations) {
+      let columnInformationsByColumnName =
+        columnInformationsByColumnNameByTableName.get(
+          columnInformation.TABLE_NAME,
+        );
+
+      if (!columnInformationsByColumnName) {
+        columnInformationsByColumnNameByTableName.set(
+          columnInformation.TABLE_NAME,
+          (columnInformationsByColumnName = new Map()),
+        );
+      }
+
+      columnInformationsByColumnName.set(
+        columnInformation.COLUMN_NAME,
+        columnInformation,
+      );
+    }
+
+    const indexInformationsByColumnNameByIndexNameByTableName = new Map<
+      Table['name'],
+      IndexInformationsByColumnNameByIndexName
+    >();
+
+    for (const indexInformation of indexInformations) {
+      let indexInformationsByColumnNameByIndexName =
+        indexInformationsByColumnNameByIndexNameByTableName.get(
+          indexInformation.TABLE_NAME,
+        );
+
+      if (!indexInformationsByColumnNameByIndexName) {
+        indexInformationsByColumnNameByIndexNameByTableName.set(
+          indexInformation.TABLE_NAME,
+          (indexInformationsByColumnNameByIndexName = new Map()),
+        );
+      }
+
+      let indexInformationsByColumnName =
+        indexInformationsByColumnNameByIndexName.get(
+          indexInformation.INDEX_NAME,
+        );
+
+      if (!indexInformationsByColumnName) {
+        indexInformationsByColumnNameByIndexName.set(
+          indexInformation.INDEX_NAME,
+          (indexInformationsByColumnName = new Map()),
+        );
+      }
+
+      indexInformationsByColumnName.set(
+        indexInformation.COLUMN_NAME,
+        indexInformation,
+      );
+    }
+
+    const foreignKeyInformationsByForeignKeyNameByTableName = new Map<
+      Table['name'],
+      ForeignKeyInformationsByForeignKeyName
+    >();
+
+    for (const foreignKeyInformation of foreignKeyInformations) {
+      let foreignKeyInformationsByForeignKeyName =
+        foreignKeyInformationsByForeignKeyNameByTableName.get(
+          foreignKeyInformation.TABLE_NAME,
+        );
+
+      if (!foreignKeyInformationsByForeignKeyName) {
+        foreignKeyInformationsByForeignKeyNameByTableName.set(
+          foreignKeyInformation.TABLE_NAME,
+          (foreignKeyInformationsByForeignKeyName = new Map()),
+        );
+      }
+
+      foreignKeyInformationsByForeignKeyName.set(
+        foreignKeyInformation.CONSTRAINT_NAME,
+        foreignKeyInformation,
+      );
+    }
+
+    return new SchemaDiagnosis(
+      this,
+      {
+        schema: schemaInformation,
+        tables: tableInformationsByTableName,
+        columns: columnInformationsByColumnNameByTableName,
+        indexes: indexInformationsByColumnNameByIndexNameByTableName,
+        foreignKeys: foreignKeyInformationsByForeignKeyNameByTableName,
+      },
+      options,
     );
   }
 }

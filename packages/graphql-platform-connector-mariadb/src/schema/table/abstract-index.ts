@@ -1,8 +1,10 @@
 import { Memoize } from '@prismamedia/memoize';
 import type { Table } from '../table.js';
+import type { Column } from './column.js';
 
 export abstract class AbstractIndex {
   public abstract readonly name: string;
+  public abstract readonly columns: ReadonlyArray<Column>;
   public abstract readonly definition: string;
 
   public constructor(public readonly table: Table) {}
@@ -23,6 +25,7 @@ export abstract class AbstractIndex {
     return `${this.table.qualifiedName}.${this.name}`;
   }
 
+  @Memoize()
   public toString(): string {
     return this.fullyQualifiedName;
   }

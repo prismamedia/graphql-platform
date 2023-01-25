@@ -11,7 +11,7 @@ export interface AddTableForeignKeysStatementConfig {}
  * @see https://mariadb.com/kb/en/alter-table/
  */
 export class AddTableForeignKeysStatement implements mariadb.QueryOptions {
-  public readonly kind = StatementKind.DEFINITION;
+  public readonly kind = StatementKind.DATA_DEFINITION;
   public readonly sql: string;
 
   public constructor(
@@ -19,15 +19,15 @@ export class AddTableForeignKeysStatement implements mariadb.QueryOptions {
     config?: AddTableForeignKeysStatementConfig,
   ) {
     assert(
-      table.foreignKeyIndexesByEdge.size > 0,
+      table.foreignKeysByEdge.size > 0,
       `There is no foreign-key in the table "${table}"`,
     );
 
     this.sql = [
       `ALTER TABLE ${escapeIdentifier(table.qualifiedName)}`,
       Array.from(
-        table.foreignKeyIndexesByEdge.values(),
-        ({ definition }) => `ADD ${definition}`,
+        table.foreignKeysByEdge.values(),
+        ({ definition }) => `  ADD ${definition}`,
       ).join(`,${EOL}`),
     ].join(EOL);
   }

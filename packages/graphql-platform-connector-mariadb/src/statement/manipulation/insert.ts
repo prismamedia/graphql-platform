@@ -16,7 +16,7 @@ export interface InsertStatementConfig {
  * @see https://mariadb.com/kb/en/insertreturning/
  */
 export class InsertStatement implements mariadb.QueryOptions {
-  public readonly kind = StatementKind.MANIPULATION;
+  public readonly kind = StatementKind.DATA_MANIPULATION;
   public readonly sql: string;
 
   public constructor(

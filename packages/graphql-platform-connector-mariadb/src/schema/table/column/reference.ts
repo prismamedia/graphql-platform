@@ -2,15 +2,17 @@ import * as core from '@prismamedia/graphql-platform';
 import * as utils from '@prismamedia/graphql-platform-utils';
 import { Memoize } from '@prismamedia/memoize';
 import assert from 'node:assert/strict';
-import { escapeStringValue } from '../../../escaping.js';
 import type { MariaDBConnector } from '../../../index.js';
 import type { Column, Schema, Table } from '../../../schema.js';
+import { ensureIdentifierName } from '../../naming-strategy.js';
 import { AbstractColumn } from '../abstract-column.js';
 import type { DataType } from '../data-type.js';
 
+export * from './reference/diagnosis.js';
+
 export class ReferenceColumn extends AbstractColumn {
   public readonly name: string;
-  public readonly description?: string;
+  public readonly comment?: string;
   public readonly dataType: DataType;
 
   public constructor(
@@ -20,34 +22,13 @@ export class ReferenceColumn extends AbstractColumn {
     nameConfig: utils.Nillable<string>,
     nameConfigPath: utils.Path,
   ) {
-    super(table);
+    super(table, edge);
 
     // name
     {
-      if (nameConfig) {
-        if (typeof nameConfig !== 'string') {
-          throw new utils.UnexpectedValueError('a string', nameConfig, {
-            path: nameConfigPath,
-          });
-        }
-
-        // @see https://mariadb.com/kb/en/identifier-names/#maximum-length
-        if (nameConfig.length > 64) {
-          throw new utils.UnexpectedValueError(
-            'an identifier shorter than 64 characters',
-            nameConfig,
-            { path: nameConfigPath },
-          );
-        }
-
-        this.name = nameConfig;
-      } else {
-        this.name = table.schema.namingStrategy.getReferenceColumnName(
-          table.name,
-          edge,
-          referencedColumn,
-        );
-      }
+      this.name = nameConfig
+        ? ensureIdentifierName(nameConfig, nameConfigPath)
+        : table.schema.namingStrategy.getReferenceColumnName(this);
     }
 
     // data-type
@@ -56,24 +37,13 @@ export class ReferenceColumn extends AbstractColumn {
     }
   }
 
-  @Memoize()
-  public isNullable(): boolean {
-    return this.edge.isNullable() || this.referencedColumn.isNullable();
+  public override isAutoIncrement(): boolean {
+    return false;
   }
 
-  /**
-   * @see https://mariadb.com/kb/en/create-table/#column-definitions
-   */
   @Memoize()
-  public get definition(): string {
-    return [
-      this.dataType.definition,
-      !this.isNullable() && 'NOT NULL',
-      this.description &&
-        `COMMENT ${escapeStringValue(this.description.substring(0, 1024))}`,
-    ]
-      .filter(Boolean)
-      .join(' ');
+  public override isNullable(): boolean {
+    return this.edge.isNullable() || this.referencedColumn.isNullable();
   }
 
   /**

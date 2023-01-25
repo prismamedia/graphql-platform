@@ -1,11 +1,15 @@
 import * as core from '@prismamedia/graphql-platform';
 import * as utils from '@prismamedia/graphql-platform-utils';
 import { Memoize } from '@prismamedia/memoize';
+
 import assert from 'node:assert/strict';
 import { escapeIdentifier } from '../../../escaping.js';
 import type { MariaDBConnector } from '../../../index.js';
+import { ensureIdentifierName } from '../../naming-strategy.js';
 import type { Column, Table } from '../../table.js';
 import { AbstractIndex } from '../abstract-index.js';
+
+export * from './unique/diagnosis.js';
 
 export interface UniqueIndexConfig {
   /**
@@ -45,48 +49,28 @@ export class UniqueIndex extends AbstractIndex {
   }
 
   @Memoize()
-  public get columns(): ReadonlyArray<Column> {
+  public override get columns(): ReadonlyArray<Column> {
     return Object.freeze(
       this.table.getColumnsByComponents(...this.uniqueConstraint.components),
     );
   }
 
   @Memoize()
-  public get name(): string {
+  public override get name(): string {
     const nameConfig = this.config?.name;
     const nameConfigPath = utils.addPath(this.configPath, 'name');
 
-    if (nameConfig) {
-      if (typeof nameConfig !== 'string') {
-        throw new utils.UnexpectedValueError('a string', nameConfig, {
-          path: nameConfigPath,
-        });
-      }
-
-      if (nameConfig.length > 64) {
-        throw new utils.UnexpectedValueError(
-          'an identifier shorter than 64 characters',
-          nameConfig,
-          { path: nameConfigPath },
-        );
-      }
-
-      return nameConfig;
-    }
-
-    return this.table.schema.namingStrategy.getUniqueIndexName(
-      this.table.name,
-      this.uniqueConstraint,
-      this.columns,
-    );
+    return nameConfig
+      ? ensureIdentifierName(nameConfig, nameConfigPath)
+      : this.table.schema.namingStrategy.getUniqueIndexName(this);
   }
 
   /**
    * @see https://mariadb.com/kb/en/create-table/#unique
    */
   @Memoize()
-  public get definition(): string {
-    return `UNIQUE ${escapeIdentifier(this.name)} (${this.columns
+  public override get definition(): string {
+    return `UNIQUE INDEX ${escapeIdentifier(this.name)} (${this.columns
       .map(({ name }) => escapeIdentifier(name))
       .join(',')})`;
   }

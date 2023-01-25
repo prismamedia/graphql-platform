@@ -11,6 +11,8 @@ import {
 import assert from 'node:assert/strict';
 import { MariaDBConnector, MariaDBConnectorConfig } from '../index.js';
 
+export type MyGP = GraphQLPlatform<MyContext, MariaDBConnector>;
+
 export function createGraphQLPlatform(
   schemaName: string,
   options?: {
@@ -20,7 +22,7 @@ export function createGraphQLPlatform(
     >['onNodeChange'];
     onExecutedStatement?: MariaDBConnectorConfig['onExecutedStatement'];
   },
-): GraphQLPlatform<MyContext, MariaDBConnector> {
+): MyGP {
   const host = process.env.MARIADB_HOST;
   assert(host, `The "MARIADB_HOST" variable must be provided`);
 
@@ -53,12 +55,10 @@ export function createGraphQLPlatform(
             Object.entries(config.components).map<[string, ComponentConfig]>(
               ([componentName, config]) => [
                 componentName,
-                componentName === '_id' &&
-                config.kind === 'Leaf' &&
-                (config.type === 'Int' || config.type === 'UnsignedInt')
+                componentName === '_id' && config.kind === 'Leaf'
                   ? {
                       ...config,
-                      column: { name: 'privateId', autoIncrement: true },
+                      column: { autoIncrement: true },
                     }
                   : nodeName === 'Article' &&
                     componentName === 'body' &&
@@ -124,6 +124,11 @@ export function createGraphQLPlatform(
       {
         schema: {
           name: `tests_${schemaName}`,
+
+          namingStrategy: {
+            leaf: (column) =>
+              column.leaf.name === '_id' ? 'private_id' : undefined,
+          },
         },
 
         pool: {

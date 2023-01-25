@@ -2,6 +2,7 @@ import type * as core from '@prismamedia/graphql-platform';
 import * as utils from '@prismamedia/graphql-platform-utils';
 import assert from 'node:assert/strict';
 import type { SetOptional } from 'type-fest';
+import { ColumnInformation } from '../../../../statement.js';
 import {
   AbstractDataType,
   type AbstractDataTypeConfig,
@@ -39,5 +40,15 @@ export class BooleanType<
     assert.equal(typeof value, 'boolean');
 
     return value ? '1' : '0';
+  }
+
+  public override isInformationValid(
+    information: ColumnInformation['DATA_TYPE'],
+  ): boolean {
+    return (
+      'TINYINT'.localeCompare(information, undefined, {
+        sensitivity: 'base',
+      }) === 0
+    );
   }
 }

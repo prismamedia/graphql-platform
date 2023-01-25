@@ -1,8 +1,8 @@
-import type * as utils from '@prismamedia/graphql-platform-utils';
+import * as utils from '@prismamedia/graphql-platform-utils';
 import type * as mariadb from 'mariadb';
 import { EOL } from 'node:os';
 import { escapeIdentifier, escapeStringValue } from '../../escaping.js';
-import type { Table } from '../../schema/table.js';
+import { Table } from '../../schema/table.js';
 import { StatementKind } from '../kind.js';
 
 export interface CreateTableStatementConfig {
@@ -15,7 +15,7 @@ export interface CreateTableStatementConfig {
  * @see https://mariadb.com/kb/en/create-table/
  */
 export class CreateTableStatement implements mariadb.QueryOptions {
-  public readonly kind = StatementKind.DEFINITION;
+  public readonly kind = StatementKind.DATA_DEFINITION;
   public readonly sql: string;
 
   public constructor(
@@ -25,29 +25,19 @@ export class CreateTableStatement implements mariadb.QueryOptions {
     this.sql = [
       [
         'CREATE',
-        config?.orReplace && 'OR REPLACE',
+        utils.getOptionalFlag(config?.orReplace, false) && 'OR REPLACE',
         'TABLE',
-        config?.ifNotExists && 'IF NOT EXISTS',
+        utils.getOptionalFlag(config?.ifNotExists, false) && 'IF NOT EXISTS',
         `${escapeIdentifier(table.qualifiedName)}`,
         `(${EOL}${[
           ...table.columns.map(
             ({ name, definition }) => `${escapeIdentifier(name)} ${definition}`,
           ),
-          table.primaryKey.definition,
-          ...Array.from(
-            table.uniqueIndexesByUniqueConstraint.values(),
-            ({ definition }) => definition,
-          ),
-          ...(config?.withoutForeignKeys !== true
-            ? Array.from(
-                table.foreignKeyIndexesByEdge.values(),
-                ({ definition }) => definition,
-              )
-            : []),
-          ...table.fullTextIndexes.map(({ definition }) => definition),
-          ...table.plainIndexes.map(({ definition }) => definition),
+          ...table.indexes.map((idx) => idx.definition),
+          ...(utils.getOptionalFlag(config?.withoutForeignKeys, false)
+            ? []
+            : table.foreignKeys.map((fk) => fk.definition)),
         ]
-          .filter(Boolean)
           .map((line) => `  ${line}`)
           .join(`,${EOL}`)}${EOL})`,
       ]
@@ -56,10 +46,7 @@ export class CreateTableStatement implements mariadb.QueryOptions {
       `ENGINE = ${escapeStringValue(table.engine)}`,
       `DEFAULT CHARSET = ${escapeStringValue(table.defaultCharset)}`,
       `DEFAULT COLLATE = ${escapeStringValue(table.defaultCollation)}`,
-      table.node.description &&
-        `COMMENT ${escapeStringValue(
-          table.node.description.substring(0, 2048),
-        )}`,
+      table.comment && `COMMENT ${escapeStringValue(table.comment)}`,
     ]
       .filter(Boolean)
       .join(EOL);

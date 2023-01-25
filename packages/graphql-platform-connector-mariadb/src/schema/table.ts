@@ -20,22 +20,26 @@ import {
   type InsertStatementConfig,
   type UpdateStatementConfig,
 } from '../statement.js';
+import { ensureIdentifierName } from './naming-strategy.js';
 import {
   LeafColumn,
   ReferenceColumnTree,
   type Column,
 } from './table/column.js';
+import { ForeignKey } from './table/foreign-key.js';
 import {
-  ForeignKeyIndex,
   FullTextIndex,
   PlainIndex,
   PrimaryKey,
   UniqueIndex,
+  type Index,
   type PlainIndexConfig,
 } from './table/index.js';
 
 export * from './table/column.js';
 export * from './table/data-type.js';
+export * from './table/diagnosis.js';
+export * from './table/foreign-key.js';
 export * from './table/index.js';
 
 export interface TableConfig {
@@ -76,6 +80,7 @@ export class Table {
    */
   public readonly qualifiedName: string;
   public readonly engine: string;
+  public readonly comment?: string;
   public readonly defaultCharset: string;
   public readonly defaultCollation: string;
   public readonly columnsByLeaf: ReadonlyMap<core.Leaf, LeafColumn>;
@@ -85,12 +90,11 @@ export class Table {
     UniqueIndex
   >;
   public readonly uniqueIndexes: ReadonlyArray<UniqueIndex>;
-  public readonly foreignKeyIndexesByEdge: ReadonlyMap<
-    core.Edge,
-    ForeignKeyIndex
-  >;
   public readonly fullTextIndexes: ReadonlyArray<FullTextIndex>;
   public readonly plainIndexes: ReadonlyArray<PlainIndex>;
+  public readonly indexes: ReadonlyArray<Index>;
+  public readonly foreignKeysByEdge: ReadonlyMap<core.Edge, ForeignKey>;
+  public readonly foreignKeys: ReadonlyArray<ForeignKey>;
 
   public constructor(
     public readonly schema: Schema,
@@ -109,31 +113,19 @@ export class Table {
       const nameConfig = this.config?.name;
       const nameConfigPath = utils.addPath(this.configPath, 'name');
 
-      if (nameConfig) {
-        if (typeof nameConfig !== 'string') {
-          throw new utils.UnexpectedValueError('a string', nameConfig, {
-            path: nameConfigPath,
-          });
-        }
-
-        // @see https://mariadb.com/kb/en/identifier-names/#maximum-length
-        if (nameConfig.length > 64) {
-          throw new utils.UnexpectedValueError(
-            'an identifier shorter than 64 characters',
-            nameConfig,
-            { path: nameConfigPath },
-          );
-        }
-
-        this.name = nameConfig;
-      } else {
-        this.name = schema.namingStrategy.getTableName(node);
-      }
+      this.name = nameConfig
+        ? ensureIdentifierName(nameConfig, nameConfigPath)
+        : schema.namingStrategy.getTableName(this);
     }
 
     // qualified-name
     {
       this.qualifiedName = `${this.schema.name}.${this.name}`;
+    }
+
+    // comment
+    {
+      this.comment = node.description?.substring(0, 2048);
     }
 
     // engine
@@ -181,13 +173,6 @@ export class Table {
       );
     }
 
-    // foreign-key-indexes-by-edge
-    {
-      this.foreignKeyIndexesByEdge = new Map(
-        node.edges.map((edge) => [edge, new ForeignKeyIndex(this, edge)]),
-      );
-    }
-
     // full-text-indexes-by-leaf
     {
       this.fullTextIndexes = Object.freeze(
@@ -225,6 +210,22 @@ export class Table {
           [],
         ),
       );
+    }
+
+    this.indexes = Object.freeze([
+      this.primaryKey,
+      ...this.uniqueIndexes,
+      ...this.fullTextIndexes,
+      ...this.plainIndexes,
+    ]);
+
+    // foreign-keys-by-edge
+    {
+      this.foreignKeysByEdge = new Map(
+        node.edges.map((edge) => [edge, new ForeignKey(this, edge)]),
+      );
+
+      this.foreignKeys = Array.from(this.foreignKeysByEdge.values());
     }
   }
 
@@ -287,8 +288,8 @@ export class Table {
     return uniqueIndex;
   }
 
-  public getForeignKeyByEdge(edge: core.Edge): ForeignKeyIndex {
-    const foreignKey = this.foreignKeyIndexesByEdge.get(edge);
+  public getForeignKeyByEdge(edge: core.Edge): ForeignKey {
+    const foreignKey = this.foreignKeysByEdge.get(edge);
     assert(
       foreignKey,
       `The edge "${edge}" is not part of the node "${this.node}"`,
@@ -419,7 +420,7 @@ export class Table {
     config?: AddTableForeignKeysStatementConfig,
     maybeConnection?: mariadb.Connection,
   ): Promise<void> {
-    if (this.foreignKeyIndexesByEdge.size) {
+    if (this.foreignKeysByEdge.size) {
       await this.schema.connector.executeStatement(
         new AddTableForeignKeysStatement(this, config),
         maybeConnection,

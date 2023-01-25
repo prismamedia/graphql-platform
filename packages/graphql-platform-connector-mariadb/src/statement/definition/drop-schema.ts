@@ -11,7 +11,7 @@ export interface DropSchemaStatementConfig {
  * @see https://mariadb.com/kb/en/drop-database/
  */
 export class DropSchemaStatement implements mariadb.QueryOptions {
-  public readonly kind = StatementKind.DEFINITION;
+  public readonly kind = StatementKind.DATA_DEFINITION;
   public readonly sql: string;
 
   public constructor(schema: Schema, config?: DropSchemaStatementConfig) {

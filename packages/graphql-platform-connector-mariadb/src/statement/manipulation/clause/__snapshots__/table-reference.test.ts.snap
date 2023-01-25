@@ -3,7 +3,7 @@
 exports[`Table reference generates valid SQL with authorization 1`] = `
 "SELECT *
 FROM \`articles\`
-  LEFT JOIN \`categories\` AS \`articles>category\` ON \`articles\`.\`category_privateId\` <= > \`articles>category\`.\`privateId\`
+  LEFT JOIN \`categories\` AS \`articles>category\` ON \`articles\`.\`category_private_id\` <= > \`articles>category\`.\`private_id\`
   LEFT JOIN \`users\` AS \`articles>createdBy\` ON \`articles\`.\`created_by_id\` <= > \`articles>createdBy\`.\`id\`
   AND FALSE
   LEFT JOIN \`user_profiles\` AS \`articles>createdBy>profile\` ON \`articles>createdBy\`.\`id\` <= > \`articles>createdBy>profile\`.\`theUserId\`"
@@ -12,7 +12,7 @@ FROM \`articles\`
 exports[`Table reference generates valid SQL with authorization 2`] = `
 "SELECT *
 FROM \`articles\`
-  LEFT JOIN \`categories\` AS \`articles>category\` ON \`articles\`.\`category_privateId\` <= > \`articles>category\`.\`privateId\`
+  LEFT JOIN \`categories\` AS \`articles>category\` ON \`articles\`.\`category_private_id\` <= > \`articles>category\`.\`private_id\`
   LEFT JOIN \`users\` AS \`articles>createdBy\` ON \`articles\`.\`created_by_id\` <= > \`articles>createdBy\`.\`id\`
   LEFT JOIN \`user_profiles\` AS \`articles>createdBy>profile\` ON \`articles>createdBy\`.\`id\` <= > \`articles>createdBy>profile\`.\`theUserId\`"
 `;
@@ -20,7 +20,7 @@ FROM \`articles\`
 exports[`Table reference generates valid SQL with authorization 3`] = `
 "SELECT *
 FROM \`articles\`
-  LEFT JOIN \`categories\` AS \`articles>category\` ON \`articles\`.\`category_privateId\` <= > \`articles>category\`.\`privateId\`
+  LEFT JOIN \`categories\` AS \`articles>category\` ON \`articles\`.\`category_private_id\` <= > \`articles>category\`.\`private_id\`
   LEFT JOIN \`users\` AS \`articles>createdBy\` ON \`articles\`.\`created_by_id\` <= > \`articles>createdBy\`.\`id\`
   LEFT JOIN \`user_profiles\` AS \`articles>createdBy>profile\` ON \`articles>createdBy\`.\`id\` <= > \`articles>createdBy>profile\`.\`theUserId\`"
 `;
@@ -28,7 +28,7 @@ FROM \`articles\`
 exports[`Table reference generates valid SQL with authorization 4`] = `
 "SELECT *
 FROM \`articles\`
-  LEFT JOIN \`categories\` AS \`articles>category\` ON \`articles\`.\`category_privateId\` <= > \`articles>category\`.\`privateId\`
+  LEFT JOIN \`categories\` AS \`articles>category\` ON \`articles\`.\`category_private_id\` <= > \`articles>category\`.\`private_id\`
   LEFT JOIN \`users\` AS \`articles>createdBy\` ON \`articles\`.\`created_by_id\` <= > \`articles>createdBy\`.\`id\`
   LEFT JOIN \`user_profiles\` AS \`articles>createdBy>profile\` ON \`articles>createdBy\`.\`id\` <= > \`articles>createdBy>profile\`.\`theUserId\`"
 `;

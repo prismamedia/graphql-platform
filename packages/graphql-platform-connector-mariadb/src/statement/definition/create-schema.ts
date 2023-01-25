@@ -13,7 +13,7 @@ export interface CreateSchemaStatementConfig {
  * @see https://mariadb.com/kb/en/create-database/
  */
 export class CreateSchemaStatement implements mariadb.QueryOptions {
-  public readonly kind = StatementKind.DEFINITION;
+  public readonly kind = StatementKind.DATA_DEFINITION;
   public readonly sql: string;
 
   public constructor(schema: Schema, config?: CreateSchemaStatementConfig) {
