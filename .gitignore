@@ -21,3 +21,5 @@ packages/**/dist/
 packages/**/node_modules/
 packages/**/package-lock.json
 packages/**/tsconfig.tsbuildinfo
+
+tmp/

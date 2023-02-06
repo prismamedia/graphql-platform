@@ -26,6 +26,7 @@ import {
   UpdateStatement,
 } from './statement.js';
 
+export * as mariadb from 'mariadb';
 export * from './escaping.js';
 export * from './schema.js';
 export * from './statement.js';
