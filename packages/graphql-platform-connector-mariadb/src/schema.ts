@@ -65,6 +65,11 @@ export interface SchemaConfig {
    * Optional, customize how the resources are named
    */
   namingStrategy?: SchemaNamingStrategyConfig;
+
+  /**
+   * Optional, provide the default diagnosis's options
+   */
+  diagnosis?: SchemaDiagnosisOptions;
 }
 
 export class Schema {
@@ -178,7 +183,7 @@ export class Schema {
   }
 
   public async diagnose(
-    options?: SchemaDiagnosisOptions,
+    options: SchemaDiagnosisOptions | undefined = this.config?.diagnosis,
   ): Promise<SchemaDiagnosis> {
     const [
       schemaInformations,
