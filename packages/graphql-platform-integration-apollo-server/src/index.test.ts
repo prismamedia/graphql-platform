@@ -8,7 +8,7 @@ import {
 import { fixtures } from '@prismamedia/graphql-platform/__tests__/fixture.js';
 import { ApolloServerIntegration } from './index.js';
 
-describe('GraphQL Platform Integration Apollo Server', () => {
+describe('GraphQL-Platform Integration Apollo Server', () => {
   let gp: MyGP<MariaDBConnector>;
 
   beforeAll(async () => {
@@ -18,9 +18,7 @@ describe('GraphQL Platform Integration Apollo Server', () => {
     await gp.seed(fixtures, myAdminContext);
   });
 
-  afterAll(async () => {
-    await gp.connector.teardown();
-  });
+  afterAll(() => gp.connector.teardown());
 
   it('creates an ApolloServer instance', async () => {
     const server = new ApolloServerIntegration(gp);

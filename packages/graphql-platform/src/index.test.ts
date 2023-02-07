@@ -2,7 +2,7 @@ import * as graphql from 'graphql';
 import { GraphQLPlatform } from './index.js';
 import { customOperations, nodes } from './__tests__/config.js';
 
-describe('GraphQL Platform', () => {
+describe('GraphQL-Platform', () => {
   describe('Fails', () => {
     it.each([
       [

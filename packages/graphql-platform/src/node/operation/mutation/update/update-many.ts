@@ -2,7 +2,6 @@ import * as scalars from '@prismamedia/graphql-platform-scalars';
 import * as utils from '@prismamedia/graphql-platform-utils';
 import { Memoize } from '@prismamedia/memoize';
 import * as graphql from 'graphql';
-import type { ConnectorInterface } from '../../../../connector-interface.js';
 import type { NodeValue } from '../../../../node.js';
 import {
   argsPathKey,
@@ -38,15 +37,14 @@ export type UpdateManyMutationResult = NodeSelectedValue[];
 
 export class UpdateManyMutation<
   TRequestContext extends object,
-  TConnector extends ConnectorInterface,
 > extends AbstractUpdate<
   TRequestContext,
-  TConnector,
   UpdateManyMutationArgs,
   UpdateManyMutationResult
 > {
-  readonly #config?: UpdateConfig<TRequestContext, TConnector> =
-    this.node.getMutationConfig(utils.MutationType.UPDATE).config;
+  readonly #config?: UpdateConfig<any, any, any> = this.node.getMutationConfig(
+    utils.MutationType.UPDATE,
+  ).config;
   readonly #configPath: utils.Path = this.node.getMutationConfig(
     utils.MutationType.UPDATE,
   ).configPath;
@@ -89,9 +87,9 @@ export class UpdateManyMutation<
   }
 
   protected override async executeWithValidArgumentsAndContext(
-    authorization: NodeFilter<TRequestContext, TConnector> | undefined,
+    authorization: NodeFilter | undefined,
     { data, ...args }: NodeSelectionAwareArgs<UpdateManyMutationArgs>,
-    context: MutationContext<TRequestContext, TConnector>,
+    context: MutationContext,
     path: utils.Path,
   ): Promise<UpdateManyMutationResult> {
     const preUpdate = this.#config?.preUpdate;

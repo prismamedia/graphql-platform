@@ -1,4 +1,3 @@
-import type { ConnectorInterface } from '../../../connector-interface.js';
 import { DeleteManyMutation } from './deletion/delete-many.js';
 import { DeleteOneIfExistsMutation } from './deletion/delete-one-if-exists.js';
 import { DeleteOneMutation } from './deletion/delete-one.js';
@@ -13,14 +12,8 @@ export const deletionConstructorsByKey = {
   'delete-one-if-exists': DeleteOneIfExistsMutation,
 } as const;
 
-export type DeletionsByKey<
-  TRequestContext extends object,
-  TConnector extends ConnectorInterface,
-> = {
-  'delete-many': DeleteManyMutation<TRequestContext, TConnector>;
-  'delete-one': DeleteOneMutation<TRequestContext, TConnector>;
-  'delete-one-if-exists': DeleteOneIfExistsMutation<
-    TRequestContext,
-    TConnector
-  >;
+export type DeletionsByKey<TRequestContext extends object> = {
+  'delete-many': DeleteManyMutation<TRequestContext>;
+  'delete-one': DeleteOneMutation<TRequestContext>;
+  'delete-one-if-exists': DeleteOneIfExistsMutation<TRequestContext>;
 };

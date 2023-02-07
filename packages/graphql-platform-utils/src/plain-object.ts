@@ -1,7 +1,7 @@
 import _ from 'lodash';
 import { UnexpectedValueError } from './error.js';
-import { isNil, Nillable } from './nil.js';
-import { Path } from './path.js';
+import { isNil, type Nillable } from './nil.js';
+import type { Path } from './path.js';
 
 export type PlainObject = { [key: string]: any };
 

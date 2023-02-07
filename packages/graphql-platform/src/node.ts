@@ -89,6 +89,7 @@ export type NodeAuthorizationConfig<TRequestContext extends object> = (
 export type NodeConfig<
   TRequestContext extends object = any,
   TConnector extends ConnectorInterface = any,
+  TContainer extends object = any,
 > = {
   /**
    * Optional, you can provide this node's plural form if the one guessed is not what you expect
@@ -169,9 +170,13 @@ export type NodeConfig<
   mutation?:
     | boolean
     | {
-        [TType in keyof MutationConfig<TRequestContext, TConnector>]?:
+        [TType in keyof MutationConfig<
+          TRequestContext,
+          TConnector,
+          TContainer
+        >]?:
           | boolean
-          | MutationConfig<TRequestContext, TConnector>[TType];
+          | MutationConfig<TRequestContext, TConnector, TContainer>[TType];
       };
 
   /**
@@ -194,6 +199,7 @@ export type NodeConfig<
 export class Node<
   TRequestContext extends object = any,
   TConnector extends ConnectorInterface = any,
+  TContainer extends object = any,
 > {
   public readonly plural: string;
   public readonly indefinite: string;
@@ -241,9 +247,13 @@ export class Node<
   readonly #authorizationConfig?: NodeAuthorizationConfig<TRequestContext>;
 
   public constructor(
-    public readonly gp: GraphQLPlatform<TRequestContext, TConnector>,
+    public readonly gp: GraphQLPlatform<
+      TRequestContext,
+      TConnector,
+      TContainer
+    >,
     public readonly name: NodeName,
-    public readonly config: NodeConfig<TRequestContext, TConnector>,
+    public readonly config: NodeConfig<TRequestContext, TConnector, TContainer>,
     public readonly configPath: utils.Path,
   ) {
     assertNodeName(name, configPath);
@@ -255,11 +265,7 @@ export class Node<
       const onChangePath = utils.addPath(configPath, 'onChange');
 
       if (onChange) {
-        if (typeof onChange !== 'function') {
-          throw new utils.UnexpectedValueError(`a function`, onChange, {
-            path: onChangePath,
-          });
-        }
+        utils.assertFunction(onChange, onChangePath);
 
         gp.on('node-change', async (change) => {
           if (change.node === this) {
@@ -532,7 +538,7 @@ export class Node<
   public getMutationConfig<TType extends utils.MutationType>(
     mutationType: TType,
   ): {
-    config?: MutationConfig<TRequestContext, TConnector>[TType];
+    config?: MutationConfig<TRequestContext, TConnector, TContainer>[TType];
     configPath: utils.Path;
   } {
     const mutationsConfig = this.config.mutation;
@@ -1136,9 +1142,7 @@ export class Node<
   }
 
   @Memoize()
-  public get mutationsByKey(): Readonly<
-    MutationsByKey<TRequestContext, TConnector>
-  > {
+  public get mutationsByKey(): Readonly<MutationsByKey<TRequestContext>> {
     return Object.entries(mutationConstructorsByKey).reduce(
       (mutationsByKey, [name, constructor]) => {
         const mutation = new constructor(this);
@@ -1155,7 +1159,7 @@ export class Node<
   public getMutationByKey<TKey extends MutationKey>(
     key: TKey,
     path?: utils.Path,
-  ): MutationsByKey<TRequestContext, TConnector>[TKey] {
+  ): MutationsByKey<TRequestContext>[TKey] {
     if (!this.mutationsByKey[key]) {
       throw new utils.UnexpectedValueError(
         `a mutation's key among "${Object.keys(this.mutationsByKey).join(
@@ -1170,9 +1174,7 @@ export class Node<
   }
 
   @Memoize()
-  public get queriesByKey(): Readonly<
-    QueriesByKey<TRequestContext, TConnector>
-  > {
+  public get queriesByKey(): Readonly<QueriesByKey<TRequestContext>> {
     return Object.entries(queryConstructorsByKey).reduce(
       (queriesByKey, [name, constructor]) => {
         const query = new constructor(this);
@@ -1189,7 +1191,7 @@ export class Node<
   public getQueryByKey<TKey extends QueryKey>(
     key: TKey,
     path?: utils.Path,
-  ): QueriesByKey<TRequestContext, TConnector>[TKey] {
+  ): QueriesByKey<TRequestContext>[TKey] {
     if (!this.queriesByKey[key]) {
       throw new utils.UnexpectedValueError(
         `a query's key among "${Object.keys(this.queriesByKey).join(', ')}"`,
@@ -1203,7 +1205,7 @@ export class Node<
 
   @Memoize()
   public get subscriptionsByKey(): Readonly<
-    SubscriptionsByKey<TRequestContext, TConnector>
+    SubscriptionsByKey<TRequestContext>
   > {
     return Object.entries(subscriptionConstructorsByKey).reduce(
       (subscriptionsByKey, [name, constructor]) => {
@@ -1221,7 +1223,7 @@ export class Node<
   public getSubscriptionByKey<TKey extends SubscriptionKey>(
     key: TKey,
     path?: utils.Path,
-  ): SubscriptionsByKey<TRequestContext, TConnector>[TKey] {
+  ): SubscriptionsByKey<TRequestContext>[TKey] {
     if (!this.subscriptionsByKey[key]) {
       throw new utils.UnexpectedValueError(
         `a subscription's key among "${Object.keys(
@@ -1237,8 +1239,7 @@ export class Node<
 
   @Memoize()
   public get operations(): ReadonlyArray<
-    | MutationInterface<TRequestContext, TConnector>
-    | OperationInterface<TRequestContext, TConnector>
+    MutationInterface<TRequestContext> | OperationInterface<TRequestContext>
   > {
     return [
       ...Object.values<MutationInterface>(this.mutationsByKey),
@@ -1359,7 +1360,7 @@ export class Node<
   public getAuthorization(
     context: OperationContext<TRequestContext, TConnector>,
     mutationType?: utils.MutationType,
-  ): NodeFilter<TRequestContext, TConnector> | undefined {
+  ): NodeFilter | undefined {
     const authorization = this.#authorizationConfig?.(
       context.requestContext,
       mutationType,

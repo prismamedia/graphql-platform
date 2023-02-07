@@ -429,7 +429,7 @@ export class NodeFilterInputType extends utils.ObjectInputType<FieldFilterInputT
     value: NodeFilterInputValue,
     context?: OperationContext<TRequestContext, TConnector>,
     path?: utils.Path,
-  ): NodeFilter<TRequestContext, TConnector> {
+  ): NodeFilter {
     return new NodeFilter(
       this.node,
       value === undefined
@@ -455,7 +455,7 @@ export class NodeFilterInputType extends utils.ObjectInputType<FieldFilterInputT
     maybeValue: unknown,
     context?: OperationContext<TRequestContext, TConnector>,
     path?: utils.Path,
-  ): NodeFilter<TRequestContext, TConnector> {
+  ): NodeFilter {
     return this.filter(this.parseValue(maybeValue, path), context, path);
   }
 }

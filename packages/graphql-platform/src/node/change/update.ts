@@ -1,25 +1,23 @@
 import * as utils from '@prismamedia/graphql-platform-utils';
-import type { ConnectorInterface } from '../../connector-interface.js';
 import type { Component, ComponentValue, Node, NodeValue } from '../../node.js';
 import { AbstractNodeChange } from '../abstract-change.js';
 
 export class NodeUpdate<
   TRequestContext extends object = any,
-  TConnector extends ConnectorInterface = any,
-> extends AbstractNodeChange<TRequestContext, TConnector> {
+> extends AbstractNodeChange<TRequestContext> {
   public override readonly kind = utils.MutationType.UPDATE;
 
   public readonly oldValue: Readonly<NodeValue>;
   public readonly newValue: Readonly<NodeValue>;
 
   public readonly updatesByComponent: ReadonlyMap<
-    Component<TRequestContext, TConnector>,
+    Component,
     Readonly<{ oldValue: ComponentValue; newValue: ComponentValue }>
   >;
   public readonly updatedComponentNames: ReadonlyArray<Component['name']>;
 
   public constructor(
-    node: Node<TRequestContext, TConnector>,
+    node: Node,
     requestContext: TRequestContext,
     maybeOldValue: unknown,
     maybeNewValue: unknown,

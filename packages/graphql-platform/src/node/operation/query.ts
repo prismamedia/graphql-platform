@@ -1,5 +1,4 @@
 import type { Simplify } from 'type-fest';
-import type { ConnectorInterface } from '../../connector-interface.js';
 import { CountQuery } from './query/count.js';
 import { ExistsQuery } from './query/exists.js';
 import { FindManyQuery } from './query/find-many.js';
@@ -26,20 +25,14 @@ export const queryConstructorsByKey = {
   'get-some-in-order-if-exists': GetSomeInOrderIfExistsQuery,
 } as const;
 
-export type QueriesByKey<
-  TRequestContext extends object,
-  TConnector extends ConnectorInterface,
-> = {
-  count: CountQuery<TRequestContext, TConnector>;
-  exists: ExistsQuery<TRequestContext, TConnector>;
-  'find-many': FindManyQuery<TRequestContext, TConnector>;
-  'get-one': GetOneQuery<TRequestContext, TConnector>;
-  'get-one-if-exists': GetOneIfExistsQuery<TRequestContext, TConnector>;
-  'get-some-in-order': GetSomeInOrderQuery<TRequestContext, TConnector>;
-  'get-some-in-order-if-exists': GetSomeInOrderIfExistsQuery<
-    TRequestContext,
-    TConnector
-  >;
+export type QueriesByKey<TRequestContext extends object> = {
+  count: CountQuery<TRequestContext>;
+  exists: ExistsQuery<TRequestContext>;
+  'find-many': FindManyQuery<TRequestContext>;
+  'get-one': GetOneQuery<TRequestContext>;
+  'get-one-if-exists': GetOneIfExistsQuery<TRequestContext>;
+  'get-some-in-order': GetSomeInOrderQuery<TRequestContext>;
+  'get-some-in-order-if-exists': GetSomeInOrderIfExistsQuery<TRequestContext>;
 };
 
-export type QueryKey = Simplify<keyof QueriesByKey<any, any>>;
+export type QueryKey = Simplify<keyof QueriesByKey<any>>;

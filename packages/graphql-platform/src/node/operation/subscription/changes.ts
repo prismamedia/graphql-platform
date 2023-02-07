@@ -2,7 +2,6 @@ import * as utils from '@prismamedia/graphql-platform-utils';
 import { Memoize } from '@prismamedia/memoize';
 import * as graphql from 'graphql';
 import inflection from 'inflection';
-import type { ConnectorInterface } from '../../../connector-interface.js';
 import type { NodeValue } from '../../../node.js';
 import type { NodeSelectionAwareArgs } from '../../abstract-operation.js';
 import type { NodeFilter } from '../../statement/filter.js';
@@ -34,10 +33,8 @@ export type ChangesSubscriptionResult = AsyncIterator<NodeSelectedValueChange>;
 
 export class ChangesSubscription<
   TRequestContext extends object,
-  TConnector extends ConnectorInterface,
 > extends AbstractSubscription<
   TRequestContext,
-  TConnector,
   ChangesSubscriptionArgs,
   ChangesSubscriptionResult
 > {
@@ -117,9 +114,9 @@ export class ChangesSubscription<
   }
 
   protected override async executeWithValidArgumentsAndContext(
-    authorization: NodeFilter<TRequestContext, TConnector> | undefined,
+    authorization: NodeFilter | undefined,
     args: NodeSelectionAwareArgs<ChangesSubscriptionArgs>,
-    context: OperationContext<TRequestContext, TConnector>,
+    context: OperationContext,
     path: utils.Path,
   ): Promise<ChangesSubscriptionResult> {
     /**

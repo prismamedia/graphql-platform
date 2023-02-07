@@ -1,7 +1,6 @@
 import type * as utils from '@prismamedia/graphql-platform-utils';
 import { Memoize } from '@prismamedia/memoize';
 import * as graphql from 'graphql';
-import type { ConnectorInterface } from '../../../../connector-interface.js';
 import type {
   NodeSelectionAwareArgs,
   RawNodeSelectionAwareArgs,
@@ -22,10 +21,8 @@ export type UpdateOneMutationResult = NodeSelectedValue;
 
 export class UpdateOneMutation<
   TRequestContext extends object,
-  TConnector extends ConnectorInterface,
 > extends AbstractUpdate<
   TRequestContext,
-  TConnector,
   UpdateOneMutationArgs,
   UpdateOneMutationResult
 > {
@@ -46,9 +43,9 @@ export class UpdateOneMutation<
   }
 
   protected override async executeWithValidArgumentsAndContext(
-    authorization: NodeFilter<TRequestContext, TConnector> | undefined,
+    authorization: NodeFilter | undefined,
     args: NodeSelectionAwareArgs<UpdateOneMutationArgs>,
-    context: MutationContext<TRequestContext, TConnector>,
+    context: MutationContext,
     path: utils.Path,
   ): Promise<UpdateOneMutationResult> {
     const nodeValue = await this.node

@@ -2,7 +2,6 @@ import * as utils from '@prismamedia/graphql-platform-utils';
 import { Memoize } from '@prismamedia/memoize';
 import * as graphql from 'graphql';
 import inflection from 'inflection';
-import type { ConnectorInterface } from '../../../connector-interface.js';
 import {
   argsPathKey,
   NodeSelectionAwareArgs,
@@ -29,10 +28,8 @@ export type GetSomeInOrderIfExistsQueryResult = Array<NodeSelectedValue | null>;
 
 export class GetSomeInOrderIfExistsQuery<
   TRequestContext extends object,
-  TConnector extends ConnectorInterface,
 > extends AbstractQuery<
   TRequestContext,
-  TConnector,
   GetSomeInOrderIfExistsQueryArgs,
   GetSomeInOrderIfExistsQueryResult
 > {
@@ -71,9 +68,9 @@ export class GetSomeInOrderIfExistsQuery<
   }
 
   protected override async executeWithValidArgumentsAndContext(
-    authorization: NodeFilter<TRequestContext, TConnector> | undefined,
+    authorization: NodeFilter | undefined,
     args: NodeSelectionAwareArgs<GetSomeInOrderIfExistsQueryArgs>,
-    context: OperationContext<TRequestContext, TConnector>,
+    context: OperationContext,
     path: utils.Path,
   ): Promise<GetSomeInOrderIfExistsQueryResult> {
     const argsPath = utils.addPath(path, argsPathKey);

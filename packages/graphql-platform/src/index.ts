@@ -38,19 +38,22 @@ export * from './seeding.js';
 export type RequestContextAssertion<
   TRequestContext extends object = any,
   TConnector extends ConnectorInterface = any,
+  TContainer extends object = any,
 > = (
-  this: GraphQLPlatform<TRequestContext, TConnector>,
+  this: GraphQLPlatform<TRequestContext, TConnector, TContainer>,
   maybeRequestContext: object,
 ) => asserts maybeRequestContext is TRequestContext;
 
 export type GraphQLPlatformEventDataByName<
   TRequestContext extends object = any,
   TConnector extends ConnectorInterface = any,
-> = { 'node-change': NodeChange<TRequestContext, TConnector> };
+  TContainer extends object = any,
+> = { 'node-change': NodeChange<TRequestContext> };
 
 export type GraphQLPlatformConfig<
   TRequestContext extends object = any,
   TConnector extends ConnectorInterface = any,
+  TContainer extends object = any,
 > = {
   /**
    * Required, provide the nodes' definition
@@ -61,7 +64,7 @@ export type GraphQLPlatformConfig<
      *
      * @see https://spec.graphql.org/draft/#sec-Names
      */
-    [nodeName: NodeName]: NodeConfig<TRequestContext, TConnector>;
+    [nodeName: NodeName]: NodeConfig<TRequestContext, TConnector, TContainer>;
   };
 
   /**
@@ -69,7 +72,8 @@ export type GraphQLPlatformConfig<
    */
   customOperations?: CustomOperationsByNameByTypeConfig<
     TRequestContext,
-    TConnector
+    TConnector,
+    TContainer
   >;
 
   /**
@@ -94,7 +98,7 @@ export type GraphQLPlatformConfig<
   /**
    * Optional, a method which asserts the request-context validity
    *
-   * Convenient when the GraphQL Platform is used with multiple integrations and you want to validate its context
+   * Convenient when the GraphQL-Platform is used with multiple integrations and you want to validate its context
    *
    * By default, the context provided by the integration is provided "as is"
    *
@@ -102,53 +106,70 @@ export type GraphQLPlatformConfig<
    */
   requestContextAssertion?: RequestContextAssertion<
     TRequestContext,
-    TConnector
+    TConnector,
+    TContainer
   >;
 
   /**
    * Optional, register some event-listeners, all at once
    */
   on?: EventConfigByName<
-    GraphQLPlatformEventDataByName<TRequestContext, TConnector>
+    GraphQLPlatformEventDataByName<TRequestContext, TConnector, TContainer>
   >;
 
   /**
    * Optional, register a node-change-listeners
    */
   onNodeChange?: EventListener<
-    GraphQLPlatformEventDataByName<TRequestContext, TConnector>,
+    GraphQLPlatformEventDataByName<TRequestContext, TConnector, TContainer>,
     'node-change'
+  >;
+
+  /**
+   * Optional, given the GraphQL-Platform instance, build a service-container which will be accessible further in the hooks, the virtual-fields and the custom-operations
+   */
+  container?: utils.ThunkOrValue<
+    TContainer,
+    [gp: GraphQLPlatform<TRequestContext, TConnector, {}>]
   >;
 };
 
 export class GraphQLPlatform<
   TRequestContext extends object = any,
   TConnector extends ConnectorInterface = any,
+  TContainer extends object = any,
 > extends AsyncEventEmitter<
-  GraphQLPlatformEventDataByName<TRequestContext, TConnector>
+  GraphQLPlatformEventDataByName<TRequestContext, TConnector, TContainer>
 > {
   public readonly nodesByName: ReadonlyMap<
     Node['name'],
-    Node<TRequestContext, TConnector>
+    Node<TRequestContext, TConnector, TContainer>
   >;
-  public readonly nodes: ReadonlyArray<Node<TRequestContext, TConnector>>;
-  public readonly nodeSet: ReadonlySet<Node<TRequestContext, TConnector>>;
-
-  public readonly operationsByNameByType: OperationsByNameByType<
-    TRequestContext,
-    TConnector
+  public readonly nodes: ReadonlyArray<
+    Node<TRequestContext, TConnector, TContainer>
+  >;
+  public readonly nodeSet: ReadonlySet<
+    Node<TRequestContext, TConnector, TContainer>
   >;
 
-  public readonly api: API<TRequestContext, TConnector>;
+  public readonly operationsByNameByType: OperationsByNameByType<TRequestContext>;
+
+  public readonly api: API<TRequestContext>;
 
   readonly #connector?: TConnector;
+
+  public readonly container: TContainer;
 
   readonly #requestContextAssertion?: (
     maybeRequestContext: object,
   ) => asserts maybeRequestContext is TRequestContext;
 
   public constructor(
-    public readonly config: GraphQLPlatformConfig<TRequestContext, TConnector>,
+    public readonly config: GraphQLPlatformConfig<
+      TRequestContext,
+      TConnector,
+      TContainer
+    >,
     public readonly configPath: utils.Path = utils.addPath(
       undefined,
       'GraphQLPlatformConfig',
@@ -164,11 +185,7 @@ export class GraphQLPlatform<
       const onNodeChangePath = utils.addPath(configPath, 'onNodeChange');
 
       if (onNodeChange) {
-        if (typeof onNodeChange !== 'function') {
-          throw new utils.UnexpectedValueError(`a function`, onNodeChange, {
-            path: onNodeChangePath,
-          });
-        }
+        utils.assertFunction(onNodeChange, onNodeChangePath);
 
         this.on('node-change', onNodeChange);
       }
@@ -287,6 +304,21 @@ export class GraphQLPlatform<
         : undefined;
     }
 
+    // container
+    {
+      const containerConfig = this.config.container;
+      const containerConfigPath = utils.addPath(this.configPath, 'container');
+
+      const container = utils.resolveThunkOrValue(containerConfig, this);
+      if (container != null && typeof container !== 'object') {
+        throw new utils.UnexpectedValueError('an object', container, {
+          path: containerConfigPath,
+        });
+      }
+
+      this.container = container ?? ({} as TContainer);
+    }
+
     // request-context-assertion
     {
       const requestContextAssertionConfig = config.requestContextAssertion;
@@ -295,14 +327,11 @@ export class GraphQLPlatform<
         'requestContextAssertion',
       );
 
-      if (requestContextAssertionConfig != null) {
-        if (typeof requestContextAssertionConfig !== 'function') {
-          throw new utils.UnexpectedValueError(
-            `a function`,
-            requestContextAssertionConfig,
-            { path: requestContextAssertionConfigPath },
-          );
-        }
+      if (requestContextAssertionConfig) {
+        utils.assertFunction(
+          requestContextAssertionConfig,
+          requestContextAssertionConfigPath,
+        );
 
         this.#requestContextAssertion =
           requestContextAssertionConfig.bind(this);
@@ -349,7 +378,7 @@ export class GraphQLPlatform<
     type: graphql.OperationTypeNode,
     name: string,
     path?: utils.Path,
-  ): OperationInterface<TRequestContext, TConnector> {
+  ): OperationInterface<TRequestContext> {
     if (!utils.operationTypes.includes(type)) {
       throw new utils.UnexpectedValueError(
         `an operation's type among "${utils.operationTypes.join(', ')}"`,

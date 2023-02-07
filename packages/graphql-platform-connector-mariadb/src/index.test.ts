@@ -9,7 +9,7 @@ import {
 } from './index.js';
 import { createGraphQLPlatform } from './__tests__/config.js';
 
-describe('GraphQL Platform Connector MariaDB', () => {
+describe('GraphQL-Platform Connector MariaDB', () => {
   let gp: MyGP<MariaDBConnector>;
 
   beforeAll(async () => {

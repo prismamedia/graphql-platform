@@ -19,6 +19,7 @@ import {
   isGraphErrorWithPathEqualOrDescendantOf,
   UnexpectedValueError,
 } from './error.js';
+import { assertFunction } from './function.js';
 import {
   ensureInputType,
   getGraphQLInputType,
@@ -185,12 +186,8 @@ export class Input<TValue = any> {
       const parserConfig = config.parser;
       const parserConfigPath = addPath(configPath, 'parser');
 
-      if (parserConfig != null) {
-        if (typeof parserConfig !== 'function') {
-          throw new UnexpectedValueError(`a function`, parserConfig, {
-            path: parserConfigPath,
-          });
-        }
+      if (parserConfig) {
+        assertFunction(parserConfig, parserConfigPath);
 
         this.#customParser = parserConfig;
       }

@@ -87,7 +87,7 @@ export const ArticleStatusType = new GraphQLEnumType({
   ),
 });
 
-export const Article: NodeConfig<MyContext> = {
+export const Article = {
   authorization({ user }, mutationType) {
     if (user) {
       switch (user.role) {
@@ -452,9 +452,9 @@ export const Article: NodeConfig<MyContext> = {
     //   );
     // }
   },
-};
+} satisfies NodeConfig<MyContext>;
 
-export const Category: NodeConfig<MyContext> = {
+export const Category = {
   authorization: ({ user }, mutationType) =>
     mutationType
       ? // Only the "admins" can mutate the categories
@@ -582,9 +582,9 @@ export const Category: NodeConfig<MyContext> = {
       interfaces: [PublicNodeInterfaceType],
     },
   },
-};
+} satisfies NodeConfig<MyContext>;
 
-export const Tag: NodeConfig<MyContext> = {
+export const Tag = {
   authorization: ({ user }, mutationType) =>
     mutationType
       ? user?.role === 'ADMIN'
@@ -682,9 +682,9 @@ export const Tag: NodeConfig<MyContext> = {
       },
     },
   },
-};
+} satisfies NodeConfig<MyContext>;
 
-export const ArticleTag: NodeConfig<MyContext> = {
+export const ArticleTag = {
   authorization: ({ user }, mutationType) =>
     mutationType
       ? user?.role === 'ADMIN'
@@ -732,9 +732,9 @@ export const ArticleTag: NodeConfig<MyContext> = {
       originalEdge: 'ArticleTagModeration.articleTag',
     },
   },
-};
+} satisfies NodeConfig<MyContext>;
 
-export const ArticleTagModeration: NodeConfig<MyContext> = {
+export const ArticleTagModeration = {
   authorization: ({ user }, mutationType) =>
     user?.role === 'ADMIN' || !mutationType,
 
@@ -759,9 +759,9 @@ export const ArticleTagModeration: NodeConfig<MyContext> = {
   },
 
   uniques: [['articleTag', 'moderator']],
-};
+} satisfies NodeConfig<MyContext>;
 
-export const User: NodeConfig<MyContext> = {
+export const User = {
   authorization: ({ user }, mutationType) =>
     mutationType
       ? // Only the "admins" can mutate the users
@@ -838,9 +838,9 @@ export const User: NodeConfig<MyContext> = {
       interfaces: [PublicNodeInterfaceType],
     },
   },
-};
+} satisfies NodeConfig<MyContext>;
 
-export const UserProfile: NodeConfig<MyContext> = {
+export const UserProfile = {
   authorization: ({ user }, mutationType) =>
     mutationType
       ? user?.role === 'ADMIN'
@@ -881,12 +881,12 @@ export const UserProfile: NodeConfig<MyContext> = {
   },
 
   uniques: [['user']],
-};
+} satisfies NodeConfig<MyContext>;
 
 /**
  * "Log" is a private & immutable node
  */
-export const Log: NodeConfig<MyContext> = {
+export const Log = {
   public: false,
 
   mutation: {
@@ -917,9 +917,9 @@ export const Log: NodeConfig<MyContext> = {
   },
 
   uniques: [['_id']],
-};
+} satisfies NodeConfig<MyContext>;
 
-export const nodes: Record<string, NodeConfig<MyContext>> = {
+export const nodes = {
   Article,
   Category,
   Tag,
@@ -928,7 +928,7 @@ export const nodes: Record<string, NodeConfig<MyContext>> = {
   User,
   UserProfile,
   Log,
-};
+} satisfies Record<string, NodeConfig<MyContext>>;
 
 export const nodeNames = Object.keys(nodes);
 
@@ -937,7 +937,7 @@ export const customOperations: CustomOperationsByNameByTypeConfig<MyContext> = {
     whoAmI: () => ({
       type: new GraphQLNonNull(GraphQLString),
       resolve: (_, args, context) =>
-        `Hello ${context.user?.name ?? 'world'}, I'm GraphQL Platform`,
+        `Hello ${context.user?.name ?? 'world'}, I'm GraphQL-Platform`,
     }),
   },
   // Can return undefined

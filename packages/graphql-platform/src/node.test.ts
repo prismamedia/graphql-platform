@@ -672,7 +672,7 @@ describe('Node', () => {
           (mutationConfig) => {
             const gp = new GraphQLPlatform({
               nodes: Object.fromEntries(
-                Object.entries(nodes).map<[utils.Name, NodeConfig]>(
+                Object.entries<NodeConfig>(nodes).map<[utils.Name, NodeConfig]>(
                   ([name, config]) => [
                     name,
                     {

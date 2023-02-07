@@ -1,17 +1,13 @@
 import * as utils from '@prismamedia/graphql-platform-utils';
-import type { ConnectorInterface } from '../connector-interface.js';
 import type { Node, UniqueConstraintValue } from '../node.js';
 
-export abstract class AbstractNodeChange<
-  TRequestContext extends object,
-  TConnector extends ConnectorInterface,
-> {
+export abstract class AbstractNodeChange<TRequestContext extends object> {
   public abstract readonly kind: utils.MutationType;
 
   public readonly stringifiedId: string;
 
   public constructor(
-    public readonly node: Node<TRequestContext, TConnector>,
+    public readonly node: Node,
     public readonly id: Readonly<UniqueConstraintValue>,
     public readonly requestContext: TRequestContext,
     public readonly createdAt: Date = new Date(),

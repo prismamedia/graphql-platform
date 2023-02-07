@@ -1,7 +1,6 @@
 import type * as utils from '@prismamedia/graphql-platform-utils';
 import { Memoize } from '@prismamedia/memoize';
 import * as graphql from 'graphql';
-import type { ConnectorInterface } from '../../../../connector-interface.js';
 import type {
   NodeSelectionAwareArgs,
   RawNodeSelectionAwareArgs,
@@ -21,10 +20,8 @@ export type DeleteOneMutationResult = NodeSelectedValue;
 
 export class DeleteOneMutation<
   TRequestContext extends object,
-  TConnector extends ConnectorInterface,
 > extends AbstractDeletion<
   TRequestContext,
-  TConnector,
   DeleteOneMutationArgs,
   DeleteOneMutationResult
 > {
@@ -45,9 +42,9 @@ export class DeleteOneMutation<
   }
 
   protected override async executeWithValidArgumentsAndContext(
-    authorization: NodeFilter<TRequestContext, TConnector> | undefined,
+    authorization: NodeFilter | undefined,
     args: NodeSelectionAwareArgs<DeleteOneMutationArgs>,
-    context: MutationContext<TRequestContext, TConnector>,
+    context: MutationContext,
     path: utils.Path,
   ): Promise<DeleteOneMutationResult> {
     const nodeValue = await this.node

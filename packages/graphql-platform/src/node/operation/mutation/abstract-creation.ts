@@ -13,7 +13,8 @@ import {
 interface AbstractCreationHookArgs<
   TRequestContext extends object,
   TConnector extends ConnectorInterface,
-> extends AbstractMutationHookArgs<TRequestContext, TConnector> {
+  TContainer extends object,
+> extends AbstractMutationHookArgs<TRequestContext, TConnector, TContainer> {
   /**
    * The provided "data" argument
    */
@@ -23,7 +24,8 @@ interface AbstractCreationHookArgs<
 export interface PreCreateArgs<
   TRequestContext extends object,
   TConnector extends ConnectorInterface,
-> extends AbstractCreationHookArgs<TRequestContext, TConnector> {
+  TContainer extends object,
+> extends AbstractCreationHookArgs<TRequestContext, TConnector, TContainer> {
   /**
    * The creation statement, as a mutable object
    */
@@ -33,11 +35,12 @@ export interface PreCreateArgs<
 export interface PostCreateArgs<
   TRequestContext extends object,
   TConnector extends ConnectorInterface,
-> extends AbstractCreationHookArgs<TRequestContext, TConnector> {
+  TContainer extends object,
+> extends AbstractCreationHookArgs<TRequestContext, TConnector, TContainer> {
   /**
    * The uncommitted change
    */
-  readonly change: NodeCreation<TRequestContext, TConnector>;
+  readonly change: NodeCreation<TRequestContext>;
 }
 
 /**
@@ -46,7 +49,8 @@ export interface PostCreateArgs<
 export interface CreationConfig<
   TRequestContext extends object,
   TConnector extends ConnectorInterface,
-> extends AbstractMutationConfig<TRequestContext, TConnector> {
+  TContainer extends object,
+> extends AbstractMutationConfig<TRequestContext, TConnector, TContainer> {
   /**
    * Optional, add some "virtual" fields whose values can be used in the hooks
    */
@@ -61,7 +65,7 @@ export interface CreationConfig<
    * Throwing an Error here will prevent the creation
    */
   preCreate?(
-    args: PreCreateArgs<TRequestContext, TConnector>,
+    args: PreCreateArgs<TRequestContext, TConnector, TContainer>,
   ): Promisable<void>;
 
   /**
@@ -70,16 +74,15 @@ export interface CreationConfig<
    * Throwing an Error here will fail the creation
    */
   postCreate?(
-    args: PostCreateArgs<TRequestContext, TConnector>,
+    args: PostCreateArgs<TRequestContext, TConnector, TContainer>,
   ): Promisable<void>;
 }
 
 export abstract class AbstractCreation<
   TRequestContext extends object,
-  TConnector extends ConnectorInterface,
   TArgs extends utils.Nillable<utils.PlainObject>,
   TResult,
-> extends AbstractMutation<TRequestContext, TConnector, TArgs, TResult> {
+> extends AbstractMutation<TRequestContext, TArgs, TResult> {
   public override readonly mutationTypes = [
     utils.MutationType.CREATION,
   ] as const;

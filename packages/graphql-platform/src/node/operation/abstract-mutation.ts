@@ -18,31 +18,33 @@ import type { MutationInterface } from './mutation/interface.js';
 export interface AbstractMutationHookArgs<
   TRequestContext extends object,
   TConnector extends ConnectorInterface,
+  TContainer extends object,
 > {
   /**
-   * The GraphQL Platform instance
+   * The GraphQL-Platform instance
    */
-  gp: GraphQLPlatform<TRequestContext, TConnector>;
+  gp: GraphQLPlatform<TRequestContext, TConnector, TContainer>;
 
   /**
    * The node's definition
    */
-  node: Node<TRequestContext, TConnector>;
+  node: Node<TRequestContext, TConnector, TContainer>;
 
   /**
    * The current context
    */
-  context: MutationContext<TRequestContext, TConnector>;
+  context: MutationContext<TRequestContext, TConnector, TContainer>;
 
   /**
    * The context-bound API
    */
-  api: ContextBoundAPI<TRequestContext, TConnector>;
+  api: ContextBoundAPI<TRequestContext>;
 }
 
 export interface AbstractMutationConfig<
   TRequestContext extends object,
   TConnector extends ConnectorInterface,
+  TContainer extends object,
 > {
   /**
    * Optional, either the mutation is enabled or not
@@ -57,12 +59,11 @@ export interface AbstractMutationConfig<
 
 export abstract class AbstractMutation<
     TRequestContext extends object,
-    TConnector extends ConnectorInterface,
     TArgs extends utils.Nillable<utils.PlainObject>,
     TResult,
   >
-  extends AbstractOperation<TRequestContext, TConnector, TArgs, TResult>
-  implements MutationInterface<TRequestContext, TConnector>
+  extends AbstractOperation<TRequestContext, TArgs, TResult>
+  implements MutationInterface<TRequestContext>
 {
   public override readonly operationType = graphql.OperationTypeNode.MUTATION;
   public abstract readonly mutationTypes: ReadonlyArray<utils.MutationType>;
@@ -85,9 +86,9 @@ export abstract class AbstractMutation<
   }
 
   protected override ensureAuthorization(
-    context: MutationContext<TRequestContext, TConnector>,
+    context: MutationContext,
     path: utils.Path,
-  ): NodeFilter<TRequestContext, TConnector> | undefined {
+  ): NodeFilter | undefined {
     return this.mutationTypes.reduce<NodeFilter | undefined>(
       (authorization, mutationType) =>
         new NodeFilter(
@@ -102,15 +103,15 @@ export abstract class AbstractMutation<
   }
 
   protected abstract override executeWithValidArgumentsAndContext(
-    authorization: NodeFilter<TRequestContext, TConnector> | undefined,
+    authorization: NodeFilter | undefined,
     args: NodeSelectionAwareArgs<TArgs>,
-    context: MutationContext<TRequestContext, TConnector>,
+    context: MutationContext,
     path: utils.Path,
   ): Promise<TResult>;
 
   public override async execute(
     args: TArgs,
-    context: TRequestContext | MutationContext<TRequestContext, TConnector>,
+    context: TRequestContext | MutationContext<TRequestContext>,
     path: utils.Path = utils.addPath(
       utils.addPath(undefined, this.operationType),
       this.name,

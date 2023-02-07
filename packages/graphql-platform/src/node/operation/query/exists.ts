@@ -3,7 +3,6 @@ import * as utils from '@prismamedia/graphql-platform-utils';
 import { Memoize } from '@prismamedia/memoize';
 import * as graphql from 'graphql';
 import inflection from 'inflection';
-import type { ConnectorInterface } from '../../../connector-interface.js';
 import { type NodeSelectionAwareArgs } from '../../abstract-operation.js';
 import type { NodeFilter } from '../../statement/filter.js';
 import type { NodeUniqueFilterInputValue } from '../../type.js';
@@ -14,12 +13,8 @@ export type ExistsQueryArgs = { where: NodeUniqueFilterInputValue };
 
 export type ExistsQueryResult = boolean;
 
-export class ExistsQuery<
-  TRequestContext extends object,
-  TConnector extends ConnectorInterface,
-> extends AbstractQuery<
+export class ExistsQuery<TRequestContext extends object> extends AbstractQuery<
   TRequestContext,
-  TConnector,
   ExistsQueryArgs,
   ExistsQueryResult
 > {
@@ -46,9 +41,9 @@ export class ExistsQuery<
   }
 
   protected override async executeWithValidArgumentsAndContext(
-    authorization: NodeFilter<TRequestContext, TConnector> | undefined,
+    authorization: NodeFilter | undefined,
     args: NodeSelectionAwareArgs<ExistsQueryArgs>,
-    context: OperationContext<TRequestContext, TConnector>,
+    context: OperationContext,
     path: utils.Path,
   ): Promise<ExistsQueryResult> {
     const count = await this.node

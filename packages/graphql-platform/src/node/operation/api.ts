@@ -1,41 +1,34 @@
 import * as utils from '@prismamedia/graphql-platform-utils';
 import type * as graphql from 'graphql';
-import type { ConnectorInterface } from '../../connector-interface.js';
 import type { GraphQLPlatform } from '../../index.js';
 import { OperationContext } from './context.js';
 import type { OperationInterface } from './interface.js';
 import type { MutationInterface } from './mutation/interface.js';
 
-export interface API<
-  TRequestContext extends object,
-  TConnector extends ConnectorInterface,
-> {
+export interface API<TRequestContext extends object> {
   readonly [graphql.OperationTypeNode.MUTATION]: Readonly<
     Record<
       MutationInterface['name'],
-      MutationInterface<TRequestContext, TConnector>['execute']
+      MutationInterface<TRequestContext>['execute']
     >
   >;
   readonly [graphql.OperationTypeNode.QUERY]: Readonly<
     Record<
       OperationInterface['name'],
-      OperationInterface<TRequestContext, TConnector>['execute']
+      OperationInterface<TRequestContext>['execute']
     >
   >;
   readonly [graphql.OperationTypeNode.SUBSCRIPTION]: Readonly<
     Record<
       OperationInterface['name'],
-      OperationInterface<TRequestContext, TConnector>['execute']
+      OperationInterface<TRequestContext>['execute']
     >
   >;
 }
 
-export const createAPI = <
-  TRequestContext extends object,
-  TConnector extends ConnectorInterface,
->(
-  gp: GraphQLPlatform<TRequestContext, TConnector>,
-): API<TRequestContext, TConnector> =>
+export const createAPI = <TRequestContext extends object>(
+  gp: GraphQLPlatform<TRequestContext>,
+): API<TRequestContext> =>
   Object.fromEntries(
     utils.operationTypes.map((type) => [
       type,
@@ -44,7 +37,7 @@ export const createAPI = <
           (_, name: OperationInterface['name']) =>
           (
             ...[args, context, path]: Parameters<
-              OperationInterface<TRequestContext, TConnector>['execute']
+              OperationInterface<TRequestContext>['execute']
             >
           ) =>
             gp
@@ -54,34 +47,24 @@ export const createAPI = <
     ]),
   ) as any;
 
-export type ContextBoundAPI<
-  TRequestContext extends object,
-  TConnector extends ConnectorInterface,
-> = Readonly<
+export type ContextBoundAPI<TRequestContext extends object> = Readonly<
   Record<
     graphql.OperationTypeNode,
     Readonly<
       Record<
         OperationInterface['name'],
         (
-          args: Parameters<
-            OperationInterface<TRequestContext, TConnector>['execute']
-          >[0],
-        ) => ReturnType<
-          OperationInterface<TRequestContext, TConnector>['execute']
-        >
+          args: Parameters<OperationInterface<TRequestContext>['execute']>[0],
+        ) => ReturnType<OperationInterface<TRequestContext>['execute']>
       >
     >
   >
 >;
 
-export const createContextBoundAPI = <
-  TRequestContext extends object,
-  TConnector extends ConnectorInterface,
->(
-  gp: GraphQLPlatform<TRequestContext, TConnector>,
-  context: OperationContext<TRequestContext, TConnector>,
-): ContextBoundAPI<TRequestContext, TConnector> =>
+export const createContextBoundAPI = <TRequestContext extends object>(
+  gp: GraphQLPlatform<TRequestContext>,
+  context: OperationContext<TRequestContext>,
+): ContextBoundAPI<TRequestContext> =>
   Object.fromEntries(
     utils.operationTypes.map((type) => [
       type,
@@ -89,9 +72,7 @@ export const createContextBoundAPI = <
         get:
           (_, name: OperationInterface['name']) =>
           (
-            args: Parameters<
-              OperationInterface<TRequestContext, TConnector>['execute']
-            >[0],
+            args: Parameters<OperationInterface<TRequestContext>['execute']>[0],
           ) =>
             gp.getOperationByTypeAndName(type, name).execute(args, context),
       }),

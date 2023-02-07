@@ -2,15 +2,13 @@ import * as utils from '@prismamedia/graphql-platform-utils';
 import { Memoize } from '@prismamedia/memoize';
 import * as graphql from 'graphql';
 import assert from 'node:assert/strict';
-import type { ConnectorInterface } from '../../connector-interface.js';
 import { AbstractOperation } from '../abstract-operation.js';
 
 export abstract class AbstractSubscription<
   TRequestContext extends object,
-  TConnector extends ConnectorInterface,
   TArgs extends utils.Nillable<utils.PlainObject>,
   TResult extends AsyncIterator<any>,
-> extends AbstractOperation<TRequestContext, TConnector, TArgs, TResult> {
+> extends AbstractOperation<TRequestContext, TArgs, TResult> {
   public override readonly operationType =
     graphql.OperationTypeNode.SUBSCRIPTION;
 
@@ -31,7 +29,7 @@ export abstract class AbstractSubscription<
       ...(this.node.deprecationReason && {
         deprecationReason: this.node.deprecationReason,
       }),
-      ...(this.arguments.length && {
+      ...(this.arguments?.length && {
         args: utils.getGraphQLFieldConfigArgumentMap(this.arguments),
       }),
       type: this.getGraphQLOutputType(),

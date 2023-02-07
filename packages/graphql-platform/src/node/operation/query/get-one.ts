@@ -2,7 +2,6 @@ import type * as utils from '@prismamedia/graphql-platform-utils';
 import { Memoize } from '@prismamedia/memoize';
 import * as graphql from 'graphql';
 import inflection from 'inflection';
-import type { ConnectorInterface } from '../../../connector-interface.js';
 import type { NodeSelectionAwareArgs } from '../../abstract-operation.js';
 import type { NodeFilter } from '../../statement/filter.js';
 import { AbstractQuery } from '../abstract-query.js';
@@ -17,12 +16,8 @@ export type GetOneQueryArgs = GetOneIfExistsQueryArgs;
 
 export type GetOneQueryResult = NonNullable<GetOneIfExistsQueryResult>;
 
-export class GetOneQuery<
-  TRequestContext extends object,
-  TConnector extends ConnectorInterface,
-> extends AbstractQuery<
+export class GetOneQuery<TRequestContext extends object> extends AbstractQuery<
   TRequestContext,
-  TConnector,
   GetOneQueryArgs,
   GetOneQueryResult
 > {
@@ -43,9 +38,9 @@ export class GetOneQuery<
   }
 
   protected override async executeWithValidArgumentsAndContext(
-    authorization: NodeFilter<TRequestContext, TConnector> | undefined,
+    authorization: NodeFilter | undefined,
     args: NodeSelectionAwareArgs<GetOneQueryArgs>,
-    context: OperationContext<TRequestContext, TConnector>,
+    context: OperationContext,
     path: utils.Path,
   ): Promise<GetOneQueryResult> {
     const nodeValue = await this.node

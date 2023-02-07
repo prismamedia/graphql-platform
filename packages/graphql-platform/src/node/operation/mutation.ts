@@ -1,5 +1,4 @@
 import type { Simplify } from 'type-fest';
-import type { ConnectorInterface } from '../../connector-interface.js';
 import {
   creationConstructorsByKey,
   type CreationsByKey,
@@ -28,15 +27,12 @@ export const mutationConstructorsByKey = {
   upsert: UpsertMutation,
 } as const;
 
-export type MutationsByKey<
-  TRequestContext extends object,
-  TConnector extends ConnectorInterface,
-> = Simplify<
-  CreationsByKey<TRequestContext, TConnector> &
-    DeletionsByKey<TRequestContext, TConnector> &
-    UpdatesByKey<TRequestContext, TConnector> & {
-      upsert: UpsertMutation<TRequestContext, TConnector>;
+export type MutationsByKey<TRequestContext extends object> = Simplify<
+  CreationsByKey<TRequestContext> &
+    UpdatesByKey<TRequestContext> &
+    DeletionsByKey<TRequestContext> & {
+      upsert: UpsertMutation<TRequestContext>;
     }
 >;
 
-export type MutationKey = Simplify<keyof MutationsByKey<any, any>>;
+export type MutationKey = Simplify<keyof MutationsByKey<any>>;

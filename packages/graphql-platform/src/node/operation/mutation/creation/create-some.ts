@@ -1,7 +1,6 @@
 import * as utils from '@prismamedia/graphql-platform-utils';
 import { Memoize } from '@prismamedia/memoize';
 import * as graphql from 'graphql';
-import type { ConnectorInterface } from '../../../../connector-interface.js';
 import type { NodeValue } from '../../../../node.js';
 import type {
   NodeSelectionAwareArgs,
@@ -29,14 +28,12 @@ export type CreateSomeMutationResult = NodeSelectedValue[];
 
 export class CreateSomeMutation<
   TRequestContext extends object,
-  TConnector extends ConnectorInterface,
 > extends AbstractCreation<
   TRequestContext,
-  TConnector,
   CreateSomeMutationArgs,
   CreateSomeMutationResult
 > {
-  readonly #config?: CreationConfig<TRequestContext, TConnector> =
+  readonly #config?: CreationConfig<any, any, any> =
     this.node.getMutationConfig(utils.MutationType.CREATION).config;
   readonly #configPath: utils.Path = this.node.getMutationConfig(
     utils.MutationType.CREATION,
@@ -70,9 +67,9 @@ export class CreateSomeMutation<
   }
 
   protected override async executeWithValidArgumentsAndContext(
-    authorization: NodeFilter<TRequestContext, TConnector> | undefined,
+    authorization: NodeFilter | undefined,
     args: NodeSelectionAwareArgs<CreateSomeMutationArgs>,
-    context: MutationContext<TRequestContext, TConnector>,
+    context: MutationContext,
     path: utils.Path,
   ): Promise<CreateSomeMutationResult> {
     const preCreate = this.#config?.preCreate;

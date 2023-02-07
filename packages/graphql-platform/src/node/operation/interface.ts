@@ -1,14 +1,9 @@
 import type * as utils from '@prismamedia/graphql-platform-utils';
 import type * as graphql from 'graphql';
-import type { ConnectorInterface } from '../../connector-interface.js';
 import type { Node } from '../../node.js';
-import type { OperationContext } from './context.js';
 
-export interface OperationInterface<
-  TRequestContext extends object = any,
-  TConnector extends ConnectorInterface = any,
-> {
-  readonly node: Node<TRequestContext, TConnector>;
+export interface OperationInterface<TRequestContext extends object = any> {
+  readonly node: Node;
   readonly operationType: graphql.OperationTypeNode;
   readonly name: utils.Name;
   isEnabled(): boolean;
@@ -21,7 +16,7 @@ export interface OperationInterface<
   validate(): void;
   execute(
     args: utils.Nillable<utils.PlainObject>,
-    context: TRequestContext | OperationContext<TRequestContext, TConnector>,
+    context: TRequestContext,
     path?: utils.Path,
   ): Promise<any>;
 }

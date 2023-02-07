@@ -12,12 +12,14 @@ import {
 interface AbstractDeletionHookArgs<
   TRequestContext extends object,
   TConnector extends ConnectorInterface,
-> extends AbstractMutationHookArgs<TRequestContext, TConnector> {}
+  TContainer extends object,
+> extends AbstractMutationHookArgs<TRequestContext, TConnector, TContainer> {}
 
 export interface PreDeleteArgs<
   TRequestContext extends object,
   TConnector extends ConnectorInterface,
-> extends AbstractDeletionHookArgs<TRequestContext, TConnector> {
+  TContainer extends object,
+> extends AbstractDeletionHookArgs<TRequestContext, TConnector, TContainer> {
   /**
    * The current node's value
    */
@@ -27,11 +29,12 @@ export interface PreDeleteArgs<
 export interface PostDeleteArgs<
   TRequestContext extends object,
   TConnector extends ConnectorInterface,
-> extends AbstractDeletionHookArgs<TRequestContext, TConnector> {
+  TContainer extends object,
+> extends AbstractDeletionHookArgs<TRequestContext, TConnector, TContainer> {
   /**
    * The uncommitted change
    */
-  readonly change: NodeDeletion<TRequestContext, TConnector>;
+  readonly change: NodeDeletion<TRequestContext>;
 }
 
 /**
@@ -40,14 +43,15 @@ export interface PostDeleteArgs<
 export interface DeletionConfig<
   TRequestContext extends object,
   TConnector extends ConnectorInterface,
-> extends AbstractMutationConfig<TRequestContext, TConnector> {
+  TContainer extends object,
+> extends AbstractMutationConfig<TRequestContext, TConnector, TContainer> {
   /**
    * Optional, add some custom validation/logic over the "update" statement that is about to be sent to the connector,
    *
    * Throwing an Error here will prevent the deletion
    */
   preDelete?(
-    args: PreDeleteArgs<TRequestContext, TConnector>,
+    args: PreDeleteArgs<TRequestContext, TConnector, TContainer>,
   ): Promisable<void>;
 
   /**
@@ -56,16 +60,15 @@ export interface DeletionConfig<
    * Throwing an Error here will fail the deletion
    */
   postDelete?(
-    args: PostDeleteArgs<TRequestContext, TConnector>,
+    args: PostDeleteArgs<TRequestContext, TConnector, TContainer>,
   ): Promisable<void>;
 }
 
 export abstract class AbstractDeletion<
   TRequestContext extends object,
-  TConnector extends ConnectorInterface,
   TArgs extends utils.Nillable<utils.PlainObject>,
   TResult,
-> extends AbstractMutation<TRequestContext, TConnector, TArgs, TResult> {
+> extends AbstractMutation<TRequestContext, TArgs, TResult> {
   public override readonly mutationTypes = [
     utils.MutationType.DELETION,
   ] as const;

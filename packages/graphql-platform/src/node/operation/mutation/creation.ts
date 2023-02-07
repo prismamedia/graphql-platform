@@ -1,4 +1,3 @@
-import type { ConnectorInterface } from '../../../connector-interface.js';
 import { CreateOneMutation } from './creation/create-one.js';
 import { CreateSomeMutation } from './creation/create-some.js';
 
@@ -10,10 +9,7 @@ export const creationConstructorsByKey = {
   'create-some': CreateSomeMutation,
 } as const;
 
-export type CreationsByKey<
-  TRequestContext extends object,
-  TConnector extends ConnectorInterface,
-> = {
-  'create-one': CreateOneMutation<TRequestContext, TConnector>;
-  'create-some': CreateSomeMutation<TRequestContext, TConnector>;
+export type CreationsByKey<TRequestContext extends object> = {
+  'create-one': CreateOneMutation<TRequestContext>;
+  'create-some': CreateSomeMutation<TRequestContext>;
 };

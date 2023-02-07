@@ -34,12 +34,11 @@ export type NodeSelectionAwareArgs<
 
 export abstract class AbstractOperation<
   TRequestContext extends object,
-  TConnector extends ConnectorInterface,
   TArgs extends utils.Nillable<utils.PlainObject>,
   TResult,
-> implements OperationInterface<TRequestContext, TConnector>
+> implements OperationInterface<TRequestContext>
 {
-  protected readonly gp: GraphQLPlatform<TRequestContext, TConnector>;
+  protected readonly gp: GraphQLPlatform;
 
   protected abstract readonly selectionAware: TArgs extends {
     selection: RawNodeSelection;
@@ -50,9 +49,9 @@ export abstract class AbstractOperation<
   public abstract readonly operationType: graphql.OperationTypeNode;
   public abstract readonly name: string;
   public abstract readonly description: string;
-  public abstract readonly arguments: ReadonlyArray<utils.Input>;
+  public abstract readonly arguments?: ReadonlyArray<utils.Input>;
 
-  public constructor(public readonly node: Node<TRequestContext, TConnector>) {
+  public constructor(public readonly node: Node) {
     this.gp = node.gp;
   }
 
@@ -76,7 +75,7 @@ export abstract class AbstractOperation<
     this.name;
     this.description;
 
-    if (this.arguments.length) {
+    if (this.arguments?.length) {
       utils.aggregateGraphError<utils.Input, void>(
         this.arguments,
         (_, argument) => argument.validate(),
@@ -92,7 +91,7 @@ export abstract class AbstractOperation<
     }
   }
 
-  protected get connector(): TConnector {
+  protected get connector(): ConnectorInterface {
     return this.gp.connector;
   }
 
@@ -106,19 +105,19 @@ export abstract class AbstractOperation<
   }
 
   protected ensureAuthorization(
-    context: OperationContext<TRequestContext, TConnector>,
+    context: OperationContext,
     path: utils.Path,
-  ): NodeFilter<TRequestContext, TConnector> | undefined {
+  ): NodeFilter | undefined {
     return context.ensureAuthorization(this.node, path);
   }
 
   protected parseArguments(
     args: TArgs,
-    context: OperationContext<TRequestContext, TConnector>,
+    context: OperationContext,
     path: utils.Path,
   ): NodeSelectionAwareArgs<TArgs> {
     const parsedArgs = utils.parseInputValues(
-      this.arguments,
+      this.arguments || [],
       this.selectionAware && utils.isPlainObject(args)
         ? _.omit(args, ['selection'])
         : args,
@@ -143,16 +142,16 @@ export abstract class AbstractOperation<
    * The actual implementation with authorization, parsed arguments and context
    */
   protected abstract executeWithValidArgumentsAndContext(
-    authorization: NodeFilter<TRequestContext, TConnector> | undefined,
+    authorization: NodeFilter | undefined,
     args: NodeSelectionAwareArgs<TArgs>,
-    context: OperationContext<TRequestContext, TConnector>,
+    context: OperationContext,
     path: utils.Path,
   ): Promise<TResult>;
 
   public async internal(
-    authorization: NodeFilter<TRequestContext, TConnector> | undefined,
+    authorization: NodeFilter | undefined,
     args: TArgs,
-    context: OperationContext<TRequestContext, TConnector>,
+    context: OperationContext<TRequestContext>,
     path: utils.Path,
   ): Promise<TResult> {
     this.assertIsEnabled(path);
@@ -169,7 +168,7 @@ export abstract class AbstractOperation<
 
   public async execute(
     args: TArgs,
-    context: TRequestContext | OperationContext<TRequestContext, TConnector>,
+    context: TRequestContext | OperationContext<TRequestContext>,
     path: utils.Path = utils.addPath(
       utils.addPath(undefined, this.operationType),
       this.name,
@@ -201,7 +200,7 @@ export abstract class AbstractOperation<
       ...(this.node.deprecationReason && {
         deprecationReason: this.node.deprecationReason,
       }),
-      ...(this.arguments.length && {
+      ...(this.arguments?.length && {
         args: utils.getGraphQLFieldConfigArgumentMap(this.arguments),
       }),
       type: this.getGraphQLOutputType(),

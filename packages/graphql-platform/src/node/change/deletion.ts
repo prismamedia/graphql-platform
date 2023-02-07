@@ -1,20 +1,18 @@
 import * as utils from '@prismamedia/graphql-platform-utils';
-import type { ConnectorInterface } from '../../connector-interface.js';
 
 import type { Node, NodeValue } from '../../node.js';
 import { AbstractNodeChange } from '../abstract-change.js';
 
 export class NodeDeletion<
   TRequestContext extends object = any,
-  TConnector extends ConnectorInterface = any,
-> extends AbstractNodeChange<TRequestContext, TConnector> {
+> extends AbstractNodeChange<TRequestContext> {
   public override readonly kind = utils.MutationType.DELETION;
 
   public readonly oldValue: Readonly<NodeValue>;
   public readonly newValue: undefined;
 
   public constructor(
-    node: Node<TRequestContext, TConnector>,
+    node: Node,
     requestContext: TRequestContext,
     maybeOldValue: unknown,
     createdAt?: Date,

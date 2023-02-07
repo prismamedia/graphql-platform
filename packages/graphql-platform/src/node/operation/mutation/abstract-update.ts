@@ -14,7 +14,8 @@ import {
 interface AbstractUpdateHookArgs<
   TRequestContext extends object,
   TConnector extends ConnectorInterface,
-> extends AbstractMutationHookArgs<TRequestContext, TConnector> {
+  TContainer extends object,
+> extends AbstractMutationHookArgs<TRequestContext, TConnector, TContainer> {
   /**
    * The provided "data" argument
    */
@@ -24,7 +25,8 @@ interface AbstractUpdateHookArgs<
 export interface PreUpdateArgs<
   TRequestContext extends object,
   TConnector extends ConnectorInterface,
-> extends AbstractUpdateHookArgs<TRequestContext, TConnector> {
+  TContainer extends object,
+> extends AbstractUpdateHookArgs<TRequestContext, TConnector, TContainer> {
   /**
    * The current node's value
    */
@@ -39,11 +41,12 @@ export interface PreUpdateArgs<
 export interface PostUpdateArgs<
   TRequestContext extends object,
   TConnector extends ConnectorInterface,
-> extends AbstractUpdateHookArgs<TRequestContext, TConnector> {
+  TContainer extends object,
+> extends AbstractUpdateHookArgs<TRequestContext, TConnector, TContainer> {
   /**
    * The uncommitted change
    */
-  readonly change: NodeUpdate<TRequestContext, TConnector>;
+  readonly change: NodeUpdate<TRequestContext>;
 }
 
 /**
@@ -52,7 +55,8 @@ export interface PostUpdateArgs<
 export interface UpdateConfig<
   TRequestContext extends object,
   TConnector extends ConnectorInterface,
-> extends AbstractMutationConfig<TRequestContext, TConnector> {
+  TContainer extends object,
+> extends AbstractMutationConfig<TRequestContext, TConnector, TContainer> {
   /**
    * Optional, add some "virtual" fields whose values can be used in the hooks
    */
@@ -67,7 +71,7 @@ export interface UpdateConfig<
    * Throwing an Error here will prevent the update
    */
   preUpdate?(
-    args: PreUpdateArgs<TRequestContext, TConnector>,
+    args: PreUpdateArgs<TRequestContext, TConnector, TContainer>,
   ): Promisable<void>;
 
   /**
@@ -76,15 +80,14 @@ export interface UpdateConfig<
    * Throwing an Error here will fail the update
    */
   postUpdate?(
-    args: PostUpdateArgs<TRequestContext, TConnector>,
+    args: PostUpdateArgs<TRequestContext, TConnector, TContainer>,
   ): Promisable<void>;
 }
 
 export abstract class AbstractUpdate<
   TRequestContext extends object,
-  TConnector extends ConnectorInterface,
   TArgs extends utils.Nillable<utils.PlainObject>,
   TResult,
-> extends AbstractMutation<TRequestContext, TConnector, TArgs, TResult> {
+> extends AbstractMutation<TRequestContext, TArgs, TResult> {
   public override readonly mutationTypes = [utils.MutationType.UPDATE] as const;
 }

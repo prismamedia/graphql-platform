@@ -142,12 +142,8 @@ export class Leaf<
       const parserConfig = config.parser;
       const parserConfigPath = utils.addPath(configPath, 'parser');
 
-      if (parserConfig != null) {
-        if (typeof parserConfig !== 'function') {
-          throw new utils.UnexpectedValueError(`a function`, parserConfig, {
-            path: parserConfigPath,
-          });
-        }
+      if (parserConfig) {
+        utils.assertFunction(parserConfig, parserConfigPath);
 
         this.customParser = parserConfig;
       }

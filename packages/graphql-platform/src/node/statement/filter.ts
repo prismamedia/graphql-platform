@@ -1,4 +1,3 @@
-import type { ConnectorInterface } from '../../connector-interface.js';
 import type { Node } from '../../node.js';
 import type { BooleanFilter } from './filter/boolean.js';
 import { NotOperation } from './filter/boolean/operation/not.js';
@@ -12,16 +11,10 @@ export interface NodeFilterAST {
   filter: BooleanFilter['ast'];
 }
 
-export class NodeFilter<
-  TRequestContext extends object = any,
-  TConnector extends ConnectorInterface = any,
-> {
+export class NodeFilter {
   public readonly filter: BooleanFilter;
 
-  public constructor(
-    public readonly node: Node<TRequestContext, TConnector>,
-    filter: BooleanFilter,
-  ) {
+  public constructor(public readonly node: Node, filter: BooleanFilter) {
     this.filter = filter.reduced;
   }
 

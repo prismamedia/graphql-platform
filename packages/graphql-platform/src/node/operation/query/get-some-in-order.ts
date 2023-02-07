@@ -2,7 +2,6 @@ import * as utils from '@prismamedia/graphql-platform-utils';
 import { Memoize } from '@prismamedia/memoize';
 import * as graphql from 'graphql';
 import inflection from 'inflection';
-import type { ConnectorInterface } from '../../../connector-interface.js';
 import type { NodeSelectionAwareArgs } from '../../abstract-operation.js';
 import type { NodeFilter } from '../../statement/filter.js';
 import type { NodeSelectedValue } from '../../statement/selection/value.js';
@@ -17,10 +16,8 @@ export type GetSomeInOrderQueryResult = NodeSelectedValue[];
 
 export class GetSomeInOrderQuery<
   TRequestContext extends object,
-  TConnector extends ConnectorInterface,
 > extends AbstractQuery<
   TRequestContext,
-  TConnector,
   GetSomeInOrderQueryArgs,
   GetSomeInOrderQueryResult
 > {
@@ -46,9 +43,9 @@ export class GetSomeInOrderQuery<
   }
 
   protected override async executeWithValidArgumentsAndContext(
-    authorization: NodeFilter<TRequestContext, TConnector> | undefined,
+    authorization: NodeFilter | undefined,
     args: NodeSelectionAwareArgs<GetSomeInOrderQueryArgs>,
-    context: OperationContext<TRequestContext, TConnector>,
+    context: OperationContext,
     path: utils.Path,
   ): Promise<GetSomeInOrderQueryResult> {
     const maybeNodeValues = await this.node

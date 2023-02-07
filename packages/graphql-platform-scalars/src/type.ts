@@ -44,7 +44,7 @@ export const typesByName = Object.freeze({
   // Basic
   ...basicTypesByName,
 
-  // GraphQL Platform
+  // GraphQL-Platform
   BigInt: GraphQLBigInt,
   Date: GraphQLDate,
   DateTime: GraphQLDateTime,

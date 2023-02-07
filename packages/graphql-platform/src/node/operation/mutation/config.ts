@@ -23,8 +23,21 @@ export type {
 export interface MutationConfig<
   TRequestContext extends object,
   TConnector extends ConnectorInterface,
+  TContainer extends object,
 > {
-  [utils.MutationType.CREATION]: CreationConfig<TRequestContext, TConnector>;
-  [utils.MutationType.UPDATE]: UpdateConfig<TRequestContext, TConnector>;
-  [utils.MutationType.DELETION]: DeletionConfig<TRequestContext, TConnector>;
+  [utils.MutationType.CREATION]: CreationConfig<
+    TRequestContext,
+    TConnector,
+    TContainer
+  >;
+  [utils.MutationType.UPDATE]: UpdateConfig<
+    TRequestContext,
+    TConnector,
+    TContainer
+  >;
+  [utils.MutationType.DELETION]: DeletionConfig<
+    TRequestContext,
+    TConnector,
+    TContainer
+  >;
 }

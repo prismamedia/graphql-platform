@@ -10,12 +10,17 @@ import { UnauthorizedError } from './error.js';
 export class OperationContext<
   TRequestContext extends object = any,
   TConnector extends ConnectorInterface = any,
+  TContainer extends object = any,
 > {
   public constructor(
     /**
-     * The GraphQL Platform itself is provided for convenience
+     * The GraphQL-Platform itself is provided for convenience
      */
-    public readonly gp: GraphQLPlatform<TRequestContext, TConnector>,
+    public readonly gp: GraphQLPlatform<
+      TRequestContext,
+      TConnector,
+      TContainer
+    >,
 
     /**
      * The "request" context, provided by the integration or at execution time
@@ -32,17 +37,17 @@ export class OperationContext<
       `${node}-${mutationType ?? ''}`,
   )
   public getAuthorization(
-    node: Node<TRequestContext, TConnector>,
+    node: Node,
     mutationType?: utils.MutationType,
-  ): NodeFilter<TRequestContext, TConnector> | undefined {
+  ): NodeFilter | undefined {
     return node.getAuthorization(this, mutationType);
   }
 
   public ensureAuthorization(
-    node: Node<TRequestContext, TConnector>,
+    node: Node,
     path: utils.Path,
     mutationType?: utils.MutationType,
-  ): NodeFilter<TRequestContext, TConnector> | undefined {
+  ): NodeFilter | undefined {
     const authorization = this.getAuthorization(node, mutationType);
     if (authorization?.isFalse()) {
       throw new UnauthorizedError(node, mutationType, { path });
@@ -55,7 +60,7 @@ export class OperationContext<
    * Returns a "context"-bound version of the API, so the developer only has to provide the operations' args
    */
   @Memoize()
-  public get api(): ContextBoundAPI<TRequestContext, TConnector> {
+  public get api(): ContextBoundAPI<TRequestContext> {
     return createContextBoundAPI(this.gp, this);
   }
 }

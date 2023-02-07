@@ -2,7 +2,6 @@ import * as scalars from '@prismamedia/graphql-platform-scalars';
 import * as utils from '@prismamedia/graphql-platform-utils';
 import { Memoize } from '@prismamedia/memoize';
 import * as graphql from 'graphql';
-import type { ConnectorInterface } from '../../../../connector-interface.js';
 import {
   argsPathKey,
   type NodeSelectionAwareArgs,
@@ -32,14 +31,12 @@ export type DeleteManyMutationResult = NodeSelectedValue[];
 
 export class DeleteManyMutation<
   TRequestContext extends object,
-  TConnector extends ConnectorInterface,
 > extends AbstractDeletion<
   TRequestContext,
-  TConnector,
   DeleteManyMutationArgs,
   DeleteManyMutationResult
 > {
-  readonly #config?: DeletionConfig<TRequestContext, TConnector> =
+  readonly #config?: DeletionConfig<any, any, any> =
     this.node.getMutationConfig(utils.MutationType.DELETION).config;
   readonly #configPath: utils.Path = this.node.getMutationConfig(
     utils.MutationType.DELETION,
@@ -79,9 +76,9 @@ export class DeleteManyMutation<
   }
 
   protected override async executeWithValidArgumentsAndContext(
-    authorization: NodeFilter<TRequestContext, TConnector> | undefined,
+    authorization: NodeFilter | undefined,
     args: NodeSelectionAwareArgs<DeleteManyMutationArgs>,
-    context: MutationContext<TRequestContext, TConnector>,
+    context: MutationContext,
     path: utils.Path,
   ): Promise<DeleteManyMutationResult> {
     const preDelete = this.#config?.preDelete;

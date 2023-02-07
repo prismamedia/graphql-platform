@@ -1,5 +1,4 @@
 import _ from 'lodash';
-import type { ConnectorInterface } from '../../connector-interface.js';
 import type { Node } from '../../node.js';
 import { type OrderingExpression } from './ordering/expression.js';
 
@@ -13,15 +12,12 @@ export interface NodeOrderingAST {
   expressions: OrderingExpression['ast'][];
 }
 
-export class NodeOrdering<
-  TRequestContext extends object = any,
-  TConnector extends ConnectorInterface = any,
-> {
+export class NodeOrdering {
   public readonly expressions: ReadonlyArray<OrderingExpression>;
   public readonly normalized: NodeOrdering | undefined;
 
   public constructor(
-    public readonly node: Node<TRequestContext, TConnector>,
+    public readonly node: Node,
     expressions: ReadonlyArray<OrderingExpression>,
   ) {
     this.expressions = Object.freeze(

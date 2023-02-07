@@ -1,15 +1,12 @@
 import * as utils from '@prismamedia/graphql-platform-utils';
 import assert from 'node:assert/strict';
-import type { ConnectorInterface } from '../../connector-interface.js';
 import type { Node } from '../../node.js';
 import type { NodeChange } from '../change.js';
 import { NodeCreation } from './creation.js';
 import { NodeUpdate } from './update.js';
 
-export class NodeChangeAggregation<
-  TRequestContext extends object = any,
-  TConnector extends ConnectorInterface = any,
-> implements Iterable<NodeChange<TRequestContext, TConnector>>
+export class NodeChangeAggregation<TRequestContext extends object = any>
+  implements Iterable<NodeChange<TRequestContext>>
 {
   readonly #changesByIdByNode = new Map<
     Node,
@@ -17,17 +14,15 @@ export class NodeChangeAggregation<
   >();
 
   public readonly changesByNode: ReadonlyMap<
-    Node<TRequestContext, TConnector>,
-    ReadonlyArray<NodeChange<TRequestContext, TConnector>>
+    Node,
+    ReadonlyArray<NodeChange<TRequestContext>>
   >;
 
   public readonly length: number;
 
-  public readonly nodes: ReadonlyArray<Node<TRequestContext, TConnector>>;
+  public readonly nodes: ReadonlyArray<Node<TRequestContext>>;
 
-  public constructor(
-    changes: ReadonlyArray<NodeChange<TRequestContext, TConnector>>,
-  ) {
+  public constructor(changes: ReadonlyArray<NodeChange<TRequestContext>>) {
     for (const change of changes) {
       const node = change.node;
 
@@ -183,9 +178,7 @@ export class NodeChangeAggregation<
     }
   }
 
-  *[Symbol.iterator](): IterableIterator<
-    NodeChange<TRequestContext, TConnector>
-  > {
+  *[Symbol.iterator](): IterableIterator<NodeChange<TRequestContext>> {
     for (const changes of this.changesByNode.values()) {
       yield* changes;
     }

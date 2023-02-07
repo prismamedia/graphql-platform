@@ -1,4 +1,3 @@
-import type { ConnectorInterface } from '../../../connector-interface.js';
 import { UpdateManyMutation } from './update/update-many.js';
 import { UpdateOneIfExistsMutation } from './update/update-one-if-exists.js';
 import { UpdateOneMutation } from './update/update-one.js';
@@ -13,14 +12,8 @@ export const updateConstructorsByKey = {
   'update-one-if-exists': UpdateOneIfExistsMutation,
 } as const;
 
-export type UpdatesByKey<
-  TRequestContext extends object,
-  TConnector extends ConnectorInterface,
-> = {
-  'update-many': UpdateManyMutation<TRequestContext, TConnector>;
-  'update-one': UpdateOneMutation<TRequestContext, TConnector>;
-  'update-one-if-exists': UpdateOneIfExistsMutation<
-    TRequestContext,
-    TConnector
-  >;
+export type UpdatesByKey<TRequestContext extends object> = {
+  'update-many': UpdateManyMutation<TRequestContext>;
+  'update-one': UpdateOneMutation<TRequestContext>;
+  'update-one-if-exists': UpdateOneIfExistsMutation<TRequestContext>;
 };
