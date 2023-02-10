@@ -3,9 +3,9 @@ import * as utils from '@prismamedia/graphql-platform-utils';
 import { Memoize } from '@prismamedia/memoize';
 import * as graphql from 'graphql';
 import { argsPathKey } from '../../../../../abstract-operation.js';
-import type { ReverseEdgeMultiple } from '../../../../../definition/reverse-edge/multiple.js';
+import type { MultipleReverseEdge } from '../../../../../definition/reverse-edge/multiple.js';
 import type { OperationContext } from '../../../../../operation/context.js';
-import { ReverseEdgeMultipleHeadSelection } from '../../../../../statement/selection/expression/reverse-edge/multiple/head.js';
+import { MultipleReverseEdgeHeadSelection } from '../../../../../statement/selection/expression/reverse-edge/multiple/head.js';
 import type {
   NodeFilterInputValue,
   OrderByInputValue,
@@ -13,20 +13,20 @@ import type {
 import type { GraphQLSelectionContext } from '../../../node.js';
 import { AbstractReverseEdgeOutputType } from '../abstract-reverse-edge.js';
 
-export type ReverseEdgeMultipleHeadOutputArgs = {
+export type MultipleReverseEdgeHeadOutputArgs = {
   where?: NodeFilterInputValue;
   orderBy?: OrderByInputValue;
   skip?: utils.Nillable<number>;
   first: number;
 };
 
-export class ReverseEdgeMultipleHeadOutputType extends AbstractReverseEdgeOutputType<ReverseEdgeMultipleHeadOutputArgs> {
+export class MultipleReverseEdgeHeadOutputType extends AbstractReverseEdgeOutputType<MultipleReverseEdgeHeadOutputArgs> {
   public override readonly name: utils.Name;
   public override readonly description?: string;
   public override readonly deprecationReason?: string;
 
   public constructor(
-    public override readonly reverseEdge: ReverseEdgeMultiple,
+    public override readonly reverseEdge: MultipleReverseEdge,
   ) {
     super(reverseEdge);
 
@@ -75,7 +75,7 @@ export class ReverseEdgeMultipleHeadOutputType extends AbstractReverseEdgeOutput
     operationContext: OperationContext | undefined,
     selectionContext: GraphQLSelectionContext | undefined,
     path: utils.Path,
-  ): ReverseEdgeMultipleHeadSelection {
+  ): MultipleReverseEdgeHeadSelection {
     const args = this.parseGraphQLArgumentNodes(
       ast.arguments,
       selectionContext,
@@ -91,7 +91,7 @@ export class ReverseEdgeMultipleHeadOutputType extends AbstractReverseEdgeOutput
 
     const argsPath = utils.addPath(path, argsPathKey);
 
-    return new ReverseEdgeMultipleHeadSelection(
+    return new MultipleReverseEdgeHeadSelection(
       this.reverseEdge,
       ast.alias?.value,
       this.reverseEdge.head.filterInputType.filter(
@@ -119,7 +119,7 @@ export class ReverseEdgeMultipleHeadOutputType extends AbstractReverseEdgeOutput
     value: unknown,
     _operationContext: OperationContext | undefined,
     path: utils.Path,
-  ): ReverseEdgeMultipleHeadSelection {
+  ): MultipleReverseEdgeHeadSelection {
     throw new utils.UnexpectedValueError('not to be selected', value, { path });
   }
 }

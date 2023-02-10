@@ -1,3 +1,4 @@
+import type { ConnectorInterface } from '../connector-interface.js';
 import type { NodeCreation } from './change/creation.js';
 import type { NodeDeletion } from './change/deletion.js';
 import type { NodeUpdate } from './change/update.js';
@@ -7,7 +8,11 @@ export * from './change/creation.js';
 export * from './change/deletion.js';
 export * from './change/update.js';
 
-export type NodeChange<TRequestContext extends object = any> =
-  | NodeCreation<TRequestContext>
-  | NodeUpdate<TRequestContext>
-  | NodeDeletion<TRequestContext>;
+export type NodeChange<
+  TRequestContext extends object = any,
+  TConnector extends ConnectorInterface = any,
+  TServiceContainer extends object = any,
+> =
+  | NodeCreation<TRequestContext, TConnector, TServiceContainer>
+  | NodeUpdate<TRequestContext, TConnector, TServiceContainer>
+  | NodeDeletion<TRequestContext, TConnector, TServiceContainer>;

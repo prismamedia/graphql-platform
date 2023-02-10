@@ -22,7 +22,7 @@ export enum ConnectorConfigOverrideKind {
   'UNIQUE_CONSTRAINT',
 }
 
-export type GetConnectorConfigOverride<
+export type ConnectorConfigOverride<
   TConnector extends ConnectorInterface,
   TKind extends ConnectorConfigOverrideKind,
 > = Partial<NonNullable<TConnector['configOverrides']>[TKind]>;

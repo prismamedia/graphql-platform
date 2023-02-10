@@ -38,8 +38,8 @@ export abstract class AbstractTableReference {
       : 0;
   }
 
-  public join(edge: core.Edge | core.ReverseEdgeUnique): JoinTable {
-    assert(edge instanceof core.Edge || edge instanceof core.ReverseEdgeUnique);
+  public join(edge: core.Edge | core.UniqueReverseEdge): JoinTable {
+    assert(edge instanceof core.Edge || edge instanceof core.UniqueReverseEdge);
     assert.equal(edge.tail, this.table.node);
 
     const joinTable = new JoinTable(this, edge);
@@ -61,13 +61,13 @@ export abstract class AbstractTableReference {
    */
   public subquery(
     selectExpressions: string | ((tableReference: TableFactor) => string),
-    reverseEdge: core.ReverseEdgeMultiple,
+    reverseEdge: core.MultipleReverseEdge,
     headFilter?: core.NodeFilter,
     headOrdering?: core.NodeOrdering,
     limit?: number | null,
     offset?: number | null,
   ): string {
-    assert(reverseEdge instanceof core.ReverseEdgeMultiple);
+    assert(reverseEdge instanceof core.MultipleReverseEdge);
     assert.equal(reverseEdge.tail, this.table.node);
 
     const head = this.table.schema.getTableByNode(reverseEdge.head);

@@ -31,29 +31,39 @@ import {
 export * from './connector-interface.js';
 export * from './custom-operations.js';
 export * from './graphql-field-config.js';
-export * from './maybe-aware-config.js';
 export * from './node.js';
 export * from './seeding.js';
 
 export type RequestContextAssertion<
   TRequestContext extends object = any,
   TConnector extends ConnectorInterface = any,
-  TContainer extends object = any,
+  TServiceContainer extends object = any,
 > = (
-  this: GraphQLPlatform<TRequestContext, TConnector, TContainer>,
+  this: GraphQLPlatform<TRequestContext, TConnector, TServiceContainer>,
   maybeRequestContext: object,
 ) => asserts maybeRequestContext is TRequestContext;
 
-export type GraphQLPlatformEventDataByName<
+export type EventDataByName<
   TRequestContext extends object = any,
   TConnector extends ConnectorInterface = any,
-  TContainer extends object = any,
-> = { 'node-change': NodeChange<TRequestContext> };
+  TServiceContainer extends object = any,
+> = {
+  'node-change': NodeChange<TRequestContext, TConnector, TServiceContainer>;
+};
+
+export type ServiceContainerConfig<
+  TRequestContext extends object = any,
+  TConnector extends ConnectorInterface = any,
+  TServiceContainer extends object = any,
+> = utils.Thunkable<
+  TServiceContainer,
+  [gp: GraphQLPlatform<TRequestContext, TConnector, {}>]
+>;
 
 export type GraphQLPlatformConfig<
   TRequestContext extends object = any,
   TConnector extends ConnectorInterface = any,
-  TContainer extends object = any,
+  TServiceContainer extends object = any,
 > = {
   /**
    * Required, provide the nodes' definition
@@ -64,7 +74,11 @@ export type GraphQLPlatformConfig<
      *
      * @see https://spec.graphql.org/draft/#sec-Names
      */
-    [nodeName: NodeName]: NodeConfig<TRequestContext, TConnector, TContainer>;
+    [nodeName: NodeName]: NodeConfig<
+      TRequestContext,
+      TConnector,
+      TServiceContainer
+    >;
   };
 
   /**
@@ -73,7 +87,7 @@ export type GraphQLPlatformConfig<
   customOperations?: CustomOperationsByNameByTypeConfig<
     TRequestContext,
     TConnector,
-    TContainer
+    TServiceContainer
   >;
 
   /**
@@ -107,49 +121,44 @@ export type GraphQLPlatformConfig<
   requestContextAssertion?: RequestContextAssertion<
     TRequestContext,
     TConnector,
-    TContainer
+    TServiceContainer
   >;
 
   /**
    * Optional, register some event-listeners, all at once
    */
   on?: EventConfigByName<
-    GraphQLPlatformEventDataByName<TRequestContext, TConnector, TContainer>
+    EventDataByName<TRequestContext, TConnector, TServiceContainer>
   >;
 
   /**
    * Optional, register a node-change-listeners
    */
   onNodeChange?: EventListener<
-    GraphQLPlatformEventDataByName<TRequestContext, TConnector, TContainer>,
+    EventDataByName<TRequestContext, TConnector, TServiceContainer>,
     'node-change'
   >;
 
   /**
-   * Optional, given the GraphQL-Platform instance, build a service-container which will be accessible further in the hooks, the virtual-fields and the custom-operations
+   * Optional, given the GraphQL-Platform instance, build a service-container which will be accessible further in the hooks, the virtual-fields and the custom-operations' resolver
    */
-  container?: utils.ThunkOrValue<
-    TContainer,
-    [gp: GraphQLPlatform<TRequestContext, TConnector, {}>]
+  container?: ServiceContainerConfig<
+    TRequestContext,
+    TConnector,
+    TServiceContainer
   >;
 };
 
 export class GraphQLPlatform<
   TRequestContext extends object = any,
   TConnector extends ConnectorInterface = any,
-  TContainer extends object = any,
+  TServiceContainer extends object = any,
 > extends AsyncEventEmitter<
-  GraphQLPlatformEventDataByName<TRequestContext, TConnector, TContainer>
+  EventDataByName<TRequestContext, TConnector, TServiceContainer>
 > {
   public readonly nodesByName: ReadonlyMap<
     Node['name'],
-    Node<TRequestContext, TConnector, TContainer>
-  >;
-  public readonly nodes: ReadonlyArray<
-    Node<TRequestContext, TConnector, TContainer>
-  >;
-  public readonly nodeSet: ReadonlySet<
-    Node<TRequestContext, TConnector, TContainer>
+    Node<TRequestContext, TConnector, TServiceContainer>
   >;
 
   public readonly operationsByNameByType: OperationsByNameByType<TRequestContext>;
@@ -158,7 +167,7 @@ export class GraphQLPlatform<
 
   readonly #connector?: TConnector;
 
-  public readonly container: TContainer;
+  public readonly container: Readonly<TServiceContainer>;
 
   readonly #requestContextAssertion?: (
     maybeRequestContext: object,
@@ -168,7 +177,7 @@ export class GraphQLPlatform<
     public readonly config: GraphQLPlatformConfig<
       TRequestContext,
       TConnector,
-      TContainer
+      TServiceContainer
     >,
     public readonly configPath: utils.Path = utils.addPath(
       undefined,
@@ -199,16 +208,14 @@ export class GraphQLPlatform<
       utils.assertPlainObject(nodesConfig, nodesConfigPath);
 
       if (!Object.entries(nodesConfig).length) {
-        throw new utils.UnexpectedValueError(
-          `at least one "node"`,
-          nodesConfig,
-          { path: nodesConfigPath },
-        );
+        throw new utils.UnexpectedValueError(`at least one node`, nodesConfig, {
+          path: nodesConfigPath,
+        });
       }
 
       this.nodesByName = new Map(
         utils.aggregateGraphError<
-          [Node['name'], NodeConfig<any, any>],
+          [Node['name'], NodeConfig],
           [Node['name'], Node][]
         >(
           Object.entries(nodesConfig),
@@ -229,30 +236,27 @@ export class GraphQLPlatform<
         ),
       );
 
-      this.nodes = Array.from(this.nodesByName.values());
-      this.nodeSet = new Set(this.nodes);
-
       /**
        * In order to fail as soon as possible, we validate/build everything right away.
        * It is done step by step in order to have meaningful errors.
        */
       {
         utils.aggregateGraphError<Node, void>(
-          this.nodes,
+          this.nodesByName.values(),
           (_, node) => node.validateDefinition(),
           undefined,
           { path: nodesConfigPath },
         );
 
         utils.aggregateGraphError<Node, void>(
-          this.nodes,
+          this.nodesByName.values(),
           (_, node) => node.validateTypes(),
           undefined,
           { path: nodesConfigPath },
         );
 
         utils.aggregateGraphError<Node, void>(
-          this.nodes,
+          this.nodesByName.values(),
           (_, node) => node.validateOperations(),
           undefined,
           { path: nodesConfigPath },
@@ -266,7 +270,7 @@ export class GraphQLPlatform<
         utils.operationTypes.map((type): any => [
           type,
           new Map(
-            this.nodes.flatMap((node) =>
+            Array.from(this.nodesByName.values()).flatMap((node) =>
               node.operations
                 .filter(
                   (operation) =>
@@ -282,6 +286,25 @@ export class GraphQLPlatform<
     // API
     {
       this.api = createAPI(this);
+    }
+
+    // request-context-assertion
+    {
+      const requestContextAssertionConfig = config.requestContextAssertion;
+      const requestContextAssertionConfigPath = utils.addPath(
+        configPath,
+        'requestContextAssertion',
+      );
+
+      if (requestContextAssertionConfig) {
+        utils.assertFunction(
+          requestContextAssertionConfig,
+          requestContextAssertionConfigPath,
+        );
+
+        this.#requestContextAssertion =
+          requestContextAssertionConfig.bind(this);
+      }
     }
 
     // connector
@@ -309,40 +332,21 @@ export class GraphQLPlatform<
       const containerConfig = this.config.container;
       const containerConfigPath = utils.addPath(this.configPath, 'container');
 
-      const container = utils.resolveThunkOrValue(containerConfig, this);
+      const container = utils.resolveThunkable(containerConfig, this);
       if (container != null && typeof container !== 'object') {
         throw new utils.UnexpectedValueError('an object', container, {
           path: containerConfigPath,
         });
       }
 
-      this.container = container ?? ({} as TContainer);
-    }
-
-    // request-context-assertion
-    {
-      const requestContextAssertionConfig = config.requestContextAssertion;
-      const requestContextAssertionConfigPath = utils.addPath(
-        configPath,
-        'requestContextAssertion',
-      );
-
-      if (requestContextAssertionConfig) {
-        utils.assertFunction(
-          requestContextAssertionConfig,
-          requestContextAssertionConfigPath,
-        );
-
-        this.#requestContextAssertion =
-          requestContextAssertionConfig.bind(this);
-      }
+      this.container = Object.freeze(container ?? ({} as TServiceContainer));
     }
   }
 
   public getNodeByName(
     name: Node['name'],
     path?: utils.Path,
-  ): Node<TRequestContext, TConnector> {
+  ): Node<TRequestContext, TConnector, TServiceContainer> {
     const node = this.nodesByName.get(name);
     if (!node) {
       throw new utils.UnexpectedValueError(
@@ -355,23 +359,6 @@ export class GraphQLPlatform<
     }
 
     return node;
-  }
-
-  public ensureNodeOrName(
-    nodeOrName: Node | Node['name'],
-    path?: utils.Path,
-  ): Node<TRequestContext, TConnector> {
-    if (typeof nodeOrName === 'string') {
-      return this.getNodeByName(nodeOrName, path);
-    } else if (this.nodeSet.has(nodeOrName)) {
-      return nodeOrName;
-    }
-
-    throw new utils.UnexpectedValueError(
-      `a node among "${[...this.nodesByName.keys()].join(', ')}"`,
-      String(nodeOrName),
-      { path },
-    );
   }
 
   public getOperationByTypeAndName(
@@ -465,8 +452,9 @@ export class GraphQLPlatform<
               // Custom-operations
               ...getCustomOperationsByNameByType(
                 this,
-                this.config.customOperations,
                 type,
+                this.config.customOperations,
+                utils.addPath(this.configPath, 'customOperations'),
               ),
             };
 

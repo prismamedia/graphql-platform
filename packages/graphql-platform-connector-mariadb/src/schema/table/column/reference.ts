@@ -128,31 +128,37 @@ export class ReferenceColumnTree {
     // columns-by-leaf
     {
       this.#columnsByLeaf = new Map(
-        this.#currentEdge.referencedUniqueConstraint.leaves.map((leaf) => [
-          leaf,
-          new ReferenceColumn(
-            tail,
-            root,
-            path.length
-              ? head
-                  .getColumnTreeByEdge(path[0])
-                  .at(path.slice(1))
-                  .getColumnByLeaf(leaf)
-              : head.getColumnByLeaf(leaf),
-            columnsConfig?.[leaf.name] as any,
-            utils.addPath(columnsConfigPath, leaf.name),
-          ),
-        ]),
+        Array.from(
+          this.#currentEdge.referencedUniqueConstraint.leafSet,
+          (leaf) => [
+            leaf,
+            new ReferenceColumn(
+              tail,
+              root,
+              path.length
+                ? head
+                    .getColumnTreeByEdge(path[0])
+                    .at(path.slice(1))
+                    .getColumnByLeaf(leaf)
+                : head.getColumnByLeaf(leaf),
+              columnsConfig?.[leaf.name] as any,
+              utils.addPath(columnsConfigPath, leaf.name),
+            ),
+          ],
+        ),
       );
     }
 
     // column-trees-by-edge
     {
       this.#columnTreesByEdge = new Map(
-        this.#currentEdge.referencedUniqueConstraint.edges.map((edge) => [
-          edge,
-          new ReferenceColumnTree(schema, root, [...path, edge]),
-        ]),
+        Array.from(
+          this.#currentEdge.referencedUniqueConstraint.edgeSet,
+          (edge) => [
+            edge,
+            new ReferenceColumnTree(schema, root, [...path, edge]),
+          ],
+        ),
       );
     }
   }
@@ -193,11 +199,12 @@ export class ReferenceColumnTree {
   @Memoize()
   public get columns(): ReadonlyArray<ReferenceColumn> {
     return Object.freeze(
-      this.#currentEdge.referencedUniqueConstraint.components.flatMap(
-        (component) =>
-          component instanceof core.Leaf
-            ? this.getColumnByLeaf(component)
-            : this.getColumnTreeByEdge(component).columns,
+      Array.from(
+        this.#currentEdge.referencedUniqueConstraint.componentsByName.values(),
+      ).flatMap((component) =>
+        component instanceof core.Leaf
+          ? this.getColumnByLeaf(component)
+          : this.getColumnTreeByEdge(component).columns,
       ),
     );
   }
@@ -206,7 +213,9 @@ export class ReferenceColumnTree {
     row: utils.PlainObject,
   ): core.ReferenceValue {
     return this.columns.some((column) => row[column.name] !== null)
-      ? this.#currentEdge.referencedUniqueConstraint.components.reduce(
+      ? Array.from(
+          this.#currentEdge.referencedUniqueConstraint.componentsByName.values(),
+        ).reduce(
           (uniqueConstraintValue, component) =>
             Object.assign(uniqueConstraintValue, {
               [component.name]:

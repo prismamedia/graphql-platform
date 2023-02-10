@@ -23,21 +23,21 @@ export type {
 export interface MutationConfig<
   TRequestContext extends object,
   TConnector extends ConnectorInterface,
-  TContainer extends object,
+  TServiceContainer extends object,
 > {
   [utils.MutationType.CREATION]: CreationConfig<
     TRequestContext,
     TConnector,
-    TContainer
+    TServiceContainer
   >;
   [utils.MutationType.UPDATE]: UpdateConfig<
     TRequestContext,
     TConnector,
-    TContainer
+    TServiceContainer
   >;
   [utils.MutationType.DELETION]: DeletionConfig<
     TRequestContext,
     TConnector,
-    TContainer
+    TServiceContainer
   >;
 }

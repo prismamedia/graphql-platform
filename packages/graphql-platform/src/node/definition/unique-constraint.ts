@@ -2,9 +2,9 @@ import * as utils from '@prismamedia/graphql-platform-utils';
 import { Memoize } from '@prismamedia/memoize';
 import type { JsonObject } from 'type-fest';
 import type {
+  ConnectorConfigOverride,
   ConnectorConfigOverrideKind,
   ConnectorInterface,
-  GetConnectorConfigOverride,
 } from '../../connector-interface.js';
 import type { Node } from '../../node.js';
 import {
@@ -19,83 +19,57 @@ export type UniqueConstraintValue = {
   [componentName: string]: ComponentValue;
 };
 
-type FullUniqueConstraintConfig<
-  TRequestContext extends object,
-  TConnector extends ConnectorInterface,
-> = {
+type FullUniqueConstraintConfig<TConnector extends ConnectorInterface = any> = {
   components: Component['name'][];
   name?: utils.Name;
-} & GetConnectorConfigOverride<
+} & ConnectorConfigOverride<
   TConnector,
   ConnectorConfigOverrideKind.UNIQUE_CONSTRAINT
 >;
 
-type ShortUniqueConstraintConfig<
-  TRequestContext extends object,
-  TConnector extends ConnectorInterface,
-> = Component['name'][];
+type ShortUniqueConstraintConfig = Component['name'][];
 
 export type UniqueConstraintConfig<
-  TRequestContext extends object,
-  TConnector extends ConnectorInterface,
-> =
-  | FullUniqueConstraintConfig<TRequestContext, TConnector>
-  | ShortUniqueConstraintConfig<TRequestContext, TConnector>;
+  TConnector extends ConnectorInterface = any,
+> = FullUniqueConstraintConfig<TConnector> | ShortUniqueConstraintConfig;
 
-const isShortConfig = <
-  TRequestContext extends object,
-  TConnector extends ConnectorInterface,
->(
-  config: UniqueConstraintConfig<TRequestContext, TConnector>,
-): config is ShortUniqueConstraintConfig<TRequestContext, TConnector> =>
-  Array.isArray(config);
+const isShortConfig = (
+  config: UniqueConstraintConfig,
+): config is ShortUniqueConstraintConfig => Array.isArray(config);
 
 export class UniqueConstraint<
   TRequestContext extends object = any,
   TConnector extends ConnectorInterface = any,
+  TServiceContainer extends object = any,
 > {
-  public readonly config: FullUniqueConstraintConfig<
-    TRequestContext,
-    TConnector
-  >;
+  public readonly config: FullUniqueConstraintConfig<TConnector>;
   public readonly name: utils.Name;
 
   public readonly componentsByName: ReadonlyMap<
     Component['name'],
-    Component<TRequestContext, TConnector>
+    Component<TRequestContext, TConnector, TServiceContainer>
   >;
-  public readonly components: ReadonlyArray<
-    Component<TRequestContext, TConnector>
-  >;
+
   public readonly componentSet: ReadonlySet<
-    Component<TRequestContext, TConnector>
+    Component<TRequestContext, TConnector, TServiceContainer>
   >;
 
-  public readonly leavesByName: ReadonlyMap<
-    Leaf['name'],
-    Leaf<TRequestContext, TConnector>
+  public readonly leafSet: ReadonlySet<
+    Leaf<TRequestContext, TConnector, TServiceContainer>
   >;
-  public readonly leaves: ReadonlyArray<Leaf<TRequestContext, TConnector>>;
-  public readonly leafSet: ReadonlySet<Leaf<TRequestContext, TConnector>>;
 
-  public readonly edgesByName: ReadonlyMap<
-    Edge['name'],
-    Edge<TRequestContext, TConnector>
+  public readonly edgeSet: ReadonlySet<
+    Edge<TRequestContext, TConnector, TServiceContainer>
   >;
-  public readonly edges: ReadonlyArray<Edge<TRequestContext, TConnector>>;
-  public readonly edgeSet: ReadonlySet<Edge<TRequestContext, TConnector>>;
 
   public constructor(
-    public readonly node: Node<TRequestContext, TConnector>,
-    config: UniqueConstraintConfig<TRequestContext, TConnector>,
+    public readonly node: Node<TRequestContext, TConnector, TServiceContainer>,
+    config: UniqueConstraintConfig<TConnector>,
     public readonly configPath: utils.Path,
   ) {
     let componentsConfigPath: utils.Path;
     if (isShortConfig(config)) {
-      this.config = { components: config } as FullUniqueConstraintConfig<
-        TRequestContext,
-        TConnector
-      >;
+      this.config = { components: config };
       componentsConfigPath = configPath;
     } else {
       this.config = config;
@@ -109,29 +83,20 @@ export class UniqueConstraint<
         !this.config.components.length
       ) {
         throw new utils.UnexpectedValueError(
-          `at least one "component"`,
+          `at least one component`,
           this.config.components,
           { path: componentsConfigPath },
         );
       }
 
       this.componentsByName = new Map(
-        utils.aggregateGraphError<
-          string,
-          [Component['name'], Component<TRequestContext, TConnector>][]
-        >(
+        utils.aggregateGraphError<string, [Component['name'], Component][]>(
           this.config.components.values(),
           (entries, componentName, index) => {
-            const component = node.componentsByName.get(componentName);
-            if (!component) {
-              throw new utils.UnexpectedValueError(
-                `a "component"'s name among "${[
-                  ...node.componentsByName.keys(),
-                ].join(', ')}"`,
-                componentName,
-                { path: utils.addPath(componentsConfigPath, index) },
-              );
-            }
+            const component = node.getComponentByName(
+              componentName,
+              utils.addPath(componentsConfigPath, index),
+            );
 
             return [...entries, [component.name, component]];
           },
@@ -140,31 +105,24 @@ export class UniqueConstraint<
         ),
       );
 
-      this.components = Array.from(this.componentsByName.values());
-      this.componentSet = new Set(this.components);
+      this.componentSet = new Set(this.componentsByName.values());
 
       // leaves
       {
-        this.leavesByName = new Map(
-          Array.from(this.componentsByName).filter(
-            (entry): entry is [string, Leaf] => entry[1] instanceof Leaf,
+        this.leafSet = new Set(
+          Array.from(this.componentsByName.values()).filter(
+            (component): component is Leaf => component instanceof Leaf,
           ),
         );
-
-        this.leaves = Array.from(this.leavesByName.values());
-        this.leafSet = new Set(this.leaves);
       }
 
       // edges
       {
-        this.edgesByName = new Map(
-          Array.from(this.componentsByName).filter(
-            (entry): entry is [string, Edge] => entry[1] instanceof Edge,
+        this.edgeSet = new Set(
+          Array.from(this.componentsByName.values()).filter(
+            (component): component is Edge => component instanceof Edge,
           ),
         );
-
-        this.edges = Array.from(this.edgesByName.values());
-        this.edgeSet = new Set(this.edges);
       }
     }
 
@@ -185,10 +143,14 @@ export class UniqueConstraint<
   }
 
   @Memoize()
-  public get referrers(): Set<Edge> {
+  public get referrerSet(): ReadonlySet<
+    Edge<TRequestContext, TConnector, TServiceContainer>
+  > {
     return new Set(
-      this.node.gp.nodes.flatMap((node) =>
-        node.edges.filter((edge) => edge.referencedUniqueConstraint === this),
+      Array.from(this.node.gp.nodesByName.values()).flatMap((node) =>
+        Array.from(node.edgesByName.values()).filter(
+          (edge) => edge.referencedUniqueConstraint === this,
+        ),
       ),
     );
   }
@@ -200,29 +162,35 @@ export class UniqueConstraint<
 
   @Memoize()
   public isComposite(): boolean {
-    return this.components.length > 1;
+    return this.componentsByName.size > 1;
   }
 
   @Memoize()
   public isMutable(): boolean {
-    return this.components.some((component) => component.isMutable());
+    return Array.from(this.componentsByName.values()).some((component) =>
+      component.isMutable(),
+    );
   }
 
   @Memoize()
   public isNullable(): boolean {
-    return this.components.every((component) => component.isNullable());
+    return Array.from(this.componentsByName.values()).every((component) =>
+      component.isNullable(),
+    );
   }
 
   @Memoize()
   public isPublic(): boolean {
-    return this.components.every((component) => component.isPublic());
+    return Array.from(this.componentsByName.values()).every((component) =>
+      component.isPublic(),
+    );
   }
 
   @Memoize()
-  public isSortable(): boolean {
+  public isScrollable(): boolean {
     return (
-      this.components.length === 1 &&
-      this.components.every(
+      this.componentsByName.size === 1 &&
+      Array.from(this.componentsByName.values()).every(
         (component) => component instanceof Leaf && component.isSortable(),
       )
     );
@@ -233,19 +201,22 @@ export class UniqueConstraint<
     return new NodeSelection(
       this.node,
       mergeSelectionExpressions(
-        this.components.map(({ selection }) => selection),
+        Array.from(
+          this.componentsByName.values(),
+          ({ selection }) => selection,
+        ),
       ),
     );
   }
 
   public validateDefinition(): void {
-    this.referrers;
+    this.referrerSet;
     this.isIdentifier();
     this.isComposite();
     this.isMutable();
     this.isNullable();
     this.isPublic();
-    this.isSortable();
+    this.isScrollable();
     this.selection;
   }
 
@@ -257,7 +228,9 @@ export class UniqueConstraint<
 
     if (
       this.isNullable() &&
-      this.components.every(({ name }) => value[name] === null)
+      Array.from(this.componentsByName.values()).every(
+        ({ name }) => value[name] === null,
+      )
     ) {
       throw new utils.UnexpectedValueError(
         `at least one non-null component's value`,

@@ -4,23 +4,23 @@ import inflection from 'inflection';
 import assert from 'node:assert/strict';
 import type { JsonObject } from 'type-fest';
 import type {
+  ConnectorConfigOverride,
   ConnectorConfigOverrideKind,
   ConnectorInterface,
-  GetConnectorConfigOverride,
 } from '../../../connector-interface.js';
 import type { Node } from '../../../node.js';
 import { EdgeHeadSelection } from '../../statement/selection/expression/component/edge/head.js';
 import {
   EdgeCreationInput,
-  EdgeCreationInputConfig,
+  type EdgeCreationInputConfig,
 } from '../../type/input/creation/field/component/edge.js';
 import {
   EdgeUpdateInput,
-  EdgeUpdateInputConfig,
+  type EdgeUpdateInputConfig,
 } from '../../type/input/update/field/component/edge.js';
 import {
   AbstractComponent,
-  AbstractComponentConfig,
+  type AbstractComponentConfig,
 } from '../abstract-component.js';
 import { ReverseEdge } from '../reverse-edge.js';
 import type {
@@ -36,38 +36,36 @@ export enum OnEdgeHeadDeletion {
   CASCADE,
 }
 
-export type EdgeConfig<
-  TRequestContext extends object = any,
-  TConnector extends ConnectorInterface = any,
-> = AbstractComponentConfig & {
-  kind: 'Edge';
+export type EdgeConfig<TConnector extends ConnectorInterface = any> =
+  AbstractComponentConfig & {
+    kind: 'Edge';
 
-  /**
-   * Required, the "head"'s name, ex: { kind: "Edge", head: "Category" }
-   *
-   * Optional, specify the referenced unique-constraint's name after a ".", ex: { kind: "Edge", head: "Category.parent-title" }
-   *
-   * Default: the "head"'s identifier (= its first unique-constraint)
-   */
-  head: Node['name'] | `${Node['name']}.${UniqueConstraint['name']}`;
+    /**
+     * Required, the "head"'s name, ex: { kind: "Edge", head: "Category" }
+     *
+     * Optional, specify the referenced unique-constraint's name after a ".", ex: { kind: "Edge", head: "Category.parent-title" }
+     *
+     * Default: the "head"'s identifier (= its first unique-constraint)
+     */
+    head: Node['name'] | `${Node['name']}.${UniqueConstraint['name']}`;
 
-  /**
-   * Optional, what to do if the edge is "beheaded"
-   *
-   * Default: RESTRICT
-   */
-  onHeadDeletion?: OnEdgeHeadDeletion;
+    /**
+     * Optional, what to do if the edge is "beheaded"
+     *
+     * Default: RESTRICT
+     */
+    onHeadDeletion?: OnEdgeHeadDeletion;
 
-  /**
-   * Optional, fine-tune the "creation"'s input
-   */
-  [utils.MutationType.CREATION]?: EdgeCreationInputConfig;
+    /**
+     * Optional, fine-tune the "creation"'s input
+     */
+    [utils.MutationType.CREATION]?: EdgeCreationInputConfig;
 
-  /**
-   * Optional, fine-tune the "update"'s input
-   */
-  [utils.MutationType.UPDATE]?: EdgeUpdateInputConfig;
-} & GetConnectorConfigOverride<TConnector, ConnectorConfigOverrideKind.EDGE>;
+    /**
+     * Optional, fine-tune the "update"'s input
+     */
+    [utils.MutationType.UPDATE]?: EdgeUpdateInputConfig;
+  } & ConnectorConfigOverride<TConnector, ConnectorConfigOverrideKind.EDGE>;
 
 /**
  * A directed edge is a link to another node
@@ -80,7 +78,8 @@ export type EdgeConfig<
 export class Edge<
   TRequestContext extends object = any,
   TConnector extends ConnectorInterface = any,
-> extends AbstractComponent<TRequestContext, TConnector> {
+  TServiceContainer extends object = any,
+> extends AbstractComponent<TRequestContext, TConnector, TServiceContainer> {
   readonly #headConfigPath: utils.Path;
   readonly #nodeHeadConfig: string;
   readonly #uniqueConstraintHeadConfig?: string;
@@ -88,9 +87,9 @@ export class Edge<
   public readonly onHeadDeletion: OnEdgeHeadDeletion;
 
   public constructor(
-    public readonly tail: Node<TRequestContext, TConnector>,
+    public readonly tail: Node<TRequestContext, TConnector, TServiceContainer>,
     name: utils.Name,
-    public override readonly config: EdgeConfig<TRequestContext, TConnector>,
+    public override readonly config: EdgeConfig<TConnector>,
     public override readonly configPath: utils.Path,
   ) {
     super(tail, name, config, configPath);
@@ -166,42 +165,26 @@ export class Edge<
   }
 
   @Memoize()
-  public get head(): Node<TRequestContext, TConnector> {
-    const node = this.node.gp.nodesByName.get(this.#nodeHeadConfig);
-    if (!node) {
-      throw new utils.UnexpectedValueError(
-        `a "node"'s name among "${[...this.node.gp.nodesByName.keys()].join(
-          ', ',
-        )}"`,
-        this.#nodeHeadConfig,
-        { path: this.#headConfigPath },
-      );
-    }
-
-    return node;
+  public get head(): Node<TRequestContext, TConnector, TServiceContainer> {
+    return this.node.gp.getNodeByName(
+      this.#nodeHeadConfig,
+      this.#headConfigPath,
+    );
   }
 
   @Memoize()
   public get referencedUniqueConstraint(): UniqueConstraint<
     TRequestContext,
-    TConnector
+    TConnector,
+    TServiceContainer
   > {
     let referencedUniqueConstraint: UniqueConstraint;
 
     if (this.#uniqueConstraintHeadConfig) {
-      const uniqueConstraint = this.head.uniqueConstraintsByName.get(
+      const uniqueConstraint = this.head.getUniqueConstraintByName(
         this.#uniqueConstraintHeadConfig,
+        this.#headConfigPath,
       );
-
-      if (!uniqueConstraint) {
-        throw new utils.UnexpectedValueError(
-          `a "unique-constraint"'s name among "${[
-            ...this.head.uniqueConstraintsByName.keys(),
-          ].join(', ')}"`,
-          this.#uniqueConstraintHeadConfig,
-          { path: this.#headConfigPath },
-        );
-      }
 
       referencedUniqueConstraint = uniqueConstraint;
     } else {
@@ -209,46 +192,36 @@ export class Edge<
     }
 
     if (
-      referencedUniqueConstraint.components.some(
+      Array.from(referencedUniqueConstraint.componentsByName.values()).some(
         (component) => component instanceof Edge && component === this,
       )
     ) {
       throw new utils.UnexpectedValueError(
-        `a "unique-constraint" not refering itself`,
+        `a unique-constraint not refering itself`,
         this.#uniqueConstraintHeadConfig,
         { path: this.#headConfigPath },
       );
     }
 
-    // Nullable "unique-constraint" are not yet supported
+    // Nullable unique-constraint are not yet supported
     if (referencedUniqueConstraint.isNullable()) {
       throw new utils.UnexpectedValueError(
-        `a non-nullable "unique-constraint"`,
+        `a non-nullable unique-constraint`,
         this.#uniqueConstraintHeadConfig,
         { path: this.#headConfigPath },
       );
     }
 
-    // Mutable "unique-constraint" are not yet supported as it is not trivial to keep track of the updates
+    // Mutable unique-constraint are not yet supported as it is not trivial to keep track of the updates
     if (referencedUniqueConstraint.isMutable()) {
       throw new utils.UnexpectedValueError(
-        `an immutable "unique-constraint"`,
+        `an immutable unique-constraint`,
         this.#uniqueConstraintHeadConfig,
         { path: this.#headConfigPath },
       );
     }
 
     return referencedUniqueConstraint;
-  }
-
-  @Memoize()
-  public get prioritizedHeadUniqueConstraintSet(): ReadonlySet<
-    UniqueConstraint<TRequestContext, TConnector>
-  > {
-    return new Set([
-      this.referencedUniqueConstraint,
-      ...this.head.uniqueConstraints,
-    ]);
   }
 
   @Memoize()
@@ -293,12 +266,16 @@ export class Edge<
   }
 
   @Memoize()
-  public get reverseEdge(): ReverseEdge<TRequestContext, TConnector> {
-    const reverseEdge = this.head.reverseEdges.find(
+  public get reverseEdge(): ReverseEdge<
+    TRequestContext,
+    TConnector,
+    TServiceContainer
+  > {
+    const reverseEdge = Array.from(this.head.reverseEdgesByName.values()).find(
       (reverseEdge) => reverseEdge.originalEdge === this,
     );
 
-    assert(reverseEdge);
+    assert(reverseEdge, `The edge "${this}" does not have its "reverse-edge"`);
 
     return reverseEdge;
   }

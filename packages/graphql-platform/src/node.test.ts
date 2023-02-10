@@ -5,11 +5,11 @@ import { GraphQLPlatform } from './index.js';
 import {
   ComponentConfig,
   Edge,
+  MultipleReverseEdge,
   NodeConfig,
   NodeName,
   NodeSelection,
   OnEdgeHeadDeletion,
-  ReverseEdgeMultiple,
 } from './node.js';
 import { Article, Category, nodes } from './__tests__/config.js';
 
@@ -73,7 +73,7 @@ describe('Node', () => {
         ],
         [
           { components: {} },
-          `/GraphQLPlatformConfig/nodes/Test/components - Expects at least one "component", got: {}`,
+          `/GraphQLPlatformConfig/nodes/Test/components - Expects at least one component, got: {}`,
         ],
       ])(
         `throws an Error on invalid components: %p`,
@@ -112,7 +112,7 @@ describe('Node', () => {
                 },
               }),
           ).toThrowError(
-            '/GraphQLPlatformConfig/nodes/Article/components/edgeToAMissingModel/head - Expects a "node"\'s name among "Article, Category, Tag, ArticleTag, ArticleTagModeration, User, UserProfile, Log", got: \'MissingModel\'',
+            "/GraphQLPlatformConfig/nodes/Article/components/edgeToAMissingModel/head - Expects a node's name among \"Article, Category, Tag, ArticleTag, ArticleTagModeration, User, UserProfile, Log\", got: 'MissingModel'",
           );
         });
 
@@ -135,7 +135,7 @@ describe('Node', () => {
                 },
               }),
           ).toThrowError(
-            '/GraphQLPlatformConfig/nodes/Article/components/edgeToAMissingReference/head - Expects a "unique-constraint"\'s name among "_id, id, category-slug", got: \'missingUnique\'',
+            `/GraphQLPlatformConfig/nodes/Article/components/edgeToAMissingReference/head - Expects an "Article"'s unique-constraint among "_id, id, category-slug", got: 'missingUnique'`,
           );
         });
 
@@ -157,7 +157,7 @@ describe('Node', () => {
                 },
               }),
           ).toThrowError(
-            '/GraphQLPlatformConfig/nodes/Category/components/parent/head - Expects a "unique-constraint" not refering itself, got: \'parent-slug\'',
+            "/GraphQLPlatformConfig/nodes/Category/components/parent/head - Expects a unique-constraint not refering itself, got: 'parent-slug'",
           );
         });
 
@@ -215,7 +215,7 @@ describe('Node', () => {
               },
             }),
         ).toThrowError(
-          `/GraphQLPlatformConfig/nodes/Test/uniques - Expects at least one "unique-constraint", got: []`,
+          `/GraphQLPlatformConfig/nodes/Test/uniques - Expects at least one unique-constraint, got: []`,
         );
       });
 
@@ -268,7 +268,7 @@ describe('Node', () => {
               },
             }),
         ).toThrowError(
-          '/GraphQLPlatformConfig/nodes/Article/uniques/0 - Expects at least one "component", got: []',
+          '/GraphQLPlatformConfig/nodes/Article/uniques/0 - Expects at least one component, got: []',
         );
       });
 
@@ -285,7 +285,7 @@ describe('Node', () => {
               },
             }),
         ).toThrowError(
-          `/GraphQLPlatformConfig/nodes/Article/uniques/0/0 - Expects a \"component\"'s name among \"_id, id, status, title, slug, body, category, createdBy, createdAt, updatedBy, updatedAt, metas, highlighted, sponsored, views, score, machineTags\", got: 'missingComponent'`,
+          `/GraphQLPlatformConfig/nodes/Article/uniques/0/0 - Expects an "Article"'s component among "_id, id, status, title, slug, body, category, createdBy, createdAt, updatedBy, updatedAt, metas, highlighted, sponsored, views, score, machineTags", got: 'missingComponent'`,
         );
       });
     });
@@ -574,19 +574,19 @@ describe('Node', () => {
         expect(node.isPublic()).toBeTruthy();
 
         expect(
-          node.components
+          Array.from(node.componentsByName.values())
             .filter((component) => !component.isPublic())
             .map((component) => component.name),
         ).toEqual(privateComponentNames);
 
         expect(
-          node.uniqueConstraints
+          Array.from(node.uniqueConstraintsByName.values())
             .filter((uniqueConstraint) => !uniqueConstraint.isPublic())
             .map((uniqueConstraint) => uniqueConstraint.name),
         ).toEqual(privateUniqueConstraintNames);
 
         expect(
-          node.reverseEdges
+          Array.from(node.reverseEdgesByName.values())
             .filter((reverseEdge) => !reverseEdge.isPublic())
             .map((reverseEdge) => reverseEdge.name),
         ).toEqual(privateReverseEdgeNames);
@@ -601,17 +601,21 @@ describe('Node', () => {
         expect(node.isPublic()).toBeFalsy();
 
         expect(
-          node.components.some((component) => component.isPublic()),
-        ).toBeFalsy();
-
-        expect(
-          node.uniqueConstraints.some((uniqueConstraint) =>
-            uniqueConstraint.isPublic(),
+          Array.from(node.componentsByName.values()).some((component) =>
+            component.isPublic(),
           ),
         ).toBeFalsy();
 
         expect(
-          node.reverseEdges.some((reverseEdge) => reverseEdge.isPublic()),
+          Array.from(node.uniqueConstraintsByName.values()).some(
+            (uniqueConstraint) => uniqueConstraint.isPublic(),
+          ),
+        ).toBeFalsy();
+
+        expect(
+          Array.from(node.reverseEdgesByName.values()).some((reverseEdge) =>
+            reverseEdge.isPublic(),
+          ),
         ).toBeFalsy();
       },
     );
@@ -625,7 +629,7 @@ describe('Node', () => {
       expect(parent.referencedUniqueConstraint.name).toEqual('_id');
 
       const children = Category.getReverseEdgeByName('children');
-      expect(children).toBeInstanceOf(ReverseEdgeMultiple);
+      expect(children).toBeInstanceOf(MultipleReverseEdge);
       expect(children.head).toBe(Category);
 
       expect(children.originalEdge).toBe(parent);
@@ -643,7 +647,7 @@ describe('Node', () => {
                   mutation: false,
                   components: Object.fromEntries(
                     Object.entries(config.components).map<
-                      [utils.Name, ComponentConfig<any, any>]
+                      [utils.Name, ComponentConfig]
                     >(([name, config]) => [
                       name,
                       (config.kind === 'Edge'
@@ -685,7 +689,7 @@ describe('Node', () => {
                       },
                       components: Object.fromEntries(
                         Object.entries(config.components).map<
-                          [utils.Name, ComponentConfig<any, any>]
+                          [utils.Name, ComponentConfig]
                         >(([name, config]) => [
                           name,
                           (config.kind === 'Edge'

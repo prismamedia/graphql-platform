@@ -34,7 +34,9 @@ export class NodeCreationInputType extends utils.ObjectInputType<FieldCreationIn
 
   @Memoize()
   protected get componentFields(): ReadonlyArray<ComponentCreationInput> {
-    return this.node.components.reduce<ComponentCreationInput[]>(
+    return Array.from(this.node.componentsByName.values()).reduce<
+      ComponentCreationInput[]
+    >(
       (fields, component) =>
         component !== this.forcedEdge
           ? [...fields, component.creationInput]
@@ -45,7 +47,9 @@ export class NodeCreationInputType extends utils.ObjectInputType<FieldCreationIn
 
   @Memoize()
   protected get reverseEdgeFields(): ReadonlyArray<ReverseEdgeCreationInput> {
-    return this.node.reverseEdges.reduce<ReverseEdgeCreationInput[]>(
+    return Array.from(this.node.reverseEdgesByName.values()).reduce<
+      ReverseEdgeCreationInput[]
+    >(
       (fields, reverseEdge) =>
         reverseEdge.creationInput
           ? [...fields, reverseEdge.creationInput]

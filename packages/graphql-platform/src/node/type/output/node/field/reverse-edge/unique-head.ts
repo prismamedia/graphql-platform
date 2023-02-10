@@ -1,18 +1,18 @@
 import * as utils from '@prismamedia/graphql-platform-utils';
 import * as graphql from 'graphql';
-import type { ReverseEdgeUnique } from '../../../../../definition/reverse-edge/unique.js';
+import type { UniqueReverseEdge } from '../../../../../definition/reverse-edge/unique.js';
 import type { OperationContext } from '../../../../../operation/context.js';
-import { ReverseEdgeUniqueHeadSelection } from '../../../../../statement/selection/expression/reverse-edge/unique/head.js';
+import { UniqueReverseEdgeHeadSelection } from '../../../../../statement/selection/expression/reverse-edge/unique/head.js';
 import type { GraphQLSelectionContext } from '../../../node.js';
 import { AbstractReverseEdgeOutputType } from '../abstract-reverse-edge.js';
 
-export class ReverseEdgeUniqueHeadOutputType extends AbstractReverseEdgeOutputType<undefined> {
+export class UniqueReverseEdgeHeadOutputType extends AbstractReverseEdgeOutputType<undefined> {
   public override readonly name: utils.Name;
   public override readonly description?: string;
   public override readonly deprecationReason?: string;
   public override readonly arguments?: undefined;
 
-  public constructor(public override readonly reverseEdge: ReverseEdgeUnique) {
+  public constructor(public override readonly reverseEdge: UniqueReverseEdge) {
     super(reverseEdge);
 
     this.name = reverseEdge.name;
@@ -29,7 +29,7 @@ export class ReverseEdgeUniqueHeadOutputType extends AbstractReverseEdgeOutputTy
     operationContext: OperationContext | undefined,
     selectionContext: GraphQLSelectionContext | undefined,
     path: utils.Path,
-  ): ReverseEdgeUniqueHeadSelection {
+  ): UniqueReverseEdgeHeadSelection {
     this.parseGraphQLArgumentNodes(ast.arguments, selectionContext, path);
 
     if (!ast.selectionSet) {
@@ -39,7 +39,7 @@ export class ReverseEdgeUniqueHeadOutputType extends AbstractReverseEdgeOutputTy
       );
     }
 
-    return new ReverseEdgeUniqueHeadSelection(
+    return new UniqueReverseEdgeHeadSelection(
       this.reverseEdge,
       ast.alias?.value,
       this.reverseEdge.head.outputType.selectGraphQLSelectionSetNode(
@@ -55,8 +55,8 @@ export class ReverseEdgeUniqueHeadOutputType extends AbstractReverseEdgeOutputTy
     value: unknown,
     operationContext: OperationContext | undefined,
     path: utils.Path,
-  ): ReverseEdgeUniqueHeadSelection {
-    return new ReverseEdgeUniqueHeadSelection(
+  ): UniqueReverseEdgeHeadSelection {
+    return new UniqueReverseEdgeHeadSelection(
       this.reverseEdge,
       undefined,
       value === null

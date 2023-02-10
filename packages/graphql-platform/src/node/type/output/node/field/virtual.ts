@@ -3,22 +3,24 @@ import { Memoize } from '@prismamedia/memoize';
 import type * as graphql from 'graphql';
 import type { ConnectorInterface } from '../../../../../connector-interface.js';
 import type { GPBoundGraphQLFieldConfig } from '../../../../../graphql-field-config.js';
-import type { MaybeNodeAwareConfig } from '../../../../maybe-aware-config.js';
+import type { Node } from '../../../../../node.js';
 import type {
   NodeSelectedValue,
   NodeSelection,
 } from '../../../../statement/selection.js';
 import type { NodeOutputType, RawNodeSelection } from '../../node.js';
 
-export interface VirtualFieldOutputTypeConfig<
+export interface VirtualFieldOutputConfig<
   TRequestContext extends object = any,
   TConnector extends ConnectorInterface = any,
+  TServiceContainer extends object = any,
   TSource extends NodeSelectedValue = any,
   TArgs = any,
   TResult = unknown,
 > extends GPBoundGraphQLFieldConfig<
     TRequestContext,
     TConnector,
+    TServiceContainer,
     TSource,
     TArgs,
     TResult
@@ -32,13 +34,30 @@ export interface VirtualFieldOutputTypeConfig<
   dependsOn?: RawNodeSelection<TSource>;
 }
 
-export type VirtualFieldOutputTypeConfigMap<
-  TRequestContext extends object,
-  TConnector extends ConnectorInterface,
-> = MaybeNodeAwareConfig<
-  TRequestContext,
-  TConnector,
-  Record<utils.Name, VirtualFieldOutputTypeConfig<TRequestContext, TConnector>>
+export type ThunkableNillableVirtualFieldOutputConfig<
+  TRequestContext extends object = any,
+  TConnector extends ConnectorInterface = any,
+  TServiceContainer extends object = any,
+> = utils.Thunkable<
+  utils.Nillable<
+    VirtualFieldOutputConfig<TRequestContext, TConnector, TServiceContainer>
+  >,
+  [node: Node<TRequestContext, TConnector, TServiceContainer>]
+>;
+
+export type ThunkableNillableVirtualFieldOutputConfigsByName<
+  TRequestContext extends object = any,
+  TConnector extends ConnectorInterface = any,
+  TServiceContainer extends object = any,
+> = utils.Thunkable<
+  utils.Nillable<{
+    [fieldName: utils.Name]: ThunkableNillableVirtualFieldOutputConfig<
+      TRequestContext,
+      TConnector,
+      TServiceContainer
+    >;
+  }>,
+  [node: Node<TRequestContext, TConnector, TServiceContainer>]
 >;
 
 export class VirtualFieldOutputType {
@@ -49,7 +68,7 @@ export class VirtualFieldOutputType {
   public constructor(
     public readonly parent: NodeOutputType,
     public readonly name: utils.Name,
-    { dependsOn, ...config }: VirtualFieldOutputTypeConfig<any, any>,
+    { dependsOn, ...config }: VirtualFieldOutputConfig,
     public readonly configPath: utils.Path,
   ) {
     utils.assertName(name, configPath);

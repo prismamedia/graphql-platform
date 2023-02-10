@@ -1,17 +1,17 @@
 import * as utils from '@prismamedia/graphql-platform-utils';
 import type { ConnectorInterface } from '../../../../../connector-interface.js';
-import type { ReverseEdgeMultiple } from '../../../../definition/reverse-edge/multiple.js';
+import type { MultipleReverseEdge } from '../../../../definition/reverse-edge/multiple.js';
 import type { OperationContext } from '../../../../operation/context.js';
 import {
+  MultipleReverseEdgeCountOrdering,
   OrderingDirection,
-  ReverseEdgeMultipleCountOrdering,
 } from '../../../../statement/ordering.js';
 
-export class ReverseEdgeMultipleCountOrderingInput extends utils.EnumInputValue {
-  readonly #expression: ReverseEdgeMultipleCountOrdering;
+export class MultipleReverseEdgeCountOrderingInput extends utils.EnumInputValue {
+  readonly #expression: MultipleReverseEdgeCountOrdering;
 
   public constructor(
-    public readonly reverseEdge: ReverseEdgeMultiple,
+    public readonly reverseEdge: MultipleReverseEdge,
     public readonly direction: OrderingDirection,
   ) {
     super({
@@ -26,7 +26,7 @@ export class ReverseEdgeMultipleCountOrderingInput extends utils.EnumInputValue 
       deprecated: reverseEdge.deprecationReason,
     });
 
-    this.#expression = new ReverseEdgeMultipleCountOrdering(
+    this.#expression = new MultipleReverseEdgeCountOrdering(
       this.reverseEdge,
       this.direction,
     );
@@ -38,7 +38,7 @@ export class ReverseEdgeMultipleCountOrderingInput extends utils.EnumInputValue 
   >(
     _context: OperationContext<TRequestContext, TConnector> | undefined,
     _path: utils.Path,
-  ): ReverseEdgeMultipleCountOrdering {
+  ): MultipleReverseEdgeCountOrdering {
     return this.#expression;
   }
 }

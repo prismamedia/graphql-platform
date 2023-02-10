@@ -7,10 +7,7 @@ import { AbstractReverseEdgeCreationInput } from '../type/input/creation/field/a
 import { AbstractReverseEdgeUpdateInput } from '../type/input/update/field/abstract-reverse-edge.js';
 import type { Edge } from './component/edge.js';
 
-export interface AbstractReverseEdgeConfig<
-  TRequestContext extends object,
-  TConnector extends ConnectorInterface,
-> {
+export interface AbstractReverseEdgeConfig {
   /**
    * Required, the "head"'s name having an edge to this node, ex: { originalEdge: "Article" }
    *
@@ -39,11 +36,12 @@ export interface AbstractReverseEdgeConfig<
 }
 
 export abstract class AbstractReverseEdge<
-  TRequestContext extends object = any,
-  TConnector extends ConnectorInterface = any,
+  TRequestContext extends object,
+  TConnector extends ConnectorInterface,
+  TServiceContainer extends object,
 > {
-  public readonly tail: Node<TRequestContext, TConnector>;
-  public readonly head: Node<TRequestContext, TConnector>;
+  public readonly tail: Node<TRequestContext, TConnector, TServiceContainer>;
+  public readonly head: Node<TRequestContext, TConnector, TServiceContainer>;
   public readonly description?: string;
   public readonly deprecationReason?: string;
   public readonly pascalCasedName: string;
@@ -51,12 +49,13 @@ export abstract class AbstractReverseEdge<
   public abstract readonly updateInput?: AbstractReverseEdgeUpdateInput<any>;
 
   public constructor(
-    public readonly originalEdge: Edge<TRequestContext, TConnector>,
-    public readonly name: utils.Name,
-    protected readonly config: AbstractReverseEdgeConfig<
+    public readonly originalEdge: Edge<
       TRequestContext,
-      TConnector
+      TConnector,
+      TServiceContainer
     >,
+    public readonly name: utils.Name,
+    protected readonly config: AbstractReverseEdgeConfig,
     protected readonly configPath: utils.Path,
   ) {
     utils.assertName(name, configPath);

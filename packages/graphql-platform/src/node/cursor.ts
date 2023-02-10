@@ -19,21 +19,23 @@ export type NodeCursorForEachOptions = Except<
   'autoStart' | 'queueClass'
 >;
 
-function pickAfterFilterInputValue(
+const pickAfterFilterInputValue = (
   uniqueConstraint: UniqueConstraint,
   direction: OrderingDirection,
   value: NodeSelectedValue,
-): NonNullable<NodeFilterInputValue> {
-  return uniqueConstraint.components.reduce((filter, component) => {
-    assert(component instanceof Leaf);
+): NonNullable<NodeFilterInputValue> =>
+  Array.from(uniqueConstraint.componentsByName.values()).reduce(
+    (filter, component) => {
+      assert(component instanceof Leaf);
 
-    return Object.assign(filter, {
-      [`${component.name}_${
-        direction === OrderingDirection.ASCENDING ? 'gt' : 'lt'
-      }`]: value[component.name],
-    });
-  }, Object.create(null));
-}
+      return Object.assign(filter, {
+        [`${component.name}_${
+          direction === OrderingDirection.ASCENDING ? 'gt' : 'lt'
+        }`]: value[component.name],
+      });
+    },
+    Object.create(null),
+  );
 
 export type NodeCursorOptions<TValue extends NodeSelectedValue = any> = {
   filter?: NodeFilterInputValue;
@@ -77,13 +79,13 @@ export class NodeCursor<
         );
 
         assert(
-          uniqueConstraint.isSortable(),
-          `The "${uniqueConstraint}" unique-constraint is not sortable`,
+          uniqueConstraint.isScrollable(),
+          `The "${uniqueConstraint}" unique-constraint is not scrollable`,
         );
       } else {
-        uniqueConstraint = node.uniqueConstraints.find((uniqueConstraint) =>
-          uniqueConstraint.isSortable(),
-        )!;
+        uniqueConstraint = Array.from(
+          node.uniqueConstraintsByName.values(),
+        ).find((uniqueConstraint) => uniqueConstraint.isScrollable())!;
       }
 
       this.uniqueConstraint = uniqueConstraint;
@@ -97,7 +99,8 @@ export class NodeCursor<
       this.uniqueConstraint.selection,
     );
 
-    this.orderByInputValue = this.uniqueConstraint.components.map(
+    this.orderByInputValue = Array.from(
+      this.uniqueConstraint.componentsByName.values(),
       (component) => {
         assert(component instanceof Leaf);
 

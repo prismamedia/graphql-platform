@@ -2,11 +2,10 @@ import * as scalars from '@prismamedia/graphql-platform-scalars';
 import * as utils from '@prismamedia/graphql-platform-utils';
 import { Memoize } from '@prismamedia/memoize';
 import * as graphql from 'graphql';
-import type { ConnectorInterface } from '../../../connector-interface.js';
 import type { Edge, Node } from '../../../node.js';
 import { Leaf, type LeafValue } from '../../definition/component/leaf.js';
-import type { ReverseEdgeMultiple } from '../../definition/reverse-edge/multiple.js';
-import { ReverseEdgeUnique } from '../../definition/reverse-edge/unique.js';
+import type { MultipleReverseEdge } from '../../definition/reverse-edge/multiple.js';
+import { UniqueReverseEdge } from '../../definition/reverse-edge/unique.js';
 import type { OperationContext } from '../../operation/context.js';
 import {
   AndOperation,
@@ -16,12 +15,12 @@ import {
   LeafComparisonFilter,
   LeafFullTextFilter,
   LeafInFilter,
+  MultipleReverseEdgeCountFilter,
+  MultipleReverseEdgeExistsFilter,
   NodeFilter,
   NotOperation,
   OrOperation,
-  ReverseEdgeMultipleCountFilter,
-  ReverseEdgeMultipleExistsFilter,
-  ReverseEdgeUniqueExistsFilter,
+  UniqueReverseEdgeExistsFilter,
 } from '../../statement/filter.js';
 import {
   BooleanOperationFilterInputType,
@@ -220,16 +219,16 @@ export class NodeFilterInputType extends utils.ObjectInputType<FieldFilterInputT
     return fields;
   }
 
-  protected getReverseEdgeUniqueFields(
-    reverseEdge: ReverseEdgeUnique,
+  protected getUniqueReverseEdgeFields(
+    reverseEdge: UniqueReverseEdge,
   ): ReverseEdgeFilterInputType[] {
     return [
       new ReverseEdgeFilterInputType<NodeFilterInputValue>(reverseEdge, 'eq', {
         type: reverseEdge.head.filterInputType,
         filter: (value, context, path) =>
           value === null
-            ? new NotOperation(new ReverseEdgeUniqueExistsFilter(reverseEdge))
-            : new ReverseEdgeUniqueExistsFilter(
+            ? new NotOperation(new UniqueReverseEdgeExistsFilter(reverseEdge))
+            : new UniqueReverseEdgeExistsFilter(
                 reverseEdge,
                 reverseEdge.head.filterInputType.filter(value, context, path),
               ),
@@ -238,9 +237,9 @@ export class NodeFilterInputType extends utils.ObjectInputType<FieldFilterInputT
         type: reverseEdge.head.filterInputType,
         filter: (value, context, path) =>
           value === null
-            ? new ReverseEdgeUniqueExistsFilter(reverseEdge)
+            ? new UniqueReverseEdgeExistsFilter(reverseEdge)
             : new NotOperation(
-                new ReverseEdgeUniqueExistsFilter(
+                new UniqueReverseEdgeExistsFilter(
                   reverseEdge,
                   reverseEdge.head.filterInputType.filter(value, context, path),
                 ),
@@ -253,8 +252,8 @@ export class NodeFilterInputType extends utils.ObjectInputType<FieldFilterInputT
           type: new utils.NonNullableInputType(scalars.typesByName.Boolean),
           filter: (value, _context, _path) =>
             value
-              ? new NotOperation(new ReverseEdgeUniqueExistsFilter(reverseEdge))
-              : new ReverseEdgeUniqueExistsFilter(reverseEdge),
+              ? new NotOperation(new UniqueReverseEdgeExistsFilter(reverseEdge))
+              : new UniqueReverseEdgeExistsFilter(reverseEdge),
         },
       ),
     ];
@@ -275,8 +274,8 @@ export class NodeFilterInputType extends utils.ObjectInputType<FieldFilterInputT
    *    = !set.some(filter);
    *    = set.every(!filter);
    */
-  protected getReverseEdgeMultipleFields(
-    reverseEdge: ReverseEdgeMultiple,
+  protected getMultipleReverseEdgeFields(
+    reverseEdge: MultipleReverseEdge,
   ): ReverseEdgeFilterInputType[] {
     return [
       new ReverseEdgeFilterInputType<NonNullable<NodeFilterInputValue>>(
@@ -290,7 +289,7 @@ export class NodeFilterInputType extends utils.ObjectInputType<FieldFilterInputT
           // set.every(filter) = !set.some(!filter);
           filter: (value, context, path) =>
             new NotOperation(
-              new ReverseEdgeMultipleExistsFilter(
+              new MultipleReverseEdgeExistsFilter(
                 reverseEdge,
                 reverseEdge.head.filterInputType.filter(
                   value,
@@ -309,7 +308,7 @@ export class NodeFilterInputType extends utils.ObjectInputType<FieldFilterInputT
             reverseEdge.head.filterInputType,
           ),
           filter: (value, context, path) =>
-            new ReverseEdgeMultipleExistsFilter(
+            new MultipleReverseEdgeExistsFilter(
               reverseEdge,
               reverseEdge.head.filterInputType.filter(value, context, path),
             ),
@@ -326,7 +325,7 @@ export class NodeFilterInputType extends utils.ObjectInputType<FieldFilterInputT
           // set.none(filter) = !set.some(filter);
           filter: (value, context, path) =>
             new NotOperation(
-              new ReverseEdgeMultipleExistsFilter(
+              new MultipleReverseEdgeExistsFilter(
                 reverseEdge,
                 reverseEdge.head.filterInputType.filter(value, context, path),
               ),
@@ -346,13 +345,13 @@ export class NodeFilterInputType extends utils.ObjectInputType<FieldFilterInputT
             filter: (value, _context, _path) =>
               operator === 'not'
                 ? new NotOperation(
-                    new ReverseEdgeMultipleCountFilter(
+                    new MultipleReverseEdgeCountFilter(
                       reverseEdge,
                       'eq',
                       value,
                     ),
                   )
-                : new ReverseEdgeMultipleCountFilter(
+                : new MultipleReverseEdgeCountFilter(
                     reverseEdge,
                     operator,
                     value,
@@ -408,26 +407,27 @@ export class NodeFilterInputType extends utils.ObjectInputType<FieldFilterInputT
   @Memoize()
   public override get fields(): ReadonlyArray<FieldFilterInputType> {
     return [
-      ...this.node.components.flatMap<FieldFilterInputType>((component) =>
+      ...Array.from(
+        this.node.componentsByName.values(),
+      ).flatMap<FieldFilterInputType>((component) =>
         component instanceof Leaf
           ? this.getLeafFields(component)
           : this.getEdgeFields(component),
       ),
-      ...this.node.reverseEdges.flatMap<FieldFilterInputType>((reverseEdge) =>
-        reverseEdge instanceof ReverseEdgeUnique
-          ? this.getReverseEdgeUniqueFields(reverseEdge)
-          : this.getReverseEdgeMultipleFields(reverseEdge),
+      ...Array.from(
+        this.node.reverseEdgesByName.values(),
+      ).flatMap<FieldFilterInputType>((reverseEdge) =>
+        reverseEdge instanceof UniqueReverseEdge
+          ? this.getUniqueReverseEdgeFields(reverseEdge)
+          : this.getMultipleReverseEdgeFields(reverseEdge),
       ),
       ...this.getBooleanOperationFields(),
     ];
   }
 
-  public filter<
-    TRequestContext extends object,
-    TConnector extends ConnectorInterface,
-  >(
+  public filter(
     value: NodeFilterInputValue,
-    context?: OperationContext<TRequestContext, TConnector>,
+    context?: OperationContext,
     path?: utils.Path,
   ): NodeFilter {
     return new NodeFilter(
@@ -448,12 +448,9 @@ export class NodeFilterInputType extends utils.ObjectInputType<FieldFilterInputT
     );
   }
 
-  public parseAndFilter<
-    TRequestContext extends object,
-    TConnector extends ConnectorInterface,
-  >(
+  public parseAndFilter(
     maybeValue: unknown,
-    context?: OperationContext<TRequestContext, TConnector>,
+    context?: OperationContext,
     path?: utils.Path,
   ): NodeFilter {
     return this.filter(this.parseValue(maybeValue, path), context, path);

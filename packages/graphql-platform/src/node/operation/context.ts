@@ -10,7 +10,7 @@ import { UnauthorizedError } from './error.js';
 export class OperationContext<
   TRequestContext extends object = any,
   TConnector extends ConnectorInterface = any,
-  TContainer extends object = any,
+  TServiceContainer extends object = any,
 > {
   public constructor(
     /**
@@ -19,7 +19,7 @@ export class OperationContext<
     public readonly gp: GraphQLPlatform<
       TRequestContext,
       TConnector,
-      TContainer
+      TServiceContainer
     >,
 
     /**

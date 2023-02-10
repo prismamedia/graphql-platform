@@ -1,10 +1,10 @@
-import { ReverseEdgeUniqueExistsFilter } from './unique/exists.js';
+import { UniqueReverseEdgeExistsFilter } from './unique/exists.js';
 
 export * from './unique/exists.js';
 
-export type ReverseEdgeUniqueFilter = ReverseEdgeUniqueExistsFilter;
+export type UniqueReverseEdgeFilter = UniqueReverseEdgeExistsFilter;
 
-export const isReverseEdgeUniqueFilter = (
-  maybeReverseEdgeUniqueFilter: unknown,
-): maybeReverseEdgeUniqueFilter is ReverseEdgeUniqueFilter =>
-  maybeReverseEdgeUniqueFilter instanceof ReverseEdgeUniqueExistsFilter;
+export const isUniqueReverseEdgeFilter = (
+  maybeUniqueReverseEdgeFilter: unknown,
+): maybeUniqueReverseEdgeFilter is UniqueReverseEdgeFilter =>
+  maybeUniqueReverseEdgeFilter instanceof UniqueReverseEdgeExistsFilter;

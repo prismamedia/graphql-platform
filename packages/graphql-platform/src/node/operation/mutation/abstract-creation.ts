@@ -13,8 +13,12 @@ import {
 interface AbstractCreationHookArgs<
   TRequestContext extends object,
   TConnector extends ConnectorInterface,
-  TContainer extends object,
-> extends AbstractMutationHookArgs<TRequestContext, TConnector, TContainer> {
+  TServiceContainer extends object,
+> extends AbstractMutationHookArgs<
+    TRequestContext,
+    TConnector,
+    TServiceContainer
+  > {
   /**
    * The provided "data" argument
    */
@@ -24,8 +28,12 @@ interface AbstractCreationHookArgs<
 export interface PreCreateArgs<
   TRequestContext extends object,
   TConnector extends ConnectorInterface,
-  TContainer extends object,
-> extends AbstractCreationHookArgs<TRequestContext, TConnector, TContainer> {
+  TServiceContainer extends object,
+> extends AbstractCreationHookArgs<
+    TRequestContext,
+    TConnector,
+    TServiceContainer
+  > {
   /**
    * The creation statement, as a mutable object
    */
@@ -35,8 +43,12 @@ export interface PreCreateArgs<
 export interface PostCreateArgs<
   TRequestContext extends object,
   TConnector extends ConnectorInterface,
-  TContainer extends object,
-> extends AbstractCreationHookArgs<TRequestContext, TConnector, TContainer> {
+  TServiceContainer extends object,
+> extends AbstractCreationHookArgs<
+    TRequestContext,
+    TConnector,
+    TServiceContainer
+  > {
   /**
    * The uncommitted change
    */
@@ -49,8 +61,12 @@ export interface PostCreateArgs<
 export interface CreationConfig<
   TRequestContext extends object,
   TConnector extends ConnectorInterface,
-  TContainer extends object,
-> extends AbstractMutationConfig<TRequestContext, TConnector, TContainer> {
+  TServiceContainer extends object,
+> extends AbstractMutationConfig<
+    TRequestContext,
+    TConnector,
+    TServiceContainer
+  > {
   /**
    * Optional, add some "virtual" fields whose values can be used in the hooks
    */
@@ -65,7 +81,7 @@ export interface CreationConfig<
    * Throwing an Error here will prevent the creation
    */
   preCreate?(
-    args: PreCreateArgs<TRequestContext, TConnector, TContainer>,
+    args: PreCreateArgs<TRequestContext, TConnector, TServiceContainer>,
   ): Promisable<void>;
 
   /**
@@ -74,7 +90,7 @@ export interface CreationConfig<
    * Throwing an Error here will fail the creation
    */
   postCreate?(
-    args: PostCreateArgs<TRequestContext, TConnector, TContainer>,
+    args: PostCreateArgs<TRequestContext, TConnector, TServiceContainer>,
   ): Promisable<void>;
 }
 

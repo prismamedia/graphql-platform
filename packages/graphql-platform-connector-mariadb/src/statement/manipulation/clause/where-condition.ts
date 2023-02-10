@@ -121,11 +121,11 @@ function parseEdgeFilter(
   }
 }
 
-function parseReverseEdgeMultipleFilter(
+function parseMultipleReverseEdgeFilter(
   tableReference: TableReference,
-  filter: core.ReverseEdgeMultipleFilter,
+  filter: core.MultipleReverseEdgeFilter,
 ): WhereCondition {
-  if (filter instanceof core.ReverseEdgeMultipleCountFilter) {
+  if (filter instanceof core.MultipleReverseEdgeCountFilter) {
     let operator: string;
     switch (filter.operator) {
       case 'eq':
@@ -148,7 +148,7 @@ function parseReverseEdgeMultipleFilter(
       'COUNT(*)',
       filter.reverseEdge,
     )}) ${operator} ${filter.value}`;
-  } else if (filter instanceof core.ReverseEdgeMultipleExistsFilter) {
+  } else if (filter instanceof core.MultipleReverseEdgeExistsFilter) {
     return `EXISTS (${tableReference.subquery(
       '*',
       filter.reverseEdge,
@@ -159,16 +159,16 @@ function parseReverseEdgeMultipleFilter(
   }
 }
 
-function parseReverseEdgeUniqueFilter(
+function parseUniqueReverseEdgeFilter(
   tableReference: TableReference,
-  filter: core.ReverseEdgeUniqueFilter,
+  filter: core.UniqueReverseEdgeFilter,
 ): WhereCondition {
   const joinTable = tableReference.join(filter.reverseEdge);
   const foreignKey = joinTable.table.getForeignKeyByEdge(
     filter.reverseEdge.originalEdge,
   );
 
-  if (filter instanceof core.ReverseEdgeUniqueExistsFilter) {
+  if (filter instanceof core.UniqueReverseEdgeExistsFilter) {
     const atLeastOneNonNullColumn = foreignKey.columns.map(
       (column) => `${joinTable.getEscapedColumnIdentifier(column)} IS NOT NULL`,
     );
@@ -198,10 +198,10 @@ function parseBooleanExpression(
     return parseLeafFilter(tableReference, filter);
   } else if (core.isEdgeFilter(filter)) {
     return parseEdgeFilter(tableReference, filter);
-  } else if (core.isReverseEdgeMultipleFilter(filter)) {
-    return parseReverseEdgeMultipleFilter(tableReference, filter);
-  } else if (core.isReverseEdgeUniqueFilter(filter)) {
-    return parseReverseEdgeUniqueFilter(tableReference, filter);
+  } else if (core.isMultipleReverseEdgeFilter(filter)) {
+    return parseMultipleReverseEdgeFilter(tableReference, filter);
+  } else if (core.isUniqueReverseEdgeFilter(filter)) {
+    return parseUniqueReverseEdgeFilter(tableReference, filter);
   } else {
     throw new utils.UnreachableValueError(filter);
   }

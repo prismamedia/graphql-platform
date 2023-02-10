@@ -5,16 +5,16 @@ import type { Leaf, LeafConfig, LeafValue } from './component/leaf.js';
 export * from './component/edge.js';
 export * from './component/leaf.js';
 
-export type ComponentConfig<
-  TRequestContext extends object = any,
-  TConnector extends ConnectorInterface = any,
-> =
-  | LeafConfig<TRequestContext, TConnector>
-  | EdgeConfig<TRequestContext, TConnector>;
+export type ComponentConfig<TConnector extends ConnectorInterface = any> =
+  | LeafConfig<TConnector>
+  | EdgeConfig<TConnector>;
 
 export type Component<
   TRequestContext extends object = any,
   TConnector extends ConnectorInterface = any,
-> = Leaf<TRequestContext, TConnector> | Edge<TRequestContext, TConnector>;
+  TServiceContainer extends object = any,
+> =
+  | Leaf<TRequestContext, TConnector, TServiceContainer>
+  | Edge<TRequestContext, TConnector, TServiceContainer>;
 
 export type ComponentValue = LeafValue | ReferenceValue;

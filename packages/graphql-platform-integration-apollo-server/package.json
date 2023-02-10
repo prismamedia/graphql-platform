@@ -29,7 +29,7 @@
   "devDependencies": {
     "@apollo/server": "4.3.3",
     "@prismamedia/graphql-platform-connector-mariadb": "workspace:packages/graphql-platform-connector-mariadb",
-    "@swc/core": "1.3.32",
+    "@swc/core": "1.3.35",
     "@swc/jest": "0.2.24",
     "@tsconfig/node18": "1.0.1",
     "@types/jest": "29.4.0",

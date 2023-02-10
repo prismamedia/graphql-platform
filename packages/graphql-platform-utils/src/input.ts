@@ -35,7 +35,7 @@ import {
 } from './input/type.js';
 import { addPath, type Path } from './path.js';
 import { assertNillablePlainObject, type PlainObject } from './plain-object.js';
-import { resolveThunkOrValue, type ThunkOrValue } from './thunk-or-value.js';
+import { resolveThunkable, type Thunkable } from './thunkable.js';
 
 export * from './input/type.js';
 
@@ -96,7 +96,7 @@ export interface InputConfig<TValue = any> {
    *
    * @see https://spec.graphql.org/draft/#DefaultValue
    */
-  defaultValue?: ThunkOrValue<TValue>;
+  defaultValue?: Thunkable<TValue>;
 
   /**
    * Optional, add some custom validation or normalization on top of the "type"'s parser
@@ -110,7 +110,7 @@ export class Input<TValue = any> {
   public readonly deprecationReason?: string;
   public readonly type: InputType;
 
-  readonly #defaultValue?: ThunkOrValue<TValue>;
+  readonly #defaultValue?: Thunkable<TValue>;
   readonly #customParser?: InputCustomParser<TValue>;
 
   #isPublic?: null | boolean;
@@ -198,7 +198,7 @@ export class Input<TValue = any> {
       const defaultValueConfig = config.defaultValue;
       const defaultValueConfigPath = addPath(configPath, 'defaultValue');
 
-      const defaultValue = resolveThunkOrValue(defaultValueConfig);
+      const defaultValue = resolveThunkable(defaultValueConfig);
       if (defaultValue !== undefined) {
         try {
           // Validates the provided "defaultValue" against the "type" and the custom-parser
@@ -315,7 +315,7 @@ export class Input<TValue = any> {
   }
 
   public getDefaultValue(): TValue | undefined {
-    return resolveThunkOrValue(this.#defaultValue);
+    return resolveThunkable(this.#defaultValue);
   }
 
   public parseValue(

@@ -5,25 +5,25 @@ import * as graphql from 'graphql';
 import assert from 'node:assert/strict';
 import type { JsonValue, SetReturnType } from 'type-fest';
 import type {
+  ConnectorConfigOverride,
   ConnectorConfigOverrideKind,
   ConnectorInterface,
-  GetConnectorConfigOverride,
 } from '../../../connector-interface.js';
 import type { Node } from '../../../node.js';
 import type { OrderingDirection } from '../../statement/ordering/direction.js';
 import { LeafSelection } from '../../statement/selection/expression/component/leaf.js';
 import {
   LeafCreationInput,
-  LeafCreationInputConfig,
+  type LeafCreationInputConfig,
 } from '../../type/input/creation/field/component/leaf.js';
 import { LeafOrderingInput } from '../../type/input/ordering/expression/leaf.js';
 import {
   LeafUpdateInput,
-  LeafUpdateInputConfig,
+  type LeafUpdateInputConfig,
 } from '../../type/input/update/field/component/leaf.js';
 import {
   AbstractComponent,
-  AbstractComponentConfig,
+  type AbstractComponentConfig,
 } from '../abstract-component.js';
 
 export type EnumType = graphql.GraphQLEnumType & {
@@ -39,55 +39,54 @@ export type LeafCustomParser<TValue extends LeafValue = any> = (
   path: utils.Path,
 ) => TValue;
 
-export type LeafConfig<
-  TRequestContext extends object = any,
-  TConnector extends ConnectorInterface = any,
-> = AbstractComponentConfig & {
-  kind?: 'Leaf';
+export type LeafConfig<TConnector extends ConnectorInterface = any> =
+  AbstractComponentConfig & {
+    kind?: 'Leaf';
 
-  /**
-   * Required, a native "Enum" type (with "string" values only), a "Scalar" type or its name
-   *
-   * ex: { kind: "Leaf", type: "UUID" }
-   */
-  type: scalars.TypeName | LeafType;
+    /**
+     * Required, a native "Enum" type (with "string" values only), a "Scalar" type or its name
+     *
+     * ex: { kind: "Leaf", type: "UUID" }
+     */
+    type: scalars.TypeName | LeafType;
 
-  /**
-   * Optional, add some custom validation or normalization on top of the "type"'s parser
-   */
-  parser?: LeafCustomParser;
+    /**
+     * Optional, add some custom validation or normalization on top of the "type"'s parser
+     */
+    parser?: LeafCustomParser;
 
-  /**
-   * Optional, is the node sortable using this component's value ?
-   *
-   * Default: guessed from its type
-   */
-  sortable?: utils.OptionalFlag;
+    /**
+     * Optional, is the node sortable using this component's value ?
+     *
+     * Default: guessed from its type
+     */
+    sortable?: utils.OptionalFlag;
 
-  /**
-   * Optional, fine-tune the "creation"'s input
-   */
-  [utils.MutationType.CREATION]?: LeafCreationInputConfig;
+    /**
+     * Optional, fine-tune the "creation"'s input
+     */
+    [utils.MutationType.CREATION]?: LeafCreationInputConfig;
 
-  /**
-   * Optional, fine-tune the "update"'s input
-   */
-  [utils.MutationType.UPDATE]?: LeafUpdateInputConfig;
-} & GetConnectorConfigOverride<TConnector, ConnectorConfigOverrideKind.LEAF>;
+    /**
+     * Optional, fine-tune the "update"'s input
+     */
+    [utils.MutationType.UPDATE]?: LeafUpdateInputConfig;
+  } & ConnectorConfigOverride<TConnector, ConnectorConfigOverrideKind.LEAF>;
 
 export class Leaf<
   TRequestContext extends object = any,
   TConnector extends ConnectorInterface = any,
-> extends AbstractComponent<TRequestContext, TConnector> {
+  TServiceContainer extends object = any,
+> extends AbstractComponent<TRequestContext, TConnector, TServiceContainer> {
   public readonly type: LeafType;
   public readonly customParser?: LeafCustomParser;
   public override readonly selection: LeafSelection;
   readonly #comparator: (a: any, b: any) => boolean;
 
   public constructor(
-    node: Node<TRequestContext, TConnector>,
+    node: Node<TRequestContext, TConnector, TServiceContainer>,
     name: utils.Name,
-    public override readonly config: LeafConfig<TRequestContext, TConnector>,
+    public override readonly config: LeafConfig<TConnector>,
     public override readonly configPath: utils.Path,
   ) {
     super(node, name, config, configPath);

@@ -82,7 +82,7 @@ describe('NodeOrderingInputType', () => {
           ['tagCount_DESC', 'updatedAt_ASC'],
           [
             {
-              kind: 'ReverseEdgeMultipleCountOrdering',
+              kind: 'MultipleReverseEdgeCountOrdering',
               reverseEdge: 'tags',
               direction: OrderingDirection.DESCENDING,
             },

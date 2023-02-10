@@ -1,26 +1,24 @@
 import type { ConnectorInterface } from '../../connector-interface.js';
 import type {
-  ReverseEdgeMultiple,
-  ReverseEdgeMultipleConfig,
+  MultipleReverseEdge,
+  MultipleReverseEdgeConfig,
 } from './reverse-edge/multiple.js';
 import type {
-  ReverseEdgeUnique,
-  ReverseEdgeUniqueConfig,
+  UniqueReverseEdge,
+  UniqueReverseEdgeConfig,
 } from './reverse-edge/unique.js';
 
 export * from './reverse-edge/multiple.js';
 export * from './reverse-edge/unique.js';
 
-export type ReverseEdgeConfig<
-  TRequestContext extends object,
-  TConnector extends ConnectorInterface,
-> =
-  | ReverseEdgeUniqueConfig<TRequestContext, TConnector>
-  | ReverseEdgeMultipleConfig<TRequestContext, TConnector>;
+export type ReverseEdgeConfig =
+  | UniqueReverseEdgeConfig
+  | MultipleReverseEdgeConfig;
 
 export type ReverseEdge<
   TRequestContext extends object = any,
   TConnector extends ConnectorInterface = any,
+  TServiceContainer extends object = any,
 > =
-  | ReverseEdgeUnique<TRequestContext, TConnector>
-  | ReverseEdgeMultiple<TRequestContext, TConnector>;
+  | UniqueReverseEdge<TRequestContext, TConnector, TServiceContainer>
+  | MultipleReverseEdge<TRequestContext, TConnector, TServiceContainer>;

@@ -25,7 +25,9 @@ export class NodeUpdateInputType extends utils.ObjectInputType<FieldUpdateInput>
 
   @Memoize()
   protected get componentFields(): ReadonlyArray<ComponentUpdateInput> {
-    return this.node.components.reduce<ComponentUpdateInput[]>(
+    return Array.from(this.node.componentsByName.values()).reduce<
+      ComponentUpdateInput[]
+    >(
       (fields, component) =>
         component.isMutable() ? [...fields, component.updateInput] : fields,
       [],
@@ -34,7 +36,9 @@ export class NodeUpdateInputType extends utils.ObjectInputType<FieldUpdateInput>
 
   @Memoize()
   protected get reverseEdgeFields(): ReadonlyArray<ReverseEdgeUpdateInput> {
-    return this.node.reverseEdges.reduce<ReverseEdgeUpdateInput[]>(
+    return Array.from(this.node.reverseEdgesByName.values()).reduce<
+      ReverseEdgeUpdateInput[]
+    >(
       (fields, reverseEdge) =>
         reverseEdge.updateInput ? [...fields, reverseEdge.updateInput] : fields,
       [],

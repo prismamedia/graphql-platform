@@ -1,21 +1,21 @@
 import {
-  isReverseEdgeMultipleFilter,
-  ReverseEdgeMultipleFilter,
+  isMultipleReverseEdgeFilter,
+  MultipleReverseEdgeFilter,
 } from './reverse-edge/multiple.js';
 import {
-  isReverseEdgeUniqueFilter,
-  ReverseEdgeUniqueFilter,
+  isUniqueReverseEdgeFilter,
+  UniqueReverseEdgeFilter,
 } from './reverse-edge/unique.js';
 
 export * from './reverse-edge/multiple.js';
 export * from './reverse-edge/unique.js';
 
 export type ReverseEdgeFilter =
-  | ReverseEdgeUniqueFilter
-  | ReverseEdgeMultipleFilter;
+  | UniqueReverseEdgeFilter
+  | MultipleReverseEdgeFilter;
 
 export const isReverseEdgeFilter = (
   maybeReverseEdgeFilter: unknown,
 ): maybeReverseEdgeFilter is ReverseEdgeFilter =>
-  isReverseEdgeUniqueFilter(maybeReverseEdgeFilter) ||
-  isReverseEdgeMultipleFilter(maybeReverseEdgeFilter);
+  isUniqueReverseEdgeFilter(maybeReverseEdgeFilter) ||
+  isMultipleReverseEdgeFilter(maybeReverseEdgeFilter);

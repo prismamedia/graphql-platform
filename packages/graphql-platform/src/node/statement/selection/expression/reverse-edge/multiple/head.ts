@@ -3,7 +3,7 @@ import { Memoize } from '@prismamedia/memoize';
 import * as graphql from 'graphql';
 import assert from 'node:assert/strict';
 import { JsonObject } from 'type-fest';
-import type { ReverseEdgeMultiple } from '../../../../../definition/reverse-edge/multiple.js';
+import type { MultipleReverseEdge } from '../../../../../definition/reverse-edge/multiple.js';
 import { areFiltersEqual, NodeFilter } from '../../../../filter.js';
 import { areOrderingsEqual, type NodeOrdering } from '../../../../ordering.js';
 import type {
@@ -12,9 +12,9 @@ import type {
 } from '../../../../selection.js';
 import type { SelectionExpressionInterface } from '../../../expression-interface.js';
 
-export type ReverseEdgeMultipleHeadValue = NodeSelectedValue[];
+export type MultipleReverseEdgeHeadValue = NodeSelectedValue[];
 
-export class ReverseEdgeMultipleHeadSelection<
+export class MultipleReverseEdgeHeadSelection<
   TValue extends NodeSelectedValue = any,
 > implements SelectionExpressionInterface<TValue[]>
 {
@@ -26,7 +26,7 @@ export class ReverseEdgeMultipleHeadSelection<
   public readonly offset?: number;
 
   public constructor(
-    public readonly reverseEdge: ReverseEdgeMultiple,
+    public readonly reverseEdge: MultipleReverseEdge,
     alias: string | undefined,
     headFilter: NodeFilter | undefined,
     headOrdering: NodeOrdering | undefined,
@@ -57,9 +57,9 @@ export class ReverseEdgeMultipleHeadSelection<
 
   public isAkinTo(
     expression: unknown,
-  ): expression is ReverseEdgeMultipleHeadSelection {
+  ): expression is MultipleReverseEdgeHeadSelection {
     return (
-      expression instanceof ReverseEdgeMultipleHeadSelection &&
+      expression instanceof MultipleReverseEdgeHeadSelection &&
       expression.reverseEdge === this.reverseEdge &&
       expression.alias === this.alias &&
       areFiltersEqual(expression.headFilter, this.headFilter) &&
@@ -71,7 +71,7 @@ export class ReverseEdgeMultipleHeadSelection<
 
   public equals(
     expression: unknown,
-  ): expression is ReverseEdgeMultipleHeadSelection {
+  ): expression is MultipleReverseEdgeHeadSelection {
     return (
       this.isAkinTo(expression) &&
       expression.headSelection.equals(this.headSelection)
@@ -86,12 +86,12 @@ export class ReverseEdgeMultipleHeadSelection<
   }
 
   public mergeWith(
-    expression: ReverseEdgeMultipleHeadSelection,
+    expression: MultipleReverseEdgeHeadSelection,
     path?: utils.Path,
-  ): ReverseEdgeMultipleHeadSelection {
+  ): MultipleReverseEdgeHeadSelection {
     assert(this.isAkinTo(expression));
 
-    return new ReverseEdgeMultipleHeadSelection(
+    return new MultipleReverseEdgeHeadSelection(
       this.reverseEdge,
       this.alias,
       this.headFilter,

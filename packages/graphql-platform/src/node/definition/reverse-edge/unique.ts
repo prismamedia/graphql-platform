@@ -3,18 +3,15 @@ import { Memoize } from '@prismamedia/memoize';
 import inflection from 'inflection';
 import assert from 'node:assert/strict';
 import type { ConnectorInterface } from '../../../connector-interface.js';
-import { ReverseEdgeUniqueCreationInput } from '../../type/input/creation/field/reverse-edge/unique.js';
-import { ReverseEdgeUniqueUpdateInput } from '../../type/input/update/field/reverse-edge/unique.js';
+import { UniqueReverseEdgeCreationInput } from '../../type/input/creation/field/reverse-edge/unique.js';
+import { UniqueReverseEdgeUpdateInput } from '../../type/input/update/field/reverse-edge/unique.js';
 import {
   AbstractReverseEdge,
   AbstractReverseEdgeConfig,
 } from '../abstract-reverse-edge.js';
 import type { Edge } from '../component/edge.js';
 
-export interface ReverseEdgeUniqueConfig<
-  TRequestContext extends object,
-  TConnector extends ConnectorInterface,
-> extends AbstractReverseEdgeConfig<TRequestContext, TConnector> {
+export interface UniqueReverseEdgeConfig extends AbstractReverseEdgeConfig {
   /**
    * Optional, used to discriminate the unique reverse-edge's configuration
    */
@@ -28,17 +25,15 @@ export interface ReverseEdgeUniqueConfig<
   forceName?: utils.OptionalFlag;
 }
 
-export class ReverseEdgeUnique<
+export class UniqueReverseEdge<
   TRequestContext extends object = any,
   TConnector extends ConnectorInterface = any,
-> extends AbstractReverseEdge<TRequestContext, TConnector> {
+  TServiceContainer extends object = any,
+> extends AbstractReverseEdge<TRequestContext, TConnector, TServiceContainer> {
   public constructor(
-    edge: Edge<TRequestContext, TConnector>,
+    edge: Edge<TRequestContext, TConnector, TServiceContainer>,
     name: utils.Name,
-    public override readonly config: ReverseEdgeUniqueConfig<
-      TRequestContext,
-      TConnector
-    >,
+    public override readonly config: UniqueReverseEdgeConfig,
     public override readonly configPath: utils.Path,
   ) {
     assert(edge.isUnique());
@@ -70,22 +65,22 @@ export class ReverseEdgeUnique<
 
   @Memoize()
   public override get creationInput():
-    | ReverseEdgeUniqueCreationInput
+    | UniqueReverseEdgeCreationInput
     | undefined {
     return this.head.isMutationEnabled(utils.MutationType.CREATION) ||
       (this.head.isMutationEnabled(utils.MutationType.UPDATE) &&
         this.originalEdge.isMutable())
-      ? new ReverseEdgeUniqueCreationInput(this)
+      ? new UniqueReverseEdgeCreationInput(this)
       : undefined;
   }
 
   @Memoize()
-  public override get updateInput(): ReverseEdgeUniqueUpdateInput | undefined {
+  public override get updateInput(): UniqueReverseEdgeUpdateInput | undefined {
     return this.head.isMutationEnabled(utils.MutationType.CREATION) ||
       (this.head.isMutationEnabled(utils.MutationType.UPDATE) &&
         this.originalEdge.isMutable()) ||
       this.head.isMutationEnabled(utils.MutationType.DELETION)
-      ? new ReverseEdgeUniqueUpdateInput(this)
+      ? new UniqueReverseEdgeUpdateInput(this)
       : undefined;
   }
 }

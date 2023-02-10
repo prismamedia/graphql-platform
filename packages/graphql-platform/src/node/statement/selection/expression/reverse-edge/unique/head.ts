@@ -3,17 +3,17 @@ import { Memoize } from '@prismamedia/memoize';
 import * as graphql from 'graphql';
 import assert from 'node:assert/strict';
 import type { JsonObject } from 'type-fest';
-import type { ReverseEdgeUnique } from '../../../../../definition/reverse-edge/unique.js';
+import type { UniqueReverseEdge } from '../../../../../definition/reverse-edge/unique.js';
 import type {
   NodeSelectedValue,
   NodeSelection,
 } from '../../../../selection.js';
 import type { SelectionExpressionInterface } from '../../../expression-interface.js';
 
-export type ReverseEdgeUniqueHeadValue = null | NodeSelectedValue;
+export type UniqueReverseEdgeHeadValue = null | NodeSelectedValue;
 
-export class ReverseEdgeUniqueHeadSelection<
-  TValue extends ReverseEdgeUniqueHeadValue = any,
+export class UniqueReverseEdgeHeadSelection<
+  TValue extends UniqueReverseEdgeHeadValue = any,
 > implements SelectionExpressionInterface<TValue>
 {
   public readonly alias?: string;
@@ -21,7 +21,7 @@ export class ReverseEdgeUniqueHeadSelection<
   public readonly key: string;
 
   public constructor(
-    public readonly reverseEdge: ReverseEdgeUnique,
+    public readonly reverseEdge: UniqueReverseEdge,
     alias: string | undefined,
     public readonly headSelection: NodeSelection<NonNullable<TValue>>,
   ) {
@@ -34,9 +34,9 @@ export class ReverseEdgeUniqueHeadSelection<
 
   public isAkinTo(
     expression: unknown,
-  ): expression is ReverseEdgeUniqueHeadSelection {
+  ): expression is UniqueReverseEdgeHeadSelection {
     return (
-      expression instanceof ReverseEdgeUniqueHeadSelection &&
+      expression instanceof UniqueReverseEdgeHeadSelection &&
       expression.reverseEdge === this.reverseEdge &&
       expression.alias === this.alias
     );
@@ -44,7 +44,7 @@ export class ReverseEdgeUniqueHeadSelection<
 
   public equals(
     expression: unknown,
-  ): expression is ReverseEdgeUniqueHeadSelection {
+  ): expression is UniqueReverseEdgeHeadSelection {
     return (
       this.isAkinTo(expression) &&
       expression.headSelection.equals(this.headSelection)
@@ -59,12 +59,12 @@ export class ReverseEdgeUniqueHeadSelection<
   }
 
   public mergeWith(
-    expression: ReverseEdgeUniqueHeadSelection,
+    expression: UniqueReverseEdgeHeadSelection,
     path?: utils.Path,
-  ): ReverseEdgeUniqueHeadSelection {
+  ): UniqueReverseEdgeHeadSelection {
     assert(this.isAkinTo(expression));
 
-    return new ReverseEdgeUniqueHeadSelection(
+    return new UniqueReverseEdgeHeadSelection(
       this.reverseEdge,
       this.alias,
       this.headSelection.mergeWith(expression.headSelection, path),

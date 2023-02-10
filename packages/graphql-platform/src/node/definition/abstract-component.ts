@@ -5,7 +5,7 @@ import type { ConnectorInterface } from '../../connector-interface.js';
 import type { Node } from '../../node.js';
 import type { AbstractComponentCreationInput } from '../type/input/creation/field/abstract-component.js';
 import type { AbstractComponentUpdateInput } from '../type/input/update/field/abstract-component.js';
-import type { Edge } from './component.js';
+import { Edge } from './component.js';
 
 export type AbstractComponentConfig = {
   /**
@@ -43,6 +43,7 @@ export type AbstractComponentConfig = {
 export abstract class AbstractComponent<
   TRequestContext extends object,
   TConnector extends ConnectorInterface,
+  TServiceContainer extends object,
 > {
   public readonly indefinite: string;
   public readonly description?: string;
@@ -52,7 +53,7 @@ export abstract class AbstractComponent<
   public abstract readonly updateInput: AbstractComponentUpdateInput<any>;
 
   public constructor(
-    public readonly node: Node<TRequestContext, TConnector>,
+    public readonly node: Node<TRequestContext, TConnector, TServiceContainer>,
     public readonly name: utils.Name,
     protected readonly config: AbstractComponentConfig,
     protected readonly configPath: utils.Path,
@@ -94,10 +95,12 @@ export abstract class AbstractComponent<
   }
 
   @Memoize()
-  public get referrerSet(): ReadonlySet<Edge> {
+  public get referrerSet(): ReadonlySet<
+    Edge<TRequestContext, TConnector, TServiceContainer>
+  > {
     return new Set(
-      this.node.gp.nodes.flatMap((node) =>
-        node.edges.filter((edge) =>
+      Array.from(this.node.gp.nodesByName.values()).flatMap((node) =>
+        Array.from(node.edgesByName.values()).filter((edge) =>
           edge.referencedUniqueConstraint.componentSet.has(this as any),
         ),
       ),
@@ -146,7 +149,7 @@ export abstract class AbstractComponent<
 
   @Memoize()
   public isUnique(): boolean {
-    return this.node.uniqueConstraints.some(
+    return Array.from(this.node.uniqueConstraintsByName.values()).some(
       ({ componentSet }) =>
         componentSet.size === 1 && componentSet.has(this as any),
     );

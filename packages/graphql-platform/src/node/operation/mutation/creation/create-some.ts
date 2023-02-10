@@ -82,7 +82,8 @@ export class CreateSomeMutation<
     // Build the "creation" statements based on the provided "data" argument
     const creations = await Promise.all(
       args.data.map(async (data, index) => {
-        const indexedPath = utils.addPath(path, index);
+        const indexedPath =
+          args.data.length > 1 ? utils.addPath(path, index) : path;
 
         // As the "data" will be provided to the hooks, we freeze it
         Object.freeze(data);
@@ -132,7 +133,8 @@ export class CreateSomeMutation<
 
     await Promise.all(
       newValues.map(async (newValue, index) => {
-        const indexedPath = utils.addPath(path, index);
+        const indexedPath =
+          newValues.length > 1 ? utils.addPath(path, index) : path;
 
         const change = new NodeCreation(
           this.node,

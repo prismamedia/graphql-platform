@@ -1,24 +1,24 @@
 import assert from 'node:assert/strict';
-import type { ReverseEdgeMultiple } from '../../../../../../definition/reverse-edge/multiple.js';
+import type { MultipleReverseEdge } from '../../../../../../definition/reverse-edge/multiple.js';
 import { areFiltersEqual, NodeFilter } from '../../../../../filter.js';
 import { BooleanFilter } from '../../../../boolean.js';
 import type { BooleanExpressionInterface } from '../../../expression-interface.js';
 import { AndOperation, NotOperation, OrOperation } from '../../../operation.js';
 import { BooleanValue } from '../../../value.js';
 
-export interface ReverseEdgeMultipleExistsFilterAST {
-  kind: 'ReverseEdgeMultipleExistsFilter';
-  reverseEdge: ReverseEdgeMultiple['name'];
+export interface MultipleReverseEdgeExistsFilterAST {
+  kind: 'MultipleReverseEdgeExistsFilter';
+  reverseEdge: MultipleReverseEdge['name'];
   headFilter?: NodeFilter['ast'];
 }
-export class ReverseEdgeMultipleExistsFilter
+export class MultipleReverseEdgeExistsFilter
   implements BooleanExpressionInterface
 {
   public readonly headFilter?: NodeFilter;
   public readonly reduced: BooleanValue | this;
 
   public constructor(
-    public readonly reverseEdge: ReverseEdgeMultiple,
+    public readonly reverseEdge: MultipleReverseEdge,
     headFilter?: NodeFilter,
   ) {
     if (headFilter) {
@@ -32,9 +32,9 @@ export class ReverseEdgeMultipleExistsFilter
 
   public equals(
     expression: unknown,
-  ): expression is ReverseEdgeMultipleExistsFilter {
+  ): expression is MultipleReverseEdgeExistsFilter {
     return (
-      expression instanceof ReverseEdgeMultipleExistsFilter &&
+      expression instanceof MultipleReverseEdgeExistsFilter &&
       expression.reverseEdge === this.reverseEdge &&
       areFiltersEqual(expression.headFilter, this.headFilter)
     );
@@ -42,10 +42,10 @@ export class ReverseEdgeMultipleExistsFilter
 
   public and(expression: unknown): BooleanFilter | undefined {
     if (
-      expression instanceof ReverseEdgeMultipleExistsFilter &&
+      expression instanceof MultipleReverseEdgeExistsFilter &&
       expression.reverseEdge === this.reverseEdge
     ) {
-      return new ReverseEdgeMultipleExistsFilter(
+      return new MultipleReverseEdgeExistsFilter(
         this.reverseEdge,
         new NodeFilter(
           this.reverseEdge.head,
@@ -57,7 +57,7 @@ export class ReverseEdgeMultipleExistsFilter
       );
     } else if (
       expression instanceof NotOperation &&
-      expression.operand instanceof ReverseEdgeMultipleExistsFilter &&
+      expression.operand instanceof MultipleReverseEdgeExistsFilter &&
       expression.operand.reverseEdge === this.reverseEdge
     ) {
       if (!expression.operand.headFilter) {
@@ -68,10 +68,10 @@ export class ReverseEdgeMultipleExistsFilter
 
   public or(expression: unknown): BooleanFilter | undefined {
     if (
-      expression instanceof ReverseEdgeMultipleExistsFilter &&
+      expression instanceof MultipleReverseEdgeExistsFilter &&
       expression.reverseEdge === this.reverseEdge
     ) {
-      return new ReverseEdgeMultipleExistsFilter(
+      return new MultipleReverseEdgeExistsFilter(
         this.reverseEdge,
         new NodeFilter(
           this.reverseEdge.head,
@@ -84,9 +84,9 @@ export class ReverseEdgeMultipleExistsFilter
     }
   }
 
-  public get ast(): ReverseEdgeMultipleExistsFilterAST {
+  public get ast(): MultipleReverseEdgeExistsFilterAST {
     return {
-      kind: 'ReverseEdgeMultipleExistsFilter',
+      kind: 'MultipleReverseEdgeExistsFilter',
       reverseEdge: this.reverseEdge.name,
       ...(this.headFilter && { headFilter: this.headFilter.ast }),
     };

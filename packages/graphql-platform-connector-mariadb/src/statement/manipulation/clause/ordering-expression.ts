@@ -23,7 +23,7 @@ export function orderNode(
         return `${tableReference.getEscapedColumnIdentifierByLeaf(
           expression.leaf,
         )} ${direction}`;
-      } else if (expression instanceof core.ReverseEdgeMultipleCountOrdering) {
+      } else if (expression instanceof core.MultipleReverseEdgeCountOrdering) {
         return `(${tableReference.subquery(
           'COUNT(*)',
           expression.reverseEdge,

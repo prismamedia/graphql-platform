@@ -1,23 +1,31 @@
 import * as utils from '@prismamedia/graphql-platform-utils';
+import type { ConnectorInterface } from '../../connector-interface.js';
 import type { Component, ComponentValue, Node, NodeValue } from '../../node.js';
 import { AbstractNodeChange } from '../abstract-change.js';
 
+export type ComponentUpdate = {
+  oldValue: ComponentValue;
+  newValue: ComponentValue;
+};
+
 export class NodeUpdate<
   TRequestContext extends object = any,
-> extends AbstractNodeChange<TRequestContext> {
+  TConnector extends ConnectorInterface = any,
+  TServiceContainer extends object = any,
+> extends AbstractNodeChange<TRequestContext, TConnector, TServiceContainer> {
   public override readonly kind = utils.MutationType.UPDATE;
 
   public readonly oldValue: Readonly<NodeValue>;
   public readonly newValue: Readonly<NodeValue>;
 
   public readonly updatesByComponent: ReadonlyMap<
-    Component,
-    Readonly<{ oldValue: ComponentValue; newValue: ComponentValue }>
+    Component<TRequestContext, TConnector, TServiceContainer>,
+    Readonly<ComponentUpdate>
   >;
   public readonly updatedComponentNames: ReadonlyArray<Component['name']>;
 
   public constructor(
-    node: Node,
+    node: Node<TRequestContext, TConnector, TServiceContainer>,
     requestContext: TRequestContext,
     maybeOldValue: unknown,
     maybeNewValue: unknown,
@@ -39,11 +47,8 @@ export class NodeUpdate<
     this.newValue = newValue;
 
     this.updatesByComponent = new Map(
-      node.components.reduce<
-        [
-          Component,
-          Readonly<{ oldValue: ComponentValue; newValue: ComponentValue }>,
-        ][]
+      Array.from(node.componentsByName.values()).reduce<
+        [Component, Readonly<ComponentUpdate>][]
       >((entries, component) => {
         const oldComponentValue: any = oldValue[component.name];
         const newComponentValue: any = newValue[component.name];

@@ -20,7 +20,7 @@ export class JoinTable extends AbstractTableReference {
 
   public constructor(
     public readonly parent: TableReference,
-    public readonly edge: core.Edge | core.ReverseEdgeUnique,
+    public readonly edge: core.Edge | core.UniqueReverseEdge,
   ) {
     const head = parent.table.schema.getTableByNode(edge.head);
     super(head, parent.context);

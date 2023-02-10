@@ -5,24 +5,19 @@ import type { NodeChange } from '../change.js';
 import { NodeCreation } from './creation.js';
 import { NodeUpdate } from './update.js';
 
-export class NodeChangeAggregation<TRequestContext extends object = any>
-  implements Iterable<NodeChange<TRequestContext>>
-{
+export class NodeChangeAggregation implements Iterable<NodeChange> {
   readonly #changesByIdByNode = new Map<
     Node,
     Map<NodeChange['stringifiedId'], NodeChange>
   >();
 
-  public readonly changesByNode: ReadonlyMap<
-    Node,
-    ReadonlyArray<NodeChange<TRequestContext>>
-  >;
+  public readonly changesByNode: ReadonlyMap<Node, ReadonlyArray<NodeChange>>;
 
   public readonly length: number;
 
-  public readonly nodes: ReadonlyArray<Node<TRequestContext>>;
+  public readonly nodes: ReadonlyArray<Node>;
 
-  public constructor(changes: ReadonlyArray<NodeChange<TRequestContext>>) {
+  public constructor(changes: ReadonlyArray<NodeChange>) {
     for (const change of changes) {
       const node = change.node;
 
@@ -178,7 +173,7 @@ export class NodeChangeAggregation<TRequestContext extends object = any>
     }
   }
 
-  *[Symbol.iterator](): IterableIterator<NodeChange<TRequestContext>> {
+  *[Symbol.iterator](): IterableIterator<NodeChange> {
     for (const changes of this.changesByNode.values()) {
       yield* changes;
     }

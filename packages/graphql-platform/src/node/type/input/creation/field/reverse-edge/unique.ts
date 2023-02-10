@@ -2,34 +2,34 @@ import * as utils from '@prismamedia/graphql-platform-utils';
 import inflection from 'inflection';
 import type { RequireExactlyOne } from 'type-fest';
 import type { NodeValue } from '../../../../../../node.js';
-import type { ReverseEdgeUnique } from '../../../../../definition/reverse-edge/unique.js';
+import type { UniqueReverseEdge } from '../../../../../definition/reverse-edge/unique.js';
 import type { MutationContext } from '../../../../../operation/mutation/context.js';
 import type { NodeCreationInputValue } from '../../../creation.js';
 import type { NodeUniqueFilterInputValue } from '../../../unique-filter.js';
 import { EdgeUpdateInputAction } from '../../../update/field/component/edge.js';
 import { AbstractReverseEdgeCreationInput } from '../abstract-reverse-edge.js';
 
-export enum ReverseEdgeUniqueCreationInputAction {
+export enum UniqueReverseEdgeCreationInputAction {
   CONNECT = 'connect',
   CONNECT_IF_EXISTS = 'connectIfExists',
   CONNECT_OR_CREATE = 'connectOrCreate',
   CREATE = 'create',
 }
 
-export type ReverseEdgeUniqueCreationInputValue = utils.Optional<
+export type UniqueReverseEdgeCreationInputValue = utils.Optional<
   RequireExactlyOne<{
-    [ReverseEdgeUniqueCreationInputAction.CONNECT]: NonNullable<NodeUniqueFilterInputValue>;
-    [ReverseEdgeUniqueCreationInputAction.CONNECT_IF_EXISTS]: NonNullable<NodeUniqueFilterInputValue>;
-    [ReverseEdgeUniqueCreationInputAction.CONNECT_OR_CREATE]: NonNullable<{
+    [UniqueReverseEdgeCreationInputAction.CONNECT]: NonNullable<NodeUniqueFilterInputValue>;
+    [UniqueReverseEdgeCreationInputAction.CONNECT_IF_EXISTS]: NonNullable<NodeUniqueFilterInputValue>;
+    [UniqueReverseEdgeCreationInputAction.CONNECT_OR_CREATE]: NonNullable<{
       where: NonNullable<NodeUniqueFilterInputValue>;
       create: NonNullable<NodeCreationInputValue>;
     }>;
-    [ReverseEdgeUniqueCreationInputAction.CREATE]: NonNullable<NodeCreationInputValue>;
+    [UniqueReverseEdgeCreationInputAction.CREATE]: NonNullable<NodeCreationInputValue>;
   }>
 >;
 
-export class ReverseEdgeUniqueCreationInput extends AbstractReverseEdgeCreationInput<ReverseEdgeUniqueCreationInputValue> {
-  public constructor(public override readonly reverseEdge: ReverseEdgeUnique) {
+export class UniqueReverseEdgeCreationInput extends AbstractReverseEdgeCreationInput<UniqueReverseEdgeCreationInputValue> {
+  public constructor(public override readonly reverseEdge: UniqueReverseEdge) {
     super(reverseEdge, {
       type: new utils.ObjectInputType({
         name: [
@@ -49,7 +49,7 @@ export class ReverseEdgeUniqueCreationInput extends AbstractReverseEdgeCreationI
           ) {
             fields.push(
               new utils.Input({
-                name: ReverseEdgeUniqueCreationInputAction.CONNECT,
+                name: UniqueReverseEdgeCreationInputAction.CONNECT,
                 type: new utils.NonNullableInputType(
                   reverseEdge.head.uniqueFilterInputType,
                 ),
@@ -58,7 +58,7 @@ export class ReverseEdgeUniqueCreationInput extends AbstractReverseEdgeCreationI
                 ),
               }),
               new utils.Input({
-                name: ReverseEdgeUniqueCreationInputAction.CONNECT_IF_EXISTS,
+                name: UniqueReverseEdgeCreationInputAction.CONNECT_IF_EXISTS,
                 type: new utils.NonNullableInputType(
                   reverseEdge.head.uniqueFilterInputType,
                 ),
@@ -73,14 +73,14 @@ export class ReverseEdgeUniqueCreationInput extends AbstractReverseEdgeCreationI
             ) {
               fields.push(
                 new utils.Input({
-                  name: ReverseEdgeUniqueCreationInputAction.CONNECT_OR_CREATE,
+                  name: UniqueReverseEdgeCreationInputAction.CONNECT_OR_CREATE,
                   type: new utils.NonNullableInputType(
                     new utils.ObjectInputType({
                       name: [
                         reverseEdge.tail.name,
                         'Nested',
                         inflection.camelize(
-                          ReverseEdgeUniqueCreationInputAction.CONNECT_OR_CREATE,
+                          UniqueReverseEdgeCreationInputAction.CONNECT_OR_CREATE,
                         ),
                         reverseEdge.pascalCasedName,
                         'ReverseEdge',
@@ -120,7 +120,7 @@ export class ReverseEdgeUniqueCreationInput extends AbstractReverseEdgeCreationI
           if (reverseEdge.head.isMutationEnabled(utils.MutationType.CREATION)) {
             fields.push(
               new utils.Input({
-                name: ReverseEdgeUniqueCreationInputAction.CREATE,
+                name: UniqueReverseEdgeCreationInputAction.CREATE,
                 type: new utils.NonNullableInputType(
                   reverseEdge.head.getCreationWithoutEdgeInputType(
                     reverseEdge.originalEdge,
@@ -152,7 +152,7 @@ export class ReverseEdgeUniqueCreationInput extends AbstractReverseEdgeCreationI
 
   public override async applyActions(
     nodeValue: Readonly<NodeValue>,
-    inputValue: Readonly<NonNullable<ReverseEdgeUniqueCreationInputValue>>,
+    inputValue: Readonly<NonNullable<UniqueReverseEdgeCreationInputValue>>,
     context: MutationContext,
     path: utils.Path,
   ): Promise<void> {
@@ -166,11 +166,11 @@ export class ReverseEdgeUniqueCreationInput extends AbstractReverseEdgeCreationI
 
     const maybeActionName = Object.keys(
       inputValue,
-    )[0] as ReverseEdgeUniqueCreationInputAction;
+    )[0] as UniqueReverseEdgeCreationInputAction;
     const actionPath = utils.addPath(path, maybeActionName);
 
     switch (maybeActionName) {
-      case ReverseEdgeUniqueCreationInputAction.CONNECT: {
+      case UniqueReverseEdgeCreationInputAction.CONNECT: {
         const actionData = inputValue[maybeActionName]!;
 
         await this.reverseEdge.head.getMutationByKey('update-one').execute(
@@ -189,7 +189,7 @@ export class ReverseEdgeUniqueCreationInput extends AbstractReverseEdgeCreationI
         break;
       }
 
-      case ReverseEdgeUniqueCreationInputAction.CONNECT_IF_EXISTS: {
+      case UniqueReverseEdgeCreationInputAction.CONNECT_IF_EXISTS: {
         const actionData = inputValue[maybeActionName]!;
 
         await this.reverseEdge.head
@@ -210,7 +210,7 @@ export class ReverseEdgeUniqueCreationInput extends AbstractReverseEdgeCreationI
         break;
       }
 
-      case ReverseEdgeUniqueCreationInputAction.CONNECT_OR_CREATE: {
+      case UniqueReverseEdgeCreationInputAction.CONNECT_OR_CREATE: {
         const { where, create } = inputValue[maybeActionName]!;
 
         await this.reverseEdge.head.getMutationByKey('upsert').execute(
@@ -235,7 +235,7 @@ export class ReverseEdgeUniqueCreationInput extends AbstractReverseEdgeCreationI
         break;
       }
 
-      case ReverseEdgeUniqueCreationInputAction.CREATE: {
+      case UniqueReverseEdgeCreationInputAction.CREATE: {
         const actionData = inputValue[maybeActionName]!;
 
         await this.reverseEdge.head.getMutationByKey('create-one').execute(

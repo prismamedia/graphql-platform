@@ -18,22 +18,22 @@ import type { MutationInterface } from './mutation/interface.js';
 export interface AbstractMutationHookArgs<
   TRequestContext extends object,
   TConnector extends ConnectorInterface,
-  TContainer extends object,
+  TServiceContainer extends object,
 > {
   /**
    * The GraphQL-Platform instance
    */
-  gp: GraphQLPlatform<TRequestContext, TConnector, TContainer>;
+  gp: GraphQLPlatform<TRequestContext, TConnector, TServiceContainer>;
 
   /**
    * The node's definition
    */
-  node: Node<TRequestContext, TConnector, TContainer>;
+  node: Node<TRequestContext, TConnector, TServiceContainer>;
 
   /**
    * The current context
    */
-  context: MutationContext<TRequestContext, TConnector, TContainer>;
+  context: MutationContext<TRequestContext, TConnector, TServiceContainer>;
 
   /**
    * The context-bound API
@@ -44,7 +44,7 @@ export interface AbstractMutationHookArgs<
 export interface AbstractMutationConfig<
   TRequestContext extends object,
   TConnector extends ConnectorInterface,
-  TContainer extends object,
+  TServiceContainer extends object,
 > {
   /**
    * Optional, either the mutation is enabled or not

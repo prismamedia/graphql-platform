@@ -1,21 +1,21 @@
 import {
-  isReverseEdgeMultipleSelection,
-  ReverseEdgeMultipleSelection,
+  isMultipleReverseEdgeSelection,
+  MultipleReverseEdgeSelection,
 } from './reverse-edge/multiple.js';
 import {
-  isReverseEdgeUniqueSelection,
-  ReverseEdgeUniqueSelection,
+  isUniqueReverseEdgeSelection,
+  UniqueReverseEdgeSelection,
 } from './reverse-edge/unique.js';
 
 export * from './reverse-edge/multiple.js';
 export * from './reverse-edge/unique.js';
 
 export type ReverseEdgeSelection =
-  | ReverseEdgeMultipleSelection
-  | ReverseEdgeUniqueSelection;
+  | MultipleReverseEdgeSelection
+  | UniqueReverseEdgeSelection;
 
 export const isReverseEdgeSelection = (
   maybeSelection: unknown,
 ): maybeSelection is ReverseEdgeSelection =>
-  isReverseEdgeMultipleSelection(maybeSelection) ||
-  isReverseEdgeUniqueSelection(maybeSelection);
+  isMultipleReverseEdgeSelection(maybeSelection) ||
+  isUniqueReverseEdgeSelection(maybeSelection);

@@ -1,7 +1,6 @@
 import * as utils from '@prismamedia/graphql-platform-utils';
 import { Memoize } from '@prismamedia/memoize';
 import { DepGraph } from 'dependency-graph';
-import type { ConnectorInterface } from './connector-interface.js';
 import type { GraphQLPlatform } from './index.js';
 import {
   Node,
@@ -20,23 +19,18 @@ export type NodeFixtureDataByReferenceByNodeName = Record<
   NodeFixtureDataByReference
 >;
 
-export class Seeding<
-  TRequestContext extends object,
-  TConnector extends ConnectorInterface,
-> {
-  public readonly dependencyGraph = new DepGraph<
-    NodeFixture<TRequestContext, TConnector>
-  >({ circular: false });
+export class Seeding<TRequestContext extends object = any> {
+  public readonly dependencyGraph = new DepGraph<NodeFixture<TRequestContext>>({
+    circular: false,
+  });
 
   /**
    * The fixtures are ordered by their dependencies
    */
-  public readonly fixtures: ReadonlyArray<
-    NodeFixture<TRequestContext, TConnector>
-  >;
+  public readonly fixtures: ReadonlyArray<NodeFixture<TRequestContext>>;
 
   public constructor(
-    public readonly gp: GraphQLPlatform<TRequestContext, TConnector>,
+    public readonly gp: GraphQLPlatform<TRequestContext>,
     fixtures: NodeFixtureDataByReferenceByNodeName,
   ) {
     const fixturesPath = utils.addPath(undefined, 'fixtures');

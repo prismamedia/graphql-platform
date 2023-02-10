@@ -51,7 +51,9 @@ export class UniqueIndex extends AbstractIndex {
   @Memoize()
   public override get columns(): ReadonlyArray<Column> {
     return Object.freeze(
-      this.table.getColumnsByComponents(...this.uniqueConstraint.components),
+      this.table.getColumnsByComponents(
+        ...this.uniqueConstraint.componentsByName.values(),
+      ),
     );
   }
 

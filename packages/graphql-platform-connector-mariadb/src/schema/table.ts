@@ -148,7 +148,10 @@ export class Table {
     // columns-by-leaf
     {
       this.columnsByLeaf = new Map(
-        node.leaves.map((leaf) => [leaf, new LeafColumn(this, leaf)]),
+        Array.from(node.leavesByName.values(), (leaf) => [
+          leaf,
+          new LeafColumn(this, leaf),
+        ]),
       );
     }
 
@@ -160,7 +163,7 @@ export class Table {
     // unique-indexes-by-unique-constraint
     {
       this.uniqueIndexesByUniqueConstraint = new Map(
-        node.uniqueConstraints
+        Array.from(node.uniqueConstraintsByName.values())
           .filter((uniqueConstraint) => !uniqueConstraint.isIdentifier())
           .map((uniqueConstraint) => [
             uniqueConstraint,
@@ -222,7 +225,10 @@ export class Table {
     // foreign-keys-by-edge
     {
       this.foreignKeysByEdge = new Map(
-        node.edges.map((edge) => [edge, new ForeignKey(this, edge)]),
+        Array.from(node.edgesByName.values(), (edge) => [
+          edge,
+          new ForeignKey(this, edge),
+        ]),
       );
 
       this.foreignKeys = Array.from(this.foreignKeysByEdge.values());
@@ -243,7 +249,7 @@ export class Table {
   @Memoize()
   public get columnTreesByEdge(): ReadonlyMap<core.Edge, ReferenceColumnTree> {
     return new Map(
-      this.node.edges.map((edge) => [
+      Array.from(this.node.edgesByName.values(), (edge) => [
         edge,
         new ReferenceColumnTree(this.schema, edge),
       ]),
@@ -272,7 +278,9 @@ export class Table {
 
   @Memoize()
   public get columns(): ReadonlyArray<Column> {
-    return Object.freeze(this.getColumnsByComponents(...this.node.components));
+    return Object.freeze(
+      this.getColumnsByComponents(...this.node.componentsByName.values()),
+    );
   }
 
   public getUniqueIndexByUniqueConstraint(
@@ -319,7 +327,7 @@ export class Table {
     }
 
     return utils.aggregateGraphError<core.Component, TValue>(
-      this.node.components,
+      this.node.componentsByName.values(),
       (document, component) =>
         Object.assign(document, {
           [component.name]: component.parseValue(
@@ -364,11 +372,11 @@ export class Table {
               )
             : null;
         } else if (
-          expression instanceof core.ReverseEdgeMultipleCountSelection
+          expression instanceof core.MultipleReverseEdgeCountSelection
         ) {
           expressionValue = Number.parseInt(jsonValue, 10);
         } else if (
-          expression instanceof core.ReverseEdgeMultipleHeadSelection
+          expression instanceof core.MultipleReverseEdgeHeadSelection
         ) {
           const head = this.schema.getTableByNode(expression.reverseEdge.head);
 
@@ -381,7 +389,7 @@ export class Table {
                 ),
               )
             : [];
-        } else if (expression instanceof core.ReverseEdgeUniqueHeadSelection) {
+        } else if (expression instanceof core.UniqueReverseEdgeHeadSelection) {
           const head = this.schema.getTableByNode(expression.reverseEdge.head);
 
           expressionValue = jsonValue

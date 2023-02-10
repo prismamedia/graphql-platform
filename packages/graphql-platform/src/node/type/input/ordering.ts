@@ -1,14 +1,13 @@
 import * as utils from '@prismamedia/graphql-platform-utils';
 import { Memoize } from '@prismamedia/memoize';
-import type { ConnectorInterface } from '../../../connector-interface.js';
 import type { Node } from '../../../node.js';
 import { Leaf } from '../../definition.js';
-import { ReverseEdgeUnique } from '../../definition/reverse-edge/unique.js';
+import { UniqueReverseEdge } from '../../definition/reverse-edge/unique.js';
 import type { OperationContext } from '../../operation/context.js';
 import { NodeOrdering, OrderingDirection } from '../../statement/ordering.js';
 import {
+  MultipleReverseEdgeCountOrderingInput,
   OrderingExpressionInput,
-  ReverseEdgeMultipleCountOrderingInput,
 } from './ordering/expression.js';
 
 export * from './ordering/expression.js';
@@ -32,7 +31,9 @@ export class NodeOrderingInputType extends utils.EnumInputType<OrderingExpressio
   @Memoize()
   public override get enumValues(): ReadonlyArray<OrderingExpressionInput> {
     return [
-      ...this.node.components.flatMap<OrderingExpressionInput>((component) =>
+      ...Array.from(
+        this.node.componentsByName.values(),
+      ).flatMap<OrderingExpressionInput>((component) =>
         component instanceof Leaf && component.isSortable()
           ? [
               component.getOrderingInput(OrderingDirection.ASCENDING),
@@ -40,32 +41,30 @@ export class NodeOrderingInputType extends utils.EnumInputType<OrderingExpressio
             ]
           : [],
       ),
-      ...this.node.reverseEdges.flatMap<OrderingExpressionInput>(
-        (reverseEdge) =>
-          reverseEdge instanceof ReverseEdgeUnique
-            ? []
-            : [
-                new ReverseEdgeMultipleCountOrderingInput(
-                  reverseEdge,
-                  OrderingDirection.ASCENDING,
-                ),
-                new ReverseEdgeMultipleCountOrderingInput(
-                  reverseEdge,
-                  OrderingDirection.DESCENDING,
-                ),
-              ],
+      ...Array.from(
+        this.node.reverseEdgesByName.values(),
+      ).flatMap<OrderingExpressionInput>((reverseEdge) =>
+        reverseEdge instanceof UniqueReverseEdge
+          ? []
+          : [
+              new MultipleReverseEdgeCountOrderingInput(
+                reverseEdge,
+                OrderingDirection.ASCENDING,
+              ),
+              new MultipleReverseEdgeCountOrderingInput(
+                reverseEdge,
+                OrderingDirection.DESCENDING,
+              ),
+            ],
       ),
     ];
   }
 
-  public sort<
-    TRequestContext extends object,
-    TConnector extends ConnectorInterface,
-  >(
+  public sort(
     value: OrderByInputValue,
-    context?: OperationContext<TRequestContext, TConnector>,
+    context?: OperationContext,
     path?: utils.Path,
-  ): NodeOrdering<TRequestContext, TConnector> {
+  ): NodeOrdering {
     return new NodeOrdering(
       this.node,
       value?.length

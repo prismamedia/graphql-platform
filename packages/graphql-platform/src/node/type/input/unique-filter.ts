@@ -36,10 +36,10 @@ export class NodeUniqueFilterInputType extends utils.ObjectInputType {
         : `${node.name}UniqueFilterInput`,
       description: [
         `Identifies exactly one "${node.name}" given one of the following combination of components' value:`,
-        node.uniqueConstraints
+        Array.from(node.uniqueConstraintsByName.values())
           .filter((uniqueConstraint) => uniqueConstraint.isPublic())
-          .map(({ components }) =>
-            components
+          .map(({ componentsByName }) =>
+            Array.from(componentsByName.values())
               .filter((component) => component !== forcedEdge)
               .map((component) => component.name)
               .join(' / '),
@@ -56,8 +56,10 @@ export class NodeUniqueFilterInputType extends utils.ObjectInputType {
   @Memoize()
   public override get fields(): ReadonlyArray<utils.Input> {
     const componentSet = new Set<Component>(
-      this.node.uniqueConstraints
-        .flatMap(({ components }) => components)
+      Array.from(this.node.uniqueConstraintsByName.values())
+        .flatMap(({ componentsByName }) =>
+          Array.from(componentsByName.values()),
+        )
         .filter((component) => component !== this.forcedEdge),
     );
 
@@ -76,13 +78,13 @@ export class NodeUniqueFilterInputType extends utils.ObjectInputType {
         deprecated: component.deprecationReason,
         type: utils.nonOptionalInputTypeDecorator(
           type,
-          this.node.uniqueConstraints.every(({ componentSet }) =>
-            componentSet.has(component),
+          Array.from(this.node.uniqueConstraintsByName.values()).every(
+            ({ componentSet }) => componentSet.has(component),
           ),
         ),
         publicType: utils.nonOptionalInputTypeDecorator(
           type,
-          this.node.uniqueConstraints
+          Array.from(this.node.uniqueConstraintsByName.values())
             .filter((uniqueConstraint) => uniqueConstraint.isPublic())
             .every(({ componentSet }) => componentSet.has(component)),
         ),
@@ -99,7 +101,7 @@ export class NodeUniqueFilterInputType extends utils.ObjectInputType {
       return parsedValue;
     }
 
-    for (const uniqueConstraint of this.node.uniqueConstraints) {
+    for (const uniqueConstraint of this.node.uniqueConstraintsByName.values()) {
       const uniqueFilterInputValue: NonNullable<NodeUniqueFilterInputValue> =
         Object.create(null);
 

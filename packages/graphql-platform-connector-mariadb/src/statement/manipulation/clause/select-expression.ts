@@ -34,17 +34,17 @@ function parseEdgeSelection(
   }
 }
 
-function parseReverseEdgeMultipleSelection(
+function parseMultipleReverseEdgeSelection(
   tableReference: TableReference,
-  selection: core.ReverseEdgeMultipleSelection,
+  selection: core.MultipleReverseEdgeSelection,
 ): string {
-  if (selection instanceof core.ReverseEdgeMultipleCountSelection) {
+  if (selection instanceof core.MultipleReverseEdgeCountSelection) {
     return `(${tableReference.subquery(
       `COUNT(*)`,
       selection.reverseEdge,
       selection.headFilter,
     )})`;
-  } else if (selection instanceof core.ReverseEdgeMultipleHeadSelection) {
+  } else if (selection instanceof core.MultipleReverseEdgeHeadSelection) {
     return `(${tableReference.subquery(
       (tableReference) =>
         `JSON_ARRAYAGG(${[
@@ -66,16 +66,16 @@ function parseReverseEdgeMultipleSelection(
   }
 }
 
-function parseReverseEdgeUniqueSelection(
+function parseUniqueReverseEdgeSelection(
   tableReference: TableReference,
-  selection: core.ReverseEdgeUniqueSelection,
+  selection: core.UniqueReverseEdgeSelection,
 ): string {
   const joinTable = tableReference.join(selection.reverseEdge);
   const foreignKey = joinTable.table.getForeignKeyByEdge(
     selection.reverseEdge.originalEdge,
   );
 
-  if (selection instanceof core.ReverseEdgeUniqueHeadSelection) {
+  if (selection instanceof core.UniqueReverseEdgeHeadSelection) {
     return `IF(${foreignKey.columns
       .map(
         (column) =>
@@ -95,10 +95,10 @@ function parseSelectionExpression(
     return parseLeafSelection(tableReference, selection);
   } else if (core.isEdgeSelection(selection)) {
     return parseEdgeSelection(tableReference, selection);
-  } else if (core.isReverseEdgeMultipleSelection(selection)) {
-    return parseReverseEdgeMultipleSelection(tableReference, selection);
-  } else if (core.isReverseEdgeUniqueSelection(selection)) {
-    return parseReverseEdgeUniqueSelection(tableReference, selection);
+  } else if (core.isMultipleReverseEdgeSelection(selection)) {
+    return parseMultipleReverseEdgeSelection(tableReference, selection);
+  } else if (core.isUniqueReverseEdgeSelection(selection)) {
+    return parseUniqueReverseEdgeSelection(tableReference, selection);
   } else {
     throw new utils.UnreachableValueError(selection);
   }

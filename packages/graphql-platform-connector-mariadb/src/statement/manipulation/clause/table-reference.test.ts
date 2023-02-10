@@ -38,7 +38,7 @@ describe('Table reference', () => {
 
     const UserNode = ArticleCreatedByEdge.head;
     const UserProfileReverseEdge =
-      UserNode.getReverseEdgeUniqueByName('profile');
+      UserNode.getUniqueReverseEdgeByName('profile');
 
     const from = new TableFactor(
       gp.connector.schema.getTableByNode(ArticleNode),
@@ -71,7 +71,7 @@ describe('Table reference', () => {
     const ArticleCreatedByEdge = ArticleNode.getEdgeByName('createdBy');
     const UserNode = ArticleCreatedByEdge.head;
     const UserProfileReverseEdge =
-      UserNode.getReverseEdgeUniqueByName('profile');
+      UserNode.getUniqueReverseEdgeByName('profile');
 
     from.join(ArticleCreatedByEdge).join(UserProfileReverseEdge);
 

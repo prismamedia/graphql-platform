@@ -3,18 +3,18 @@ import * as utils from '@prismamedia/graphql-platform-utils';
 import { Memoize } from '@prismamedia/memoize';
 import * as graphql from 'graphql';
 import assert from 'node:assert/strict';
-import type { ReverseEdgeMultiple } from '../../../../../definition/reverse-edge/multiple.js';
+import type { MultipleReverseEdge } from '../../../../../definition/reverse-edge/multiple.js';
 import { areFiltersEqual, NodeFilter } from '../../../../filter.js';
 import type { SelectionExpressionInterface } from '../../../expression-interface.js';
 
-export type ReverseEdgeMultipleCountSelectionArgs = utils.Nillable<{
+export type MultipleReverseEdgeCountSelectionArgs = utils.Nillable<{
   filter?: NodeFilter;
 }>;
 
-export type ReverseEdgeMultipleCountValue = number;
+export type MultipleReverseEdgeCountValue = number;
 
-export class ReverseEdgeMultipleCountSelection
-  implements SelectionExpressionInterface<ReverseEdgeMultipleCountValue>
+export class MultipleReverseEdgeCountSelection
+  implements SelectionExpressionInterface<MultipleReverseEdgeCountValue>
 {
   public readonly alias?: string;
   public readonly name: string;
@@ -22,7 +22,7 @@ export class ReverseEdgeMultipleCountSelection
   public readonly headFilter?: NodeFilter;
 
   public constructor(
-    public readonly reverseEdge: ReverseEdgeMultiple,
+    public readonly reverseEdge: MultipleReverseEdge,
     alias: string | undefined,
     headFilter: NodeFilter | undefined,
   ) {
@@ -39,9 +39,9 @@ export class ReverseEdgeMultipleCountSelection
 
   public isAkinTo(
     expression: unknown,
-  ): expression is ReverseEdgeMultipleCountSelection {
+  ): expression is MultipleReverseEdgeCountSelection {
     return (
-      expression instanceof ReverseEdgeMultipleCountSelection &&
+      expression instanceof MultipleReverseEdgeCountSelection &&
       expression.reverseEdge === this.reverseEdge &&
       expression.alias === this.alias &&
       areFiltersEqual(expression.headFilter, this.headFilter)
@@ -50,7 +50,7 @@ export class ReverseEdgeMultipleCountSelection
 
   public equals(
     expression: unknown,
-  ): expression is ReverseEdgeMultipleCountSelection {
+  ): expression is MultipleReverseEdgeCountSelection {
     return this.isAkinTo(expression);
   }
 
@@ -59,7 +59,7 @@ export class ReverseEdgeMultipleCountSelection
   }
 
   public mergeWith(
-    expression: ReverseEdgeMultipleCountSelection,
+    expression: MultipleReverseEdgeCountSelection,
     _path?: utils.Path,
   ): this {
     assert(this.isAkinTo(expression));
@@ -87,7 +87,7 @@ export class ReverseEdgeMultipleCountSelection
   public parseValue(
     maybeValue: unknown,
     path?: utils.Path,
-  ): ReverseEdgeMultipleCountValue {
+  ): MultipleReverseEdgeCountValue {
     if (maybeValue == null) {
       throw new utils.UnexpectedValueError(
         `a non-nil "${scalars.typesByName.UnsignedInt}"`,
@@ -104,8 +104,8 @@ export class ReverseEdgeMultipleCountSelection
   }
 
   public areValuesEqual(
-    a: ReverseEdgeMultipleCountValue,
-    b: ReverseEdgeMultipleCountValue,
+    a: MultipleReverseEdgeCountValue,
+    b: MultipleReverseEdgeCountValue,
   ): boolean {
     return a === b;
   }

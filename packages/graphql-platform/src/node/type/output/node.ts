@@ -7,8 +7,7 @@ import type { ConnectorInterface } from '../../../connector-interface.js';
 import type { Node } from '../../../node.js';
 import type { Component } from '../../definition.js';
 import { Leaf } from '../../definition/component/leaf.js';
-import { ReverseEdgeUnique } from '../../definition/reverse-edge/unique.js';
-import { resolveMaybeNodeAwareConfig } from '../../maybe-aware-config.js';
+import { UniqueReverseEdge } from '../../definition/reverse-edge/unique.js';
 import type { OperationContext } from '../../operation/context.js';
 import {
   mergeSelectionExpressions,
@@ -19,13 +18,13 @@ import {
 import {
   EdgeHeadOutputType,
   LeafOutputType,
+  MultipleReverseEdgeCountOutputType,
+  MultipleReverseEdgeHeadOutputType,
   NodeFieldOutputType,
-  ReverseEdgeMultipleCountOutputType,
-  ReverseEdgeMultipleHeadOutputType,
-  ReverseEdgeUniqueHeadOutputType,
+  ThunkableNillableVirtualFieldOutputConfig,
+  ThunkableNillableVirtualFieldOutputConfigsByName,
+  UniqueReverseEdgeHeadOutputType,
   VirtualFieldOutputType,
-  VirtualFieldOutputTypeConfig,
-  VirtualFieldOutputTypeConfigMap,
 } from './node/field.js';
 
 export * from './node/field.js';
@@ -59,13 +58,18 @@ export type RawNodeSelection<TValue extends NodeSelectedValue = any> =
 export interface NodeOutputTypeConfig<
   TRequestContext extends object,
   TConnector extends ConnectorInterface,
+  TServiceContainer extends object,
 > {
   /**
    * Optional, add some "virtual" fields whose value is computed from the components' value
    *
    * They are called "virtual" because their value is not stored
    */
-  virtualFields?: VirtualFieldOutputTypeConfigMap<TRequestContext, TConnector>;
+  virtualFields?: ThunkableNillableVirtualFieldOutputConfigsByName<
+    TRequestContext,
+    TConnector,
+    TServiceContainer
+  >;
 
   /**
    * Optional, fine-tune the node's GraphQL output type
@@ -80,7 +84,7 @@ export interface NodeOutputTypeConfig<
 }
 
 export class NodeOutputType {
-  readonly #config?: NodeOutputTypeConfig<any, any>;
+  readonly #config?: NodeOutputTypeConfig<any, any, any>;
   readonly #configPath: utils.Path;
 
   public constructor(public readonly node: Node) {
@@ -104,7 +108,7 @@ export class NodeOutputType {
   > {
     const fields: NodeFieldOutputType[] = [];
 
-    for (const component of this.node.components) {
+    for (const component of this.node.componentsByName.values()) {
       if (component instanceof Leaf) {
         fields.push(new LeafOutputType(component));
       } else {
@@ -112,63 +116,75 @@ export class NodeOutputType {
       }
     }
 
-    for (const reverseEdge of this.node.reverseEdges) {
-      if (reverseEdge instanceof ReverseEdgeUnique) {
-        fields.push(new ReverseEdgeUniqueHeadOutputType(reverseEdge));
+    for (const reverseEdge of this.node.reverseEdgesByName.values()) {
+      if (reverseEdge instanceof UniqueReverseEdge) {
+        fields.push(new UniqueReverseEdgeHeadOutputType(reverseEdge));
       } else {
         fields.push(
-          new ReverseEdgeMultipleHeadOutputType(reverseEdge),
-          new ReverseEdgeMultipleCountOutputType(reverseEdge),
+          new MultipleReverseEdgeHeadOutputType(reverseEdge),
+          new MultipleReverseEdgeCountOutputType(reverseEdge),
         );
       }
     }
 
-    if (this.#config?.virtualFields) {
-      const virtualFieldsConfigPath = utils.addPath(
+    // virtual-fields
+    {
+      const virtualFieldConfigsByName = utils.resolveThunkable(
+        this.#config?.virtualFields,
+        this.node,
+      );
+      const virtualFieldConfigsByNamePath = utils.addPath(
         this.#configPath,
         'virtualFields',
       );
 
-      const virtualFieldsConfig = resolveMaybeNodeAwareConfig(
-        this.node,
-        this.#config.virtualFields,
-      );
-
       utils.assertNillablePlainObject(
-        virtualFieldsConfig,
-        virtualFieldsConfigPath,
+        virtualFieldConfigsByName,
+        virtualFieldConfigsByNamePath,
       );
 
-      if (virtualFieldsConfig) {
+      if (virtualFieldConfigsByName) {
         utils.aggregateGraphError<
-          [utils.Name, VirtualFieldOutputTypeConfig<any, any>],
+          [utils.Name, ThunkableNillableVirtualFieldOutputConfig],
           void
         >(
-          Object.entries(virtualFieldsConfig),
-          (_, [virtualFieldName, virtualFieldConfig]) => {
+          Object.entries(virtualFieldConfigsByName),
+          (_, [virtualFieldName, thunkableNillableVirtualFieldConfig]) => {
+            const virtualFieldConfig = utils.resolveThunkable(
+              thunkableNillableVirtualFieldConfig,
+              this.node,
+            );
+
             const virtualFieldConfigPath = utils.addPath(
-              virtualFieldsConfigPath,
+              virtualFieldConfigsByNamePath,
               virtualFieldName,
             );
 
-            const virtualField = new VirtualFieldOutputType(
-              this,
-              virtualFieldName,
+            utils.assertNillablePlainObject(
               virtualFieldConfig,
               virtualFieldConfigPath,
             );
 
-            if (fields.some((field) => field.name === virtualField.name)) {
-              throw new utils.GraphError(
-                `At least 1 field already have this name`,
-                { path: virtualFieldConfigPath },
+            if (virtualFieldConfig) {
+              const virtualField = new VirtualFieldOutputType(
+                this,
+                virtualFieldName,
+                virtualFieldConfig,
+                virtualFieldConfigPath,
               );
-            }
 
-            fields.push(virtualField);
+              if (fields.some((field) => field.name === virtualField.name)) {
+                throw new utils.GraphError(
+                  `At least 1 field already have this name`,
+                  { path: virtualFieldConfigPath },
+                );
+              }
+
+              fields.push(virtualField);
+            }
           },
           undefined,
-          { path: virtualFieldsConfigPath },
+          { path: virtualFieldConfigsByNamePath },
         );
       }
     }

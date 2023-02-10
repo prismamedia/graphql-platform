@@ -27,8 +27,8 @@ services:
     working_dir: /workspace
     volumes:
       - .:/workspace
-      - ~/.bash_history:/root/.bash_history
       - ~/.bash_history:/root/.ash_history
+      - ~/.bash_history:/root/.bash_history
     depends_on:
       - mariadb
     logging:

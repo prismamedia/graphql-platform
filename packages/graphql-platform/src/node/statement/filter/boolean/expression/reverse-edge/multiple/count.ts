@@ -1,26 +1,26 @@
 import { Memoize } from '@prismamedia/memoize';
 import assert from 'node:assert/strict';
-import type { ReverseEdgeMultiple } from '../../../../../../definition/reverse-edge/multiple.js';
+import type { MultipleReverseEdge } from '../../../../../../definition/reverse-edge/multiple.js';
 import { BooleanFilter } from '../../../../boolean.js';
 import type { BooleanExpressionInterface } from '../../../expression-interface.js';
 import { BooleanValue } from '../../../value.js';
 
-export interface ReverseEdgeMultipleCountFilterAST {
-  kind: 'ReverseEdgeMultipleCountFilter';
-  reverseEdge: ReverseEdgeMultiple['name'];
-  operator: ReverseEdgeMultipleCountFilter['operator'];
-  value: ReverseEdgeMultipleCountFilter['value'];
+export interface MultipleReverseEdgeCountFilterAST {
+  kind: 'MultipleReverseEdgeCountFilter';
+  reverseEdge: MultipleReverseEdge['name'];
+  operator: MultipleReverseEdgeCountFilter['operator'];
+  value: MultipleReverseEdgeCountFilter['value'];
 }
 
-export class ReverseEdgeMultipleCountFilter
+export class MultipleReverseEdgeCountFilter
   implements BooleanExpressionInterface
 {
   public readonly operator: 'eq' | 'gt' | 'lt';
   public readonly value: number;
-  public readonly reduced: BooleanValue | ReverseEdgeMultipleCountFilter | this;
+  public readonly reduced: BooleanValue | MultipleReverseEdgeCountFilter | this;
 
   public constructor(
-    public readonly reverseEdge: ReverseEdgeMultiple,
+    public readonly reverseEdge: MultipleReverseEdge,
     operator: 'eq' | 'gt' | 'gte' | 'lt' | 'lte',
     value: number,
   ) {
@@ -51,23 +51,23 @@ export class ReverseEdgeMultipleCountFilter
         ? this.value === 0
           ? new BooleanValue(false)
           : this.value === 1
-          ? new ReverseEdgeMultipleCountFilter(reverseEdge, 'eq', 0)
+          ? new MultipleReverseEdgeCountFilter(reverseEdge, 'eq', 0)
           : this
         : this;
   }
 
   @Memoize()
-  public get complement(): ReverseEdgeMultipleCountFilter | undefined {
+  public get complement(): MultipleReverseEdgeCountFilter | undefined {
     return this.operator === 'gt'
-      ? new ReverseEdgeMultipleCountFilter(this.reverseEdge, 'lte', this.value)
+      ? new MultipleReverseEdgeCountFilter(this.reverseEdge, 'lte', this.value)
       : this.operator === 'lt'
-      ? new ReverseEdgeMultipleCountFilter(this.reverseEdge, 'gte', this.value)
+      ? new MultipleReverseEdgeCountFilter(this.reverseEdge, 'gte', this.value)
       : undefined;
   }
 
   public equals(expression: unknown): boolean {
     return (
-      expression instanceof ReverseEdgeMultipleCountFilter &&
+      expression instanceof MultipleReverseEdgeCountFilter &&
       expression.reverseEdge === this.reverseEdge &&
       expression.operator === this.operator &&
       expression.value === this.value
@@ -76,7 +76,7 @@ export class ReverseEdgeMultipleCountFilter
 
   public and(expression: unknown): BooleanFilter | undefined {
     if (
-      expression instanceof ReverseEdgeMultipleCountFilter &&
+      expression instanceof MultipleReverseEdgeCountFilter &&
       expression.reverseEdge === this.reverseEdge
     ) {
       if (
@@ -93,9 +93,9 @@ export class ReverseEdgeMultipleCountFilter
     return undefined;
   }
 
-  public get ast(): ReverseEdgeMultipleCountFilterAST {
+  public get ast(): MultipleReverseEdgeCountFilterAST {
     return {
-      kind: 'ReverseEdgeMultipleCountFilter',
+      kind: 'MultipleReverseEdgeCountFilter',
       reverseEdge: this.reverseEdge.name,
       operator: this.operator,
       value: this.value,

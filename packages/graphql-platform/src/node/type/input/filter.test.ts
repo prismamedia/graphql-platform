@@ -612,7 +612,7 @@ describe('NodeFilterInputType', () => {
                 'A user WITH any "profile" - 0',
                 { profile_is_null: false },
                 {
-                  kind: 'ReverseEdgeUniqueExistsFilter',
+                  kind: 'UniqueReverseEdgeExistsFilter',
                   reverseEdge: 'profile',
                 },
               ],
@@ -621,7 +621,7 @@ describe('NodeFilterInputType', () => {
                 'A user WITH any "profile" - 1',
                 { profile_not: null },
                 {
-                  kind: 'ReverseEdgeUniqueExistsFilter',
+                  kind: 'UniqueReverseEdgeExistsFilter',
                   reverseEdge: 'profile',
                 },
               ],
@@ -630,7 +630,7 @@ describe('NodeFilterInputType', () => {
                 'A user WITH any "profile" - 1',
                 { profile: {} },
                 {
-                  kind: 'ReverseEdgeUniqueExistsFilter',
+                  kind: 'UniqueReverseEdgeExistsFilter',
                   reverseEdge: 'profile',
                 },
               ],
@@ -639,7 +639,7 @@ describe('NodeFilterInputType', () => {
                 'An user with the specified "profile"',
                 { profile: { birthday_not: null } },
                 {
-                  kind: 'ReverseEdgeUniqueExistsFilter',
+                  kind: 'UniqueReverseEdgeExistsFilter',
                   reverseEdge: 'profile',
                   headFilter: {
                     kind: 'NodeFilter',
@@ -665,7 +665,7 @@ describe('NodeFilterInputType', () => {
                   kind: 'BooleanOperation',
                   operator: 'Not',
                   operand: {
-                    kind: 'ReverseEdgeUniqueExistsFilter',
+                    kind: 'UniqueReverseEdgeExistsFilter',
                     reverseEdge: 'profile',
                   },
                 },
@@ -678,7 +678,7 @@ describe('NodeFilterInputType', () => {
                   kind: 'BooleanOperation',
                   operator: 'Not',
                   operand: {
-                    kind: 'ReverseEdgeUniqueExistsFilter',
+                    kind: 'UniqueReverseEdgeExistsFilter',
                     reverseEdge: 'profile',
                   },
                 },
@@ -691,7 +691,7 @@ describe('NodeFilterInputType', () => {
                   kind: 'BooleanOperation',
                   operator: 'Not',
                   operand: {
-                    kind: 'ReverseEdgeUniqueExistsFilter',
+                    kind: 'UniqueReverseEdgeExistsFilter',
                     reverseEdge: 'profile',
                   },
                 },
@@ -704,7 +704,7 @@ describe('NodeFilterInputType', () => {
                   kind: 'BooleanOperation',
                   operator: 'Not',
                   operand: {
-                    kind: 'ReverseEdgeUniqueExistsFilter',
+                    kind: 'UniqueReverseEdgeExistsFilter',
                     reverseEdge: 'profile',
                     headFilter: {
                       kind: 'NodeFilter',
@@ -750,7 +750,7 @@ describe('NodeFilterInputType', () => {
                   ],
                 },
                 {
-                  kind: 'ReverseEdgeUniqueExistsFilter',
+                  kind: 'UniqueReverseEdgeExistsFilter',
                   reverseEdge: 'profile',
                   headFilter: {
                     kind: 'NodeFilter',
@@ -786,7 +786,7 @@ describe('NodeFilterInputType', () => {
                   ],
                 },
                 {
-                  kind: 'ReverseEdgeUniqueExistsFilter',
+                  kind: 'UniqueReverseEdgeExistsFilter',
                   reverseEdge: 'profile',
                   headFilter: {
                     kind: 'NodeFilter',
@@ -810,7 +810,7 @@ describe('NodeFilterInputType', () => {
                   ],
                 },
                 {
-                  kind: 'ReverseEdgeUniqueExistsFilter',
+                  kind: 'UniqueReverseEdgeExistsFilter',
                   reverseEdge: 'profile',
                 },
               ],
@@ -840,7 +840,7 @@ describe('NodeFilterInputType', () => {
                 'An article WITH some "tags"',
                 { tags_some: {} },
                 {
-                  kind: 'ReverseEdgeMultipleExistsFilter',
+                  kind: 'MultipleReverseEdgeExistsFilter',
                   reverseEdge: 'tags',
                 },
               ],
@@ -852,7 +852,7 @@ describe('NodeFilterInputType', () => {
                   kind: 'BooleanOperation',
                   operator: 'Not',
                   operand: {
-                    kind: 'ReverseEdgeMultipleExistsFilter',
+                    kind: 'MultipleReverseEdgeExistsFilter',
                     reverseEdge: 'tags',
                     headFilter: {
                       kind: 'NodeFilter',
@@ -887,7 +887,7 @@ describe('NodeFilterInputType', () => {
                   kind: 'BooleanOperation',
                   operator: 'Not',
                   operand: {
-                    kind: 'ReverseEdgeMultipleExistsFilter',
+                    kind: 'MultipleReverseEdgeExistsFilter',
                     reverseEdge: 'tags',
                     headFilter: {
                       kind: 'NodeFilter',

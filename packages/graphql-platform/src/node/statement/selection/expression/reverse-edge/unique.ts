@@ -1,10 +1,10 @@
-import { ReverseEdgeUniqueHeadSelection } from './unique/head.js';
+import { UniqueReverseEdgeHeadSelection } from './unique/head.js';
 
 export * from './unique/head.js';
 
-export type ReverseEdgeUniqueSelection = ReverseEdgeUniqueHeadSelection;
+export type UniqueReverseEdgeSelection = UniqueReverseEdgeHeadSelection;
 
-export const isReverseEdgeUniqueSelection = (
+export const isUniqueReverseEdgeSelection = (
   maybeSelection: unknown,
-): maybeSelection is ReverseEdgeUniqueSelection =>
-  maybeSelection instanceof ReverseEdgeUniqueHeadSelection;
+): maybeSelection is UniqueReverseEdgeSelection =>
+  maybeSelection instanceof UniqueReverseEdgeHeadSelection;

@@ -1,6 +1,5 @@
 import * as utils from '@prismamedia/graphql-platform-utils';
 import { Memoize } from '@prismamedia/memoize';
-import type { ConnectorInterface } from '../connector-interface.js';
 import type { Node, NodeValue } from '../node.js';
 import type { Seeding } from '../seeding.js';
 import type { UniqueConstraintValue } from './definition.js';
@@ -10,13 +9,10 @@ export type NodeFixtureReference = string;
 
 export type NodeFixtureData = utils.PlainObject;
 
-export class NodeFixture<
-  TRequestContext extends object,
-  TConnector extends ConnectorInterface,
-> {
+export class NodeFixture<TRequestContext extends object = any> {
   public constructor(
-    public readonly seeding: Seeding<TRequestContext, TConnector>,
-    public readonly node: Node<TRequestContext, TConnector>,
+    public readonly seeding: Seeding<TRequestContext>,
+    public readonly node: Node<TRequestContext>,
     public readonly reference: NodeFixtureReference,
     public readonly data: NodeFixtureData,
     public readonly path: utils.Path,
@@ -27,30 +23,33 @@ export class NodeFixture<
   @Memoize()
   public get dependencies(): ReadonlySet<NodeFixtureReference> {
     return new Set(
-      this.node.edges.reduce<NodeFixtureReference[]>((dependencies, edge) => {
-        const maybeEdgeReference = this.data[edge.name];
-        if (maybeEdgeReference != null) {
-          if (typeof maybeEdgeReference !== 'string') {
-            throw new utils.UnexpectedValueError(
-              'a string',
-              maybeEdgeReference,
-              { path: utils.addPath(this.path, edge.name) },
-            );
-          } else if (
-            !this.seeding.dependencyGraph.hasNode(maybeEdgeReference)
-          ) {
-            throw new utils.UnexpectedValueError(
-              "an existing fixture's reference",
-              maybeEdgeReference,
-              { path: utils.addPath(this.path, edge.name) },
-            );
+      Array.from(this.node.edgesByName.values()).reduce<NodeFixtureReference[]>(
+        (dependencies, edge) => {
+          const maybeEdgeReference = this.data[edge.name];
+          if (maybeEdgeReference != null) {
+            if (typeof maybeEdgeReference !== 'string') {
+              throw new utils.UnexpectedValueError(
+                'a string',
+                maybeEdgeReference,
+                { path: utils.addPath(this.path, edge.name) },
+              );
+            } else if (
+              !this.seeding.dependencyGraph.hasNode(maybeEdgeReference)
+            ) {
+              throw new utils.UnexpectedValueError(
+                "an existing fixture's reference",
+                maybeEdgeReference,
+                { path: utils.addPath(this.path, edge.name) },
+              );
+            }
+
+            dependencies.push(maybeEdgeReference);
           }
 
-          dependencies.push(maybeEdgeReference);
-        }
-
-        return dependencies;
-      }, []),
+          return dependencies;
+        },
+        [],
+      ),
     );
   }
 

@@ -3,24 +3,24 @@ import * as utils from '@prismamedia/graphql-platform-utils';
 import { Memoize } from '@prismamedia/memoize';
 import * as graphql from 'graphql';
 import { argsPathKey } from '../../../../../abstract-operation.js';
-import type { ReverseEdgeMultiple } from '../../../../../definition/reverse-edge/multiple.js';
+import type { MultipleReverseEdge } from '../../../../../definition/reverse-edge/multiple.js';
 import type { OperationContext } from '../../../../../operation/context.js';
-import { ReverseEdgeMultipleCountSelection } from '../../../../../statement/selection/expression/reverse-edge/multiple/count.js';
+import { MultipleReverseEdgeCountSelection } from '../../../../../statement/selection/expression/reverse-edge/multiple/count.js';
 import type { NodeFilterInputValue } from '../../../../input/filter.js';
 import type { GraphQLSelectionContext } from '../../../node.js';
 import { AbstractReverseEdgeOutputType } from '../abstract-reverse-edge.js';
 
-export type ReverseEdgeMultipleCountOutputArgs = utils.Nillable<{
+export type MultipleReverseEdgeCountOutputArgs = utils.Nillable<{
   where?: NodeFilterInputValue;
 }>;
 
-export class ReverseEdgeMultipleCountOutputType extends AbstractReverseEdgeOutputType<ReverseEdgeMultipleCountOutputArgs> {
+export class MultipleReverseEdgeCountOutputType extends AbstractReverseEdgeOutputType<MultipleReverseEdgeCountOutputArgs> {
   public override readonly name: utils.Name;
   public override readonly description?: string;
   public override readonly deprecationReason?: string;
 
   public constructor(
-    public override readonly reverseEdge: ReverseEdgeMultiple,
+    public override readonly reverseEdge: MultipleReverseEdge,
   ) {
     super(reverseEdge);
 
@@ -49,7 +49,7 @@ export class ReverseEdgeMultipleCountOutputType extends AbstractReverseEdgeOutpu
     operationContext: OperationContext | undefined,
     selectionContext: GraphQLSelectionContext | undefined,
     path: utils.Path,
-  ): ReverseEdgeMultipleCountSelection {
+  ): MultipleReverseEdgeCountSelection {
     const args = this.parseGraphQLArgumentNodes(
       ast.arguments,
       selectionContext,
@@ -62,7 +62,7 @@ export class ReverseEdgeMultipleCountOutputType extends AbstractReverseEdgeOutpu
 
     const argsPath = utils.addPath(path, argsPathKey);
 
-    return new ReverseEdgeMultipleCountSelection(
+    return new MultipleReverseEdgeCountSelection(
       this.reverseEdge,
       ast.alias?.value,
       this.reverseEdge.head.filterInputType.filter(
@@ -77,7 +77,7 @@ export class ReverseEdgeMultipleCountOutputType extends AbstractReverseEdgeOutpu
     value: unknown,
     _operationContext: OperationContext | undefined,
     path: utils.Path,
-  ): ReverseEdgeMultipleCountSelection {
+  ): MultipleReverseEdgeCountSelection {
     throw new utils.UnexpectedValueError('not to be selected', value, { path });
   }
 }

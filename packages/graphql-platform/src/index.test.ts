@@ -30,7 +30,7 @@ describe('GraphQL-Platform', () => {
       ],
       [
         { nodes: {} },
-        `/GraphQLPlatformConfig/nodes - Expects at least one "node", got: {}`,
+        `/GraphQLPlatformConfig/nodes - Expects at least one node, got: {}`,
       ],
     ])('throws an Error on invalid nodes: %p', (config, expectedError) => {
       // @ts-expect-error
@@ -71,17 +71,17 @@ describe('GraphQL-Platform', () => {
     ])(
       `generates %s: %d enabled / %d public`,
       (operationType, enabledCount, publicCount) => {
-        const enabledOperationsByName = Array.from(
-          gp.operationsByNameByType[operationType].values(),
-        ).filter((operation) => operation.isEnabled());
+        expect(
+          Array.from(gp.operationsByNameByType[operationType].values()).filter(
+            (operation) => operation.isEnabled(),
+          ),
+        ).toHaveLength(enabledCount);
 
-        expect(enabledOperationsByName.length).toBe(enabledCount);
-
-        const publicOperationsByName = Array.from(
-          gp.operationsByNameByType[operationType].values(),
-        ).filter((operation) => operation.isPublic());
-
-        expect(publicOperationsByName.length).toBe(publicCount);
+        expect(
+          Array.from(gp.operationsByNameByType[operationType].values()).filter(
+            (operation) => operation.isPublic(),
+          ),
+        ).toHaveLength(publicCount);
       },
     );
 

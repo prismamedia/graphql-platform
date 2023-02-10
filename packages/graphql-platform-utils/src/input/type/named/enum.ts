@@ -18,10 +18,7 @@ import {
 import { indefinite } from '../../../indefinite.js';
 import { isNil, type Nillable } from '../../../nil.js';
 import { addPath, type Path } from '../../../path.js';
-import {
-  resolveThunkOrValue,
-  type ThunkOrValue,
-} from '../../../thunk-or-value.js';
+import { resolveThunkable, type Thunkable } from '../../../thunkable.js';
 import type { NonNullNonVariableGraphQLValueNode } from '../../type.js';
 import {
   AbstractNamedInputType,
@@ -182,7 +179,7 @@ export class EnumInputValue {
 export interface EnumInputTypeConfig<
   TValue extends EnumInputValue = EnumInputValue,
 > extends AbstractNamedInputTypeConfig {
-  values?: ThunkOrValue<TValue[]>;
+  values?: Thunkable<TValue[]>;
 }
 
 export class EnumInputType<
@@ -203,7 +200,7 @@ export class EnumInputType<
 
   @Memoize()
   public get enumValues(): ReadonlyArray<TValue> {
-    const values = resolveThunkOrValue(this.#valuesConfig);
+    const values = resolveThunkable(this.#valuesConfig);
 
     return values?.length
       ? aggregateGraphError<TValue, TValue[]>(
