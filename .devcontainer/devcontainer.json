@@ -2,8 +2,9 @@
   "name": "GraphQL Platform",
   "dockerComposeFile": "../docker-compose.yml",
   "service": "project",
+  "overrideCommand": true,
   "workspaceFolder": "/workspace",
-  "postStartCommand": "yarn install && yarn rebuild && yarn sdks vscode",
+  "postStartCommand": "yarn && yarn sdks vscode",
   "customizations": {
     "vscode": {
       "extensions": ["esbenp.prettier-vscode", "arcanis.vscode-zipfs"]
