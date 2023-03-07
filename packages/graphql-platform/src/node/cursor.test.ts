@@ -28,23 +28,40 @@ describe('Cursor', () => {
     });
 
     const Article = gp.getNodeByName('Article');
-
-    const values: any[] = [];
-
-    for await (const value of Article.scroll<{ id: string }>(myAdminContext, {
+    const cursor = Article.scroll<{ id: string }>(myAdminContext, {
       selection: '{ id }',
       chunkSize: 2,
-    })) {
-      values.push(value);
+    });
+
+    {
+      callIndex = 0;
+      const values: any[] = [];
+      for await (const value of cursor) {
+        values.push(value);
+      }
+
+      expect(values).toEqual([
+        { id: 'ca001c1c-2e90-461f-96c8-658afa089728' },
+        { id: 'c4f05098-9484-4a2f-b82a-60c3a5d54ec6' },
+        { id: '3d0dc22d-0175-462c-afda-70be8702e1b7' },
+      ]);
     }
 
-    expect(values).toEqual([
-      { id: 'ca001c1c-2e90-461f-96c8-658afa089728' },
-      { id: 'c4f05098-9484-4a2f-b82a-60c3a5d54ec6' },
-      { id: '3d0dc22d-0175-462c-afda-70be8702e1b7' },
-    ]);
-
     expect(gp.connector.find).toHaveBeenCalledTimes(2);
+
+    {
+      callIndex = 0;
+      const values: any[] = [];
+      await cursor.forEach((value) => {
+        values.push(value);
+      });
+
+      expect(values).toEqual([
+        { id: 'ca001c1c-2e90-461f-96c8-658afa089728' },
+        { id: 'c4f05098-9484-4a2f-b82a-60c3a5d54ec6' },
+        { id: '3d0dc22d-0175-462c-afda-70be8702e1b7' },
+      ]);
+    }
   });
 
   it('"ArticleTag" is not scrollable', async () => {

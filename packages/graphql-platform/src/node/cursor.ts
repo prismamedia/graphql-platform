@@ -1,4 +1,5 @@
 import assert from 'node:assert/strict';
+import { inspect } from 'node:util';
 import PQueue, { Options as QueueOptions } from 'p-queue';
 import type { Except, Promisable } from 'type-fest';
 import type { Node } from '../node.js';
@@ -17,7 +18,14 @@ import type {
 export type NodeCursorForEachOptions = Except<
   QueueOptions<any, any>,
   'autoStart' | 'queueClass'
->;
+> & {
+  /**
+   * Optional, the number of tasks waiting to be processed
+   *
+   * Default: the queue's concurrency, so we're able to fill all the workers at any time
+   */
+  buffer?: number;
+};
 
 const pickAfterFilterInputValue = (
   uniqueConstraint: UniqueConstraint,
@@ -148,20 +156,26 @@ export class NodeCursor<
 
   public async forEach(
     task: (value: TValue) => Promisable<void>,
-    options?: NodeCursorForEachOptions,
+    { buffer: rawBuffer, ...queueOptions }: NodeCursorForEachOptions = {},
   ): Promise<void> {
     const queue = new PQueue({
-      ...options,
-      concurrency: options?.concurrency ?? 1,
-      throwOnTimeout: options?.throwOnTimeout ?? true,
+      ...queueOptions,
+      concurrency: queueOptions?.concurrency ?? 1,
+      throwOnTimeout: queueOptions?.throwOnTimeout ?? true,
     });
+
+    const buffer = rawBuffer ?? queue.concurrency;
+    assert(
+      typeof buffer === 'number' && buffer >= 1,
+      `The buffer has to be greater than or equal to 1, got ${inspect(buffer)}`,
+    );
 
     await new Promise<void>(async (resolve, reject) => {
       queue.on('error', reject);
 
       try {
         for await (const value of this) {
-          await queue.onEmpty();
+          await queue.onSizeLessThan(buffer);
 
           queue.add(() => task(value));
         }
