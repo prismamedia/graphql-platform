@@ -1,7 +1,7 @@
 import { Memoize } from '@prismamedia/memoize';
 import * as graphql from 'graphql';
 import { UnexpectedUndefinedError } from '../../../error.js';
-import { type Path } from '../../../path.js';
+import type { Path } from '../../../path.js';
 import {
   getGraphQLInputType,
   NonNullNonVariableGraphQLValueNode,

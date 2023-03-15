@@ -2,8 +2,8 @@ import * as graphql from 'graphql';
 import { GraphError, UnexpectedValueError } from '../../error.js';
 import { parseGraphQLEnumValue, parseGraphQLLeafValue } from '../../graphql.js';
 import { indefinite } from '../../indefinite.js';
-import { Path } from '../../path.js';
-import { NonNullNonVariableGraphQLValueNode } from '../type.js';
+import type { Path } from '../../path.js';
+import type { NonNullNonVariableGraphQLValueNode } from '../type.js';
 import { EnumInputType } from './named/enum.js';
 import { ObjectInputType } from './named/object.js';
 

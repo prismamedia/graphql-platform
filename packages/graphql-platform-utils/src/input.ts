@@ -1,5 +1,5 @@
 import { Memoize } from '@prismamedia/memoize';
-import * as graphql from 'graphql';
+import type * as graphql from 'graphql';
 import assert from 'node:assert/strict';
 import {
   assertOptionalFlag,

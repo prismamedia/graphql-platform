@@ -11,10 +11,10 @@ export const isGraphQLResolveInfo = (
   maybeGraphQLResolveInfo: unknown,
 ): maybeGraphQLResolveInfo is graphql.GraphQLResolveInfo =>
   isPlainObject(maybeGraphQLResolveInfo) &&
-  typeof maybeGraphQLResolveInfo.fieldName === 'string' &&
-  Array.isArray(maybeGraphQLResolveInfo.fieldNodes) &&
-  graphql.isOutputType(maybeGraphQLResolveInfo.returnType) &&
-  graphql.isOutputType(maybeGraphQLResolveInfo.parentType);
+  typeof maybeGraphQLResolveInfo['fieldName'] === 'string' &&
+  Array.isArray(maybeGraphQLResolveInfo['fieldNodes']) &&
+  graphql.isOutputType(maybeGraphQLResolveInfo['returnType']) &&
+  graphql.isOutputType(maybeGraphQLResolveInfo['parentType']);
 
 export function assertGraphQLResolveInfo(
   maybeGraphQLResolveInfo: unknown,
@@ -33,7 +33,7 @@ export const isGraphQLASTNode = <TKind extends graphql.Kind>(
   maybeGraphQLASTNode: unknown,
   kind: TKind,
 ): maybeGraphQLASTNode is graphql.ASTKindToNode[TKind] =>
-  isPlainObject(maybeGraphQLASTNode) && maybeGraphQLASTNode.kind === kind;
+  isPlainObject(maybeGraphQLASTNode) && maybeGraphQLASTNode['kind'] === kind;
 
 export function assertGraphQLASTNode<TKind extends graphql.Kind>(
   maybeGraphQLASTNode: unknown,

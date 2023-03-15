@@ -1,16 +1,16 @@
 import _ from 'lodash';
 import { EOL } from 'node:os';
 import { inspect } from 'node:util';
-import { Nillable } from './nil.js';
+import type { Nillable } from './nil.js';
 import { isPathEqualOrDescendantOf, printPath, type Path } from './path.js';
 import { isPlainObject } from './plain-object.js';
-import { Stringifiable } from './stringifiable.js';
+import type { Stringifiable } from './stringifiable.js';
 
 export const castToError = (error: unknown): Error =>
   error instanceof Error
     ? error
     : isPlainObject(error)
-    ? Object.assign(new Error(error.message), error)
+    ? Object.assign(new Error(error['message']), error)
     : new Error(error as any);
 
 export interface GraphErrorOptions extends ErrorOptions {
@@ -49,7 +49,7 @@ export class GraphError extends Error {
     }
   }
 
-  public get message(): string {
+  public override get message(): string {
     return [
       this.path && this.path !== this.#ancestor
         ? printPath(this.path, this.#ancestor)
@@ -132,7 +132,7 @@ export class AggregateGraphError extends AggregateError {
     }
   }
 
-  public get message(): string {
+  public override get message(): string {
     return [
       // First line
       [

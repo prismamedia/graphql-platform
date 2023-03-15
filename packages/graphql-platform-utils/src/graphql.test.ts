@@ -1,3 +1,4 @@
+import { describe, expect, it } from '@jest/globals';
 import * as graphql from 'graphql';
 import { createGraphQLEnumType, parseGraphQLLeafValue } from './graphql.js';
 

@@ -1,3 +1,4 @@
+import { describe, expect, it } from '@jest/globals';
 import { GraphQLNonEmptyTrimmedString } from './non-empty-trimmed-string.js';
 
 describe('NonEmptyTrimmedString', () => {

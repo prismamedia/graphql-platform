@@ -15,7 +15,7 @@
     "format": "prettier --cache --write ./packages/*/src/**/*.ts",
     "compile": "tsc --build",
     "compile:watch": "yarn run compile --watch",
-    "test": "yarn node --no-warnings --experimental-vm-modules $(yarn bin jest) --no-cache",
+    "test": "yarn node --no-warnings --experimental-vm-modules $(yarn bin jest)",
     "test:watch": "yarn run test --watchAll"
   },
   "devDependencies": {

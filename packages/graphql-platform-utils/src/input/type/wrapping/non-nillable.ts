@@ -1,4 +1,4 @@
-import { InputType } from '../../type.js';
+import type { InputType } from '../../type.js';
 import {
   getNullableInputType,
   isNonNullableInputType,

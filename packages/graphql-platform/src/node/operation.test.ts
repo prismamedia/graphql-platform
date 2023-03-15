@@ -1,3 +1,4 @@
+import { beforeAll, describe, expect, it } from '@jest/globals';
 import { GraphQLPlatform } from '../index.js';
 import { MyGP, nodes } from '../__tests__/config.js';
 import { AbstractMutation } from './operation/abstract-mutation.js';

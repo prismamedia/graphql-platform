@@ -1,4 +1,5 @@
 import { ApolloServer } from '@apollo/server';
+import { afterAll, beforeAll, describe, expect, it } from '@jest/globals';
 import { MariaDBConnector } from '@prismamedia/graphql-platform-connector-mariadb';
 import { createGraphQLPlatform } from '@prismamedia/graphql-platform-connector-mariadb/__tests__/config.js';
 import {

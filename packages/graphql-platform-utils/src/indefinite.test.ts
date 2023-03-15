@@ -1,3 +1,4 @@
+import { describe, expect, it } from '@jest/globals';
 import { indefinite } from './indefinite.js';
 
 describe('Indefinite', () => {

@@ -1,8 +1,11 @@
 {
   "extends": "@tsconfig/node18",
+
+  "include": ["src/**/*.ts"],
+
   "compilerOptions": {
-    "moduleResolution": "Node16",
     "module": "Node16",
+    "moduleResolution": "Node16",
 
     "composite": true,
     "declaration": true,

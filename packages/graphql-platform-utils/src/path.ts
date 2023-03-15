@@ -1,14 +1,14 @@
 import { addPath as baseAddPath, type Path } from 'graphql/jsutils/Path.js';
 import assert from 'node:assert/strict';
-import { InputType } from './input/type.js';
+import type { InputType } from './input/type.js';
 import { isPlainObject } from './plain-object.js';
 
 export * from 'graphql/jsutils/Path.js';
 
 export const isPath = (maybePath: unknown): maybePath is Path =>
   isPlainObject(maybePath) &&
-  ['string', 'number'].includes(typeof maybePath.key) &&
-  (maybePath.prev === undefined || isPath(maybePath.prev));
+  ['string', 'number'].includes(typeof maybePath['key']) &&
+  (maybePath['prev'] === undefined || isPath(maybePath['prev']));
 
 export const addPath = (
   prev: Path | undefined,

@@ -1,3 +1,4 @@
+import { describe, expect, it } from '@jest/globals';
 import * as graphql from 'graphql';
 import type { JsonValue } from 'type-fest';
 import { GraphQLJSONArray, GraphQLJSONObject } from './json.js';

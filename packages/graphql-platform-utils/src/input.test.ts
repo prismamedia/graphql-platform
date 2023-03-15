@@ -1,3 +1,4 @@
+import { describe, expect, it } from '@jest/globals';
 import * as graphql from 'graphql';
 import {
   Input,
@@ -8,7 +9,7 @@ import {
   NonOptionalInputType,
   ObjectInputType,
 } from './input.js';
-import { Nillable } from './nil.js';
+import type { Nillable } from './nil.js';
 import { addPath } from './path.js';
 
 describe('Input', () => {

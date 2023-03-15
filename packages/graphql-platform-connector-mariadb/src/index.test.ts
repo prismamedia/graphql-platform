@@ -1,3 +1,4 @@
+import { beforeAll, describe, expect, it } from '@jest/globals';
 import { MyGP } from '@prismamedia/graphql-platform/__tests__/config.js';
 import { EOL } from 'node:os';
 import {

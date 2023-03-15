@@ -303,7 +303,7 @@ export class EnumInputType<
 
   public override parseLiteral(
     value: NonNullNonVariableGraphQLValueNode,
-    variableValues?: graphql.GraphQLResolveInfo['variableValues'],
+    _variableValues?: graphql.GraphQLResolveInfo['variableValues'],
     path?: Path,
   ): Nillable<TValue['value']> {
     if (value.kind === graphql.Kind.STRING) {

@@ -1,3 +1,4 @@
+import { describe, expect, it } from '@jest/globals';
 import { getEnumKeys, getEnumValues } from './enum.js';
 
 enum MyNumericEnum {

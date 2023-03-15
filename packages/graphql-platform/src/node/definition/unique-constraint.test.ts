@@ -1,3 +1,4 @@
+import { describe, expect, it } from '@jest/globals';
 import { GraphQLPlatform } from '../../index.js';
 import { nodes } from '../../__tests__/config.js';
 

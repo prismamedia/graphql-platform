@@ -1,5 +1,5 @@
 import { UnexpectedValueError } from '../../error.js';
-import { Path } from '../../path.js';
+import type { Path } from '../../path.js';
 import { ListableInputType } from './wrapping/listable.js';
 import { NonNullableInputType } from './wrapping/non-nullable.js';
 import { NonOptionalInputType } from './wrapping/non-optional.js';

@@ -1,3 +1,4 @@
+import { describe, expect, it } from '@jest/globals';
 import { uuidTypesByName } from './uuid.js';
 
 describe('UUID', () => {

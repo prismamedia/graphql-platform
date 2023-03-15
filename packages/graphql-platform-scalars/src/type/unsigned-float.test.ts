@@ -1,3 +1,4 @@
+import { describe, expect, it } from '@jest/globals';
 import { GraphQLUnsignedFloat } from './unsigned-float.js';
 
 describe('UnsignedFloat', () => {

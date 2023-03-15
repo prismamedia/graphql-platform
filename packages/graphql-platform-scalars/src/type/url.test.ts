@@ -1,3 +1,4 @@
+import { describe, expect, it } from '@jest/globals';
 import { URL } from 'node:url';
 import { GraphQLURL } from './url.js';
 

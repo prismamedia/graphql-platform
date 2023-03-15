@@ -1,3 +1,4 @@
+import { describe, expect, it } from '@jest/globals';
 import { GraphQLUnsignedBigInt } from './unsigned-bigint.js';
 
 describe('UnsignedBigInt', () => {

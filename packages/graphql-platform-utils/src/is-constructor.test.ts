@@ -1,3 +1,4 @@
+import { describe, expect, it } from '@jest/globals';
 import { isConstructor } from './is-constructor.js';
 
 describe('Is constructor', () => {

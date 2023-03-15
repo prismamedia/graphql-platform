@@ -1,3 +1,4 @@
+import { afterAll, beforeAll, describe, expect, it } from '@jest/globals';
 import { IterableElement } from 'type-fest';
 import { escapeIdentifier } from './escaping.js';
 import { SchemaDiagnosis } from './schema.js';

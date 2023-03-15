@@ -1,3 +1,4 @@
+import { describe, expect, it } from '@jest/globals';
 import { addPath } from '../path.js';
 import { getOptionalFlag, type OptionalFlag } from './optional-flag.js';
 

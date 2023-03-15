@@ -1,3 +1,4 @@
+import { beforeAll, describe, expect, it } from '@jest/globals';
 import { printType } from 'graphql';
 import { EnumInputType, EnumInputValue } from './enum.js';
 

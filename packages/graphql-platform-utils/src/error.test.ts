@@ -1,3 +1,4 @@
+import { describe, expect, it } from '@jest/globals';
 import { AggregateGraphError, GraphError } from './error.js';
 import { addPath } from './path.js';
 

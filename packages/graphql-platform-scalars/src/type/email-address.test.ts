@@ -1,3 +1,4 @@
+import { describe, expect, it } from '@jest/globals';
 import { GraphQLEmailAddress } from './email-address.js';
 
 describe('EmailAddress', () => {

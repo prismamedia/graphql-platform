@@ -1,3 +1,4 @@
+import { describe, expect, it } from '@jest/globals';
 import * as utils from '@prismamedia/graphql-platform-utils';
 import * as graphql from 'graphql';
 import _ from 'lodash';

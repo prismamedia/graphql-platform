@@ -1,3 +1,4 @@
+import { describe, expect, it } from '@jest/globals';
 import { GraphQLBigInt } from './big-int.js';
 
 describe('BigInt', () => {
