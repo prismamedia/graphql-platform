@@ -6,15 +6,15 @@ import { AbstractNodeChange } from '../abstract-change.js';
 export class NodeDeletion<
   TRequestContext extends object = any,
   TConnector extends ConnectorInterface = any,
-  TServiceContainer extends object = any,
-> extends AbstractNodeChange<TRequestContext, TConnector, TServiceContainer> {
+  TContainer extends object = any,
+> extends AbstractNodeChange<TRequestContext, TConnector, TContainer> {
   public override readonly kind = utils.MutationType.DELETION;
 
   public readonly oldValue: Readonly<NodeValue>;
   public readonly newValue: undefined;
 
   public constructor(
-    node: Node<TRequestContext, TConnector, TServiceContainer>,
+    node: Node<TRequestContext, TConnector, TContainer>,
     requestContext: TRequestContext,
     maybeOldValue: unknown,
     createdAt?: Date,

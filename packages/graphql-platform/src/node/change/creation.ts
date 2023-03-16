@@ -6,15 +6,15 @@ import { AbstractNodeChange } from '../abstract-change.js';
 export class NodeCreation<
   TRequestContext extends object = any,
   TConnector extends ConnectorInterface = any,
-  TServiceContainer extends object = any,
-> extends AbstractNodeChange<TRequestContext, TConnector, TServiceContainer> {
+  TContainer extends object = any,
+> extends AbstractNodeChange<TRequestContext, TConnector, TContainer> {
   public override readonly kind = utils.MutationType.CREATION;
 
   public readonly oldValue: undefined;
   public readonly newValue: Readonly<NodeValue>;
 
   public constructor(
-    node: Node<TRequestContext, TConnector, TServiceContainer>,
+    node: Node<TRequestContext, TConnector, TContainer>,
     requestContext: TRequestContext,
     maybeNewValue: unknown,
     createdAt?: Date,

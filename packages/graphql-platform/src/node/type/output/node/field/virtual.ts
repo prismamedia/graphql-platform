@@ -13,14 +13,14 @@ import type { NodeOutputType, RawNodeSelection } from '../../node.js';
 export interface VirtualFieldOutputConfig<
   TRequestContext extends object = any,
   TConnector extends ConnectorInterface = any,
-  TServiceContainer extends object = any,
+  TContainer extends object = any,
   TSource extends NodeSelectedValue = any,
   TArgs = any,
   TResult = unknown,
 > extends GPBoundGraphQLFieldConfig<
     TRequestContext,
     TConnector,
-    TServiceContainer,
+    TContainer,
     TSource,
     TArgs,
     TResult
@@ -37,27 +37,27 @@ export interface VirtualFieldOutputConfig<
 export type ThunkableNillableVirtualFieldOutputConfig<
   TRequestContext extends object = any,
   TConnector extends ConnectorInterface = any,
-  TServiceContainer extends object = any,
+  TContainer extends object = any,
 > = utils.Thunkable<
   utils.Nillable<
-    VirtualFieldOutputConfig<TRequestContext, TConnector, TServiceContainer>
+    VirtualFieldOutputConfig<TRequestContext, TConnector, TContainer>
   >,
-  [node: Node<TRequestContext, TConnector, TServiceContainer>]
+  [node: Node<TRequestContext, TConnector, TContainer>]
 >;
 
 export type ThunkableNillableVirtualFieldOutputConfigsByName<
   TRequestContext extends object = any,
   TConnector extends ConnectorInterface = any,
-  TServiceContainer extends object = any,
+  TContainer extends object = any,
 > = utils.Thunkable<
   utils.Nillable<{
     [fieldName: utils.Name]: ThunkableNillableVirtualFieldOutputConfig<
       TRequestContext,
       TConnector,
-      TServiceContainer
+      TContainer
     >;
   }>,
-  [node: Node<TRequestContext, TConnector, TServiceContainer>]
+  [node: Node<TRequestContext, TConnector, TContainer>]
 >;
 
 export class VirtualFieldOutputType {

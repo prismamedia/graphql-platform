@@ -14,12 +14,8 @@ import {
 interface AbstractUpdateHookArgs<
   TRequestContext extends object,
   TConnector extends ConnectorInterface,
-  TServiceContainer extends object,
-> extends AbstractMutationHookArgs<
-    TRequestContext,
-    TConnector,
-    TServiceContainer
-  > {
+  TContainer extends object,
+> extends AbstractMutationHookArgs<TRequestContext, TConnector, TContainer> {
   /**
    * The provided "data" argument
    */
@@ -29,12 +25,8 @@ interface AbstractUpdateHookArgs<
 export interface PreUpdateArgs<
   TRequestContext extends object,
   TConnector extends ConnectorInterface,
-  TServiceContainer extends object,
-> extends AbstractUpdateHookArgs<
-    TRequestContext,
-    TConnector,
-    TServiceContainer
-  > {
+  TContainer extends object,
+> extends AbstractUpdateHookArgs<TRequestContext, TConnector, TContainer> {
   /**
    * The current node's value
    */
@@ -49,12 +41,8 @@ export interface PreUpdateArgs<
 export interface PostUpdateArgs<
   TRequestContext extends object,
   TConnector extends ConnectorInterface,
-  TServiceContainer extends object,
-> extends AbstractUpdateHookArgs<
-    TRequestContext,
-    TConnector,
-    TServiceContainer
-  > {
+  TContainer extends object,
+> extends AbstractUpdateHookArgs<TRequestContext, TConnector, TContainer> {
   /**
    * The uncommitted change
    */
@@ -67,12 +55,8 @@ export interface PostUpdateArgs<
 export interface UpdateConfig<
   TRequestContext extends object,
   TConnector extends ConnectorInterface,
-  TServiceContainer extends object,
-> extends AbstractMutationConfig<
-    TRequestContext,
-    TConnector,
-    TServiceContainer
-  > {
+  TContainer extends object,
+> extends AbstractMutationConfig<TRequestContext, TConnector, TContainer> {
   /**
    * Optional, add some "virtual" fields whose values can be used in the hooks
    */
@@ -87,7 +71,7 @@ export interface UpdateConfig<
    * Throwing an Error here will prevent the update
    */
   preUpdate?(
-    args: PreUpdateArgs<TRequestContext, TConnector, TServiceContainer>,
+    args: PreUpdateArgs<TRequestContext, TConnector, TContainer>,
   ): Promisable<void>;
 
   /**
@@ -96,7 +80,7 @@ export interface UpdateConfig<
    * Throwing an Error here will fail the update
    */
   postUpdate?(
-    args: PostUpdateArgs<TRequestContext, TConnector, TServiceContainer>,
+    args: PostUpdateArgs<TRequestContext, TConnector, TContainer>,
   ): Promisable<void>;
 }
 

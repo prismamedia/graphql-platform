@@ -8,7 +8,10 @@ import {
 } from '../index.js';
 
 describe('Change', () => {
-  let gp: GraphQLPlatform;
+  type MyTestRequestContext = {};
+  let myContext = {} satisfies MyTestRequestContext;
+
+  let gp: GraphQLPlatform<MyTestRequestContext>;
 
   beforeAll(() => {
     gp = new GraphQLPlatform({
@@ -71,13 +74,13 @@ describe('Change', () => {
     const Tag = gp.getNodeByName('Tag');
     const ArticleTag = gp.getNodeByName('ArticleTag');
 
-    expect(() => new NodeCreation(Article, {}, {})).toThrowError(
+    expect(() => new NodeCreation(Article, myContext, {})).toThrowError(
       '/Article - 2 errors:',
     );
-    expect(() => new NodeCreation(Tag, {}, {})).toThrowError(
+    expect(() => new NodeCreation(Tag, myContext, {})).toThrowError(
       '/Tag - 2 errors:',
     );
-    expect(() => new NodeCreation(ArticleTag, {}, {})).toThrowError(
+    expect(() => new NodeCreation(ArticleTag, myContext, {})).toThrowError(
       '/ArticleTag - 3 errors:',
     );
   });
@@ -87,57 +90,40 @@ describe('Change', () => {
     const Tag = gp.getNodeByName('Tag');
     const ArticleTag = gp.getNodeByName('ArticleTag');
 
-    const aggregate = new NodeChangeAggregation([
+    const aggregate = new NodeChangeAggregation(gp, myContext, [
       // These 2 changes are aggregated
-      new NodeCreation(
-        Article,
-        {},
-        { id: '2e9b5020-b9fe-4dab-bb59-59c986fffc12', title: 'My title' },
-      ),
+      new NodeCreation(Article, myContext, {
+        id: '2e9b5020-b9fe-4dab-bb59-59c986fffc12',
+        title: 'My title',
+      }),
       new NodeUpdate(
         Article,
-        {},
+        myContext,
         { id: '2e9b5020-b9fe-4dab-bb59-59c986fffc12', title: 'My title' },
         { id: '2e9b5020-b9fe-4dab-bb59-59c986fffc12', title: 'My new title' },
       ),
       // These 2 changes are removed
-      new NodeCreation(
-        Article,
-        {},
-        {
-          id: 'a642c6e3-e477-45da-bd0d-0351a2b086a0',
-          title: 'My other title',
-        },
-      ),
-      new NodeDeletion(
-        Article,
-        {},
-        {
-          id: 'a642c6e3-e477-45da-bd0d-0351a2b086a0',
-          title: 'My other title',
-        },
-      ),
-      new NodeCreation(
-        Tag,
-        {},
-        {
-          id: 1,
-          title: 'My first tag',
-        },
-      ),
+      new NodeCreation(Article, myContext, {
+        id: 'a642c6e3-e477-45da-bd0d-0351a2b086a0',
+        title: 'My other title',
+      }),
+      new NodeDeletion(Article, myContext, {
+        id: 'a642c6e3-e477-45da-bd0d-0351a2b086a0',
+        title: 'My other title',
+      }),
+      new NodeCreation(Tag, myContext, {
+        id: 1,
+        title: 'My first tag',
+      }),
       // These 2 changes are aggregated
-      new NodeCreation(
-        ArticleTag,
-        {},
-        {
-          article: { id: '2e9b5020-b9fe-4dab-bb59-59c986fffc12' },
-          tag: { id: 1 },
-          order: 1,
-        },
-      ),
+      new NodeCreation(ArticleTag, myContext, {
+        article: { id: '2e9b5020-b9fe-4dab-bb59-59c986fffc12' },
+        tag: { id: 1 },
+        order: 1,
+      }),
       new NodeUpdate(
         ArticleTag,
-        {},
+        myContext,
         {
           article: { id: '2e9b5020-b9fe-4dab-bb59-59c986fffc12' },
           tag: { id: 1 },
@@ -152,7 +138,7 @@ describe('Change', () => {
       // These 2 changes are removed
       new NodeUpdate(
         Article,
-        {},
+        myContext,
         { id: 'fbc99af4-429d-49fd-be05-8fdba83559c5', title: 'My title' },
         {
           id: 'fbc99af4-429d-49fd-be05-8fdba83559c5',
@@ -161,7 +147,7 @@ describe('Change', () => {
       ),
       new NodeUpdate(
         Article,
-        {},
+        myContext,
         {
           id: 'fbc99af4-429d-49fd-be05-8fdba83559c5',
           title: 'My updated title',

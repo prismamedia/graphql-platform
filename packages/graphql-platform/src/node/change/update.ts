@@ -11,21 +11,21 @@ export type ComponentUpdate = {
 export class NodeUpdate<
   TRequestContext extends object = any,
   TConnector extends ConnectorInterface = any,
-  TServiceContainer extends object = any,
-> extends AbstractNodeChange<TRequestContext, TConnector, TServiceContainer> {
+  TContainer extends object = any,
+> extends AbstractNodeChange<TRequestContext, TConnector, TContainer> {
   public override readonly kind = utils.MutationType.UPDATE;
 
   public readonly oldValue: Readonly<NodeValue>;
   public readonly newValue: Readonly<NodeValue>;
 
   public readonly updatesByComponent: ReadonlyMap<
-    Component<TRequestContext, TConnector, TServiceContainer>,
+    Component<TRequestContext, TConnector, TContainer>,
     Readonly<ComponentUpdate>
   >;
   public readonly updatedComponentNames: ReadonlyArray<Component['name']>;
 
   public constructor(
-    node: Node<TRequestContext, TConnector, TServiceContainer>,
+    node: Node<TRequestContext, TConnector, TContainer>,
     requestContext: TRequestContext,
     maybeOldValue: unknown,
     maybeNewValue: unknown,

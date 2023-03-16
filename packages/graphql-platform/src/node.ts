@@ -1,19 +1,15 @@
-import type { EventListener } from '@prismamedia/async-event-emitter';
 import * as utils from '@prismamedia/graphql-platform-utils';
 import { Memoize } from '@prismamedia/memoize';
 import inflection from 'inflection';
 import assert from 'node:assert/strict';
-import type { JsonObject } from 'type-fest';
+import type { JsonObject, Promisable } from 'type-fest';
 import type {
   ConnectorConfigOverride,
   ConnectorConfigOverrideKind,
   ConnectorInterface,
 } from './connector-interface.js';
-import type {
-  EventDataByName,
-  GraphQLPlatform,
-  OnEdgeHeadDeletion,
-} from './index.js';
+import type { GraphQLPlatform, OnEdgeHeadDeletion } from './index.js';
+import type { NodeChange } from './node/change.js';
 import { NodeCursor, type NodeCursorOptions } from './node/cursor.js';
 import {
   Edge,
@@ -83,9 +79,9 @@ export type NodeValue = NodeSelectedValue &
 export type NodeAuthorizer<
   TRequestContext extends object,
   TConnector extends ConnectorInterface,
-  TServiceContainer extends object,
+  TContainer extends object,
 > = (
-  this: GraphQLPlatform<TRequestContext, TConnector, TServiceContainer>,
+  this: GraphQLPlatform<TRequestContext, TConnector, TContainer>,
   requestContext: TRequestContext,
   mutationType?: utils.MutationType,
 ) => NodeFilterInputValue | boolean;
@@ -93,7 +89,7 @@ export type NodeAuthorizer<
 export type NodeConfig<
   TRequestContext extends object = any,
   TConnector extends ConnectorInterface = any,
-  TServiceContainer extends object = any,
+  TContainer extends object = any,
 > = {
   /**
    * Optional, you can provide this node's plural form if the one guessed is not what you expect
@@ -163,7 +159,7 @@ export type NodeConfig<
   /**
    * Optional, fine-tune the output type generated from this node's definition
    */
-  output?: NodeOutputTypeConfig<TRequestContext, TConnector, TServiceContainer>;
+  output?: NodeOutputTypeConfig<TRequestContext, TConnector, TContainer>;
 
   /**
    * Optional, fine-tune the "mutation":
@@ -177,14 +173,10 @@ export type NodeConfig<
         [TType in keyof MutationConfig<
           TRequestContext,
           TConnector,
-          TServiceContainer
+          TContainer
         >]?:
           | boolean
-          | MutationConfig<
-              TRequestContext,
-              TConnector,
-              TServiceContainer
-            >[TType];
+          | MutationConfig<TRequestContext, TConnector, TContainer>[TType];
       };
 
   /**
@@ -193,25 +185,29 @@ export type NodeConfig<
    * - grant full access by returning either "true" or "undefined"
    * - grant access to a subset by returning a filter (= the "where" argument)
    */
-  authorization?: NodeAuthorizer<
-    TRequestContext,
-    TConnector,
-    TServiceContainer
-  >;
+  authorization?: NodeAuthorizer<TRequestContext, TConnector, TContainer>;
+
+  /**
+   * Optional, register some change-aggregation-listeners
+   */
+  onChangeAggregation?: (
+    this: Node<TRequestContext, TConnector, TContainer>,
+    changes: ReadonlyArray<NodeChange<TRequestContext, TConnector, TContainer>>,
+  ) => Promisable<void>;
 
   /**
    * Optional, register some change-listeners
    */
-  onChange?: EventListener<
-    EventDataByName<TRequestContext, TConnector, TServiceContainer>,
-    'node-change'
-  >;
+  onChange?: (
+    this: Node<TRequestContext, TConnector, TContainer>,
+    change: NodeChange<TRequestContext, TConnector, TContainer>,
+  ) => Promisable<void>;
 } & ConnectorConfigOverride<TConnector, ConnectorConfigOverrideKind.NODE>;
 
 export class Node<
   TRequestContext extends object = any,
   TConnector extends ConnectorInterface = any,
-  TServiceContainer extends object = any,
+  TContainer extends object = any,
 > {
   public readonly plural: string;
   public readonly indefinite: string;
@@ -220,62 +216,78 @@ export class Node<
 
   public readonly componentsByName: ReadonlyMap<
     Component['name'],
-    Component<TRequestContext, TConnector, TServiceContainer>
+    Component<TRequestContext, TConnector, TContainer>
   >;
 
   public readonly componentSet: ReadonlySet<
-    Component<TRequestContext, TConnector, TServiceContainer>
+    Component<TRequestContext, TConnector, TContainer>
   >;
 
   public readonly leavesByName: ReadonlyMap<
     Leaf['name'],
-    Leaf<TRequestContext, TConnector, TServiceContainer>
+    Leaf<TRequestContext, TConnector, TContainer>
   >;
 
   public readonly leafSet: ReadonlySet<
-    Leaf<TRequestContext, TConnector, TServiceContainer>
+    Leaf<TRequestContext, TConnector, TContainer>
   >;
 
   public readonly edgesByName: ReadonlyMap<
     Edge['name'],
-    Edge<TRequestContext, TConnector, TServiceContainer>
+    Edge<TRequestContext, TConnector, TContainer>
   >;
 
   public readonly edgeSet: ReadonlySet<
-    Edge<TRequestContext, TConnector, TServiceContainer>
+    Edge<TRequestContext, TConnector, TContainer>
   >;
 
   public readonly uniqueConstraintsByName: ReadonlyMap<
     UniqueConstraint['name'],
-    UniqueConstraint<TRequestContext, TConnector, TServiceContainer>
+    UniqueConstraint<TRequestContext, TConnector, TContainer>
   >;
 
   public readonly uniqueConstraintSet: ReadonlySet<
-    UniqueConstraint<TRequestContext, TConnector, TServiceContainer>
+    UniqueConstraint<TRequestContext, TConnector, TContainer>
   >;
 
   public readonly identifier: UniqueConstraint<
     TRequestContext,
     TConnector,
-    TServiceContainer
+    TContainer
   >;
 
   public constructor(
     public readonly gp: GraphQLPlatform<
       TRequestContext,
       TConnector,
-      TServiceContainer
+      TContainer
     >,
     public readonly name: NodeName,
-    public readonly config: NodeConfig<
-      TRequestContext,
-      TConnector,
-      TServiceContainer
-    >,
+    public readonly config: NodeConfig<TRequestContext, TConnector, TContainer>,
     public readonly configPath: utils.Path,
   ) {
     assertNodeName(name, configPath);
     utils.assertPlainObject(config, configPath);
+
+    // on-change-aggregation
+    {
+      const onChangeAggregation = config.onChangeAggregation;
+      const onChangeAggregationPath = utils.addPath(
+        configPath,
+        'onChangeAggregation',
+      );
+
+      if (onChangeAggregation) {
+        utils.assertFunction(onChangeAggregation, onChangeAggregationPath);
+
+        gp.on('node-change-aggregation', async (aggregation) => {
+          const changes = aggregation.changesByNode.get(this);
+          if (changes?.length) {
+            await onChangeAggregation.call(this, changes);
+          }
+        });
+      }
+    }
 
     // on-change
     {
@@ -287,7 +299,7 @@ export class Node<
 
         gp.on('node-change', async (change) => {
           if (change.node === this) {
-            await onChange(change);
+            await onChange.call(this, change);
           }
         });
       }
@@ -531,11 +543,7 @@ export class Node<
   public getMutationConfig<TType extends utils.MutationType>(
     mutationType: TType,
   ): {
-    config?: MutationConfig<
-      TRequestContext,
-      TConnector,
-      TServiceContainer
-    >[TType];
+    config?: MutationConfig<TRequestContext, TConnector, TContainer>[TType];
     configPath: utils.Path;
   } {
     const mutationsConfig = this.config.mutation;
@@ -631,7 +639,7 @@ export class Node<
   public getComponentByName(
     name: Component['name'],
     path?: utils.Path,
-  ): Component<TRequestContext, TConnector, TServiceContainer> {
+  ): Component<TRequestContext, TConnector, TContainer> {
     const component = this.componentsByName.get(name);
     if (!component) {
       throw new utils.UnexpectedValueError(
@@ -649,7 +657,7 @@ export class Node<
   public getLeafByName(
     name: Leaf['name'],
     path?: utils.Path,
-  ): Leaf<TRequestContext, TConnector, TServiceContainer> {
+  ): Leaf<TRequestContext, TConnector, TContainer> {
     const leaf = this.leavesByName.get(name);
     if (!leaf) {
       throw new utils.UnexpectedValueError(
@@ -667,7 +675,7 @@ export class Node<
   public getEdgeByName(
     name: Edge['name'],
     path?: utils.Path,
-  ): Edge<TRequestContext, TConnector, TServiceContainer> {
+  ): Edge<TRequestContext, TConnector, TContainer> {
     const edge = this.edgesByName.get(name);
     if (!edge) {
       throw new utils.UnexpectedValueError(
@@ -685,7 +693,7 @@ export class Node<
   public getUniqueConstraintByName(
     name: UniqueConstraint['name'],
     path?: utils.Path,
-  ): UniqueConstraint<TRequestContext, TConnector, TServiceContainer> {
+  ): UniqueConstraint<TRequestContext, TConnector, TContainer> {
     const uniqueConstraint = this.uniqueConstraintsByName.get(name);
     if (!uniqueConstraint) {
       throw new utils.UnexpectedValueError(
@@ -716,7 +724,7 @@ export class Node<
   @Memoize()
   public get reverseEdgesByName(): ReadonlyMap<
     ReverseEdge['name'],
-    ReverseEdge<TRequestContext, TConnector, TServiceContainer>
+    ReverseEdge<TRequestContext, TConnector, TContainer>
   > {
     // Let's find all the edges heading to this node
     const referrersByNameByNodeName = new Map<
@@ -912,7 +920,7 @@ export class Node<
 
   @Memoize()
   public get reverseEdgeSet(): ReadonlySet<
-    ReverseEdge<TRequestContext, TConnector, TServiceContainer>
+    ReverseEdge<TRequestContext, TConnector, TContainer>
   > {
     return new Set(this.reverseEdgesByName.values());
   }
@@ -920,7 +928,7 @@ export class Node<
   public getReverseEdgeByName(
     name: ReverseEdge['name'],
     path?: utils.Path,
-  ): ReverseEdge<TRequestContext, TConnector, TServiceContainer> {
+  ): ReverseEdge<TRequestContext, TConnector, TContainer> {
     const reverseEdge = this.reverseEdgesByName.get(name);
     if (!reverseEdge) {
       throw new utils.UnexpectedValueError(
@@ -938,7 +946,7 @@ export class Node<
   @Memoize()
   public get uniqueReverseEdgesByName(): ReadonlyMap<
     UniqueReverseEdge['name'],
-    UniqueReverseEdge<TRequestContext, TConnector, TServiceContainer>
+    UniqueReverseEdge<TRequestContext, TConnector, TContainer>
   > {
     return new Map(
       Array.from(this.reverseEdgesByName).filter(
@@ -950,7 +958,7 @@ export class Node<
 
   @Memoize()
   public get uniqueReverseEdgeSet(): ReadonlySet<
-    UniqueReverseEdge<TRequestContext, TConnector, TServiceContainer>
+    UniqueReverseEdge<TRequestContext, TConnector, TContainer>
   > {
     return new Set(this.uniqueReverseEdgesByName.values());
   }
@@ -958,7 +966,7 @@ export class Node<
   public getUniqueReverseEdgeByName(
     name: UniqueReverseEdge['name'],
     path?: utils.Path,
-  ): UniqueReverseEdge<TRequestContext, TConnector, TServiceContainer> {
+  ): UniqueReverseEdge<TRequestContext, TConnector, TContainer> {
     const reverseEdge = this.uniqueReverseEdgesByName.get(name);
     if (!reverseEdge) {
       throw new utils.UnexpectedValueError(
@@ -976,7 +984,7 @@ export class Node<
   @Memoize()
   public get multipleReverseEdgesByName(): ReadonlyMap<
     MultipleReverseEdge['name'],
-    MultipleReverseEdge<TRequestContext, TConnector, TServiceContainer>
+    MultipleReverseEdge<TRequestContext, TConnector, TContainer>
   > {
     return new Map(
       Array.from(this.reverseEdgesByName).filter(
@@ -988,7 +996,7 @@ export class Node<
 
   @Memoize()
   public get multipleReverseEdgeSet(): ReadonlySet<
-    MultipleReverseEdge<TRequestContext, TConnector, TServiceContainer>
+    MultipleReverseEdge<TRequestContext, TConnector, TContainer>
   > {
     return new Set(this.multipleReverseEdgesByName.values());
   }
@@ -996,7 +1004,7 @@ export class Node<
   public getMultipleReverseEdgeByName(
     name: MultipleReverseEdge['name'],
     path?: utils.Path,
-  ): MultipleReverseEdge<TRequestContext, TConnector, TServiceContainer> {
+  ): MultipleReverseEdge<TRequestContext, TConnector, TContainer> {
     const reverseEdge = this.multipleReverseEdgesByName.get(name);
     if (!reverseEdge) {
       throw new utils.UnexpectedValueError(
@@ -1014,9 +1022,7 @@ export class Node<
   @Memoize((onHeadDeletion: OnEdgeHeadDeletion) => onHeadDeletion)
   public getReverseEdgesByAction(
     onHeadDeletion: OnEdgeHeadDeletion,
-  ): ReadonlyArray<
-    ReverseEdge<TRequestContext, TConnector, TServiceContainer>
-  > {
+  ): ReadonlyArray<ReverseEdge<TRequestContext, TConnector, TContainer>> {
     return Array.from(this.reverseEdgesByName.values()).filter(
       (reverseEdge) =>
         reverseEdge.originalEdge.onHeadDeletion === onHeadDeletion,
@@ -1027,8 +1033,8 @@ export class Node<
   public getReverseEdgesByHeadByAction(
     onHeadDeletion: OnEdgeHeadDeletion,
   ): ReadonlyMap<
-    Node<TRequestContext, TConnector, TServiceContainer>,
-    ReadonlyArray<ReverseEdge<TRequestContext, TConnector, TServiceContainer>>
+    Node<TRequestContext, TConnector, TContainer>,
+    ReadonlyArray<ReverseEdge<TRequestContext, TConnector, TContainer>>
   > {
     const reverseEdgesByHead = new Map<Node, Array<ReverseEdge>>();
 

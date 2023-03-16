@@ -7,13 +7,13 @@ import type { GraphQLPlatform } from './index.js';
 export interface CustomOperationConfig<
   TRequestContext extends object = any,
   TConnector extends ConnectorInterface = any,
-  TServiceContainer extends object = any,
+  TContainer extends object = any,
   TArgs = any,
   TResult = unknown,
 > extends GPBoundGraphQLFieldConfig<
     TRequestContext,
     TConnector,
-    TServiceContainer,
+    TContainer,
     undefined,
     TArgs,
     TResult
@@ -22,55 +22,55 @@ export interface CustomOperationConfig<
 export type ThunkableNillableCustomOperation<
   TRequestContext extends object = any,
   TConnector extends ConnectorInterface = any,
-  TServiceContainer extends object = any,
+  TContainer extends object = any,
 > = utils.Thunkable<
   utils.Nillable<
-    CustomOperationConfig<TRequestContext, TConnector, TServiceContainer>
+    CustomOperationConfig<TRequestContext, TConnector, TContainer>
   >,
-  [gp: GraphQLPlatform<TRequestContext, TConnector, TServiceContainer>]
+  [gp: GraphQLPlatform<TRequestContext, TConnector, TContainer>]
 >;
 
 export type CustomOperationsByNameConfig<
   TRequestContext extends object = any,
   TConnector extends ConnectorInterface = any,
-  TServiceContainer extends object = any,
+  TContainer extends object = any,
 > = utils.Thunkable<
   utils.Nillable<{
     [operationName: utils.Name]: ThunkableNillableCustomOperation<
       TRequestContext,
       TConnector,
-      TServiceContainer
+      TContainer
     >;
   }>,
-  [gp: GraphQLPlatform<TRequestContext, TConnector, TServiceContainer>]
+  [gp: GraphQLPlatform<TRequestContext, TConnector, TContainer>]
 >;
 
 export type CustomOperationsByNameByTypeConfig<
   TRequestContext extends object = any,
   TConnector extends ConnectorInterface = any,
-  TServiceContainer extends object = any,
+  TContainer extends object = any,
 > = utils.Thunkable<
   utils.Nillable<{
     [operationType in graphql.OperationTypeNode]?: CustomOperationsByNameConfig<
       TRequestContext,
       TConnector,
-      TServiceContainer
+      TContainer
     >;
   }>,
-  [gp: GraphQLPlatform<TRequestContext, TConnector, TServiceContainer>]
+  [gp: GraphQLPlatform<TRequestContext, TConnector, TContainer>]
 >;
 
 export function getCustomOperationsByNameByType<
   TRequestContext extends object,
   TConnector extends ConnectorInterface,
-  TServiceContainer extends object,
+  TContainer extends object,
 >(
-  gp: GraphQLPlatform<TRequestContext, TConnector, TServiceContainer>,
+  gp: GraphQLPlatform<TRequestContext, TConnector, TContainer>,
   operationType: graphql.OperationTypeNode,
   config: CustomOperationsByNameByTypeConfig<
     TRequestContext,
     TConnector,
-    TServiceContainer
+    TContainer
   >,
   configPath: utils.Path,
 ): graphql.GraphQLFieldConfigMap<undefined, TRequestContext> {

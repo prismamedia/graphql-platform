@@ -18,7 +18,7 @@ export type ReverseEdgeConfig =
 export type ReverseEdge<
   TRequestContext extends object = any,
   TConnector extends ConnectorInterface = any,
-  TServiceContainer extends object = any,
+  TContainer extends object = any,
 > =
-  | UniqueReverseEdge<TRequestContext, TConnector, TServiceContainer>
-  | MultipleReverseEdge<TRequestContext, TConnector, TServiceContainer>;
+  | UniqueReverseEdge<TRequestContext, TConnector, TContainer>
+  | MultipleReverseEdge<TRequestContext, TConnector, TContainer>;

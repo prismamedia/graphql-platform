@@ -1,7 +1,6 @@
 import {
   AsyncEventEmitter,
   type EventConfigByName,
-  type EventListener,
 } from '@prismamedia/async-event-emitter';
 import * as utils from '@prismamedia/graphql-platform-utils';
 import { Memoize } from '@prismamedia/memoize';
@@ -18,6 +17,7 @@ import {
   Node,
   type API,
   type NodeChange,
+  type NodeChangeAggregation,
   type NodeConfig,
   type NodeName,
   type OperationInterface,
@@ -37,33 +37,49 @@ export * from './seeding.js';
 export type RequestContextAssertion<
   TRequestContext extends object = any,
   TConnector extends ConnectorInterface = any,
-  TServiceContainer extends object = any,
+  TContainer extends object = any,
 > = (
-  this: GraphQLPlatform<TRequestContext, TConnector, TServiceContainer>,
+  this: GraphQLPlatform<TRequestContext, TConnector, TContainer>,
   maybeRequestContext: object,
 ) => asserts maybeRequestContext is TRequestContext;
 
 export type EventDataByName<
   TRequestContext extends object = any,
   TConnector extends ConnectorInterface = any,
-  TServiceContainer extends object = any,
+  TContainer extends object = any,
 > = {
-  'node-change': NodeChange<TRequestContext, TConnector, TServiceContainer>;
+  'node-change-aggregation': NodeChangeAggregation<
+    TRequestContext,
+    TConnector,
+    TContainer
+  >;
+  'node-change': NodeChange<TRequestContext, TConnector, TContainer>;
 };
 
-export type ServiceContainerConfig<
+export type ConnectorConfig<TConnector extends ConnectorInterface> =
+  | TConnector
+  | Constructor<TConnector, [GraphQLPlatform]>
+  | [
+      Constructor<
+        TConnector,
+        [GraphQLPlatform, TConnector['config'], utils.Path]
+      >,
+      TConnector['config'],
+    ];
+
+export type ContainerConfig<
   TRequestContext extends object = any,
   TConnector extends ConnectorInterface = any,
-  TServiceContainer extends object = any,
+  TContainer extends object = any,
 > = utils.Thunkable<
-  TServiceContainer,
+  TContainer,
   [gp: GraphQLPlatform<TRequestContext, TConnector, {}>]
 >;
 
 export type GraphQLPlatformConfig<
   TRequestContext extends object = any,
   TConnector extends ConnectorInterface = any,
-  TServiceContainer extends object = any,
+  TContainer extends object = any,
 > = {
   /**
    * Required, provide the nodes' definition
@@ -74,11 +90,7 @@ export type GraphQLPlatformConfig<
      *
      * @see https://spec.graphql.org/draft/#sec-Names
      */
-    [nodeName: NodeName]: NodeConfig<
-      TRequestContext,
-      TConnector,
-      TServiceContainer
-    >;
+    [nodeName: NodeName]: NodeConfig<TRequestContext, TConnector, TContainer>;
   };
 
   /**
@@ -87,7 +99,7 @@ export type GraphQLPlatformConfig<
   customOperations?: CustomOperationsByNameByTypeConfig<
     TRequestContext,
     TConnector,
-    TServiceContainer
+    TContainer
   >;
 
   /**
@@ -98,16 +110,12 @@ export type GraphQLPlatformConfig<
   /**
    * Optional, provide a connector to let the schema be executable
    */
-  connector?:
-    | TConnector
-    | Constructor<TConnector, [GraphQLPlatform]>
-    | [
-        Constructor<
-          TConnector,
-          [GraphQLPlatform, TConnector['config'], utils.Path]
-        >,
-        TConnector['config'],
-      ];
+  connector?: ConnectorConfig<TConnector>;
+
+  /**
+   * Optional, given the GraphQL-Platform instance, build a service-container which will be accessible further in the hooks, the virtual-fields and the custom-operations' resolver
+   */
+  container?: ContainerConfig<TRequestContext, TConnector, TContainer>;
 
   /**
    * Optional, a method which asserts the request-context validity
@@ -121,44 +129,27 @@ export type GraphQLPlatformConfig<
   requestContextAssertion?: RequestContextAssertion<
     TRequestContext,
     TConnector,
-    TServiceContainer
+    TContainer
   >;
 
   /**
    * Optional, register some event-listeners, all at once
    */
   on?: EventConfigByName<
-    EventDataByName<TRequestContext, TConnector, TServiceContainer>
-  >;
-
-  /**
-   * Optional, register a node-change-listeners
-   */
-  onNodeChange?: EventListener<
-    EventDataByName<TRequestContext, TConnector, TServiceContainer>,
-    'node-change'
-  >;
-
-  /**
-   * Optional, given the GraphQL-Platform instance, build a service-container which will be accessible further in the hooks, the virtual-fields and the custom-operations' resolver
-   */
-  container?: ServiceContainerConfig<
-    TRequestContext,
-    TConnector,
-    TServiceContainer
+    EventDataByName<TRequestContext, TConnector, TContainer>
   >;
 };
 
 export class GraphQLPlatform<
   TRequestContext extends object = any,
   TConnector extends ConnectorInterface = any,
-  TServiceContainer extends object = any,
+  TContainer extends object = any,
 > extends AsyncEventEmitter<
-  EventDataByName<TRequestContext, TConnector, TServiceContainer>
+  EventDataByName<TRequestContext, TConnector, TContainer>
 > {
   public readonly nodesByName: ReadonlyMap<
     Node['name'],
-    Node<TRequestContext, TConnector, TServiceContainer>
+    Node<TRequestContext, TConnector, TContainer>
   >;
 
   public readonly operationsByNameByType: OperationsByNameByType<TRequestContext>;
@@ -167,7 +158,7 @@ export class GraphQLPlatform<
 
   readonly #connector?: TConnector;
 
-  public readonly container: Readonly<TServiceContainer>;
+  public readonly container: Readonly<TContainer>;
 
   readonly #requestContextAssertion?: (
     maybeRequestContext: object,
@@ -177,7 +168,7 @@ export class GraphQLPlatform<
     public readonly config: GraphQLPlatformConfig<
       TRequestContext,
       TConnector,
-      TServiceContainer
+      TContainer
     >,
     public readonly configPath: utils.Path = utils.addPath(
       undefined,
@@ -187,18 +178,6 @@ export class GraphQLPlatform<
     utils.assertPlainObject(config, configPath);
 
     super(config.on);
-
-    // on-node-change
-    {
-      const onNodeChange = config.onNodeChange;
-      const onNodeChangePath = utils.addPath(configPath, 'onNodeChange');
-
-      if (onNodeChange) {
-        utils.assertFunction(onNodeChange, onNodeChangePath);
-
-        this.on('node-change', onNodeChange);
-      }
-    }
 
     // nodes
     {
@@ -339,14 +318,14 @@ export class GraphQLPlatform<
         });
       }
 
-      this.container = Object.freeze(container ?? ({} as TServiceContainer));
+      this.container = Object.freeze(container ?? ({} as TContainer));
     }
   }
 
   public getNodeByName(
     name: Node['name'],
     path?: utils.Path,
-  ): Node<TRequestContext, TConnector, TServiceContainer> {
+  ): Node<TRequestContext, TConnector, TContainer> {
     const node = this.nodesByName.get(name);
     if (!node) {
       throw new utils.UnexpectedValueError(

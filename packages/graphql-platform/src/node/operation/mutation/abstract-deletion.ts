@@ -12,22 +12,14 @@ import {
 interface AbstractDeletionHookArgs<
   TRequestContext extends object,
   TConnector extends ConnectorInterface,
-  TServiceContainer extends object,
-> extends AbstractMutationHookArgs<
-    TRequestContext,
-    TConnector,
-    TServiceContainer
-  > {}
+  TContainer extends object,
+> extends AbstractMutationHookArgs<TRequestContext, TConnector, TContainer> {}
 
 export interface PreDeleteArgs<
   TRequestContext extends object,
   TConnector extends ConnectorInterface,
-  TServiceContainer extends object,
-> extends AbstractDeletionHookArgs<
-    TRequestContext,
-    TConnector,
-    TServiceContainer
-  > {
+  TContainer extends object,
+> extends AbstractDeletionHookArgs<TRequestContext, TConnector, TContainer> {
   /**
    * The current node's value
    */
@@ -37,12 +29,8 @@ export interface PreDeleteArgs<
 export interface PostDeleteArgs<
   TRequestContext extends object,
   TConnector extends ConnectorInterface,
-  TServiceContainer extends object,
-> extends AbstractDeletionHookArgs<
-    TRequestContext,
-    TConnector,
-    TServiceContainer
-  > {
+  TContainer extends object,
+> extends AbstractDeletionHookArgs<TRequestContext, TConnector, TContainer> {
   /**
    * The uncommitted change
    */
@@ -55,19 +43,15 @@ export interface PostDeleteArgs<
 export interface DeletionConfig<
   TRequestContext extends object,
   TConnector extends ConnectorInterface,
-  TServiceContainer extends object,
-> extends AbstractMutationConfig<
-    TRequestContext,
-    TConnector,
-    TServiceContainer
-  > {
+  TContainer extends object,
+> extends AbstractMutationConfig<TRequestContext, TConnector, TContainer> {
   /**
    * Optional, add some custom validation/logic over the "update" statement that is about to be sent to the connector,
    *
    * Throwing an Error here will prevent the deletion
    */
   preDelete?(
-    args: PreDeleteArgs<TRequestContext, TConnector, TServiceContainer>,
+    args: PreDeleteArgs<TRequestContext, TConnector, TContainer>,
   ): Promisable<void>;
 
   /**
@@ -76,7 +60,7 @@ export interface DeletionConfig<
    * Throwing an Error here will fail the deletion
    */
   postDelete?(
-    args: PostDeleteArgs<TRequestContext, TConnector, TServiceContainer>,
+    args: PostDeleteArgs<TRequestContext, TConnector, TContainer>,
   ): Promisable<void>;
 }
 

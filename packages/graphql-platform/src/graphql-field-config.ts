@@ -6,12 +6,12 @@ import type { GraphQLPlatform } from './index.js';
 export type GPBoundGraphQLFieldResolver<
   TRequestContext extends object,
   TConnector extends ConnectorInterface,
-  TServiceContainer extends object,
+  TContainer extends object,
   TSource,
   TArgs = any,
   TResult = unknown,
 > = (
-  this: GraphQLPlatform<TRequestContext, TConnector, TServiceContainer>,
+  this: GraphQLPlatform<TRequestContext, TConnector, TContainer>,
   source: TSource,
   args: TArgs,
   context: TRequestContext,
@@ -21,7 +21,7 @@ export type GPBoundGraphQLFieldResolver<
 export interface GPBoundGraphQLFieldConfig<
   TRequestContext extends object,
   TConnector extends ConnectorInterface,
-  TServiceContainer extends object,
+  TContainer extends object,
   TSource,
   TArgs = any,
   TResult = unknown,
@@ -29,7 +29,7 @@ export interface GPBoundGraphQLFieldConfig<
   resolve?: GPBoundGraphQLFieldResolver<
     TRequestContext,
     TConnector,
-    TServiceContainer,
+    TContainer,
     TSource,
     TArgs,
     TResult
@@ -37,7 +37,7 @@ export interface GPBoundGraphQLFieldConfig<
   subscribe?: GPBoundGraphQLFieldResolver<
     TRequestContext,
     TConnector,
-    TServiceContainer,
+    TContainer,
     TSource,
     TArgs,
     TResult

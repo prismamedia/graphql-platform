@@ -1,20 +1,18 @@
 import { beforeAll, describe, expect, it } from '@jest/globals';
-import { MyGP } from '@prismamedia/graphql-platform/__tests__/config.js';
 import { EOL } from 'node:os';
 import {
   AddTableForeignKeysStatement,
   CreateSchemaStatement,
   CreateTableStatement,
   DropSchemaStatement,
-  MariaDBConnector,
 } from './index.js';
-import { createGraphQLPlatform } from './__tests__/config.js';
+import { createMyGP, type MyGP } from './__tests__/config.js';
 
 describe('GraphQL-Platform Connector MariaDB', () => {
-  let gp: MyGP<MariaDBConnector>;
+  let gp: MyGP;
 
   beforeAll(async () => {
-    gp = createGraphQLPlatform('connector_mariadb');
+    gp = createMyGP('connector_mariadb');
   });
 
   it('generates valid and stable schema', async () => {

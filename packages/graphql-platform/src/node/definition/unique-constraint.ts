@@ -40,30 +40,30 @@ const isShortConfig = (
 export class UniqueConstraint<
   TRequestContext extends object = any,
   TConnector extends ConnectorInterface = any,
-  TServiceContainer extends object = any,
+  TContainer extends object = any,
 > {
   public readonly config: FullUniqueConstraintConfig<TConnector>;
   public readonly name: utils.Name;
 
   public readonly componentsByName: ReadonlyMap<
     Component['name'],
-    Component<TRequestContext, TConnector, TServiceContainer>
+    Component<TRequestContext, TConnector, TContainer>
   >;
 
   public readonly componentSet: ReadonlySet<
-    Component<TRequestContext, TConnector, TServiceContainer>
+    Component<TRequestContext, TConnector, TContainer>
   >;
 
   public readonly leafSet: ReadonlySet<
-    Leaf<TRequestContext, TConnector, TServiceContainer>
+    Leaf<TRequestContext, TConnector, TContainer>
   >;
 
   public readonly edgeSet: ReadonlySet<
-    Edge<TRequestContext, TConnector, TServiceContainer>
+    Edge<TRequestContext, TConnector, TContainer>
   >;
 
   public constructor(
-    public readonly node: Node<TRequestContext, TConnector, TServiceContainer>,
+    public readonly node: Node<TRequestContext, TConnector, TContainer>,
     config: UniqueConstraintConfig<TConnector>,
     public readonly configPath: utils.Path,
   ) {
@@ -144,7 +144,7 @@ export class UniqueConstraint<
 
   @Memoize()
   public get referrerSet(): ReadonlySet<
-    Edge<TRequestContext, TConnector, TServiceContainer>
+    Edge<TRequestContext, TConnector, TContainer>
   > {
     return new Set(
       Array.from(this.node.gp.nodesByName.values()).flatMap((node) =>

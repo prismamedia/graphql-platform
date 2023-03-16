@@ -58,7 +58,7 @@ export type RawNodeSelection<TValue extends NodeSelectedValue = any> =
 export interface NodeOutputTypeConfig<
   TRequestContext extends object,
   TConnector extends ConnectorInterface,
-  TServiceContainer extends object,
+  TContainer extends object,
 > {
   /**
    * Optional, add some "virtual" fields whose value is computed from the components' value
@@ -68,7 +68,7 @@ export interface NodeOutputTypeConfig<
   virtualFields?: ThunkableNillableVirtualFieldOutputConfigsByName<
     TRequestContext,
     TConnector,
-    TServiceContainer
+    TContainer
   >;
 
   /**

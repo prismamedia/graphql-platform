@@ -11,8 +11,8 @@ export * from './change/update.js';
 export type NodeChange<
   TRequestContext extends object = any,
   TConnector extends ConnectorInterface = any,
-  TServiceContainer extends object = any,
+  TContainer extends object = any,
 > =
-  | NodeCreation<TRequestContext, TConnector, TServiceContainer>
-  | NodeUpdate<TRequestContext, TConnector, TServiceContainer>
-  | NodeDeletion<TRequestContext, TConnector, TServiceContainer>;
+  | NodeCreation<TRequestContext, TConnector, TContainer>
+  | NodeUpdate<TRequestContext, TConnector, TContainer>
+  | NodeDeletion<TRequestContext, TConnector, TContainer>;

@@ -5,8 +5,8 @@ import { OperationContext } from '../context.js';
 export class MutationContext<
   TRequestContext extends object = any,
   TConnector extends ConnectorInterface = any,
-  TServiceContainer extends object = any,
-> extends OperationContext<TRequestContext, TConnector, TServiceContainer> {
+  TContainer extends object = any,
+> extends OperationContext<TRequestContext, TConnector, TContainer> {
   /**
    * Contains the nodes' changes that will be fired after the success of the whole mutation, including all the nested actions
    */

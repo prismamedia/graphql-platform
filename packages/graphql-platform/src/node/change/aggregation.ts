@@ -1,29 +1,69 @@
 import * as utils from '@prismamedia/graphql-platform-utils';
 import assert from 'node:assert/strict';
+import type { ConnectorInterface } from '../../connector-interface.js';
+import type { GraphQLPlatform } from '../../index.js';
 import type { Node } from '../../node.js';
 import type { NodeChange } from '../change.js';
 import { NodeCreation } from './creation.js';
 import { NodeUpdate } from './update.js';
 
-export class NodeChangeAggregation implements Iterable<NodeChange> {
-  readonly #changesByIdByNode = new Map<
-    Node,
-    Map<NodeChange['stringifiedId'], NodeChange>
-  >();
+function deleteNodeChange(
+  changesByIdByNode: Map<Node, Map<NodeChange['stringifiedId'], NodeChange>>,
+  change: NodeChange,
+): void {
+  let changeByFlattenedId = changesByIdByNode.get(change.node);
 
-  public readonly changesByNode: ReadonlyMap<Node, ReadonlyArray<NodeChange>>;
+  if (
+    changeByFlattenedId?.delete(change.stringifiedId) &&
+    changeByFlattenedId.size === 0
+  ) {
+    changesByIdByNode.delete(change.node);
+  }
+}
+
+export class NodeChangeAggregation<
+  TRequestContext extends object = any,
+  TConnector extends ConnectorInterface = any,
+  TContainer extends object = any,
+> implements Iterable<NodeChange<TRequestContext, TConnector, TContainer>>
+{
+  public readonly changesByNode: ReadonlyMap<
+    Node<TRequestContext, TConnector, TContainer>,
+    ReadonlyArray<NodeChange<TRequestContext, TConnector, TContainer>>
+  >;
 
   public readonly length: number;
 
-  public readonly nodes: ReadonlyArray<Node>;
+  public readonly nodes: ReadonlyArray<
+    Node<TRequestContext, TConnector, TContainer>
+  >;
 
-  public constructor(changes: ReadonlyArray<NodeChange>) {
+  public constructor(
+    public readonly gp: GraphQLPlatform<
+      TRequestContext,
+      TConnector,
+      TContainer
+    >,
+    public readonly requestContext: TRequestContext,
+    changes: ReadonlyArray<NodeChange>,
+  ) {
+    const changesByIdByNode = new Map<
+      Node,
+      Map<NodeChange['stringifiedId'], NodeChange>
+    >();
+
     for (const change of changes) {
+      assert.equal(
+        change.requestContext,
+        requestContext,
+        'The changes have not occured in the same request',
+      );
+
       const node = change.node;
 
-      let changesById = this.#changesByIdByNode.get(node);
+      let changesById = changesByIdByNode.get(node);
       if (!changesById) {
-        this.#changesByIdByNode.set(node, (changesById = new Map()));
+        changesByIdByNode.set(node, (changesById = new Map()));
       }
 
       let previousChange = changesById.get(change.stringifiedId);
@@ -32,7 +72,7 @@ export class NodeChangeAggregation implements Iterable<NodeChange> {
       } else {
         assert(
           previousChange.createdAt <= change.createdAt,
-          'The aggregation has to be done in the order the changes have occured.',
+          'The aggregation has to be done in the order the changes have occured',
         );
 
         switch (previousChange.kind) {
@@ -59,7 +99,7 @@ export class NodeChangeAggregation implements Iterable<NodeChange> {
               }
 
               case utils.MutationType.DELETION:
-                this.delete(previousChange);
+                deleteNodeChange(changesByIdByNode, previousChange);
                 break;
             }
             break;
@@ -92,7 +132,7 @@ export class NodeChangeAggregation implements Iterable<NodeChange> {
                     changesById.set(change.stringifiedId, aggregate);
                   } else {
                     // This "update" cancels the previous "update" => no change
-                    this.delete(previousChange);
+                    deleteNodeChange(changesByIdByNode, previousChange);
                   }
                 } else {
                   // Should not happen - we missed something
@@ -123,7 +163,7 @@ export class NodeChangeAggregation implements Iterable<NodeChange> {
                   changesById.set(change.stringifiedId, aggregate);
                 } else {
                   // This "creation" cancels the previous "deletion" => no change
-                  this.delete(previousChange);
+                  deleteNodeChange(changesByIdByNode, previousChange);
                 }
                 break;
               }
@@ -146,10 +186,10 @@ export class NodeChangeAggregation implements Iterable<NodeChange> {
     }
 
     this.changesByNode = new Map(
-      Array.from(this.#changesByIdByNode.entries()).map(
+      Array.from(changesByIdByNode.entries()).map(
         ([node, changesByFlattenedId]) => [
           node,
-          Array.from(changesByFlattenedId.values()),
+          Object.freeze(Array.from(changesByFlattenedId.values())),
         ],
       ),
     );
@@ -159,21 +199,12 @@ export class NodeChangeAggregation implements Iterable<NodeChange> {
       0,
     );
 
-    this.nodes = Array.from(this.changesByNode.keys());
+    this.nodes = Object.freeze(Array.from(this.changesByNode.keys()));
   }
 
-  protected delete(change: NodeChange): void {
-    let changeByFlattenedId = this.#changesByIdByNode.get(change.node);
-
-    if (
-      changeByFlattenedId?.delete(change.stringifiedId) &&
-      changeByFlattenedId.size === 0
-    ) {
-      this.#changesByIdByNode.delete(change.node);
-    }
-  }
-
-  *[Symbol.iterator](): IterableIterator<NodeChange> {
+  *[Symbol.iterator](): IterableIterator<
+    NodeChange<TRequestContext, TConnector, TContainer>
+  > {
     for (const changes of this.changesByNode.values()) {
       yield* changes;
     }

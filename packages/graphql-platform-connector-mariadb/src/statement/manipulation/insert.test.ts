@@ -1,24 +1,21 @@
 import { afterAll, beforeAll, describe, expect, it } from '@jest/globals';
 import {
   myAdminContext,
-  MyGP,
   myJournalistContext,
 } from '@prismamedia/graphql-platform/__tests__/config.js';
-import { MariaDBConnector } from '../../index.js';
-import { createGraphQLPlatform } from '../../__tests__/config.js';
+import { createMyGP, type MyGP } from '../../__tests__/config.js';
 import { InsertStatement } from './insert.js';
 
 describe('Insert statement', () => {
-  let gp: MyGP<MariaDBConnector>;
+  let gp: MyGP;
   const executedStatements: string[] = [];
 
   beforeAll(async () => {
-    gp = createGraphQLPlatform(`connector_mariadb_insert_statement`, {
-      onExecutedStatement({ statement }) {
-        if (statement instanceof InsertStatement) {
-          executedStatements.push(statement.sql);
-        }
-      },
+    gp = createMyGP(`connector_mariadb_insert_statement`);
+    gp.connector.on('executed-statement', ({ statement }) => {
+      if (statement instanceof InsertStatement) {
+        executedStatements.push(statement.sql);
+      }
     });
 
     await gp.connector.setup();

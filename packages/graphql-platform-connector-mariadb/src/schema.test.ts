@@ -3,7 +3,7 @@ import { IterableElement } from 'type-fest';
 import { escapeIdentifier } from './escaping.js';
 import { SchemaDiagnosis } from './schema.js';
 import { StatementKind } from './statement.js';
-import { createGraphQLPlatform, MyGP } from './__tests__/config.js';
+import { createMyGP, type MyGP } from './__tests__/config.js';
 
 describe('Schema', () => {
   const testIds = ['diagnosis'] as const;
@@ -15,7 +15,7 @@ describe('Schema', () => {
       (gpsByTest = Object.fromEntries(
         Object.values(testIds).map((testId) => [
           testId,
-          createGraphQLPlatform(`connector_mariadb_schema_${testId}`),
+          createMyGP(`connector_mariadb_schema_${testId}`),
         ]),
       ) as any),
   );

@@ -43,7 +43,7 @@ export type AbstractComponentConfig = {
 export abstract class AbstractComponent<
   TRequestContext extends object,
   TConnector extends ConnectorInterface,
-  TServiceContainer extends object,
+  TContainer extends object,
 > {
   public readonly indefinite: string;
   public readonly description?: string;
@@ -53,7 +53,7 @@ export abstract class AbstractComponent<
   public abstract readonly updateInput: AbstractComponentUpdateInput<any>;
 
   public constructor(
-    public readonly node: Node<TRequestContext, TConnector, TServiceContainer>,
+    public readonly node: Node<TRequestContext, TConnector, TContainer>,
     public readonly name: utils.Name,
     protected readonly config: AbstractComponentConfig,
     protected readonly configPath: utils.Path,
@@ -96,7 +96,7 @@ export abstract class AbstractComponent<
 
   @Memoize()
   public get referrerSet(): ReadonlySet<
-    Edge<TRequestContext, TConnector, TServiceContainer>
+    Edge<TRequestContext, TConnector, TContainer>
   > {
     return new Set(
       Array.from(this.node.gp.nodesByName.values()).flatMap((node) =>

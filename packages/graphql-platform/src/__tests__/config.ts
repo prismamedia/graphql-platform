@@ -8,7 +8,10 @@ import {
 } from 'graphql';
 import { randomUUID } from 'node:crypto';
 import {
+  ComponentConfig,
+  ConnectorConfig,
   ConnectorInterface,
+  ContainerConfig,
   CustomOperationsByNameByTypeConfig,
   GraphQLPlatform,
   NodeConfig,
@@ -946,5 +949,103 @@ export const customOperations: CustomOperationsByNameByTypeConfig<MyContext> = {
   subscription: undefined,
 };
 
-export type MyGP<TConnector extends ConnectorInterface = ConnectorInterface> =
-  GraphQLPlatform<MyContext, TConnector>;
+export type MyGP<
+  TConnector extends ConnectorInterface = any,
+  TContainer extends object = any,
+> = GraphQLPlatform<MyContext, TConnector, TContainer>;
+
+export function createMyGP<
+  TConnector extends ConnectorInterface,
+  TContainer extends object,
+>(config?: {
+  connector?: ConnectorConfig<TConnector>;
+  container?: ContainerConfig<MyContext, TConnector, TContainer>;
+}): MyGP<TConnector, TContainer> {
+  return new GraphQLPlatform({
+    nodes: Object.fromEntries<NodeConfig>(
+      Object.entries(nodes).map<[string, NodeConfig]>(([nodeName, config]) => [
+        nodeName,
+        {
+          ...config,
+          ...(nodeName === 'Article'
+            ? {
+                table: {
+                  indexes: [
+                    ['slug'],
+                    ['status', 'slug'],
+                    ['category', 'updatedAt'],
+                  ],
+                },
+              }
+            : {}),
+          components: Object.fromEntries<ComponentConfig>(
+            Object.entries(config.components).map<[string, ComponentConfig]>(
+              ([componentName, config]) => [
+                componentName,
+                componentName === '_id' && config.kind === 'Leaf'
+                  ? {
+                      ...config,
+                      column: { autoIncrement: true },
+                    }
+                  : nodeName === 'Article' &&
+                    componentName === 'body' &&
+                    config.kind === 'Leaf'
+                  ? {
+                      ...config,
+                      column: { fullTextIndex: true },
+                    }
+                  : nodeName === 'Article' &&
+                    componentName === 'updatedAt' &&
+                    config.kind === 'Leaf'
+                  ? {
+                      ...config,
+                      column: {
+                        dataType: {
+                          kind: 'TIMESTAMP',
+                          microsecondPrecision: 0,
+                        },
+                      },
+                    }
+                  : nodeName === 'User' &&
+                    componentName === 'lastLoggedInAt' &&
+                    config.kind === 'Leaf'
+                  ? {
+                      ...config,
+                      column: {
+                        dataType: {
+                          kind: 'TIMESTAMP',
+                          microsecondPrecision: 0,
+                        },
+                      },
+                    }
+                  : nodeName === 'UserProfile' &&
+                    componentName === 'user' &&
+                    config.kind === 'Edge'
+                  ? {
+                      ...config,
+                      columns: { id: 'theUserId' },
+                    }
+                  : nodeName === 'ArticleTagModeration' &&
+                    componentName === 'articleTag' &&
+                    config.kind === 'Edge'
+                  ? {
+                      ...config,
+                      columns: {
+                        article: { _id: 'theArticlePrivateId' },
+                        tag: { id: 'theTagId' },
+                      },
+                      foreignKey: { name: 'my_custom_fk_name' },
+                    }
+                  : config,
+              ],
+            ),
+          ),
+        },
+      ]),
+    ),
+
+    connector: config?.connector,
+
+    container: config?.container,
+  });
+}

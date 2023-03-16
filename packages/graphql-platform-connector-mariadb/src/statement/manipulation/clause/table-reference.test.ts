@@ -2,21 +2,19 @@ import { afterAll, beforeAll, describe, expect, it } from '@jest/globals';
 import { OperationContext } from '@prismamedia/graphql-platform';
 import {
   myAdminContext,
-  MyGP,
   myJournalistContext,
   myUserContext,
   myVisitorContext,
 } from '@prismamedia/graphql-platform/__tests__/config.js';
 import { format } from '@sqltools/formatter';
-import { MariaDBConnector } from '../../../index.js';
-import { createGraphQLPlatform } from '../../../__tests__/config.js';
+import { createMyGP, type MyGP } from '../../../__tests__/config.js';
 import { TableFactor } from './table-reference.js';
 
 describe('Table reference', () => {
-  let gp: MyGP<MariaDBConnector>;
+  let gp: MyGP;
 
   beforeAll(async () => {
-    gp = createGraphQLPlatform('connector_mariadb_table_reference_clause');
+    gp = createMyGP('connector_mariadb_table_reference_clause');
 
     await gp.connector.setup();
   });

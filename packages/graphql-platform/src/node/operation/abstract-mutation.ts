@@ -18,22 +18,22 @@ import type { MutationInterface } from './mutation/interface.js';
 export interface AbstractMutationHookArgs<
   TRequestContext extends object,
   TConnector extends ConnectorInterface,
-  TServiceContainer extends object,
+  TContainer extends object,
 > {
   /**
    * The GraphQL-Platform instance
    */
-  gp: GraphQLPlatform<TRequestContext, TConnector, TServiceContainer>;
+  gp: GraphQLPlatform<TRequestContext, TConnector, TContainer>;
 
   /**
    * The node's definition
    */
-  node: Node<TRequestContext, TConnector, TServiceContainer>;
+  node: Node<TRequestContext, TConnector, TContainer>;
 
   /**
    * The current context
    */
-  context: MutationContext<TRequestContext, TConnector, TServiceContainer>;
+  context: MutationContext<TRequestContext, TConnector, TContainer>;
 
   /**
    * The context-bound API
@@ -44,7 +44,7 @@ export interface AbstractMutationHookArgs<
 export interface AbstractMutationConfig<
   TRequestContext extends object,
   TConnector extends ConnectorInterface,
-  TServiceContainer extends object,
+  TContainer extends object,
 > {
   /**
    * Optional, either the mutation is enabled or not
@@ -190,14 +190,19 @@ export abstract class AbstractMutation<
 
     // changes
     {
-      const aggregation = new NodeChangeAggregation(mutationContext.changes);
+      const aggregation = new NodeChangeAggregation(
+        mutationContext.gp,
+        mutationContext.requestContext,
+        mutationContext.changes,
+      );
 
       if (aggregation.length) {
-        await Promise.all(
-          Array.from(aggregation, (change) =>
+        await Promise.all([
+          this.gp.emit('node-change-aggregation', aggregation),
+          ...Array.from(aggregation, (change) =>
             this.gp.emit('node-change', change),
           ),
-        );
+        ]);
       }
     }
 

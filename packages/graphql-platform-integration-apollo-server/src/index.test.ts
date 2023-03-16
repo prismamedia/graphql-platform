@@ -1,19 +1,18 @@
 import { ApolloServer } from '@apollo/server';
 import { afterAll, beforeAll, describe, expect, it } from '@jest/globals';
-import { MariaDBConnector } from '@prismamedia/graphql-platform-connector-mariadb';
-import { createGraphQLPlatform } from '@prismamedia/graphql-platform-connector-mariadb/__tests__/config.js';
 import {
-  myAdminContext,
-  MyGP,
-} from '@prismamedia/graphql-platform/__tests__/config.js';
+  createMyGP,
+  type MyGP,
+} from '@prismamedia/graphql-platform-connector-mariadb/__tests__/config.js';
+import { myAdminContext } from '@prismamedia/graphql-platform/__tests__/config.js';
 import { fixtures } from '@prismamedia/graphql-platform/__tests__/fixture.js';
 import { ApolloServerIntegration } from './index.js';
 
 describe('GraphQL-Platform Integration Apollo Server', () => {
-  let gp: MyGP<MariaDBConnector>;
+  let gp: MyGP;
 
   beforeAll(async () => {
-    gp = createGraphQLPlatform('integration_apollo_server');
+    gp = createMyGP('integration_apollo_server');
 
     await gp.connector.setup();
     await gp.seed(fixtures, myAdminContext);

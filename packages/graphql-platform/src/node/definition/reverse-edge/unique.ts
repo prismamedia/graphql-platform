@@ -28,10 +28,10 @@ export interface UniqueReverseEdgeConfig extends AbstractReverseEdgeConfig {
 export class UniqueReverseEdge<
   TRequestContext extends object = any,
   TConnector extends ConnectorInterface = any,
-  TServiceContainer extends object = any,
-> extends AbstractReverseEdge<TRequestContext, TConnector, TServiceContainer> {
+  TContainer extends object = any,
+> extends AbstractReverseEdge<TRequestContext, TConnector, TContainer> {
   public constructor(
-    edge: Edge<TRequestContext, TConnector, TServiceContainer>,
+    edge: Edge<TRequestContext, TConnector, TContainer>,
     name: utils.Name,
     public override readonly config: UniqueReverseEdgeConfig,
     public override readonly configPath: utils.Path,

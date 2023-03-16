@@ -35,12 +35,12 @@ export interface MultipleReverseEdgeConfig extends AbstractReverseEdgeConfig {
 export class MultipleReverseEdge<
   TRequestContext extends object = any,
   TConnector extends ConnectorInterface = any,
-  TServiceContainer extends object = any,
-> extends AbstractReverseEdge<TRequestContext, TConnector, TServiceContainer> {
+  TContainer extends object = any,
+> extends AbstractReverseEdge<TRequestContext, TConnector, TContainer> {
   public readonly countFieldName: string;
 
   public constructor(
-    edge: Edge<TRequestContext, TConnector, TServiceContainer>,
+    edge: Edge<TRequestContext, TConnector, TContainer>,
     name: utils.Name,
     public override readonly config: MultipleReverseEdgeConfig,
     public override readonly configPath: utils.Path,

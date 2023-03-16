@@ -4,22 +4,17 @@ import { MutationType } from '@prismamedia/graphql-platform-utils';
 import {
   ArticleStatus,
   myAdminContext,
-  MyGP,
 } from '@prismamedia/graphql-platform/__tests__/config.js';
 import { fixtures } from '@prismamedia/graphql-platform/__tests__/fixture.js';
-import { MariaDBConnector } from '../../index.js';
-import { createGraphQLPlatform } from '../../__tests__/config.js';
+import { createMyGP, type MyGP } from '../../__tests__/config.js';
 
 describe('Update statement', () => {
-  let gp: MyGP<MariaDBConnector>;
+  let gp: MyGP;
   const changes: NodeChange[] = [];
 
   beforeAll(async () => {
-    gp = createGraphQLPlatform(`connector_mariadb_update_statement`, {
-      onNodeChange(change) {
-        changes.push(change);
-      },
-    });
+    gp = createMyGP(`connector_mariadb_update_statement`);
+    gp.on('node-change', (change) => changes.push(change));
 
     await gp.connector.setup();
     await gp.seed(fixtures, myAdminContext);

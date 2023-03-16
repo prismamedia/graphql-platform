@@ -12,9 +12,9 @@ export type ComponentConfig<TConnector extends ConnectorInterface = any> =
 export type Component<
   TRequestContext extends object = any,
   TConnector extends ConnectorInterface = any,
-  TServiceContainer extends object = any,
+  TContainer extends object = any,
 > =
-  | Leaf<TRequestContext, TConnector, TServiceContainer>
-  | Edge<TRequestContext, TConnector, TServiceContainer>;
+  | Leaf<TRequestContext, TConnector, TContainer>
+  | Edge<TRequestContext, TConnector, TContainer>;
 
 export type ComponentValue = LeafValue | ReferenceValue;

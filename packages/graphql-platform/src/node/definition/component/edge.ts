@@ -78,8 +78,8 @@ export type EdgeConfig<TConnector extends ConnectorInterface = any> =
 export class Edge<
   TRequestContext extends object = any,
   TConnector extends ConnectorInterface = any,
-  TServiceContainer extends object = any,
-> extends AbstractComponent<TRequestContext, TConnector, TServiceContainer> {
+  TContainer extends object = any,
+> extends AbstractComponent<TRequestContext, TConnector, TContainer> {
   readonly #headConfigPath: utils.Path;
   readonly #nodeHeadConfig: string;
   readonly #uniqueConstraintHeadConfig?: string;
@@ -87,7 +87,7 @@ export class Edge<
   public readonly onHeadDeletion: OnEdgeHeadDeletion;
 
   public constructor(
-    public readonly tail: Node<TRequestContext, TConnector, TServiceContainer>,
+    public readonly tail: Node<TRequestContext, TConnector, TContainer>,
     name: utils.Name,
     public override readonly config: EdgeConfig<TConnector>,
     public override readonly configPath: utils.Path,
@@ -165,7 +165,7 @@ export class Edge<
   }
 
   @Memoize()
-  public get head(): Node<TRequestContext, TConnector, TServiceContainer> {
+  public get head(): Node<TRequestContext, TConnector, TContainer> {
     return this.node.gp.getNodeByName(
       this.#nodeHeadConfig,
       this.#headConfigPath,
@@ -176,7 +176,7 @@ export class Edge<
   public get referencedUniqueConstraint(): UniqueConstraint<
     TRequestContext,
     TConnector,
-    TServiceContainer
+    TContainer
   > {
     let referencedUniqueConstraint: UniqueConstraint;
 
@@ -269,7 +269,7 @@ export class Edge<
   public get reverseEdge(): ReverseEdge<
     TRequestContext,
     TConnector,
-    TServiceContainer
+    TContainer
   > {
     const reverseEdge = Array.from(this.head.reverseEdgesByName.values()).find(
       (reverseEdge) => reverseEdge.originalEdge === this,
