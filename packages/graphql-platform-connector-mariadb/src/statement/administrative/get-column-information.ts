@@ -8,7 +8,7 @@ import { StatementKind } from '../kind.js';
  * @see https://mariadb.com/kb/en/information-schema-columns-table/
  */
 export type ColumnInformation = {
-  CHARACTER_MAXIMUM_LENGTH: BigInt | null;
+  CHARACTER_MAXIMUM_LENGTH: bigint | null;
   CHARACTER_SET_NAME: string | null;
   COLLATION_NAME: string | null;
   COLUMN_COMMENT: string;
@@ -17,12 +17,12 @@ export type ColumnInformation = {
   COLUMN_NAME: string;
   COLUMN_TYPE: string;
   DATA_TYPE: string;
-  DATETIME_PRECISION: BigInt | null;
+  DATETIME_PRECISION: bigint | null;
   EXTRA: string;
   IS_NULLABLE: 'YES' | 'NO';
-  NUMERIC_PRECISION: BigInt | null;
-  NUMERIC_SCALE: BigInt | null;
-  ORDINAL_POSITION: BigInt;
+  NUMERIC_PRECISION: bigint | null;
+  NUMERIC_SCALE: bigint | null;
+  ORDINAL_POSITION: bigint;
   TABLE_NAME: string;
   TABLE_SCHEMA: string;
 };

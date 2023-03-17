@@ -5,16 +5,16 @@ import {
 import * as utils from '@prismamedia/graphql-platform-utils';
 import { Memoize } from '@prismamedia/memoize';
 import * as graphql from 'graphql';
-import type { Constructor, Except } from 'type-fest';
+import type { Except } from 'type-fest';
 import type { ConnectorInterface } from './connector-interface.js';
 import {
   getCustomOperationsByNameByType,
   type CustomOperationsByNameByTypeConfig,
 } from './custom-operations.js';
 import {
-  createAPI,
   InvalidRequestContextError,
   Node,
+  createAPI,
   type API,
   type NodeChange,
   type NodeChangeAggregation,
@@ -56,16 +56,13 @@ export type EventDataByName<
   'node-change': NodeChange<TRequestContext, TConnector, TContainer>;
 };
 
-export type ConnectorConfig<TConnector extends ConnectorInterface> =
-  | TConnector
-  | Constructor<TConnector, [GraphQLPlatform]>
-  | [
-      Constructor<
-        TConnector,
-        [GraphQLPlatform, TConnector['config'], utils.Path]
-      >,
-      TConnector['config'],
-    ];
+export type ConnectorConfig<
+  TRequestContext extends object = any,
+  TConnector extends ConnectorInterface = any,
+> = utils.Thunkable<
+  TConnector,
+  [gp: GraphQLPlatform<TRequestContext, any, any>, configPath: utils.Path]
+>;
 
 export type ContainerConfig<
   TRequestContext extends object = any,
@@ -73,7 +70,7 @@ export type ContainerConfig<
   TContainer extends object = any,
 > = utils.Thunkable<
   TContainer,
-  [gp: GraphQLPlatform<TRequestContext, TConnector, {}>]
+  [gp: GraphQLPlatform<TRequestContext, TConnector, {}>, configPath: utils.Path]
 >;
 
 export type GraphQLPlatformConfig<
@@ -110,7 +107,7 @@ export type GraphQLPlatformConfig<
   /**
    * Optional, provide a connector to let the schema be executable
    */
-  connector?: ConnectorConfig<TConnector>;
+  connector?: ConnectorConfig<TRequestContext, TConnector>;
 
   /**
    * Optional, given the GraphQL-Platform instance, build a service-container which will be accessible further in the hooks, the virtual-fields and the custom-operations' resolver
@@ -291,19 +288,11 @@ export class GraphQLPlatform<
       const connectorConfig = this.config.connector;
       const connectorConfigPath = utils.addPath(this.configPath, 'connector');
 
-      this.#connector = connectorConfig
-        ? utils.isConstructor<TConnector, [GraphQLPlatform]>(connectorConfig)
-          ? new connectorConfig(this)
-          : Array.isArray(connectorConfig)
-          ? connectorConfig.length
-            ? new connectorConfig[0](
-                this,
-                connectorConfig[1],
-                utils.addPath(connectorConfigPath, 1),
-              )
-            : undefined
-          : connectorConfig
-        : undefined;
+      this.#connector = utils.resolveThunkable(
+        connectorConfig,
+        this,
+        connectorConfigPath,
+      );
     }
 
     // container
@@ -311,7 +300,12 @@ export class GraphQLPlatform<
       const containerConfig = this.config.container;
       const containerConfigPath = utils.addPath(this.configPath, 'container');
 
-      const container = utils.resolveThunkable(containerConfig, this);
+      const container = utils.resolveThunkable(
+        containerConfig,
+        this,
+        containerConfigPath,
+      );
+
       if (container != null && typeof container !== 'object') {
         throw new utils.UnexpectedValueError('an object', container, {
           path: containerConfigPath,

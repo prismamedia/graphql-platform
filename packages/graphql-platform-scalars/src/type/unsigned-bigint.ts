@@ -2,7 +2,7 @@ import * as utils from '@prismamedia/graphql-platform-utils';
 import * as graphql from 'graphql';
 import { parseBigInt } from './big-int.js';
 
-export function parseUnsignedBigInt(value: unknown, path?: utils.Path): BigInt {
+export function parseUnsignedBigInt(value: unknown, path?: utils.Path): bigint {
   const parsedValue = parseBigInt(value, path);
   if (parsedValue < 0n) {
     throw new utils.UnexpectedValueError('an unsigned BigInt', value, { path });

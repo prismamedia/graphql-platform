@@ -36,7 +36,7 @@ export * from './statement.js';
  */
 export type OkPacket = {
   affectedRows: number;
-  insertId: BigInt;
+  insertId: bigint;
   warningStatus: number;
 };
 

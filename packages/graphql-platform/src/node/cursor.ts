@@ -46,7 +46,7 @@ const pickAfterFilterInputValue = (
   );
 
 export type NodeCursorOptions<TValue extends NodeSelectedValue = any> = {
-  filter?: NodeFilterInputValue;
+  where?: NodeFilterInputValue;
   selection?: RawNodeSelection<TValue>;
   direction?: OrderingDirection;
   uniqueConstraint?: UniqueConstraint['name'];
@@ -58,7 +58,7 @@ export class NodeCursor<
   TRequestContext extends object = any,
 > implements AsyncIterable<TValue>
 {
-  protected readonly filter: NodeFilterInputValue;
+  protected readonly where: NodeFilterInputValue;
   protected readonly direction: OrderingDirection;
   protected readonly uniqueConstraint: UniqueConstraint;
   protected readonly selection: NodeSelection<TValue>;
@@ -73,7 +73,7 @@ export class NodeCursor<
   ) {
     assert(node.isScrollable(), `The "${node}" node is not scrollable`);
 
-    this.filter = node.filterInputType.parseValue(options?.filter);
+    this.where = node.filterInputType.parseValue(options?.where);
 
     this.direction = options?.direction || OrderingDirection.ASCENDING;
 
@@ -122,7 +122,7 @@ export class NodeCursor<
   public async count(): Promise<number> {
     return this.node
       .getQueryByKey('count')
-      .execute({ where: this.filter }, this.context);
+      .execute({ where: this.where }, this.context);
   }
 
   public async *[Symbol.asyncIterator](): AsyncIterator<TValue> {
@@ -132,7 +132,7 @@ export class NodeCursor<
     do {
       values = await this.node.getQueryByKey('find-many').execute(
         {
-          where: { AND: [after, this.filter] },
+          where: { AND: [after, this.where] },
           orderBy: this.orderByInputValue,
           first: this.chunkSize,
           selection: this.internalSelection,

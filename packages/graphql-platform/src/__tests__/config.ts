@@ -958,11 +958,11 @@ export function createMyGP<
   TConnector extends ConnectorInterface,
   TContainer extends object,
 >(config?: {
-  connector?: ConnectorConfig<TConnector>;
+  connector?: ConnectorConfig<MyContext, TConnector>;
   container?: ContainerConfig<MyContext, TConnector, TContainer>;
 }): MyGP<TConnector, TContainer> {
   return new GraphQLPlatform({
-    nodes: Object.fromEntries<NodeConfig>(
+    nodes: Object.fromEntries(
       Object.entries(nodes).map<[string, NodeConfig]>(([nodeName, config]) => [
         nodeName,
         {

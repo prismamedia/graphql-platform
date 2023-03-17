@@ -1,7 +1,7 @@
 import * as utils from '@prismamedia/graphql-platform-utils';
 import * as graphql from 'graphql';
 
-export function parseBigInt(value: unknown, path?: utils.Path): BigInt {
+export function parseBigInt(value: unknown, path?: utils.Path): bigint {
   if (typeof value === 'bigint') {
     return value;
   } else if (typeof value === 'number') {

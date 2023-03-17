@@ -1,7 +1,7 @@
 import type { ContainerConfig } from '@prismamedia/graphql-platform';
 import {
-  createMyGP as baseCreateMyGP,
   MyContext,
+  createMyGP as baseCreateMyGP,
   type MyGP as BaseMyGP,
 } from '@prismamedia/graphql-platform/__tests__/config.js';
 import assert from 'node:assert/strict';
@@ -30,27 +30,28 @@ export function createMyGP<TContainer extends object>(
   assert(password, `The "MARIADB_ROOT_PASSWORD" variable must be provided`);
 
   return baseCreateMyGP({
-    connector: [
-      MariaDBConnector,
-      {
-        schema: {
-          name: `tests_${schemaName}`,
+    connector: (gp, configPath) =>
+      new MariaDBConnector(
+        gp,
+        {
+          schema: {
+            name: `tests_${schemaName}`,
 
-          namingStrategy: {
-            leaf: (column) =>
-              column.leaf.name === '_id' ? 'private_id' : undefined,
+            namingStrategy: {
+              leaf: (column) =>
+                column.leaf.name === '_id' ? 'private_id' : undefined,
+            },
+          },
+
+          pool: {
+            host,
+            port,
+            user: 'root',
+            password,
           },
         },
-
-        pool: {
-          host,
-          port,
-          user: 'root',
-          password,
-          idleTimeout: 30,
-        },
-      },
-    ],
+        configPath,
+      ),
 
     container: config?.container,
   });
