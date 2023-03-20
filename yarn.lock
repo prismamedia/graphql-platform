@@ -1071,17 +1071,17 @@ __metadata:
     "@prismamedia/graphql-platform-utils": "workspace:packages/graphql-platform-utils"
     "@prismamedia/memoize": ^4.0.0
     "@sqltools/formatter": 1.2.5
-    "@swc/core": 1.3.40
+    "@swc/core": 1.3.42
     "@swc/jest": 0.2.24
     "@tsconfig/node18": 1.0.1
-    "@types/node": 18.15.3
+    "@types/node": 18.15.10
     "@types/semver": 7.3.13
     graphql: 16.6.0
     inflection: ^2.0.1
     jest: 29.5.0
-    mariadb: ^3.1.0
+    mariadb: ^3.1.1
     semver: ^7.3.8
-    type-fest: ^3.6.1
+    type-fest: ^3.7.1
     typescript: 5.0.2
   peerDependencies:
     graphql: ^16.6.0
@@ -1096,10 +1096,10 @@ __metadata:
     "@jest/globals": 29.5.0
     "@prismamedia/graphql-platform": "workspace:packages/graphql-platform"
     "@prismamedia/graphql-platform-connector-mariadb": "workspace:packages/graphql-platform-connector-mariadb"
-    "@swc/core": 1.3.40
+    "@swc/core": 1.3.42
     "@swc/jest": 0.2.24
     "@tsconfig/node18": 1.0.1
-    "@types/node": 18.15.3
+    "@types/node": 18.15.10
     graphql: 16.6.0
     jest: 29.5.0
     typescript: 5.0.2
@@ -1115,15 +1115,15 @@ __metadata:
   dependencies:
     "@jest/globals": 29.5.0
     "@prismamedia/graphql-platform-utils": "workspace:packages/graphql-platform-utils"
-    "@swc/core": 1.3.40
+    "@swc/core": 1.3.42
     "@swc/jest": 0.2.24
     "@tsconfig/node18": 1.0.1
     "@types/draft-js": ^0.11.10
-    "@types/node": 18.15.3
+    "@types/node": 18.15.10
     entities: ^4.4.0
     graphql: 16.6.0
     jest: 29.5.0
-    type-fest: ^3.6.1
+    type-fest: ^3.7.1
     typescript: 5.0.2
   peerDependencies:
     graphql: ^16.6.0
@@ -1136,17 +1136,17 @@ __metadata:
   dependencies:
     "@jest/globals": 29.5.0
     "@prismamedia/memoize": ^4.0.0
-    "@swc/core": 1.3.40
+    "@swc/core": 1.3.42
     "@swc/jest": 0.2.24
     "@tsconfig/node18": 1.0.1
     "@types/indefinite": 2.3.1
     "@types/lodash": 4.14.191
-    "@types/node": 18.15.3
+    "@types/node": 18.15.10
     graphql: 16.6.0
     indefinite: ^2.4.2
     jest: 29.5.0
     lodash: ^4.17.21
-    type-fest: ^3.6.1
+    type-fest: ^3.7.1
     typescript: 5.0.2
   peerDependencies:
     graphql: ^16.6.0
@@ -1162,11 +1162,11 @@ __metadata:
     "@prismamedia/graphql-platform-scalars": "workspace:packages/graphql-platform-scalars"
     "@prismamedia/graphql-platform-utils": "workspace:packages/graphql-platform-utils"
     "@prismamedia/memoize": ^4.0.0
-    "@swc/core": 1.3.40
+    "@swc/core": 1.3.42
     "@swc/jest": 0.2.24
     "@tsconfig/node18": 1.0.1
     "@types/lodash": 4.14.191
-    "@types/node": 18.15.3
+    "@types/node": 18.15.10
     dataloader: ^2.2.2
     dependency-graph: ^0.11.0
     graphql: 16.6.0
@@ -1174,7 +1174,7 @@ __metadata:
     jest: 29.5.0
     lodash: ^4.17.21
     p-queue: ^7.3.4
-    type-fest: ^3.6.1
+    type-fest: ^3.7.1
     typescript: 5.0.2
   peerDependencies:
     graphql: ^16.6.0
@@ -1300,90 +1300,90 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@swc/core-darwin-arm64@npm:1.3.40":
-  version: 1.3.40
-  resolution: "@swc/core-darwin-arm64@npm:1.3.40"
+"@swc/core-darwin-arm64@npm:1.3.42":
+  version: 1.3.42
+  resolution: "@swc/core-darwin-arm64@npm:1.3.42"
   conditions: os=darwin & cpu=arm64
   languageName: node
   linkType: hard
 
-"@swc/core-darwin-x64@npm:1.3.40":
-  version: 1.3.40
-  resolution: "@swc/core-darwin-x64@npm:1.3.40"
+"@swc/core-darwin-x64@npm:1.3.42":
+  version: 1.3.42
+  resolution: "@swc/core-darwin-x64@npm:1.3.42"
   conditions: os=darwin & cpu=x64
   languageName: node
   linkType: hard
 
-"@swc/core-linux-arm-gnueabihf@npm:1.3.40":
-  version: 1.3.40
-  resolution: "@swc/core-linux-arm-gnueabihf@npm:1.3.40"
+"@swc/core-linux-arm-gnueabihf@npm:1.3.42":
+  version: 1.3.42
+  resolution: "@swc/core-linux-arm-gnueabihf@npm:1.3.42"
   conditions: os=linux & cpu=arm
   languageName: node
   linkType: hard
 
-"@swc/core-linux-arm64-gnu@npm:1.3.40":
-  version: 1.3.40
-  resolution: "@swc/core-linux-arm64-gnu@npm:1.3.40"
+"@swc/core-linux-arm64-gnu@npm:1.3.42":
+  version: 1.3.42
+  resolution: "@swc/core-linux-arm64-gnu@npm:1.3.42"
   conditions: os=linux & cpu=arm64 & libc=glibc
   languageName: node
   linkType: hard
 
-"@swc/core-linux-arm64-musl@npm:1.3.40":
-  version: 1.3.40
-  resolution: "@swc/core-linux-arm64-musl@npm:1.3.40"
+"@swc/core-linux-arm64-musl@npm:1.3.42":
+  version: 1.3.42
+  resolution: "@swc/core-linux-arm64-musl@npm:1.3.42"
   conditions: os=linux & cpu=arm64 & libc=musl
   languageName: node
   linkType: hard
 
-"@swc/core-linux-x64-gnu@npm:1.3.40":
-  version: 1.3.40
-  resolution: "@swc/core-linux-x64-gnu@npm:1.3.40"
+"@swc/core-linux-x64-gnu@npm:1.3.42":
+  version: 1.3.42
+  resolution: "@swc/core-linux-x64-gnu@npm:1.3.42"
   conditions: os=linux & cpu=x64 & libc=glibc
   languageName: node
   linkType: hard
 
-"@swc/core-linux-x64-musl@npm:1.3.40":
-  version: 1.3.40
-  resolution: "@swc/core-linux-x64-musl@npm:1.3.40"
+"@swc/core-linux-x64-musl@npm:1.3.42":
+  version: 1.3.42
+  resolution: "@swc/core-linux-x64-musl@npm:1.3.42"
   conditions: os=linux & cpu=x64 & libc=musl
   languageName: node
   linkType: hard
 
-"@swc/core-win32-arm64-msvc@npm:1.3.40":
-  version: 1.3.40
-  resolution: "@swc/core-win32-arm64-msvc@npm:1.3.40"
+"@swc/core-win32-arm64-msvc@npm:1.3.42":
+  version: 1.3.42
+  resolution: "@swc/core-win32-arm64-msvc@npm:1.3.42"
   conditions: os=win32 & cpu=arm64
   languageName: node
   linkType: hard
 
-"@swc/core-win32-ia32-msvc@npm:1.3.40":
-  version: 1.3.40
-  resolution: "@swc/core-win32-ia32-msvc@npm:1.3.40"
+"@swc/core-win32-ia32-msvc@npm:1.3.42":
+  version: 1.3.42
+  resolution: "@swc/core-win32-ia32-msvc@npm:1.3.42"
   conditions: os=win32 & cpu=ia32
   languageName: node
   linkType: hard
 
-"@swc/core-win32-x64-msvc@npm:1.3.40":
-  version: 1.3.40
-  resolution: "@swc/core-win32-x64-msvc@npm:1.3.40"
+"@swc/core-win32-x64-msvc@npm:1.3.42":
+  version: 1.3.42
+  resolution: "@swc/core-win32-x64-msvc@npm:1.3.42"
   conditions: os=win32 & cpu=x64
   languageName: node
   linkType: hard
 
-"@swc/core@npm:1.3.40":
-  version: 1.3.40
-  resolution: "@swc/core@npm:1.3.40"
+"@swc/core@npm:1.3.42":
+  version: 1.3.42
+  resolution: "@swc/core@npm:1.3.42"
   dependencies:
-    "@swc/core-darwin-arm64": 1.3.40
-    "@swc/core-darwin-x64": 1.3.40
-    "@swc/core-linux-arm-gnueabihf": 1.3.40
-    "@swc/core-linux-arm64-gnu": 1.3.40
-    "@swc/core-linux-arm64-musl": 1.3.40
-    "@swc/core-linux-x64-gnu": 1.3.40
-    "@swc/core-linux-x64-musl": 1.3.40
-    "@swc/core-win32-arm64-msvc": 1.3.40
-    "@swc/core-win32-ia32-msvc": 1.3.40
-    "@swc/core-win32-x64-msvc": 1.3.40
+    "@swc/core-darwin-arm64": 1.3.42
+    "@swc/core-darwin-x64": 1.3.42
+    "@swc/core-linux-arm-gnueabihf": 1.3.42
+    "@swc/core-linux-arm64-gnu": 1.3.42
+    "@swc/core-linux-arm64-musl": 1.3.42
+    "@swc/core-linux-x64-gnu": 1.3.42
+    "@swc/core-linux-x64-musl": 1.3.42
+    "@swc/core-win32-arm64-msvc": 1.3.42
+    "@swc/core-win32-ia32-msvc": 1.3.42
+    "@swc/core-win32-x64-msvc": 1.3.42
   dependenciesMeta:
     "@swc/core-darwin-arm64":
       optional: true
@@ -1405,7 +1405,7 @@ __metadata:
       optional: true
     "@swc/core-win32-x64-msvc":
       optional: true
-  checksum: 3ec2919784dfac7a535976e43771c85ed8048fae036ba922d379b1f64ea1cbfe614cc4124553fc268a19c5246311a3d887b9a92c6bcde6b03f2ad1957ad77246
+  checksum: 5c28c03ee6a4e1f630c4a519b56d7e23a0102f70fad977a3ab144a3da96231cf4849e473cdc9ee7be6b9266ba0838d0bc0b6b3575a75540f302befe96cc9606e
   languageName: node
   linkType: hard
 
@@ -1651,10 +1651,17 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@types/node@npm:*, @types/node@npm:18.15.3":
+"@types/node@npm:*":
   version: 18.15.3
   resolution: "@types/node@npm:18.15.3"
   checksum: 31b1d92475a82c30de29aa6c0771b18a276552d191283b4423ba2d61b3f01159bf0d02576c0b7cc834b043997893800db6bb47f246083ed85aa45e79c80875d7
+  languageName: node
+  linkType: hard
+
+"@types/node@npm:18.15.10":
+  version: 18.15.10
+  resolution: "@types/node@npm:18.15.10"
+  checksum: 9aeae0b683eda82892def5315812bdee3f1a28c4898b7e70f8e2514564538b16c4dccbe8339c1266f8fc1d707a48f152689264a854f5ebc2eba5011e793612d9
   languageName: node
   linkType: hard
 
@@ -4147,16 +4154,16 @@ __metadata:
   languageName: node
   linkType: hard
 
-"mariadb@npm:^3.1.0":
-  version: 3.1.0
-  resolution: "mariadb@npm:3.1.0"
+"mariadb@npm:^3.1.1":
+  version: 3.1.1
+  resolution: "mariadb@npm:3.1.1"
   dependencies:
     "@types/geojson": ^7946.0.10
     "@types/node": ^17.0.45
     denque: ^2.1.0
     iconv-lite: ^0.6.3
     lru-cache: ^7.14.0
-  checksum: d906ffc915567053e0c0227d087cfe9a3892490ee4ae505d2a0d45b293a3d8f6565376fad6e0622987f6a98b0a028a0d27e20faa3bc604b9987ecfecd194f3d4
+  checksum: bc44b375cb247e04248f0c5cb3dcc7eaf5d8a2178cc4f62455b666a51ba95af1f47953260f5e34738766dd35a76502fa193277a6084cb9194c0bbe04173f7220
   languageName: node
   linkType: hard
 
@@ -4690,12 +4697,12 @@ __metadata:
   languageName: node
   linkType: hard
 
-"prettier@npm:2.8.4":
-  version: 2.8.4
-  resolution: "prettier@npm:2.8.4"
+"prettier@npm:2.8.7":
+  version: 2.8.7
+  resolution: "prettier@npm:2.8.7"
   bin:
     prettier: bin-prettier.js
-  checksum: c173064bf3df57b6d93d19aa98753b9b9dd7657212e33b41ada8e2e9f9884066bb9ca0b4005b89b3ab137efffdf8fbe0b462785aba20364798ff4303aadda57e
+  checksum: fdc8f2616f099f5f0d685907f4449a70595a0fc1d081a88919604375989e0d5e9168d6121d8cc6861f21990b31665828e00472544d785d5940ea08a17660c3a6
   languageName: node
   linkType: hard
 
@@ -4953,7 +4960,7 @@ __metadata:
   dependencies:
     "@yarnpkg/sdks": 3.0.0-rc.40
     jest: 29.5.0
-    prettier: 2.8.4
+    prettier: 2.8.7
     typescript: 5.0.2
   languageName: unknown
   linkType: soft
@@ -5381,10 +5388,10 @@ __metadata:
   languageName: node
   linkType: hard
 
-"type-fest@npm:^3.6.1":
-  version: 3.6.1
-  resolution: "type-fest@npm:3.6.1"
-  checksum: f7e39bf6b74a883661ec8642707f49c33cfcdc6221e1ba36b1d329c1cf301d87351b3ca0839b894cbfe47dc62140c0ce47e69c88f76800b678e0b67b7fe826e6
+"type-fest@npm:^3.7.1":
+  version: 3.7.1
+  resolution: "type-fest@npm:3.7.1"
+  checksum: a694e0d62a06a60dec0f57e2e681d2e8d301992a3abd515fcc2f8f135ca12aa4f7d4aab24532ee781e4fb7735d6cfbd127ff0337b13cdbca6ff32b74d091c403
   languageName: node
   linkType: hard
 

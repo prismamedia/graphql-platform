@@ -12,7 +12,7 @@
     "./packages/*"
   ],
   "scripts": {
-    "format": "prettier --cache --write ./packages/*/src/**/*.ts",
+    "format": "prettier --cache --write .",
     "compile": "tsc --build",
     "compile:watch": "yarn run compile --watch",
     "test": "yarn node --no-warnings --experimental-vm-modules $(yarn bin jest)",
@@ -21,7 +21,7 @@
   "devDependencies": {
     "@yarnpkg/sdks": "3.0.0-rc.40",
     "jest": "29.5.0",
-    "prettier": "2.8.4",
+    "prettier": "2.8.7",
     "typescript": "5.0.2"
   },
   "resolutions": {
