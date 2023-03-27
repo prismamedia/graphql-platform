@@ -1,6 +1,7 @@
 import assert from 'node:assert/strict';
 import { inspect } from 'node:util';
-import PQueue, { Options as QueueOptions } from 'p-queue';
+import PQueue, { Options as PQueueOptions } from 'p-queue';
+import PRetry, { Options as PRetryOptions } from 'p-retry';
 import type { Except, Promisable } from 'type-fest';
 import type { Node } from '../node.js';
 import { Leaf, type UniqueConstraint } from './definition.js';
@@ -16,7 +17,7 @@ import type {
 } from './type.js';
 
 export type NodeCursorForEachOptions = Except<
-  QueueOptions<any, any>,
+  PQueueOptions<any, any>,
   'autoStart' | 'queueClass'
 > & {
   /**
@@ -25,6 +26,15 @@ export type NodeCursorForEachOptions = Except<
    * Default: the queue's concurrency, so we're able to fill all the workers at any time
    */
   buffer?: number;
+
+  /**
+   * Optional, define a retry strategy
+   *
+   * Default: false / no retry
+   *
+   * @see https://github.com/sindresorhus/p-retry/blob/main/readme.md
+   */
+  retry?: PRetryOptions | PRetryOptions['retries'] | boolean;
 };
 
 const pickAfterFilterInputValue = (
@@ -156,7 +166,11 @@ export class NodeCursor<
 
   public async forEach(
     task: (value: TValue) => Promisable<void>,
-    { buffer: rawBuffer, ...queueOptions }: NodeCursorForEachOptions = {},
+    {
+      retry: retryOptions,
+      buffer: bufferOptions,
+      ...queueOptions
+    }: NodeCursorForEachOptions = {},
   ): Promise<void> {
     const queue = new PQueue({
       ...queueOptions,
@@ -164,11 +178,19 @@ export class NodeCursor<
       throwOnTimeout: queueOptions?.throwOnTimeout ?? true,
     });
 
-    const buffer = rawBuffer ?? queue.concurrency;
+    const buffer = bufferOptions ?? queue.concurrency;
     assert(
       typeof buffer === 'number' && buffer >= 1,
       `The buffer has to be greater than or equal to 1, got ${inspect(buffer)}`,
     );
+
+    const normalizedRetryOptions: PRetryOptions | false = retryOptions
+      ? retryOptions === true
+        ? {}
+        : typeof retryOptions === 'number'
+        ? { retries: retryOptions }
+        : retryOptions
+      : false;
 
     await new Promise<void>(async (resolve, reject) => {
       queue.on('error', reject);
@@ -177,7 +199,11 @@ export class NodeCursor<
         for await (const value of this) {
           await queue.onSizeLessThan(buffer);
 
-          queue.add(() => task(value));
+          queue.add(
+            normalizedRetryOptions
+              ? () => PRetry(() => task(value), normalizedRetryOptions)
+              : () => task(value),
+          );
         }
 
         await queue.onIdle();

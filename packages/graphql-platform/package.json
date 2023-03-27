@@ -1,6 +1,6 @@
 {
   "name": "@prismamedia/graphql-platform",
-  "version": "1.0.0-rc.1",
+  "version": "1.0.0-rc.2",
   "license": "MIT",
   "contributors": [
     "Yvann Boucher <yvann.boucher@gmail.com>"
@@ -48,6 +48,7 @@
     "inflection": "^2.0.1",
     "lodash": "^4.17.21",
     "p-queue": "^7.3.4",
+    "p-retry": "^5.1.2",
     "type-fest": "^3.7.1"
   },
   "peerDependencies": {

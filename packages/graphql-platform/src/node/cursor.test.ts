@@ -1,7 +1,7 @@
 import { describe, expect, it } from '@jest/globals';
-import { GraphQLPlatform } from '../index.js';
 import { myAdminContext, nodes } from '../__tests__/config.js';
 import { mockConnector } from '../__tests__/connector-mock.js';
+import { GraphQLPlatform } from '../index.js';
 
 describe('Cursor', () => {
   it('"Article" is scrollable', async () => {
