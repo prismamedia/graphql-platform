@@ -1,9 +1,9 @@
 import { afterAll, beforeAll, describe, expect, it } from '@jest/globals';
 import { IterableElement } from 'type-fest';
+import { createMyGP, type MyGP } from './__tests__/config.js';
 import { escapeIdentifier } from './escaping.js';
 import { SchemaDiagnosis } from './schema.js';
 import { StatementKind } from './statement.js';
-import { createMyGP, type MyGP } from './__tests__/config.js';
 
 describe('Schema', () => {
   const testIds = ['diagnosis'] as const;

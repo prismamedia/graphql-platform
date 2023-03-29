@@ -1,7 +1,7 @@
 import { beforeAll, describe, expect, it } from '@jest/globals';
 import { GraphQLInputObjectType, printType } from 'graphql';
-import { GraphQLPlatform } from '../../../index.js';
 import { MyGP, nodeNames, nodes } from '../../../__tests__/config.js';
+import { GraphQLPlatform } from '../../../index.js';
 import {
   NodeUniqueFilterInputType,
   NodeUniqueFilterInputValue,

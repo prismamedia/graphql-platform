@@ -1,13 +1,13 @@
 import { beforeAll, describe, expect, it } from '@jest/globals';
 import * as utils from '@prismamedia/graphql-platform-utils';
 import * as graphql from 'graphql';
-import { GraphQLPlatform } from '../../../index.js';
 import {
   ArticleStatus,
   MyGP,
   nodeNames,
   nodes,
 } from '../../../__tests__/config.js';
+import { GraphQLPlatform } from '../../../index.js';
 import { BooleanFilter } from '../../statement.js';
 import { NodeFilterInputType, NodeFilterInputValue } from './filter.js';
 

@@ -4,10 +4,10 @@ import {
   Input,
   InputConfig,
   ListableInputType,
-  nonNillableInputType,
   NonNullableInputType,
   NonOptionalInputType,
   ObjectInputType,
+  nonNillableInputType,
 } from './input.js';
 import type { Nillable } from './nil.js';
 import { addPath } from './path.js';

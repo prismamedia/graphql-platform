@@ -1,7 +1,7 @@
 import { beforeAll, describe, expect, it } from '@jest/globals';
 import * as graphql from 'graphql';
-import { GraphQLPlatform } from './index.js';
 import { customOperations, nodes } from './__tests__/config.js';
+import { GraphQLPlatform } from './index.js';
 
 describe('GraphQL-Platform', () => {
   describe('Fails', () => {

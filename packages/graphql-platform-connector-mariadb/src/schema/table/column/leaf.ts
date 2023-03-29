@@ -14,7 +14,6 @@ import {
   BigIntType,
   BooleanType,
   CharType,
-  createDataTypeFromConfig,
   DateTimeType,
   DateType,
   DoubleType,
@@ -24,6 +23,7 @@ import {
   TextType,
   UuidType,
   VarCharType,
+  createDataTypeFromConfig,
   type DataType,
   type DataTypeConfig,
 } from '../data-type.js';

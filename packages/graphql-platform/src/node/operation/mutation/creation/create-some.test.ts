@@ -1,9 +1,8 @@
 import { beforeAll, beforeEach, describe, expect, it } from '@jest/globals';
-import { GraphQLPlatform } from '../../../../index.js';
 import {
-  myAdminContext,
   MyContext,
   MyGP,
+  myAdminContext,
   myVisitorContext,
   nodes,
 } from '../../../../__tests__/config.js';
@@ -11,6 +10,7 @@ import {
   clearAllConnectorMocks,
   mockConnector,
 } from '../../../../__tests__/connector-mock.js';
+import { GraphQLPlatform } from '../../../../index.js';
 import { UnauthorizedError } from '../../error.js';
 import { CreateSomeMutationArgs } from './create-some.js';
 

@@ -1,13 +1,8 @@
 import { beforeAll, beforeEach, describe, expect, it } from '@jest/globals';
 import {
-  GraphQLPlatform,
-  NodeFilter,
-  OperationContext,
-} from '../../../index.js';
-import {
-  myAdminContext,
   MyContext,
   MyGP,
+  myAdminContext,
   myVisitorContext,
   nodes,
 } from '../../../__tests__/config.js';
@@ -15,6 +10,11 @@ import {
   clearAllConnectorMocks,
   mockConnector,
 } from '../../../__tests__/connector-mock.js';
+import {
+  GraphQLPlatform,
+  NodeFilter,
+  OperationContext,
+} from '../../../index.js';
 import { UnauthorizedError } from '../error.js';
 import { CountQueryArgs } from './count.js';
 

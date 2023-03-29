@@ -1,12 +1,12 @@
 import { beforeAll, describe, expect, it } from '@jest/globals';
 import { EOL } from 'node:os';
+import { createMyGP, type MyGP } from './__tests__/config.js';
 import {
   AddTableForeignKeysStatement,
   CreateSchemaStatement,
   CreateTableStatement,
   DropSchemaStatement,
 } from './index.js';
-import { createMyGP, type MyGP } from './__tests__/config.js';
 
 describe('GraphQL-Platform Connector MariaDB', () => {
   let gp: MyGP;

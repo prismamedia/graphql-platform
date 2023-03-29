@@ -2,6 +2,7 @@ import { describe, expect, it } from '@jest/globals';
 import * as utils from '@prismamedia/graphql-platform-utils';
 import * as graphql from 'graphql';
 import _ from 'lodash';
+import { Article, Category, nodes } from './__tests__/config.js';
 import { GraphQLPlatform } from './index.js';
 import {
   ComponentConfig,
@@ -12,7 +13,6 @@ import {
   NodeSelection,
   OnEdgeHeadDeletion,
 } from './node.js';
-import { Article, Category, nodes } from './__tests__/config.js';
 
 const hasEnabledMutationByType = (
   gp: GraphQLPlatform,

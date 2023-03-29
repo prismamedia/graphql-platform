@@ -8,8 +8,8 @@ import {
   type SchemaDiagnosisOptions,
 } from './schema/diagnosis.js';
 import {
-  ensureIdentifierName,
   SchemaNamingStrategy,
+  ensureIdentifierName,
   type SchemaNamingStrategyConfig,
 } from './schema/naming-strategy.js';
 import {

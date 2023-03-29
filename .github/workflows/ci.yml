@@ -41,6 +41,9 @@ jobs:
       - name: Install the dependencies
         run: yarn install --immutable
 
+      - name: Check the code formatting
+        run: yarn prettier --check .
+
       - name: Compile the code
         run: yarn run compile
 

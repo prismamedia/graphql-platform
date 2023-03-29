@@ -1,6 +1,6 @@
 import { describe, expect, it } from '@jest/globals';
-import { GraphQLPlatform } from '../../index.js';
 import { nodes } from '../../__tests__/config.js';
+import { GraphQLPlatform } from '../../index.js';
 
 describe('Unique-constraint', () => {
   const gp = new GraphQLPlatform({ nodes });

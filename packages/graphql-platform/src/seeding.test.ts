@@ -1,4 +1,7 @@
 import { beforeAll, describe, expect, it } from '@jest/globals';
+import { myAdminContext, nodes } from './__tests__/config.js';
+import { mockConnector } from './__tests__/connector-mock.js';
+import { fixtures } from './__tests__/fixture.js';
 import {
   EdgeExistsFilter,
   GraphQLPlatform,
@@ -7,9 +10,6 @@ import {
   NotOperation,
 } from './index.js';
 import { Seeding } from './seeding.js';
-import { myAdminContext, nodes } from './__tests__/config.js';
-import { mockConnector } from './__tests__/connector-mock.js';
-import { fixtures } from './__tests__/fixture.js';
 
 describe('Seeding', () => {
   let gp: GraphQLPlatform;

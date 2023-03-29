@@ -9,8 +9,8 @@ import {
 import { Input } from '../../../input.js';
 import {
   ListableInputType,
-  nonNillableInputType,
   NonNullableInputType,
+  nonNillableInputType,
 } from '../wrapping.js';
 import { ObjectInputType } from './object.js';
 

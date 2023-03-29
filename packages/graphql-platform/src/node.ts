@@ -27,8 +27,8 @@ import {
 } from './node/definition.js';
 import { assertNodeName, type NodeName } from './node/name.js';
 import {
-  mutationConstructorsByKey,
   OperationContext,
+  mutationConstructorsByKey,
   queryConstructorsByKey,
   subscriptionConstructorsByKey,
   type MutationConfig,
@@ -42,8 +42,8 @@ import {
   type SubscriptionsByKey,
 } from './node/operation.js';
 import {
-  mergeSelectionExpressions,
   NodeSelection,
+  mergeSelectionExpressions,
   type NodeFilter,
   type NodeSelectedValue,
 } from './node/statement.js';

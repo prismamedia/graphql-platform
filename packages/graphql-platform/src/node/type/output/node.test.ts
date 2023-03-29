@@ -1,13 +1,13 @@
 import { beforeAll, describe, expect, it } from '@jest/globals';
 import * as graphql from 'graphql';
-import { GraphQLPlatform } from '../../../index.js';
 import {
   ArticleStatus,
-  myAdminContext,
   MyGP,
+  myAdminContext,
   nodeNames,
   nodes,
 } from '../../../__tests__/config.js';
+import { GraphQLPlatform } from '../../../index.js';
 import { OperationContext } from '../../operation/context.js';
 import { GraphQLSelectionContext, NodeOutputType } from './node.js';
 

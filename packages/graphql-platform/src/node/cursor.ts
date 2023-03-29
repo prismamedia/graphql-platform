@@ -1,3 +1,8 @@
+import {
+  SingleBar as ProgressBar,
+  Presets as ProgressBarPresets,
+  type Options as ProgressBarOptions,
+} from 'cli-progress';
 import assert from 'node:assert/strict';
 import { inspect } from 'node:util';
 import PQueue, { Options as PQueueOptions } from 'p-queue';
@@ -15,6 +20,17 @@ import type {
   OrderByInputValue,
   RawNodeSelection,
 } from './type.js';
+
+const defaultProgressBarOptions = {
+  format: `[{bar}] {value}/{total} | {percentage}% | Elapsed: {duration_formatted} | ETA: {eta_formatted}`,
+} satisfies ProgressBarOptions;
+
+export {
+  ProgressBar,
+  type ProgressBarOptions,
+  ProgressBarPresets,
+  defaultProgressBarOptions,
+};
 
 export type NodeCursorForEachOptions = Except<
   PQueueOptions<any, any>,
@@ -35,6 +51,13 @@ export type NodeCursorForEachOptions = Except<
    * @see https://github.com/sindresorhus/p-retry/blob/main/readme.md
    */
   retry?: PRetryOptions | PRetryOptions['retries'] | boolean;
+
+  /**
+   * Optional, provide a progress-bar which will be updated with the current progress
+   *
+   * Default: none
+   */
+  progressBar?: boolean | ProgressBarOptions | ProgressBar;
 };
 
 const pickAfterFilterInputValue = (
@@ -167,6 +190,7 @@ export class NodeCursor<
   public async forEach(
     task: (value: TValue) => Promisable<void>,
     {
+      progressBar: progressBarOptions,
       retry: retryOptions,
       buffer: bufferOptions,
       ...queueOptions
@@ -192,6 +216,19 @@ export class NodeCursor<
         : retryOptions
       : false;
 
+    const progressBar: ProgressBar | undefined = progressBarOptions
+      ? progressBarOptions instanceof ProgressBar
+        ? progressBarOptions
+        : progressBarOptions === true
+        ? new ProgressBar(defaultProgressBarOptions)
+        : new ProgressBar({
+            ...defaultProgressBarOptions,
+            ...progressBarOptions,
+          })
+      : undefined;
+
+    progressBar?.start(await this.count(), 0);
+
     await new Promise<void>(async (resolve, reject) => {
       queue.on('error', reject);
 
@@ -199,14 +236,22 @@ export class NodeCursor<
         for await (const value of this) {
           await queue.onSizeLessThan(buffer);
 
+          const wrappedTask = async () => {
+            await task(value);
+
+            progressBar?.increment();
+          };
+
           queue.add(
             normalizedRetryOptions
-              ? () => PRetry(() => task(value), normalizedRetryOptions)
-              : () => task(value),
+              ? () => PRetry(wrappedTask, normalizedRetryOptions)
+              : wrappedTask,
           );
         }
 
         await queue.onIdle();
+
+        progressBar?.stop();
 
         resolve();
       } catch (error) {

@@ -1,6 +1,6 @@
 {
   "name": "@prismamedia/graphql-platform-utils",
-  "version": "1.0.0-rc.2",
+  "version": "1.0.0-rc.3",
   "license": "MIT",
   "contributors": [
     "Yvann Boucher <yvann.boucher@gmail.com>"
@@ -32,8 +32,8 @@
     "@swc/jest": "0.2.24",
     "@tsconfig/node18": "1.0.1",
     "@types/indefinite": "2.3.1",
-    "@types/lodash": "4.14.191",
-    "@types/node": "18.15.10",
+    "@types/lodash": "4.14.192",
+    "@types/node": "18.15.11",
     "graphql": "16.6.0",
     "jest": "29.5.0",
     "typescript": "5.0.2"

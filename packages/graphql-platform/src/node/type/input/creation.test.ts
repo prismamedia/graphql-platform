@@ -1,7 +1,6 @@
 import { beforeAll, describe, expect, it } from '@jest/globals';
 import * as utils from '@prismamedia/graphql-platform-utils';
 import * as graphql from 'graphql';
-import { GraphQLPlatform, NodeCreationStatement } from '../../../index.js';
 import {
   ArticleStatus,
   MyGP,
@@ -10,6 +9,7 @@ import {
   nodes,
 } from '../../../__tests__/config.js';
 import { mockConnector } from '../../../__tests__/connector-mock.js';
+import { GraphQLPlatform, NodeCreationStatement } from '../../../index.js';
 import { MutationContext } from '../../operation.js';
 import { LeafComparisonFilter } from '../../statement/filter.js';
 import { NodeCreationInputType } from './creation.js';

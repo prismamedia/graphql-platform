@@ -8,8 +8,8 @@ import type {
 } from '../../connector-interface.js';
 import type { Node } from '../../node.js';
 import {
-  mergeSelectionExpressions,
   NodeSelection,
+  mergeSelectionExpressions,
 } from '../statement/selection.js';
 import type { Component, ComponentValue } from './component.js';
 import { Edge } from './component/edge.js';
