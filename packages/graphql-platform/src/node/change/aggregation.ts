@@ -186,7 +186,8 @@ export class NodeChangeAggregation<
     }
 
     this.changesByNode = new Map(
-      Array.from(changesByIdByNode.entries()).map(
+      Array.from(
+        changesByIdByNode.entries(),
         ([node, changesByFlattenedId]) => [
           node,
           Object.freeze(Array.from(changesByFlattenedId.values())),

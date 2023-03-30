@@ -1,4 +1,6 @@
+import { Memoize, doNotMemoize } from '@prismamedia/memoize';
 import {
+  MultiBar as MultiProgressBar,
   SingleBar as ProgressBar,
   Presets as ProgressBarPresets,
   type Options as ProgressBarOptions,
@@ -21,43 +23,17 @@ import type {
   RawNodeSelection,
 } from './type.js';
 
-const defaultProgressBarOptions = {
-  format: `[{bar}] {value}/{total} | {percentage}% | Elapsed: {duration_formatted} | ETA: {eta_formatted}`,
-} satisfies ProgressBarOptions;
+export const defaultNamedProgressBarFormat =
+  `[{bar}] {name} | {value}/{total} | {percentage}% | ETA: {eta_formatted} | Elapsed: {duration_formatted}` satisfies ProgressBarOptions['format'];
+
+export const defaultProgressBarFormat =
+  `[{bar}] {value}/{total} | {percentage}% | ETA: {eta_formatted} | Elapsed: {duration_formatted}` satisfies ProgressBarOptions['format'];
 
 export {
   ProgressBar,
+  MultiProgressBar,
   type ProgressBarOptions,
   ProgressBarPresets,
-  defaultProgressBarOptions,
-};
-
-export type NodeCursorForEachOptions = Except<
-  PQueueOptions<any, any>,
-  'autoStart' | 'queueClass'
-> & {
-  /**
-   * Optional, the number of tasks waiting to be processed
-   *
-   * Default: the queue's concurrency, so we're able to fill all the workers at any time
-   */
-  buffer?: number;
-
-  /**
-   * Optional, define a retry strategy
-   *
-   * Default: false / no retry
-   *
-   * @see https://github.com/sindresorhus/p-retry/blob/main/readme.md
-   */
-  retry?: PRetryOptions | PRetryOptions['retries'] | boolean;
-
-  /**
-   * Optional, provide a progress-bar which will be updated with the current progress
-   *
-   * Default: none
-   */
-  progressBar?: boolean | ProgressBarOptions | ProgressBar;
 };
 
 const pickAfterFilterInputValue = (
@@ -77,6 +53,46 @@ const pickAfterFilterInputValue = (
     },
     Object.create(null),
   );
+
+export type NodeCursorForEachTask<
+  TValue extends NodeSelectedValue = any,
+  TRequestContext extends object = any,
+> = (
+  value: TValue,
+  index: number,
+  cursor: NodeCursor<TValue, TRequestContext>,
+) => Promisable<void>;
+
+export type NodeCursorForEachOptions =
+  | Except<PQueueOptions<any, any>, 'autoStart' | 'queueClass'> & {
+      /**
+       * Optional, the number of tasks waiting to be processed
+       *
+       * Default: the queue's concurrency, so we're able to fill all the workers at any time
+       */
+      buffer?: number;
+
+      /**
+       * Optional, define a retry strategy
+       *
+       * Default: false / no retry
+       *
+       * @see https://github.com/sindresorhus/p-retry/blob/main/readme.md
+       */
+      retry?: PRetryOptions | PRetryOptions['retries'] | boolean;
+
+      /**
+       * Optional, either:
+       * - provide a progress-bar which will be updated with the current progress
+       * - provide a multi-progress-bar on which will be appended a new one which will be updated with the current progress
+       *
+       * Default: none
+       */
+      progressBar?:
+        | boolean
+        | ProgressBar
+        | { container: MultiProgressBar; name: string };
+    };
 
 export type NodeCursorOptions<TValue extends NodeSelectedValue = any> = {
   where?: NodeFilterInputValue;
@@ -152,7 +168,8 @@ export class NodeCursor<
     this.chunkSize = Math.max(1, options?.chunkSize || 100);
   }
 
-  public async count(): Promise<number> {
+  @Memoize((force: boolean = false) => force && doNotMemoize)
+  public async size(force: boolean = false): Promise<number> {
     return this.node
       .getQueryByKey('count')
       .execute({ where: this.where }, this.context);
@@ -188,7 +205,7 @@ export class NodeCursor<
   }
 
   public async forEach(
-    task: (value: TValue) => Promisable<void>,
+    task: NodeCursorForEachTask<TValue, TRequestContext>,
     {
       progressBar: progressBarOptions,
       retry: retryOptions,
@@ -216,18 +233,39 @@ export class NodeCursor<
         : retryOptions
       : false;
 
-    const progressBar: ProgressBar | undefined = progressBarOptions
-      ? progressBarOptions instanceof ProgressBar
-        ? progressBarOptions
-        : progressBarOptions === true
-        ? new ProgressBar(defaultProgressBarOptions)
-        : new ProgressBar({
-            ...defaultProgressBarOptions,
-            ...progressBarOptions,
-          })
-      : undefined;
+    let currentIndex: number = 0;
 
-    progressBar?.start(await this.count(), 0);
+    let progressBar: ProgressBar | undefined;
+    if (progressBarOptions) {
+      if (
+        typeof progressBarOptions === 'object' &&
+        'container' in progressBarOptions &&
+        'name' in progressBarOptions
+      ) {
+        assert(
+          progressBarOptions.container instanceof MultiProgressBar,
+          `The "container" has to be a multi-progress-bar instance`,
+        );
+        assert.equal(
+          typeof progressBarOptions.name,
+          'string',
+          `The "name" has to be a string`,
+        );
+
+        progressBar = progressBarOptions.container.create(
+          await this.size(),
+          currentIndex,
+          { name: progressBarOptions.name },
+        );
+      } else {
+        progressBar =
+          progressBarOptions instanceof ProgressBar
+            ? progressBarOptions
+            : new ProgressBar({ format: defaultProgressBarFormat });
+
+        progressBar.start(await this.size(), currentIndex);
+      }
+    }
 
     await new Promise<void>(async (resolve, reject) => {
       queue.on('error', reject);
@@ -237,7 +275,7 @@ export class NodeCursor<
           await queue.onSizeLessThan(buffer);
 
           const wrappedTask = async () => {
-            await task(value);
+            await task(value, currentIndex++, this);
 
             progressBar?.increment();
           };
@@ -258,5 +296,16 @@ export class NodeCursor<
         reject(error);
       }
     });
+  }
+
+  @Memoize((force: boolean = false) => force && doNotMemoize)
+  public async toArray(force: boolean = false): Promise<TValue[]> {
+    const values: TValue[] = [];
+
+    for await (const value of this) {
+      values.push(value);
+    }
+
+    return values;
   }
 }

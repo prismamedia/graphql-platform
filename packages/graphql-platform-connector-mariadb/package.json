@@ -1,6 +1,6 @@
 {
   "name": "@prismamedia/graphql-platform-connector-mariadb",
-  "version": "1.0.0-rc.3",
+  "version": "1.0.0-rc.4",
   "license": "MIT",
   "contributors": [
     "Yvann Boucher <yvann.boucher@gmail.com>"
@@ -48,7 +48,7 @@
     "inflection": "^2.0.1",
     "mariadb": "^3.1.1",
     "semver": "^7.3.8",
-    "type-fest": "^3.7.1"
+    "type-fest": "^3.7.2"
   },
   "peerDependencies": {
     "graphql": "^16.6.0"

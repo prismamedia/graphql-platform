@@ -1081,7 +1081,7 @@ __metadata:
     jest: 29.5.0
     mariadb: ^3.1.1
     semver: ^7.3.8
-    type-fest: ^3.7.1
+    type-fest: ^3.7.2
     typescript: 5.0.2
   peerDependencies:
     graphql: ^16.6.0
@@ -1123,7 +1123,7 @@ __metadata:
     entities: ^4.4.0
     graphql: 16.6.0
     jest: 29.5.0
-    type-fest: ^3.7.1
+    type-fest: ^3.7.2
     typescript: 5.0.2
   peerDependencies:
     graphql: ^16.6.0
@@ -1146,7 +1146,7 @@ __metadata:
     indefinite: ^2.4.2
     jest: 29.5.0
     lodash: ^4.17.21
-    type-fest: ^3.7.1
+    type-fest: ^3.7.2
     typescript: 5.0.2
   peerDependencies:
     graphql: ^16.6.0
@@ -1177,7 +1177,7 @@ __metadata:
     lodash: ^4.17.21
     p-queue: ^7.3.4
     p-retry: ^5.1.2
-    type-fest: ^3.7.1
+    type-fest: ^3.7.2
     typescript: 5.0.2
   peerDependencies:
     graphql: ^16.6.0
@@ -2691,9 +2691,9 @@ __metadata:
   linkType: hard
 
 "electron-to-chromium@npm:^1.4.284":
-  version: 1.4.342
-  resolution: "electron-to-chromium@npm:1.4.342"
-  checksum: 61ecf9f3ea65a6044cdcea092dd56b42d0961fdb8fb3942ba808c6aa6ab3213d3218e599748d6d6ae8b43ddc9f76f428af0b96eaee2f0b4b2f0195c643f36f3d
+  version: 1.4.345
+  resolution: "electron-to-chromium@npm:1.4.345"
+  checksum: 4561a09c1259c04ecb0c6f0c9000b12c562a1a06dfd89858bf2388d3d6083d41a12a7ca5a425cae9b12fa2de2ccddf2dd0ba43fb26600ab66cec26d48a8c19b0
   languageName: node
   linkType: hard
 
@@ -5419,10 +5419,10 @@ __metadata:
   languageName: node
   linkType: hard
 
-"type-fest@npm:^3.7.1":
-  version: 3.7.1
-  resolution: "type-fest@npm:3.7.1"
-  checksum: a694e0d62a06a60dec0f57e2e681d2e8d301992a3abd515fcc2f8f135ca12aa4f7d4aab24532ee781e4fb7735d6cfbd127ff0337b13cdbca6ff32b74d091c403
+"type-fest@npm:^3.7.2":
+  version: 3.7.2
+  resolution: "type-fest@npm:3.7.2"
+  checksum: 28f5c6eca67f01825308e19792425d1643d6f7589aa278d3a8e34caa07d9502aa54016df6b9f65bd3d51a3f2d9c002d3a739bb391d11ef2505df73e374a10b79
   languageName: node
   linkType: hard
 

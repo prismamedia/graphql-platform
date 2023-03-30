@@ -1744,7 +1744,7 @@ function $$SETUP_STATE(hydrateRuntimeState, basePath) {
             ["lodash", "npm:4.17.21"],\
             ["p-queue", "npm:7.3.4"],\
             ["p-retry", "npm:5.1.2"],\
-            ["type-fest", "npm:3.7.1"],\
+            ["type-fest", "npm:3.7.2"],\
             ["typescript", "patch:typescript@npm%3A5.0.2#~builtin<compat/typescript>::version=5.0.2&hash=85af82"]\
           ],\
           "packagePeers": [\
@@ -1777,7 +1777,7 @@ function $$SETUP_STATE(hydrateRuntimeState, basePath) {
             ["lodash", "npm:4.17.21"],\
             ["p-queue", "npm:7.3.4"],\
             ["p-retry", "npm:5.1.2"],\
-            ["type-fest", "npm:3.7.1"],\
+            ["type-fest", "npm:3.7.2"],\
             ["typescript", "patch:typescript@npm%3A5.0.2#~builtin<compat/typescript>::version=5.0.2&hash=85af82"]\
           ],\
           "linkType": "SOFT"\
@@ -1806,7 +1806,7 @@ function $$SETUP_STATE(hydrateRuntimeState, basePath) {
             ["jest", "virtual:dc3fc578bfa5e06182a4d2be39ede0bc5b74940b1ffe0d70c26892ab140a4699787750fba175dc306292e80b4aa2c8c5f68c2a821e69b2c37e360c0dff36ff66#npm:29.5.0"],\
             ["mariadb", "npm:3.1.1"],\
             ["semver", "npm:7.3.8"],\
-            ["type-fest", "npm:3.7.1"],\
+            ["type-fest", "npm:3.7.2"],\
             ["typescript", "patch:typescript@npm%3A5.0.2#~builtin<compat/typescript>::version=5.0.2&hash=85af82"]\
           ],\
           "packagePeers": [\
@@ -1836,7 +1836,7 @@ function $$SETUP_STATE(hydrateRuntimeState, basePath) {
             ["jest", "virtual:dc3fc578bfa5e06182a4d2be39ede0bc5b74940b1ffe0d70c26892ab140a4699787750fba175dc306292e80b4aa2c8c5f68c2a821e69b2c37e360c0dff36ff66#npm:29.5.0"],\
             ["mariadb", "npm:3.1.1"],\
             ["semver", "npm:7.3.8"],\
-            ["type-fest", "npm:3.7.1"],\
+            ["type-fest", "npm:3.7.2"],\
             ["typescript", "patch:typescript@npm%3A5.0.2#~builtin<compat/typescript>::version=5.0.2&hash=85af82"]\
           ],\
           "linkType": "SOFT"\
@@ -1878,7 +1878,7 @@ function $$SETUP_STATE(hydrateRuntimeState, basePath) {
             ["entities", "npm:4.4.0"],\
             ["graphql", "npm:16.6.0"],\
             ["jest", "virtual:dc3fc578bfa5e06182a4d2be39ede0bc5b74940b1ffe0d70c26892ab140a4699787750fba175dc306292e80b4aa2c8c5f68c2a821e69b2c37e360c0dff36ff66#npm:29.5.0"],\
-            ["type-fest", "npm:3.7.1"],\
+            ["type-fest", "npm:3.7.2"],\
             ["typescript", "patch:typescript@npm%3A5.0.2#~builtin<compat/typescript>::version=5.0.2&hash=85af82"]\
           ],\
           "packagePeers": [\
@@ -1901,7 +1901,7 @@ function $$SETUP_STATE(hydrateRuntimeState, basePath) {
             ["entities", "npm:4.4.0"],\
             ["graphql", "npm:16.6.0"],\
             ["jest", "virtual:dc3fc578bfa5e06182a4d2be39ede0bc5b74940b1ffe0d70c26892ab140a4699787750fba175dc306292e80b4aa2c8c5f68c2a821e69b2c37e360c0dff36ff66#npm:29.5.0"],\
-            ["type-fest", "npm:3.7.1"],\
+            ["type-fest", "npm:3.7.2"],\
             ["typescript", "patch:typescript@npm%3A5.0.2#~builtin<compat/typescript>::version=5.0.2&hash=85af82"]\
           ],\
           "linkType": "SOFT"\
@@ -1925,7 +1925,7 @@ function $$SETUP_STATE(hydrateRuntimeState, basePath) {
             ["indefinite", "npm:2.4.2"],\
             ["jest", "virtual:dc3fc578bfa5e06182a4d2be39ede0bc5b74940b1ffe0d70c26892ab140a4699787750fba175dc306292e80b4aa2c8c5f68c2a821e69b2c37e360c0dff36ff66#npm:29.5.0"],\
             ["lodash", "npm:4.17.21"],\
-            ["type-fest", "npm:3.7.1"],\
+            ["type-fest", "npm:3.7.2"],\
             ["typescript", "patch:typescript@npm%3A5.0.2#~builtin<compat/typescript>::version=5.0.2&hash=85af82"]\
           ],\
           "packagePeers": [\
@@ -1950,7 +1950,7 @@ function $$SETUP_STATE(hydrateRuntimeState, basePath) {
             ["indefinite", "npm:2.4.2"],\
             ["jest", "virtual:dc3fc578bfa5e06182a4d2be39ede0bc5b74940b1ffe0d70c26892ab140a4699787750fba175dc306292e80b4aa2c8c5f68c2a821e69b2c37e360c0dff36ff66#npm:29.5.0"],\
             ["lodash", "npm:4.17.21"],\
-            ["type-fest", "npm:3.7.1"],\
+            ["type-fest", "npm:3.7.2"],\
             ["typescript", "patch:typescript@npm%3A5.0.2#~builtin<compat/typescript>::version=5.0.2&hash=85af82"]\
           ],\
           "linkType": "SOFT"\
@@ -3171,7 +3171,7 @@ function $$SETUP_STATE(hydrateRuntimeState, basePath) {
           "packageDependencies": [\
             ["browserslist", "npm:4.21.5"],\
             ["caniuse-lite", "npm:1.0.30001472"],\
-            ["electron-to-chromium", "npm:1.4.342"],\
+            ["electron-to-chromium", "npm:1.4.345"],\
             ["node-releases", "npm:2.0.10"],\
             ["update-browserslist-db", "virtual:e3b9e9d029ed690d72cbb29196ba0a23f15b398eeb926347678187be937db870a04cbf984eecc8e0ec9c290158a9cd8607d12f0188665abe039fa4a9051a22ac#npm:1.0.10"]\
           ],\
@@ -3784,10 +3784,10 @@ function $$SETUP_STATE(hydrateRuntimeState, basePath) {
         }]\
       ]],\
       ["electron-to-chromium", [\
-        ["npm:1.4.342", {\
-          "packageLocation": "./.yarn/cache/electron-to-chromium-npm-1.4.342-d67e2fea13-61ecf9f3ea.zip/node_modules/electron-to-chromium/",\
+        ["npm:1.4.345", {\
+          "packageLocation": "./.yarn/cache/electron-to-chromium-npm-1.4.345-99a13733ae-4561a09c12.zip/node_modules/electron-to-chromium/",\
           "packageDependencies": [\
-            ["electron-to-chromium", "npm:1.4.342"]\
+            ["electron-to-chromium", "npm:1.4.345"]\
           ],\
           "linkType": "HARD"\
         }]\
@@ -6942,10 +6942,10 @@ function $$SETUP_STATE(hydrateRuntimeState, basePath) {
           ],\
           "linkType": "HARD"\
         }],\
-        ["npm:3.7.1", {\
-          "packageLocation": "./.yarn/cache/type-fest-npm-3.7.1-cf44973d7e-a694e0d62a.zip/node_modules/type-fest/",\
+        ["npm:3.7.2", {\
+          "packageLocation": "./.yarn/cache/type-fest-npm-3.7.2-e73cc98a16-28f5c6eca6.zip/node_modules/type-fest/",\
           "packageDependencies": [\
-            ["type-fest", "npm:3.7.1"]\
+            ["type-fest", "npm:3.7.2"]\
           ],\
           "linkType": "HARD"\
         }]\
