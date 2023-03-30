@@ -1,3 +1,4 @@
+import type { AbstractUpdate } from './abstract-update.js';
 import { UpdateManyMutation } from './update/update-many.js';
 import { UpdateOneIfExistsMutation } from './update/update-one-if-exists.js';
 import { UpdateOneMutation } from './update/update-one.js';
@@ -10,7 +11,7 @@ export const updateConstructorsByKey = {
   'update-many': UpdateManyMutation,
   'update-one': UpdateOneMutation,
   'update-one-if-exists': UpdateOneIfExistsMutation,
-} as const;
+} satisfies Record<string, typeof AbstractUpdate<any, any, any>>;
 
 export type UpdatesByKey<TRequestContext extends object> = {
   'update-many': UpdateManyMutation<TRequestContext>;

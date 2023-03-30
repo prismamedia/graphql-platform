@@ -16,7 +16,7 @@ import type { MutationContext } from './context.js';
 export type UpsertMutationArgs = RawNodeSelectionAwareArgs<{
   where: NonNullable<NodeUniqueFilterInputValue>;
   create: NonNullable<NodeCreationInputValue>;
-  update: NonNullable<NodeUpdateInputValue>;
+  update?: NodeUpdateInputValue;
 }>;
 
 export type UpsertMutationResult = NodeSelectedValue;
@@ -31,7 +31,7 @@ export class UpsertMutation<
   public override readonly mutationTypes = [
     utils.MutationType.CREATION,
     utils.MutationType.UPDATE,
-  ] as const;
+  ] satisfies utils.MutationType[];
 
   protected override readonly selectionAware = true;
   public override readonly name = `upsert${this.node}`;
@@ -50,7 +50,7 @@ export class UpsertMutation<
       }),
       new utils.Input({
         name: 'update',
-        type: utils.nonNillableInputType(this.node.updateInputType),
+        type: this.node.updateInputType,
       }),
     ];
   }
@@ -69,14 +69,25 @@ export class UpsertMutation<
     path: utils.Path,
   ): Promise<UpsertMutationResult> {
     return (
-      (await this.node
-        .getMutationByKey('update-one-if-exists')
-        .internal(
-          authorization,
-          { where: args.where, data: args.update, selection: args.selection },
-          context,
-          path,
-        )) ??
+      (await (args.update
+        ? this.node.getMutationByKey('update-one-if-exists').internal(
+            authorization,
+            {
+              where: args.where,
+              data: args.update,
+              selection: args.selection,
+            },
+            context,
+            path,
+          )
+        : this.node
+            .getQueryByKey('get-one-if-exists')
+            .internal(
+              authorization,
+              { where: args.where, selection: args.selection },
+              context,
+              path,
+            ))) ??
       (await this.node
         .getMutationByKey('create-one')
         .internal(

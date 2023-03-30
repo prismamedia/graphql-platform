@@ -1,4 +1,5 @@
 import type { Simplify } from 'type-fest';
+import type { AbstractQuery } from './abstract-query.js';
 import { CountQuery } from './query/count.js';
 import { ExistsQuery } from './query/exists.js';
 import { FindManyQuery } from './query/find-many.js';
@@ -23,7 +24,7 @@ export const queryConstructorsByKey = {
   'get-one-if-exists': GetOneIfExistsQuery,
   'get-some-in-order': GetSomeInOrderQuery,
   'get-some-in-order-if-exists': GetSomeInOrderIfExistsQuery,
-} as const;
+} satisfies Record<string, typeof AbstractQuery<any, any, any>>;
 
 export type QueriesByKey<TRequestContext extends object> = {
   count: CountQuery<TRequestContext>;

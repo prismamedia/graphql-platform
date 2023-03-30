@@ -1073,6 +1073,11 @@ type mutation {
   """Creates one "Article", throws an error if it already exists"""
   createArticle(data: ArticleCreationInput!): Article!
 
+  """
+  Creates one "Article" if it does not exist, returns the existing otherwise
+  """
+  createArticleIfNotExists(where: ArticleUniqueFilterInput!, data: ArticleCreationInput!): Article!
+
   """Creates some "Article", throws an error if they already exist"""
   createArticles(data: [ArticleCreationInput!]!): [Article!]!
 
@@ -1099,10 +1104,15 @@ type mutation {
   updateArticleIfExists(where: ArticleUniqueFilterInput!, data: ArticleUpdateInput!): Article
 
   """Updates an existing "Article" or creates a new one"""
-  upsertArticle(where: ArticleUniqueFilterInput!, create: ArticleCreationInput!, update: ArticleUpdateInput!): Article!
+  upsertArticle(where: ArticleUniqueFilterInput!, create: ArticleCreationInput!, update: ArticleUpdateInput): Article!
 
   """Creates one "Category", throws an error if it already exists"""
   createCategory(data: CategoryCreationInput!): Category!
+
+  """
+  Creates one "Category" if it does not exist, returns the existing otherwise
+  """
+  createCategoryIfNotExists(where: CategoryUniqueFilterInput!, data: CategoryCreationInput!): Category!
 
   """Creates some "Category", throws an error if they already exist"""
   createCategories(data: [CategoryCreationInput!]!): [Category!]!
@@ -1130,10 +1140,13 @@ type mutation {
   updateCategoryIfExists(where: CategoryUniqueFilterInput!, data: CategoryUpdateInput!): Category
 
   """Updates an existing "Category" or creates a new one"""
-  upsertCategory(where: CategoryUniqueFilterInput!, create: CategoryCreationInput!, update: CategoryUpdateInput!): Category!
+  upsertCategory(where: CategoryUniqueFilterInput!, create: CategoryCreationInput!, update: CategoryUpdateInput): Category!
 
   """Creates one "Tag", throws an error if it already exists"""
   createTag(data: TagCreationInput!): Tag!
+
+  """Creates one "Tag" if it does not exist, returns the existing otherwise"""
+  createTagIfNotExists(where: TagUniqueFilterInput!, data: TagCreationInput!): Tag!
 
   """Creates some "Tag", throws an error if they already exist"""
   createTags(data: [TagCreationInput!]!): [Tag!]!
@@ -1161,10 +1174,15 @@ type mutation {
   updateTagIfExists(where: TagUniqueFilterInput!, data: TagUpdateInput!): Tag
 
   """Updates an existing "Tag" or creates a new one"""
-  upsertTag(where: TagUniqueFilterInput!, create: TagCreationInput!, update: TagUpdateInput!): Tag!
+  upsertTag(where: TagUniqueFilterInput!, create: TagCreationInput!, update: TagUpdateInput): Tag!
 
   """Creates one "ArticleTag", throws an error if it already exists"""
   createArticleTag(data: ArticleTagCreationInput!): ArticleTag!
+
+  """
+  Creates one "ArticleTag" if it does not exist, returns the existing otherwise
+  """
+  createArticleTagIfNotExists(where: ArticleTagUniqueFilterInput!, data: ArticleTagCreationInput!): ArticleTag!
 
   """Creates some "ArticleTag", throws an error if they already exist"""
   createArticleTags(data: [ArticleTagCreationInput!]!): [ArticleTag!]!
@@ -1192,12 +1210,17 @@ type mutation {
   updateArticleTagIfExists(where: ArticleTagUniqueFilterInput!, data: ArticleTagUpdateInput!): ArticleTag
 
   """Updates an existing "ArticleTag" or creates a new one"""
-  upsertArticleTag(where: ArticleTagUniqueFilterInput!, create: ArticleTagCreationInput!, update: ArticleTagUpdateInput!): ArticleTag!
+  upsertArticleTag(where: ArticleTagUniqueFilterInput!, create: ArticleTagCreationInput!, update: ArticleTagUpdateInput): ArticleTag!
 
   """
   Creates one "ArticleTagModeration", throws an error if it already exists
   """
   createArticleTagModeration(data: ArticleTagModerationCreationInput!): ArticleTagModeration!
+
+  """
+  Creates one "ArticleTagModeration" if it does not exist, returns the existing otherwise
+  """
+  createArticleTagModerationIfNotExists(where: ArticleTagModerationUniqueFilterInput!, data: ArticleTagModerationCreationInput!): ArticleTagModeration!
 
   """
   Creates some "ArticleTagModeration", throws an error if they already exist
@@ -1235,10 +1258,15 @@ type mutation {
   updateArticleTagModerationIfExists(where: ArticleTagModerationUniqueFilterInput!, data: ArticleTagModerationUpdateInput!): ArticleTagModeration
 
   """Updates an existing "ArticleTagModeration" or creates a new one"""
-  upsertArticleTagModeration(where: ArticleTagModerationUniqueFilterInput!, create: ArticleTagModerationCreationInput!, update: ArticleTagModerationUpdateInput!): ArticleTagModeration!
+  upsertArticleTagModeration(where: ArticleTagModerationUniqueFilterInput!, create: ArticleTagModerationCreationInput!, update: ArticleTagModerationUpdateInput): ArticleTagModeration!
 
   """Creates one "UserProfile", throws an error if it already exists"""
   createUserProfile(data: UserProfileCreationInput!): UserProfile!
+
+  """
+  Creates one "UserProfile" if it does not exist, returns the existing otherwise
+  """
+  createUserProfileIfNotExists(where: UserProfileUniqueFilterInput!, data: UserProfileCreationInput!): UserProfile!
 
   """Creates some "UserProfile", throws an error if they already exist"""
   createUserProfiles(data: [UserProfileCreationInput!]!): [UserProfile!]!
@@ -1266,7 +1294,7 @@ type mutation {
   updateUserProfileIfExists(where: UserProfileUniqueFilterInput!, data: UserProfileUpdateInput!): UserProfile
 
   """Updates an existing "UserProfile" or creates a new one"""
-  upsertUserProfile(where: UserProfileUniqueFilterInput!, create: UserProfileCreationInput!, update: UserProfileUpdateInput!): UserProfile!
+  upsertUserProfile(where: UserProfileUniqueFilterInput!, create: UserProfileCreationInput!, update: UserProfileUpdateInput): UserProfile!
 }
 
 """The "Article" node's creation"""
@@ -1364,7 +1392,7 @@ input CategoryNestedParentEdgeCreationInput {
 }
 
 input CategoryNestedConnectOrCreateParentEdgeCreationInput {
-  where: CategoryUniqueFilterInput!
+  connect: CategoryUniqueFilterInput!
   create: CategoryCreationInput!
 }
 
@@ -1377,7 +1405,7 @@ input CategoryNestedChildrenReverseEdgeCreationInput {
 }
 
 input CategoryNestedConnectOrCreateChildrenReverseEdgeCreationInput {
-  where: CategoryUniqueFilterInput!
+  connect: CategoryUniqueFilterInput!
   create: CategoryCreationWithoutParentInput!
 }
 
@@ -1410,7 +1438,7 @@ input CategoryNestedArticlesReverseEdgeCreationInput {
 }
 
 input CategoryNestedConnectOrCreateArticlesReverseEdgeCreationInput {
-  where: ArticleUniqueFilterInput!
+  connect: ArticleUniqueFilterInput!
   create: ArticleCreationWithoutCategoryInput!
 }
 
@@ -1513,7 +1541,7 @@ input ArticleTagNestedArticleEdgeCreationInput {
 }
 
 input ArticleTagNestedConnectOrCreateArticleEdgeCreationInput {
-  where: ArticleUniqueFilterInput!
+  connect: ArticleUniqueFilterInput!
   create: ArticleCreationInput!
 }
 
@@ -1535,12 +1563,12 @@ input ArticleTagModerationNestedModeratorEdgeCreationInput {
 }
 
 input ArticleTagNestedConnectOrCreateTagEdgeCreationInput {
-  where: TagUniqueFilterInput!
+  connect: TagUniqueFilterInput!
   create: TagCreationInput!
 }
 
 input ArticleNestedConnectOrCreateCategoryEdgeCreationInput {
-  where: CategoryUniqueFilterInput!
+  connect: CategoryUniqueFilterInput!
   create: CategoryCreationInput!
 }
 
@@ -1581,7 +1609,7 @@ input ArticleNestedCategoryEdgeUpdateInput {
 }
 
 input ArticleNestedConnectOrCreateCategoryEdgeUpdateInput {
-  where: CategoryUniqueFilterInput!
+  connect: CategoryUniqueFilterInput!
   create: CategoryCreationInput!
 }
 
@@ -1620,7 +1648,7 @@ input CategoryNestedParentEdgeUpdateInput {
 }
 
 input CategoryNestedConnectOrCreateParentEdgeUpdateInput {
-  where: CategoryUniqueFilterInput!
+  connect: CategoryUniqueFilterInput!
   create: CategoryCreationInput!
 }
 
@@ -1641,7 +1669,7 @@ input CategoryNestedChildrenReverseEdgeUpdateInput {
 }
 
 input CategoryNestedConnectOrCreateChildrenReverseEdgeUpdateInput {
-  where: CategoryUniqueFilterInput!
+  connect: CategoryUniqueFilterInput!
   create: CategoryCreationWithoutParentInput!
 }
 
@@ -1662,7 +1690,7 @@ input CategoryNestedArticlesReverseEdgeUpdateInput {
 }
 
 input CategoryNestedConnectOrCreateArticlesReverseEdgeUpdateInput {
-  where: ArticleUniqueFilterInput!
+  connect: ArticleUniqueFilterInput!
   create: ArticleCreationWithoutCategoryInput!
 }
 
@@ -1728,7 +1756,7 @@ input ArticleTagModerationNestedArticleTagEdgeCreationInput {
 }
 
 input ArticleTagModerationNestedConnectOrCreateArticleTagEdgeCreationInput {
-  where: ArticleTagUniqueFilterInput!
+  connect: ArticleTagUniqueFilterInput!
   create: ArticleTagCreationInput!
 }
 

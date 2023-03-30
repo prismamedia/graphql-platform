@@ -71,5 +71,5 @@ export abstract class AbstractDeletion<
 > extends AbstractMutation<TRequestContext, TArgs, TResult> {
   public override readonly mutationTypes = [
     utils.MutationType.DELETION,
-  ] as const;
+  ] satisfies utils.MutationType[];
 }

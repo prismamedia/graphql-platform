@@ -85,5 +85,5 @@ export abstract class AbstractCreation<
 > extends AbstractMutation<TRequestContext, TArgs, TResult> {
   public override readonly mutationTypes = [
     utils.MutationType.CREATION,
-  ] as const;
+  ] satisfies utils.MutationType[];
 }

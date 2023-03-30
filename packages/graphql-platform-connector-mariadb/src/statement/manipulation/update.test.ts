@@ -1,4 +1,11 @@
-import { afterAll, beforeAll, describe, expect, it } from '@jest/globals';
+import {
+  afterAll,
+  beforeAll,
+  beforeEach,
+  describe,
+  expect,
+  it,
+} from '@jest/globals';
 import { Node, NodeChange } from '@prismamedia/graphql-platform';
 import { MutationType } from '@prismamedia/graphql-platform-utils';
 import {
@@ -10,14 +17,20 @@ import { createMyGP, type MyGP } from '../../__tests__/config.js';
 
 describe('Update statement', () => {
   let gp: MyGP;
-  const changes: NodeChange[] = [];
+  let changes: NodeChange[];
 
   beforeAll(async () => {
     gp = createMyGP(`connector_mariadb_update_statement`);
-    gp.on('node-change', (change) => changes.push(change));
+    gp.on('node-change-aggregation', (aggregation) =>
+      changes?.push(...aggregation),
+    );
 
     await gp.connector.setup();
     await gp.seed(fixtures, myAdminContext);
+  });
+
+  beforeEach(() => {
+    changes = [];
   });
 
   afterAll(async () => {
@@ -96,10 +109,21 @@ describe('Update statement', () => {
       {
         data: {
           tags: {
-            create: {
-              order: 1,
-              tag: { connect: { slug: 'high-tech' } },
-            },
+            create: [
+              {
+                order: 1,
+                tag: { connect: { slug: 'high-tech' } },
+              },
+              {
+                order: 2,
+                tag: {
+                  connectOrCreate: {
+                    connect: { slug: 'tv' },
+                    create: { title: 'TV' },
+                  },
+                },
+              },
+            ],
           },
           updatedAt: new Date('2022-06-01T00:00:00Z'),
         },
@@ -123,8 +147,6 @@ describe('Update statement', () => {
       myAdminContext,
     ],
   ])('generates statements', async (nodeName, args, context) => {
-    changes.length = 0;
-
     await expect(
       gp
         .getNodeByName(nodeName)

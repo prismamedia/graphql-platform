@@ -46,7 +46,7 @@ export type MultipleReverseEdgeUpdateInputValue = utils.Optional<
     // Non-destructive actions
     [MultipleReverseEdgeUpdateInputAction.CONNECT_MANY]: NonNullable<NodeFilterInputValue>;
     [MultipleReverseEdgeUpdateInputAction.CONNECT_OR_CREATE_SOME]: NonNullable<{
-      where: NonNullable<NodeUniqueFilterInputValue>;
+      connect: NonNullable<NodeUniqueFilterInputValue>;
       create: NonNullable<NodeCreationInputValue>;
     }>[];
     [MultipleReverseEdgeUpdateInputAction.CONNECT_SOME]: NonNullable<NodeUniqueFilterInputValue>[];
@@ -227,7 +227,7 @@ export class MultipleReverseEdgeUpdateInput extends AbstractReverseEdgeUpdateInp
                           ].join(''),
                           fields: () => [
                             new utils.Input({
-                              name: 'where',
+                              name: 'connect',
                               type: utils.nonNillableInputType(
                                 reverseEdge.head.uniqueFilterInputType,
                               ),
@@ -532,10 +532,10 @@ export class MultipleReverseEdgeUpdateInput extends AbstractReverseEdgeUpdateInp
             const actionData = inputValue[actionName]!;
 
             await Promise.all(
-              actionData.map(({ where, create }, index) =>
+              actionData.map(({ connect, create }, index) =>
                 this.reverseEdge.head.getMutationByKey('upsert').execute(
                   {
-                    where,
+                    where: connect,
                     create: {
                       ...create,
                       [originalEdgeName]: {

@@ -28,7 +28,7 @@ Map {
 exports[`Update statement generates statements: changes 3`] = `
 Map {
   "ArticleTag" => Map {
-    "creation" => 2,
+    "creation" => 4,
   },
 }
 `;
@@ -99,6 +99,12 @@ exports[`Update statement generates statements: result 3`] = `
           "title": "High-tech",
         },
       },
+      {
+        "order": 2,
+        "tag": {
+          "title": "TV",
+        },
+      },
     ],
     "title": "My first draft article",
   },
@@ -116,6 +122,12 @@ exports[`Update statement generates statements: result 3`] = `
         "order": 1,
         "tag": {
           "title": "High-tech",
+        },
+      },
+      {
+        "order": 2,
+        "tag": {
+          "title": "TV",
         },
       },
     ],

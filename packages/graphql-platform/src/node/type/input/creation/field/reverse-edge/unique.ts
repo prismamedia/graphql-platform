@@ -21,7 +21,7 @@ export type UniqueReverseEdgeCreationInputValue = utils.Optional<
     [UniqueReverseEdgeCreationInputAction.CONNECT]: NonNullable<NodeUniqueFilterInputValue>;
     [UniqueReverseEdgeCreationInputAction.CONNECT_IF_EXISTS]: NonNullable<NodeUniqueFilterInputValue>;
     [UniqueReverseEdgeCreationInputAction.CONNECT_OR_CREATE]: NonNullable<{
-      where: NonNullable<NodeUniqueFilterInputValue>;
+      connect: NonNullable<NodeUniqueFilterInputValue>;
       create: NonNullable<NodeCreationInputValue>;
     }>;
     [UniqueReverseEdgeCreationInputAction.CREATE]: NonNullable<NodeCreationInputValue>;
@@ -89,7 +89,7 @@ export class UniqueReverseEdgeCreationInput extends AbstractReverseEdgeCreationI
                       ].join(''),
                       fields: () => [
                         new utils.Input({
-                          name: 'where',
+                          name: 'connect',
                           type: utils.nonNillableInputType(
                             reverseEdge.head.uniqueFilterInputType,
                           ),
@@ -211,11 +211,11 @@ export class UniqueReverseEdgeCreationInput extends AbstractReverseEdgeCreationI
       }
 
       case UniqueReverseEdgeCreationInputAction.CONNECT_OR_CREATE: {
-        const { where, create } = inputValue[maybeActionName]!;
+        const { connect, create } = inputValue[maybeActionName]!;
 
         await this.reverseEdge.head.getMutationByKey('upsert').execute(
           {
-            where,
+            where: connect,
             create: {
               ...create,
               [originalEdgeName]: {

@@ -1,3 +1,7 @@
+import type {
+  NodeFixtureDataByReference,
+  NodeFixtureDataByReferenceByNodeName,
+} from '../seeding.js';
 import { ArticleStatus } from './config.js';
 
 export const Category = {
@@ -15,7 +19,7 @@ export const Category = {
     order: 1,
     title: 'News',
   },
-} as const;
+} satisfies NodeFixtureDataByReference;
 
 export const Article = {
   article_01: {
@@ -56,7 +60,7 @@ export const Article = {
     machineTags: ['namespace:key=a_value', 'namespace:key=other_value'],
     metas: { aKey: 'withAnyValue' },
   },
-} as const;
+} satisfies NodeFixtureDataByReference;
 
 export const Tag = {
   tag_01: {
@@ -69,7 +73,7 @@ export const Tag = {
     title: 'Fashion',
     deprecated: true,
   },
-} as const;
+} satisfies NodeFixtureDataByReference;
 
 export const ArticleTag = {
   'article_03-tag_01': {
@@ -87,7 +91,7 @@ export const ArticleTag = {
     tag: 'tag_03',
     order: 0,
   },
-} as const;
+} satisfies NodeFixtureDataByReference;
 
 export const ArticleTagModeration = {
   'article_03-tag_02-moderator_user_yvann': {
@@ -100,7 +104,7 @@ export const ArticleTagModeration = {
     moderator: 'user_marine',
     moderation: 'I would like to delete it',
   },
-} as const;
+} satisfies NodeFixtureDataByReference;
 
 export const User = {
   user_yvann: {
@@ -115,7 +119,7 @@ export const User = {
     createdAt: new Date('2022-02-01T12:00:00Z'),
     lastLoggedInAt: null,
   },
-} as const;
+} satisfies NodeFixtureDataByReference;
 
 export const UserProfile = {
   user_profile_yvann: {
@@ -123,7 +127,7 @@ export const UserProfile = {
     birthday: '1987-04-28',
     twitterHandle: '@yvannboucher',
   },
-} as const;
+} satisfies NodeFixtureDataByReference;
 
 export const fixtures = {
   Category,
@@ -133,4 +137,4 @@ export const fixtures = {
   ArticleTagModeration,
   User,
   UserProfile,
-} as const;
+} satisfies NodeFixtureDataByReferenceByNodeName;

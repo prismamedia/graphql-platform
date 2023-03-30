@@ -1,4 +1,5 @@
 import type { Simplify } from 'type-fest';
+import type { AbstractMutation } from './abstract-mutation.js';
 import {
   creationConstructorsByKey,
   type CreationsByKey,
@@ -25,7 +26,7 @@ export const mutationConstructorsByKey = {
   ...deletionConstructorsByKey,
   ...updateConstructorsByKey,
   upsert: UpsertMutation,
-} as const;
+} satisfies Record<string, typeof AbstractMutation<any, any, any>>;
 
 export type MutationsByKey<TRequestContext extends object> = Simplify<
   CreationsByKey<TRequestContext> &

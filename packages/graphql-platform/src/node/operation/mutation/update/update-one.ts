@@ -7,14 +7,15 @@ import type {
 } from '../../../abstract-operation.js';
 import type { NodeFilter } from '../../../statement/filter.js';
 import type { NodeSelectedValue } from '../../../statement/selection/value.js';
-import type { NodeUniqueFilterInputValue } from '../../../type.js';
+import type { NodeUniqueFilterInputValue } from '../../../type/input/unique-filter.js';
+import type { NodeUpdateInputValue } from '../../../type/input/update.js';
 import { NodeNotFoundError } from '../../error.js';
 import { AbstractUpdate } from '../abstract-update.js';
 import type { MutationContext } from '../context.js';
 
 export type UpdateOneMutationArgs = RawNodeSelectionAwareArgs<{
   where: NonNullable<NodeUniqueFilterInputValue>;
-  data: utils.PlainObject;
+  data: NonNullable<NodeUpdateInputValue>;
 }>;
 
 export type UpdateOneMutationResult = NodeSelectedValue;

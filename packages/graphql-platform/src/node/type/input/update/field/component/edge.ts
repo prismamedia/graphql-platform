@@ -22,7 +22,7 @@ export type EdgeUpdateInputValue = utils.Nillable<
     [EdgeUpdateInputAction.CONNECT]: NonNullable<NodeUniqueFilterInputValue>;
     [EdgeUpdateInputAction.CONNECT_IF_EXISTS]: NonNullable<NodeUniqueFilterInputValue>;
     [EdgeUpdateInputAction.CONNECT_OR_CREATE]: NonNullable<{
-      where: NonNullable<NodeUniqueFilterInputValue>;
+      connect: NonNullable<NodeUniqueFilterInputValue>;
       create: NonNullable<NodeCreationInputValue>;
     }>;
     [EdgeUpdateInputAction.CREATE]: NonNullable<NodeCreationInputValue>;
@@ -93,7 +93,7 @@ export class EdgeUpdateInput extends AbstractComponentUpdateInput<EdgeUpdateInpu
                       ].join(''),
                       fields: () => [
                         new utils.Input({
-                          name: 'where',
+                          name: 'connect',
                           type: utils.nonNillableInputType(
                             edge.head.uniqueFilterInputType,
                           ),
@@ -170,11 +170,7 @@ export class EdgeUpdateInput extends AbstractComponentUpdateInput<EdgeUpdateInpu
 
         return this.edge.head
           .getQueryByKey('get-one')
-          .execute(
-            { where: actionData, selection },
-            context,
-            actionPath,
-          ) as any;
+          .execute({ where: actionData, selection }, context, actionPath);
       }
 
       case EdgeUpdateInputAction.CONNECT_IF_EXISTS: {
@@ -182,32 +178,19 @@ export class EdgeUpdateInput extends AbstractComponentUpdateInput<EdgeUpdateInpu
 
         return this.edge.head
           .getQueryByKey('get-one-if-exists')
-          .execute(
-            { where: actionData, selection },
-            context,
-            actionPath,
-          ) as any;
+          .execute({ where: actionData, selection }, context, actionPath);
       }
 
       case EdgeUpdateInputAction.CONNECT_OR_CREATE: {
-        const actionData = inputValue[actionName]!;
+        const { connect, create } = inputValue[actionName]!;
 
-        return (
-          (await this.edge.head
-            .getQueryByKey('get-one-if-exists')
-            .execute(
-              { where: actionData.where, selection },
-              context,
-              actionPath,
-            )) ??
-          ((await this.edge.head
-            .getMutationByKey('create-one')
-            .execute(
-              { data: actionData.create, selection },
-              context,
-              actionPath,
-            )) as any)
-        );
+        return this.edge.head
+          .getMutationByKey('create-one-if-not-exists')
+          .execute(
+            { where: connect, data: create, selection },
+            context,
+            actionPath,
+          );
       }
 
       case EdgeUpdateInputAction.CREATE: {
@@ -215,7 +198,7 @@ export class EdgeUpdateInput extends AbstractComponentUpdateInput<EdgeUpdateInpu
 
         return this.edge.head
           .getMutationByKey('create-one')
-          .execute({ data: actionData, selection }, context, actionPath) as any;
+          .execute({ data: actionData, selection }, context, actionPath);
       }
 
       case EdgeUpdateInputAction.DISCONNECT: {

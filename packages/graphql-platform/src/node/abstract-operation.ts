@@ -23,13 +23,11 @@ export type RawNodeSelectionAwareArgs<
 
 export type NodeSelectionAwareArgs<
   TArgs extends utils.Nillable<utils.PlainObject>,
-> = Readonly<
-  Exclude<
-    TArgs extends { selection: RawNodeSelection }
-      ? Merge<TArgs, { selection: NodeSelection }>
-      : TArgs,
-    null
-  >
+> = Exclude<
+  TArgs extends { selection: RawNodeSelection }
+    ? Merge<TArgs, { selection: NodeSelection }>
+    : TArgs,
+  null
 >;
 
 export abstract class AbstractOperation<
