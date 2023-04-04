@@ -73,11 +73,11 @@ export type ContainerConfig<
   [gp: GraphQLPlatform<TRequestContext, TConnector, {}>, configPath: utils.Path]
 >;
 
-export type GraphQLPlatformConfig<
+export interface GraphQLPlatformConfig<
   TRequestContext extends object = any,
   TConnector extends ConnectorInterface = any,
   TContainer extends object = any,
-> = {
+> {
   /**
    * Required, provide the nodes' definition
    */
@@ -135,7 +135,7 @@ export type GraphQLPlatformConfig<
   on?: EventConfigByName<
     EventDataByName<TRequestContext, TConnector, TContainer>
   >;
-};
+}
 
 export class GraphQLPlatform<
   TRequestContext extends object = any,

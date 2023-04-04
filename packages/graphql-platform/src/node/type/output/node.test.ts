@@ -174,7 +174,7 @@ describe(`NodeOutputType`, () => {
         ],
         [
           'Article',
-          `{ id lowerCasedTitle category { id _a: parent { _id } } }`,
+          `{ id __typename lowerCasedTitle category { id _a: parent { _id } } }`,
           undefined,
           `{
   id

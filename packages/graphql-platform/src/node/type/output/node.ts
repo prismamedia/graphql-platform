@@ -458,8 +458,14 @@ export class NodeOutputType {
 
           switch (ast.kind) {
             case graphql.Kind.FIELD: {
-              const fieldAlias = ast.alias?.value || undefined;
               const fieldName = ast.name.value;
+
+              // Handle the "__typename" meta field
+              if (fieldName === graphql.TypeNameMetaFieldDef.name) {
+                return [];
+              }
+
+              const fieldAlias = ast.alias?.value || undefined;
               const fieldKey = fieldAlias ?? fieldName;
               const field = this.getFieldByName(fieldName, path);
 
