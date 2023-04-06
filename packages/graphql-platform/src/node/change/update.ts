@@ -71,4 +71,8 @@ export class NodeUpdate<
       Array.from(this.updatesByComponent.keys(), ({ name }) => name),
     );
   }
+
+  public isEmpty(): boolean {
+    return this.updatesByComponent.size === 0;
+  }
 }

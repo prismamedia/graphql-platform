@@ -72,6 +72,7 @@ export class CreateSomeMutation<
     context: MutationContext,
     path: utils.Path,
   ): Promise<CreateSomeMutationResult> {
+    const api = createContextBoundAPI(this.gp, context);
     const preCreate = this.#config?.preCreate;
     const postCreate = this.#config?.postCreate;
 
@@ -104,15 +105,15 @@ export class CreateSomeMutation<
             gp: this.gp,
             node: this.node,
             context,
-            api: createContextBoundAPI(this.gp, context),
+            api,
             data,
             creation: statement.proxy,
           });
-        } catch (error) {
+        } catch (cause) {
           throw new NodeLifecycleHookError(
             this.node,
             NodeLifecycleHookKind.PRE_CREATE,
-            { cause: error, path: indexedPath },
+            { cause, path: indexedPath },
           );
         }
 
@@ -127,8 +128,8 @@ export class CreateSomeMutation<
         { node: this.node, creations },
         context,
       );
-    } catch (error) {
-      throw new ConnectorError({ cause: error, path });
+    } catch (cause) {
+      throw new ConnectorError({ cause, path });
     }
 
     await Promise.all(
@@ -162,15 +163,15 @@ export class CreateSomeMutation<
             gp: this.gp,
             node: this.node,
             context,
-            api: createContextBoundAPI(this.gp, context),
+            api,
             data,
             change,
           });
-        } catch (error) {
+        } catch (cause) {
           throw new NodeLifecycleHookError(
             this.node,
             NodeLifecycleHookKind.POST_CREATE,
-            { cause: error, path: indexedPath },
+            { cause, path: indexedPath },
           );
         }
       }),

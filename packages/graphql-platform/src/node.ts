@@ -17,6 +17,7 @@ import {
   MultipleReverseEdge,
   UniqueConstraint,
   UniqueReverseEdge,
+  isComponent,
   type Component,
   type ComponentConfig,
   type ComponentValue,
@@ -654,6 +655,28 @@ export class Node<
     return component;
   }
 
+  public ensureComponent(
+    componentOrName: Component | Component['name'],
+    path?: utils.Path,
+  ): Component<TRequestContext, TConnector, TContainer> {
+    if (typeof componentOrName === 'string') {
+      return this.getComponentByName(componentOrName, path);
+    } else if (
+      isComponent(componentOrName) &&
+      this.componentSet.has(componentOrName)
+    ) {
+      return componentOrName;
+    }
+
+    throw new utils.UnexpectedValueError(
+      `${this.indefinite}'s component among "${[
+        ...this.componentsByName.keys(),
+      ].join(', ')}"`,
+      String(componentOrName),
+      { path },
+    );
+  }
+
   public getLeafByName(
     name: Leaf['name'],
     path?: utils.Path,
@@ -672,6 +695,25 @@ export class Node<
     return leaf;
   }
 
+  public ensureLeaf(
+    leafOrName: Leaf | Leaf['name'],
+    path?: utils.Path,
+  ): Leaf<TRequestContext, TConnector, TContainer> {
+    if (typeof leafOrName === 'string') {
+      return this.getLeafByName(leafOrName, path);
+    } else if (leafOrName instanceof Leaf && this.leafSet.has(leafOrName)) {
+      return leafOrName;
+    }
+
+    throw new utils.UnexpectedValueError(
+      `${this.indefinite}'s leaf among "${[...this.leavesByName.keys()].join(
+        ', ',
+      )}"`,
+      String(leafOrName),
+      { path },
+    );
+  }
+
   public getEdgeByName(
     name: Edge['name'],
     path?: utils.Path,
@@ -688,6 +730,25 @@ export class Node<
     }
 
     return edge;
+  }
+
+  public ensureEdge(
+    edgeOrName: Edge | Edge['name'],
+    path?: utils.Path,
+  ): Edge<TRequestContext, TConnector, TContainer> {
+    if (typeof edgeOrName === 'string') {
+      return this.getEdgeByName(edgeOrName, path);
+    } else if (edgeOrName instanceof Edge && this.edgeSet.has(edgeOrName)) {
+      return edgeOrName;
+    }
+
+    throw new utils.UnexpectedValueError(
+      `${this.indefinite}'s edge among "${[...this.edgesByName.keys()].join(
+        ', ',
+      )}"`,
+      String(edgeOrName),
+      { path },
+    );
   }
 
   public getUniqueConstraintByName(

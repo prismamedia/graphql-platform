@@ -92,6 +92,7 @@ export class UpdateManyMutation<
     context: MutationContext,
     path: utils.Path,
   ): Promise<UpdateManyMutationResult> {
+    const api = createContextBoundAPI(this.gp, context);
     const preUpdate = this.#config?.preUpdate;
     const postUpdate = this.#config?.postUpdate;
 
@@ -146,8 +147,8 @@ export class UpdateManyMutation<
         },
         context,
       );
-    } catch (error) {
-      throw new ConnectorError({ cause: error, path });
+    } catch (cause) {
+      throw new ConnectorError({ cause, path });
     }
 
     if (currentValues.length === 0) {
@@ -159,56 +160,56 @@ export class UpdateManyMutation<
     );
 
     // Resolve the edges' nested-actions into their value
-    const value: NodeUpdateValue = await this.node.updateInputType.resolveValue(
-      data,
-      context,
-      path,
-    );
+    const update: NodeUpdateValue =
+      await this.node.updateInputType.resolveValue(data, context, path);
 
     // Create a statement with it
-    const statement = new NodeUpdateStatement(this.node, value);
+    const statement = new NodeUpdateStatement(this.node, update);
 
-    if (statement.updatesByComponent.size) {
-      if (preUpdate) {
+    if (!statement.isEmpty()) {
+      if (preUpdate || currentValues.length === 1) {
         await Promise.all(
           currentValues.map(async (currentValue, index) => {
             // Because we provide the "currentValue", the statement might be "individualized/customized" using it
-            const individualizedStatement = statement.clone();
+            const individualizedStatement =
+              statement.individualize(currentValue);
 
-            // Apply the "preUpdate"-hook
-            try {
-              await preUpdate({
-                gp: this.gp,
-                node: this.node,
-                context,
-                api: createContextBoundAPI(this.gp, context),
-                data,
-                currentValue: Object.freeze(this.node.parseValue(currentValue)),
-                update: individualizedStatement.proxy,
-              });
-            } catch (error) {
-              throw new NodeLifecycleHookError(
-                this.node,
-                NodeLifecycleHookKind.PRE_UPDATE,
-                { cause: error, path },
-              );
-            }
-
-            if (individualizedStatement.updatesByComponent.size) {
-              // Actually update the node
+            if (!individualizedStatement.isEmpty()) {
+              // Apply the "preUpdate"-hook
               try {
-                await this.connector.update(
-                  {
-                    node: this.node,
-                    update: individualizedStatement,
-                    filter: this.node.filterInputType.parseAndFilter(
-                      currentIds[index],
-                    ),
-                  },
+                await preUpdate?.({
+                  gp: this.gp,
+                  node: this.node,
                   context,
+                  api,
+                  data,
+                  currentValue,
+                  update: individualizedStatement.proxy,
+                });
+              } catch (cause) {
+                throw new NodeLifecycleHookError(
+                  this.node,
+                  NodeLifecycleHookKind.PRE_UPDATE,
+                  { cause, path },
                 );
-              } catch (error) {
-                throw new ConnectorError({ cause: error, path });
+              }
+
+              if (!individualizedStatement.isEmpty()) {
+                // Actually update the node
+                try {
+                  await this.connector.update(
+                    {
+                      node: this.node,
+                      update: individualizedStatement,
+                      filter: this.node.filterInputType.parseAndFilter(
+                        currentIds[index],
+                      ),
+                    },
+                    context,
+                  );
+                } catch (cause) {
+                  throw new ConnectorError({ cause, path });
+                }
               }
             }
           }),
@@ -226,8 +227,8 @@ export class UpdateManyMutation<
             },
             context,
           );
-        } catch (error) {
-          throw new ConnectorError({ cause: error, path });
+        } catch (cause) {
+          throw new ConnectorError({ cause, path });
         }
       }
     }
@@ -259,7 +260,7 @@ export class UpdateManyMutation<
           newValues[index],
         );
 
-        if (change.updatesByComponent.size) {
+        if (!change.isEmpty()) {
           // Let's everybody know about the update, if any
           context.changes.push(change);
 
@@ -294,15 +295,15 @@ export class UpdateManyMutation<
               gp: this.gp,
               node: this.node,
               context,
-              api: createContextBoundAPI(this.gp, context),
+              api,
               data,
               change,
             });
-          } catch (error) {
+          } catch (cause) {
             throw new NodeLifecycleHookError(
               this.node,
               NodeLifecycleHookKind.POST_UPDATE,
-              { cause: error, path },
+              { cause, path },
             );
           }
         }),

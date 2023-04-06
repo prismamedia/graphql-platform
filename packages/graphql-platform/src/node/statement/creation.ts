@@ -1,5 +1,4 @@
 import * as utils from '@prismamedia/graphql-platform-utils';
-import assert from 'node:assert/strict';
 import type {
   Component,
   Edge,
@@ -48,26 +47,9 @@ const proxyHandler: ProxyHandler<NodeCreationStatement> = {
     };
   },
   get: (statement, maybeComponentName) =>
-    statement.getComponentValue(
-      statement.node.getComponentByName(
-        maybeComponentName as any,
-        utils.addPath(
-          utils.addPath(undefined, 'NodeCreationStatement'),
-          String(maybeComponentName),
-        ),
-      ),
-    ),
+    statement.getComponentValue(maybeComponentName as any),
   set: (statement, maybeComponentName, maybeComponentValue) => {
-    statement.setComponentValue(
-      statement.node.getComponentByName(
-        maybeComponentName as any,
-        utils.addPath(
-          utils.addPath(undefined, 'NodeCreationStatement'),
-          String(maybeComponentName),
-        ),
-      ),
-      maybeComponentValue,
-    );
+    statement.setComponentValue(maybeComponentName as any, maybeComponentValue);
 
     return true;
   },
@@ -81,10 +63,7 @@ const proxyHandler: ProxyHandler<NodeCreationStatement> = {
 };
 
 export class NodeCreationStatement {
-  public readonly path: utils.Path = utils.addPath(
-    undefined,
-    this.constructor.name,
-  );
+  readonly #path: utils.Path = utils.addPath(undefined, this.constructor.name);
 
   public readonly valuesByComponent = new Map<
     Component,
@@ -99,61 +78,54 @@ export class NodeCreationStatement {
     proxyHandler,
   ) as any;
 
-  public constructor(public readonly node: Node, value?: NodeCreationValue) {
+  public constructor(
+    public readonly node: Node,
+    value?: Readonly<NodeCreationValue>,
+  ) {
     value != null && this.setValue(value);
   }
 
   public setComponentValue(
-    component: Component,
+    componentOrName: Component | Component['name'],
     value?: ComponentCreationValue,
   ): void {
-    assert(
-      this.node.componentSet.has(component),
-      `The "${component}" component does not belong to the "${this.node}" node`,
-    );
+    const component = this.node.ensureComponent(componentOrName, this.#path);
 
     value === undefined
       ? this.valuesByComponent.delete(component)
       : this.valuesByComponent.set(
           component,
-          component.parseValue(value, utils.addPath(this.path, component.name)),
+          component.parseValue(
+            value,
+            utils.addPath(this.#path, component.name),
+          ),
         );
   }
 
-  public setValue(value: NodeCreationValue): void {
+  public setValue(value: Readonly<NodeCreationValue>): void {
     utils.assertPlainObject(value);
 
     Object.entries(value).forEach(([componentName, componentValue]) =>
-      this.setComponentValue(
-        this.node.getComponentByName(componentName, this.path),
-        componentValue,
-      ),
+      this.setComponentValue(componentName, componentValue),
     );
   }
 
-  public getComponentValue(component: Component): ComponentCreationValue {
-    assert(
-      this.node.componentSet.has(component),
-      `The "${component}" component does not belong to the "${this.node}" node`,
-    );
+  public getComponentValue(
+    componentOrName: Component | Component['name'],
+  ): ComponentCreationValue {
+    const component = this.node.ensureComponent(componentOrName, this.#path);
 
     return this.valuesByComponent.get(component);
   }
 
-  public getLeafValue(leaf: Leaf): LeafCreationValue {
-    assert(
-      this.node.componentSet.has(leaf),
-      `The "${leaf}" leaf does not belong to the "${this.node}" node`,
-    );
+  public getLeafValue(leafOrName: Leaf | Leaf['name']): LeafCreationValue {
+    const leaf = this.node.ensureLeaf(leafOrName, this.#path);
 
     return this.valuesByComponent.get(leaf) as any;
   }
 
-  public getEdgeValue(edge: Edge): EdgeCreationValue {
-    assert(
-      this.node.componentSet.has(edge),
-      `The "${edge}" edge does not belong to the "${this.node}" node`,
-    );
+  public getEdgeValue(edgeOrName: Edge | Edge['name']): EdgeCreationValue {
+    const edge = this.node.ensureEdge(edgeOrName, this.#path);
 
     return this.valuesByComponent.get(edge) as any;
   }
@@ -168,9 +140,5 @@ export class NodeCreationStatement {
         ]),
       ),
     );
-  }
-
-  public clone(): NodeCreationStatement {
-    return new NodeCreationStatement(this.node, this.value);
   }
 }

@@ -81,6 +81,7 @@ export class DeleteManyMutation<
     context: MutationContext,
     path: utils.Path,
   ): Promise<DeleteManyMutationResult> {
+    const api = createContextBoundAPI(this.gp, context);
     const preDelete = this.#config?.preDelete;
     const postDelete = this.#config?.postDelete;
 
@@ -126,8 +127,8 @@ export class DeleteManyMutation<
         },
         context,
       );
-    } catch (error) {
-      throw new ConnectorError({ cause: error, path });
+    } catch (cause) {
+      throw new ConnectorError({ cause, path });
     }
 
     if (currentValues.length === 0) {
@@ -143,14 +144,14 @@ export class DeleteManyMutation<
               gp: this.gp,
               node: this.node,
               context,
-              api: createContextBoundAPI(this.gp, context),
+              api,
               currentValue: Object.freeze(this.node.parseValue(currentValue)),
             });
-          } catch (error) {
+          } catch (cause) {
             throw new NodeLifecycleHookError(
               this.node,
               NodeLifecycleHookKind.PRE_DELETE,
-              { cause: error, path },
+              { cause, path },
             );
           }
         }),
@@ -227,8 +228,8 @@ export class DeleteManyMutation<
         },
         context,
       );
-    } catch (error) {
-      throw new ConnectorError({ cause: error, path });
+    } catch (cause) {
+      throw new ConnectorError({ cause, path });
     }
 
     return Promise.all(
@@ -248,14 +249,14 @@ export class DeleteManyMutation<
             gp: this.gp,
             node: this.node,
             context,
-            api: createContextBoundAPI(this.gp, context),
+            api,
             change,
           });
-        } catch (error) {
+        } catch (cause) {
           throw new NodeLifecycleHookError(
             this.node,
             NodeLifecycleHookKind.POST_DELETE,
-            { cause: error, path },
+            { cause, path },
           );
         }
 

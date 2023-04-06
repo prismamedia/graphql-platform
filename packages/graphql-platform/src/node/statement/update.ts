@@ -1,11 +1,11 @@
 import * as utils from '@prismamedia/graphql-platform-utils';
-import assert from 'node:assert/strict';
 import type {
   Component,
   Edge,
   Leaf,
   LeafValue,
   Node,
+  NodeValue,
   ReferenceValue,
 } from '../../node.js';
 
@@ -45,12 +45,10 @@ const proxyHandler: ProxyHandler<NodeUpdateStatement> = {
     };
   },
   get: (statement, maybeComponentName) =>
-    statement.getComponentUpdate(
-      statement.node.getComponentByName(maybeComponentName as any),
-    ),
+    statement.getComponentUpdate(maybeComponentName as any),
   set: (statement, maybeComponentName, maybeComponentUpdate) => {
     statement.setComponentUpdate(
-      statement.node.getComponentByName(maybeComponentName as any),
+      maybeComponentName as any,
       maybeComponentUpdate,
     );
 
@@ -66,10 +64,9 @@ const proxyHandler: ProxyHandler<NodeUpdateStatement> = {
 };
 
 export class NodeUpdateStatement {
-  public readonly path: utils.Path = utils.addPath(
-    undefined,
-    this.constructor.name,
-  );
+  readonly #path: utils.Path = utils.addPath(undefined, this.constructor.name);
+
+  readonly #currentValue?: Readonly<NodeValue>;
 
   public readonly updatesByComponent = new Map<
     Component,
@@ -81,69 +78,72 @@ export class NodeUpdateStatement {
    */
   public readonly proxy: NodeUpdateValue = new Proxy(this, proxyHandler) as any;
 
-  public constructor(public readonly node: Node, value?: NodeUpdateValue) {
-    value != null && this.setValue(value);
+  public constructor(
+    public readonly node: Node,
+    update?: Readonly<NodeUpdateValue>,
+    currentValue?: Readonly<NodeValue>,
+  ) {
+    this.#currentValue = currentValue;
+    update != null && this.setUpdate(update);
   }
 
   public setComponentUpdate(
-    component: Component,
+    componentOrName: Component | Component['name'],
     update?: ComponentUpdateValue,
   ): void {
-    assert(
-      this.node.componentSet.has(component),
-      `The "${component}" component does not belong to the "${this.node}" node`,
-    );
+    const component = this.node.ensureComponent(componentOrName, this.#path);
 
-    update === undefined
-      ? this.updatesByComponent.delete(component)
-      : this.updatesByComponent.set(
-          component,
-          component.parseValue(
-            update,
-            utils.addPath(this.path, component.name),
-          ),
-        );
+    if (update !== undefined) {
+      const parsedUpdate = component.parseValue(
+        update,
+        utils.addPath(this.#path, component.name),
+      );
+
+      if (
+        !this.#currentValue ||
+        !component.areValuesEqual(
+          this.#currentValue[component.name] as any,
+          parsedUpdate as any,
+        )
+      ) {
+        this.updatesByComponent.set(component, parsedUpdate);
+      } else {
+        this.updatesByComponent.delete(component);
+      }
+    } else {
+      this.updatesByComponent.delete(component);
+    }
   }
 
-  public setValue(value: NodeUpdateValue): void {
+  public setUpdate(value: NodeUpdateValue): void {
     utils.assertPlainObject(value);
 
     Object.entries(value).forEach(([componentName, componentValue]) =>
-      this.setComponentUpdate(
-        this.node.getComponentByName(componentName, this.path),
-        componentValue,
-      ),
+      this.setComponentUpdate(componentName, componentValue),
     );
   }
 
-  public getComponentUpdate(component: Component): ComponentUpdateValue {
-    assert(
-      this.node.componentSet.has(component),
-      `The "${component}" component does not belong to the "${this.node}" node`,
-    );
+  public getComponentUpdate(
+    componentOrName: Component | Component['name'],
+  ): ComponentUpdateValue {
+    const component = this.node.ensureComponent(componentOrName, this.#path);
 
     return this.updatesByComponent.get(component);
   }
 
-  public getLeafUpdate(leaf: Leaf): LeafUpdateValue {
-    assert(
-      this.node.componentSet.has(leaf),
-      `The "${leaf}" leaf does not belong to the "${this.node}" node`,
-    );
+  public getLeafUpdate(leafOrName: Leaf | Leaf['name']): LeafUpdateValue {
+    const leaf = this.node.ensureLeaf(leafOrName, this.#path);
 
     return this.updatesByComponent.get(leaf) as any;
   }
 
-  public getEdgeUpdate(edge: Edge): EdgeUpdateValue {
-    assert(
-      this.node.componentSet.has(edge),
-      `The "${edge}" edge does not belong to the "${this.node}" node`,
-    );
+  public getEdgeUpdate(edgeOrName: Edge | Edge['name']): EdgeUpdateValue {
+    const edge = this.node.ensureEdge(edgeOrName, this.#path);
 
     return this.updatesByComponent.get(edge) as any;
   }
 
-  public get value(): NodeUpdateValue {
+  public get update(): NodeUpdateValue {
     return Object.assign(
       Object.create(null),
       Object.fromEntries(
@@ -155,7 +155,11 @@ export class NodeUpdateStatement {
     );
   }
 
-  public clone(): NodeUpdateStatement {
-    return new NodeUpdateStatement(this.node, this.value);
+  public individualize(currentValue: NodeValue): NodeUpdateStatement {
+    return new NodeUpdateStatement(this.node, this.update, currentValue);
+  }
+
+  public isEmpty(): boolean {
+    return this.updatesByComponent.size === 0;
   }
 }

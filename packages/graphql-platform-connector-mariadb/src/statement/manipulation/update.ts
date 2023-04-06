@@ -1,6 +1,7 @@
 import * as core from '@prismamedia/graphql-platform';
 import * as utils from '@prismamedia/graphql-platform-utils';
 import type * as mariadb from 'mariadb';
+import assert from 'node:assert/strict';
 import { EOL } from 'node:os';
 import { Table } from '../../schema.js';
 import { StatementKind } from '../kind.js';
@@ -27,6 +28,8 @@ export class UpdateStatement implements mariadb.QueryOptions {
     context: core.MutationContext,
     config?: UpdateStatementConfig,
   ) {
+    assert(!statement.update.isEmpty(), 'Empty update statement');
+
     const tableReference = new TableFactor(table, context);
 
     const whereCondition = filterNode(tableReference, statement.filter);
