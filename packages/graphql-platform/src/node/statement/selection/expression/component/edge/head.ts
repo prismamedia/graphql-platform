@@ -1,6 +1,7 @@
 import * as utils from '@prismamedia/graphql-platform-utils';
 import { Memoize } from '@prismamedia/memoize';
 import * as graphql from 'graphql';
+import _ from 'lodash';
 import assert from 'node:assert/strict';
 import type { JsonObject } from 'type-fest';
 import type { Component } from '../../../../../definition/component.js';
@@ -107,6 +108,10 @@ export class EdgeHeadSelection<TValue extends EdgeHeadValue = any>
     return a === null || b === null
       ? a === b
       : this.headSelection.areValuesEqual(a, b);
+  }
+
+  public uniqValues(values: ReadonlyArray<TValue>): TValue[] {
+    return _.uniqWith(values, (a, b) => this.areValuesEqual(a, b));
   }
 
   public serialize(maybeValue: unknown, path?: utils.Path): JsonObject | null {

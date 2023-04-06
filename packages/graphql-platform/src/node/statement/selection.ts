@@ -1,5 +1,6 @@
 import * as utils from '@prismamedia/graphql-platform-utils';
 import * as graphql from 'graphql';
+import _ from 'lodash';
 import assert from 'node:assert/strict';
 import type { JsonObject } from 'type-fest';
 import type { Node } from '../../node.js';
@@ -116,6 +117,10 @@ export class NodeSelection<TValue extends NodeSelectedValue = any> {
       aKeySet.size === 0 &&
       bKeySet.size === 0
     );
+  }
+
+  public uniqValues(values: ReadonlyArray<TValue>): TValue[] {
+    return _.uniqWith(values, (a, b) => this.areValuesEqual(a, b));
   }
 
   public serialize(

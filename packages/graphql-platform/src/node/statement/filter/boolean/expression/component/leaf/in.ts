@@ -29,9 +29,8 @@ export class LeafInFilter implements BooleanExpressionInterface {
   ) {
     assert(!values.includes(undefined as any));
 
-    this.values = _.uniqWith(
+    this.values = leaf.uniqValues(
       leaf.isNullable() ? values : values.filter((value) => value !== null),
-      leaf.areValuesEqual.bind(leaf),
     );
 
     this.reduced =

@@ -2,6 +2,7 @@ import * as scalars from '@prismamedia/graphql-platform-scalars';
 import * as utils from '@prismamedia/graphql-platform-utils';
 import { Memoize } from '@prismamedia/memoize';
 import * as graphql from 'graphql';
+import _ from 'lodash';
 import assert from 'node:assert/strict';
 import type { JsonValue, SetReturnType } from 'type-fest';
 import type {
@@ -265,6 +266,10 @@ export class Leaf<
 
   public areValuesEqual(a: LeafValue, b: LeafValue): boolean {
     return a === null || b === null ? a === b : this.#comparator(a, b);
+  }
+
+  public uniqValues(values: ReadonlyArray<LeafValue>): LeafValue[] {
+    return _.uniqWith(values, (a, b) => this.areValuesEqual(a, b));
   }
 
   public serialize(

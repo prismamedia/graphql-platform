@@ -16,6 +16,7 @@ export interface SelectionExpressionInterface<
 
   parseValue(maybeValue: unknown, path?: utils.Path): TInternal;
   areValuesEqual(a: TInternal, b: TInternal): boolean;
+  uniqValues?(values: ReadonlyArray<TInternal>): TInternal[];
   serialize(maybeValue: unknown, path?: utils.Path): TExternal;
   stringify(maybeValue: unknown, path?: utils.Path): string;
 }

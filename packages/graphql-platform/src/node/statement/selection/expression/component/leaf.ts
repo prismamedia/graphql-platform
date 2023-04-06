@@ -59,6 +59,10 @@ export class LeafSelection implements SelectionExpressionInterface<LeafValue> {
     return this.leaf.areValuesEqual(a, b);
   }
 
+  public uniqValues(values: ReadonlyArray<LeafValue>): LeafValue[] {
+    return this.leaf.uniqValues(values);
+  }
+
   public serialize(maybeValue: unknown, path?: utils.Path): JsonValue {
     return this.leaf.serialize(maybeValue, path);
   }

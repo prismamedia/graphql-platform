@@ -249,6 +249,12 @@ export class UniqueConstraint<
     return this.selection.areValuesEqual(a, b);
   }
 
+  public uniqValues(
+    values: ReadonlyArray<UniqueConstraintValue>,
+  ): UniqueConstraintValue[] {
+    return this.selection.uniqValues(values);
+  }
+
   public serialize(
     maybeValue: unknown,
     path: utils.Path = utils.addPath(undefined, this.toString()),

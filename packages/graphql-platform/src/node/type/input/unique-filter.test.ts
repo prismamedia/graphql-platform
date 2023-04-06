@@ -120,6 +120,132 @@ describe('NodeUniqueFilterInputType', () => {
           );
         },
       );
+
+      it.each<
+        [
+          string,
+          NodeUniqueFilterInputValue,
+          NodeUniqueFilterInputValue,
+          boolean,
+        ]
+      >([
+        ['Article', undefined, undefined, true],
+        ['Article', null, null, true],
+        ['Article', { _id: 123 }, { _id: 123 }, true],
+        [
+          'Category',
+          { parent: null, order: 1 },
+          { parent: null, order: 1 },
+          true,
+        ],
+        [
+          'Category',
+          { parent: null, order: 1 },
+          { parent: null, order: 2 },
+          false,
+        ],
+        [
+          'Category',
+          { parent: { id: '76784b6c-ddf5-46a5-b8d7-4697c8c68e66' }, order: 1 },
+          { parent: { id: '76784b6c-ddf5-46a5-b8d7-4697c8c68e66' }, order: 1 },
+          true,
+        ],
+        [
+          'Category',
+          { parent: { id: '76784b6c-ddf5-46a5-b8d7-4697c8c68e66' }, order: 1 },
+          { parent: { id: '8db764c6-8a4d-492c-876e-7cfa2fdd455f' }, order: 1 },
+          false,
+        ],
+      ])(
+        '%sUniqueFilterInput.areValuesEqual(%p, %p) = %p',
+        (nodeName, a, b, result) => {
+          const uniqueFilterInputType =
+            gp.getNodeByName(nodeName).uniqueFilterInputType;
+
+          expect(uniqueFilterInputType.areValuesEqual(a, b)).toEqual(result);
+        },
+      );
+
+      it.each<
+        [
+          string,
+          ReadonlyArray<NodeUniqueFilterInputValue>,
+          NodeUniqueFilterInputValue[],
+        ]
+      >([
+        ['Article', [undefined, null, undefined, null], [undefined, null]],
+        ['Article', [{ _id: 123 }], [{ _id: 123 }]],
+        [
+          'Category',
+          [
+            { parent: null, order: 1 },
+            { parent: null, order: 2 },
+            { parent: null, order: 1 },
+          ],
+          [
+            { parent: null, order: 1 },
+            { parent: null, order: 2 },
+          ],
+        ],
+        [
+          'Category',
+          [
+            {
+              parent: { id: '76784b6c-ddf5-46a5-b8d7-4697c8c68e66' },
+              order: 1,
+            },
+            {
+              parent: { id: '76784b6c-ddf5-46a5-b8d7-4697c8c68e66' },
+              order: 1,
+            },
+            {
+              parent: { id: '76784b6c-ddf5-46a5-b8d7-4697c8c68e66' },
+              order: 1,
+            },
+          ],
+          [
+            {
+              parent: { id: '76784b6c-ddf5-46a5-b8d7-4697c8c68e66' },
+              order: 1,
+            },
+          ],
+        ],
+        [
+          'Category',
+          [
+            {
+              parent: { id: '8db764c6-8a4d-492c-876e-7cfa2fdd455f' },
+              order: 1,
+            },
+            {
+              parent: { id: '76784b6c-ddf5-46a5-b8d7-4697c8c68e66' },
+              order: 3,
+            },
+            {
+              parent: { id: '8db764c6-8a4d-492c-876e-7cfa2fdd455f' },
+              order: 1,
+            },
+          ],
+          [
+            {
+              parent: { id: '8db764c6-8a4d-492c-876e-7cfa2fdd455f' },
+              order: 1,
+            },
+            {
+              parent: { id: '76784b6c-ddf5-46a5-b8d7-4697c8c68e66' },
+              order: 3,
+            },
+          ],
+        ],
+      ])(
+        '%sUniqueFilterInput.uniqValues(%p) = %p',
+        (nodeName, values, result) => {
+          const uniqueFilterInputType =
+            gp.getNodeByName(nodeName).uniqueFilterInputType;
+
+          expect(uniqueFilterInputType.uniqValues(values)).toEqual(result);
+        },
+      );
     });
   });
 });

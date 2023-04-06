@@ -1,6 +1,7 @@
 import * as utils from '@prismamedia/graphql-platform-utils';
 import { Memoize } from '@prismamedia/memoize';
 import inflection from 'inflection';
+import _ from 'lodash';
 import assert from 'node:assert/strict';
 import type { Component, Edge, Node } from '../../../node.js';
 import { Leaf, type LeafValue } from '../../definition/component/leaf.js';
@@ -131,5 +132,33 @@ export class NodeUniqueFilterInputType extends utils.ObjectInputType {
     throw new NodeUniqueFilterNotFoundError(this.node, maybeValue, {
       path,
     });
+  }
+
+  public areValuesEqual(
+    a: NodeUniqueFilterInputValue,
+    b: NodeUniqueFilterInputValue,
+  ): boolean {
+    return a == null || b == null
+      ? a === b
+      : Object.entries(a).length === Object.entries(b).length &&
+          Object.entries(a).every(([componentName, componentValue]) => {
+            const component = this.node.getComponentByName(componentName);
+
+            return component instanceof Leaf
+              ? component.areValuesEqual(
+                  componentValue as any,
+                  b[componentName] as any,
+                )
+              : component.head.uniqueFilterInputType.areValuesEqual(
+                  componentValue as any,
+                  b[componentName] as any,
+                );
+          });
+  }
+
+  public uniqValues(
+    values: ReadonlyArray<NodeUniqueFilterInputValue>,
+  ): NodeUniqueFilterInputValue[] {
+    return _.uniqWith(values, (a, b) => this.areValuesEqual(a, b));
   }
 }

@@ -1421,6 +1421,10 @@ export class Node<
     return this.selection.areValuesEqual(a, b);
   }
 
+  public uniqValues(values: ReadonlyArray<NodeValue>): NodeValue[] {
+    return this.selection.uniqValues(values);
+  }
+
   public serialize(maybeValue: unknown, path?: utils.Path): JsonObject {
     return this.selection.serialize(maybeValue, path);
   }
