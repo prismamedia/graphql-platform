@@ -4,8 +4,8 @@ import * as graphql from 'graphql';
 import _ from 'lodash';
 import assert from 'node:assert/strict';
 import type { JsonObject } from 'type-fest';
-import type { Component } from '../../../../../definition/component.js';
-import type { Edge } from '../../../../../definition/component/edge.js';
+import type { Component, Edge } from '../../../../../definition/component.js';
+import { type DependencyTree } from '../../../../../result-set.js';
 import type {
   NodeSelectedValue,
   NodeSelection,
@@ -22,6 +22,8 @@ export class EdgeHeadSelection<TValue extends EdgeHeadValue = any>
   public readonly name: string;
   public readonly key: string;
 
+  public readonly dependencies: DependencyTree;
+
   public constructor(
     public readonly edge: Edge,
     alias: string | undefined,
@@ -33,6 +35,8 @@ export class EdgeHeadSelection<TValue extends EdgeHeadValue = any>
     this.key = this.alias ?? this.name;
 
     assert.equal(edge.head, headSelection.node);
+
+    this.dependencies = new Map([[edge, this.headSelection.dependencies]]);
   }
 
   public isAkinTo(expression: unknown): expression is EdgeHeadSelection {

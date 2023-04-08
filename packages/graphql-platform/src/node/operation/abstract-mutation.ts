@@ -8,7 +8,6 @@ import {
   AbstractOperation,
   type NodeSelectionAwareArgs,
 } from '../abstract-operation.js';
-import { NodeChangeAggregation } from '../change.js';
 import { AndOperation, NodeFilter } from '../statement/filter.js';
 import type { ContextBoundAPI } from './api.js';
 import { ConnectorError } from './error.js';
@@ -161,14 +160,7 @@ export abstract class AbstractMutation<
         throw new ConnectorError({ cause: error, path });
       }
 
-      // changes
-      {
-        const committedAt = new Date();
-
-        mutationContext.changes.forEach((change) => {
-          change.committedAt = committedAt;
-        });
-      }
+      mutationContext.commitChanges();
     } catch (error) {
       try {
         await this.connector.postFailedMutation?.(
@@ -190,18 +182,18 @@ export abstract class AbstractMutation<
 
     // changes
     {
-      const aggregation = new NodeChangeAggregation(
-        mutationContext.gp,
-        mutationContext.requestContext,
-        mutationContext.changes,
-      );
+      const aggregation = mutationContext.aggregateChanges();
 
       if (aggregation.length) {
         await Promise.all([
           this.gp.emit('node-change-aggregation', aggregation),
-          ...Array.from(aggregation, (change) =>
-            this.gp.emit('node-change', change),
-          ),
+          this.gp.eventListenerCount('node-change')
+            ? Promise.all(
+                Array.from(aggregation, (change) =>
+                  this.gp.emit('node-change', change),
+                ),
+              )
+            : undefined,
         ]);
       }
     }

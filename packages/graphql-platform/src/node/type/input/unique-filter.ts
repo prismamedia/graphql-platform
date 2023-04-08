@@ -156,9 +156,9 @@ export class NodeUniqueFilterInputType extends utils.ObjectInputType {
           });
   }
 
-  public uniqValues(
-    values: ReadonlyArray<NodeUniqueFilterInputValue>,
-  ): NodeUniqueFilterInputValue[] {
+  public uniqValues<T extends NodeUniqueFilterInputValue>(
+    values: ReadonlyArray<T>,
+  ): T[] {
     return _.uniqWith(values, (a, b) => this.areValuesEqual(a, b));
   }
 }

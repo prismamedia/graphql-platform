@@ -1,11 +1,11 @@
 import type { ConnectorInterface } from '../../connector-interface.js';
-import type {
+import {
   MultipleReverseEdge,
-  MultipleReverseEdgeConfig,
+  type MultipleReverseEdgeConfig,
 } from './reverse-edge/multiple.js';
-import type {
+import {
   UniqueReverseEdge,
-  UniqueReverseEdgeConfig,
+  type UniqueReverseEdgeConfig,
 } from './reverse-edge/unique.js';
 
 export * from './reverse-edge/multiple.js';
@@ -22,3 +22,13 @@ export type ReverseEdge<
 > =
   | UniqueReverseEdge<TRequestContext, TConnector, TContainer>
   | MultipleReverseEdge<TRequestContext, TConnector, TContainer>;
+
+export const isReverseEdge = <
+  TRequestContext extends object = any,
+  TConnector extends ConnectorInterface = any,
+  TContainer extends object = any,
+>(
+  maybeReverseEdge: unknown,
+): maybeReverseEdge is ReverseEdge<TRequestContext, TConnector, TContainer> =>
+  maybeReverseEdge instanceof UniqueReverseEdge ||
+  maybeReverseEdge instanceof MultipleReverseEdge;

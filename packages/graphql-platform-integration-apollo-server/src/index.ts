@@ -6,14 +6,14 @@ import {
 import type * as core from '@prismamedia/graphql-platform';
 
 export type ApolloServerIntegrationOptions<
-  in out TRequestContext extends BaseContext = any,
+  TRequestContext extends BaseContext = any,
 > = Omit<
   ApolloServerOptions<TRequestContext>,
   'schema' | 'typeDefs' | 'resolvers' | 'gateway'
 >;
 
 export class ApolloServerIntegration<
-  in out TRequestContext extends BaseContext = any,
+  TRequestContext extends BaseContext = any,
   TConnector extends core.ConnectorInterface = any,
 > extends ApolloServer<TRequestContext> {
   public constructor(

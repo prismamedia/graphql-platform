@@ -1,6 +1,11 @@
 import assert from 'node:assert/strict';
+import type { NodeValue } from '../../../../../../../node.js';
 import type { MultipleReverseEdge } from '../../../../../../definition/reverse-edge/multiple.js';
-import { areFiltersEqual, NodeFilter } from '../../../../../filter.js';
+import {
+  mergeDependencyTrees,
+  type DependencyTree,
+} from '../../../../../../result-set.js';
+import { NodeFilter, areFiltersEqual } from '../../../../../filter.js';
 import { BooleanFilter } from '../../../../boolean.js';
 import type { BooleanExpressionInterface } from '../../../expression-interface.js';
 import { AndOperation, NotOperation, OrOperation } from '../../../operation.js';
@@ -28,6 +33,18 @@ export class MultipleReverseEdgeExistsFilter
     }
 
     this.reduced = this.headFilter?.isFalse() ? new BooleanValue(false) : this;
+  }
+
+  public get dependencies(): DependencyTree | undefined {
+    return new Map([
+      [
+        this.reverseEdge,
+        mergeDependencyTrees([
+          new Map([[this.reverseEdge.originalEdge, undefined]]),
+          this.headFilter?.dependencies,
+        ]),
+      ],
+    ]);
   }
 
   public equals(
@@ -90,5 +107,9 @@ export class MultipleReverseEdgeExistsFilter
       reverseEdge: this.reverseEdge.name,
       ...(this.headFilter && { headFilter: this.headFilter.ast }),
     };
+  }
+
+  public execute(_nodeValue: Partial<NodeValue>): undefined {
+    return;
   }
 }

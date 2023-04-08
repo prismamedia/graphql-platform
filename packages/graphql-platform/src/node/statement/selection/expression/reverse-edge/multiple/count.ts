@@ -4,7 +4,11 @@ import { Memoize } from '@prismamedia/memoize';
 import * as graphql from 'graphql';
 import assert from 'node:assert/strict';
 import type { MultipleReverseEdge } from '../../../../../definition/reverse-edge/multiple.js';
-import { areFiltersEqual, NodeFilter } from '../../../../filter.js';
+import {
+  mergeDependencyTrees,
+  type DependencyTree,
+} from '../../../../../result-set.js';
+import { NodeFilter, areFiltersEqual } from '../../../../filter.js';
 import type { SelectionExpressionInterface } from '../../../expression-interface.js';
 
 export type MultipleReverseEdgeCountSelectionArgs = utils.Nillable<{
@@ -21,6 +25,8 @@ export class MultipleReverseEdgeCountSelection
   public readonly key: string;
   public readonly headFilter?: NodeFilter;
 
+  public readonly dependencies: DependencyTree;
+
   public constructor(
     public readonly reverseEdge: MultipleReverseEdge,
     alias: string | undefined,
@@ -35,6 +41,16 @@ export class MultipleReverseEdgeCountSelection
 
       this.headFilter = headFilter.normalized;
     }
+
+    this.dependencies = new Map([
+      [
+        reverseEdge,
+        mergeDependencyTrees([
+          new Map([[reverseEdge.originalEdge, undefined]]),
+          this.headFilter?.dependencies,
+        ]),
+      ],
+    ]);
   }
 
   public isAkinTo(

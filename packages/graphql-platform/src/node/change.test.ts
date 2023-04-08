@@ -90,7 +90,7 @@ describe('Change', () => {
     const Tag = gp.getNodeByName('Tag');
     const ArticleTag = gp.getNodeByName('ArticleTag');
 
-    const aggregate = new NodeChangeAggregation(gp, myContext, [
+    const aggregate = new NodeChangeAggregation([
       // These 2 changes are aggregated
       new NodeCreation(Article, myContext, {
         id: '2e9b5020-b9fe-4dab-bb59-59c986fffc12',
@@ -156,7 +156,21 @@ describe('Change', () => {
       ),
     ]);
 
+    expect(aggregate.requestContexts.length).toBe(1);
     expect(aggregate.length).toBe(3);
+
+    expect(
+      Object.fromEntries(
+        Array.from(aggregate.flatChanges, ([node, components]) => [
+          node.name,
+          Array.from(components).map((component) => component.name),
+        ]),
+      ),
+    ).toEqual({
+      Article: ['id', 'title'],
+      ArticleTag: ['article', 'tag', 'order'],
+      Tag: ['id', 'title'],
+    });
 
     expect(
       Array.from(aggregate, (change) => ({

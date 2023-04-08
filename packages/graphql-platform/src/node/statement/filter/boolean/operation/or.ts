@@ -1,5 +1,10 @@
 import * as utils from '@prismamedia/graphql-platform-utils';
 import { Memoize } from '@prismamedia/memoize';
+import type { NodeValue } from '../../../../../node.js';
+import {
+  mergeDependencyTrees,
+  type DependencyTree,
+} from '../../../../result-set.js';
 import { isBooleanFilter, type BooleanFilter } from '../../boolean.js';
 import type { BooleanExpressionInterface } from '../expression-interface.js';
 import type { BooleanExpression } from '../expression.js';
@@ -98,7 +103,7 @@ export class OrOperation implements BooleanExpressionInterface {
       }
     }
 
-    this.operands = Array.from(operandSet);
+    this.operands = Object.freeze(Array.from(operandSet));
   }
 
   @Memoize()
@@ -109,6 +114,12 @@ export class OrOperation implements BooleanExpressionInterface {
       : this.operands.length === 1
       ? this.operands[0]
       : this;
+  }
+
+  public get dependencies(): DependencyTree | undefined {
+    return mergeDependencyTrees(
+      this.operands.map(({ dependencies }) => dependencies),
+    );
   }
 
   protected has(expression: unknown): boolean {
@@ -138,5 +149,21 @@ export class OrOperation implements BooleanExpressionInterface {
       operator: 'Or',
       operands: this.operands.map(({ ast }) => ast),
     };
+  }
+
+  public execute(nodeValue: Partial<NodeValue>): boolean | undefined {
+    let hasUndefinedOperand: boolean = false;
+
+    for (const operand of this.operands) {
+      const result = operand.execute(nodeValue);
+
+      if (result === true) {
+        return true;
+      } else if (result === undefined) {
+        hasUndefinedOperand = true;
+      }
+    }
+
+    return hasUndefinedOperand ? undefined : false;
   }
 }

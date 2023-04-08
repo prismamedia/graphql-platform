@@ -22,7 +22,13 @@ export class NodeUpdate<
     Component<TRequestContext, TConnector, TContainer>,
     Readonly<ComponentUpdate>
   >;
-  public readonly updatedComponentNames: ReadonlyArray<Component['name']>;
+
+  /**
+   * List of the updated components
+   */
+  public readonly components: ReadonlyArray<
+    Component<TRequestContext, TConnector, TContainer>
+  >;
 
   public constructor(
     node: Node<TRequestContext, TConnector, TContainer>,
@@ -48,7 +54,7 @@ export class NodeUpdate<
 
     this.updatesByComponent = new Map(
       Array.from(node.componentsByName.values()).reduce<
-        [Component, Readonly<ComponentUpdate>][]
+        [Component, ComponentUpdate][]
       >((entries, component) => {
         const oldComponentValue: any = oldValue[component.name];
         const newComponentValue: any = newValue[component.name];
@@ -67,12 +73,31 @@ export class NodeUpdate<
       }, []),
     );
 
-    this.updatedComponentNames = Object.freeze(
-      Array.from(this.updatesByComponent.keys(), ({ name }) => name),
-    );
+    this.components = Array.from(this.updatesByComponent.keys());
   }
 
   public isEmpty(): boolean {
     return this.updatesByComponent.size === 0;
   }
 }
+
+export const createNodeUpdateFromComponentUpdates = <
+  TRequestContext extends object = any,
+  TConnector extends ConnectorInterface = any,
+  TContainer extends object = any,
+>(
+  node: Node<TRequestContext, TConnector, TContainer>,
+  requestContext: TRequestContext,
+  maybeOldValue: NodeValue,
+  updatesByComponent: Record<Component['name'], ComponentValue>,
+  createdAt?: Date,
+  committedAt?: Date,
+): NodeUpdate<TRequestContext, TConnector, TContainer> =>
+  new NodeUpdate(
+    node,
+    requestContext,
+    maybeOldValue,
+    { ...maybeOldValue, ...updatesByComponent },
+    createdAt,
+    committedAt,
+  );

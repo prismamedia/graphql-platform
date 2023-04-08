@@ -1,25 +1,85 @@
 import * as utils from '@prismamedia/graphql-platform-utils';
-import assert from 'node:assert/strict';
 import type { ConnectorInterface } from '../../connector-interface.js';
-import type { GraphQLPlatform } from '../../index.js';
-import type { Node } from '../../node.js';
-import type { NodeChange } from '../change.js';
-import { NodeCreation } from './creation.js';
-import { NodeUpdate } from './update.js';
+import type { Component, Node } from '../../node.js';
+import { NodeCreation, NodeUpdate, type NodeChange } from '../change.js';
 
-function deleteNodeChange(
-  changesByIdByNode: Map<Node, Map<NodeChange['stringifiedId'], NodeChange>>,
-  change: NodeChange,
-): void {
-  let changeByFlattenedId = changesByIdByNode.get(change.node);
+type NodeChangeAggregatorMatrix = {
+  [TPreviousChangeKind in utils.MutationType]: {
+    [TChangeKind in utils.MutationType]: (
+      previousChange: Extract<NodeChange, { kind: TPreviousChangeKind }>,
+      change: Extract<NodeChange, { kind: TChangeKind }>,
+    ) => NodeChange | void;
+  };
+};
 
-  if (
-    changeByFlattenedId?.delete(change.stringifiedId) &&
-    changeByFlattenedId.size === 0
-  ) {
-    changesByIdByNode.delete(change.node);
-  }
-}
+/**
+ * A case that should not happen, we missed something.
+ * We could throw an error, but let's keep the new change instead.
+ */
+const invalidAggregator = (_previousChange: NodeChange, change: NodeChange) =>
+  change;
+
+const aggregatorMatrix: NodeChangeAggregatorMatrix = {
+  [utils.MutationType.CREATION]: {
+    [utils.MutationType.CREATION]: invalidAggregator,
+
+    [utils.MutationType.UPDATE]: (_previousCreation, update) =>
+      new NodeCreation(
+        update.node,
+        update.requestContext,
+        update.newValue,
+        update.createdAt,
+        update.committedAt,
+      ),
+
+    [utils.MutationType.DELETION]: (_previousCreation, _deletion) =>
+      // This "deletion" cancels the previous "creation" => no change
+      undefined,
+  },
+  [utils.MutationType.UPDATE]: {
+    [utils.MutationType.CREATION]: invalidAggregator,
+
+    [utils.MutationType.UPDATE]: (previousUpdate, update) => {
+      const aggregate = new NodeUpdate(
+        update.node,
+        update.requestContext,
+        previousUpdate.oldValue,
+        update.newValue,
+        update.createdAt,
+        update.committedAt,
+      );
+
+      return aggregate.isEmpty()
+        ? // This new "update" cancels the previous "update" => no change
+          undefined
+        : aggregate;
+    },
+
+    [utils.MutationType.DELETION]: (_previousUpdate, deletion) => deletion,
+  },
+  [utils.MutationType.DELETION]: {
+    [utils.MutationType.CREATION]: (previousDeletion, creation) => {
+      const aggregate = new NodeUpdate(
+        creation.node,
+        creation.requestContext,
+        previousDeletion.oldValue,
+        creation.newValue,
+        creation.createdAt,
+        creation.committedAt,
+      );
+
+      return aggregate.isEmpty()
+        ? // This "creation" cancels the previous "deletion" => no change
+          undefined
+        : aggregate;
+    },
+
+    [utils.MutationType.UPDATE]: invalidAggregator,
+    [utils.MutationType.DELETION]: invalidAggregator,
+  },
+};
+
+export type FlatChanges = ReadonlyMap<Node, ReadonlySet<Component>>;
 
 export class NodeChangeAggregation<
   TRequestContext extends object = any,
@@ -27,180 +87,111 @@ export class NodeChangeAggregation<
   TContainer extends object = any,
 > implements Iterable<NodeChange<TRequestContext, TConnector, TContainer>>
 {
+  public readonly requestContexts: ReadonlyArray<TRequestContext>;
+
   public readonly changesByNode: ReadonlyMap<
     Node<TRequestContext, TConnector, TContainer>,
     ReadonlyArray<NodeChange<TRequestContext, TConnector, TContainer>>
   >;
 
+  /**
+   * Convenient to match against NodeResultSetMutability.flatDependencies
+   */
+  public readonly flatChanges: FlatChanges;
+
   public readonly length: number;
 
-  public readonly nodes: ReadonlyArray<
-    Node<TRequestContext, TConnector, TContainer>
-  >;
-
-  public constructor(
-    public readonly gp: GraphQLPlatform<
-      TRequestContext,
-      TConnector,
-      TContainer
-    >,
-    public readonly requestContext: TRequestContext,
-    changes: ReadonlyArray<NodeChange>,
-  ) {
+  public constructor(changes: ReadonlyArray<NodeChange>) {
+    const requestContextSet = new Set<TRequestContext>();
     const changesByIdByNode = new Map<
       Node,
       Map<NodeChange['stringifiedId'], NodeChange>
     >();
 
     for (const change of changes) {
-      assert.equal(
-        change.requestContext,
-        requestContext,
-        'The changes have not occured in the same request',
-      );
-
-      const node = change.node;
-
-      let changesById = changesByIdByNode.get(node);
-      if (!changesById) {
-        changesByIdByNode.set(node, (changesById = new Map()));
+      if (
+        (change instanceof NodeUpdate && change.isEmpty()) ||
+        !change.node.filterChange(change)
+      ) {
+        continue;
       }
 
-      let previousChange = changesById.get(change.stringifiedId);
+      requestContextSet.add(change.requestContext);
+
+      let changesById = changesByIdByNode.get(change.node);
+      if (!changesById) {
+        changesByIdByNode.set(change.node, (changesById = new Map()));
+      }
+
+      const previousChange = changesById.get(change.stringifiedId);
+
       if (!previousChange) {
         changesById.set(change.stringifiedId, change);
-      } else {
-        assert(
-          previousChange.createdAt <= change.createdAt,
-          'The aggregation has to be done in the order the changes have occured',
+      } else if (previousChange.at <= change.at) {
+        const aggregate = aggregatorMatrix[previousChange.kind][change.kind](
+          previousChange as any,
+          change as any,
         );
 
-        switch (previousChange.kind) {
-          case utils.MutationType.CREATION:
-            switch (change.kind) {
-              case utils.MutationType.CREATION: {
-                // Should not happen - we missed something
-                changesById.set(change.stringifiedId, change);
-                break;
-              }
-
-              case utils.MutationType.UPDATE: {
-                changesById.set(
-                  change.stringifiedId,
-                  new NodeCreation(
-                    node,
-                    change.requestContext,
-                    change.newValue,
-                    change.createdAt,
-                    change.committedAt,
-                  ),
-                );
-                break;
-              }
-
-              case utils.MutationType.DELETION:
-                deleteNodeChange(changesByIdByNode, previousChange);
-                break;
-            }
-            break;
-
-          case utils.MutationType.UPDATE:
-            switch (change.kind) {
-              case utils.MutationType.CREATION: {
-                // Should not happen - we missed something
-                changesById.set(change.stringifiedId, change);
-                break;
-              }
-
-              case utils.MutationType.UPDATE: {
-                if (
-                  node.selection.areValuesEqual(
-                    previousChange.newValue,
-                    change.oldValue,
-                  )
-                ) {
-                  const aggregate = new NodeUpdate(
-                    node,
-                    change.requestContext,
-                    previousChange.oldValue,
-                    change.newValue,
-                    change.createdAt,
-                    change.committedAt,
-                  );
-
-                  if (aggregate.updatesByComponent.size) {
-                    changesById.set(change.stringifiedId, aggregate);
-                  } else {
-                    // This "update" cancels the previous "update" => no change
-                    deleteNodeChange(changesByIdByNode, previousChange);
-                  }
-                } else {
-                  // Should not happen - we missed something
-                  changesById.set(change.stringifiedId, change);
-                }
-                break;
-              }
-
-              case utils.MutationType.DELETION:
-                changesById.set(change.stringifiedId, change);
-                break;
-            }
-            break;
-
-          case utils.MutationType.DELETION:
-            switch (change.kind) {
-              case utils.MutationType.CREATION: {
-                const aggregate = new NodeUpdate(
-                  node,
-                  change.requestContext,
-                  previousChange.oldValue,
-                  change.newValue,
-                  change.createdAt,
-                  change.committedAt,
-                );
-
-                if (aggregate.updatesByComponent.size) {
-                  changesById.set(change.stringifiedId, aggregate);
-                } else {
-                  // This "creation" cancels the previous "deletion" => no change
-                  deleteNodeChange(changesByIdByNode, previousChange);
-                }
-                break;
-              }
-
-              case utils.MutationType.UPDATE: {
-                // Should not happen - we missed something
-                changesById.set(change.stringifiedId, change);
-                break;
-              }
-
-              case utils.MutationType.DELETION: {
-                // Should not happen - we missed something
-                changesById.set(change.stringifiedId, change);
-                break;
-              }
-            }
-            break;
+        if (aggregate) {
+          changesById.delete(previousChange.stringifiedId);
+          changesById.set(aggregate.stringifiedId, aggregate);
+        } else {
+          if (
+            changesById.delete(previousChange.stringifiedId) &&
+            changesById.size === 0
+          ) {
+            changesByIdByNode.delete(previousChange.node);
+          }
         }
       }
     }
+
+    this.requestContexts = Array.from(requestContextSet);
 
     this.changesByNode = new Map(
       Array.from(
         changesByIdByNode.entries(),
         ([node, changesByFlattenedId]) => [
           node,
-          Object.freeze(Array.from(changesByFlattenedId.values())),
+          Array.from(changesByFlattenedId.values()),
         ],
       ),
     );
 
-    this.length = Array.from(this.changesByNode.values()).reduce<number>(
-      (sum, changes) => sum + changes.length,
-      0,
+    this.flatChanges = new Map(
+      Array.from(this.changesByNode.entries(), ([node, changes]) => {
+        const componentSet = new Set<Component>();
+
+        for (const change of changes) {
+          if (
+            change.kind === utils.MutationType.CREATION ||
+            change.kind === utils.MutationType.DELETION
+          ) {
+            for (const component of node.componentSet) {
+              componentSet.add(component);
+            }
+
+            break;
+          } else {
+            for (const component of change.components) {
+              componentSet.add(component);
+            }
+
+            if (componentSet.size === node.componentSet.size) {
+              break;
+            }
+          }
+        }
+
+        return [node, componentSet];
+      }),
     );
 
-    this.nodes = Object.freeze(Array.from(this.changesByNode.keys()));
+    this.length = Array.from(
+      this.changesByNode.values(),
+      (changes) => changes.length,
+    ).reduce<number>((sum, changesLength) => sum + changesLength, 0);
   }
 
   *[Symbol.iterator](): IterableIterator<

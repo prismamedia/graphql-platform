@@ -8,10 +8,7 @@ import {
   RawNodeSelectionAwareArgs,
 } from '../../abstract-operation.js';
 import type { NodeFilter } from '../../statement/filter.js';
-import {
-  doesSelectedValueMatchUniqueFilter,
-  type NodeSelectedValue,
-} from '../../statement/selection.js';
+import type { NodeSelectedValue } from '../../statement/selection.js';
 import type {
   NodeFilterInputValue,
   NodeUniqueFilterInputValue,
@@ -117,7 +114,7 @@ export class GetSomeInOrderIfExistsQuery<
 
     return args.where.map((key) => {
       const maybeNodeValue = unorderedNodeValues.find((nodeValue) =>
-        doesSelectedValueMatchUniqueFilter(this.node, nodeValue, key),
+        this.node.filterInputType.filter(key).execute(nodeValue, false),
       );
 
       return maybeNodeValue ? args.selection.parseValue(maybeNodeValue) : null;

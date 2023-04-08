@@ -1,9 +1,11 @@
 import { Memoize } from '@prismamedia/memoize';
 import assert from 'node:assert/strict';
+import type { NodeValue } from '../../../../../../../node.js';
 import type {
   Leaf,
   LeafValue,
 } from '../../../../../../definition/component/leaf.js';
+import type { DependencyTree } from '../../../../../../result-set.js';
 import type { BooleanFilter } from '../../../../boolean.js';
 import type { BooleanExpressionInterface } from '../../../expression-interface.js';
 import { BooleanValue } from '../../../value.js';
@@ -35,6 +37,10 @@ export class LeafComparisonFilter implements BooleanExpressionInterface {
       !leaf.isNullable() && operator === 'eq' && value === null
         ? new BooleanValue(false)
         : this;
+  }
+
+  public get dependencies(): DependencyTree | undefined {
+    return new Map([[this.leaf, undefined]]);
   }
 
   @Memoize()
@@ -128,5 +134,34 @@ export class LeafComparisonFilter implements BooleanExpressionInterface {
       operator: this.operator,
       value: this.value,
     };
+  }
+
+  public execute(nodeValue: Partial<NodeValue>): boolean | undefined {
+    const leafValue = nodeValue[this.leaf.name];
+    if (leafValue === undefined) {
+      return;
+    }
+
+    if (this.operator === 'eq') {
+      return this.leaf.areValuesEqual(leafValue, this.value);
+    }
+
+    if (leafValue === null || this.value === null) {
+      return false;
+    }
+
+    switch (this.operator) {
+      case 'gt':
+        return leafValue > this.value;
+
+      case 'gte':
+        return leafValue >= this.value;
+
+      case 'lt':
+        return leafValue < this.value;
+
+      case 'lte':
+        return leafValue <= this.value;
+    }
   }
 }

@@ -1,5 +1,6 @@
 import _ from 'lodash';
 import type { Node } from '../../node.js';
+import { mergeDependencyTrees, type DependencyTree } from '../result-set.js';
 import { type OrderingExpression } from './ordering/expression.js';
 
 export * from './ordering/direction.js';
@@ -15,6 +16,11 @@ export interface NodeOrderingAST {
 export class NodeOrdering {
   public readonly expressions: ReadonlyArray<OrderingExpression>;
   public readonly normalized: NodeOrdering | undefined;
+
+  /**
+   * List of the components & reverse-edges whom changes may change the result-set
+   */
+  public readonly dependencies: DependencyTree;
 
   public constructor(
     public readonly node: Node,
@@ -34,6 +40,10 @@ export class NodeOrdering {
     );
 
     this.normalized = this.expressions.length === 0 ? undefined : this;
+
+    this.dependencies = mergeDependencyTrees(
+      this.expressions.map(({ dependencies }) => dependencies),
+    )!;
   }
 
   public equals(nodeOrdering: unknown): boolean {
@@ -62,4 +72,4 @@ export const areOrderingsEqual = (
 ): boolean =>
   a?.normalized && b?.normalized
     ? a.normalized.equals(b.normalized)
-    : !a?.normalized && !b?.normalized;
+    : a?.normalized === b?.normalized;

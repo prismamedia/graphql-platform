@@ -1,6 +1,8 @@
 import assert from 'node:assert/strict';
+import type { NodeValue } from '../../../../../../../node.js';
 import type { Edge } from '../../../../../../definition/component/edge.js';
-import { areFiltersEqual, NodeFilter } from '../../../../../filter.js';
+import { type DependencyTree } from '../../../../../../result-set.js';
+import { NodeFilter, areFiltersEqual } from '../../../../../filter.js';
 import { BooleanFilter } from '../../../../boolean.js';
 import type { BooleanExpressionInterface } from '../../../expression-interface.js';
 import { AndOperation, NotOperation, OrOperation } from '../../../operation.js';
@@ -24,6 +26,10 @@ export class EdgeExistsFilter implements BooleanExpressionInterface {
     }
 
     this.reduced = this.headFilter?.isFalse() ? new BooleanValue(false) : this;
+  }
+
+  public get dependencies(): DependencyTree | undefined {
+    return new Map([[this.edge, this.headFilter?.dependencies]]);
   }
 
   public equals(expression: unknown): boolean {
@@ -84,5 +90,18 @@ export class EdgeExistsFilter implements BooleanExpressionInterface {
       edge: this.edge.name,
       ...(this.headFilter && { headFilter: this.headFilter.ast }),
     };
+  }
+
+  public execute(nodeValue: Partial<NodeValue>): boolean | undefined {
+    const edgeValue = nodeValue[this.edge.name];
+    if (edgeValue === undefined) {
+      return;
+    }
+
+    if (!edgeValue) {
+      return false;
+    }
+
+    return this.headFilter ? this.headFilter.execute(edgeValue) : true;
   }
 }

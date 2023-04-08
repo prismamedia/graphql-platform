@@ -1,6 +1,8 @@
 import { Memoize } from '@prismamedia/memoize';
 import assert from 'node:assert/strict';
+import type { NodeValue } from '../../../../../../../node.js';
 import type { MultipleReverseEdge } from '../../../../../../definition/reverse-edge/multiple.js';
+import type { DependencyTree } from '../../../../../../result-set.js';
 import { BooleanFilter } from '../../../../boolean.js';
 import type { BooleanExpressionInterface } from '../../../expression-interface.js';
 import { BooleanValue } from '../../../value.js';
@@ -56,6 +58,12 @@ export class MultipleReverseEdgeCountFilter
         : this;
   }
 
+  public get dependencies(): DependencyTree | undefined {
+    return new Map([
+      [this.reverseEdge, new Map([[this.reverseEdge.originalEdge, undefined]])],
+    ]);
+  }
+
   @Memoize()
   public get complement(): MultipleReverseEdgeCountFilter | undefined {
     return this.operator === 'gt'
@@ -100,5 +108,9 @@ export class MultipleReverseEdgeCountFilter
       operator: this.operator,
       value: this.value,
     };
+  }
+
+  public execute(_nodeValue: Partial<NodeValue>): undefined {
+    return;
   }
 }

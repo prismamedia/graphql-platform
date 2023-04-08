@@ -65,6 +65,7 @@ export * from './node/definition.js';
 export * from './node/fixture.js';
 export * from './node/name.js';
 export * from './node/operation.js';
+export * from './node/result-set.js';
 export * from './node/statement.js';
 export * from './node/type.js';
 
@@ -189,7 +190,15 @@ export type NodeConfig<
   authorization?: NodeAuthorizer<TRequestContext, TConnector, TContainer>;
 
   /**
-   * Optional, register some change-aggregation-listeners
+   * Optional, you may want to filter the "changes" to avoid some useless processing in the "change-aggregation" and "change" listeners
+   */
+  changeFilter?: (
+    this: Node<TRequestContext, TConnector, TContainer>,
+    change: NodeChange<TRequestContext, TConnector, TContainer>,
+  ) => boolean;
+
+  /**
+   * Optional, register a change-aggregation-listener
    */
   onChangeAggregation?: (
     this: Node<TRequestContext, TConnector, TContainer>,
@@ -197,7 +206,7 @@ export type NodeConfig<
   ) => Promisable<void>;
 
   /**
-   * Optional, register some change-listeners
+   * Optional, register a change-listener
    */
   onChange?: (
     this: Node<TRequestContext, TConnector, TContainer>,
@@ -257,6 +266,10 @@ export class Node<
     TContainer
   >;
 
+  readonly #changeFilter?: (
+    change: NodeChange<TRequestContext, TConnector, TContainer>,
+  ) => boolean;
+
   public constructor(
     public readonly gp: GraphQLPlatform<
       TRequestContext,
@@ -270,6 +283,18 @@ export class Node<
     assertNodeName(name, configPath);
     utils.assertPlainObject(config, configPath);
 
+    // change-filter
+    {
+      const changeFilterConfig = config.changeFilter;
+      const changeFilterConfigPath = utils.addPath(configPath, 'changeFilter');
+
+      if (changeFilterConfig) {
+        utils.assertFunction(changeFilterConfig, changeFilterConfigPath);
+
+        this.#changeFilter = changeFilterConfig.bind(this);
+      }
+    }
+
     // on-change-aggregation
     {
       const onChangeAggregation = config.onChangeAggregation;
@@ -281,10 +306,10 @@ export class Node<
       if (onChangeAggregation) {
         utils.assertFunction(onChangeAggregation, onChangeAggregationPath);
 
-        gp.on('node-change-aggregation', async (aggregation) => {
+        gp.on('node-change-aggregation', (aggregation) => {
           const changes = aggregation.changesByNode.get(this);
           if (changes?.length) {
-            await onChangeAggregation.call(this, changes);
+            return onChangeAggregation.call(this, changes);
           }
         });
       }
@@ -298,9 +323,9 @@ export class Node<
       if (onChange) {
         utils.assertFunction(onChange, onChangePath);
 
-        gp.on('node-change', async (change) => {
+        gp.on('node-change', (change) => {
           if (change.node === this) {
-            await onChange.call(this, change);
+            return onChange.call(this, change);
           }
         });
       }
@@ -1431,5 +1456,11 @@ export class Node<
 
   public stringify(maybeValue: unknown, path?: utils.Path): string {
     return this.selection.stringify(maybeValue, path);
+  }
+
+  public filterChange(
+    change: NodeChange<TRequestContext, TConnector, TContainer>,
+  ): boolean {
+    return this.#changeFilter ? this.#changeFilter(change) : true;
   }
 }

@@ -1,3 +1,4 @@
+import * as utils from '@prismamedia/graphql-platform-utils';
 import { Memoize, doNotMemoize } from '@prismamedia/memoize';
 import {
   MultiBar as MultiProgressBar,
@@ -107,6 +108,8 @@ export class NodeCursor<
   TRequestContext extends object = any,
 > implements AsyncIterable<TValue>
 {
+  readonly #context: utils.Thunkable<TRequestContext>;
+
   protected readonly where: NodeFilterInputValue;
   protected readonly direction: OrderingDirection;
   protected readonly uniqueConstraint: UniqueConstraint;
@@ -116,11 +119,14 @@ export class NodeCursor<
   protected readonly chunkSize: number;
 
   public constructor(
-    protected readonly node: Node<TRequestContext>,
-    protected readonly context: TRequestContext,
+    public readonly node: Node<TRequestContext>,
+    context: utils.Thunkable<TRequestContext>,
     options?: NodeCursorOptions<TValue>,
   ) {
     assert(node.isScrollable(), `The "${node}" node is not scrollable`);
+
+    assert(context, `Expects a valid context`);
+    this.#context = context;
 
     this.where = node.filterInputType.parseValue(options?.where);
 
@@ -166,6 +172,10 @@ export class NodeCursor<
     );
 
     this.chunkSize = Math.max(1, options?.chunkSize || 100);
+  }
+
+  protected get context(): TRequestContext {
+    return utils.resolveThunkable(this.#context);
   }
 
   @Memoize((force: boolean = false) => force && doNotMemoize)

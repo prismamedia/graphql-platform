@@ -4,6 +4,10 @@ import * as graphql from 'graphql';
 import assert from 'node:assert/strict';
 import type { JsonObject } from 'type-fest';
 import type { UniqueReverseEdge } from '../../../../../definition/reverse-edge/unique.js';
+import {
+  mergeDependencyTrees,
+  type DependencyTree,
+} from '../../../../../result-set.js';
 import type {
   NodeSelectedValue,
   NodeSelection,
@@ -20,6 +24,8 @@ export class UniqueReverseEdgeHeadSelection<
   public readonly name: string;
   public readonly key: string;
 
+  public readonly dependencies: DependencyTree;
+
   public constructor(
     public readonly reverseEdge: UniqueReverseEdge,
     alias: string | undefined,
@@ -30,6 +36,16 @@ export class UniqueReverseEdgeHeadSelection<
     this.key = this.alias ?? this.name;
 
     assert.equal(reverseEdge.head, headSelection.node);
+
+    this.dependencies = new Map([
+      [
+        reverseEdge,
+        mergeDependencyTrees([
+          new Map([[reverseEdge.originalEdge, undefined]]),
+          this.headSelection.dependencies,
+        ]),
+      ],
+    ]);
   }
 
   public isAkinTo(

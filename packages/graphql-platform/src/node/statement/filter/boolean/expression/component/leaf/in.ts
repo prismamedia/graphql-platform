@@ -1,9 +1,11 @@
 import _ from 'lodash';
 import assert from 'node:assert/strict';
+import type { NodeValue } from '../../../../../../../node.js';
 import type {
   Leaf,
   LeafValue,
 } from '../../../../../../definition/component/leaf.js';
+import type { DependencyTree } from '../../../../../../result-set.js';
 import type { BooleanFilter } from '../../../../boolean.js';
 import type { BooleanExpressionInterface } from '../../../expression-interface.js';
 import { BooleanValue } from '../../../value.js';
@@ -29,8 +31,10 @@ export class LeafInFilter implements BooleanExpressionInterface {
   ) {
     assert(!values.includes(undefined as any));
 
-    this.values = leaf.uniqValues(
-      leaf.isNullable() ? values : values.filter((value) => value !== null),
+    this.values = Object.freeze(
+      leaf.uniqValues(
+        leaf.isNullable() ? values : values.filter((value) => value !== null),
+      ),
     );
 
     this.reduced =
@@ -39,6 +43,10 @@ export class LeafInFilter implements BooleanExpressionInterface {
         : this.values.length === 1
         ? new LeafComparisonFilter(this.leaf, 'eq', this.values[0])
         : this;
+  }
+
+  public get dependencies(): DependencyTree | undefined {
+    return new Map([[this.leaf, undefined]]);
   }
 
   protected has(value: LeafValue): boolean {
@@ -102,5 +110,14 @@ export class LeafInFilter implements BooleanExpressionInterface {
       operator: 'in',
       values: this.values,
     };
+  }
+
+  public execute(nodeValue: Partial<NodeValue>): boolean | undefined {
+    const leafValue = nodeValue[this.leaf.name];
+    if (leafValue === undefined) {
+      return;
+    }
+
+    return this.has(leafValue);
   }
 }

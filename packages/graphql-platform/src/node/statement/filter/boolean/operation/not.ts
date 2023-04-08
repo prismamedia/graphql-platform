@@ -1,3 +1,5 @@
+import type { NodeValue } from '../../../../../node.js';
+import type { DependencyTree } from '../../../../result-set.js';
 import type { BooleanFilter } from '../../boolean.js';
 import type { BooleanExpressionInterface } from '../expression-interface.js';
 import { BooleanValue } from '../value.js';
@@ -27,6 +29,10 @@ export class NotOperation implements BooleanExpressionInterface {
       'complement' in this.operand && this.operand.complement
         ? this.operand.complement.reduced
         : this;
+  }
+
+  public get dependencies(): DependencyTree | undefined {
+    return this.operand.dependencies;
   }
 
   public equals(expression: unknown): expression is NotOperation {
@@ -66,5 +72,11 @@ export class NotOperation implements BooleanExpressionInterface {
       operator: 'Not',
       operand: this.operand.ast,
     };
+  }
+
+  public execute(nodeValue: Partial<NodeValue>): boolean | undefined {
+    const result = this.operand.execute(nodeValue);
+
+    return result === undefined ? undefined : !result;
   }
 }

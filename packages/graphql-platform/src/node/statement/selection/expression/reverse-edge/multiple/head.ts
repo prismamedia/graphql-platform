@@ -4,7 +4,11 @@ import * as graphql from 'graphql';
 import assert from 'node:assert/strict';
 import { JsonObject } from 'type-fest';
 import type { MultipleReverseEdge } from '../../../../../definition/reverse-edge/multiple.js';
-import { areFiltersEqual, NodeFilter } from '../../../../filter.js';
+import {
+  mergeDependencyTrees,
+  type DependencyTree,
+} from '../../../../../result-set.js';
+import { NodeFilter, areFiltersEqual } from '../../../../filter.js';
 import { areOrderingsEqual, type NodeOrdering } from '../../../../ordering.js';
 import type {
   NodeSelectedValue,
@@ -24,6 +28,8 @@ export class MultipleReverseEdgeHeadSelection<
   public readonly headFilter?: NodeFilter;
   public readonly headOrdering?: NodeOrdering;
   public readonly offset?: number;
+
+  public readonly dependencies: DependencyTree;
 
   public constructor(
     public readonly reverseEdge: MultipleReverseEdge,
@@ -53,6 +59,18 @@ export class MultipleReverseEdgeHeadSelection<
     this.offset = offset || undefined;
 
     assert.equal(reverseEdge.head, headSelection.node);
+
+    this.dependencies = new Map([
+      [
+        reverseEdge,
+        mergeDependencyTrees([
+          new Map([[reverseEdge.originalEdge, undefined]]),
+          this.headFilter?.dependencies,
+          this.headOrdering?.dependencies,
+          headSelection.dependencies,
+        ]),
+      ],
+    ]);
   }
 
   public isAkinTo(

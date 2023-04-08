@@ -1,5 +1,6 @@
 import { Memoize } from '@prismamedia/memoize';
 import assert from 'node:assert/strict';
+import type { NodeValue } from '../../../../node.js';
 import type { BooleanExpressionInterface } from './expression-interface.js';
 
 export interface BooleanValueAST<TValue extends boolean = boolean> {
@@ -12,10 +13,14 @@ export class BooleanValue<TValue extends boolean = boolean>
 {
   public readonly reduced: this;
 
+  public readonly dependencies: undefined;
+
   public constructor(public readonly value: TValue) {
     assert.equal(typeof value, 'boolean');
 
     this.reduced = this;
+
+    this.dependencies = undefined;
   }
 
   @Memoize()
@@ -42,5 +47,9 @@ export class BooleanValue<TValue extends boolean = boolean>
 
   public isFalse(): this is BooleanValue<false> {
     return !this.value;
+  }
+
+  public execute(_nodeValue: Partial<NodeValue>): boolean {
+    return this.value;
   }
 }

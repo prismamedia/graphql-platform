@@ -4,6 +4,7 @@ import _ from 'lodash';
 import assert from 'node:assert/strict';
 import type { JsonObject } from 'type-fest';
 import type { Node } from '../../node.js';
+import { mergeDependencyTrees, type DependencyTree } from '../result-set.js';
 import {
   mergeSelectionExpressions,
   type SelectionExpression,
@@ -16,6 +17,11 @@ export * from './selection/value.js';
 export class NodeSelection<TValue extends NodeSelectedValue = any> {
   public readonly expressions: ReadonlyArray<SelectionExpression>;
 
+  /**
+   * List of the components & reverse-edges whom changes may change the result-set
+   */
+  public readonly dependencies: DependencyTree;
+
   public constructor(
     public readonly node: Node,
     public readonly expressionsByKey: ReadonlyMap<
@@ -24,6 +30,10 @@ export class NodeSelection<TValue extends NodeSelectedValue = any> {
     >,
   ) {
     this.expressions = Object.freeze(Array.from(expressionsByKey.values()));
+
+    this.dependencies = mergeDependencyTrees(
+      this.expressions.map(({ dependencies }) => dependencies),
+    )!;
   }
 
   public isAkinTo(maybeSelection: unknown): maybeSelection is NodeSelection {
