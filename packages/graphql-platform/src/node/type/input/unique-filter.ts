@@ -27,7 +27,14 @@ export class NodeUniqueFilterInputType extends utils.ObjectInputType {
     public readonly node: Node,
     public readonly forcedEdge?: Edge,
   ) {
-    forcedEdge && assert.equal(forcedEdge.tail, node);
+    if (forcedEdge) {
+      assert.equal(forcedEdge.tail, node);
+      assert(
+        Array.from(node.uniqueConstraintsByName.values()).some(
+          (uniqueConstraint) => uniqueConstraint.componentSet.has(forcedEdge),
+        ),
+      );
+    }
 
     super({
       name: forcedEdge

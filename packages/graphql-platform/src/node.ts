@@ -1147,6 +1147,17 @@ export class Node<
     return new NodeUniqueFilterInputType(this);
   }
 
+  @Memoize((edge: Edge) => edge)
+  public getUniqueFilterWithoutEdgeInputType(
+    edge: Edge,
+  ): NodeUniqueFilterInputType {
+    return Array.from(this.uniqueConstraintsByName.values()).some(
+      (uniqueConstraint) => uniqueConstraint.componentSet.has(edge),
+    )
+      ? new NodeUniqueFilterInputType(this, edge)
+      : this.uniqueFilterInputType;
+  }
+
   @Memoize()
   public get filterInputType(): NodeFilterInputType {
     return new NodeFilterInputType(this);

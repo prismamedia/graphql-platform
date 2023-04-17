@@ -1625,6 +1625,57 @@ input ArticleNestedTagsReverseEdgeUpdateInput {
   delete: [ArticleTagUniqueFilterInput!]
   deleteIfExists: [ArticleTagUniqueFilterInput!]
   create: [ArticleTagCreationWithoutArticleInput!]
+  upsert: [ArticleNestedUpsertTagsReverseEdgeUpdateInput!]
+}
+
+input ArticleNestedUpsertTagsReverseEdgeUpdateInput {
+  where: ArticleTagUniqueFilterWithoutArticleInput!
+  create: ArticleTagCreationWithoutArticleInput!
+  update: ArticleTagUpdateInput
+}
+
+"""
+Identifies exactly one "ArticleTag" given one of the following combination of components' value:
+- tag
+- order
+"""
+input ArticleTagUniqueFilterWithoutArticleInput {
+  tag: TagUniqueFilterInput
+  order: UnsignedInt
+}
+
+"""The "ArticleTag" node's update"""
+input ArticleTagUpdateInput {
+  order: UnsignedInt
+  moderations: ArticleTagNestedModerationsReverseEdgeUpdateInput
+}
+
+input ArticleTagNestedModerationsReverseEdgeUpdateInput {
+  deleteAll: Boolean
+  deleteMany: ArticleTagModerationFilterInput
+  delete: [ArticleTagModerationUniqueFilterInput!]
+  deleteIfExists: [ArticleTagModerationUniqueFilterInput!]
+  create: [ArticleTagModerationCreationWithoutArticletagInput!]
+  upsert: [ArticleTagNestedUpsertModerationsReverseEdgeUpdateInput!]
+}
+
+input ArticleTagNestedUpsertModerationsReverseEdgeUpdateInput {
+  where: ArticleTagModerationUniqueFilterWithoutArticletagInput!
+  create: ArticleTagModerationCreationWithoutArticletagInput!
+  update: ArticleTagModerationUpdateInput
+}
+
+"""
+Identifies exactly one "ArticleTagModeration" given one of the following combination of components' value:
+- moderator
+"""
+input ArticleTagModerationUniqueFilterWithoutArticletagInput {
+  moderator: UserUniqueFilterInput!
+}
+
+"""The "ArticleTagModeration" node's update"""
+input ArticleTagModerationUpdateInput {
+  moderation: NonEmptyTrimmedString
 }
 
 """The "Category" node's update"""
@@ -1662,11 +1713,11 @@ input CategoryNestedChildrenReverseEdgeUpdateInput {
   disconnect: [CategoryUniqueFilterInput!]
   disconnectIfExists: [CategoryUniqueFilterInput!]
   connectMany: CategoryFilterInput
-  connectOrCreate: [CategoryNestedConnectOrCreateChildrenReverseEdgeUpdateInput!]
-  upsert: [CategoryNestedUpsertChildrenReverseEdgeUpdateInput!]
   connect: [CategoryUniqueFilterInput!]
   connectIfExists: [CategoryUniqueFilterInput!]
+  connectOrCreate: [CategoryNestedConnectOrCreateChildrenReverseEdgeUpdateInput!]
   create: [CategoryCreationWithoutParentInput!]
+  upsert: [CategoryNestedUpsertChildrenReverseEdgeUpdateInput!]
 }
 
 input CategoryNestedConnectOrCreateChildrenReverseEdgeUpdateInput {
@@ -1675,9 +1726,21 @@ input CategoryNestedConnectOrCreateChildrenReverseEdgeUpdateInput {
 }
 
 input CategoryNestedUpsertChildrenReverseEdgeUpdateInput {
-  where: CategoryUniqueFilterInput!
+  where: CategoryUniqueFilterWithoutParentInput!
   create: CategoryCreationWithoutParentInput!
   update: CategoryUpdateWithoutParentInput
+}
+
+"""
+Identifies exactly one "Category" given one of the following combination of components' value:
+- id
+- slug
+- order
+"""
+input CategoryUniqueFilterWithoutParentInput {
+  id: UUIDv4
+  slug: NonEmptyTrimmedString
+  order: UnsignedInt
 }
 
 """The "Category" node's update"""
@@ -1701,11 +1764,11 @@ input CategoryNestedArticlesReverseEdgeUpdateInput {
   disconnect: [ArticleUniqueFilterInput!]
   disconnectIfExists: [ArticleUniqueFilterInput!]
   connectMany: ArticleFilterInput
-  connectOrCreate: [CategoryNestedConnectOrCreateArticlesReverseEdgeUpdateInput!]
-  upsert: [CategoryNestedUpsertArticlesReverseEdgeUpdateInput!]
   connect: [ArticleUniqueFilterInput!]
   connectIfExists: [ArticleUniqueFilterInput!]
+  connectOrCreate: [CategoryNestedConnectOrCreateArticlesReverseEdgeUpdateInput!]
   create: [ArticleCreationWithoutCategoryInput!]
+  upsert: [CategoryNestedUpsertArticlesReverseEdgeUpdateInput!]
 }
 
 input CategoryNestedConnectOrCreateArticlesReverseEdgeUpdateInput {
@@ -1714,9 +1777,20 @@ input CategoryNestedConnectOrCreateArticlesReverseEdgeUpdateInput {
 }
 
 input CategoryNestedUpsertArticlesReverseEdgeUpdateInput {
-  where: ArticleUniqueFilterInput!
+  where: ArticleUniqueFilterWithoutCategoryInput!
   create: ArticleCreationWithoutCategoryInput!
   update: ArticleUpdateWithoutCategoryInput
+}
+
+"""
+Identifies exactly one "Article" given one of the following combination of components' value:
+- id
+- slug
+"""
+input ArticleUniqueFilterWithoutCategoryInput {
+  """This UUID identifies an Article publicly"""
+  id: UUIDv4
+  slug: NonEmptyTrimmedString
 }
 
 """The "Article" node's update"""
@@ -1759,6 +1833,23 @@ input TagNestedArticlesReverseEdgeUpdateInput {
   delete: [ArticleTagUniqueFilterInput!]
   deleteIfExists: [ArticleTagUniqueFilterInput!]
   create: [ArticleTagCreationWithoutTagInput!]
+  upsert: [TagNestedUpsertArticlesReverseEdgeUpdateInput!]
+}
+
+input TagNestedUpsertArticlesReverseEdgeUpdateInput {
+  where: ArticleTagUniqueFilterWithoutTagInput!
+  create: ArticleTagCreationWithoutTagInput!
+  update: ArticleTagUpdateInput
+}
+
+"""
+Identifies exactly one "ArticleTag" given one of the following combination of components' value:
+- article
+- article / order
+"""
+input ArticleTagUniqueFilterWithoutTagInput {
+  article: ArticleUniqueFilterInput!
+  order: UnsignedInt
 }
 
 """The "ArticleTag" node's creation"""
@@ -1767,20 +1858,6 @@ input ArticleTagCreationInput {
   tag: ArticleTagNestedTagEdgeCreationInput!
   order: UnsignedInt!
   moderations: ArticleTagNestedModerationsReverseEdgeCreationInput
-}
-
-"""The "ArticleTag" node's update"""
-input ArticleTagUpdateInput {
-  order: UnsignedInt
-  moderations: ArticleTagNestedModerationsReverseEdgeUpdateInput
-}
-
-input ArticleTagNestedModerationsReverseEdgeUpdateInput {
-  deleteAll: Boolean
-  deleteMany: ArticleTagModerationFilterInput
-  delete: [ArticleTagModerationUniqueFilterInput!]
-  deleteIfExists: [ArticleTagModerationUniqueFilterInput!]
-  create: [ArticleTagModerationCreationWithoutArticletagInput!]
 }
 
 """The "ArticleTagModeration" node's creation"""
@@ -1810,11 +1887,6 @@ input ArticleTagModerationNestedArticleTagEdgeCreationInput {
 input ArticleTagModerationNestedConnectOrCreateArticleTagEdgeCreationInput {
   connect: ArticleTagUniqueFilterInput!
   create: ArticleTagCreationInput!
-}
-
-"""The "ArticleTagModeration" node's update"""
-input ArticleTagModerationUpdateInput {
-  moderation: NonEmptyTrimmedString
 }
 
 """The "UserProfile" node's creation"""

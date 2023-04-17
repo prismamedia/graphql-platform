@@ -156,12 +156,10 @@ export class UniqueReverseEdgeCreationInput extends AbstractReverseEdgeCreationI
     context: MutationContext,
     path: utils.Path,
   ): Promise<void> {
-    const originalEdgeName = this.reverseEdge.originalEdge.name;
+    const originalEdge = this.reverseEdge.originalEdge;
+    const originalEdgeName = originalEdge.name;
     const originalEdgeValue =
-      this.reverseEdge.originalEdge.referencedUniqueConstraint.parseValue(
-        nodeValue,
-        path,
-      );
+      originalEdge.referencedUniqueConstraint.parseValue(nodeValue, path);
     const selection = this.reverseEdge.head.identifier.selection;
 
     const maybeActionName = Object.keys(
