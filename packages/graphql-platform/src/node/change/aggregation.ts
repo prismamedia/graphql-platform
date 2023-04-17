@@ -39,45 +39,40 @@ const aggregatorMatrix: NodeChangeAggregatorMatrix = {
   [utils.MutationType.UPDATE]: {
     [utils.MutationType.CREATION]: invalidAggregator,
 
-    [utils.MutationType.UPDATE]: (previousUpdate, update) => {
-      const aggregate = new NodeUpdate(
+    [utils.MutationType.UPDATE]: (previousUpdate, update) =>
+      new NodeUpdate(
         update.node,
         update.requestContext,
         previousUpdate.oldValue,
         update.newValue,
         update.createdAt,
         update.committedAt,
-      );
-
-      return aggregate.isEmpty()
-        ? // This new "update" cancels the previous "update" => no change
-          undefined
-        : aggregate;
-    },
+      ),
 
     [utils.MutationType.DELETION]: (_previousUpdate, deletion) => deletion,
   },
   [utils.MutationType.DELETION]: {
-    [utils.MutationType.CREATION]: (previousDeletion, creation) => {
-      const aggregate = new NodeUpdate(
+    [utils.MutationType.CREATION]: (previousDeletion, creation) =>
+      new NodeUpdate(
         creation.node,
         creation.requestContext,
         previousDeletion.oldValue,
         creation.newValue,
         creation.createdAt,
         creation.committedAt,
-      );
-
-      return aggregate.isEmpty()
-        ? // This "creation" cancels the previous "deletion" => no change
-          undefined
-        : aggregate;
-    },
+      ),
 
     [utils.MutationType.UPDATE]: invalidAggregator,
     [utils.MutationType.DELETION]: invalidAggregator,
   },
 };
+
+function filterChange(change: NodeChange): boolean {
+  return (
+    !(change instanceof NodeUpdate && change.isEmpty()) &&
+    change.node.filterChange(change)
+  );
+}
 
 export type FlatChanges = ReadonlyMap<Node, ReadonlySet<Component>>;
 
@@ -109,10 +104,7 @@ export class NodeChangeAggregation<
     >();
 
     for (const change of changes) {
-      if (
-        (change instanceof NodeUpdate && change.isEmpty()) ||
-        !change.node.filterChange(change)
-      ) {
+      if (!filterChange(change)) {
         continue;
       }
 
@@ -133,7 +125,7 @@ export class NodeChangeAggregation<
           change as any,
         );
 
-        if (aggregate) {
+        if (aggregate && filterChange(aggregate)) {
           changesById.delete(previousChange.stringifiedId);
           changesById.set(aggregate.stringifiedId, aggregate);
         } else {
