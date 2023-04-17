@@ -63,6 +63,7 @@ export * from './node/change.js';
 export * from './node/cursor.js';
 export * from './node/definition.js';
 export * from './node/fixture.js';
+export * from './node/loader.js';
 export * from './node/name.js';
 export * from './node/operation.js';
 export * from './node/result-set.js';

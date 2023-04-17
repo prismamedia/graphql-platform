@@ -8,6 +8,7 @@ import type {
   NodeSelectedValue,
   NodeSelection,
 } from './statement/selection.js';
+import type { NodeFilterInputValue } from './type/input/filter.js';
 import type { NodeUniqueFilterInputValue } from './type/input/unique-filter.js';
 
 export type NodeLoaderKey = NonNullable<NodeUniqueFilterInputValue>;
@@ -24,12 +25,17 @@ export function createNodeLoader<
   node: Node<TRequestContext, TConnector>,
   selection: NodeSelection,
   context: TRequestContext | OperationContext<TRequestContext, TConnector>,
-  options?: DataLoader.Options<NodeLoaderKey, NodeLoaderValue, TCacheKey>,
+  {
+    subset,
+    ...options
+  }: {
+    subset?: NodeFilterInputValue;
+  } & DataLoader.Options<NodeLoaderKey, NodeLoaderValue, TCacheKey> = {},
 ): NodeLoader {
   return new DataLoader(async (keys) => {
     const maybeValues = await node
       .getQueryByKey('get-some-in-order-if-exists')
-      .execute({ where: keys, selection }, context);
+      .execute({ where: keys, subset, selection }, context);
 
     return maybeValues.map(
       (maybeValue, index): NodeSelectedValue | Error =>
