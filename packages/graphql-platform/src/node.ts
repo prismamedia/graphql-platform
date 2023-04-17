@@ -1176,6 +1176,13 @@ export class Node<
     return new NodeUpdateInputType(this);
   }
 
+  @Memoize((edge: Edge) => edge)
+  public getUpdateWithoutEdgeInputType(edge: Edge): NodeUpdateInputType {
+    return edge.isMutable()
+      ? new NodeUpdateInputType(this, edge)
+      : this.updateInputType;
+  }
+
   @Memoize()
   public get mutationsByKey(): Readonly<MutationsByKey<TRequestContext>> {
     return Object.entries(mutationConstructorsByKey).reduce(

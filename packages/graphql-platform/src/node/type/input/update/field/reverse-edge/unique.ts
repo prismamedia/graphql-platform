@@ -49,7 +49,7 @@ const destructiveActionNames = [
   UniqueReverseEdgeUpdateInputAction.DELETE_IF_EXISTS,
   UniqueReverseEdgeUpdateInputAction.DISCONNECT,
   UniqueReverseEdgeUpdateInputAction.DISCONNECT_IF_EXISTS,
-] as const;
+] satisfies UniqueReverseEdgeUpdateInputAction[];
 
 type DestructiveActionName = IterableElement<typeof destructiveActionNames>;
 
@@ -63,7 +63,7 @@ const nonDestructiveActionNames = [
   UniqueReverseEdgeUpdateInputAction.CONNECT_IF_EXISTS,
   UniqueReverseEdgeUpdateInputAction.CONNECT_OR_CREATE,
   UniqueReverseEdgeUpdateInputAction.CREATE,
-] as const;
+] satisfies UniqueReverseEdgeUpdateInputAction[];
 
 export class UniqueReverseEdgeUpdateInput extends AbstractReverseEdgeUpdateInput<UniqueReverseEdgeUpdateInputValue> {
   public constructor(public override readonly reverseEdge: UniqueReverseEdge) {

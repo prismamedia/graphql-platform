@@ -1,7 +1,9 @@
 import * as utils from '@prismamedia/graphql-platform-utils';
 import { Memoize } from '@prismamedia/memoize';
+import inflection from 'inflection';
+import assert from 'node:assert/strict';
 import type { Except } from 'type-fest';
-import type { Node, NodeValue } from '../../../node.js';
+import type { Edge, Node, NodeValue } from '../../../node.js';
 import type { MutationContext } from '../../operation.js';
 import type { NodeUpdateValue } from '../../statement/update.js';
 import {
@@ -16,9 +18,19 @@ export * from './update/field.js';
 export type NodeUpdateInputValue = utils.Nillable<utils.PlainObject>;
 
 export class NodeUpdateInputType extends utils.ObjectInputType<FieldUpdateInput> {
-  public constructor(public readonly node: Node) {
+  public constructor(
+    public readonly node: Node,
+    public readonly forcedEdge?: Edge,
+  ) {
+    if (forcedEdge) {
+      assert.equal(forcedEdge.tail, node);
+      assert(forcedEdge.isMutable());
+    }
+
     super({
-      name: `${node}UpdateInput`,
+      name: forcedEdge
+        ? `${node}UpdateWithout${inflection.capitalize(forcedEdge.name)}Input`
+        : `${node}UpdateInput`,
       description: `The "${node}" node's ${utils.MutationType.UPDATE}`,
     });
   }
@@ -29,7 +41,9 @@ export class NodeUpdateInputType extends utils.ObjectInputType<FieldUpdateInput>
       ComponentUpdateInput[]
     >(
       (fields, component) =>
-        component.isMutable() ? [...fields, component.updateInput] : fields,
+        component.isMutable() && component !== this.forcedEdge
+          ? [...fields, component.updateInput]
+          : fields,
       [],
     );
   }

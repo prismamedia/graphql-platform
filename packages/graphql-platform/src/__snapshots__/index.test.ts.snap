@@ -1663,6 +1663,7 @@ input CategoryNestedChildrenReverseEdgeUpdateInput {
   disconnectIfExists: [CategoryUniqueFilterInput!]
   connectMany: CategoryFilterInput
   connectOrCreate: [CategoryNestedConnectOrCreateChildrenReverseEdgeUpdateInput!]
+  upsert: [CategoryNestedUpsertChildrenReverseEdgeUpdateInput!]
   connect: [CategoryUniqueFilterInput!]
   connectIfExists: [CategoryUniqueFilterInput!]
   create: [CategoryCreationWithoutParentInput!]
@@ -1671,6 +1672,23 @@ input CategoryNestedChildrenReverseEdgeUpdateInput {
 input CategoryNestedConnectOrCreateChildrenReverseEdgeUpdateInput {
   connect: CategoryUniqueFilterInput!
   create: CategoryCreationWithoutParentInput!
+}
+
+input CategoryNestedUpsertChildrenReverseEdgeUpdateInput {
+  where: CategoryUniqueFilterInput!
+  create: CategoryCreationWithoutParentInput!
+  update: CategoryUpdateWithoutParentInput
+}
+
+"""The "Category" node's update"""
+input CategoryUpdateWithoutParentInput {
+  order: UnsignedInt
+
+  """This category's children"""
+  children: CategoryNestedChildrenReverseEdgeUpdateInput
+
+  """The articles attached to this category"""
+  articles: CategoryNestedArticlesReverseEdgeUpdateInput
 }
 
 input CategoryNestedArticlesReverseEdgeUpdateInput {
@@ -1684,6 +1702,7 @@ input CategoryNestedArticlesReverseEdgeUpdateInput {
   disconnectIfExists: [ArticleUniqueFilterInput!]
   connectMany: ArticleFilterInput
   connectOrCreate: [CategoryNestedConnectOrCreateArticlesReverseEdgeUpdateInput!]
+  upsert: [CategoryNestedUpsertArticlesReverseEdgeUpdateInput!]
   connect: [ArticleUniqueFilterInput!]
   connectIfExists: [ArticleUniqueFilterInput!]
   create: [ArticleCreationWithoutCategoryInput!]
@@ -1692,6 +1711,39 @@ input CategoryNestedArticlesReverseEdgeUpdateInput {
 input CategoryNestedConnectOrCreateArticlesReverseEdgeUpdateInput {
   connect: ArticleUniqueFilterInput!
   create: ArticleCreationWithoutCategoryInput!
+}
+
+input CategoryNestedUpsertArticlesReverseEdgeUpdateInput {
+  where: ArticleUniqueFilterInput!
+  create: ArticleCreationWithoutCategoryInput!
+  update: ArticleUpdateWithoutCategoryInput
+}
+
+"""The "Article" node's update"""
+input ArticleUpdateWithoutCategoryInput {
+  status: ArticleStatus
+  title: NonEmptyTrimmedString
+  slug: NonEmptyTrimmedString
+
+  """The article's body"""
+  body: DraftJS
+  updatedBy: ArticleNestedUpdatedByEdgeUpdateInput
+
+  """Contains any arbitrary data you want to store alongside the article"""
+  metas: JSONObject
+
+  """Is the article highlighted?"""
+  highlighted: Boolean
+
+  """Is the article a partnership?"""
+  sponsored: Boolean
+  views: UnsignedBigInt
+  score: UnsignedFloat
+  machineTags: JSONArray
+  tags: ArticleNestedTagsReverseEdgeUpdateInput
+
+  """It is possible to provide the article's body as raw HTML"""
+  htmlBody: String
 }
 
 """The "Tag" node's update"""
