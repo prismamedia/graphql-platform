@@ -21,6 +21,7 @@ jobs:
         node:
           - 18
           - 19
+          # - 20
 
         include:
           - node: 18

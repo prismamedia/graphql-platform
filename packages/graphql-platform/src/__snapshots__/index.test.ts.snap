@@ -733,7 +733,7 @@ scalar UnsignedFloat @specifiedBy(url: "https://en.wikipedia.org/wiki/IEEE_float
 scalar JSONArray @specifiedBy(url: "http://www.ecma-international.org/publications/files/ECMA-ST/ECMA-404.pdf")
 
 """
-Identifies exactly one "Article" given one of the following combination of components' value:
+Identifies exactly one "Article" with one of the following combination of components' value:
 - id
 - category / slug
 """
@@ -745,7 +745,7 @@ input ArticleUniqueFilterInput {
 }
 
 """
-Identifies exactly one "Category" given one of the following combination of components' value:
+Identifies exactly one "Category" with one of the following combination of components' value:
 - id
 - parent / slug
 - parent / order
@@ -971,7 +971,7 @@ enum ArticleTagOrderingInput {
 }
 
 """
-Identifies exactly one "Tag" given one of the following combination of components' value:
+Identifies exactly one "Tag" with one of the following combination of components' value:
 - id
 - slug
 """
@@ -1002,7 +1002,7 @@ enum TagOrderingInput {
 }
 
 """
-Identifies exactly one "ArticleTag" given one of the following combination of components' value:
+Identifies exactly one "ArticleTag" with one of the following combination of components' value:
 - article / tag
 - article / order
 """
@@ -1013,7 +1013,7 @@ input ArticleTagUniqueFilterInput {
 }
 
 """
-Identifies exactly one "ArticleTagModeration" given one of the following combination of components' value:
+Identifies exactly one "ArticleTagModeration" with one of the following combination of components' value:
 - articleTag / moderator
 """
 input ArticleTagModerationUniqueFilterInput {
@@ -1022,7 +1022,7 @@ input ArticleTagModerationUniqueFilterInput {
 }
 
 """
-Identifies exactly one "User" given one of the following combination of components' value:
+Identifies exactly one "User" with one of the following combination of components' value:
 - id
 - username
 """
@@ -1053,7 +1053,7 @@ enum UserOrderingInput {
 }
 
 """
-Identifies exactly one "UserProfile" given one of the following combination of components' value:
+Identifies exactly one "UserProfile" with one of the following combination of components' value:
 - user
 """
 input UserProfileUniqueFilterInput {
@@ -1635,9 +1635,9 @@ input ArticleNestedUpsertTagsReverseEdgeUpdateInput {
 }
 
 """
-Identifies exactly one "ArticleTag" given one of the following combination of components' value:
-- tag
-- order
+Given a known "article", identifies exactly one "ArticleTag" with one of the following combination of components' value:
+- (article) / tag
+- (article) / order
 """
 input ArticleTagUniqueFilterWithoutArticleInput {
   tag: TagUniqueFilterInput
@@ -1666,8 +1666,8 @@ input ArticleTagNestedUpsertModerationsReverseEdgeUpdateInput {
 }
 
 """
-Identifies exactly one "ArticleTagModeration" given one of the following combination of components' value:
-- moderator
+Given a known "articleTag", identifies exactly one "ArticleTagModeration" with one of the following combination of components' value:
+- (articleTag) / moderator
 """
 input ArticleTagModerationUniqueFilterWithoutArticletagInput {
   moderator: UserUniqueFilterInput!
@@ -1732,10 +1732,10 @@ input CategoryNestedUpsertChildrenReverseEdgeUpdateInput {
 }
 
 """
-Identifies exactly one "Category" given one of the following combination of components' value:
+Given a known "parent", identifies exactly one "Category" with one of the following combination of components' value:
 - id
-- slug
-- order
+- (parent) / slug
+- (parent) / order
 """
 input CategoryUniqueFilterWithoutParentInput {
   id: UUIDv4
@@ -1783,9 +1783,9 @@ input CategoryNestedUpsertArticlesReverseEdgeUpdateInput {
 }
 
 """
-Identifies exactly one "Article" given one of the following combination of components' value:
+Given a known "category", identifies exactly one "Article" with one of the following combination of components' value:
 - id
-- slug
+- (category) / slug
 """
 input ArticleUniqueFilterWithoutCategoryInput {
   """This UUID identifies an Article publicly"""
@@ -1843,8 +1843,8 @@ input TagNestedUpsertArticlesReverseEdgeUpdateInput {
 }
 
 """
-Identifies exactly one "ArticleTag" given one of the following combination of components' value:
-- article
+Given a known "tag", identifies exactly one "ArticleTag" with one of the following combination of components' value:
+- article / (tag)
 - article / order
 """
 input ArticleTagUniqueFilterWithoutTagInput {

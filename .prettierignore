@@ -1,9 +1,8 @@
-**/*.log
-
 .pnp.*
 .vscode/extensions.json
 .yarn/
-!.yarnrc.yml
+
+**/*.log
 
 build/
 coverage/
@@ -11,7 +10,6 @@ dist/
 node_modules/
 package-lock.json
 package.json
-tmp/
 tsconfig.tsbuildinfo
 yarn.lock
 
@@ -23,3 +21,5 @@ packages/**/package.json
 packages/**/package-lock.json
 packages/**/tsconfig.tsbuildinfo
 packages/**/yarn.lock
+
+tmp/

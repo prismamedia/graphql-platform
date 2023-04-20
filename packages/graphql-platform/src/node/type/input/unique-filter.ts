@@ -43,13 +43,20 @@ export class NodeUniqueFilterInputType extends utils.ObjectInputType {
           )}Input`
         : `${node.name}UniqueFilterInput`,
       description: [
-        `Identifies exactly one "${node.name}" given one of the following combination of components' value:`,
+        `${
+          forcedEdge ? `Given a known "${forcedEdge.name}", i` : `I`
+        }dentifies exactly one "${
+          node.name
+        }" with one of the following combination of components' value:`,
         Array.from(node.uniqueConstraintsByName.values())
           .filter((uniqueConstraint) => uniqueConstraint.isPublic())
           .map(({ componentsByName }) =>
             Array.from(componentsByName.values())
-              .filter((component) => component !== forcedEdge)
-              .map((component) => component.name)
+              .map((component) =>
+                component === forcedEdge
+                  ? `(${component.name})`
+                  : component.name,
+              )
               .join(' / '),
           )
           .filter(Boolean)

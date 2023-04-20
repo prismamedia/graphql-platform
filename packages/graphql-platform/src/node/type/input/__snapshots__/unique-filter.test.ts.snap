@@ -2,7 +2,7 @@
 
 exports[`NodeUniqueFilterInputType Definition Article has a unique filter input type: ArticleUniqueFilterInput 1`] = `
 """"
-Identifies exactly one "Article" given one of the following combination of components' value:
+Identifies exactly one "Article" with one of the following combination of components' value:
 - id
 - category / slug
 """
@@ -16,7 +16,7 @@ input ArticleUniqueFilterInput {
 
 exports[`NodeUniqueFilterInputType Definition ArticleTag has a unique filter input type: ArticleTagUniqueFilterInput 1`] = `
 """"
-Identifies exactly one "ArticleTag" given one of the following combination of components' value:
+Identifies exactly one "ArticleTag" with one of the following combination of components' value:
 - article / tag
 - article / order
 """
@@ -29,7 +29,7 @@ input ArticleTagUniqueFilterInput {
 
 exports[`NodeUniqueFilterInputType Definition ArticleTagModeration has a unique filter input type: ArticleTagModerationUniqueFilterInput 1`] = `
 """"
-Identifies exactly one "ArticleTagModeration" given one of the following combination of components' value:
+Identifies exactly one "ArticleTagModeration" with one of the following combination of components' value:
 - articleTag / moderator
 """
 input ArticleTagModerationUniqueFilterInput {
@@ -40,7 +40,7 @@ input ArticleTagModerationUniqueFilterInput {
 
 exports[`NodeUniqueFilterInputType Definition Category has a unique filter input type: CategoryUniqueFilterInput 1`] = `
 """"
-Identifies exactly one "Category" given one of the following combination of components' value:
+Identifies exactly one "Category" with one of the following combination of components' value:
 - id
 - parent / slug
 - parent / order
@@ -55,7 +55,7 @@ input CategoryUniqueFilterInput {
 
 exports[`NodeUniqueFilterInputType Definition Tag has a unique filter input type: TagUniqueFilterInput 1`] = `
 """"
-Identifies exactly one "Tag" given one of the following combination of components' value:
+Identifies exactly one "Tag" with one of the following combination of components' value:
 - id
 - slug
 """
@@ -67,7 +67,7 @@ input TagUniqueFilterInput {
 
 exports[`NodeUniqueFilterInputType Definition User has a unique filter input type: UserUniqueFilterInput 1`] = `
 """"
-Identifies exactly one "User" given one of the following combination of components' value:
+Identifies exactly one "User" with one of the following combination of components' value:
 - id
 - username
 """
@@ -79,7 +79,7 @@ input UserUniqueFilterInput {
 
 exports[`NodeUniqueFilterInputType Definition UserProfile has a unique filter input type: UserProfileUniqueFilterInput 1`] = `
 """"
-Identifies exactly one "UserProfile" given one of the following combination of components' value:
+Identifies exactly one "UserProfile" with one of the following combination of components' value:
 - user
 """
 input UserProfileUniqueFilterInput {
