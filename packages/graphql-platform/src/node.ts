@@ -1424,7 +1424,7 @@ export class Node<
     try {
       authorization = this.config.authorization?.call(
         this.gp,
-        context.requestContext,
+        context.request,
         mutationType,
       );
     } catch (error) {

@@ -45,9 +45,6 @@ export class UpdateManyMutation<
   readonly #config?: UpdateConfig<any, any, any> = this.node.getMutationConfig(
     utils.MutationType.UPDATE,
   ).config;
-  readonly #configPath: utils.Path = this.node.getMutationConfig(
-    utils.MutationType.UPDATE,
-  ).configPath;
 
   protected override readonly selectionAware = true;
   public override readonly name = `update${this.node.plural}`;
@@ -156,7 +153,7 @@ export class UpdateManyMutation<
     }
 
     const currentIds = currentValues.map((currentValue) =>
-      this.node.identifier.parseValue(currentValue),
+      Object.freeze(this.node.identifier.parseValue(currentValue)),
     );
 
     // Resolve the edges' nested-actions into their value
@@ -183,7 +180,8 @@ export class UpdateManyMutation<
                   context,
                   api,
                   data,
-                  currentValue,
+                  id: currentIds[index],
+                  current: Object.freeze(this.node.parseValue(currentValue)),
                   update: individualizedStatement.proxy,
                 });
               } catch (cause) {
@@ -201,7 +199,7 @@ export class UpdateManyMutation<
                     {
                       node: this.node,
                       update: individualizedStatement,
-                      filter: this.node.filterInputType.parseAndFilter(
+                      filter: this.node.filterInputType.filter(
                         currentIds[index],
                       ),
                     },
@@ -221,7 +219,7 @@ export class UpdateManyMutation<
             {
               node: this.node,
               update: statement,
-              filter: this.node.filterInputType.parseAndFilter({
+              filter: this.node.filterInputType.filter({
                 OR: currentIds,
               }),
             },
@@ -255,7 +253,7 @@ export class UpdateManyMutation<
       (changes, oldValue, index) => {
         const change = new NodeUpdate(
           this.node,
-          context.requestContext,
+          context.request,
           oldValue,
           newValues[index],
         );

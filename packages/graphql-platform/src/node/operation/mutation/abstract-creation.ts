@@ -27,7 +27,7 @@ export interface PreCreateArgs<
   TContainer extends object,
 > extends AbstractCreationHookArgs<TRequestContext, TConnector, TContainer> {
   /**
-   * The creation statement, as a mutable object
+   * The creation statement, as a mutable plain-object
    */
   readonly creation: NodeCreationValue;
 }

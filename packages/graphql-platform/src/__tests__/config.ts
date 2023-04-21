@@ -287,14 +287,8 @@ export const Article = {
         },
       },
 
-      async preCreate({
-        node,
-        context: { requestContext },
-        api,
-        data,
-        creation,
-      }) {
-        if (!requestContext.user) {
+      async preCreate({ node, context: { request }, api, data, creation }) {
+        if (!request.user) {
           throw new Error(`Must be logged-in`);
         }
 
@@ -313,7 +307,7 @@ export const Article = {
 
         if (!creation['createdBy'] || !creation['updatedBy']) {
           const currentUser = await api.query.userIfExists({
-            where: { id: requestContext.user.id },
+            where: { id: request.user.id },
             selection: node
               .getEdgeByName('createdBy')
               .referencedUniqueConstraint.selection.mergeWith(
@@ -340,13 +334,13 @@ export const Article = {
 
       async preUpdate({
         node,
-        context: { requestContext },
+        context: { request },
         api,
         data,
-        currentValue,
+        current,
         update,
       }) {
-        if (!requestContext.user) {
+        if (!request.user) {
           throw new Error(`Must be logged-in`);
         }
 
@@ -361,7 +355,7 @@ export const Article = {
           // update['body'] = myHtmlToDraftService(data['htmlBody']);
         }
 
-        if (currentValue['status'] === ArticleStatus.DELETED) {
+        if (current['status'] === ArticleStatus.DELETED) {
           throw new Error(`Cannot update a deleted article`);
         }
 
@@ -372,7 +366,7 @@ export const Article = {
         }
 
         update['updatedBy'] ??= await api.query.userIfExists({
-          where: { id: requestContext.user.id },
+          where: { id: request.user.id },
           selection:
             node.getEdgeByName('updatedBy').referencedUniqueConstraint
               .selection,
@@ -383,7 +377,7 @@ export const Article = {
     },
 
     deletion: {
-      preDelete({ currentValue }) {},
+      preDelete({ current }) {},
 
       postDelete({ change }) {},
     },

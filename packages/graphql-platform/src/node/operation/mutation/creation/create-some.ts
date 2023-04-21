@@ -35,9 +35,6 @@ export class CreateSomeMutation<
 > {
   readonly #config?: CreationConfig<any, any, any> =
     this.node.getMutationConfig(utils.MutationType.CREATION).config;
-  readonly #configPath: utils.Path = this.node.getMutationConfig(
-    utils.MutationType.CREATION,
-  ).configPath;
 
   protected override readonly selectionAware = true;
   public override readonly name = `create${this.node.plural}`;
@@ -137,11 +134,7 @@ export class CreateSomeMutation<
         const indexedPath =
           newValues.length > 1 ? utils.addPath(path, index) : path;
 
-        const change = new NodeCreation(
-          this.node,
-          context.requestContext,
-          newValue,
-        );
+        const change = new NodeCreation(this.node, context.request, newValue);
 
         // Let's everybody know about this created node
         context.changes.push(change);

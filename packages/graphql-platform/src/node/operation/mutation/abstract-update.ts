@@ -3,6 +3,7 @@ import type { Except, Promisable } from 'type-fest';
 import type { ConnectorInterface } from '../../../connector-interface.js';
 import type { NodeValue } from '../../../node.js';
 import type { NodeUpdate } from '../../change.js';
+import type { UniqueConstraintValue } from '../../definition.js';
 import type { NodeUpdateValue } from '../../statement/update.js';
 import type { NodeUpdateInputValue } from '../../type/input/update.js';
 import {
@@ -28,12 +29,17 @@ export interface PreUpdateArgs<
   TContainer extends object,
 > extends AbstractUpdateHookArgs<TRequestContext, TConnector, TContainer> {
   /**
-   * The current node's value
+   * The current node's id
    */
-  readonly currentValue: Readonly<NodeValue>;
+  readonly id: Readonly<UniqueConstraintValue>;
 
   /**
-   * The update statement, as a mutable object
+   * The current node's value
+   */
+  readonly current: Readonly<NodeValue>;
+
+  /**
+   * The update statement, as a mutable plain-object
    */
   readonly update: NodeUpdateValue;
 }

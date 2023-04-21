@@ -38,9 +38,6 @@ export class DeleteManyMutation<
 > {
   readonly #config?: DeletionConfig<any, any, any> =
     this.node.getMutationConfig(utils.MutationType.DELETION).config;
-  readonly #configPath: utils.Path = this.node.getMutationConfig(
-    utils.MutationType.DELETION,
-  ).configPath;
 
   protected override readonly selectionAware = true;
   public override readonly name = `delete${this.node.plural}`;
@@ -135,17 +132,22 @@ export class DeleteManyMutation<
       return [];
     }
 
+    const currentIds = currentValues.map((currentValue) =>
+      Object.freeze(this.node.identifier.parseValue(currentValue)),
+    );
+
     // Apply the "preDelete"-hook, if any
     if (preDelete) {
       await Promise.all(
-        currentValues.map(async (currentValue) => {
+        currentValues.map(async (currentValue, index) => {
           try {
             await preDelete({
               gp: this.gp,
               node: this.node,
               context,
               api,
-              currentValue: Object.freeze(this.node.parseValue(currentValue)),
+              id: currentIds[index],
+              current: Object.freeze(this.node.parseValue(currentValue)),
             });
           } catch (cause) {
             throw new NodeLifecycleHookError(
@@ -220,10 +222,8 @@ export class DeleteManyMutation<
       await this.connector.delete(
         {
           node: this.node,
-          filter: this.node.filterInputType.parseAndFilter({
-            OR: currentValues.map((currentValue) =>
-              this.node.identifier.parseValue(currentValue),
-            ),
+          filter: this.node.filterInputType.filter({
+            OR: currentIds,
           }),
         },
         context,
@@ -234,11 +234,7 @@ export class DeleteManyMutation<
 
     return Promise.all(
       currentValues.map(async (oldValue) => {
-        const change = new NodeDeletion(
-          this.node,
-          context.requestContext,
-          oldValue,
-        );
+        const change = new NodeDeletion(this.node, context.request, oldValue);
 
         // Let's everybody know about this deleted node
         context.changes.push(change);

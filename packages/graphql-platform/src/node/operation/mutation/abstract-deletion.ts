@@ -3,6 +3,7 @@ import type { Promisable } from 'type-fest';
 import type { ConnectorInterface } from '../../../connector-interface.js';
 import type { NodeValue } from '../../../node.js';
 import type { NodeDeletion } from '../../change.js';
+import type { UniqueConstraintValue } from '../../definition.js';
 import {
   AbstractMutation,
   type AbstractMutationConfig,
@@ -21,9 +22,14 @@ export interface PreDeleteArgs<
   TContainer extends object,
 > extends AbstractDeletionHookArgs<TRequestContext, TConnector, TContainer> {
   /**
+   * The current node's id
+   */
+  readonly id: Readonly<UniqueConstraintValue>;
+
+  /**
    * The current node's value
    */
-  readonly currentValue: Readonly<NodeValue>;
+  readonly current: Readonly<NodeValue>;
 }
 
 export interface PostDeleteArgs<

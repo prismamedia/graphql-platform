@@ -27,9 +27,9 @@ export class OperationContext<
      *
      * Unlike the "operation" context, it is shared among all the operations of the "request"'s document
      */
-    public readonly requestContext: TRequestContext,
+    public readonly request: TRequestContext,
   ) {
-    gp.assertRequestContext(requestContext);
+    gp.assertRequestContext(request);
   }
 
   @Memoize(
