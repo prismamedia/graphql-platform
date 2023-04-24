@@ -3,9 +3,9 @@ import type { ConnectorInterface } from '../../connector-interface.js';
 import type { Component, ComponentValue, Node, NodeValue } from '../../node.js';
 import { AbstractNodeChange } from '../abstract-change.js';
 
-export type ComponentUpdate = {
-  oldValue: ComponentValue;
-  newValue: ComponentValue;
+export type ComponentUpdate<TValue extends ComponentValue = any> = {
+  oldValue: TValue;
+  newValue: TValue;
 };
 
 export class NodeUpdate<
@@ -21,13 +21,6 @@ export class NodeUpdate<
   public readonly updatesByComponent: ReadonlyMap<
     Component<TRequestContext, TConnector, TContainer>,
     Readonly<ComponentUpdate>
-  >;
-
-  /**
-   * List of the updated components
-   */
-  public readonly components: ReadonlyArray<
-    Component<TRequestContext, TConnector, TContainer>
   >;
 
   public constructor(
@@ -72,12 +65,26 @@ export class NodeUpdate<
         return entries;
       }, []),
     );
-
-    this.components = Array.from(this.updatesByComponent.keys());
   }
 
   public isEmpty(): boolean {
     return this.updatesByComponent.size === 0;
+  }
+
+  public hasComponentUpdate(
+    componentOrName: Component | Component['name'],
+  ): boolean {
+    const component = this.node.ensureComponent(componentOrName);
+
+    return this.updatesByComponent.has(component);
+  }
+
+  public getComponentUpdate<TValue extends ComponentValue>(
+    componentOrName: Component | Component['name'],
+  ): ComponentUpdate<TValue> | undefined {
+    const component = this.node.ensureComponent(componentOrName);
+
+    return this.updatesByComponent.get(component);
   }
 }
 

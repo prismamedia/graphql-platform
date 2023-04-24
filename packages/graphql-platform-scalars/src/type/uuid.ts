@@ -1,33 +1,34 @@
 import * as utils from '@prismamedia/graphql-platform-utils';
 import * as graphql from 'graphql';
+import type { UUID } from 'node:crypto';
 
-type GraphQLUUIDVersion = 1 | 2 | 3 | 4 | 5;
+export type UUIDVersion = 1 | 2 | 3 | 4 | 5;
 
 export function parseUUID(
   value: unknown,
-  version?: GraphQLUUIDVersion,
+  version?: UUIDVersion,
   path?: utils.Path,
-): string {
+): UUID {
   if (
-    typeof value === 'string' &&
-    new RegExp(
+    typeof value !== 'string' ||
+    !new RegExp(
       `^[0-9a-f]{8}-[0-9a-f]{4}-${
         version ?? '[0-9]'
       }[0-9a-f]{3}-[89AB][0-9a-f]{3}-[0-9a-f]{12}$`,
       'i',
     ).test(value)
   ) {
-    return value.toLowerCase();
+    throw new utils.UnexpectedValueError(
+      `an UUID${version ? ` version ${version}` : ''}`,
+      value,
+      { path },
+    );
   }
 
-  throw new utils.UnexpectedValueError(
-    `an UUID${version ? ` version ${version}` : ''}`,
-    value,
-    { path },
-  );
+  return value.toLowerCase() as UUID;
 }
 
-const buildGraphQLUUIDScalarType = (version?: GraphQLUUIDVersion) =>
+const buildGraphQLUUIDScalarType = (version?: UUIDVersion) =>
   new graphql.GraphQLScalarType({
     name: `UUID${version ? `v${version}` : ''}`,
     description: `A field whose value is a generic Universally Unique Identifier.`,
@@ -62,4 +63,4 @@ export const uuidTypesByName = {
   UUIDv3: GraphQLUUIDv3,
   UUIDv4: GraphQLUUIDv4,
   UUIDv5: GraphQLUUIDv5,
-} as const;
+} satisfies Record<string, graphql.GraphQLScalarType>;

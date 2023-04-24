@@ -3,6 +3,7 @@ import { MyGP, nodes } from '../__tests__/config.js';
 import { GraphQLPlatform } from '../index.js';
 import { AbstractMutation } from './operation/abstract-mutation.js';
 import { AbstractQuery } from './operation/abstract-query.js';
+import { AbstractSubscription } from './operation/abstract-subscription.js';
 
 describe('Operation', () => {
   let gp: MyGP;
@@ -23,6 +24,12 @@ describe('Operation', () => {
         expect(mutation).toBeInstanceOf(AbstractMutation);
         expect(typeof mutation.isEnabled()).toBe('boolean');
         expect(typeof mutation.isPublic()).toBe('boolean');
+      }
+
+      for (const subscription of Object.values(node.subscriptionsByKey)) {
+        expect(subscription).toBeInstanceOf(AbstractSubscription);
+        expect(typeof subscription.isEnabled()).toBe('boolean');
+        expect(typeof subscription.isPublic()).toBe('boolean');
       }
     }
   });

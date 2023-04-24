@@ -108,4 +108,4 @@ export const GraphQLJSONObject = new graphql.GraphQLScalarType({
 export const jsonTypesByName = {
   JSONArray: GraphQLJSONArray,
   JSONObject: GraphQLJSONObject,
-} as const;
+} satisfies Record<string, graphql.GraphQLScalarType>;

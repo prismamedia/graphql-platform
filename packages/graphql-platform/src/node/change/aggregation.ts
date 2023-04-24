@@ -67,12 +67,9 @@ const aggregatorMatrix: NodeChangeAggregatorMatrix = {
   },
 };
 
-function filterChange(change: NodeChange): boolean {
-  return (
-    !(change instanceof NodeUpdate && change.isEmpty()) &&
-    change.node.filterChange(change)
-  );
-}
+const filterChange = (change: NodeChange): boolean =>
+  !(change instanceof NodeUpdate && change.isEmpty()) &&
+  change.node.filterChange(change);
 
 export type FlatChanges = ReadonlyMap<Node, ReadonlySet<Component>>;
 
@@ -166,7 +163,7 @@ export class NodeChangeAggregation<
 
             break;
           } else {
-            for (const component of change.components) {
+            for (const component of change.updatesByComponent.keys()) {
               componentSet.add(component);
             }
 

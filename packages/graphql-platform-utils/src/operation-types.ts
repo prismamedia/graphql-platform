@@ -1,11 +1,11 @@
 import * as graphql from 'graphql';
 import { createGraphQLEnumType } from './graphql.js';
 
-export const operationTypes = [
+export const operationTypes = Object.freeze([
   graphql.OperationTypeNode.QUERY,
   graphql.OperationTypeNode.MUTATION,
   graphql.OperationTypeNode.SUBSCRIPTION,
-] as const;
+] satisfies graphql.OperationTypeNode[]);
 
 export enum MutationType {
   CREATION = 'creation',
@@ -13,11 +13,11 @@ export enum MutationType {
   UPDATE = 'update',
 }
 
-export const mutationTypes = [
+export const mutationTypes = Object.freeze([
   MutationType.CREATION,
   MutationType.DELETION,
   MutationType.UPDATE,
-] as const;
+] satisfies MutationType[]);
 
 export const MutationTypeType = createGraphQLEnumType(
   'MutationType',

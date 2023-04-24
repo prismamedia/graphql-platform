@@ -307,8 +307,8 @@ export class ResultSetMutability<TValue extends NodeSelectedValue = any> {
         );
     } else if (reverseEdgeHeadChange instanceof NodeUpdate) {
       if (
-        reverseEdgeHeadChange.components.some((component) =>
-          dependencies.has(component),
+        Array.from(reverseEdgeHeadChange.updatesByComponent.keys()).some(
+          (component) => dependencies.has(component),
         )
       ) {
         reverseEdgeHeadChange.newValue[reverseEdge.originalEdge.name] &&
@@ -352,7 +352,7 @@ export class ResultSetMutability<TValue extends NodeSelectedValue = any> {
 
         if (
           oldFilter !== newFilter ||
-          change.components.some(
+          Array.from(change.updatesByComponent.keys()).some(
             (component) =>
               this.#ordering?.dependencies?.has(component) ||
               this.#selection.dependencies.has(component),
