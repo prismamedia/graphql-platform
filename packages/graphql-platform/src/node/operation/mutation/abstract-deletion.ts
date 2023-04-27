@@ -40,7 +40,7 @@ export interface PostDeleteArgs<
   /**
    * The uncommitted change
    */
-  readonly change: NodeDeletion<TRequestContext>;
+  readonly change: NodeDeletion<TRequestContext, TConnector, TContainer>;
 }
 
 /**
@@ -75,7 +75,5 @@ export abstract class AbstractDeletion<
   TArgs extends utils.Nillable<utils.PlainObject>,
   TResult,
 > extends AbstractMutation<TRequestContext, TArgs, TResult> {
-  public override readonly mutationTypes = [
-    utils.MutationType.DELETION,
-  ] satisfies utils.MutationType[];
+  public override readonly mutationTypes = [utils.MutationType.DELETION];
 }

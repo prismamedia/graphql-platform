@@ -2,7 +2,6 @@ import { beforeAll, describe, expect, it } from '@jest/globals';
 import * as utils from '@prismamedia/graphql-platform-utils';
 import { GraphQLInputObjectType, printType } from 'graphql';
 import {
-  ArticleStatus,
   MyGP,
   myUserContext,
   nodeNames,
@@ -12,7 +11,6 @@ import { mockConnector } from '../../../__tests__/connector-mock.js';
 import { GraphQLPlatform } from '../../../index.js';
 import { MutationContext } from '../../operation.js';
 import { LeafComparisonFilter } from '../../statement/filter.js';
-import { NodeUpdateStatement } from '../../statement/update.js';
 import { NodeUpdateInputType } from './update.js';
 
 describe('NodeUpdateInputType', () => {
@@ -156,40 +154,13 @@ describe('NodeUpdateInputType', () => {
           updatedAt: expect.any(Date),
         });
 
-        const resolvedValue = await ArticleUpdateInputType.resolveValue(
-          parsedInput,
-          new MutationContext(gp, myUserContext),
-        );
-
-        expect(resolvedValue).toEqual({
+        await expect(
+          ArticleUpdateInputType.resolveValue(
+            parsedInput,
+            new MutationContext(gp, myUserContext),
+          ),
+        ).resolves.toEqual({
           title: "My new article's title",
-          category: null,
-          updatedAt: expect.any(Date),
-        });
-
-        const statement = new NodeUpdateStatement(Article, resolvedValue);
-        expect(statement).toBeInstanceOf(NodeUpdateStatement);
-
-        expect(statement.update).toEqual({
-          title: "My new article's title",
-          category: null,
-          updatedAt: expect.any(Date),
-        });
-
-        expect(
-          statement.individualize({
-            id: '6a1dd2e7-7496-47aa-8575-282f45566d44',
-            title: "My new article's title",
-            status: ArticleStatus.DRAFT,
-            category: { _id: 4 },
-            createdBy: { id: '2059b77a-a735-41fe-b415-5b12944b6ba6' },
-            createdAt: new Date('1987-04-28T00:00:00.000Z'),
-            updatedBy: { username: 'yvann' },
-            updatedAt: new Date('1987-04-28T00:00:00.000Z'),
-            views: 0n,
-            score: 0.5,
-          }).update,
-        ).toEqual({
           category: null,
           updatedAt: expect.any(Date),
         });

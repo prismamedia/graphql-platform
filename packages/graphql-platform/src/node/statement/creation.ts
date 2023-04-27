@@ -22,12 +22,22 @@ export type NodeCreationValue = Record<
 const proxyHandler: ProxyHandler<NodeCreationStatement> = {
   ownKeys: (statement) =>
     Array.from(statement.valuesByComponent.keys(), ({ name }) => name),
-  has: (statement, maybeComponentName) => {
-    const component = statement.node.componentsByName.get(
-      maybeComponentName as any,
-    );
+  has: (statement, componentName) => {
+    const component = statement.node.componentsByName.get(componentName as any);
 
     return component ? statement.valuesByComponent.has(component) : false;
+  },
+  get: (statement, componentName) =>
+    statement.getComponentValue(componentName as any),
+  set: (statement, componentName, componentValue) => {
+    statement.setComponentValue(componentName as any, componentValue);
+
+    return true;
+  },
+  deleteProperty: (statement, componentName) => {
+    const component = statement.node.componentsByName.get(componentName as any);
+
+    return component ? statement.valuesByComponent.delete(component) : false;
   },
   getOwnPropertyDescriptor: (statement, componentName) => {
     const component = statement.node.componentsByName.get(componentName as any);
@@ -43,102 +53,73 @@ const proxyHandler: ProxyHandler<NodeCreationStatement> = {
     return {
       configurable: true,
       enumerable: true,
+      writable: true,
       value,
     };
-  },
-  get: (statement, maybeComponentName) =>
-    statement.getComponentValue(maybeComponentName as any),
-  set: (statement, maybeComponentName, maybeComponentValue) => {
-    statement.setComponentValue(maybeComponentName as any, maybeComponentValue);
-
-    return true;
-  },
-  deleteProperty: (statement, maybeComponentName) => {
-    const component = statement.node.componentsByName.get(
-      maybeComponentName as any,
-    );
-
-    return component ? statement.valuesByComponent.delete(component) : false;
   },
 };
 
 export class NodeCreationStatement {
-  readonly #path: utils.Path = utils.addPath(undefined, this.constructor.name);
+  /**
+   * A convenient proxy to use this as a mutable plain-object
+   */
+  public readonly proxy: NodeCreationValue;
 
   public readonly valuesByComponent = new Map<
     Component,
     utils.NonOptional<ComponentCreationValue>
   >();
 
-  /**
-   * A convenient proxy to use this as a mutable-object
-   */
-  public readonly proxy: NodeCreationValue = new Proxy(
-    this,
-    proxyHandler,
-  ) as any;
-
   public constructor(
     public readonly node: Node,
     value?: Readonly<NodeCreationValue>,
   ) {
     value != null && this.setValue(value);
+
+    this.proxy = new Proxy(this, proxyHandler) as any;
   }
 
   public setComponentValue(
     componentOrName: Component | Component['name'],
     value?: ComponentCreationValue,
   ): void {
-    const component = this.node.ensureComponent(componentOrName, this.#path);
+    const component = this.node.ensureComponent(componentOrName);
 
     value === undefined
       ? this.valuesByComponent.delete(component)
-      : this.valuesByComponent.set(
-          component,
-          component.parseValue(
-            value,
-            utils.addPath(this.#path, component.name),
-          ),
-        );
+      : this.valuesByComponent.set(component, component.parseValue(value));
   }
 
   public setValue(value: Readonly<NodeCreationValue>): void {
     utils.assertPlainObject(value);
 
-    Object.entries(value).forEach(([componentName, componentValue]) =>
-      this.setComponentValue(componentName, componentValue),
-    );
+    for (const [componentName, componentValue] of Object.entries(value)) {
+      this.setComponentValue(componentName, componentValue);
+    }
   }
 
   public getComponentValue(
     componentOrName: Component | Component['name'],
   ): ComponentCreationValue {
-    const component = this.node.ensureComponent(componentOrName, this.#path);
-
-    return this.valuesByComponent.get(component);
+    return this.valuesByComponent.get(
+      this.node.ensureComponent(componentOrName),
+    );
   }
 
   public getLeafValue(leafOrName: Leaf | Leaf['name']): LeafCreationValue {
-    const leaf = this.node.ensureLeaf(leafOrName, this.#path);
-
-    return this.valuesByComponent.get(leaf) as any;
+    return this.valuesByComponent.get(this.node.ensureLeaf(leafOrName)) as any;
   }
 
   public getEdgeValue(edgeOrName: Edge | Edge['name']): EdgeCreationValue {
-    const edge = this.node.ensureEdge(edgeOrName, this.#path);
-
-    return this.valuesByComponent.get(edge) as any;
+    return this.valuesByComponent.get(this.node.ensureEdge(edgeOrName)) as any;
   }
 
   public get value(): NodeCreationValue {
-    return Object.assign(
-      Object.create(null),
-      Object.fromEntries(
-        Array.from(this.valuesByComponent, ([component, value]) => [
-          component.name,
-          value,
-        ]),
-      ),
+    return Object.fromEntries(
+      Array.from(this.valuesByComponent, ([component, value]) => [
+        component.name,
+        value,
+      ]),
     );
   }
 }

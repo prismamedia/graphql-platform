@@ -42,6 +42,11 @@ export interface PreUpdateArgs<
    * The update statement, as a mutable plain-object
    */
   readonly update: NodeUpdateValue;
+
+  /**
+   * The node's value as it would be if we apply the update: current + update = target
+   */
+  readonly target: NodeValue;
 }
 
 export interface PostUpdateArgs<
@@ -52,7 +57,7 @@ export interface PostUpdateArgs<
   /**
    * The uncommitted change
    */
-  readonly change: NodeUpdate<TRequestContext>;
+  readonly change: NodeUpdate<TRequestContext, TConnector, TContainer>;
 }
 
 /**
@@ -95,7 +100,5 @@ export abstract class AbstractUpdate<
   TArgs extends utils.Nillable<utils.PlainObject>,
   TResult,
 > extends AbstractMutation<TRequestContext, TArgs, TResult> {
-  public override readonly mutationTypes = [
-    utils.MutationType.UPDATE,
-  ] satisfies utils.MutationType[];
+  public override readonly mutationTypes = [utils.MutationType.UPDATE];
 }

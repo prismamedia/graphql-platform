@@ -1,6 +1,7 @@
 import * as utils from '@prismamedia/graphql-platform-utils';
 import type {
   Component,
+  ComponentValue,
   Edge,
   Leaf,
   LeafValue,
@@ -17,15 +18,25 @@ export type ComponentUpdateValue = LeafUpdateValue | EdgeUpdateValue;
 
 export type NodeUpdateValue = Record<Component['name'], ComponentUpdateValue>;
 
-const proxyHandler: ProxyHandler<NodeUpdateStatement> = {
+const updateProxyHandler: ProxyHandler<NodeUpdateStatement> = {
   ownKeys: (statement) =>
     Array.from(statement.updatesByComponent.keys(), ({ name }) => name),
-  has: (statement, maybeComponentName) => {
-    const component = statement.node.componentsByName.get(
-      maybeComponentName as any,
-    );
+  has: (statement, componentName) => {
+    const component = statement.node.componentsByName.get(componentName as any);
 
     return component ? statement.updatesByComponent.has(component) : false;
+  },
+  get: (statement, componentName) =>
+    statement.getComponentUpdate(componentName as any),
+  set: (statement, componentName, componentUpdate) => {
+    statement.setComponentUpdate(componentName as any, componentUpdate);
+
+    return true;
+  },
+  deleteProperty: (statement, componentName) => {
+    const component = statement.node.componentsByName.get(componentName as any);
+
+    return component ? statement.updatesByComponent.delete(component) : false;
   },
   getOwnPropertyDescriptor: (statement, componentName) => {
     const component = statement.node.componentsByName.get(componentName as any);
@@ -41,125 +52,167 @@ const proxyHandler: ProxyHandler<NodeUpdateStatement> = {
     return {
       configurable: true,
       enumerable: true,
+      writable: true,
       value,
     };
-  },
-  get: (statement, maybeComponentName) =>
-    statement.getComponentUpdate(maybeComponentName as any),
-  set: (statement, maybeComponentName, maybeComponentUpdate) => {
-    statement.setComponentUpdate(
-      maybeComponentName as any,
-      maybeComponentUpdate,
-    );
-
-    return true;
-  },
-  deleteProperty: (statement, maybeComponentName) => {
-    const component = statement.node.componentsByName.get(
-      maybeComponentName as any,
-    );
-
-    return component ? statement.updatesByComponent.delete(component) : false;
   },
 };
 
 export class NodeUpdateStatement {
-  readonly #path: utils.Path = utils.addPath(undefined, this.constructor.name);
-
-  readonly #currentValue?: Readonly<NodeValue>;
+  /**
+   * A convenient proxy to use this as a mutable plain-object
+   */
+  public readonly updateProxy: NodeUpdateValue;
 
   public readonly updatesByComponent = new Map<
     Component,
     utils.NonOptional<ComponentUpdateValue>
   >();
 
-  /**
-   * A convenient proxy to use this as a mutable-object
-   */
-  public readonly proxy: NodeUpdateValue = new Proxy(this, proxyHandler) as any;
-
   public constructor(
     public readonly node: Node,
     update?: Readonly<NodeUpdateValue>,
-    currentValue?: Readonly<NodeValue>,
+    protected readonly currentValue?: Readonly<NodeValue>,
   ) {
-    this.#currentValue = currentValue;
     update != null && this.setUpdate(update);
+
+    this.updateProxy = new Proxy(this, updateProxyHandler) as any;
   }
 
   public setComponentUpdate(
     componentOrName: Component | Component['name'],
     update?: ComponentUpdateValue,
   ): void {
-    const component = this.node.ensureComponent(componentOrName, this.#path);
+    const component = this.node.ensureComponent(componentOrName);
 
-    if (update !== undefined) {
-      const parsedUpdate = component.parseValue(
-        update,
-        utils.addPath(this.#path, component.name),
-      );
+    if (update === undefined) {
+      this.updatesByComponent.delete(component);
+    } else {
+      const value = component.parseValue(update);
 
       if (
-        !this.#currentValue ||
-        !component.areValuesEqual(
-          this.#currentValue[component.name] as any,
-          parsedUpdate as any,
+        this.currentValue &&
+        component.areValuesEqual(
+          this.currentValue[component.name] as any,
+          value as any,
         )
       ) {
-        this.updatesByComponent.set(component, parsedUpdate);
-      } else {
         this.updatesByComponent.delete(component);
+      } else {
+        this.updatesByComponent.set(component, value);
       }
-    } else {
-      this.updatesByComponent.delete(component);
     }
   }
 
-  public setUpdate(value: NodeUpdateValue): void {
+  public setUpdate(value: Readonly<NodeUpdateValue>): void {
     utils.assertPlainObject(value);
 
-    Object.entries(value).forEach(([componentName, componentValue]) =>
-      this.setComponentUpdate(componentName, componentValue),
-    );
+    for (const [componentName, componentValue] of Object.entries(value)) {
+      this.setComponentUpdate(componentName, componentValue);
+    }
   }
 
   public getComponentUpdate(
     componentOrName: Component | Component['name'],
   ): ComponentUpdateValue {
-    const component = this.node.ensureComponent(componentOrName, this.#path);
-
-    return this.updatesByComponent.get(component);
-  }
-
-  public getLeafUpdate(leafOrName: Leaf | Leaf['name']): LeafUpdateValue {
-    const leaf = this.node.ensureLeaf(leafOrName, this.#path);
-
-    return this.updatesByComponent.get(leaf) as any;
-  }
-
-  public getEdgeUpdate(edgeOrName: Edge | Edge['name']): EdgeUpdateValue {
-    const edge = this.node.ensureEdge(edgeOrName, this.#path);
-
-    return this.updatesByComponent.get(edge) as any;
-  }
-
-  public get update(): NodeUpdateValue {
-    return Object.assign(
-      Object.create(null),
-      Object.fromEntries(
-        Array.from(this.updatesByComponent, ([component, update]) => [
-          component.name,
-          update,
-        ]),
-      ),
+    return this.updatesByComponent.get(
+      this.node.ensureComponent(componentOrName),
     );
   }
 
-  public individualize(currentValue: NodeValue): NodeUpdateStatement {
-    return new NodeUpdateStatement(this.node, this.update, currentValue);
+  public getLeafUpdate(leafOrName: Leaf | Leaf['name']): LeafUpdateValue {
+    return this.updatesByComponent.get(this.node.ensureLeaf(leafOrName)) as any;
+  }
+
+  public getEdgeUpdate(edgeOrName: Edge | Edge['name']): EdgeUpdateValue {
+    return this.updatesByComponent.get(this.node.ensureEdge(edgeOrName)) as any;
+  }
+
+  public get update(): NodeUpdateValue {
+    return Object.fromEntries(
+      Array.from(this.updatesByComponent, ([component, update]) => [
+        component.name,
+        update,
+      ]),
+    );
   }
 
   public isEmpty(): boolean {
     return this.updatesByComponent.size === 0;
+  }
+
+  public individualize(
+    currentValue: Readonly<NodeValue>,
+  ): IndividualizedNodeUpdateStatement {
+    return new IndividualizedNodeUpdateStatement(
+      this.node,
+      this.update,
+      currentValue,
+    );
+  }
+}
+
+const updatedValueProxyHandler: ProxyHandler<IndividualizedNodeUpdateStatement> =
+  {
+    ownKeys: (statement) => Array.from(statement.node.componentsByName.keys()),
+    has: (statement, componentName) =>
+      statement.node.componentsByName.has(componentName as any),
+    get: (statement, componentName) =>
+      statement.getComponentTarget(componentName as any),
+    set: (statement, componentName, componentUpdate) => {
+      statement.setComponentUpdate(componentName as any, componentUpdate);
+
+      return true;
+    },
+    deleteProperty: (_statement, componentName) => {
+      throw new TypeError(`Cannot delete property "${String(componentName)}"`);
+    },
+    getOwnPropertyDescriptor: (statement, componentName) => {
+      const component = statement.node.componentsByName.get(
+        componentName as any,
+      );
+
+      return component
+        ? {
+            configurable: true,
+            enumerable: true,
+            writable: true,
+            value: statement.getComponentTarget(component),
+          }
+        : undefined;
+    },
+  };
+
+export class IndividualizedNodeUpdateStatement extends NodeUpdateStatement {
+  public readonly targetProxy: NodeValue;
+
+  public constructor(
+    node: Node,
+    update: Readonly<NodeUpdateValue> | undefined,
+    protected override readonly currentValue: Readonly<NodeValue>,
+  ) {
+    super(node, update, currentValue);
+
+    this.targetProxy = new Proxy(this, updatedValueProxyHandler) as any;
+  }
+
+  public getComponentTarget(
+    componentOrName: Component | Component['name'],
+  ): ComponentValue {
+    const component = this.node.ensureComponent(componentOrName);
+    const componentUpdate = this.updatesByComponent.get(component);
+
+    return componentUpdate === undefined
+      ? this.currentValue[component.name]
+      : componentUpdate;
+  }
+
+  public get target(): NodeValue {
+    return Object.fromEntries(
+      Array.from(this.node.componentsByName.values(), (component) => [
+        component.name,
+        this.getComponentTarget(component),
+      ]),
+    );
   }
 }

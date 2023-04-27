@@ -40,7 +40,7 @@ export interface PostCreateArgs<
   /**
    * The uncommitted change
    */
-  readonly change: NodeCreation<TRequestContext>;
+  readonly change: NodeCreation<TRequestContext, TConnector, TContainer>;
 }
 
 /**
@@ -83,7 +83,5 @@ export abstract class AbstractCreation<
   TArgs extends utils.Nillable<utils.PlainObject>,
   TResult,
 > extends AbstractMutation<TRequestContext, TArgs, TResult> {
-  public override readonly mutationTypes = [
-    utils.MutationType.CREATION,
-  ] satisfies utils.MutationType[];
+  public override readonly mutationTypes = [utils.MutationType.CREATION];
 }

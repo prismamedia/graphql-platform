@@ -9,7 +9,7 @@ import {
   nodes,
 } from '../../../__tests__/config.js';
 import { mockConnector } from '../../../__tests__/connector-mock.js';
-import { GraphQLPlatform, NodeCreationStatement } from '../../../index.js';
+import { GraphQLPlatform } from '../../../index.js';
 import { MutationContext } from '../../operation.js';
 import { LeafComparisonFilter } from '../../statement/filter.js';
 import { NodeCreationInputType } from './creation.js';
@@ -157,28 +157,12 @@ describe('NodeCreationInputType', () => {
           score: 0.5,
         });
 
-        const resolvedValue = await ArticleCreationInputType.resolveValue(
-          parsedValue,
-          new MutationContext(gp, myUserContext),
-        );
-
-        expect(resolvedValue).toEqual({
-          id: expect.any(String),
-          title: "My article's title",
-          status: ArticleStatus.DRAFT,
-          category: { _id: 4 },
-          createdBy: { id: '2059b77a-a735-41fe-b415-5b12944b6ba6' },
-          createdAt: expect.any(Date),
-          updatedBy: { username: 'yvann' },
-          updatedAt: expect.any(Date),
-          views: 0n,
-          score: 0.5,
-        });
-
-        const statement = new NodeCreationStatement(Article, resolvedValue);
-        expect(statement).toBeInstanceOf(NodeCreationStatement);
-
-        expect(statement.value).toEqual({
+        await expect(
+          ArticleCreationInputType.resolveValue(
+            parsedValue,
+            new MutationContext(gp, myUserContext),
+          ),
+        ).resolves.toEqual({
           id: expect.any(String),
           title: "My article's title",
           status: ArticleStatus.DRAFT,

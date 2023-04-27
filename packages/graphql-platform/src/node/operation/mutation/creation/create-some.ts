@@ -73,6 +73,9 @@ export class CreateSomeMutation<
     const preCreate = this.#config?.preCreate;
     const postCreate = this.#config?.postCreate;
 
+    // As the "data" will be provided to the hooks, we freeze it
+    Object.freeze(args.data);
+
     if (args.data.length === 0) {
       return [];
     }

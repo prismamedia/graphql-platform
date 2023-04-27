@@ -93,18 +93,16 @@ export class UpdateManyMutation<
     const preUpdate = this.#config?.preUpdate;
     const postUpdate = this.#config?.postUpdate;
 
-    if (Object.keys(data).length === 0) {
+    // As the "data" will be provided to the hooks, we freeze it
+    Object.freeze(data);
+
+    if (args.first === 0) {
+      return [];
+    } else if (Object.keys(data).length === 0) {
       // An "empty" update is just a "find"
       return this.node
         .getQueryByKey('find-many')
         .internal(authorization, args, context, path);
-    } else {
-      // As the "data" will be provided to the hooks, we freeze it
-      Object.freeze(data);
-    }
-
-    if (args.first === 0) {
-      return [];
     }
 
     const argsPath = utils.addPath(path, argsPathKey);
@@ -182,7 +180,8 @@ export class UpdateManyMutation<
                   data,
                   id: currentIds[index],
                   current: Object.freeze(this.node.parseValue(currentValue)),
-                  update: individualizedStatement.proxy,
+                  update: individualizedStatement.updateProxy,
+                  target: individualizedStatement.targetProxy,
                 });
               } catch (cause) {
                 throw new NodeLifecycleHookError(
