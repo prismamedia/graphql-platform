@@ -12,7 +12,6 @@ import { OnEdgeHeadDeletion } from '../../../definition/component/edge.js';
 import { AndOperation, NodeFilter } from '../../../statement/filter.js';
 import type { NodeSelectedValue } from '../../../statement/selection.js';
 import type { NodeFilterInputValue, OrderByInputValue } from '../../../type.js';
-import { createContextBoundAPI } from '../../api.js';
 import {
   ConnectorError,
   NodeLifecycleHookError,
@@ -78,7 +77,6 @@ export class DeleteManyMutation<
     context: MutationContext,
     path: utils.Path,
   ): Promise<DeleteManyMutationResult> {
-    const api = createContextBoundAPI(this.gp, context);
     const preDelete = this.#config?.preDelete;
     const postDelete = this.#config?.postDelete;
 
@@ -145,7 +143,7 @@ export class DeleteManyMutation<
               gp: this.gp,
               node: this.node,
               context,
-              api,
+              api: context.api,
               id: currentIds[index],
               current: Object.freeze(this.node.parseValue(currentValue)),
             });
@@ -245,7 +243,7 @@ export class DeleteManyMutation<
             gp: this.gp,
             node: this.node,
             context,
-            api,
+            api: context.api,
             change,
           });
         } catch (cause) {

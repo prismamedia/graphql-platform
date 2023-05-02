@@ -17,7 +17,6 @@ import {
 } from '../../../statement/update.js';
 import type { NodeFilterInputValue } from '../../../type/input/filter.js';
 import type { OrderByInputValue } from '../../../type/input/ordering.js';
-import { createContextBoundAPI } from '../../api.js';
 import {
   ConnectorError,
   NodeLifecycleHookError,
@@ -89,7 +88,6 @@ export class UpdateManyMutation<
     context: MutationContext,
     path: utils.Path,
   ): Promise<UpdateManyMutationResult> {
-    const api = createContextBoundAPI(this.gp, context);
     const preUpdate = this.#config?.preUpdate;
     const postUpdate = this.#config?.postUpdate;
 
@@ -176,7 +174,7 @@ export class UpdateManyMutation<
                   gp: this.gp,
                   node: this.node,
                   context,
-                  api,
+                  api: context.api,
                   data,
                   id: currentIds[index],
                   current: Object.freeze(this.node.parseValue(currentValue)),
@@ -292,7 +290,7 @@ export class UpdateManyMutation<
               gp: this.gp,
               node: this.node,
               context,
-              api,
+              api: context.api,
               data,
               change,
             });

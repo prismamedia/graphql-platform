@@ -37,7 +37,7 @@ export interface AbstractMutationHookArgs<
   /**
    * The context-bound API
    */
-  api: ContextBoundAPI<TRequestContext>;
+  api: ContextBoundAPI;
 }
 
 export interface AbstractMutationConfig<

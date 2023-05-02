@@ -60,7 +60,7 @@ export class OperationContext<
    * Returns a "context"-bound version of the API, so the developer only has to provide the operations' args
    */
   @Memoize()
-  public get api(): ContextBoundAPI<TRequestContext> {
+  public get api(): ContextBoundAPI {
     return createContextBoundAPI(this.gp, this);
   }
 }

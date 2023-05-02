@@ -11,7 +11,6 @@ import { NodeCreationStatement } from '../../../statement/creation.js';
 import type { NodeFilter } from '../../../statement/filter.js';
 import type { NodeSelectedValue } from '../../../statement/selection.js';
 import type { NodeCreationInputValue } from '../../../type/input/creation.js';
-import { createContextBoundAPI } from '../../api.js';
 import {
   ConnectorError,
   NodeLifecycleHookError,
@@ -69,7 +68,6 @@ export class CreateSomeMutation<
     context: MutationContext,
     path: utils.Path,
   ): Promise<CreateSomeMutationResult> {
-    const api = createContextBoundAPI(this.gp, context);
     const preCreate = this.#config?.preCreate;
     const postCreate = this.#config?.postCreate;
 
@@ -105,7 +103,7 @@ export class CreateSomeMutation<
             gp: this.gp,
             node: this.node,
             context,
-            api,
+            api: context.api,
             data,
             creation: statement.proxy,
           });
@@ -159,7 +157,7 @@ export class CreateSomeMutation<
             gp: this.gp,
             node: this.node,
             context,
-            api,
+            api: context.api,
             data,
             change,
           });

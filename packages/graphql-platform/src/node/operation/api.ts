@@ -47,15 +47,16 @@ export const createAPI = <TRequestContext extends object>(
     ]),
   ) as any;
 
-export type ContextBoundAPI<TRequestContext extends object> = Readonly<
+export type ContextBoundAPI = Readonly<
   Record<
     graphql.OperationTypeNode,
     Readonly<
       Record<
         OperationInterface['name'],
         (
-          args: Parameters<OperationInterface<TRequestContext>['execute']>[0],
-        ) => ReturnType<OperationInterface<TRequestContext>['execute']>
+          args: Parameters<OperationInterface['execute']>[0],
+          path?: Parameters<OperationInterface['execute']>[2],
+        ) => ReturnType<OperationInterface['execute']>
       >
     >
   >
@@ -64,7 +65,7 @@ export type ContextBoundAPI<TRequestContext extends object> = Readonly<
 export const createContextBoundAPI = <TRequestContext extends object>(
   gp: GraphQLPlatform<TRequestContext>,
   context: OperationContext<TRequestContext>,
-): ContextBoundAPI<TRequestContext> =>
+): ContextBoundAPI =>
   Object.fromEntries(
     utils.operationTypes.map((type) => [
       type,
@@ -72,9 +73,12 @@ export const createContextBoundAPI = <TRequestContext extends object>(
         get:
           (_, name: OperationInterface['name']) =>
           (
-            args: Parameters<OperationInterface<TRequestContext>['execute']>[0],
+            args: Parameters<OperationInterface['execute']>[0],
+            path?: Parameters<OperationInterface['execute']>[2],
           ) =>
-            gp.getOperationByTypeAndName(type, name).execute(args, context),
+            gp
+              .getOperationByTypeAndName(type, name)
+              .execute(args, context, path),
       }),
     ]),
   ) as any;
