@@ -1,6 +1,6 @@
 {
   "name": "@prismamedia/graphql-platform-scalars",
-  "version": "1.0.0-rc.17",
+  "version": "1.0.0-rc.18",
   "license": "MIT",
   "contributors": [
     "Yvann Boucher <yvann.boucher@gmail.com>"
@@ -23,7 +23,7 @@
   "scripts": {
     "compile": "tsc --build",
     "compile:watch": "yarn run compile --watch",
-    "test": "yarn node --no-warnings --experimental-vm-modules $(yarn bin jest)",
+    "test": "yarn node --no-warnings --experimental-vm-modules $(yarn bin jest) --detectOpenHandles",
     "test:watch": "yarn run test --watchAll"
   },
   "devDependencies": {

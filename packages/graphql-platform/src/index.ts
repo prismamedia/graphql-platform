@@ -132,8 +132,12 @@ export interface GraphQLPlatformConfig<
   /**
    * Optional, register some event-listeners, all at once
    */
-  on?: EventConfigByName<
-    EventDataByName<TRequestContext, TConnector, TContainer>
+  on?: utils.Thunkable<
+    EventConfigByName<EventDataByName<TRequestContext, TConnector, TContainer>>,
+    [
+      gp: GraphQLPlatform<TRequestContext, TConnector, TContainer>,
+      configPath: utils.Path,
+    ]
   >;
 }
 
@@ -174,7 +178,7 @@ export class GraphQLPlatform<
   ) {
     utils.assertPlainObject(config, configPath);
 
-    super(config.on);
+    super();
 
     // nodes
     {
@@ -285,8 +289,8 @@ export class GraphQLPlatform<
 
     // connector
     {
-      const connectorConfig = this.config.connector;
-      const connectorConfigPath = utils.addPath(this.configPath, 'connector');
+      const connectorConfig = config.connector;
+      const connectorConfigPath = utils.addPath(configPath, 'connector');
 
       this.#connector = utils.resolveThunkable(
         connectorConfig,
@@ -297,8 +301,8 @@ export class GraphQLPlatform<
 
     // container
     {
-      const containerConfig = this.config.container;
-      const containerConfigPath = utils.addPath(this.configPath, 'container');
+      const containerConfig = config.container;
+      const containerConfigPath = utils.addPath(configPath, 'container');
 
       const container = utils.resolveThunkable(
         containerConfig,
@@ -306,13 +310,35 @@ export class GraphQLPlatform<
         containerConfigPath,
       );
 
-      if (container != null && typeof container !== 'object') {
-        throw new utils.UnexpectedValueError('an object', container, {
-          path: containerConfigPath,
-        });
-      }
+      if (container != null) {
+        if (typeof container !== 'object') {
+          throw new utils.UnexpectedValueError('an object', container, {
+            path: containerConfigPath,
+          });
+        }
 
-      this.container = Object.freeze(container ?? ({} as TContainer));
+        this.container = Object.freeze(container);
+      } else {
+        this.container = Object.freeze({} as TContainer);
+      }
+    }
+
+    // on
+    {
+      const onConfig = config.on;
+      const onConfigPath = utils.addPath(configPath, 'on');
+
+      const on = utils.resolveThunkable(onConfig, this, onConfigPath);
+
+      if (on != null) {
+        if (typeof on !== 'object') {
+          throw new utils.UnexpectedValueError('an object', on, {
+            path: onConfigPath,
+          });
+        }
+
+        this.on(on);
+      }
     }
   }
 
