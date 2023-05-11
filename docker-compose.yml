@@ -21,6 +21,7 @@ services:
       MARIADB_HOST: mariadb
       MARIADB_PORT: 3306
       MARIADB_ROOT_PASSWORD: my_root_password_for_local
+
       TZ: Europe/Paris
     ports:
       - 3000:3000

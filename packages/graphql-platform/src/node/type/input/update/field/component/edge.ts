@@ -2,31 +2,43 @@ import * as scalars from '@prismamedia/graphql-platform-scalars';
 import * as utils from '@prismamedia/graphql-platform-utils';
 import inflection from 'inflection';
 import type { Except, RequireExactlyOne } from 'type-fest';
-import type { Edge } from '../../../../../definition/component/edge.js';
+import type { NodeValue } from '../../../../../../node.js';
+import type {
+  Edge,
+  ReferenceValue,
+} from '../../../../../definition/component/edge.js';
+import { UniqueConstraintValue } from '../../../../../definition/unique-constraint.js';
 import type { MutationContext } from '../../../../../operation/mutation/context.js';
 import type { EdgeUpdateValue } from '../../../../../statement/update.js';
 import type { NodeCreationInputValue } from '../../../creation.js';
 import type { NodeUniqueFilterInputValue } from '../../../unique-filter.js';
+import type { NodeUpdateInputValue } from '../../../update.js';
 import { AbstractComponentUpdateInput } from '../abstract-component.js';
 
 export enum EdgeUpdateInputAction {
+  DISCONNECT = 'disconnect',
+  DISCONNECT_IF_EXISTS = 'disconnectIfExists',
   CONNECT = 'connect',
   CONNECT_IF_EXISTS = 'connectIfExists',
-  CONNECT_OR_CREATE = 'connectOrCreate',
   CREATE = 'create',
-  DISCONNECT = 'disconnect',
+  CREATE_IF_NOT_EXISTS = 'createIfNotExists',
+  UPDATE = 'update',
+  UPDATE_IF_EXISTS = 'updateIfExists',
 }
 
 export type EdgeUpdateInputValue = utils.Nillable<
   RequireExactlyOne<{
+    [EdgeUpdateInputAction.DISCONNECT]: boolean;
+    [EdgeUpdateInputAction.DISCONNECT_IF_EXISTS]: boolean;
     [EdgeUpdateInputAction.CONNECT]: NonNullable<NodeUniqueFilterInputValue>;
     [EdgeUpdateInputAction.CONNECT_IF_EXISTS]: NonNullable<NodeUniqueFilterInputValue>;
-    [EdgeUpdateInputAction.CONNECT_OR_CREATE]: NonNullable<{
-      connect: NonNullable<NodeUniqueFilterInputValue>;
-      create: NonNullable<NodeCreationInputValue>;
-    }>;
     [EdgeUpdateInputAction.CREATE]: NonNullable<NodeCreationInputValue>;
-    [EdgeUpdateInputAction.DISCONNECT]: boolean;
+    [EdgeUpdateInputAction.CREATE_IF_NOT_EXISTS]: NonNullable<{
+      where: NonNullable<NodeUniqueFilterInputValue>;
+      data: NonNullable<NodeCreationInputValue>;
+    }>;
+    [EdgeUpdateInputAction.UPDATE]: NonNullable<NodeUpdateInputValue>;
+    [EdgeUpdateInputAction.UPDATE_IF_EXISTS]: NonNullable<NodeUpdateInputValue>;
   }>
 >;
 
@@ -46,97 +58,99 @@ export class EdgeUpdateInput extends AbstractComponentUpdateInput<EdgeUpdateInpu
     super(
       edge,
       {
-        type: utils.nonNullableInputTypeDecorator(
-          new utils.ObjectInputType({
-            name: [
-              edge.tail.name,
-              'Nested',
-              edge.pascalCasedName,
-              'Edge',
-              inflection.camelize(utils.MutationType.UPDATE),
-              'Input',
-            ].join(''),
-            fields: () => {
-              const fields: utils.Input[] = [
+        type: new utils.ObjectInputType({
+          name: [
+            edge.tail.name,
+            inflection.camelize(utils.MutationType.UPDATE),
+            edge.pascalCasedName,
+            'Input',
+          ].join(''),
+          fields: () => {
+            const fields: utils.Input[] = [
+              new utils.Input({
+                name: EdgeUpdateInputAction.CONNECT,
+                description: `Connect ${edge.head.indefinite} to an existing "${edge.tail}" through the "${edge}" edge, throw an error if it does not exist.`,
+                type: edge.head.uniqueFilterInputType,
+                nullable: false,
+              }),
+            ];
+
+            if (edge.isNullable()) {
+              fields.push(
                 new utils.Input({
-                  name: EdgeUpdateInputAction.CONNECT,
+                  name: EdgeUpdateInputAction.CONNECT_IF_EXISTS,
+                  description: `Connect ${edge.head.indefinite} to an existing "${edge.tail}" through the "${edge}" edge, if it exists.`,
                   type: edge.head.uniqueFilterInputType,
                   nullable: false,
                 }),
-              ];
+                new utils.Input({
+                  name: EdgeUpdateInputAction.DISCONNECT,
+                  type: scalars.typesByName.Boolean,
+                  nullable: false,
+                }),
+                new utils.Input({
+                  name: EdgeUpdateInputAction.DISCONNECT_IF_EXISTS,
+                  type: scalars.typesByName.Boolean,
+                  nullable: false,
+                }),
+              );
+            }
+
+            if (edge.head.isCreatable()) {
+              fields.push(
+                new utils.Input({
+                  name: EdgeUpdateInputAction.CREATE,
+                  description: `Create ${edge.head.indefinite} and connect it to an existing "${edge.tail}" through the "${edge}" edge.`,
+                  type: edge.head.creationInputType,
+                  nullable: false,
+                }),
+                new utils.Input({
+                  name: EdgeUpdateInputAction.CREATE_IF_NOT_EXISTS,
+                  description: `Create ${edge.head.indefinite} if it does not exist, and connect it to an existing "${edge.tail}" through the "${edge}" edge.`,
+                  type: new utils.ObjectInputType({
+                    name: [
+                      edge.tail.name,
+                      inflection.camelize(utils.MutationType.UPDATE),
+                      edge.pascalCasedName,
+                      inflection.camelize(
+                        EdgeUpdateInputAction.CREATE_IF_NOT_EXISTS,
+                      ),
+                      'Input',
+                    ].join(''),
+                    fields: () =>
+                      edge.head.getMutationByKey('create-one-if-not-exists')
+                        .arguments,
+                  }),
+                  nullable: false,
+                }),
+              );
+            }
+
+            if (edge.head.isUpdatable()) {
+              fields.push(
+                new utils.Input({
+                  name: EdgeUpdateInputAction.UPDATE,
+                  description: `Update the connected "${edge.head}", throw an error if the "${edge}" edge does not exist.`,
+                  type: edge.head.updateInputType,
+                  nullable: false,
+                }),
+              );
 
               if (edge.isNullable()) {
                 fields.push(
                   new utils.Input({
-                    name: EdgeUpdateInputAction.CONNECT_IF_EXISTS,
-                    type: edge.head.uniqueFilterInputType,
+                    name: EdgeUpdateInputAction.UPDATE_IF_EXISTS,
+                    description: `Update the connected "${edge.head}", if the "${edge}" edge exists.`,
+                    type: edge.head.updateInputType,
                     nullable: false,
                   }),
                 );
               }
+            }
 
-              if (edge.head.isMutationEnabled(utils.MutationType.CREATION)) {
-                fields.push(
-                  new utils.Input({
-                    name: EdgeUpdateInputAction.CONNECT_OR_CREATE,
-                    type: new utils.ObjectInputType({
-                      name: [
-                        edge.tail.name,
-                        'Nested',
-                        inflection.camelize(
-                          EdgeUpdateInputAction.CONNECT_OR_CREATE,
-                        ),
-                        edge.pascalCasedName,
-                        'Edge',
-                        inflection.camelize(utils.MutationType.UPDATE),
-                        'Input',
-                      ].join(''),
-                      fields: () => [
-                        new utils.Input({
-                          name: 'connect',
-                          type: utils.nonNillableInputType(
-                            edge.head.uniqueFilterInputType,
-                          ),
-                        }),
-                        new utils.Input({
-                          name: 'create',
-                          type: utils.nonNillableInputType(
-                            edge.head.creationInputType,
-                          ),
-                        }),
-                      ],
-                    }),
-                    nullable: false,
-                    public: edge.head.isMutationPublic(
-                      utils.MutationType.CREATION,
-                    ),
-                  }),
-                  new utils.Input({
-                    name: EdgeUpdateInputAction.CREATE,
-                    type: edge.head.creationInputType,
-                    nullable: false,
-                    public: edge.head.isMutationPublic(
-                      utils.MutationType.CREATION,
-                    ),
-                  }),
-                );
-              }
-
-              if (edge.isNullable()) {
-                fields.push(
-                  new utils.Input({
-                    name: EdgeUpdateInputAction.DISCONNECT,
-                    type: scalars.typesByName.Boolean,
-                    nullable: false,
-                  }),
-                );
-              }
-
-              return fields;
-            },
-          }),
-          !edge.isNullable(),
-        ),
+            return fields;
+          },
+        }),
         parser(inputValue, path) {
           if (Object.keys(inputValue).length !== 1) {
             throw new utils.UnexpectedValueError(
@@ -154,7 +168,8 @@ export class EdgeUpdateInput extends AbstractComponentUpdateInput<EdgeUpdateInpu
     );
   }
 
-  public async resolveValue(
+  public async resolveUpdate(
+    currentValues: ReadonlyArray<NodeValue>,
     inputValue: Readonly<NonNullable<EdgeUpdateInputValue>>,
     context: MutationContext,
     path: utils.Path,
@@ -165,46 +180,91 @@ export class EdgeUpdateInput extends AbstractComponentUpdateInput<EdgeUpdateInpu
     const actionPath = utils.addPath(path, actionName);
 
     switch (actionName) {
-      case EdgeUpdateInputAction.CONNECT: {
+      case EdgeUpdateInputAction.DISCONNECT:
+      case EdgeUpdateInputAction.DISCONNECT_IF_EXISTS: {
         const actionData = inputValue[actionName]!;
+
+        if (actionData === true) {
+          if (
+            actionName === EdgeUpdateInputAction.DISCONNECT &&
+            currentValues.some((currentValue) => !currentValue[this.edge.name])
+          ) {
+            throw new utils.GraphError(
+              `The "${this.edge.tail.plural}" is not connected to any "${this.edge.head.plural}"`,
+              { path: actionPath },
+            );
+          }
+
+          return null;
+        }
+
+        return undefined;
+      }
+
+      case EdgeUpdateInputAction.CONNECT: {
+        const where = inputValue[actionName]!;
 
         return this.edge.head
           .getQueryByKey('get-one')
-          .execute({ where: actionData, selection }, context, actionPath);
+          .execute({ where, selection }, context, actionPath);
       }
 
       case EdgeUpdateInputAction.CONNECT_IF_EXISTS: {
-        const actionData = inputValue[actionName]!;
+        const where = inputValue[actionName]!;
 
         return this.edge.head
           .getQueryByKey('get-one-if-exists')
-          .execute({ where: actionData, selection }, context, actionPath);
-      }
-
-      case EdgeUpdateInputAction.CONNECT_OR_CREATE: {
-        const { connect, create } = inputValue[actionName]!;
-
-        return this.edge.head
-          .getMutationByKey('create-one-if-not-exists')
-          .execute(
-            { where: connect, data: create, selection },
-            context,
-            actionPath,
-          );
+          .execute({ where, selection }, context, actionPath);
       }
 
       case EdgeUpdateInputAction.CREATE: {
-        const actionData = inputValue[actionName]!;
+        const data = inputValue[actionName]!;
 
         return this.edge.head
           .getMutationByKey('create-one')
-          .execute({ data: actionData, selection }, context, actionPath);
+          .execute({ data, selection }, context, actionPath);
       }
 
-      case EdgeUpdateInputAction.DISCONNECT: {
-        const actionData = inputValue[actionName]!;
+      case EdgeUpdateInputAction.CREATE_IF_NOT_EXISTS: {
+        const { where, data } = inputValue[actionName]!;
 
-        return actionData === true ? null : undefined;
+        return this.edge.head
+          .getMutationByKey('create-one-if-not-exists')
+          .execute({ where, data, selection }, context, actionPath);
+      }
+
+      case EdgeUpdateInputAction.UPDATE:
+      case EdgeUpdateInputAction.UPDATE_IF_EXISTS: {
+        const data = inputValue[actionName]!;
+
+        const references: UniqueConstraintValue[] = [];
+
+        for (const currentValue of currentValues) {
+          const reference: ReferenceValue = currentValue[this.edge.name];
+          if (reference) {
+            references.push(reference);
+          } else if (actionName === EdgeUpdateInputAction.UPDATE) {
+            throw new utils.GraphError(
+              `The "${this.edge.tail.plural}" is not connected to any "${this.edge.head.plural}"`,
+              { path: actionPath },
+            );
+          }
+        }
+
+        if (references.length) {
+          await this.edge.head.getMutationByKey('update-many').execute(
+            {
+              where: { OR: references },
+              first: references.length,
+              data,
+              selection,
+            },
+            context,
+            actionPath,
+          );
+        }
+
+        return undefined;
       }
 
       default:

@@ -146,7 +146,7 @@ export class Edge<
           }
 
           case OnEdgeHeadDeletion.CASCADE: {
-            if (!this.node.isMutationEnabled(utils.MutationType.DELETION)) {
+            if (!this.node.isDeletable()) {
               throw new utils.UnexpectedValueError(
                 `not to be "${
                   OnEdgeHeadDeletion[OnEdgeHeadDeletion.CASCADE]
@@ -286,10 +286,8 @@ export class Edge<
   }
 
   @Memoize()
-  public override get updateInput(): EdgeUpdateInput {
-    assert(this.isMutable(), `The "${this}" edge is immutable`);
-
-    return new EdgeUpdateInput(this);
+  public override get updateInput(): EdgeUpdateInput | undefined {
+    return this.isMutable() ? new EdgeUpdateInput(this) : undefined;
   }
 
   public parseValue(

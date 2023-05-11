@@ -99,9 +99,9 @@ export abstract class AbstractReverseEdge<
   @Memoize()
   public isMutable(): boolean {
     return (
+      this.head.isCreatable() ||
       this.originalEdge.isMutable() ||
-      this.head.isMutationEnabled(utils.MutationType.CREATION) ||
-      this.head.isMutationEnabled(utils.MutationType.DELETION)
+      this.head.isDeletable()
     );
   }
 

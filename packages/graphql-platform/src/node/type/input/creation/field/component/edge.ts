@@ -11,19 +11,19 @@ import { AbstractComponentCreationInput } from '../abstract-component.js';
 export enum EdgeCreationInputAction {
   CONNECT = 'connect',
   CONNECT_IF_EXISTS = 'connectIfExists',
-  CONNECT_OR_CREATE = 'connectOrCreate',
   CREATE = 'create',
+  CREATE_IF_NOT_EXISTS = 'createIfNotExists',
 }
 
 export type EdgeCreationInputValue = utils.Nillable<
   RequireExactlyOne<{
     [EdgeCreationInputAction.CONNECT]: NonNullable<NodeUniqueFilterInputValue>;
     [EdgeCreationInputAction.CONNECT_IF_EXISTS]: NonNullable<NodeUniqueFilterInputValue>;
-    [EdgeCreationInputAction.CONNECT_OR_CREATE]: NonNullable<{
-      connect: NonNullable<NodeUniqueFilterInputValue>;
-      create: NonNullable<NodeCreationInputValue>;
-    }>;
     [EdgeCreationInputAction.CREATE]: NonNullable<NodeCreationInputValue>;
+    [EdgeCreationInputAction.CREATE_IF_NOT_EXISTS]: NonNullable<{
+      where: NonNullable<NodeUniqueFilterInputValue>;
+      data: NonNullable<NodeCreationInputValue>;
+    }>;
   }>
 >;
 
@@ -46,17 +46,15 @@ export class EdgeCreationInput extends AbstractComponentCreationInput<EdgeCreati
         type: new utils.ObjectInputType({
           name: [
             edge.tail.name,
-            'Nested',
-            edge.pascalCasedName,
-            'Edge',
             inflection.camelize(utils.MutationType.CREATION),
+            edge.pascalCasedName,
             'Input',
           ].join(''),
           fields: () => {
             const fields: utils.Input[] = [
               new utils.Input({
                 name: EdgeCreationInputAction.CONNECT,
-                description: `Connect ${edge.head.indefinite} to this new "${edge.tail}" through the "${edge}" edge, throw an error if it does not exist.`,
+                description: `Connect ${edge.head.indefinite} to a new "${edge.tail}" through the "${edge}" edge, throw an error if it does not exist.`,
                 type: edge.head.uniqueFilterInputType,
                 nullable: false,
               }),
@@ -66,58 +64,39 @@ export class EdgeCreationInput extends AbstractComponentCreationInput<EdgeCreati
               fields.push(
                 new utils.Input({
                   name: EdgeCreationInputAction.CONNECT_IF_EXISTS,
-                  description: `Connect ${edge.head.indefinite} to this new "${edge.tail}" through the "${edge}" edge, if it exists.`,
+                  description: `Connect ${edge.head.indefinite} to a new "${edge.tail}" through the "${edge}" edge, if it exists.`,
                   type: edge.head.uniqueFilterInputType,
                   nullable: false,
                 }),
               );
             }
 
-            if (edge.head.isMutationEnabled(utils.MutationType.CREATION)) {
+            if (edge.head.isCreatable()) {
               fields.push(
                 new utils.Input({
                   name: EdgeCreationInputAction.CREATE,
-                  description: `Create ${edge.head.indefinite} and connect it to this new "${edge.tail}" through the "${edge}" edge.`,
+                  description: `Create ${edge.head.indefinite} and connect it to a new "${edge.tail}" through the "${edge}" edge.`,
                   type: edge.head.creationInputType,
                   nullable: false,
-                  public: edge.head.isMutationPublic(
-                    utils.MutationType.CREATION,
-                  ),
                 }),
                 new utils.Input({
-                  name: EdgeCreationInputAction.CONNECT_OR_CREATE,
-                  description: `Create ${edge.head.indefinite} if it does not exist, and connect it to this new "${edge.tail}" through the "${edge}" edge.`,
+                  name: EdgeCreationInputAction.CREATE_IF_NOT_EXISTS,
+                  description: `Create ${edge.head.indefinite} if it does not exist, and connect it to a new "${edge.tail}" through the "${edge}" edge.`,
                   type: new utils.ObjectInputType({
                     name: [
                       edge.tail.name,
-                      'Nested',
-                      inflection.camelize(
-                        EdgeCreationInputAction.CONNECT_OR_CREATE,
-                      ),
-                      edge.pascalCasedName,
-                      'Edge',
                       inflection.camelize(utils.MutationType.CREATION),
+                      edge.pascalCasedName,
+                      inflection.camelize(
+                        EdgeCreationInputAction.CREATE_IF_NOT_EXISTS,
+                      ),
                       'Input',
                     ].join(''),
-                    fields: () => [
-                      new utils.Input({
-                        name: 'connect',
-                        type: utils.nonNillableInputType(
-                          edge.head.uniqueFilterInputType,
-                        ),
-                      }),
-                      new utils.Input({
-                        name: 'create',
-                        type: utils.nonNillableInputType(
-                          edge.head.creationInputType,
-                        ),
-                      }),
-                    ],
+                    fields: () =>
+                      edge.head.getMutationByKey('create-one-if-not-exists')
+                        .arguments,
                   }),
                   nullable: false,
-                  public: edge.head.isMutationPublic(
-                    utils.MutationType.CREATION,
-                  ),
                 }),
               );
             }
@@ -157,39 +136,35 @@ export class EdgeCreationInput extends AbstractComponentCreationInput<EdgeCreati
 
     switch (actionName) {
       case EdgeCreationInputAction.CONNECT: {
-        const actionData = inputValue[actionName]!;
+        const where = inputValue[actionName]!;
 
         return this.edge.head
           .getQueryByKey('get-one')
-          .execute({ where: actionData, selection }, context, actionPath);
+          .execute({ where, selection }, context, actionPath);
       }
 
       case EdgeCreationInputAction.CONNECT_IF_EXISTS: {
-        const actionData = inputValue[actionName]!;
+        const where = inputValue[actionName]!;
 
         return this.edge.head
           .getQueryByKey('get-one-if-exists')
-          .execute({ where: actionData, selection }, context, actionPath);
-      }
-
-      case EdgeCreationInputAction.CONNECT_OR_CREATE: {
-        const { connect, create } = inputValue[actionName]!;
-
-        return this.edge.head
-          .getMutationByKey('create-one-if-not-exists')
-          .execute(
-            { where: connect, data: create, selection },
-            context,
-            actionPath,
-          );
+          .execute({ where, selection }, context, actionPath);
       }
 
       case EdgeCreationInputAction.CREATE: {
-        const actionData = inputValue[actionName]!;
+        const data = inputValue[actionName]!;
 
         return this.edge.head
           .getMutationByKey('create-one')
-          .execute({ data: actionData, selection }, context, actionPath);
+          .execute({ data, selection }, context, actionPath);
+      }
+
+      case EdgeCreationInputAction.CREATE_IF_NOT_EXISTS: {
+        const { where, data } = inputValue[actionName]!;
+
+        return this.edge.head
+          .getMutationByKey('create-one-if-not-exists')
+          .execute({ where, data, selection }, context, actionPath);
       }
 
       default:

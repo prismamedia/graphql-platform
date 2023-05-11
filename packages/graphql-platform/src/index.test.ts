@@ -49,6 +49,7 @@ describe('GraphQL-Platform', () => {
     it(`has nodes' definition`, () => {
       expect(Array.from(gp.nodesByName.keys())).toEqual([
         'Article',
+        'ArticleExtension',
         'Category',
         'Tag',
         'ArticleTag',
@@ -66,8 +67,8 @@ describe('GraphQL-Platform', () => {
         publicCount: number,
       ]
     >([
-      [graphql.OperationTypeNode.QUERY, 56, 49],
-      [graphql.OperationTypeNode.MUTATION, 69, 60],
+      [graphql.OperationTypeNode.QUERY, 63, 56],
+      [graphql.OperationTypeNode.MUTATION, 83, 70],
       [graphql.OperationTypeNode.SUBSCRIPTION, 0, 0],
     ])(
       `generates %s: %d enabled / %d public`,

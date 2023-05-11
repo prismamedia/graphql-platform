@@ -14,6 +14,26 @@ input ArticleUniqueFilterInput {
 }"
 `;
 
+exports[`NodeUniqueFilterInputType Definition Article has a unique filter input type: ArticleUniqueFilterWithoutCategoryInput 1`] = `
+""""
+Given a "category", identifies exactly one "Article" with one of the following combination of components' value:
+- (category) / slug
+"""
+input ArticleUniqueFilterWithoutCategoryInput {
+  slug: NonEmptyTrimmedString!
+}"
+`;
+
+exports[`NodeUniqueFilterInputType Definition ArticleExtension has a unique filter input type: ArticleExtensionUniqueFilterInput 1`] = `
+""""
+Identifies exactly one "ArticleExtension" with one of the following combination of components' value:
+- article
+"""
+input ArticleExtensionUniqueFilterInput {
+  article: ArticleUniqueFilterInput!
+}"
+`;
+
 exports[`NodeUniqueFilterInputType Definition ArticleTag has a unique filter input type: ArticleTagUniqueFilterInput 1`] = `
 """"
 Identifies exactly one "ArticleTag" with one of the following combination of components' value:
@@ -24,6 +44,28 @@ input ArticleTagUniqueFilterInput {
   article: ArticleUniqueFilterInput!
   tag: TagUniqueFilterInput
   order: UnsignedInt
+}"
+`;
+
+exports[`NodeUniqueFilterInputType Definition ArticleTag has a unique filter input type: ArticleTagUniqueFilterWithoutArticleInput 1`] = `
+""""
+Given an "article", identifies exactly one "ArticleTag" with one of the following combination of components' value:
+- (article) / tag
+- (article) / order
+"""
+input ArticleTagUniqueFilterWithoutArticleInput {
+  tag: TagUniqueFilterInput
+  order: UnsignedInt
+}"
+`;
+
+exports[`NodeUniqueFilterInputType Definition ArticleTag has a unique filter input type: ArticleTagUniqueFilterWithoutTagInput 1`] = `
+""""
+Given a "tag", identifies exactly one "ArticleTag" with one of the following combination of components' value:
+- article / (tag)
+"""
+input ArticleTagUniqueFilterWithoutTagInput {
+  article: ArticleUniqueFilterInput!
 }"
 `;
 
@@ -38,6 +80,26 @@ input ArticleTagModerationUniqueFilterInput {
 }"
 `;
 
+exports[`NodeUniqueFilterInputType Definition ArticleTagModeration has a unique filter input type: ArticleTagModerationUniqueFilterWithoutArticletagInput 1`] = `
+""""
+Given an "articleTag", identifies exactly one "ArticleTagModeration" with one of the following combination of components' value:
+- (articleTag) / moderator
+"""
+input ArticleTagModerationUniqueFilterWithoutArticletagInput {
+  moderator: UserUniqueFilterInput!
+}"
+`;
+
+exports[`NodeUniqueFilterInputType Definition ArticleTagModeration has a unique filter input type: ArticleTagModerationUniqueFilterWithoutModeratorInput 1`] = `
+""""
+Given a "moderator", identifies exactly one "ArticleTagModeration" with one of the following combination of components' value:
+- articleTag / (moderator)
+"""
+input ArticleTagModerationUniqueFilterWithoutModeratorInput {
+  articleTag: ArticleTagUniqueFilterInput!
+}"
+`;
+
 exports[`NodeUniqueFilterInputType Definition Category has a unique filter input type: CategoryUniqueFilterInput 1`] = `
 """"
 Identifies exactly one "Category" with one of the following combination of components' value:
@@ -48,6 +110,18 @@ Identifies exactly one "Category" with one of the following combination of compo
 input CategoryUniqueFilterInput {
   id: UUIDv4
   parent: CategoryUniqueFilterInput
+  slug: NonEmptyTrimmedString
+  order: UnsignedInt
+}"
+`;
+
+exports[`NodeUniqueFilterInputType Definition Category has a unique filter input type: CategoryUniqueFilterWithoutParentInput 1`] = `
+""""
+Given a "parent", identifies exactly one "Category" with one of the following combination of components' value:
+- (parent) / slug
+- (parent) / order
+"""
+input CategoryUniqueFilterWithoutParentInput {
   slug: NonEmptyTrimmedString
   order: UnsignedInt
 }"

@@ -236,6 +236,7 @@ export class Input<TValue = any> {
     if (this.#isPublic !== undefined) {
       return this.#isPublic ?? false;
     } else {
+      // We mark it as "null" to go through the circular dependencies (the test above will return "false")
       this.#isPublic = null;
     }
 
@@ -252,7 +253,7 @@ export class Input<TValue = any> {
 
     if (this.#isPublic && !isTypePublic) {
       throw new UnexpectedValueError(
-        `not to be true as "${this.type}" is private`,
+        `not to be "true" as "${this.type}" is private`,
         publicConfig,
         { path: publicConfigPath },
       );
@@ -300,6 +301,7 @@ export class Input<TValue = any> {
     if (this.#isValid !== undefined) {
       return;
     } else {
+      // We mark it as "null" to go through the circular dependencies
       this.#isValid = null;
     }
 

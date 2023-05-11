@@ -35,7 +35,7 @@ export class LeafSelection implements SelectionExpressionInterface<LeafValue> {
     return this.isAkinTo(expression);
   }
 
-  public includes(expression: unknown): boolean {
+  public isSupersetOf(expression: unknown): boolean {
     return this.isAkinTo(expression);
   }
 

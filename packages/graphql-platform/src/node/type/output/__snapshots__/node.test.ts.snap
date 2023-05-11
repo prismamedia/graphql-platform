@@ -34,12 +34,22 @@ type Article implements PublicNodeInterface {
   Number of "tags"
   """
   tagCount(where: ArticleTagFilterInput): UnsignedInt!
+  extension: ArticleExtension
 
   """A custom field with a dependency"""
   lowerCasedTitle: NonEmptyTrimmedString!
 
   """A custom field with a dependency"""
   upperCasedTitle: NonEmptyTrimmedString!
+}"
+`;
+
+exports[`NodeOutputType Definition ArticleExtension has an output type 1`] = `
+"type ArticleExtension {
+  article: Article!
+
+  """The source of the article"""
+  source: NonEmptyTrimmedString
 }"
 `;
 

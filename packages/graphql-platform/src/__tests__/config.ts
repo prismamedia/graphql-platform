@@ -276,6 +276,9 @@ export const Article = {
     tags: {
       originalEdge: 'ArticleTag.article',
     },
+    extension: {
+      originalEdge: 'ArticleExtension.article',
+    },
   },
 
   mutation: {
@@ -449,6 +452,25 @@ export const Article = {
     //   );
     // }
   },
+} satisfies NodeConfig<MyContext>;
+
+export const ArticleExtension = {
+  components: {
+    article: {
+      kind: 'Edge',
+      head: 'Article',
+      nullable: false,
+      mutable: false,
+      onHeadDeletion: OnEdgeHeadDeletion.CASCADE,
+    },
+    source: {
+      description: `The source of the article`,
+      kind: 'Leaf',
+      type: 'NonEmptyTrimmedString',
+    },
+  },
+
+  uniques: [['article']],
 } satisfies NodeConfig<MyContext>;
 
 export const Category = {
@@ -826,7 +848,7 @@ export const User = {
 
   mutation: {
     creation: { public: false },
-    update: false,
+    update: { public: false },
     deletion: { public: false },
   },
 
@@ -918,6 +940,7 @@ export const Log = {
 
 export const nodes = {
   Article,
+  ArticleExtension,
   Category,
   Tag,
   ArticleTag,

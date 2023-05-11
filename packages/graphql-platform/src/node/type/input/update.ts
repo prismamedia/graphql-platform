@@ -5,6 +5,10 @@ import assert from 'node:assert/strict';
 import type { Except } from 'type-fest';
 import type { Edge, Node, NodeValue } from '../../../node.js';
 import type { MutationContext } from '../../operation.js';
+import {
+  isReverseEdgeSelection,
+  type NodeSelection,
+} from '../../statement/selection.js';
 import type { NodeUpdateValue } from '../../statement/update.js';
 import {
   ComponentUpdateInput,
@@ -18,45 +22,55 @@ export * from './update/field.js';
 export type NodeUpdateInputValue = utils.Nillable<utils.PlainObject>;
 
 export class NodeUpdateInputType extends utils.ObjectInputType<FieldUpdateInput> {
-  public constructor(
-    public readonly node: Node,
-    public readonly forcedEdge?: Edge,
-  ) {
-    if (forcedEdge) {
-      assert.equal(forcedEdge.tail, node);
-      assert(forcedEdge.isMutable());
-    }
+  readonly #excludedEdge?: Edge;
+
+  public constructor(public readonly node: Node, excludedEdge?: Edge) {
+    assert(
+      node.isUpdatable(excludedEdge),
+      `The "${node}" node is not updatable`,
+    );
 
     super({
-      name: forcedEdge
-        ? `${node}UpdateWithout${inflection.capitalize(forcedEdge.name)}Input`
-        : `${node}UpdateInput`,
+      name: [
+        node.name,
+        inflection.camelize(utils.MutationType.UPDATE),
+        excludedEdge
+          ? `Without${inflection.capitalize(excludedEdge.name)}`
+          : undefined,
+        'Input',
+      ]
+        .filter(Boolean)
+        .join(''),
       description: `The "${node}" node's ${utils.MutationType.UPDATE}`,
     });
+
+    this.#excludedEdge = excludedEdge;
   }
 
   @Memoize()
   protected get componentFields(): ReadonlyArray<ComponentUpdateInput> {
     return Array.from(this.node.componentsByName.values()).reduce<
       ComponentUpdateInput[]
-    >(
-      (fields, component) =>
-        component.isMutable() && component !== this.forcedEdge
-          ? [...fields, component.updateInput]
-          : fields,
-      [],
-    );
+    >((fields, component) => {
+      if (component !== this.#excludedEdge && component.updateInput) {
+        fields.push(component.updateInput);
+      }
+
+      return fields;
+    }, []);
   }
 
   @Memoize()
   protected get reverseEdgeFields(): ReadonlyArray<ReverseEdgeUpdateInput> {
     return Array.from(this.node.reverseEdgesByName.values()).reduce<
       ReverseEdgeUpdateInput[]
-    >(
-      (fields, reverseEdge) =>
-        reverseEdge.updateInput ? [...fields, reverseEdge.updateInput] : fields,
-      [],
-    );
+    >((fields, reverseEdge) => {
+      if (reverseEdge.updateInput) {
+        fields.push(reverseEdge.updateInput);
+      }
+
+      return fields;
+    }, []);
   }
 
   @Memoize()
@@ -120,45 +134,57 @@ export class NodeUpdateInputType extends utils.ObjectInputType<FieldUpdateInput>
   @Memoize()
   public override isPublic(): boolean {
     return (
-      this.node.isMutationPublic(utils.MutationType.UPDATE) &&
-      super.isPublic() &&
-      this.componentFields.some((field) => field.isPublic())
+      super.isPublic() && this.componentFields.some((field) => field.isPublic())
     );
   }
 
-  public async resolveValue(
+  public async resolveUpdate(
+    currentValues: ReadonlyArray<NodeValue>,
     data: Readonly<NonNullable<NodeUpdateInputValue>>,
     context: MutationContext,
     path?: utils.Path,
   ): Promise<NodeUpdateValue> {
-    const resolvedValue: NodeUpdateValue = Object.create(null);
+    const resolvedUpdate: NodeUpdateValue = Object.create(null);
 
     await Promise.all(
       this.componentFields.map(async (field) => {
         const fieldData = data[field.name];
-
-        resolvedValue[field.name] =
+        const componentUpdate =
           fieldData == null || field instanceof LeafUpdateInput
             ? fieldData
-            : await field.resolveValue(
+            : await field.resolveUpdate(
+                currentValues,
                 fieldData,
                 context,
                 utils.addPath(path, field.name),
               );
+
+        if (componentUpdate !== undefined) {
+          Object.assign(resolvedUpdate, { [field.name]: componentUpdate });
+        }
       }),
     );
 
-    return resolvedValue;
+    return resolvedUpdate;
   }
 
-  public hasReverseEdgeActions(
+  public hasActionOnSelectedReverseEdge(
     data: Readonly<NonNullable<NodeUpdateInputValue>>,
+    selection: NodeSelection,
   ): boolean {
-    return this.reverseEdgeFields.some((field) => data[field.name] != null);
+    return this.reverseEdgeFields.some(
+      (field) =>
+        data[field.name] != null &&
+        selection.expressions.some(
+          (expression) =>
+            isReverseEdgeSelection(expression) &&
+            expression.reverseEdge === field.reverseEdge,
+        ),
+    );
   }
 
   public async applyReverseEdgeActions(
-    nodeValue: NodeValue,
+    nodeValues: ReadonlyArray<NodeValue>,
     data: Readonly<NonNullable<NodeUpdateInputValue>>,
     context: MutationContext,
     path?: utils.Path,
@@ -169,7 +195,7 @@ export class NodeUpdateInputType extends utils.ObjectInputType<FieldUpdateInput>
 
         if (fieldData != null) {
           await field.applyActions(
-            nodeValue,
+            nodeValues,
             fieldData,
             context,
             utils.addPath(path, field.name),

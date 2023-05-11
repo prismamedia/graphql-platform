@@ -28,6 +28,7 @@ export class ObjectInputType<
 > extends AbstractNamedInputType<PlainObject> {
   readonly #fieldsConfig: ObjectInputTypeConfig<TField>['fields'];
   readonly #fieldsConfigPath: Path;
+
   #isPublic?: null | boolean;
   #isValid?: null | true;
 
@@ -87,6 +88,7 @@ export class ObjectInputType<
     if (this.#isPublic !== undefined) {
       return this.#isPublic ?? false;
     } else {
+      // We mark it as "null" to go through the circular dependencies (the test above will return "false")
       this.#isPublic = null;
     }
 
@@ -128,6 +130,7 @@ export class ObjectInputType<
     if (this.#isValid !== undefined) {
       return;
     } else {
+      // We mark it as "null" to go through the circular dependencies
       this.#isValid = null;
     }
 

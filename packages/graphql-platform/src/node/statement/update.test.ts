@@ -4,7 +4,7 @@ import {
   createMyGP,
   type MyGP,
 } from '../../__tests__/config.js';
-import { IndividualizedNodeUpdateStatement } from './update.js';
+import { NodeUpdateStatement } from './update.js';
 
 describe('Update', () => {
   let gp: MyGP;
@@ -52,11 +52,7 @@ describe('Update', () => {
     ],
   ])('works', (nodeName, current, update, actual, updated) => {
     const node = gp.getNodeByName(nodeName);
-    const statement = new IndividualizedNodeUpdateStatement(
-      node,
-      update,
-      current,
-    );
+    const statement = new NodeUpdateStatement(node, current, update);
 
     expect(statement.update).toEqual(actual);
     expect({ ...statement.updateProxy }).toEqual(actual);

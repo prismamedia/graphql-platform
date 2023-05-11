@@ -43,6 +43,16 @@ DEFAULT CHARSET = 'utf8mb4'
 DEFAULT COLLATE = 'utf8mb4_unicode_520_ci'
 COMMENT 'The article is the main resource, written by the journalists'
 
+CREATE TABLE \`tests_connector_mariadb\`.\`article_extensions\` (
+  \`article_private_id\` INT UNSIGNED NOT NULL,
+  \`source\` VARCHAR(255) CHARSET 'utf8mb4' COLLATE 'utf8mb4_unicode_520_ci' NULL COMMENT 'The source of the article',
+  PRIMARY KEY (\`article_private_id\`),
+  FOREIGN KEY \`fk_article_extensions_article_private_id\` (\`article_private_id\`) REFERENCES \`articles\` (\`private_id\`) ON UPDATE RESTRICT ON DELETE RESTRICT
+)
+ENGINE = 'InnoDB'
+DEFAULT CHARSET = 'utf8mb4'
+DEFAULT COLLATE = 'utf8mb4_unicode_520_ci'
+
 CREATE TABLE \`tests_connector_mariadb\`.\`categories\` (
   \`private_id\` INT UNSIGNED AUTO_INCREMENT NOT NULL,
   \`id\` CHAR(36) CHARSET 'utf8mb4' COLLATE 'utf8mb4_unicode_520_ci' NOT NULL,
@@ -141,6 +151,9 @@ exports[`GraphQL-Platform Connector MariaDB generates valid and stable schema 4`
   ADD FOREIGN KEY \`fk_articles_category_private_id\` (\`category_private_id\`) REFERENCES \`categories\` (\`private_id\`) ON UPDATE RESTRICT ON DELETE RESTRICT,
   ADD FOREIGN KEY \`fk_articles_created_by_id\` (\`created_by_id\`) REFERENCES \`users\` (\`id\`) ON UPDATE RESTRICT ON DELETE RESTRICT,
   ADD FOREIGN KEY \`fk_articles_updated_by_username\` (\`updated_by_username\`) REFERENCES \`users\` (\`username\`) ON UPDATE RESTRICT ON DELETE RESTRICT
+
+ALTER TABLE \`tests_connector_mariadb\`.\`article_extensions\`
+  ADD FOREIGN KEY \`fk_article_extensions_article_private_id\` (\`article_private_id\`) REFERENCES \`articles\` (\`private_id\`) ON UPDATE RESTRICT ON DELETE RESTRICT
 
 ALTER TABLE \`tests_connector_mariadb\`.\`categories\`
   ADD FOREIGN KEY \`fk_categories_parent_private_id\` (\`parent_private_id\`) REFERENCES \`categories\` (\`private_id\`) ON UPDATE RESTRICT ON DELETE RESTRICT

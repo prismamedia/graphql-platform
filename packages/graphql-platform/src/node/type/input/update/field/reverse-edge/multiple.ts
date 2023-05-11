@@ -2,6 +2,7 @@ import * as scalars from '@prismamedia/graphql-platform-scalars';
 import * as utils from '@prismamedia/graphql-platform-utils';
 import inflection from 'inflection';
 import _ from 'lodash';
+import assert from 'node:assert/strict';
 import type { IterableElement } from 'type-fest';
 import type { NodeValue } from '../../../../../../node.js';
 import type { MultipleReverseEdge } from '../../../../../definition/reverse-edge/multiple.js';
@@ -19,17 +20,14 @@ export enum MultipleReverseEdgeUpdateInputAction {
   DELETE_MANY = 'deleteMany',
   DELETE_SOME = 'delete',
   DELETE_SOME_IF_EXISTS = 'deleteIfExists',
-  DISCONNECT_ALL = 'disconnectAll',
-  DISCONNECT_MANY = 'disconnectMany',
-  DISCONNECT_SOME = 'disconnect',
-  DISCONNECT_SOME_IF_EXISTS = 'disconnectIfExists',
 
   // Non-destructive actions
-  CONNECT_MANY = 'connectMany',
-  CONNECT_OR_CREATE_SOME = 'connectOrCreate',
-  CONNECT_SOME = 'connect',
-  CONNECT_SOME_IF_EXISTS = 'connectIfExists',
   CREATE_SOME = 'create',
+  CREATE_SOME_IF_NOT_EXISTS = 'createIfNotExists',
+  UPDATE_ALL = 'updateAll',
+  UPDATE_MANY = 'updateMany',
+  UPDATE_SOME = 'update',
+  UPDATE_SOME_IF_EXISTS = 'updateIfExists',
   UPSERT_SOME = 'upsert',
 }
 
@@ -38,22 +36,34 @@ export type MultipleReverseEdgeUpdateInputValue = utils.Optional<
     // Destructive actions
     [MultipleReverseEdgeUpdateInputAction.DELETE_ALL]: boolean;
     [MultipleReverseEdgeUpdateInputAction.DELETE_MANY]: NonNullable<NodeFilterInputValue>;
-    [MultipleReverseEdgeUpdateInputAction.DELETE_SOME]: NonNullable<NodeUniqueFilterInputValue>[];
-    [MultipleReverseEdgeUpdateInputAction.DELETE_SOME_IF_EXISTS]: NonNullable<NodeUniqueFilterInputValue>[];
-    [MultipleReverseEdgeUpdateInputAction.DISCONNECT_ALL]: boolean;
-    [MultipleReverseEdgeUpdateInputAction.DISCONNECT_MANY]: NonNullable<NodeFilterInputValue>;
-    [MultipleReverseEdgeUpdateInputAction.DISCONNECT_SOME]: NonNullable<NodeUniqueFilterInputValue>[];
-    [MultipleReverseEdgeUpdateInputAction.DISCONNECT_SOME_IF_EXISTS]: NonNullable<NodeUniqueFilterInputValue>[];
+    [MultipleReverseEdgeUpdateInputAction.DELETE_SOME]: ReadonlyArray<
+      NonNullable<NodeUniqueFilterInputValue>
+    >;
+    [MultipleReverseEdgeUpdateInputAction.DELETE_SOME_IF_EXISTS]: ReadonlyArray<
+      NonNullable<NodeUniqueFilterInputValue>
+    >;
 
     // Non-destructive actions
-    [MultipleReverseEdgeUpdateInputAction.CONNECT_MANY]: NonNullable<NodeFilterInputValue>;
-    [MultipleReverseEdgeUpdateInputAction.CONNECT_OR_CREATE_SOME]: NonNullable<{
-      connect: NonNullable<NodeUniqueFilterInputValue>;
-      create: NonNullable<NodeCreationInputValue>;
+    [MultipleReverseEdgeUpdateInputAction.CREATE_SOME]: ReadonlyArray<
+      NonNullable<NodeCreationInputValue>
+    >;
+    [MultipleReverseEdgeUpdateInputAction.CREATE_SOME_IF_NOT_EXISTS]: ReadonlyArray<{
+      where: NonNullable<NodeUniqueFilterInputValue>;
+      data: NonNullable<NodeCreationInputValue>;
+    }>;
+    [MultipleReverseEdgeUpdateInputAction.UPDATE_ALL]: NonNullable<NodeUpdateInputValue>;
+    [MultipleReverseEdgeUpdateInputAction.UPDATE_MANY]: NonNullable<{
+      where?: NodeFilterInputValue;
+      data?: NodeUpdateInputValue;
+    }>;
+    [MultipleReverseEdgeUpdateInputAction.UPDATE_SOME]: NonNullable<{
+      where: NonNullable<NodeUniqueFilterInputValue>;
+      data?: NodeUpdateInputValue;
     }>[];
-    [MultipleReverseEdgeUpdateInputAction.CONNECT_SOME]: NonNullable<NodeUniqueFilterInputValue>[];
-    [MultipleReverseEdgeUpdateInputAction.CONNECT_SOME_IF_EXISTS]: NonNullable<NodeUniqueFilterInputValue>[];
-    [MultipleReverseEdgeUpdateInputAction.CREATE_SOME]: NonNullable<NodeCreationInputValue>[];
+    [MultipleReverseEdgeUpdateInputAction.UPDATE_SOME_IF_EXISTS]: NonNullable<{
+      where: NonNullable<NodeUniqueFilterInputValue>;
+      data?: NodeUpdateInputValue;
+    }>[];
     [MultipleReverseEdgeUpdateInputAction.UPSERT_SOME]: NonNullable<{
       where: NonNullable<NodeUniqueFilterInputValue>;
       create: NonNullable<NodeCreationInputValue>;
@@ -67,10 +77,6 @@ const destructiveActionNames = [
   MultipleReverseEdgeUpdateInputAction.DELETE_MANY,
   MultipleReverseEdgeUpdateInputAction.DELETE_SOME,
   MultipleReverseEdgeUpdateInputAction.DELETE_SOME_IF_EXISTS,
-  MultipleReverseEdgeUpdateInputAction.DISCONNECT_ALL,
-  MultipleReverseEdgeUpdateInputAction.DISCONNECT_MANY,
-  MultipleReverseEdgeUpdateInputAction.DISCONNECT_SOME,
-  MultipleReverseEdgeUpdateInputAction.DISCONNECT_SOME_IF_EXISTS,
 ] satisfies MultipleReverseEdgeUpdateInputAction[];
 
 type DestructiveActionName = IterableElement<typeof destructiveActionNames>;
@@ -81,255 +87,116 @@ type NonDestructiveActionName = Exclude<
 >;
 
 export class MultipleReverseEdgeUpdateInput extends AbstractReverseEdgeUpdateInput<MultipleReverseEdgeUpdateInputValue> {
+  public static supports(reverseEdge: MultipleReverseEdge): boolean {
+    return (
+      reverseEdge.head.isDeletable() ||
+      reverseEdge.head.isCreatable() ||
+      reverseEdge.head.isUpdatable(reverseEdge.originalEdge)
+    );
+  }
+
   public constructor(
     public override readonly reverseEdge: MultipleReverseEdge,
   ) {
+    assert(
+      MultipleReverseEdgeUpdateInput.supports(reverseEdge),
+      `The "${reverseEdge}" reverse-edge is not available at update`,
+    );
+
     super(reverseEdge, {
       type: new utils.ObjectInputType({
         name: [
           reverseEdge.tail.name,
-          'Nested',
-          reverseEdge.pascalCasedName,
-          'ReverseEdge',
           inflection.camelize(utils.MutationType.UPDATE),
+          reverseEdge.pascalCasedName,
           'Input',
         ].join(''),
         fields: () => {
           const fields: utils.Input[] = [];
 
-          if (reverseEdge.head.isMutationEnabled(utils.MutationType.DELETION)) {
+          if (reverseEdge.head.isDeletable()) {
             fields.push(
               new utils.Input({
                 name: MultipleReverseEdgeUpdateInputAction.DELETE_ALL,
-                type: new utils.NonNullableInputType(
-                  scalars.typesByName.Boolean,
-                ),
-                public: reverseEdge.head.isMutationPublic(
-                  utils.MutationType.DELETION,
-                ),
+                type: scalars.typesByName.Boolean,
+                nullable: false,
+                public: reverseEdge.head.isPubliclyDeletable(),
               }),
               new utils.Input({
                 name: MultipleReverseEdgeUpdateInputAction.DELETE_MANY,
-                type: new utils.NonNullableInputType(
-                  reverseEdge.head.filterInputType,
-                ),
-                public: reverseEdge.head.isMutationPublic(
-                  utils.MutationType.DELETION,
-                ),
-              }),
-              new utils.Input({
-                name: MultipleReverseEdgeUpdateInputAction.DELETE_SOME,
-                type: new utils.NonNullableInputType(
-                  new utils.ListableInputType(
-                    utils.nonNillableInputType(
-                      reverseEdge.head.uniqueFilterInputType,
-                    ),
-                  ),
-                ),
-                public: reverseEdge.head.isMutationPublic(
-                  utils.MutationType.DELETION,
-                ),
-              }),
-              new utils.Input({
-                name: MultipleReverseEdgeUpdateInputAction.DELETE_SOME_IF_EXISTS,
-                type: new utils.NonNullableInputType(
-                  new utils.ListableInputType(
-                    utils.nonNillableInputType(
-                      reverseEdge.head.uniqueFilterInputType,
-                    ),
-                  ),
-                ),
-                public: reverseEdge.head.isMutationPublic(
-                  utils.MutationType.DELETION,
-                ),
-              }),
-            );
-          }
-
-          if (
-            reverseEdge.head.isMutationEnabled(utils.MutationType.UPDATE) &&
-            reverseEdge.originalEdge.isMutable()
-          ) {
-            if (reverseEdge.originalEdge.isNullable()) {
-              fields.push(
-                new utils.Input({
-                  name: MultipleReverseEdgeUpdateInputAction.DISCONNECT_ALL,
-                  type: new utils.NonNullableInputType(
-                    scalars.typesByName.Boolean,
-                  ),
-                  public: reverseEdge.head.isMutationPublic(
-                    utils.MutationType.UPDATE,
-                  ),
-                }),
-                new utils.Input({
-                  name: MultipleReverseEdgeUpdateInputAction.DISCONNECT_MANY,
-                  type: new utils.NonNullableInputType(
-                    reverseEdge.head.filterInputType,
-                  ),
-                  public: reverseEdge.head.isMutationPublic(
-                    utils.MutationType.UPDATE,
-                  ),
-                }),
-                new utils.Input({
-                  name: MultipleReverseEdgeUpdateInputAction.DISCONNECT_SOME,
-                  type: new utils.NonNullableInputType(
-                    new utils.ListableInputType(
-                      utils.nonNillableInputType(
-                        reverseEdge.head.uniqueFilterInputType,
-                      ),
-                    ),
-                  ),
-                  public: reverseEdge.head.isMutationPublic(
-                    utils.MutationType.UPDATE,
-                  ),
-                }),
-                new utils.Input({
-                  name: MultipleReverseEdgeUpdateInputAction.DISCONNECT_SOME_IF_EXISTS,
-                  type: new utils.NonNullableInputType(
-                    new utils.ListableInputType(
-                      utils.nonNillableInputType(
-                        reverseEdge.head.uniqueFilterInputType,
-                      ),
-                    ),
-                  ),
-                  public: reverseEdge.head.isMutationPublic(
-                    utils.MutationType.UPDATE,
-                  ),
-                }),
-              );
-            }
-
-            fields.push(
-              new utils.Input({
-                name: MultipleReverseEdgeUpdateInputAction.CONNECT_MANY,
-                type: new utils.NonNullableInputType(
-                  reverseEdge.head.filterInputType,
-                ),
-                public: reverseEdge.head.isMutationPublic(
-                  utils.MutationType.UPDATE,
-                ),
-              }),
-              new utils.Input({
-                name: MultipleReverseEdgeUpdateInputAction.CONNECT_SOME,
-                type: new utils.NonNullableInputType(
-                  new utils.ListableInputType(
-                    utils.nonNillableInputType(
-                      reverseEdge.head.uniqueFilterInputType,
-                    ),
-                  ),
-                ),
-                public: reverseEdge.head.isMutationPublic(
-                  utils.MutationType.UPDATE,
-                ),
-              }),
-              new utils.Input({
-                name: MultipleReverseEdgeUpdateInputAction.CONNECT_SOME_IF_EXISTS,
-                type: new utils.NonNullableInputType(
-                  new utils.ListableInputType(
-                    utils.nonNillableInputType(
-                      reverseEdge.head.uniqueFilterInputType,
-                    ),
-                  ),
-                ),
-                public: reverseEdge.head.isMutationPublic(
-                  utils.MutationType.UPDATE,
-                ),
+                type: reverseEdge.head.filterInputType,
+                nullable: false,
+                public: reverseEdge.head.isPubliclyDeletable(),
               }),
             );
 
             if (
-              reverseEdge.head.isMutationEnabled(utils.MutationType.CREATION)
+              reverseEdge.head.isPartiallyIdentifiableWithEdge(
+                reverseEdge.originalEdge,
+              )
             ) {
               fields.push(
                 new utils.Input({
-                  name: MultipleReverseEdgeUpdateInputAction.CONNECT_OR_CREATE_SOME,
-                  type: new utils.NonNullableInputType(
-                    new utils.ListableInputType(
-                      utils.nonNillableInputType(
-                        new utils.ObjectInputType({
-                          name: [
-                            reverseEdge.tail.name,
-                            'Nested',
-                            inflection.camelize(
-                              MultipleReverseEdgeUpdateInputAction.CONNECT_OR_CREATE_SOME,
-                            ),
-                            reverseEdge.pascalCasedName,
-                            'ReverseEdge',
-                            inflection.camelize(utils.MutationType.UPDATE),
-                            'Input',
-                          ].join(''),
-                          fields: () => [
-                            new utils.Input({
-                              name: 'connect',
-                              type: utils.nonNillableInputType(
-                                reverseEdge.head.uniqueFilterInputType,
-                              ),
-                            }),
-                            new utils.Input({
-                              name: 'create',
-                              type: utils.nonNillableInputType(
-                                reverseEdge.head.getCreationWithoutEdgeInputType(
-                                  reverseEdge.originalEdge,
-                                ),
-                              ),
-                            }),
-                          ],
-                        }),
+                  name: MultipleReverseEdgeUpdateInputAction.DELETE_SOME,
+                  type: new utils.ListableInputType(
+                    utils.nonNillableInputType(
+                      reverseEdge.head.getUniqueFilterWithoutEdgeInputType(
+                        reverseEdge.originalEdge,
                       ),
                     ),
                   ),
-                  public:
-                    reverseEdge.head.isMutationPublic(
-                      utils.MutationType.UPDATE,
-                    ) &&
-                    reverseEdge.head.isMutationPublic(
-                      utils.MutationType.CREATION,
+                  nullable: false,
+                  public: reverseEdge.head.isPubliclyDeletable(),
+                }),
+                new utils.Input({
+                  name: MultipleReverseEdgeUpdateInputAction.DELETE_SOME_IF_EXISTS,
+                  type: new utils.ListableInputType(
+                    utils.nonNillableInputType(
+                      reverseEdge.head.getUniqueFilterWithoutEdgeInputType(
+                        reverseEdge.originalEdge,
+                      ),
                     ),
+                  ),
+                  nullable: false,
+                  public: reverseEdge.head.isPubliclyDeletable(),
                 }),
               );
             }
           }
 
-          if (reverseEdge.head.isMutationEnabled(utils.MutationType.CREATION)) {
+          if (reverseEdge.head.isCreatable()) {
             fields.push(
               new utils.Input({
                 name: MultipleReverseEdgeUpdateInputAction.CREATE_SOME,
-                type: new utils.NonNullableInputType(
-                  new utils.ListableInputType(
-                    utils.nonNillableInputType(
-                      reverseEdge.head.getCreationWithoutEdgeInputType(
-                        reverseEdge.originalEdge,
-                      ),
+                type: new utils.ListableInputType(
+                  utils.nonNillableInputType(
+                    reverseEdge.head.getCreationWithoutEdgeInputType(
+                      reverseEdge.originalEdge,
                     ),
                   ),
                 ),
-                public: reverseEdge.head.isMutationPublic(
-                  utils.MutationType.CREATION,
-                ),
+                nullable: false,
               }),
             );
-          }
 
-          if (
-            reverseEdge.head.isMutationEnabled(utils.MutationType.UPDATE) &&
-            reverseEdge.head.isMutationEnabled(utils.MutationType.CREATION)
-          ) {
-            fields.push(
-              new utils.Input({
-                name: MultipleReverseEdgeUpdateInputAction.UPSERT_SOME,
-                type: new utils.NonNullableInputType(
-                  new utils.ListableInputType(
+            if (
+              reverseEdge.head.isPartiallyIdentifiableWithEdge(
+                reverseEdge.originalEdge,
+              )
+            ) {
+              fields.push(
+                new utils.Input({
+                  name: MultipleReverseEdgeUpdateInputAction.CREATE_SOME_IF_NOT_EXISTS,
+                  type: new utils.ListableInputType(
                     utils.nonNillableInputType(
                       new utils.ObjectInputType({
                         name: [
                           reverseEdge.tail.name,
-                          'Nested',
-                          inflection.camelize(
-                            MultipleReverseEdgeUpdateInputAction.UPSERT_SOME,
-                          ),
-                          reverseEdge.pascalCasedName,
-                          'ReverseEdge',
                           inflection.camelize(utils.MutationType.UPDATE),
+                          reverseEdge.pascalCasedName,
+                          inflection.camelize(
+                            MultipleReverseEdgeUpdateInputAction.CREATE_SOME_IF_NOT_EXISTS,
+                          ),
                           'Input',
                         ].join(''),
                         fields: () => [
@@ -342,15 +209,96 @@ export class MultipleReverseEdgeUpdateInput extends AbstractReverseEdgeUpdateInp
                             ),
                           }),
                           new utils.Input({
-                            name: 'create',
+                            name: 'data',
                             type: utils.nonNillableInputType(
                               reverseEdge.head.getCreationWithoutEdgeInputType(
                                 reverseEdge.originalEdge,
                               ),
                             ),
                           }),
+                        ],
+                      }),
+                    ),
+                  ),
+                  nullable: false,
+                }),
+              );
+            }
+          }
+
+          if (reverseEdge.head.isUpdatable(reverseEdge.originalEdge)) {
+            fields.push(
+              new utils.Input({
+                name: MultipleReverseEdgeUpdateInputAction.UPDATE_ALL,
+                type: reverseEdge.head.getUpdateWithoutEdgeInputType(
+                  reverseEdge.originalEdge,
+                ),
+                nullable: false,
+              }),
+              new utils.Input({
+                name: MultipleReverseEdgeUpdateInputAction.UPDATE_MANY,
+                type: new utils.ObjectInputType({
+                  name: [
+                    reverseEdge.tail.name,
+                    inflection.camelize(utils.MutationType.UPDATE),
+                    reverseEdge.pascalCasedName,
+                    inflection.camelize(
+                      MultipleReverseEdgeUpdateInputAction.UPDATE_MANY,
+                    ),
+                    'Input',
+                  ].join(''),
+                  fields: () => [
+                    new utils.Input({
+                      name: 'where',
+                      type: reverseEdge.head.filterInputType,
+                    }),
+                    new utils.Input({
+                      name: 'data',
+                      type: reverseEdge.head.getUpdateWithoutEdgeInputType(
+                        reverseEdge.originalEdge,
+                      ),
+                    }),
+                  ],
+                }),
+                nullable: false,
+                // We explicitly define the visibility as we don't want to expose this operation if the head it not publicly updatable, and it would as "update" is not required
+                public: reverseEdge.head.isPubliclyUpdatable(
+                  reverseEdge.originalEdge,
+                ),
+              }),
+            );
+
+            if (
+              reverseEdge.head.isPartiallyIdentifiableWithEdge(
+                reverseEdge.originalEdge,
+              )
+            ) {
+              fields.push(
+                new utils.Input({
+                  name: MultipleReverseEdgeUpdateInputAction.UPDATE_SOME,
+                  type: new utils.ListableInputType(
+                    utils.nonNillableInputType(
+                      new utils.ObjectInputType({
+                        name: [
+                          reverseEdge.tail.name,
+                          inflection.camelize(utils.MutationType.UPDATE),
+                          reverseEdge.pascalCasedName,
+                          inflection.camelize(
+                            MultipleReverseEdgeUpdateInputAction.UPDATE_SOME,
+                          ),
+                          'Input',
+                        ].join(''),
+                        fields: () => [
                           new utils.Input({
-                            name: 'update',
+                            name: 'where',
+                            type: utils.nonNillableInputType(
+                              reverseEdge.head.getUniqueFilterWithoutEdgeInputType(
+                                reverseEdge.originalEdge,
+                              ),
+                            ),
+                          }),
+                          new utils.Input({
+                            name: 'data',
                             type: reverseEdge.head.getUpdateWithoutEdgeInputType(
                               reverseEdge.originalEdge,
                             ),
@@ -359,13 +307,123 @@ export class MultipleReverseEdgeUpdateInput extends AbstractReverseEdgeUpdateInp
                       }),
                     ),
                   ),
+                  nullable: false,
+                  // We explicitly define the visibility as we don't want to expose this operation if the head it not publicly updatable, and it would as "update" is not required
+                  public:
+                    reverseEdge.head.isPubliclyPartiallyIdentifiableWithEdge(
+                      reverseEdge.originalEdge,
+                    ) &&
+                    reverseEdge.head.isPubliclyUpdatable(
+                      reverseEdge.originalEdge,
+                    ),
+                }),
+                new utils.Input({
+                  name: MultipleReverseEdgeUpdateInputAction.UPDATE_SOME_IF_EXISTS,
+                  type: new utils.ListableInputType(
+                    utils.nonNillableInputType(
+                      new utils.ObjectInputType({
+                        name: [
+                          reverseEdge.tail.name,
+                          inflection.camelize(utils.MutationType.UPDATE),
+                          reverseEdge.pascalCasedName,
+                          inflection.camelize(
+                            MultipleReverseEdgeUpdateInputAction.UPDATE_SOME_IF_EXISTS,
+                          ),
+                          'Input',
+                        ].join(''),
+                        fields: () => [
+                          new utils.Input({
+                            name: 'where',
+                            type: utils.nonNillableInputType(
+                              reverseEdge.head.getUniqueFilterWithoutEdgeInputType(
+                                reverseEdge.originalEdge,
+                              ),
+                            ),
+                          }),
+                          new utils.Input({
+                            name: 'data',
+                            type: reverseEdge.head.getUpdateWithoutEdgeInputType(
+                              reverseEdge.originalEdge,
+                            ),
+                          }),
+                        ],
+                      }),
+                    ),
+                  ),
+                  nullable: false,
+                  // We explicitly define the visibility as we don't want to expose this operation if the head it not publicly updatable, and it would as "update" is not required
+                  public:
+                    reverseEdge.head.isPubliclyPartiallyIdentifiableWithEdge(
+                      reverseEdge.originalEdge,
+                    ) &&
+                    reverseEdge.head.isPubliclyUpdatable(
+                      reverseEdge.originalEdge,
+                    ),
+                }),
+              );
+            }
+          }
+
+          if (
+            reverseEdge.head.isPartiallyIdentifiableWithEdge(
+              reverseEdge.originalEdge,
+            ) &&
+            reverseEdge.head.isCreatable() &&
+            reverseEdge.head.isUpdatable(reverseEdge.originalEdge)
+          ) {
+            fields.push(
+              new utils.Input({
+                name: MultipleReverseEdgeUpdateInputAction.UPSERT_SOME,
+                type: new utils.ListableInputType(
+                  utils.nonNillableInputType(
+                    new utils.ObjectInputType({
+                      name: [
+                        reverseEdge.tail.name,
+                        inflection.camelize(utils.MutationType.UPDATE),
+                        reverseEdge.pascalCasedName,
+                        inflection.camelize(
+                          MultipleReverseEdgeUpdateInputAction.UPSERT_SOME,
+                        ),
+                        'Input',
+                      ].join(''),
+                      fields: () => [
+                        new utils.Input({
+                          name: 'where',
+                          type: utils.nonNillableInputType(
+                            reverseEdge.head.getUniqueFilterWithoutEdgeInputType(
+                              reverseEdge.originalEdge,
+                            ),
+                          ),
+                        }),
+                        new utils.Input({
+                          name: 'create',
+                          type: utils.nonNillableInputType(
+                            reverseEdge.head.getCreationWithoutEdgeInputType(
+                              reverseEdge.originalEdge,
+                            ),
+                          ),
+                        }),
+                        new utils.Input({
+                          name: 'update',
+                          type: reverseEdge.head.getUpdateWithoutEdgeInputType(
+                            reverseEdge.originalEdge,
+                          ),
+                        }),
+                      ],
+                    }),
+                  ),
                 ),
+                nullable: false,
+                // We explicitly define the visibility as we don't want to expose this operation if the head it not publicly updatable, and it would as "update" is not required
                 public:
-                  reverseEdge.head.isMutationPublic(
-                    utils.MutationType.UPDATE,
+                  reverseEdge.head.isPubliclyPartiallyIdentifiableWithEdge(
+                    reverseEdge.originalEdge,
                   ) &&
-                  reverseEdge.head.isMutationPublic(
-                    utils.MutationType.CREATION,
+                  reverseEdge.head.isPubliclyCreatable(
+                    reverseEdge.originalEdge,
+                  ) &&
+                  reverseEdge.head.isPubliclyUpdatable(
+                    reverseEdge.originalEdge,
                   ),
               }),
             );
@@ -378,24 +436,19 @@ export class MultipleReverseEdgeUpdateInput extends AbstractReverseEdgeUpdateInp
   }
 
   public override async applyActions(
-    nodeValue: Readonly<NodeValue>,
+    nodeValues: ReadonlyArray<NodeValue>,
     inputValue: Readonly<NonNullable<MultipleReverseEdgeUpdateInputValue>>,
     context: MutationContext,
     path: utils.Path,
   ): Promise<void> {
+    const selection = this.reverseEdge.head.identifier.selection;
     const originalEdge = this.reverseEdge.originalEdge;
     const originalEdgeName = originalEdge.name;
-    const originalEdgeValue =
-      originalEdge.referencedUniqueConstraint.parseValue(nodeValue, path);
-    const selection = this.reverseEdge.head.identifier.selection;
-
-    const originalEdgeInHeadUniqueConstraint = Array.from(
-      this.reverseEdge.head.uniqueConstraintsByName.values(),
-    ).some((uniqueConstraint) =>
-      uniqueConstraint.componentSet.has(originalEdge),
+    const originalEdgeValues = nodeValues.map((nodeValue) =>
+      originalEdge.referencedUniqueConstraint.parseValue(nodeValue),
     );
 
-    // Apply destructive actions first
+    // First, we apply destructive actions
     await Promise.all(
       _.intersection<DestructiveActionName>(
         Object.keys(inputValue) as any,
@@ -412,7 +465,7 @@ export class MultipleReverseEdgeUpdateInput extends AbstractReverseEdgeUpdateInp
                 .getMutationByKey('delete-many')
                 .execute(
                   {
-                    where: { [originalEdgeName]: originalEdgeValue },
+                    where: { [originalEdgeName]: { OR: originalEdgeValues } },
                     first: scalars.GRAPHQL_MAX_UNSIGNED_INT,
                     selection,
                   },
@@ -424,12 +477,15 @@ export class MultipleReverseEdgeUpdateInput extends AbstractReverseEdgeUpdateInp
           }
 
           case MultipleReverseEdgeUpdateInputAction.DELETE_MANY: {
-            const actionData = inputValue[actionName]!;
+            const where = inputValue[actionName]!;
 
             await this.reverseEdge.head.getMutationByKey('delete-many').execute(
               {
                 where: {
-                  AND: [{ [originalEdgeName]: originalEdgeValue }, actionData],
+                  AND: [
+                    { [originalEdgeName]: { OR: originalEdgeValues } },
+                    where,
+                  ],
                 },
                 first: scalars.GRAPHQL_MAX_UNSIGNED_INT,
                 selection,
@@ -444,14 +500,23 @@ export class MultipleReverseEdgeUpdateInput extends AbstractReverseEdgeUpdateInp
             const actionData = inputValue[actionName]!;
 
             await Promise.all(
-              actionData.map((where, index) =>
-                this.reverseEdge.head.getMutationByKey('delete-one').execute(
-                  {
-                    where: { ...where, [originalEdgeName]: originalEdgeValue },
-                    selection,
-                  },
-                  context,
-                  utils.addPath(actionPath, index),
+              originalEdgeValues.map((originalEdgeValue) =>
+                Promise.all(
+                  actionData.map((where, index) =>
+                    this.reverseEdge.head
+                      .getMutationByKey('delete-one')
+                      .execute(
+                        {
+                          where: {
+                            ...where,
+                            [originalEdgeName]: originalEdgeValue,
+                          },
+                          selection,
+                        },
+                        context,
+                        utils.addPath(actionPath, index),
+                      ),
+                  ),
                 ),
               ),
             );
@@ -461,103 +526,19 @@ export class MultipleReverseEdgeUpdateInput extends AbstractReverseEdgeUpdateInp
           case MultipleReverseEdgeUpdateInputAction.DELETE_SOME_IF_EXISTS: {
             const actionData = inputValue[actionName]!;
 
-            await Promise.all(
-              actionData.map((where, index) =>
-                this.reverseEdge.head
-                  .getMutationByKey('delete-one-if-exists')
-                  .execute(
-                    {
-                      where: {
-                        ...where,
-                        [originalEdgeName]: originalEdgeValue,
-                      },
-                      selection,
-                    },
-                    context,
-                    utils.addPath(actionPath, index),
-                  ),
-              ),
-            );
-            break;
-          }
-
-          case MultipleReverseEdgeUpdateInputAction.DISCONNECT_ALL: {
-            const actionData = inputValue[actionName]!;
-
-            if (actionData === true) {
-              await this.reverseEdge.head
-                .getMutationByKey('update-many')
-                .execute(
-                  {
-                    where: { [originalEdgeName]: originalEdgeValue },
-                    data: { [originalEdgeName]: null },
-                    first: scalars.GRAPHQL_MAX_UNSIGNED_INT,
-                    selection,
-                  },
-                  context,
-                  actionPath,
-                );
-            }
-            break;
-          }
-
-          case MultipleReverseEdgeUpdateInputAction.DISCONNECT_MANY: {
-            const actionData = inputValue[actionName]!;
-
-            await this.reverseEdge.head.getMutationByKey('update-many').execute(
+            await this.reverseEdge.head.getMutationByKey('delete-many').execute(
               {
                 where: {
-                  AND: [{ [originalEdgeName]: originalEdgeValue }, actionData],
+                  AND: [
+                    { [originalEdgeName]: { OR: originalEdgeValues } },
+                    { OR: actionData },
+                  ],
                 },
-                data: { [originalEdgeName]: null },
                 first: scalars.GRAPHQL_MAX_UNSIGNED_INT,
                 selection,
               },
               context,
               actionPath,
-            );
-            break;
-          }
-
-          case MultipleReverseEdgeUpdateInputAction.DISCONNECT_SOME: {
-            const actionData = inputValue[actionName]!;
-
-            await Promise.all(
-              actionData.map((where, index) =>
-                this.reverseEdge.head.getMutationByKey('update-one').execute(
-                  {
-                    where: { ...where, [originalEdgeName]: originalEdgeValue },
-                    data: { [originalEdgeName]: null },
-                    selection,
-                  },
-                  context,
-                  utils.addPath(actionPath, index),
-                ),
-              ),
-            );
-            break;
-          }
-
-          case MultipleReverseEdgeUpdateInputAction.DISCONNECT_SOME_IF_EXISTS: {
-            const actionData = inputValue[actionName]!;
-
-            await Promise.all(
-              actionData.map((where, index) =>
-                this.reverseEdge.head
-                  .getMutationByKey('update-one-if-exists')
-                  .execute(
-                    {
-                      where: {
-                        ...where,
-                        [originalEdgeName]: originalEdgeValue,
-                      },
-                      data: { [originalEdgeName]: null },
-                      selection,
-                    },
-                    context,
-                    utils.addPath(actionPath, index),
-                  ),
-              ),
             );
             break;
           }
@@ -577,118 +558,147 @@ export class MultipleReverseEdgeUpdateInput extends AbstractReverseEdgeUpdateInp
         const actionPath = utils.addPath(path, actionName);
 
         switch (actionName) {
-          case MultipleReverseEdgeUpdateInputAction.CONNECT_MANY: {
-            const actionData = inputValue[actionName]!;
-
-            await this.reverseEdge.head.getMutationByKey('update-many').execute(
-              {
-                where: actionData,
-                first: scalars.GRAPHQL_MAX_UNSIGNED_INT,
-                data: {
-                  [originalEdgeName]: {
-                    [EdgeUpdateInputAction.CONNECT]: originalEdgeValue,
-                  },
-                },
-                selection,
-              },
-              context,
-              actionPath,
-            );
-            break;
-          }
-
-          case MultipleReverseEdgeUpdateInputAction.CONNECT_SOME: {
-            const actionData = inputValue[actionName]!;
-
-            await Promise.all(
-              actionData.map((where, index) =>
-                this.reverseEdge.head.getMutationByKey('update-one').execute(
-                  {
-                    where,
-                    data: {
-                      [originalEdgeName]: {
-                        [EdgeUpdateInputAction.CONNECT]: originalEdgeValue,
-                      },
-                    },
-                    selection,
-                  },
-                  context,
-                  utils.addPath(actionPath, index),
-                ),
-              ),
-            );
-            break;
-          }
-
-          case MultipleReverseEdgeUpdateInputAction.CONNECT_SOME_IF_EXISTS: {
-            const actionData = inputValue[actionName]!;
-
-            await Promise.all(
-              actionData.map((where, index) =>
-                this.reverseEdge.head
-                  .getMutationByKey('update-one-if-exists')
-                  .execute(
-                    {
-                      where,
-                      data: {
-                        [originalEdgeName]: {
-                          [EdgeUpdateInputAction.CONNECT]: originalEdgeValue,
-                        },
-                      },
-                      selection,
-                    },
-                    context,
-                    utils.addPath(actionPath, index),
-                  ),
-              ),
-            );
-            break;
-          }
-
-          case MultipleReverseEdgeUpdateInputAction.CONNECT_OR_CREATE_SOME: {
-            const actionData = inputValue[actionName]!;
-
-            await Promise.all(
-              actionData.map(({ connect, create }, index) =>
-                this.reverseEdge.head.getMutationByKey('upsert').execute(
-                  {
-                    where: connect,
-                    create: {
-                      ...create,
-                      [originalEdgeName]: {
-                        [EdgeUpdateInputAction.CONNECT]: originalEdgeValue,
-                      },
-                    },
-                    update: {
-                      [originalEdgeName]: {
-                        [EdgeUpdateInputAction.CONNECT]: originalEdgeValue,
-                      },
-                    },
-                    selection,
-                  },
-                  context,
-                  utils.addPath(actionPath, index),
-                ),
-              ),
-            );
-            break;
-          }
-
           case MultipleReverseEdgeUpdateInputAction.CREATE_SOME: {
             const actionData = inputValue[actionName]!;
 
             await this.reverseEdge.head.getMutationByKey('create-some').execute(
               {
-                data: actionData.map((data) => ({
-                  ...data,
-                  [originalEdgeName]: {
-                    [EdgeUpdateInputAction.CONNECT]: originalEdgeValue,
-                  },
-                })),
+                data: originalEdgeValues.flatMap((originalEdgeValue) =>
+                  actionData.map((data) => ({
+                    ...data,
+                    [originalEdgeName]: {
+                      [EdgeUpdateInputAction.CONNECT]: originalEdgeValue,
+                    },
+                  })),
+                ),
                 selection,
               },
               context,
               actionPath,
+            );
+            break;
+          }
+
+          case MultipleReverseEdgeUpdateInputAction.CREATE_SOME_IF_NOT_EXISTS: {
+            const actionData = inputValue[actionName]!;
+
+            await Promise.all(
+              originalEdgeValues.map((originalEdgeValue) =>
+                Promise.all(
+                  actionData.map(({ where, data }) =>
+                    this.reverseEdge.head
+                      .getMutationByKey('create-one-if-not-exists')
+                      .execute(
+                        {
+                          where: {
+                            ...where,
+                            [originalEdgeName]: originalEdgeValue,
+                          },
+                          data: {
+                            ...data,
+                            [originalEdgeName]: {
+                              [EdgeUpdateInputAction.CONNECT]:
+                                originalEdgeValue,
+                            },
+                          },
+                          selection,
+                        },
+                        context,
+                        actionPath,
+                      ),
+                  ),
+                ),
+              ),
+            );
+            break;
+          }
+
+          case MultipleReverseEdgeUpdateInputAction.UPDATE_ALL: {
+            const data = inputValue[actionName]!;
+
+            await this.reverseEdge.head.getMutationByKey('update-many').execute(
+              {
+                where: { [originalEdgeName]: { OR: originalEdgeValues } },
+                first: scalars.GRAPHQL_MAX_UNSIGNED_INT,
+                data,
+                selection,
+              },
+              context,
+              actionPath,
+            );
+            break;
+          }
+
+          case MultipleReverseEdgeUpdateInputAction.UPDATE_MANY: {
+            const { where, data } = inputValue[actionName]!;
+
+            await this.reverseEdge.head.getMutationByKey('update-many').execute(
+              {
+                where: {
+                  AND: [
+                    { [originalEdgeName]: { OR: originalEdgeValues } },
+                    where,
+                  ],
+                },
+                first: scalars.GRAPHQL_MAX_UNSIGNED_INT,
+                data,
+                selection,
+              },
+              context,
+              actionPath,
+            );
+            break;
+          }
+
+          case MultipleReverseEdgeUpdateInputAction.UPDATE_SOME: {
+            const actionData = inputValue[actionName]!;
+
+            await Promise.all(
+              originalEdgeValues.map((originalEdgeValue) =>
+                Promise.all(
+                  actionData.map(({ where, data }, index) =>
+                    this.reverseEdge.head
+                      .getMutationByKey('update-one')
+                      .execute(
+                        {
+                          where: {
+                            ...where,
+                            [originalEdgeName]: originalEdgeValue,
+                          },
+                          data,
+                          selection,
+                        },
+                        context,
+                        utils.addPath(actionPath, index),
+                      ),
+                  ),
+                ),
+              ),
+            );
+            break;
+          }
+
+          case MultipleReverseEdgeUpdateInputAction.UPDATE_SOME_IF_EXISTS: {
+            const actionData = inputValue[actionName]!;
+
+            await Promise.all(
+              actionData.map(({ where, data }, index) =>
+                this.reverseEdge.head.getMutationByKey('update-many').execute(
+                  {
+                    where: {
+                      AND: [
+                        { [originalEdgeName]: { OR: originalEdgeValues } },
+                        where,
+                      ],
+                    },
+                    first: originalEdgeValues.length,
+                    data,
+                    selection,
+                  },
+                  context,
+                  utils.addPath(actionPath, index),
+                ),
+              ),
             );
             break;
           }
@@ -697,33 +707,28 @@ export class MultipleReverseEdgeUpdateInput extends AbstractReverseEdgeUpdateInp
             const actionData = inputValue[actionName]!;
 
             await Promise.all(
-              actionData.map(({ where, create, update }) =>
-                this.reverseEdge.head.getMutationByKey('upsert').execute(
-                  {
-                    where: {
-                      ...where,
-                      ...(originalEdgeInHeadUniqueConstraint && {
-                        [originalEdgeName]: originalEdgeValue,
-                      }),
-                    },
-                    create: {
-                      ...create,
-                      [originalEdgeName]: {
-                        [EdgeUpdateInputAction.CONNECT]: originalEdgeValue,
-                      },
-                    },
-                    update: {
-                      ...update,
-                      ...(originalEdge.isMutable() && {
-                        [originalEdgeName]: {
-                          [EdgeUpdateInputAction.CONNECT]: originalEdgeValue,
+              originalEdgeValues.map((originalEdgeValue) =>
+                Promise.all(
+                  actionData.map(({ where, create, update }) =>
+                    this.reverseEdge.head.getMutationByKey('upsert').execute(
+                      {
+                        where: {
+                          ...where,
+                          [originalEdgeName]: originalEdgeValue,
                         },
-                      }),
-                    },
-                    selection,
-                  },
-                  context,
-                  actionPath,
+                        create: {
+                          ...create,
+                          [originalEdgeName]: {
+                            [EdgeUpdateInputAction.CONNECT]: originalEdgeValue,
+                          },
+                        },
+                        update,
+                        selection,
+                      },
+                      context,
+                      actionPath,
+                    ),
+                  ),
                 ),
               ),
             );

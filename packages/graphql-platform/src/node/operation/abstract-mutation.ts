@@ -70,7 +70,7 @@ export abstract class AbstractMutation<
   @Memoize()
   public override isEnabled(): boolean {
     return this.mutationTypes.every((mutationType) =>
-      this.node.isMutationEnabled(mutationType),
+      this.node.isMutable(mutationType),
     );
   }
 
@@ -79,7 +79,7 @@ export abstract class AbstractMutation<
     return (
       this.isEnabled() &&
       this.mutationTypes.every((mutationType) =>
-        this.node.isMutationPublic(mutationType),
+        this.node.isPubliclyMutable(mutationType),
       )
     );
   }

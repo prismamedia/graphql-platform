@@ -109,6 +109,19 @@ describe('Update statement', () => {
       {
         data: {
           tags: {
+            deleteIfExists: [
+              { order: 1 },
+              { tag: { slug: 'high-tech' } },
+              { order: 2 },
+              { tag: { slug: 'tv' } },
+            ],
+            // // Same result as above
+            // deleteMany: {
+            //   OR: [
+            //     { order_in: [1, 2] },
+            //     { tag: { slug_in: ['high-tech', 'tv'] } },
+            //   ],
+            // },
             create: [
               {
                 order: 1,
@@ -117,9 +130,9 @@ describe('Update statement', () => {
               {
                 order: 2,
                 tag: {
-                  connectOrCreate: {
-                    connect: { slug: 'tv' },
-                    create: { title: 'TV' },
+                  createIfNotExists: {
+                    where: { slug: 'tv' },
+                    data: { title: 'TV' },
                   },
                 },
               },

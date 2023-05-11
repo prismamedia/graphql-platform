@@ -10,13 +10,17 @@ import {
 } from '../../../abstract-operation.js';
 import { NodeUpdate } from '../../../change.js';
 import { AndOperation, NodeFilter } from '../../../statement/filter.js';
-import type { NodeSelectedValue } from '../../../statement/selection.js';
+import {
+  isReverseEdgeSelection,
+  type NodeSelectedValue,
+} from '../../../statement/selection.js';
 import {
   NodeUpdateStatement,
   NodeUpdateValue,
 } from '../../../statement/update.js';
 import type { NodeFilterInputValue } from '../../../type/input/filter.js';
 import type { OrderByInputValue } from '../../../type/input/ordering.js';
+import type { NodeUpdateInputValue } from '../../../type/input/update.js';
 import {
   ConnectorError,
   NodeLifecycleHookError,
@@ -29,7 +33,7 @@ export type UpdateManyMutationArgs = RawNodeSelectionAwareArgs<{
   where?: NodeFilterInputValue;
   orderBy?: OrderByInputValue;
   first: number;
-  data: utils.PlainObject;
+  data?: NodeUpdateInputValue;
 }>;
 
 export type UpdateManyMutationResult = NodeSelectedValue[];
@@ -68,7 +72,7 @@ export class UpdateManyMutation<
       }),
       new utils.Input({
         name: 'data',
-        type: utils.nonNillableInputType(this.node.updateInputType),
+        type: this.node.updateInputType,
       }),
     ];
   }
@@ -96,7 +100,7 @@ export class UpdateManyMutation<
 
     if (args.first === 0) {
       return [];
-    } else if (Object.keys(data).length === 0) {
+    } else if (!data || Object.keys(data).length === 0) {
       // An "empty" update is just a "find"
       return this.node
         .getQueryByKey('find-many')
@@ -127,7 +131,7 @@ export class UpdateManyMutation<
       utils.addPath(argsPath, 'orderBy'),
     ).normalized;
 
-    let currentValues: NodeValue[];
+    let currentValues: ReadonlyArray<NodeValue>;
     try {
       currentValues = await this.connector.find(
         {
@@ -148,141 +152,142 @@ export class UpdateManyMutation<
       return [];
     }
 
+    const willEventuallyRefetchToGetReverseEdgeChanges =
+      // We assume that the "postUpdate"-hook can change the reverse-edges
+      (postUpdate &&
+        args.selection.expressions.some((expression) =>
+          isReverseEdgeSelection(expression),
+        )) ||
+      this.node.updateInputType.hasActionOnSelectedReverseEdge(
+        data,
+        args.selection,
+      );
+
     const currentIds = currentValues.map((currentValue) =>
-      Object.freeze(this.node.identifier.parseValue(currentValue)),
+      this.node.identifier.parseValue(currentValue),
     );
 
     // Resolve the edges' nested-actions into their value
     const update: NodeUpdateValue =
-      await this.node.updateInputType.resolveValue(data, context, path);
+      await this.node.updateInputType.resolveUpdate(
+        currentValues,
+        data,
+        context,
+        path,
+      );
 
-    // Create a statement with it
-    const statement = new NodeUpdateStatement(this.node, update);
+    let newValues: ReadonlyArray<NodeValue>;
+    let changes: ReadonlyArray<NodeUpdate>;
 
-    if (!statement.isEmpty()) {
-      if (preUpdate || currentValues.length === 1) {
-        await Promise.all(
-          currentValues.map(async (currentValue, index) => {
-            // Because we provide the "currentValue", the statement might be "individualized/customized" using it
-            const individualizedStatement =
-              statement.individualize(currentValue);
+    if (Object.keys(update).length) {
+      await Promise.all(
+        currentValues.map(async (currentValue, index) => {
+          // Create a statement for it
+          const statement = new NodeUpdateStatement(
+            this.node,
+            currentValue,
+            update,
+          );
 
-            if (!individualizedStatement.isEmpty()) {
-              // Apply the "preUpdate"-hook
+          if (!statement.isEmpty()) {
+            // Apply the "preUpdate"-hook
+            try {
+              await preUpdate?.({
+                gp: this.gp,
+                node: this.node,
+                context,
+                api: context.api,
+                data,
+                id: Object.freeze(currentIds[index]),
+                current: Object.freeze(this.node.parseValue(currentValue)),
+                update: statement.updateProxy,
+                target: statement.targetProxy,
+              });
+            } catch (cause) {
+              throw new NodeLifecycleHookError(
+                this.node,
+                NodeLifecycleHookKind.PRE_UPDATE,
+                { cause, path },
+              );
+            }
+
+            if (!statement.isEmpty()) {
+              // Actually update the node
               try {
-                await preUpdate?.({
-                  gp: this.gp,
-                  node: this.node,
+                await this.connector.update(
+                  {
+                    node: this.node,
+                    update: statement,
+                    filter: this.node.filterInputType.filter(currentIds[index]),
+                  },
                   context,
-                  api: context.api,
-                  data,
-                  id: currentIds[index],
-                  current: Object.freeze(this.node.parseValue(currentValue)),
-                  update: individualizedStatement.updateProxy,
-                  target: individualizedStatement.targetProxy,
-                });
-              } catch (cause) {
-                throw new NodeLifecycleHookError(
-                  this.node,
-                  NodeLifecycleHookKind.PRE_UPDATE,
-                  { cause, path },
                 );
-              }
-
-              if (!individualizedStatement.isEmpty()) {
-                // Actually update the node
-                try {
-                  await this.connector.update(
-                    {
-                      node: this.node,
-                      update: individualizedStatement,
-                      filter: this.node.filterInputType.filter(
-                        currentIds[index],
-                      ),
-                    },
-                    context,
-                  );
-                } catch (cause) {
-                  throw new ConnectorError({ cause, path });
-                }
+              } catch (cause) {
+                throw new ConnectorError({ cause, path });
               }
             }
-          }),
-        );
-      } else {
-        // Actually update the nodes
-        try {
-          await this.connector.update(
-            {
-              node: this.node,
-              update: statement,
-              filter: this.node.filterInputType.filter({
-                OR: currentIds,
-              }),
-            },
-            context,
-          );
-        } catch (cause) {
-          throw new ConnectorError({ cause, path });
-        }
-      }
-    }
+          }
+        }),
+      );
 
-    const maybeUpdateAfterwards =
-      (this.node.updateInputType.hasReverseEdgeActions(data) || postUpdate) &&
-      !this.node.selection.includes(args.selection);
-
-    const newValues = (await this.node
-      .getQueryByKey('get-some-in-order')
-      .internal(
-        authorization,
+      newValues = await this.node.getQueryByKey('get-some-in-order').internal(
+        undefined,
         {
           where: currentIds,
-          selection: maybeUpdateAfterwards
+          selection: willEventuallyRefetchToGetReverseEdgeChanges
             ? this.node.selection
             : this.node.selection.mergeWith(args.selection),
         },
         context,
         path,
-      )) as NodeValue[];
+      );
 
-    const changes = currentValues.reduce<NodeUpdate[]>(
-      (changes, oldValue, index) => {
-        const change = new NodeUpdate(
-          this.node,
-          context.request,
-          oldValue,
-          newValues[index],
-        );
+      changes = currentValues.reduce<NodeUpdate[]>(
+        (changes, oldValue, index) => {
+          const change = new NodeUpdate(
+            this.node,
+            context.request,
+            oldValue,
+            newValues[index],
+          );
 
-        if (!change.isEmpty()) {
-          // Let's everybody know about the update, if any
-          context.changes.push(change);
+          if (!change.isEmpty()) {
+            // Let's everybody know about the update, if any
+            context.changes.push(change);
 
-          changes.push(change);
-        }
+            changes.push(change);
+          }
 
-        return changes;
-      },
-      [],
-    );
-
-    // Apply the reverse-edges' actions
-    if (this.node.updateInputType.hasReverseEdgeActions(data)) {
-      await Promise.all(
-        newValues.map((newValue) =>
-          this.node.updateInputType.applyReverseEdgeActions(
-            newValue,
-            data,
+          return changes;
+        },
+        [],
+      );
+    } else {
+      newValues = willEventuallyRefetchToGetReverseEdgeChanges
+        ? currentValues
+        : await this.node.getQueryByKey('get-some-in-order').internal(
+            undefined,
+            {
+              where: currentIds,
+              selection: this.node.selection.mergeWith(args.selection),
+            },
             context,
             path,
-          ),
-        ),
-      );
+          );
+
+      changes = [];
     }
 
+    // Apply the reverse-edges' actions
+    await this.node.updateInputType.applyReverseEdgeActions(
+      newValues,
+      data,
+      context,
+      path,
+    );
+
     // Apply the "postUpdate"-hook
-    if (postUpdate) {
+    if (changes.length && postUpdate) {
       await Promise.all(
         changes.map(async (change) => {
           try {
@@ -305,9 +310,9 @@ export class UpdateManyMutation<
       );
     }
 
-    return maybeUpdateAfterwards
+    return willEventuallyRefetchToGetReverseEdgeChanges
       ? this.node.getQueryByKey('get-some-in-order').internal(
-          authorization,
+          undefined,
           {
             where: currentIds,
             selection: args.selection,

@@ -18,7 +18,7 @@ export interface SelectionExpressionInterface<
 
   isAkinTo(expression: unknown): boolean;
   equals(expression: unknown): boolean;
-  includes(expression: unknown): boolean;
+  isSupersetOf(expression: unknown): boolean;
   toGraphQLField(): graphql.FieldNode;
 
   parseValue(maybeValue: unknown, path?: utils.Path): TInternal;

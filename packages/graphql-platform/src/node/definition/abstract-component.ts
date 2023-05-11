@@ -50,7 +50,7 @@ export abstract class AbstractComponent<
   public readonly deprecationReason?: string;
   public abstract readonly selection: any;
   public abstract readonly creationInput: AbstractComponentCreationInput<any>;
-  public abstract readonly updateInput: AbstractComponentUpdateInput<any>;
+  public abstract readonly updateInput?: AbstractComponentUpdateInput<any>;
 
   public constructor(
     public readonly node: Node<TRequestContext, TConnector, TContainer>,
@@ -114,11 +114,11 @@ export abstract class AbstractComponent<
 
     const isMutable = utils.getOptionalFlag(
       mutableConfig,
-      this.node.isMutationEnabled(utils.MutationType.UPDATE),
+      this.node.isUpdatable(),
       mutableConfigPath,
     );
 
-    if (isMutable && !this.node.isMutationEnabled(utils.MutationType.UPDATE)) {
+    if (isMutable && !this.node.isUpdatable()) {
       throw new utils.UnexpectedValueError(
         `not to be "true" as the "${this.node}"'s ${utils.MutationType.UPDATE} is disabled`,
         mutableConfig,
@@ -168,7 +168,7 @@ export abstract class AbstractComponent<
   @Memoize()
   public validateTypes(): void {
     this.creationInput.validate();
-    this.isMutable() && this.updateInput.validate();
+    this.updateInput?.validate();
   }
 
   public abstract parseValue(maybeValue: unknown, path?: utils.Path): any;

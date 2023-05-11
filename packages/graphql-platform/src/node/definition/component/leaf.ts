@@ -226,10 +226,8 @@ export class Leaf<
   }
 
   @Memoize()
-  public override get updateInput(): LeafUpdateInput {
-    assert(this.isMutable(), `The "${this}" leaf is immutable`);
-
-    return new LeafUpdateInput(this);
+  public override get updateInput(): LeafUpdateInput | undefined {
+    return this.isMutable() ? new LeafUpdateInput(this) : undefined;
   }
 
   public parseValue(

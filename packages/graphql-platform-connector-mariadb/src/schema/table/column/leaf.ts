@@ -253,7 +253,7 @@ export class LeafColumn extends AbstractColumn {
           )
         ) {
           throw new utils.UnexpectedValueError(
-            `not to be true as the "${this.dataType.kind}" data-type does not support it`,
+            `not to be "true" as the "${this.dataType.kind}" data-type does not support it`,
             fullTextIndexConfig,
             { path: fullTextIndexConfigPath },
           );
@@ -280,7 +280,7 @@ export class LeafColumn extends AbstractColumn {
 
     if (isAutoIncrement && !this.leaf.isIdentifier()) {
       throw new utils.UnexpectedValueError(
-        `not to be true as "${this.leaf}" is not the identifier`,
+        `not to be "true" as "${this.leaf}" is not the identifier`,
         autoIncrementConfig,
         { path: autoIncrementConfigPath },
       );

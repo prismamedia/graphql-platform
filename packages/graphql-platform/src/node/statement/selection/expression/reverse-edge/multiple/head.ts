@@ -96,10 +96,10 @@ export class MultipleReverseEdgeHeadSelection<
     );
   }
 
-  public includes(expression: unknown): boolean {
+  public isSupersetOf(expression: unknown): boolean {
     return (
       this.isAkinTo(expression) &&
-      this.headSelection.includes(expression.headSelection)
+      this.headSelection.isSupersetOf(expression.headSelection)
     );
   }
 

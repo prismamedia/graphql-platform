@@ -113,7 +113,7 @@ describe('Node', () => {
                 },
               }),
           ).toThrowError(
-            "/GraphQLPlatformConfig/nodes/Article/components/edgeToAMissingModel/head - Expects a node's name among \"Article, Category, Tag, ArticleTag, ArticleTagModeration, User, UserProfile, Log\", got: 'MissingModel'",
+            "/GraphQLPlatformConfig/nodes/Article/components/edgeToAMissingModel/head - Expects a node's name among \"Article, ArticleExtension, Category, Tag, ArticleTag, ArticleTagModeration, User, UserProfile, Log\", got: 'MissingModel'",
           );
         });
 
@@ -470,7 +470,7 @@ describe('Node', () => {
               },
             }),
         ).toThrowError(
-          '/GraphQLPlatformConfig/nodes/Test - Expects at least one publicly mutable component as it is publicly mutable',
+          '/GraphQLPlatformConfig/nodes/Test - Expects at least one publicly mutable component as it is publicly updatable',
         );
       });
     });
@@ -502,7 +502,7 @@ describe('Node', () => {
           'machineTags',
         ],
         ['_id', 'id', 'category-slug'],
-        ['tags'],
+        ['tags', 'extension'],
       ],
       [
         'Category',

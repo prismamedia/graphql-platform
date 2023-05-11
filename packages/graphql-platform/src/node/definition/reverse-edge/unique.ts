@@ -31,13 +31,13 @@ export class UniqueReverseEdge<
   TContainer extends object = any,
 > extends AbstractReverseEdge<TRequestContext, TConnector, TContainer> {
   public constructor(
-    edge: Edge<TRequestContext, TConnector, TContainer>,
+    originalEdge: Edge<TRequestContext, TConnector, TContainer>,
     name: utils.Name,
     public override readonly config: UniqueReverseEdgeConfig,
     public override readonly configPath: utils.Path,
   ) {
-    assert(edge.isUnique());
-    super(edge, name, config, configPath);
+    assert(originalEdge.isUnique());
+    super(originalEdge, name, config, configPath);
 
     // name
     {
@@ -67,19 +67,14 @@ export class UniqueReverseEdge<
   public override get creationInput():
     | UniqueReverseEdgeCreationInput
     | undefined {
-    return this.head.isMutationEnabled(utils.MutationType.CREATION) ||
-      (this.head.isMutationEnabled(utils.MutationType.UPDATE) &&
-        this.originalEdge.isMutable())
+    return UniqueReverseEdgeCreationInput.supports(this)
       ? new UniqueReverseEdgeCreationInput(this)
       : undefined;
   }
 
   @Memoize()
   public override get updateInput(): UniqueReverseEdgeUpdateInput | undefined {
-    return this.head.isMutationEnabled(utils.MutationType.CREATION) ||
-      (this.head.isMutationEnabled(utils.MutationType.UPDATE) &&
-        this.originalEdge.isMutable()) ||
-      this.head.isMutationEnabled(utils.MutationType.DELETION)
+    return UniqueReverseEdgeUpdateInput.supports(this)
       ? new UniqueReverseEdgeUpdateInput(this)
       : undefined;
   }

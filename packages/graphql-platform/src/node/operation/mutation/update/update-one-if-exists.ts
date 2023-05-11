@@ -33,7 +33,7 @@ export class UpdateOneIfExistsMutation<
       }),
       new utils.Input({
         name: 'data',
-        type: utils.nonNillableInputType(this.node.updateInputType),
+        type: this.node.updateInputType,
       }),
     ];
   }

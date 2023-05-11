@@ -171,7 +171,7 @@ export class CreateSomeMutation<
       }),
     );
 
-    return this.node.selection.includes(args.selection)
+    return this.node.selection.isSupersetOf(args.selection)
       ? newValues.map((newValue, index) =>
           args.selection.parseValue(newValue, utils.addPath(path, index)),
         )

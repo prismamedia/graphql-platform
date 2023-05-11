@@ -23,14 +23,7 @@ export class LeafUpdateInput extends AbstractComponentUpdateInput<LeafUpdateInpu
 
     super(
       leaf,
-      {
-        type: utils.nonNullableInputTypeDecorator(
-          leaf.type,
-          !leaf.isNullable(),
-        ),
-        parser: leaf.customParser,
-        ...config,
-      },
+      { type: leaf.type, parser: leaf.customParser, ...config },
       configPath,
     );
   }

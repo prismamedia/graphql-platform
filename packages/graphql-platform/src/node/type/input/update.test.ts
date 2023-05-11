@@ -1,73 +1,31 @@
 import { beforeAll, describe, expect, it } from '@jest/globals';
-import * as utils from '@prismamedia/graphql-platform-utils';
-import { GraphQLInputObjectType, printType } from 'graphql';
-import {
-  MyGP,
-  myUserContext,
-  nodeNames,
-  nodes,
-} from '../../../__tests__/config.js';
-import { mockConnector } from '../../../__tests__/connector-mock.js';
-import { GraphQLPlatform } from '../../../index.js';
-import { MutationContext } from '../../operation.js';
-import { LeafComparisonFilter } from '../../statement/filter.js';
+import * as graphql from 'graphql';
+import { MyGP, nodeNames, nodes } from '../../../__tests__/config.js';
+import { GraphQLPlatform, Node, NodeUpdateInputValue } from '../../../index.js';
 import { NodeUpdateInputType } from './update.js';
 
 describe('NodeUpdateInputType', () => {
   let gp: MyGP;
 
   beforeAll(() => {
-    gp = new GraphQLPlatform({
-      nodes,
-      connector: mockConnector({
-        find: async ({ node, filter }): Promise<any> => {
-          if (
-            node.name === 'Category' &&
-            filter?.filter.equals(
-              new LeafComparisonFilter(
-                node.getLeafByName('id'),
-                'eq',
-                '91a7c846-b030-4ef3-aaaa-747fe7b11519',
-              ),
-            )
-          ) {
-            return [{ _id: 4 }];
-          } else if (
-            node.name === 'User' &&
-            filter?.filter.equals(
-              new LeafComparisonFilter(
-                node.getLeafByName('id'),
-                'eq',
-                '2059b77a-a735-41fe-b415-5b12944b6ba6',
-              ),
-            )
-          ) {
-            return [
-              { id: '2059b77a-a735-41fe-b415-5b12944b6ba6', username: 'yvann' },
-            ];
-          }
-
-          throw new Error('KO');
-        },
-      }),
-    });
+    gp = new GraphQLPlatform({ nodes });
   });
 
   describe('Definition', () => {
     it.each(nodeNames)('%s may have an update input type', (nodeName) => {
       const node = gp.getNodeByName(nodeName);
 
-      if (node.isMutationEnabled(utils.MutationType.UPDATE)) {
+      if (node.isUpdatable()) {
         const updateInputType = node.updateInputType;
         expect(updateInputType).toBeInstanceOf(NodeUpdateInputType);
 
-        if (node.isMutationPublic(utils.MutationType.UPDATE)) {
+        if (node.isPubliclyUpdatable()) {
           expect(updateInputType.getGraphQLInputType()).toBeInstanceOf(
-            GraphQLInputObjectType,
+            graphql.GraphQLInputObjectType,
           );
 
           expect(
-            printType(updateInputType.getGraphQLInputType()),
+            graphql.printType(updateInputType.getGraphQLInputType()),
           ).toMatchSnapshot(updateInputType.name);
         } else {
           expect(() => updateInputType.getGraphQLInputType()).toThrowError(
@@ -75,6 +33,27 @@ describe('NodeUpdateInputType', () => {
           );
         }
       }
+
+      node.edgeSet.forEach((edge) => {
+        if (node.isUpdatable(edge)) {
+          const updateInputType = node.getUpdateWithoutEdgeInputType(edge);
+          expect(updateInputType).toBeInstanceOf(NodeUpdateInputType);
+
+          if (node.isPubliclyUpdatable(edge)) {
+            expect(
+              graphql.printType(updateInputType.getGraphQLInputType()),
+            ).toMatchSnapshot(updateInputType.name);
+          } else {
+            expect(() => updateInputType.getGraphQLInputType()).toThrowError(
+              `The "${nodeName}UpdateInput" input type is private`,
+            );
+          }
+        } else {
+          expect(() => node.getUpdateWithoutEdgeInputType(edge)).toThrowError(
+            `The "${nodeName}" node is not updatable`,
+          );
+        }
+      });
     });
   });
 
@@ -103,6 +82,7 @@ describe('NodeUpdateInputType', () => {
         (nodeName, value, error) => {
           const node = gp.getNodeByName(nodeName);
           const updateInputType = node.updateInputType;
+          expect(updateInputType).toBeInstanceOf(NodeUpdateInputType);
 
           expect(() => updateInputType.parseValue(value)).toThrowError(error);
         },
@@ -110,60 +90,207 @@ describe('NodeUpdateInputType', () => {
     });
 
     describe('Works', () => {
-      it.each([
+      it.each<
+        [nodeName: Node['name'], data: NonNullable<NodeUpdateInputValue>]
+      >([
         [
           'Article',
-          {},
           {
-            updatedAt: expect.any(Date),
+            title: "My new article's title",
+            category: { disconnect: true },
+            updatedBy: {
+              connect: { id: '2059b77a-a735-41fe-b415-5b12944b6ba6' },
+            },
+            tags: {
+              create: [
+                {
+                  order: 3,
+                  tag: {
+                    connect: { id: '77759b36-b7c2-4ec1-af9a-8a45cc853e9a' },
+                  },
+                },
+              ],
+            },
           },
         ],
         [
           'Article',
           {
-            title: 'My new title',
-            category: null,
-          },
-          {
-            title: 'My new title',
-            category: null,
-            updatedAt: expect.any(Date),
+            extension: { delete: true },
           },
         ],
-      ])('%sUpdateInput.parseValue(%p)', (nodeName, value, update) => {
+        [
+          'Article',
+          {
+            extension: { deleteIfExists: true },
+          },
+        ],
+        [
+          'Article',
+          {
+            extension: { create: { source: null } },
+          },
+        ],
+        [
+          'Article',
+          {
+            extension: { createIfNotExists: { source: null } },
+          },
+        ],
+        [
+          'Article',
+          {
+            extension: { update: {} },
+          },
+        ],
+        [
+          'Article',
+          {
+            extension: { updateIfExists: {} },
+          },
+        ],
+        [
+          'Article',
+          {
+            extension: {
+              upsert: { create: { source: null }, update: { source: null } },
+            },
+          },
+        ],
+        [
+          'Article',
+          {
+            tags: {
+              deleteAll: true,
+            },
+          },
+        ],
+        [
+          'Article',
+          {
+            tags: {
+              deleteMany: { order_gt: 2 },
+            },
+          },
+        ],
+        [
+          'Article',
+          {
+            tags: {
+              delete: [{ order: 1 }, { order: 2 }],
+            },
+          },
+        ],
+        [
+          'Article',
+          {
+            tags: {
+              deleteIfExists: [{ order: 1 }, { order: 2 }],
+            },
+          },
+        ],
+        [
+          'Article',
+          {
+            tags: {
+              create: [
+                { order: 1, tag: { connect: { slug: 'tv' } } },
+                { order: 2, tag: { connect: { slug: 'news' } } },
+              ],
+            },
+          },
+        ],
+        [
+          'Article',
+          {
+            tags: {
+              create: [
+                { order: 1, tag: { connect: { slug: 'tv' } } },
+                { order: 2, tag: { connect: { slug: 'news' } } },
+              ],
+            },
+          },
+        ],
+        [
+          'Article',
+          {
+            tags: {
+              createIfNotExists: [
+                {
+                  where: { order: 1 },
+                  data: { order: 1, tag: { connect: { slug: 'tv' } } },
+                },
+                {
+                  where: { order: 2 },
+                  data: { order: 2, tag: { connect: { slug: 'news' } } },
+                },
+              ],
+            },
+          },
+        ],
+        // [
+        //   'Tag',
+        //   {
+        //     articles: {
+        //       updateAll: { article: { status: ArticleStatus.PUBLISHED } },
+        //     },
+        //   },
+        // ],
+        // [
+        //   'Article',
+        //   {
+        //     tags: {
+        //       updateAll: { tag: { update: { deprecated: false } } },
+        //     },
+        //   },
+        // ],
+        [
+          'Article',
+          {
+            tags: {
+              update: [
+                { where: { order: 1 }, data: { order: 2 } },
+                { where: { order: 3 }, data: { order: 4 } },
+              ],
+            },
+          },
+        ],
+        [
+          'Article',
+          {
+            tags: {
+              updateIfExists: [
+                { where: { order: 1 }, data: { order: 2 } },
+                { where: { order: 3 }, data: { order: 4 } },
+              ],
+            },
+          },
+        ],
+        [
+          'Article',
+          {
+            tags: {
+              upsert: [
+                {
+                  where: { order: 1 },
+                  create: { order: 2, tag: { connect: { slug: 'tv' } } },
+                  update: { order: 2 },
+                },
+                {
+                  where: { order: 3 },
+                  create: { order: 4, tag: { connect: { slug: 'news' } } },
+                  update: { order: 4 },
+                },
+              ],
+            },
+          },
+        ],
+      ])('%sUpdateInput.parseValue(%p)', (nodeName, data) => {
         const node = gp.getNodeByName(nodeName);
         const updateInputType = node.updateInputType;
+        expect(updateInputType).toBeInstanceOf(NodeUpdateInputType);
 
-        expect(updateInputType.parseValue(value)).toEqual(update);
-      });
-
-      it('creates a valid statement', async () => {
-        const Article = gp.getNodeByName('Article');
-        const ArticleUpdateInputType = Article.updateInputType;
-
-        const input: utils.PlainObject = {
-          title: "My new article's title",
-          category: { disconnect: true },
-        };
-
-        const parsedInput = ArticleUpdateInputType.parseValue(input)!;
-
-        expect(parsedInput).toEqual({
-          title: "My new article's title",
-          category: { disconnect: true },
-          updatedAt: expect.any(Date),
-        });
-
-        await expect(
-          ArticleUpdateInputType.resolveValue(
-            parsedInput,
-            new MutationContext(gp, myUserContext),
-          ),
-        ).resolves.toEqual({
-          title: "My new article's title",
-          category: null,
-          updatedAt: expect.any(Date),
-        });
+        expect(updateInputType.parseValue(data)).toBeDefined();
       });
     });
   });

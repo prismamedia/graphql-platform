@@ -55,6 +55,7 @@ describe('Schema', () => {
       expect(diagnosis.summarize()).toEqual({
         missingTables: [
           'articles',
+          'article_extensions',
           'categories',
           'tags',
           'article_tags',
@@ -89,6 +90,7 @@ describe('Schema', () => {
       expect(diagnosis.isValid()).toBeFalsy();
       expect(diagnosis.summarize()).toEqual({
         missingTables: [
+          'article_extensions',
           'tags',
           'article_tags',
           'article_tag_moderations',
@@ -117,6 +119,7 @@ describe('Schema', () => {
         (connection) =>
           Promise.all(
             [
+              'ArticleExtension',
               'ArticleTag',
               'ArticleTagModeration',
               'Log',
@@ -143,6 +146,9 @@ describe('Schema', () => {
               'fk_articles_created_by_id',
               'fk_articles_updated_by_username',
             ],
+          },
+          article_extensions: {
+            missingForeignKeys: ['fk_article_extensions_article_private_id'],
           },
           categories: {
             missingForeignKeys: ['fk_categories_parent_private_id'],
@@ -173,6 +179,7 @@ describe('Schema', () => {
           Promise.all(
             [
               'Article',
+              'ArticleExtension',
               'ArticleTag',
               'ArticleTagModeration',
               'Category',

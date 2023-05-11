@@ -11,7 +11,7 @@ export abstract class AbstractComponentUpdateInput<
     config: Except<utils.InputConfig<TInputValue>, 'name' | 'optional'>,
     configPath: utils.Path,
   ) {
-    assert(component.isMutable());
+    assert(component.isMutable(), `The "${component}" component is immutable`);
 
     const publicConfig = config.public;
     const publicConfigPath = utils.addPath(configPath, 'public');
@@ -22,19 +22,19 @@ export abstract class AbstractComponentUpdateInput<
         deprecated: component.deprecationReason,
         ...config,
         name: component.name,
+        optional: true,
+        nullable: component.isNullable(),
         public: utils.getOptionalFlag(
           publicConfig,
-          component.isPublic() &&
-            component.node.isMutationPublic(utils.MutationType.UPDATE),
+          component.isPublic() && component.node.isPubliclyUpdatable(),
           publicConfigPath,
         ),
-        optional: true,
       },
       configPath,
     );
 
     if (this.isPublic()) {
-      if (!component.node.isMutationPublic(utils.MutationType.UPDATE)) {
+      if (!component.node.isPubliclyUpdatable()) {
         throw new utils.UnexpectedValueError(
           `not to be "true" as the ${utils.MutationType.UPDATE} is private`,
           publicConfig,

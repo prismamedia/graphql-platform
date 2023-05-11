@@ -106,9 +106,34 @@ input ArticleFilterInput {
   tagCount_gte: UnsignedInt
   tagCount_lt: UnsignedInt
   tagCount_lte: UnsignedInt
+  extension: ArticleExtensionFilterInput
+  extension_not: ArticleExtensionFilterInput
+  extension_is_null: Boolean
   AND: [ArticleFilterInput]
   OR: [ArticleFilterInput]
   NOT: ArticleFilterInput
+}"
+`;
+
+exports[`NodeFilterInputType Definition ArticleExtension has a filter input type: ArticleExtensionFilterInput 1`] = `
+""""The "ArticleExtension" nodes' filter"""
+input ArticleExtensionFilterInput {
+  article: ArticleFilterInput
+  article_not: ArticleFilterInput
+  source: NonEmptyTrimmedString
+  source_not: NonEmptyTrimmedString
+  source_is_null: Boolean
+  source_in: [NonEmptyTrimmedString]
+  source_not_in: [NonEmptyTrimmedString]
+  source_contains: NonEmptyString
+  source_not_contains: NonEmptyString
+  source_starts_with: NonEmptyString
+  source_not_starts_with: NonEmptyString
+  source_ends_with: NonEmptyString
+  source_not_ends_with: NonEmptyString
+  AND: [ArticleExtensionFilterInput]
+  OR: [ArticleExtensionFilterInput]
+  NOT: ArticleExtensionFilterInput
 }"
 `;
 

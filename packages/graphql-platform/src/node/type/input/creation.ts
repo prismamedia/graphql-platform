@@ -18,44 +18,53 @@ export * from './creation/field.js';
 export type NodeCreationInputValue = utils.Nillable<utils.PlainObject>;
 
 export class NodeCreationInputType extends utils.ObjectInputType<FieldCreationInput> {
-  public constructor(
-    public readonly node: Node,
-    public readonly forcedEdge?: Edge,
-  ) {
-    forcedEdge && assert.equal(forcedEdge.tail, node);
+  readonly #excludedEdge?: Edge;
+
+  public constructor(public readonly node: Node, excludedEdge?: Edge) {
+    excludedEdge && node.ensureEdge(excludedEdge);
+    assert(node.isCreatable(), `The "${node}" node is not creatable`);
 
     super({
-      name: forcedEdge
-        ? `${node}CreationWithout${inflection.capitalize(forcedEdge.name)}Input`
-        : `${node}CreationInput`,
+      name: [
+        node.name,
+        inflection.camelize(utils.MutationType.CREATION),
+        excludedEdge
+          ? `Without${inflection.capitalize(excludedEdge.name)}`
+          : undefined,
+        'Input',
+      ]
+        .filter(Boolean)
+        .join(''),
       description: `The "${node}" node's ${utils.MutationType.CREATION}`,
     });
+
+    this.#excludedEdge = excludedEdge;
   }
 
   @Memoize()
   protected get componentFields(): ReadonlyArray<ComponentCreationInput> {
     return Array.from(this.node.componentsByName.values()).reduce<
       ComponentCreationInput[]
-    >(
-      (fields, component) =>
-        component !== this.forcedEdge
-          ? [...fields, component.creationInput]
-          : fields,
-      [],
-    );
+    >((fields, component) => {
+      if (component !== this.#excludedEdge) {
+        fields.push(component.creationInput);
+      }
+
+      return fields;
+    }, []);
   }
 
   @Memoize()
   protected get reverseEdgeFields(): ReadonlyArray<ReverseEdgeCreationInput> {
     return Array.from(this.node.reverseEdgesByName.values()).reduce<
       ReverseEdgeCreationInput[]
-    >(
-      (fields, reverseEdge) =>
-        reverseEdge.creationInput
-          ? [...fields, reverseEdge.creationInput]
-          : fields,
-      [],
-    );
+    >((fields, reverseEdge) => {
+      if (reverseEdge.creationInput) {
+        fields.push(reverseEdge.creationInput);
+      }
+
+      return fields;
+    }, []);
   }
 
   @Memoize()
@@ -119,9 +128,7 @@ export class NodeCreationInputType extends utils.ObjectInputType<FieldCreationIn
   @Memoize()
   public override isPublic(): boolean {
     return (
-      this.node.isMutationPublic(utils.MutationType.CREATION) &&
-      super.isPublic() &&
-      this.componentFields.some((field) => field.isPublic())
+      super.isPublic() && this.componentFields.some((field) => field.isPublic())
     );
   }
 
@@ -135,8 +142,7 @@ export class NodeCreationInputType extends utils.ObjectInputType<FieldCreationIn
     await Promise.all(
       this.componentFields.map(async (field) => {
         const fieldData = data[field.name];
-
-        resolvedValue[field.name] =
+        const componentValue =
           fieldData == null || field instanceof LeafCreationInput
             ? fieldData
             : await field.resolveValue(
@@ -144,6 +150,10 @@ export class NodeCreationInputType extends utils.ObjectInputType<FieldCreationIn
                 context,
                 utils.addPath(path, field.name),
               );
+
+        if (componentValue !== undefined) {
+          Object.assign(resolvedValue, { [field.name]: componentValue });
+        }
       }),
     );
 

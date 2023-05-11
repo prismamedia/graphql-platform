@@ -51,6 +51,49 @@ type query {
   ): [Article]!
 
   """
+  Gets the number of "ArticleExtensions"
+  """
+  articleExtensionCount(where: ArticleExtensionFilterInput): UnsignedInt!
+
+  """Either the "ArticleExtension" exists or not?"""
+  articleExtensionExists(where: ArticleExtensionUniqueFilterInput!): Boolean!
+
+  """
+  Retrieves a list of "ArticleExtensions"
+  """
+  articleExtensions(where: ArticleExtensionFilterInput, skip: UnsignedInt, first: UnsignedInt!): [ArticleExtension!]!
+
+  """Retrieves one "ArticleExtension", throws an error if it does not exist"""
+  articleExtension(where: ArticleExtensionUniqueFilterInput!): ArticleExtension!
+
+  """Retrieves one "ArticleExtension" if it exists, returns null otherwise"""
+  articleExtensionIfExists(where: ArticleExtensionUniqueFilterInput!): ArticleExtension
+
+  """
+  Given a list of unique-filter's value, retrieves the corresponding "ArticleExtensions" in the same order, throws an error if one does not exist
+  """
+  articleExtensionsInOrder(
+    where: [ArticleExtensionUniqueFilterInput!]!
+
+    """
+    It is possible to provide a filter in order to perform this query in a subset of the documents
+    """
+    subset: ArticleExtensionFilterInput
+  ): [ArticleExtension!]!
+
+  """
+  Given a list of unique-filter's value, retrieves the corresponding "ArticleExtensions", or null, in the same order
+  """
+  articleExtensionsInOrderIfExists(
+    where: [ArticleExtensionUniqueFilterInput!]!
+
+    """
+    It is possible to provide a filter in order to perform this query in a subset of the documents
+    """
+    subset: ArticleExtensionFilterInput
+  ): [ArticleExtension]!
+
+  """
   Gets the number of "Categories"
   """
   categoryCount(where: CategoryFilterInput): UnsignedInt!
@@ -424,6 +467,9 @@ input ArticleFilterInput {
   tagCount_gte: UnsignedInt
   tagCount_lt: UnsignedInt
   tagCount_lte: UnsignedInt
+  extension: ArticleExtensionFilterInput
+  extension_not: ArticleExtensionFilterInput
+  extension_is_null: Boolean
   AND: [ArticleFilterInput]
   OR: [ArticleFilterInput]
   NOT: ArticleFilterInput
@@ -732,6 +778,26 @@ scalar UnsignedFloat @specifiedBy(url: "https://en.wikipedia.org/wiki/IEEE_float
 """The \`JSONArray\` scalar type represents JSON arrays."""
 scalar JSONArray @specifiedBy(url: "http://www.ecma-international.org/publications/files/ECMA-ST/ECMA-404.pdf")
 
+"""The "ArticleExtension" nodes' filter"""
+input ArticleExtensionFilterInput {
+  article: ArticleFilterInput
+  article_not: ArticleFilterInput
+  source: NonEmptyTrimmedString
+  source_not: NonEmptyTrimmedString
+  source_is_null: Boolean
+  source_in: [NonEmptyTrimmedString]
+  source_not_in: [NonEmptyTrimmedString]
+  source_contains: NonEmptyString
+  source_not_contains: NonEmptyString
+  source_starts_with: NonEmptyString
+  source_not_starts_with: NonEmptyString
+  source_ends_with: NonEmptyString
+  source_not_ends_with: NonEmptyString
+  AND: [ArticleExtensionFilterInput]
+  OR: [ArticleExtensionFilterInput]
+  NOT: ArticleExtensionFilterInput
+}
+
 """
 Identifies exactly one "Article" with one of the following combination of components' value:
 - id
@@ -790,6 +856,7 @@ type Article implements PublicNodeInterface {
   Number of "tags"
   """
   tagCount(where: ArticleTagFilterInput): UnsignedInt!
+  extension: ArticleExtension
 
   """A custom field with a dependency"""
   lowerCasedTitle: NonEmptyTrimmedString!
@@ -970,6 +1037,21 @@ enum ArticleTagOrderingInput {
   moderationCount_DESC
 }
 
+type ArticleExtension {
+  article: Article!
+
+  """The source of the article"""
+  source: NonEmptyTrimmedString
+}
+
+"""
+Identifies exactly one "ArticleExtension" with one of the following combination of components' value:
+- article
+"""
+input ArticleExtensionUniqueFilterInput {
+  article: ArticleUniqueFilterInput!
+}
+
 """
 Identifies exactly one "Tag" with one of the following combination of components' value:
 - id
@@ -1095,16 +1177,52 @@ type mutation {
   """
   Updates many "Articles"
   """
-  updateArticles(where: ArticleFilterInput, orderBy: [ArticleOrderingInput!], first: UnsignedInt!, data: ArticleUpdateInput!): [Article!]!
+  updateArticles(where: ArticleFilterInput, orderBy: [ArticleOrderingInput!], first: UnsignedInt!, data: ArticleUpdateInput): [Article!]!
 
   """Updates one "Article", throws an error if it does not exists"""
-  updateArticle(where: ArticleUniqueFilterInput!, data: ArticleUpdateInput!): Article!
+  updateArticle(where: ArticleUniqueFilterInput!, data: ArticleUpdateInput): Article!
 
   """Updates one "Article" if it exists, returns null otherwise"""
-  updateArticleIfExists(where: ArticleUniqueFilterInput!, data: ArticleUpdateInput!): Article
+  updateArticleIfExists(where: ArticleUniqueFilterInput!, data: ArticleUpdateInput): Article
 
   """Updates an existing "Article" or creates a new one"""
   upsertArticle(where: ArticleUniqueFilterInput!, create: ArticleCreationInput!, update: ArticleUpdateInput): Article!
+
+  """Creates one "ArticleExtension", throws an error if it already exists"""
+  createArticleExtension(data: ArticleExtensionCreationInput!): ArticleExtension!
+
+  """
+  Creates one "ArticleExtension" if it does not exist, returns the existing otherwise
+  """
+  createArticleExtensionIfNotExists(where: ArticleExtensionUniqueFilterInput!, data: ArticleExtensionCreationInput!): ArticleExtension!
+
+  """Creates some "ArticleExtension", throws an error if they already exist"""
+  createArticleExtensions(data: [ArticleExtensionCreationInput!]!): [ArticleExtension!]!
+
+  """
+  Deletes many "ArticleExtensions"
+  """
+  deleteArticleExtensions(where: ArticleExtensionFilterInput, first: UnsignedInt!): [ArticleExtension!]!
+
+  """Deletes one "ArticleExtension", throws an error if it does not exists"""
+  deleteArticleExtension(where: ArticleExtensionUniqueFilterInput!): ArticleExtension!
+
+  """Deletes one "ArticleExtension" if it exists, returns null otherwise"""
+  deleteArticleExtensionIfExists(where: ArticleExtensionUniqueFilterInput!): ArticleExtension
+
+  """
+  Updates many "ArticleExtensions"
+  """
+  updateArticleExtensions(where: ArticleExtensionFilterInput, first: UnsignedInt!, data: ArticleExtensionUpdateInput): [ArticleExtension!]!
+
+  """Updates one "ArticleExtension", throws an error if it does not exists"""
+  updateArticleExtension(where: ArticleExtensionUniqueFilterInput!, data: ArticleExtensionUpdateInput): ArticleExtension!
+
+  """Updates one "ArticleExtension" if it exists, returns null otherwise"""
+  updateArticleExtensionIfExists(where: ArticleExtensionUniqueFilterInput!, data: ArticleExtensionUpdateInput): ArticleExtension
+
+  """Updates an existing "ArticleExtension" or creates a new one"""
+  upsertArticleExtension(where: ArticleExtensionUniqueFilterInput!, create: ArticleExtensionCreationInput!, update: ArticleExtensionUpdateInput): ArticleExtension!
 
   """Creates one "Category", throws an error if it already exists"""
   createCategory(data: CategoryCreationInput!): Category!
@@ -1131,13 +1249,13 @@ type mutation {
   """
   Updates many "Categories"
   """
-  updateCategories(where: CategoryFilterInput, orderBy: [CategoryOrderingInput!], first: UnsignedInt!, data: CategoryUpdateInput!): [Category!]!
+  updateCategories(where: CategoryFilterInput, orderBy: [CategoryOrderingInput!], first: UnsignedInt!, data: CategoryUpdateInput): [Category!]!
 
   """Updates one "Category", throws an error if it does not exists"""
-  updateCategory(where: CategoryUniqueFilterInput!, data: CategoryUpdateInput!): Category!
+  updateCategory(where: CategoryUniqueFilterInput!, data: CategoryUpdateInput): Category!
 
   """Updates one "Category" if it exists, returns null otherwise"""
-  updateCategoryIfExists(where: CategoryUniqueFilterInput!, data: CategoryUpdateInput!): Category
+  updateCategoryIfExists(where: CategoryUniqueFilterInput!, data: CategoryUpdateInput): Category
 
   """Updates an existing "Category" or creates a new one"""
   upsertCategory(where: CategoryUniqueFilterInput!, create: CategoryCreationInput!, update: CategoryUpdateInput): Category!
@@ -1165,13 +1283,13 @@ type mutation {
   """
   Updates many "Tags"
   """
-  updateTags(where: TagFilterInput, orderBy: [TagOrderingInput!], first: UnsignedInt!, data: TagUpdateInput!): [Tag!]!
+  updateTags(where: TagFilterInput, orderBy: [TagOrderingInput!], first: UnsignedInt!, data: TagUpdateInput): [Tag!]!
 
   """Updates one "Tag", throws an error if it does not exists"""
-  updateTag(where: TagUniqueFilterInput!, data: TagUpdateInput!): Tag!
+  updateTag(where: TagUniqueFilterInput!, data: TagUpdateInput): Tag!
 
   """Updates one "Tag" if it exists, returns null otherwise"""
-  updateTagIfExists(where: TagUniqueFilterInput!, data: TagUpdateInput!): Tag
+  updateTagIfExists(where: TagUniqueFilterInput!, data: TagUpdateInput): Tag
 
   """Updates an existing "Tag" or creates a new one"""
   upsertTag(where: TagUniqueFilterInput!, create: TagCreationInput!, update: TagUpdateInput): Tag!
@@ -1201,13 +1319,13 @@ type mutation {
   """
   Updates many "ArticleTags"
   """
-  updateArticleTags(where: ArticleTagFilterInput, orderBy: [ArticleTagOrderingInput!], first: UnsignedInt!, data: ArticleTagUpdateInput!): [ArticleTag!]!
+  updateArticleTags(where: ArticleTagFilterInput, orderBy: [ArticleTagOrderingInput!], first: UnsignedInt!, data: ArticleTagUpdateInput): [ArticleTag!]!
 
   """Updates one "ArticleTag", throws an error if it does not exists"""
-  updateArticleTag(where: ArticleTagUniqueFilterInput!, data: ArticleTagUpdateInput!): ArticleTag!
+  updateArticleTag(where: ArticleTagUniqueFilterInput!, data: ArticleTagUpdateInput): ArticleTag!
 
   """Updates one "ArticleTag" if it exists, returns null otherwise"""
-  updateArticleTagIfExists(where: ArticleTagUniqueFilterInput!, data: ArticleTagUpdateInput!): ArticleTag
+  updateArticleTagIfExists(where: ArticleTagUniqueFilterInput!, data: ArticleTagUpdateInput): ArticleTag
 
   """Updates an existing "ArticleTag" or creates a new one"""
   upsertArticleTag(where: ArticleTagUniqueFilterInput!, create: ArticleTagCreationInput!, update: ArticleTagUpdateInput): ArticleTag!
@@ -1245,17 +1363,17 @@ type mutation {
   """
   Updates many "ArticleTagModerations"
   """
-  updateArticleTagModerations(where: ArticleTagModerationFilterInput, first: UnsignedInt!, data: ArticleTagModerationUpdateInput!): [ArticleTagModeration!]!
+  updateArticleTagModerations(where: ArticleTagModerationFilterInput, first: UnsignedInt!, data: ArticleTagModerationUpdateInput): [ArticleTagModeration!]!
 
   """
   Updates one "ArticleTagModeration", throws an error if it does not exists
   """
-  updateArticleTagModeration(where: ArticleTagModerationUniqueFilterInput!, data: ArticleTagModerationUpdateInput!): ArticleTagModeration!
+  updateArticleTagModeration(where: ArticleTagModerationUniqueFilterInput!, data: ArticleTagModerationUpdateInput): ArticleTagModeration!
 
   """
   Updates one "ArticleTagModeration" if it exists, returns null otherwise
   """
-  updateArticleTagModerationIfExists(where: ArticleTagModerationUniqueFilterInput!, data: ArticleTagModerationUpdateInput!): ArticleTagModeration
+  updateArticleTagModerationIfExists(where: ArticleTagModerationUniqueFilterInput!, data: ArticleTagModerationUpdateInput): ArticleTagModeration
 
   """Updates an existing "ArticleTagModeration" or creates a new one"""
   upsertArticleTagModeration(where: ArticleTagModerationUniqueFilterInput!, create: ArticleTagModerationCreationInput!, update: ArticleTagModerationUpdateInput): ArticleTagModeration!
@@ -1285,13 +1403,13 @@ type mutation {
   """
   Updates many "UserProfiles"
   """
-  updateUserProfiles(where: UserProfileFilterInput, orderBy: [UserProfileOrderingInput!], first: UnsignedInt!, data: UserProfileUpdateInput!): [UserProfile!]!
+  updateUserProfiles(where: UserProfileFilterInput, orderBy: [UserProfileOrderingInput!], first: UnsignedInt!, data: UserProfileUpdateInput): [UserProfile!]!
 
   """Updates one "UserProfile", throws an error if it does not exists"""
-  updateUserProfile(where: UserProfileUniqueFilterInput!, data: UserProfileUpdateInput!): UserProfile!
+  updateUserProfile(where: UserProfileUniqueFilterInput!, data: UserProfileUpdateInput): UserProfile!
 
   """Updates one "UserProfile" if it exists, returns null otherwise"""
-  updateUserProfileIfExists(where: UserProfileUniqueFilterInput!, data: UserProfileUpdateInput!): UserProfile
+  updateUserProfileIfExists(where: UserProfileUniqueFilterInput!, data: UserProfileUpdateInput): UserProfile
 
   """Updates an existing "UserProfile" or creates a new one"""
   upsertUserProfile(where: UserProfileUniqueFilterInput!, create: UserProfileCreationInput!, update: UserProfileUpdateInput): UserProfile!
@@ -1309,7 +1427,7 @@ input ArticleCreationInput {
 
   """The article's body"""
   body: DraftJS
-  category: ArticleNestedCategoryEdgeCreationInput
+  category: ArticleCreationCategoryInput
 
   """Contains any arbitrary data you want to store alongside the article"""
   metas: JSONObject
@@ -1320,32 +1438,33 @@ input ArticleCreationInput {
   """Is the article a partnership?"""
   sponsored: Boolean
   machineTags: JSONArray
-  tags: ArticleNestedTagsReverseEdgeCreationInput
+  tags: ArticleCreationTagsInput
+  extension: ArticleCreationExtensionInput
 
   """It is possible to provide the article's body as raw HTML"""
   htmlBody: String
 }
 
-input ArticleNestedCategoryEdgeCreationInput {
+input ArticleCreationCategoryInput {
   """
-  Connect a "Category" to this new "Article" through the "Article.category" edge, throw an error if it does not exist.
+  Connect a "Category" to a new "Article" through the "Article.category" edge, throw an error if it does not exist.
   """
   connect: CategoryUniqueFilterInput
 
   """
-  Connect a "Category" to this new "Article" through the "Article.category" edge, if it exists.
+  Connect a "Category" to a new "Article" through the "Article.category" edge, if it exists.
   """
   connectIfExists: CategoryUniqueFilterInput
 
   """
-  Create a "Category" and connect it to this new "Article" through the "Article.category" edge.
+  Create a "Category" and connect it to a new "Article" through the "Article.category" edge.
   """
   create: CategoryCreationInput
 
   """
-  Create a "Category" if it does not exist, and connect it to this new "Article" through the "Article.category" edge.
+  Create a "Category" if it does not exist, and connect it to a new "Article" through the "Article.category" edge.
   """
-  connectOrCreate: ArticleNestedConnectOrCreateCategoryEdgeCreationInput
+  createIfNotExists: ArticleCreationCategoryCreateIfNotExistsInput
 }
 
 """The "Category" node's creation"""
@@ -1356,57 +1475,48 @@ input CategoryCreationInput {
 
   """You can either provide a slug or let the title be "slugified" for you"""
   slug: NonEmptyTrimmedString
-  parent: CategoryNestedParentEdgeCreationInput
+  parent: CategoryCreationParentInput
   order: UnsignedInt!
 
   """This category's children"""
-  children: CategoryNestedChildrenReverseEdgeCreationInput
+  children: CategoryCreationChildrenInput
 
   """The articles attached to this category"""
-  articles: CategoryNestedArticlesReverseEdgeCreationInput
+  articles: CategoryCreationArticlesInput
 
   """It is possible to provide the article's body as raw HTML"""
   htmlBody: String
 }
 
-input CategoryNestedParentEdgeCreationInput {
+input CategoryCreationParentInput {
   """
-  Connect a "Category" to this new "Category" through the "Category.parent" edge, throw an error if it does not exist.
+  Connect a "Category" to a new "Category" through the "Category.parent" edge, throw an error if it does not exist.
   """
   connect: CategoryUniqueFilterInput
 
   """
-  Connect a "Category" to this new "Category" through the "Category.parent" edge, if it exists.
+  Connect a "Category" to a new "Category" through the "Category.parent" edge, if it exists.
   """
   connectIfExists: CategoryUniqueFilterInput
 
   """
-  Create a "Category" and connect it to this new "Category" through the "Category.parent" edge.
+  Create a "Category" and connect it to a new "Category" through the "Category.parent" edge.
   """
   create: CategoryCreationInput
 
   """
-  Create a "Category" if it does not exist, and connect it to this new "Category" through the "Category.parent" edge.
+  Create a "Category" if it does not exist, and connect it to a new "Category" through the "Category.parent" edge.
   """
-  connectOrCreate: CategoryNestedConnectOrCreateParentEdgeCreationInput
+  createIfNotExists: CategoryCreationParentCreateIfNotExistsInput
 }
 
-input CategoryNestedConnectOrCreateParentEdgeCreationInput {
-  connect: CategoryUniqueFilterInput!
-  create: CategoryCreationInput!
+input CategoryCreationParentCreateIfNotExistsInput {
+  where: CategoryUniqueFilterInput!
+  data: CategoryCreationInput!
 }
 
-input CategoryNestedChildrenReverseEdgeCreationInput {
-  connectMany: CategoryFilterInput
-  connectOrCreate: [CategoryNestedConnectOrCreateChildrenReverseEdgeCreationInput!]
-  connect: [CategoryUniqueFilterInput!]
-  connectIfExists: [CategoryUniqueFilterInput!]
+input CategoryCreationChildrenInput {
   create: [CategoryCreationWithoutParentInput!]
-}
-
-input CategoryNestedConnectOrCreateChildrenReverseEdgeCreationInput {
-  connect: CategoryUniqueFilterInput!
-  create: CategoryCreationWithoutParentInput!
 }
 
 """The "Category" node's creation"""
@@ -1420,26 +1530,17 @@ input CategoryCreationWithoutParentInput {
   order: UnsignedInt!
 
   """This category's children"""
-  children: CategoryNestedChildrenReverseEdgeCreationInput
+  children: CategoryCreationChildrenInput
 
   """The articles attached to this category"""
-  articles: CategoryNestedArticlesReverseEdgeCreationInput
+  articles: CategoryCreationArticlesInput
 
   """It is possible to provide the article's body as raw HTML"""
   htmlBody: String
 }
 
-input CategoryNestedArticlesReverseEdgeCreationInput {
-  connectMany: ArticleFilterInput
-  connectOrCreate: [CategoryNestedConnectOrCreateArticlesReverseEdgeCreationInput!]
-  connect: [ArticleUniqueFilterInput!]
-  connectIfExists: [ArticleUniqueFilterInput!]
+input CategoryCreationArticlesInput {
   create: [ArticleCreationWithoutCategoryInput!]
-}
-
-input CategoryNestedConnectOrCreateArticlesReverseEdgeCreationInput {
-  connect: ArticleUniqueFilterInput!
-  create: ArticleCreationWithoutCategoryInput!
 }
 
 """The "Article" node's creation"""
@@ -1464,38 +1565,39 @@ input ArticleCreationWithoutCategoryInput {
   """Is the article a partnership?"""
   sponsored: Boolean
   machineTags: JSONArray
-  tags: ArticleNestedTagsReverseEdgeCreationInput
+  tags: ArticleCreationTagsInput
+  extension: ArticleCreationExtensionInput
 
   """It is possible to provide the article's body as raw HTML"""
   htmlBody: String
 }
 
-input ArticleNestedTagsReverseEdgeCreationInput {
+input ArticleCreationTagsInput {
   create: [ArticleTagCreationWithoutArticleInput!]
 }
 
 """The "ArticleTag" node's creation"""
 input ArticleTagCreationWithoutArticleInput {
-  tag: ArticleTagNestedTagEdgeCreationInput!
+  tag: ArticleTagCreationTagInput!
   order: UnsignedInt!
-  moderations: ArticleTagNestedModerationsReverseEdgeCreationInput
+  moderations: ArticleTagCreationModerationsInput
 }
 
-input ArticleTagNestedTagEdgeCreationInput {
+input ArticleTagCreationTagInput {
   """
-  Connect a "Tag" to this new "ArticleTag" through the "ArticleTag.tag" edge, throw an error if it does not exist.
+  Connect a "Tag" to a new "ArticleTag" through the "ArticleTag.tag" edge, throw an error if it does not exist.
   """
   connect: TagUniqueFilterInput
 
   """
-  Create a "Tag" and connect it to this new "ArticleTag" through the "ArticleTag.tag" edge.
+  Create a "Tag" and connect it to a new "ArticleTag" through the "ArticleTag.tag" edge.
   """
   create: TagCreationInput
 
   """
-  Create a "Tag" if it does not exist, and connect it to this new "ArticleTag" through the "ArticleTag.tag" edge.
+  Create a "Tag" if it does not exist, and connect it to a new "ArticleTag" through the "ArticleTag.tag" edge.
   """
-  connectOrCreate: ArticleTagNestedConnectOrCreateTagEdgeCreationInput
+  createIfNotExists: ArticleTagCreationTagCreateIfNotExistsInput
 }
 
 """The "Tag" node's creation"""
@@ -1509,67 +1611,77 @@ input TagCreationInput {
 
   """You can either provide a slug or let the title be "slugified" for you"""
   slug: NonEmptyTrimmedString
-  articles: TagNestedArticlesReverseEdgeCreationInput
+  articles: TagCreationArticlesInput
 }
 
-input TagNestedArticlesReverseEdgeCreationInput {
+input TagCreationArticlesInput {
   create: [ArticleTagCreationWithoutTagInput!]
 }
 
 """The "ArticleTag" node's creation"""
 input ArticleTagCreationWithoutTagInput {
-  article: ArticleTagNestedArticleEdgeCreationInput!
+  article: ArticleTagCreationArticleInput!
   order: UnsignedInt!
-  moderations: ArticleTagNestedModerationsReverseEdgeCreationInput
+  moderations: ArticleTagCreationModerationsInput
 }
 
-input ArticleTagNestedArticleEdgeCreationInput {
+input ArticleTagCreationArticleInput {
   """
-  Connect an "Article" to this new "ArticleTag" through the "ArticleTag.article" edge, throw an error if it does not exist.
+  Connect an "Article" to a new "ArticleTag" through the "ArticleTag.article" edge, throw an error if it does not exist.
   """
   connect: ArticleUniqueFilterInput
 
   """
-  Create an "Article" and connect it to this new "ArticleTag" through the "ArticleTag.article" edge.
+  Create an "Article" and connect it to a new "ArticleTag" through the "ArticleTag.article" edge.
   """
   create: ArticleCreationInput
 
   """
-  Create an "Article" if it does not exist, and connect it to this new "ArticleTag" through the "ArticleTag.article" edge.
+  Create an "Article" if it does not exist, and connect it to a new "ArticleTag" through the "ArticleTag.article" edge.
   """
-  connectOrCreate: ArticleTagNestedConnectOrCreateArticleEdgeCreationInput
+  createIfNotExists: ArticleTagCreationArticleCreateIfNotExistsInput
 }
 
-input ArticleTagNestedConnectOrCreateArticleEdgeCreationInput {
-  connect: ArticleUniqueFilterInput!
-  create: ArticleCreationInput!
+input ArticleTagCreationArticleCreateIfNotExistsInput {
+  where: ArticleUniqueFilterInput!
+  data: ArticleCreationInput!
 }
 
-input ArticleTagNestedModerationsReverseEdgeCreationInput {
+input ArticleTagCreationModerationsInput {
   create: [ArticleTagModerationCreationWithoutArticletagInput!]
 }
 
 """The "ArticleTagModeration" node's creation"""
 input ArticleTagModerationCreationWithoutArticletagInput {
-  moderator: ArticleTagModerationNestedModeratorEdgeCreationInput!
+  moderator: ArticleTagModerationCreationModeratorInput!
   moderation: NonEmptyTrimmedString
 }
 
-input ArticleTagModerationNestedModeratorEdgeCreationInput {
+input ArticleTagModerationCreationModeratorInput {
   """
-  Connect a "User" to this new "ArticleTagModeration" through the "ArticleTagModeration.moderator" edge, throw an error if it does not exist.
+  Connect a "User" to a new "ArticleTagModeration" through the "ArticleTagModeration.moderator" edge, throw an error if it does not exist.
   """
   connect: UserUniqueFilterInput
 }
 
-input ArticleTagNestedConnectOrCreateTagEdgeCreationInput {
-  connect: TagUniqueFilterInput!
-  create: TagCreationInput!
+input ArticleTagCreationTagCreateIfNotExistsInput {
+  where: TagUniqueFilterInput!
+  data: TagCreationInput!
 }
 
-input ArticleNestedConnectOrCreateCategoryEdgeCreationInput {
-  connect: CategoryUniqueFilterInput!
-  create: CategoryCreationInput!
+input ArticleCreationExtensionInput {
+  create: ArticleExtensionCreationWithoutArticleInput
+}
+
+"""The "ArticleExtension" node's creation"""
+input ArticleExtensionCreationWithoutArticleInput {
+  """The source of the article"""
+  source: NonEmptyTrimmedString
+}
+
+input ArticleCreationCategoryCreateIfNotExistsInput {
+  where: CategoryUniqueFilterInput!
+  data: CategoryCreationInput!
 }
 
 """The "Article" node's update"""
@@ -1580,8 +1692,8 @@ input ArticleUpdateInput {
 
   """The article's body"""
   body: DraftJS
-  category: ArticleNestedCategoryEdgeUpdateInput
-  updatedBy: ArticleNestedUpdatedByEdgeUpdateInput
+  category: ArticleUpdateCategoryInput
+  updatedBy: ArticleUpdateUpdatedByInput
 
   """Contains any arbitrary data you want to store alongside the article"""
   metas: JSONObject
@@ -1594,153 +1706,128 @@ input ArticleUpdateInput {
   views: UnsignedBigInt
   score: UnsignedFloat
   machineTags: JSONArray
-  tags: ArticleNestedTagsReverseEdgeUpdateInput
+  tags: ArticleUpdateTagsInput
+  extension: ArticleUpdateExtensionInput
 
   """It is possible to provide the article's body as raw HTML"""
   htmlBody: String
 }
 
-input ArticleNestedCategoryEdgeUpdateInput {
+input ArticleUpdateCategoryInput {
+  """
+  Connect a "Category" to an existing "Article" through the "Article.category" edge, throw an error if it does not exist.
+  """
   connect: CategoryUniqueFilterInput
+
+  """
+  Connect a "Category" to an existing "Article" through the "Article.category" edge, if it exists.
+  """
   connectIfExists: CategoryUniqueFilterInput
-  connectOrCreate: ArticleNestedConnectOrCreateCategoryEdgeUpdateInput
+  disconnect: Boolean
+  disconnectIfExists: Boolean
+
+  """
+  Create a "Category" and connect it to an existing "Article" through the "Article.category" edge.
+  """
   create: CategoryCreationInput
-  disconnect: Boolean
+
+  """
+  Create a "Category" if it does not exist, and connect it to an existing "Article" through the "Article.category" edge.
+  """
+  createIfNotExists: ArticleUpdateCategoryCreateIfNotExistsInput
+
+  """
+  Update the connected "Category", throw an error if the "Article.category" edge does not exist.
+  """
+  update: CategoryUpdateInput
+
+  """
+  Update the connected "Category", if the "Article.category" edge exists.
+  """
+  updateIfExists: CategoryUpdateInput
 }
 
-input ArticleNestedConnectOrCreateCategoryEdgeUpdateInput {
-  connect: CategoryUniqueFilterInput!
-  create: CategoryCreationInput!
-}
-
-input ArticleNestedUpdatedByEdgeUpdateInput {
-  connect: UserUniqueFilterInput
-  connectIfExists: UserUniqueFilterInput
-  disconnect: Boolean
-}
-
-input ArticleNestedTagsReverseEdgeUpdateInput {
-  deleteAll: Boolean
-  deleteMany: ArticleTagFilterInput
-  delete: [ArticleTagUniqueFilterInput!]
-  deleteIfExists: [ArticleTagUniqueFilterInput!]
-  create: [ArticleTagCreationWithoutArticleInput!]
-  upsert: [ArticleNestedUpsertTagsReverseEdgeUpdateInput!]
-}
-
-input ArticleNestedUpsertTagsReverseEdgeUpdateInput {
-  where: ArticleTagUniqueFilterWithoutArticleInput!
-  create: ArticleTagCreationWithoutArticleInput!
-  update: ArticleTagUpdateInput
-}
-
-"""
-Given a known "article", identifies exactly one "ArticleTag" with one of the following combination of components' value:
-- (article) / tag
-- (article) / order
-"""
-input ArticleTagUniqueFilterWithoutArticleInput {
-  tag: TagUniqueFilterInput
-  order: UnsignedInt
-}
-
-"""The "ArticleTag" node's update"""
-input ArticleTagUpdateInput {
-  order: UnsignedInt
-  moderations: ArticleTagNestedModerationsReverseEdgeUpdateInput
-}
-
-input ArticleTagNestedModerationsReverseEdgeUpdateInput {
-  deleteAll: Boolean
-  deleteMany: ArticleTagModerationFilterInput
-  delete: [ArticleTagModerationUniqueFilterInput!]
-  deleteIfExists: [ArticleTagModerationUniqueFilterInput!]
-  create: [ArticleTagModerationCreationWithoutArticletagInput!]
-  upsert: [ArticleTagNestedUpsertModerationsReverseEdgeUpdateInput!]
-}
-
-input ArticleTagNestedUpsertModerationsReverseEdgeUpdateInput {
-  where: ArticleTagModerationUniqueFilterWithoutArticletagInput!
-  create: ArticleTagModerationCreationWithoutArticletagInput!
-  update: ArticleTagModerationUpdateInput
-}
-
-"""
-Given a known "articleTag", identifies exactly one "ArticleTagModeration" with one of the following combination of components' value:
-- (articleTag) / moderator
-"""
-input ArticleTagModerationUniqueFilterWithoutArticletagInput {
-  moderator: UserUniqueFilterInput!
-}
-
-"""The "ArticleTagModeration" node's update"""
-input ArticleTagModerationUpdateInput {
-  moderation: NonEmptyTrimmedString
+input ArticleUpdateCategoryCreateIfNotExistsInput {
+  where: CategoryUniqueFilterInput!
+  data: CategoryCreationInput!
 }
 
 """The "Category" node's update"""
 input CategoryUpdateInput {
-  parent: CategoryNestedParentEdgeUpdateInput
+  parent: CategoryUpdateParentInput
   order: UnsignedInt
 
   """This category's children"""
-  children: CategoryNestedChildrenReverseEdgeUpdateInput
+  children: CategoryUpdateChildrenInput
 
   """The articles attached to this category"""
-  articles: CategoryNestedArticlesReverseEdgeUpdateInput
+  articles: CategoryUpdateArticlesInput
 }
 
-input CategoryNestedParentEdgeUpdateInput {
+input CategoryUpdateParentInput {
+  """
+  Connect a "Category" to an existing "Category" through the "Category.parent" edge, throw an error if it does not exist.
+  """
   connect: CategoryUniqueFilterInput
+
+  """
+  Connect a "Category" to an existing "Category" through the "Category.parent" edge, if it exists.
+  """
   connectIfExists: CategoryUniqueFilterInput
-  connectOrCreate: CategoryNestedConnectOrCreateParentEdgeUpdateInput
-  create: CategoryCreationInput
   disconnect: Boolean
+  disconnectIfExists: Boolean
+
+  """
+  Create a "Category" and connect it to an existing "Category" through the "Category.parent" edge.
+  """
+  create: CategoryCreationInput
+
+  """
+  Create a "Category" if it does not exist, and connect it to an existing "Category" through the "Category.parent" edge.
+  """
+  createIfNotExists: CategoryUpdateParentCreateIfNotExistsInput
+
+  """
+  Update the connected "Category", throw an error if the "Category.parent" edge does not exist.
+  """
+  update: CategoryUpdateInput
+
+  """Update the connected "Category", if the "Category.parent" edge exists."""
+  updateIfExists: CategoryUpdateInput
 }
 
-input CategoryNestedConnectOrCreateParentEdgeUpdateInput {
-  connect: CategoryUniqueFilterInput!
-  create: CategoryCreationInput!
+input CategoryUpdateParentCreateIfNotExistsInput {
+  where: CategoryUniqueFilterInput!
+  data: CategoryCreationInput!
 }
 
-input CategoryNestedChildrenReverseEdgeUpdateInput {
+input CategoryUpdateChildrenInput {
   deleteAll: Boolean
   deleteMany: CategoryFilterInput
-  delete: [CategoryUniqueFilterInput!]
-  deleteIfExists: [CategoryUniqueFilterInput!]
-  disconnectAll: Boolean
-  disconnectMany: CategoryFilterInput
-  disconnect: [CategoryUniqueFilterInput!]
-  disconnectIfExists: [CategoryUniqueFilterInput!]
-  connectMany: CategoryFilterInput
-  connect: [CategoryUniqueFilterInput!]
-  connectIfExists: [CategoryUniqueFilterInput!]
-  connectOrCreate: [CategoryNestedConnectOrCreateChildrenReverseEdgeUpdateInput!]
+  delete: [CategoryUniqueFilterWithoutParentInput!]
+  deleteIfExists: [CategoryUniqueFilterWithoutParentInput!]
   create: [CategoryCreationWithoutParentInput!]
-  upsert: [CategoryNestedUpsertChildrenReverseEdgeUpdateInput!]
-}
-
-input CategoryNestedConnectOrCreateChildrenReverseEdgeUpdateInput {
-  connect: CategoryUniqueFilterInput!
-  create: CategoryCreationWithoutParentInput!
-}
-
-input CategoryNestedUpsertChildrenReverseEdgeUpdateInput {
-  where: CategoryUniqueFilterWithoutParentInput!
-  create: CategoryCreationWithoutParentInput!
-  update: CategoryUpdateWithoutParentInput
+  createIfNotExists: [CategoryUpdateChildrenCreateIfNotExistsInput!]
+  updateAll: CategoryUpdateWithoutParentInput
+  updateMany: CategoryUpdateChildrenUpdateManyInput
+  update: [CategoryUpdateChildrenUpdateInput!]
+  updateIfExists: [CategoryUpdateChildrenUpdateIfExistsInput!]
+  upsert: [CategoryUpdateChildrenUpsertInput!]
 }
 
 """
-Given a known "parent", identifies exactly one "Category" with one of the following combination of components' value:
-- id
+Given a "parent", identifies exactly one "Category" with one of the following combination of components' value:
 - (parent) / slug
 - (parent) / order
 """
 input CategoryUniqueFilterWithoutParentInput {
-  id: UUIDv4
   slug: NonEmptyTrimmedString
   order: UnsignedInt
+}
+
+input CategoryUpdateChildrenCreateIfNotExistsInput {
+  where: CategoryUniqueFilterWithoutParentInput!
+  data: CategoryCreationWithoutParentInput!
 }
 
 """The "Category" node's update"""
@@ -1748,49 +1835,37 @@ input CategoryUpdateWithoutParentInput {
   order: UnsignedInt
 
   """This category's children"""
-  children: CategoryNestedChildrenReverseEdgeUpdateInput
+  children: CategoryUpdateChildrenInput
 
   """The articles attached to this category"""
-  articles: CategoryNestedArticlesReverseEdgeUpdateInput
+  articles: CategoryUpdateArticlesInput
 }
 
-input CategoryNestedArticlesReverseEdgeUpdateInput {
+input CategoryUpdateArticlesInput {
   deleteAll: Boolean
   deleteMany: ArticleFilterInput
-  delete: [ArticleUniqueFilterInput!]
-  deleteIfExists: [ArticleUniqueFilterInput!]
-  disconnectAll: Boolean
-  disconnectMany: ArticleFilterInput
-  disconnect: [ArticleUniqueFilterInput!]
-  disconnectIfExists: [ArticleUniqueFilterInput!]
-  connectMany: ArticleFilterInput
-  connect: [ArticleUniqueFilterInput!]
-  connectIfExists: [ArticleUniqueFilterInput!]
-  connectOrCreate: [CategoryNestedConnectOrCreateArticlesReverseEdgeUpdateInput!]
+  delete: [ArticleUniqueFilterWithoutCategoryInput!]
+  deleteIfExists: [ArticleUniqueFilterWithoutCategoryInput!]
   create: [ArticleCreationWithoutCategoryInput!]
-  upsert: [CategoryNestedUpsertArticlesReverseEdgeUpdateInput!]
-}
-
-input CategoryNestedConnectOrCreateArticlesReverseEdgeUpdateInput {
-  connect: ArticleUniqueFilterInput!
-  create: ArticleCreationWithoutCategoryInput!
-}
-
-input CategoryNestedUpsertArticlesReverseEdgeUpdateInput {
-  where: ArticleUniqueFilterWithoutCategoryInput!
-  create: ArticleCreationWithoutCategoryInput!
-  update: ArticleUpdateWithoutCategoryInput
+  createIfNotExists: [CategoryUpdateArticlesCreateIfNotExistsInput!]
+  updateAll: ArticleUpdateWithoutCategoryInput
+  updateMany: CategoryUpdateArticlesUpdateManyInput
+  update: [CategoryUpdateArticlesUpdateInput!]
+  updateIfExists: [CategoryUpdateArticlesUpdateIfExistsInput!]
+  upsert: [CategoryUpdateArticlesUpsertInput!]
 }
 
 """
-Given a known "category", identifies exactly one "Article" with one of the following combination of components' value:
-- id
+Given a "category", identifies exactly one "Article" with one of the following combination of components' value:
 - (category) / slug
 """
 input ArticleUniqueFilterWithoutCategoryInput {
-  """This UUID identifies an Article publicly"""
-  id: UUIDv4
-  slug: NonEmptyTrimmedString
+  slug: NonEmptyTrimmedString!
+}
+
+input CategoryUpdateArticlesCreateIfNotExistsInput {
+  where: ArticleUniqueFilterWithoutCategoryInput!
+  data: ArticleCreationWithoutCategoryInput!
 }
 
 """The "Article" node's update"""
@@ -1801,7 +1876,7 @@ input ArticleUpdateWithoutCategoryInput {
 
   """The article's body"""
   body: DraftJS
-  updatedBy: ArticleNestedUpdatedByEdgeUpdateInput
+  updatedBy: ArticleUpdateUpdatedByInput
 
   """Contains any arbitrary data you want to store alongside the article"""
   metas: JSONObject
@@ -1814,93 +1889,356 @@ input ArticleUpdateWithoutCategoryInput {
   views: UnsignedBigInt
   score: UnsignedFloat
   machineTags: JSONArray
-  tags: ArticleNestedTagsReverseEdgeUpdateInput
+  tags: ArticleUpdateTagsInput
+  extension: ArticleUpdateExtensionInput
 
   """It is possible to provide the article's body as raw HTML"""
   htmlBody: String
+}
+
+input ArticleUpdateUpdatedByInput {
+  """
+  Connect a "User" to an existing "Article" through the "Article.updatedBy" edge, throw an error if it does not exist.
+  """
+  connect: UserUniqueFilterInput
+
+  """
+  Connect a "User" to an existing "Article" through the "Article.updatedBy" edge, if it exists.
+  """
+  connectIfExists: UserUniqueFilterInput
+  disconnect: Boolean
+  disconnectIfExists: Boolean
+}
+
+input ArticleUpdateTagsInput {
+  deleteAll: Boolean
+  deleteMany: ArticleTagFilterInput
+  delete: [ArticleTagUniqueFilterWithoutArticleInput!]
+  deleteIfExists: [ArticleTagUniqueFilterWithoutArticleInput!]
+  create: [ArticleTagCreationWithoutArticleInput!]
+  createIfNotExists: [ArticleUpdateTagsCreateIfNotExistsInput!]
+  updateAll: ArticleTagUpdateWithoutArticleInput
+  updateMany: ArticleUpdateTagsUpdateManyInput
+  update: [ArticleUpdateTagsUpdateInput!]
+  updateIfExists: [ArticleUpdateTagsUpdateIfExistsInput!]
+  upsert: [ArticleUpdateTagsUpsertInput!]
+}
+
+"""
+Given an "article", identifies exactly one "ArticleTag" with one of the following combination of components' value:
+- (article) / tag
+- (article) / order
+"""
+input ArticleTagUniqueFilterWithoutArticleInput {
+  tag: TagUniqueFilterInput
+  order: UnsignedInt
+}
+
+input ArticleUpdateTagsCreateIfNotExistsInput {
+  where: ArticleTagUniqueFilterWithoutArticleInput!
+  data: ArticleTagCreationWithoutArticleInput!
+}
+
+"""The "ArticleTag" node's update"""
+input ArticleTagUpdateWithoutArticleInput {
+  order: UnsignedInt
+  moderations: ArticleTagUpdateModerationsInput
+}
+
+input ArticleTagUpdateModerationsInput {
+  deleteAll: Boolean
+  deleteMany: ArticleTagModerationFilterInput
+  delete: [ArticleTagModerationUniqueFilterWithoutArticletagInput!]
+  deleteIfExists: [ArticleTagModerationUniqueFilterWithoutArticletagInput!]
+  create: [ArticleTagModerationCreationWithoutArticletagInput!]
+  createIfNotExists: [ArticleTagUpdateModerationsCreateIfNotExistsInput!]
+  updateAll: ArticleTagModerationUpdateWithoutArticletagInput
+  updateMany: ArticleTagUpdateModerationsUpdateManyInput
+  update: [ArticleTagUpdateModerationsUpdateInput!]
+  updateIfExists: [ArticleTagUpdateModerationsUpdateIfExistsInput!]
+  upsert: [ArticleTagUpdateModerationsUpsertInput!]
+}
+
+"""
+Given an "articleTag", identifies exactly one "ArticleTagModeration" with one of the following combination of components' value:
+- (articleTag) / moderator
+"""
+input ArticleTagModerationUniqueFilterWithoutArticletagInput {
+  moderator: UserUniqueFilterInput!
+}
+
+input ArticleTagUpdateModerationsCreateIfNotExistsInput {
+  where: ArticleTagModerationUniqueFilterWithoutArticletagInput!
+  data: ArticleTagModerationCreationWithoutArticletagInput!
+}
+
+"""The "ArticleTagModeration" node's update"""
+input ArticleTagModerationUpdateWithoutArticletagInput {
+  moderation: NonEmptyTrimmedString
+}
+
+input ArticleTagUpdateModerationsUpdateManyInput {
+  where: ArticleTagModerationFilterInput
+  data: ArticleTagModerationUpdateWithoutArticletagInput
+}
+
+input ArticleTagUpdateModerationsUpdateInput {
+  where: ArticleTagModerationUniqueFilterWithoutArticletagInput!
+  data: ArticleTagModerationUpdateWithoutArticletagInput
+}
+
+input ArticleTagUpdateModerationsUpdateIfExistsInput {
+  where: ArticleTagModerationUniqueFilterWithoutArticletagInput!
+  data: ArticleTagModerationUpdateWithoutArticletagInput
+}
+
+input ArticleTagUpdateModerationsUpsertInput {
+  where: ArticleTagModerationUniqueFilterWithoutArticletagInput!
+  create: ArticleTagModerationCreationWithoutArticletagInput!
+  update: ArticleTagModerationUpdateWithoutArticletagInput
+}
+
+input ArticleUpdateTagsUpdateManyInput {
+  where: ArticleTagFilterInput
+  data: ArticleTagUpdateWithoutArticleInput
+}
+
+input ArticleUpdateTagsUpdateInput {
+  where: ArticleTagUniqueFilterWithoutArticleInput!
+  data: ArticleTagUpdateWithoutArticleInput
+}
+
+input ArticleUpdateTagsUpdateIfExistsInput {
+  where: ArticleTagUniqueFilterWithoutArticleInput!
+  data: ArticleTagUpdateWithoutArticleInput
+}
+
+input ArticleUpdateTagsUpsertInput {
+  where: ArticleTagUniqueFilterWithoutArticleInput!
+  create: ArticleTagCreationWithoutArticleInput!
+  update: ArticleTagUpdateWithoutArticleInput
+}
+
+input ArticleUpdateExtensionInput {
+  delete: Boolean
+  deleteIfExists: Boolean
+  create: ArticleExtensionCreationWithoutArticleInput
+  createIfNotExists: ArticleExtensionCreationWithoutArticleInput
+  update: ArticleExtensionUpdateWithoutArticleInput
+  updateIfExists: ArticleExtensionUpdateWithoutArticleInput
+  upsert: ArticleUpdateExtensionUpsertInput
+}
+
+"""The "ArticleExtension" node's update"""
+input ArticleExtensionUpdateWithoutArticleInput {
+  """The source of the article"""
+  source: NonEmptyTrimmedString
+}
+
+input ArticleUpdateExtensionUpsertInput {
+  create: ArticleExtensionCreationWithoutArticleInput!
+  update: ArticleExtensionUpdateWithoutArticleInput
+}
+
+input CategoryUpdateArticlesUpdateManyInput {
+  where: ArticleFilterInput
+  data: ArticleUpdateWithoutCategoryInput
+}
+
+input CategoryUpdateArticlesUpdateInput {
+  where: ArticleUniqueFilterWithoutCategoryInput!
+  data: ArticleUpdateWithoutCategoryInput
+}
+
+input CategoryUpdateArticlesUpdateIfExistsInput {
+  where: ArticleUniqueFilterWithoutCategoryInput!
+  data: ArticleUpdateWithoutCategoryInput
+}
+
+input CategoryUpdateArticlesUpsertInput {
+  where: ArticleUniqueFilterWithoutCategoryInput!
+  create: ArticleCreationWithoutCategoryInput!
+  update: ArticleUpdateWithoutCategoryInput
+}
+
+input CategoryUpdateChildrenUpdateManyInput {
+  where: CategoryFilterInput
+  data: CategoryUpdateWithoutParentInput
+}
+
+input CategoryUpdateChildrenUpdateInput {
+  where: CategoryUniqueFilterWithoutParentInput!
+  data: CategoryUpdateWithoutParentInput
+}
+
+input CategoryUpdateChildrenUpdateIfExistsInput {
+  where: CategoryUniqueFilterWithoutParentInput!
+  data: CategoryUpdateWithoutParentInput
+}
+
+input CategoryUpdateChildrenUpsertInput {
+  where: CategoryUniqueFilterWithoutParentInput!
+  create: CategoryCreationWithoutParentInput!
+  update: CategoryUpdateWithoutParentInput
+}
+
+"""The "ArticleExtension" node's creation"""
+input ArticleExtensionCreationInput {
+  article: ArticleExtensionCreationArticleInput!
+
+  """The source of the article"""
+  source: NonEmptyTrimmedString
+}
+
+input ArticleExtensionCreationArticleInput {
+  """
+  Connect an "Article" to a new "ArticleExtension" through the "ArticleExtension.article" edge, throw an error if it does not exist.
+  """
+  connect: ArticleUniqueFilterInput
+
+  """
+  Create an "Article" and connect it to a new "ArticleExtension" through the "ArticleExtension.article" edge.
+  """
+  create: ArticleCreationInput
+
+  """
+  Create an "Article" if it does not exist, and connect it to a new "ArticleExtension" through the "ArticleExtension.article" edge.
+  """
+  createIfNotExists: ArticleExtensionCreationArticleCreateIfNotExistsInput
+}
+
+input ArticleExtensionCreationArticleCreateIfNotExistsInput {
+  where: ArticleUniqueFilterInput!
+  data: ArticleCreationInput!
+}
+
+"""The "ArticleExtension" node's update"""
+input ArticleExtensionUpdateInput {
+  """The source of the article"""
+  source: NonEmptyTrimmedString
 }
 
 """The "Tag" node's update"""
 input TagUpdateInput {
   """A tag can be deprecated"""
   deprecated: Boolean
-  articles: TagNestedArticlesReverseEdgeUpdateInput
+  articles: TagUpdateArticlesInput
 }
 
-input TagNestedArticlesReverseEdgeUpdateInput {
+input TagUpdateArticlesInput {
   deleteAll: Boolean
   deleteMany: ArticleTagFilterInput
-  delete: [ArticleTagUniqueFilterInput!]
-  deleteIfExists: [ArticleTagUniqueFilterInput!]
+  delete: [ArticleTagUniqueFilterWithoutTagInput!]
+  deleteIfExists: [ArticleTagUniqueFilterWithoutTagInput!]
   create: [ArticleTagCreationWithoutTagInput!]
-  upsert: [TagNestedUpsertArticlesReverseEdgeUpdateInput!]
-}
-
-input TagNestedUpsertArticlesReverseEdgeUpdateInput {
-  where: ArticleTagUniqueFilterWithoutTagInput!
-  create: ArticleTagCreationWithoutTagInput!
-  update: ArticleTagUpdateInput
+  createIfNotExists: [TagUpdateArticlesCreateIfNotExistsInput!]
+  updateAll: ArticleTagUpdateWithoutTagInput
+  updateMany: TagUpdateArticlesUpdateManyInput
+  update: [TagUpdateArticlesUpdateInput!]
+  updateIfExists: [TagUpdateArticlesUpdateIfExistsInput!]
+  upsert: [TagUpdateArticlesUpsertInput!]
 }
 
 """
-Given a known "tag", identifies exactly one "ArticleTag" with one of the following combination of components' value:
+Given a "tag", identifies exactly one "ArticleTag" with one of the following combination of components' value:
 - article / (tag)
-- article / order
 """
 input ArticleTagUniqueFilterWithoutTagInput {
   article: ArticleUniqueFilterInput!
+}
+
+input TagUpdateArticlesCreateIfNotExistsInput {
+  where: ArticleTagUniqueFilterWithoutTagInput!
+  data: ArticleTagCreationWithoutTagInput!
+}
+
+"""The "ArticleTag" node's update"""
+input ArticleTagUpdateWithoutTagInput {
   order: UnsignedInt
+  moderations: ArticleTagUpdateModerationsInput
+}
+
+input TagUpdateArticlesUpdateManyInput {
+  where: ArticleTagFilterInput
+  data: ArticleTagUpdateWithoutTagInput
+}
+
+input TagUpdateArticlesUpdateInput {
+  where: ArticleTagUniqueFilterWithoutTagInput!
+  data: ArticleTagUpdateWithoutTagInput
+}
+
+input TagUpdateArticlesUpdateIfExistsInput {
+  where: ArticleTagUniqueFilterWithoutTagInput!
+  data: ArticleTagUpdateWithoutTagInput
+}
+
+input TagUpdateArticlesUpsertInput {
+  where: ArticleTagUniqueFilterWithoutTagInput!
+  create: ArticleTagCreationWithoutTagInput!
+  update: ArticleTagUpdateWithoutTagInput
 }
 
 """The "ArticleTag" node's creation"""
 input ArticleTagCreationInput {
-  article: ArticleTagNestedArticleEdgeCreationInput!
-  tag: ArticleTagNestedTagEdgeCreationInput!
+  article: ArticleTagCreationArticleInput!
+  tag: ArticleTagCreationTagInput!
   order: UnsignedInt!
-  moderations: ArticleTagNestedModerationsReverseEdgeCreationInput
+  moderations: ArticleTagCreationModerationsInput
+}
+
+"""The "ArticleTag" node's update"""
+input ArticleTagUpdateInput {
+  order: UnsignedInt
+  moderations: ArticleTagUpdateModerationsInput
 }
 
 """The "ArticleTagModeration" node's creation"""
 input ArticleTagModerationCreationInput {
-  articleTag: ArticleTagModerationNestedArticleTagEdgeCreationInput!
-  moderator: ArticleTagModerationNestedModeratorEdgeCreationInput!
+  articleTag: ArticleTagModerationCreationArticleTagInput!
+  moderator: ArticleTagModerationCreationModeratorInput!
   moderation: NonEmptyTrimmedString
 }
 
-input ArticleTagModerationNestedArticleTagEdgeCreationInput {
+input ArticleTagModerationCreationArticleTagInput {
   """
-  Connect an "ArticleTag" to this new "ArticleTagModeration" through the "ArticleTagModeration.articleTag" edge, throw an error if it does not exist.
+  Connect an "ArticleTag" to a new "ArticleTagModeration" through the "ArticleTagModeration.articleTag" edge, throw an error if it does not exist.
   """
   connect: ArticleTagUniqueFilterInput
 
   """
-  Create an "ArticleTag" and connect it to this new "ArticleTagModeration" through the "ArticleTagModeration.articleTag" edge.
+  Create an "ArticleTag" and connect it to a new "ArticleTagModeration" through the "ArticleTagModeration.articleTag" edge.
   """
   create: ArticleTagCreationInput
 
   """
-  Create an "ArticleTag" if it does not exist, and connect it to this new "ArticleTagModeration" through the "ArticleTagModeration.articleTag" edge.
+  Create an "ArticleTag" if it does not exist, and connect it to a new "ArticleTagModeration" through the "ArticleTagModeration.articleTag" edge.
   """
-  connectOrCreate: ArticleTagModerationNestedConnectOrCreateArticleTagEdgeCreationInput
+  createIfNotExists: ArticleTagModerationCreationArticleTagCreateIfNotExistsInput
 }
 
-input ArticleTagModerationNestedConnectOrCreateArticleTagEdgeCreationInput {
-  connect: ArticleTagUniqueFilterInput!
-  create: ArticleTagCreationInput!
+input ArticleTagModerationCreationArticleTagCreateIfNotExistsInput {
+  where: ArticleTagUniqueFilterInput!
+  data: ArticleTagCreationInput!
+}
+
+"""The "ArticleTagModeration" node's update"""
+input ArticleTagModerationUpdateInput {
+  moderation: NonEmptyTrimmedString
 }
 
 """The "UserProfile" node's creation"""
 input UserProfileCreationInput {
-  user: UserProfileNestedUserEdgeCreationInput!
+  user: UserProfileCreationUserInput!
   birthday: Date
   facebookId: ID
   googleId: ID
   twitterHandle: ID
 }
 
-input UserProfileNestedUserEdgeCreationInput {
+input UserProfileCreationUserInput {
   """
-  Connect a "User" to this new "UserProfile" through the "UserProfile.user" edge, throw an error if it does not exist.
+  Connect a "User" to a new "UserProfile" through the "UserProfile.user" edge, throw an error if it does not exist.
   """
   connect: UserUniqueFilterInput
 }

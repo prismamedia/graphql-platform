@@ -58,25 +58,62 @@ const updateProxyHandler: ProxyHandler<NodeUpdateStatement> = {
   },
 };
 
+const targetProxyHandler: ProxyHandler<NodeUpdateStatement> = {
+  ownKeys: (statement) => Array.from(statement.node.componentsByName.keys()),
+  has: (statement, componentName) =>
+    statement.node.componentsByName.has(componentName as any),
+  get: (statement, componentName) =>
+    statement.getComponentTarget(componentName as any),
+  set: (statement, componentName, componentUpdate) => {
+    statement.setComponentUpdate(componentName as any, componentUpdate);
+
+    return true;
+  },
+  deleteProperty: (_statement, componentName) => {
+    throw new TypeError(`Cannot delete property "${String(componentName)}"`);
+  },
+  getOwnPropertyDescriptor: (statement, componentName) => {
+    const component = statement.node.componentsByName.get(componentName as any);
+
+    return component
+      ? {
+          configurable: true,
+          enumerable: true,
+          writable: true,
+          value: statement.getComponentTarget(component),
+        }
+      : undefined;
+  },
+};
+
 export class NodeUpdateStatement {
-  /**
-   * A convenient proxy to use this as a mutable plain-object
-   */
-  public readonly updateProxy: NodeUpdateValue;
+  readonly #currentValue: Readonly<NodeValue>;
 
   public readonly updatesByComponent = new Map<
     Component,
     utils.NonOptional<ComponentUpdateValue>
   >();
 
+  /**
+   * A convenient way to access the updates of this node, as a mutable plain-object
+   */
+  public readonly updateProxy: NodeUpdateValue;
+
+  /**
+   * A convenient way to access the targeted value of this node, as a mutable plain-object
+   */
+  public readonly targetProxy: NodeValue;
+
   public constructor(
     public readonly node: Node,
+    currentValue: Readonly<NodeValue>,
     update?: Readonly<NodeUpdateValue>,
-    protected readonly currentValue?: Readonly<NodeValue>,
   ) {
+    this.#currentValue = currentValue;
     update != null && this.setUpdate(update);
 
     this.updateProxy = new Proxy(this, updateProxyHandler) as any;
+    this.targetProxy = new Proxy(this, targetProxyHandler) as any;
   }
 
   public setComponentUpdate(
@@ -91,9 +128,8 @@ export class NodeUpdateStatement {
       const value = component.parseValue(update);
 
       if (
-        this.currentValue &&
         component.areValuesEqual(
-          this.currentValue[component.name] as any,
+          this.#currentValue[component.name] as any,
           value as any,
         )
       ) {
@@ -141,61 +177,6 @@ export class NodeUpdateStatement {
     return this.updatesByComponent.size === 0;
   }
 
-  public individualize(
-    currentValue: Readonly<NodeValue>,
-  ): IndividualizedNodeUpdateStatement {
-    return new IndividualizedNodeUpdateStatement(
-      this.node,
-      this.update,
-      currentValue,
-    );
-  }
-}
-
-const updatedValueProxyHandler: ProxyHandler<IndividualizedNodeUpdateStatement> =
-  {
-    ownKeys: (statement) => Array.from(statement.node.componentsByName.keys()),
-    has: (statement, componentName) =>
-      statement.node.componentsByName.has(componentName as any),
-    get: (statement, componentName) =>
-      statement.getComponentTarget(componentName as any),
-    set: (statement, componentName, componentUpdate) => {
-      statement.setComponentUpdate(componentName as any, componentUpdate);
-
-      return true;
-    },
-    deleteProperty: (_statement, componentName) => {
-      throw new TypeError(`Cannot delete property "${String(componentName)}"`);
-    },
-    getOwnPropertyDescriptor: (statement, componentName) => {
-      const component = statement.node.componentsByName.get(
-        componentName as any,
-      );
-
-      return component
-        ? {
-            configurable: true,
-            enumerable: true,
-            writable: true,
-            value: statement.getComponentTarget(component),
-          }
-        : undefined;
-    },
-  };
-
-export class IndividualizedNodeUpdateStatement extends NodeUpdateStatement {
-  public readonly targetProxy: NodeValue;
-
-  public constructor(
-    node: Node,
-    update: Readonly<NodeUpdateValue> | undefined,
-    protected override readonly currentValue: Readonly<NodeValue>,
-  ) {
-    super(node, update, currentValue);
-
-    this.targetProxy = new Proxy(this, updatedValueProxyHandler) as any;
-  }
-
   public getComponentTarget(
     componentOrName: Component | Component['name'],
   ): ComponentValue {
@@ -203,8 +184,16 @@ export class IndividualizedNodeUpdateStatement extends NodeUpdateStatement {
     const componentUpdate = this.updatesByComponent.get(component);
 
     return componentUpdate === undefined
-      ? this.currentValue[component.name]
+      ? this.#currentValue[component.name]
       : componentUpdate;
+  }
+
+  public getLeafTarget(leafOrName: Leaf | Leaf['name']): LeafValue {
+    return this.getComponentTarget(this.node.ensureLeaf(leafOrName)) as any;
+  }
+
+  public getEdgeTarget(edgeOrName: Edge | Edge['name']): ReferenceValue {
+    return this.getComponentTarget(this.node.ensureEdge(edgeOrName)) as any;
   }
 
   public get target(): NodeValue {

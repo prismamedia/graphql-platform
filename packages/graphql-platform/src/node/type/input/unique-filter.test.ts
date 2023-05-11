@@ -1,7 +1,7 @@
 import { beforeAll, describe, expect, it } from '@jest/globals';
-import { GraphQLInputObjectType, printType } from 'graphql';
+import * as graphql from 'graphql';
 import { MyGP, nodeNames, nodes } from '../../../__tests__/config.js';
-import { GraphQLPlatform } from '../../../index.js';
+import { Edge, GraphQLPlatform, Node } from '../../../index.js';
 import {
   NodeUniqueFilterInputType,
   NodeUniqueFilterInputValue,
@@ -23,16 +23,45 @@ describe('NodeUniqueFilterInputType', () => {
 
       if (node.isPublic()) {
         expect(uniqueFilterInputType.getGraphQLInputType()).toBeInstanceOf(
-          GraphQLInputObjectType,
+          graphql.GraphQLInputObjectType,
         );
+
         expect(
-          printType(uniqueFilterInputType.getGraphQLInputType()),
+          graphql.printType(uniqueFilterInputType.getGraphQLInputType()),
         ).toMatchSnapshot(uniqueFilterInputType.name);
       } else {
         expect(() => uniqueFilterInputType.getGraphQLInputType()).toThrowError(
           `The "${nodeName}UniqueFilterInput" input type is private`,
         );
       }
+
+      node.edgeSet.forEach((edge) => {
+        if (node.isPartiallyIdentifiableWithEdge(edge)) {
+          const uniqueFilterInputType =
+            node.getUniqueFilterWithoutEdgeInputType(edge);
+          expect(uniqueFilterInputType).toBeInstanceOf(
+            NodeUniqueFilterInputType,
+          );
+
+          if (node.isPubliclyPartiallyIdentifiableWithEdge(edge)) {
+            expect(
+              graphql.printType(uniqueFilterInputType.getGraphQLInputType()),
+            ).toMatchSnapshot(uniqueFilterInputType.name);
+          } else {
+            expect(() =>
+              uniqueFilterInputType.getGraphQLInputType(),
+            ).toThrowError(
+              `The "${nodeName}UniqueFilterInput" input type is private`,
+            );
+          }
+        } else {
+          expect(() =>
+            node.getUniqueFilterWithoutEdgeInputType(edge),
+          ).toThrowError(
+            `The "${nodeName}" node is not partially identifiable with the "${edge}" edge`,
+          );
+        }
+      });
     });
   });
 
@@ -41,21 +70,37 @@ describe('NodeUniqueFilterInputType', () => {
       it.each([
         [
           'Article',
+          undefined,
           { id_is_null: true },
           'Expects not to contain the extra key(s): id_is_null',
         ],
-        ['Article', { id: null }, '/id - Expects a non-null "UUIDv4"'],
-        ['Article', { id: 123 }, `/id - Expects an "UUIDv4", got: 123`],
         [
           'Article',
+          undefined,
+          { id: null },
+          '/id - Expects a non-null "UUIDv4"',
+        ],
+        [
+          'Article',
+          undefined,
+          { id: 123 },
+          `/id - Expects an "UUIDv4", got: 123`,
+        ],
+        [
+          'Article',
+          undefined,
           { category: { parent: { title: null } }, slug: 'you-re-welcome' },
           '/category/parent - Expects not to contain the extra key(s): title',
         ],
       ])(
         '%sUniqueFilterInput.parseValue(%p) throws the error %p',
-        (nodeName, value, error) => {
+        (nodeName, forcedEdgeName, value, error) => {
           const node = gp.getNodeByName(nodeName);
-          const uniqueFilterInputType = node.uniqueFilterInputType;
+          const uniqueFilterInputType = forcedEdgeName
+            ? node.getUniqueFilterWithoutEdgeInputType(
+                node.getEdgeByName(forcedEdgeName),
+              )
+            : node.uniqueFilterInputType;
 
           expect(() => uniqueFilterInputType.parseValue(value)).toThrowError(
             error,
@@ -65,55 +110,70 @@ describe('NodeUniqueFilterInputType', () => {
     });
 
     describe('Works', () => {
-      it.each<[string, NodeUniqueFilterInputValue, NodeUniqueFilterInputValue]>(
+      it.each<
         [
-          ['Article', undefined, undefined],
-          ['Article', null, null],
-          ['Article', { _id: 123 }, { _id: 123 }],
-          [
-            'Article',
-            { id: 'e22205cc-7d8e-4772-a46d-528a29fb81f2' },
-            { id: 'e22205cc-7d8e-4772-a46d-528a29fb81f2' },
-          ],
-          [
-            'Category',
-            {
-              parent: { id: '6684d029-0016-4615-b1e7-f7f0087dbf11' },
-              order: 789,
-            },
-            {
-              parent: { id: '6684d029-0016-4615-b1e7-f7f0087dbf11' },
-              order: 789,
-            },
-          ],
-          [
-            'Category',
-            { parent: null, slug: 'root' },
-            { parent: null, slug: 'root' },
-          ],
-          [
-            'Category',
-            {
-              parent: {
-                _id: 999,
-                slug: 'root',
-                id: 'd038d5cf-815e-4f8d-8099-1def0bdec246',
-              },
-              order: 789,
-            },
-            {
-              parent: {
-                _id: 999,
-              },
-              order: 789,
-            },
-          ],
+          Node['name'],
+          Edge['name'] | undefined,
+          NodeUniqueFilterInputValue,
+          NodeUniqueFilterInputValue,
+        ]
+      >([
+        ['Article', undefined, undefined, undefined],
+        ['Article', undefined, null, null],
+        ['Article', undefined, { _id: 123 }, { _id: 123 }],
+        [
+          'Article',
+          undefined,
+          { id: 'e22205cc-7d8e-4772-a46d-528a29fb81f2' },
+          { id: 'e22205cc-7d8e-4772-a46d-528a29fb81f2' },
         ],
-      )(
+        ['Article', 'category', { slug: 'my-slug' }, { slug: 'my-slug' }],
+        [
+          'Category',
+          undefined,
+          {
+            parent: { id: '6684d029-0016-4615-b1e7-f7f0087dbf11' },
+            order: 789,
+          },
+          {
+            parent: { id: '6684d029-0016-4615-b1e7-f7f0087dbf11' },
+            order: 789,
+          },
+        ],
+        [
+          'Category',
+          undefined,
+          { parent: null, slug: 'root' },
+          { parent: null, slug: 'root' },
+        ],
+        [
+          'Category',
+          undefined,
+          {
+            parent: {
+              _id: 999,
+              slug: 'root',
+              id: 'd038d5cf-815e-4f8d-8099-1def0bdec246',
+            },
+            order: 789,
+          },
+          {
+            parent: {
+              _id: 999,
+            },
+            order: 789,
+          },
+        ],
+        ['Category', 'parent', { slug: 'root' }, { slug: 'root' }],
+      ])(
         '%sUniqueFilterInput.parseValue(%p) = %p',
-        (nodeName, inputValue, parsedValue) => {
-          const uniqueFilterInputType =
-            gp.getNodeByName(nodeName).uniqueFilterInputType;
+        (nodeName, forcedEdgeName, inputValue, parsedValue) => {
+          const node = gp.getNodeByName(nodeName);
+          const uniqueFilterInputType = forcedEdgeName
+            ? node.getUniqueFilterWithoutEdgeInputType(
+                node.getEdgeByName(forcedEdgeName),
+              )
+            : node.uniqueFilterInputType;
 
           expect(uniqueFilterInputType.parseValue(inputValue)).toEqual(
             parsedValue,

@@ -1,7 +1,6 @@
 import * as utils from '@prismamedia/graphql-platform-utils';
 import { Memoize } from '@prismamedia/memoize';
 import inflection from 'inflection';
-import assert from 'node:assert/strict';
 import type { JsonObject, Promisable } from 'type-fest';
 import type {
   ConnectorConfigOverride,
@@ -619,7 +618,7 @@ export class Node<
   }
 
   @Memoize((mutationType: utils.MutationType) => mutationType)
-  public isMutationEnabled(mutationType: utils.MutationType): boolean {
+  public isMutable(mutationType: utils.MutationType): boolean {
     const { config, configPath } = this.getMutationConfig(mutationType);
 
     return utils.getOptionalFlag(
@@ -629,8 +628,28 @@ export class Node<
     );
   }
 
+  public isCreatable(): boolean {
+    return this.isMutable(utils.MutationType.CREATION);
+  }
+
+  public isUpdatable(excludedEdge?: Edge): boolean {
+    excludedEdge && this.ensureEdge(excludedEdge);
+
+    return (
+      this.isMutable(utils.MutationType.UPDATE) &&
+      (!excludedEdge ||
+        Array.from(this.componentSet).some(
+          (component) => component !== excludedEdge && component.updateInput,
+        ))
+    );
+  }
+
+  public isDeletable(): boolean {
+    return this.isMutable(utils.MutationType.DELETION);
+  }
+
   @Memoize((mutationType: utils.MutationType) => mutationType)
-  public isMutationPublic(mutationType: utils.MutationType): boolean {
+  public isPubliclyMutable(mutationType: utils.MutationType): boolean {
     const { config, configPath } = this.getMutationConfig(mutationType);
 
     const publicConfig = config?.public;
@@ -638,7 +657,7 @@ export class Node<
 
     const isPublic = utils.getOptionalFlag(
       publicConfig,
-      this.isPublic() && this.isMutationEnabled(mutationType),
+      this.isPublic() && this.isMutable(mutationType),
       publicConfigPath,
     );
 
@@ -651,7 +670,7 @@ export class Node<
         );
       }
 
-      if (!this.isMutationEnabled(mutationType)) {
+      if (!this.isMutable(mutationType)) {
         throw new utils.UnexpectedValueError(
           `not to be "true" as the "${this}" node's ${mutationType} is disabled`,
           publicConfig,
@@ -661,6 +680,36 @@ export class Node<
     }
 
     return isPublic;
+  }
+
+  public isPubliclyCreatable(excludedEdge?: Edge): boolean {
+    excludedEdge && this.ensureEdge(excludedEdge);
+
+    return (
+      this.isPubliclyMutable(utils.MutationType.CREATION) &&
+      (!excludedEdge ||
+        Array.from(this.componentSet).some(
+          (component) =>
+            component !== excludedEdge && component.creationInput.isPublic(),
+        ))
+    );
+  }
+
+  public isPubliclyUpdatable(excludedEdge?: Edge): boolean {
+    excludedEdge && this.ensureEdge(excludedEdge);
+
+    return (
+      this.isPubliclyMutable(utils.MutationType.UPDATE) &&
+      (!excludedEdge ||
+        Array.from(this.componentSet).some(
+          (component) =>
+            component !== excludedEdge && component.updateInput?.isPublic(),
+        ))
+    );
+  }
+
+  public isPubliclyDeletable(): boolean {
+    return this.isPubliclyMutable(utils.MutationType.DELETION);
   }
 
   public getComponentByName(
@@ -795,15 +844,35 @@ export class Node<
     return uniqueConstraint;
   }
 
+  @Memoize((edge: Edge) => edge)
+  public isPartiallyIdentifiableWithEdge(edge: Edge): boolean {
+    this.ensureEdge(edge);
+
+    return Array.from(this.uniqueConstraintSet).some(
+      (uniqueConstraint) =>
+        uniqueConstraint.componentSet.has(edge) &&
+        uniqueConstraint.componentSet.size > 1,
+    );
+  }
+
+  @Memoize((edge: Edge) => edge)
+  public isPubliclyPartiallyIdentifiableWithEdge(edge: Edge): boolean {
+    this.ensureEdge(edge);
+
+    return Array.from(this.uniqueConstraintSet).some(
+      (uniqueConstraint) =>
+        uniqueConstraint.isPublic() &&
+        uniqueConstraint.componentSet.has(edge) &&
+        uniqueConstraint.componentSet.size > 1,
+    );
+  }
+
   @Memoize()
   public get selection(): NodeSelection<NodeValue> {
     return new NodeSelection(
       this,
       mergeSelectionExpressions(
-        Array.from(
-          this.componentsByName.values(),
-          ({ selection }) => selection,
-        ),
+        Array.from(this.componentSet, ({ selection }) => selection),
       ),
     );
   }
@@ -1151,11 +1220,7 @@ export class Node<
   public getUniqueFilterWithoutEdgeInputType(
     edge: Edge,
   ): NodeUniqueFilterInputType {
-    return Array.from(this.uniqueConstraintsByName.values()).some(
-      (uniqueConstraint) => uniqueConstraint.componentSet.has(edge),
-    )
-      ? new NodeUniqueFilterInputType(this, edge)
-      : this.uniqueFilterInputType;
+    return new NodeUniqueFilterInputType(this, edge);
   }
 
   @Memoize()
@@ -1180,19 +1245,12 @@ export class Node<
 
   @Memoize()
   public get updateInputType(): NodeUpdateInputType {
-    assert(
-      this.isMutationEnabled(utils.MutationType.UPDATE),
-      `The "${this}" node is immutable`,
-    );
-
     return new NodeUpdateInputType(this);
   }
 
   @Memoize((edge: Edge) => edge)
   public getUpdateWithoutEdgeInputType(edge: Edge): NodeUpdateInputType {
-    return edge.isMutable()
-      ? new NodeUpdateInputType(this, edge)
-      : this.updateInputType;
+    return new NodeUpdateInputType(this, edge);
   }
 
   @Memoize()
@@ -1305,14 +1363,14 @@ export class Node<
   @Memoize()
   public validateDefinition(): void {
     utils.aggregateGraphError<Component, void>(
-      this.componentsByName.values(),
+      this.componentSet,
       (_, component) => component.validateDefinition(),
       undefined,
       { path: this.configPath },
     );
 
     utils.aggregateGraphError<UniqueConstraint, void>(
-      this.uniqueConstraintsByName.values(),
+      this.uniqueConstraintSet,
       (_, uniqueConstraint) => uniqueConstraint.validateDefinition(),
       undefined,
       { path: this.configPath },
@@ -1320,9 +1378,9 @@ export class Node<
 
     this.selection;
 
-    if (this.isMutationEnabled(utils.MutationType.UPDATE)) {
+    if (this.isUpdatable()) {
       if (
-        !Array.from(this.componentsByName.values()).some((component) =>
+        !Array.from(this.componentSet).some((component) =>
           component.isMutable(),
         )
       ) {
@@ -1335,9 +1393,7 @@ export class Node<
 
     if (this.isPublic()) {
       if (
-        !Array.from(this.componentsByName.values()).some((component) =>
-          component.isPublic(),
-        )
+        !Array.from(this.componentSet).some((component) => component.isPublic())
       ) {
         throw new utils.GraphError(
           `Expects at least one public component as it is public`,
@@ -1346,8 +1402,8 @@ export class Node<
       }
 
       if (
-        !Array.from(this.uniqueConstraintsByName.values()).some(
-          (uniqueConstraint) => uniqueConstraint.isPublic(),
+        !Array.from(this.uniqueConstraintSet).some((uniqueConstraint) =>
+          uniqueConstraint.isPublic(),
         )
       ) {
         throw new utils.GraphError(
@@ -1356,15 +1412,27 @@ export class Node<
         );
       }
 
-      if (this.isMutationPublic(utils.MutationType.UPDATE)) {
+      if (this.isPubliclyCreatable()) {
         if (
-          !Array.from(this.componentsByName.values()).some(
-            (component) =>
-              component.isMutable() && component.updateInput.isPublic(),
+          !Array.from(this.componentSet).some((component) =>
+            component.creationInput.isPublic(),
           )
         ) {
           throw new utils.GraphError(
-            `Expects at least one publicly mutable component as it is publicly mutable`,
+            `Expects at least one public component as it is publicly creatable`,
+            { path: this.configPath },
+          );
+        }
+      }
+
+      if (this.isPubliclyUpdatable()) {
+        if (
+          !Array.from(this.componentSet).some((component) =>
+            component.updateInput?.isPublic(),
+          )
+        ) {
+          throw new utils.GraphError(
+            `Expects at least one publicly mutable component as it is publicly updatable`,
             { path: this.configPath },
           );
         }
@@ -1382,7 +1450,7 @@ export class Node<
   @Memoize()
   public validateTypes(): void {
     utils.aggregateGraphError<Component, void>(
-      this.componentsByName.values(),
+      this.componentSet,
       (_, component) => component.validateTypes(),
       undefined,
       { path: this.configPath },
@@ -1398,9 +1466,8 @@ export class Node<
     this.filterInputType.validate();
     this.orderingInputType.validate();
     this.uniqueFilterInputType.validate();
-    this.creationInputType.validate();
-    this.isMutationEnabled(utils.MutationType.UPDATE) &&
-      this.updateInputType.validate();
+    this.isCreatable() && this.creationInputType.validate();
+    this.isUpdatable() && this.updateInputType.validate();
 
     this.outputType.validate();
   }
@@ -1445,8 +1512,8 @@ export class Node<
 
   @Memoize()
   public isScrollable(): boolean {
-    return Array.from(this.uniqueConstraintsByName.values()).some(
-      (uniqueConstraint) => uniqueConstraint.isScrollable(),
+    return Array.from(this.uniqueConstraintSet).some((uniqueConstraint) =>
+      uniqueConstraint.isScrollable(),
     );
   }
 

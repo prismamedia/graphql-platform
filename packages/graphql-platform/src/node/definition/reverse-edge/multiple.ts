@@ -40,13 +40,13 @@ export class MultipleReverseEdge<
   public readonly countFieldName: string;
 
   public constructor(
-    edge: Edge<TRequestContext, TConnector, TContainer>,
+    originalEdge: Edge<TRequestContext, TConnector, TContainer>,
     name: utils.Name,
     public override readonly config: MultipleReverseEdgeConfig,
     public override readonly configPath: utils.Path,
   ) {
-    assert(!edge.isUnique());
-    super(edge, name, config, configPath);
+    assert(!originalEdge.isUnique());
+    super(originalEdge, name, config, configPath);
 
     // name
     {
@@ -78,9 +78,7 @@ export class MultipleReverseEdge<
   public override get creationInput():
     | MultipleReverseEdgeCreationInput
     | undefined {
-    return this.head.isMutationEnabled(utils.MutationType.CREATION) ||
-      (this.head.isMutationEnabled(utils.MutationType.UPDATE) &&
-        this.originalEdge.isMutable())
+    return MultipleReverseEdgeCreationInput.supports(this)
       ? new MultipleReverseEdgeCreationInput(this)
       : undefined;
   }
@@ -89,10 +87,7 @@ export class MultipleReverseEdge<
   public override get updateInput():
     | MultipleReverseEdgeUpdateInput
     | undefined {
-    return this.head.isMutationEnabled(utils.MutationType.CREATION) ||
-      (this.head.isMutationEnabled(utils.MutationType.UPDATE) &&
-        this.originalEdge.isMutable()) ||
-      this.head.isMutationEnabled(utils.MutationType.DELETION)
+    return MultipleReverseEdgeUpdateInput.supports(this)
       ? new MultipleReverseEdgeUpdateInput(this)
       : undefined;
   }

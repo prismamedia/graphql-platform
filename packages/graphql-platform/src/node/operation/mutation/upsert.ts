@@ -69,33 +69,25 @@ export class UpsertMutation<
     path: utils.Path,
   ): Promise<UpsertMutationResult> {
     return (
-      (await (args.update
-        ? this.node.getMutationByKey('update-one-if-exists').internal(
-            authorization,
-            {
-              where: args.where,
-              data: args.update,
-              selection: args.selection,
-            },
-            context,
-            path,
-          )
-        : this.node
-            .getQueryByKey('get-one-if-exists')
-            .internal(
-              authorization,
-              { where: args.where, selection: args.selection },
-              context,
-              path,
-            ))) ??
-      (await this.node
-        .getMutationByKey('create-one')
-        .internal(
-          authorization,
-          { data: args.create, selection: args.selection },
-          context,
-          path,
-        ))
+      (await this.node.getMutationByKey('update-one-if-exists').internal(
+        authorization,
+        {
+          where: args.where,
+          data: args.update,
+          selection: args.selection,
+        },
+        context,
+        path,
+      )) ??
+      (await this.node.getMutationByKey('create-one').internal(
+        authorization,
+        {
+          data: args.create,
+          selection: args.selection,
+        },
+        context,
+        path,
+      ))
     );
   }
 }

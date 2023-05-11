@@ -15,7 +15,7 @@ import type { MutationContext } from '../context.js';
 
 export type UpdateOneMutationArgs = RawNodeSelectionAwareArgs<{
   where: NonNullable<NodeUniqueFilterInputValue>;
-  data: NonNullable<NodeUpdateInputValue>;
+  data?: NodeUpdateInputValue;
 }>;
 
 export type UpdateOneMutationResult = NodeSelectedValue;

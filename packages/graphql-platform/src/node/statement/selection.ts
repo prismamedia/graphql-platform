@@ -56,11 +56,11 @@ export class NodeSelection<TValue extends NodeSelectedValue = any> {
   /**
    * Returns true if the provided selection is a subset of the current one
    */
-  public includes(selection: NodeSelection): boolean {
+  public isSupersetOf(selection: NodeSelection): boolean {
     assert(this.isAkinTo(selection));
 
     return selection.expressions.every((expression) =>
-      this.expressionsByKey.get(expression.key)?.includes(expression),
+      this.expressionsByKey.get(expression.key)?.isSupersetOf(expression),
     );
   }
 
