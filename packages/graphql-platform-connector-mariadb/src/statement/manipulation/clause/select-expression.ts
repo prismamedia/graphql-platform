@@ -49,17 +49,15 @@ function parseMultipleReverseEdgeSelection(
       (tableReference) =>
         `JSON_ARRAYAGG(${[
           selectNode(tableReference, selection.headSelection),
-          // Even if the subquery is already sorted below, we must sort again here
           selection.headOrdering &&
             `ORDER BY ${orderNode(tableReference, selection.headOrdering)}`,
+          selection.limit && `LIMIT ${selection.limit}`,
+          selection.offset && `OFFSET ${selection.offset}`,
         ]
           .filter(Boolean)
           .join(' ')})`,
       selection.reverseEdge,
       selection.headFilter,
-      selection.headOrdering,
-      selection.limit,
-      selection.offset,
     )})`;
   } else {
     throw new utils.UnreachableValueError(selection);

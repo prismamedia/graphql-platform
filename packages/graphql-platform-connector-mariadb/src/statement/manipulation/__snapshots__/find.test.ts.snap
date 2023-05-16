@@ -1,105 +1,6 @@
 // Jest Snapshot v1, https://goo.gl/fbAQLP
 
-exports[`Find statement generates statements: result 1`] = `
-[
-  {
-    "body": null,
-    "createdAt": 2022-03-01T00:00:00.000Z,
-    "machineTags": null,
-    "metas": null,
-    "score": 0.5,
-    "status": "published",
-    "tagCount": 2,
-    "title": "My first published article",
-    "views": 0n,
-  },
-  {
-    "body": {
-      "blocks": [],
-      "entityMap": {},
-    },
-    "createdAt": 2022-04-01T00:00:00.000Z,
-    "machineTags": [
-      "namespace:key=a_value",
-      "namespace:key=other_value",
-    ],
-    "metas": {
-      "aKey": "withAnyValue",
-    },
-    "score": 0.12,
-    "status": "published",
-    "tagCount": 1,
-    "title": "My second published article",
-    "views": 1234567890n,
-  },
-]
-`;
-
-exports[`Find statement generates statements: result 2`] = `
-[
-  {
-    "body": {
-      "blocks": [],
-      "entityMap": {},
-    },
-    "createdAt": 2022-01-01T00:00:00.000Z,
-    "machineTags": null,
-    "metas": {
-      "myArbitraryKey": "with my arbitrary value",
-    },
-    "score": 0.5,
-    "status": "draft",
-    "tagCount": 0,
-    "title": "My first draft article",
-    "views": 0n,
-  },
-  {
-    "body": null,
-    "createdAt": 2022-02-01T00:00:00.000Z,
-    "machineTags": null,
-    "metas": null,
-    "score": 0.5,
-    "status": "draft",
-    "tagCount": 0,
-    "title": "My second draft article",
-    "views": 0n,
-  },
-  {
-    "body": null,
-    "createdAt": 2022-03-01T00:00:00.000Z,
-    "machineTags": null,
-    "metas": null,
-    "score": 0.5,
-    "status": "published",
-    "tagCount": 2,
-    "title": "My first published article",
-    "views": 0n,
-  },
-  {
-    "body": {
-      "blocks": [],
-      "entityMap": {},
-    },
-    "createdAt": 2022-04-01T00:00:00.000Z,
-    "machineTags": [
-      "namespace:key=a_value",
-      "namespace:key=other_value",
-    ],
-    "metas": {
-      "aKey": "withAnyValue",
-    },
-    "score": 0.12,
-    "status": "published",
-    "tagCount": 1,
-    "title": "My second published article",
-    "views": 1234567890n,
-  },
-]
-`;
-
-exports[`Find statement generates statements: result 3`] = `[]`;
-
-exports[`Find statement generates statements: statements 1`] = `
+exports[`Find statement 0 - generates statements 1`] = `
 [
   "SELECT JSON_OBJECT(
     "status",
@@ -132,31 +33,13 @@ LIMIT 5",
 ]
 `;
 
-exports[`Find statement generates statements: statements 2`] = `
+exports[`Find statement 1 - generates statements 1`] = `
 [
   "SELECT JSON_OBJECT(
     "status",
     \`articles\`.\`status\`,
     "title",
-    \`articles\`.\`title\`,
-    "body",
-    \`articles\`.\`body\`,
-    "views",
-    \`articles\`.\`views\`,
-    "score",
-    \`articles\`.\`score\`,
-    "machineTags",
-    \`articles\`.\`machine_tags\`,
-    "metas",
-    \`articles\`.\`metas\`,
-    "tagCount",
-    (
-      SELECT COUNT(*)
-      FROM \`article_tags\`
-      WHERE \`articles\`.\`private_id\` <=> \`article_tags\`.\`article_private_id\`
-    ),
-    "createdAt",
-    \`articles\`.\`created_at\`
+    \`articles\`.\`title\`
   ) as \`Article\`
 FROM \`articles\`
 ORDER BY \`articles\`.\`created_at\` ASC
@@ -164,7 +47,7 @@ LIMIT 5",
 ]
 `;
 
-exports[`Find statement generates statements: statements 3`] = `
+exports[`Find statement 2 - generates statements 1`] = `
 [
   "SELECT JSON_OBJECT(
     "status",
@@ -235,13 +118,14 @@ exports[`Find statement generates statements: statements 3`] = `
             )
           )
           ORDER BY \`article_tags\`.\`order\` ASC
+          LIMIT 5
         )
       FROM \`article_tags\`
         INNER JOIN \`tags\` AS \`article_tags>tag\` ON \`article_tags\`.\`tag_id\` <=> \`article_tags>tag\`.\`id\`
       WHERE \`articles\`.\`private_id\` <=> \`article_tags\`.\`article_private_id\`
-      ORDER BY \`article_tags\`.\`order\` ASC
-      LIMIT 5
-    ), "filteredTags", (
+    ),
+    "filteredTags",
+    (
       SELECT JSON_ARRAYAGG(
           JSON_OBJECT(
             "order",
@@ -254,6 +138,7 @@ exports[`Find statement generates statements: statements 3`] = `
             )
           )
           ORDER BY \`article_tags\`.\`order\` ASC
+          LIMIT 5
         )
       FROM \`article_tags\`
         INNER JOIN \`tags\` AS \`article_tags>tag\` ON \`article_tags\`.\`tag_id\` <=> \`article_tags>tag\`.\`id\`
@@ -262,8 +147,6 @@ exports[`Find statement generates statements: statements 3`] = `
           \`article_tags>tag\`.\`id\` IS NOT NULL
           AND \`article_tags>tag\`.\`deprecated\` <=> 1
         )
-      ORDER BY \`article_tags\`.\`order\` ASC
-      LIMIT 5
     )
   ) as \`Article\`
 FROM \`articles\`
@@ -309,6 +192,40 @@ WHERE (
     )
   )
 ORDER BY \`articles\`.\`created_at\` ASC
+LIMIT 5",
+]
+`;
+
+exports[`Find statement 3 - generates statements 1`] = `
+[
+  "SELECT JSON_OBJECT(
+    "second",
+    (
+      SELECT JSON_ARRAYAGG(
+          JSON_OBJECT("order", \`article_tags\`.\`order\`)
+          ORDER BY \`article_tags\`.\`order\` ASC
+          LIMIT 1 OFFSET 1
+        )
+      FROM \`article_tags\`
+      WHERE \`articles\`.\`private_id\` <=> \`article_tags\`.\`article_private_id\`
+    ),
+    "penultimate",
+    (
+      SELECT JSON_ARRAYAGG(
+          JSON_OBJECT("order", \`article_tags\`.\`order\`)
+          ORDER BY \`article_tags\`.\`order\` DESC
+          LIMIT 1 OFFSET 1
+        )
+      FROM \`article_tags\`
+      WHERE \`articles\`.\`private_id\` <=> \`article_tags\`.\`article_private_id\`
+    )
+  ) as \`Article\`
+FROM \`articles\`
+WHERE (
+    SELECT COUNT(*)
+    FROM \`article_tags\`
+    WHERE \`articles\`.\`private_id\` <=> \`article_tags\`.\`article_private_id\`
+  ) > 1
 LIMIT 5",
 ]
 `;

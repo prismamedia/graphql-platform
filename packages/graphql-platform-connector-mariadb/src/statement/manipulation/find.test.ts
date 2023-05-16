@@ -10,7 +10,7 @@ import { createMyGP, type MyGP } from '../../__tests__/config.js';
 
 describe('Find statement', () => {
   let gp: MyGP;
-  const executedStatements: string[] = [];
+  let executedStatements: string[] = [];
 
   beforeAll(async () => {
     gp = createMyGP(`connector_mariadb_find_statement`);
@@ -45,6 +45,35 @@ describe('Find statement', () => {
         }`,
       },
       myUserContext,
+      [
+        {
+          body: null,
+          createdAt: new Date('2022-03-01T00:00:00.000Z'),
+          machineTags: null,
+          metas: null,
+          score: 0.5,
+          status: 'published',
+          tagCount: 2,
+          title: 'My first published article',
+          views: 0n,
+        },
+        {
+          body: {
+            blocks: [],
+            entityMap: {},
+          },
+          createdAt: new Date('2022-04-01T00:00:00.000Z'),
+          machineTags: ['namespace:key=a_value', 'namespace:key=other_value'],
+          metas: {
+            aKey: 'withAnyValue',
+          },
+          score: 0.12,
+          status: 'published',
+          tagCount: 1,
+          title: 'My second published article',
+          views: 1234567890n,
+        },
+      ],
     ],
     [
       'Article',
@@ -54,16 +83,27 @@ describe('Find statement', () => {
         selection: `{
           status
           title
-          body
-          views
-          score
-          machineTags
-          metas
-          tagCount
-          createdAt
         }`,
       },
       myAdminContext,
+      [
+        {
+          status: 'draft',
+          title: 'My first draft article',
+        },
+        {
+          status: 'draft',
+          title: 'My second draft article',
+        },
+        {
+          status: 'published',
+          title: 'My first published article',
+        },
+        {
+          status: 'published',
+          title: 'My second published article',
+        },
+      ],
     ],
     [
       'Article',
@@ -122,17 +162,51 @@ describe('Find statement', () => {
         }`,
       },
       myAdminContext,
+      [],
     ],
-  ])('generates statements', async (nodeName, args, context) => {
-    executedStatements.length = 0;
+    [
+      'Article',
+      {
+        where: { tagCount_gt: 1 },
+        first: 5,
+        selection: `{
+          second: tags(orderBy: [order_ASC], skip: 1, first: 1) {
+            order
+          }
+          penultimate: tags(orderBy: [order_DESC], skip: 1, first: 1) {
+            order
+          }
+        }`,
+      },
+      myAdminContext,
+      [
+        {
+          second: [
+            {
+              order: 1,
+            },
+          ],
+          penultimate: [
+            {
+              order: 0,
+            },
+          ],
+        },
+      ],
+    ],
+  ])(
+    '%# - generates statements',
+    async (nodeName, args, context, expectedResult) => {
+      executedStatements.length = 0;
 
-    await expect(
-      gp
-        .getNodeByName(nodeName)
-        .getQueryByKey('find-many')
-        .execute(args, context),
-    ).resolves.toMatchSnapshot('result');
+      await expect(
+        gp
+          .getNodeByName(nodeName)
+          .getQueryByKey('find-many')
+          .execute(args, context),
+      ).resolves.toEqual(expectedResult);
 
-    expect(executedStatements).toMatchSnapshot('statements');
-  });
+      expect(executedStatements).toMatchSnapshot();
+    },
+  );
 });
