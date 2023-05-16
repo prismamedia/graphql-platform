@@ -28,7 +28,7 @@ export class ResultSet<TValue extends NodeSelectedValue = any> {
   readonly #orderBy?: OrderByInputValue;
   readonly #selection: NodeSelection<TValue>;
 
-  public readonly mutability?: ResultSetMutability;
+  public readonly mutability: ResultSetMutability;
 
   public constructor(
     public readonly node: Node,

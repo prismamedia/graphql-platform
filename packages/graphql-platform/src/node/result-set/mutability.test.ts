@@ -6,12 +6,12 @@ import {
   NodeCreation,
   createNodeUpdateFromComponentUpdates,
 } from '../change.js';
+import { ResultSet } from '../result-set.js';
 import type { NodeFilterInputValue } from '../type/input/filter.js';
 import type { OrderByInputValue } from '../type/input/ordering.js';
 import type { NodeUniqueFilterInputValue } from '../type/input/unique-filter.js';
 import type { RawNodeSelection } from '../type/output/node.js';
 import {
-  ResultSetMutability,
   toTestableDependencies,
   toTestableFlatDependencies,
 } from './mutability.js';
@@ -132,7 +132,7 @@ describe('Mutability', () => {
   describe.each<
     [
       nodeName: string,
-      filter: NodeFilterInputValue,
+      where: NodeFilterInputValue,
       orderBy: OrderByInputValue,
       selection: RawNodeSelection,
       expectedDependencies: Record<string, any>,
@@ -609,7 +609,7 @@ describe('Mutability', () => {
     'Definition %#',
     (
       nodeName,
-      filter,
+      where,
       orderBy,
       selection,
       expectedDependencies,
@@ -617,13 +617,13 @@ describe('Mutability', () => {
       expectedFlatDependencies,
       scenarios,
     ) => {
-      const mutability = new ResultSetMutability(gp.getNodeByName(nodeName), {
-        filter: gp
-          .getNodeByName(nodeName)
-          .filterInputType.parseAndFilter(filter),
-        ordering: gp.getNodeByName(nodeName).orderingInputType.sort(orderBy),
-        selection: gp.getNodeByName(nodeName).outputType.select(selection),
+      const resultSet = new ResultSet(gp.getNodeByName(nodeName), {
+        where,
+        orderBy,
+        selection,
       });
+
+      const mutability = resultSet.mutability;
 
       it('has expected dependencies', () => {
         expect(toTestableDependencies(mutability.dependencies)).toEqual(
