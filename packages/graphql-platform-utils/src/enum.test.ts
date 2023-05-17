@@ -1,5 +1,5 @@
 import { describe, expect, it } from '@jest/globals';
-import { getEnumKeys, getEnumValues } from './enum.js';
+import { createEnumUtils, type EnumKey, type EnumValue } from './enum.js';
 
 enum MyNumericEnum {
   ONE,
@@ -7,11 +7,17 @@ enum MyNumericEnum {
   THREE,
 }
 
+type MyNumericEnumKey = EnumKey<typeof MyNumericEnum>;
+type MyNumericEnumValue = EnumValue<typeof MyNumericEnum>;
+
 enum MyStringEnum {
   ONE = 'one',
   TWO = 'two',
   THREE = 'three',
 }
+
+type MyStringEnumKey = EnumKey<typeof MyStringEnum>;
+type MyStringEnumValue = EnumValue<typeof MyStringEnum>;
 
 enum MyMixedEnum {
   ONE = 0,
@@ -19,19 +25,64 @@ enum MyMixedEnum {
   THREE = 2,
 }
 
+type MyMixedEnumKey = EnumKey<typeof MyMixedEnum>;
+type MyMixedEnumValue = EnumValue<typeof MyMixedEnum>;
+
 describe('Enum', () => {
-  it('works with numeric enum', () => {
-    expect(getEnumKeys(MyNumericEnum)).toEqual(['ONE', 'TWO', 'THREE']);
-    expect(getEnumValues(MyNumericEnum)).toEqual([0, 1, 2]);
-  });
+  describe.each([
+    ['numeric', MyNumericEnum, { ONE: 0, TWO: 1, THREE: 2 }],
+    ['string', MyStringEnum, { ONE: 'one', TWO: 'two', THREE: 'three' }],
+    ['mixed', MyMixedEnum, { ONE: 0, TWO: 'two', THREE: 2 }],
+  ])('works for "%s"', (_label, enumerable, object) => {
+    const {
+      keys,
+      values,
+      isKey,
+      ensureKey,
+      isValue,
+      ensureValue,
+      getKeyByValue,
+      getValueByKey,
+    } = createEnumUtils(enumerable);
 
-  it('works with string enum', () => {
-    expect(getEnumKeys(MyStringEnum)).toEqual(['ONE', 'TWO', 'THREE']);
-    expect(getEnumValues(MyStringEnum)).toEqual(['one', 'two', 'three']);
-  });
+    it('gets keys', () => {
+      expect(keys).toEqual(Object.keys(object));
 
-  it('works with mixed enum', () => {
-    expect(getEnumKeys(MyMixedEnum)).toEqual(['ONE', 'TWO', 'THREE']);
-    expect(getEnumValues(MyMixedEnum)).toEqual([0, 'two', 2]);
+      Object.keys(object).forEach((key) => {
+        expect(isKey(key)).toBe(true);
+        expect(ensureKey(key)).toBe(key);
+      });
+
+      ['FOUR', 0].forEach((key) => {
+        expect(isKey(key)).toBe(false);
+        expect(() => ensureKey(key)).toThrowError();
+      });
+    });
+
+    it('gets values', () => {
+      expect(values).toEqual(Object.values(object));
+
+      Object.values(object).forEach((value) => {
+        expect(isValue(value)).toBe(true);
+        expect(ensureValue(value)).toBe(value);
+      });
+
+      [-1, '1', 'ONE'].forEach((value) => {
+        expect(isValue(value)).toBe(false);
+        expect(() => ensureValue(value)).toThrowError();
+      });
+    });
+
+    it('gets key by value', () => {
+      Object.entries(object).map(([key, value]) =>
+        expect(getKeyByValue(ensureValue(value))).toBe(key),
+      );
+    });
+
+    it('gets value by key', () => {
+      Object.entries(object).map(([key, value]) =>
+        expect(getValueByKey(ensureKey(key))).toBe(value),
+      );
+    });
   });
 });

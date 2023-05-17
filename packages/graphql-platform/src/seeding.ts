@@ -20,9 +20,7 @@ export type NodeFixtureDataByReferenceByNodeName = Record<
 >;
 
 export class Seeding<TRequestContext extends object = any> {
-  public readonly dependencyGraph = new DepGraph<NodeFixture<TRequestContext>>({
-    circular: false,
-  });
+  public readonly dependencyGraph: DepGraph<NodeFixture<TRequestContext>>;
 
   /**
    * The fixtures are ordered by their dependencies
@@ -36,6 +34,8 @@ export class Seeding<TRequestContext extends object = any> {
     const fixturesPath = utils.addPath(undefined, 'fixtures');
 
     utils.assertPlainObject(fixtures, fixturesPath);
+
+    this.dependencyGraph = new DepGraph({ circular: false });
 
     Object.entries(fixtures).forEach(([nodeName, dataByReference]) => {
       const node = gp.getNodeByName(nodeName, fixturesPath);
