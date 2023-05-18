@@ -1,7 +1,12 @@
 import * as utils from '@prismamedia/graphql-platform-utils';
 import type { ConnectorInterface } from '../../connector-interface.js';
 import type { Component, Node } from '../../node.js';
-import { NodeCreation, NodeUpdate, type NodeChange } from '../change.js';
+import {
+  NodeCreation,
+  NodeUpdate,
+  filterNodeChange,
+  type NodeChange,
+} from '../change.js';
 
 type NodeChangeAggregatorMatrix = {
   [TPreviousChangeKind in utils.MutationType]: {
@@ -67,10 +72,6 @@ const aggregatorMatrix: NodeChangeAggregatorMatrix = {
   },
 };
 
-const filterChange = (change: NodeChange): boolean =>
-  !(change instanceof NodeUpdate && change.isEmpty()) &&
-  change.node.filterChange(change);
-
 export type FlatChanges = ReadonlyMap<Node, ReadonlySet<Component>>;
 
 export class NodeChangeAggregation<
@@ -101,7 +102,7 @@ export class NodeChangeAggregation<
     >();
 
     for (const change of changes) {
-      if (!filterChange(change)) {
+      if (!filterNodeChange(change)) {
         continue;
       }
 
@@ -122,7 +123,7 @@ export class NodeChangeAggregation<
           change as any,
         );
 
-        if (aggregate && filterChange(aggregate)) {
+        if (aggregate && filterNodeChange(aggregate)) {
           changesById.delete(previousChange.stringifiedId);
           changesById.set(aggregate.stringifiedId, aggregate);
         } else {

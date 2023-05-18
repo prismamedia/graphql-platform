@@ -235,7 +235,7 @@ export class DeleteManyMutation<
         const change = new NodeDeletion(this.node, context.request, oldValue);
 
         // Let's everybody know about this deleted node
-        context.changes.push(change);
+        context.appendChange(change);
 
         // Apply the "postDelete"-hook, if any
         try {

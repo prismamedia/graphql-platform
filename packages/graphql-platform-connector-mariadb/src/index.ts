@@ -327,13 +327,7 @@ export class MariaDBConnector
       StatementKind.DATA_MANIPULATION,
     ).getConnection();
 
-    try {
-      await connection.beginTransaction();
-    } catch (error) {
-      await connection.release();
-
-      throw error;
-    }
+    await connection.beginTransaction();
 
     this.#connectionsByMutation.set(context, connection);
   }
@@ -377,7 +371,7 @@ export class MariaDBConnector
     const table = this.schema.getTableByNode(statement.node);
     const maybeConnection =
       context instanceof core.MutationContext
-        ? this.#connectionsByMutation.get(context)
+        ? this.getConnectionForMutation(context)
         : undefined;
 
     return table.count(statement, context, maybeConnection);
@@ -390,7 +384,7 @@ export class MariaDBConnector
     const table = this.schema.getTableByNode(statement.node);
     const maybeConnection =
       context instanceof core.MutationContext
-        ? this.#connectionsByMutation.get(context)
+        ? this.getConnectionForMutation(context)
         : undefined;
 
     return table.find(statement, context, maybeConnection);

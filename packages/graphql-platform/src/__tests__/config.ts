@@ -1,11 +1,6 @@
 import * as scalars from '@prismamedia/graphql-platform-scalars';
 import * as utils from '@prismamedia/graphql-platform-utils';
-import {
-  GraphQLEnumType,
-  GraphQLInterfaceType,
-  GraphQLNonNull,
-  GraphQLString,
-} from 'graphql';
+import { GraphQLInterfaceType, GraphQLNonNull, GraphQLString } from 'graphql';
 import { randomUUID } from 'node:crypto';
 import {
   ComponentConfig,
@@ -79,16 +74,10 @@ export enum ArticleStatus {
   DELETED = 'deleted',
 }
 
-export const ArticleStatusType = new GraphQLEnumType({
-  name: 'ArticleStatus',
-  values: Object.fromEntries(
-    Object.entries({
-      DRAFT: ArticleStatus.DRAFT,
-      PUBLISHED: ArticleStatus.PUBLISHED,
-      DELETED: ArticleStatus.DELETED,
-    }).map(([key, value]) => [key, { value }]),
-  ),
-});
+export const ArticleStatusType = utils.createGraphQLEnumType(
+  'ArticleStatus',
+  ArticleStatus,
+);
 
 export const Article = {
   authorization({ user }, mutationType) {

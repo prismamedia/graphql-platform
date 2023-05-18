@@ -67,7 +67,7 @@ export function ensureEnumKey<TEnumerable extends PlainObject>(
 ): EnumKey<TEnumerable> {
   assert(
     isEnumKey(enumerable, maybeKey, keySet),
-    `${maybeKey} is not a key of this enum`,
+    `"${maybeKey}" is not among this enum's keys`,
   );
 
   return maybeKey;
@@ -80,7 +80,7 @@ export function ensureEnumValue<TEnumerable extends PlainObject>(
 ): EnumValue<TEnumerable> {
   assert(
     isEnumValue(enumerable, maybeValue, valueSet),
-    `${maybeValue} is not a value of this enum`,
+    `"${maybeValue}" is not among this enum's values`,
   );
 
   return maybeValue;
@@ -102,7 +102,7 @@ export function getEnumKeyByValue<TEnumerable extends PlainObject>(
   > = getEnumKeysByValue(enumerable),
 ): EnumKey<TEnumerable> {
   const key = keysByValue.get(value);
-  assert(key !== undefined, `No key found for "${value}" in the enum.`);
+  assert(key !== undefined, `"${value}" is not among this enum's values`);
 
   return key;
 }
@@ -123,7 +123,7 @@ export function getEnumValueByKey<TEnumerable extends PlainObject>(
   > = getEnumValuesByKey(enumerable),
 ): EnumValue<TEnumerable> {
   const value = valuesByKey.get(key);
-  assert(value !== undefined, `No value found for "${key}" in the enum.`);
+  assert(value !== undefined, `"${key}" is not among this enum's keys`);
 
   return value;
 }

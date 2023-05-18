@@ -140,8 +140,8 @@ export abstract class AbstractMutation<
 
     try {
       await this.connector.preMutation?.(mutationContext);
-    } catch (error) {
-      throw new ConnectorError({ cause: error, path });
+    } catch (cause) {
+      throw new ConnectorError({ cause, path });
     }
 
     let result: TResult;
@@ -156,8 +156,8 @@ export abstract class AbstractMutation<
 
       try {
         await this.connector.postSuccessfulMutation?.(mutationContext);
-      } catch (error) {
-        throw new ConnectorError({ cause: error, path });
+      } catch (cause) {
+        throw new ConnectorError({ cause, path });
       }
 
       mutationContext.commitChanges();
@@ -167,16 +167,16 @@ export abstract class AbstractMutation<
           mutationContext,
           utils.castToError(error),
         );
-      } catch (error) {
-        throw new ConnectorError({ cause: error, path });
+      } catch (cause) {
+        throw new ConnectorError({ cause, path });
       }
 
       throw error;
     } finally {
       try {
         await this.connector.postMutation?.(mutationContext);
-      } catch (error) {
-        throw new ConnectorError({ cause: error, path });
+      } catch (cause) {
+        throw new ConnectorError({ cause, path });
       }
     }
 
