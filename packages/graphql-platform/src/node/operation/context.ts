@@ -28,8 +28,10 @@ export class OperationContext<
      * Unlike the "operation" context, it is shared among all the operations of the "request"'s document
      */
     public readonly request: TRequestContext,
+
+    path?: utils.Path,
   ) {
-    gp.assertRequestContext(request);
+    gp.assertRequestContext(request, path);
   }
 
   @Memoize(

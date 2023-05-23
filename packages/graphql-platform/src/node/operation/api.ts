@@ -3,28 +3,14 @@ import type * as graphql from 'graphql';
 import type { GraphQLPlatform } from '../../index.js';
 import { OperationContext } from './context.js';
 import type { OperationInterface } from './interface.js';
-import type { MutationInterface } from './mutation/interface.js';
 
-export interface API<TRequestContext extends object> {
-  readonly [graphql.OperationTypeNode.MUTATION]: Readonly<
-    Record<
-      MutationInterface['name'],
-      MutationInterface<TRequestContext>['execute']
-    >
-  >;
-  readonly [graphql.OperationTypeNode.QUERY]: Readonly<
-    Record<
-      OperationInterface['name'],
-      OperationInterface<TRequestContext>['execute']
-    >
-  >;
-  readonly [graphql.OperationTypeNode.SUBSCRIPTION]: Readonly<
-    Record<
-      OperationInterface['name'],
-      OperationInterface<TRequestContext>['execute']
-    >
-  >;
-}
+export type API<TRequestContext extends object> = Record<
+  graphql.OperationTypeNode,
+  Record<
+    OperationInterface['name'],
+    OperationInterface<TRequestContext>['execute']
+  >
+>;
 
 export const createAPI = <TRequestContext extends object>(
   gp: GraphQLPlatform<TRequestContext>,
@@ -35,30 +21,20 @@ export const createAPI = <TRequestContext extends object>(
       new Proxy<any>(Object.create(null), {
         get:
           (_, name: OperationInterface['name']) =>
-          (
-            ...[args, context, path]: Parameters<
-              OperationInterface<TRequestContext>['execute']
-            >
-          ) =>
-            gp
-              .getOperationByTypeAndName(type, name)
-              .execute(args, context, path),
+          (...args: Parameters<OperationInterface['execute']>) =>
+            gp.getOperationByTypeAndName(type, name).execute(...args),
       }),
     ]),
   ) as any;
 
-export type ContextBoundAPI = Readonly<
+export type ContextBoundAPI = Record<
+  graphql.OperationTypeNode,
   Record<
-    graphql.OperationTypeNode,
-    Readonly<
-      Record<
-        OperationInterface['name'],
-        (
-          args: Parameters<OperationInterface['execute']>[0],
-          path?: Parameters<OperationInterface['execute']>[2],
-        ) => ReturnType<OperationInterface['execute']>
-      >
-    >
+    OperationInterface['name'],
+    (
+      args: Parameters<OperationInterface['execute']>[1],
+      path?: Parameters<OperationInterface['execute']>[2],
+    ) => ReturnType<OperationInterface['execute']>
   >
 >;
 
@@ -73,12 +49,12 @@ export const createContextBoundAPI = <TRequestContext extends object>(
         get:
           (_, name: OperationInterface['name']) =>
           (
-            args: Parameters<OperationInterface['execute']>[0],
+            args: Parameters<OperationInterface['execute']>[1],
             path?: Parameters<OperationInterface['execute']>[2],
           ) =>
             gp
               .getOperationByTypeAndName(type, name)
-              .execute(args, context, path),
+              .execute(context, args, path),
       }),
     ]),
   ) as any;

@@ -41,14 +41,14 @@ export class ExistsQuery<TRequestContext extends object> extends AbstractQuery<
   }
 
   protected override async executeWithValidArgumentsAndContext(
+    context: OperationContext,
     authorization: NodeFilter | undefined,
     args: NodeSelectionAwareArgs<ExistsQueryArgs>,
-    context: OperationContext,
     path: utils.Path,
   ): Promise<ExistsQueryResult> {
     const count = await this.node
       .getQueryByKey('count')
-      .internal(authorization, { where: args.where }, context, path);
+      .internal(context, authorization, args, path);
 
     return count > 0;
   }

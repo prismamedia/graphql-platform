@@ -1,18 +1,32 @@
 import * as utils from '@prismamedia/graphql-platform-utils';
 import { inspect } from 'node:util';
-import type { Node, UniqueConstraint } from '../../node.js';
+import type { Except, Promisable } from 'type-fest';
+import type { Node } from '../../node.js';
 import type { NodeUniqueFilterInputValue } from '../type/input/unique-filter.js';
+import { AbstractOperationError } from './abstract-error.js';
 
-export class InvalidRequestContextError extends utils.GraphError {
+export class InvalidRequestContextError extends AbstractOperationError {
+  public readonly code = 'INVALID_REQUEST_CONTEXT';
+
   public constructor(options?: utils.GraphErrorOptions) {
-    super(`Invalid request`, options);
+    super(`Invalid request-context`, options);
   }
 }
 
-export class UnauthorizedError extends utils.GraphError {
+export class UnauthenticatedError extends AbstractOperationError {
+  public readonly code = 'UNAUTHENTICATED';
+
+  public constructor(options?: utils.GraphErrorOptions) {
+    super(`Unauthenticated`, options);
+  }
+}
+
+export class UnauthorizedError extends AbstractOperationError {
+  public readonly code = 'UNAUTHORIZED';
+
   public constructor(
     node: Node,
-    mutationType: utils.MutationType | undefined,
+    mutationType?: utils.MutationType,
     options?: utils.GraphErrorOptions,
   ) {
     super(
@@ -24,66 +38,111 @@ export class UnauthorizedError extends utils.GraphError {
   }
 }
 
-export class NodeNotFoundError extends utils.GraphError {
+export class InvalidArgumentsError extends AbstractOperationError {
+  public readonly code = 'INVALID_ARGUMENTS';
+
+  public constructor(options?: utils.GraphErrorOptions) {
+    super(`Invalid argument(s)`, options);
+  }
+}
+
+export class InvalidSelectionError extends AbstractOperationError {
+  public readonly code = 'INVALID_SELECTION';
+
+  public constructor(options?: utils.GraphErrorOptions) {
+    super(`Invalid selection`, options);
+  }
+}
+
+export class NotFoundError extends AbstractOperationError {
+  public readonly code = 'NOT_FOUND';
+
   public constructor(
     node: Node,
     where: NonNullable<NodeUniqueFilterInputValue>,
     options?: utils.GraphErrorOptions,
   ) {
     super(
-      `No "${node}" has been found given the following filter: ${inspect({
-        ...where,
-      })}`,
+      `No "${node}" has been found given the following filter: ${inspect(
+        where,
+      )}`,
       options,
     );
   }
 }
 
-export interface DuplicateNodeErrorOptions extends utils.GraphErrorOptions {
-  readonly uniqueConstraint?: UniqueConstraint;
-  readonly hint?: string;
+export abstract class AbstractConnectorError extends AbstractOperationError {}
+
+export enum ConnectorWorkflowKind {
+  PRE_MUTATION,
+  POST_SUCCESSFUL_MUTATION,
+  POST_FAILED_MUTATION,
+  POST_MUTATION,
 }
 
-export class DuplicateNodeError extends utils.GraphError {
-  public constructor(node: Node, options?: DuplicateNodeErrorOptions) {
-    super(
-      [
-        `Duplicate "${options?.uniqueConstraint || node}"`,
-        options?.hint ? `: ${options.hint}` : undefined,
-      ]
-        .filter(Boolean)
-        .join(''),
-      options,
-    );
+export interface ConnectorWorkflowErrorOptions
+  extends utils.GraphErrorOptions {}
+
+export class ConnectorWorkflowError extends AbstractConnectorError {
+  public readonly code = 'CONNECTOR_WORKFLOW_ERROR';
+
+  public constructor(
+    kind: ConnectorWorkflowKind,
+    options?: ConnectorWorkflowErrorOptions,
+  ) {
+    super(`Failed at "${ConnectorWorkflowKind[kind]}"`, options);
   }
 }
 
-export enum NodeLifecycleHookKind {
-  PRE_CREATE = 'pre-create',
-  POST_CREATE = 'post-create',
-  PRE_UPDATE = 'pre-update',
-  POST_UPDATE = 'post-update',
-  PRE_DELETE = 'pre-delete',
-  POST_DELETE = 'post-delete',
+export async function catchConnectorWorkflowError(
+  workflow: () => Promisable<void>,
+  kind: ConnectorWorkflowKind,
+  options?: Except<ConnectorWorkflowErrorOptions, 'cause'>,
+): Promise<void> {
+  try {
+    await workflow();
+  } catch (cause) {
+    throw cause instanceof ConnectorWorkflowError
+      ? cause
+      : new ConnectorWorkflowError(kind, { ...options, cause });
+  }
 }
 
-export class NodeLifecycleHookError extends utils.GraphError {
+export enum ConnectorOperationKind {
+  COUNT,
+  FIND,
+  CREATE,
+  UPDATE,
+  DELETE,
+}
+
+export interface ConnectorOperationErrorOptions
+  extends utils.GraphErrorOptions {}
+
+export class ConnectorOperationError extends AbstractConnectorError {
+  public readonly code: 'CONNECTOR_OPERATION_ERROR' | 'DUPLICATE' =
+    'CONNECTOR_OPERATION_ERROR';
+
   public constructor(
     node: Node,
-    kind: NodeLifecycleHookKind,
-    options?: utils.GraphErrorOptions,
+    kind: ConnectorOperationKind,
+    options?: ConnectorOperationErrorOptions,
   ) {
-    super(`${node}'s "${kind}" lifecycle hook error`, options);
+    super(`Failed at "${node}.${ConnectorOperationKind[kind]}"`, options);
   }
 }
 
-export class ConnectorError extends utils.GraphError {
-  public constructor(options?: utils.GraphErrorOptions) {
-    super(
-      options?.cause instanceof DuplicateNodeError
-        ? options.cause.message
-        : 'Connector error',
-      options,
-    );
+export async function catchConnectorOperationError<T>(
+  operation: () => Promise<T>,
+  node: Node,
+  kind: ConnectorOperationKind,
+  options?: Except<ConnectorOperationErrorOptions, 'cause'>,
+): Promise<T> {
+  try {
+    return await operation();
+  } catch (cause) {
+    throw cause instanceof ConnectorOperationError
+      ? cause
+      : new ConnectorOperationError(node, kind, { ...options, cause });
   }
 }

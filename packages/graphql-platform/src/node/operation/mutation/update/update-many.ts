@@ -22,12 +22,12 @@ import type { NodeFilterInputValue } from '../../../type/input/filter.js';
 import type { OrderByInputValue } from '../../../type/input/ordering.js';
 import type { NodeUpdateInputValue } from '../../../type/input/update.js';
 import {
-  ConnectorError,
-  NodeLifecycleHookError,
-  NodeLifecycleHookKind,
+  catchConnectorOperationError,
+  ConnectorOperationKind,
 } from '../../error.js';
 import { AbstractUpdate, type UpdateConfig } from '../abstract-update.js';
 import type { MutationContext } from '../context.js';
+import { LifecycleHookError, LifecycleHookKind } from '../error.js';
 
 export type UpdateManyMutationArgs = RawNodeSelectionAwareArgs<{
   where?: NodeFilterInputValue;
@@ -87,9 +87,9 @@ export class UpdateManyMutation<
   }
 
   protected override async executeWithValidArgumentsAndContext(
+    context: MutationContext,
     authorization: NodeFilter | undefined,
     { data, ...args }: NodeSelectionAwareArgs<UpdateManyMutationArgs>,
-    context: MutationContext,
     path: utils.Path,
   ): Promise<UpdateManyMutationResult> {
     const preUpdate = this.#config?.preUpdate;
@@ -104,7 +104,7 @@ export class UpdateManyMutation<
       // An "empty" update is just a "find"
       return this.node
         .getQueryByKey('find-many')
-        .internal(authorization, args, context, path);
+        .internal(context, authorization, args, path);
     }
 
     const argsPath = utils.addPath(path, argsPathKey);
@@ -131,22 +131,21 @@ export class UpdateManyMutation<
       utils.addPath(argsPath, 'orderBy'),
     ).normalized;
 
-    let currentValues: ReadonlyArray<NodeValue>;
-    try {
-      currentValues = await this.connector.find(
-        {
+    // Fetch the current nodes' value
+    const currentValues = await catchConnectorOperationError(
+      () =>
+        this.connector.find(context, {
           node: this.node,
           ...(filter && { filter }),
           ...(ordering && { ordering }),
           limit: args.first,
           selection: this.node.selection,
           forMutation: utils.MutationType.UPDATE,
-        },
-        context,
-      );
-    } catch (cause) {
-      throw new ConnectorError({ cause, path });
-    }
+        }),
+      this.node,
+      ConnectorOperationKind.FIND,
+      { path },
+    );
 
     if (currentValues.length === 0) {
       return [];
@@ -204,33 +203,33 @@ export class UpdateManyMutation<
                 target: statement.targetProxy,
               });
             } catch (cause) {
-              throw new NodeLifecycleHookError(
+              throw new LifecycleHookError(
                 this.node,
-                NodeLifecycleHookKind.PRE_UPDATE,
+                LifecycleHookKind.PRE_UPDATE,
                 { cause, path },
               );
             }
 
             if (!statement.isEmpty()) {
               // Actually update the node
-              try {
-                await this.connector.update(
-                  {
+              await catchConnectorOperationError(
+                () =>
+                  this.connector.update(context, {
                     node: this.node,
                     update: statement,
                     filter: this.node.filterInputType.filter(currentIds[index]),
-                  },
-                  context,
-                );
-              } catch (cause) {
-                throw new ConnectorError({ cause, path });
-              }
+                  }),
+                this.node,
+                ConnectorOperationKind.UPDATE,
+                { path },
+              );
             }
           }
         }),
       );
 
       newValues = await this.node.getQueryByKey('get-some-in-order').internal(
+        context,
         undefined,
         {
           where: currentIds,
@@ -238,7 +237,6 @@ export class UpdateManyMutation<
             ? this.node.selection
             : this.node.selection.mergeWith(args.selection),
         },
-        context,
         path,
       );
 
@@ -266,12 +264,12 @@ export class UpdateManyMutation<
       newValues = willEventuallyRefetchToGetReverseEdgeChanges
         ? currentValues
         : await this.node.getQueryByKey('get-some-in-order').internal(
+            context,
             undefined,
             {
               where: currentIds,
               selection: this.node.selection.mergeWith(args.selection),
             },
-            context,
             path,
           );
 
@@ -300,9 +298,9 @@ export class UpdateManyMutation<
               change,
             });
           } catch (cause) {
-            throw new NodeLifecycleHookError(
+            throw new LifecycleHookError(
               this.node,
-              NodeLifecycleHookKind.POST_UPDATE,
+              LifecycleHookKind.POST_UPDATE,
               { cause, path },
             );
           }
@@ -312,12 +310,12 @@ export class UpdateManyMutation<
 
     return willEventuallyRefetchToGetReverseEdgeChanges
       ? this.node.getQueryByKey('get-some-in-order').internal(
+          context,
           undefined,
           {
             where: currentIds,
             selection: args.selection,
           },
-          context,
           path,
         )
       : newValues.map((newValue) => args.selection.parseValue(newValue));

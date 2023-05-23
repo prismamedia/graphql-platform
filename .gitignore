@@ -2,6 +2,8 @@
 /*.log
 /**/.DS_Store
 
+/.swc/
+
 /.yarn/*
 !/.yarn/cache
 !/.yarn/plugins

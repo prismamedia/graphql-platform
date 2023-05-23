@@ -7,7 +7,12 @@ import type { Merge } from 'type-fest';
 import type { ConnectorInterface } from '../connector-interface.js';
 import type { GraphQLPlatform } from '../index.js';
 import type { Node } from '../node.js';
+import { AbstractOperationError } from './operation/abstract-error.js';
 import { OperationContext } from './operation/context.js';
+import {
+  InvalidArgumentsError,
+  InvalidSelectionError,
+} from './operation/error.js';
 import type { OperationInterface } from './operation/interface.js';
 import type { NodeFilter } from './statement/filter.js';
 import type { NodeSelection } from './statement/selection.js';
@@ -114,23 +119,33 @@ export abstract class AbstractOperation<
     context: OperationContext,
     path: utils.Path,
   ): NodeSelectionAwareArgs<TArgs> {
-    const parsedArgs = utils.parseInputValues(
-      this.arguments || [],
-      this.selectionAware && utils.isPlainObject(args)
-        ? _.omit(args, ['selection'])
-        : args,
-      utils.addPath(path, argsPathKey),
-    );
+    let parsedArgs;
+
+    try {
+      parsedArgs = utils.parseInputValues(
+        this.arguments || [],
+        this.selectionAware && utils.isPlainObject(args)
+          ? _.omit(args, ['selection'])
+          : args,
+        utils.addPath(path, argsPathKey),
+      );
+    } catch (cause) {
+      throw new InvalidArgumentsError({ cause, path });
+    }
 
     if (this.selectionAware) {
-      Object.assign(parsedArgs, {
-        selection: this.node.outputType.select(
-          args?.selection,
-          context,
-          undefined,
-          path,
-        ),
-      });
+      try {
+        Object.assign(parsedArgs, {
+          selection: this.node.outputType.select(
+            args?.selection,
+            context,
+            undefined,
+            path,
+          ),
+        });
+      } catch (cause) {
+        throw new InvalidSelectionError({ cause, path });
+      }
     }
 
     return parsedArgs as any;
@@ -140,16 +155,16 @@ export abstract class AbstractOperation<
    * The actual implementation with authorization, parsed arguments and context
    */
   protected abstract executeWithValidArgumentsAndContext(
+    context: OperationContext,
     authorization: NodeFilter | undefined,
     args: NodeSelectionAwareArgs<TArgs>,
-    context: OperationContext,
     path: utils.Path,
   ): Promise<TResult>;
 
   public async internal(
+    context: OperationContext<TRequestContext>,
     authorization: NodeFilter | undefined,
     args: TArgs,
-    context: OperationContext<TRequestContext>,
     path: utils.Path,
   ): Promise<TResult> {
     this.assertIsEnabled(path);
@@ -157,16 +172,16 @@ export abstract class AbstractOperation<
     const parsedArguments = this.parseArguments(args, context, path);
 
     return this.executeWithValidArgumentsAndContext(
+      context,
       authorization,
       parsedArguments,
-      context,
       path,
     );
   }
 
   public async execute(
-    args: TArgs,
     context: TRequestContext | OperationContext<TRequestContext>,
+    args: TArgs,
     path: utils.Path = utils.addPath(
       utils.addPath(undefined, this.operationType),
       this.name,
@@ -177,11 +192,11 @@ export abstract class AbstractOperation<
     const operationContext =
       context instanceof OperationContext
         ? context
-        : new OperationContext(this.gp, context);
+        : new OperationContext(this.gp, context, path);
 
     const authorization = this.ensureAuthorization(operationContext, path);
 
-    return this.internal(authorization, args, operationContext, path);
+    return this.internal(operationContext, authorization, args, path);
   }
 
   public abstract getGraphQLOutputType(): graphql.GraphQLOutputType;
@@ -202,12 +217,21 @@ export abstract class AbstractOperation<
         args: utils.getGraphQLFieldConfigArgumentMap(this.arguments),
       }),
       type: this.getGraphQLOutputType(),
-      resolve: (_, args, context, info) =>
-        this.execute(
-          (this.selectionAware ? { ...args, selection: info } : args) as TArgs,
-          context,
-          info.path,
-        ),
+      resolve: async (_, args, context, info) => {
+        try {
+          return await this.execute(
+            context,
+            (this.selectionAware
+              ? { ...args, selection: info }
+              : args) as TArgs,
+            info.path,
+          );
+        } catch (error) {
+          throw error instanceof AbstractOperationError
+            ? error.toGraphQLError()
+            : error;
+        }
+      },
     };
   }
 }

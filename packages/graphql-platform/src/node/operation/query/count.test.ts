@@ -34,11 +34,11 @@ describe('CountQuery', () => {
     beforeEach(() => clearAllConnectorMocks(gp.connector));
 
     describe('Fails', () => {
-      it.each<[CountQueryArgs, MyContext]>([[undefined, myVisitorContext]])(
+      it.each<[MyContext, CountQueryArgs]>([[myVisitorContext, undefined]])(
         'throws an UnauthorizedError',
-        async (args, context) => {
+        async (context, args) => {
           await expect(
-            gp.api.query.articleCount(args, context),
+            gp.api.query.articleCount(context, args),
           ).rejects.toThrowError(UnauthorizedError);
 
           expect(gp.connector.count).toHaveBeenCalledTimes(0);
@@ -47,11 +47,11 @@ describe('CountQuery', () => {
     });
 
     describe('Works', () => {
-      it.each<[CountQueryArgs, MyContext]>([[{ where: null }, myAdminContext]])(
+      it.each<[MyContext, CountQueryArgs]>([[myAdminContext, { where: null }]])(
         'does no call the connector when it is not needed',
-        async (args, context) => {
+        async (context, args) => {
           await expect(
-            gp.api.query.articleCount(args, context),
+            gp.api.query.articleCount(context, args),
           ).resolves.toEqual(0);
 
           expect(gp.connector.count).toHaveBeenCalledTimes(0);
@@ -60,28 +60,27 @@ describe('CountQuery', () => {
 
       it('calls the connector properly', async () => {
         await expect(
-          gp.api.query.articleCount({}, myAdminContext),
+          gp.api.query.articleCount(myAdminContext, {}),
         ).resolves.toEqual(5);
 
         expect(gp.connector.count).toHaveBeenCalledTimes(1);
         expect(gp.connector.count).toHaveBeenLastCalledWith(
-          { node: gp.getNodeByName('Article') },
           expect.any(OperationContext),
+          { node: gp.getNodeByName('Article') },
         );
       });
 
       it('calls the connector properly', async () => {
         await expect(
-          gp.api.query.articleCount(
-            { where: { tagCount_gt: 0 } },
-            myAdminContext,
-          ),
+          gp.api.query.articleCount(myAdminContext, {
+            where: { tagCount_gt: 0 },
+          }),
         ).resolves.toEqual(5);
 
         expect(gp.connector.count).toHaveBeenCalledTimes(1);
         expect(gp.connector.count).toHaveBeenLastCalledWith(
-          { node: gp.getNodeByName('Article'), filter: expect.any(NodeFilter) },
           expect.any(OperationContext),
+          { node: gp.getNodeByName('Article'), filter: expect.any(NodeFilter) },
         );
       });
     });

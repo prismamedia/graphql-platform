@@ -402,11 +402,8 @@ export class GraphQLPlatform<
       }
 
       this.#requestContextAssertion?.(maybeRequestContext);
-    } catch (error) {
-      throw new InvalidRequestContextError({
-        cause: error,
-        path,
-      });
+    } catch (cause) {
+      throw new InvalidRequestContextError({ cause, path });
     }
   }
 

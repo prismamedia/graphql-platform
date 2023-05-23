@@ -9,7 +9,11 @@ export type ApolloServerIntegrationOptions<
   TRequestContext extends BaseContext = any,
 > = Omit<
   ApolloServerOptions<TRequestContext>,
-  'schema' | 'typeDefs' | 'resolvers' | 'gateway'
+  | 'schema'
+  | 'typeDefs'
+  | 'resolvers'
+  | 'gateway'
+  | 'status400ForVariableCoercionErrors'
 >;
 
 export class ApolloServerIntegration<
@@ -23,6 +27,7 @@ export class ApolloServerIntegration<
     super({
       ...options,
       schema: gp.schema,
+      status400ForVariableCoercionErrors: true,
     });
   }
 }

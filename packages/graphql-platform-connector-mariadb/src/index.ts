@@ -253,10 +253,17 @@ export class MariaDBConnector
               )
             : undefined;
 
-          throw new core.DuplicateNodeError(statement.table.node, {
-            uniqueConstraint: uniqueIndex?.uniqueConstraint,
-            hint: match?.groups?.value,
-          });
+          throw new core.DuplicateError(
+            statement.table.node,
+            statement instanceof InsertStatement
+              ? core.ConnectorOperationKind.CREATE
+              : core.ConnectorOperationKind.UPDATE,
+            {
+              uniqueConstraint: uniqueIndex?.uniqueConstraint,
+              hint: match?.groups?.value,
+              cause: error,
+            },
+          );
         }
       }
 
@@ -365,58 +372,58 @@ export class MariaDBConnector
   }
 
   public async count(
-    statement: core.ConnectorCountStatement,
     context: core.OperationContext,
+    { node, ...statement }: core.ConnectorCountStatement,
   ): Promise<number> {
-    const table = this.schema.getTableByNode(statement.node);
+    const table = this.schema.getTableByNode(node);
     const maybeConnection =
       context instanceof core.MutationContext
         ? this.getConnectionForMutation(context)
         : undefined;
 
-    return table.count(statement, context, maybeConnection);
+    return table.count(context, statement, maybeConnection);
   }
 
   public async find<TValue extends core.NodeSelectedValue>(
-    statement: core.ConnectorFindStatement<TValue>,
     context: core.OperationContext,
+    { node, ...statement }: core.ConnectorFindStatement<TValue>,
   ): Promise<TValue[]> {
-    const table = this.schema.getTableByNode(statement.node);
+    const table = this.schema.getTableByNode(node);
     const maybeConnection =
       context instanceof core.MutationContext
         ? this.getConnectionForMutation(context)
         : undefined;
 
-    return table.find(statement, context, maybeConnection);
+    return table.find(context, statement, maybeConnection);
   }
 
   public async create(
-    statement: core.ConnectorCreateStatement,
     context: core.MutationContext,
+    { node, ...statement }: core.ConnectorCreateStatement,
   ): Promise<core.NodeValue[]> {
-    const table = this.schema.getTableByNode(statement.node);
+    const table = this.schema.getTableByNode(node);
     const connection = this.getConnectionForMutation(context);
 
-    return table.insert(statement, context, connection);
+    return table.insert(context, statement, connection);
   }
 
   public async update(
-    statement: core.ConnectorUpdateStatement,
     context: core.MutationContext,
+    { node, ...statement }: core.ConnectorUpdateStatement,
   ): Promise<number> {
-    const table = this.schema.getTableByNode(statement.node);
+    const table = this.schema.getTableByNode(node);
     const connection = this.getConnectionForMutation(context);
 
-    return table.update(statement, context, connection);
+    return table.update(context, statement, connection);
   }
 
   public async delete(
-    statement: core.ConnectorDeleteStatement,
     context: core.MutationContext,
+    { node, ...statement }: core.ConnectorDeleteStatement,
   ): Promise<number> {
-    const table = this.schema.getTableByNode(statement.node);
+    const table = this.schema.getTableByNode(node);
     const connection = this.getConnectionForMutation(context);
 
-    return table.delete(statement, context, connection);
+    return table.delete(context, statement, connection);
   }
 }

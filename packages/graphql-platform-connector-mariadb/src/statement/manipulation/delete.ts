@@ -1,6 +1,7 @@
 import type * as core from '@prismamedia/graphql-platform';
 import type * as mariadb from 'mariadb';
 import { EOL } from 'node:os';
+import type { SetOptional } from 'type-fest';
 import { escapeIdentifier } from '../../escaping.js';
 import { Table } from '../../schema.js';
 import { StatementKind } from '../kind.js';
@@ -23,8 +24,8 @@ export class DeleteStatement implements mariadb.QueryOptions {
 
   public constructor(
     public readonly table: Table,
-    statement: core.ConnectorDeleteStatement,
     context: core.MutationContext,
+    statement: SetOptional<core.ConnectorDeleteStatement, 'node'>,
     config?: DeleteStatementConfig,
   ) {
     const tableReference = new TableFactor(table, context);

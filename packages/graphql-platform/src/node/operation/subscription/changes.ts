@@ -114,9 +114,9 @@ export class ChangesSubscription<
   }
 
   protected override async executeWithValidArgumentsAndContext(
+    context: OperationContext,
     authorization: NodeFilter | undefined,
     args: NodeSelectionAwareArgs<ChangesSubscriptionArgs>,
-    context: OperationContext,
     path: utils.Path,
   ): Promise<ChangesSubscriptionResult> {
     /**

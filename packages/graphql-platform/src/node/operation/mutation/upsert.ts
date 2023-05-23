@@ -63,29 +63,29 @@ export class UpsertMutation<
   }
 
   protected override async executeWithValidArgumentsAndContext(
+    context: MutationContext,
     authorization: NodeFilter | undefined,
     args: NodeSelectionAwareArgs<UpsertMutationArgs>,
-    context: MutationContext,
     path: utils.Path,
   ): Promise<UpsertMutationResult> {
     return (
       (await this.node.getMutationByKey('update-one-if-exists').internal(
+        context,
         authorization,
         {
           where: args.where,
           data: args.update,
           selection: args.selection,
         },
-        context,
         path,
       )) ??
       (await this.node.getMutationByKey('create-one').internal(
+        context,
         authorization,
         {
           data: args.create,
           selection: args.selection,
         },
-        context,
         path,
       ))
     );

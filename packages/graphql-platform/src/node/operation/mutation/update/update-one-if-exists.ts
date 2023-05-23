@@ -44,14 +44,15 @@ export class UpdateOneIfExistsMutation<
   }
 
   protected override async executeWithValidArgumentsAndContext(
+    context: MutationContext,
     authorization: NodeFilter | undefined,
     args: NodeSelectionAwareArgs<UpdateOneIfExistsMutationArgs>,
-    context: MutationContext,
     path: utils.Path,
   ): Promise<UpdateOneIfExistsMutationResult> {
     const [nodeValue = null] = await this.node
       .getMutationByKey('update-many')
       .internal(
+        context,
         authorization,
         {
           where: args.where,
@@ -59,7 +60,6 @@ export class UpdateOneIfExistsMutation<
           data: args.data,
           selection: args.selection,
         },
-        context,
         path,
       );
 

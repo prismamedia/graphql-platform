@@ -18,6 +18,7 @@ export * from './mutation/config.js';
 export * from './mutation/context.js';
 export * from './mutation/creation.js';
 export * from './mutation/deletion.js';
+export * from './mutation/error.js';
 export * from './mutation/interface.js';
 export * from './mutation/update.js';
 

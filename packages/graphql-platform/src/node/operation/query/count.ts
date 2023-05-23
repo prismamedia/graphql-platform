@@ -11,7 +11,10 @@ import { AndOperation, NodeFilter } from '../../statement/filter.js';
 import type { NodeFilterInputValue } from '../../type.js';
 import { AbstractQuery } from '../abstract-query.js';
 import type { OperationContext } from '../context.js';
-import { ConnectorError } from '../error.js';
+import {
+  catchConnectorOperationError,
+  ConnectorOperationKind,
+} from '../error.js';
 
 export type CountQueryArgs = utils.Nillable<{
   where?: NodeFilterInputValue;
@@ -47,9 +50,9 @@ export class CountQuery<TRequestContext extends object> extends AbstractQuery<
   }
 
   protected override async executeWithValidArgumentsAndContext(
+    context: OperationContext,
     authorization: NodeFilter | undefined,
     args: NodeSelectionAwareArgs<CountQueryArgs>,
-    context: OperationContext,
     path: utils.Path,
   ): Promise<CountQueryResult> {
     const argsPath = utils.addPath(path, argsPathKey);
@@ -70,16 +73,15 @@ export class CountQuery<TRequestContext extends object> extends AbstractQuery<
       return 0;
     }
 
-    try {
-      return await this.connector.count(
-        {
+    return catchConnectorOperationError(
+      () =>
+        this.connector.count(context, {
           node: this.node,
           ...(filter && { filter }),
-        },
-        context,
-      );
-    } catch (error) {
-      throw new ConnectorError({ cause: error, path });
-    }
+        }),
+      this.node,
+      ConnectorOperationKind.COUNT,
+      { path },
+    );
   }
 }

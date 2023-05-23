@@ -265,11 +265,11 @@ export class UniqueReverseEdgeUpdateInput extends AbstractReverseEdgeUpdateInput
               await Promise.all(
                 originalEdgeValues.map((originalEdgeValue) =>
                   this.reverseEdge.head.getMutationByKey('delete-one').execute(
+                    context,
                     {
                       where: { [originalEdgeName]: originalEdgeValue },
                       selection,
                     },
-                    context,
                     actionPath,
                   ),
                 ),
@@ -285,12 +285,12 @@ export class UniqueReverseEdgeUpdateInput extends AbstractReverseEdgeUpdateInput
               await this.reverseEdge.head
                 .getMutationByKey('delete-many')
                 .execute(
+                  context,
                   {
                     where: { [originalEdgeName]: { OR: originalEdgeValues } },
                     first: originalEdgeValues.length,
                     selection,
                   },
-                  context,
                   actionPath,
                 );
             }
@@ -318,6 +318,7 @@ export class UniqueReverseEdgeUpdateInput extends AbstractReverseEdgeUpdateInput
             const data = inputValue[maybeActionName]!;
 
             await this.reverseEdge.head.getMutationByKey('create-some').execute(
+              context,
               {
                 data: originalEdgeValues.map((originalEdgeValue) => ({
                   ...data,
@@ -327,7 +328,6 @@ export class UniqueReverseEdgeUpdateInput extends AbstractReverseEdgeUpdateInput
                 })),
                 selection,
               },
-              context,
               actionPath,
             );
             break;
@@ -341,6 +341,7 @@ export class UniqueReverseEdgeUpdateInput extends AbstractReverseEdgeUpdateInput
                 this.reverseEdge.head
                   .getMutationByKey('create-one-if-not-exists')
                   .execute(
+                    context,
                     {
                       where: { [originalEdgeName]: originalEdgeValue },
                       data: {
@@ -351,7 +352,6 @@ export class UniqueReverseEdgeUpdateInput extends AbstractReverseEdgeUpdateInput
                       },
                       selection,
                     },
-                    context,
                     actionPath,
                   ),
               ),
@@ -365,12 +365,12 @@ export class UniqueReverseEdgeUpdateInput extends AbstractReverseEdgeUpdateInput
             await Promise.all(
               originalEdgeValues.map((originalEdgeValue) =>
                 this.reverseEdge.head.getMutationByKey('update-one').execute(
+                  context,
                   {
                     where: { [originalEdgeName]: originalEdgeValue },
                     data,
                     selection,
                   },
-                  context,
                   actionPath,
                 ),
               ),
@@ -382,13 +382,13 @@ export class UniqueReverseEdgeUpdateInput extends AbstractReverseEdgeUpdateInput
             const data = inputValue[maybeActionName]!;
 
             await this.reverseEdge.head.getMutationByKey('update-many').execute(
+              context,
               {
                 where: { [originalEdgeName]: { OR: originalEdgeValues } },
                 first: originalEdgeValues.length,
                 data,
                 selection,
               },
-              context,
               actionPath,
             );
             break;
@@ -400,6 +400,7 @@ export class UniqueReverseEdgeUpdateInput extends AbstractReverseEdgeUpdateInput
             await Promise.all(
               originalEdgeValues.map((originalEdgeValue) =>
                 this.reverseEdge.head.getMutationByKey('upsert').execute(
+                  context,
                   {
                     where: { [originalEdgeName]: originalEdgeValue },
                     create: {
@@ -411,7 +412,6 @@ export class UniqueReverseEdgeUpdateInput extends AbstractReverseEdgeUpdateInput
                     update,
                     selection,
                   },
-                  context,
                   actionPath,
                 ),
               ),

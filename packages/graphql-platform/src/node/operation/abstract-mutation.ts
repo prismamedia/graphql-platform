@@ -10,7 +10,7 @@ import {
 } from '../abstract-operation.js';
 import { AndOperation, NodeFilter } from '../statement/filter.js';
 import type { ContextBoundAPI } from './api.js';
-import { ConnectorError } from './error.js';
+import { ConnectorWorkflowKind, catchConnectorWorkflowError } from './error.js';
 import { MutationContext } from './mutation/context.js';
 import type { MutationInterface } from './mutation/interface.js';
 
@@ -102,27 +102,27 @@ export abstract class AbstractMutation<
   }
 
   protected abstract override executeWithValidArgumentsAndContext(
+    context: MutationContext,
     authorization: NodeFilter | undefined,
     args: NodeSelectionAwareArgs<TArgs>,
-    context: MutationContext,
     path: utils.Path,
   ): Promise<TResult>;
 
   public override async execute(
-    args: TArgs,
     context: TRequestContext | MutationContext<TRequestContext>,
+    args: TArgs,
     path: utils.Path = utils.addPath(
       utils.addPath(undefined, this.operationType),
       this.name,
     ),
   ): Promise<TResult> {
     if (context instanceof MutationContext) {
-      return super.execute(args, context, path);
+      return super.execute(context, args, path);
     }
 
     this.assertIsEnabled(path);
 
-    const mutationContext = new MutationContext(this.gp, context);
+    const mutationContext = new MutationContext(this.gp, context, path);
 
     const authorization = this.ensureAuthorization(mutationContext, path);
 
@@ -138,46 +138,45 @@ export abstract class AbstractMutation<
       path,
     );
 
-    try {
-      await this.connector.preMutation?.(mutationContext);
-    } catch (cause) {
-      throw new ConnectorError({ cause, path });
-    }
+    await catchConnectorWorkflowError(
+      () => this.connector.preMutation?.(mutationContext),
+      ConnectorWorkflowKind.PRE_MUTATION,
+      { path },
+    );
 
     let result: TResult;
 
     try {
       result = await this.executeWithValidArgumentsAndContext(
+        mutationContext,
         authorization,
         parsedArguments,
-        mutationContext,
         path,
       );
 
-      try {
-        await this.connector.postSuccessfulMutation?.(mutationContext);
-      } catch (cause) {
-        throw new ConnectorError({ cause, path });
-      }
+      await catchConnectorWorkflowError(
+        () => this.connector.postSuccessfulMutation?.(mutationContext),
+        ConnectorWorkflowKind.POST_SUCCESSFUL_MUTATION,
+        { path },
+      );
 
       mutationContext.commitChanges();
-    } catch (error) {
-      try {
-        await this.connector.postFailedMutation?.(
-          mutationContext,
-          utils.castToError(error),
-        );
-      } catch (cause) {
-        throw new ConnectorError({ cause, path });
-      }
+    } catch (rawError) {
+      const error = utils.castToError(rawError);
+
+      await catchConnectorWorkflowError(
+        () => this.connector.postFailedMutation?.(mutationContext, error),
+        ConnectorWorkflowKind.POST_FAILED_MUTATION,
+        { path },
+      );
 
       throw error;
     } finally {
-      try {
-        await this.connector.postMutation?.(mutationContext);
-      } catch (cause) {
-        throw new ConnectorError({ cause, path });
-      }
+      await catchConnectorWorkflowError(
+        () => this.connector.postMutation?.(mutationContext),
+        ConnectorWorkflowKind.POST_MUTATION,
+        { path },
+      );
     }
 
     // changes

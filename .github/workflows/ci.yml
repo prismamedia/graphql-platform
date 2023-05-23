@@ -56,7 +56,7 @@ jobs:
           MARIADB_ROOT_PASSWORD: my_root_password_for_tests
 
       - name: Lint package.json
-        run: yarn workspaces foreach --all --no-private run publint
+        run: yarn workspaces foreach --all --no-private run publint --strict
 
       - name: Publish to npmjs
         if: "matrix.publish == true && startsWith(github.ref, 'refs/tags/')"

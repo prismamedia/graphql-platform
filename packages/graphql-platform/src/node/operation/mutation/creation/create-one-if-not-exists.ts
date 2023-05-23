@@ -55,26 +55,26 @@ export class CreateOneIfNotExistsMutation<
   }
 
   protected override async executeWithValidArgumentsAndContext(
+    context: MutationContext,
     authorization: NodeFilter | undefined,
     args: NodeSelectionAwareArgs<CreateOneIfNotExistsMutationArgs>,
-    context: MutationContext,
     path: utils.Path,
   ): Promise<CreateOneIfNotExistsMutationResult> {
     return (
       (await this.node
         .getQueryByKey('get-one-if-exists')
         .internal(
+          context,
           authorization,
           { where: args.where, selection: args.selection },
-          context,
           path,
         )) ??
       (await this.node
         .getMutationByKey('create-one')
         .internal(
+          context,
           authorization,
           { data: args.data, selection: args.selection },
-          context,
           path,
         ))
     );

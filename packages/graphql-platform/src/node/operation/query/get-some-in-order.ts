@@ -7,7 +7,7 @@ import type { NodeFilter } from '../../statement/filter.js';
 import type { NodeSelectedValue } from '../../statement/selection/value.js';
 import { AbstractQuery } from '../abstract-query.js';
 import type { OperationContext } from '../context.js';
-import { NodeNotFoundError } from '../error.js';
+import { NotFoundError } from '../error.js';
 import type { GetSomeInOrderIfExistsQueryArgs } from './get-some-in-order-if-exists.js';
 
 export type GetSomeInOrderQueryArgs = GetSomeInOrderIfExistsQueryArgs;
@@ -43,14 +43,14 @@ export class GetSomeInOrderQuery<
   }
 
   protected override async executeWithValidArgumentsAndContext(
+    context: OperationContext,
     authorization: NodeFilter | undefined,
     args: NodeSelectionAwareArgs<GetSomeInOrderQueryArgs>,
-    context: OperationContext,
     path: utils.Path,
   ): Promise<GetSomeInOrderQueryResult> {
     const maybeNodeValues = await this.node
       .getQueryByKey('get-some-in-order-if-exists')
-      .internal(authorization, args, context, path);
+      .internal(context, authorization, args, path);
 
     return utils.aggregateGraphError<
       NodeSelectedValue | null,
@@ -59,12 +59,14 @@ export class GetSomeInOrderQuery<
       maybeNodeValues,
       (nodeValues, maybeNodeValue, index) => {
         if (!maybeNodeValue) {
-          throw new NodeNotFoundError(this.node, args.where[index], {
+          throw new NotFoundError(this.node, args.where[index], {
             path: utils.addPath(path, index),
           });
         }
 
-        return [...nodeValues, maybeNodeValue];
+        nodeValues.push(maybeNodeValue);
+
+        return nodeValues;
       },
       [],
       { path },

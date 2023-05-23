@@ -92,6 +92,7 @@ export class UniqueReverseEdgeCreationInput extends AbstractReverseEdgeCreationI
         const data = inputValue[maybeActionName]!;
 
         await this.reverseEdge.head.getMutationByKey('create-one').execute(
+          context,
           {
             data: {
               ...data,
@@ -101,7 +102,6 @@ export class UniqueReverseEdgeCreationInput extends AbstractReverseEdgeCreationI
             },
             selection,
           },
-          context,
           actionPath,
         );
         break;

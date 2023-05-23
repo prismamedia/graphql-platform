@@ -1,4 +1,5 @@
 import { afterAll, beforeAll, describe, expect, it } from '@jest/globals';
+import * as core from '@prismamedia/graphql-platform';
 import {
   myAdminContext,
   myJournalistContext,
@@ -29,23 +30,20 @@ describe('Insert statement', () => {
     executedStatements.length = 0;
 
     await expect(
-      gp.api.mutation.createUser(
-        {
-          data: {
-            id: '484ae4db-a944-421d-828c-3b514a438146',
-            username: 'myTestUser',
-            createdAt: new Date('2022-02-01T12:00:00Z'),
-            lastLoggedInAt: null,
-          },
-          selection: `{ 
+      gp.api.mutation.createUser(myAdminContext, {
+        data: {
+          id: '484ae4db-a944-421d-828c-3b514a438146',
+          username: 'myTestUser',
+          createdAt: new Date('2022-02-01T12:00:00Z'),
+          lastLoggedInAt: null,
+        },
+        selection: `{ 
             id
             username
             createdAt
             lastLoggedInAt
           }`,
-        },
-        myAdminContext,
-      ),
+      }),
     ).resolves.toEqual({
       id: '484ae4db-a944-421d-828c-3b514a438146',
       username: 'myTestUser',
@@ -69,35 +67,31 @@ RETURNING
     const now = new Date();
 
     await expect(
-      gp.api.mutation.createArticles(
-        {
-          data: [
-            {
-              id: '484ae4db-a944-421d-828c-3b514a438146',
-              title: '  My first title  ',
-              createdAt: now,
-              updatedAt: now,
+      gp.api.mutation.createArticles(myJournalistContext, {
+        data: [
+          {
+            id: '484ae4db-a944-421d-828c-3b514a438146',
+            title: '  My first title  ',
+            createdAt: now,
+            updatedAt: now,
+          },
+          {
+            id: 'f96e220e-ae7b-487e-b62a-09dc446f0c7d',
+            title: 'My second title',
+            body: {
+              blocks: [],
+              entityMap: {},
             },
-            {
-              id: 'f96e220e-ae7b-487e-b62a-09dc446f0c7d',
-              title: 'My second title',
-              body: {
-                blocks: [],
-                entityMap: {},
-              },
-              createdAt: now,
-              updatedAt: now,
-              sponsored: true,
-              views: 12n,
-              score: 0.753,
-              machineTags: [
-                'namespace:key=a_value',
-                'namespace:key=other_value',
-              ],
-              metas: { aKey: 'withAnyValue' },
-            },
-          ],
-          selection: `{ 
+            createdAt: now,
+            updatedAt: now,
+            sponsored: true,
+            views: 12n,
+            score: 0.753,
+            machineTags: ['namespace:key=a_value', 'namespace:key=other_value'],
+            metas: { aKey: 'withAnyValue' },
+          },
+        ],
+        selection: `{ 
             id
             title
             body
@@ -109,9 +103,7 @@ RETURNING
             machineTags
             metas
           }`,
-        },
-        myJournalistContext,
-      ),
+      }),
     ).resolves.toEqual([
       {
         id: '484ae4db-a944-421d-828c-3b514a438146',
@@ -159,5 +151,19 @@ VALUES
 RETURNING
   \`private_id\`,\`id\`,\`status\`,\`title\`,\`slug\`,\`body\`,\`category_private_id\`,\`created_by_id\`,\`created_at\`,\`updated_by_username\`,\`updated_at\`,\`metas\`,\`highlighted\`,\`sponsored\`,\`views\`,\`score\`,\`machine_tags\``,
     ]);
+  });
+
+  it('throws a duplicate error', async () => {
+    executedStatements.length = 0;
+
+    await expect(
+      gp.api.mutation.createArticle(myAdminContext, {
+        data: {
+          id: '484ae4db-a944-421d-828c-3b514a438146',
+          title: 'My title',
+        },
+        selection: `{ id }`,
+      }),
+    ).rejects.toThrowError(core.DuplicateError);
   });
 });

@@ -72,7 +72,7 @@ describe('Seeding', () => {
       nodes,
 
       connector: mockConnector({
-        create: async ({ node, creations }) => {
+        create: async (_context, { node, creations }) => {
           switch (node.name) {
             case 'Article':
               return creations.map((creation): NodeValue => {
@@ -252,7 +252,7 @@ describe('Seeding', () => {
               throw new Error(`"create" not implemented for "${node.name}"`);
           }
         },
-        count: async ({ node, filter }) => {
+        count: async (_context, { node, filter }) => {
           switch (node.name) {
             case 'Category':
               if (
@@ -269,14 +269,10 @@ describe('Seeding', () => {
               );
           }
         },
-        find: async ({
-          node,
-          filter,
-          ordering,
-          offset,
-          limit,
-          forMutation,
-        }): Promise<any> => {
+        find: async (
+          _context,
+          { node, filter, ordering, offset, limit, forMutation },
+        ): Promise<any> => {
           switch (node.name) {
             case 'Article':
               return filter?.filter instanceof LeafComparisonFilter &&

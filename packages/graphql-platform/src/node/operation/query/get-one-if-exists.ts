@@ -47,21 +47,21 @@ export class GetOneIfExistsQuery<
   }
 
   protected override async executeWithValidArgumentsAndContext(
+    context: OperationContext,
     authorization: NodeFilter | undefined,
     args: NodeSelectionAwareArgs<GetOneIfExistsQueryArgs>,
-    context: OperationContext,
     path: utils.Path,
   ): Promise<GetOneIfExistsQueryResult> {
     const [nodeValue = null] = await this.node
       .getQueryByKey('find-many')
       .internal(
+        context,
         authorization,
         {
           where: args.where,
           first: 1,
           selection: args.selection,
         },
-        context,
         path,
       );
 

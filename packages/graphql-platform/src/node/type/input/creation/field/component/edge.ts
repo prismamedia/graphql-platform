@@ -140,7 +140,7 @@ export class EdgeCreationInput extends AbstractComponentCreationInput<EdgeCreati
 
         return this.edge.head
           .getQueryByKey('get-one')
-          .execute({ where, selection }, context, actionPath);
+          .execute(context, { where, selection }, actionPath);
       }
 
       case EdgeCreationInputAction.CONNECT_IF_EXISTS: {
@@ -148,7 +148,7 @@ export class EdgeCreationInput extends AbstractComponentCreationInput<EdgeCreati
 
         return this.edge.head
           .getQueryByKey('get-one-if-exists')
-          .execute({ where, selection }, context, actionPath);
+          .execute(context, { where, selection }, actionPath);
       }
 
       case EdgeCreationInputAction.CREATE: {
@@ -156,7 +156,7 @@ export class EdgeCreationInput extends AbstractComponentCreationInput<EdgeCreati
 
         return this.edge.head
           .getMutationByKey('create-one')
-          .execute({ data, selection }, context, actionPath);
+          .execute(context, { data, selection }, actionPath);
       }
 
       case EdgeCreationInputAction.CREATE_IF_NOT_EXISTS: {
@@ -164,7 +164,7 @@ export class EdgeCreationInput extends AbstractComponentCreationInput<EdgeCreati
 
         return this.edge.head
           .getMutationByKey('create-one-if-not-exists')
-          .execute({ where, data, selection }, context, actionPath);
+          .execute(context, { where, data, selection }, actionPath);
       }
 
       default:

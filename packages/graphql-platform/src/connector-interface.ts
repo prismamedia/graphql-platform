@@ -76,20 +76,20 @@ export interface ConnectorInterface {
    * Returns the number of nodes
    */
   count(
-    statement: ConnectorCountStatement,
     context: OperationContext,
+    statement: ConnectorCountStatement,
   ): Promise<number>;
 
   /**
    * Returns a list of nodes
    */
   find<TValue extends NodeSelectedValue>(
-    statement: ConnectorFindStatement<TValue>,
     context: OperationContext,
+    statement: ConnectorFindStatement<TValue>,
   ): Promise<TValue[]>;
 
   /**
-   * This method, if provided, is called at the beginning of a new mutation (= would be a good place to start a transaction)
+   * This method, if provided, is called at the beginning of a new mutation (= would be a good place to get a connection and start a transaction)
    */
   preMutation?(context: MutationContext): Promise<void>;
 
@@ -112,23 +112,23 @@ export interface ConnectorInterface {
    * Creates some nodes and returns them
    */
   create(
-    statement: ConnectorCreateStatement,
     context: MutationContext,
+    statement: ConnectorCreateStatement,
   ): Promise<NodeValue[]>;
 
   /**
    * Update many nodes and returns the number of actually updated nodes
    */
   update(
-    statement: ConnectorUpdateStatement,
     context: MutationContext,
+    statement: ConnectorUpdateStatement,
   ): Promise<number>;
 
   /**
    * Deletes many nodes and returns the number of actually deleted nodes
    */
   delete(
-    statement: ConnectorDeleteStatement,
     context: MutationContext,
+    statement: ConnectorDeleteStatement,
   ): Promise<number>;
 }

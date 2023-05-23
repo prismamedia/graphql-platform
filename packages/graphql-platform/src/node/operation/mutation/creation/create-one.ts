@@ -46,20 +46,17 @@ export class CreateOneMutation<
   }
 
   protected override async executeWithValidArgumentsAndContext(
+    context: MutationContext,
     authorization: NodeFilter | undefined,
     args: NodeSelectionAwareArgs<CreateOneMutationArgs>,
-    context: MutationContext,
     path: utils.Path,
   ): Promise<CreateOneMutationResult> {
     const [nodeValue] = await this.node
       .getMutationByKey('create-some')
       .internal(
-        authorization,
-        {
-          data: [args.data],
-          selection: args.selection,
-        },
         context,
+        authorization,
+        { data: [args.data], selection: args.selection },
         path,
       );
 

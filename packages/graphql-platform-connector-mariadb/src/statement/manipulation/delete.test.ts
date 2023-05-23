@@ -27,32 +27,32 @@ describe('Delete statement', () => {
   it.each([
     [
       'Article',
+      myAdminContext,
       {
         where: { status: ArticleStatus.PUBLISHED },
         orderBy: ['createdAt_ASC'],
         first: 10,
         selection: '{ title }',
       },
-      myAdminContext,
     ],
     [
       'Article',
+      myAdminContext,
       {
         where: { status: ArticleStatus.DRAFT },
         orderBy: ['createdAt_ASC'],
         first: 10,
         selection: '{ title }',
       },
-      myAdminContext,
     ],
-  ])('generates statements', async (nodeName, args, context) => {
+  ])('generates statements', async (nodeName, context, args) => {
     changes.length = 0;
 
     await expect(
       gp
         .getNodeByName(nodeName)
         .getMutationByKey('delete-many')
-        .execute(args, context),
+        .execute(context, args),
     ).resolves.toMatchSnapshot('result');
 
     expect(

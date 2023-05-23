@@ -3,6 +3,7 @@ import { Memoize } from '@prismamedia/memoize';
 import * as graphql from 'graphql';
 import assert from 'node:assert/strict';
 import { AbstractOperation } from '../abstract-operation.js';
+import { AbstractOperationError } from './abstract-error.js';
 
 export abstract class AbstractSubscription<
   TRequestContext extends object,
@@ -33,12 +34,21 @@ export abstract class AbstractSubscription<
         args: utils.getGraphQLFieldConfigArgumentMap(this.arguments),
       }),
       type: this.getGraphQLOutputType(),
-      subscribe: (_, args, context, info) =>
-        this.execute(
-          (this.selectionAware ? { ...args, selection: info } : args) as TArgs,
-          context,
-          info.path,
-        ),
+      subscribe: async (_, args, context, info) => {
+        try {
+          return await this.execute(
+            context,
+            (this.selectionAware
+              ? { ...args, selection: info }
+              : args) as TArgs,
+            info.path,
+          );
+        } catch (error) {
+          throw error instanceof AbstractOperationError
+            ? error.toGraphQLError()
+            : error;
+        }
+      },
     };
   }
 }

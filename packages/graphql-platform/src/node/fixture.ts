@@ -10,14 +10,18 @@ export type NodeFixtureReference = string;
 export type NodeFixtureData = utils.PlainObject;
 
 export class NodeFixture<TRequestContext extends object = any> {
+  readonly #path: utils.Path;
+
   public constructor(
     public readonly seeding: Seeding<TRequestContext>,
     public readonly node: Node<TRequestContext>,
     public readonly reference: NodeFixtureReference,
     public readonly data: NodeFixtureData,
-    public readonly path: utils.Path,
+    path: utils.Path,
   ) {
     utils.assertPlainObject(data, path);
+
+    this.#path = path;
   }
 
   @Memoize()
@@ -31,7 +35,7 @@ export class NodeFixture<TRequestContext extends object = any> {
               throw new utils.UnexpectedValueError(
                 'a string',
                 maybeEdgeReference,
-                { path: utils.addPath(this.path, edge.name) },
+                { path: utils.addPath(this.#path, edge.name) },
               );
             } else if (
               !this.seeding.dependencyGraph.hasNode(maybeEdgeReference)
@@ -39,7 +43,7 @@ export class NodeFixture<TRequestContext extends object = any> {
               throw new utils.UnexpectedValueError(
                 "an existing fixture's reference",
                 maybeEdgeReference,
-                { path: utils.addPath(this.path, edge.name) },
+                { path: utils.addPath(this.#path, edge.name) },
               );
             }
 
@@ -89,16 +93,12 @@ export class NodeFixture<TRequestContext extends object = any> {
           ),
         ),
       ),
-      this.path,
+      this.#path,
     ) as any;
 
     return this.node
       .getMutationByKey('create-one')
-      .execute(
-        { data, selection: this.node.selection },
-        context,
-        this.path,
-      ) as any;
+      .execute(context, { data, selection: this.node.selection }, this.#path);
   }
 
   @Memoize((context: TRequestContext) => context)

@@ -11,7 +11,12 @@ import {
   mockConnector,
 } from '../../../../__tests__/connector-mock.js';
 import { GraphQLPlatform } from '../../../../index.js';
-import { UnauthorizedError } from '../../error.js';
+import {
+  ConnectorOperationError,
+  ConnectorWorkflowError,
+  UnauthorizedError,
+} from '../../error.js';
+import { LifecycleHookError } from '../error.js';
 import { CreateSomeMutationArgs } from './create-some.js';
 
 describe('CreateSomeMutation', () => {
@@ -20,7 +25,9 @@ describe('CreateSomeMutation', () => {
   beforeAll(() => {
     gp = new GraphQLPlatform({
       nodes,
-      connector: mockConnector(),
+      connector: mockConnector({
+        find: async () => [],
+      }),
     });
   });
 
@@ -30,28 +37,95 @@ describe('CreateSomeMutation', () => {
     beforeEach(() => clearAllConnectorMocks(gp.connector));
 
     describe('Fails', () => {
-      it.each<[CreateSomeMutationArgs, MyContext]>([
+      it.each<[MyContext, CreateSomeMutationArgs]>([
         [
-          { data: [{ title: 'A title' }], selection: '{ id }' },
           myVisitorContext,
+          { data: [{ title: 'A title' }], selection: '{ id }' },
         ],
-      ])('throws an UnauthorizedError', async (args, context) => {
+      ])('throws an UnauthorizedError', async (context, args) => {
         await expect(
-          gp.api.mutation.createArticles(args, context),
+          gp.api.mutation.createArticles(context, args),
         ).rejects.toThrowError(UnauthorizedError);
 
         expect(gp.connector.create).toHaveBeenCalledTimes(0);
       });
+
+      it('throws a ConnectorFlowError', async () => {
+        const gp = new GraphQLPlatform({
+          nodes,
+          connector: mockConnector({
+            preMutation: async () => {
+              throw new Error('No connection available');
+            },
+          }),
+        });
+
+        await expect(
+          gp.api.mutation.createArticles(myAdminContext, {
+            data: [
+              {
+                title: "My first article's title",
+              },
+              {
+                title: "My second article's title",
+              },
+            ],
+          }),
+        ).rejects.toThrowError(ConnectorWorkflowError);
+      });
+
+      it('throws a ConnectorOperationError', async () => {
+        const gp = new GraphQLPlatform({
+          nodes,
+          connector: mockConnector({
+            create: async () => {
+              throw new Error('Failed to create');
+            },
+          }),
+        });
+
+        await expect(
+          gp.api.mutation.createTags(myAdminContext, {
+            data: [
+              {
+                title: "My first tag's title",
+              },
+              {
+                title: "My second tag's title",
+              },
+            ],
+          }),
+        ).rejects.toThrowError(ConnectorOperationError);
+      });
+
+      it('throws a LifecycleHookError', async () => {
+        await expect(
+          gp.api.mutation.createArticles(myAdminContext, {
+            data: [
+              {
+                title: "My first article's title",
+                htmlBody: '<p>body</p>',
+                body: { blocks: [] },
+              },
+              {
+                title: "My second article's title",
+                htmlBody: '<p>body</p>',
+                body: { blocks: [] },
+              },
+            ],
+          }),
+        ).rejects.toThrowError(LifecycleHookError);
+      });
     });
 
     describe('Works', () => {
-      it.each<[CreateSomeMutationArgs, MyContext]>([
-        [{ data: [], selection: '{ id }' }, myAdminContext],
+      it.each<[MyContext, CreateSomeMutationArgs]>([
+        [myAdminContext, { data: [], selection: '{ id }' }],
       ])(
         'does no call the connector when it is not needed',
-        async (args, context) => {
+        async (context, args) => {
           await expect(
-            gp.api.mutation.createArticles(args, context),
+            gp.api.mutation.createArticles(context, args),
           ).resolves.toEqual([]);
 
           expect(gp.connector.create).toHaveBeenCalledTimes(0);
@@ -69,6 +143,7 @@ describe('CreateSomeMutation', () => {
       //     expect.any(OperationContext),
       //   );
       // });
+      //
       // it('calls the connector properly', async () => {
       //   await expect(
       //     gp.api.query.articleCount(

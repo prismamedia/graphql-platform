@@ -30,11 +30,11 @@ describe('UpdateManyMutation', () => {
     beforeEach(() => clearAllConnectorMocks(gp.connector));
 
     describe('Fails', () => {
-      it.each<[UpdateManyMutationArgs, MyContext]>([
-        [{ data: {}, first: 5, selection: '{ id }' }, myVisitorContext],
-      ])('throws an UnauthorizedError', async (args, context) => {
+      it.each<[MyContext, UpdateManyMutationArgs]>([
+        [myVisitorContext, { data: {}, first: 5, selection: '{ id }' }],
+      ])('throws an UnauthorizedError', async (context, args) => {
         await expect(
-          gp.api.mutation.updateArticles(args, context),
+          gp.api.mutation.updateArticles(context, args),
         ).rejects.toThrowError(UnauthorizedError);
 
         expect(gp.connector.find).toHaveBeenCalledTimes(0);
@@ -43,17 +43,17 @@ describe('UpdateManyMutation', () => {
     });
 
     describe('Works', () => {
-      it.each<[UpdateManyMutationArgs, MyContext]>([
-        [{ data: {}, first: 0, selection: '{ id }' }, myAdminContext],
+      it.each<[MyContext, UpdateManyMutationArgs]>([
+        [myAdminContext, { data: {}, first: 0, selection: '{ id }' }],
         [
-          { data: {}, where: null, first: 5, selection: '{ id }' },
           myAdminContext,
+          { data: {}, where: null, first: 5, selection: '{ id }' },
         ],
       ])(
         'does no call the connector when it is not needed',
-        async (args, context) => {
+        async (context, args) => {
           await expect(
-            gp.api.mutation.updateArticles(args, context),
+            gp.api.mutation.updateArticles(context, args),
           ).resolves.toEqual([]);
 
           expect(gp.connector.find).toHaveBeenCalledTimes(0);

@@ -298,13 +298,14 @@ export const Article = {
         creation['slug'] ??= slugify(creation['title'] as string);
 
         if (!creation['createdBy'] || !creation['updatedBy']) {
+          const createdByEdge = node.getEdgeByName('createdBy');
+          const updatedByEdge = node.getEdgeByName('updatedBy');
+
           const currentUser = await api.query.userIfExists({
             where: { id: request.user.id },
-            selection: node
-              .getEdgeByName('createdBy')
-              .referencedUniqueConstraint.selection.mergeWith(
-                node.getEdgeByName('updatedBy').referencedUniqueConstraint
-                  .selection,
+            selection:
+              createdByEdge.referencedUniqueConstraint.selection.mergeWith(
+                updatedByEdge.referencedUniqueConstraint.selection,
               ),
           });
 
@@ -560,7 +561,7 @@ export const Category = {
         if (creation['parent'] == null) {
           const categoryWithoutParentCount = await node
             .getQueryByKey('count')
-            .execute({ where: { parent: null } }, context);
+            .execute(context, { where: { parent: null } });
 
           if (categoryWithoutParentCount !== 0) {
             throw new utils.UnexpectedValueError(

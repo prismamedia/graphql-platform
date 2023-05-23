@@ -182,7 +182,7 @@ export class NodeCursor<
   public async size(force: boolean = false): Promise<number> {
     return this.node
       .getQueryByKey('count')
-      .execute({ where: this.where }, this.context);
+      .execute(this.context, { where: this.where });
   }
 
   public async *[Symbol.asyncIterator](): AsyncIterator<TValue> {
@@ -190,15 +190,14 @@ export class NodeCursor<
     let values: NodeSelectedValue[];
 
     do {
-      values = await this.node.getQueryByKey('find-many').execute(
-        {
+      values = await this.node
+        .getQueryByKey('find-many')
+        .execute(this.context, {
           where: { AND: [after, this.where] },
           orderBy: this.orderByInputValue,
           first: this.chunkSize,
           selection: this.internalSelection,
-        },
-        this.context,
-      );
+        });
 
       if (values.length) {
         for (const value of values) {

@@ -90,6 +90,7 @@ export class MultipleReverseEdgeCreationInput extends AbstractReverseEdgeCreatio
               await this.reverseEdge.head
                 .getMutationByKey('create-some')
                 .execute(
+                  context,
                   {
                     data: actionData.map((data) => ({
                       ...data,
@@ -99,7 +100,6 @@ export class MultipleReverseEdgeCreationInput extends AbstractReverseEdgeCreatio
                     })),
                     selection,
                   },
-                  context,
                   actionPath,
                 );
               break;

@@ -13,12 +13,12 @@ import { AndOperation, NodeFilter } from '../../../statement/filter.js';
 import type { NodeSelectedValue } from '../../../statement/selection.js';
 import type { NodeFilterInputValue, OrderByInputValue } from '../../../type.js';
 import {
-  ConnectorError,
-  NodeLifecycleHookError,
-  NodeLifecycleHookKind,
+  catchConnectorOperationError,
+  ConnectorOperationKind,
 } from '../../error.js';
 import { AbstractDeletion, type DeletionConfig } from '../abstract-deletion.js';
 import type { MutationContext } from '../context.js';
+import { LifecycleHookError, LifecycleHookKind } from '../error.js';
 
 export type DeleteManyMutationArgs = RawNodeSelectionAwareArgs<{
   where?: NodeFilterInputValue;
@@ -72,9 +72,9 @@ export class DeleteManyMutation<
   }
 
   protected override async executeWithValidArgumentsAndContext(
+    context: MutationContext,
     authorization: NodeFilter | undefined,
     args: NodeSelectionAwareArgs<DeleteManyMutationArgs>,
-    context: MutationContext,
     path: utils.Path,
   ): Promise<DeleteManyMutationResult> {
     const preDelete = this.#config?.preDelete;
@@ -109,22 +109,20 @@ export class DeleteManyMutation<
     ).normalized;
 
     // Fetch the current nodes' value
-    let currentValues: NodeSelectedValue[];
-    try {
-      currentValues = await this.connector.find(
-        {
+    const currentValues = await catchConnectorOperationError(
+      () =>
+        this.connector.find(context, {
           node: this.node,
           ...(filter && { filter }),
           ...(ordering && { ordering }),
           limit: args.first,
           selection: this.node.selection.mergeWith(args.selection),
           forMutation: utils.MutationType.DELETION,
-        },
-        context,
-      );
-    } catch (cause) {
-      throw new ConnectorError({ cause, path });
-    }
+        }),
+      this.node,
+      ConnectorOperationKind.FIND,
+      { path },
+    );
 
     if (currentValues.length === 0) {
       return [];
@@ -148,9 +146,9 @@ export class DeleteManyMutation<
               current: Object.freeze(this.node.parseValue(currentValue)),
             });
           } catch (cause) {
-            throw new NodeLifecycleHookError(
+            throw new LifecycleHookError(
               this.node,
-              NodeLifecycleHookKind.PRE_DELETE,
+              LifecycleHookKind.PRE_DELETE,
               { cause, path },
             );
           }
@@ -171,31 +169,9 @@ export class DeleteManyMutation<
         await Promise.all([
           // CASCADE
           ...Array.from(cascadeReverseEdgesByHead, ([head, reverseEdges]) =>
-            head.getMutationByKey('delete-many').execute(
-              {
-                where: {
-                  OR: reverseEdges.map((reverseEdge) => ({
-                    [reverseEdge.originalEdge.name]: {
-                      OR: currentValues.map((currentValue) =>
-                        reverseEdge.originalEdge.referencedUniqueConstraint.parseValue(
-                          currentValue,
-                        ),
-                      ),
-                    },
-                  })),
-                },
-                first: scalars.GRAPHQL_MAX_UNSIGNED_INT,
-                selection: head.identifier.selection,
-              },
-              context,
-            ),
-          ),
-
-          // SET_NULL
-          ...setNullReverseEdges.map((reverseEdge) =>
-            reverseEdge.head.getMutationByKey('update-many').execute(
-              {
-                where: {
+            head.getMutationByKey('delete-many').execute(context, {
+              where: {
+                OR: reverseEdges.map((reverseEdge) => ({
                   [reverseEdge.originalEdge.name]: {
                     OR: currentValues.map((currentValue) =>
                       reverseEdge.originalEdge.referencedUniqueConstraint.parseValue(
@@ -203,32 +179,47 @@ export class DeleteManyMutation<
                       ),
                     ),
                   },
-                },
-                first: scalars.GRAPHQL_MAX_UNSIGNED_INT,
-                data: { [reverseEdge.originalEdge.name]: null },
-                selection: reverseEdge.head.identifier.selection,
+                })),
               },
-              context,
-            ),
+              first: scalars.GRAPHQL_MAX_UNSIGNED_INT,
+              selection: head.identifier.selection,
+            }),
+          ),
+
+          // SET_NULL
+          ...setNullReverseEdges.map((reverseEdge) =>
+            reverseEdge.head.getMutationByKey('update-many').execute(context, {
+              where: {
+                [reverseEdge.originalEdge.name]: {
+                  OR: currentValues.map((currentValue) =>
+                    reverseEdge.originalEdge.referencedUniqueConstraint.parseValue(
+                      currentValue,
+                    ),
+                  ),
+                },
+              },
+              first: scalars.GRAPHQL_MAX_UNSIGNED_INT,
+              data: { [reverseEdge.originalEdge.name]: null },
+              selection: reverseEdge.head.identifier.selection,
+            }),
           ),
         ]);
       }
     }
 
     // Actually delete the nodes
-    try {
-      await this.connector.delete(
-        {
+    await catchConnectorOperationError(
+      () =>
+        this.connector.delete(context, {
           node: this.node,
           filter: this.node.filterInputType.filter({
             OR: currentIds,
           }),
-        },
-        context,
-      );
-    } catch (cause) {
-      throw new ConnectorError({ cause, path });
-    }
+        }),
+      this.node,
+      ConnectorOperationKind.DELETE,
+      { path },
+    );
 
     return Promise.all(
       currentValues.map(async (oldValue) => {
@@ -247,9 +238,9 @@ export class DeleteManyMutation<
             change,
           });
         } catch (cause) {
-          throw new NodeLifecycleHookError(
+          throw new LifecycleHookError(
             this.node,
-            NodeLifecycleHookKind.POST_DELETE,
+            LifecycleHookKind.POST_DELETE,
             { cause, path },
           );
         }

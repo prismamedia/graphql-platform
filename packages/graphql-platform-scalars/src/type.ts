@@ -63,10 +63,10 @@ export const typesByName = Object.freeze({
 type TypesByName = typeof typesByName;
 
 export type TypeName = keyof TypesByName;
-export const typeNames = Object.keys(typesByName);
+export const typeNames = Object.freeze(Object.keys(typesByName) as TypeName[]);
 
 export type Type = ValueOf<TypesByName>;
-export const types = Object.values(typesByName);
+export const types = Object.freeze(Object.values(typesByName));
 
 export type GetInternalValueByType<TType extends Type> =
   TType extends graphql.GraphQLScalarType<infer TInternalValue, any>
@@ -78,15 +78,12 @@ export type GetExternalValueByType<TType extends Type> =
     ? TExternalValue
     : never;
 
-export function getTypeByName(
-  maybeTypeName: TypeName,
-  path?: utils.Path,
-): Type {
-  const scalarType = typesByName[maybeTypeName];
+export function getTypeByName(typeName: TypeName, path?: utils.Path): Type {
+  const scalarType = typesByName[typeName];
   if (!scalarType) {
     throw new utils.UnexpectedValueError(
       `a scalar type name among "${typeNames.join(', ')}"`,
-      maybeTypeName,
+      typeName,
       { path },
     );
   }
@@ -107,7 +104,7 @@ export function assertType(
   }
 }
 
-export function ensureType(maybeType: unknown, path: utils.Path): Type {
+export function ensureType(maybeType: unknown, path?: utils.Path): Type {
   assertType(maybeType, path);
 
   return maybeType;

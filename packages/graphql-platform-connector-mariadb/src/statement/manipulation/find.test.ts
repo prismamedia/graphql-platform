@@ -29,6 +29,7 @@ describe('Find statement', () => {
   it.each([
     [
       'Article',
+      myUserContext,
       {
         orderBy: ['createdAt_ASC'],
         first: 5,
@@ -44,7 +45,6 @@ describe('Find statement', () => {
           createdAt
         }`,
       },
-      myUserContext,
       [
         {
           body: null,
@@ -77,6 +77,7 @@ describe('Find statement', () => {
     ],
     [
       'Article',
+      myAdminContext,
       {
         orderBy: ['createdAt_ASC'],
         first: 5,
@@ -85,7 +86,6 @@ describe('Find statement', () => {
           title
         }`,
       },
-      myAdminContext,
       [
         {
           status: 'draft',
@@ -107,6 +107,7 @@ describe('Find statement', () => {
     ],
     [
       'Article',
+      myAdminContext,
       {
         where: {
           OR: [
@@ -161,11 +162,11 @@ describe('Find statement', () => {
           }
         }`,
       },
-      myAdminContext,
       [],
     ],
     [
       'Article',
+      myAdminContext,
       {
         where: { tagCount_gt: 1 },
         first: 5,
@@ -178,7 +179,6 @@ describe('Find statement', () => {
           }
         }`,
       },
-      myAdminContext,
       [
         {
           second: [
@@ -196,14 +196,14 @@ describe('Find statement', () => {
     ],
   ])(
     '%# - generates statements',
-    async (nodeName, args, context, expectedResult) => {
+    async (nodeName, context, args, expectedResult) => {
       executedStatements.length = 0;
 
       await expect(
         gp
           .getNodeByName(nodeName)
           .getQueryByKey('find-many')
-          .execute(args, context),
+          .execute(context, args),
       ).resolves.toEqual(expectedResult);
 
       expect(executedStatements).toMatchSnapshot();

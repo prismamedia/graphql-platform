@@ -1,6 +1,7 @@
 import type * as core from '@prismamedia/graphql-platform';
 import type * as mariadb from 'mariadb';
 import { EOL } from 'node:os';
+import type { SetOptional } from 'type-fest';
 import { escapeIdentifier } from '../../escaping.js';
 import type { Table } from '../../schema.js';
 import { StatementKind } from '../kind.js';
@@ -18,8 +19,8 @@ export class FindStatement implements mariadb.QueryOptions {
 
   public constructor(
     public readonly table: Table,
-    statement: core.ConnectorFindStatement,
     context: core.OperationContext,
+    statement: SetOptional<core.ConnectorFindStatement, 'node'>,
   ) {
     const tableReference = new TableFactor(table, context);
 
@@ -47,7 +48,7 @@ export class FindStatement implements mariadb.QueryOptions {
       orderingExpressions && `ORDER BY ${orderingExpressions}`,
       `LIMIT ${limit}`,
       offset && `OFFSET ${offset}`,
-      statement.forMutation && 'FOR UPDATE',
+      statement.forMutation != null && 'FOR UPDATE',
     ]
       .filter(Boolean)
       .join(EOL);

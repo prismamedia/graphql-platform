@@ -40,6 +40,7 @@ describe('Update statement', () => {
   it.each([
     [
       'Article',
+      myAdminContext,
       {
         data: {
           score: 0,
@@ -69,10 +70,10 @@ describe('Update statement', () => {
           }
         }`,
       },
-      myAdminContext,
     ],
     [
       'Article',
+      myAdminContext,
       {
         data: {
           status: ArticleStatus.PUBLISHED,
@@ -102,10 +103,10 @@ describe('Update statement', () => {
           }
         }`,
       },
-      myAdminContext,
     ],
     [
       'Article',
+      myAdminContext,
       {
         data: {
           tags: {
@@ -157,14 +158,13 @@ describe('Update statement', () => {
           }
         }`,
       },
-      myAdminContext,
     ],
-  ])('generates statements', async (nodeName, args, context) => {
+  ])('generates statements', async (nodeName, context, args) => {
     await expect(
       gp
         .getNodeByName(nodeName)
         .getMutationByKey('update-many')
-        .execute(args, context),
+        .execute(context, args),
     ).resolves.toMatchSnapshot('result');
 
     expect(

@@ -40,21 +40,21 @@ export class DeleteOneIfExistsMutation<
   }
 
   protected override async executeWithValidArgumentsAndContext(
+    context: MutationContext,
     authorization: NodeFilter | undefined,
     args: NodeSelectionAwareArgs<DeleteOneIfExistsMutationArgs>,
-    context: MutationContext,
     path: utils.Path,
   ): Promise<DeleteOneIfExistsMutationResult> {
     const [nodeValue = null] = await this.node
       .getMutationByKey('delete-many')
       .internal(
+        context,
         authorization,
         {
           where: args.where,
           first: 1,
           selection: args.selection,
         },
-        context,
         path,
       );
 

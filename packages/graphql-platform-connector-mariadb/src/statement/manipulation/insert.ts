@@ -1,6 +1,7 @@
 import type * as core from '@prismamedia/graphql-platform';
 import type * as mariadb from 'mariadb';
 import { EOL } from 'node:os';
+import { SetOptional } from 'type-fest';
 import { escapeIdentifier } from '../../escaping.js';
 import { LeafColumn, type Table } from '../../schema.js';
 import { StatementKind } from '../kind.js';
@@ -21,8 +22,8 @@ export class InsertStatement implements mariadb.QueryOptions {
 
   public constructor(
     public readonly table: Table,
-    statement: core.ConnectorCreateStatement,
     _context: core.MutationContext,
+    statement: SetOptional<core.ConnectorCreateStatement, 'node'>,
     config?: InsertStatementConfig,
   ) {
     this.sql = [

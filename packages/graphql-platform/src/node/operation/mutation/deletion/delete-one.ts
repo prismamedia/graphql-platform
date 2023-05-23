@@ -8,7 +8,7 @@ import type {
 import type { NodeFilter } from '../../../statement/filter.js';
 import type { NodeSelectedValue } from '../../../statement/selection/value.js';
 import type { NodeUniqueFilterInputValue } from '../../../type.js';
-import { NodeNotFoundError } from '../../error.js';
+import { NotFoundError } from '../../error.js';
 import { AbstractDeletion } from '../abstract-deletion.js';
 import type { MutationContext } from '../context.js';
 
@@ -42,17 +42,17 @@ export class DeleteOneMutation<
   }
 
   protected override async executeWithValidArgumentsAndContext(
+    context: MutationContext,
     authorization: NodeFilter | undefined,
     args: NodeSelectionAwareArgs<DeleteOneMutationArgs>,
-    context: MutationContext,
     path: utils.Path,
   ): Promise<DeleteOneMutationResult> {
     const nodeValue = await this.node
       .getMutationByKey('delete-one-if-exists')
-      .internal(authorization, args, context, path);
+      .internal(context, authorization, args, path);
 
     if (!nodeValue) {
-      throw new NodeNotFoundError(this.node, args.where, { path });
+      throw new NotFoundError(this.node, args.where, { path });
     }
 
     return nodeValue;

@@ -13,7 +13,10 @@ import type { NodeSelectedValue } from '../../statement/selection/value.js';
 import type { NodeFilterInputValue, OrderByInputValue } from '../../type.js';
 import { AbstractQuery } from '../abstract-query.js';
 import type { OperationContext } from '../context.js';
-import { ConnectorError } from '../error.js';
+import {
+  catchConnectorOperationError,
+  ConnectorOperationKind,
+} from '../error.js';
 
 export type FindManyQueryArgs = RawNodeSelectionAwareArgs<{
   where?: NodeFilterInputValue;
@@ -69,9 +72,9 @@ export class FindManyQuery<
   }
 
   protected override async executeWithValidArgumentsAndContext(
+    context: OperationContext,
     authorization: NodeFilter | undefined,
     args: NodeSelectionAwareArgs<FindManyQueryArgs>,
-    context: OperationContext,
     path: utils.Path,
   ): Promise<FindManyQueryResult> {
     if (args.first === 0) {
@@ -102,20 +105,19 @@ export class FindManyQuery<
       utils.addPath(argsPath, 'orderBy'),
     ).normalized;
 
-    try {
-      return await this.connector.find(
-        {
+    return catchConnectorOperationError(
+      () =>
+        this.connector.find(context, {
           node: this.node,
           ...(filter && { filter }),
           ...(ordering && { ordering }),
           ...(args.skip && { offset: args.skip }),
           limit: args.first,
           selection: args.selection,
-        },
-        context,
-      );
-    } catch (error) {
-      throw new ConnectorError({ cause: error, path });
-    }
+        }),
+      this.node,
+      ConnectorOperationKind.FIND,
+      { path },
+    );
   }
 }

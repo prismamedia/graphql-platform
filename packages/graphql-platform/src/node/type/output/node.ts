@@ -72,7 +72,7 @@ export interface NodeOutputTypeConfig<
   >;
 
   /**
-   * Optional, fine-tune the node's GraphQL output type
+   * Optional, fine-tune the GraphQL output type
    */
   graphql?: Except<
     graphql.GraphQLObjectTypeConfig<
@@ -301,14 +301,11 @@ export class NodeOutputType {
               `fragment MyFragment on ${this.node} {`,
             ),
       );
-    } catch (error) {
+    } catch (cause) {
       throw new utils.UnexpectedValueError(
         `a valid GraphQL fragment`,
         fragment,
-        {
-          path,
-          cause: error,
-        },
+        { cause, path },
       );
     }
 

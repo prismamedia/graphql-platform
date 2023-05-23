@@ -13,6 +13,17 @@ export const castToError = (error: unknown): Error =>
     ? Object.assign(new Error(error['message']), error)
     : new Error(error as any);
 
+export function setGraphErrorAncestor<TError = unknown>(
+  error: TError,
+  ancestor: Path,
+): TError {
+  if (isGraphError(error)) {
+    error.setAncestor(ancestor);
+  }
+
+  return error;
+}
+
 export interface GraphErrorOptions extends ErrorOptions {
   readonly path?: Path;
 }
@@ -26,11 +37,11 @@ export class GraphError extends Error {
     message: Nillable<string>,
     { path, ...options }: GraphErrorOptions = {},
   ) {
-    if (options?.cause && isGraphError(options.cause) && path) {
-      options.cause.setAncestor(path);
-    }
-
-    super(undefined, options);
+    super(undefined, {
+      ...options,
+      cause:
+        options?.cause && path && setGraphErrorAncestor(options.cause, path),
+    });
 
     this.name = new.target.name;
     Object.setPrototypeOf(this, new.target.prototype);
@@ -105,13 +116,7 @@ export class AggregateGraphError extends AggregateError {
   ) {
     super(
       path
-        ? Array.from(errors, (error) => {
-            if (isGraphError(error)) {
-              error.setAncestor(path);
-            }
-
-            return error;
-          })
+        ? Array.from(errors, (error) => setGraphErrorAncestor(error, path))
         : errors,
     );
 

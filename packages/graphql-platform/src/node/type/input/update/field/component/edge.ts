@@ -206,7 +206,7 @@ export class EdgeUpdateInput extends AbstractComponentUpdateInput<EdgeUpdateInpu
 
         return this.edge.head
           .getQueryByKey('get-one')
-          .execute({ where, selection }, context, actionPath);
+          .execute(context, { where, selection }, actionPath);
       }
 
       case EdgeUpdateInputAction.CONNECT_IF_EXISTS: {
@@ -214,7 +214,7 @@ export class EdgeUpdateInput extends AbstractComponentUpdateInput<EdgeUpdateInpu
 
         return this.edge.head
           .getQueryByKey('get-one-if-exists')
-          .execute({ where, selection }, context, actionPath);
+          .execute(context, { where, selection }, actionPath);
       }
 
       case EdgeUpdateInputAction.CREATE: {
@@ -222,7 +222,7 @@ export class EdgeUpdateInput extends AbstractComponentUpdateInput<EdgeUpdateInpu
 
         return this.edge.head
           .getMutationByKey('create-one')
-          .execute({ data, selection }, context, actionPath);
+          .execute(context, { data, selection }, actionPath);
       }
 
       case EdgeUpdateInputAction.CREATE_IF_NOT_EXISTS: {
@@ -230,7 +230,7 @@ export class EdgeUpdateInput extends AbstractComponentUpdateInput<EdgeUpdateInpu
 
         return this.edge.head
           .getMutationByKey('create-one-if-not-exists')
-          .execute({ where, data, selection }, context, actionPath);
+          .execute(context, { where, data, selection }, actionPath);
       }
 
       case EdgeUpdateInputAction.UPDATE:
@@ -253,13 +253,13 @@ export class EdgeUpdateInput extends AbstractComponentUpdateInput<EdgeUpdateInpu
 
         if (references.length) {
           await this.edge.head.getMutationByKey('update-many').execute(
+            context,
             {
               where: { OR: references },
               first: references.length,
               data,
               selection,
             },
-            context,
             actionPath,
           );
         }

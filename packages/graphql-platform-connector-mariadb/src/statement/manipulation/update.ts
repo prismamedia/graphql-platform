@@ -3,6 +3,7 @@ import * as utils from '@prismamedia/graphql-platform-utils';
 import type * as mariadb from 'mariadb';
 import assert from 'node:assert/strict';
 import { EOL } from 'node:os';
+import type { SetOptional } from 'type-fest';
 import { Table } from '../../schema.js';
 import { StatementKind } from '../kind.js';
 import { TableFactor } from './clause/table-reference.js';
@@ -24,8 +25,8 @@ export class UpdateStatement implements mariadb.QueryOptions {
 
   public constructor(
     public readonly table: Table,
-    statement: core.ConnectorUpdateStatement,
     context: core.MutationContext,
+    statement: SetOptional<core.ConnectorUpdateStatement, 'node'>,
     config?: UpdateStatementConfig,
   ) {
     assert(!statement.update.isEmpty(), 'Empty update statement');

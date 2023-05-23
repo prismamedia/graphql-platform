@@ -1,6 +1,7 @@
 import type * as core from '@prismamedia/graphql-platform';
 import type * as mariadb from 'mariadb';
 import { EOL } from 'node:os';
+import type { SetOptional } from 'type-fest';
 import type { Table } from '../../schema.js';
 import { StatementKind } from '../kind.js';
 import { TableFactor } from './clause/table-reference.js';
@@ -15,8 +16,8 @@ export class CountStatement implements mariadb.QueryOptions {
 
   public constructor(
     public readonly table: Table,
-    statement: core.ConnectorCountStatement,
     context: core.OperationContext,
+    statement: SetOptional<core.ConnectorCountStatement, 'node'>,
   ) {
     const tableReference = new TableFactor(table, context);
 

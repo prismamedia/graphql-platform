@@ -3,7 +3,7 @@ import DataLoader from 'dataloader';
 import type { ConnectorInterface } from '../connector-interface.js';
 import type { Node } from '../node.js';
 import type { OperationContext } from './operation/context.js';
-import { NodeNotFoundError } from './operation/error.js';
+import { NotFoundError } from './operation/error.js';
 import type {
   NodeSelectedValue,
   NodeSelection,
@@ -23,8 +23,8 @@ export function createNodeLoader<
   TCacheKey = NodeLoaderKey,
 >(
   node: Node<TRequestContext, TConnector>,
-  selection: NodeSelection,
   context: TRequestContext | OperationContext<TRequestContext, TConnector>,
+  selection: NodeSelection,
   {
     subset,
     ...options
@@ -35,12 +35,12 @@ export function createNodeLoader<
   return new DataLoader(async (keys) => {
     const maybeValues = await node
       .getQueryByKey('get-some-in-order-if-exists')
-      .execute({ where: keys, subset, selection }, context);
+      .execute(context, { where: keys, subset, selection });
 
     return maybeValues.map(
       (maybeValue, index): NodeSelectedValue | Error =>
         maybeValue ??
-        new NodeNotFoundError(node, keys[index], {
+        new NotFoundError(node, keys[index], {
           path: utils.addPath(undefined, index),
         }),
     );

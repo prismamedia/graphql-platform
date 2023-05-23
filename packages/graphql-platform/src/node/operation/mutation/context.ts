@@ -1,9 +1,5 @@
 import type { ConnectorInterface } from '../../../connector-interface.js';
-import {
-  NodeChangeAggregation,
-  filterNodeChange,
-  type NodeChange,
-} from '../../change.js';
+import { NodeChangeAggregation, type NodeChange } from '../../change.js';
 import { OperationContext } from '../context.js';
 
 export class MutationContext<
@@ -22,14 +18,8 @@ export class MutationContext<
     return this.#changes;
   }
 
-  public appendChange(change: NodeChange): boolean {
-    if (filterNodeChange(change)) {
-      this.#changes.push(change);
-
-      return true;
-    }
-
-    return false;
+  public appendChange(change: NodeChange): void {
+    this.#changes.push(change);
   }
 
   public commitChanges(at: Date = new Date()): void {

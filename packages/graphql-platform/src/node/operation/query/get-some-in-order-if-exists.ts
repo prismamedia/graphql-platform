@@ -65,9 +65,9 @@ export class GetSomeInOrderIfExistsQuery<
   }
 
   protected override async executeWithValidArgumentsAndContext(
+    context: OperationContext,
     authorization: NodeFilter | undefined,
     args: NodeSelectionAwareArgs<GetSomeInOrderIfExistsQueryArgs>,
-    context: OperationContext,
     path: utils.Path,
   ): Promise<GetSomeInOrderIfExistsQueryResult> {
     const argsPath = utils.addPath(path, argsPathKey);
@@ -76,6 +76,7 @@ export class GetSomeInOrderIfExistsQuery<
     const unorderedNodeValues = await this.node
       .getQueryByKey('find-many')
       .internal(
+        context,
         authorization,
         {
           where: { AND: [{ OR: args.where }, args.subset] },
@@ -108,7 +109,6 @@ export class GetSomeInOrderIfExistsQuery<
             args.selection,
           ),
         },
-        context,
         path,
       );
 

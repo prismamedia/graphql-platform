@@ -35,10 +35,10 @@ describe('FindManyQuery', () => {
     beforeEach(() => clearAllConnectorMocks(gp.connector));
 
     describe('Fails', () => {
-      it.each<[FindManyQueryArgs, MyContext]>([
-        [{ first: 5, selection: ['id'] }, myVisitorContext],
-      ])('throws an UnauthorizedError', async (args, context) => {
-        await expect(gp.api.query.articles(args, context)).rejects.toThrowError(
+      it.each<[MyContext, FindManyQueryArgs]>([
+        [myVisitorContext, { first: 5, selection: ['id'] }],
+      ])('throws an UnauthorizedError', async (context, args) => {
+        await expect(gp.api.query.articles(context, args)).rejects.toThrowError(
           UnauthorizedError,
         );
 
@@ -47,13 +47,13 @@ describe('FindManyQuery', () => {
     });
 
     describe('Works', () => {
-      it.each<[FindManyQueryArgs, MyContext]>([
-        [{ where: null, first: 5, selection: '{ id }' }, myAdminContext],
-        [{ first: 0, selection: '{ id }' }, myAdminContext],
+      it.each<[MyContext, FindManyQueryArgs]>([
+        [myAdminContext, { where: null, first: 5, selection: '{ id }' }],
+        [myAdminContext, { first: 0, selection: '{ id }' }],
       ])(
         'does no call the connector when it is not needed',
-        async (args, context) => {
-          await expect(gp.api.query.articles(args, context)).resolves.toEqual(
+        async (context, args) => {
+          await expect(gp.api.query.articles(context, args)).resolves.toEqual(
             [],
           );
 
@@ -63,40 +63,38 @@ describe('FindManyQuery', () => {
 
       it('calls the connector properly', async () => {
         await expect(
-          gp.api.query.articles(
-            { first: 10, selection: '{ id }' },
-            myAdminContext,
-          ),
+          gp.api.query.articles(myAdminContext, {
+            first: 10,
+            selection: '{ id }',
+          }),
         ).resolves.toEqual([]);
 
         expect(gp.connector.find).toHaveBeenCalledTimes(1);
         expect(gp.connector.find).toHaveBeenLastCalledWith(
+          expect.any(OperationContext),
           {
             node: gp.getNodeByName('Article'),
             limit: 10,
             selection: expect.any(NodeSelection),
           },
-          expect.any(OperationContext),
         );
       });
 
       it('calls the connector properly', async () => {
         await expect(
-          gp.api.query.articles(
-            {
-              where: { tagCount_gt: 0 },
-              orderBy: ['_id_DESC'],
-              skip: 5,
-              first: 10,
-              selection:
-                '{ id tags(orderBy: [order_ASC], first: 5) { tag { title } } }',
-            },
-            myAdminContext,
-          ),
+          gp.api.query.articles(myAdminContext, {
+            where: { tagCount_gt: 0 },
+            orderBy: ['_id_DESC'],
+            skip: 5,
+            first: 10,
+            selection:
+              '{ id tags(orderBy: [order_ASC], first: 5) { tag { title } } }',
+          }),
         ).resolves.toEqual([]);
 
         expect(gp.connector.find).toHaveBeenCalledTimes(1);
         expect(gp.connector.find).toHaveBeenLastCalledWith(
+          expect.any(OperationContext),
           {
             node: gp.getNodeByName('Article'),
             filter: expect.any(NodeFilter),
@@ -105,7 +103,6 @@ describe('FindManyQuery', () => {
             limit: 10,
             selection: expect.any(NodeSelection),
           },
-          expect.any(OperationContext),
         );
       });
     });

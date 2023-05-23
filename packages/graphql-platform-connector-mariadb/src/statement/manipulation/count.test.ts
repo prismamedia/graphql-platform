@@ -27,10 +27,11 @@ describe('Count statement', () => {
   });
 
   it.each([
-    ['Article', undefined, myUserContext],
-    ['Article', undefined, myAdminContext],
+    ['Article', myUserContext, undefined],
+    ['Article', myAdminContext, undefined],
     [
       'Article',
+      myAdminContext,
       {
         where: {
           status: ArticleStatus.PUBLISHED,
@@ -38,13 +39,12 @@ describe('Count statement', () => {
           tagCount_gte: 5,
         },
       },
-      myAdminContext,
     ],
-  ])('generates statements', async (nodeName, args, context) => {
+  ])('generates statements', async (nodeName, context, args) => {
     executedStatements.length = 0;
 
     await expect(
-      gp.getNodeByName(nodeName).getQueryByKey('count').execute(args, context),
+      gp.getNodeByName(nodeName).getQueryByKey('count').execute(context, args),
     ).resolves.toMatchSnapshot('result');
 
     expect(executedStatements).toMatchSnapshot('statements');

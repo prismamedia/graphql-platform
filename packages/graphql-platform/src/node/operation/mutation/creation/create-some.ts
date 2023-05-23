@@ -1,7 +1,6 @@
 import * as utils from '@prismamedia/graphql-platform-utils';
 import { Memoize } from '@prismamedia/memoize';
 import * as graphql from 'graphql';
-import type { NodeValue } from '../../../../node.js';
 import type {
   NodeSelectionAwareArgs,
   RawNodeSelectionAwareArgs,
@@ -12,12 +11,12 @@ import type { NodeFilter } from '../../../statement/filter.js';
 import type { NodeSelectedValue } from '../../../statement/selection.js';
 import type { NodeCreationInputValue } from '../../../type/input/creation.js';
 import {
-  ConnectorError,
-  NodeLifecycleHookError,
-  NodeLifecycleHookKind,
+  ConnectorOperationKind,
+  catchConnectorOperationError,
 } from '../../error.js';
 import { AbstractCreation, type CreationConfig } from '../abstract-creation.js';
 import type { MutationContext } from '../context.js';
+import { LifecycleHookError, LifecycleHookKind } from '../error.js';
 
 export type CreateSomeMutationArgs = RawNodeSelectionAwareArgs<{
   data: ReadonlyArray<NonNullable<NodeCreationInputValue>>;
@@ -63,9 +62,9 @@ export class CreateSomeMutation<
   }
 
   protected override async executeWithValidArgumentsAndContext(
+    context: MutationContext,
     authorization: NodeFilter | undefined,
     args: NodeSelectionAwareArgs<CreateSomeMutationArgs>,
-    context: MutationContext,
     path: utils.Path,
   ): Promise<CreateSomeMutationResult> {
     const preCreate = this.#config?.preCreate;
@@ -108,9 +107,9 @@ export class CreateSomeMutation<
             creation: statement.proxy,
           });
         } catch (cause) {
-          throw new NodeLifecycleHookError(
+          throw new LifecycleHookError(
             this.node,
-            NodeLifecycleHookKind.PRE_CREATE,
+            LifecycleHookKind.PRE_CREATE,
             { cause, path: indexedPath },
           );
         }
@@ -120,15 +119,12 @@ export class CreateSomeMutation<
     );
 
     // Actually create the nodes
-    let newValues: NodeValue[];
-    try {
-      newValues = await this.connector.create(
-        { node: this.node, creations },
-        context,
-      );
-    } catch (cause) {
-      throw new ConnectorError({ cause, path });
-    }
+    const newValues = await catchConnectorOperationError(
+      () => this.connector.create(context, { node: this.node, creations }),
+      this.node,
+      ConnectorOperationKind.CREATE,
+      { path },
+    );
 
     await Promise.all(
       newValues.map(async (newValue, index) => {
@@ -162,9 +158,9 @@ export class CreateSomeMutation<
             change,
           });
         } catch (cause) {
-          throw new NodeLifecycleHookError(
+          throw new LifecycleHookError(
             this.node,
-            NodeLifecycleHookKind.POST_CREATE,
+            LifecycleHookKind.POST_CREATE,
             { cause, path: indexedPath },
           );
         }
@@ -176,6 +172,7 @@ export class CreateSomeMutation<
           args.selection.parseValue(newValue, utils.addPath(path, index)),
         )
       : this.node.getQueryByKey('get-some-in-order').internal(
+          context,
           authorization,
           {
             where: newValues.map((newValue) =>
@@ -183,7 +180,6 @@ export class CreateSomeMutation<
             ),
             selection: args.selection,
           },
-          context,
           path,
         );
   }

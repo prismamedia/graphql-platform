@@ -31,12 +31,12 @@ describe('DeleteManyMutation', () => {
     beforeEach(() => clearAllConnectorMocks(gp.connector));
 
     describe('Fails', () => {
-      it.each<[DeleteManyMutationArgs, MyContext]>([
-        [{ first: 5, selection: '{ id }' }, myVisitorContext],
-        [{ first: 5, selection: '{ id }' }, myUserContext],
-      ])('throws an UnauthorizedError', async (args, context) => {
+      it.each<[MyContext, DeleteManyMutationArgs]>([
+        [myVisitorContext, { first: 5, selection: '{ id }' }],
+        [myUserContext, { first: 5, selection: '{ id }' }],
+      ])('throws an UnauthorizedError', async (context, args) => {
         await expect(
-          gp.api.mutation.deleteArticles(args, context),
+          gp.api.mutation.deleteArticles(context, args),
         ).rejects.toThrowError(UnauthorizedError);
 
         expect(gp.connector.find).toHaveBeenCalledTimes(0);
@@ -45,14 +45,14 @@ describe('DeleteManyMutation', () => {
     });
 
     describe('Works', () => {
-      it.each<[DeleteManyMutationArgs, MyContext]>([
-        [{ first: 0, selection: '{ id }' }, myAdminContext],
-        [{ where: null, first: 5, selection: '{ id }' }, myAdminContext],
+      it.each<[MyContext, DeleteManyMutationArgs]>([
+        [myAdminContext, { first: 0, selection: '{ id }' }],
+        [myAdminContext, { where: null, first: 5, selection: '{ id }' }],
       ])(
         'does no call the connector when it is not needed',
-        async (args, context) => {
+        async (context, args) => {
           await expect(
-            gp.api.mutation.deleteArticles(args, context),
+            gp.api.mutation.deleteArticles(context, args),
           ).resolves.toEqual([]);
 
           expect(gp.connector.find).toHaveBeenCalledTimes(0);

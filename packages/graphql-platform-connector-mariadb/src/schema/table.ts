@@ -4,6 +4,7 @@ import { UnreachableValueError } from '@prismamedia/graphql-platform-utils';
 import { Memoize } from '@prismamedia/memoize';
 import type * as mariadb from 'mariadb';
 import assert from 'node:assert/strict';
+import type { SetOptional } from 'type-fest';
 import type { MariaDBConnector, OkPacket } from '../index.js';
 import type { Schema } from '../schema.js';
 import {
@@ -312,24 +313,10 @@ export class Table {
   ): TValue {
     utils.assertPlainObject(row, path);
 
-    const emptyColumns = this.columns.filter(
-      (column) => row[column.name] === undefined,
-    );
-
-    if (emptyColumns.length) {
-      throw new utils.UnexpectedValueError(
-        `the column(s) "${emptyColumns
-          .map((column) => column.name)
-          .join(', ')}" to be defined`,
-        row,
-        { path },
-      );
-    }
-
     return utils.aggregateGraphError<core.Component, TValue>(
       this.node.componentsByName.values(),
-      (document, component) =>
-        Object.assign(document, {
+      (result, component) =>
+        Object.assign(result, {
           [component.name]: component.parseValue(
             component instanceof core.Leaf
               ? this.getColumnByLeaf(component).pickLeafValueFromRow(row)
@@ -351,8 +338,8 @@ export class Table {
     utils.assertPlainObject(jsonDocument, path);
 
     return utils.aggregateGraphError(
-      selection.expressions,
-      (document, expression) => {
+      selection.expressionsByKey.values(),
+      (result, expression) => {
         const expressionPath = utils.addPath(path, expression.key);
         const jsonValue = jsonDocument[expression.key];
         let expressionValue: any;
@@ -403,7 +390,7 @@ export class Table {
           throw new UnreachableValueError(expression);
         }
 
-        return Object.assign(document, {
+        return Object.assign(result, {
           [expression.key]: expression.parseValue(
             expressionValue,
             expressionPath,
@@ -437,25 +424,25 @@ export class Table {
   }
 
   public async count(
-    statement: core.ConnectorCountStatement,
     context: core.OperationContext,
+    statement: SetOptional<core.ConnectorCountStatement, 'node'>,
     maybeConnection?: mariadb.Connection,
   ): Promise<number> {
     const [{ COUNT }] = await this.schema.connector.executeStatement<
       [{ COUNT: bigint }]
-    >(new CountStatement(this, statement, context), maybeConnection);
+    >(new CountStatement(this, context, statement), maybeConnection);
 
     return Number(COUNT);
   }
 
   public async find<TValue extends core.NodeSelectedValue>(
-    statement: core.ConnectorFindStatement<TValue>,
     context: core.OperationContext,
+    statement: SetOptional<core.ConnectorFindStatement<TValue>, 'node'>,
     maybeConnection?: mariadb.Connection,
   ): Promise<TValue[]> {
     const tuples = await this.schema.connector.executeStatement<
       utils.PlainObject[]
-    >(new FindStatement(this, statement, context), maybeConnection);
+    >(new FindStatement(this, context, statement), maybeConnection);
 
     return tuples.map((tuple) =>
       this.parseJsonDocument(
@@ -466,27 +453,27 @@ export class Table {
   }
 
   public async insert(
-    statement: core.ConnectorCreateStatement,
     context: core.MutationContext,
+    statement: SetOptional<core.ConnectorCreateStatement, 'node'>,
     connection: mariadb.Connection,
     config?: InsertStatementConfig,
   ): Promise<core.NodeValue[]> {
     const rows = await this.schema.connector.executeStatement<
       utils.PlainObject[]
-    >(new InsertStatement(this, statement, context, config), connection);
+    >(new InsertStatement(this, context, statement, config), connection);
 
     return rows.map((row) => this.parseRow(row));
   }
 
   public async update(
-    statement: core.ConnectorUpdateStatement,
     context: core.MutationContext,
+    statement: SetOptional<core.ConnectorUpdateStatement, 'node'>,
     connection: mariadb.Connection,
     config?: UpdateStatementConfig,
   ): Promise<number> {
     const { affectedRows } =
       await this.schema.connector.executeStatement<OkPacket>(
-        new UpdateStatement(this, statement, context, config),
+        new UpdateStatement(this, context, statement, config),
         connection,
       );
 
@@ -494,14 +481,14 @@ export class Table {
   }
 
   public async delete(
-    statement: core.ConnectorDeleteStatement,
     context: core.MutationContext,
+    statement: SetOptional<core.ConnectorDeleteStatement, 'node'>,
     connection: mariadb.Connection,
     config?: DeleteStatementConfig,
   ): Promise<number> {
     const { affectedRows } =
       await this.schema.connector.executeStatement<OkPacket>(
-        new DeleteStatement(this, statement, context, config),
+        new DeleteStatement(this, context, statement, config),
         connection,
       );
 
