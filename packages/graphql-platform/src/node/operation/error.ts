@@ -1,73 +1,124 @@
 import * as utils from '@prismamedia/graphql-platform-utils';
 import { inspect } from 'node:util';
 import type { Except, Promisable } from 'type-fest';
-import type { Node } from '../../node.js';
+import type { Node, UniqueConstraint } from '../../node.js';
 import type { NodeUniqueFilterInputValue } from '../type/input/unique-filter.js';
-import { AbstractOperationError } from './abstract-error.js';
+
+export enum OperationErrorCode {
+  INVALID_REQUEST_CONTEXT,
+  UNAUTHENTICATED,
+  UNAUTHORIZED,
+  INVALID_ARGUMENTS,
+  INVALID_SELECTION,
+  NOT_FOUND,
+  LIFECYCLE_ERROR,
+  CONNECTOR_WORKFLOW_ERROR,
+  CONNECTOR_OPERATION_ERROR,
+  DUPLICATE,
+}
+
+export type OperationErrorOptions = Except<utils.GraphErrorOptions, 'code'>;
+
+abstract class AbstractOperationError extends utils.GraphError {
+  public constructor(
+    message: string,
+    options?: OperationErrorOptions & {
+      readonly code: OperationErrorCode;
+    },
+  ) {
+    super(message, {
+      ...options,
+      code:
+        options?.code != null ? OperationErrorCode[options.code] : undefined,
+    });
+  }
+}
 
 export class InvalidRequestContextError extends AbstractOperationError {
-  public readonly code = 'INVALID_REQUEST_CONTEXT';
-
-  public constructor(options?: utils.GraphErrorOptions) {
-    super(`Invalid request-context`, options);
+  public constructor(options?: OperationErrorOptions) {
+    super(`Invalid request-context`, {
+      ...options,
+      code: OperationErrorCode.INVALID_REQUEST_CONTEXT,
+    });
   }
 }
 
 export class UnauthenticatedError extends AbstractOperationError {
-  public readonly code = 'UNAUTHENTICATED';
-
-  public constructor(options?: utils.GraphErrorOptions) {
-    super(`Unauthenticated`, options);
+  public constructor(options?: OperationErrorOptions) {
+    super(`Unauthenticated`, {
+      ...options,
+      code: OperationErrorCode.UNAUTHENTICATED,
+    });
   }
 }
 
 export class UnauthorizedError extends AbstractOperationError {
-  public readonly code = 'UNAUTHORIZED';
-
   public constructor(
     node: Node,
     mutationType?: utils.MutationType,
-    options?: utils.GraphErrorOptions,
+    options?: OperationErrorOptions,
   ) {
     super(
       `Unauthorized access to "${node}"${
         mutationType ? `'s ${mutationType}` : ''
       }`,
-      options,
+      { ...options, code: OperationErrorCode.UNAUTHORIZED },
     );
   }
 }
 
 export class InvalidArgumentsError extends AbstractOperationError {
-  public readonly code = 'INVALID_ARGUMENTS';
-
-  public constructor(options?: utils.GraphErrorOptions) {
-    super(`Invalid argument(s)`, options);
+  public constructor(options?: OperationErrorOptions) {
+    super(`Invalid argument(s)`, {
+      ...options,
+      code: OperationErrorCode.INVALID_ARGUMENTS,
+    });
   }
 }
 
 export class InvalidSelectionError extends AbstractOperationError {
-  public readonly code = 'INVALID_SELECTION';
-
-  public constructor(options?: utils.GraphErrorOptions) {
-    super(`Invalid selection`, options);
+  public constructor(options?: OperationErrorOptions) {
+    super(`Invalid selection`, {
+      ...options,
+      code: OperationErrorCode.INVALID_SELECTION,
+    });
   }
 }
 
 export class NotFoundError extends AbstractOperationError {
-  public readonly code = 'NOT_FOUND';
-
   public constructor(
     node: Node,
     where: NonNullable<NodeUniqueFilterInputValue>,
-    options?: utils.GraphErrorOptions,
+    options?: OperationErrorOptions,
   ) {
     super(
       `No "${node}" has been found given the following filter: ${inspect(
         where,
       )}`,
-      options,
+      { ...options, code: OperationErrorCode.NOT_FOUND },
     );
+  }
+}
+
+export enum LifecycleKind {
+  PRE_CREATE,
+  POST_CREATE,
+  PRE_UPDATE,
+  POST_UPDATE,
+  PRE_DELETE,
+  POST_DELETE,
+}
+
+export class LifecycleError extends AbstractOperationError {
+  public constructor(
+    node: Node,
+    kind: LifecycleKind,
+    options?: OperationErrorOptions,
+  ) {
+    super(`Failed at "${node}.${LifecycleKind[kind]}"`, {
+      ...options,
+      code: OperationErrorCode.LIFECYCLE_ERROR,
+    });
   }
 }
 
@@ -80,17 +131,17 @@ export enum ConnectorWorkflowKind {
   POST_MUTATION,
 }
 
-export interface ConnectorWorkflowErrorOptions
-  extends utils.GraphErrorOptions {}
+export interface ConnectorWorkflowErrorOptions extends OperationErrorOptions {}
 
 export class ConnectorWorkflowError extends AbstractConnectorError {
-  public readonly code = 'CONNECTOR_WORKFLOW_ERROR';
-
   public constructor(
     kind: ConnectorWorkflowKind,
     options?: ConnectorWorkflowErrorOptions,
   ) {
-    super(`Failed at "${ConnectorWorkflowKind[kind]}"`, options);
+    super(`Failed at "${ConnectorWorkflowKind[kind]}"`, {
+      ...options,
+      code: OperationErrorCode.CONNECTOR_WORKFLOW_ERROR,
+    });
   }
 }
 
@@ -116,19 +167,48 @@ export enum ConnectorOperationKind {
   DELETE,
 }
 
-export interface ConnectorOperationErrorOptions
-  extends utils.GraphErrorOptions {}
+export interface ConnectorOperationErrorOptions extends OperationErrorOptions {}
 
 export class ConnectorOperationError extends AbstractConnectorError {
-  public readonly code: 'CONNECTOR_OPERATION_ERROR' | 'DUPLICATE' =
-    'CONNECTOR_OPERATION_ERROR';
-
   public constructor(
     node: Node,
     kind: ConnectorOperationKind,
-    options?: ConnectorOperationErrorOptions,
+    options?: ConnectorOperationErrorOptions & {
+      readonly code?: OperationErrorCode.DUPLICATE;
+    },
   ) {
-    super(`Failed at "${node}.${ConnectorOperationKind[kind]}"`, options);
+    super(`Failed at "${node}.${ConnectorOperationKind[kind]}"`, {
+      ...options,
+      code: options?.code ?? OperationErrorCode.CONNECTOR_OPERATION_ERROR,
+    });
+  }
+}
+
+export interface DuplicateErrorOptions extends OperationErrorOptions {
+  readonly uniqueConstraint?: UniqueConstraint;
+  readonly hint?: string;
+}
+
+export class DuplicateError extends ConnectorOperationError {
+  public constructor(
+    node: Node,
+    kind: ConnectorOperationKind.CREATE | ConnectorOperationKind.UPDATE,
+    options?: DuplicateErrorOptions,
+  ) {
+    super(node, kind, {
+      ...options,
+      code: OperationErrorCode.DUPLICATE,
+      cause: new Error(
+        [
+          'duplicate',
+          options?.uniqueConstraint && `"${options?.uniqueConstraint.name}"`,
+          options?.hint && `(${options.hint})`,
+        ]
+          .filter(Boolean)
+          .join(' '),
+        { cause: options?.cause },
+      ),
+    });
   }
 }
 

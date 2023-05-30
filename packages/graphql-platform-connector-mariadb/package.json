@@ -29,7 +29,7 @@
   "devDependencies": {
     "@jest/globals": "29.5.0",
     "@sqltools/formatter": "1.2.5",
-    "@swc/core": "1.3.60",
+    "@swc/core": "1.3.61",
     "@swc/jest": "0.2.26",
     "@tsconfig/node18": "2.0.1",
     "@types/node": "18.16.16",

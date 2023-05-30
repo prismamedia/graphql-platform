@@ -12,11 +12,12 @@ import type { NodeSelectedValue } from '../../../statement/selection.js';
 import type { NodeCreationInputValue } from '../../../type/input/creation.js';
 import {
   ConnectorOperationKind,
+  LifecycleError,
+  LifecycleKind,
   catchConnectorOperationError,
 } from '../../error.js';
 import { AbstractCreation, type CreationConfig } from '../abstract-creation.js';
 import type { MutationContext } from '../context.js';
-import { LifecycleHookError, LifecycleHookKind } from '../error.js';
 
 export type CreateSomeMutationArgs = RawNodeSelectionAwareArgs<{
   data: ReadonlyArray<NonNullable<NodeCreationInputValue>>;
@@ -107,11 +108,10 @@ export class CreateSomeMutation<
             creation: statement.proxy,
           });
         } catch (cause) {
-          throw new LifecycleHookError(
-            this.node,
-            LifecycleHookKind.PRE_CREATE,
-            { cause, path: indexedPath },
-          );
+          throw new LifecycleError(this.node, LifecycleKind.PRE_CREATE, {
+            cause,
+            path: indexedPath,
+          });
         }
 
         return statement;
@@ -158,11 +158,10 @@ export class CreateSomeMutation<
             change,
           });
         } catch (cause) {
-          throw new LifecycleHookError(
-            this.node,
-            LifecycleHookKind.POST_CREATE,
-            { cause, path: indexedPath },
-          );
+          throw new LifecycleError(this.node, LifecycleKind.POST_CREATE, {
+            cause,
+            path: indexedPath,
+          });
         }
       }),
     );

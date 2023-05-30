@@ -1,8 +1,14 @@
+import { GraphQLError } from 'graphql';
 import _ from 'lodash';
 import { EOL } from 'node:os';
 import { inspect } from 'node:util';
 import type { Nillable } from './nil.js';
-import { isPathEqualOrDescendantOf, printPath, type Path } from './path.js';
+import {
+  isPathEqualOrDescendantOf,
+  pathToArray,
+  printPath,
+  type Path,
+} from './path.js';
 import { isPlainObject } from './plain-object.js';
 import type { Stringifiable } from './stringifiable.js';
 
@@ -26,16 +32,18 @@ export function setGraphErrorAncestor<TError = unknown>(
 
 export interface GraphErrorOptions extends ErrorOptions {
   readonly path?: Path;
+  readonly code?: string;
 }
 
 export class GraphError extends Error {
   public readonly path?: Path;
-  readonly #message?: string;
+  public readonly code?: string;
+  readonly #message: string;
   #ancestor?: Path;
 
   public constructor(
-    message: Nillable<string>,
-    { path, ...options }: GraphErrorOptions = {},
+    message: string,
+    { path, code, ...options }: GraphErrorOptions = {},
   ) {
     super(undefined, {
       ...options,
@@ -51,7 +59,12 @@ export class GraphError extends Error {
       enumerable: false,
     });
 
-    this.#message = message || undefined;
+    Object.defineProperty(this, 'code', {
+      value: code || undefined,
+      enumerable: false,
+    });
+
+    this.#message = message;
   }
 
   public setAncestor(ancestor: Path): void {
@@ -69,6 +82,19 @@ export class GraphError extends Error {
     ]
       .filter(Boolean)
       .join(' - ');
+  }
+
+  public toGraphQLError(): GraphQLError {
+    return new GraphQLError(
+      `${this.#message}${
+        this.cause instanceof Error ? ` - ${this.cause.message}` : ''
+      }`,
+      {
+        ...(this.cause instanceof Error && { originalError: this.cause }),
+        ...(this.path && { path: pathToArray(this.path) }),
+        ...(this.code && { extensions: { code: this.code } }),
+      },
+    );
   }
 }
 

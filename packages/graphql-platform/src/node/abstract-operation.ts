@@ -7,7 +7,6 @@ import type { Merge } from 'type-fest';
 import type { ConnectorInterface } from '../connector-interface.js';
 import type { GraphQLPlatform } from '../index.js';
 import type { Node } from '../node.js';
-import { AbstractOperationError } from './operation/abstract-error.js';
 import { OperationContext } from './operation/context.js';
 import {
   InvalidArgumentsError,
@@ -227,7 +226,7 @@ export abstract class AbstractOperation<
             info.path,
           );
         } catch (error) {
-          throw error instanceof AbstractOperationError
+          throw error instanceof utils.GraphError
             ? error.toGraphQLError()
             : error;
         }

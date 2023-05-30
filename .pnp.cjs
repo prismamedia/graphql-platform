@@ -1726,7 +1726,7 @@ function $$SETUP_STATE(hydrateRuntimeState, basePath) {
             ["@prismamedia/graphql-platform-scalars", "virtual:6aa5de53097a6ad89dd6f5bb86e7514117f570cb46a75f75d77cb5990bf91bfadeda913e418fca44e97d5e167ac1fd89ff92fff8bd06a4e0277076b42b3c17dd#workspace:packages/graphql-platform-scalars"],\
             ["@prismamedia/graphql-platform-utils", "virtual:6aa5de53097a6ad89dd6f5bb86e7514117f570cb46a75f75d77cb5990bf91bfadeda913e418fca44e97d5e167ac1fd89ff92fff8bd06a4e0277076b42b3c17dd#workspace:packages/graphql-platform-utils"],\
             ["@prismamedia/memoize", "npm:4.0.0"],\
-            ["@swc/core", "virtual:6aa5de53097a6ad89dd6f5bb86e7514117f570cb46a75f75d77cb5990bf91bfadeda913e418fca44e97d5e167ac1fd89ff92fff8bd06a4e0277076b42b3c17dd#npm:1.3.60"],\
+            ["@swc/core", "virtual:6aa5de53097a6ad89dd6f5bb86e7514117f570cb46a75f75d77cb5990bf91bfadeda913e418fca44e97d5e167ac1fd89ff92fff8bd06a4e0277076b42b3c17dd#npm:1.3.61"],\
             ["@swc/jest", "virtual:6aa5de53097a6ad89dd6f5bb86e7514117f570cb46a75f75d77cb5990bf91bfadeda913e418fca44e97d5e167ac1fd89ff92fff8bd06a4e0277076b42b3c17dd#npm:0.2.26"],\
             ["@tsconfig/node18", "npm:2.0.1"],\
             ["@types/cli-progress", "npm:3.11.0"],\
@@ -1761,7 +1761,7 @@ function $$SETUP_STATE(hydrateRuntimeState, basePath) {
             ["@prismamedia/graphql-platform-scalars", "virtual:6aa5de53097a6ad89dd6f5bb86e7514117f570cb46a75f75d77cb5990bf91bfadeda913e418fca44e97d5e167ac1fd89ff92fff8bd06a4e0277076b42b3c17dd#workspace:packages/graphql-platform-scalars"],\
             ["@prismamedia/graphql-platform-utils", "virtual:6aa5de53097a6ad89dd6f5bb86e7514117f570cb46a75f75d77cb5990bf91bfadeda913e418fca44e97d5e167ac1fd89ff92fff8bd06a4e0277076b42b3c17dd#workspace:packages/graphql-platform-utils"],\
             ["@prismamedia/memoize", "npm:4.0.0"],\
-            ["@swc/core", "virtual:6aa5de53097a6ad89dd6f5bb86e7514117f570cb46a75f75d77cb5990bf91bfadeda913e418fca44e97d5e167ac1fd89ff92fff8bd06a4e0277076b42b3c17dd#npm:1.3.60"],\
+            ["@swc/core", "virtual:6aa5de53097a6ad89dd6f5bb86e7514117f570cb46a75f75d77cb5990bf91bfadeda913e418fca44e97d5e167ac1fd89ff92fff8bd06a4e0277076b42b3c17dd#npm:1.3.61"],\
             ["@swc/jest", "virtual:6aa5de53097a6ad89dd6f5bb86e7514117f570cb46a75f75d77cb5990bf91bfadeda913e418fca44e97d5e167ac1fd89ff92fff8bd06a4e0277076b42b3c17dd#npm:0.2.26"],\
             ["@tsconfig/node18", "npm:2.0.1"],\
             ["@types/cli-progress", "npm:3.11.0"],\
@@ -1795,7 +1795,7 @@ function $$SETUP_STATE(hydrateRuntimeState, basePath) {
             ["@prismamedia/graphql-platform-utils", "virtual:6aa5de53097a6ad89dd6f5bb86e7514117f570cb46a75f75d77cb5990bf91bfadeda913e418fca44e97d5e167ac1fd89ff92fff8bd06a4e0277076b42b3c17dd#workspace:packages/graphql-platform-utils"],\
             ["@prismamedia/memoize", "npm:4.0.0"],\
             ["@sqltools/formatter", "npm:1.2.5"],\
-            ["@swc/core", "virtual:6aa5de53097a6ad89dd6f5bb86e7514117f570cb46a75f75d77cb5990bf91bfadeda913e418fca44e97d5e167ac1fd89ff92fff8bd06a4e0277076b42b3c17dd#npm:1.3.60"],\
+            ["@swc/core", "virtual:6aa5de53097a6ad89dd6f5bb86e7514117f570cb46a75f75d77cb5990bf91bfadeda913e418fca44e97d5e167ac1fd89ff92fff8bd06a4e0277076b42b3c17dd#npm:1.3.61"],\
             ["@swc/jest", "virtual:6aa5de53097a6ad89dd6f5bb86e7514117f570cb46a75f75d77cb5990bf91bfadeda913e418fca44e97d5e167ac1fd89ff92fff8bd06a4e0277076b42b3c17dd#npm:0.2.26"],\
             ["@tsconfig/node18", "npm:2.0.1"],\
             ["@types/graphql", null],\
@@ -1827,7 +1827,7 @@ function $$SETUP_STATE(hydrateRuntimeState, basePath) {
             ["@prismamedia/graphql-platform-utils", "virtual:6aa5de53097a6ad89dd6f5bb86e7514117f570cb46a75f75d77cb5990bf91bfadeda913e418fca44e97d5e167ac1fd89ff92fff8bd06a4e0277076b42b3c17dd#workspace:packages/graphql-platform-utils"],\
             ["@prismamedia/memoize", "npm:4.0.0"],\
             ["@sqltools/formatter", "npm:1.2.5"],\
-            ["@swc/core", "virtual:6aa5de53097a6ad89dd6f5bb86e7514117f570cb46a75f75d77cb5990bf91bfadeda913e418fca44e97d5e167ac1fd89ff92fff8bd06a4e0277076b42b3c17dd#npm:1.3.60"],\
+            ["@swc/core", "virtual:6aa5de53097a6ad89dd6f5bb86e7514117f570cb46a75f75d77cb5990bf91bfadeda913e418fca44e97d5e167ac1fd89ff92fff8bd06a4e0277076b42b3c17dd#npm:1.3.61"],\
             ["@swc/jest", "virtual:6aa5de53097a6ad89dd6f5bb86e7514117f570cb46a75f75d77cb5990bf91bfadeda913e418fca44e97d5e167ac1fd89ff92fff8bd06a4e0277076b42b3c17dd#npm:0.2.26"],\
             ["@tsconfig/node18", "npm:2.0.1"],\
             ["@types/node", "npm:18.16.16"],\
@@ -1853,7 +1853,7 @@ function $$SETUP_STATE(hydrateRuntimeState, basePath) {
             ["@jest/globals", "npm:29.5.0"],\
             ["@prismamedia/graphql-platform", "virtual:a142b8d95b647c96a8af70c806a01cd284cac136ccab6d49cb14349537a01cfed611f4510033cc978f700e4a8cb9a4e3dbbf80269b8a747cf9214af105884b4d#workspace:packages/graphql-platform"],\
             ["@prismamedia/graphql-platform-connector-mariadb", "virtual:b569f7060a52e570519d0836d34b2d239c388152dedaeac860fb1bfa896c6242686900b3d1bb4ddeaf747617e7676e1fc67474c34a54123a30f691be62dff202#workspace:packages/graphql-platform-connector-mariadb"],\
-            ["@swc/core", "virtual:6aa5de53097a6ad89dd6f5bb86e7514117f570cb46a75f75d77cb5990bf91bfadeda913e418fca44e97d5e167ac1fd89ff92fff8bd06a4e0277076b42b3c17dd#npm:1.3.60"],\
+            ["@swc/core", "virtual:6aa5de53097a6ad89dd6f5bb86e7514117f570cb46a75f75d77cb5990bf91bfadeda913e418fca44e97d5e167ac1fd89ff92fff8bd06a4e0277076b42b3c17dd#npm:1.3.61"],\
             ["@swc/jest", "virtual:6aa5de53097a6ad89dd6f5bb86e7514117f570cb46a75f75d77cb5990bf91bfadeda913e418fca44e97d5e167ac1fd89ff92fff8bd06a4e0277076b42b3c17dd#npm:0.2.26"],\
             ["@tsconfig/node18", "npm:2.0.1"],\
             ["@types/node", "npm:18.16.16"],\
@@ -1872,7 +1872,7 @@ function $$SETUP_STATE(hydrateRuntimeState, basePath) {
             ["@prismamedia/graphql-platform-scalars", "virtual:6aa5de53097a6ad89dd6f5bb86e7514117f570cb46a75f75d77cb5990bf91bfadeda913e418fca44e97d5e167ac1fd89ff92fff8bd06a4e0277076b42b3c17dd#workspace:packages/graphql-platform-scalars"],\
             ["@jest/globals", "npm:29.5.0"],\
             ["@prismamedia/graphql-platform-utils", "virtual:6aa5de53097a6ad89dd6f5bb86e7514117f570cb46a75f75d77cb5990bf91bfadeda913e418fca44e97d5e167ac1fd89ff92fff8bd06a4e0277076b42b3c17dd#workspace:packages/graphql-platform-utils"],\
-            ["@swc/core", "virtual:6aa5de53097a6ad89dd6f5bb86e7514117f570cb46a75f75d77cb5990bf91bfadeda913e418fca44e97d5e167ac1fd89ff92fff8bd06a4e0277076b42b3c17dd#npm:1.3.60"],\
+            ["@swc/core", "virtual:6aa5de53097a6ad89dd6f5bb86e7514117f570cb46a75f75d77cb5990bf91bfadeda913e418fca44e97d5e167ac1fd89ff92fff8bd06a4e0277076b42b3c17dd#npm:1.3.61"],\
             ["@swc/jest", "virtual:6aa5de53097a6ad89dd6f5bb86e7514117f570cb46a75f75d77cb5990bf91bfadeda913e418fca44e97d5e167ac1fd89ff92fff8bd06a4e0277076b42b3c17dd#npm:0.2.26"],\
             ["@tsconfig/node18", "npm:2.0.1"],\
             ["@types/draft-js", "npm:0.11.11"],\
@@ -1897,7 +1897,7 @@ function $$SETUP_STATE(hydrateRuntimeState, basePath) {
             ["@prismamedia/graphql-platform-scalars", "workspace:packages/graphql-platform-scalars"],\
             ["@jest/globals", "npm:29.5.0"],\
             ["@prismamedia/graphql-platform-utils", "virtual:6aa5de53097a6ad89dd6f5bb86e7514117f570cb46a75f75d77cb5990bf91bfadeda913e418fca44e97d5e167ac1fd89ff92fff8bd06a4e0277076b42b3c17dd#workspace:packages/graphql-platform-utils"],\
-            ["@swc/core", "virtual:6aa5de53097a6ad89dd6f5bb86e7514117f570cb46a75f75d77cb5990bf91bfadeda913e418fca44e97d5e167ac1fd89ff92fff8bd06a4e0277076b42b3c17dd#npm:1.3.60"],\
+            ["@swc/core", "virtual:6aa5de53097a6ad89dd6f5bb86e7514117f570cb46a75f75d77cb5990bf91bfadeda913e418fca44e97d5e167ac1fd89ff92fff8bd06a4e0277076b42b3c17dd#npm:1.3.61"],\
             ["@swc/jest", "virtual:6aa5de53097a6ad89dd6f5bb86e7514117f570cb46a75f75d77cb5990bf91bfadeda913e418fca44e97d5e167ac1fd89ff92fff8bd06a4e0277076b42b3c17dd#npm:0.2.26"],\
             ["@tsconfig/node18", "npm:2.0.1"],\
             ["@types/draft-js", "npm:0.11.11"],\
@@ -1919,7 +1919,7 @@ function $$SETUP_STATE(hydrateRuntimeState, basePath) {
             ["@prismamedia/graphql-platform-utils", "virtual:6aa5de53097a6ad89dd6f5bb86e7514117f570cb46a75f75d77cb5990bf91bfadeda913e418fca44e97d5e167ac1fd89ff92fff8bd06a4e0277076b42b3c17dd#workspace:packages/graphql-platform-utils"],\
             ["@jest/globals", "npm:29.5.0"],\
             ["@prismamedia/memoize", "npm:4.0.0"],\
-            ["@swc/core", "virtual:6aa5de53097a6ad89dd6f5bb86e7514117f570cb46a75f75d77cb5990bf91bfadeda913e418fca44e97d5e167ac1fd89ff92fff8bd06a4e0277076b42b3c17dd#npm:1.3.60"],\
+            ["@swc/core", "virtual:6aa5de53097a6ad89dd6f5bb86e7514117f570cb46a75f75d77cb5990bf91bfadeda913e418fca44e97d5e167ac1fd89ff92fff8bd06a4e0277076b42b3c17dd#npm:1.3.61"],\
             ["@swc/jest", "virtual:6aa5de53097a6ad89dd6f5bb86e7514117f570cb46a75f75d77cb5990bf91bfadeda913e418fca44e97d5e167ac1fd89ff92fff8bd06a4e0277076b42b3c17dd#npm:0.2.26"],\
             ["@tsconfig/node18", "npm:2.0.1"],\
             ["@types/graphql", null],\
@@ -1946,7 +1946,7 @@ function $$SETUP_STATE(hydrateRuntimeState, basePath) {
             ["@prismamedia/graphql-platform-utils", "workspace:packages/graphql-platform-utils"],\
             ["@jest/globals", "npm:29.5.0"],\
             ["@prismamedia/memoize", "npm:4.0.0"],\
-            ["@swc/core", "virtual:6aa5de53097a6ad89dd6f5bb86e7514117f570cb46a75f75d77cb5990bf91bfadeda913e418fca44e97d5e167ac1fd89ff92fff8bd06a4e0277076b42b3c17dd#npm:1.3.60"],\
+            ["@swc/core", "virtual:6aa5de53097a6ad89dd6f5bb86e7514117f570cb46a75f75d77cb5990bf91bfadeda913e418fca44e97d5e167ac1fd89ff92fff8bd06a4e0277076b42b3c17dd#npm:1.3.61"],\
             ["@swc/jest", "virtual:6aa5de53097a6ad89dd6f5bb86e7514117f570cb46a75f75d77cb5990bf91bfadeda913e418fca44e97d5e167ac1fd89ff92fff8bd06a4e0277076b42b3c17dd#npm:0.2.26"],\
             ["@tsconfig/node18", "npm:2.0.1"],\
             ["@types/indefinite", "npm:2.3.1"],\
@@ -2112,27 +2112,27 @@ function $$SETUP_STATE(hydrateRuntimeState, basePath) {
         }]\
       ]],\
       ["@swc/core", [\
-        ["npm:1.3.60", {\
-          "packageLocation": "./.yarn/unplugged/@swc-core-virtual-9407152ce4/node_modules/@swc/core/",\
+        ["npm:1.3.61", {\
+          "packageLocation": "./.yarn/unplugged/@swc-core-virtual-3e0c18cd2b/node_modules/@swc/core/",\
           "packageDependencies": [\
-            ["@swc/core", "npm:1.3.60"]\
+            ["@swc/core", "npm:1.3.61"]\
           ],\
           "linkType": "SOFT"\
         }],\
-        ["virtual:6aa5de53097a6ad89dd6f5bb86e7514117f570cb46a75f75d77cb5990bf91bfadeda913e418fca44e97d5e167ac1fd89ff92fff8bd06a4e0277076b42b3c17dd#npm:1.3.60", {\
-          "packageLocation": "./.yarn/unplugged/@swc-core-virtual-9407152ce4/node_modules/@swc/core/",\
+        ["virtual:6aa5de53097a6ad89dd6f5bb86e7514117f570cb46a75f75d77cb5990bf91bfadeda913e418fca44e97d5e167ac1fd89ff92fff8bd06a4e0277076b42b3c17dd#npm:1.3.61", {\
+          "packageLocation": "./.yarn/unplugged/@swc-core-virtual-3e0c18cd2b/node_modules/@swc/core/",\
           "packageDependencies": [\
-            ["@swc/core", "virtual:6aa5de53097a6ad89dd6f5bb86e7514117f570cb46a75f75d77cb5990bf91bfadeda913e418fca44e97d5e167ac1fd89ff92fff8bd06a4e0277076b42b3c17dd#npm:1.3.60"],\
-            ["@swc/core-darwin-arm64", "npm:1.3.60"],\
-            ["@swc/core-darwin-x64", "npm:1.3.60"],\
-            ["@swc/core-linux-arm-gnueabihf", "npm:1.3.60"],\
-            ["@swc/core-linux-arm64-gnu", "npm:1.3.60"],\
-            ["@swc/core-linux-arm64-musl", "npm:1.3.60"],\
-            ["@swc/core-linux-x64-gnu", "npm:1.3.60"],\
-            ["@swc/core-linux-x64-musl", "npm:1.3.60"],\
-            ["@swc/core-win32-arm64-msvc", "npm:1.3.60"],\
-            ["@swc/core-win32-ia32-msvc", "npm:1.3.60"],\
-            ["@swc/core-win32-x64-msvc", "npm:1.3.60"],\
+            ["@swc/core", "virtual:6aa5de53097a6ad89dd6f5bb86e7514117f570cb46a75f75d77cb5990bf91bfadeda913e418fca44e97d5e167ac1fd89ff92fff8bd06a4e0277076b42b3c17dd#npm:1.3.61"],\
+            ["@swc/core-darwin-arm64", "npm:1.3.61"],\
+            ["@swc/core-darwin-x64", "npm:1.3.61"],\
+            ["@swc/core-linux-arm-gnueabihf", "npm:1.3.61"],\
+            ["@swc/core-linux-arm64-gnu", "npm:1.3.61"],\
+            ["@swc/core-linux-arm64-musl", "npm:1.3.61"],\
+            ["@swc/core-linux-x64-gnu", "npm:1.3.61"],\
+            ["@swc/core-linux-x64-musl", "npm:1.3.61"],\
+            ["@swc/core-win32-arm64-msvc", "npm:1.3.61"],\
+            ["@swc/core-win32-ia32-msvc", "npm:1.3.61"],\
+            ["@swc/core-win32-x64-msvc", "npm:1.3.61"],\
             ["@swc/helpers", null],\
             ["@types/swc__helpers", null]\
           ],\
@@ -2144,91 +2144,91 @@ function $$SETUP_STATE(hydrateRuntimeState, basePath) {
         }]\
       ]],\
       ["@swc/core-darwin-arm64", [\
-        ["npm:1.3.60", {\
-          "packageLocation": "./.yarn/unplugged/@swc-core-darwin-arm64-npm-1.3.60-d53116f40e/node_modules/@swc/core-darwin-arm64/",\
+        ["npm:1.3.61", {\
+          "packageLocation": "./.yarn/unplugged/@swc-core-darwin-arm64-npm-1.3.61-8598d7162f/node_modules/@swc/core-darwin-arm64/",\
           "packageDependencies": [\
-            ["@swc/core-darwin-arm64", "npm:1.3.60"]\
+            ["@swc/core-darwin-arm64", "npm:1.3.61"]\
           ],\
           "linkType": "HARD"\
         }]\
       ]],\
       ["@swc/core-darwin-x64", [\
-        ["npm:1.3.60", {\
-          "packageLocation": "./.yarn/unplugged/@swc-core-darwin-x64-npm-1.3.60-94914f1659/node_modules/@swc/core-darwin-x64/",\
+        ["npm:1.3.61", {\
+          "packageLocation": "./.yarn/unplugged/@swc-core-darwin-x64-npm-1.3.61-466453acf8/node_modules/@swc/core-darwin-x64/",\
           "packageDependencies": [\
-            ["@swc/core-darwin-x64", "npm:1.3.60"]\
+            ["@swc/core-darwin-x64", "npm:1.3.61"]\
           ],\
           "linkType": "HARD"\
         }]\
       ]],\
       ["@swc/core-linux-arm-gnueabihf", [\
-        ["npm:1.3.60", {\
-          "packageLocation": "./.yarn/unplugged/@swc-core-linux-arm-gnueabihf-npm-1.3.60-425ff63983/node_modules/@swc/core-linux-arm-gnueabihf/",\
+        ["npm:1.3.61", {\
+          "packageLocation": "./.yarn/unplugged/@swc-core-linux-arm-gnueabihf-npm-1.3.61-4a1f64130c/node_modules/@swc/core-linux-arm-gnueabihf/",\
           "packageDependencies": [\
-            ["@swc/core-linux-arm-gnueabihf", "npm:1.3.60"]\
+            ["@swc/core-linux-arm-gnueabihf", "npm:1.3.61"]\
           ],\
           "linkType": "HARD"\
         }]\
       ]],\
       ["@swc/core-linux-arm64-gnu", [\
-        ["npm:1.3.60", {\
-          "packageLocation": "./.yarn/unplugged/@swc-core-linux-arm64-gnu-npm-1.3.60-3e9e5fabd6/node_modules/@swc/core-linux-arm64-gnu/",\
+        ["npm:1.3.61", {\
+          "packageLocation": "./.yarn/unplugged/@swc-core-linux-arm64-gnu-npm-1.3.61-0d483dfaf4/node_modules/@swc/core-linux-arm64-gnu/",\
           "packageDependencies": [\
-            ["@swc/core-linux-arm64-gnu", "npm:1.3.60"]\
+            ["@swc/core-linux-arm64-gnu", "npm:1.3.61"]\
           ],\
           "linkType": "HARD"\
         }]\
       ]],\
       ["@swc/core-linux-arm64-musl", [\
-        ["npm:1.3.60", {\
-          "packageLocation": "./.yarn/unplugged/@swc-core-linux-arm64-musl-npm-1.3.60-912b2993bb/node_modules/@swc/core-linux-arm64-musl/",\
+        ["npm:1.3.61", {\
+          "packageLocation": "./.yarn/unplugged/@swc-core-linux-arm64-musl-npm-1.3.61-7fca157592/node_modules/@swc/core-linux-arm64-musl/",\
           "packageDependencies": [\
-            ["@swc/core-linux-arm64-musl", "npm:1.3.60"]\
+            ["@swc/core-linux-arm64-musl", "npm:1.3.61"]\
           ],\
           "linkType": "HARD"\
         }]\
       ]],\
       ["@swc/core-linux-x64-gnu", [\
-        ["npm:1.3.60", {\
-          "packageLocation": "./.yarn/unplugged/@swc-core-linux-x64-gnu-npm-1.3.60-580ab77b09/node_modules/@swc/core-linux-x64-gnu/",\
+        ["npm:1.3.61", {\
+          "packageLocation": "./.yarn/unplugged/@swc-core-linux-x64-gnu-npm-1.3.61-1917f0dabe/node_modules/@swc/core-linux-x64-gnu/",\
           "packageDependencies": [\
-            ["@swc/core-linux-x64-gnu", "npm:1.3.60"]\
+            ["@swc/core-linux-x64-gnu", "npm:1.3.61"]\
           ],\
           "linkType": "HARD"\
         }]\
       ]],\
       ["@swc/core-linux-x64-musl", [\
-        ["npm:1.3.60", {\
-          "packageLocation": "./.yarn/unplugged/@swc-core-linux-x64-musl-npm-1.3.60-56ff404a4c/node_modules/@swc/core-linux-x64-musl/",\
+        ["npm:1.3.61", {\
+          "packageLocation": "./.yarn/unplugged/@swc-core-linux-x64-musl-npm-1.3.61-a8a8535054/node_modules/@swc/core-linux-x64-musl/",\
           "packageDependencies": [\
-            ["@swc/core-linux-x64-musl", "npm:1.3.60"]\
+            ["@swc/core-linux-x64-musl", "npm:1.3.61"]\
           ],\
           "linkType": "HARD"\
         }]\
       ]],\
       ["@swc/core-win32-arm64-msvc", [\
-        ["npm:1.3.60", {\
-          "packageLocation": "./.yarn/unplugged/@swc-core-win32-arm64-msvc-npm-1.3.60-9946779c3b/node_modules/@swc/core-win32-arm64-msvc/",\
+        ["npm:1.3.61", {\
+          "packageLocation": "./.yarn/unplugged/@swc-core-win32-arm64-msvc-npm-1.3.61-052854e84d/node_modules/@swc/core-win32-arm64-msvc/",\
           "packageDependencies": [\
-            ["@swc/core-win32-arm64-msvc", "npm:1.3.60"]\
+            ["@swc/core-win32-arm64-msvc", "npm:1.3.61"]\
           ],\
           "linkType": "HARD"\
         }]\
       ]],\
       ["@swc/core-win32-ia32-msvc", [\
-        ["npm:1.3.60", {\
-          "packageLocation": "./.yarn/unplugged/@swc-core-win32-ia32-msvc-npm-1.3.60-5c9e592c84/node_modules/@swc/core-win32-ia32-msvc/",\
+        ["npm:1.3.61", {\
+          "packageLocation": "./.yarn/unplugged/@swc-core-win32-ia32-msvc-npm-1.3.61-3c0bf959a8/node_modules/@swc/core-win32-ia32-msvc/",\
           "packageDependencies": [\
-            ["@swc/core-win32-ia32-msvc", "npm:1.3.60"]\
+            ["@swc/core-win32-ia32-msvc", "npm:1.3.61"]\
           ],\
           "linkType": "HARD"\
         }]\
       ]],\
       ["@swc/core-win32-x64-msvc", [\
-        ["npm:1.3.60", {\
-          "packageLocation": "./.yarn/unplugged/@swc-core-win32-x64-msvc-npm-1.3.60-8567060d58/node_modules/@swc/core-win32-x64-msvc/",\
+        ["npm:1.3.61", {\
+          "packageLocation": "./.yarn/unplugged/@swc-core-win32-x64-msvc-npm-1.3.61-aeeeee5eef/node_modules/@swc/core-win32-x64-msvc/",\
           "packageDependencies": [\
-            ["@swc/core-win32-x64-msvc", "npm:1.3.60"]\
+            ["@swc/core-win32-x64-msvc", "npm:1.3.61"]\
           ],\
           "linkType": "HARD"\
         }]\
@@ -2246,7 +2246,7 @@ function $$SETUP_STATE(hydrateRuntimeState, basePath) {
           "packageDependencies": [\
             ["@swc/jest", "virtual:6aa5de53097a6ad89dd6f5bb86e7514117f570cb46a75f75d77cb5990bf91bfadeda913e418fca44e97d5e167ac1fd89ff92fff8bd06a4e0277076b42b3c17dd#npm:0.2.26"],\
             ["@jest/create-cache-key-function", "npm:27.5.1"],\
-            ["@swc/core", "virtual:6aa5de53097a6ad89dd6f5bb86e7514117f570cb46a75f75d77cb5990bf91bfadeda913e418fca44e97d5e167ac1fd89ff92fff8bd06a4e0277076b42b3c17dd#npm:1.3.60"],\
+            ["@swc/core", "virtual:6aa5de53097a6ad89dd6f5bb86e7514117f570cb46a75f75d77cb5990bf91bfadeda913e418fca44e97d5e167ac1fd89ff92fff8bd06a4e0277076b42b3c17dd#npm:1.3.61"],\
             ["@types/swc__core", null],\
             ["jsonc-parser", "npm:3.2.0"]\
           ],\

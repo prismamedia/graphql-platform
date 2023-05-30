@@ -3,7 +3,6 @@ import { Memoize } from '@prismamedia/memoize';
 import * as graphql from 'graphql';
 import assert from 'node:assert/strict';
 import { AbstractOperation } from '../abstract-operation.js';
-import { AbstractOperationError } from './abstract-error.js';
 
 export abstract class AbstractSubscription<
   TRequestContext extends object,
@@ -44,7 +43,7 @@ export abstract class AbstractSubscription<
             info.path,
           );
         } catch (error) {
-          throw error instanceof AbstractOperationError
+          throw error instanceof utils.GraphError
             ? error.toGraphQLError()
             : error;
         }
