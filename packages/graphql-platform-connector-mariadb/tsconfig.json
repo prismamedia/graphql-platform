@@ -6,11 +6,12 @@
   "compilerOptions": {
     "moduleResolution": "node16",
 
+    "experimentalDecorators": true,
+
     "composite": true,
     "sourceMap": true,
     "declaration": true,
     "declarationMap": true,
-    "experimentalDecorators": true,
 
     "rootDir": "src",
     "outDir": "dist"

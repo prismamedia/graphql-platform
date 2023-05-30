@@ -42,7 +42,7 @@
     "@prismamedia/async-event-emitter": "^5.0.1",
     "@prismamedia/graphql-platform-scalars": "workspace:packages/graphql-platform-scalars",
     "@prismamedia/graphql-platform-utils": "workspace:packages/graphql-platform-utils",
-    "@prismamedia/memoize": "^4.0.0",
+    "@prismamedia/memoize": "^5.0.1",
     "@types/cli-progress": "^3.11.0",
     "cli-progress": "^3.12.0",
     "dataloader": "^2.2.2",
@@ -51,7 +51,7 @@
     "lodash": "^4.17.21",
     "p-queue": "^7.3.4",
     "p-retry": "^5.1.2",
-    "type-fest": "^3.11.0"
+    "type-fest": "^3.11.1"
   },
   "peerDependencies": {
     "graphql": "^16.6.0"

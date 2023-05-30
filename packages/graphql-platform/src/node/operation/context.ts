@@ -28,11 +28,7 @@ export class OperationContext<
      * Unlike the "operation" context, it is shared among all the operations of the "request"'s document
      */
     public readonly request: TRequestContext,
-
-    path?: utils.Path,
-  ) {
-    gp.assertRequestContext(request, path);
-  }
+  ) {}
 
   @Memoize(
     (node: Node, mutationType?: utils.MutationType) =>
@@ -50,7 +46,17 @@ export class OperationContext<
     path: utils.Path,
     mutationType?: utils.MutationType,
   ): NodeFilter | undefined {
-    const authorization = this.getAuthorization(node, mutationType);
+    let authorization: NodeFilter | undefined;
+
+    try {
+      authorization = this.getAuthorization(node, mutationType);
+    } catch (cause) {
+      throw new UnauthorizedError(node, mutationType, {
+        path,
+        cause: new utils.GraphError(`The request-authorizer failed`, { cause }),
+      });
+    }
+
     if (authorization?.isFalse()) {
       throw new UnauthorizedError(node, mutationType, { path });
     }

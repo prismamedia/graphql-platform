@@ -40,7 +40,7 @@
     "@prismamedia/graphql-platform-utils": "workspace:packages/graphql-platform-utils",
     "@types/draft-js": "^0.11.11",
     "entities": "^4.5.0",
-    "type-fest": "^3.11.0"
+    "type-fest": "^3.11.1"
   },
   "peerDependencies": {
     "graphql": "^16.6.0"

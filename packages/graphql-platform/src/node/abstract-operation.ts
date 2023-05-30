@@ -188,10 +188,15 @@ export abstract class AbstractOperation<
   ): Promise<TResult> {
     this.assertIsEnabled(path);
 
-    const operationContext =
-      context instanceof OperationContext
-        ? context
-        : new OperationContext(this.gp, context, path);
+    let operationContext: OperationContext;
+
+    if (context instanceof OperationContext) {
+      operationContext = context;
+    } else {
+      this.gp.assertRequestContext(context, path);
+
+      operationContext = new OperationContext(this.gp, context);
+    }
 
     const authorization = this.ensureAuthorization(operationContext, path);
 

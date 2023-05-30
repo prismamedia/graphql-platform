@@ -44,11 +44,11 @@
     "@prismamedia/graphql-platform": "workspace:packages/graphql-platform",
     "@prismamedia/graphql-platform-scalars": "workspace:packages/graphql-platform-scalars",
     "@prismamedia/graphql-platform-utils": "workspace:packages/graphql-platform-utils",
-    "@prismamedia/memoize": "^4.0.0",
+    "@prismamedia/memoize": "^5.0.1",
     "inflection": "^2.0.1",
     "mariadb": "^3.1.2",
     "semver": "^7.5.1",
-    "type-fest": "^3.11.0"
+    "type-fest": "^3.11.1"
   },
   "peerDependencies": {
     "graphql": "^16.6.0"

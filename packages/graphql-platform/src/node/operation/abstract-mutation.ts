@@ -122,7 +122,9 @@ export abstract class AbstractMutation<
 
     this.assertIsEnabled(path);
 
-    const mutationContext = new MutationContext(this.gp, context, path);
+    this.gp.assertRequestContext(context, path);
+
+    const mutationContext = new MutationContext(this.gp, context);
 
     const authorization = this.ensureAuthorization(mutationContext, path);
 

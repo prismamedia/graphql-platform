@@ -1,5 +1,5 @@
 import * as utils from '@prismamedia/graphql-platform-utils';
-import { Memoize, doNotMemoize } from '@prismamedia/memoize';
+import { Memoize, doNotCache } from '@prismamedia/memoize';
 import {
   MultiBar as MultiProgressBar,
   SingleBar as ProgressBar,
@@ -178,7 +178,7 @@ export class NodeCursor<
     return utils.resolveThunkable(this.#context);
   }
 
-  @Memoize((force: boolean = false) => force && doNotMemoize)
+  @Memoize((force: boolean = false) => force && doNotCache)
   public async size(force: boolean = false): Promise<number> {
     return this.node
       .getQueryByKey('count')
@@ -307,7 +307,7 @@ export class NodeCursor<
     });
   }
 
-  @Memoize((force: boolean = false) => force && doNotMemoize)
+  @Memoize((force: boolean = false) => force && doNotCache)
   public async toArray(force: boolean = false): Promise<TValue[]> {
     const values: TValue[] = [];
 

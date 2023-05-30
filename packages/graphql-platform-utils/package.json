@@ -39,10 +39,10 @@
     "typescript": "5.0.4"
   },
   "dependencies": {
-    "@prismamedia/memoize": "^4.0.0",
+    "@prismamedia/memoize": "^5.0.1",
     "indefinite": "^2.4.3",
     "lodash": "^4.17.21",
-    "type-fest": "^3.11.0"
+    "type-fest": "^3.11.1"
   },
   "peerDependencies": {
     "graphql": "^16.6.0"

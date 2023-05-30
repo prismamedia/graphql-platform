@@ -1486,20 +1486,8 @@ export class Node<
     context: OperationContext,
     mutationType?: utils.MutationType,
   ): NodeFilter | undefined {
-    let authorization: NodeFilterInputValue | boolean | undefined;
-
-    try {
-      authorization = this.config.authorization?.call(
-        this.gp,
-        context.request,
-        mutationType,
-      );
-    } catch (error) {
-      throw new utils.GraphError(`The request-authorizer threw an error`, {
-        path: utils.addPath(this.configPath, 'authorization'),
-        cause: error,
-      });
-    }
+    const authorization: NodeFilterInputValue | boolean | undefined =
+      this.config.authorization?.call(this.gp, context.request, mutationType);
 
     return this.filterInputType.parseAndFilter(
       authorization === true
