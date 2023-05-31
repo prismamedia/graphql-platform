@@ -24,8 +24,8 @@ import type { NodeUpdateInputValue } from '../../../type/input/update.js';
 import {
   catchConnectorOperationError,
   ConnectorOperationKind,
-  LifecycleError,
-  LifecycleKind,
+  LifecycleHookError,
+  LifecycleHookKind,
 } from '../../error.js';
 import { AbstractUpdate, type UpdateConfig } from '../abstract-update.js';
 import type { MutationContext } from '../context.js';
@@ -204,10 +204,11 @@ export class UpdateManyMutation<
                 target: statement.targetProxy,
               });
             } catch (cause) {
-              throw new LifecycleError(this.node, LifecycleKind.PRE_UPDATE, {
-                cause,
-                path,
-              });
+              throw new LifecycleHookError(
+                this.node,
+                LifecycleHookKind.PRE_UPDATE,
+                { cause, path },
+              );
             }
 
             if (!statement.isEmpty()) {
@@ -298,10 +299,11 @@ export class UpdateManyMutation<
               change,
             });
           } catch (cause) {
-            throw new LifecycleError(this.node, LifecycleKind.POST_UPDATE, {
-              cause,
-              path,
-            });
+            throw new LifecycleHookError(
+              this.node,
+              LifecycleHookKind.POST_UPDATE,
+              { cause, path },
+            );
           }
         }),
       );

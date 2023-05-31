@@ -11,7 +11,7 @@ export enum OperationErrorCode {
   INVALID_ARGUMENTS,
   INVALID_SELECTION,
   NOT_FOUND,
-  LIFECYCLE_ERROR,
+  LIFECYCLE_HOOK_ERROR,
   CONNECTOR_WORKFLOW_ERROR,
   CONNECTOR_OPERATION_ERROR,
   DUPLICATE,
@@ -100,7 +100,7 @@ export class NotFoundError extends AbstractOperationError {
   }
 }
 
-export enum LifecycleKind {
+export enum LifecycleHookKind {
   PRE_CREATE,
   POST_CREATE,
   PRE_UPDATE,
@@ -109,16 +109,19 @@ export enum LifecycleKind {
   POST_DELETE,
 }
 
-export class LifecycleError extends AbstractOperationError {
+export class LifecycleHookError extends AbstractOperationError {
   public constructor(
     node: Node,
-    kind: LifecycleKind,
+    kind: LifecycleHookKind,
     options?: OperationErrorOptions,
   ) {
-    super(`Failed at "${node}.${LifecycleKind[kind]}"`, {
-      ...options,
-      code: OperationErrorCode.LIFECYCLE_ERROR,
-    });
+    super(
+      `The "${node}"'s "${LifecycleHookKind[kind]}" lifecycle-hook failed`,
+      {
+        ...options,
+        code: OperationErrorCode.LIFECYCLE_HOOK_ERROR,
+      },
+    );
   }
 }
 
@@ -138,9 +141,10 @@ export class ConnectorWorkflowError extends AbstractConnectorError {
     kind: ConnectorWorkflowKind,
     options?: ConnectorWorkflowErrorOptions,
   ) {
-    super(`Failed at "${ConnectorWorkflowKind[kind]}"`, {
+    super(`The connector failed at "${ConnectorWorkflowKind[kind]}"`, {
       ...options,
       code: OperationErrorCode.CONNECTOR_WORKFLOW_ERROR,
+      causeIsPrivate: options?.causeIsPrivate ?? true,
     });
   }
 }
@@ -177,9 +181,10 @@ export class ConnectorOperationError extends AbstractConnectorError {
       readonly code?: OperationErrorCode.DUPLICATE;
     },
   ) {
-    super(`Failed at "${node}.${ConnectorOperationKind[kind]}"`, {
+    super(`The connector failed at "${node}.${ConnectorOperationKind[kind]}"`, {
       ...options,
       code: options?.code ?? OperationErrorCode.CONNECTOR_OPERATION_ERROR,
+      causeIsPrivate: options?.causeIsPrivate ?? true,
     });
   }
 }
@@ -208,6 +213,7 @@ export class DuplicateError extends ConnectorOperationError {
           .join(' '),
         { cause: options?.cause },
       ),
+      causeIsPrivate: false,
     });
   }
 }

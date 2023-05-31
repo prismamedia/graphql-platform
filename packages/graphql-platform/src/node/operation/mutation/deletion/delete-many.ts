@@ -15,8 +15,8 @@ import type { NodeFilterInputValue, OrderByInputValue } from '../../../type.js';
 import {
   catchConnectorOperationError,
   ConnectorOperationKind,
-  LifecycleError,
-  LifecycleKind,
+  LifecycleHookError,
+  LifecycleHookKind,
 } from '../../error.js';
 import { AbstractDeletion, type DeletionConfig } from '../abstract-deletion.js';
 import type { MutationContext } from '../context.js';
@@ -147,10 +147,11 @@ export class DeleteManyMutation<
               current: Object.freeze(this.node.parseValue(currentValue)),
             });
           } catch (cause) {
-            throw new LifecycleError(this.node, LifecycleKind.PRE_DELETE, {
-              cause,
-              path,
-            });
+            throw new LifecycleHookError(
+              this.node,
+              LifecycleHookKind.PRE_DELETE,
+              { cause, path },
+            );
           }
         }),
       );
@@ -238,10 +239,11 @@ export class DeleteManyMutation<
             change,
           });
         } catch (cause) {
-          throw new LifecycleError(this.node, LifecycleKind.POST_DELETE, {
-            cause,
-            path,
-          });
+          throw new LifecycleHookError(
+            this.node,
+            LifecycleHookKind.POST_DELETE,
+            { cause, path },
+          );
         }
 
         return args.selection.parseValue(oldValue);

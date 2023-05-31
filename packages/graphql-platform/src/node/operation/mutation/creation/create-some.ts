@@ -12,8 +12,8 @@ import type { NodeSelectedValue } from '../../../statement/selection.js';
 import type { NodeCreationInputValue } from '../../../type/input/creation.js';
 import {
   ConnectorOperationKind,
-  LifecycleError,
-  LifecycleKind,
+  LifecycleHookError,
+  LifecycleHookKind,
   catchConnectorOperationError,
 } from '../../error.js';
 import { AbstractCreation, type CreationConfig } from '../abstract-creation.js';
@@ -108,10 +108,11 @@ export class CreateSomeMutation<
             creation: statement.proxy,
           });
         } catch (cause) {
-          throw new LifecycleError(this.node, LifecycleKind.PRE_CREATE, {
-            cause,
-            path: indexedPath,
-          });
+          throw new LifecycleHookError(
+            this.node,
+            LifecycleHookKind.PRE_CREATE,
+            { cause, path: indexedPath },
+          );
         }
 
         return statement;
@@ -158,10 +159,11 @@ export class CreateSomeMutation<
             change,
           });
         } catch (cause) {
-          throw new LifecycleError(this.node, LifecycleKind.POST_CREATE, {
-            cause,
-            path: indexedPath,
-          });
+          throw new LifecycleHookError(
+            this.node,
+            LifecycleHookKind.POST_CREATE,
+            { cause, path: indexedPath },
+          );
         }
       }),
     );

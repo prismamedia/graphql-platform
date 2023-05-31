@@ -14,7 +14,7 @@ import { GraphQLPlatform } from '../../../../index.js';
 import {
   ConnectorOperationError,
   ConnectorWorkflowError,
-  LifecycleError,
+  LifecycleHookError,
   UnauthorizedError,
 } from '../../error.js';
 import { CreateSomeMutationArgs } from './create-some.js';
@@ -114,7 +114,7 @@ describe('CreateSomeMutation', () => {
               },
             ],
           }),
-        ).rejects.toThrowError(LifecycleError);
+        ).rejects.toThrowError(LifecycleHookError);
       });
     });
 
