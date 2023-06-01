@@ -2,12 +2,12 @@ import * as utils from '@prismamedia/graphql-platform-utils';
 import { Memoize } from '@prismamedia/memoize';
 import { DepGraph } from 'dependency-graph';
 import type { GraphQLPlatform } from './index.js';
+import type { Node } from './node.js';
 import {
-  Node,
   NodeFixture,
-  NodeFixtureData,
-  NodeFixtureReference,
-} from './node.js';
+  type NodeFixtureData,
+  type NodeFixtureReference,
+} from './node/fixture.js';
 
 export type NodeFixtureDataByReference = Record<
   NodeFixtureReference,

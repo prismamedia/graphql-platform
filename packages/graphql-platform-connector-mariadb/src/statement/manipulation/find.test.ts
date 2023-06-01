@@ -4,7 +4,7 @@ import {
   myAdminContext,
   myUserContext,
 } from '@prismamedia/graphql-platform/__tests__/config.js';
-import { fixtures } from '@prismamedia/graphql-platform/__tests__/fixture.js';
+import * as fixtures from '@prismamedia/graphql-platform/__tests__/fixture.js';
 import { format } from '@sqltools/formatter';
 import { createMyGP, type MyGP } from '../../__tests__/config.js';
 
@@ -19,7 +19,7 @@ describe('Find statement', () => {
     );
 
     await gp.connector.setup();
-    await gp.seed(fixtures, myAdminContext);
+    await gp.seed(myAdminContext, fixtures.constant);
   });
 
   afterAll(async () => {

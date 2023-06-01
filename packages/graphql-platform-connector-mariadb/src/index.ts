@@ -182,6 +182,18 @@ export class MariaDBConnector
     return pool;
   }
 
+  public async disconnect(): Promise<void> {
+    await Promise.all(
+      Array.from(this.#poolsByStatementKind, async ([kind, pool]) => {
+        try {
+          await pool.end();
+        } finally {
+          this.#poolsByStatementKind.delete(kind);
+        }
+      }),
+    );
+  }
+
   public async withConnection<TResult = unknown>(
     callback: (connection: mariadb.Connection) => Promise<TResult>,
     kind?: StatementKind,
@@ -190,7 +202,7 @@ export class MariaDBConnector
     try {
       return await callback(connection);
     } finally {
-      connection.release();
+      await connection.release();
     }
   }
 
@@ -317,15 +329,7 @@ export class MariaDBConnector
     try {
       await this.schema.drop({ ifExists: true });
     } finally {
-      await Promise.all(
-        Array.from(this.#poolsByStatementKind).map(async ([kind, pool]) => {
-          try {
-            await pool.end();
-          } finally {
-            this.#poolsByStatementKind.delete(kind);
-          }
-        }),
-      );
+      await this.disconnect();
     }
   }
 

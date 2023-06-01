@@ -158,9 +158,10 @@ export class Schema {
     return this.name;
   }
 
-  public getTableByNode(node: core.Node): Table {
+  public getTableByNode(nodeOrName: core.Node | core.Node['name']): Table {
+    const node = this.connector.gp.ensureNode(nodeOrName);
     const table = this.tablesByNode.get(node);
-    assert(table, `The node "${node}" does not exist`);
+    assert(table, `No table found for the node "${node}"`);
 
     return table;
   }

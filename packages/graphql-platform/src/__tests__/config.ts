@@ -74,6 +74,8 @@ export enum ArticleStatus {
   DELETED = 'deleted',
 }
 
+export const ArticleStatusUtils = utils.createEnumUtils(ArticleStatus);
+
 export const ArticleStatusType = utils.createGraphQLEnumType(
   'ArticleStatus',
   ArticleStatus,
@@ -516,19 +518,11 @@ export const Category = {
       kind: 'Edge',
       head: 'Category',
       onHeadDeletion: OnEdgeHeadDeletion.CASCADE,
-
-      creation: {
-        nullable: false,
-      },
     },
     order: {
       kind: 'Leaf',
       type: 'UnsignedInt',
       nullable: false,
-
-      // creation: {
-      //   optional: true,
-      // },
     },
   },
 

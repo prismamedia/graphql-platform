@@ -5,7 +5,7 @@ import {
   type MyGP,
 } from '@prismamedia/graphql-platform-connector-mariadb/__tests__/config.js';
 import { myAdminContext } from '@prismamedia/graphql-platform/__tests__/config.js';
-import { fixtures } from '@prismamedia/graphql-platform/__tests__/fixture.js';
+import * as fixtures from '@prismamedia/graphql-platform/__tests__/fixture.js';
 import { ApolloServerIntegration } from './index.js';
 
 describe('GraphQL-Platform Integration Apollo Server', () => {
@@ -15,7 +15,7 @@ describe('GraphQL-Platform Integration Apollo Server', () => {
     gp = createMyGP('integration_apollo_server');
 
     await gp.connector.setup();
-    await gp.seed(fixtures, myAdminContext);
+    await gp.seed(myAdminContext, fixtures.constant);
   });
 
   afterAll(() => gp.connector.teardown());

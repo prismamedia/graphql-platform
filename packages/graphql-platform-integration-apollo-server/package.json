@@ -42,7 +42,7 @@
     "@prismamedia/graphql-platform": "workspace:packages/graphql-platform"
   },
   "peerDependencies": {
-    "@apollo/server": "^4.0.5",
+    "@apollo/server": "^4.7.1",
     "graphql": "^16.6.0"
   }
 }

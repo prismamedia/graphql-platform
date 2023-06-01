@@ -1,7 +1,7 @@
 import { beforeAll, describe, expect, it } from '@jest/globals';
 import { myAdminContext, nodes } from './__tests__/config.js';
 import { mockConnector } from './__tests__/connector-mock.js';
-import { fixtures } from './__tests__/fixture.js';
+import * as fixtures from './__tests__/fixture.js';
 import {
   EdgeExistsFilter,
   GraphQLPlatform,
@@ -24,12 +24,14 @@ describe('Seeding', () => {
         new Seeding(gp, {
           Category: {
             root: {
-              title: 'ROOT',
               parent: 'home',
+              order: 0,
+              title: 'ROOT',
             },
             home: {
-              title: 'ROOT',
               parent: 'root',
+              order: 0,
+              title: 'ROOT',
             },
           },
         }),
@@ -37,9 +39,9 @@ describe('Seeding', () => {
   });
 
   it('orders by dependencies', () => {
-    const seeding = new Seeding(gp, fixtures);
+    const seeding = new Seeding(gp, fixtures.constant);
 
-    expect(seeding.fixtures.length).toMatchInlineSnapshot(`18`);
+    expect(seeding.fixtures.length).toMatchInlineSnapshot(`12`);
     expect(seeding.fixtures.map(({ reference }) => reference))
       .toMatchInlineSnapshot(`
       [
@@ -48,19 +50,13 @@ describe('Seeding', () => {
         "article_01",
         "article_02",
         "category_news",
-        "article_03",
         "tag_01",
-        "article_03-tag_01",
-        "article_04",
-        "tag_03",
-        "article_04-tag_03",
         "tag_02",
-        "article_03-tag_02",
         "user_yvann",
-        "article_03-tag_02-moderator_user_yvann",
         "user_marine",
-        "article_03-tag_02-moderator_user_marine",
-        "user_profile_yvann",
+        "article_03",
+        "tag_03",
+        "article_04",
       ]
     `);
   });
@@ -131,6 +127,11 @@ describe('Seeding', () => {
                     );
                 }
               });
+
+            case 'ArticleExtension':
+              return creations.map(
+                (creation): NodeValue => creation.value as any,
+              );
 
             case 'Category':
               return creations.map((creation): NodeValue => {
@@ -338,7 +339,7 @@ describe('Seeding', () => {
       }),
     });
 
-    const seeding = new Seeding(gp, fixtures);
+    const seeding = new Seeding(gp, fixtures.constant);
 
     await expect(seeding.load(myAdminContext)).resolves.toBeUndefined();
   });

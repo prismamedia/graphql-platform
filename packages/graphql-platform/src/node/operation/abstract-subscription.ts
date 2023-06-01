@@ -33,21 +33,16 @@ export abstract class AbstractSubscription<
         args: utils.getGraphQLFieldConfigArgumentMap(this.arguments),
       }),
       type: this.getGraphQLOutputType(),
-      subscribe: async (_, args, context, info) => {
-        try {
-          return await this.execute(
-            context,
-            (this.selectionAware
-              ? { ...args, selection: info }
-              : args) as TArgs,
-            info.path,
-          );
-        } catch (error) {
+      subscribe: (_, args, context, info) =>
+        this.execute(
+          context,
+          (this.selectionAware ? { ...args, selection: info } : args) as TArgs,
+          info.path,
+        ).catch((error) => {
           throw error instanceof utils.GraphError
             ? error.toGraphQLError()
             : error;
-        }
-      },
+        }),
     };
   }
 }

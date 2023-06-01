@@ -6,7 +6,7 @@ Map {
     "update" => 2,
   },
   "ArticleTagModeration" => Map {
-    "deletion" => 2,
+    "deletion" => 3,
   },
   "ArticleTag" => Map {
     "deletion" => 3,

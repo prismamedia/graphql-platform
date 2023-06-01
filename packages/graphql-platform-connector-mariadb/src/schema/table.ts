@@ -240,9 +240,12 @@ export class Table {
     return this.qualifiedName;
   }
 
-  public getColumnByLeaf(leaf: core.Leaf): LeafColumn {
+  public getColumnByLeaf(
+    leafOrName: core.Leaf | core.Leaf['name'],
+  ): LeafColumn {
+    const leaf = this.node.ensureLeaf(leafOrName);
     const column = this.columnsByLeaf.get(leaf);
-    assert(column, `The leaf "${leaf}" is not part of the node "${this.node}"`);
+    assert(column, `No column found for the leaf "${leaf}"`);
 
     return column;
   }
@@ -259,10 +262,7 @@ export class Table {
 
   public getColumnTreeByEdge(edge: core.Edge): ReferenceColumnTree {
     const columnTree = this.columnTreesByEdge.get(edge);
-    assert(
-      columnTree,
-      `The edge "${edge}" is not part of the node "${this.node}"`,
-    );
+    assert(columnTree, `No columns found for the edge "${edge}"`);
 
     return columnTree;
   }
@@ -291,18 +291,18 @@ export class Table {
       this.uniqueIndexesByUniqueConstraint.get(uniqueConstraint);
     assert(
       uniqueIndex,
-      `The unique-constraint "${uniqueConstraint}" is not part of the node "${this.node}"`,
+      `No unique-index found for the unique-constraint "${uniqueConstraint}"`,
     );
 
     return uniqueIndex;
   }
 
-  public getForeignKeyByEdge(edge: core.Edge): ForeignKey {
+  public getForeignKeyByEdge(
+    edgeOrName: core.Edge | core.Edge['name'],
+  ): ForeignKey {
+    const edge = this.node.ensureEdge(edgeOrName);
     const foreignKey = this.foreignKeysByEdge.get(edge);
-    assert(
-      foreignKey,
-      `The edge "${edge}" is not part of the node "${this.node}"`,
-    );
+    assert(foreignKey, `No foreign-key found for the edge "${edge}"`);
 
     return foreignKey;
   }

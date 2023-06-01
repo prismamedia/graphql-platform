@@ -2565,10 +2565,10 @@ function $$SETUP_STATE(hydrateRuntimeState, basePath) {
         }]\
       ]],\
       ["@types/prettier", [\
-        ["npm:2.7.2", {\
-          "packageLocation": "./.yarn/cache/@types-prettier-npm-2.7.2-6b2e2f518f-b47d76a525.zip/node_modules/@types/prettier/",\
+        ["npm:2.7.3", {\
+          "packageLocation": "./.yarn/cache/@types-prettier-npm-2.7.3-497316f37c-705384209c.zip/node_modules/@types/prettier/",\
           "packageDependencies": [\
-            ["@types/prettier", "npm:2.7.2"]\
+            ["@types/prettier", "npm:2.7.3"]\
           ],\
           "linkType": "HARD"\
         }]\
@@ -3216,8 +3216,8 @@ function $$SETUP_STATE(hydrateRuntimeState, basePath) {
           "packageLocation": "./.yarn/cache/browserslist-npm-4.21.7-36caf91554-3d0d025e6d.zip/node_modules/browserslist/",\
           "packageDependencies": [\
             ["browserslist", "npm:4.21.7"],\
-            ["caniuse-lite", "npm:1.0.30001491"],\
-            ["electron-to-chromium", "npm:1.4.413"],\
+            ["caniuse-lite", "npm:1.0.30001492"],\
+            ["electron-to-chromium", "npm:1.4.416"],\
             ["node-releases", "npm:2.0.12"],\
             ["update-browserslist-db", "virtual:36caf91554dac89a3f358f56f66ad80dc64d857177a5d24ed45f959d4a3df13ab436c15c5a53b1877973f2b1210f779aec20e0aa5d0876811aa58c9c83dd4f9c#npm:1.0.11"]\
           ],\
@@ -3341,10 +3341,10 @@ function $$SETUP_STATE(hydrateRuntimeState, basePath) {
         }]\
       ]],\
       ["caniuse-lite", [\
-        ["npm:1.0.30001491", {\
-          "packageLocation": "./.yarn/cache/caniuse-lite-npm-1.0.30001491-2171552243-ce8e1343dd.zip/node_modules/caniuse-lite/",\
+        ["npm:1.0.30001492", {\
+          "packageLocation": "./.yarn/cache/caniuse-lite-npm-1.0.30001492-90c5710f02-261869f910.zip/node_modules/caniuse-lite/",\
           "packageDependencies": [\
-            ["caniuse-lite", "npm:1.0.30001491"]\
+            ["caniuse-lite", "npm:1.0.30001492"]\
           ],\
           "linkType": "HARD"\
         }]\
@@ -3830,10 +3830,10 @@ function $$SETUP_STATE(hydrateRuntimeState, basePath) {
         }]\
       ]],\
       ["electron-to-chromium", [\
-        ["npm:1.4.413", {\
-          "packageLocation": "./.yarn/cache/electron-to-chromium-npm-1.4.413-7e81be06e6-6d702b84e2.zip/node_modules/electron-to-chromium/",\
+        ["npm:1.4.416", {\
+          "packageLocation": "./.yarn/cache/electron-to-chromium-npm-1.4.416-661d1e05e2-a1804fe6f1.zip/node_modules/electron-to-chromium/",\
           "packageDependencies": [\
-            ["electron-to-chromium", "npm:1.4.413"]\
+            ["electron-to-chromium", "npm:1.4.416"]\
           ],\
           "linkType": "HARD"\
         }]\
@@ -5272,7 +5272,7 @@ function $$SETUP_STATE(hydrateRuntimeState, basePath) {
             ["@jest/transform", "npm:29.5.0"],\
             ["@jest/types", "npm:29.5.0"],\
             ["@types/babel__traverse", "npm:7.20.0"],\
-            ["@types/prettier", "npm:2.7.2"],\
+            ["@types/prettier", "npm:2.7.3"],\
             ["babel-preset-current-node-syntax", "virtual:2187ce2f072cb5e40780d7cadfa7b959443960e4540d0f21cd80557a038cdba80efd8f7fbdbc902d4001bb391176118d0a81d6bfa2fe326dc4a5ba08f0c3c8b7#npm:1.0.1"],\
             ["chalk", "npm:4.1.2"],\
             ["expect", "npm:29.5.0"],\

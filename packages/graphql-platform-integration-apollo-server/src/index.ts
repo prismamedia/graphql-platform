@@ -17,11 +17,16 @@ export type ApolloServerIntegrationOptions<
 >;
 
 export class ApolloServerIntegration<
-  TRequestContext extends BaseContext = any,
-  TConnector extends core.ConnectorInterface = any,
+  TRequestContext extends BaseContext,
+  TConnector extends core.ConnectorInterface,
+  TContainer extends object,
 > extends ApolloServer<TRequestContext> {
   public constructor(
-    public readonly gp: core.GraphQLPlatform<TRequestContext, TConnector>,
+    public readonly gp: core.GraphQLPlatform<
+      TRequestContext,
+      TConnector,
+      TContainer
+    >,
     options?: ApolloServerIntegrationOptions<TRequestContext>,
   ) {
     super({

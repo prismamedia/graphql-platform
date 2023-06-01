@@ -1,13 +1,146 @@
 import * as utils from '@prismamedia/graphql-platform-utils';
 import { Memoize } from '@prismamedia/memoize';
-import type { Node, NodeValue } from '../node.js';
+import type { DepGraph } from 'dependency-graph';
+import type {
+  Node,
+  NodeCreationInputValue,
+  NodeValue,
+  UniqueConstraintValue,
+} from '../node.js';
 import type { Seeding } from '../seeding.js';
-import type { UniqueConstraintValue } from './definition.js';
-import { EdgeCreationInputAction } from './type/input/creation/field.js';
+import {
+  EdgeCreationInput,
+  EdgeCreationInputAction,
+  LeafCreationInput,
+  MultipleReverseEdgeCreationInput,
+  MultipleReverseEdgeCreationInputAction,
+  UniqueReverseEdgeCreationInput,
+  UniqueReverseEdgeCreationInputAction,
+  type FieldCreationInput,
+} from './type/input/creation/field.js';
 
 export type NodeFixtureReference = string;
 
 export type NodeFixtureData = utils.PlainObject;
+
+function extractDependencies(
+  dependencyGraph: DepGraph<NodeFixture>,
+  node: Node,
+  data: NodeFixtureData,
+  path: utils.Path,
+  dependencies: Set<NodeFixtureReference> = new Set(),
+): Set<NodeFixtureReference> {
+  utils.assertPlainObject(data, path);
+
+  Object.entries(data).forEach(([fieldName, fieldValue]) => {
+    const field = node.creationInputType.getFieldByName(fieldName, path);
+    const fieldPath = utils.addPath(path, field.name);
+
+    if (field instanceof EdgeCreationInput) {
+      if (fieldValue != null) {
+        if (typeof fieldValue !== 'string') {
+          throw new utils.UnexpectedValueError('a string', fieldValue, {
+            path: fieldPath,
+          });
+        } else if (!dependencyGraph.hasNode(fieldValue)) {
+          throw new utils.UnexpectedValueError(
+            "an existing fixture's reference",
+            fieldValue,
+            { path: fieldPath },
+          );
+        }
+
+        dependencies.add(fieldValue);
+      }
+    } else if (field instanceof UniqueReverseEdgeCreationInput) {
+      if (fieldValue != null) {
+        extractDependencies(
+          dependencyGraph,
+          field.reverseEdge.head,
+          fieldValue,
+          fieldPath,
+          dependencies,
+        );
+      }
+    } else if (field instanceof MultipleReverseEdgeCreationInput) {
+      if (fieldValue != null) {
+        utils
+          .resolveArrayable(fieldValue)
+          .forEach((data, index) =>
+            extractDependencies(
+              dependencyGraph,
+              field.reverseEdge.head,
+              data,
+              utils.addPath(fieldPath, index),
+              dependencies,
+            ),
+          );
+      }
+    }
+  });
+
+  return dependencies;
+}
+
+async function extractData<TRequestContext extends object>(
+  dependencyGraph: DepGraph<NodeFixture>,
+  node: Node,
+  data: NodeFixtureData,
+  context: TRequestContext,
+  path: utils.Path,
+): Promise<NonNullable<NodeCreationInputValue>> {
+  utils.assertPlainObject(data, path);
+
+  return Object.fromEntries(
+    await Promise.all(
+      Object.entries(data).map(async ([fieldName, fieldValue]) => {
+        const field = node.creationInputType.getFieldByName(fieldName, path);
+        const fieldPath = utils.addPath(path, field.name);
+
+        return [
+          fieldName,
+          field instanceof LeafCreationInput
+            ? fieldValue
+            : field instanceof EdgeCreationInput
+            ? fieldValue && {
+                [EdgeCreationInputAction.CONNECT]: await dependencyGraph
+                  .getNodeData(fieldValue)
+                  .getIdentifier(context),
+              }
+            : field instanceof MultipleReverseEdgeCreationInput
+            ? fieldValue && {
+                [MultipleReverseEdgeCreationInputAction.CREATE_SOME]:
+                  await Promise.all(
+                    utils
+                      .resolveArrayable(fieldValue)
+                      .map((data, index) =>
+                        extractData(
+                          dependencyGraph,
+                          field.reverseEdge.head,
+                          data,
+                          context,
+                          utils.addPath(fieldPath, index),
+                        ),
+                      ),
+                  ),
+              }
+            : field instanceof UniqueReverseEdgeCreationInput
+            ? fieldValue && {
+                [UniqueReverseEdgeCreationInputAction.CREATE]:
+                  await extractData(
+                    dependencyGraph,
+                    field.reverseEdge.head,
+                    fieldValue,
+                    context,
+                    fieldPath,
+                  ),
+              }
+            : fieldValue,
+        ];
+      }),
+    ),
+  );
+}
 
 export class NodeFixture<TRequestContext extends object = any> {
   readonly #path: utils.Path;
@@ -21,39 +154,36 @@ export class NodeFixture<TRequestContext extends object = any> {
   ) {
     utils.assertPlainObject(data, path);
 
+    utils.aggregateGraphError<string, void>(
+      Object.keys(data),
+      (_, fieldName) => {
+        node.creationInputType.getFieldByName(fieldName, path);
+      },
+      undefined,
+      { path },
+    );
+
+    utils.aggregateGraphError<FieldCreationInput, void>(
+      node.creationInputType.requiredFields,
+      (_, field) => {
+        if (data[field.name] === undefined) {
+          throw new utils.UnexpectedUndefinedError(field.name, { path });
+        }
+      },
+      undefined,
+      { path },
+    );
+
     this.#path = path;
   }
 
   @Memoize()
   public get dependencies(): ReadonlySet<NodeFixtureReference> {
-    return new Set(
-      Array.from(this.node.edgesByName.values()).reduce<NodeFixtureReference[]>(
-        (dependencies, edge) => {
-          const maybeEdgeReference = this.data[edge.name];
-          if (maybeEdgeReference != null) {
-            if (typeof maybeEdgeReference !== 'string') {
-              throw new utils.UnexpectedValueError(
-                'a string',
-                maybeEdgeReference,
-                { path: utils.addPath(this.#path, edge.name) },
-              );
-            } else if (
-              !this.seeding.dependencyGraph.hasNode(maybeEdgeReference)
-            ) {
-              throw new utils.UnexpectedValueError(
-                "an existing fixture's reference",
-                maybeEdgeReference,
-                { path: utils.addPath(this.#path, edge.name) },
-              );
-            }
-
-            dependencies.push(maybeEdgeReference);
-          }
-
-          return dependencies;
-        },
-        [],
-      ),
+    return extractDependencies(
+      this.seeding.dependencyGraph,
+      this.node,
+      this.data,
+      this.#path,
     );
   }
 
@@ -75,26 +205,13 @@ export class NodeFixture<TRequestContext extends object = any> {
 
   @Memoize((context: TRequestContext) => context)
   public async load(context: TRequestContext): Promise<NodeValue> {
-    const data = this.node.creationInputType.parseValue(
-      Object.fromEntries(
-        await Promise.all(
-          Object.entries(this.data).map(
-            async ([componentName, componentValue]) => [
-              componentName,
-              this.node.edgesByName.has(componentName) && componentValue != null
-                ? {
-                    [EdgeCreationInputAction.CONNECT]:
-                      await this.seeding.dependencyGraph
-                        .getNodeData(componentValue)
-                        .getIdentifier(context),
-                  }
-                : componentValue,
-            ],
-          ),
-        ),
-      ),
+    const data = await extractData(
+      this.seeding.dependencyGraph,
+      this.node,
+      this.data,
+      context,
       this.#path,
-    ) as any;
+    );
 
     return this.node
       .getMutationByKey('create-one')

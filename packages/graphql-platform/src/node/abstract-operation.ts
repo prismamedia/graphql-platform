@@ -221,21 +221,16 @@ export abstract class AbstractOperation<
         args: utils.getGraphQLFieldConfigArgumentMap(this.arguments),
       }),
       type: this.getGraphQLOutputType(),
-      resolve: async (_, args, context, info) => {
-        try {
-          return await this.execute(
-            context,
-            (this.selectionAware
-              ? { ...args, selection: info }
-              : args) as TArgs,
-            info.path,
-          );
-        } catch (error) {
+      resolve: (_, args, context, info) =>
+        this.execute(
+          context,
+          (this.selectionAware ? { ...args, selection: info } : args) as TArgs,
+          info.path,
+        ).catch((error) => {
           throw error instanceof utils.GraphError
             ? error.toGraphQLError()
             : error;
-        }
-      },
+        }),
     };
   }
 }

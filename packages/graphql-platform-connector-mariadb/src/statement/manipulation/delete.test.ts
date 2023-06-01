@@ -5,7 +5,7 @@ import {
   ArticleStatus,
   myAdminContext,
 } from '@prismamedia/graphql-platform/__tests__/config.js';
-import { fixtures } from '@prismamedia/graphql-platform/__tests__/fixture.js';
+import * as fixtures from '@prismamedia/graphql-platform/__tests__/fixture.js';
 import { createMyGP, type MyGP } from '../../__tests__/config.js';
 
 describe('Delete statement', () => {
@@ -17,7 +17,7 @@ describe('Delete statement', () => {
     gp.on('node-change', (change) => changes.push(change));
 
     await gp.connector.setup();
-    await gp.seed(fixtures, myAdminContext);
+    await gp.seed(myAdminContext, fixtures.constant);
   });
 
   afterAll(async () => {

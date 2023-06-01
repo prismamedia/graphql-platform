@@ -2,8 +2,11 @@
 
 exports[`Delete statement generates statements: changes 1`] = `
 Map {
+  "ArticleExtension" => Map {
+    "deletion" => 1,
+  },
   "ArticleTagModeration" => Map {
-    "deletion" => 2,
+    "deletion" => 3,
   },
   "ArticleTag" => Map {
     "deletion" => 3,

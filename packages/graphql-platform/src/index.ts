@@ -153,6 +153,10 @@ export class GraphQLPlatform<
     Node<TRequestContext, TConnector, TContainer>
   >;
 
+  public readonly nodeSet: ReadonlySet<
+    Node<TRequestContext, TConnector, TContainer>
+  >;
+
   public readonly operationsByNameByType: OperationsByNameByType<TRequestContext>;
 
   public readonly api: API<TRequestContext>;
@@ -215,6 +219,8 @@ export class GraphQLPlatform<
           { path: nodesConfigPath },
         ),
       );
+
+      this.nodeSet = new Set(this.nodesByName.values());
 
       /**
        * In order to fail as soon as possible, we validate/build everything right away.
@@ -360,6 +366,23 @@ export class GraphQLPlatform<
     return node;
   }
 
+  public ensureNode(
+    nodeOrName: Node | Node['name'],
+    path?: utils.Path,
+  ): Node<TRequestContext, TConnector, TContainer> {
+    if (typeof nodeOrName === 'string') {
+      return this.getNodeByName(nodeOrName, path);
+    } else if (nodeOrName instanceof Node && this.nodeSet.has(nodeOrName)) {
+      return nodeOrName;
+    }
+
+    throw new utils.UnexpectedValueError(
+      `a node among "${[...this.nodesByName.keys()].join(', ')}"`,
+      String(nodeOrName),
+      { path },
+    );
+  }
+
   public getOperationByTypeAndName(
     type: graphql.OperationTypeNode,
     name: string,
@@ -419,8 +442,8 @@ export class GraphQLPlatform<
   }
 
   public async seed(
-    fixtures: NodeFixtureDataByReferenceByNodeName,
     context: TRequestContext,
+    fixtures: NodeFixtureDataByReferenceByNodeName,
   ): Promise<void> {
     const seeding = new Seeding(this, fixtures);
     await seeding.load(context);
