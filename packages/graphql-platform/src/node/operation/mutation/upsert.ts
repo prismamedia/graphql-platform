@@ -77,7 +77,7 @@ export class UpsertMutation<
           data: args.update,
           selection: args.selection,
         },
-        path,
+        utils.addPath(path, 'update'),
       )) ??
       (await this.node.getMutationByKey('create-one').internal(
         context,
@@ -86,7 +86,7 @@ export class UpsertMutation<
           data: args.create,
           selection: args.selection,
         },
-        path,
+        utils.addPath(path, 'create'),
       ))
     );
   }

@@ -585,7 +585,7 @@ export class MultipleReverseEdgeUpdateInput extends AbstractReverseEdgeUpdateInp
             await Promise.all(
               originalEdgeValues.map((originalEdgeValue) =>
                 Promise.all(
-                  actionData.map(({ where, data }) =>
+                  actionData.map(({ where, data }, index) =>
                     this.reverseEdge.head
                       .getMutationByKey('create-one-if-not-exists')
                       .execute(
@@ -604,7 +604,7 @@ export class MultipleReverseEdgeUpdateInput extends AbstractReverseEdgeUpdateInp
                           },
                           selection,
                         },
-                        actionPath,
+                        utils.addPath(actionPath, index),
                       ),
                   ),
                 ),
@@ -709,7 +709,7 @@ export class MultipleReverseEdgeUpdateInput extends AbstractReverseEdgeUpdateInp
             await Promise.all(
               originalEdgeValues.map((originalEdgeValue) =>
                 Promise.all(
-                  actionData.map(({ where, create, update }) =>
+                  actionData.map(({ where, create, update }, index) =>
                     this.reverseEdge.head.getMutationByKey('upsert').execute(
                       context,
                       {
@@ -726,7 +726,7 @@ export class MultipleReverseEdgeUpdateInput extends AbstractReverseEdgeUpdateInp
                         update,
                         selection,
                       },
-                      actionPath,
+                      utils.addPath(actionPath, index),
                     ),
                   ),
                 ),
