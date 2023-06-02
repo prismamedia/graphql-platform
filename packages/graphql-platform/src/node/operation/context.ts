@@ -4,7 +4,7 @@ import type { ConnectorInterface } from '../../connector-interface.js';
 import type { GraphQLPlatform } from '../../index.js';
 import type { Node } from '../../node.js';
 import type { NodeFilter } from '../statement/filter.js';
-import { createContextBoundAPI, type ContextBoundAPI } from './api.js';
+import type { ContextBoundAPI } from './api.js';
 import { UnauthorizedError } from './error.js';
 
 export class OperationContext<
@@ -69,6 +69,6 @@ export class OperationContext<
    */
   @Memoize()
   public get api(): ContextBoundAPI {
-    return createContextBoundAPI(this.gp, this);
+    return this.gp.createContextBoundAPI(this);
   }
 }

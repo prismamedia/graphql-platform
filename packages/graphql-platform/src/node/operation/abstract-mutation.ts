@@ -109,7 +109,9 @@ export abstract class AbstractMutation<
   ): Promise<TResult>;
 
   public override async execute(
-    context: TRequestContext | MutationContext<TRequestContext>,
+    context:
+      | utils.Thunkable<TRequestContext>
+      | MutationContext<TRequestContext>,
     args: TArgs,
     path: utils.Path = utils.addPath(
       utils.addPath(undefined, this.operationType),
@@ -122,9 +124,11 @@ export abstract class AbstractMutation<
 
     this.assertIsEnabled(path);
 
-    this.gp.assertRequestContext(context, path);
+    const requestContext = utils.resolveThunkable(context);
 
-    const mutationContext = new MutationContext(this.gp, context);
+    this.gp.assertRequestContext(requestContext, path);
+
+    const mutationContext = new MutationContext(this.gp, requestContext);
 
     const authorization = this.ensureAuthorization(mutationContext, path);
 

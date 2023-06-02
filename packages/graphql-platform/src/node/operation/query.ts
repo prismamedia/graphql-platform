@@ -1,5 +1,5 @@
-import type { Simplify } from 'type-fest';
-import type { AbstractQuery } from './abstract-query.js';
+import type { Constructor } from 'type-fest';
+import type { Node } from '../../node.js';
 import { CountQuery } from './query/count.js';
 import { ExistsQuery } from './query/exists.js';
 import { FindManyQuery } from './query/find-many.js';
@@ -16,17 +16,7 @@ export * from './query/get-one.js';
 export * from './query/get-some-in-order-if-exists.js';
 export * from './query/get-some-in-order.js';
 
-export const queryConstructorsByKey = {
-  count: CountQuery,
-  exists: ExistsQuery,
-  'find-many': FindManyQuery,
-  'get-one': GetOneQuery,
-  'get-one-if-exists': GetOneIfExistsQuery,
-  'get-some-in-order': GetSomeInOrderQuery,
-  'get-some-in-order-if-exists': GetSomeInOrderIfExistsQuery,
-} satisfies Record<string, typeof AbstractQuery<any, any, any>>;
-
-export type QueriesByKey<TRequestContext extends object> = {
+export type QueriesByKey<TRequestContext extends object = any> = {
   count: CountQuery<TRequestContext>;
   exists: ExistsQuery<TRequestContext>;
   'find-many': FindManyQuery<TRequestContext>;
@@ -36,4 +26,14 @@ export type QueriesByKey<TRequestContext extends object> = {
   'get-some-in-order-if-exists': GetSomeInOrderIfExistsQuery<TRequestContext>;
 };
 
-export type QueryKey = Simplify<keyof QueriesByKey<any>>;
+export const queriesByKey = {
+  count: CountQuery,
+  exists: ExistsQuery,
+  'find-many': FindManyQuery,
+  'get-one': GetOneQuery,
+  'get-one-if-exists': GetOneIfExistsQuery,
+  'get-some-in-order': GetSomeInOrderQuery,
+  'get-some-in-order-if-exists': GetSomeInOrderIfExistsQuery,
+} satisfies {
+  [TKey in keyof QueriesByKey]: Constructor<QueriesByKey[TKey], [Node]>;
+};

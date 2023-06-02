@@ -1,5 +1,5 @@
-import type { Simplify } from 'type-fest';
-import type { AbstractMutation } from './abstract-mutation.js';
+import type { Constructor } from 'type-fest';
+import type { Node } from '../../node.js';
 import {
   creationConstructorsByKey,
   type CreationsByKey,
@@ -21,19 +21,18 @@ export * from './mutation/deletion.js';
 export * from './mutation/interface.js';
 export * from './mutation/update.js';
 
+export type MutationsByKey<TRequestContext extends object = any> =
+  CreationsByKey<TRequestContext> &
+    UpdatesByKey<TRequestContext> &
+    DeletionsByKey<TRequestContext> & {
+      upsert: UpsertMutation<TRequestContext>;
+    };
+
 export const mutationConstructorsByKey = {
   ...creationConstructorsByKey,
   ...deletionConstructorsByKey,
   ...updateConstructorsByKey,
   upsert: UpsertMutation,
-} satisfies Record<string, typeof AbstractMutation<any, any, any>>;
-
-export type MutationsByKey<TRequestContext extends object> = Simplify<
-  CreationsByKey<TRequestContext> &
-    UpdatesByKey<TRequestContext> &
-    DeletionsByKey<TRequestContext> & {
-      upsert: UpsertMutation<TRequestContext>;
-    }
->;
-
-export type MutationKey = Simplify<keyof MutationsByKey<any>>;
+} satisfies {
+  [TKey in keyof MutationsByKey]: Constructor<MutationsByKey[TKey], [Node]>;
+};

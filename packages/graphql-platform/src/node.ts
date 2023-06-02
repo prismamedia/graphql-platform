@@ -29,16 +29,13 @@ import { assertNodeName, type NodeName } from './node/name.js';
 import {
   OperationContext,
   mutationConstructorsByKey,
-  queryConstructorsByKey,
+  queriesByKey,
   subscriptionConstructorsByKey,
   type MutationConfig,
   type MutationInterface,
-  type MutationKey,
   type MutationsByKey,
   type OperationInterface,
   type QueriesByKey,
-  type QueryKey,
-  type SubscriptionKey,
   type SubscriptionsByKey,
 } from './node/operation.js';
 import {
@@ -1268,7 +1265,7 @@ export class Node<
     );
   }
 
-  public getMutationByKey<TKey extends MutationKey>(
+  public getMutationByKey<TKey extends keyof MutationsByKey>(
     key: TKey,
     path?: utils.Path,
   ): MutationsByKey<TRequestContext>[TKey] {
@@ -1287,7 +1284,7 @@ export class Node<
 
   @Memoize()
   public get queriesByKey(): Readonly<QueriesByKey<TRequestContext>> {
-    return Object.entries(queryConstructorsByKey).reduce(
+    return Object.entries(queriesByKey).reduce(
       (queriesByKey, [name, constructor]) => {
         const query = new constructor(this);
         if (query.isEnabled()) {
@@ -1300,7 +1297,7 @@ export class Node<
     );
   }
 
-  public getQueryByKey<TKey extends QueryKey>(
+  public getQueryByKey<TKey extends keyof QueriesByKey>(
     key: TKey,
     path?: utils.Path,
   ): QueriesByKey<TRequestContext>[TKey] {
@@ -1332,7 +1329,7 @@ export class Node<
     );
   }
 
-  public getSubscriptionByKey<TKey extends SubscriptionKey>(
+  public getSubscriptionByKey<TKey extends keyof SubscriptionsByKey>(
     key: TKey,
     path?: utils.Path,
   ): SubscriptionsByKey<TRequestContext>[TKey] {
@@ -1350,9 +1347,7 @@ export class Node<
   }
 
   @Memoize()
-  public get operations(): ReadonlyArray<
-    MutationInterface<TRequestContext> | OperationInterface<TRequestContext>
-  > {
+  public get operations(): ReadonlyArray<OperationInterface<TRequestContext>> {
     return [
       ...Object.values<MutationInterface>(this.mutationsByKey),
       ...Object.values<OperationInterface>(this.queriesByKey),

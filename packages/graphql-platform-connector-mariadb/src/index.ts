@@ -363,6 +363,7 @@ export class MariaDBConnector
 
   public async postFailedMutation(
     context: core.MutationContext,
+    _cause: Error,
   ): Promise<void> {
     await this.getConnectionForMutation(context).rollback();
   }

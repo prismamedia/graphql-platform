@@ -15,11 +15,14 @@ import {
   InvalidRequestContextError,
   Node,
   createAPI,
+  createContextBoundAPI,
   type API,
+  type ContextBoundAPI,
   type NodeChange,
   type NodeChangeAggregation,
   type NodeConfig,
   type NodeName,
+  type OperationContext,
   type OperationInterface,
   type OperationsByNameByType,
 } from './node.js';
@@ -159,8 +162,6 @@ export class GraphQLPlatform<
 
   public readonly operationsByNameByType: OperationsByNameByType<TRequestContext>;
 
-  public readonly api: API<TRequestContext>;
-
   readonly #connector?: TConnector;
 
   public readonly container: Readonly<TContainer>;
@@ -168,6 +169,8 @@ export class GraphQLPlatform<
   readonly #requestContextAssertion?: (
     maybeRequestContext: object,
   ) => asserts maybeRequestContext is TRequestContext;
+
+  public readonly api: API<TRequestContext>;
 
   public constructor(
     public readonly config: GraphQLPlatformConfig<
@@ -269,11 +272,6 @@ export class GraphQLPlatform<
       ) as OperationsByNameByType;
     }
 
-    // API
-    {
-      this.api = createAPI(this);
-    }
-
     // request-context-assertion
     {
       const requestContextAssertionConfig = config.requestContextAssertion;
@@ -345,6 +343,11 @@ export class GraphQLPlatform<
 
         this.on(on);
       }
+    }
+
+    // API
+    {
+      this.api = createAPI(this);
     }
   }
 
@@ -491,5 +494,16 @@ export class GraphQLPlatform<
     graphql.assertValidSchema(schema);
 
     return schema;
+  }
+
+  /**
+   * Returns a "context"-bound version of the API, so the developer only has to provide the operations' args
+   */
+  public createContextBoundAPI(
+    context:
+      | utils.Thunkable<TRequestContext>
+      | OperationContext<TRequestContext>,
+  ): ContextBoundAPI {
+    return createContextBoundAPI(this, context);
   }
 }

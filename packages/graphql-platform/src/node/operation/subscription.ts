@@ -1,15 +1,18 @@
-import type { Simplify } from 'type-fest';
-import type { AbstractSubscription } from './abstract-subscription.js';
+import type { Constructor } from 'type-fest';
+import type { Node } from '../../node.js';
 import { ChangesSubscription } from './subscription/changes.js';
 
 export * from './subscription/changes.js';
 
-export const subscriptionConstructorsByKey = {
-  changes: ChangesSubscription,
-} satisfies Record<string, typeof AbstractSubscription<any, any, any>>;
-
-export type SubscriptionsByKey<TRequestContext extends object> = {
+export type SubscriptionsByKey<TRequestContext extends object = any> = {
   changes: ChangesSubscription<TRequestContext>;
 };
 
-export type SubscriptionKey = Simplify<keyof SubscriptionsByKey<any>>;
+export const subscriptionConstructorsByKey = {
+  changes: ChangesSubscription,
+} satisfies {
+  [TKey in keyof SubscriptionsByKey]: Constructor<
+    SubscriptionsByKey[TKey],
+    [Node]
+  >;
+};

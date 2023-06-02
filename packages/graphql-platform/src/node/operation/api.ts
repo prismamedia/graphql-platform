@@ -40,7 +40,7 @@ export type ContextBoundAPI = Record<
 
 export const createContextBoundAPI = <TRequestContext extends object>(
   gp: GraphQLPlatform<TRequestContext>,
-  context: OperationContext<TRequestContext>,
+  context: utils.Thunkable<TRequestContext> | OperationContext<TRequestContext>,
 ): ContextBoundAPI =>
   Object.fromEntries(
     utils.operationTypes.map((type) => [

@@ -179,7 +179,9 @@ export abstract class AbstractOperation<
   }
 
   public async execute(
-    context: TRequestContext | OperationContext<TRequestContext>,
+    context:
+      | utils.Thunkable<TRequestContext>
+      | OperationContext<TRequestContext>,
     args: TArgs,
     path: utils.Path = utils.addPath(
       utils.addPath(undefined, this.operationType),
@@ -193,9 +195,11 @@ export abstract class AbstractOperation<
     if (context instanceof OperationContext) {
       operationContext = context;
     } else {
-      this.gp.assertRequestContext(context, path);
+      const requestContext = utils.resolveThunkable(context);
 
-      operationContext = new OperationContext(this.gp, context);
+      this.gp.assertRequestContext(requestContext, path);
+
+      operationContext = new OperationContext(this.gp, requestContext);
     }
 
     const authorization = this.ensureAuthorization(operationContext, path);

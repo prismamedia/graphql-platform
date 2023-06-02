@@ -101,7 +101,7 @@ export interface ConnectorInterface {
   /**
    * This method, if provided, is called if the mutation fails (= would be a good place to rollback a transaction)
    */
-  postFailedMutation?(context: MutationContext, error: Error): Promise<void>;
+  postFailedMutation?(context: MutationContext, cause: Error): Promise<void>;
 
   /**
    * This method, if provided, is called after the mutation, regardless of its success or failure (= would be a good place to release a connection)
