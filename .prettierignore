@@ -1,6 +1,7 @@
 .pnp.*
 .vscode/extensions.json
 .yarn/
+.yarnrc.yml
 
 **/*.log
 
