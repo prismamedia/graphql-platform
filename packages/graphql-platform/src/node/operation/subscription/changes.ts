@@ -38,15 +38,14 @@ export class ChangesSubscription<
   ChangesSubscriptionArgs,
   ChangesSubscriptionResult
 > {
-  protected override readonly selectionAware = false;
-  public override readonly name = `${inflection.camelize(
-    this.node.name,
-    true,
-  )}Changes`;
-  public override readonly description = `Subscribe to the "${this.node.plural}"' changes`;
+  protected readonly selectionAware = false;
+
+  public readonly key = 'changes';
+  public readonly name = `${inflection.camelize(this.node.name, true)}Changes`;
+  public readonly description = `Subscribe to the "${this.node.plural}"' changes`;
 
   @Memoize()
-  public override get arguments() {
+  public get arguments() {
     return [
       new utils.Input({
         name: 'where',
@@ -56,7 +55,7 @@ export class ChangesSubscription<
   }
 
   @Memoize()
-  public override getGraphQLOutputType() {
+  public getGraphQLOutputType() {
     return new graphql.GraphQLNonNull(
       new graphql.GraphQLUnionType({
         name: `${this.node}Change`,
@@ -113,7 +112,7 @@ export class ChangesSubscription<
     );
   }
 
-  protected override async executeWithValidArgumentsAndContext(
+  protected async executeWithValidArgumentsAndContext(
     context: OperationContext,
     authorization: NodeFilter | undefined,
     args: NodeSelectionAwareArgs<ChangesSubscriptionArgs>,

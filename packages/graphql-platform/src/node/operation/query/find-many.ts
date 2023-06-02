@@ -34,12 +34,14 @@ export class FindManyQuery<
   FindManyQueryArgs,
   FindManyQueryResult
 > {
-  protected override readonly selectionAware = true;
-  public override readonly name = inflection.camelize(this.node.plural, true);
-  public override readonly description = `Retrieves a list of "${this.node.plural}"`;
+  protected readonly selectionAware = true;
+
+  public readonly key = 'find-many';
+  public readonly name = inflection.camelize(this.node.plural, true);
+  public readonly description = `Retrieves a list of "${this.node.plural}"`;
 
   @Memoize()
-  public override get arguments() {
+  public get arguments() {
     return [
       new utils.Input({
         name: 'where',
@@ -63,7 +65,7 @@ export class FindManyQuery<
   }
 
   @Memoize()
-  public override getGraphQLOutputType() {
+  public getGraphQLOutputType() {
     return new graphql.GraphQLNonNull(
       new graphql.GraphQLList(
         new graphql.GraphQLNonNull(this.node.outputType.getGraphQLObjectType()),
@@ -71,7 +73,7 @@ export class FindManyQuery<
     );
   }
 
-  protected override async executeWithValidArgumentsAndContext(
+  protected async executeWithValidArgumentsAndContext(
     context: OperationContext,
     authorization: NodeFilter | undefined,
     args: NodeSelectionAwareArgs<FindManyQueryArgs>,

@@ -1,17 +1,8 @@
 import type { Constructor } from 'type-fest';
 import type { Node } from '../../node.js';
-import {
-  creationConstructorsByKey,
-  type CreationsByKey,
-} from './mutation/creation.js';
-import {
-  deletionConstructorsByKey,
-  type DeletionsByKey,
-} from './mutation/deletion.js';
-import {
-  updateConstructorsByKey,
-  type UpdatesByKey,
-} from './mutation/update.js';
+import { creationConstructors, type Creation } from './mutation/creation.js';
+import { deletionConstructors, type Deletion } from './mutation/deletion.js';
+import { updateConstructors, type Update } from './mutation/update.js';
 import { UpsertMutation } from './mutation/upsert.js';
 
 export * from './mutation/config.js';
@@ -21,18 +12,15 @@ export * from './mutation/deletion.js';
 export * from './mutation/interface.js';
 export * from './mutation/update.js';
 
-export type MutationsByKey<TRequestContext extends object = any> =
-  CreationsByKey<TRequestContext> &
-    UpdatesByKey<TRequestContext> &
-    DeletionsByKey<TRequestContext> & {
-      upsert: UpsertMutation<TRequestContext>;
-    };
+export type Mutation<TRequestContext extends object = any> =
+  | Creation<TRequestContext>
+  | Update<TRequestContext>
+  | Deletion<TRequestContext>
+  | UpsertMutation<TRequestContext>;
 
-export const mutationConstructorsByKey = {
-  ...creationConstructorsByKey,
-  ...deletionConstructorsByKey,
-  ...updateConstructorsByKey,
-  upsert: UpsertMutation,
-} satisfies {
-  [TKey in keyof MutationsByKey]: Constructor<MutationsByKey[TKey], [Node]>;
-};
+export const mutationConstructors = [
+  ...creationConstructors,
+  ...updateConstructors,
+  ...deletionConstructors,
+  UpsertMutation,
+] satisfies Constructor<Mutation, [Node]>[];

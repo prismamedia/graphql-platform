@@ -16,15 +16,18 @@ import {
   Node,
   createAPI,
   createContextBoundAPI,
+  operationConstructorsByType,
   type API,
   type ContextBoundAPI,
   type NodeChange,
   type NodeChangeAggregation,
   type NodeConfig,
   type NodeName,
+  type Operation,
+  type OperationByType,
   type OperationContext,
   type OperationInterface,
-  type OperationsByNameByType,
+  type OperationType,
 } from './node.js';
 import {
   Seeding,
@@ -36,6 +39,13 @@ export * from './custom-operations.js';
 export * from './graphql-field-config.js';
 export * from './node.js';
 export * from './seeding.js';
+
+type OperationsByNameByType<TRequestContext extends object = any> = {
+  [TType in OperationType]: Map<
+    Operation['name'],
+    OperationByType<TRequestContext>[TType]
+  >;
+};
 
 export type RequestContextAssertion<
   TRequestContext extends object = any,
@@ -170,6 +180,15 @@ export class GraphQLPlatform<
     maybeRequestContext: object,
   ) => asserts maybeRequestContext is TRequestContext;
 
+  /**
+   * Make it easy to call the operations, either through the "GraphAPI" or the "NodeAPI":
+   *
+   * @example <caption>GraphAPI</caption>
+   * const articles = await api.query.articles(myRequestContext, { where: { status: ArticleStatus.Published }, first: 5, selection: `{ id title }` });
+   *
+   * @example <caption>NodeAPI</caption>
+   * const articles = await api.Article.query.findMany(myRequestContext, { where: { status: ArticleStatus.Published }, first: 5, selection: `{ id title }` });
+   */
   public readonly api: API<TRequestContext>;
 
   public constructor(
@@ -256,19 +275,19 @@ export class GraphQLPlatform<
     // operations
     {
       this.operationsByNameByType = Object.fromEntries(
-        utils.operationTypes.map((type): any => [
-          type,
-          new Map(
-            Array.from(this.nodesByName.values()).flatMap((node) =>
-              node.operations
-                .filter(
-                  (operation) =>
-                    operation.operationType === type && operation.isEnabled(),
-                )
-                .map((operation) => [operation.name, operation]),
+        (Object.keys(operationConstructorsByType) as OperationType[]).map(
+          (type): any => [
+            type,
+            new Map(
+              Array.from(this.nodesByName.values()).flatMap((node) =>
+                node.operationsByType[type].map((operation) => [
+                  operation.name,
+                  operation,
+                ]),
+              ),
             ),
-          ),
-        ]),
+          ],
+        ),
       ) as OperationsByNameByType;
     }
 
@@ -391,20 +410,19 @@ export class GraphQLPlatform<
     name: string,
     path?: utils.Path,
   ): OperationInterface<TRequestContext> {
-    if (!utils.operationTypes.includes(type)) {
+    const operationsByName = this.operationsByNameByType[type];
+    if (!operationsByName) {
       throw new utils.UnexpectedValueError(
-        `an operation's type among "${utils.operationTypes.join(', ')}"`,
+        `a type among "${Object.keys(this.operationsByNameByType).join(', ')}"`,
         type,
         { path },
       );
     }
 
-    const operation = this.operationsByNameByType[type].get(name);
+    const operation = operationsByName.get(name);
     if (!operation) {
       throw new utils.UnexpectedValueError(
-        `an operation's name among "${[
-          ...this.operationsByNameByType[type].keys(),
-        ].join(', ')}"`,
+        `a ${type} among "${[...operationsByName.keys()].join(', ')}"`,
         name,
         { path },
       );
@@ -462,14 +480,15 @@ export class GraphQLPlatform<
           .map((type): [string, graphql.GraphQLObjectType] | undefined => {
             const fields: graphql.GraphQLFieldConfigMap<any, any> = {
               // Core-operations
-              ...Object.fromEntries(
-                [...this.operationsByNameByType[type].values()]
-                  .filter((operation) => operation.isPublic())
-                  .map((operation) => [
-                    operation.name,
-                    operation.getGraphQLFieldConfig(),
-                  ]),
-              ),
+              ...(this.operationsByNameByType[type]?.size &&
+                Object.fromEntries(
+                  [...this.operationsByNameByType[type].values()]
+                    .filter((operation) => operation.isPublic())
+                    .map((operation) => [
+                      operation.name,
+                      operation.getGraphQLFieldConfig(),
+                    ]),
+                )),
 
               // Custom-operations
               ...getCustomOperationsByNameByType(
@@ -497,7 +516,13 @@ export class GraphQLPlatform<
   }
 
   /**
-   * Returns a "context"-bound version of the API, so the developer only has to provide the operations' args
+   * Returns a "context"-bound API, so the developer only has to provide the operations' args:
+   *
+   * @example <caption>GraphAPI</caption>
+   * const articles = await api.query.articles({ where: { status: ArticleStatus.Published }, first: 5, selection: `{ id title }` });
+   *
+   * @example <caption>NodeAPI</caption>
+   * const articles = await api.Article.query.findMany({ where: { status: ArticleStatus.Published }, first: 5, selection: `{ id title }` });
    */
   public createContextBoundAPI(
     context:

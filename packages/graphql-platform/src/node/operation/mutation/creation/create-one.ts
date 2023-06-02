@@ -24,12 +24,14 @@ export class CreateOneMutation<
   CreateOneMutationArgs,
   CreateOneMutationResult
 > {
-  protected override readonly selectionAware = true;
-  public override readonly name = `create${this.node}`;
-  public override readonly description = `Creates one "${this.node}", throws an error if it already exists`;
+  protected readonly selectionAware = true;
+
+  public readonly key = 'create-one';
+  public readonly name = `create${this.node}`;
+  public readonly description = `Creates one "${this.node}", throws an error if it already exists`;
 
   @Memoize()
-  public override get arguments() {
+  public get arguments() {
     return [
       new utils.Input({
         name: 'data',
@@ -39,13 +41,13 @@ export class CreateOneMutation<
   }
 
   @Memoize()
-  public override getGraphQLOutputType() {
+  public getGraphQLOutputType() {
     return new graphql.GraphQLNonNull(
       this.node.outputType.getGraphQLObjectType(),
     );
   }
 
-  protected override async executeWithValidArgumentsAndContext(
+  protected async executeWithValidArgumentsAndContext(
     context: MutationContext,
     authorization: NodeFilter | undefined,
     args: NodeSelectionAwareArgs<CreateOneMutationArgs>,

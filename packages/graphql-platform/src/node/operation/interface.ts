@@ -16,9 +16,7 @@ export interface OperationInterface<TRequestContext extends object = any> {
   >;
   validate(): void;
   execute(
-    context:
-      | utils.Thunkable<TRequestContext>
-      | OperationContext<TRequestContext>,
+    context: TRequestContext | OperationContext<TRequestContext>,
     args: utils.Nillable<utils.PlainObject>,
     path?: utils.Path,
   ): Promise<any>;

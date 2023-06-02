@@ -29,12 +29,14 @@ export class CreateOneIfNotExistsMutation<
   CreateOneIfNotExistsMutationArgs,
   CreateOneIfNotExistsMutationResult
 > {
-  protected override readonly selectionAware = true;
-  public override readonly name = `create${this.node}IfNotExists`;
-  public override readonly description = `Creates one "${this.node}" if it does not exist, returns the existing otherwise`;
+  protected readonly selectionAware = true;
+
+  public readonly key = 'create-one-if-not-exists';
+  public readonly name = `create${this.node}IfNotExists`;
+  public readonly description = `Creates one "${this.node}" if it does not exist, returns the existing otherwise`;
 
   @Memoize()
-  public override get arguments() {
+  public get arguments() {
     return [
       new utils.Input({
         name: 'where',
@@ -48,13 +50,13 @@ export class CreateOneIfNotExistsMutation<
   }
 
   @Memoize()
-  public override getGraphQLOutputType() {
+  public getGraphQLOutputType() {
     return new graphql.GraphQLNonNull(
       this.node.outputType.getGraphQLObjectType(),
     );
   }
 
-  protected override async executeWithValidArgumentsAndContext(
+  protected async executeWithValidArgumentsAndContext(
     context: MutationContext,
     authorization: NodeFilter | undefined,
     args: NodeSelectionAwareArgs<CreateOneIfNotExistsMutationArgs>,

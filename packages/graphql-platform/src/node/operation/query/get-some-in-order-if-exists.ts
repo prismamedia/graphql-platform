@@ -30,15 +30,17 @@ export class GetSomeInOrderIfExistsQuery<
   GetSomeInOrderIfExistsQueryArgs,
   GetSomeInOrderIfExistsQueryResult
 > {
-  protected override readonly selectionAware = true;
-  public override readonly name = `${inflection.camelize(
+  protected readonly selectionAware = true;
+
+  public readonly key = 'get-some-in-order-if-exists';
+  public readonly name = `${inflection.camelize(
     this.node.plural,
     true,
   )}InOrderIfExists`;
-  public override readonly description = `Given a list of unique-filter's value, retrieves the corresponding "${this.node.plural}", or null, in the same order`;
+  public readonly description = `Given a list of unique-filter's value, retrieves the corresponding "${this.node.plural}", or null, in the same order`;
 
   @Memoize()
-  public override get arguments() {
+  public get arguments() {
     return [
       new utils.Input({
         name: 'where',
@@ -58,13 +60,13 @@ export class GetSomeInOrderIfExistsQuery<
   }
 
   @Memoize()
-  public override getGraphQLOutputType() {
+  public getGraphQLOutputType() {
     return new graphql.GraphQLNonNull(
       new graphql.GraphQLList(this.node.outputType.getGraphQLObjectType()),
     );
   }
 
-  protected override async executeWithValidArgumentsAndContext(
+  protected async executeWithValidArgumentsAndContext(
     context: OperationContext,
     authorization: NodeFilter | undefined,
     args: NodeSelectionAwareArgs<GetSomeInOrderIfExistsQueryArgs>,

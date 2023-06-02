@@ -49,7 +49,28 @@ export abstract class AbstractOperation<
     : false;
 
   public abstract readonly operationType: graphql.OperationTypeNode;
+
+  /**
+   * This is unique for a node/operation-type
+   *
+   * It identifies the operation for a given node and operation-type
+   */
+  public abstract readonly key: string;
+
+  /**
+   * This is unique for a node
+   *
+   * It identifies the operation for a given node
+   */
+  public abstract get method(): string;
+
+  /**
+   * This is unique
+   *
+   * It identifies the operation
+   */
   public abstract readonly name: string;
+
   public abstract readonly description: string;
   public abstract readonly arguments?: ReadonlyArray<utils.Input>;
 
@@ -73,6 +94,10 @@ export abstract class AbstractOperation<
 
   @Memoize()
   public validate(): void {
+    if (!this.isEnabled()) {
+      return;
+    }
+
     this.operationType;
     this.name;
     this.description;
@@ -85,8 +110,6 @@ export abstract class AbstractOperation<
         { path: this.node.configPath },
       );
     }
-
-    this.isEnabled();
 
     if (this.isPublic()) {
       this.getGraphQLFieldConfig();
@@ -179,9 +202,7 @@ export abstract class AbstractOperation<
   }
 
   public async execute(
-    context:
-      | utils.Thunkable<TRequestContext>
-      | OperationContext<TRequestContext>,
+    context: TRequestContext | OperationContext<TRequestContext>,
     args: TArgs,
     path: utils.Path = utils.addPath(
       utils.addPath(undefined, this.operationType),
@@ -195,11 +216,9 @@ export abstract class AbstractOperation<
     if (context instanceof OperationContext) {
       operationContext = context;
     } else {
-      const requestContext = utils.resolveThunkable(context);
+      this.gp.assertRequestContext(context, path);
 
-      this.gp.assertRequestContext(requestContext, path);
-
-      operationContext = new OperationContext(this.gp, requestContext);
+      operationContext = new OperationContext(this.gp, context);
     }
 
     const authorization = this.ensureAuthorization(operationContext, path);

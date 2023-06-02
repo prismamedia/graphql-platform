@@ -24,15 +24,14 @@ export class GetOneIfExistsQuery<
   GetOneIfExistsQueryArgs,
   GetOneIfExistsQueryResult
 > {
-  protected override readonly selectionAware = true;
-  public override readonly name = `${inflection.camelize(
-    this.node.name,
-    true,
-  )}IfExists`;
-  public override readonly description = `Retrieves one "${this.node}" if it exists, returns null otherwise`;
+  protected readonly selectionAware = true;
+
+  public readonly key = 'get-one-if-exists';
+  public readonly name = `${inflection.camelize(this.node.name, true)}IfExists`;
+  public readonly description = `Retrieves one "${this.node}" if it exists, returns null otherwise`;
 
   @Memoize()
-  public override get arguments() {
+  public get arguments() {
     return [
       new utils.Input({
         name: 'where',
@@ -42,11 +41,11 @@ export class GetOneIfExistsQuery<
   }
 
   @Memoize()
-  public override getGraphQLOutputType() {
+  public getGraphQLOutputType() {
     return this.node.outputType.getGraphQLObjectType();
   }
 
-  protected override async executeWithValidArgumentsAndContext(
+  protected async executeWithValidArgumentsAndContext(
     context: OperationContext,
     authorization: NodeFilter | undefined,
     args: NodeSelectionAwareArgs<GetOneIfExistsQueryArgs>,

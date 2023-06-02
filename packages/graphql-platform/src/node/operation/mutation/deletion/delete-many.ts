@@ -39,12 +39,14 @@ export class DeleteManyMutation<
   readonly #config?: DeletionConfig<any, any, any> =
     this.node.getMutationConfig(utils.MutationType.DELETION).config;
 
-  protected override readonly selectionAware = true;
-  public override readonly name = `delete${this.node.plural}`;
-  public override readonly description = `Deletes many "${this.node.plural}"`;
+  protected readonly selectionAware = true;
+
+  public readonly key = 'delete-many';
+  public readonly name = `delete${this.node.plural}`;
+  public readonly description = `Deletes many "${this.node.plural}"`;
 
   @Memoize()
-  public override get arguments() {
+  public get arguments() {
     return [
       new utils.Input({
         name: 'where',
@@ -64,7 +66,7 @@ export class DeleteManyMutation<
   }
 
   @Memoize()
-  public override getGraphQLOutputType() {
+  public getGraphQLOutputType() {
     return new graphql.GraphQLNonNull(
       new graphql.GraphQLList(
         new graphql.GraphQLNonNull(this.node.outputType.getGraphQLObjectType()),
@@ -72,7 +74,7 @@ export class DeleteManyMutation<
     );
   }
 
-  protected override async executeWithValidArgumentsAndContext(
+  protected async executeWithValidArgumentsAndContext(
     context: MutationContext,
     authorization: NodeFilter | undefined,
     args: NodeSelectionAwareArgs<DeleteManyMutationArgs>,

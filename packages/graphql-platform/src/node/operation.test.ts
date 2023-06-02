@@ -14,19 +14,19 @@ describe('Operation', () => {
 
   it('are actually registered', () => {
     for (const node of gp.nodesByName.values()) {
-      for (const query of Object.values(node.queriesByKey)) {
-        expect(query).toBeInstanceOf(AbstractQuery);
-        expect(typeof query.isEnabled()).toBe('boolean');
-        expect(typeof query.isPublic()).toBe('boolean');
-      }
-
-      for (const mutation of Object.values(node.mutationsByKey)) {
+      for (const mutation of node.operationsByType.mutation) {
         expect(mutation).toBeInstanceOf(AbstractMutation);
         expect(typeof mutation.isEnabled()).toBe('boolean');
         expect(typeof mutation.isPublic()).toBe('boolean');
       }
 
-      for (const subscription of Object.values(node.subscriptionsByKey)) {
+      for (const query of node.operationsByType.query) {
+        expect(query).toBeInstanceOf(AbstractQuery);
+        expect(query.isEnabled()).toBe(true);
+        expect(typeof query.isPublic()).toBe('boolean');
+      }
+
+      for (const subscription of node.operationsByType.subscription) {
         expect(subscription).toBeInstanceOf(AbstractSubscription);
         expect(typeof subscription.isEnabled()).toBe('boolean');
         expect(typeof subscription.isPublic()).toBe('boolean');

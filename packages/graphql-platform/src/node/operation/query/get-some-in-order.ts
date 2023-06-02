@@ -21,20 +21,22 @@ export class GetSomeInOrderQuery<
   GetSomeInOrderQueryArgs,
   GetSomeInOrderQueryResult
 > {
-  protected override readonly selectionAware = true;
-  public override readonly name = `${inflection.camelize(
+  protected readonly selectionAware = true;
+
+  public readonly key = 'get-some-in-order';
+  public readonly name = `${inflection.camelize(
     this.node.plural,
     true,
   )}InOrder`;
-  public override readonly description = `Given a list of unique-filter's value, retrieves the corresponding "${this.node.plural}" in the same order, throws an error if one does not exist`;
+  public readonly description = `Given a list of unique-filter's value, retrieves the corresponding "${this.node.plural}" in the same order, throws an error if one does not exist`;
 
   @Memoize()
-  public override get arguments() {
+  public get arguments() {
     return this.node.getQueryByKey('get-some-in-order-if-exists').arguments;
   }
 
   @Memoize()
-  public override getGraphQLOutputType() {
+  public getGraphQLOutputType() {
     return new graphql.GraphQLNonNull(
       new graphql.GraphQLList(
         new graphql.GraphQLNonNull(this.node.outputType.getGraphQLObjectType()),
@@ -42,7 +44,7 @@ export class GetSomeInOrderQuery<
     );
   }
 
-  protected override async executeWithValidArgumentsAndContext(
+  protected async executeWithValidArgumentsAndContext(
     context: OperationContext,
     authorization: NodeFilter | undefined,
     args: NodeSelectionAwareArgs<GetSomeInOrderQueryArgs>,

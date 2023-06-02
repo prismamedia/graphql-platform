@@ -50,12 +50,14 @@ export class UpdateManyMutation<
     utils.MutationType.UPDATE,
   ).config;
 
-  protected override readonly selectionAware = true;
-  public override readonly name = `update${this.node.plural}`;
-  public override readonly description = `Updates many "${this.node.plural}"`;
+  protected readonly selectionAware = true;
+
+  public readonly key = 'update-many';
+  public readonly name = `update${this.node.plural}`;
+  public readonly description = `Updates many "${this.node.plural}"`;
 
   @Memoize()
-  public override get arguments() {
+  public get arguments() {
     return [
       new utils.Input({
         name: 'where',
@@ -79,7 +81,7 @@ export class UpdateManyMutation<
   }
 
   @Memoize()
-  public override getGraphQLOutputType() {
+  public getGraphQLOutputType() {
     return new graphql.GraphQLNonNull(
       new graphql.GraphQLList(
         new graphql.GraphQLNonNull(this.node.outputType.getGraphQLObjectType()),
@@ -87,7 +89,7 @@ export class UpdateManyMutation<
     );
   }
 
-  protected override async executeWithValidArgumentsAndContext(
+  protected async executeWithValidArgumentsAndContext(
     context: MutationContext,
     authorization: NodeFilter | undefined,
     { data, ...args }: NodeSelectionAwareArgs<UpdateManyMutationArgs>,

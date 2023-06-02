@@ -1,4 +1,5 @@
-import type { AbstractCreation } from './abstract-creation.js';
+import type { Constructor } from 'type-fest';
+import type { Node } from '../../../node.js';
 import { CreateOneIfNotExistsMutation } from './creation/create-one-if-not-exists.js';
 import { CreateOneMutation } from './creation/create-one.js';
 import { CreateSomeMutation } from './creation/create-some.js';
@@ -7,14 +8,13 @@ export * from './creation/create-one-if-not-exists.js';
 export * from './creation/create-one.js';
 export * from './creation/create-some.js';
 
-export const creationConstructorsByKey = {
-  'create-one': CreateOneMutation,
-  'create-one-if-not-exists': CreateOneIfNotExistsMutation,
-  'create-some': CreateSomeMutation,
-} satisfies Record<string, typeof AbstractCreation<any, any, any>>;
+export type Creation<TRequestContext extends object = any> =
+  | CreateOneMutation<TRequestContext>
+  | CreateOneIfNotExistsMutation<TRequestContext>
+  | CreateSomeMutation<TRequestContext>;
 
-export type CreationsByKey<TRequestContext extends object> = {
-  'create-one': CreateOneMutation<TRequestContext>;
-  'create-one-if-not-exists': CreateOneIfNotExistsMutation<TRequestContext>;
-  'create-some': CreateSomeMutation<TRequestContext>;
-};
+export const creationConstructors = [
+  CreateOneMutation,
+  CreateOneIfNotExistsMutation,
+  CreateSomeMutation,
+] satisfies Constructor<Creation, [Node]>[];

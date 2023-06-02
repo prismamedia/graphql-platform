@@ -18,12 +18,12 @@ const sample = 1 / config.sampling;
 const getFormattedMemory = () => {
   global.gc?.();
 
-  return `${(process.memoryUsage().rss / 1024 / 1024).toFixed(3)} MB`;
+  return `${(process.memoryUsage().heapUsed / 1024 / 1024).toFixed(3)} MB`;
 };
 
 console.debug(`INIT: ${getFormattedMemory()}`);
 
-const gp = createMyGP('connector_mariadb_bench');
+let gp = createMyGP('connector_mariadb_bench');
 console.debug(`POST_CONSTRUCT: ${getFormattedMemory()}`);
 
 try {
@@ -39,7 +39,6 @@ try {
     }
   }
 } finally {
-  // await gp.connector.disconnect();
   await gp.connector.teardown();
   console.debug(`POST_CONNECTOR_TEARDOWN: ${getFormattedMemory()}`);
 }

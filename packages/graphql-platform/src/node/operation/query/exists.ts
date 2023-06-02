@@ -18,15 +18,14 @@ export class ExistsQuery<TRequestContext extends object> extends AbstractQuery<
   ExistsQueryArgs,
   ExistsQueryResult
 > {
-  protected override readonly selectionAware = false;
-  public override readonly name = `${inflection.camelize(
-    this.node.name,
-    true,
-  )}Exists`;
-  public override readonly description = `Either the "${this.node}" exists or not?`;
+  protected readonly selectionAware = false;
+
+  public readonly key = 'exists';
+  public readonly name = `${inflection.camelize(this.node.name, true)}Exists`;
+  public readonly description = `Either the "${this.node}" exists or not?`;
 
   @Memoize()
-  public override get arguments() {
+  public get arguments() {
     return [
       new utils.Input({
         name: 'where',
@@ -36,11 +35,11 @@ export class ExistsQuery<TRequestContext extends object> extends AbstractQuery<
   }
 
   @Memoize()
-  public override getGraphQLOutputType() {
+  public getGraphQLOutputType() {
     return new graphql.GraphQLNonNull(scalars.typesByName.Boolean);
   }
 
-  protected override async executeWithValidArgumentsAndContext(
+  protected async executeWithValidArgumentsAndContext(
     context: OperationContext,
     authorization: NodeFilter | undefined,
     args: NodeSelectionAwareArgs<ExistsQueryArgs>,

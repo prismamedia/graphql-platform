@@ -83,5 +83,5 @@ export abstract class AbstractCreation<
   TArgs extends utils.Nillable<utils.PlainObject>,
   TResult,
 > extends AbstractMutation<TRequestContext, TArgs, TResult> {
-  public override readonly mutationTypes = [utils.MutationType.CREATION];
+  public readonly mutationTypes = [utils.MutationType.CREATION];
 }

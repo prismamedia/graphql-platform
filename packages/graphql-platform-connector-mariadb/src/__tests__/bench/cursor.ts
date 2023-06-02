@@ -15,16 +15,8 @@ export default async function (gp: MyGP, iteration: number) {
     }`,
   });
 
-  if (iteration === 0) {
-    console.debug(`ARTICLE_CURSOR_COUNT: ${await cursor.size()}`);
-  }
-
   let articleCount: number = 0;
   await cursor.forEach(() => {
     articleCount++;
   });
-
-  if (iteration === 0) {
-    console.debug(`ARTICLE_COUNT: ${articleCount}`);
-  }
 }

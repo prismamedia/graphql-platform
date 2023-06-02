@@ -28,17 +28,19 @@ export class UpsertMutation<
   UpsertMutationArgs,
   UpsertMutationResult
 > {
-  public override readonly mutationTypes = [
+  public readonly mutationTypes = [
     utils.MutationType.CREATION,
     utils.MutationType.UPDATE,
-  ] satisfies utils.MutationType[];
+  ];
 
-  protected override readonly selectionAware = true;
-  public override readonly name = `upsert${this.node}`;
-  public override readonly description = `Updates an existing "${this.node}" or creates a new one`;
+  protected readonly selectionAware = true;
+
+  public readonly key = 'upsert';
+  public readonly name = `upsert${this.node}`;
+  public readonly description = `Updates an existing "${this.node}" or creates a new one`;
 
   @Memoize()
-  public override get arguments() {
+  public get arguments() {
     return [
       new utils.Input({
         name: 'where',
@@ -56,13 +58,13 @@ export class UpsertMutation<
   }
 
   @Memoize()
-  public override getGraphQLOutputType() {
+  public getGraphQLOutputType() {
     return new graphql.GraphQLNonNull(
       this.node.outputType.getGraphQLObjectType(),
     );
   }
 
-  protected override async executeWithValidArgumentsAndContext(
+  protected async executeWithValidArgumentsAndContext(
     context: MutationContext,
     authorization: NodeFilter | undefined,
     args: NodeSelectionAwareArgs<UpsertMutationArgs>,

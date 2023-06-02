@@ -27,23 +27,25 @@ export class UpdateOneMutation<
   UpdateOneMutationArgs,
   UpdateOneMutationResult
 > {
-  protected override readonly selectionAware = true;
-  public override readonly name = `update${this.node}`;
-  public override readonly description = `Updates one "${this.node}", throws an error if it does not exists`;
+  protected readonly selectionAware = true;
+
+  public readonly key = 'update-one';
+  public readonly name = `update${this.node}`;
+  public readonly description = `Updates one "${this.node}", throws an error if it does not exists`;
 
   @Memoize()
-  public override get arguments() {
+  public get arguments() {
     return this.node.getMutationByKey('update-one-if-exists').arguments;
   }
 
   @Memoize()
-  public override getGraphQLOutputType() {
+  public getGraphQLOutputType() {
     return new graphql.GraphQLNonNull(
       this.node.outputType.getGraphQLObjectType(),
     );
   }
 
-  protected override async executeWithValidArgumentsAndContext(
+  protected async executeWithValidArgumentsAndContext(
     context: MutationContext,
     authorization: NodeFilter | undefined,
     args: NodeSelectionAwareArgs<UpdateOneMutationArgs>,

@@ -21,23 +21,25 @@ export class GetOneQuery<TRequestContext extends object> extends AbstractQuery<
   GetOneQueryArgs,
   GetOneQueryResult
 > {
-  protected override readonly selectionAware = true;
-  public override readonly name = inflection.camelize(this.node.name, true);
-  public override readonly description = `Retrieves one "${this.node}", throws an error if it does not exist`;
+  protected readonly selectionAware = true;
+
+  public readonly key = 'get-one';
+  public readonly name = inflection.camelize(this.node.name, true);
+  public readonly description = `Retrieves one "${this.node}", throws an error if it does not exist`;
 
   @Memoize()
-  public override get arguments() {
+  public get arguments() {
     return this.node.getQueryByKey('get-one-if-exists').arguments;
   }
 
   @Memoize()
-  public override getGraphQLOutputType() {
+  public getGraphQLOutputType() {
     return new graphql.GraphQLNonNull(
       this.node.outputType.getGraphQLObjectType(),
     );
   }
 
-  protected override async executeWithValidArgumentsAndContext(
+  protected async executeWithValidArgumentsAndContext(
     context: OperationContext,
     authorization: NodeFilter | undefined,
     args: NodeSelectionAwareArgs<GetOneQueryArgs>,

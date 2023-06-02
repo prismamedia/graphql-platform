@@ -1164,17 +1164,6 @@ type mutation {
   createArticles(data: [ArticleCreationInput!]!): [Article!]!
 
   """
-  Deletes many "Articles"
-  """
-  deleteArticles(where: ArticleFilterInput, orderBy: [ArticleOrderingInput!], first: UnsignedInt!): [Article!]!
-
-  """Deletes one "Article", throws an error if it does not exists"""
-  deleteArticle(where: ArticleUniqueFilterInput!): Article!
-
-  """Deletes one "Article" if it exists, returns null otherwise"""
-  deleteArticleIfExists(where: ArticleUniqueFilterInput!): Article
-
-  """
   Updates many "Articles"
   """
   updateArticles(where: ArticleFilterInput, orderBy: [ArticleOrderingInput!], first: UnsignedInt!, data: ArticleUpdateInput): [Article!]!
@@ -1184,6 +1173,17 @@ type mutation {
 
   """Updates one "Article" if it exists, returns null otherwise"""
   updateArticleIfExists(where: ArticleUniqueFilterInput!, data: ArticleUpdateInput): Article
+
+  """
+  Deletes many "Articles"
+  """
+  deleteArticles(where: ArticleFilterInput, orderBy: [ArticleOrderingInput!], first: UnsignedInt!): [Article!]!
+
+  """Deletes one "Article", throws an error if it does not exists"""
+  deleteArticle(where: ArticleUniqueFilterInput!): Article!
+
+  """Deletes one "Article" if it exists, returns null otherwise"""
+  deleteArticleIfExists(where: ArticleUniqueFilterInput!): Article
 
   """Updates an existing "Article" or creates a new one"""
   upsertArticle(where: ArticleUniqueFilterInput!, create: ArticleCreationInput!, update: ArticleUpdateInput): Article!
@@ -1200,17 +1200,6 @@ type mutation {
   createArticleExtensions(data: [ArticleExtensionCreationInput!]!): [ArticleExtension!]!
 
   """
-  Deletes many "ArticleExtensions"
-  """
-  deleteArticleExtensions(where: ArticleExtensionFilterInput, first: UnsignedInt!): [ArticleExtension!]!
-
-  """Deletes one "ArticleExtension", throws an error if it does not exists"""
-  deleteArticleExtension(where: ArticleExtensionUniqueFilterInput!): ArticleExtension!
-
-  """Deletes one "ArticleExtension" if it exists, returns null otherwise"""
-  deleteArticleExtensionIfExists(where: ArticleExtensionUniqueFilterInput!): ArticleExtension
-
-  """
   Updates many "ArticleExtensions"
   """
   updateArticleExtensions(where: ArticleExtensionFilterInput, first: UnsignedInt!, data: ArticleExtensionUpdateInput): [ArticleExtension!]!
@@ -1220,6 +1209,17 @@ type mutation {
 
   """Updates one "ArticleExtension" if it exists, returns null otherwise"""
   updateArticleExtensionIfExists(where: ArticleExtensionUniqueFilterInput!, data: ArticleExtensionUpdateInput): ArticleExtension
+
+  """
+  Deletes many "ArticleExtensions"
+  """
+  deleteArticleExtensions(where: ArticleExtensionFilterInput, first: UnsignedInt!): [ArticleExtension!]!
+
+  """Deletes one "ArticleExtension", throws an error if it does not exists"""
+  deleteArticleExtension(where: ArticleExtensionUniqueFilterInput!): ArticleExtension!
+
+  """Deletes one "ArticleExtension" if it exists, returns null otherwise"""
+  deleteArticleExtensionIfExists(where: ArticleExtensionUniqueFilterInput!): ArticleExtension
 
   """Updates an existing "ArticleExtension" or creates a new one"""
   upsertArticleExtension(where: ArticleExtensionUniqueFilterInput!, create: ArticleExtensionCreationInput!, update: ArticleExtensionUpdateInput): ArticleExtension!
@@ -1236,17 +1236,6 @@ type mutation {
   createCategories(data: [CategoryCreationInput!]!): [Category!]!
 
   """
-  Deletes many "Categories"
-  """
-  deleteCategories(where: CategoryFilterInput, orderBy: [CategoryOrderingInput!], first: UnsignedInt!): [Category!]!
-
-  """Deletes one "Category", throws an error if it does not exists"""
-  deleteCategory(where: CategoryUniqueFilterInput!): Category!
-
-  """Deletes one "Category" if it exists, returns null otherwise"""
-  deleteCategoryIfExists(where: CategoryUniqueFilterInput!): Category
-
-  """
   Updates many "Categories"
   """
   updateCategories(where: CategoryFilterInput, orderBy: [CategoryOrderingInput!], first: UnsignedInt!, data: CategoryUpdateInput): [Category!]!
@@ -1256,6 +1245,17 @@ type mutation {
 
   """Updates one "Category" if it exists, returns null otherwise"""
   updateCategoryIfExists(where: CategoryUniqueFilterInput!, data: CategoryUpdateInput): Category
+
+  """
+  Deletes many "Categories"
+  """
+  deleteCategories(where: CategoryFilterInput, orderBy: [CategoryOrderingInput!], first: UnsignedInt!): [Category!]!
+
+  """Deletes one "Category", throws an error if it does not exists"""
+  deleteCategory(where: CategoryUniqueFilterInput!): Category!
+
+  """Deletes one "Category" if it exists, returns null otherwise"""
+  deleteCategoryIfExists(where: CategoryUniqueFilterInput!): Category
 
   """Updates an existing "Category" or creates a new one"""
   upsertCategory(where: CategoryUniqueFilterInput!, create: CategoryCreationInput!, update: CategoryUpdateInput): Category!
@@ -1270,17 +1270,6 @@ type mutation {
   createTags(data: [TagCreationInput!]!): [Tag!]!
 
   """
-  Deletes many "Tags"
-  """
-  deleteTags(where: TagFilterInput, orderBy: [TagOrderingInput!], first: UnsignedInt!): [Tag!]!
-
-  """Deletes one "Tag", throws an error if it does not exists"""
-  deleteTag(where: TagUniqueFilterInput!): Tag!
-
-  """Deletes one "Tag" if it exists, returns null otherwise"""
-  deleteTagIfExists(where: TagUniqueFilterInput!): Tag
-
-  """
   Updates many "Tags"
   """
   updateTags(where: TagFilterInput, orderBy: [TagOrderingInput!], first: UnsignedInt!, data: TagUpdateInput): [Tag!]!
@@ -1290,6 +1279,17 @@ type mutation {
 
   """Updates one "Tag" if it exists, returns null otherwise"""
   updateTagIfExists(where: TagUniqueFilterInput!, data: TagUpdateInput): Tag
+
+  """
+  Deletes many "Tags"
+  """
+  deleteTags(where: TagFilterInput, orderBy: [TagOrderingInput!], first: UnsignedInt!): [Tag!]!
+
+  """Deletes one "Tag", throws an error if it does not exists"""
+  deleteTag(where: TagUniqueFilterInput!): Tag!
+
+  """Deletes one "Tag" if it exists, returns null otherwise"""
+  deleteTagIfExists(where: TagUniqueFilterInput!): Tag
 
   """Updates an existing "Tag" or creates a new one"""
   upsertTag(where: TagUniqueFilterInput!, create: TagCreationInput!, update: TagUpdateInput): Tag!
@@ -1306,17 +1306,6 @@ type mutation {
   createArticleTags(data: [ArticleTagCreationInput!]!): [ArticleTag!]!
 
   """
-  Deletes many "ArticleTags"
-  """
-  deleteArticleTags(where: ArticleTagFilterInput, orderBy: [ArticleTagOrderingInput!], first: UnsignedInt!): [ArticleTag!]!
-
-  """Deletes one "ArticleTag", throws an error if it does not exists"""
-  deleteArticleTag(where: ArticleTagUniqueFilterInput!): ArticleTag!
-
-  """Deletes one "ArticleTag" if it exists, returns null otherwise"""
-  deleteArticleTagIfExists(where: ArticleTagUniqueFilterInput!): ArticleTag
-
-  """
   Updates many "ArticleTags"
   """
   updateArticleTags(where: ArticleTagFilterInput, orderBy: [ArticleTagOrderingInput!], first: UnsignedInt!, data: ArticleTagUpdateInput): [ArticleTag!]!
@@ -1326,6 +1315,17 @@ type mutation {
 
   """Updates one "ArticleTag" if it exists, returns null otherwise"""
   updateArticleTagIfExists(where: ArticleTagUniqueFilterInput!, data: ArticleTagUpdateInput): ArticleTag
+
+  """
+  Deletes many "ArticleTags"
+  """
+  deleteArticleTags(where: ArticleTagFilterInput, orderBy: [ArticleTagOrderingInput!], first: UnsignedInt!): [ArticleTag!]!
+
+  """Deletes one "ArticleTag", throws an error if it does not exists"""
+  deleteArticleTag(where: ArticleTagUniqueFilterInput!): ArticleTag!
+
+  """Deletes one "ArticleTag" if it exists, returns null otherwise"""
+  deleteArticleTagIfExists(where: ArticleTagUniqueFilterInput!): ArticleTag
 
   """Updates an existing "ArticleTag" or creates a new one"""
   upsertArticleTag(where: ArticleTagUniqueFilterInput!, create: ArticleTagCreationInput!, update: ArticleTagUpdateInput): ArticleTag!
@@ -1346,21 +1346,6 @@ type mutation {
   createArticleTagModerations(data: [ArticleTagModerationCreationInput!]!): [ArticleTagModeration!]!
 
   """
-  Deletes many "ArticleTagModerations"
-  """
-  deleteArticleTagModerations(where: ArticleTagModerationFilterInput, first: UnsignedInt!): [ArticleTagModeration!]!
-
-  """
-  Deletes one "ArticleTagModeration", throws an error if it does not exists
-  """
-  deleteArticleTagModeration(where: ArticleTagModerationUniqueFilterInput!): ArticleTagModeration!
-
-  """
-  Deletes one "ArticleTagModeration" if it exists, returns null otherwise
-  """
-  deleteArticleTagModerationIfExists(where: ArticleTagModerationUniqueFilterInput!): ArticleTagModeration
-
-  """
   Updates many "ArticleTagModerations"
   """
   updateArticleTagModerations(where: ArticleTagModerationFilterInput, first: UnsignedInt!, data: ArticleTagModerationUpdateInput): [ArticleTagModeration!]!
@@ -1374,6 +1359,21 @@ type mutation {
   Updates one "ArticleTagModeration" if it exists, returns null otherwise
   """
   updateArticleTagModerationIfExists(where: ArticleTagModerationUniqueFilterInput!, data: ArticleTagModerationUpdateInput): ArticleTagModeration
+
+  """
+  Deletes many "ArticleTagModerations"
+  """
+  deleteArticleTagModerations(where: ArticleTagModerationFilterInput, first: UnsignedInt!): [ArticleTagModeration!]!
+
+  """
+  Deletes one "ArticleTagModeration", throws an error if it does not exists
+  """
+  deleteArticleTagModeration(where: ArticleTagModerationUniqueFilterInput!): ArticleTagModeration!
+
+  """
+  Deletes one "ArticleTagModeration" if it exists, returns null otherwise
+  """
+  deleteArticleTagModerationIfExists(where: ArticleTagModerationUniqueFilterInput!): ArticleTagModeration
 
   """Updates an existing "ArticleTagModeration" or creates a new one"""
   upsertArticleTagModeration(where: ArticleTagModerationUniqueFilterInput!, create: ArticleTagModerationCreationInput!, update: ArticleTagModerationUpdateInput): ArticleTagModeration!
@@ -1390,17 +1390,6 @@ type mutation {
   createUserProfiles(data: [UserProfileCreationInput!]!): [UserProfile!]!
 
   """
-  Deletes many "UserProfiles"
-  """
-  deleteUserProfiles(where: UserProfileFilterInput, orderBy: [UserProfileOrderingInput!], first: UnsignedInt!): [UserProfile!]!
-
-  """Deletes one "UserProfile", throws an error if it does not exists"""
-  deleteUserProfile(where: UserProfileUniqueFilterInput!): UserProfile!
-
-  """Deletes one "UserProfile" if it exists, returns null otherwise"""
-  deleteUserProfileIfExists(where: UserProfileUniqueFilterInput!): UserProfile
-
-  """
   Updates many "UserProfiles"
   """
   updateUserProfiles(where: UserProfileFilterInput, orderBy: [UserProfileOrderingInput!], first: UnsignedInt!, data: UserProfileUpdateInput): [UserProfile!]!
@@ -1410,6 +1399,17 @@ type mutation {
 
   """Updates one "UserProfile" if it exists, returns null otherwise"""
   updateUserProfileIfExists(where: UserProfileUniqueFilterInput!, data: UserProfileUpdateInput): UserProfile
+
+  """
+  Deletes many "UserProfiles"
+  """
+  deleteUserProfiles(where: UserProfileFilterInput, orderBy: [UserProfileOrderingInput!], first: UnsignedInt!): [UserProfile!]!
+
+  """Deletes one "UserProfile", throws an error if it does not exists"""
+  deleteUserProfile(where: UserProfileUniqueFilterInput!): UserProfile!
+
+  """Deletes one "UserProfile" if it exists, returns null otherwise"""
+  deleteUserProfileIfExists(where: UserProfileUniqueFilterInput!): UserProfile
 
   """Updates an existing "UserProfile" or creates a new one"""
   upsertUserProfile(where: UserProfileUniqueFilterInput!, create: UserProfileCreationInput!, update: UserProfileUpdateInput): UserProfile!

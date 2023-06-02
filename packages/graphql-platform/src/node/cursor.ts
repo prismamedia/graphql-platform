@@ -11,7 +11,7 @@ import { inspect } from 'node:util';
 import PQueue, { Options as PQueueOptions } from 'p-queue';
 import PRetry, { Options as PRetryOptions } from 'p-retry';
 import type { Except, Promisable } from 'type-fest';
-import type { Node } from '../node.js';
+import type { ContextBoundNodeAPI, Node, OperationContext } from '../node.js';
 import { Leaf, type UniqueConstraint } from './definition.js';
 import {
   OrderingDirection,
@@ -31,10 +31,10 @@ export const defaultProgressBarFormat =
   `[{bar}] {value}/{total} | {percentage}% | ETA: {eta_formatted} | Elapsed: {duration_formatted}` satisfies ProgressBarOptions['format'];
 
 export {
-  ProgressBar,
   MultiProgressBar,
-  type ProgressBarOptions,
+  ProgressBar,
   ProgressBarPresets,
+  type ProgressBarOptions,
 };
 
 const pickAfterFilterInputValue = (
@@ -108,8 +108,7 @@ export class NodeCursor<
   TRequestContext extends object = any,
 > implements AsyncIterable<TValue>
 {
-  readonly #context: utils.Thunkable<TRequestContext>;
-
+  protected readonly api: ContextBoundNodeAPI;
   protected readonly where: NodeFilterInputValue;
   protected readonly direction: OrderingDirection;
   protected readonly uniqueConstraint: UniqueConstraint;
@@ -120,13 +119,14 @@ export class NodeCursor<
 
   public constructor(
     public readonly node: Node<TRequestContext>,
-    context: utils.Thunkable<TRequestContext>,
+    context:
+      | utils.Thunkable<TRequestContext>
+      | OperationContext<TRequestContext>,
     options?: NodeCursorOptions<TValue>,
   ) {
     assert(node.isScrollable(), `The "${node}" node is not scrollable`);
 
-    assert(context, `Expects a valid context`);
-    this.#context = context;
+    this.api = node.createContextBoundAPI(context);
 
     this.where = node.filterInputType.parseValue(options?.where);
 
@@ -174,15 +174,9 @@ export class NodeCursor<
     this.chunkSize = Math.max(1, options?.chunkSize || 100);
   }
 
-  protected get context(): TRequestContext {
-    return utils.resolveThunkable(this.#context);
-  }
-
   @Memoize((force: boolean = false) => force && doNotCache)
   public async size(force: boolean = false): Promise<number> {
-    return this.node
-      .getQueryByKey('count')
-      .execute(this.context, { where: this.where });
+    return this.api.count({ where: this.where });
   }
 
   public async *[Symbol.asyncIterator](): AsyncIterator<TValue> {
@@ -190,14 +184,12 @@ export class NodeCursor<
     let values: NodeSelectedValue[];
 
     do {
-      values = await this.node
-        .getQueryByKey('find-many')
-        .execute(this.context, {
-          where: { AND: [after, this.where] },
-          orderBy: this.orderByInputValue,
-          first: this.chunkSize,
-          selection: this.internalSelection,
-        });
+      values = await this.api.findMany({
+        where: { AND: [after, this.where] },
+        orderBy: this.orderByInputValue,
+        first: this.chunkSize,
+        selection: this.internalSelection,
+      });
 
       if (values.length) {
         for (const value of values) {

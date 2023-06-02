@@ -75,5 +75,5 @@ export abstract class AbstractDeletion<
   TArgs extends utils.Nillable<utils.PlainObject>,
   TResult,
 > extends AbstractMutation<TRequestContext, TArgs, TResult> {
-  public override readonly mutationTypes = [utils.MutationType.DELETION];
+  public readonly mutationTypes = [utils.MutationType.DELETION];
 }

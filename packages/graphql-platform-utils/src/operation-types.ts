@@ -1,11 +1,30 @@
 import * as graphql from 'graphql';
+import { UnexpectedValueError } from './error.js';
 import { createGraphQLEnumType } from './graphql.js';
+import type { Path } from './path.js';
 
-export const operationTypes = Object.freeze([
+export const operationTypes: ReadonlyArray<graphql.OperationTypeNode> = [
   graphql.OperationTypeNode.QUERY,
   graphql.OperationTypeNode.MUTATION,
   graphql.OperationTypeNode.SUBSCRIPTION,
-] satisfies graphql.OperationTypeNode[]);
+];
+
+export const operationTypeSet: ReadonlySet<graphql.OperationTypeNode> = new Set(
+  operationTypes,
+);
+
+export function assertOperationType(
+  maybeOperationType: unknown,
+  path?: Path,
+): asserts maybeOperationType is graphql.OperationTypeNode {
+  if (!operationTypeSet.has(maybeOperationType as any)) {
+    throw new UnexpectedValueError(
+      `an operation-type among "${operationTypes.join(', ')}"`,
+      maybeOperationType,
+      { path },
+    );
+  }
+}
 
 export enum MutationType {
   CREATION = 'creation',
@@ -13,11 +32,11 @@ export enum MutationType {
   UPDATE = 'update',
 }
 
-export const mutationTypes = Object.freeze([
+export const mutationTypes: ReadonlyArray<MutationType> = [
   MutationType.CREATION,
   MutationType.DELETION,
   MutationType.UPDATE,
-] satisfies MutationType[]);
+];
 
 export const MutationTypeType = createGraphQLEnumType(
   'MutationType',

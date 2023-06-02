@@ -100,5 +100,5 @@ export abstract class AbstractUpdate<
   TArgs extends utils.Nillable<utils.PlainObject>,
   TResult,
 > extends AbstractMutation<TRequestContext, TArgs, TResult> {
-  public override readonly mutationTypes = [utils.MutationType.UPDATE];
+  public readonly mutationTypes = [utils.MutationType.UPDATE];
 }

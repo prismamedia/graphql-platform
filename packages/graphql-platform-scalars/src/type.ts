@@ -40,7 +40,7 @@ export const basicTypesByName = {
   String: graphql.GraphQLString,
 } satisfies Record<string, graphql.GraphQLScalarType>;
 
-export const typesByName = Object.freeze({
+export const typesByName = {
   // Basic
   ...basicTypesByName,
 
@@ -58,15 +58,15 @@ export const typesByName = Object.freeze({
   URL: GraphQLURL,
   ...jsonTypesByName,
   ...uuidTypesByName,
-} satisfies Record<string, graphql.GraphQLScalarType>);
+} satisfies Record<string, graphql.GraphQLScalarType>;
 
 type TypesByName = typeof typesByName;
 
 export type TypeName = keyof TypesByName;
-export const typeNames = Object.freeze(Object.keys(typesByName) as TypeName[]);
+export const typeNames = Object.keys(typesByName) as TypeName[];
 
 export type Type = ValueOf<TypesByName>;
-export const types = Object.freeze(Object.values(typesByName));
+export const types = Object.values(typesByName);
 
 export type GetInternalValueByType<TType extends Type> =
   TType extends graphql.GraphQLScalarType<infer TInternalValue, any>

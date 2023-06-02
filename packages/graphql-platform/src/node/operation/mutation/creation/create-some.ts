@@ -35,12 +35,14 @@ export class CreateSomeMutation<
   readonly #config?: CreationConfig<any, any, any> =
     this.node.getMutationConfig(utils.MutationType.CREATION).config;
 
-  protected override readonly selectionAware = true;
-  public override readonly name = `create${this.node.plural}`;
-  public override readonly description = `Creates some "${this.node}", throws an error if they already exist`;
+  protected readonly selectionAware = true;
+
+  public readonly key = 'create-some';
+  public readonly name = `create${this.node.plural}`;
+  public readonly description = `Creates some "${this.node}", throws an error if they already exist`;
 
   @Memoize()
-  public override get arguments() {
+  public get arguments() {
     return [
       new utils.Input({
         name: 'data',
@@ -54,7 +56,7 @@ export class CreateSomeMutation<
   }
 
   @Memoize()
-  public override getGraphQLOutputType() {
+  public getGraphQLOutputType() {
     return new graphql.GraphQLNonNull(
       new graphql.GraphQLList(
         new graphql.GraphQLNonNull(this.node.outputType.getGraphQLObjectType()),
@@ -62,7 +64,7 @@ export class CreateSomeMutation<
     );
   }
 
-  protected override async executeWithValidArgumentsAndContext(
+  protected async executeWithValidArgumentsAndContext(
     context: MutationContext,
     authorization: NodeFilter | undefined,
     args: NodeSelectionAwareArgs<CreateSomeMutationArgs>,

@@ -27,15 +27,14 @@ export class CountQuery<TRequestContext extends object> extends AbstractQuery<
   CountQueryArgs,
   CountQueryResult
 > {
-  protected override readonly selectionAware = false;
-  public override readonly name = `${inflection.camelize(
-    this.node.name,
-    true,
-  )}Count`;
-  public override readonly description = `Gets the number of "${this.node.plural}"`;
+  protected readonly selectionAware = false;
+
+  public readonly key = 'count';
+  public readonly name = `${inflection.camelize(this.node.name, true)}Count`;
+  public readonly description = `Gets the number of "${this.node.plural}"`;
 
   @Memoize()
-  public override get arguments() {
+  public get arguments() {
     return [
       new utils.Input({
         name: 'where',
@@ -45,11 +44,11 @@ export class CountQuery<TRequestContext extends object> extends AbstractQuery<
   }
 
   @Memoize()
-  public override getGraphQLOutputType() {
+  public getGraphQLOutputType() {
     return new graphql.GraphQLNonNull(scalars.typesByName.UnsignedInt);
   }
 
-  protected override async executeWithValidArgumentsAndContext(
+  protected async executeWithValidArgumentsAndContext(
     context: OperationContext,
     authorization: NodeFilter | undefined,
     args: NodeSelectionAwareArgs<CountQueryArgs>,

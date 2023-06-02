@@ -303,7 +303,7 @@ export const Article = {
           const createdByEdge = node.getEdgeByName('createdBy');
           const updatedByEdge = node.getEdgeByName('updatedBy');
 
-          const currentUser = await api.query.userIfExists({
+          const currentUser = await api.User.getOneIfExists({
             where: { id: request.user.id },
             selection:
               createdByEdge.referencedUniqueConstraint.selection.mergeWith(
@@ -360,7 +360,7 @@ export const Article = {
             : null;
         }
 
-        update['updatedBy'] ??= await api.query.userIfExists({
+        update['updatedBy'] ??= await api.User.getOneIfExists({
           where: { id: request.user.id },
           selection:
             node.getEdgeByName('updatedBy').referencedUniqueConstraint
@@ -567,7 +567,7 @@ export const Category = {
 
         if (creation['order'] == null) {
           // Get the "MAX(order)" of the categories having the same parent
-          const categories = await api.query.categories({
+          const categories = await api.Category.findMany({
             where: { parent: creation['parent'] ?? null },
             orderBy: ['order_DESC'],
             first: 1,

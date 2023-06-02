@@ -20,12 +20,14 @@ export class DeleteOneIfExistsMutation<
   DeleteOneIfExistsMutationArgs,
   DeleteOneIfExistsMutationResult
 > {
-  protected override readonly selectionAware = true;
-  public override readonly name = `delete${this.node}IfExists`;
-  public override readonly description = `Deletes one "${this.node}" if it exists, returns null otherwise`;
+  protected readonly selectionAware = true;
+
+  public readonly key = 'delete-one-if-exists';
+  public readonly name = `delete${this.node}IfExists`;
+  public readonly description = `Deletes one "${this.node}" if it exists, returns null otherwise`;
 
   @Memoize()
-  public override get arguments() {
+  public get arguments() {
     return [
       new utils.Input({
         name: 'where',
@@ -35,11 +37,11 @@ export class DeleteOneIfExistsMutation<
   }
 
   @Memoize()
-  public override getGraphQLOutputType() {
+  public getGraphQLOutputType() {
     return this.node.outputType.getGraphQLObjectType();
   }
 
-  protected override async executeWithValidArgumentsAndContext(
+  protected async executeWithValidArgumentsAndContext(
     context: MutationContext,
     authorization: NodeFilter | undefined,
     args: NodeSelectionAwareArgs<DeleteOneIfExistsMutationArgs>,

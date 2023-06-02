@@ -2,6 +2,7 @@ import * as utils from '@prismamedia/graphql-platform-utils';
 import { Memoize } from '@prismamedia/memoize';
 import * as graphql from 'graphql';
 import assert from 'node:assert/strict';
+import type { PascalCase } from 'type-fest';
 import { AbstractOperation } from '../abstract-operation.js';
 
 export abstract class AbstractSubscription<
@@ -9,8 +10,19 @@ export abstract class AbstractSubscription<
   TArgs extends utils.Nillable<utils.PlainObject>,
   TResult extends AsyncIterator<any>,
 > extends AbstractOperation<TRequestContext, TArgs, TResult> {
-  public override readonly operationType =
-    graphql.OperationTypeNode.SUBSCRIPTION;
+  public readonly operationType = graphql.OperationTypeNode.SUBSCRIPTION;
+
+  /**
+   * This is unique for a node
+   *
+   * It identifies the operation for a given node
+   */
+  @Memoize()
+  public get method(): `subscribeTo${PascalCase<this['key']>}` {
+    return `subscribeTo${this.key.replaceAll(/((?:^|-).)/g, (_match, letter) =>
+      letter.toUpperCase(),
+    )}` as any;
+  }
 
   @Memoize()
   public override isEnabled(): boolean {

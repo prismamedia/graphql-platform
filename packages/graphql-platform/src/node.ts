@@ -1,5 +1,6 @@
 import * as utils from '@prismamedia/graphql-platform-utils';
 import { Memoize } from '@prismamedia/memoize';
+import { OperationTypeNode } from 'graphql';
 import inflection from 'inflection';
 import type { JsonObject, Promisable } from 'type-fest';
 import type {
@@ -7,7 +8,7 @@ import type {
   ConnectorConfigOverrideKind,
   ConnectorInterface,
 } from './connector-interface.js';
-import type { GraphQLPlatform, OnEdgeHeadDeletion } from './index.js';
+import type { GraphQLPlatform } from './index.js';
 import type { NodeChange } from './node/change.js';
 import { NodeCursor, type NodeCursorOptions } from './node/cursor.js';
 import {
@@ -20,6 +21,7 @@ import {
   type Component,
   type ComponentConfig,
   type ComponentValue,
+  type OnEdgeHeadDeletion,
   type ReverseEdge,
   type ReverseEdgeConfig,
   type UniqueConstraintConfig,
@@ -27,16 +29,17 @@ import {
 } from './node/definition.js';
 import { assertNodeName, type NodeName } from './node/name.js';
 import {
-  OperationContext,
-  mutationConstructorsByKey,
-  queriesByKey,
-  subscriptionConstructorsByKey,
+  createContextBoundNodeAPI,
+  createNodeAPI,
+  operationConstructorsByType,
+  type ContextBoundNodeAPI,
   type MutationConfig,
-  type MutationInterface,
-  type MutationsByKey,
-  type OperationInterface,
-  type QueriesByKey,
-  type SubscriptionsByKey,
+  type NodeAPI,
+  type Operation,
+  type OperationByType,
+  type OperationContext,
+  type OperationType,
+  type OperationsByType,
 } from './node/operation.js';
 import {
   NodeSelection,
@@ -65,6 +68,16 @@ export * from './node/operation.js';
 export * from './node/result-set.js';
 export * from './node/statement.js';
 export * from './node/type.js';
+
+type OperationsByKeyByType<TRequestContext extends object = any> = {
+  [TType in OperationType]: {
+    [TOperation in OperationByType<TRequestContext>[TType] as TOperation['key']]: TOperation;
+  };
+};
+
+type OperationsByMethod<TRequestContext extends object = any> = {
+  [TOperation in Operation<TRequestContext> as TOperation['method']]: TOperation;
+};
 
 /**
  * Includes all the components' value
@@ -266,6 +279,14 @@ export class Node<
   readonly #changeFilter?: (
     change: NodeChange<TRequestContext, TConnector, TContainer>,
   ) => boolean;
+
+  /**
+   * Make it easy to call the operations:
+   *
+   * @example
+   * const articles = await api.query.findMany(myRequestContext, { where: { status: ArticleStatus.Published }, first: 5, selection: `{ id title }` });
+   */
+  public readonly api: NodeAPI<TRequestContext>;
 
   public constructor(
     public readonly gp: GraphQLPlatform<
@@ -547,6 +568,11 @@ export class Node<
         authorizationConfig,
         authorizationConfigPath,
       );
+    }
+
+    // API
+    {
+      this.api = createNodeAPI(this);
     }
   }
 
@@ -1251,108 +1277,112 @@ export class Node<
   }
 
   @Memoize()
-  public get mutationsByKey(): Readonly<MutationsByKey<TRequestContext>> {
-    return Object.entries(mutationConstructorsByKey).reduce(
-      (mutationsByKey, [name, constructor]) => {
-        const mutation = new constructor(this);
-        if (mutation.isEnabled()) {
-          mutationsByKey[name] = mutation;
-        }
-
-        return mutationsByKey;
-      },
-      Object.create(null),
-    );
-  }
-
-  public getMutationByKey<TKey extends keyof MutationsByKey>(
-    key: TKey,
-    path?: utils.Path,
-  ): MutationsByKey<TRequestContext>[TKey] {
-    if (!this.mutationsByKey[key]) {
-      throw new utils.UnexpectedValueError(
-        `a mutation's key among "${Object.keys(this.mutationsByKey).join(
-          ', ',
-        )}"`,
-        key,
-        { path },
-      );
-    }
-
-    return this.mutationsByKey[key];
+  public get operationsByType(): Readonly<OperationsByType<TRequestContext>> {
+    return Object.fromEntries(
+      Object.entries(operationConstructorsByType).map(
+        ([type, operationConstructors]) => [
+          type,
+          operationConstructors.map((constructor) => new constructor(this)),
+        ],
+      ),
+    ) as any;
   }
 
   @Memoize()
-  public get queriesByKey(): Readonly<QueriesByKey<TRequestContext>> {
-    return Object.entries(queriesByKey).reduce(
-      (queriesByKey, [name, constructor]) => {
-        const query = new constructor(this);
-        if (query.isEnabled()) {
-          queriesByKey[name] = query;
-        }
-
-        return queriesByKey;
-      },
-      Object.create(null),
-    );
-  }
-
-  public getQueryByKey<TKey extends keyof QueriesByKey>(
-    key: TKey,
-    path?: utils.Path,
-  ): QueriesByKey<TRequestContext>[TKey] {
-    if (!this.queriesByKey[key]) {
-      throw new utils.UnexpectedValueError(
-        `a query's key among "${Object.keys(this.queriesByKey).join(', ')}"`,
-        key,
-        { path },
-      );
-    }
-
-    return this.queriesByKey[key];
-  }
-
-  @Memoize()
-  public get subscriptionsByKey(): Readonly<
-    SubscriptionsByKey<TRequestContext>
+  protected get operationsByKeyByType(): Readonly<
+    OperationsByKeyByType<TRequestContext>
   > {
-    return Object.entries(subscriptionConstructorsByKey).reduce(
-      (subscriptionsByKey, [name, constructor]) => {
-        const subscription = new constructor(this);
-        if (subscription.isEnabled()) {
-          subscriptionsByKey[name] = subscription;
-        }
-
-        return subscriptionsByKey;
-      },
-      Object.create(null),
-    );
+    return Object.fromEntries(
+      Object.entries(this.operationsByType).map(([type, operations]) => [
+        type,
+        Object.fromEntries(
+          operations.map((operation) => [operation.key, operation]),
+        ),
+      ]),
+    ) as any;
   }
 
-  public getSubscriptionByKey<TKey extends keyof SubscriptionsByKey>(
+  public getOperationByTypeAndKey<
+    TType extends keyof OperationsByKeyByType,
+    TKey extends keyof OperationsByKeyByType[TType],
+  >(
+    type: TType,
     key: TKey,
     path?: utils.Path,
-  ): SubscriptionsByKey<TRequestContext>[TKey] {
-    if (!this.subscriptionsByKey[key]) {
+  ): OperationsByKeyByType<TRequestContext>[TType][TKey] {
+    const operationsByKey = this.operationsByKeyByType[type];
+    if (!operationsByKey) {
       throw new utils.UnexpectedValueError(
-        `a subscription's key among "${Object.keys(
-          this.subscriptionsByKey,
-        ).join(', ')}"`,
+        `a type among "${Object.keys(this.operationsByKeyByType).join(', ')}"`,
+        type,
+        { path },
+      );
+    }
+
+    const operation = operationsByKey[key];
+    if (!operation) {
+      throw new utils.UnexpectedValueError(
+        `a key among "${Object.keys(operationsByKey).join(', ')}"`,
         key,
         { path },
       );
     }
 
-    return this.subscriptionsByKey[key];
+    return operation;
+  }
+
+  public getMutationByKey<TKey extends keyof OperationsByKeyByType['mutation']>(
+    key: TKey,
+    path?: utils.Path,
+  ): OperationsByKeyByType<TRequestContext>['mutation'][TKey] {
+    return this.getOperationByTypeAndKey(OperationTypeNode.MUTATION, key, path);
+  }
+
+  public getQueryByKey<TKey extends keyof OperationsByKeyByType['query']>(
+    key: TKey,
+    path?: utils.Path,
+  ): OperationsByKeyByType<TRequestContext>['query'][TKey] {
+    return this.getOperationByTypeAndKey(OperationTypeNode.QUERY, key, path);
+  }
+
+  public getSubscriptionByKey<
+    TKey extends keyof OperationsByKeyByType['subscription'],
+  >(
+    key: TKey,
+    path?: utils.Path,
+  ): OperationsByKeyByType<TRequestContext>['subscription'][TKey] {
+    return this.getOperationByTypeAndKey(
+      OperationTypeNode.SUBSCRIPTION,
+      key,
+      path,
+    );
   }
 
   @Memoize()
-  public get operations(): ReadonlyArray<OperationInterface<TRequestContext>> {
-    return [
-      ...Object.values<MutationInterface>(this.mutationsByKey),
-      ...Object.values<OperationInterface>(this.queriesByKey),
-      ...Object.values<OperationInterface>(this.subscriptionsByKey),
-    ];
+  protected get operationsByMethod(): Readonly<
+    OperationsByMethod<TRequestContext>
+  > {
+    return Object.fromEntries(
+      Object.values(this.operationsByType).flatMap((operations) =>
+        operations.map((operation) => [operation.method, operation]),
+      ),
+    ) as any;
+  }
+
+  public getOperationByMethod<TMethod extends keyof OperationsByMethod>(
+    method: TMethod,
+    path?: utils.Path,
+  ): OperationsByMethod<TRequestContext>[TMethod] {
+    const operation = this.operationsByMethod[method];
+    if (!operation) {
+      throw new utils.UnexpectedValueError(
+        `a method among "${Object.keys(this.operationsByMethod).join(', ')}"`,
+        method,
+        { path },
+      );
+    }
+
+    return operation;
   }
 
   @Memoize()
@@ -1469,12 +1499,15 @@ export class Node<
 
   @Memoize()
   public validateOperations(): void {
-    utils.aggregateGraphError<OperationInterface, void>(
-      this.operations,
+    utils.aggregateGraphError<Operation, void>(
+      Object.values(this.operationsByType).flat(),
       (_, operation) => operation.validate(),
       undefined,
       { path: this.configPath },
     );
+
+    this.operationsByKeyByType;
+    this.operationsByMethod;
   }
 
   public getAuthorization(
@@ -1501,7 +1534,9 @@ export class Node<
   }
 
   public scroll<TValue extends NodeSelectedValue>(
-    context: TRequestContext,
+    context:
+      | utils.Thunkable<TRequestContext>
+      | OperationContext<TRequestContext>,
     options?: NodeCursorOptions<TValue>,
   ): NodeCursor<TValue, TRequestContext> {
     return new NodeCursor(this, context, options);
@@ -1531,5 +1566,19 @@ export class Node<
     change: NodeChange<TRequestContext, TConnector, TContainer>,
   ): boolean {
     return this.#changeFilter ? this.#changeFilter(change) : true;
+  }
+
+  /**
+   * Returns a "context"-bound API, so the developer only has to provide the operations' args:
+   *
+   * @example
+   * const articles = await api.query.findMany({ where: { status: ArticleStatus.Published }, first: 5, selection: `{ id title }` });
+   */
+  public createContextBoundAPI(
+    context:
+      | utils.Thunkable<TRequestContext>
+      | OperationContext<TRequestContext>,
+  ): ContextBoundNodeAPI {
+    return createContextBoundNodeAPI(this, context);
   }
 }

@@ -1,6 +1,7 @@
 import * as utils from '@prismamedia/graphql-platform-utils';
 import { Memoize } from '@prismamedia/memoize';
 import * as graphql from 'graphql';
+import type { CamelCase } from 'type-fest';
 import type { ConnectorInterface } from '../../connector-interface.js';
 import type { GraphQLPlatform } from '../../index.js';
 import type { Node } from '../../node.js';
@@ -35,7 +36,13 @@ export interface AbstractMutationHookArgs<
   context: MutationContext<TRequestContext, TConnector, TContainer>;
 
   /**
-   * The context-bound API
+   * The "context"-bound API, so you only have to provide the operations' args:
+   *
+   * @example <caption>GraphAPI</caption>
+   * const articles = await api.query.articles({ where: { status: ArticleStatus.Published }, first: 5, selection: `{ id title }` });
+   *
+   * @example <caption>NodeAPI</caption>
+   * const articles = await api.Article.query.findMany({ where: { status: ArticleStatus.Published }, first: 5, selection: `{ id title }` });
    */
   api: ContextBoundAPI;
 }
@@ -64,8 +71,15 @@ export abstract class AbstractMutation<
   extends AbstractOperation<TRequestContext, TArgs, TResult>
   implements MutationInterface<TRequestContext>
 {
-  public override readonly operationType = graphql.OperationTypeNode.MUTATION;
+  public readonly operationType = graphql.OperationTypeNode.MUTATION;
   public abstract readonly mutationTypes: ReadonlyArray<utils.MutationType>;
+
+  @Memoize()
+  public get method(): CamelCase<this['key']> {
+    return this.key.replaceAll(/((?:-).)/g, ([_match, letter]) =>
+      letter.toUpperCase(),
+    ) as any;
+  }
 
   @Memoize()
   public override isEnabled(): boolean {
@@ -109,9 +123,7 @@ export abstract class AbstractMutation<
   ): Promise<TResult>;
 
   public override async execute(
-    context:
-      | utils.Thunkable<TRequestContext>
-      | MutationContext<TRequestContext>,
+    context: TRequestContext | MutationContext<TRequestContext>,
     args: TArgs,
     path: utils.Path = utils.addPath(
       utils.addPath(undefined, this.operationType),
@@ -124,11 +136,9 @@ export abstract class AbstractMutation<
 
     this.assertIsEnabled(path);
 
-    const requestContext = utils.resolveThunkable(context);
+    this.gp.assertRequestContext(context, path);
 
-    this.gp.assertRequestContext(requestContext, path);
-
-    const mutationContext = new MutationContext(this.gp, requestContext);
+    const mutationContext = new MutationContext(this.gp, context);
 
     const authorization = this.ensureAuthorization(mutationContext, path);
 

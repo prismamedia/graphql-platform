@@ -16,24 +16,21 @@ export * from './query/get-one.js';
 export * from './query/get-some-in-order-if-exists.js';
 export * from './query/get-some-in-order.js';
 
-export type QueriesByKey<TRequestContext extends object = any> = {
-  count: CountQuery<TRequestContext>;
-  exists: ExistsQuery<TRequestContext>;
-  'find-many': FindManyQuery<TRequestContext>;
-  'get-one': GetOneQuery<TRequestContext>;
-  'get-one-if-exists': GetOneIfExistsQuery<TRequestContext>;
-  'get-some-in-order': GetSomeInOrderQuery<TRequestContext>;
-  'get-some-in-order-if-exists': GetSomeInOrderIfExistsQuery<TRequestContext>;
-};
+export type Query<TRequestContext extends object = any> =
+  | CountQuery<TRequestContext>
+  | ExistsQuery<TRequestContext>
+  | FindManyQuery<TRequestContext>
+  | GetOneQuery<TRequestContext>
+  | GetOneIfExistsQuery<TRequestContext>
+  | GetSomeInOrderQuery<TRequestContext>
+  | GetSomeInOrderIfExistsQuery<TRequestContext>;
 
-export const queriesByKey = {
-  count: CountQuery,
-  exists: ExistsQuery,
-  'find-many': FindManyQuery,
-  'get-one': GetOneQuery,
-  'get-one-if-exists': GetOneIfExistsQuery,
-  'get-some-in-order': GetSomeInOrderQuery,
-  'get-some-in-order-if-exists': GetSomeInOrderIfExistsQuery,
-} satisfies {
-  [TKey in keyof QueriesByKey]: Constructor<QueriesByKey[TKey], [Node]>;
-};
+export const queryConstructors = [
+  CountQuery,
+  ExistsQuery,
+  FindManyQuery,
+  GetOneQuery,
+  GetOneIfExistsQuery,
+  GetSomeInOrderQuery,
+  GetSomeInOrderIfExistsQuery,
+] satisfies Constructor<Query, [Node]>[];

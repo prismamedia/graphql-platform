@@ -1,7 +1,11 @@
 import { beforeAll, describe, expect, it } from '@jest/globals';
 import * as graphql from 'graphql';
 import { customOperations, nodes } from './__tests__/config.js';
-import { GraphQLPlatform } from './index.js';
+import {
+  GraphQLPlatform,
+  type Operation,
+  type OperationType,
+} from './index.js';
 
 describe('GraphQL-Platform', () => {
   describe('Fails', () => {
@@ -61,11 +65,7 @@ describe('GraphQL-Platform', () => {
     });
 
     it.each<
-      [
-        operationType: graphql.OperationTypeNode,
-        enabledCount: number,
-        publicCount: number,
-      ]
+      [operationType: OperationType, enabledCount: number, publicCount: number]
     >([
       [graphql.OperationTypeNode.QUERY, 63, 56],
       [graphql.OperationTypeNode.MUTATION, 83, 70],
@@ -74,15 +74,15 @@ describe('GraphQL-Platform', () => {
       `generates %s: %d enabled / %d public`,
       (operationType, enabledCount, publicCount) => {
         expect(
-          Array.from(gp.operationsByNameByType[operationType].values()).filter(
-            (operation) => operation.isEnabled(),
-          ),
+          Array.from<Operation>(
+            gp.operationsByNameByType[operationType].values(),
+          ).filter((operation) => operation.isEnabled()),
         ).toHaveLength(enabledCount);
 
         expect(
-          Array.from(gp.operationsByNameByType[operationType].values()).filter(
-            (operation) => operation.isPublic(),
-          ),
+          Array.from<Operation>(
+            gp.operationsByNameByType[operationType].values(),
+          ).filter((operation) => operation.isPublic()),
         ).toHaveLength(publicCount);
       },
     );
