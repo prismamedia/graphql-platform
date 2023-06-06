@@ -1,5 +1,4 @@
 import type * as utils from '@prismamedia/graphql-platform-utils';
-import { Memoize } from '@prismamedia/memoize';
 import * as graphql from 'graphql';
 import inflection from 'inflection';
 import type { NodeSelectionAwareArgs } from '../../abstract-operation.js';
@@ -27,12 +26,10 @@ export class GetOneQuery<TRequestContext extends object> extends AbstractQuery<
   public readonly name = inflection.camelize(this.node.name, true);
   public readonly description = `Retrieves one "${this.node}", throws an error if it does not exist`;
 
-  @Memoize()
   public get arguments() {
     return this.node.getQueryByKey('get-one-if-exists').arguments;
   }
 
-  @Memoize()
   public getGraphQLOutputType() {
     return new graphql.GraphQLNonNull(
       this.node.outputType.getGraphQLObjectType(),

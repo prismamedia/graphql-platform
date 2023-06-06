@@ -1,5 +1,4 @@
 import type * as utils from '@prismamedia/graphql-platform-utils';
-import { Memoize } from '@prismamedia/memoize';
 import * as graphql from 'graphql';
 import type {
   NodeSelectionAwareArgs,
@@ -33,12 +32,10 @@ export class UpdateOneMutation<
   public readonly name = `update${this.node}`;
   public readonly description = `Updates one "${this.node}", throws an error if it does not exists`;
 
-  @Memoize()
   public get arguments() {
     return this.node.getMutationByKey('update-one-if-exists').arguments;
   }
 
-  @Memoize()
   public getGraphQLOutputType() {
     return new graphql.GraphQLNonNull(
       this.node.outputType.getGraphQLObjectType(),

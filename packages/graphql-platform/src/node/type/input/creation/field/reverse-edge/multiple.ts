@@ -72,6 +72,8 @@ export class MultipleReverseEdgeCreationInput extends AbstractReverseEdgeCreatio
     context: MutationContext,
     path: utils.Path,
   ): Promise<void> {
+    const headAPI = this.reverseEdge.head.createContextBoundAPI(context);
+
     const originalEdge = this.reverseEdge.originalEdge;
     const originalEdgeName = originalEdge.name;
     const originalEdgeValue =
@@ -87,21 +89,18 @@ export class MultipleReverseEdgeCreationInput extends AbstractReverseEdgeCreatio
             case MultipleReverseEdgeCreationInputAction.CREATE_SOME: {
               const actionData = inputValue[actionName]!;
 
-              await this.reverseEdge.head
-                .getMutationByKey('create-some')
-                .execute(
-                  context,
-                  {
-                    data: actionData.map((data) => ({
-                      ...data,
-                      [originalEdgeName]: {
-                        [EdgeUpdateInputAction.CONNECT]: originalEdgeValue,
-                      },
-                    })),
-                    selection,
-                  },
-                  actionPath,
-                );
+              await headAPI.createSome(
+                {
+                  data: actionData.map((data) => ({
+                    ...data,
+                    [originalEdgeName]: {
+                      [EdgeUpdateInputAction.CONNECT]: originalEdgeValue,
+                    },
+                  })),
+                  selection,
+                },
+                actionPath,
+              );
               break;
             }
 

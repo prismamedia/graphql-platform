@@ -49,7 +49,6 @@ export class CreateOneIfNotExistsMutation<
     ];
   }
 
-  @Memoize()
   public getGraphQLOutputType() {
     return new graphql.GraphQLNonNull(
       this.node.outputType.getGraphQLObjectType(),

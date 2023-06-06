@@ -80,7 +80,6 @@ export class UpdateManyMutation<
     ];
   }
 
-  @Memoize()
   public getGraphQLOutputType() {
     return new graphql.GraphQLNonNull(
       new graphql.GraphQLList(

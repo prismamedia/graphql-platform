@@ -1,5 +1,4 @@
 import * as utils from '@prismamedia/graphql-platform-utils';
-import { Memoize } from '@prismamedia/memoize';
 import * as graphql from 'graphql';
 import type { Edge } from '../../../../../definition/component/edge.js';
 import type { OperationContext } from '../../../../../operation/context.js';
@@ -8,10 +7,11 @@ import type { GraphQLSelectionContext } from '../../../node.js';
 import { AbstractComponentOutputType } from '../abstract-component.js';
 
 export class EdgeHeadOutputType extends AbstractComponentOutputType<undefined> {
-  public override readonly name: utils.Name;
-  public override readonly description?: string;
-  public override readonly deprecationReason?: string;
-  public override readonly arguments?: undefined;
+  public readonly name: utils.Name;
+  public readonly description?: string;
+  public readonly deprecationReason?: string;
+
+  protected readonly arguments?: undefined;
 
   public constructor(public readonly edge: Edge) {
     super(edge);
@@ -21,8 +21,7 @@ export class EdgeHeadOutputType extends AbstractComponentOutputType<undefined> {
     this.deprecationReason = edge.deprecationReason;
   }
 
-  @Memoize()
-  public override get type() {
+  protected get type() {
     return this.edge.isNullable()
       ? this.edge.head.outputType.getGraphQLObjectType()
       : new graphql.GraphQLNonNull(
@@ -30,7 +29,7 @@ export class EdgeHeadOutputType extends AbstractComponentOutputType<undefined> {
         );
   }
 
-  public override selectGraphQLFieldNode(
+  public selectGraphQLFieldNode(
     ast: graphql.FieldNode,
     operationContext: OperationContext | undefined,
     selectionContext: GraphQLSelectionContext | undefined,
@@ -61,7 +60,7 @@ export class EdgeHeadOutputType extends AbstractComponentOutputType<undefined> {
     );
   }
 
-  public override selectShape(
+  public selectShape(
     value: unknown,
     operationContext: OperationContext | undefined,
     path: utils.Path,

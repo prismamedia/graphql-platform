@@ -1,5 +1,4 @@
 import * as utils from '@prismamedia/graphql-platform-utils';
-import { Memoize } from '@prismamedia/memoize';
 import * as graphql from 'graphql';
 import inflection from 'inflection';
 import type { NodeSelectionAwareArgs } from '../../abstract-operation.js';
@@ -30,12 +29,10 @@ export class GetSomeInOrderQuery<
   )}InOrder`;
   public readonly description = `Given a list of unique-filter's value, retrieves the corresponding "${this.node.plural}" in the same order, throws an error if one does not exist`;
 
-  @Memoize()
   public get arguments() {
     return this.node.getQueryByKey('get-some-in-order-if-exists').arguments;
   }
 
-  @Memoize()
   public getGraphQLOutputType() {
     return new graphql.GraphQLNonNull(
       new graphql.GraphQLList(

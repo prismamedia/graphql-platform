@@ -7,10 +7,11 @@ import type { GraphQLSelectionContext } from '../../../node.js';
 import { AbstractReverseEdgeOutputType } from '../abstract-reverse-edge.js';
 
 export class UniqueReverseEdgeHeadOutputType extends AbstractReverseEdgeOutputType<undefined> {
-  public override readonly name: utils.Name;
-  public override readonly description?: string;
-  public override readonly deprecationReason?: string;
-  public override readonly arguments?: undefined;
+  public readonly name: utils.Name;
+  public readonly description?: string;
+  public readonly deprecationReason?: string;
+
+  protected readonly arguments?: undefined;
 
   public constructor(public override readonly reverseEdge: UniqueReverseEdge) {
     super(reverseEdge);
@@ -20,11 +21,11 @@ export class UniqueReverseEdgeHeadOutputType extends AbstractReverseEdgeOutputTy
     this.deprecationReason = reverseEdge.deprecationReason;
   }
 
-  public override get type() {
+  protected get type() {
     return this.reverseEdge.head.outputType.getGraphQLObjectType();
   }
 
-  public override selectGraphQLFieldNode(
+  public selectGraphQLFieldNode(
     ast: graphql.FieldNode,
     operationContext: OperationContext | undefined,
     selectionContext: GraphQLSelectionContext | undefined,
@@ -51,7 +52,7 @@ export class UniqueReverseEdgeHeadOutputType extends AbstractReverseEdgeOutputTy
     );
   }
 
-  public override selectShape(
+  public selectShape(
     value: unknown,
     operationContext: OperationContext | undefined,
     path: utils.Path,

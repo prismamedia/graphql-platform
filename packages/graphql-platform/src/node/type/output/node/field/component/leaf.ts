@@ -10,11 +10,12 @@ import type { GraphQLSelectionContext } from '../../../node.js';
 import { AbstractComponentOutputType } from '../abstract-component.js';
 
 export class LeafOutputType extends AbstractComponentOutputType<undefined> {
-  public override readonly name: utils.Name;
-  public override readonly description?: string;
-  public override readonly deprecationReason?: string;
-  public override readonly arguments?: undefined;
-  public override readonly type: LeafType | graphql.GraphQLNonNull<LeafType>;
+  public readonly name: utils.Name;
+  public readonly description?: string;
+  public readonly deprecationReason?: string;
+
+  protected readonly arguments?: undefined;
+  protected readonly type: LeafType | graphql.GraphQLNonNull<LeafType>;
 
   public constructor(public readonly leaf: Leaf) {
     super(leaf);
@@ -27,7 +28,7 @@ export class LeafOutputType extends AbstractComponentOutputType<undefined> {
       : new graphql.GraphQLNonNull(leaf.type);
   }
 
-  public override selectGraphQLFieldNode(
+  public selectGraphQLFieldNode(
     ast: graphql.FieldNode,
     _operationContext: OperationContext | undefined,
     selectionContext: GraphQLSelectionContext | undefined,
@@ -42,7 +43,7 @@ export class LeafOutputType extends AbstractComponentOutputType<undefined> {
     return new LeafSelection(this.leaf, ast.alias?.value);
   }
 
-  public override selectShape(
+  public selectShape(
     _value: unknown,
     _operationContext: OperationContext | undefined,
     _path: utils.Path,

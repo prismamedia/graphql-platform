@@ -23,12 +23,12 @@ export abstract class AbstractNodeFieldOutputType<
   public abstract readonly name: utils.Name;
   public abstract readonly description?: string;
   public abstract readonly deprecationReason?: string;
-  public abstract readonly arguments?: ReadonlyArray<utils.Input>;
-  public abstract readonly type: graphql.GraphQLOutputType;
+
+  protected abstract readonly arguments?: ReadonlyArray<utils.Input>;
+  protected abstract readonly type: graphql.GraphQLOutputType;
 
   public abstract isPublic(): boolean;
 
-  @Memoize()
   public getGraphQLFieldConfig(): graphql.GraphQLFieldConfig<
     NodeSelectedValue,
     any,

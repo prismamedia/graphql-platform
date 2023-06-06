@@ -40,7 +40,6 @@ export class GetOneIfExistsQuery<
     ];
   }
 
-  @Memoize()
   public getGraphQLOutputType() {
     return this.node.outputType.getGraphQLObjectType();
   }

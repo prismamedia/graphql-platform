@@ -64,7 +64,6 @@ export class FindManyQuery<
     ];
   }
 
-  @Memoize()
   public getGraphQLOutputType() {
     return new graphql.GraphQLNonNull(
       new graphql.GraphQLList(

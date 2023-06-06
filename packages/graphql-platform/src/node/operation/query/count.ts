@@ -43,7 +43,6 @@ export class CountQuery<TRequestContext extends object> extends AbstractQuery<
     ];
   }
 
-  @Memoize()
   public getGraphQLOutputType() {
     return new graphql.GraphQLNonNull(scalars.typesByName.UnsignedInt);
   }

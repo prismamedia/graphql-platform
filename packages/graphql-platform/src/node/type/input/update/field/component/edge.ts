@@ -174,6 +174,8 @@ export class EdgeUpdateInput extends AbstractComponentUpdateInput<EdgeUpdateInpu
     context: MutationContext,
     path: utils.Path,
   ): Promise<EdgeUpdateValue> {
+    const headAPI = this.edge.head.createContextBoundAPI(context);
+
     const selection = this.edge.referencedUniqueConstraint.selection;
 
     const actionName = Object.keys(inputValue)[0] as EdgeUpdateInputAction;
@@ -204,33 +206,28 @@ export class EdgeUpdateInput extends AbstractComponentUpdateInput<EdgeUpdateInpu
       case EdgeUpdateInputAction.CONNECT: {
         const where = inputValue[actionName]!;
 
-        return this.edge.head
-          .getQueryByKey('get-one')
-          .execute(context, { where, selection }, actionPath);
+        return headAPI.getOne({ where, selection }, actionPath);
       }
 
       case EdgeUpdateInputAction.CONNECT_IF_EXISTS: {
         const where = inputValue[actionName]!;
 
-        return this.edge.head
-          .getQueryByKey('get-one-if-exists')
-          .execute(context, { where, selection }, actionPath);
+        return headAPI.getOneIfExists({ where, selection }, actionPath);
       }
 
       case EdgeUpdateInputAction.CREATE: {
         const data = inputValue[actionName]!;
 
-        return this.edge.head
-          .getMutationByKey('create-one')
-          .execute(context, { data, selection }, actionPath);
+        return headAPI.createOne({ data, selection }, actionPath);
       }
 
       case EdgeUpdateInputAction.CREATE_IF_NOT_EXISTS: {
         const { where, data } = inputValue[actionName]!;
 
-        return this.edge.head
-          .getMutationByKey('create-one-if-not-exists')
-          .execute(context, { where, data, selection }, actionPath);
+        return headAPI.createOneIfNotExists(
+          { where, data, selection },
+          actionPath,
+        );
       }
 
       case EdgeUpdateInputAction.UPDATE:
@@ -252,8 +249,7 @@ export class EdgeUpdateInput extends AbstractComponentUpdateInput<EdgeUpdateInpu
         }
 
         if (references.length) {
-          await this.edge.head.getMutationByKey('update-many').execute(
-            context,
+          await headAPI.updateMany(
             {
               where: { OR: references },
               first: references.length,

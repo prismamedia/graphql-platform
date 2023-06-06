@@ -13,7 +13,7 @@ import type { OperationInterface } from './interface.js';
 export type NodeAPI<TRequestContext extends object> = {
   [TOperation in Operation<TRequestContext> as TOperation['method']]: TOperation['execute'];
 } & {
-  scroll: Node['scroll'];
+  scroll: Node<TRequestContext>['scroll'];
 };
 
 export const createNodeAPI = <TRequestContext extends object>(

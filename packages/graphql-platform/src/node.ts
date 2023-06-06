@@ -284,7 +284,7 @@ export class Node<
    * Make it easy to call the operations:
    *
    * @example
-   * const articles = await api.query.findMany(myRequestContext, { where: { status: ArticleStatus.Published }, first: 5, selection: `{ id title }` });
+   * const articles = await api.findMany(myRequestContext, { where: { status: ArticleStatus.Published }, first: 5, selection: `{ id title }` });
    */
   public readonly api: NodeAPI<TRequestContext>;
 
@@ -1569,10 +1569,10 @@ export class Node<
   }
 
   /**
-   * Returns a "context"-bound API, so the developer only has to provide the operations' args:
+   * Returns a "context"-bound API, so you only have to provide the operations' args:
    *
    * @example
-   * const articles = await api.query.findMany({ where: { status: ArticleStatus.Published }, first: 5, selection: `{ id title }` });
+   * const articles = await api.findMany({ where: { status: ArticleStatus.Published }, first: 5, selection: `{ id title }` });
    */
   public createContextBoundAPI(
     context:

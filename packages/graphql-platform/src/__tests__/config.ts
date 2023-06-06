@@ -553,9 +553,9 @@ export const Category = {
         creation['slug'] ??= slugify(creation['title'] as string);
 
         if (creation['parent'] == null) {
-          const categoryWithoutParentCount = await node
-            .getQueryByKey('count')
-            .execute(context, { where: { parent: null } });
+          const categoryWithoutParentCount = await api[node.name].count({
+            where: { parent: null },
+          });
 
           if (categoryWithoutParentCount !== 0) {
             throw new utils.UnexpectedValueError(

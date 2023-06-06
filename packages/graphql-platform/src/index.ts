@@ -187,7 +187,7 @@ export class GraphQLPlatform<
    * const articles = await api.query.articles(myRequestContext, { where: { status: ArticleStatus.Published }, first: 5, selection: `{ id title }` });
    *
    * @example <caption>NodeAPI</caption>
-   * const articles = await api.Article.query.findMany(myRequestContext, { where: { status: ArticleStatus.Published }, first: 5, selection: `{ id title }` });
+   * const articles = await api.Article.findMany(myRequestContext, { where: { status: ArticleStatus.Published }, first: 5, selection: `{ id title }` });
    */
   public readonly api: API<TRequestContext>;
 
@@ -516,13 +516,13 @@ export class GraphQLPlatform<
   }
 
   /**
-   * Returns a "context"-bound API, so the developer only has to provide the operations' args:
+   * Returns a "context"-bound API, so you only have to provide the operations' args:
    *
    * @example <caption>GraphAPI</caption>
    * const articles = await api.query.articles({ where: { status: ArticleStatus.Published }, first: 5, selection: `{ id title }` });
    *
    * @example <caption>NodeAPI</caption>
-   * const articles = await api.Article.query.findMany({ where: { status: ArticleStatus.Published }, first: 5, selection: `{ id title }` });
+   * const articles = await api.Article.findMany({ where: { status: ArticleStatus.Published }, first: 5, selection: `{ id title }` });
    */
   public createContextBoundAPI(
     context:

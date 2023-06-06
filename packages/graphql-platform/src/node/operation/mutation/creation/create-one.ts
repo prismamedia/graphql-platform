@@ -40,7 +40,6 @@ export class CreateOneMutation<
     ];
   }
 
-  @Memoize()
   public getGraphQLOutputType() {
     return new graphql.GraphQLNonNull(
       this.node.outputType.getGraphQLObjectType(),

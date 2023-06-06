@@ -129,6 +129,8 @@ export class EdgeCreationInput extends AbstractComponentCreationInput<EdgeCreati
     context: MutationContext,
     path: utils.Path,
   ): Promise<EdgeCreationValue> {
+    const headAPI = this.edge.head.createContextBoundAPI(context);
+
     const selection = this.edge.referencedUniqueConstraint.selection;
 
     const actionName = Object.keys(inputValue)[0] as EdgeCreationInputAction;
@@ -138,33 +140,28 @@ export class EdgeCreationInput extends AbstractComponentCreationInput<EdgeCreati
       case EdgeCreationInputAction.CONNECT: {
         const where = inputValue[actionName]!;
 
-        return this.edge.head
-          .getQueryByKey('get-one')
-          .execute(context, { where, selection }, actionPath);
+        return headAPI.getOne({ where, selection }, actionPath);
       }
 
       case EdgeCreationInputAction.CONNECT_IF_EXISTS: {
         const where = inputValue[actionName]!;
 
-        return this.edge.head
-          .getQueryByKey('get-one-if-exists')
-          .execute(context, { where, selection }, actionPath);
+        return headAPI.getOneIfExists({ where, selection }, actionPath);
       }
 
       case EdgeCreationInputAction.CREATE: {
         const data = inputValue[actionName]!;
 
-        return this.edge.head
-          .getMutationByKey('create-one')
-          .execute(context, { data, selection }, actionPath);
+        return headAPI.createOne({ data, selection }, actionPath);
       }
 
       case EdgeCreationInputAction.CREATE_IF_NOT_EXISTS: {
         const { where, data } = inputValue[actionName]!;
 
-        return this.edge.head
-          .getMutationByKey('create-one-if-not-exists')
-          .execute(context, { where, data, selection }, actionPath);
+        return headAPI.createOneIfNotExists(
+          { where, data, selection },
+          actionPath,
+        );
       }
 
       default:

@@ -21,9 +21,9 @@ export type MultipleReverseEdgeHeadOutputArgs = {
 };
 
 export class MultipleReverseEdgeHeadOutputType extends AbstractReverseEdgeOutputType<MultipleReverseEdgeHeadOutputArgs> {
-  public override readonly name: utils.Name;
-  public override readonly description?: string;
-  public override readonly deprecationReason?: string;
+  public readonly name: utils.Name;
+  public readonly description?: string;
+  public readonly deprecationReason?: string;
 
   public constructor(
     public override readonly reverseEdge: MultipleReverseEdge,
@@ -36,7 +36,7 @@ export class MultipleReverseEdgeHeadOutputType extends AbstractReverseEdgeOutput
   }
 
   @Memoize()
-  public override get arguments(): ReadonlyArray<utils.Input> {
+  protected get arguments(): ReadonlyArray<utils.Input> {
     return [
       new utils.Input({
         name: 'where',
@@ -59,8 +59,7 @@ export class MultipleReverseEdgeHeadOutputType extends AbstractReverseEdgeOutput
     ];
   }
 
-  @Memoize()
-  public override get type() {
+  protected get type() {
     return new graphql.GraphQLNonNull(
       new graphql.GraphQLList(
         new graphql.GraphQLNonNull(
@@ -70,7 +69,7 @@ export class MultipleReverseEdgeHeadOutputType extends AbstractReverseEdgeOutput
     );
   }
 
-  public override selectGraphQLFieldNode(
+  public selectGraphQLFieldNode(
     ast: graphql.FieldNode,
     operationContext: OperationContext | undefined,
     selectionContext: GraphQLSelectionContext | undefined,
@@ -115,7 +114,7 @@ export class MultipleReverseEdgeHeadOutputType extends AbstractReverseEdgeOutput
     );
   }
 
-  public override selectShape(
+  public selectShape(
     value: unknown,
     _operationContext: OperationContext | undefined,
     path: utils.Path,

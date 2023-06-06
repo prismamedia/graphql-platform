@@ -15,9 +15,9 @@ export type MultipleReverseEdgeCountOutputArgs = utils.Nillable<{
 }>;
 
 export class MultipleReverseEdgeCountOutputType extends AbstractReverseEdgeOutputType<MultipleReverseEdgeCountOutputArgs> {
-  public override readonly name: utils.Name;
-  public override readonly description?: string;
-  public override readonly deprecationReason?: string;
+  public readonly name: utils.Name;
+  public readonly description?: string;
+  public readonly deprecationReason?: string;
 
   public constructor(
     public override readonly reverseEdge: MultipleReverseEdge,
@@ -30,7 +30,7 @@ export class MultipleReverseEdgeCountOutputType extends AbstractReverseEdgeOutpu
   }
 
   @Memoize()
-  public override get arguments(): ReadonlyArray<utils.Input> {
+  protected get arguments(): ReadonlyArray<utils.Input> {
     return [
       new utils.Input({
         name: 'where',
@@ -39,12 +39,11 @@ export class MultipleReverseEdgeCountOutputType extends AbstractReverseEdgeOutpu
     ];
   }
 
-  @Memoize()
-  public override get type() {
+  protected get type() {
     return new graphql.GraphQLNonNull(scalars.typesByName.UnsignedInt);
   }
 
-  public override selectGraphQLFieldNode(
+  public selectGraphQLFieldNode(
     ast: graphql.FieldNode,
     operationContext: OperationContext | undefined,
     selectionContext: GraphQLSelectionContext | undefined,
@@ -73,7 +72,7 @@ export class MultipleReverseEdgeCountOutputType extends AbstractReverseEdgeOutpu
     );
   }
 
-  public override selectShape(
+  public selectShape(
     value: unknown,
     _operationContext: OperationContext | undefined,
     path: utils.Path,

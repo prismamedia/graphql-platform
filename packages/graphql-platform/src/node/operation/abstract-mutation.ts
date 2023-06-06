@@ -42,7 +42,7 @@ export interface AbstractMutationHookArgs<
    * const articles = await api.query.articles({ where: { status: ArticleStatus.Published }, first: 5, selection: `{ id title }` });
    *
    * @example <caption>NodeAPI</caption>
-   * const articles = await api.Article.query.findMany({ where: { status: ArticleStatus.Published }, first: 5, selection: `{ id title }` });
+   * const articles = await api.Article.findMany({ where: { status: ArticleStatus.Published }, first: 5, selection: `{ id title }` });
    */
   api: ContextBoundAPI;
 }

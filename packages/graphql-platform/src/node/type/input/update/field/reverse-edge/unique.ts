@@ -236,6 +236,8 @@ export class UniqueReverseEdgeUpdateInput extends AbstractReverseEdgeUpdateInput
     context: MutationContext,
     path: utils.Path,
   ): Promise<void> {
+    const headAPI = this.reverseEdge.head.createContextBoundAPI(context);
+
     const selection = this.reverseEdge.head.identifier.selection;
     const originalEdge = this.reverseEdge.originalEdge;
     const originalEdgeName = originalEdge.name;
@@ -264,8 +266,7 @@ export class UniqueReverseEdgeUpdateInput extends AbstractReverseEdgeUpdateInput
             if (actionData === true) {
               await Promise.all(
                 originalEdgeValues.map((originalEdgeValue) =>
-                  this.reverseEdge.head.getMutationByKey('delete-one').execute(
-                    context,
+                  headAPI.deleteOne(
                     {
                       where: { [originalEdgeName]: originalEdgeValue },
                       selection,
@@ -282,17 +283,14 @@ export class UniqueReverseEdgeUpdateInput extends AbstractReverseEdgeUpdateInput
             const actionData = inputValue[maybeActionName]!;
 
             if (actionData === true) {
-              await this.reverseEdge.head
-                .getMutationByKey('delete-many')
-                .execute(
-                  context,
-                  {
-                    where: { [originalEdgeName]: { OR: originalEdgeValues } },
-                    first: originalEdgeValues.length,
-                    selection,
-                  },
-                  actionPath,
-                );
+              await headAPI.deleteMany(
+                {
+                  where: { [originalEdgeName]: { OR: originalEdgeValues } },
+                  first: originalEdgeValues.length,
+                  selection,
+                },
+                actionPath,
+              );
             }
             break;
           }
@@ -317,8 +315,7 @@ export class UniqueReverseEdgeUpdateInput extends AbstractReverseEdgeUpdateInput
           case UniqueReverseEdgeUpdateInputAction.CREATE: {
             const data = inputValue[maybeActionName]!;
 
-            await this.reverseEdge.head.getMutationByKey('create-some').execute(
-              context,
+            await headAPI.createSome(
               {
                 data: originalEdgeValues.map((originalEdgeValue) => ({
                   ...data,
@@ -338,22 +335,19 @@ export class UniqueReverseEdgeUpdateInput extends AbstractReverseEdgeUpdateInput
 
             await Promise.all(
               originalEdgeValues.map((originalEdgeValue) =>
-                this.reverseEdge.head
-                  .getMutationByKey('create-one-if-not-exists')
-                  .execute(
-                    context,
-                    {
-                      where: { [originalEdgeName]: originalEdgeValue },
-                      data: {
-                        ...data,
-                        [originalEdgeName]: {
-                          [EdgeUpdateInputAction.CONNECT]: originalEdgeValue,
-                        },
+                headAPI.createOneIfNotExists(
+                  {
+                    where: { [originalEdgeName]: originalEdgeValue },
+                    data: {
+                      ...data,
+                      [originalEdgeName]: {
+                        [EdgeUpdateInputAction.CONNECT]: originalEdgeValue,
                       },
-                      selection,
                     },
-                    actionPath,
-                  ),
+                    selection,
+                  },
+                  actionPath,
+                ),
               ),
             );
             break;
@@ -364,8 +358,7 @@ export class UniqueReverseEdgeUpdateInput extends AbstractReverseEdgeUpdateInput
 
             await Promise.all(
               originalEdgeValues.map((originalEdgeValue) =>
-                this.reverseEdge.head.getMutationByKey('update-one').execute(
-                  context,
+                headAPI.updateOne(
                   {
                     where: { [originalEdgeName]: originalEdgeValue },
                     data,
@@ -381,8 +374,7 @@ export class UniqueReverseEdgeUpdateInput extends AbstractReverseEdgeUpdateInput
           case UniqueReverseEdgeUpdateInputAction.UPDATE_IF_EXISTS: {
             const data = inputValue[maybeActionName]!;
 
-            await this.reverseEdge.head.getMutationByKey('update-many').execute(
-              context,
+            await headAPI.updateMany(
               {
                 where: { [originalEdgeName]: { OR: originalEdgeValues } },
                 first: originalEdgeValues.length,
@@ -399,8 +391,7 @@ export class UniqueReverseEdgeUpdateInput extends AbstractReverseEdgeUpdateInput
 
             await Promise.all(
               originalEdgeValues.map((originalEdgeValue) =>
-                this.reverseEdge.head.getMutationByKey('upsert').execute(
-                  context,
+                headAPI.upsert(
                   {
                     where: { [originalEdgeName]: originalEdgeValue },
                     create: {

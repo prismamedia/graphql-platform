@@ -23,7 +23,7 @@ export function createNodeLoader<
   TCacheKey = NodeLoaderKey,
 >(
   node: Node<TRequestContext, TConnector>,
-  context: TRequestContext | OperationContext<TRequestContext, TConnector>,
+  context: utils.Thunkable<TRequestContext> | OperationContext<TRequestContext>,
   selection: NodeSelection,
   {
     subset,
@@ -32,10 +32,14 @@ export function createNodeLoader<
     subset?: NodeFilterInputValue;
   } & DataLoader.Options<NodeLoaderKey, NodeLoaderValue, TCacheKey> = {},
 ): NodeLoader {
+  const api = node.createContextBoundAPI(context);
+
   return new DataLoader(async (keys) => {
-    const maybeValues = await node
-      .getQueryByKey('get-some-in-order-if-exists')
-      .execute(context, { where: keys, subset, selection });
+    const maybeValues = await api.getSomeInOrderIfExists({
+      where: keys,
+      subset,
+      selection,
+    });
 
     return maybeValues.map(
       (maybeValue, index): NodeSelectedValue | Error =>

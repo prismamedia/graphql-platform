@@ -76,6 +76,8 @@ export class UniqueReverseEdgeCreationInput extends AbstractReverseEdgeCreationI
     context: MutationContext,
     path: utils.Path,
   ): Promise<void> {
+    const headAPI = this.reverseEdge.head.createContextBoundAPI(context);
+
     const originalEdge = this.reverseEdge.originalEdge;
     const originalEdgeName = originalEdge.name;
     const originalEdgeValue =
@@ -91,8 +93,7 @@ export class UniqueReverseEdgeCreationInput extends AbstractReverseEdgeCreationI
       case UniqueReverseEdgeCreationInputAction.CREATE: {
         const data = inputValue[maybeActionName]!;
 
-        await this.reverseEdge.head.getMutationByKey('create-one').execute(
-          context,
+        await headAPI.createOne(
           {
             data: {
               ...data,

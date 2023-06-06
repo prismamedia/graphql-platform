@@ -36,7 +36,6 @@ export class DeleteOneIfExistsMutation<
     ];
   }
 
-  @Memoize()
   public getGraphQLOutputType() {
     return this.node.outputType.getGraphQLObjectType();
   }

@@ -40,7 +40,6 @@ export class UpdateOneIfExistsMutation<
     ];
   }
 
-  @Memoize()
   public getGraphQLOutputType() {
     return this.node.outputType.getGraphQLObjectType();
   }
