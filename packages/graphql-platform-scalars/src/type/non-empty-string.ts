@@ -2,11 +2,11 @@ import * as utils from '@prismamedia/graphql-platform-utils';
 import * as graphql from 'graphql';
 
 export function parseNonEmptyString(value: unknown, path?: utils.Path): string {
-  if (typeof value === 'string' && value.length) {
-    return value;
+  if (typeof value !== 'string' || !value) {
+    throw new utils.UnexpectedValueError('a non-empty string', value, { path });
   }
 
-  throw new utils.UnexpectedValueError('a non-empty string', value, { path });
+  return value;
 }
 
 export const GraphQLNonEmptyString = new graphql.GraphQLScalarType({

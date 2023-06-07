@@ -7,7 +7,7 @@ export function parseNonEmptyTrimmedString(
 ): string {
   if (typeof value === 'string') {
     const trimmedValue = value.trim();
-    if (trimmedValue.length) {
+    if (trimmedValue) {
       return trimmedValue;
     }
   }

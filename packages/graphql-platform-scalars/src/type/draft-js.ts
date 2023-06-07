@@ -7,13 +7,47 @@ import type {
 } from 'draft-js';
 import * as entities from 'entities';
 import * as graphql from 'graphql';
+import { parseNonEmptyString } from './non-empty-string.js';
 
 export type {
   RawDraftContentBlock,
   RawDraftEntity,
   RawDraftEntityRange,
   RawDraftInlineStyleRange,
-};
+} from 'draft-js';
+
+export function addRawDraftEntity<T extends RawDraftEntity>(
+  entityMap: Record<string, RawDraftEntity>,
+  entity: T,
+): number {
+  let key = 0;
+  while (entityMap[key]) {
+    key++;
+  }
+
+  entityMap[key] = entity;
+
+  return key;
+}
+
+export function removeRawDraftEntity(
+  content: RawDraftContentState,
+  key: number | string,
+): void {
+  if (!content.entityMap[key]) {
+    return;
+  }
+
+  delete content.entityMap[key];
+
+  for (const block of content.blocks) {
+    block.entityRanges = block.entityRanges.filter(
+      (entityRange) =>
+        // The equality is not strict because the object-key is a string and is a number in range
+        entityRange.key != key,
+    );
+  }
+}
 
 export function parseRawDraftEntity(
   maybeRawDraftEntity: unknown,
@@ -21,27 +55,12 @@ export function parseRawDraftEntity(
 ): RawDraftEntity {
   utils.assertPlainObject(maybeRawDraftEntity, path);
 
-  if (
-    typeof maybeRawDraftEntity.type !== 'string' ||
-    !maybeRawDraftEntity.type
-  ) {
-    throw new utils.UnexpectedValueError(
-      `a non-empty string`,
-      maybeRawDraftEntity.type,
-      { path: utils.addPath(path, 'type') },
-    );
-  }
+  parseNonEmptyString(maybeRawDraftEntity.type, utils.addPath(path, 'type'));
 
-  if (
-    typeof maybeRawDraftEntity.mutability !== 'string' ||
-    !maybeRawDraftEntity.mutability
-  ) {
-    throw new utils.UnexpectedValueError(
-      `a non-empty string`,
-      maybeRawDraftEntity.mutability,
-      { path: utils.addPath(path, 'mutability') },
-    );
-  }
+  parseNonEmptyString(
+    maybeRawDraftEntity.mutability,
+    utils.addPath(path, 'mutability'),
+  );
 
   utils.assertPlainObject(
     maybeRawDraftEntity.data,
@@ -57,7 +76,10 @@ export function parseRawDraftInlineStyleRange(
 ): RawDraftInlineStyleRange {
   utils.assertPlainObject(maybeRawDraftInlineStyleRange, path);
 
-  if (typeof maybeRawDraftInlineStyleRange.style !== 'string') {
+  if (
+    typeof maybeRawDraftInlineStyleRange.style !== 'string' ||
+    !maybeRawDraftInlineStyleRange.style
+  ) {
     throw new utils.UnexpectedValueError(
       `a string`,
       maybeRawDraftInlineStyleRange.style,
@@ -65,7 +87,7 @@ export function parseRawDraftInlineStyleRange(
     );
   }
 
-  if (!Number.isInteger(maybeRawDraftInlineStyleRange.offset)) {
+  if (!Number.isSafeInteger(maybeRawDraftInlineStyleRange.offset)) {
     throw new utils.UnexpectedValueError(
       `an integer`,
       maybeRawDraftInlineStyleRange.offset,
@@ -73,7 +95,7 @@ export function parseRawDraftInlineStyleRange(
     );
   }
 
-  if (!Number.isInteger(maybeRawDraftInlineStyleRange.length)) {
+  if (!Number.isSafeInteger(maybeRawDraftInlineStyleRange.length)) {
     throw new utils.UnexpectedValueError(
       `an integer`,
       maybeRawDraftInlineStyleRange.length,
@@ -91,7 +113,13 @@ export function parseRawDraftEntityRange(
 ): RawDraftEntityRange {
   utils.assertPlainObject(maybeRawDraftEntityRange, path);
 
-  if (!(maybeRawDraftEntityRange.key in entityMap)) {
+  if (!Number.isSafeInteger(maybeRawDraftEntityRange.key)) {
+    throw new utils.UnexpectedValueError(
+      `an integer`,
+      maybeRawDraftEntityRange.key,
+      { path: utils.addPath(path, 'key') },
+    );
+  } else if (!(maybeRawDraftEntityRange.key in entityMap)) {
     throw new utils.UnexpectedValueError(
       `a value among "${Object.keys(entityMap).join(', ')}"`,
       maybeRawDraftEntityRange.key,
@@ -99,7 +127,7 @@ export function parseRawDraftEntityRange(
     );
   }
 
-  if (!Number.isInteger(maybeRawDraftEntityRange.offset)) {
+  if (!Number.isSafeInteger(maybeRawDraftEntityRange.offset)) {
     throw new utils.UnexpectedValueError(
       `an integer`,
       maybeRawDraftEntityRange.offset,
@@ -107,7 +135,7 @@ export function parseRawDraftEntityRange(
     );
   }
 
-  if (!Number.isInteger(maybeRawDraftEntityRange.length)) {
+  if (!Number.isSafeInteger(maybeRawDraftEntityRange.length)) {
     throw new utils.UnexpectedValueError(
       `an integer`,
       maybeRawDraftEntityRange.length,
@@ -125,26 +153,28 @@ export function parseRawDraftContentBlock(
 ): RawDraftContentBlock {
   utils.assertPlainObject(maybeRawDraftContentBlock, path);
 
-  if (
-    typeof maybeRawDraftContentBlock.key !== 'string' ||
-    !maybeRawDraftContentBlock.key
-  ) {
-    throw new utils.UnexpectedValueError(
-      `a string`,
-      maybeRawDraftContentBlock.key,
-      { path: utils.addPath(path, 'key') },
-    );
-  }
+  const key = parseNonEmptyString(
+    maybeRawDraftContentBlock.key,
+    utils.addPath(path, 'key'),
+  );
 
-  if (
-    typeof maybeRawDraftContentBlock.type !== 'string' ||
-    !maybeRawDraftContentBlock.type
-  ) {
-    throw new utils.UnexpectedValueError(
-      `a string`,
-      maybeRawDraftContentBlock.type,
-      { path: utils.addPath(path, 'type') },
-    );
+  const type = parseNonEmptyString(
+    maybeRawDraftContentBlock.type,
+    utils.addPath(path, 'type'),
+  );
+
+  // depth
+  let depth: number;
+  {
+    if (!Number.isSafeInteger(maybeRawDraftContentBlock.depth)) {
+      throw new utils.UnexpectedValueError(
+        `an integer`,
+        maybeRawDraftContentBlock.depth,
+        { path: utils.addPath(path, 'depth') },
+      );
+    }
+
+    depth = maybeRawDraftContentBlock.depth;
   }
 
   let text: string;
@@ -166,16 +196,8 @@ export function parseRawDraftContentBlock(
     }
   }
 
-  if (!Number.isInteger(maybeRawDraftContentBlock.depth)) {
-    throw new utils.UnexpectedValueError(
-      `an integer`,
-      maybeRawDraftContentBlock.depth,
-      { path: utils.addPath(path, 'depth') },
-    );
-  }
-
   // inlineStyleRanges
-  let inlineStyleRanges: RawDraftInlineStyleRange[];
+  const inlineStyleRanges: RawDraftInlineStyleRange[] = [];
   {
     const inlineStyleRangesPath = utils.addPath(path, 'inlineStyleRanges');
 
@@ -187,10 +209,7 @@ export function parseRawDraftContentBlock(
       );
     }
 
-    inlineStyleRanges = utils.aggregateGraphError<
-      any,
-      RawDraftInlineStyleRange[]
-    >(
+    utils.aggregateGraphError<any, RawDraftInlineStyleRange[]>(
       maybeRawDraftContentBlock.inlineStyleRanges,
       (inlineStyleRanges, value, index) => {
         inlineStyleRanges.push(
@@ -202,13 +221,13 @@ export function parseRawDraftContentBlock(
 
         return inlineStyleRanges;
       },
-      [],
+      inlineStyleRanges,
       { path: inlineStyleRangesPath },
     );
   }
 
   // entityRanges
-  let entityRanges: RawDraftEntityRange[];
+  const entityRanges: RawDraftEntityRange[] = [];
   {
     const entityRangesPath = utils.addPath(path, 'entityRanges');
 
@@ -220,7 +239,7 @@ export function parseRawDraftContentBlock(
       );
     }
 
-    entityRanges = utils.aggregateGraphError<any, RawDraftEntityRange[]>(
+    utils.aggregateGraphError<any, RawDraftEntityRange[]>(
       maybeRawDraftContentBlock.entityRanges,
       (entityRanges, value, index) => {
         entityRanges.push(
@@ -233,7 +252,7 @@ export function parseRawDraftContentBlock(
 
         return entityRanges;
       },
-      [],
+      entityRanges,
       { path: entityRangesPath },
     );
   }
@@ -244,9 +263,9 @@ export function parseRawDraftContentBlock(
     const rawData = maybeRawDraftContentBlock.data;
     const rawDataPath = utils.addPath(path, 'data');
 
-    if (rawData !== undefined) {
+    if (rawData != null) {
       if (utils.isPlainObject(rawData)) {
-        data = Object.entries(rawData).length ? rawData : undefined;
+        data = Object.keys(rawData).length ? rawData : undefined;
       } else if (Array.isArray(rawData)) {
         data = rawData.length ? rawData : undefined;
       } else {
@@ -256,10 +275,10 @@ export function parseRawDraftContentBlock(
   }
 
   return Object.assign(Object.create(null), {
-    key: maybeRawDraftContentBlock.key,
-    type: maybeRawDraftContentBlock.type,
+    key,
+    type,
+    depth,
     text,
-    depth: maybeRawDraftContentBlock.depth,
     inlineStyleRanges,
     entityRanges,
     ...(data && { data }),
@@ -278,29 +297,38 @@ export function parseRawDraftContentState(
   utils.assertPlainObject(maybeRawDraftContentState, path);
 
   // entityMap
-  let entityMap: RawDraftContentState['entityMap'] = Object.create(null);
+  const entityMap: RawDraftContentState['entityMap'] = Object.create(null);
   {
     if (maybeRawDraftContentState.entityMap != null) {
       const entityMapPath = utils.addPath(path, 'entityMap');
 
       if (utils.isPlainObject(maybeRawDraftContentState.entityMap)) {
-        entityMap = utils.aggregateGraphError<
+        utils.aggregateGraphError<
           [string, RawDraftEntity],
           Record<string, RawDraftEntity>
         >(
           Object.entries(maybeRawDraftContentState.entityMap),
-          (entityMap, [key, value]) =>
+          (entityMap, [key, value]) => {
+            if (!Number.isSafeInteger(Number.parseInt(key, 10))) {
+              throw new utils.UnexpectedValueError(`an integer`, key, {
+                path: utils.addPath(entityMapPath, key),
+              });
+            }
+
             Object.assign(entityMap, {
               [key]: parseRawDraftEntity(
                 value,
                 utils.addPath(entityMapPath, key),
               ),
-            }),
+            });
+
+            return entityMap;
+          },
           entityMap,
           { path: entityMapPath },
         );
       } else if (Array.isArray(maybeRawDraftContentState.entityMap)) {
-        entityMap = utils.aggregateGraphError<
+        utils.aggregateGraphError<
           RawDraftEntity,
           Record<string, RawDraftEntity>
         >(
@@ -326,7 +354,7 @@ export function parseRawDraftContentState(
   }
 
   // blocks
-  let blocks: RawDraftContentBlock[];
+  const blocks: RawDraftContentBlock[] = [];
   {
     const blocksPath = utils.addPath(path, 'blocks');
 
@@ -338,7 +366,7 @@ export function parseRawDraftContentState(
       );
     }
 
-    blocks = utils.aggregateGraphError<any, RawDraftContentBlock[]>(
+    utils.aggregateGraphError<any, RawDraftContentBlock[]>(
       maybeRawDraftContentState.blocks,
       (blocks, block, index) => {
         blocks.push(
@@ -351,7 +379,7 @@ export function parseRawDraftContentState(
 
         return blocks;
       },
-      [],
+      blocks,
       { path: blocksPath },
     );
   }
@@ -368,7 +396,7 @@ export const GraphQLDraftJS = new graphql.GraphQLScalarType({
     'The DraftJS raw state contains a list of content blocks, as well as a map of all relevant entity objects.',
   specifiedByURL:
     'https://draftjs.org/docs/api-reference-data-conversion/#convertfromraw',
-  parseValue(value: unknown) {
+  parseValue(value) {
     return parseRawDraftContentState(value);
   },
   parseLiteral(ast, variables) {
@@ -380,7 +408,7 @@ export const GraphQLDraftJS = new graphql.GraphQLScalarType({
 
     throw new TypeError(`Cannot parse literal: ${graphql.print(ast)}`);
   },
-  serialize(value: unknown) {
+  serialize(value) {
     return parseRawDraftContentState(value);
   },
 });
