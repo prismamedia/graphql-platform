@@ -134,7 +134,7 @@ export interface GraphQLPlatformConfig<
    *
    * By default, the context provided by the integration is provided "as is"
    *
-   * @see: https://www.apollographql.com/docs/apollo-server/data/resolvers/#the-context-argument
+   * @see https://www.apollographql.com/docs/apollo-server/data/resolvers/#the-context-argument
    */
   requestContextAssertion?: RequestContextAssertion<
     TRequestContext,

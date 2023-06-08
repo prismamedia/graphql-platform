@@ -3,14 +3,19 @@ import * as utils from '@prismamedia/graphql-platform-utils';
 import { GraphQLInterfaceType, GraphQLNonNull, GraphQLString } from 'graphql';
 import { randomUUID } from 'node:crypto';
 import {
-  ComponentConfig,
-  ConnectorConfig,
-  ConnectorInterface,
-  ContainerConfig,
-  CustomOperationsByNameByTypeConfig,
   GraphQLPlatform,
-  NodeConfig,
   OnEdgeHeadDeletion,
+  type ConnectorConfig,
+  type ConnectorConfigOverride,
+  type ConnectorConfigOverrideKind,
+  type ConnectorInterface,
+  type ContainerConfig,
+  type CustomOperationsByNameByTypeConfig,
+  type Edge,
+  type Leaf,
+  type Node,
+  type NodeConfig,
+  type UniqueConstraint,
 } from '../index.js';
 
 export const slugify = (input: string): string =>
@@ -955,92 +960,98 @@ export type MyGP<
   TContainer extends object = any,
 > = GraphQLPlatform<MyContext, TConnector, TContainer>;
 
+export type NodeConfigOverride<TConnector extends ConnectorInterface> = (
+  nodeName: Node['name'],
+) =>
+  | ConnectorConfigOverride<TConnector, ConnectorConfigOverrideKind.NODE>
+  | undefined;
+
+export type LeafConfigOverride<TConnector extends ConnectorInterface> = (
+  leafName: Leaf['name'],
+  nodeName: Node['name'],
+) =>
+  | ConnectorConfigOverride<TConnector, ConnectorConfigOverrideKind.LEAF>
+  | undefined;
+
+export type EdgeConfigOverride<TConnector extends ConnectorInterface> = (
+  edgeName: Edge['name'],
+  nodeName: Node['name'],
+) =>
+  | ConnectorConfigOverride<TConnector, ConnectorConfigOverrideKind.EDGE>
+  | undefined;
+
+export type UniqueConstraintConfigOverride<
+  TConnector extends ConnectorInterface,
+> = (
+  uniqueIndex: number,
+  uniqueName: UniqueConstraint['name'] | undefined,
+  nodeName: Node['name'],
+) =>
+  | ConnectorConfigOverride<
+      TConnector,
+      ConnectorConfigOverrideKind.UNIQUE_CONSTRAINT
+    >
+  | undefined;
+
 export function createMyGP<
   TConnector extends ConnectorInterface,
   TContainer extends object,
 >(config?: {
+  overrides?: {
+    node?: NodeConfigOverride<TConnector>;
+    leaf?: LeafConfigOverride<TConnector>;
+    edge?: EdgeConfigOverride<TConnector>;
+    uniqueConstraint?: UniqueConstraintConfigOverride<TConnector>;
+  };
+
   connector?: ConnectorConfig<MyContext, TConnector>;
+
   container?: ContainerConfig<MyContext, TConnector, TContainer>;
 }): MyGP<TConnector, TContainer> {
   return new GraphQLPlatform({
     nodes: Object.fromEntries(
-      Object.entries(nodes).map<[string, NodeConfig]>(([nodeName, config]) => [
+      Object.entries<NodeConfig>(nodes).map(([nodeName, nodeConfig]) => [
         nodeName,
         {
-          ...config,
-          ...(nodeName === 'Article'
-            ? {
-                table: {
-                  indexes: [
-                    ['slug'],
-                    ['status', 'slug'],
-                    ['category', 'updatedAt'],
-                  ],
-                },
-              }
-            : {}),
-          components: Object.fromEntries<ComponentConfig>(
-            Object.entries(config.components).map<[string, ComponentConfig]>(
-              ([componentName, config]) => [
-                componentName,
-                componentName === '_id' && config.kind === 'Leaf'
-                  ? {
-                      ...config,
-                      column: { autoIncrement: true },
-                    }
-                  : nodeName === 'Article' &&
-                    componentName === 'body' &&
-                    config.kind === 'Leaf'
-                  ? {
-                      ...config,
-                      column: { fullTextIndex: true },
-                    }
-                  : nodeName === 'Article' &&
-                    componentName === 'updatedAt' &&
-                    config.kind === 'Leaf'
-                  ? {
-                      ...config,
-                      column: {
-                        dataType: {
-                          kind: 'TIMESTAMP',
-                          microsecondPrecision: 0,
-                        },
+          ...nodeConfig,
+
+          ...config?.overrides?.node?.(nodeName),
+
+          components:
+            config?.overrides?.edge || config?.overrides?.leaf
+              ? Object.fromEntries(
+                  Object.entries(nodeConfig.components).map(
+                    ([componentName, componentConfig]) => [
+                      componentName,
+                      {
+                        ...componentConfig,
+
+                        ...(componentConfig.kind === 'Edge'
+                          ? config?.overrides?.edge?.(componentName, nodeName)
+                          : config?.overrides?.leaf?.(componentName, nodeName)),
                       },
-                    }
-                  : nodeName === 'User' &&
-                    componentName === 'lastLoggedInAt' &&
-                    config.kind === 'Leaf'
-                  ? {
-                      ...config,
-                      column: {
-                        dataType: {
-                          kind: 'TIMESTAMP',
-                          microsecondPrecision: 0,
-                        },
-                      },
-                    }
-                  : nodeName === 'UserProfile' &&
-                    componentName === 'user' &&
-                    config.kind === 'Edge'
-                  ? {
-                      ...config,
-                      columns: { id: 'theUserId' },
-                    }
-                  : nodeName === 'ArticleTagModeration' &&
-                    componentName === 'articleTag' &&
-                    config.kind === 'Edge'
-                  ? {
-                      ...config,
-                      columns: {
-                        article: { _id: 'theArticlePrivateId' },
-                        tag: { id: 'theTagId' },
-                      },
-                      foreignKey: { name: 'my_custom_fk_name' },
-                    }
-                  : config,
-              ],
-            ),
-          ),
+                    ],
+                  ),
+                )
+              : nodeConfig.components,
+
+          uniques: config?.overrides?.uniqueConstraint
+            ? nodeConfig.uniques.map((unique, index) => {
+                const uniqueConstraintConfig = Array.isArray(unique)
+                  ? { components: unique }
+                  : unique;
+
+                return {
+                  ...uniqueConstraintConfig,
+
+                  ...config?.overrides?.uniqueConstraint?.(
+                    index,
+                    uniqueConstraintConfig.name,
+                    nodeName,
+                  ),
+                };
+              })
+            : nodeConfig.uniques,
         },
       ]),
     ),

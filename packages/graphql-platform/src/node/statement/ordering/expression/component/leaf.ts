@@ -11,8 +11,7 @@ export interface LeafOrderingAST {
 }
 
 export class LeafOrdering implements OrderingExpressionInterface {
-  public readonly reduced?: this;
-
+  public readonly reduced: this;
   public readonly dependencies: DependencyTree;
 
   public constructor(
@@ -22,7 +21,6 @@ export class LeafOrdering implements OrderingExpressionInterface {
     assert(leaf.isSortable(), `The "${leaf}" leaf is not sortable`);
 
     this.reduced = this;
-
     this.dependencies = new Map([[leaf, undefined]]);
   }
 

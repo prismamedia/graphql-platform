@@ -3,29 +3,24 @@ import assert from 'node:assert/strict';
 import type { NodeValue } from '../../../../node.js';
 import type { BooleanExpressionInterface } from './expression-interface.js';
 
-export interface BooleanValueAST<TValue extends boolean = boolean> {
-  kind: 'BooleanValue';
-  value: TValue;
+export interface BooleanValueAST {
+  kind: 'BOOLEAN';
+  value: boolean;
 }
 
-export class BooleanValue<TValue extends boolean = boolean>
-  implements BooleanExpressionInterface
-{
-  public readonly reduced: this;
+export class BooleanValue implements BooleanExpressionInterface {
+  public readonly score: number;
+  public readonly dependencies?: undefined;
 
-  public readonly dependencies: undefined;
-
-  public constructor(public readonly value: TValue) {
+  public constructor(public readonly value: boolean) {
     assert.equal(typeof value, 'boolean');
 
-    this.reduced = this;
-
-    this.dependencies = undefined;
+    this.score = 0;
   }
 
   @Memoize()
-  public get complement(): BooleanValue<TValue extends true ? false : true> {
-    return new BooleanValue<any>(!this.value);
+  public get complement(): BooleanValue {
+    return new BooleanValue(!this.value);
   }
 
   public equals(expression: unknown): expression is BooleanValue {
@@ -34,22 +29,18 @@ export class BooleanValue<TValue extends boolean = boolean>
     );
   }
 
-  public get ast(): BooleanValueAST<TValue> {
+  public get ast(): BooleanValueAST {
     return {
-      kind: 'BooleanValue',
+      kind: 'BOOLEAN',
       value: this.value,
     };
-  }
-
-  public isTrue(): this is BooleanValue<true> {
-    return this.value;
-  }
-
-  public isFalse(): this is BooleanValue<false> {
-    return !this.value;
   }
 
   public execute(_nodeValue: Partial<NodeValue>): boolean {
     return this.value;
   }
 }
+
+export const TrueValue = new BooleanValue(true);
+
+export const FalseValue = new BooleanValue(false);

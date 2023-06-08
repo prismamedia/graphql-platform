@@ -91,7 +91,7 @@ export class DeleteManyMutation<
 
     const filter = new NodeFilter(
       this.node,
-      new AndOperation([
+      AndOperation.create([
         authorization?.filter,
         this.node.filterInputType.filter(
           args.where,

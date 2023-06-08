@@ -1,7 +1,7 @@
 import { GraphQLError } from 'graphql';
-import _ from 'lodash';
 import { EOL } from 'node:os';
 import { inspect } from 'node:util';
+import * as R from 'remeda';
 import type { Nillable } from './nil.js';
 import {
   isPathEqualOrDescendantOf,
@@ -224,7 +224,7 @@ export const aggregateGraphError = <TInput, TOuput>(
     initialValue,
   );
 
-  const deduplicatedErrors = _.uniqBy(errors, (error) =>
+  const deduplicatedErrors = R.uniqBy(errors, (error) =>
     error instanceof Error ? error.message : String(error),
   );
 

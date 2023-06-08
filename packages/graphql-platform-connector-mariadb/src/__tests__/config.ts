@@ -30,6 +30,53 @@ export function createMyGP<TContainer extends object>(
   assert(password, `The "MARIADB_ROOT_PASSWORD" variable must be provided`);
 
   return baseCreateMyGP({
+    overrides: {
+      node: (node) =>
+        node === 'Article'
+          ? {
+              table: {
+                indexes: [
+                  ['slug'],
+                  ['status', 'slug'],
+                  ['category', 'updatedAt'],
+                ],
+              },
+            }
+          : undefined,
+
+      leaf: (leaf, node) =>
+        leaf === '_id'
+          ? { column: { autoIncrement: true } }
+          : node === 'Article' && leaf === 'title'
+          ? { column: { fullTextIndex: true } }
+          : node === 'Article' && leaf === 'updatedAt'
+          ? {
+              column: {
+                dataType: { kind: 'TIMESTAMP', microsecondPrecision: 0 },
+              },
+            }
+          : node === 'User' && leaf === 'lastLoggedInAt'
+          ? {
+              column: {
+                dataType: { kind: 'TIMESTAMP', microsecondPrecision: 0 },
+              },
+            }
+          : undefined,
+
+      edge: (edge, node) =>
+        node === 'UserProfile' && edge === 'user'
+          ? { columns: { id: 'theUserId' } }
+          : node === 'ArticleTagModeration' && edge === 'articleTag'
+          ? {
+              columns: {
+                article: { _id: 'theArticlePrivateId' },
+                tag: { id: 'theTagId' },
+              },
+              foreignKey: { name: 'my_custom_fk_name' },
+            }
+          : undefined,
+    },
+
     connector: (gp, configPath) =>
       new MariaDBConnector(
         gp,

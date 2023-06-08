@@ -21,6 +21,7 @@ import {
   NotOperation,
   OrOperation,
   UniqueReverseEdgeExistsFilter,
+  sortableLeafComparisonOperatorSet,
 } from '../../statement/filter.js';
 import {
   BooleanOperationFilterInputType,
@@ -43,26 +44,16 @@ export class NodeFilterInputType extends utils.ObjectInputType<FieldFilterInputT
   }
 
   protected getLeafFields(leaf: Leaf): LeafFilterInputType[] {
-    const fields: LeafFilterInputType[] = [];
-
-    // eq, not
-    fields.push(
-      new LeafFilterInputType<LeafValue>(leaf, 'eq', {
-        type: utils.nonNullableInputTypeDecorator(
-          leaf.type,
-          !leaf.isNullable(),
-        ),
-        filter: (value, _context, _path) =>
-          new LeafComparisonFilter(leaf, 'eq', value),
-      }),
-      new LeafFilterInputType<LeafValue>(leaf, 'not', {
-        type: utils.nonNullableInputTypeDecorator(
-          leaf.type,
-          !leaf.isNullable(),
-        ),
-        filter: (value, _context, _path) =>
-          new NotOperation(new LeafComparisonFilter(leaf, 'eq', value)),
-      }),
+    const fields: LeafFilterInputType[] = (['eq', 'not'] as const).map(
+      (operator) =>
+        new LeafFilterInputType<LeafValue>(leaf, operator, {
+          type: utils.nonNullableInputTypeDecorator(
+            leaf.type,
+            !leaf.isNullable(),
+          ),
+          filter: (value, _context, _path) =>
+            new LeafComparisonFilter(leaf, operator, value),
+        }),
     );
 
     // is_null
@@ -71,9 +62,7 @@ export class NodeFilterInputType extends utils.ObjectInputType<FieldFilterInputT
         new LeafFilterInputType<boolean>(leaf, 'is_null', {
           type: new utils.NonNullableInputType(scalars.typesByName.Boolean),
           filter: (value, _context, _path) =>
-            value
-              ? new LeafComparisonFilter(leaf, 'eq', null)
-              : new NotOperation(new LeafComparisonFilter(leaf, 'eq', null)),
+            new LeafComparisonFilter(leaf, value ? 'eq' : 'not', null),
         }),
       );
     }
@@ -100,7 +89,8 @@ export class NodeFilterInputType extends utils.ObjectInputType<FieldFilterInputT
               ),
             ),
           ),
-          filter: (values, _context, _path) => new LeafInFilter(leaf, values),
+          filter: (values, _context, _path) =>
+            LeafInFilter.create(leaf, values),
         }),
         new LeafFilterInputType<LeafValue[]>(leaf, 'not_in', {
           type: new utils.NonNullableInputType(
@@ -114,16 +104,16 @@ export class NodeFilterInputType extends utils.ObjectInputType<FieldFilterInputT
             ),
           ),
           filter: (values, _context, _path) =>
-            new NotOperation(new LeafInFilter(leaf, values)),
+            NotOperation.create(LeafInFilter.create(leaf, values)),
         }),
       );
     }
 
     // gt, gte, lt, lte
     if (leaf.isSortable()) {
-      for (const operator of ['gt', 'gte', 'lt', 'lte'] as const) {
+      for (const operator of sortableLeafComparisonOperatorSet) {
         fields.push(
-          new LeafFilterInputType<LeafValue>(leaf, operator, {
+          new LeafFilterInputType<NonNullable<LeafValue>>(leaf, operator, {
             type: new utils.NonNullableInputType(leaf.type),
             filter: (value, _context, _path) =>
               new LeafComparisonFilter(leaf, operator, value),
@@ -160,7 +150,9 @@ export class NodeFilterInputType extends utils.ObjectInputType<FieldFilterInputT
               scalars.typesByName.NonEmptyString,
             ),
             filter: (value, _context, _path) =>
-              new NotOperation(new LeafFullTextFilter(leaf, operator, value)),
+              NotOperation.create(
+                new LeafFullTextFilter(leaf, operator, value),
+              ),
           }),
         );
       }
@@ -170,9 +162,7 @@ export class NodeFilterInputType extends utils.ObjectInputType<FieldFilterInputT
   }
 
   protected getEdgeFields(edge: Edge): EdgeFilterInputType[] {
-    const fields: EdgeFilterInputType[] = [];
-
-    fields.push(
+    const fields: EdgeFilterInputType[] = [
       new EdgeFilterInputType<NodeFilterInputValue>(edge, 'eq', {
         type: utils.nonNullableInputTypeDecorator(
           edge.head.filterInputType,
@@ -180,8 +170,8 @@ export class NodeFilterInputType extends utils.ObjectInputType<FieldFilterInputT
         ),
         filter: (value, context, path) =>
           value === null
-            ? new NotOperation(new EdgeExistsFilter(edge))
-            : new EdgeExistsFilter(
+            ? NotOperation.create(EdgeExistsFilter.create(edge))
+            : EdgeExistsFilter.create(
                 edge,
                 edge.head.filterInputType.filter(value, context, path),
               ),
@@ -193,15 +183,15 @@ export class NodeFilterInputType extends utils.ObjectInputType<FieldFilterInputT
         ),
         filter: (value, context, path) =>
           value === null
-            ? new EdgeExistsFilter(edge)
-            : new NotOperation(
-                new EdgeExistsFilter(
+            ? EdgeExistsFilter.create(edge)
+            : NotOperation.create(
+                EdgeExistsFilter.create(
                   edge,
                   edge.head.filterInputType.filter(value, context, path),
                 ),
               ),
       }),
-    );
+    ];
 
     // is_null
     if (edge.isNullable()) {
@@ -210,8 +200,8 @@ export class NodeFilterInputType extends utils.ObjectInputType<FieldFilterInputT
           type: new utils.NonNullableInputType(scalars.typesByName.Boolean),
           filter: (value, _context, _path) =>
             value
-              ? new NotOperation(new EdgeExistsFilter(edge))
-              : new EdgeExistsFilter(edge),
+              ? NotOperation.create(EdgeExistsFilter.create(edge))
+              : EdgeExistsFilter.create(edge),
         }),
       );
     }
@@ -227,8 +217,10 @@ export class NodeFilterInputType extends utils.ObjectInputType<FieldFilterInputT
         type: reverseEdge.head.filterInputType,
         filter: (value, context, path) =>
           value === null
-            ? new NotOperation(new UniqueReverseEdgeExistsFilter(reverseEdge))
-            : new UniqueReverseEdgeExistsFilter(
+            ? NotOperation.create(
+                UniqueReverseEdgeExistsFilter.create(reverseEdge),
+              )
+            : UniqueReverseEdgeExistsFilter.create(
                 reverseEdge,
                 reverseEdge.head.filterInputType.filter(value, context, path),
               ),
@@ -237,9 +229,9 @@ export class NodeFilterInputType extends utils.ObjectInputType<FieldFilterInputT
         type: reverseEdge.head.filterInputType,
         filter: (value, context, path) =>
           value === null
-            ? new UniqueReverseEdgeExistsFilter(reverseEdge)
-            : new NotOperation(
-                new UniqueReverseEdgeExistsFilter(
+            ? UniqueReverseEdgeExistsFilter.create(reverseEdge)
+            : NotOperation.create(
+                UniqueReverseEdgeExistsFilter.create(
                   reverseEdge,
                   reverseEdge.head.filterInputType.filter(value, context, path),
                 ),
@@ -252,8 +244,10 @@ export class NodeFilterInputType extends utils.ObjectInputType<FieldFilterInputT
           type: new utils.NonNullableInputType(scalars.typesByName.Boolean),
           filter: (value, _context, _path) =>
             value
-              ? new NotOperation(new UniqueReverseEdgeExistsFilter(reverseEdge))
-              : new UniqueReverseEdgeExistsFilter(reverseEdge),
+              ? NotOperation.create(
+                  UniqueReverseEdgeExistsFilter.create(reverseEdge),
+                )
+              : UniqueReverseEdgeExistsFilter.create(reverseEdge),
         },
       ),
     ];
@@ -288,14 +282,11 @@ export class NodeFilterInputType extends utils.ObjectInputType<FieldFilterInputT
 
           // set.every(filter) = !set.some(!filter);
           filter: (value, context, path) =>
-            new NotOperation(
-              new MultipleReverseEdgeExistsFilter(
+            NotOperation.create(
+              MultipleReverseEdgeExistsFilter.create(
                 reverseEdge,
-                reverseEdge.head.filterInputType.filter(
-                  value,
-                  context,
-                  path,
-                ).complement,
+                reverseEdge.head.filterInputType.filter(value, context, path)
+                  .complement,
               ),
             ),
         },
@@ -308,7 +299,7 @@ export class NodeFilterInputType extends utils.ObjectInputType<FieldFilterInputT
             reverseEdge.head.filterInputType,
           ),
           filter: (value, context, path) =>
-            new MultipleReverseEdgeExistsFilter(
+            MultipleReverseEdgeExistsFilter.create(
               reverseEdge,
               reverseEdge.head.filterInputType.filter(value, context, path),
             ),
@@ -324,8 +315,8 @@ export class NodeFilterInputType extends utils.ObjectInputType<FieldFilterInputT
 
           // set.none(filter) = !set.some(filter);
           filter: (value, context, path) =>
-            new NotOperation(
-              new MultipleReverseEdgeExistsFilter(
+            NotOperation.create(
+              MultipleReverseEdgeExistsFilter.create(
                 reverseEdge,
                 reverseEdge.head.filterInputType.filter(value, context, path),
               ),
@@ -344,14 +335,14 @@ export class NodeFilterInputType extends utils.ObjectInputType<FieldFilterInputT
             ),
             filter: (value, _context, _path) =>
               operator === 'not'
-                ? new NotOperation(
-                    new MultipleReverseEdgeCountFilter(
+                ? NotOperation.create(
+                    MultipleReverseEdgeCountFilter.create(
                       reverseEdge,
                       'eq',
                       value,
                     ),
                   )
-                : new MultipleReverseEdgeCountFilter(
+                : MultipleReverseEdgeCountFilter.create(
                     reverseEdge,
                     operator,
                     value,
@@ -367,7 +358,7 @@ export class NodeFilterInputType extends utils.ObjectInputType<FieldFilterInputT
         name: 'AND',
         type: new utils.NonNullableInputType(new utils.ListableInputType(this)),
         filter: (values, context, path) =>
-          new AndOperation(
+          AndOperation.create(
             utils.aggregateGraphError<NodeFilterInputValue, BooleanFilter[]>(
               values,
               (operands, value, index) => [
@@ -383,7 +374,7 @@ export class NodeFilterInputType extends utils.ObjectInputType<FieldFilterInputT
         name: 'OR',
         type: new utils.NonNullableInputType(new utils.ListableInputType(this)),
         filter: (values, context, path) =>
-          new OrOperation(
+          OrOperation.create(
             utils.aggregateGraphError<NodeFilterInputValue, BooleanFilter[]>(
               values,
               (operands, value, index) => [
@@ -399,7 +390,7 @@ export class NodeFilterInputType extends utils.ObjectInputType<FieldFilterInputT
         name: 'NOT',
         type: this,
         filter: (value, context, path) =>
-          new NotOperation(this.filter(value, context, path).filter),
+          NotOperation.create(this.filter(value, context, path).filter),
       }),
     ];
   }
@@ -436,7 +427,7 @@ export class NodeFilterInputType extends utils.ObjectInputType<FieldFilterInputT
         ? new BooleanValue(true)
         : value === null
         ? new BooleanValue(false)
-        : new AndOperation(
+        : AndOperation.create(
             Object.entries(value).map(([filterName, filterValue]) =>
               this.getFieldByName(filterName, path).filter(
                 filterValue,

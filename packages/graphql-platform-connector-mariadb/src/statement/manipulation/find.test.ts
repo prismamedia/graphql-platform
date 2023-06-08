@@ -10,7 +10,7 @@ import { createMyGP, type MyGP } from '../../__tests__/config.js';
 
 describe('Find statement', () => {
   let gp: MyGP;
-  let executedStatements: string[] = [];
+  const executedStatements: string[] = [];
 
   beforeAll(async () => {
     gp = createMyGP(`connector_mariadb_find_statement`);
@@ -22,9 +22,7 @@ describe('Find statement', () => {
     await gp.seed(myAdminContext, fixtures.constant);
   });
 
-  afterAll(async () => {
-    await gp.connector.teardown();
-  });
+  afterAll(() => gp.connector.teardown());
 
   it.each([
     [
@@ -112,7 +110,9 @@ describe('Find statement', () => {
         where: {
           OR: [
             { body_is_null: true },
-            { body_contains: 'my +searched -text here' },
+            { body_contains: 'my searched text here' },
+            { body_starts_with: 'my starting text here' },
+            { body_ends_with: 'my ending text here' },
           ],
           status: ArticleStatus.PUBLISHED,
           category: { slug: 'tv' },

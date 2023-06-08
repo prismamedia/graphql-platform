@@ -110,7 +110,7 @@ export class UniqueConstraint<
       // leaves
       {
         this.leafSet = new Set(
-          Array.from(this.componentsByName.values()).filter(
+          Array.from(this.componentSet).filter(
             (component): component is Leaf => component instanceof Leaf,
           ),
         );
@@ -119,7 +119,7 @@ export class UniqueConstraint<
       // edges
       {
         this.edgeSet = new Set(
-          Array.from(this.componentsByName.values()).filter(
+          Array.from(this.componentSet).filter(
             (component): component is Edge => component instanceof Edge,
           ),
         );
@@ -167,21 +167,21 @@ export class UniqueConstraint<
 
   @Memoize()
   public isMutable(): boolean {
-    return Array.from(this.componentsByName.values()).some((component) =>
+    return Array.from(this.componentSet).some((component) =>
       component.isMutable(),
     );
   }
 
   @Memoize()
   public isNullable(): boolean {
-    return Array.from(this.componentsByName.values()).every((component) =>
+    return Array.from(this.componentSet).every((component) =>
       component.isNullable(),
     );
   }
 
   @Memoize()
   public isPublic(): boolean {
-    return Array.from(this.componentsByName.values()).every((component) =>
+    return Array.from(this.componentSet).every((component) =>
       component.isPublic(),
     );
   }
@@ -190,7 +190,7 @@ export class UniqueConstraint<
   public isScrollable(): boolean {
     return (
       this.componentsByName.size === 1 &&
-      Array.from(this.componentsByName.values()).every(
+      Array.from(this.componentSet).every(
         (component) => component instanceof Leaf && component.isSortable(),
       )
     );
@@ -201,10 +201,7 @@ export class UniqueConstraint<
     return new NodeSelection(
       this.node,
       mergeSelectionExpressions(
-        Array.from(
-          this.componentsByName.values(),
-          ({ selection }) => selection,
-        ),
+        Array.from(this.componentSet, ({ selection }) => selection),
       ),
     );
   }
@@ -228,9 +225,7 @@ export class UniqueConstraint<
 
     if (
       this.isNullable() &&
-      Array.from(this.componentsByName.values()).every(
-        ({ name }) => value[name] === null,
-      )
+      Array.from(this.componentSet).every(({ name }) => value[name] === null)
     ) {
       throw new utils.UnexpectedValueError(
         `at least one non-null component's value`,

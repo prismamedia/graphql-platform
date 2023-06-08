@@ -1,5 +1,6 @@
 import type { NodeValue } from '../../../../node.js';
 import type { DependencyTree } from '../../../result-set.js';
+import type { AndOperand, BooleanFilter, OrOperand } from '../boolean.js';
 
 export interface BooleanExpressionInterface {
   /**
@@ -7,30 +8,41 @@ export interface BooleanExpressionInterface {
    */
   equals(expression: unknown): boolean;
 
-  and?(
-    expression: BooleanExpressionInterface,
-  ): BooleanExpressionInterface | undefined;
-
-  or?(
-    expression: BooleanExpressionInterface,
-  ): BooleanExpressionInterface | undefined;
-
   /**
-   * Uses the boolean algebra's (non-)monotone laws to reduce/optimize this expression
+   * Used to sort expressions, the lower the better
    *
-   * @see https://en.wikipedia.org/wiki/Boolean_algebra#Laws
+   * = 1 + operands' score
    */
-  readonly reduced: this | BooleanExpressionInterface;
+  readonly score: number;
 
   /**
    * List of the components & reverse-edges whom changes may change the result-set
    */
-  readonly dependencies: DependencyTree | undefined;
+  readonly dependencies?: DependencyTree;
 
   /**
+   * Returns the logical negation, if possible
+   *
    * @see https://en.wikipedia.org/wiki/Negation
    */
-  readonly complement?: BooleanExpressionInterface;
+  readonly complement?: BooleanFilter | undefined;
+
+  /**
+   * Reduce the conjunction of this expression with the provided operand, if possible
+   *
+   * @see https://en.wikipedia.org/wiki/Logical_conjunction
+   */
+  and?(
+    operand: AndOperand,
+    remainingReducers: number,
+  ): BooleanFilter | undefined;
+
+  /**
+   * Reduce the disjunction of this expression with the provided operand, if possible
+   *
+   * @see https://en.wikipedia.org/wiki/Disjunction_(logical_connective)
+   */
+  or?(operand: OrOperand, remainingReducers: number): BooleanFilter | undefined;
 
   /**
    * A developer-friendly representation of this expression

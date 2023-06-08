@@ -33,9 +33,7 @@ describe('Update statement', () => {
     changes = [];
   });
 
-  afterAll(async () => {
-    await gp.connector.teardown();
-  });
+  afterAll(() => gp.connector.teardown());
 
   it.each([
     [

@@ -2,37 +2,38 @@ import type { NodeValue } from '../../../../../node.js';
 import type { DependencyTree } from '../../../../result-set.js';
 import type { BooleanFilter } from '../../boolean.js';
 import type { BooleanExpressionInterface } from '../expression-interface.js';
-import { BooleanValue } from '../value.js';
-import { OrOperation } from './or.js';
+import type { BooleanExpression } from '../expression.js';
+import { AndOperand, AndOperation } from './and.js';
+import { OrOperation, type OrOperand } from './or.js';
+
+export type NotOperand = BooleanExpression | AndOperation | OrOperation;
 
 export interface NotOperationAST {
-  kind: 'BooleanOperation';
-  operator: 'Not';
-  operand: BooleanFilter['ast'];
+  kind: 'NOT';
+  operand: NotOperand['ast'];
 }
 
 /**
  * @see https://en.wikipedia.org/wiki/Negation
  */
 export class NotOperation implements BooleanExpressionInterface {
-  public readonly operand: BooleanFilter;
-  public readonly complement: BooleanFilter;
-  public readonly reduced: BooleanFilter;
-
-  public constructor(rawOperand: BooleanFilter) {
-    this.operand = rawOperand.reduced;
-
-    this.complement = this.operand;
-
-    // Double negation: NOT (NOT A) = A
-    this.reduced =
-      'complement' in this.operand && this.operand.complement
-        ? this.operand.complement.reduced
-        : this;
+  public static create(operand: BooleanFilter): BooleanFilter {
+    return 'complement' in operand &&
+      operand.complement &&
+      operand.complement.score < 1 + operand.score
+      ? // Double negation: NOT (NOT A) = A
+        operand.complement
+      : new this(operand as NotOperand);
   }
 
-  public get dependencies(): DependencyTree | undefined {
-    return this.operand.dependencies;
+  public readonly score: number;
+  public readonly dependencies?: DependencyTree;
+  public readonly complement: NotOperand;
+
+  public constructor(public readonly operand: NotOperand) {
+    this.score = 1 + operand.score;
+    this.dependencies = operand.dependencies;
+    this.complement = operand;
   }
 
   public equals(expression: unknown): expression is NotOperation {
@@ -42,34 +43,23 @@ export class NotOperation implements BooleanExpressionInterface {
     );
   }
 
-  public and(expression: BooleanFilter): BooleanFilter | undefined {
-    if (this.operand.equals(expression)) {
-      // Complementation: A AND (NOT A) = 0
-      return new BooleanValue(false);
-    }
-
-    if ('complement' in expression && expression.complement) {
-      // De Morgan's laws: (NOT A) AND (NOT B) = NOT (A OR B)
-      const or = new OrOperation([this.operand, expression.complement]);
-
-      // In order not to have an infinite loop, we apply this rule only if the result is actually reduced
-      if (or.reduced !== or) {
-        return new NotOperation(or);
-      }
-    }
+  public and(
+    _operand: AndOperand,
+    _remainingReducers: number,
+  ): BooleanFilter | undefined {
+    return;
   }
 
-  public or(expression: BooleanFilter): BooleanFilter | undefined {
-    if (this.operand.equals(expression)) {
-      // Complementation: A OR (NOT A) = 1
-      return new BooleanValue(true);
-    }
+  public or(
+    _operand: OrOperand,
+    _remainingReducers: number,
+  ): BooleanFilter | undefined {
+    return;
   }
 
   public get ast(): NotOperationAST {
     return {
-      kind: 'BooleanOperation',
-      operator: 'Not',
+      kind: 'NOT',
       operand: this.operand.ast,
     };
   }

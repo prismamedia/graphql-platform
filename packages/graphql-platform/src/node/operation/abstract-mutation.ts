@@ -106,7 +106,7 @@ export abstract class AbstractMutation<
       (authorization, mutationType) =>
         new NodeFilter(
           this.node,
-          new AndOperation([
+          AndOperation.create([
             authorization?.filter,
             context.ensureAuthorization(this.node, path, mutationType)?.filter,
           ]),

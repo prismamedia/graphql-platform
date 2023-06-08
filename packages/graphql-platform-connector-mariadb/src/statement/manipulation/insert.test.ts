@@ -22,9 +22,7 @@ describe('Insert statement', () => {
     await gp.connector.setup();
   });
 
-  afterAll(async () => {
-    await gp.connector.teardown();
-  });
+  afterAll(() => gp.connector.teardown());
 
   it('generates a single creation', async () => {
     executedStatements.length = 0;

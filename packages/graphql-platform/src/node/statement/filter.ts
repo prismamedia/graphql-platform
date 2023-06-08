@@ -1,8 +1,10 @@
+import { Memoize } from '@prismamedia/memoize';
+import assert from 'node:assert/strict';
 import type { Node, NodeValue } from '../../node.js';
 import type { DependencyTree } from '../result-set.js';
 import type { BooleanFilter } from './filter/boolean.js';
 import { NotOperation } from './filter/boolean/operation/not.js';
-import { BooleanValue } from './filter/boolean/value.js';
+import { FalseValue, TrueValue } from './filter/boolean/value.js';
 
 export * from './filter/boolean.js';
 
@@ -13,21 +15,27 @@ export interface NodeFilterAST {
 }
 
 export class NodeFilter {
-  public readonly filter: BooleanFilter;
+  /**
+   * Used to sort filters, the lower the better
+   */
+  public readonly score: number;
 
   /**
    * List of the components & reverse-edges whom changes may change the result-set
    */
   public readonly dependencies: DependencyTree | undefined;
 
-  public constructor(public readonly node: Node, filter: BooleanFilter) {
-    this.filter = filter.reduced;
-
-    this.dependencies = this.filter.dependencies;
+  public constructor(
+    public readonly node: Node,
+    public readonly filter: BooleanFilter,
+  ) {
+    this.score = filter.score;
+    this.dependencies = filter.dependencies;
   }
 
+  @Memoize()
   public get complement(): NodeFilter {
-    return new NodeFilter(this.node, new NotOperation(this.filter));
+    return new NodeFilter(this.node, NotOperation.create(this.filter));
   }
 
   public equals(nodeFilter: unknown): boolean {
@@ -39,11 +47,11 @@ export class NodeFilter {
   }
 
   public isTrue(): boolean {
-    return this.filter instanceof BooleanValue && this.filter.isTrue();
+    return this.filter.equals(TrueValue);
   }
 
   public isFalse(): boolean {
-    return this.filter instanceof BooleanValue && this.filter.isFalse();
+    return this.filter.equals(FalseValue);
   }
 
   public get ast(): NodeFilterAST {
@@ -67,9 +75,10 @@ export class NodeFilter {
   ): TPartial extends false ? boolean : boolean | undefined {
     const result = this.filter.execute(nodeValue);
 
-    if (result === undefined && partial === false) {
-      throw new Error('The filter is not applicable to this value');
-    }
+    assert(
+      result !== undefined || partial !== false,
+      'The filter is not applicable to this value',
+    );
 
     return result as any;
   }

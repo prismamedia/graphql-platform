@@ -14,7 +14,7 @@ export type Name = string;
  */
 export function assertName(
   maybeName: unknown,
-  path: Path,
+  path?: Path,
 ): asserts maybeName is Name {
   if (typeof maybeName !== 'string' || !maybeName) {
     throw new UnexpectedValueError(`a non-empty string`, maybeName, {
@@ -24,11 +24,11 @@ export function assertName(
 
   try {
     graphql.assertName(maybeName);
-  } catch (error) {
+  } catch (cause) {
     throw new UnexpectedValueError(
       'to be valid against the GraphQL "Names" specification (@see: https://spec.graphql.org/draft/#sec-Names)',
       maybeName,
-      { cause: error, path },
+      { cause, path },
     );
   }
 }
@@ -36,7 +36,7 @@ export function assertName(
 /**
  * @see https://spec.graphql.org/draft/#sec-Names
  */
-export function ensureName(maybeName: unknown, path: Path): Name {
+export function ensureName(maybeName: unknown, path?: Path): Name {
   assertName(maybeName, path);
 
   return maybeName;

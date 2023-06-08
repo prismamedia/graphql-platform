@@ -1,76 +1,71 @@
 import { Memoize } from '@prismamedia/memoize';
-import assert from 'node:assert/strict';
 import type { NodeValue } from '../../../../../../../node.js';
 import type { MultipleReverseEdge } from '../../../../../../definition/reverse-edge/multiple.js';
 import type { DependencyTree } from '../../../../../../result-set.js';
-import { BooleanFilter } from '../../../../boolean.js';
+import type { BooleanFilter } from '../../../../boolean.js';
 import type { BooleanExpressionInterface } from '../../../expression-interface.js';
-import { BooleanValue } from '../../../value.js';
+import {
+  NotOperation,
+  type AndOperand,
+  type OrOperand,
+} from '../../../operation.js';
+import { FalseValue } from '../../../value.js';
+import { MultipleReverseEdgeExistsFilter } from './exists.js';
 
 export interface MultipleReverseEdgeCountFilterAST {
-  kind: 'MultipleReverseEdgeCountFilter';
+  kind: 'MULTIPLE_REVERSE_EDGE_COUNT';
   reverseEdge: MultipleReverseEdge['name'];
-  operator: MultipleReverseEdgeCountFilter['operator'];
+  operator: Uppercase<MultipleReverseEdgeCountFilter['operator']>;
   value: MultipleReverseEdgeCountFilter['value'];
 }
 
 export class MultipleReverseEdgeCountFilter
   implements BooleanExpressionInterface
 {
-  public readonly operator: 'eq' | 'gt' | 'lt';
-  public readonly value: number;
-  public readonly reduced: BooleanValue | MultipleReverseEdgeCountFilter | this;
-
-  public constructor(
-    public readonly reverseEdge: MultipleReverseEdge,
+  public static create(
+    reverseEdge: MultipleReverseEdge,
     operator: 'eq' | 'gt' | 'gte' | 'lt' | 'lte',
     value: number,
-  ) {
-    assert(
-      Number.isInteger(value) && value >= 0,
-      `Expects a non-negative integer, got: ${value}`,
-    );
-
-    switch (operator) {
-      case 'gte':
-        this.operator = 'gt';
-        this.value = value - 1;
-        break;
-
-      case 'lte':
-        this.operator = 'lt';
-        this.value = value + 1;
-        break;
-
-      default:
-        this.operator = operator;
-        this.value = value;
-        break;
+  ): BooleanFilter {
+    if (operator === 'gte') {
+      return this.create(reverseEdge, 'gt', value - 1);
+    } else if (operator === 'lte') {
+      return this.create(reverseEdge, 'lt', value + 1);
     }
 
-    this.reduced =
-      this.operator === 'lt'
-        ? this.value === 0
-          ? new BooleanValue(false)
-          : this.value === 1
-          ? new MultipleReverseEdgeCountFilter(reverseEdge, 'eq', 0)
-          : this
-        : this;
+    if (operator === 'gt') {
+      if (value === 0) {
+        return MultipleReverseEdgeExistsFilter.create(reverseEdge);
+      }
+    } else if (operator === 'lt') {
+      if (value === 0) {
+        return FalseValue;
+      } else if (value === 1) {
+        return this.create(reverseEdge, 'eq', 0);
+      }
+    } else if (operator === 'eq') {
+      if (value === 0) {
+        return NotOperation.create(
+          MultipleReverseEdgeExistsFilter.create(reverseEdge),
+        );
+      }
+    }
+
+    return new this(reverseEdge, operator, value);
   }
 
-  public get dependencies(): DependencyTree | undefined {
-    return new Map([
-      [this.reverseEdge, new Map([[this.reverseEdge.originalEdge, undefined]])],
+  public readonly score: number;
+  public readonly dependencies: DependencyTree;
+
+  protected constructor(
+    public readonly reverseEdge: MultipleReverseEdge,
+    public readonly operator: 'eq' | 'gt' | 'lt',
+    public readonly value: number,
+  ) {
+    this.score = 2;
+    this.dependencies = new Map([
+      [reverseEdge, new Map([[reverseEdge.originalEdge, undefined]])],
     ]);
-  }
-
-  @Memoize()
-  public get complement(): MultipleReverseEdgeCountFilter | undefined {
-    return this.operator === 'gt'
-      ? new MultipleReverseEdgeCountFilter(this.reverseEdge, 'lte', this.value)
-      : this.operator === 'lt'
-      ? new MultipleReverseEdgeCountFilter(this.reverseEdge, 'gte', this.value)
-      : undefined;
   }
 
   public equals(expression: unknown): boolean {
@@ -82,30 +77,53 @@ export class MultipleReverseEdgeCountFilter
     );
   }
 
-  public and(expression: unknown): BooleanFilter | undefined {
+  @Memoize()
+  public get complement(): BooleanFilter | undefined {
+    return this.operator === 'gt'
+      ? MultipleReverseEdgeCountFilter.create(
+          this.reverseEdge,
+          'lte',
+          this.value,
+        )
+      : this.operator === 'lt'
+      ? MultipleReverseEdgeCountFilter.create(
+          this.reverseEdge,
+          'gte',
+          this.value,
+        )
+      : undefined;
+  }
+
+  public and(
+    operand: AndOperand,
+    _remainingReducers: number,
+  ): BooleanFilter | undefined {
     if (
-      expression instanceof MultipleReverseEdgeCountFilter &&
-      expression.reverseEdge === this.reverseEdge
+      operand instanceof MultipleReverseEdgeCountFilter &&
+      operand.reverseEdge === this.reverseEdge
     ) {
       if (
         this.operator === 'eq' &&
-        expression.operator === 'eq' &&
-        this.value !== expression.value
+        operand.operator === 'eq' &&
+        this.value !== operand.value
       ) {
-        return new BooleanValue(false);
+        return FalseValue;
       }
     }
   }
 
-  public or(expression: unknown): BooleanFilter | undefined {
-    return undefined;
+  public or(
+    _operand: OrOperand,
+    _remainingReducers: number,
+  ): BooleanFilter | undefined {
+    return;
   }
 
   public get ast(): MultipleReverseEdgeCountFilterAST {
     return {
-      kind: 'MultipleReverseEdgeCountFilter',
+      kind: 'MULTIPLE_REVERSE_EDGE_COUNT',
       reverseEdge: this.reverseEdge.name,
-      operator: this.operator,
+      operator: this.operator.toUpperCase() as any,
       value: this.value,
     };
   }

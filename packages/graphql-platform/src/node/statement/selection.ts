@@ -1,7 +1,7 @@
 import * as utils from '@prismamedia/graphql-platform-utils';
 import * as graphql from 'graphql';
-import _ from 'lodash';
 import assert from 'node:assert/strict';
+import * as R from 'remeda';
 import type { JsonObject } from 'type-fest';
 import type { Node } from '../../node.js';
 import { mergeDependencyTrees, type DependencyTree } from '../result-set.js';
@@ -130,7 +130,7 @@ export class NodeSelection<TValue extends NodeSelectedValue = any> {
   }
 
   public uniqValues(values: ReadonlyArray<TValue>): TValue[] {
-    return _.uniqWith(values, (a, b) => this.areValuesEqual(a, b));
+    return R.uniqWith(values, (a, b) => this.areValuesEqual(a, b));
   }
 
   public serialize(

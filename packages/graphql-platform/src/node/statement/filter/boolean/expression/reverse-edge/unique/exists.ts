@@ -1,3 +1,4 @@
+import { Memoize } from '@prismamedia/memoize';
 import assert from 'node:assert/strict';
 import type { NodeValue } from '../../../../../../../node.js';
 import type { UniqueReverseEdge } from '../../../../../../definition/reverse-edge/unique.js';
@@ -6,13 +7,14 @@ import {
   type DependencyTree,
 } from '../../../../../../result-set.js';
 import { NodeFilter, areFiltersEqual } from '../../../../../filter.js';
-import { BooleanFilter } from '../../../../boolean.js';
+import type { BooleanFilter } from '../../../../boolean.js';
 import type { BooleanExpressionInterface } from '../../../expression-interface.js';
+import type { AndOperand, OrOperand } from '../../../operation.js';
 import { AndOperation, NotOperation, OrOperation } from '../../../operation.js';
-import { BooleanValue } from '../../../value.js';
+import { FalseValue } from '../../../value.js';
 
 export interface UniqueReverseEdgeExistsFilterAST {
-  kind: 'UniqueReverseEdgeExistsFilter';
+  kind: 'UNIQUE_REVERSE_EDGE_EXISTS';
   reverseEdge: UniqueReverseEdge['name'];
   headFilter?: NodeFilter['ast'];
 }
@@ -20,29 +22,31 @@ export interface UniqueReverseEdgeExistsFilterAST {
 export class UniqueReverseEdgeExistsFilter
   implements BooleanExpressionInterface
 {
-  public readonly headFilter?: NodeFilter;
-  public readonly reduced: BooleanValue | this;
-
-  public constructor(
-    public readonly reverseEdge: UniqueReverseEdge,
+  public static create(
+    reverseEdge: UniqueReverseEdge,
     headFilter?: NodeFilter,
-  ) {
-    if (headFilter) {
-      assert.equal(reverseEdge.head, headFilter.node);
+  ): BooleanFilter {
+    headFilter && assert.equal(reverseEdge.head, headFilter.node);
 
-      this.headFilter = headFilter.normalized;
-    }
-
-    this.reduced = this.headFilter?.isFalse() ? new BooleanValue(false) : this;
+    return headFilter?.isFalse()
+      ? FalseValue
+      : new this(reverseEdge, headFilter?.normalized);
   }
 
-  public get dependencies(): DependencyTree | undefined {
-    return new Map([
+  public readonly score: number;
+  public readonly dependencies: DependencyTree;
+
+  protected constructor(
+    public readonly reverseEdge: UniqueReverseEdge,
+    public readonly headFilter?: NodeFilter,
+  ) {
+    this.score = 1 + (headFilter?.score ?? 0);
+    this.dependencies = new Map([
       [
-        this.reverseEdge,
+        reverseEdge,
         mergeDependencyTrees([
-          new Map([[this.reverseEdge.originalEdge, undefined]]),
-          this.headFilter?.dependencies,
+          new Map([[reverseEdge.originalEdge, undefined]]),
+          headFilter?.dependencies,
         ]),
       ],
     ]);
@@ -58,45 +62,61 @@ export class UniqueReverseEdgeExistsFilter
     );
   }
 
-  public and(expression: unknown): BooleanFilter | undefined {
+  @Memoize()
+  public get complement(): BooleanFilter | undefined {
+    return this.headFilter
+      ? new OrOperation(
+          [
+            new NotOperation(
+              new UniqueReverseEdgeExistsFilter(this.reverseEdge),
+            ),
+            new UniqueReverseEdgeExistsFilter(
+              this.reverseEdge,
+              this.headFilter.complement,
+            ),
+          ],
+          this,
+        )
+      : undefined;
+  }
+
+  public and(
+    operand: AndOperand,
+    remainingReducers: number,
+  ): BooleanFilter | undefined {
     if (
-      expression instanceof UniqueReverseEdgeExistsFilter &&
-      expression.reverseEdge === this.reverseEdge
+      operand instanceof UniqueReverseEdgeExistsFilter &&
+      operand.reverseEdge === this.reverseEdge
     ) {
-      return new UniqueReverseEdgeExistsFilter(
+      return UniqueReverseEdgeExistsFilter.create(
         this.reverseEdge,
         new NodeFilter(
           this.reverseEdge.head,
-          new AndOperation([
-            this.headFilter?.filter,
-            expression.headFilter?.filter,
-          ]),
+          AndOperation.create(
+            [this.headFilter?.filter, operand.headFilter?.filter],
+            remainingReducers,
+          ),
         ),
       );
-    } else if (
-      expression instanceof NotOperation &&
-      expression.operand instanceof UniqueReverseEdgeExistsFilter &&
-      expression.operand.reverseEdge === this.reverseEdge
-    ) {
-      if (!expression.operand.headFilter) {
-        return new BooleanValue(false);
-      }
     }
   }
 
-  public or(expression: unknown): BooleanFilter | undefined {
+  public or(
+    operand: OrOperand,
+    remainingReducers: number,
+  ): BooleanFilter | undefined {
     if (
-      expression instanceof UniqueReverseEdgeExistsFilter &&
-      expression.reverseEdge === this.reverseEdge
+      operand instanceof UniqueReverseEdgeExistsFilter &&
+      operand.reverseEdge === this.reverseEdge
     ) {
-      return new UniqueReverseEdgeExistsFilter(
+      return UniqueReverseEdgeExistsFilter.create(
         this.reverseEdge,
         new NodeFilter(
           this.reverseEdge.head,
-          new OrOperation([
-            this.headFilter?.filter,
-            expression.headFilter?.filter,
-          ]),
+          OrOperation.create(
+            [this.headFilter?.filter, operand.headFilter?.filter],
+            remainingReducers,
+          ),
         ),
       );
     }
@@ -104,7 +124,7 @@ export class UniqueReverseEdgeExistsFilter
 
   public get ast(): UniqueReverseEdgeExistsFilterAST {
     return {
-      kind: 'UniqueReverseEdgeExistsFilter',
+      kind: 'UNIQUE_REVERSE_EDGE_EXISTS',
       reverseEdge: this.reverseEdge.name,
       ...(this.headFilter && { headFilter: this.headFilter.ast }),
     };

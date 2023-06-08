@@ -164,9 +164,9 @@ WHERE (
       AND (
         \`articles>createdBy>profile\`.\`theUserId\` IS NOT NULL
         AND (
-          NOT \`articles>createdBy>profile\`.\`facebook_id\` <=> NULL
-          OR NOT \`articles>createdBy>profile\`.\`google_id\` <=> NULL
-          OR NOT \`articles>createdBy>profile\`.\`twitter_handle\` <=> NULL
+          \`articles>createdBy>profile\`.\`facebook_id\` <> NULL
+          OR \`articles>createdBy>profile\`.\`google_id\` <> NULL
+          OR \`articles>createdBy>profile\`.\`twitter_handle\` <> NULL
         )
       )
     )
@@ -178,7 +178,7 @@ WHERE (
       WHERE \`articles\`.\`private_id\` <=> \`article_tags\`.\`article_private_id\`
         AND (
           \`article_tags>tag\`.\`id\` IS NOT NULL
-          AND NOT \`article_tags>tag\`.\`deprecated\` <=> 1
+          AND \`article_tags>tag\`.\`deprecated\` <> 1
         )
     )
     AND (
@@ -188,7 +188,27 @@ WHERE (
     ) > 5
     AND (
       \`articles\`.\`body\` <=> NULL
-      OR MATCH (\`articles\`.\`body\`) AGAINST ('my +searched -text here' IN BOOLEAN MODE)
+      OR JSON_SEARCH(
+        \`articles\`.\`body\`,
+        'one',
+        '%my searched text here%',
+        NULL,
+        '$.blocks[*].text'
+      ) IS NOT NULL
+      OR JSON_SEARCH(
+        \`articles\`.\`body\`,
+        'one',
+        'my starting text here%',
+        NULL,
+        '$.blocks[0].text'
+      ) IS NOT NULL
+      OR JSON_SEARCH(
+        \`articles\`.\`body\`,
+        'one',
+        '%my ending text here',
+        NULL,
+        '$.blocks[last].text'
+      ) IS NOT NULL
     )
   )
 ORDER BY \`articles\`.\`created_at\` ASC

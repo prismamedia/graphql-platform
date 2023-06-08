@@ -1,128 +1,142 @@
-import * as utils from '@prismamedia/graphql-platform-utils';
-import { Memoize } from '@prismamedia/memoize';
 import type { NodeValue } from '../../../../../node.js';
 import {
   mergeDependencyTrees,
   type DependencyTree,
 } from '../../../../result-set.js';
-import { isBooleanFilter, type BooleanFilter } from '../../boolean.js';
+import { type BooleanFilter } from '../../boolean.js';
 import type { BooleanExpressionInterface } from '../expression-interface.js';
 import type { BooleanExpression } from '../expression.js';
-import { BooleanValue } from '../value.js';
-import { AndOperation } from './and.js';
+import { type LeafInFilterAST } from '../expression/component/leaf/in.js';
+import { BooleanValue, FalseValue, TrueValue } from '../value.js';
+import { AndOperation, type AndOperand } from './and.js';
 import { NotOperation } from './not.js';
 
+export type OrOperand = BooleanExpression | AndOperation | NotOperation;
+
 export interface OrOperationAST {
-  kind: 'BooleanOperation';
-  operator: 'Or';
+  kind: 'OR';
   operands: OrOperand['ast'][];
 }
 
-export type OrOperand =
-  | AndOperation
-  | BooleanExpression
-  | BooleanValue<true>
-  | NotOperation;
-
-/**
- * Thanks to the "associativity" (-> A OR (B OR C) = A OR B OR C) we'll store the operands in an optimized tree
- *
- * Then we'll use the (non-)monotone laws to reduce/optimize the operands
- *
- * @see https://en.wikipedia.org/wiki/Logical_disjunction
- */
 export class OrOperation implements BooleanExpressionInterface {
-  public readonly operands: ReadonlyArray<OrOperand>;
+  protected static reducers(
+    remainingReducers: number,
+  ): Array<(a: OrOperand, b: OrOperand) => BooleanFilter | undefined> {
+    return [
+      // Idempotent law: A + A = A
+      (a: OrOperand, b: OrOperand) => (a.equals(b) ? a : undefined),
+      // Deeper optimizations
+      ...(remainingReducers
+        ? [
+            (a: OrOperand, b: OrOperand) => a.or(b, remainingReducers - 1),
+            (a: OrOperand, b: OrOperand) => b.or(a, remainingReducers - 1),
+            // Complement law: A + (NOT A) = 1
+            (a: OrOperand, b: OrOperand) =>
+              ('complement' in a && a.complement?.equals(b)) ||
+              ('complement' in b && b.complement?.equals(a))
+                ? TrueValue
+                : undefined,
+            // De Morgan's law: (NOT A) + (NOT B) = NOT (A . B)
+            (a: OrOperand, b: OrOperand) =>
+              'complement' in a &&
+              a.complement &&
+              'complement' in b &&
+              b.complement
+                ? NotOperation.create(
+                    AndOperation.create(
+                      [a.complement, b.complement],
+                      remainingReducers - 1,
+                    ),
+                  )
+                : undefined,
+          ]
+        : []),
+    ];
+  }
 
-  public constructor(rawOperands: ReadonlyArray<BooleanFilter | undefined>) {
-    const operandSet = new Set<Exclude<OrOperand, BooleanValue>>();
+  /**
+   * Use the (non-)monotone laws to reduce/optimize the operands
+   *
+   * @see https://en.wikipedia.org/wiki/Logical_disjunction
+   */
+  public static create(
+    maybeOperands: ReadonlyArray<BooleanFilter | null | undefined>,
+    remainingReducers: number = 2,
+  ): BooleanFilter {
+    const operands: OrOperand[] = [];
 
-    /**
-     * We'll use this array to iterate over and reduce every operands
-     * As we'll push new operands into it, we cannot use the original "rawOperands", hence the shallow copy
-     */
-    const shallowCopyOfRawOperands = Array.from(rawOperands);
+    const queue = Array.from(maybeOperands);
+    const reducers = this.reducers(remainingReducers);
 
-    for (const rawOperand of shallowCopyOfRawOperands) {
-      if (rawOperand === undefined) {
-        // Annihilator: A OR 1 = 1
-        this.operands = [new BooleanValue(true)];
-        return;
-      } else if (isBooleanFilter(rawOperand)) {
-        // Reduce recursively
-        const operand = rawOperand.reduced;
+    while (queue.length) {
+      const maybeOperand = queue.shift();
 
-        if (operand instanceof BooleanValue) {
-          if (operand.isTrue()) {
-            // Annihilator: A OR 1 = 1
-            this.operands = [operand];
-            return;
-          } else {
-            // Identity: A OR 0 = A
-            continue;
-          }
-        } else if (operand instanceof OrOperation) {
-          // Associativity: A OR (B OR C) = A OR B OR C
-          shallowCopyOfRawOperands.push(...operand.operands);
-        } else if (
-          operand instanceof NotOperation &&
-          operand.operand instanceof AndOperation
-        ) {
-          // De Morgan's laws: NOT (A AND B) = (NOT A) OR (NOT B)
-          shallowCopyOfRawOperands.push(
-            ...operand.operand.operands.map(
-              (operand) => new NotOperation(operand),
-            ),
-          );
-        } else if (
-          !Array.from(operandSet).some((currentOperand) => {
-            if (currentOperand.equals(operand)) {
-              // Idempotence: A OR A = A
-              return true;
-            }
+      const operand =
+        maybeOperand === undefined
+          ? TrueValue
+          : maybeOperand === null
+          ? FalseValue
+          : maybeOperand;
 
-            const combinedExpression =
-              currentOperand.or(operand) ?? operand.or(currentOperand);
-
-            if (combinedExpression) {
-              if (combinedExpression !== currentOperand) {
-                operandSet.delete(currentOperand);
-                shallowCopyOfRawOperands.push(combinedExpression);
+      // Reduce recursively
+      if (operand instanceof BooleanValue) {
+        if (operand.value) {
+          // Annulment law: A + 1 = 1
+          return operand;
+        } else {
+          // Identity law: A + 0 = A
+          continue;
+        }
+      } else if (operand instanceof OrOperation) {
+        // Associative law: A + (B + C) = A + B + C
+        queue.unshift(...operand.operands);
+      } else if (
+        !reducers.length ||
+        !operands.some((previousOperand, index) =>
+          reducers.some((reducer) => {
+            const disjunction = reducer(previousOperand, operand);
+            if (
+              disjunction &&
+              disjunction.score < 1 + previousOperand.score + operand.score
+            ) {
+              if (previousOperand !== disjunction) {
+                operands.splice(index, 1);
+                queue.unshift(disjunction);
               }
 
               return true;
             }
 
             return false;
-          })
-        ) {
-          operandSet.add(operand);
-        }
-      } else {
-        throw new utils.UnreachableValueError(rawOperand);
+          }),
+        )
+      ) {
+        operands.push(operand);
       }
     }
 
-    this.operands = Object.freeze(Array.from(operandSet));
-  }
-
-  @Memoize()
-  public get reduced(): BooleanFilter {
-    return this.operands.length === 0
+    return operands.length === 0
       ? // An empty disjunction is FALSE
-        new BooleanValue(false)
-      : this.operands.length === 1
-      ? this.operands[0]
-      : this;
+        FalseValue
+      : operands.length === 1
+      ? operands[0]
+      : new this(operands);
   }
 
-  public get dependencies(): DependencyTree | undefined {
-    return mergeDependencyTrees(
-      this.operands.map(({ dependencies }) => dependencies),
+  public readonly score: number;
+  public readonly dependencies?: DependencyTree;
+
+  public constructor(
+    public readonly operands: ReadonlyArray<OrOperand>,
+    public readonly complement?: BooleanFilter,
+  ) {
+    this.score = 1 + operands.reduce((total, { score }) => total + score, 0);
+    this.dependencies = mergeDependencyTrees(
+      operands.map(({ dependencies }) => dependencies),
     );
   }
 
-  protected has(expression: unknown): boolean {
+  public has(expression: unknown): boolean {
     return this.operands.some((operand) => operand.equals(expression));
   }
 
@@ -134,19 +148,27 @@ export class OrOperation implements BooleanExpressionInterface {
     );
   }
 
-  public and(expression: BooleanFilter): BooleanFilter | undefined {
-    if (this.has(expression)) {
-      // Absorption: (A OR B) AND A = A
-      return expression;
+  public and(
+    operand: AndOperand,
+    remainingReducers: number,
+  ): BooleanFilter | undefined {
+    // Absorption law: (A + B) . A = A
+    if (this.has(operand)) {
+      return operand;
     }
 
-    // TODO: Distributivity: (A OR B) AND C = (A AND C) OR (B AND C)
+    // Distributive law: (A + B) . C = (A . C) + (B . C)
+    return OrOperation.create(
+      this.operands.map((a) =>
+        AndOperation.create([a, operand], remainingReducers),
+      ),
+      remainingReducers,
+    );
   }
 
-  public get ast(): OrOperationAST {
+  public get ast(): OrOperationAST | LeafInFilterAST {
     return {
-      kind: 'BooleanOperation',
-      operator: 'Or',
+      kind: 'OR',
       operands: this.operands.map(({ ast }) => ast),
     };
   }

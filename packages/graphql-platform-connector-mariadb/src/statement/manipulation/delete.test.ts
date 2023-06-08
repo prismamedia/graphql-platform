@@ -20,9 +20,7 @@ describe('Delete statement', () => {
     await gp.seed(myAdminContext, fixtures.constant);
   });
 
-  afterAll(async () => {
-    await gp.connector.teardown();
-  });
+  afterAll(() => gp.connector.teardown());
 
   it.each([
     [

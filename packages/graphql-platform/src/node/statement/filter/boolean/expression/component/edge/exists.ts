@@ -1,35 +1,39 @@
+import { Memoize } from '@prismamedia/memoize';
 import assert from 'node:assert/strict';
 import type { NodeValue } from '../../../../../../../node.js';
 import type { Edge } from '../../../../../../definition/component/edge.js';
-import { type DependencyTree } from '../../../../../../result-set.js';
+import type { DependencyTree } from '../../../../../../result-set.js';
 import { NodeFilter, areFiltersEqual } from '../../../../../filter.js';
-import { BooleanFilter } from '../../../../boolean.js';
+import type { BooleanFilter } from '../../../../boolean.js';
 import type { BooleanExpressionInterface } from '../../../expression-interface.js';
+import type { AndOperand, OrOperand } from '../../../operation.js';
 import { AndOperation, NotOperation, OrOperation } from '../../../operation.js';
-import { BooleanValue } from '../../../value.js';
+import { FalseValue } from '../../../value.js';
 
 export interface EdgeExistsFilterAST {
-  kind: 'EdgeExistsFilter';
+  kind: 'EDGE_EXISTS';
   edge: Edge['name'];
   headFilter?: NodeFilter['ast'];
 }
 
 export class EdgeExistsFilter implements BooleanExpressionInterface {
-  public readonly headFilter?: NodeFilter;
-  public readonly reduced: BooleanValue | this;
+  public static create(edge: Edge, headFilter?: NodeFilter): BooleanFilter {
+    headFilter && assert.equal(edge.head, headFilter.node);
 
-  public constructor(public readonly edge: Edge, headFilter?: NodeFilter) {
-    if (headFilter) {
-      assert.equal(edge.head, headFilter.node);
-
-      this.headFilter = headFilter.normalized;
-    }
-
-    this.reduced = this.headFilter?.isFalse() ? new BooleanValue(false) : this;
+    return headFilter?.isFalse()
+      ? FalseValue
+      : new this(edge, headFilter?.normalized);
   }
 
-  public get dependencies(): DependencyTree | undefined {
-    return new Map([[this.edge, this.headFilter?.dependencies]]);
+  public readonly score: number;
+  public readonly dependencies: DependencyTree;
+
+  protected constructor(
+    public readonly edge: Edge,
+    public readonly headFilter?: NodeFilter,
+  ) {
+    this.score = 1 + (headFilter?.score ?? 0);
+    this.dependencies = new Map([[edge, headFilter?.dependencies]]);
   }
 
   public equals(expression: unknown): boolean {
@@ -40,45 +44,50 @@ export class EdgeExistsFilter implements BooleanExpressionInterface {
     );
   }
 
-  public and(expression: unknown): BooleanFilter | undefined {
-    if (
-      expression instanceof EdgeExistsFilter &&
-      expression.edge === this.edge
-    ) {
-      return new EdgeExistsFilter(
+  @Memoize()
+  public get complement(): BooleanFilter | undefined {
+    return this.headFilter?.filter
+      ? new OrOperation(
+          [
+            new NotOperation(new EdgeExistsFilter(this.edge)),
+            new EdgeExistsFilter(this.edge, this.headFilter.complement),
+          ],
+          // this,
+        )
+      : undefined;
+  }
+
+  public and(
+    operand: AndOperand,
+    remainingReducers: number,
+  ): BooleanFilter | undefined {
+    if (operand instanceof EdgeExistsFilter && operand.edge === this.edge) {
+      return EdgeExistsFilter.create(
         this.edge,
         new NodeFilter(
           this.edge.head,
-          new AndOperation([
-            this.headFilter?.filter,
-            expression.headFilter?.filter,
-          ]),
+          AndOperation.create(
+            [this.headFilter?.filter, operand.headFilter?.filter],
+            remainingReducers,
+          ),
         ),
       );
-    } else if (
-      expression instanceof NotOperation &&
-      expression.operand instanceof EdgeExistsFilter &&
-      expression.operand.edge === this.edge
-    ) {
-      if (!expression.operand.headFilter) {
-        return new BooleanValue(false);
-      }
     }
   }
 
-  public or(expression: unknown): BooleanFilter | undefined {
-    if (
-      expression instanceof EdgeExistsFilter &&
-      expression.edge === this.edge
-    ) {
-      return new EdgeExistsFilter(
+  public or(
+    operand: OrOperand,
+    remainingReducers: number,
+  ): BooleanFilter | undefined {
+    if (operand instanceof EdgeExistsFilter && operand.edge === this.edge) {
+      return EdgeExistsFilter.create(
         this.edge,
         new NodeFilter(
           this.edge.head,
-          new OrOperation([
-            this.headFilter?.filter,
-            expression.headFilter?.filter,
-          ]),
+          OrOperation.create(
+            [this.headFilter?.filter, operand.headFilter?.filter],
+            remainingReducers,
+          ),
         ),
       );
     }
@@ -86,7 +95,7 @@ export class EdgeExistsFilter implements BooleanExpressionInterface {
 
   public get ast(): EdgeExistsFilterAST {
     return {
-      kind: 'EdgeExistsFilter',
+      kind: 'EDGE_EXISTS',
       edge: this.edge.name,
       ...(this.headFilter && { headFilter: this.headFilter.ast }),
     };

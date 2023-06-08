@@ -1,4 +1,3 @@
-import _ from 'lodash';
 import { UnexpectedValueError } from './error.js';
 import { isNil, type Nillable } from './nil.js';
 import type { Path } from './path.js';
@@ -7,7 +6,13 @@ export type PlainObject = { [key: string]: any };
 
 export const isPlainObject = (
   maybePlainObject: unknown,
-): maybePlainObject is PlainObject => _.isPlainObject(maybePlainObject);
+): maybePlainObject is PlainObject =>
+  typeof maybePlainObject === 'object' &&
+  maybePlainObject !== null &&
+  !(
+    'then' in maybePlainObject && typeof maybePlainObject.then === 'function'
+  ) &&
+  Object.prototype.toString.call(maybePlainObject) === '[object Object]';
 
 export function assertPlainObject(
   maybePlainObject: unknown,

@@ -15,9 +15,12 @@ export type Comparator<TScalarType extends Type> = (
   b: GetInternalValueByType<TScalarType>,
 ) => boolean;
 
-export const getComparatorByType = <TType extends Type>(
+/**
+ * @see https://tc39.es/ecma262/#sec-isstrictlyequal
+ */
+export const getNonStrictEqualityComparatorByType = <TType extends Type>(
   type: TType,
-): Comparator<TType> =>
+): Comparator<TType> | undefined =>
   (type === GraphQLDateTime || type === GraphQLDate
     ? (a: Date, b: Date) => a.getTime() === b.getTime()
     : type === GraphQLURL
@@ -26,4 +29,9 @@ export const getComparatorByType = <TType extends Type>(
       type === GraphQLJSONArray ||
       type === GraphQLJSONObject
     ? (a: any, b: any) => isDeepStrictEqual(a, b)
-    : (a: any, b: any) => a === b) as any;
+    : undefined) as any;
+
+export const getComparatorByType = <TType extends Type>(
+  type: TType,
+): Comparator<TType> =>
+  getNonStrictEqualityComparatorByType(type) ?? ((a: any, b: any) => a === b);

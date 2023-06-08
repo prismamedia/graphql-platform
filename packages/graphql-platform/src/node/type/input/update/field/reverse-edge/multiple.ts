@@ -1,8 +1,8 @@
 import * as scalars from '@prismamedia/graphql-platform-scalars';
 import * as utils from '@prismamedia/graphql-platform-utils';
 import inflection from 'inflection';
-import _ from 'lodash';
 import assert from 'node:assert/strict';
+import * as R from 'remeda';
 import type { IterableElement } from 'type-fest';
 import type { NodeValue } from '../../../../../../node.js';
 import type { MultipleReverseEdge } from '../../../../../definition/reverse-edge/multiple.js';
@@ -452,7 +452,7 @@ export class MultipleReverseEdgeUpdateInput extends AbstractReverseEdgeUpdateInp
 
     // First, we apply destructive actions
     await Promise.all(
-      _.intersection<DestructiveActionName>(
+      R.intersection<DestructiveActionName>(
         Object.keys(inputValue) as any,
         destructiveActionNames,
       ).map(async (actionName) => {
@@ -545,7 +545,7 @@ export class MultipleReverseEdgeUpdateInput extends AbstractReverseEdgeUpdateInp
 
     // Then the others
     await Promise.all(
-      _.difference<NonDestructiveActionName>(
+      R.difference<NonDestructiveActionName>(
         Object.keys(inputValue) as any,
         destructiveActionNames as any,
       ).map(async (actionName) => {

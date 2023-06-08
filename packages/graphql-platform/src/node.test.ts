@@ -1,7 +1,7 @@
 import { describe, expect, it } from '@jest/globals';
 import * as utils from '@prismamedia/graphql-platform-utils';
 import * as graphql from 'graphql';
-import _ from 'lodash';
+import * as R from 'remeda';
 import { Article, Category, nodes } from './__tests__/config.js';
 import { GraphQLPlatform } from './index.js';
 import {
@@ -38,11 +38,11 @@ describe('Node', () => {
       it.each([
         [
           '-InvalidName',
-          `/GraphQLPlatformConfig/nodes/-InvalidName - Expects to be valid against the GraphQL \"Names\" specification (@see: https://spec.graphql.org/draft/#sec-Names), got: '-InvalidName'`,
+          `/GraphQLPlatformConfig/nodes/-InvalidName - Expects to be valid against the GraphQL "Names" specification (@see: https://spec.graphql.org/draft/#sec-Names), got: '-InvalidName'`,
         ],
         [
           'invalidName',
-          `/GraphQLPlatformConfig/nodes/invalidName - Expects to be in PascalCase (= \"InvalidName\"), got: 'invalidName'`,
+          `/GraphQLPlatformConfig/nodes/invalidName - Expects to be in "PascalCase", got: 'invalidName'`,
         ],
       ])(
         `throws an Error on invalid name: %s`,
@@ -652,7 +652,7 @@ describe('Node', () => {
                     >(([name, config]) => [
                       name,
                       (config.kind === 'Edge'
-                        ? _.omit(config, ['onHeadDeletion'])
+                        ? R.omit(config, ['onHeadDeletion'])
                         : config) as any,
                     ]),
                   ),
@@ -694,7 +694,7 @@ describe('Node', () => {
                         >(([name, config]) => [
                           name,
                           (config.kind === 'Edge'
-                            ? _.omit(config, ['onHeadDeletion'])
+                            ? R.omit(config, ['onHeadDeletion'])
                             : config) as any,
                         ]),
                       ),

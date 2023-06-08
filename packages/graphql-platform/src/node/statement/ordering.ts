@@ -1,4 +1,4 @@
-import _ from 'lodash';
+import * as R from 'remeda';
 import type { Node } from '../../node.js';
 import { mergeDependencyTrees, type DependencyTree } from '../result-set.js';
 import { type OrderingExpression } from './ordering/expression.js';
@@ -27,7 +27,7 @@ export class NodeOrdering {
     expressions: ReadonlyArray<OrderingExpression>,
   ) {
     this.expressions = Object.freeze(
-      _.uniqWith(
+      R.uniqWith(
         expressions.reduce<OrderingExpression[]>(
           (expressions, expression) =>
             expression.reduced

@@ -12,8 +12,7 @@ export interface MultipleReverseEdgeCountOrderingAST {
 export class MultipleReverseEdgeCountOrdering
   implements OrderingExpressionInterface
 {
-  public readonly reduced?: this;
-
+  public readonly reduced: this;
   public readonly dependencies: DependencyTree;
 
   public constructor(
@@ -21,7 +20,6 @@ export class MultipleReverseEdgeCountOrdering
     public readonly direction: OrderingDirection,
   ) {
     this.reduced = this;
-
     this.dependencies = new Map([
       [reverseEdge, new Map([[reverseEdge.originalEdge, undefined]])],
     ]);

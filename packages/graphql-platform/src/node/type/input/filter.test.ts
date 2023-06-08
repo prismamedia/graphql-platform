@@ -1,6 +1,7 @@
 import { beforeAll, describe, expect, it } from '@jest/globals';
 import * as utils from '@prismamedia/graphql-platform-utils';
 import * as graphql from 'graphql';
+import * as R from 'remeda';
 import {
   ArticleStatus,
   MyGP,
@@ -131,937 +132,2033 @@ describe('NodeFilterInputType', () => {
         });
       });
 
-      describe(`Reduces`, () => {
-        describe('Components', () => {
-          describe(`Leafs`, () => {
-            it.each<
-              [
+      describe('Components', () => {
+        describe(`Leafs`, () => {
+          describe.each<
+            [
+              label: string,
+              tests?: [
                 label: string,
-                filter: NodeFilterInputValue,
+                input: NodeFilterInputValue,
                 ast: BooleanFilter['ast'],
-              ]
-            >([
+              ][],
+            ]
+          >([
+            [
+              `Idempotent law`,
               [
-                `"OR"'s idempotence law`,
-                { _id_in: [1, 2, 3, 2, 1] },
-                {
-                  kind: 'LeafFilter',
-                  leaf: '_id',
-                  operator: 'in',
-                  values: [1, 2, 3],
-                },
+                [
+                  'OR',
+                  { _id_in: [1, 2, 3, 2, 1] },
+                  {
+                    kind: 'LEAF',
+                    leaf: '_id',
+                    operator: 'IN',
+                    values: [1, 2, 3],
+                  },
+                ],
+                [
+                  'AND',
+                  { AND: [{ _id: 1 }, { _id: 1 }] },
+                  {
+                    kind: 'LEAF',
+                    leaf: '_id',
+                    operator: 'EQ',
+                    value: 1,
+                  },
+                ],
+                [
+                  'AND & OR',
+                  {
+                    AND: [{ _id_in: [1, 2, 3, 4] }, { _id_in: [2, 3, 4, 1] }],
+                    OR: [{ _id_in: [3, 4, 1, 2] }, { _id_in: [4, 1, 2, 3] }],
+                  },
+                  {
+                    kind: 'LEAF',
+                    leaf: '_id',
+                    operator: 'IN',
+                    values: [1, 2, 3, 4],
+                  },
+                ],
               ],
-
+            ],
+            [
+              `Absorption law`,
               [
-                `"AND"'s idempotence law`,
-                { AND: [{ _id: 1 }, { _id: 1 }] },
-                {
-                  kind: 'LeafFilter',
-                  leaf: '_id',
-                  operator: 'eq',
-                  value: 1,
-                },
+                [
+                  'OR',
+                  {
+                    OR: [
+                      { _id: 1 },
+                      {
+                        AND: [{ _id: 1 }, { status: ArticleStatus.PUBLISHED }],
+                      },
+                    ],
+                  },
+                  {
+                    kind: 'LEAF',
+                    leaf: '_id',
+                    operator: 'EQ',
+                    value: 1,
+                  },
+                ],
+                [
+                  'AND',
+                  {
+                    AND: [
+                      { _id: 1 },
+                      { OR: [{ _id: 1 }, { status: ArticleStatus.PUBLISHED }] },
+                    ],
+                  },
+                  {
+                    kind: 'LEAF',
+                    leaf: '_id',
+                    operator: 'EQ',
+                    value: 1,
+                  },
+                ],
               ],
-
+            ],
+            [
+              'Complementation',
               [
-                `"OR/AND"'s idempotence law`,
-                {
-                  AND: [{ _id_in: [1, 2, 3, 4] }, { _id_in: [2, 3, 4, 1] }],
-                  OR: [{ _id_in: [3, 4, 1, 2] }, { _id_in: [4, 1, 2, 3] }],
-                },
-                {
-                  kind: 'LeafFilter',
-                  leaf: '_id',
-                  operator: 'in',
-                  values: [1, 2, 3, 4],
-                },
+                [
+                  'OR',
+                  { OR: [{ _id: 5 }, { _id_not: 5 }] },
+                  {
+                    kind: 'BOOLEAN',
+                    value: true,
+                  },
+                ],
+                [
+                  'AND',
+                  { AND: [{ _id: 5 }, { _id_not: 5 }] },
+                  {
+                    kind: 'BOOLEAN',
+                    value: false,
+                  },
+                ],
               ],
-
-              [
-                `"OR"'s absorption law`,
-                {
-                  OR: [
-                    { _id: 1 },
-                    { AND: [{ _id: 1 }, { status: ArticleStatus.PUBLISHED }] },
+            ],
+            [
+              'Comparison - AND',
+              Object.entries({
+                eq: {
+                  eq: [
+                    [5, 4, { kind: 'BOOLEAN', value: false }],
+                    [
+                      5,
+                      5,
+                      { kind: 'LEAF', leaf: '_id', operator: 'EQ', value: 5 },
+                    ],
+                    [5, 6, { kind: 'BOOLEAN', value: false }],
+                  ],
+                  not: [
+                    [
+                      5,
+                      4,
+                      { kind: 'LEAF', leaf: '_id', operator: 'EQ', value: 5 },
+                    ],
+                    [5, 5, { kind: 'BOOLEAN', value: false }],
+                    [
+                      5,
+                      6,
+                      { kind: 'LEAF', leaf: '_id', operator: 'EQ', value: 5 },
+                    ],
+                  ],
+                  gt: [
+                    [
+                      5,
+                      4,
+                      {
+                        kind: 'LEAF',
+                        leaf: '_id',
+                        operator: 'EQ',
+                        value: 5,
+                      },
+                    ],
+                    [5, 5, { kind: 'BOOLEAN', value: false }],
+                    [5, 6, { kind: 'BOOLEAN', value: false }],
+                  ],
+                  gte: [
+                    [
+                      5,
+                      4,
+                      {
+                        kind: 'LEAF',
+                        leaf: '_id',
+                        operator: 'EQ',
+                        value: 5,
+                      },
+                    ],
+                    [
+                      5,
+                      5,
+                      {
+                        kind: 'LEAF',
+                        leaf: '_id',
+                        operator: 'EQ',
+                        value: 5,
+                      },
+                    ],
+                    [5, 6, { kind: 'BOOLEAN', value: false }],
+                  ],
+                  lt: [
+                    [5, 4, { kind: 'BOOLEAN', value: false }],
+                    [5, 5, { kind: 'BOOLEAN', value: false }],
+                    [
+                      5,
+                      6,
+                      {
+                        kind: 'LEAF',
+                        leaf: '_id',
+                        operator: 'EQ',
+                        value: 5,
+                      },
+                    ],
+                  ],
+                  lte: [
+                    [5, 4, { kind: 'BOOLEAN', value: false }],
+                    [
+                      5,
+                      5,
+                      {
+                        kind: 'LEAF',
+                        leaf: '_id',
+                        operator: 'EQ',
+                        value: 5,
+                      },
+                    ],
+                    [
+                      5,
+                      6,
+                      {
+                        kind: 'LEAF',
+                        leaf: '_id',
+                        operator: 'EQ',
+                        value: 5,
+                      },
+                    ],
                   ],
                 },
-                {
-                  kind: 'LeafFilter',
-                  leaf: '_id',
-                  operator: 'eq',
-                  value: 1,
-                },
-              ],
-
-              [
-                `"AND"'s absorption law`,
-                {
-                  AND: [
-                    { _id: 1 },
-                    { OR: [{ _id: 1 }, { status: ArticleStatus.PUBLISHED }] },
+                gt: {
+                  gt: [
+                    [
+                      5,
+                      4,
+                      {
+                        kind: 'LEAF',
+                        leaf: '_id',
+                        operator: 'GT',
+                        value: 5,
+                      },
+                    ],
+                    [
+                      5,
+                      5,
+                      {
+                        kind: 'LEAF',
+                        leaf: '_id',
+                        operator: 'GT',
+                        value: 5,
+                      },
+                    ],
+                    [
+                      5,
+                      6,
+                      {
+                        kind: 'LEAF',
+                        leaf: '_id',
+                        operator: 'GT',
+                        value: 6,
+                      },
+                    ],
+                  ],
+                  gte: [
+                    [
+                      5,
+                      4,
+                      {
+                        kind: 'LEAF',
+                        leaf: '_id',
+                        operator: 'GT',
+                        value: 5,
+                      },
+                    ],
+                    [
+                      5,
+                      5,
+                      {
+                        kind: 'LEAF',
+                        leaf: '_id',
+                        operator: 'GT',
+                        value: 5,
+                      },
+                    ],
+                    [
+                      5,
+                      6,
+                      {
+                        kind: 'LEAF',
+                        leaf: '_id',
+                        operator: 'GTE',
+                        value: 6,
+                      },
+                    ],
+                  ],
+                  lt: [
+                    [5, 4, { kind: 'BOOLEAN', value: false }],
+                    [5, 5, { kind: 'BOOLEAN', value: false }],
+                    [
+                      5,
+                      6,
+                      {
+                        kind: 'AND',
+                        operands: expect.arrayContaining([
+                          {
+                            kind: 'LEAF',
+                            leaf: '_id',
+                            operator: 'GT',
+                            value: 5,
+                          },
+                          {
+                            kind: 'LEAF',
+                            leaf: '_id',
+                            operator: 'LT',
+                            value: 6,
+                          },
+                        ]),
+                      },
+                    ],
+                  ],
+                  lte: [
+                    [5, 4, { kind: 'BOOLEAN', value: false }],
+                    [5, 5, { kind: 'BOOLEAN', value: false }],
+                    [
+                      5,
+                      6,
+                      {
+                        kind: 'AND',
+                        operands: expect.arrayContaining([
+                          {
+                            kind: 'LEAF',
+                            leaf: '_id',
+                            operator: 'GT',
+                            value: 5,
+                          },
+                          {
+                            kind: 'LEAF',
+                            leaf: '_id',
+                            operator: 'LTE',
+                            value: 6,
+                          },
+                        ]),
+                      },
+                    ],
                   ],
                 },
-                {
-                  kind: 'LeafFilter',
-                  leaf: '_id',
-                  operator: 'eq',
-                  value: 1,
-                },
-              ],
-
-              [
-                `"OR"'s complementation`,
-                { OR: [{ _id: 5 }, { _id_not: 5 }] },
-                {
-                  kind: 'BooleanValue',
-                  value: true,
-                },
-              ],
-
-              [
-                `"AND"'s complementation`,
-                { AND: [{ _id: 5 }, { _id_not: 5 }] },
-                {
-                  kind: 'BooleanValue',
-                  value: false,
-                },
-              ],
-
-              [
-                `"AND"'s sortable-optimization - 0`,
-                { AND: [{ _id: 5 }, { _id_gt: 5 }] },
-                {
-                  kind: 'BooleanValue',
-                  value: false,
-                },
-              ],
-
-              [
-                `"AND"'s sortable-optimization - 1`,
-                { AND: [{ _id: 5 }, { _id_gt: 4 }] },
-                {
-                  kind: 'LeafFilter',
-                  leaf: '_id',
-                  operator: 'eq',
-                  value: 5,
-                },
-              ],
-
-              [
-                `"AND"'s sortable-optimization - 2`,
-                { AND: [{ _id: 5 }, { _id_gte: 6 }] },
-                {
-                  kind: 'BooleanValue',
-                  value: false,
-                },
-              ],
-
-              [
-                `"AND"'s sortable-optimization - 3`,
-                { AND: [{ _id: 5 }, { _id_gte: 5 }] },
-                {
-                  kind: 'LeafFilter',
-                  leaf: '_id',
-                  operator: 'eq',
-                  value: 5,
-                },
-              ],
-
-              [
-                `"AND"'s sortable-optimization - 4`,
-                { AND: [{ _id: 5 }, { _id_lt: 5 }] },
-                {
-                  kind: 'BooleanValue',
-                  value: false,
-                },
-              ],
-
-              [
-                `"AND"'s sortable-optimization - 5`,
-                { AND: [{ _id: 5 }, { _id_lt: 6 }] },
-                {
-                  kind: 'LeafFilter',
-                  leaf: '_id',
-                  operator: 'eq',
-                  value: 5,
-                },
-              ],
-
-              [
-                `"AND"'s sortable-optimization - 6`,
-                { AND: [{ _id: 5 }, { _id_lte: 4 }] },
-                {
-                  kind: 'BooleanValue',
-                  value: false,
-                },
-              ],
-
-              [
-                `"AND"'s sortable-optimization - 7`,
-                { AND: [{ _id: 5 }, { _id_lte: 5 }] },
-                {
-                  kind: 'LeafFilter',
-                  leaf: '_id',
-                  operator: 'eq',
-                  value: 5,
-                },
-              ],
-
-              [
-                `"AND"'s sortable-optimization - 8`,
-                { AND: [{ _id_gt: 5 }, { _id_gt: 10 }] },
-                {
-                  kind: 'LeafFilter',
-                  leaf: '_id',
-                  operator: 'gt',
-                  value: 10,
-                },
-              ],
-
-              [
-                `"AND"'s sortable-optimization - 9`,
-                { AND: [{ _id_gte: 5 }, { _id_gte: 10 }] },
-                {
-                  kind: 'LeafFilter',
-                  leaf: '_id',
-                  operator: 'gte',
-                  value: 10,
-                },
-              ],
-
-              [
-                `"AND"'s sortable-optimization - 10`,
-                { AND: [{ _id_lt: 5 }, { _id_lt: 10 }] },
-                {
-                  kind: 'LeafFilter',
-                  leaf: '_id',
-                  operator: 'lt',
-                  value: 5,
-                },
-              ],
-
-              [
-                `"AND"'s sortable-optimization - 11`,
-                { AND: [{ _id_lte: 5 }, { _id_lte: 10 }] },
-                {
-                  kind: 'LeafFilter',
-                  leaf: '_id',
-                  operator: 'lte',
-                  value: 5,
-                },
-              ],
-
-              [
-                `A simple logical "AND" filter over some leaves' value`,
-                {
-                  id: '94de8a4b-a25f-4659-ba13-c84761ef135b',
-                  title_contains: 'FRANCE',
-                  createdAt_gte: '2021-01-01T00:00:00Z',
-                },
-                {
-                  kind: 'BooleanOperation',
-                  operator: 'And',
-                  operands: [
-                    {
-                      kind: 'LeafFilter',
-                      leaf: 'id',
-                      operator: 'eq',
-                      value: '94de8a4b-a25f-4659-ba13-c84761ef135b',
-                    },
-                    {
-                      kind: 'LeafFilter',
-                      leaf: 'title',
-                      operator: 'contains',
-                      value: 'FRANCE',
-                    },
-                    {
-                      kind: 'LeafFilter',
-                      leaf: 'createdAt',
-                      operator: 'gte',
-                      value: new Date('2021-01-01T00:00:00.000Z'),
-                    },
+                gte: {
+                  gte: [
+                    [
+                      5,
+                      4,
+                      {
+                        kind: 'LEAF',
+                        leaf: '_id',
+                        operator: 'GTE',
+                        value: 5,
+                      },
+                    ],
+                    [
+                      5,
+                      5,
+                      {
+                        kind: 'LEAF',
+                        leaf: '_id',
+                        operator: 'GTE',
+                        value: 5,
+                      },
+                    ],
+                    [
+                      5,
+                      6,
+                      {
+                        kind: 'LEAF',
+                        leaf: '_id',
+                        operator: 'GTE',
+                        value: 6,
+                      },
+                    ],
+                  ],
+                  lt: [
+                    [5, 4, { kind: 'BOOLEAN', value: false }],
+                    [5, 5, { kind: 'BOOLEAN', value: false }],
+                    [
+                      5,
+                      6,
+                      {
+                        kind: 'AND',
+                        operands: expect.arrayContaining([
+                          {
+                            kind: 'LEAF',
+                            leaf: '_id',
+                            operator: 'GTE',
+                            value: 5,
+                          },
+                          {
+                            kind: 'LEAF',
+                            leaf: '_id',
+                            operator: 'LT',
+                            value: 6,
+                          },
+                        ]),
+                      },
+                    ],
+                  ],
+                  lte: [
+                    [5, 4, { kind: 'BOOLEAN', value: false }],
+                    [
+                      5,
+                      5,
+                      {
+                        kind: 'LEAF',
+                        leaf: '_id',
+                        operator: 'EQ',
+                        value: 5,
+                      },
+                    ],
+                    [
+                      5,
+                      6,
+                      {
+                        kind: 'AND',
+                        operands: expect.arrayContaining([
+                          {
+                            kind: 'LEAF',
+                            leaf: '_id',
+                            operator: 'GTE',
+                            value: 5,
+                          },
+                          {
+                            kind: 'LEAF',
+                            leaf: '_id',
+                            operator: 'LTE',
+                            value: 6,
+                          },
+                        ]),
+                      },
+                    ],
                   ],
                 },
-              ],
-
-              [
-                `A conjunction of IN`,
-                {
-                  AND: [
+                lt: {
+                  lt: [
+                    [
+                      5,
+                      4,
+                      {
+                        kind: 'LEAF',
+                        leaf: '_id',
+                        operator: 'LT',
+                        value: 4,
+                      },
+                    ],
+                    [
+                      5,
+                      5,
+                      {
+                        kind: 'LEAF',
+                        leaf: '_id',
+                        operator: 'LT',
+                        value: 5,
+                      },
+                    ],
+                    [
+                      5,
+                      6,
+                      {
+                        kind: 'LEAF',
+                        leaf: '_id',
+                        operator: 'LT',
+                        value: 5,
+                      },
+                    ],
+                  ],
+                  lte: [
+                    [
+                      5,
+                      4,
+                      {
+                        kind: 'LEAF',
+                        leaf: '_id',
+                        operator: 'LTE',
+                        value: 4,
+                      },
+                    ],
+                    [
+                      5,
+                      5,
+                      {
+                        kind: 'LEAF',
+                        leaf: '_id',
+                        operator: 'LT',
+                        value: 5,
+                      },
+                    ],
+                    [
+                      5,
+                      6,
+                      {
+                        kind: 'LEAF',
+                        leaf: '_id',
+                        operator: 'LT',
+                        value: 5,
+                      },
+                    ],
+                  ],
+                },
+                lte: {
+                  lte: [
+                    [
+                      5,
+                      4,
+                      {
+                        kind: 'LEAF',
+                        leaf: '_id',
+                        operator: 'LTE',
+                        value: 4,
+                      },
+                    ],
+                    [
+                      5,
+                      5,
+                      {
+                        kind: 'LEAF',
+                        leaf: '_id',
+                        operator: 'LTE',
+                        value: 5,
+                      },
+                    ],
+                    [
+                      5,
+                      6,
+                      {
+                        kind: 'LEAF',
+                        leaf: '_id',
+                        operator: 'LTE',
+                        value: 5,
+                      },
+                    ],
+                  ],
+                },
+              } as const).flatMap<
+                [
+                  label: string,
+                  input: NodeFilterInputValue,
+                  ast: BooleanFilter['ast'],
+                ]
+              >(([aOperator, config]) =>
+                Object.entries(config).flatMap(([bOperator, values]) =>
+                  values.map(([aValue, bValue, ast]: any): any => [
+                    `${aOperator}-${aValue} AND ${bOperator}-${bValue}`,
                     {
-                      status_in: [
-                        ArticleStatus.DELETED,
-                        ArticleStatus.DRAFT,
-                        ArticleStatus.PUBLISHED,
+                      AND: [
+                        {
+                          [`_id${aOperator === 'eq' ? '' : `_${aOperator}`}`]:
+                            aValue,
+                        },
+                        {
+                          [`_id${bOperator === 'eq' ? '' : `_${bOperator}`}`]:
+                            bValue,
+                        },
                       ],
                     },
-                    { status_in: [ArticleStatus.DRAFT] },
+                    ast,
+                  ]),
+                ),
+              ),
+            ],
+            [
+              'Comparison - OR',
+              Object.entries({
+                eq: {
+                  eq: [
+                    [
+                      5,
+                      4,
+                      {
+                        kind: 'LEAF',
+                        leaf: '_id',
+                        operator: 'IN',
+                        values: [5, 4],
+                      },
+                    ],
+                    [
+                      5,
+                      5,
+                      { kind: 'LEAF', leaf: '_id', operator: 'EQ', value: 5 },
+                    ],
+                    [
+                      5,
+                      6,
+                      {
+                        kind: 'LEAF',
+                        leaf: '_id',
+                        operator: 'IN',
+                        values: [5, 6],
+                      },
+                    ],
+                  ],
+                  not: [
+                    [
+                      5,
+                      4,
+                      {
+                        kind: 'LEAF',
+                        leaf: '_id',
+                        operator: 'NOT',
+                        value: 4,
+                      },
+                    ],
+                    [5, 5, { kind: 'BOOLEAN', value: true }],
+                    [
+                      5,
+                      6,
+                      {
+                        kind: 'LEAF',
+                        leaf: '_id',
+                        operator: 'NOT',
+                        value: 6,
+                      },
+                    ],
+                  ],
+                  gt: [
+                    [
+                      5,
+                      4,
+                      {
+                        kind: 'LEAF',
+                        leaf: '_id',
+                        operator: 'GT',
+                        value: 4,
+                      },
+                    ],
+                    [
+                      5,
+                      5,
+                      {
+                        kind: 'LEAF',
+                        leaf: '_id',
+                        operator: 'GTE',
+                        value: 5,
+                      },
+                    ],
+                    [
+                      5,
+                      6,
+                      {
+                        kind: 'OR',
+                        operands: [
+                          {
+                            kind: 'LEAF',
+                            leaf: '_id',
+                            operator: 'EQ',
+                            value: 5,
+                          },
+                          {
+                            kind: 'LEAF',
+                            leaf: '_id',
+                            operator: 'GT',
+                            value: 6,
+                          },
+                        ],
+                      },
+                    ],
+                  ],
+                  gte: [
+                    [
+                      5,
+                      4,
+                      {
+                        kind: 'LEAF',
+                        leaf: '_id',
+                        operator: 'GTE',
+                        value: 4,
+                      },
+                    ],
+                    [
+                      5,
+                      5,
+                      {
+                        kind: 'LEAF',
+                        leaf: '_id',
+                        operator: 'GTE',
+                        value: 5,
+                      },
+                    ],
+                    [
+                      5,
+                      6,
+                      {
+                        kind: 'OR',
+                        operands: [
+                          {
+                            kind: 'LEAF',
+                            leaf: '_id',
+                            operator: 'EQ',
+                            value: 5,
+                          },
+                          {
+                            kind: 'LEAF',
+                            leaf: '_id',
+                            operator: 'GTE',
+                            value: 6,
+                          },
+                        ],
+                      },
+                    ],
+                  ],
+                  lt: [
+                    [
+                      5,
+                      4,
+                      {
+                        kind: 'OR',
+                        operands: [
+                          {
+                            kind: 'LEAF',
+                            leaf: '_id',
+                            operator: 'EQ',
+                            value: 5,
+                          },
+                          {
+                            kind: 'LEAF',
+                            leaf: '_id',
+                            operator: 'LT',
+                            value: 4,
+                          },
+                        ],
+                      },
+                    ],
+                    [
+                      5,
+                      5,
+                      {
+                        kind: 'LEAF',
+                        leaf: '_id',
+                        operator: 'LTE',
+                        value: 5,
+                      },
+                    ],
+                    [
+                      5,
+                      6,
+                      {
+                        kind: 'LEAF',
+                        leaf: '_id',
+                        operator: 'LT',
+                        value: 6,
+                      },
+                    ],
+                  ],
+                  lte: [
+                    [
+                      5,
+                      4,
+                      {
+                        kind: 'OR',
+                        operands: [
+                          {
+                            kind: 'LEAF',
+                            leaf: '_id',
+                            operator: 'EQ',
+                            value: 5,
+                          },
+                          {
+                            kind: 'LEAF',
+                            leaf: '_id',
+                            operator: 'LTE',
+                            value: 4,
+                          },
+                        ],
+                      },
+                    ],
+                    [
+                      5,
+                      5,
+                      {
+                        kind: 'LEAF',
+                        leaf: '_id',
+                        operator: 'LTE',
+                        value: 5,
+                      },
+                    ],
+                    [
+                      5,
+                      6,
+                      {
+                        kind: 'LEAF',
+                        leaf: '_id',
+                        operator: 'LTE',
+                        value: 6,
+                      },
+                    ],
                   ],
                 },
-                {
-                  kind: 'LeafFilter',
-                  leaf: 'status',
-                  operator: 'eq',
-                  value: ArticleStatus.DRAFT,
+                gt: {
+                  gt: [
+                    [
+                      5,
+                      4,
+                      {
+                        kind: 'LEAF',
+                        leaf: '_id',
+                        operator: 'GT',
+                        value: 4,
+                      },
+                    ],
+                    [
+                      5,
+                      5,
+                      {
+                        kind: 'LEAF',
+                        leaf: '_id',
+                        operator: 'GT',
+                        value: 5,
+                      },
+                    ],
+                    [
+                      5,
+                      6,
+                      {
+                        kind: 'LEAF',
+                        leaf: '_id',
+                        operator: 'GT',
+                        value: 5,
+                      },
+                    ],
+                  ],
+                  gte: [
+                    [
+                      5,
+                      4,
+                      {
+                        kind: 'LEAF',
+                        leaf: '_id',
+                        operator: 'GTE',
+                        value: 4,
+                      },
+                    ],
+                    [
+                      5,
+                      5,
+                      {
+                        kind: 'LEAF',
+                        leaf: '_id',
+                        operator: 'GTE',
+                        value: 5,
+                      },
+                    ],
+                    [
+                      5,
+                      6,
+                      {
+                        kind: 'LEAF',
+                        leaf: '_id',
+                        operator: 'GT',
+                        value: 5,
+                      },
+                    ],
+                  ],
+                  lt: [
+                    [
+                      5,
+                      4,
+                      {
+                        kind: 'OR',
+                        operands: [
+                          {
+                            kind: 'LEAF',
+                            leaf: '_id',
+                            operator: 'GT',
+                            value: 5,
+                          },
+                          {
+                            kind: 'LEAF',
+                            leaf: '_id',
+                            operator: 'LT',
+                            value: 4,
+                          },
+                        ],
+                      },
+                    ],
+                    [
+                      5,
+                      5,
+                      {
+                        kind: 'LEAF',
+                        leaf: '_id',
+                        operator: 'NOT',
+                        value: 5,
+                      },
+                    ],
+                    [5, 6, { kind: 'BOOLEAN', value: true }],
+                  ],
+                  lte: [
+                    [
+                      5,
+                      4,
+                      {
+                        kind: 'OR',
+                        operands: expect.arrayContaining([
+                          {
+                            kind: 'LEAF',
+                            leaf: '_id',
+                            operator: 'GT',
+                            value: 5,
+                          },
+                          {
+                            kind: 'LEAF',
+                            leaf: '_id',
+                            operator: 'LTE',
+                            value: 4,
+                          },
+                        ]),
+                      },
+                    ],
+                    [5, 5, { kind: 'BOOLEAN', value: true }],
+                    [5, 6, { kind: 'BOOLEAN', value: true }],
+                  ],
                 },
-              ],
-            ])('%s', (_label, input, filter) => {
-              const node = gp.getNodeByName('Article');
-              const filterInputType = node.filterInputType;
-
-              expect(
-                filterInputType.parseAndFilter(
-                  input,
-                  undefined,
-                  utils.addPath(undefined, filterInputType.name),
-                ).filter.ast,
-              ).toEqual(filter);
-            });
-          });
-
-          describe(`Edges`, () => {
-            it.each<
-              [
-                label: string,
-                filter: NodeFilterInputValue,
-                ast: BooleanFilter['ast'],
-              ]
-            >([
-              [
-                'An article WITH any "category" - 0',
-                { category_is_null: false },
-                {
-                  kind: 'EdgeExistsFilter',
-                  edge: 'category',
+                gte: {
+                  gte: [
+                    [
+                      5,
+                      4,
+                      {
+                        kind: 'LEAF',
+                        leaf: '_id',
+                        operator: 'GTE',
+                        value: 4,
+                      },
+                    ],
+                    [
+                      5,
+                      5,
+                      {
+                        kind: 'LEAF',
+                        leaf: '_id',
+                        operator: 'GTE',
+                        value: 5,
+                      },
+                    ],
+                    [
+                      5,
+                      6,
+                      {
+                        kind: 'LEAF',
+                        leaf: '_id',
+                        operator: 'GTE',
+                        value: 5,
+                      },
+                    ],
+                  ],
+                  lt: [
+                    [
+                      5,
+                      4,
+                      {
+                        kind: 'OR',
+                        operands: [
+                          {
+                            kind: 'LEAF',
+                            leaf: '_id',
+                            operator: 'GTE',
+                            value: 5,
+                          },
+                          {
+                            kind: 'LEAF',
+                            leaf: '_id',
+                            operator: 'LT',
+                            value: 4,
+                          },
+                        ],
+                      },
+                    ],
+                    [5, 5, { kind: 'BOOLEAN', value: true }],
+                    [5, 6, { kind: 'BOOLEAN', value: true }],
+                  ],
+                  lte: [
+                    [
+                      5,
+                      4,
+                      {
+                        kind: 'OR',
+                        operands: expect.arrayContaining([
+                          {
+                            kind: 'LEAF',
+                            leaf: '_id',
+                            operator: 'GTE',
+                            value: 5,
+                          },
+                          {
+                            kind: 'LEAF',
+                            leaf: '_id',
+                            operator: 'LTE',
+                            value: 4,
+                          },
+                        ]),
+                      },
+                    ],
+                    [5, 5, { kind: 'BOOLEAN', value: true }],
+                    [5, 6, { kind: 'BOOLEAN', value: true }],
+                  ],
                 },
-              ],
-
-              [
-                'An article WITH any "category" - 1',
-                { category_not: null },
-                {
-                  kind: 'EdgeExistsFilter',
-                  edge: 'category',
+                lt: {
+                  lt: [
+                    [
+                      5,
+                      4,
+                      {
+                        kind: 'LEAF',
+                        leaf: '_id',
+                        operator: 'LT',
+                        value: 5,
+                      },
+                    ],
+                    [
+                      5,
+                      5,
+                      {
+                        kind: 'LEAF',
+                        leaf: '_id',
+                        operator: 'LT',
+                        value: 5,
+                      },
+                    ],
+                    [
+                      5,
+                      6,
+                      {
+                        kind: 'LEAF',
+                        leaf: '_id',
+                        operator: 'LT',
+                        value: 6,
+                      },
+                    ],
+                  ],
+                  lte: [
+                    [
+                      5,
+                      4,
+                      {
+                        kind: 'LEAF',
+                        leaf: '_id',
+                        operator: 'LT',
+                        value: 5,
+                      },
+                    ],
+                    [
+                      5,
+                      5,
+                      {
+                        kind: 'LEAF',
+                        leaf: '_id',
+                        operator: 'LTE',
+                        value: 5,
+                      },
+                    ],
+                    [
+                      5,
+                      6,
+                      {
+                        kind: 'LEAF',
+                        leaf: '_id',
+                        operator: 'LTE',
+                        value: 6,
+                      },
+                    ],
+                  ],
                 },
-              ],
-
-              [
-                'An article WITH any "category" - 2',
-                { category: {} },
-                {
-                  kind: 'EdgeExistsFilter',
-                  edge: 'category',
+                lte: {
+                  lte: [
+                    [
+                      5,
+                      4,
+                      {
+                        kind: 'LEAF',
+                        leaf: '_id',
+                        operator: 'LTE',
+                        value: 5,
+                      },
+                    ],
+                    [
+                      5,
+                      5,
+                      {
+                        kind: 'LEAF',
+                        leaf: '_id',
+                        operator: 'LTE',
+                        value: 5,
+                      },
+                    ],
+                    [
+                      5,
+                      6,
+                      {
+                        kind: 'LEAF',
+                        leaf: '_id',
+                        operator: 'LTE',
+                        value: 6,
+                      },
+                    ],
+                  ],
                 },
-              ],
-
+              } as const).flatMap<
+                [
+                  label: string,
+                  input: NodeFilterInputValue,
+                  ast: BooleanFilter['ast'],
+                ]
+              >(([aOperator, config]) =>
+                Object.entries(config).flatMap(([bOperator, values]) =>
+                  values.map(([aValue, bValue, ast]: any): any => [
+                    `${aOperator}-${aValue} OR ${bOperator}-${bValue}`,
+                    {
+                      OR: [
+                        {
+                          [`_id${aOperator === 'eq' ? '' : `_${aOperator}`}`]:
+                            aValue,
+                        },
+                        {
+                          [`_id${bOperator === 'eq' ? '' : `_${bOperator}`}`]:
+                            bValue,
+                        },
+                      ],
+                    },
+                    ast,
+                  ]),
+                ),
+              ),
+            ],
+            [
+              'IN-0-5-10 - AND',
               [
-                'An article in the specified "category"',
-                { category: { slug: 'news' } },
-                {
-                  kind: 'EdgeExistsFilter',
+                [
+                  'IN-5-10',
+                  { AND: [{ _id_in: [0, 5, 10] }, { _id_in: [5, 10] }] },
+                  {
+                    kind: 'LEAF',
+                    leaf: '_id',
+                    operator: 'IN',
+                    values: expect.arrayContaining([5, 10]) as any,
+                  },
+                ],
+                [
+                  'IN-4-6',
+                  { AND: [{ _id_in: [0, 5, 10] }, { _id_in: [4, 6] }] },
+                  { kind: 'BOOLEAN', value: false },
+                ],
+                [
+                  'EQ-4',
+                  { AND: [{ _id_in: [0, 5, 10] }, { _id: 4 }] },
+                  { kind: 'BOOLEAN', value: false },
+                ],
+                [
+                  'EQ-5',
+                  { AND: [{ _id_in: [0, 5, 10] }, { _id: 5 }] },
+                  {
+                    kind: 'LEAF',
+                    leaf: '_id',
+                    operator: 'EQ',
+                    value: 5,
+                  },
+                ],
+                [
+                  'NOT-4',
+                  { AND: [{ _id_in: [0, 5, 10] }, { _id_not: 4 }] },
+                  {
+                    kind: 'LEAF',
+                    leaf: '_id',
+                    operator: 'IN',
+                    values: expect.arrayContaining([0, 5, 10]) as any,
+                  },
+                ],
+                [
+                  'NOT-5',
+                  { AND: [{ _id_in: [0, 5, 10] }, { _id_not: 5 }] },
+                  {
+                    kind: 'LEAF',
+                    leaf: '_id',
+                    operator: 'IN',
+                    values: expect.arrayContaining([0, 10]) as any,
+                  },
+                ],
+                [
+                  'GT-0',
+                  { AND: [{ _id_in: [0, 5, 10] }, { _id_gt: 0 }] },
+                  {
+                    kind: 'LEAF',
+                    leaf: '_id',
+                    operator: 'IN',
+                    values: expect.arrayContaining([5, 10]) as any,
+                  },
+                ],
+                [
+                  'GT-5',
+                  { AND: [{ _id_in: [0, 5, 10] }, { _id_gt: 5 }] },
+                  {
+                    kind: 'LEAF',
+                    leaf: '_id',
+                    operator: 'EQ',
+                    value: 10,
+                  },
+                ],
+                [
+                  'GT-10',
+                  { AND: [{ _id_in: [0, 5, 10] }, { _id_gt: 10 }] },
+                  { kind: 'BOOLEAN', value: false },
+                ],
+                [
+                  'GTE-0',
+                  { AND: [{ _id_in: [0, 5, 10] }, { _id_gte: 0 }] },
+                  {
+                    kind: 'LEAF',
+                    leaf: '_id',
+                    operator: 'IN',
+                    values: expect.arrayContaining([0, 5, 10]) as any,
+                  },
+                ],
+                [
+                  'GTE-5',
+                  { AND: [{ _id_in: [0, 5, 10] }, { _id_gte: 5 }] },
+                  {
+                    kind: 'LEAF',
+                    leaf: '_id',
+                    operator: 'IN',
+                    values: expect.arrayContaining([5, 10]) as any,
+                  },
+                ],
+                [
+                  'GTE-10',
+                  { AND: [{ _id_in: [0, 5, 10] }, { _id_gte: 10 }] },
+                  {
+                    kind: 'LEAF',
+                    leaf: '_id',
+                    operator: 'EQ',
+                    value: 10,
+                  },
+                ],
+              ],
+            ],
+            [
+              'IN - OR',
+              [
+                [
+                  'IN-5-10',
+                  { OR: [{ _id_in: [0, 5, 10] }, { _id_in: [5, 10] }] },
+                  {
+                    kind: 'LEAF',
+                    leaf: '_id',
+                    operator: 'IN',
+                    values: expect.arrayContaining([0, 5, 10]) as any,
+                  },
+                ],
+                [
+                  'OR-4-6',
+                  { OR: [{ _id_in: [0, 5, 10] }, { _id_in: [4, 6] }] },
+                  {
+                    kind: 'LEAF',
+                    leaf: '_id',
+                    operator: 'IN',
+                    values: expect.arrayContaining([0, 4, 5, 6, 10]) as any,
+                  },
+                ],
+                [
+                  'EQ-4',
+                  { OR: [{ _id_in: [0, 5, 10] }, { _id: 4 }] },
+                  {
+                    kind: 'LEAF',
+                    leaf: '_id',
+                    operator: 'IN',
+                    values: expect.arrayContaining([0, 4, 5, 10]) as any,
+                  },
+                ],
+                [
+                  'EQ-5',
+                  { OR: [{ _id_in: [0, 5, 10] }, { _id: 5 }] },
+                  {
+                    kind: 'LEAF',
+                    leaf: '_id',
+                    operator: 'IN',
+                    values: expect.arrayContaining([0, 5, 10]) as any,
+                  },
+                ],
+                [
+                  'NOT-4',
+                  { OR: [{ _id_in: [0, 5, 10] }, { _id_not: 4 }] },
+                  {
+                    kind: 'LEAF',
+                    leaf: '_id',
+                    operator: 'NOT',
+                    value: 4,
+                  },
+                ],
+                [
+                  'NOT-5',
+                  { OR: [{ _id_in: [0, 5, 10] }, { _id_not: 5 }] },
+                  { kind: 'BOOLEAN', value: true },
+                ],
+                [
+                  'GT-0',
+                  { OR: [{ _id_in: [0, 5, 10] }, { _id_gt: 0 }] },
+                  {
+                    kind: 'LEAF',
+                    leaf: '_id',
+                    operator: 'GTE',
+                    value: 0,
+                  },
+                ],
+                [
+                  'GT-5',
+                  { OR: [{ _id_in: [0, 5, 10] }, { _id_gt: 5 }] },
+                  {
+                    kind: 'OR',
+                    operands: expect.arrayContaining([
+                      {
+                        kind: 'LEAF',
+                        leaf: '_id',
+                        operator: 'IN',
+                        values: expect.arrayContaining([0, 5]) as any,
+                      },
+                      {
+                        kind: 'LEAF',
+                        leaf: '_id',
+                        operator: 'GT',
+                        value: 5,
+                      },
+                    ]) as any,
+                  },
+                ],
+                [
+                  'GT-10',
+                  { OR: [{ _id_in: [0, 5, 10] }, { _id_gt: 10 }] },
+                  {
+                    kind: 'OR',
+                    operands: expect.arrayContaining([
+                      {
+                        kind: 'LEAF',
+                        leaf: '_id',
+                        operator: 'IN',
+                        values: expect.arrayContaining([0, 5, 10]) as any,
+                      },
+                      {
+                        kind: 'LEAF',
+                        leaf: '_id',
+                        operator: 'GT',
+                        value: 10,
+                      },
+                    ]) as any,
+                  },
+                ],
+                [
+                  'GTE-0',
+                  { OR: [{ _id_in: [0, 5, 10] }, { _id_gte: 0 }] },
+                  {
+                    kind: 'LEAF',
+                    leaf: '_id',
+                    operator: 'GTE',
+                    value: 0,
+                  },
+                ],
+                [
+                  'GTE-5',
+                  { OR: [{ _id_in: [0, 5, 10] }, { _id_gte: 5 }] },
+                  {
+                    kind: 'OR',
+                    operands: expect.arrayContaining([
+                      {
+                        kind: 'LEAF',
+                        leaf: '_id',
+                        operator: 'EQ',
+                        value: 0,
+                      },
+                      {
+                        kind: 'LEAF',
+                        leaf: '_id',
+                        operator: 'GTE',
+                        value: 5,
+                      },
+                    ]) as any,
+                  },
+                ],
+                [
+                  'GTE-10',
+                  { OR: [{ _id_in: [0, 5, 10] }, { _id_gte: 10 }] },
+                  {
+                    kind: 'OR',
+                    operands: expect.arrayContaining([
+                      {
+                        kind: 'LEAF',
+                        leaf: '_id',
+                        operator: 'IN',
+                        values: expect.arrayContaining([0, 5]) as any,
+                      },
+                      {
+                        kind: 'LEAF',
+                        leaf: '_id',
+                        operator: 'GTE',
+                        value: 10,
+                      },
+                    ]) as any,
+                  },
+                ],
+              ],
+            ],
+            [
+              'Others',
+              [
+                [
+                  `A simple logical "AND" filter over some leaves' value`,
+                  {
+                    id: '94de8a4b-a25f-4659-ba13-c84761ef135b',
+                    title_contains: 'FRANCE',
+                    createdAt_gte: '2021-01-01T00:00:00Z',
+                  },
+                  {
+                    kind: 'AND',
+                    operands: [
+                      {
+                        kind: 'LEAF',
+                        leaf: 'id',
+                        operator: 'EQ',
+                        value: '94de8a4b-a25f-4659-ba13-c84761ef135b',
+                      },
+                      {
+                        kind: 'LEAF',
+                        leaf: 'title',
+                        operator: 'CONTAINS',
+                        value: 'FRANCE',
+                      },
+                      {
+                        kind: 'LEAF',
+                        leaf: 'createdAt',
+                        operator: 'GTE',
+                        value: new Date('2021-01-01T00:00:00.000Z'),
+                      },
+                    ],
+                  },
+                ],
+              ],
+            ],
+          ])(
+            `%s`,
+            (_label, tests) =>
+              tests?.length &&
+              it.each(tests)(`%# - %s`, (_label, input, ast) => {
+                const node = gp.getNodeByName('Article');
+                const filter =
+                  node.filterInputType.parseAndFilter(input).filter;
+
+                expect(filter.ast).toEqual(ast);
+              }),
+          );
+        });
+
+        describe(`Edges`, () => {
+          it.each<
+            [
+              label: string,
+              input: NodeFilterInputValue,
+              ast: BooleanFilter['ast'],
+            ]
+          >([
+            [
+              'An article WITH any "category" - 0',
+              { category_is_null: false },
+              {
+                kind: 'EDGE_EXISTS',
+                edge: 'category',
+              },
+            ],
+
+            [
+              'An article WITH any "category" - 1',
+              { category_not: null },
+              {
+                kind: 'EDGE_EXISTS',
+                edge: 'category',
+              },
+            ],
+
+            [
+              'An article WITH any "category" - 2',
+              { category: {} },
+              {
+                kind: 'EDGE_EXISTS',
+                edge: 'category',
+              },
+            ],
+
+            [
+              'An article in the specified "category"',
+              { category: { slug: 'news' } },
+              {
+                kind: 'EDGE_EXISTS',
+                edge: 'category',
+                headFilter: {
+                  kind: 'NodeFilter',
+                  node: 'Category',
+                  filter: {
+                    kind: 'LEAF',
+                    leaf: 'slug',
+                    operator: 'EQ',
+                    value: 'news',
+                  },
+                },
+              },
+            ],
+
+            [
+              'An article WITHOUT any "category" - 0',
+              { category_is_null: true },
+              {
+                kind: 'NOT',
+                operand: { kind: 'EDGE_EXISTS', edge: 'category' },
+              },
+            ],
+
+            [
+              'An article WITHOUT any "category" - 1',
+              { category: null },
+              {
+                kind: 'NOT',
+                operand: { kind: 'EDGE_EXISTS', edge: 'category' },
+              },
+            ],
+
+            [
+              'An article WITHOUT any "category" - 2',
+              { category_not: {} },
+              {
+                kind: 'NOT',
+                operand: { kind: 'EDGE_EXISTS', edge: 'category' },
+              },
+            ],
+
+            [
+              'An article not in the specified "category"',
+              { category_not: { slug: 'news' } },
+              {
+                kind: 'NOT',
+                operand: {
+                  kind: 'EDGE_EXISTS',
                   edge: 'category',
                   headFilter: {
                     kind: 'NodeFilter',
                     node: 'Category',
                     filter: {
-                      kind: 'LeafFilter',
+                      kind: 'LEAF',
                       leaf: 'slug',
-                      operator: 'eq',
+                      operator: 'EQ',
                       value: 'news',
                     },
                   },
                 },
-              ],
+              },
+            ],
 
-              [
-                'An article WITHOUT any "category" - 0',
-                { category_is_null: true },
-                {
-                  kind: 'BooleanOperation',
-                  operator: 'Not',
-                  operand: { kind: 'EdgeExistsFilter', edge: 'category' },
-                },
-              ],
+            [
+              'AND - 0',
+              { AND: [{ category_not: {} }, { category: {} }] },
+              { kind: 'BOOLEAN', value: false },
+            ],
 
-              [
-                'An article WITHOUT any "category" - 1',
-                { category: null },
-                {
-                  kind: 'BooleanOperation',
-                  operator: 'Not',
-                  operand: { kind: 'EdgeExistsFilter', edge: 'category' },
-                },
-              ],
+            [
+              'AND - 1',
+              {
+                AND: [{ category_not: {} }, { category: { slug: 'news' } }],
+              },
+              { kind: 'BOOLEAN', value: false },
+            ],
 
-              [
-                'An article WITHOUT any "category" - 2',
-                { category_not: {} },
-                {
-                  kind: 'BooleanOperation',
-                  operator: 'Not',
-                  operand: { kind: 'EdgeExistsFilter', edge: 'category' },
-                },
-              ],
+            [
+              'AND - 2',
+              {
+                AND: [
+                  { category_not: { slug: 'news' } },
+                  { category: { slug: 'news' } },
+                ],
+              },
+              { kind: 'BOOLEAN', value: false },
+            ],
 
-              [
-                'An article not in the specified "category"',
-                { category_not: { slug: 'news' } },
-                {
-                  kind: 'BooleanOperation',
-                  operator: 'Not',
-                  operand: {
-                    kind: 'EdgeExistsFilter',
-                    edge: 'category',
-                    headFilter: {
-                      kind: 'NodeFilter',
-                      node: 'Category',
-                      filter: {
-                        kind: 'LeafFilter',
-                        leaf: 'slug',
-                        operator: 'eq',
-                        value: 'news',
-                      },
-                    },
+            [
+              'OR - 0',
+              {
+                OR: [
+                  { category: { slug: 'news' } },
+                  { category: { slug: 'tv' } },
+                ],
+              },
+              {
+                kind: 'EDGE_EXISTS',
+                edge: 'category',
+                headFilter: {
+                  kind: 'NodeFilter',
+                  node: 'Category',
+                  filter: {
+                    kind: 'LEAF',
+                    leaf: 'slug',
+                    operator: 'IN',
+                    values: ['news', 'tv'],
                   },
                 },
-              ],
+              },
+            ],
 
-              [
-                'AND/Conjunction - 0',
-                { AND: [{ category_not: {} }, { category: {} }] },
-                { kind: 'BooleanValue', value: false },
-              ],
+            [
+              'OR - 1',
+              {
+                OR: [{ category: { slug: 'news' } }, { category: {} }],
+              },
+              {
+                kind: 'EDGE_EXISTS',
+                edge: 'category',
+              },
+            ],
+          ])('%s', (_label, input, ast) => {
+            const node = gp.getNodeByName('Article');
+            const filter = node.filterInputType.parseAndFilter(input).filter;
 
-              [
-                'AND/Conjunction - 1',
-                {
-                  AND: [{ category_not: {} }, { category: { slug: 'news' } }],
+            expect(filter.ast).toEqual(ast);
+          });
+        });
+      });
+
+      describe(`Reverse-edges`, () => {
+        describe('Unique', () => {
+          it.each<
+            [
+              label: string,
+              input: NodeFilterInputValue,
+              ast: BooleanFilter['ast'],
+            ]
+          >([
+            [
+              'A user WITH any "profile" - 0',
+              { profile_is_null: false },
+              {
+                kind: 'UNIQUE_REVERSE_EDGE_EXISTS',
+                reverseEdge: 'profile',
+              },
+            ],
+
+            [
+              'A user WITH any "profile" - 1',
+              { profile_not: null },
+              {
+                kind: 'UNIQUE_REVERSE_EDGE_EXISTS',
+                reverseEdge: 'profile',
+              },
+            ],
+
+            [
+              'A user WITH any "profile" - 1',
+              { profile: {} },
+              {
+                kind: 'UNIQUE_REVERSE_EDGE_EXISTS',
+                reverseEdge: 'profile',
+              },
+            ],
+
+            [
+              'An user with the specified "profile"',
+              { profile: { birthday_not: null } },
+              {
+                kind: 'UNIQUE_REVERSE_EDGE_EXISTS',
+                reverseEdge: 'profile',
+                headFilter: {
+                  kind: 'NodeFilter',
+                  node: 'UserProfile',
+                  filter: {
+                    kind: 'LEAF',
+                    leaf: 'birthday',
+                    operator: 'NOT',
+                    value: null,
+                  },
                 },
-                { kind: 'BooleanValue', value: false },
-              ],
+              },
+            ],
 
-              [
-                'AND/Conjunction - 2',
-                {
-                  AND: [
-                    { category_not: { slug: 'news' } },
-                    { category: { slug: 'news' } },
-                  ],
+            [
+              'A user WITHOUT any "profile" - 0',
+              { profile_is_null: true },
+              {
+                kind: 'NOT',
+                operand: {
+                  kind: 'UNIQUE_REVERSE_EDGE_EXISTS',
+                  reverseEdge: 'profile',
                 },
-                { kind: 'BooleanValue', value: false },
-              ],
+              },
+            ],
 
-              [
-                'OR/Disjunction - 0',
-                {
-                  OR: [
-                    { category: { slug: 'news' } },
-                    { category: { slug: 'tv' } },
-                  ],
+            [
+              'A user WITHOUT any "profile" - 1',
+              { profile: null },
+              {
+                kind: 'NOT',
+                operand: {
+                  kind: 'UNIQUE_REVERSE_EDGE_EXISTS',
+                  reverseEdge: 'profile',
                 },
-                {
-                  kind: 'EdgeExistsFilter',
-                  edge: 'category',
+              },
+            ],
+
+            [
+              'A user WITHOUT any "profile" - 1',
+              { profile_not: {} },
+              {
+                kind: 'NOT',
+                operand: {
+                  kind: 'UNIQUE_REVERSE_EDGE_EXISTS',
+                  reverseEdge: 'profile',
+                },
+              },
+            ],
+
+            [
+              'A user not having the specified "profile"',
+              { profile_not: { birthday_not: null } },
+              {
+                kind: 'NOT',
+                operand: {
+                  kind: 'UNIQUE_REVERSE_EDGE_EXISTS',
+                  reverseEdge: 'profile',
                   headFilter: {
                     kind: 'NodeFilter',
-                    node: 'Category',
+                    node: 'UserProfile',
                     filter: {
-                      kind: 'LeafFilter',
-                      leaf: 'slug',
-                      operator: 'in',
-                      values: ['news', 'tv'],
+                      kind: 'LEAF',
+                      leaf: 'birthday',
+                      operator: 'NOT',
+                      value: null,
                     },
                   },
                 },
-              ],
+              },
+            ],
 
-              [
-                'OR/Disjunction - 1',
-                {
-                  OR: [{ category: { slug: 'news' } }, { category: {} }],
-                },
-                {
-                  kind: 'EdgeExistsFilter',
-                  edge: 'category',
-                },
-              ],
-            ])('%s', (_label, input, filter) => {
-              const node = gp.getNodeByName('Article');
-              const filterInputType = node.filterInputType;
+            [
+              'AND - 0',
+              { AND: [{ profile_not: {} }, { profile: {} }] },
+              { kind: 'BOOLEAN', value: false },
+            ],
 
-              expect(
-                filterInputType.parseAndFilter(
-                  input,
-                  undefined,
-                  utils.addPath(undefined, filterInputType.name),
-                ).filter.ast,
-              ).toEqual(filter);
-            });
+            [
+              'AND - 1',
+              {
+                AND: [
+                  { profile_not: { twitterHandle: '@yvannboucher' } },
+                  { profile: { twitterHandle: '@yvannboucher' } },
+                ],
+              },
+              { kind: 'BOOLEAN', value: false },
+            ],
+
+            [
+              'AND - 2',
+              {
+                AND: [
+                  { profile: { twitterHandle: 'ryanmdahl' } },
+                  { profile: { facebookId: 'leeb' } },
+                ],
+              },
+              {
+                kind: 'UNIQUE_REVERSE_EDGE_EXISTS',
+                reverseEdge: 'profile',
+                headFilter: {
+                  kind: 'NodeFilter',
+                  node: 'UserProfile',
+                  filter: {
+                    kind: 'AND',
+                    operands: [
+                      {
+                        kind: 'LEAF',
+                        leaf: 'twitterHandle',
+                        operator: 'EQ',
+                        value: 'ryanmdahl',
+                      },
+                      {
+                        kind: 'LEAF',
+                        leaf: 'facebookId',
+                        operator: 'EQ',
+                        value: 'leeb',
+                      },
+                    ],
+                  },
+                },
+              },
+            ],
+
+            [
+              'OR - 0',
+              {
+                OR: [
+                  { profile: { twitterHandle: 'ryanmdahl' } },
+                  { profile: { twitterHandle: 'leeb' } },
+                ],
+              },
+              {
+                kind: 'UNIQUE_REVERSE_EDGE_EXISTS',
+                reverseEdge: 'profile',
+                headFilter: {
+                  kind: 'NodeFilter',
+                  node: 'UserProfile',
+                  filter: {
+                    kind: 'LEAF',
+                    leaf: 'twitterHandle',
+                    operator: 'IN',
+                    values: ['ryanmdahl', 'leeb'],
+                  },
+                },
+              },
+            ],
+
+            [
+              'OR - 1',
+              {
+                OR: [
+                  { profile: { twitterHandle: 'ryanmdahl' } },
+                  { profile: {} },
+                ],
+              },
+              {
+                kind: 'UNIQUE_REVERSE_EDGE_EXISTS',
+                reverseEdge: 'profile',
+              },
+            ],
+          ])('%s', (_label, input, ast) => {
+            const node = gp.getNodeByName('User');
+            const filter = node.filterInputType.parseAndFilter(input).filter;
+
+            expect(filter.ast).toEqual(ast);
           });
         });
 
-        describe(`Reverse-edges`, () => {
-          describe('Unique', () => {
-            it.each<
-              [
-                label: string,
-                filter: NodeFilterInputValue,
-                ast: BooleanFilter['ast'],
-              ]
-            >([
-              [
-                'A user WITH any "profile" - 0',
-                { profile_is_null: false },
-                {
-                  kind: 'UniqueReverseEdgeExistsFilter',
-                  reverseEdge: 'profile',
-                },
-              ],
+        describe('Multiple', () => {
+          it.each<
+            [
+              label: string,
+              input: NodeFilterInputValue,
+              ast: BooleanFilter['ast'],
+            ]
+          >([
+            [
+              'An article WITH some "tags"',
+              { tags_some: {} },
+              {
+                kind: 'MULTIPLE_REVERSE_EDGE_EXISTS',
+                reverseEdge: 'tags',
+              },
+            ],
 
-              [
-                'A user WITH any "profile" - 1',
-                { profile_not: null },
-                {
-                  kind: 'UniqueReverseEdgeExistsFilter',
-                  reverseEdge: 'profile',
-                },
-              ],
-
-              [
-                'A user WITH any "profile" - 1',
-                { profile: {} },
-                {
-                  kind: 'UniqueReverseEdgeExistsFilter',
-                  reverseEdge: 'profile',
-                },
-              ],
-
-              [
-                'An user with the specified "profile"',
-                { profile: { birthday_not: null } },
-                {
-                  kind: 'UniqueReverseEdgeExistsFilter',
-                  reverseEdge: 'profile',
-                  headFilter: {
-                    kind: 'NodeFilter',
-                    node: 'UserProfile',
-                    filter: {
-                      kind: 'BooleanOperation',
-                      operator: 'Not',
-                      operand: {
-                        kind: 'LeafFilter',
-                        leaf: 'birthday',
-                        operator: 'eq',
-                        value: null,
-                      },
-                    },
-                  },
-                },
-              ],
-
-              [
-                'A user WITHOUT any "profile" - 0',
-                { profile_is_null: true },
-                {
-                  kind: 'BooleanOperation',
-                  operator: 'Not',
-                  operand: {
-                    kind: 'UniqueReverseEdgeExistsFilter',
-                    reverseEdge: 'profile',
-                  },
-                },
-              ],
-
-              [
-                'A user WITHOUT any "profile" - 1',
-                { profile: null },
-                {
-                  kind: 'BooleanOperation',
-                  operator: 'Not',
-                  operand: {
-                    kind: 'UniqueReverseEdgeExistsFilter',
-                    reverseEdge: 'profile',
-                  },
-                },
-              ],
-
-              [
-                'A user WITHOUT any "profile" - 1',
-                { profile_not: {} },
-                {
-                  kind: 'BooleanOperation',
-                  operator: 'Not',
-                  operand: {
-                    kind: 'UniqueReverseEdgeExistsFilter',
-                    reverseEdge: 'profile',
-                  },
-                },
-              ],
-
-              [
-                'A user not having the specified "profile"',
-                { profile_not: { birthday_not: null } },
-                {
-                  kind: 'BooleanOperation',
-                  operator: 'Not',
-                  operand: {
-                    kind: 'UniqueReverseEdgeExistsFilter',
-                    reverseEdge: 'profile',
-                    headFilter: {
-                      kind: 'NodeFilter',
-                      node: 'UserProfile',
-                      filter: {
-                        kind: 'BooleanOperation',
-                        operator: 'Not',
-                        operand: {
-                          kind: 'LeafFilter',
-                          leaf: 'birthday',
-                          operator: 'eq',
-                          value: null,
-                        },
-                      },
-                    },
-                  },
-                },
-              ],
-
-              [
-                'AND/Conjunction - 0',
-                { AND: [{ profile_not: {} }, { profile: {} }] },
-                { kind: 'BooleanValue', value: false },
-              ],
-
-              [
-                'AND/Conjunction - 1',
-                {
-                  AND: [
-                    { profile_not: { twitterHandle: '@yvannboucher' } },
-                    { profile: { twitterHandle: '@yvannboucher' } },
-                  ],
-                },
-                { kind: 'BooleanValue', value: false },
-              ],
-
-              [
-                'AND/Conjunction - 2',
-                {
-                  AND: [
-                    { profile: { twitterHandle: 'ryanmdahl' } },
-                    { profile: { facebookId: 'leeb' } },
-                  ],
-                },
-                {
-                  kind: 'UniqueReverseEdgeExistsFilter',
-                  reverseEdge: 'profile',
-                  headFilter: {
-                    kind: 'NodeFilter',
-                    node: 'UserProfile',
-                    filter: {
-                      kind: 'BooleanOperation',
-                      operator: 'And',
-                      operands: [
-                        {
-                          kind: 'LeafFilter',
-                          leaf: 'twitterHandle',
-                          operator: 'eq',
-                          value: 'ryanmdahl',
-                        },
-                        {
-                          kind: 'LeafFilter',
-                          leaf: 'facebookId',
-                          operator: 'eq',
-                          value: 'leeb',
-                        },
-                      ],
-                    },
-                  },
-                },
-              ],
-
-              [
-                'OR/Disjunction - 0',
-                {
-                  OR: [
-                    { profile: { twitterHandle: 'ryanmdahl' } },
-                    { profile: { twitterHandle: 'leeb' } },
-                  ],
-                },
-                {
-                  kind: 'UniqueReverseEdgeExistsFilter',
-                  reverseEdge: 'profile',
-                  headFilter: {
-                    kind: 'NodeFilter',
-                    node: 'UserProfile',
-                    filter: {
-                      kind: 'LeafFilter',
-                      leaf: 'twitterHandle',
-                      operator: 'in',
-                      values: ['ryanmdahl', 'leeb'],
-                    },
-                  },
-                },
-              ],
-
-              [
-                'OR/Disjunction - 1',
-                {
-                  OR: [
-                    { profile: { twitterHandle: 'ryanmdahl' } },
-                    { profile: {} },
-                  ],
-                },
-                {
-                  kind: 'UniqueReverseEdgeExistsFilter',
-                  reverseEdge: 'profile',
-                },
-              ],
-            ])('%s', (_label, input, filter) => {
-              const node = gp.getNodeByName('User');
-              const filterInputType = node.filterInputType;
-
-              expect(
-                filterInputType.parseAndFilter(
-                  input,
-                  undefined,
-                  utils.addPath(undefined, filterInputType.name),
-                ).filter.ast,
-              ).toEqual(filter);
-            });
-          });
-
-          describe('Multiple', () => {
-            it.each<
-              [
-                label: string,
-                filter: NodeFilterInputValue,
-                ast: BooleanFilter['ast'],
-              ]
-            >([
-              [
-                'An article WITH some "tags"',
-                { tags_some: {} },
-                {
-                  kind: 'MultipleReverseEdgeExistsFilter',
+            [
+              'An article WITHOUT any deprecated "tags" - 0',
+              { tags_none: { tag: { deprecated: true } } },
+              {
+                kind: 'NOT',
+                operand: {
+                  kind: 'MULTIPLE_REVERSE_EDGE_EXISTS',
                   reverseEdge: 'tags',
+                  headFilter: {
+                    kind: 'NodeFilter',
+                    node: 'ArticleTag',
+                    filter: {
+                      kind: 'EDGE_EXISTS',
+                      edge: 'tag',
+                      headFilter: {
+                        kind: 'NodeFilter',
+                        node: 'Tag',
+                        filter: {
+                          kind: 'LEAF',
+                          leaf: 'deprecated',
+                          operator: 'EQ',
+                          value: true,
+                        },
+                      },
+                    },
+                  },
                 },
-              ],
+              },
+            ],
 
-              [
-                'An article WITHOUT any deprecated "tags" - 0',
-                { tags_none: { tag: { deprecated: true } } },
-                {
-                  kind: 'BooleanOperation',
-                  operator: 'Not',
-                  operand: {
-                    kind: 'MultipleReverseEdgeExistsFilter',
-                    reverseEdge: 'tags',
-                    headFilter: {
-                      kind: 'NodeFilter',
-                      node: 'ArticleTag',
-                      filter: {
-                        kind: 'EdgeExistsFilter',
+            [
+              'An article WITHOUT any deprecated "tags" - 1',
+              {
+                tags_every: {
+                  tag: { OR: [{ deprecated: null }, { deprecated: false }] },
+                },
+              },
+              {
+                kind: 'NOT',
+                operand: {
+                  kind: 'MULTIPLE_REVERSE_EDGE_EXISTS',
+                  reverseEdge: 'tags',
+                  headFilter: {
+                    kind: 'NodeFilter',
+                    node: 'ArticleTag',
+                    filter: {
+                      kind: 'NOT',
+                      operand: {
+                        kind: 'EDGE_EXISTS',
                         edge: 'tag',
                         headFilter: {
                           kind: 'NodeFilter',
                           node: 'Tag',
                           filter: {
-                            kind: 'LeafFilter',
+                            kind: 'LEAF',
                             leaf: 'deprecated',
-                            operator: 'eq',
-                            value: true,
+                            operator: 'IN',
+                            values: [null, false],
                           },
                         },
                       },
                     },
                   },
                 },
-              ],
+              },
+            ],
+          ])('%s', (_label, input, ast) => {
+            const node = gp.getNodeByName('Article');
+            const filter = node.filterInputType.parseAndFilter(input).filter;
 
-              [
-                'An article WITHOUT any deprecated "tags" - 1',
-                {
-                  tags_every: {
-                    tag: { OR: [{ deprecated: null }, { deprecated: false }] },
-                  },
-                },
-                {
-                  kind: 'BooleanOperation',
-                  operator: 'Not',
-                  operand: {
-                    kind: 'MultipleReverseEdgeExistsFilter',
-                    reverseEdge: 'tags',
-                    headFilter: {
-                      kind: 'NodeFilter',
-                      node: 'ArticleTag',
-                      filter: {
-                        kind: 'BooleanOperation',
-                        operator: 'Not',
-                        operand: {
-                          kind: 'EdgeExistsFilter',
-                          edge: 'tag',
-                          headFilter: {
-                            kind: 'NodeFilter',
-                            node: 'Tag',
-                            filter: {
-                              kind: 'LeafFilter',
-                              leaf: 'deprecated',
-                              operator: 'in',
-                              values: [null, false],
-                            },
-                          },
-                        },
-                      },
-                    },
-                  },
-                },
-              ],
-            ])('%s', (_label, input, filter) => {
-              const node = gp.getNodeByName('Article');
-              const filterInputType = node.filterInputType;
-
-              expect(
-                filterInputType.parseAndFilter(
-                  input,
-                  undefined,
-                  utils.addPath(undefined, filterInputType.name),
-                ).filter.ast,
-              ).toEqual(filter);
-            });
+            expect(filter.ast).toEqual(ast);
           });
         });
+      });
 
-        describe('Complexes', () => {
-          it.each<
-            [
-              label: string,
-              filter: NodeFilterInputValue,
-              ast: BooleanFilter['ast'],
-            ]
-          >([
-            [
-              'A complex "OR"',
-              {
-                OR: [
-                  { _id: 1 },
-                  { _id_not: 20 },
-                  { category: null },
-                  { status: ArticleStatus.DELETED },
-                  { category: { slug: 'news' } },
-                  { _id_in: [2] },
-                  { category_is_null: true },
-                  { _id_in: 3 },
-                  { status: ArticleStatus.DRAFT },
-                  { _id_in: [4, 5, 4, 3, 2, 1] },
-                  { category: { slug: 'tv' } },
-                ],
-              },
-              {
-                kind: 'BooleanOperation',
-                operator: 'Or',
-                operands: [
-                  {
-                    kind: 'BooleanOperation',
-                    operator: 'Not',
-                    operand: {
-                      kind: 'LeafFilter',
-                      leaf: '_id',
-                      operator: 'eq',
-                      value: 20,
-                    },
-                  },
-                  {
-                    kind: 'BooleanOperation',
-                    operator: 'Not',
-                    operand: {
-                      kind: 'EdgeExistsFilter',
-                      edge: 'category',
-                    },
-                  },
-                  {
-                    kind: 'LeafFilter',
-                    leaf: 'status',
-                    operator: 'in',
-                    values: ['deleted', 'draft'],
-                  },
-                  {
-                    kind: 'EdgeExistsFilter',
+      describe('Others', () => {
+        it.each<
+          [
+            label: string,
+            input: NodeFilterInputValue,
+            ast: BooleanFilter['ast'],
+          ]
+        >([
+          [
+            'A complex "OR"',
+            {
+              OR: [
+                { _id: 1 },
+                { _id_not: 20 },
+                { category: null },
+                { status: ArticleStatus.DELETED },
+                { category: { slug: 'news' } },
+                { _id_in: [2] },
+                { category_is_null: true },
+                { _id_in: 3 },
+                { status: ArticleStatus.DRAFT },
+                { _id_in: [4, 5, 4, 3, 2, 1] },
+                { category: { slug: 'tv' } },
+              ],
+            },
+            {
+              kind: 'OR',
+              operands: expect.arrayContaining([
+                {
+                  kind: 'LEAF',
+                  leaf: '_id',
+                  operator: 'NOT',
+                  value: 20,
+                },
+                {
+                  kind: 'NOT',
+                  operand: {
+                    kind: 'EDGE_EXISTS',
                     edge: 'category',
-                    headFilter: {
-                      kind: 'NodeFilter',
-                      node: 'Category',
-                      filter: {
-                        kind: 'LeafFilter',
-                        leaf: 'slug',
-                        operator: 'in',
-                        values: ['news', 'tv'],
-                      },
+                  },
+                },
+                {
+                  kind: 'LEAF',
+                  leaf: 'status',
+                  operator: 'IN',
+                  values: ['deleted', 'draft'],
+                },
+                {
+                  kind: 'EDGE_EXISTS',
+                  edge: 'category',
+                  headFilter: {
+                    kind: 'NodeFilter',
+                    node: 'Category',
+                    filter: {
+                      kind: 'LEAF',
+                      leaf: 'slug',
+                      operator: 'IN',
+                      values: ['news', 'tv'],
                     },
                   },
-                  {
-                    kind: 'LeafFilter',
+                },
+              ]) as any,
+            },
+          ],
+          [
+            'A complex "AND"',
+            {
+              AND: [
+                { NOT: { _id: 1 } },
+                { _id_not: 2 },
+                { category: { slug_in: ['news', 'home'] } },
+                { NOT: { _id: 3 } },
+                { _id_not_in: [4, 5, 6] },
+                { category: { slug_in: ['news', 'tv', 'home'] } },
+              ],
+            },
+            {
+              kind: 'AND',
+              operands: expect.arrayContaining([
+                {
+                  kind: 'EDGE_EXISTS',
+                  edge: 'category',
+                  headFilter: {
+                    kind: 'NodeFilter',
+                    node: 'Category',
+                    filter: {
+                      kind: 'LEAF',
+                      leaf: 'slug',
+                      operator: 'IN',
+                      values: ['news', 'home'],
+                    },
+                  },
+                },
+                {
+                  kind: 'NOT',
+                  operand: {
+                    kind: 'LEAF',
                     leaf: '_id',
-                    operator: 'in',
-                    values: [1, 2, 4, 5, 3],
+                    operator: 'IN',
+                    values: expect.arrayContaining([1, 2, 4, 5, 6, 3]),
                   },
-                ],
-              },
-            ],
+                },
+              ]) as any,
+            },
+          ],
+          [
+            'An "IN" with lot of values',
+            {
+              OR: [{ _id: 1 }, { _id_in: R.range(2, 1000) }],
+            },
+            {
+              kind: 'LEAF',
+              leaf: '_id',
+              operator: 'IN',
+              values: expect.arrayContaining([1, 999]) as any,
+            },
+          ],
+        ])('%s', (_label, input, ast) => {
+          const node = gp.getNodeByName('Article');
+          const filter = node.filterInputType.parseAndFilter(input).filter;
 
-            [
-              'A complex "AND"',
-              {
-                AND: [
-                  { NOT: { _id: 1 } },
-                  { _id_not: 2 },
-                  { category: { slug_in: ['news', 'home'] } },
-                  { NOT: { _id: 3 } },
-                  { _id_not_in: [4, 5, 6] },
-                  { category: { slug_in: ['news', 'tv', 'home'] } },
-                ],
-              },
-              {
-                kind: 'BooleanOperation',
-                operator: 'And',
-                operands: [
-                  {
-                    kind: 'EdgeExistsFilter',
-                    edge: 'category',
-                    headFilter: {
-                      kind: 'NodeFilter',
-                      node: 'Category',
-                      filter: {
-                        kind: 'LeafFilter',
-                        leaf: 'slug',
-                        operator: 'in',
-                        values: ['news', 'home'],
-                      },
-                    },
-                  },
-                  {
-                    kind: 'BooleanOperation',
-                    operator: 'Not',
-                    operand: {
-                      kind: 'LeafFilter',
-                      leaf: '_id',
-                      operator: 'in',
-                      values: [1, 2, 4, 5, 6, 3],
-                    },
-                  },
-                ],
-              },
-            ],
-          ])('%s', (_label, input, filter) => {
-            const node = gp.getNodeByName('Article');
-            const filterInputType = node.filterInputType;
-
-            expect(
-              filterInputType.parseAndFilter(
-                input,
-                undefined,
-                utils.addPath(undefined, filterInputType.name),
-              ).filter.ast,
-            ).toEqual(filter);
-          });
+          expect(filter.ast).toEqual(ast);
         });
       });
     });

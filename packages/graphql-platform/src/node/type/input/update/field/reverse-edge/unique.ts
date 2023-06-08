@@ -1,8 +1,8 @@
 import * as scalars from '@prismamedia/graphql-platform-scalars';
 import * as utils from '@prismamedia/graphql-platform-utils';
 import inflection from 'inflection';
-import _ from 'lodash';
 import assert from 'node:assert/strict';
+import * as R from 'remeda';
 import type { IterableElement } from 'type-fest';
 import type {
   NodeUpdateInputValue,
@@ -202,7 +202,7 @@ export class UniqueReverseEdgeUpdateInput extends AbstractReverseEdgeUpdateInput
         ) as UniqueReverseEdgeUpdateInputAction[];
 
         if (
-          _.intersection(inputActionNames, destructiveActionNames).length > 1
+          R.intersection(inputActionNames, destructiveActionNames).length > 1
         ) {
           throw new utils.UnexpectedValueError(
             `no more than one destructive action among ${destructiveActionNames.join(
@@ -214,7 +214,7 @@ export class UniqueReverseEdgeUpdateInput extends AbstractReverseEdgeUpdateInput
         }
 
         if (
-          _.intersection(inputActionNames, nonDestructiveActionNames).length > 1
+          R.intersection(inputActionNames, nonDestructiveActionNames).length > 1
         ) {
           throw new utils.UnexpectedValueError(
             `no more than one action among ${nonDestructiveActionNames.join(

@@ -1,8 +1,8 @@
 import * as utils from '@prismamedia/graphql-platform-utils';
 import { Memoize } from '@prismamedia/memoize';
 import * as graphql from 'graphql';
-import _ from 'lodash';
 import assert from 'node:assert/strict';
+import * as R from 'remeda';
 import type { Merge } from 'type-fest';
 import type { ConnectorInterface } from '../connector-interface.js';
 import type { GraphQLPlatform } from '../index.js';
@@ -147,7 +147,7 @@ export abstract class AbstractOperation<
       parsedArgs = utils.parseInputValues(
         this.arguments || [],
         this.selectionAware && utils.isPlainObject(args)
-          ? _.omit(args, ['selection'])
+          ? R.omit(args, ['selection'])
           : args,
         utils.addPath(path, argsPathKey),
       );

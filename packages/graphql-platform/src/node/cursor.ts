@@ -42,17 +42,13 @@ const pickAfterFilterInputValue = (
   direction: OrderingDirection,
   value: NodeSelectedValue,
 ): NonNullable<NodeFilterInputValue> =>
-  Array.from(uniqueConstraint.componentsByName.values()).reduce(
-    (filter, component) => {
-      assert(component instanceof Leaf);
-
-      return Object.assign(filter, {
-        [`${component.name}_${
-          direction === OrderingDirection.ASCENDING ? 'gt' : 'lt'
-        }`]: value[component.name],
-      });
-    },
-    Object.create(null),
+  Object.fromEntries(
+    Array.from(uniqueConstraint.componentSet, (component) => [
+      `${component.name}_${
+        direction === OrderingDirection.ASCENDING ? 'gt' : 'lt'
+      }`,
+      value[component.name],
+    ]),
   );
 
 export type NodeCursorForEachTask<
@@ -108,14 +104,14 @@ export class NodeCursor<
   TRequestContext extends object = any,
 > implements AsyncIterable<TValue>
 {
-  protected readonly api: ContextBoundNodeAPI;
-  protected readonly where: NodeFilterInputValue;
-  protected readonly direction: OrderingDirection;
-  protected readonly uniqueConstraint: UniqueConstraint;
-  protected readonly selection: NodeSelection<TValue>;
-  protected readonly internalSelection: NodeSelection;
-  protected readonly orderByInputValue: OrderByInputValue;
-  protected readonly chunkSize: number;
+  readonly #api: ContextBoundNodeAPI;
+  readonly #where: NodeFilterInputValue;
+  readonly #direction: OrderingDirection;
+  readonly #uniqueConstraint: UniqueConstraint;
+  readonly #selection: NodeSelection<TValue>;
+  readonly #internalSelection: NodeSelection;
+  readonly #orderByInputValue: OrderByInputValue;
+  readonly #chunkSize: number;
 
   public constructor(
     public readonly node: Node<TRequestContext>,
@@ -124,17 +120,9 @@ export class NodeCursor<
       | OperationContext<TRequestContext>,
     options?: NodeCursorOptions<TValue>,
   ) {
-    assert(node.isScrollable(), `The "${node}" node is not scrollable`);
-
-    this.api = node.createContextBoundAPI(context);
-
-    this.where = node.filterInputType.parseValue(options?.where);
-
-    this.direction = options?.direction || OrderingDirection.ASCENDING;
-
     // unique-constraint
     {
-      let uniqueConstraint: UniqueConstraint;
+      let uniqueConstraint: UniqueConstraint | undefined;
 
       if (options?.uniqueConstraint) {
         uniqueConstraint = node.getUniqueConstraintByName(
@@ -146,37 +134,45 @@ export class NodeCursor<
           `The "${uniqueConstraint}" unique-constraint is not scrollable`,
         );
       } else {
-        uniqueConstraint = Array.from(
-          node.uniqueConstraintsByName.values(),
-        ).find((uniqueConstraint) => uniqueConstraint.isScrollable())!;
+        uniqueConstraint = Array.from(node.uniqueConstraintSet).find(
+          (uniqueConstraint) => uniqueConstraint.isScrollable(),
+        );
+
+        assert(uniqueConstraint, `The "${node}" node is not scrollable`);
       }
 
-      this.uniqueConstraint = uniqueConstraint;
+      this.#uniqueConstraint = uniqueConstraint;
     }
 
-    this.selection = options?.selection
-      ? node.outputType.select(options?.selection)
+    this.#api = node.createContextBoundAPI(context);
+
+    this.#where = node.filterInputType.parseValue(options?.where);
+
+    this.#direction = options?.direction || OrderingDirection.ASCENDING;
+
+    this.#selection = options?.selection
+      ? node.outputType.select(options.selection)
       : node.selection;
 
-    this.internalSelection = this.selection.mergeWith(
-      this.uniqueConstraint.selection,
+    this.#internalSelection = this.#selection.mergeWith(
+      this.#uniqueConstraint.selection,
     );
 
-    this.orderByInputValue = Array.from(
-      this.uniqueConstraint.componentsByName.values(),
+    this.#orderByInputValue = Array.from(
+      this.#uniqueConstraint.componentSet,
       (component) => {
-        assert(component instanceof Leaf);
+        assert(component instanceof Leaf && component.isSortable());
 
-        return component.getOrderingInput(this.direction).value;
+        return component.getOrderingInput(this.#direction).value;
       },
     );
 
-    this.chunkSize = Math.max(1, options?.chunkSize || 100);
+    this.#chunkSize = Math.max(1, options?.chunkSize || 100);
   }
 
   @Memoize((force: boolean = false) => force && doNotCache)
   public async size(force: boolean = false): Promise<number> {
-    return this.api.count({ where: this.where });
+    return this.#api.count({ where: this.#where });
   }
 
   public async *[Symbol.asyncIterator](): AsyncIterator<TValue> {
@@ -184,25 +180,25 @@ export class NodeCursor<
     let values: NodeSelectedValue[];
 
     do {
-      values = await this.api.findMany({
-        where: { AND: [after, this.where] },
-        orderBy: this.orderByInputValue,
-        first: this.chunkSize,
-        selection: this.internalSelection,
+      values = await this.#api.findMany({
+        where: { AND: [after, this.#where] },
+        orderBy: this.#orderByInputValue,
+        first: this.#chunkSize,
+        selection: this.#internalSelection,
       });
 
       if (values.length) {
         for (const value of values) {
-          yield this.selection.parseValue(value);
+          yield this.#selection.parseValue(value);
         }
 
         after = pickAfterFilterInputValue(
-          this.uniqueConstraint,
-          this.direction,
+          this.#uniqueConstraint,
+          this.#direction,
           values.at(-1)!,
         );
       }
-    } while (values.length === this.chunkSize);
+    } while (values.length === this.#chunkSize);
   }
 
   public async forEach(

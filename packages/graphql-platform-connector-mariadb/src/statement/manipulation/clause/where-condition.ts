@@ -1,4 +1,5 @@
 import * as core from '@prismamedia/graphql-platform';
+import * as scalars from '@prismamedia/graphql-platform-scalars';
 import * as utils from '@prismamedia/graphql-platform-utils';
 import assert from 'node:assert/strict';
 import { escapeStringValue } from '../../../escaping.js';
@@ -40,6 +41,9 @@ function parseLeafFilter(
       case 'eq':
         return `${columnIdentifier} <=> ${serializedColumnValue}`;
 
+      case 'not':
+        return `${columnIdentifier} <> ${serializedColumnValue}`;
+
       case 'gt':
         return `${columnIdentifier} > ${serializedColumnValue}`;
 
@@ -63,19 +67,27 @@ function parseLeafFilter(
             `MATCH (${columnIdentifier}) AGAINST (${escapeStringValue(
               filter.value,
             )} IN BOOLEAN MODE)`
+          : filter.leaf.type === scalars.typesByName.DraftJS
+          ? `JSON_SEARCH(${columnIdentifier}, 'one', ${escapeStringValue(
+              `%${filter.value}%`,
+            )}, NULL, '$.blocks[*].text') IS NOT NULL`
           : `${columnIdentifier} LIKE ${escapeStringValue(
               `%${filter.value}%`,
             )}`;
 
       case 'starts_with':
-        return `${columnIdentifier} LIKE ${escapeStringValue(
-          `${filter.value}%`,
-        )}`;
+        return filter.leaf.type === scalars.typesByName.DraftJS
+          ? `JSON_SEARCH(${columnIdentifier}, 'one', ${escapeStringValue(
+              `${filter.value}%`,
+            )}, NULL, '$.blocks[0].text') IS NOT NULL`
+          : `${columnIdentifier} LIKE ${escapeStringValue(`${filter.value}%`)}`;
 
       case 'ends_with':
-        return `${columnIdentifier} LIKE ${escapeStringValue(
-          `%${filter.value}`,
-        )}`;
+        return filter.leaf.type === scalars.typesByName.DraftJS
+          ? `JSON_SEARCH(${columnIdentifier}, 'one', ${escapeStringValue(
+              `%${filter.value}`,
+            )}, NULL, '$.blocks[last].text') IS NOT NULL`
+          : `${columnIdentifier} LIKE ${escapeStringValue(`%${filter.value}`)}`;
 
       default:
         throw new utils.UnreachableValueError(filter);

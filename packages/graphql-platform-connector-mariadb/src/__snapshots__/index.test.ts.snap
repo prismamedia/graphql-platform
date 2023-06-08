@@ -30,7 +30,7 @@ exports[`GraphQL-Platform Connector MariaDB generates valid and stable schema 3`
   PRIMARY KEY (\`private_id\`),
   UNIQUE INDEX \`unq_id\` (\`id\`),
   UNIQUE INDEX \`unq_category_private_id_slug\` (\`category_private_id\`,\`slug\`),
-  FULLTEXT \`ft_body\` (\`body\`),
+  FULLTEXT \`ft_title\` (\`title\`),
   INDEX \`idx_slug\` (\`slug\`),
   INDEX \`idx_status_slug\` (\`status\`,\`slug\`),
   INDEX \`idx_category_private_id_updated_at\` (\`category_private_id\`,\`updated_at\`),

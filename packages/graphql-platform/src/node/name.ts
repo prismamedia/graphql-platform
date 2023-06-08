@@ -1,41 +1,27 @@
 import * as utils from '@prismamedia/graphql-platform-utils';
-import inflection from 'inflection';
 
-/**
- * A string in "PascalCase" compliant with the GraphQL "Names" specification
- *
- * @see https://spec.graphql.org/draft/#sec-Names
- */
-export type NodeName = string;
+export type NodeName = utils.Name;
 
 export function assertNodeName(
   maybeNodeName: unknown,
-  path: utils.Path,
+  path?: utils.Path,
 ): asserts maybeNodeName is NodeName {
   utils.assertName(maybeNodeName, path);
 
-  // if (maybeNodeName.includes('_')) {
-  //   throw new UnexpectedValueError(
-  //     `not to contain underscore`,
-  //     maybeNodeName,
-  //     { path },
-  //   );
-  // }
-
-  // if (maybeNodeName.endsWith('Identifier')) {
-  //   throw new UnexpectedValueError(
-  //     `not to end with "Identifier"`,
-  //     maybeNodeName,
-  //     { path },
-  //   );
-  // }
-
-  const pascalCasedName = inflection.camelize(maybeNodeName, false);
-  if (maybeNodeName !== pascalCasedName) {
+  if (!/^[A-Z][A-Za-z]*$/.test(maybeNodeName)) {
     throw new utils.UnexpectedValueError(
-      `to be in PascalCase (= "${pascalCasedName}")`,
+      'to be in "PascalCase"',
       maybeNodeName,
       { path },
     );
   }
+}
+
+export function ensureNodeName(
+  maybeNodeName: unknown,
+  path?: utils.Path,
+): NodeName {
+  assertNodeName(maybeNodeName, path);
+
+  return maybeNodeName;
 }

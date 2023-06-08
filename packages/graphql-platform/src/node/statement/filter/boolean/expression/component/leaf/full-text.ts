@@ -1,18 +1,22 @@
+import * as scalars from '@prismamedia/graphql-platform-scalars';
 import * as utils from '@prismamedia/graphql-platform-utils';
 import type { NodeValue } from '../../../../../../../node.js';
 import type { Leaf } from '../../../../../../definition/component/leaf.js';
 import type { DependencyTree } from '../../../../../../result-set.js';
+import type { BooleanFilter } from '../../../../boolean.js';
 import type { BooleanExpressionInterface } from '../../../expression-interface.js';
+import type { AndOperand, OrOperand } from '../../../operation.js';
 
 export interface LeafFullTextFilterAST {
-  kind: 'LeafFilter';
+  kind: 'LEAF';
   leaf: Leaf['name'];
-  operator: LeafFullTextFilter['operator'];
+  operator: Uppercase<LeafFullTextFilter['operator']>;
   value: LeafFullTextFilter['value'];
 }
 
 export class LeafFullTextFilter implements BooleanExpressionInterface {
-  public readonly reduced: this;
+  public readonly score: number = 2;
+  public readonly dependencies: DependencyTree;
 
   public constructor(
     public readonly leaf: Leaf,
@@ -23,11 +27,7 @@ export class LeafFullTextFilter implements BooleanExpressionInterface {
       throw new utils.UnexpectedValueError(value, `a non-empty string`);
     }
 
-    this.reduced = this;
-  }
-
-  public get dependencies(): DependencyTree | undefined {
-    return new Map([[this.leaf, undefined]]);
+    this.dependencies = new Map([[leaf, undefined]]);
   }
 
   public equals(expression: unknown): boolean {
@@ -39,19 +39,25 @@ export class LeafFullTextFilter implements BooleanExpressionInterface {
     );
   }
 
-  public and(_expression: unknown) {
-    return undefined;
+  public and(
+    _operand: AndOperand,
+    _remainingReducers: number,
+  ): BooleanFilter | undefined {
+    return;
   }
 
-  public or(_expression: unknown) {
-    return undefined;
+  public or(
+    _operand: OrOperand,
+    _remainingReducers: number,
+  ): BooleanFilter | undefined {
+    return;
   }
 
   public get ast(): LeafFullTextFilterAST {
     return {
-      kind: 'LeafFilter',
+      kind: 'LEAF',
       leaf: this.leaf.name,
-      operator: this.operator,
+      operator: this.operator.toUpperCase() as any,
       value: this.value,
     };
   }
@@ -62,19 +68,34 @@ export class LeafFullTextFilter implements BooleanExpressionInterface {
       return;
     }
 
-    if (!leafValue || !this.value) {
+    if (!leafValue) {
       return false;
     }
 
     switch (this.operator) {
       case 'contains':
-        return leafValue.includes(this.value);
-
-      case 'ends_with':
-        return leafValue.endsWith(this.value);
+        return this.leaf.type === scalars.typesByName.DraftJS
+          ? (leafValue as scalars.RawDraftContentState).blocks.some((block) =>
+              block.text.includes(this.value),
+            )
+          : leafValue.includes(this.value);
 
       case 'starts_with':
-        return leafValue.startsWith(this.value);
+        return this.leaf.type === scalars.typesByName.DraftJS
+          ? (leafValue as scalars.RawDraftContentState).blocks
+              .at(0)
+              ?.text.startsWith(this.value)
+          : leafValue.startsWith(this.value);
+
+      case 'ends_with':
+        return this.leaf.type === scalars.typesByName.DraftJS
+          ? (leafValue as scalars.RawDraftContentState).blocks
+              .at(-1)
+              ?.text.endsWith(this.value)
+          : leafValue.endsWith(this.value);
+
+      default:
+        throw new utils.UnreachableValueError(this.operator);
     }
   }
 }
