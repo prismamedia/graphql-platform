@@ -52,7 +52,7 @@ export class EdgeExistsFilter implements BooleanExpressionInterface {
             new NotOperation(new EdgeExistsFilter(this.edge)),
             new EdgeExistsFilter(this.edge, this.headFilter.complement),
           ],
-          // this,
+          this,
         )
       : undefined;
   }

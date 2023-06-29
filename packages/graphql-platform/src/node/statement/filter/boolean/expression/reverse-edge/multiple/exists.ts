@@ -1,4 +1,3 @@
-import { Memoize } from '@prismamedia/memoize';
 import assert from 'node:assert/strict';
 import type { NodeValue } from '../../../../../../../node.js';
 import type { MultipleReverseEdge } from '../../../../../../definition/reverse-edge/multiple.js';
@@ -10,7 +9,6 @@ import { NodeFilter, areFiltersEqual } from '../../../../../filter.js';
 import type { BooleanFilter } from '../../../../boolean.js';
 import type { BooleanExpressionInterface } from '../../../expression-interface.js';
 import type { AndOperand, OrOperand } from '../../../operation.js';
-import { AndOperation, NotOperation, OrOperation } from '../../../operation.js';
 import { FalseValue } from '../../../value.js';
 
 export interface MultipleReverseEdgeExistsFilterAST {
@@ -62,64 +60,30 @@ export class MultipleReverseEdgeExistsFilter
     );
   }
 
-  @Memoize()
-  public get complement(): BooleanFilter | undefined {
-    return this.headFilter
-      ? new OrOperation(
-          [
-            new NotOperation(
-              new MultipleReverseEdgeExistsFilter(this.reverseEdge),
-            ),
-            new MultipleReverseEdgeExistsFilter(
-              this.reverseEdge,
-              this.headFilter.complement,
-            ),
-          ],
-          this,
-        )
-      : undefined;
-  }
-
   public and(
     operand: AndOperand,
-    remainingReducers: number,
+    _remainingReducers: number,
   ): BooleanFilter | undefined {
     if (
       operand instanceof MultipleReverseEdgeExistsFilter &&
       operand.reverseEdge === this.reverseEdge
     ) {
-      return MultipleReverseEdgeExistsFilter.create(
-        this.reverseEdge,
-        new NodeFilter(
-          this.reverseEdge.head,
-          AndOperation.create(
-            [this.headFilter?.filter, operand.headFilter?.filter],
-            remainingReducers,
-          ),
-        ),
-      );
     }
+
+    return;
   }
 
   public or(
     operand: OrOperand,
-    remainingReducers: number,
+    _remainingReducers: number,
   ): BooleanFilter | undefined {
     if (
       operand instanceof MultipleReverseEdgeExistsFilter &&
       operand.reverseEdge === this.reverseEdge
     ) {
-      return MultipleReverseEdgeExistsFilter.create(
-        this.reverseEdge,
-        new NodeFilter(
-          this.reverseEdge.head,
-          OrOperation.create(
-            [this.headFilter?.filter, operand.headFilter?.filter],
-            remainingReducers,
-          ),
-        ),
-      );
     }
+
+    return;
   }
 
   public get ast(): MultipleReverseEdgeExistsFilterAST {
