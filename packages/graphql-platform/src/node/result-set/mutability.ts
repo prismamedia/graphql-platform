@@ -34,7 +34,7 @@ import type { NodeUniqueFilterInputValue } from '../type/input/unique-filter.js'
  *     logCount_gt: 0
  *   },
  *   orderBy: [tagCount_DESC]
- * ): {
+ * ) {
  *   slug
  *   title
  *   category { slug }
@@ -43,19 +43,19 @@ import type { NodeUniqueFilterInputValue } from '../type/input/unique-filter.js'
  *
  * ->
  *
- * category
- *   title
- *   slug
- * tags
- *   article
- *   tag
- *     status
- *     slug
- *   order
- * logs
- *   article
- * slug
- * title
+ * - category
+ *   - title
+ *   - slug
+ * - tags
+ *   - article
+ *   - tag
+ *     - status
+ *     - slug
+ *   - order
+ * - logs
+ *   - article
+ * - slug
+ * - title
  */
 export type DependencyTree = ReadonlyMap<
   Component | ReverseEdge,

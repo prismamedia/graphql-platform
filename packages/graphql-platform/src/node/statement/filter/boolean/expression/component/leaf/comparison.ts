@@ -1,7 +1,6 @@
 import * as utils from '@prismamedia/graphql-platform-utils';
 import { Memoize } from '@prismamedia/memoize';
 import assert from 'node:assert/strict';
-import * as R from 'remeda';
 import type { NodeValue } from '../../../../../../../node.js';
 import type {
   Leaf,
@@ -68,7 +67,7 @@ export class LeafComparisonFilter implements BooleanExpressionInterface {
 
   @Memoize()
   public get operands():
-    | ReadonlyArray<Extract<OrOperand, LeafComparisonFilter>>
+    | [LeafComparisonFilter, LeafComparisonFilter]
     | undefined {
     return ['gte', 'lte'].includes(this.operator)
       ? [
@@ -148,13 +147,11 @@ export class LeafComparisonFilter implements BooleanExpressionInterface {
           return this;
         }
 
-        // Distributive law: (A + B) . (C + D) = (A . C) + (A . D) + (B . C) + (B . D)
+        // Distributive law: A . (B + C) = (A . B) + (A . C)
         if (remainingReducers) {
           return OrOperation.create(
-            operand.operands.flatMap((a) =>
-              (this.operands ?? [this]).map((b) =>
-                AndOperation.create([a, b], remainingReducers),
-              ),
+            operand.operands.map((operand) =>
+              AndOperation.create([operand, this], remainingReducers),
             ),
             remainingReducers,
           );
@@ -180,15 +177,20 @@ export class LeafComparisonFilter implements BooleanExpressionInterface {
         return undefined;
       }
 
-      // Associative law: (A + B) + (C + D) = A + B + C + D
+      // Associative law: A + (B + C) = (A + B) + C = (A + C) + B
       if (remainingReducers && operand.operands) {
-        return OrOperation.create(
-          R.uniqWith(
-            [...(this.operands || [this]), ...operand.operands],
-            (a, b) => a.equals(b),
+        const [a, b] = operand.operands;
+
+        return [
+          OrOperation.create(
+            [a, OrOperation.create([this, b], remainingReducers)],
+            remainingReducers,
           ),
-          remainingReducers,
-        );
+          OrOperation.create(
+            [b, OrOperation.create([this, a], remainingReducers)],
+            remainingReducers,
+          ),
+        ].sort(({ score: a }, { score: b }) => a - b)[0];
       }
 
       if (this.operator === 'eq') {

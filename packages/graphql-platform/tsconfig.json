@@ -4,8 +4,6 @@
   "include": ["src/**/*.ts"],
 
   "compilerOptions": {
-    "moduleResolution": "node16",
-
     "experimentalDecorators": true,
 
     "composite": true,

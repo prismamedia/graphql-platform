@@ -69,9 +69,7 @@ export class LeafInFilter implements BooleanExpressionInterface {
   }
 
   @Memoize()
-  public get operands(): ReadonlyArray<
-    Extract<OrOperand, LeafComparisonFilter>
-  > {
+  public get operands(): ReadonlyArray<LeafComparisonFilter> {
     return this.values.map(
       (value) => new LeafComparisonFilter(this.leaf, 'eq', value),
     );
