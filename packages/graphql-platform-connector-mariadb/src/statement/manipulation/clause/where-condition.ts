@@ -42,7 +42,9 @@ function parseLeafFilter(
         return `${columnIdentifier} <=> ${serializedColumnValue}`;
 
       case 'not':
-        return `${columnIdentifier} <> ${serializedColumnValue}`;
+        return filter.value === null
+          ? `${columnIdentifier} IS NOT NULL`
+          : `${columnIdentifier} <> ${serializedColumnValue}`;
 
       case 'gt':
         return `${columnIdentifier} > ${serializedColumnValue}`;

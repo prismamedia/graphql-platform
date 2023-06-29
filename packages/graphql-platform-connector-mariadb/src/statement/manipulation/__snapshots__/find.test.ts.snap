@@ -164,9 +164,9 @@ WHERE (
       AND (
         \`articles>createdBy>profile\`.\`theUserId\` IS NOT NULL
         AND (
-          \`articles>createdBy>profile\`.\`facebook_id\` <> NULL
-          OR \`articles>createdBy>profile\`.\`google_id\` <> NULL
-          OR \`articles>createdBy>profile\`.\`twitter_handle\` <> NULL
+          \`articles>createdBy>profile\`.\`facebook_id\` IS NOT NULL
+          OR \`articles>createdBy>profile\`.\`google_id\` IS NOT NULL
+          OR \`articles>createdBy>profile\`.\`twitter_handle\` IS NOT NULL
         )
       )
     )
