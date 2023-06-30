@@ -5,6 +5,7 @@ import assert from 'node:assert/strict';
 import type { ConnectorInterface } from '../../../connector-interface.js';
 import { MultipleReverseEdgeCreationInput } from '../../type/input/creation/field/reverse-edge/multiple.js';
 import { MultipleReverseEdgeUpdateInput } from '../../type/input/update/field/reverse-edge/multiple.js';
+import type { MultipleReverseEdgeHeadOutputArgs } from '../../type/output/node/field/reverse-edge/multiple-head.js';
 import {
   AbstractReverseEdge,
   AbstractReverseEdgeConfig,
@@ -24,12 +25,12 @@ export interface MultipleReverseEdgeConfig extends AbstractReverseEdgeConfig {
    */
   forceName?: utils.OptionalFlag;
 
-  /**
-   * Optional, you can provide this referrer's singular form if the one guessed is not what you expect
-   *
-   * Default: guessed from the name
-   */
-  singular?: string;
+  output?: {
+    /**
+     * Optional, provide some defaults to the outputs' field arguments
+     */
+    defaultArgs?: Partial<MultipleReverseEdgeHeadOutputArgs>;
+  };
 }
 
 export class MultipleReverseEdge<

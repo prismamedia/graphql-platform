@@ -51,6 +51,7 @@ export abstract class AbstractNodeFieldOutputType<
 
   @Memoize()
   public validate(): void {
+    this.arguments;
     if (this.isPublic()) {
       this.getGraphQLFieldConfig();
     }

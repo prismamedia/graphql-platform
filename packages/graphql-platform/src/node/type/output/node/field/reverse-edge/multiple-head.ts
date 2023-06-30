@@ -37,24 +37,30 @@ export class MultipleReverseEdgeHeadOutputType extends AbstractReverseEdgeOutput
 
   @Memoize()
   protected get arguments(): ReadonlyArray<utils.Input> {
+    const defaults = this.reverseEdge.config.output?.defaultArgs;
+
     return [
       new utils.Input({
         name: 'where',
         type: this.reverseEdge.head.filterInputType,
+        ...(defaults?.where !== undefined && { defaultValue: defaults.where }),
       }),
       new utils.Input({
         name: 'orderBy',
         type: new utils.ListableInputType(
           utils.nonNillableInputType(this.reverseEdge.head.orderingInputType),
         ),
+        ...(defaults?.orderBy != null && { defaultValue: defaults.orderBy }),
       }),
       new utils.Input({
         name: 'skip',
         type: scalars.typesByName.UnsignedInt,
+        ...(defaults?.skip != null && { defaultValue: defaults.skip }),
       }),
       new utils.Input({
         name: 'first',
         type: utils.nonNillableInputType(scalars.typesByName.UnsignedInt),
+        ...(defaults?.first != null && { defaultValue: defaults.first }),
       }),
     ];
   }

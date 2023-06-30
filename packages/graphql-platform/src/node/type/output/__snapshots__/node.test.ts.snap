@@ -28,7 +28,7 @@ type Article implements PublicNodeInterface {
   views: UnsignedBigInt!
   score: UnsignedFloat!
   machineTags: JSONArray
-  tags(where: ArticleTagFilterInput, orderBy: [ArticleTagOrderingInput!], skip: UnsignedInt, first: UnsignedInt!): [ArticleTag!]!
+  tags(where: ArticleTagFilterInput, orderBy: [ArticleTagOrderingInput!] = [order_ASC], skip: UnsignedInt, first: UnsignedInt!): [ArticleTag!]!
 
   """
   Number of "tags"

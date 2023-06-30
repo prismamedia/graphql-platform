@@ -31,10 +31,13 @@ export class MultipleReverseEdgeCountOutputType extends AbstractReverseEdgeOutpu
 
   @Memoize()
   protected get arguments(): ReadonlyArray<utils.Input> {
+    const defaults = this.reverseEdge.config.output?.defaultArgs;
+
     return [
       new utils.Input({
         name: 'where',
         type: this.reverseEdge.head.filterInputType,
+        ...(defaults?.where !== undefined && { defaultValue: defaults.where }),
       }),
     ];
   }

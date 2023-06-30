@@ -271,6 +271,7 @@ export const Article = {
   reverseEdges: {
     tags: {
       originalEdge: 'ArticleTag.article',
+      output: { defaultArgs: { orderBy: ['order_ASC'] } },
     },
     extension: {
       originalEdge: 'ArticleExtension.article',
