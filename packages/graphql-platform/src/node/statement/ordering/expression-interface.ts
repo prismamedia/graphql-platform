@@ -3,7 +3,6 @@ import type { OrderingDirection } from './direction.js';
 
 export interface OrderingExpressionInterface {
   readonly direction: OrderingDirection;
-  readonly reduced: OrderingExpressionInterface;
 
   /**
    * List of the components & reverse-edges whom changes may change the result-set

@@ -8,7 +8,7 @@ export * from './ordering/expression-interface.js';
 export * from './ordering/expression.js';
 
 export interface NodeOrderingAST {
-  kind: 'NodeOrdering';
+  kind: 'NODE';
   node: Node['name'];
   expressions: OrderingExpression['ast'][];
 }
@@ -27,16 +27,7 @@ export class NodeOrdering {
     expressions: ReadonlyArray<OrderingExpression>,
   ) {
     this.expressions = Object.freeze(
-      R.uniqWith(
-        expressions.reduce<OrderingExpression[]>(
-          (expressions, expression) =>
-            expression.reduced
-              ? [...expressions, expression.reduced]
-              : expressions,
-          [],
-        ),
-        (a, b) => a.equals(b),
-      ),
+      R.uniqWith(expressions, (a, b) => a.equals(b)),
     );
 
     this.normalized = this.expressions.length === 0 ? undefined : this;
@@ -59,7 +50,7 @@ export class NodeOrdering {
 
   public get ast(): NodeOrderingAST {
     return {
-      kind: 'NodeOrdering',
+      kind: 'NODE',
       node: this.node.name,
       expressions: this.expressions.map(({ ast }) => ast),
     };

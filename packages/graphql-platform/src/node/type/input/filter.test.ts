@@ -1606,7 +1606,7 @@ describe('NodeFilterInputType', () => {
                 kind: 'EDGE_EXISTS',
                 edge: 'category',
                 headFilter: {
-                  kind: 'NodeFilter',
+                  kind: 'NODE',
                   node: 'Category',
                   filter: {
                     kind: 'LEAF',
@@ -1654,7 +1654,7 @@ describe('NodeFilterInputType', () => {
                   kind: 'EDGE_EXISTS',
                   edge: 'category',
                   headFilter: {
-                    kind: 'NodeFilter',
+                    kind: 'NODE',
                     node: 'Category',
                     filter: {
                       kind: 'LEAF',
@@ -1704,7 +1704,7 @@ describe('NodeFilterInputType', () => {
                 kind: 'EDGE_EXISTS',
                 edge: 'category',
                 headFilter: {
-                  kind: 'NodeFilter',
+                  kind: 'NODE',
                   node: 'Category',
                   filter: {
                     kind: 'LEAF',
@@ -1778,7 +1778,7 @@ describe('NodeFilterInputType', () => {
                 kind: 'UNIQUE_REVERSE_EDGE_EXISTS',
                 reverseEdge: 'profile',
                 headFilter: {
-                  kind: 'NodeFilter',
+                  kind: 'NODE',
                   node: 'UserProfile',
                   filter: {
                     kind: 'LEAF',
@@ -1835,7 +1835,7 @@ describe('NodeFilterInputType', () => {
                   kind: 'UNIQUE_REVERSE_EDGE_EXISTS',
                   reverseEdge: 'profile',
                   headFilter: {
-                    kind: 'NodeFilter',
+                    kind: 'NODE',
                     node: 'UserProfile',
                     filter: {
                       kind: 'LEAF',
@@ -1877,7 +1877,7 @@ describe('NodeFilterInputType', () => {
                 kind: 'UNIQUE_REVERSE_EDGE_EXISTS',
                 reverseEdge: 'profile',
                 headFilter: {
-                  kind: 'NodeFilter',
+                  kind: 'NODE',
                   node: 'UserProfile',
                   filter: {
                     kind: 'AND',
@@ -1912,7 +1912,7 @@ describe('NodeFilterInputType', () => {
                 kind: 'UNIQUE_REVERSE_EDGE_EXISTS',
                 reverseEdge: 'profile',
                 headFilter: {
-                  kind: 'NodeFilter',
+                  kind: 'NODE',
                   node: 'UserProfile',
                   filter: {
                     kind: 'LEAF',
@@ -1971,13 +1971,13 @@ describe('NodeFilterInputType', () => {
                   kind: 'MULTIPLE_REVERSE_EDGE_EXISTS',
                   reverseEdge: 'tags',
                   headFilter: {
-                    kind: 'NodeFilter',
+                    kind: 'NODE',
                     node: 'ArticleTag',
                     filter: {
                       kind: 'EDGE_EXISTS',
                       edge: 'tag',
                       headFilter: {
-                        kind: 'NodeFilter',
+                        kind: 'NODE',
                         node: 'Tag',
                         filter: {
                           kind: 'LEAF',
@@ -2005,7 +2005,7 @@ describe('NodeFilterInputType', () => {
                   kind: 'MULTIPLE_REVERSE_EDGE_EXISTS',
                   reverseEdge: 'tags',
                   headFilter: {
-                    kind: 'NodeFilter',
+                    kind: 'NODE',
                     node: 'ArticleTag',
                     filter: {
                       kind: 'NOT',
@@ -2013,7 +2013,7 @@ describe('NodeFilterInputType', () => {
                         kind: 'EDGE_EXISTS',
                         edge: 'tag',
                         headFilter: {
-                          kind: 'NodeFilter',
+                          kind: 'NODE',
                           node: 'Tag',
                           filter: {
                             kind: 'LEAF',
@@ -2088,7 +2088,7 @@ describe('NodeFilterInputType', () => {
                   kind: 'EDGE_EXISTS',
                   edge: 'category',
                   headFilter: {
-                    kind: 'NodeFilter',
+                    kind: 'NODE',
                     node: 'Category',
                     filter: {
                       kind: 'LEAF',
@@ -2120,7 +2120,7 @@ describe('NodeFilterInputType', () => {
                   kind: 'EDGE_EXISTS',
                   edge: 'category',
                   headFilter: {
-                    kind: 'NodeFilter',
+                    kind: 'NODE',
                     node: 'Category',
                     filter: {
                       kind: 'LEAF',

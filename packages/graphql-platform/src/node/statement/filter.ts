@@ -9,7 +9,7 @@ import { FalseValue, TrueValue } from './filter/boolean/value.js';
 export * from './filter/boolean.js';
 
 export interface NodeFilterAST {
-  kind: 'NodeFilter';
+  kind: 'NODE';
   node: Node['name'];
   filter: BooleanFilter['ast'];
 }
@@ -56,7 +56,7 @@ export class NodeFilter {
 
   public get ast(): NodeFilterAST {
     return {
-      kind: 'NodeFilter',
+      kind: 'NODE',
       node: this.node.name,
       filter: this.filter.ast,
     };

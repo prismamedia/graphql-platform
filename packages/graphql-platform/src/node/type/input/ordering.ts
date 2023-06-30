@@ -2,7 +2,6 @@ import * as utils from '@prismamedia/graphql-platform-utils';
 import { Memoize } from '@prismamedia/memoize';
 import type { Node } from '../../../node.js';
 import { Leaf } from '../../definition.js';
-import { UniqueReverseEdge } from '../../definition/reverse-edge/unique.js';
 import type { OperationContext } from '../../operation/context.js';
 import { NodeOrdering, OrderingDirection } from '../../statement/ordering.js';
 import {
@@ -31,32 +30,27 @@ export class NodeOrderingInputType extends utils.EnumInputType<OrderingExpressio
   @Memoize()
   public override get enumValues(): ReadonlyArray<OrderingExpressionInput> {
     return [
-      ...Array.from(
-        this.node.componentsByName.values(),
-      ).flatMap<OrderingExpressionInput>((component) =>
-        component instanceof Leaf && component.isSortable()
-          ? [
-              component.getOrderingInput(OrderingDirection.ASCENDING),
-              component.getOrderingInput(OrderingDirection.DESCENDING),
-            ]
-          : [],
+      ...Array.from(this.node.componentSet).flatMap<OrderingExpressionInput>(
+        (component) =>
+          component instanceof Leaf && component.isSortable()
+            ? [
+                component.getOrderingInput(OrderingDirection.ASCENDING),
+                component.getOrderingInput(OrderingDirection.DESCENDING),
+              ]
+            : [],
       ),
       ...Array.from(
-        this.node.reverseEdgesByName.values(),
-      ).flatMap<OrderingExpressionInput>((reverseEdge) =>
-        reverseEdge instanceof UniqueReverseEdge
-          ? []
-          : [
-              new MultipleReverseEdgeCountOrderingInput(
-                reverseEdge,
-                OrderingDirection.ASCENDING,
-              ),
-              new MultipleReverseEdgeCountOrderingInput(
-                reverseEdge,
-                OrderingDirection.DESCENDING,
-              ),
-            ],
-      ),
+        this.node.multipleReverseEdgeSet,
+      ).flatMap<OrderingExpressionInput>((reverseEdge) => [
+        new MultipleReverseEdgeCountOrderingInput(
+          reverseEdge,
+          OrderingDirection.ASCENDING,
+        ),
+        new MultipleReverseEdgeCountOrderingInput(
+          reverseEdge,
+          OrderingDirection.DESCENDING,
+        ),
+      ]),
     ];
   }
 

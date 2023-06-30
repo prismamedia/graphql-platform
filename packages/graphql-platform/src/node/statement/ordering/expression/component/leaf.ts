@@ -5,13 +5,12 @@ import type { OrderingDirection } from '../../direction.js';
 import type { OrderingExpressionInterface } from '../../expression-interface.js';
 
 export interface LeafOrderingAST {
-  kind: 'LeafOrdering';
+  kind: 'LEAF';
   leaf: Leaf['name'];
   direction: OrderingDirection;
 }
 
 export class LeafOrdering implements OrderingExpressionInterface {
-  public readonly reduced: this;
   public readonly dependencies: DependencyTree;
 
   public constructor(
@@ -20,7 +19,6 @@ export class LeafOrdering implements OrderingExpressionInterface {
   ) {
     assert(leaf.isSortable(), `The "${leaf}" leaf is not sortable`);
 
-    this.reduced = this;
     this.dependencies = new Map([[leaf, undefined]]);
   }
 
@@ -34,7 +32,7 @@ export class LeafOrdering implements OrderingExpressionInterface {
 
   public get ast(): LeafOrderingAST {
     return {
-      kind: 'LeafOrdering',
+      kind: 'LEAF',
       leaf: this.leaf.name,
       direction: this.direction,
     };

@@ -4,7 +4,7 @@ import type { OrderingDirection } from '../../direction.js';
 import type { OrderingExpressionInterface } from '../../expression-interface.js';
 
 export interface MultipleReverseEdgeCountOrderingAST {
-  kind: 'MultipleReverseEdgeCountOrdering';
+  kind: 'MULTIPLE_REVERSE_EDGE_COUNT';
   reverseEdge: MultipleReverseEdge['name'];
   direction: OrderingDirection;
 }
@@ -12,14 +12,12 @@ export interface MultipleReverseEdgeCountOrderingAST {
 export class MultipleReverseEdgeCountOrdering
   implements OrderingExpressionInterface
 {
-  public readonly reduced: this;
   public readonly dependencies: DependencyTree;
 
   public constructor(
     public readonly reverseEdge: MultipleReverseEdge,
     public readonly direction: OrderingDirection,
   ) {
-    this.reduced = this;
     this.dependencies = new Map([
       [reverseEdge, new Map([[reverseEdge.originalEdge, undefined]])],
     ]);
@@ -35,7 +33,7 @@ export class MultipleReverseEdgeCountOrdering
 
   public get ast(): MultipleReverseEdgeCountOrderingAST {
     return {
-      kind: 'MultipleReverseEdgeCountOrdering',
+      kind: 'MULTIPLE_REVERSE_EDGE_COUNT',
       reverseEdge: this.reverseEdge.name,
       direction: this.direction,
     };

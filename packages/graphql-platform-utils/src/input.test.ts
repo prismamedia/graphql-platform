@@ -1,6 +1,8 @@
 import { describe, expect, it } from '@jest/globals';
 import * as graphql from 'graphql';
 import {
+  EnumInputType,
+  EnumInputValue,
   Input,
   InputConfig,
   ListableInputType,
@@ -207,6 +209,33 @@ describe('Input', () => {
           type: new NonNullableInputType(
             new ListableInputType(nonNillableInputType(objectInputType)),
           ),
+        }),
+        new Input({
+          name: 'status',
+          optional: false,
+          type: new EnumInputType({
+            name: 'UserStatus',
+            values: [
+              new EnumInputValue({ value: 'PRIVATE', public: false }),
+              new EnumInputValue({ value: 'PUBLIC' }),
+            ],
+          }),
+          defaultValue: 'PRIVATE',
+        }),
+        new Input({
+          name: 'roles',
+          type: new ListableInputType(
+            nonNillableInputType(
+              new EnumInputType({
+                name: 'UserRole',
+                values: [
+                  new EnumInputValue({ value: 'ADMIN', public: false }),
+                  new EnumInputValue({ value: 'CLIENT' }),
+                ],
+              }),
+            ),
+          ),
+          defaultValue: ['ADMIN', 'CLIENT'],
         }),
       ],
     });

@@ -29,7 +29,11 @@ export interface MultipleReverseEdgeConfig extends AbstractReverseEdgeConfig {
     /**
      * Optional, provide some defaults to the outputs' field arguments
      */
-    defaultArgs?: Partial<MultipleReverseEdgeHeadOutputArgs>;
+    defaultArgs?: {
+      [TKey in keyof MultipleReverseEdgeHeadOutputArgs]?: utils.Thunkable<
+        MultipleReverseEdgeHeadOutputArgs[TKey]
+      >;
+    };
   };
 }
 

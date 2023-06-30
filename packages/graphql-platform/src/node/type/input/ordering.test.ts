@@ -72,7 +72,7 @@ describe('NodeOrderingInputType', () => {
           ['createdAt_ASC'],
           [
             {
-              kind: 'LeafOrdering',
+              kind: 'LEAF',
               leaf: 'createdAt',
               direction: OrderingDirection.ASCENDING,
             },
@@ -83,13 +83,24 @@ describe('NodeOrderingInputType', () => {
           ['tagCount_DESC', 'updatedAt_ASC'],
           [
             {
-              kind: 'MultipleReverseEdgeCountOrdering',
+              kind: 'MULTIPLE_REVERSE_EDGE_COUNT',
               reverseEdge: 'tags',
               direction: OrderingDirection.DESCENDING,
             },
             {
-              kind: 'LeafOrdering',
+              kind: 'LEAF',
               leaf: 'updatedAt',
+              direction: OrderingDirection.ASCENDING,
+            },
+          ],
+        ],
+        [
+          'Article',
+          ['_id_ASC'],
+          [
+            {
+              kind: 'LEAF',
+              leaf: '_id',
               direction: OrderingDirection.ASCENDING,
             },
           ],
