@@ -1,15 +1,13 @@
 import assert from 'node:assert/strict';
-import type { NodeValue } from '../../../../../../../node.js';
+import type { NodeSelectedValue } from '../../../../../../../node.js';
 import type { MultipleReverseEdge } from '../../../../../../definition/reverse-edge/multiple.js';
-import {
-  mergeDependencyTrees,
-  type DependencyTree,
-} from '../../../../../../result-set.js';
+import { DependencyGraph } from '../../../../../../subscription.js';
+import type { NodeFilterInputValue } from '../../../../../../type.js';
 import { NodeFilter, areFiltersEqual } from '../../../../../filter.js';
 import type { BooleanFilter } from '../../../../boolean.js';
 import type { BooleanExpressionInterface } from '../../../expression-interface.js';
 import type { AndOperand, OrOperand } from '../../../operation.js';
-import { FalseValue } from '../../../value.js';
+import { FalseValue, TrueValue } from '../../../value.js';
 
 export interface MultipleReverseEdgeExistsFilterAST {
   kind: 'MULTIPLE_REVERSE_EDGE_EXISTS';
@@ -31,23 +29,22 @@ export class MultipleReverseEdgeExistsFilter
       : new this(reverseEdge, headFilter?.normalized);
   }
 
+  public readonly key: string;
+
   public readonly score: number;
-  public readonly dependencies: DependencyTree;
+  public readonly dependencies: DependencyGraph;
 
   protected constructor(
     public readonly reverseEdge: MultipleReverseEdge,
     public readonly headFilter?: NodeFilter,
   ) {
+    this.key = `${reverseEdge.name}_some`;
+
     this.score = 1 + (headFilter?.score ?? 0);
-    this.dependencies = new Map([
-      [
-        reverseEdge,
-        mergeDependencyTrees([
-          new Map([[reverseEdge.originalEdge, undefined]]),
-          headFilter?.dependencies,
-        ]),
-      ],
-    ]);
+    this.dependencies = DependencyGraph.fromReverseEdge(
+      reverseEdge,
+      headFilter?.dependencies,
+    );
   }
 
   public equals(
@@ -86,6 +83,23 @@ export class MultipleReverseEdgeExistsFilter
     return;
   }
 
+  public execute(value: NodeSelectedValue): boolean | undefined {
+    const reverseEdgeValues = value[this.reverseEdge.name];
+    if (reverseEdgeValues === undefined) {
+      return;
+    }
+
+    if (!Array.isArray(reverseEdgeValues) || !reverseEdgeValues.length) {
+      return false;
+    }
+
+    return this.headFilter
+      ? reverseEdgeValues.some((reverseEdgeValue) =>
+          this.headFilter!.execute(reverseEdgeValue, true),
+        )
+      : true;
+  }
+
   public get ast(): MultipleReverseEdgeExistsFilterAST {
     return {
       kind: 'MULTIPLE_REVERSE_EDGE_EXISTS',
@@ -94,7 +108,11 @@ export class MultipleReverseEdgeExistsFilter
     };
   }
 
-  public execute(_nodeValue: Partial<NodeValue>): undefined {
-    return;
+  public get inputValue(): NodeFilterInputValue {
+    return {
+      [this.key]: this.headFilter
+        ? this.headFilter.inputValue
+        : TrueValue.inputValue,
+    };
   }
 }

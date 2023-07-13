@@ -1,6 +1,6 @@
 import assert from 'node:assert/strict';
 import type { Leaf } from '../../../../definition/component/leaf.js';
-import type { DependencyTree } from '../../../../result-set.js';
+import { DependencyGraph } from '../../../../subscription.js';
 import type { OrderingDirection } from '../../direction.js';
 import type { OrderingExpressionInterface } from '../../expression-interface.js';
 
@@ -11,7 +11,7 @@ export interface LeafOrderingAST {
 }
 
 export class LeafOrdering implements OrderingExpressionInterface {
-  public readonly dependencies: DependencyTree;
+  public readonly dependencies: DependencyGraph;
 
   public constructor(
     public readonly leaf: Leaf,
@@ -19,7 +19,7 @@ export class LeafOrdering implements OrderingExpressionInterface {
   ) {
     assert(leaf.isSortable(), `The "${leaf}" leaf is not sortable`);
 
-    this.dependencies = new Map([[leaf, undefined]]);
+    this.dependencies = DependencyGraph.fromLeaf(leaf);
   }
 
   public equals(expression: unknown): boolean {

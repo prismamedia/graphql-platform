@@ -142,17 +142,7 @@ export abstract class AbstractMutation<
 
     const authorization = this.ensureAuthorization(mutationContext, path);
 
-    const parsedArguments = this.parseArguments(
-      {
-        ...args,
-        // For the mutations, it is allowed to forget the "selection" as we may don't need the result
-        ...(args?.selection == null && this.selectionAware
-          ? { selection: this.node.identifier.selection }
-          : {}),
-      },
-      mutationContext,
-      path,
-    );
+    const parsedArguments = this.parseArguments(args, mutationContext, path);
 
     await catchConnectorWorkflowError(
       () => this.connector.preMutation?.(mutationContext),
@@ -199,7 +189,7 @@ export abstract class AbstractMutation<
     {
       const aggregation = mutationContext.aggregateChanges();
 
-      if (aggregation.length) {
+      if (aggregation.size) {
         await Promise.all([
           this.gp.emit('node-change-aggregation', aggregation),
           this.gp.eventListenerCount('node-change')

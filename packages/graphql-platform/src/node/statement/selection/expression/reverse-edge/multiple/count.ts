@@ -3,11 +3,8 @@ import * as utils from '@prismamedia/graphql-platform-utils';
 import { Memoize } from '@prismamedia/memoize';
 import * as graphql from 'graphql';
 import assert from 'node:assert/strict';
-import type { MultipleReverseEdge } from '../../../../../definition/reverse-edge/multiple.js';
-import {
-  mergeDependencyTrees,
-  type DependencyTree,
-} from '../../../../../result-set.js';
+import type { MultipleReverseEdge } from '../../../../../definition.js';
+import { DependencyGraph } from '../../../../../subscription.js';
 import { NodeFilter, areFiltersEqual } from '../../../../filter.js';
 import type { SelectionExpressionInterface } from '../../../expression-interface.js';
 
@@ -25,7 +22,7 @@ export class MultipleReverseEdgeCountSelection
   public readonly key: string;
   public readonly headFilter?: NodeFilter;
 
-  public readonly dependencies: DependencyTree;
+  public readonly dependencies: DependencyGraph;
 
   public constructor(
     public readonly reverseEdge: MultipleReverseEdge,
@@ -42,15 +39,10 @@ export class MultipleReverseEdgeCountSelection
       this.headFilter = headFilter.normalized;
     }
 
-    this.dependencies = new Map([
-      [
-        reverseEdge,
-        mergeDependencyTrees([
-          new Map([[reverseEdge.originalEdge, undefined]]),
-          this.headFilter?.dependencies,
-        ]),
-      ],
-    ]);
+    this.dependencies = DependencyGraph.fromReverseEdge(
+      reverseEdge,
+      this.headFilter?.dependencies,
+    );
   }
 
   public isAkinTo(

@@ -1,9 +1,7 @@
-import type { NodeValue } from '../../../../../node.js';
-import {
-  mergeDependencyTrees,
-  type DependencyTree,
-} from '../../../../result-set.js';
-import { type BooleanFilter } from '../../boolean.js';
+import type { NodeSelectedValue } from '../../../../../node.js';
+import type { DependencyGraph } from '../../../../subscription.js';
+import type { NodeFilterInputValue } from '../../../../type.js';
+import type { BooleanFilter } from '../../boolean.js';
 import type { BooleanExpressionInterface } from '../expression-interface.js';
 import type { BooleanExpression } from '../expression.js';
 import { BooleanValue, FalseValue, TrueValue } from '../value.js';
@@ -18,6 +16,8 @@ export interface AndOperationAST {
 }
 
 export class AndOperation implements BooleanExpressionInterface {
+  public static key: string = 'AND';
+
   protected static reducers(
     remainingReducers: number,
   ): Array<(a: AndOperand, b: AndOperand) => BooleanFilter | undefined> {
@@ -122,16 +122,22 @@ export class AndOperation implements BooleanExpressionInterface {
       : new this(operands);
   }
 
+  public readonly key: string;
   public readonly score: number;
-  public readonly dependencies?: DependencyTree;
+  public readonly dependencies?: DependencyGraph;
 
   public constructor(
     public readonly operands: ReadonlyArray<AndOperand>,
     public readonly complement?: BooleanFilter,
   ) {
+    this.key = (this.constructor as typeof AndOperation).key;
     this.score = 1 + operands.reduce((total, { score }) => total + score, 0);
-    this.dependencies = mergeDependencyTrees(
-      operands.map(({ dependencies }) => dependencies),
+    this.dependencies = operands.reduce<DependencyGraph | undefined>(
+      (dependencies, operand) =>
+        dependencies && operand.dependencies
+          ? dependencies.mergeWith(operand.dependencies)
+          : dependencies || operand.dependencies,
+      undefined,
     );
   }
 
@@ -165,18 +171,11 @@ export class AndOperation implements BooleanExpressionInterface {
     );
   }
 
-  public get ast(): AndOperationAST {
-    return {
-      kind: 'AND',
-      operands: this.operands.map(({ ast }) => ast),
-    };
-  }
-
-  public execute(nodeValue: Partial<NodeValue>): boolean | undefined {
+  public execute(value: NodeSelectedValue): boolean | undefined {
     let hasUndefinedOperand: boolean = false;
 
     for (const operand of this.operands) {
-      const result = operand.execute(nodeValue);
+      const result = operand.execute(value);
 
       if (result === false) {
         return false;
@@ -186,5 +185,35 @@ export class AndOperation implements BooleanExpressionInterface {
     }
 
     return hasUndefinedOperand ? undefined : true;
+  }
+
+  public get ast(): AndOperationAST {
+    return {
+      kind: 'AND',
+      operands: this.operands.map(({ ast }) => ast),
+    };
+  }
+
+  public get inputValue(): NodeFilterInputValue {
+    const firstOperandsByKey = new Map<AndOperand['key'], AndOperand>();
+    const rest: AndOperand[] = [];
+
+    for (const operand of this.operands) {
+      if (firstOperandsByKey.has(operand.key)) {
+        rest.push(operand);
+      } else {
+        firstOperandsByKey.set(operand.key, operand);
+      }
+    }
+
+    return {
+      ...Array.from(firstOperandsByKey.values()).reduce(
+        (output, { inputValue }) => Object.assign(output, inputValue),
+        {},
+      ),
+      ...(rest.length && {
+        [this.key]: rest.map(({ inputValue }) => inputValue),
+      }),
+    };
   }
 }

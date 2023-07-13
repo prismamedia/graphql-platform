@@ -1,7 +1,7 @@
 import * as R from 'remeda';
 import type { Node } from '../../node.js';
-import { mergeDependencyTrees, type DependencyTree } from '../result-set.js';
-import { type OrderingExpression } from './ordering/expression.js';
+import type { DependencyGraph } from '../subscription.js';
+import type { OrderingExpression } from './ordering/expression.js';
 
 export * from './ordering/direction.js';
 export * from './ordering/expression-interface.js';
@@ -18,9 +18,9 @@ export class NodeOrdering {
   public readonly normalized: NodeOrdering | undefined;
 
   /**
-   * List of the components & reverse-edges whom changes may change the result-set
+   * Used in subscriptions to know wich nodes to fetch
    */
-  public readonly dependencies: DependencyTree;
+  public readonly dependencies?: DependencyGraph;
 
   public constructor(
     public readonly node: Node,
@@ -32,17 +32,21 @@ export class NodeOrdering {
 
     this.normalized = this.expressions.length === 0 ? undefined : this;
 
-    this.dependencies = mergeDependencyTrees(
-      this.expressions.map(({ dependencies }) => dependencies),
-    )!;
+    this.dependencies = this.expressions.reduce<DependencyGraph | undefined>(
+      (dependencies, expression) =>
+        dependencies && expression.dependencies
+          ? dependencies.mergeWith(expression.dependencies)
+          : dependencies || expression.dependencies,
+      undefined,
+    );
   }
 
-  public equals(nodeOrdering: unknown): boolean {
+  public equals(ordering: unknown): boolean {
     return (
-      nodeOrdering instanceof NodeOrdering &&
-      nodeOrdering.node === this.node &&
-      nodeOrdering.expressions.length === this.expressions.length &&
-      nodeOrdering.expressions.every((expression, index) =>
+      ordering instanceof NodeOrdering &&
+      ordering.node === this.node &&
+      ordering.expressions.length === this.expressions.length &&
+      ordering.expressions.every((expression, index) =>
         expression.equals(this.expressions[index]),
       )
     );

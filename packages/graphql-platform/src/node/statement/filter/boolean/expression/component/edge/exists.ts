@@ -1,14 +1,15 @@
 import { Memoize } from '@prismamedia/memoize';
 import assert from 'node:assert/strict';
-import type { NodeValue } from '../../../../../../../node.js';
-import type { Edge } from '../../../../../../definition/component/edge.js';
-import type { DependencyTree } from '../../../../../../result-set.js';
+import type { Component, Edge } from '../../../../../../definition.js';
+import { DependencyGraph } from '../../../../../../subscription.js';
+import type { NodeFilterInputValue } from '../../../../../../type.js';
 import { NodeFilter, areFiltersEqual } from '../../../../../filter.js';
+import type { NodeSelectedValue } from '../../../../../selection.js';
 import type { BooleanFilter } from '../../../../boolean.js';
 import type { BooleanExpressionInterface } from '../../../expression-interface.js';
 import type { AndOperand, OrOperand } from '../../../operation.js';
 import { AndOperation, NotOperation, OrOperation } from '../../../operation.js';
-import { FalseValue } from '../../../value.js';
+import { FalseValue, TrueValue } from '../../../value.js';
 
 export interface EdgeExistsFilterAST {
   kind: 'EDGE_EXISTS';
@@ -25,15 +26,24 @@ export class EdgeExistsFilter implements BooleanExpressionInterface {
       : new this(edge, headFilter?.normalized);
   }
 
+  public readonly key: string;
+
+  public readonly component: Component;
   public readonly score: number;
-  public readonly dependencies: DependencyTree;
+  public readonly dependencies: DependencyGraph;
 
   protected constructor(
     public readonly edge: Edge,
     public readonly headFilter?: NodeFilter,
   ) {
+    this.key = edge.name;
+
+    this.component = edge;
     this.score = 1 + (headFilter?.score ?? 0);
-    this.dependencies = new Map([[edge, headFilter?.dependencies]]);
+    this.dependencies = DependencyGraph.fromEdge(
+      this,
+      headFilter?.dependencies,
+    );
   }
 
   public equals(expression: unknown): boolean {
@@ -93,16 +103,8 @@ export class EdgeExistsFilter implements BooleanExpressionInterface {
     }
   }
 
-  public get ast(): EdgeExistsFilterAST {
-    return {
-      kind: 'EDGE_EXISTS',
-      edge: this.edge.name,
-      ...(this.headFilter && { headFilter: this.headFilter.ast }),
-    };
-  }
-
-  public execute(nodeValue: Partial<NodeValue>): boolean | undefined {
-    const edgeValue = nodeValue[this.edge.name];
+  public execute(value: NodeSelectedValue): boolean | undefined {
+    const edgeValue = value[this.edge.name];
     if (edgeValue === undefined) {
       return;
     }
@@ -111,6 +113,22 @@ export class EdgeExistsFilter implements BooleanExpressionInterface {
       return false;
     }
 
-    return this.headFilter ? this.headFilter.execute(edgeValue) : true;
+    return this.headFilter ? this.headFilter.execute(edgeValue, true) : true;
+  }
+
+  public get ast(): EdgeExistsFilterAST {
+    return {
+      kind: 'EDGE_EXISTS',
+      edge: this.edge.name,
+      ...(this.headFilter && { headFilter: this.headFilter.ast }),
+    };
+  }
+
+  public get inputValue(): NodeFilterInputValue {
+    return {
+      [this.key]: this.headFilter
+        ? this.headFilter.inputValue
+        : TrueValue.inputValue,
+    };
   }
 }

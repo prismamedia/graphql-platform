@@ -154,47 +154,54 @@ describe('Change', () => {
         },
         { id: 'fbc99af4-429d-49fd-be05-8fdba83559c5', title: 'My title' },
       ),
+      new NodeUpdate(
+        Tag,
+        myContext,
+        {
+          id: 5,
+          title: 'My fifth tag',
+        },
+        {
+          id: 5,
+          title: 'My updated fifth tag',
+        },
+      ),
+      new NodeDeletion(Tag, myContext, {
+        id: 10,
+        title: 'My tenth tag',
+      }),
     ]);
 
     expect(aggregate.requestContexts.length).toBe(1);
-    expect(aggregate.length).toBe(3);
+    expect(aggregate.size).toBe(5);
 
     expect(
-      Object.fromEntries(
-        Array.from(aggregate.flatChanges, ([node, components]) => [
-          node.name,
-          Array.from(components).map((component) => component.name),
-        ]),
-      ),
-    ).toEqual({
-      Article: ['id', 'title'],
-      ArticleTag: ['article', 'tag', 'order'],
-      Tag: ['id', 'title'],
-    });
+      Array.from(aggregate.changesByNode.keys(), ({ name }) => name),
+    ).toEqual(['Article', 'Tag', 'ArticleTag']);
 
+    expect(aggregate.summary.creations?.size).toBe(3);
     expect(
-      Array.from(aggregate, (change) => ({
-        node: change.node.name,
-        stringifiedId: change.stringifiedId,
-        kind: change.kind,
-      })),
-    ).toEqual([
-      {
-        node: 'Article',
-        stringifiedId: '{"id":"2e9b5020-b9fe-4dab-bb59-59c986fffc12"}',
-        kind: 'creation',
-      },
-      {
-        node: 'Tag',
-        stringifiedId: '{"id":1}',
-        kind: 'creation',
-      },
-      {
-        node: 'ArticleTag',
-        stringifiedId:
-          '{"article":{"id":"2e9b5020-b9fe-4dab-bb59-59c986fffc12"},"tag":{"id":1}}',
-        kind: 'creation',
-      },
-    ]);
+      Array.from(aggregate.summary.creations!, ({ name }) => name),
+    ).toEqual(['Article', 'Tag', 'ArticleTag']);
+
+    expect(aggregate.summary.deletions?.size).toBe(1);
+    expect(
+      Array.from(aggregate.summary.deletions!, ({ name }) => name),
+    ).toEqual(['Tag']);
+
+    expect(aggregate.summary.updatesByNode?.size).toBe(1);
+    expect(
+      Array.from(aggregate.summary.updatesByNode!.keys(), ({ name }) => name),
+    ).toEqual(['Tag']);
+
+    expect(Array.from(aggregate, String)).toMatchInlineSnapshot(`
+      [
+        "Article/"2e9b5020-b9fe-4dab-bb59-59c986fffc12"/creation",
+        "Tag/1/creation",
+        "Tag/5/update",
+        "Tag/10/deletion",
+        "ArticleTag/{"article":{"id":"2e9b5020-b9fe-4dab-bb59-59c986fffc12"},"tag":{"id":1}}/creation",
+      ]
+    `);
   });
 });

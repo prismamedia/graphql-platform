@@ -3,7 +3,7 @@ import * as graphql from 'graphql';
 import assert from 'node:assert/strict';
 import type { JsonValue } from 'type-fest';
 import type { Component, Leaf, LeafValue } from '../../../../definition.js';
-import type { DependencyTree } from '../../../../result-set.js';
+import { DependencyGraph } from '../../../../subscription.js';
 import type { SelectionExpressionInterface } from '../../expression-interface.js';
 
 export class LeafSelection implements SelectionExpressionInterface<LeafValue> {
@@ -12,7 +12,7 @@ export class LeafSelection implements SelectionExpressionInterface<LeafValue> {
   public readonly name: string;
   public readonly key: string;
 
-  public readonly dependencies: DependencyTree;
+  public readonly dependencies: DependencyGraph;
 
   public constructor(public readonly leaf: Leaf, alias: string | undefined) {
     this.component = leaf;
@@ -20,7 +20,7 @@ export class LeafSelection implements SelectionExpressionInterface<LeafValue> {
     this.name = leaf.name;
     this.key = this.alias ?? this.name;
 
-    this.dependencies = new Map([[leaf, undefined]]);
+    this.dependencies = DependencyGraph.fromLeaf(leaf);
   }
 
   public isAkinTo(expression: unknown): expression is LeafSelection {

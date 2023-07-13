@@ -3,13 +3,13 @@
 exports[`Update statement generates statements: changes 1`] = `
 Map {
   "Article" => Map {
-    "update" => 2,
+    "update" => 4,
   },
   "ArticleTagModeration" => Map {
     "deletion" => 3,
   },
   "ArticleTag" => Map {
-    "deletion" => 3,
+    "deletion" => 8,
   },
 }
 `;
@@ -46,6 +46,18 @@ exports[`Update statement generates statements: result 1`] = `
     "status": "deleted",
     "tags": [],
     "title": "My second published article",
+  },
+  {
+    "score": 0,
+    "status": "deleted",
+    "tags": [],
+    "title": "My first published article in root category",
+  },
+  {
+    "score": 0,
+    "status": "deleted",
+    "tags": [],
+    "title": "My second published article in root category",
   },
 ]
 `;

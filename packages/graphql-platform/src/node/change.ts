@@ -1,6 +1,6 @@
 import type { ConnectorInterface } from '../connector-interface.js';
-import type { NodeCreation } from './change/creation.js';
-import type { NodeDeletion } from './change/deletion.js';
+import { NodeCreation } from './change/creation.js';
+import { NodeDeletion } from './change/deletion.js';
 import { NodeUpdate } from './change/update.js';
 
 export * from './change/aggregation.js';
@@ -20,3 +20,14 @@ export type NodeChange<
 export const filterNodeChange = (change: NodeChange): boolean =>
   !(change instanceof NodeUpdate && change.isEmpty()) &&
   change.node.filterChange(change);
+
+export const isNodeChange = <
+  TRequestContext extends object = any,
+  TConnector extends ConnectorInterface = any,
+  TContainer extends object = any,
+>(
+  maybeChange: unknown,
+): maybeChange is NodeChange<TRequestContext, TConnector, TContainer> =>
+  maybeChange instanceof NodeCreation ||
+  maybeChange instanceof NodeUpdate ||
+  maybeChange instanceof NodeDeletion;

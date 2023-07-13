@@ -1,7 +1,8 @@
 import { Memoize } from '@prismamedia/memoize';
-import type { NodeValue } from '../../../../../../../node.js';
+import type { NodeSelectedValue } from '../../../../../../../node.js';
 import type { MultipleReverseEdge } from '../../../../../../definition/reverse-edge/multiple.js';
-import type { DependencyTree } from '../../../../../../result-set.js';
+import { DependencyGraph } from '../../../../../../subscription.js';
+import type { NodeFilterInputValue } from '../../../../../../type.js';
 import type { BooleanFilter } from '../../../../boolean.js';
 import type { BooleanExpressionInterface } from '../../../expression-interface.js';
 import {
@@ -54,18 +55,23 @@ export class MultipleReverseEdgeCountFilter
     return new this(reverseEdge, operator, value);
   }
 
+  public readonly key: string;
+
   public readonly score: number;
-  public readonly dependencies: DependencyTree;
+  public readonly dependencies: DependencyGraph;
 
   protected constructor(
     public readonly reverseEdge: MultipleReverseEdge,
     public readonly operator: 'eq' | 'gt' | 'lt',
     public readonly value: number,
   ) {
+    this.key =
+      operator === 'eq'
+        ? reverseEdge.countFieldName
+        : `${reverseEdge.countFieldName}_${operator}`;
+
     this.score = 2;
-    this.dependencies = new Map([
-      [reverseEdge, new Map([[reverseEdge.originalEdge, undefined]])],
-    ]);
+    this.dependencies = DependencyGraph.fromReverseEdge(reverseEdge);
   }
 
   public equals(expression: unknown): boolean {
@@ -119,6 +125,10 @@ export class MultipleReverseEdgeCountFilter
     return;
   }
 
+  public execute(_value: NodeSelectedValue): undefined {
+    return;
+  }
+
   public get ast(): MultipleReverseEdgeCountFilterAST {
     return {
       kind: 'MULTIPLE_REVERSE_EDGE_COUNT',
@@ -128,7 +138,7 @@ export class MultipleReverseEdgeCountFilter
     };
   }
 
-  public execute(_nodeValue: Partial<NodeValue>): undefined {
-    return;
+  public get inputValue(): NodeFilterInputValue {
+    return { [this.key]: this.value };
   }
 }

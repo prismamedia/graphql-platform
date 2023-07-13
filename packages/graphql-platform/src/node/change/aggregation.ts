@@ -3,6 +3,7 @@ import type { ConnectorInterface } from '../../connector-interface.js';
 import type { Component, Node } from '../../node.js';
 import {
   NodeCreation,
+  NodeDeletion,
   NodeUpdate,
   filterNodeChange,
   type NodeChange,
@@ -72,8 +73,6 @@ const aggregatorMatrix: NodeChangeAggregatorMatrix = {
   },
 };
 
-export type FlatChanges = ReadonlyMap<Node, ReadonlySet<Component>>;
-
 export class NodeChangeAggregation<
   TRequestContext extends object = any,
   TConnector extends ConnectorInterface = any,
@@ -87,12 +86,14 @@ export class NodeChangeAggregation<
     ReadonlyArray<NodeChange<TRequestContext, TConnector, TContainer>>
   >;
 
-  /**
-   * Convenient to match against NodeResultSetMutability.flatDependencies
-   */
-  public readonly flatChanges: FlatChanges;
+  public readonly summary: {
+    readonly creations?: ReadonlySet<Node>;
+    readonly deletions?: ReadonlySet<Node>;
+    readonly updatesByNode?: ReadonlyMap<Node, ReadonlySet<Component>>;
+    readonly changes: ReadonlySet<Node>;
+  };
 
-  public readonly length: number;
+  public readonly size: number;
 
   public constructor(changes: ReadonlyArray<NodeChange>) {
     const requestContextSet = new Set<TRequestContext>();
@@ -140,48 +141,48 @@ export class NodeChangeAggregation<
     this.requestContexts = Array.from(requestContextSet);
 
     this.changesByNode = new Map(
-      Array.from(
-        changesByIdByNode.entries(),
-        ([node, changesByFlattenedId]) => [
-          node,
-          Array.from(changesByFlattenedId.values()),
-        ],
-      ),
+      Array.from(changesByIdByNode, ([node, changesByFlattenedId]) => [
+        node,
+        Array.from(changesByFlattenedId.values()),
+      ]),
     );
 
-    this.flatChanges = new Map(
-      Array.from(this.changesByNode.entries(), ([node, changes]) => {
-        const componentSet = new Set<Component>();
+    // changes-summary
+    {
+      const creations = new Set<Node>();
+      const deletions = new Set<Node>();
+      const updatesByNode = new Map<Node, Set<Component>>();
 
-        for (const change of changes) {
-          if (
-            change.kind === utils.MutationType.CREATION ||
-            change.kind === utils.MutationType.DELETION
-          ) {
-            for (const component of node.componentSet) {
-              componentSet.add(component);
-            }
+      changesByIdByNode.forEach((changesByFlattenedId, node) => {
+        const updates = new Set<Component>();
 
-            break;
+        changesByFlattenedId.forEach((change) => {
+          if (change instanceof NodeCreation) {
+            creations.add(node);
+          } else if (change instanceof NodeDeletion) {
+            deletions.add(node);
           } else {
-            for (const component of change.updatesByComponent.keys()) {
-              componentSet.add(component);
-            }
-
-            if (componentSet.size === node.componentSet.size) {
-              break;
-            }
+            change.updatesByComponent.forEach((_, component) =>
+              updates.add(component),
+            );
           }
-        }
+        });
 
-        return [node, componentSet];
-      }),
-    );
+        updates.size && updatesByNode.set(node, updates);
+      });
 
-    this.length = Array.from(
+      this.summary = {
+        ...(creations.size && { creations }),
+        ...(deletions.size && { deletions }),
+        ...(updatesByNode.size && { updatesByNode }),
+        changes: new Set([...creations, ...deletions, ...updatesByNode.keys()]),
+      };
+    }
+
+    this.size = Array.from(
       this.changesByNode.values(),
       (changes) => changes.length,
-    ).reduce<number>((sum, changesLength) => sum + changesLength, 0);
+    ).reduce((sum, length) => sum + length, 0);
   }
 
   *[Symbol.iterator](): IterableIterator<

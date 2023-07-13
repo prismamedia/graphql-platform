@@ -1,17 +1,15 @@
 import { Memoize } from '@prismamedia/memoize';
 import assert from 'node:assert/strict';
-import type { NodeValue } from '../../../../../../../node.js';
+import type { NodeSelectedValue } from '../../../../../../../node.js';
 import type { UniqueReverseEdge } from '../../../../../../definition/reverse-edge/unique.js';
-import {
-  mergeDependencyTrees,
-  type DependencyTree,
-} from '../../../../../../result-set.js';
+import { DependencyGraph } from '../../../../../../subscription.js';
+import type { NodeFilterInputValue } from '../../../../../../type.js';
 import { NodeFilter, areFiltersEqual } from '../../../../../filter.js';
 import type { BooleanFilter } from '../../../../boolean.js';
 import type { BooleanExpressionInterface } from '../../../expression-interface.js';
 import type { AndOperand, OrOperand } from '../../../operation.js';
 import { AndOperation, NotOperation, OrOperation } from '../../../operation.js';
-import { FalseValue } from '../../../value.js';
+import { FalseValue, TrueValue } from '../../../value.js';
 
 export interface UniqueReverseEdgeExistsFilterAST {
   kind: 'UNIQUE_REVERSE_EDGE_EXISTS';
@@ -33,23 +31,22 @@ export class UniqueReverseEdgeExistsFilter
       : new this(reverseEdge, headFilter?.normalized);
   }
 
+  public readonly key: string;
+
   public readonly score: number;
-  public readonly dependencies: DependencyTree;
+  public readonly dependencies: DependencyGraph;
 
   protected constructor(
     public readonly reverseEdge: UniqueReverseEdge,
     public readonly headFilter?: NodeFilter,
   ) {
+    this.key = reverseEdge.name;
+
     this.score = 1 + (headFilter?.score ?? 0);
-    this.dependencies = new Map([
-      [
-        reverseEdge,
-        mergeDependencyTrees([
-          new Map([[reverseEdge.originalEdge, undefined]]),
-          headFilter?.dependencies,
-        ]),
-      ],
-    ]);
+    this.dependencies = DependencyGraph.fromReverseEdge(
+      reverseEdge,
+      headFilter?.dependencies,
+    );
   }
 
   public equals(
@@ -122,6 +119,21 @@ export class UniqueReverseEdgeExistsFilter
     }
   }
 
+  public execute(value: NodeSelectedValue): boolean | undefined {
+    const reverseEdgeValue = value[this.reverseEdge.name];
+    if (reverseEdgeValue === undefined) {
+      return;
+    }
+
+    if (!reverseEdgeValue) {
+      return false;
+    }
+
+    return this.headFilter
+      ? this.headFilter.execute(reverseEdgeValue, true)
+      : true;
+  }
+
   public get ast(): UniqueReverseEdgeExistsFilterAST {
     return {
       kind: 'UNIQUE_REVERSE_EDGE_EXISTS',
@@ -130,7 +142,11 @@ export class UniqueReverseEdgeExistsFilter
     };
   }
 
-  public execute(_nodeValue: Partial<NodeValue>): undefined {
-    return;
+  public get inputValue(): NodeFilterInputValue {
+    return {
+      [this.key]: this.headFilter
+        ? this.headFilter.inputValue
+        : TrueValue.inputValue,
+    };
   }
 }

@@ -1,6 +1,5 @@
 import { beforeAll, describe, expect, it } from '@jest/globals';
 import { createMyGP, type MyGP } from '../../__tests__/config.js';
-import { toTestableDependencies } from '../result-set.js';
 import type { OrderByInputValue } from '../type/input/ordering.js';
 
 describe('Ordering', () => {
@@ -17,13 +16,14 @@ describe('Ordering', () => {
       expected: Record<string, any>,
     ]
   >([
-    ['ArticleTag', ['order_ASC'], { order: true }],
-    ['Article', ['tagCount_DESC'], { tags: { article: true } }],
-  ])('%# - is aware of its dependencies', (nodeName, orderBy, expected) =>
+    ['ArticleTag', ['order_ASC'], { order: undefined }],
+    ['Article', ['tagCount_DESC'], { tags: { article: undefined } }],
+  ])('%# - %s.sort(%p).dependencies = %p', (nodeName, orderBy, expected) =>
     expect(
-      toTestableDependencies(
-        gp.getNodeByName(nodeName).orderingInputType.sort(orderBy).dependencies,
-      ),
+      gp
+        .getNodeByName(nodeName)
+        .orderingInputType.sort(orderBy)
+        .dependencies?.debug(),
     ).toEqual(expected),
   );
 });

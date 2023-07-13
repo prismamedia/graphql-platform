@@ -48,6 +48,10 @@ import {
   type NodeSelectedValue,
 } from './node/statement.js';
 import {
+  NodeSubscription,
+  type NodeSubscriptionOptions,
+} from './node/subscription.js';
+import {
   NodeCreationInputType,
   NodeFilterInputType,
   NodeFilterInputValue,
@@ -65,8 +69,8 @@ export * from './node/fixture.js';
 export * from './node/loader.js';
 export * from './node/name.js';
 export * from './node/operation.js';
-export * from './node/result-set.js';
 export * from './node/statement.js';
+export * from './node/subscription.js';
 export * from './node/type.js';
 
 type OperationsByKeyByType<TRequestContext extends object = any> = {
@@ -1540,6 +1544,18 @@ export class Node<
     options?: NodeCursorOptions<TValue>,
   ): NodeCursor<TValue, TRequestContext> {
     return new NodeCursor(this, context, options);
+  }
+
+  public subscribe<
+    TId extends UniqueConstraintValue,
+    TValue extends NodeSelectedValue & TId,
+  >(
+    context:
+      | utils.Thunkable<TRequestContext>
+      | OperationContext<TRequestContext>,
+    options?: NodeSubscriptionOptions<TValue>,
+  ): NodeSubscription<TId, TValue, TRequestContext> {
+    return new NodeSubscription(this, context, options);
   }
 
   public parseValue(maybeValue: unknown, path?: utils.Path): NodeValue {

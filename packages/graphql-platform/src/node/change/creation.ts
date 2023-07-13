@@ -24,7 +24,7 @@ export class NodeCreation<
 
     super(
       node,
-      Object.freeze(node.identifier.parseValue(newValue)),
+      node.identifier.parseValue(newValue),
       requestContext,
       createdAt,
       committedAt,

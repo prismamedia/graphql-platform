@@ -4,8 +4,8 @@ import * as graphql from 'graphql';
 import assert from 'node:assert/strict';
 import * as R from 'remeda';
 import type { JsonObject } from 'type-fest';
-import type { Component, Edge } from '../../../../../definition/component.js';
-import { type DependencyTree } from '../../../../../result-set.js';
+import type { Component, Edge } from '../../../../../definition.js';
+import { DependencyGraph } from '../../../../../subscription.js';
 import type {
   NodeSelectedValue,
   NodeSelection,
@@ -22,7 +22,7 @@ export class EdgeHeadSelection<TValue extends EdgeHeadValue = any>
   public readonly name: string;
   public readonly key: string;
 
-  public readonly dependencies: DependencyTree;
+  public readonly dependencies: DependencyGraph;
 
   public constructor(
     public readonly edge: Edge,
@@ -36,7 +36,10 @@ export class EdgeHeadSelection<TValue extends EdgeHeadValue = any>
 
     assert.equal(edge.head, headSelection.node);
 
-    this.dependencies = new Map([[edge, this.headSelection.dependencies]]);
+    this.dependencies = DependencyGraph.fromEdge(
+      edge,
+      headSelection.dependencies,
+    );
   }
 
   public isAkinTo(expression: unknown): expression is EdgeHeadSelection {

@@ -8,6 +8,7 @@ import {
 } from './boolean/operation.js';
 import { BooleanValue } from './boolean/value.js';
 
+export * from './boolean/expression-interface.js';
 export * from './boolean/expression.js';
 export * from './boolean/operation.js';
 export * from './boolean/value.js';

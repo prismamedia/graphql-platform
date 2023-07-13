@@ -1,5 +1,5 @@
 import type { MultipleReverseEdge } from '../../../../definition/reverse-edge/multiple.js';
-import type { DependencyTree } from '../../../../result-set.js';
+import { DependencyGraph } from '../../../../subscription.js';
 import type { OrderingDirection } from '../../direction.js';
 import type { OrderingExpressionInterface } from '../../expression-interface.js';
 
@@ -12,15 +12,13 @@ export interface MultipleReverseEdgeCountOrderingAST {
 export class MultipleReverseEdgeCountOrdering
   implements OrderingExpressionInterface
 {
-  public readonly dependencies: DependencyTree;
+  public readonly dependencies: DependencyGraph;
 
   public constructor(
     public readonly reverseEdge: MultipleReverseEdge,
     public readonly direction: OrderingDirection,
   ) {
-    this.dependencies = new Map([
-      [reverseEdge, new Map([[reverseEdge.originalEdge, undefined]])],
-    ]);
+    this.dependencies = DependencyGraph.fromReverseEdge(reverseEdge);
   }
 
   public equals(expression: unknown): boolean {

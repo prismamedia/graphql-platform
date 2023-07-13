@@ -15,6 +15,7 @@ import type { ContextBoundNodeAPI, Node, OperationContext } from '../node.js';
 import { Leaf, type UniqueConstraint } from './definition.js';
 import {
   OrderingDirection,
+  type NodeFilter,
   type NodeSelectedValue,
   type NodeSelection,
 } from './statement.js';
@@ -60,36 +61,38 @@ export type NodeCursorForEachTask<
   cursor: NodeCursor<TValue, TRequestContext>,
 ) => Promisable<void>;
 
-export type NodeCursorForEachOptions =
-  | Except<PQueueOptions<any, any>, 'autoStart' | 'queueClass'> & {
-      /**
-       * Optional, the number of tasks waiting to be processed
-       *
-       * Default: the queue's concurrency, so we're able to fill all the workers at any time
-       */
-      buffer?: number;
+export type NodeCursorForEachOptions = Except<
+  PQueueOptions<any, any>,
+  'autoStart' | 'queueClass'
+> & {
+  /**
+   * Optional, the number of tasks waiting to be processed
+   *
+   * Default: the queue's concurrency, so we're able to fill all the workers at any time
+   */
+  buffer?: number;
 
-      /**
-       * Optional, define a retry strategy
-       *
-       * Default: false / no retry
-       *
-       * @see https://github.com/sindresorhus/p-retry/blob/main/readme.md
-       */
-      retry?: PRetryOptions | number | boolean;
+  /**
+   * Optional, define a retry strategy
+   *
+   * Default: false / no retry
+   *
+   * @see https://github.com/sindresorhus/p-retry/blob/main/readme.md
+   */
+  retry?: PRetryOptions | number | boolean;
 
-      /**
-       * Optional, either:
-       * - provide a progress-bar which will be updated with the current progress
-       * - provide a multi-progress-bar on which will be appended a new one which will be updated with the current progress
-       *
-       * Default: none
-       */
-      progressBar?:
-        | boolean
-        | ProgressBar
-        | { container: MultiProgressBar; name: string };
-    };
+  /**
+   * Optional, either:
+   * - provide a progress-bar which will be updated with the current progress
+   * - provide a multi-progress-bar on which will be appended a new one which will be updated with the current progress
+   *
+   * Default: none
+   */
+  progressBar?:
+    | boolean
+    | ProgressBar
+    | { container: MultiProgressBar; name: string };
+};
 
 export type NodeCursorOptions<TValue extends NodeSelectedValue = any> = {
   where?: NodeFilterInputValue;
@@ -105,7 +108,7 @@ export class NodeCursor<
 > implements AsyncIterable<TValue>
 {
   readonly #api: ContextBoundNodeAPI;
-  readonly #where: NodeFilterInputValue;
+  readonly #filter: NodeFilter | undefined;
   readonly #direction: OrderingDirection;
   readonly #uniqueConstraint: UniqueConstraint;
   readonly #selection: NodeSelection<TValue>;
@@ -146,7 +149,9 @@ export class NodeCursor<
 
     this.#api = node.createContextBoundAPI(context);
 
-    this.#where = node.filterInputType.parseValue(options?.where);
+    this.#filter = node.filterInputType.parseAndFilter(
+      options?.where,
+    ).normalized;
 
     this.#direction = options?.direction || OrderingDirection.ASCENDING;
 
@@ -172,7 +177,7 @@ export class NodeCursor<
 
   @Memoize((force: boolean = false) => force && doNotCache)
   public async size(force: boolean = false): Promise<number> {
-    return this.#api.count({ where: this.#where });
+    return this.#api.count({ where: this.#filter?.inputValue });
   }
 
   public async *[Symbol.asyncIterator](): AsyncIterator<TValue> {
@@ -181,7 +186,7 @@ export class NodeCursor<
 
     do {
       values = await this.#api.findMany({
-        where: { AND: [after, this.#where] },
+        where: { AND: [after, this.#filter?.inputValue] },
         orderBy: this.#orderByInputValue,
         first: this.#chunkSize,
         selection: this.#internalSelection,
@@ -210,13 +215,13 @@ export class NodeCursor<
       ...queueOptions
     }: NodeCursorForEachOptions = {},
   ): Promise<void> {
-    const queue = new PQueue({
+    const tasks = new PQueue({
       ...queueOptions,
       concurrency: queueOptions?.concurrency ?? 1,
       throwOnTimeout: queueOptions?.throwOnTimeout ?? true,
     });
 
-    const buffer = bufferOptions ?? queue.concurrency;
+    const buffer = bufferOptions ?? tasks.concurrency;
     assert(
       typeof buffer === 'number' && buffer >= 1,
       `The buffer has to be greater than or equal to 1, got ${inspect(buffer)}`,
@@ -264,35 +269,40 @@ export class NodeCursor<
       }
     }
 
-    await new Promise<void>(async (resolve, reject) => {
-      queue.on('error', reject);
+    try {
+      await new Promise<void>(async (resolve, reject) => {
+        tasks.on('error', reject);
 
-      try {
-        for await (const value of this) {
-          await queue.onSizeLessThan(buffer);
+        try {
+          for await (const value of this) {
+            await tasks.onSizeLessThan(buffer);
 
-          const wrappedTask = async () => {
-            await task(value, currentIndex++, this);
+            const taskIndex = currentIndex++;
+            const wrappedTask = async () => {
+              await task(value, taskIndex, this);
 
-            progressBar?.increment();
-          };
+              progressBar?.increment();
+            };
 
-          queue.add(
-            normalizedRetryOptions
-              ? () => PRetry(wrappedTask, normalizedRetryOptions)
-              : wrappedTask,
-          );
+            tasks.add(
+              normalizedRetryOptions
+                ? () => PRetry(wrappedTask, normalizedRetryOptions)
+                : wrappedTask,
+            );
+          }
+
+          await tasks.onIdle();
+
+          progressBar?.stop();
+
+          resolve();
+        } catch (error) {
+          reject(error);
         }
-
-        await queue.onIdle();
-
-        progressBar?.stop();
-
-        resolve();
-      } catch (error) {
-        reject(error);
-      }
-    });
+      });
+    } finally {
+      tasks.clear();
+    }
   }
 
   @Memoize((force: boolean = false) => force && doNotCache)

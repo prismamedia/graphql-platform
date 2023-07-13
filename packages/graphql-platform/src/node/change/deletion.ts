@@ -24,7 +24,7 @@ export class NodeDeletion<
 
     super(
       node,
-      Object.freeze(node.identifier.parseValue(oldValue)),
+      node.identifier.parseValue(oldValue),
       requestContext,
       createdAt,
       committedAt,

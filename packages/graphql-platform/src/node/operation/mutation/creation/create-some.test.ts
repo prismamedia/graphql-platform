@@ -70,6 +70,7 @@ describe('CreateSomeMutation', () => {
                 title: "My second article's title",
               },
             ],
+            selection: '{ id }',
           }),
         ).rejects.toThrowError(ConnectorWorkflowError);
       });
@@ -94,6 +95,7 @@ describe('CreateSomeMutation', () => {
                 title: "My second tag's title",
               },
             ],
+            selection: '{ id }',
           }),
         ).rejects.toThrowError(ConnectorOperationError);
       });
@@ -113,6 +115,7 @@ describe('CreateSomeMutation', () => {
                 body: { blocks: [] },
               },
             ],
+            selection: '{ id }',
           }),
         ).rejects.toThrowError(LifecycleHookError);
       });

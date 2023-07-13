@@ -1,5 +1,6 @@
-import type { NodeValue } from '../../../../../node.js';
-import type { DependencyTree } from '../../../../result-set.js';
+import type { NodeSelectedValue } from '../../../../../node.js';
+import type { DependencyGraph } from '../../../../subscription.js';
+import type { NodeFilterInputValue } from '../../../../type.js';
 import type { BooleanFilter } from '../../boolean.js';
 import type { BooleanExpressionInterface } from '../expression-interface.js';
 import type { BooleanExpression } from '../expression.js';
@@ -17,6 +18,8 @@ export interface NotOperationAST {
  * @see https://en.wikipedia.org/wiki/Negation
  */
 export class NotOperation implements BooleanExpressionInterface {
+  public static key: string = 'NOT';
+
   public static create(operand: BooleanFilter): BooleanFilter {
     return 'complement' in operand &&
       operand.complement &&
@@ -26,14 +29,16 @@ export class NotOperation implements BooleanExpressionInterface {
       : new this(operand as NotOperand);
   }
 
+  public readonly key: string;
   public readonly score: number;
-  public readonly dependencies?: DependencyTree;
   public readonly complement: NotOperand;
+  public readonly dependencies?: DependencyGraph;
 
   public constructor(public readonly operand: NotOperand) {
+    this.key = (this.constructor as typeof NotOperation).key;
     this.score = 1 + operand.score;
-    this.dependencies = operand.dependencies;
     this.complement = operand;
+    this.dependencies = operand.dependencies;
   }
 
   public equals(expression: unknown): expression is NotOperation {
@@ -57,6 +62,12 @@ export class NotOperation implements BooleanExpressionInterface {
     return;
   }
 
+  public execute(value: NodeSelectedValue): boolean | undefined {
+    const result = this.operand.execute(value);
+
+    return result === undefined ? undefined : !result;
+  }
+
   public get ast(): NotOperationAST {
     return {
       kind: 'NOT',
@@ -64,9 +75,7 @@ export class NotOperation implements BooleanExpressionInterface {
     };
   }
 
-  public execute(nodeValue: Partial<NodeValue>): boolean | undefined {
-    const result = this.operand.execute(nodeValue);
-
-    return result === undefined ? undefined : !result;
+  public get inputValue(): NodeFilterInputValue {
+    return { [this.key]: this.operand.inputValue };
   }
 }

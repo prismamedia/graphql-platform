@@ -88,6 +88,62 @@ exports[`GraphQL-Platform Integration Apollo Server creates an ApolloServer inst
             "title": "My second published article",
             "views": "1234567890",
           },
+          {
+            "body": null,
+            "createdAt": "2022-05-01T00:00:00.000Z",
+            "machineTags": null,
+            "metas": null,
+            "score": 0.5,
+            "status": "PUBLISHED",
+            "tagCount": 3,
+            "tags": [
+              {
+                "order": 0,
+                "tag": {
+                  "title": "TV",
+                },
+              },
+              {
+                "order": 1,
+                "tag": {
+                  "title": "High-tech",
+                },
+              },
+              {
+                "order": 2,
+                "tag": {
+                  "title": "Fashion",
+                },
+              },
+            ],
+            "title": "My first published article in root category",
+            "views": "0",
+          },
+          {
+            "body": null,
+            "createdAt": "2022-06-01T00:00:00.000Z",
+            "machineTags": null,
+            "metas": null,
+            "score": 0.5,
+            "status": "PUBLISHED",
+            "tagCount": 2,
+            "tags": [
+              {
+                "order": 0,
+                "tag": {
+                  "title": "TV",
+                },
+              },
+              {
+                "order": 1,
+                "tag": {
+                  "title": "Fashion",
+                },
+              },
+            ],
+            "title": "My second published article in root category",
+            "views": "0",
+          },
         ],
       },
       "errors": undefined,

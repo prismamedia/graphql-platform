@@ -41,7 +41,7 @@ describe('Seeding', () => {
   it('orders by dependencies', () => {
     const seeding = new Seeding(gp, fixtures.constant);
 
-    expect(seeding.fixtures.length).toMatchInlineSnapshot(`12`);
+    expect(seeding.fixtures.length).toMatchInlineSnapshot(`14`);
     expect(seeding.fixtures.map(({ reference }) => reference))
       .toMatchInlineSnapshot(`
       [
@@ -50,13 +50,15 @@ describe('Seeding', () => {
         "article_01",
         "article_02",
         "category_news",
+        "user_marine",
         "tag_01",
         "tag_02",
         "user_yvann",
-        "user_marine",
         "article_03",
         "tag_03",
         "article_04",
+        "article_05",
+        "article_06",
       ]
     `);
   });
@@ -114,6 +116,30 @@ describe('Seeding', () => {
                       ...creation.value,
                       _id: 4,
                       id: 'bffaac46-f6dd-42c9-bc25-5d327d304ae8',
+                      body: null,
+                      metas: null,
+                      highlighted: null,
+                      sponsored: null,
+                      machineTags: null,
+                    };
+
+                  case 'My first published article in root category':
+                    return {
+                      ...creation.value,
+                      _id: 5,
+                      id: '84d63552-d57e-4c5c-a453-0f8e9a7e034f',
+                      body: null,
+                      metas: null,
+                      highlighted: null,
+                      sponsored: null,
+                      machineTags: null,
+                    };
+
+                  case 'My second published article in root category':
+                    return {
+                      ...creation.value,
+                      _id: 6,
+                      id: 'e260c62d-8979-4ad3-bfd9-34ea0072c191',
                       body: null,
                       metas: null,
                       highlighted: null,
@@ -204,28 +230,9 @@ describe('Seeding', () => {
               });
 
             case 'ArticleTag':
-              return creations.map((creation): NodeValue => {
-                switch (creation.value.order) {
-                  case 0:
-                    return {
-                      ...creation.value,
-                      article: { _id: 3 },
-                      tag: { id: '98aaaccb-e73e-4e9b-9aa6-383b05a15974' },
-                    };
-
-                  case 1:
-                    return {
-                      ...creation.value,
-                      article: { _id: 3 },
-                      tag: { id: 'db414952-b5e4-4a91-a013-584d10521714' },
-                    };
-
-                  default:
-                    throw new Error(
-                      `"create" not implemented for "${node.name}/${creation.value}"`,
-                    );
-                }
-              });
+              return creations.map(
+                (creation): NodeValue => ({ ...creation.value } as NodeValue),
+              );
 
             case 'ArticleTagModeration':
               return creations.map(

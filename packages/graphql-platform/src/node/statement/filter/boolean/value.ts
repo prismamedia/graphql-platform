@@ -1,6 +1,8 @@
 import { Memoize } from '@prismamedia/memoize';
 import assert from 'node:assert/strict';
-import type { NodeValue } from '../../../../node.js';
+import type { NodeSelectedValue } from '../../../../node.js';
+import type { DependencyGraph } from '../../../subscription.js';
+import type { NodeFilterInputValue } from '../../../type.js';
 import type { BooleanExpressionInterface } from './expression-interface.js';
 
 export interface BooleanValueAST {
@@ -10,7 +12,7 @@ export interface BooleanValueAST {
 
 export class BooleanValue implements BooleanExpressionInterface {
   public readonly score: number;
-  public readonly dependencies?: undefined;
+  public readonly dependencies?: DependencyGraph;
 
   public constructor(public readonly value: boolean) {
     assert.equal(typeof value, 'boolean');
@@ -36,8 +38,12 @@ export class BooleanValue implements BooleanExpressionInterface {
     };
   }
 
-  public execute(_nodeValue: Partial<NodeValue>): boolean {
+  public execute(_value: NodeSelectedValue): boolean {
     return this.value;
+  }
+
+  public get inputValue(): NodeFilterInputValue {
+    return this.value ? {} : null;
   }
 }
 

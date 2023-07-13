@@ -1,5 +1,5 @@
-import type { NodeValue } from '../../../../node.js';
-import type { DependencyTree } from '../../../result-set.js';
+import type { DependencyGraph } from '../../../subscription.js';
+import type { NodeSelectedValue } from '../../selection.js';
 import type { AndOperand, BooleanFilter, OrOperand } from '../boolean.js';
 
 export interface BooleanExpressionInterface {
@@ -14,11 +14,6 @@ export interface BooleanExpressionInterface {
    * = 1 + operands' score
    */
   readonly score: number;
-
-  /**
-   * List of the components & reverse-edges whom changes may change the result-set
-   */
-  readonly dependencies?: DependencyTree;
 
   /**
    * Returns the logical negation, if possible
@@ -52,5 +47,10 @@ export interface BooleanExpressionInterface {
   /**
    * Execute this expression against a partial value, returns undefined if not applicable
    */
-  execute(nodeValue: Partial<NodeValue>): boolean | undefined;
+  execute(value: NodeSelectedValue): boolean | undefined;
+
+  /**
+   * Returns the dependency graph of this expression, if any
+   */
+  readonly dependencies?: DependencyGraph;
 }

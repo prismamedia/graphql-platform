@@ -3,11 +3,8 @@ import { Memoize } from '@prismamedia/memoize';
 import * as graphql from 'graphql';
 import assert from 'node:assert/strict';
 import type { JsonObject } from 'type-fest';
-import type { UniqueReverseEdge } from '../../../../../definition/reverse-edge/unique.js';
-import {
-  mergeDependencyTrees,
-  type DependencyTree,
-} from '../../../../../result-set.js';
+import type { UniqueReverseEdge } from '../../../../../definition.js';
+import { DependencyGraph } from '../../../../../subscription.js';
 import type {
   NodeSelectedValue,
   NodeSelection,
@@ -24,7 +21,7 @@ export class UniqueReverseEdgeHeadSelection<
   public readonly name: string;
   public readonly key: string;
 
-  public readonly dependencies: DependencyTree;
+  public readonly dependencies: DependencyGraph;
 
   public constructor(
     public readonly reverseEdge: UniqueReverseEdge,
@@ -37,15 +34,10 @@ export class UniqueReverseEdgeHeadSelection<
 
     assert.equal(reverseEdge.head, headSelection.node);
 
-    this.dependencies = new Map([
-      [
-        reverseEdge,
-        mergeDependencyTrees([
-          new Map([[reverseEdge.originalEdge, undefined]]),
-          this.headSelection.dependencies,
-        ]),
-      ],
-    ]);
+    this.dependencies = DependencyGraph.fromReverseEdge(
+      reverseEdge,
+      headSelection.dependencies,
+    );
   }
 
   public isAkinTo(

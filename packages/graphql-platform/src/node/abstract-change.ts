@@ -18,7 +18,16 @@ export abstract class AbstractNodeChange<
     public readonly createdAt: Date = new Date(),
     public committedAt?: Date,
   ) {
-    this.stringifiedId = node.identifier.stringify(id);
+    Object.freeze(id);
+
+    const pureIdentifierLeaf =
+      node.identifier.componentSet.size === 1
+        ? node.identifier.leafSet.values().next().value
+        : undefined;
+
+    this.stringifiedId = pureIdentifierLeaf
+      ? pureIdentifierLeaf.stringify(id[pureIdentifierLeaf.name])
+      : node.identifier.stringify(id);
   }
 
   public toString(): string {

@@ -1,6 +1,5 @@
 import { beforeAll, describe, expect, it } from '@jest/globals';
 import { createMyGP, type MyGP } from '../../__tests__/config.js';
-import { toTestableDependencies } from '../result-set.js';
 import type { NodeFilterInputValue } from '../type/input/filter.js';
 
 describe('Filter', () => {
@@ -18,7 +17,7 @@ describe('Filter', () => {
         expected: Record<string, any>,
       ]
     >([
-      ['ArticleTag', { order_gt: 5 }, { order: true }],
+      ['ArticleTag', { order_gt: 5 }, { order: undefined }],
       [
         'ArticleTag',
         {
@@ -26,8 +25,8 @@ describe('Filter', () => {
           tag: { title: 'My tag title' },
         },
         {
-          article: { title: true, tags: { article: true } },
-          tag: { title: true },
+          article: { title: undefined, tags: { article: undefined } },
+          tag: { title: undefined },
         },
       ],
       [
@@ -36,14 +35,14 @@ describe('Filter', () => {
           tagCount_gt: 5,
           tags_some: { tag: { title: 'my title' } },
         },
-        { tags: { article: true, tag: { title: true } } },
+        { tags: { article: undefined, tag: { title: undefined } } },
       ],
     ])('%# - %s.filter(%p).dependencies = %p', (nodeName, filter, expected) =>
       expect(
-        toTestableDependencies(
-          gp.getNodeByName(nodeName).filterInputType.parseAndFilter(filter)
-            .dependencies,
-        ),
+        gp
+          .getNodeByName(nodeName)
+          .filterInputType.parseAndFilter(filter)
+          .dependencies?.debug(),
       ).toEqual(expected),
     );
   });
@@ -63,15 +62,12 @@ describe('Filter', () => {
 
       ['Article', { title_contains: 'newss' }, { title: 'The news' }, false],
       ['Article', { title_contains: 'news' }, { title: 'The news' }, true],
-      // ['Article', { title_contains: 'News' }, { title: 'The news' }, true],
 
       ['Article', { title_starts_with: 'Thes' }, { title: 'The news' }, false],
       ['Article', { title_starts_with: 'The' }, { title: 'The news' }, true],
-      // ['Article', { title_starts_with: 'the' }, { title: 'The news' }, true],
 
       ['Article', { title_ends_with: 'newss' }, { title: 'The news' }, false],
       ['Article', { title_ends_with: 'news' }, { title: 'The news' }, true],
-      // ['Article', { title_ends_with: 'News' }, { title: 'The news' }, true],
       [
         'Article',
         { AND: [{ title_starts_with: 'The' }, { title_ends_with: 'news' }] },
@@ -79,13 +75,13 @@ describe('Filter', () => {
         true,
       ],
     ])(
-      '%# - %s.filter(%p).execute(%p) = %p',
-      (nodeValue, filter, value, expected) =>
+      '%# - %s.filter(%p).execute(%p, true) = %p',
+      (nodeName, filter, value, expected) =>
         expect(
           gp
-            .getNodeByName(nodeValue)
+            .getNodeByName(nodeName)
             .filterInputType.parseAndFilter(filter)
-            .execute(value),
+            .execute(value, true),
         ).toEqual(expected),
     );
   });

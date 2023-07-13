@@ -59,10 +59,12 @@ export class NodeOrderingInputType extends utils.EnumInputType<OrderingExpressio
     context?: OperationContext,
     path?: utils.Path,
   ): NodeOrdering {
+    utils.assertNillableIterableObject<NodeOrderingInputValue>(value, path);
+
     return new NodeOrdering(
       this.node,
-      value?.length
-        ? value.map((value, index) =>
+      value
+        ? Array.from(value, (value, index) =>
             this.getEnumValue(value, utils.addPath(path, index)).sort(
               context,
               utils.addPath(path, value),

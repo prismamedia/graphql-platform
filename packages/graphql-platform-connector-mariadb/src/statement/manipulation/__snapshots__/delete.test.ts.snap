@@ -9,10 +9,10 @@ Map {
     "deletion" => 3,
   },
   "ArticleTag" => Map {
-    "deletion" => 3,
+    "deletion" => 8,
   },
   "Article" => Map {
-    "deletion" => 2,
+    "deletion" => 4,
   },
 }
 `;
@@ -32,6 +32,12 @@ exports[`Delete statement generates statements: result 1`] = `
   },
   {
     "title": "My second published article",
+  },
+  {
+    "title": "My first published article in root category",
+  },
+  {
+    "title": "My second published article in root category",
   },
 ]
 `;

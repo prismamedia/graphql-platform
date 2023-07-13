@@ -1,15 +1,17 @@
 import { Memoize } from '@prismamedia/memoize';
 import assert from 'node:assert/strict';
 import * as R from 'remeda';
-import type { NodeValue } from '../../../../../../../node.js';
 import type {
+  Component,
   Leaf,
   LeafValue,
-} from '../../../../../../definition/component/leaf.js';
-import type { DependencyTree } from '../../../../../../result-set.js';
+} from '../../../../../../definition.js';
+import { DependencyGraph } from '../../../../../../subscription.js';
+import type { NodeFilterInputValue } from '../../../../../../type.js';
+import type { NodeSelectedValue } from '../../../../../selection.js';
 import { AndOperation, BooleanFilter } from '../../../../boolean.js';
 import type { BooleanExpressionInterface } from '../../../expression-interface.js';
-import { type AndOperand } from '../../../operation/and.js';
+import type { AndOperand } from '../../../operation/and.js';
 import { OrOperation, type OrOperand } from '../../../operation/or.js';
 import { FalseValue, TrueValue } from '../../../value.js';
 import {
@@ -41,15 +43,21 @@ export class LeafInFilter implements BooleanExpressionInterface {
       : new this(leaf, values);
   }
 
+  public readonly key: string;
+
+  public readonly component: Component;
   public readonly score: number;
-  public readonly dependencies: DependencyTree;
+  public readonly dependencies: DependencyGraph;
 
   protected constructor(
     public readonly leaf: Leaf,
     public readonly values: ReadonlyArray<LeafValue>,
   ) {
+    this.key = `${leaf.name}_in`;
+
+    this.component = leaf;
     this.score = 1 + values.length;
-    this.dependencies = new Map([[leaf, undefined]]);
+    this.dependencies = DependencyGraph.fromLeaf(this);
   }
 
   public has(value: LeafValue): boolean {
@@ -190,6 +198,15 @@ export class LeafInFilter implements BooleanExpressionInterface {
     }
   }
 
+  public execute(value: NodeSelectedValue): boolean | undefined {
+    const leafValue = value[this.leaf.name];
+    if (leafValue === undefined) {
+      return;
+    }
+
+    return this.has(leafValue);
+  }
+
   public get ast(): LeafInFilterAST {
     return {
       kind: 'LEAF',
@@ -199,12 +216,7 @@ export class LeafInFilter implements BooleanExpressionInterface {
     };
   }
 
-  public execute(nodeValue: Partial<NodeValue>): boolean | undefined {
-    const leafValue = nodeValue[this.leaf.name];
-    if (leafValue === undefined) {
-      return;
-    }
-
-    return this.has(leafValue);
+  public get inputValue(): NodeFilterInputValue {
+    return { [this.key]: this.values };
   }
 }

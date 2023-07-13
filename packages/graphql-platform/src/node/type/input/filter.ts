@@ -10,8 +10,8 @@ import type { OperationContext } from '../../operation/context.js';
 import {
   AndOperation,
   BooleanFilter,
-  BooleanValue,
   EdgeExistsFilter,
+  FalseValue,
   LeafComparisonFilter,
   LeafFullTextFilter,
   LeafInFilter,
@@ -20,6 +20,7 @@ import {
   NodeFilter,
   NotOperation,
   OrOperation,
+  TrueValue,
   UniqueReverseEdgeExistsFilter,
   sortableLeafComparisonOperatorSet,
 } from '../../statement/filter.js';
@@ -424,9 +425,9 @@ export class NodeFilterInputType extends utils.ObjectInputType<FieldFilterInputT
     return new NodeFilter(
       this.node,
       value === undefined
-        ? new BooleanValue(true)
+        ? TrueValue
         : value === null
-        ? new BooleanValue(false)
+        ? FalseValue
         : AndOperation.create(
             Object.entries(value).map(([filterName, filterValue]) =>
               this.getFieldByName(filterName, path).filter(

@@ -1,12 +1,14 @@
 import * as utils from '@prismamedia/graphql-platform-utils';
 import { Memoize } from '@prismamedia/memoize';
 import assert from 'node:assert/strict';
-import type { NodeValue } from '../../../../../../../node.js';
+import type { NodeSelectedValue } from '../../../../../../../node.js';
 import type {
+  Component,
   Leaf,
   LeafValue,
-} from '../../../../../../definition/component/leaf.js';
-import type { DependencyTree } from '../../../../../../result-set.js';
+} from '../../../../../../definition/component.js';
+import { DependencyGraph } from '../../../../../../subscription.js';
+import type { NodeFilterInputValue } from '../../../../../../type.js';
 import type { BooleanFilter } from '../../../../boolean.js';
 import type { BooleanExpressionInterface } from '../../../expression-interface.js';
 import {
@@ -33,8 +35,11 @@ export const sortableLeafComparisonOperatorSet = new Set([
 ] satisfies LeafComparisonFilter['operator'][]);
 
 export class LeafComparisonFilter implements BooleanExpressionInterface {
+  public readonly key: string;
+
+  public readonly component: Component;
   public readonly score: number;
-  public readonly dependencies: DependencyTree;
+  public readonly dependencies: DependencyGraph;
   readonly #complement?: LeafComparisonFilter;
 
   public constructor(
@@ -51,8 +56,12 @@ export class LeafComparisonFilter implements BooleanExpressionInterface {
       assert(leaf.isSortable(), `The "${leaf}" leaf is not sortable`);
     }
 
+    this.key = operator === 'eq' ? leaf.name : `${leaf.name}_${operator}`;
+
+    this.component = leaf;
     this.score = 2;
-    this.dependencies = new Map([[leaf, undefined]]);
+    this.dependencies = DependencyGraph.fromLeaf(this);
+
     this.#complement = complement;
   }
 
@@ -225,17 +234,8 @@ export class LeafComparisonFilter implements BooleanExpressionInterface {
     }
   }
 
-  public get ast(): LeafComparisonFilterAST {
-    return {
-      kind: 'LEAF',
-      leaf: this.leaf.name,
-      operator: this.operator.toUpperCase() as any,
-      value: this.value,
-    };
-  }
-
-  public execute(nodeValue: Partial<NodeValue>): boolean | undefined {
-    const leafValue = nodeValue[this.leaf.name];
+  public execute(value: NodeSelectedValue): boolean | undefined {
+    const leafValue = value[this.leaf.name];
     if (leafValue === undefined) {
       return;
     }
@@ -266,5 +266,18 @@ export class LeafComparisonFilter implements BooleanExpressionInterface {
       default:
         throw new utils.UnreachableValueError(this.operator);
     }
+  }
+
+  public get ast(): LeafComparisonFilterAST {
+    return {
+      kind: 'LEAF',
+      leaf: this.leaf.name,
+      operator: this.operator.toUpperCase() as any,
+      value: this.value,
+    };
+  }
+
+  public get inputValue(): NodeFilterInputValue {
+    return { [this.key]: this.value };
   }
 }

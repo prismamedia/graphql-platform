@@ -36,7 +36,7 @@ export class NodeUpdate<
 
     super(
       node,
-      Object.freeze(node.identifier.parseValue(newValue)),
+      node.identifier.parseValue(newValue),
       requestContext,
       createdAt,
       committedAt,
@@ -99,12 +99,20 @@ export const createNodeUpdateFromComponentUpdates = <
   updatesByComponent: Record<Component['name'], ComponentValue>,
   createdAt?: Date,
   committedAt?: Date,
-): NodeUpdate<TRequestContext, TConnector, TContainer> =>
-  new NodeUpdate(
+): NodeUpdate<TRequestContext, TConnector, TContainer> => {
+  const oldValue = {
+    ...Object.fromEntries(
+      Array.from(node.componentSet, (component) => [component.name, null]),
+    ),
+    ...maybeOldValue,
+  };
+
+  return new NodeUpdate(
     node,
     requestContext,
-    maybeOldValue,
-    { ...maybeOldValue, ...updatesByComponent },
+    oldValue,
+    { ...oldValue, ...updatesByComponent },
     createdAt,
     committedAt,
   );
+};

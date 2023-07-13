@@ -1,10 +1,16 @@
 import { Memoize } from '@prismamedia/memoize';
 import assert from 'node:assert/strict';
-import type { Node, NodeValue } from '../../node.js';
-import type { DependencyTree } from '../result-set.js';
+import type { Node } from '../../node.js';
+import type { DependencyGraph } from '../subscription.js';
+import type { NodeFilterInputValue } from '../type.js';
 import type { BooleanFilter } from './filter/boolean.js';
-import { NotOperation } from './filter/boolean/operation/not.js';
+import {
+  AndOperation,
+  NotOperation,
+  OrOperation,
+} from './filter/boolean/operation.js';
 import { FalseValue, TrueValue } from './filter/boolean/value.js';
+import type { NodeSelectedValue } from './selection.js';
 
 export * from './filter/boolean.js';
 
@@ -16,14 +22,14 @@ export interface NodeFilterAST {
 
 export class NodeFilter {
   /**
-   * Used to sort filters, the lower the better
+   * Used to sort filters, the lower the better/simpler
    */
   public readonly score: number;
 
   /**
-   * List of the components & reverse-edges whom changes may change the result-set
+   * Used in subscriptions to know wich nodes to fetch
    */
-  public readonly dependencies: DependencyTree | undefined;
+  public readonly dependencies?: DependencyGraph;
 
   public constructor(
     public readonly node: Node,
@@ -38,11 +44,29 @@ export class NodeFilter {
     return new NodeFilter(this.node, NotOperation.create(this.filter));
   }
 
-  public equals(nodeFilter: unknown): boolean {
+  public and(other: NodeFilter): NodeFilter {
+    assert.equal(other.node, this.node);
+
+    return new NodeFilter(
+      this.node,
+      AndOperation.create([this.filter, other.filter]),
+    );
+  }
+
+  public or(other: NodeFilter): NodeFilter {
+    assert.equal(other.node, this.node);
+
+    return new NodeFilter(
+      this.node,
+      OrOperation.create([this.filter, other.filter]),
+    );
+  }
+
+  public equals(filter: unknown): boolean {
     return (
-      nodeFilter instanceof NodeFilter &&
-      nodeFilter.node === this.node &&
-      nodeFilter.filter.equals(this.filter)
+      filter instanceof NodeFilter &&
+      filter.node === this.node &&
+      filter.filter.equals(this.filter)
     );
   }
 
@@ -54,12 +78,8 @@ export class NodeFilter {
     return this.filter.equals(FalseValue);
   }
 
-  public get ast(): NodeFilterAST {
-    return {
-      kind: 'NODE',
-      node: this.node.name,
-      filter: this.filter.ast,
-    };
+  public isUnique(): boolean {
+    return this.node.uniqueFilterInputType.isValid(this.inputValue);
   }
 
   public get normalized(): NodeFilter | undefined {
@@ -69,18 +89,34 @@ export class NodeFilter {
   /**
    * Execute this filter against a partial value, returns undefined if not applicable
    */
-  public execute<TPartial extends boolean = true>(
-    nodeValue: Partial<NodeValue>,
-    partial?: TPartial,
+  public execute<TPartial extends boolean>(
+    value: NodeSelectedValue,
+    partial: TPartial,
   ): TPartial extends false ? boolean : boolean | undefined {
-    const result = this.filter.execute(nodeValue);
+    const result = this.filter.execute(value);
 
-    assert(
-      result !== undefined || partial !== false,
-      'The filter is not applicable to this value',
-    );
+    if (partial === false) {
+      assert.notEqual(
+        result,
+        undefined,
+        'The filter is not applicable to this value',
+      );
+    }
 
     return result as any;
+  }
+
+  public get ast(): NodeFilterAST {
+    return {
+      kind: 'NODE',
+      node: this.node.name,
+      filter: this.filter.ast,
+    };
+  }
+
+  @Memoize()
+  public get inputValue(): NodeFilterInputValue {
+    return this.filter.inputValue;
   }
 }
 

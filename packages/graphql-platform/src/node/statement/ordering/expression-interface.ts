@@ -1,13 +1,8 @@
-import type { DependencyTree } from '../../result-set.js';
+import type { DependencyGraph } from '../../subscription.js';
 import type { OrderingDirection } from './direction.js';
 
 export interface OrderingExpressionInterface {
   readonly direction: OrderingDirection;
-
-  /**
-   * List of the components & reverse-edges whom changes may change the result-set
-   */
-  readonly dependencies: DependencyTree;
 
   equals(expression: unknown): boolean;
 
@@ -15,4 +10,9 @@ export interface OrderingExpressionInterface {
    * A developer-friendly representation of this expression
    */
   ast: any;
+
+  /**
+   * Returns the dependency graph of this expression, if any
+   */
+  readonly dependencies?: DependencyGraph;
 }

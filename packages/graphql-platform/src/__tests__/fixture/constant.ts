@@ -77,6 +77,7 @@ export const Article = {
     title: 'My first published article',
     status: ArticleStatus.PUBLISHED,
     createdAt: new Date('2022-03-01T00:00:00Z'),
+    createdBy: 'user_marine',
     tags: [
       {
         tag: 'tag_01',
@@ -123,11 +124,49 @@ export const Article = {
       },
     ],
   },
+  article_05: {
+    category: 'category_root',
+    title: 'My first published article in root category',
+    status: ArticleStatus.PUBLISHED,
+    tags: [
+      {
+        tag: 'tag_01',
+        order: 0,
+      },
+      {
+        tag: 'tag_02',
+        order: 1,
+      },
+      {
+        tag: 'tag_03',
+        order: 2,
+      },
+    ],
+    createdAt: new Date('2022-05-01T00:00:00Z'),
+    createdBy: 'user_yvann',
+  },
+  article_06: {
+    category: 'category_root',
+    title: 'My second published article in root category',
+    status: ArticleStatus.PUBLISHED,
+    tags: [
+      {
+        tag: 'tag_01',
+        order: 0,
+      },
+      {
+        tag: 'tag_03',
+        order: 1,
+      },
+    ],
+    createdAt: new Date('2022-06-01T00:00:00Z'),
+    createdBy: 'user_yvann',
+  },
 } satisfies NodeFixtureDataByReference;
 
 export default {
+  Article,
   Category,
   Tag,
   User,
-  Article,
 } satisfies NodeFixtureDataByReferenceByNodeName;

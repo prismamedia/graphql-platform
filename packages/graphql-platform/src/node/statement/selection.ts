@@ -4,23 +4,32 @@ import assert from 'node:assert/strict';
 import * as R from 'remeda';
 import type { JsonObject } from 'type-fest';
 import type { Node } from '../../node.js';
-import { mergeDependencyTrees, type DependencyTree } from '../result-set.js';
+import type { NodeUpdate } from '../change.js';
+import type { DependencyGraph } from '../subscription.js';
 import {
+  isComponentSelection,
+  isReverseEdgeSelection,
   mergeSelectionExpressions,
+  type ComponentSelection,
+  type ReverseEdgeSelection,
   type SelectionExpression,
 } from './selection/expression.js';
 import type { NodeSelectedValue } from './selection/value.js';
 
+export * from './selection/expression-interface.js';
 export * from './selection/expression.js';
 export * from './selection/value.js';
 
 export class NodeSelection<TValue extends NodeSelectedValue = any> {
   public readonly expressions: ReadonlyArray<SelectionExpression>;
 
+  public readonly components: ReadonlyArray<ComponentSelection>;
+  public readonly reverseEdges: ReadonlyArray<ReverseEdgeSelection>;
+
   /**
-   * List of the components & reverse-edges whom changes may change the result-set
+   * Used in subscriptions to know wich nodes to fetch
    */
-  public readonly dependencies: DependencyTree;
+  public readonly dependencies?: DependencyGraph;
 
   public constructor(
     public readonly node: Node,
@@ -29,11 +38,20 @@ export class NodeSelection<TValue extends NodeSelectedValue = any> {
       SelectionExpression
     >,
   ) {
-    this.expressions = Object.freeze(Array.from(expressionsByKey.values()));
+    assert(expressionsByKey.size);
 
-    this.dependencies = mergeDependencyTrees(
-      this.expressions.map(({ dependencies }) => dependencies),
-    )!;
+    this.expressions = Array.from(expressionsByKey.values());
+
+    this.components = this.expressions.filter(isComponentSelection);
+    this.reverseEdges = this.expressions.filter(isReverseEdgeSelection);
+
+    this.dependencies = this.expressions.reduce<DependencyGraph | undefined>(
+      (dependencies, expression) =>
+        dependencies && expression.dependencies
+          ? dependencies.mergeWith(expression.dependencies)
+          : dependencies || expression.dependencies,
+      undefined,
+    );
   }
 
   public isAkinTo(maybeSelection: unknown): maybeSelection is NodeSelection {
@@ -54,13 +72,27 @@ export class NodeSelection<TValue extends NodeSelectedValue = any> {
   }
 
   /**
-   * Returns true if the provided selection is a subset of the current one
+   * Returns true if the provided selection is a subset of this one
    */
   public isSupersetOf(selection: NodeSelection): boolean {
     assert(this.isAkinTo(selection));
 
     return selection.expressions.every((expression) =>
       this.expressionsByKey.get(expression.key)?.isSupersetOf(expression),
+    );
+  }
+
+  public isSubsetOf(selection: NodeSelection): boolean {
+    assert(this.isAkinTo(selection));
+
+    return selection.isSupersetOf(this);
+  }
+
+  public isAffectedByRootUpdate(update: NodeUpdate): boolean {
+    assert.equal(update.node, this.node);
+
+    return this.components.some(({ component }) =>
+      update.updatesByComponent.has(component),
     );
   }
 

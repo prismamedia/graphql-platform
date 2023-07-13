@@ -1,12 +1,10 @@
-import type { NodeValue } from '../../../../../node.js';
-import {
-  mergeDependencyTrees,
-  type DependencyTree,
-} from '../../../../result-set.js';
-import { type BooleanFilter } from '../../boolean.js';
+import type { NodeSelectedValue } from '../../../../../node.js';
+import type { DependencyGraph } from '../../../../subscription.js';
+import type { NodeFilterInputValue } from '../../../../type.js';
+import type { BooleanFilter } from '../../boolean.js';
 import type { BooleanExpressionInterface } from '../expression-interface.js';
 import type { BooleanExpression } from '../expression.js';
-import { type LeafInFilterAST } from '../expression/component/leaf/in.js';
+import type { LeafInFilterAST } from '../expression/component/leaf/in.js';
 import { BooleanValue, FalseValue, TrueValue } from '../value.js';
 import { AndOperation, type AndOperand } from './and.js';
 import { NotOperation } from './not.js';
@@ -19,6 +17,8 @@ export interface OrOperationAST {
 }
 
 export class OrOperation implements BooleanExpressionInterface {
+  public static key: string = 'OR';
+
   protected static reducers(
     remainingReducers: number,
   ): Array<(a: OrOperand, b: OrOperand) => BooleanFilter | undefined> {
@@ -123,16 +123,22 @@ export class OrOperation implements BooleanExpressionInterface {
       : new this(operands);
   }
 
+  public readonly key: string;
   public readonly score: number;
-  public readonly dependencies?: DependencyTree;
+  public readonly dependencies?: DependencyGraph;
 
   public constructor(
     public readonly operands: ReadonlyArray<OrOperand>,
     public readonly complement?: BooleanFilter,
   ) {
+    this.key = (this.constructor as typeof OrOperation).key;
     this.score = 1 + operands.reduce((total, { score }) => total + score, 0);
-    this.dependencies = mergeDependencyTrees(
-      operands.map(({ dependencies }) => dependencies),
+    this.dependencies = operands.reduce<DependencyGraph | undefined>(
+      (dependencies, operand) =>
+        dependencies && operand.dependencies
+          ? dependencies.mergeWith(operand.dependencies)
+          : dependencies || operand.dependencies,
+      undefined,
     );
   }
 
@@ -166,18 +172,11 @@ export class OrOperation implements BooleanExpressionInterface {
     );
   }
 
-  public get ast(): OrOperationAST | LeafInFilterAST {
-    return {
-      kind: 'OR',
-      operands: this.operands.map(({ ast }) => ast),
-    };
-  }
-
-  public execute(nodeValue: Partial<NodeValue>): boolean | undefined {
+  public execute(value: NodeSelectedValue): boolean | undefined {
     let hasUndefinedOperand: boolean = false;
 
     for (const operand of this.operands) {
-      const result = operand.execute(nodeValue);
+      const result = operand.execute(value);
 
       if (result === true) {
         return true;
@@ -187,5 +186,16 @@ export class OrOperation implements BooleanExpressionInterface {
     }
 
     return hasUndefinedOperand ? undefined : false;
+  }
+
+  public get ast(): OrOperationAST | LeafInFilterAST {
+    return {
+      kind: 'OR',
+      operands: this.operands.map(({ ast }) => ast),
+    };
+  }
+
+  public get inputValue(): NodeFilterInputValue {
+    return { [this.key]: this.operands.map(({ inputValue }) => inputValue) };
   }
 }

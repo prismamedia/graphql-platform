@@ -1,6 +1,5 @@
 import { beforeAll, describe, expect, it } from '@jest/globals';
 import { createMyGP, type MyGP } from '../../__tests__/config.js';
-import { toTestableDependencies } from '../result-set.js';
 import type { RawNodeSelection } from '../type/output/node.js';
 
 describe('Selection', () => {
@@ -23,7 +22,7 @@ describe('Selection', () => {
         id
         title
       }`,
-      { id: true, title: true },
+      { id: undefined, title: undefined },
     ],
     [
       'Article',
@@ -38,9 +37,13 @@ describe('Selection', () => {
         }
       }`,
       {
-        id: true,
-        title: true,
-        tags: { article: true, order: true, tag: { title: true } },
+        id: undefined,
+        title: undefined,
+        tags: {
+          article: undefined,
+          order: undefined,
+          tag: { title: undefined },
+        },
       },
     ],
     [
@@ -50,7 +53,7 @@ describe('Selection', () => {
         title
         tagCount
       }`,
-      { id: true, title: true, tags: { article: true } },
+      { id: undefined, title: undefined, tags: { article: undefined } },
     ],
     [
       'Article',
@@ -61,11 +64,11 @@ describe('Selection', () => {
         }
       }`,
       {
-        title: true,
+        title: undefined,
         tags: {
-          article: true,
-          order: true,
-          tag: { title: true },
+          article: undefined,
+          order: undefined,
+          tag: { title: undefined },
         },
       },
     ],
@@ -80,19 +83,20 @@ describe('Selection', () => {
         }
       }`,
       {
-        title: true,
+        title: undefined,
         tags: {
-          article: true,
-          order: true,
-          tag: { title: true },
+          article: undefined,
+          order: undefined,
+          tag: { title: undefined },
         },
       },
     ],
-  ])('%# - is aware of its dependencies', (nodeName, selection, expected) =>
+  ])('%# - %s.select(%p).dependencies = $p', (nodeName, selection, expected) =>
     expect(
-      toTestableDependencies(
-        gp.getNodeByName(nodeName).outputType.select(selection).dependencies,
-      ),
+      gp
+        .getNodeByName(nodeName)
+        .outputType.select(selection)
+        .dependencies?.debug(),
     ).toEqual(expected),
   );
 });

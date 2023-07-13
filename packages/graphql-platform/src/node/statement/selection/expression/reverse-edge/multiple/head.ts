@@ -3,11 +3,8 @@ import { Memoize } from '@prismamedia/memoize';
 import * as graphql from 'graphql';
 import assert from 'node:assert/strict';
 import { JsonObject } from 'type-fest';
-import type { MultipleReverseEdge } from '../../../../../definition/reverse-edge/multiple.js';
-import {
-  mergeDependencyTrees,
-  type DependencyTree,
-} from '../../../../../result-set.js';
+import type { MultipleReverseEdge } from '../../../../../definition.js';
+import { DependencyGraph } from '../../../../../subscription.js';
 import { NodeFilter, areFiltersEqual } from '../../../../filter.js';
 import { areOrderingsEqual, type NodeOrdering } from '../../../../ordering.js';
 import type {
@@ -29,7 +26,7 @@ export class MultipleReverseEdgeHeadSelection<
   public readonly headOrdering?: NodeOrdering;
   public readonly offset?: number;
 
-  public readonly dependencies: DependencyTree;
+  public readonly dependencies: DependencyGraph;
 
   public constructor(
     public readonly reverseEdge: MultipleReverseEdge,
@@ -60,17 +57,12 @@ export class MultipleReverseEdgeHeadSelection<
 
     assert.equal(reverseEdge.head, headSelection.node);
 
-    this.dependencies = new Map([
-      [
-        reverseEdge,
-        mergeDependencyTrees([
-          new Map([[reverseEdge.originalEdge, undefined]]),
-          this.headFilter?.dependencies,
-          this.headOrdering?.dependencies,
-          headSelection.dependencies,
-        ]),
-      ],
-    ]);
+    this.dependencies = DependencyGraph.fromReverseEdge(
+      reverseEdge,
+      this.headFilter?.dependencies,
+      this.headOrdering?.dependencies,
+      this.headSelection?.dependencies,
+    );
   }
 
   public isAkinTo(
