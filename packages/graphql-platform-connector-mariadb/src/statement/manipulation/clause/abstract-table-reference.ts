@@ -70,10 +70,15 @@ export abstract class AbstractTableReference {
     assert(reverseEdge instanceof core.MultipleReverseEdge);
     assert.equal(reverseEdge.tail, this.table.node);
 
+    const tail = this.table.schema.getTableByNode(reverseEdge.tail);
     const head = this.table.schema.getTableByNode(reverseEdge.head);
     const headAuthorization = this.context.getAuthorization(reverseEdge.head);
 
-    const tableReference = new TableFactor(head, this.context);
+    const tableReference = new TableFactor(
+      head,
+      this.context,
+      `${tail.name}>${reverseEdge.name}`,
+    );
 
     this.subqueries.add(tableReference);
 

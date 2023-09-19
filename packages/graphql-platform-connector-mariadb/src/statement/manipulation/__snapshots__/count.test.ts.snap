@@ -36,8 +36,8 @@ WHERE (
     ) IS NOT NULL
     AND (
       SELECT COUNT(*)
-      FROM \`article_tags\`
-      WHERE \`articles\`.\`private_id\` <=> \`article_tags\`.\`article_private_id\`
+      FROM \`article_tags\` AS \`articles>tags\`
+      WHERE \`articles\`.\`private_id\` <=> \`articles>tags\`.\`article_private_id\`
     ) > 4
   )",
 ]

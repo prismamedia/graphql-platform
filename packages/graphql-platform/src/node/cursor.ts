@@ -76,7 +76,7 @@ export type NodeCursorForEachOptions =
        *
        * @see https://github.com/sindresorhus/p-retry/blob/main/readme.md
        */
-      retry?: PRetryOptions | PRetryOptions['retries'] | boolean;
+      retry?: PRetryOptions | number | boolean;
 
       /**
        * Optional, either:

@@ -169,26 +169,57 @@ describe('Find statement', () => {
       myAdminContext,
       {
         where: { tagCount_gt: 1 },
-        first: 5,
+        orderBy: ['createdAt_ASC'],
+        first: 1,
         selection: `{
+          title
           second: tags(orderBy: [order_ASC], skip: 1, first: 1) {
             order
           }
           penultimate: tags(orderBy: [order_DESC], skip: 1, first: 1) {
             order
           }
+          all: tags(orderBy: [order_ASC], first: 10) {
+            order
+          }
         }`,
       },
       [
         {
-          second: [
+          title: 'My first published article',
+          second: [{ order: 1 }],
+          penultimate: [{ order: 0 }],
+          all: [{ order: 0 }, { order: 1 }],
+        },
+      ],
+    ],
+    [
+      'Category',
+      myAdminContext,
+      {
+        where: { parent: null },
+        first: 1,
+        selection: `{
+          title
+          childCount
+          children(first: 10) {
+            parent { title }
+            title 
+          }
+        }`,
+      },
+      [
+        {
+          title: 'ROOT',
+          childCount: 2,
+          children: [
             {
-              order: 1,
+              title: 'Home',
+              parent: { title: 'ROOT' },
             },
-          ],
-          penultimate: [
             {
-              order: 0,
+              title: 'News',
+              parent: { title: 'ROOT' },
             },
           ],
         },

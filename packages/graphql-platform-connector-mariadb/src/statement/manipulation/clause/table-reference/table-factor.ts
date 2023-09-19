@@ -7,13 +7,14 @@ import { AbstractTableReference } from '../abstract-table-reference.js';
  * @see https://mariadb.com/kb/en/join-syntax/
  */
 export class TableFactor extends AbstractTableReference {
-  public override readonly alias: string;
   public override readonly depth: number = 0;
 
-  public constructor(table: Table, context: core.OperationContext) {
+  public constructor(
+    table: Table,
+    context: core.OperationContext,
+    public override readonly alias: string = table.name,
+  ) {
     super(table, context);
-
-    this.alias = table.name;
   }
 
   public override toString(): string {

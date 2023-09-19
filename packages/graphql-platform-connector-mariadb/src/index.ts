@@ -255,7 +255,7 @@ export class MariaDBConnector
           (statement instanceof InsertStatement ||
             statement instanceof UpdateStatement)
         ) {
-          const match = error.text?.match(
+          const match = error.sqlMessage?.match(
             /Duplicate entry '(?<value>.+)' for key '(?<unique>.+)'/,
           );
 
