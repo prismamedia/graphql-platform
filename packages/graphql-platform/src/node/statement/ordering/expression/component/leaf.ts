@@ -37,4 +37,8 @@ export class LeafOrdering implements OrderingExpressionInterface {
       direction: this.direction,
     };
   }
+
+  public get inputValue() {
+    return this.leaf.getOrderingInput(this.direction).name;
+  }
 }

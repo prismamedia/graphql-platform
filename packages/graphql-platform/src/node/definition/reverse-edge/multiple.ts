@@ -3,7 +3,9 @@ import { Memoize } from '@prismamedia/memoize';
 import inflection from 'inflection';
 import assert from 'node:assert/strict';
 import type { ConnectorInterface } from '../../../connector-interface.js';
+import type { OrderingDirection } from '../../statement/ordering/direction.js';
 import { MultipleReverseEdgeCreationInput } from '../../type/input/creation/field/reverse-edge/multiple.js';
+import { MultipleReverseEdgeCountOrderingInput } from '../../type/input/ordering/expression/reverse-edge-multiple-count.js';
 import { MultipleReverseEdgeUpdateInput } from '../../type/input/update/field/reverse-edge/multiple.js';
 import type { MultipleReverseEdgeHeadOutputArgs } from '../../type/output/node/field/reverse-edge/multiple-head.js';
 import {
@@ -77,6 +79,13 @@ export class MultipleReverseEdge<
     }
 
     this.countFieldName = `${inflection.singularize(name)}Count`;
+  }
+
+  @Memoize((direction: OrderingDirection) => direction)
+  public getOrderingInput(
+    direction: OrderingDirection,
+  ): MultipleReverseEdgeCountOrderingInput {
+    return new MultipleReverseEdgeCountOrderingInput(this, direction);
   }
 
   @Memoize()

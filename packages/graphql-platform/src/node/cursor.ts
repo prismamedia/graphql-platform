@@ -14,16 +14,13 @@ import type { Except, Promisable } from 'type-fest';
 import type { ContextBoundNodeAPI, Node, OperationContext } from '../node.js';
 import { Leaf, type UniqueConstraint } from './definition.js';
 import {
+  NodeOrdering,
   OrderingDirection,
   type NodeFilter,
   type NodeSelectedValue,
   type NodeSelection,
 } from './statement.js';
-import type {
-  NodeFilterInputValue,
-  OrderByInputValue,
-  RawNodeSelection,
-} from './type.js';
+import type { NodeFilterInputValue, RawNodeSelection } from './type.js';
 
 export const defaultNamedProgressBarFormat =
   `[{bar}] {name} | {value}/{total} | {percentage}% | ETA: {eta_formatted} | Elapsed: {duration_formatted}` satisfies ProgressBarOptions['format'];
@@ -107,13 +104,14 @@ export class NodeCursor<
   TRequestContext extends object = any,
 > implements AsyncIterable<TValue>
 {
+  public readonly uniqueConstraint: UniqueConstraint;
+  public readonly filter: NodeFilter | undefined;
+  public readonly ordering: NodeOrdering;
+  public readonly selection: NodeSelection<TValue>;
+
   readonly #api: ContextBoundNodeAPI;
-  readonly #filter: NodeFilter | undefined;
   readonly #direction: OrderingDirection;
-  readonly #uniqueConstraint: UniqueConstraint;
-  readonly #selection: NodeSelection<TValue>;
   readonly #internalSelection: NodeSelection;
-  readonly #orderByInputValue: OrderByInputValue;
   readonly #chunkSize: number;
 
   public constructor(
@@ -121,7 +119,7 @@ export class NodeCursor<
     context:
       | utils.Thunkable<TRequestContext>
       | OperationContext<TRequestContext>,
-    options?: NodeCursorOptions<TValue>,
+    options?: Readonly<NodeCursorOptions<TValue>>,
   ) {
     // unique-constraint
     {
@@ -144,32 +142,32 @@ export class NodeCursor<
         assert(uniqueConstraint, `The "${node}" node is not scrollable`);
       }
 
-      this.#uniqueConstraint = uniqueConstraint;
+      this.uniqueConstraint = uniqueConstraint;
     }
 
-    this.#api = node.createContextBoundAPI(context);
-
-    this.#filter = node.filterInputType.parseAndFilter(
+    this.filter = node.filterInputType.parseAndFilter(
       options?.where,
     ).normalized;
 
-    this.#direction = options?.direction || OrderingDirection.ASCENDING;
-
-    this.#selection = options?.selection
+    this.selection = options?.selection
       ? node.outputType.select(options.selection)
       : node.selection;
 
-    this.#internalSelection = this.#selection.mergeWith(
-      this.#uniqueConstraint.selection,
+    this.#internalSelection = this.selection.mergeWith(
+      this.uniqueConstraint.selection,
     );
 
-    this.#orderByInputValue = Array.from(
-      this.#uniqueConstraint.componentSet,
-      (component) => {
+    this.#api = node.createContextBoundAPI(context);
+
+    this.#direction = options?.direction || OrderingDirection.ASCENDING;
+
+    this.ordering = new NodeOrdering(
+      node,
+      Array.from(this.uniqueConstraint.componentSet, (component) => {
         assert(component instanceof Leaf && component.isSortable());
 
-        return component.getOrderingInput(this.#direction).value;
-      },
+        return component.getOrderingInput(this.#direction).sort();
+      }),
     );
 
     this.#chunkSize = Math.max(1, options?.chunkSize || 100);
@@ -177,7 +175,7 @@ export class NodeCursor<
 
   @Memoize((force: boolean = false) => force && doNotCache)
   public async size(force: boolean = false): Promise<number> {
-    return this.#api.count({ where: this.#filter?.inputValue });
+    return this.#api.count({ where: this.filter?.inputValue });
   }
 
   public async *[Symbol.asyncIterator](): AsyncIterator<TValue> {
@@ -186,19 +184,19 @@ export class NodeCursor<
 
     do {
       values = await this.#api.findMany({
-        where: { AND: [after, this.#filter?.inputValue] },
-        orderBy: this.#orderByInputValue,
+        where: { AND: [after, this.filter?.inputValue] },
+        orderBy: this.ordering.inputValue,
         first: this.#chunkSize,
         selection: this.#internalSelection,
       });
 
       if (values.length) {
         for (const value of values) {
-          yield this.#selection.parseValue(value);
+          yield this.selection.parseValue(value);
         }
 
         after = pickAfterFilterInputValue(
-          this.#uniqueConstraint,
+          this.uniqueConstraint,
           this.#direction,
           values.at(-1)!,
         );

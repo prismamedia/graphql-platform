@@ -36,4 +36,8 @@ export class MultipleReverseEdgeCountOrdering
       direction: this.direction,
     };
   }
+
+  public get inputValue() {
+    return this.reverseEdge.getOrderingInput(this.direction).name;
+  }
 }

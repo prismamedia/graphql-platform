@@ -36,8 +36,8 @@ export class LeafOrderingInput extends utils.EnumInputValue {
     TRequestContext extends object,
     TConnector extends ConnectorInterface,
   >(
-    _context: OperationContext<TRequestContext, TConnector> | undefined,
-    _path: utils.Path,
+    _context?: OperationContext<TRequestContext, TConnector> | undefined,
+    _path?: utils.Path,
   ): LeafOrdering {
     return this.#expression;
   }

@@ -1,6 +1,8 @@
+import { Memoize } from '@prismamedia/memoize';
 import * as R from 'remeda';
 import type { Node } from '../../node.js';
 import type { DependencyGraph } from '../subscription.js';
+import type { OrderByInputValue } from '../type.js';
 import type { OrderingExpression } from './ordering/expression.js';
 
 export * from './ordering/direction.js';
@@ -58,6 +60,11 @@ export class NodeOrdering {
       node: this.node.name,
       expressions: this.expressions.map(({ ast }) => ast),
     };
+  }
+
+  @Memoize()
+  public get inputValue(): OrderByInputValue {
+    return Array.from(this.expressions, ({ inputValue }) => inputValue);
   }
 }
 

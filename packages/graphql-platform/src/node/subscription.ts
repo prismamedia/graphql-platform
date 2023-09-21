@@ -72,7 +72,7 @@ export type NodeSubscriptionForEachOptions = Except<
 export type NodeSubscriptionOptions<TValue extends NodeSelectedValue = any> = {
   where?: NodeFilterInputValue;
   selection?: RawNodeSelection<TValue>;
-  id?: UniqueConstraint['name'];
+  uniqueConstraint?: UniqueConstraint['name'];
   signal?: AbortSignal;
 };
 
@@ -111,11 +111,12 @@ export class NodeSubscription<
   implements
     AsyncIterable<NodeSubscriptionChange<TId, TValue, TRequestContext>>
 {
+  public readonly uniqueConstraint: UniqueConstraint;
   public readonly filter: NodeFilter | undefined;
   public readonly selection: NodeSelection<TValue>;
-  public readonly id: UniqueConstraint;
 
   public readonly dependencies?: DependencyGraph;
+
   readonly #isPureSelection: boolean;
 
   readonly #api: ContextBoundNodeAPI;
@@ -141,20 +142,22 @@ export class NodeSubscription<
       ? node.outputType.select(options.selection)
       : node.selection;
 
-    if (options?.id) {
-      this.id = node.getUniqueConstraintByName(options.id);
-
-      assert(
-        this.selection.isSupersetOf(this.id.selection),
-        `The "${this.id}" unique-constraint is not selected`,
+    if (options?.uniqueConstraint) {
+      this.uniqueConstraint = node.getUniqueConstraintByName(
+        options.uniqueConstraint,
       );
 
       assert(
-        !this.id.isMutable(),
-        `The "${this.id}" unique-constraint is mutable`,
+        this.selection.isSupersetOf(this.uniqueConstraint.selection),
+        `The "${this.uniqueConstraint}" unique-constraint is not selected`,
+      );
+
+      assert(
+        !this.uniqueConstraint.isMutable(),
+        `The "${this.uniqueConstraint}" unique-constraint is mutable`,
       );
     } else {
-      let id: UniqueConstraint | undefined;
+      let uniqueConstraint: UniqueConstraint | undefined;
 
       const uniqueConstraints = Array.from(node.uniqueConstraintSet).filter(
         (uniqueConstraint) => !uniqueConstraint.isMutable(),
@@ -162,7 +165,7 @@ export class NodeSubscription<
 
       for (const selection of this.selection.components) {
         if (
-          (id = uniqueConstraints.find(
+          (uniqueConstraint = uniqueConstraints.find(
             (uniqueConstraint) =>
               uniqueConstraint.componentSet.has(selection.component) &&
               this.selection.isSupersetOf(uniqueConstraint.selection),
@@ -173,11 +176,11 @@ export class NodeSubscription<
       }
 
       assert(
-        id instanceof UniqueConstraint,
+        uniqueConstraint instanceof UniqueConstraint,
         `No immutable unique-constraint is selected`,
       );
 
-      this.id = id;
+      this.uniqueConstraint = uniqueConstraint;
     }
 
     this.dependencies =
@@ -224,7 +227,7 @@ export class NodeSubscription<
             deletions: [
               new NodeSubscriptionDeletion(
                 this,
-                this.id.parseValue(change.oldValue),
+                this.uniqueConstraint.parseValue(change.oldValue),
                 [change.requestContext],
               ),
             ],
@@ -243,7 +246,7 @@ export class NodeSubscription<
                   upserts: [
                     new NodeSubscriptionUpsert(
                       this,
-                      this.id.parseValue(change.newValue),
+                      this.uniqueConstraint.parseValue(change.newValue),
                       this.selection.parseValue(change.newValue),
                       [change.requestContext],
                     ),
@@ -272,7 +275,7 @@ export class NodeSubscription<
                       upserts: [
                         new NodeSubscriptionUpsert(
                           this,
-                          this.id.parseValue(change.newValue),
+                          this.uniqueConstraint.parseValue(change.newValue),
                           this.selection.parseValue(change.newValue),
                           [change.requestContext],
                         ),
@@ -288,7 +291,7 @@ export class NodeSubscription<
                 deletions: [
                   new NodeSubscriptionDeletion(
                     this,
-                    this.id.parseValue(change.newValue),
+                    this.uniqueConstraint.parseValue(change.newValue),
                     [change.requestContext],
                   ),
                 ],
@@ -361,7 +364,7 @@ export class NodeSubscription<
     return effect;
   }
 
-  public async *resolveNodeChangeEffect(
+  protected async *resolveNodeChangeEffect(
     effect: NodeSubscriptionEffect,
   ): AsyncGenerator<
     NodeSubscriptionChange<TId, TValue, TRequestContext>,
@@ -384,7 +387,7 @@ export class NodeSubscription<
 
           yield new NodeSubscriptionUpsert(
             this,
-            this.id.parseValue(value) as any,
+            this.uniqueConstraint.parseValue(value) as any,
             value as any,
             [change.requestContext],
           );
@@ -414,14 +417,14 @@ export class NodeSubscription<
         if (value) {
           yield new NodeSubscriptionUpsert(
             this,
-            this.id.parseValue(value) as any,
+            this.uniqueConstraint.parseValue(value) as any,
             value as any,
             [change.requestContext],
           );
         } else if (index >= firstMaybeChangeIndex) {
           yield new NodeSubscriptionDeletion(
             this,
-            this.id.parseValue(change.newValue) as any,
+            this.uniqueConstraint.parseValue(change.newValue) as any,
             [change.requestContext],
           );
         }
@@ -436,7 +439,7 @@ export class NodeSubscription<
           where: {
             AND: [this.filter.complement.inputValue, effect.filter.inputValue],
           },
-          selection: this.id.selection,
+          selection: this.uniqueConstraint.selection,
         });
 
         for await (const id of cursor) {
@@ -454,7 +457,7 @@ export class NodeSubscription<
         for await (const value of cursor) {
           yield new NodeSubscriptionUpsert(
             this,
-            this.id.parseValue(value) as any,
+            this.uniqueConstraint.parseValue(value) as any,
             value as any,
           );
         }

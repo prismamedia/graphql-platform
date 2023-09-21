@@ -17,12 +17,12 @@ export abstract class AbstractNodeSubscriptionChange<
     Object.freeze(id);
 
     const pureIdentifierLeaf =
-      subscription.id.componentSet.size === 1
-        ? subscription.id.leafSet.values().next().value
+      subscription.uniqueConstraint.componentSet.size === 1
+        ? subscription.uniqueConstraint.leafSet.values().next().value
         : undefined;
 
     this.stringifiedId = pureIdentifierLeaf
       ? pureIdentifierLeaf.stringify(id[pureIdentifierLeaf.name])
-      : subscription.id.stringify(id);
+      : subscription.uniqueConstraint.stringify(id);
   }
 }

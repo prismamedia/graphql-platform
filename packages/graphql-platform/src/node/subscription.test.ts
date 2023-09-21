@@ -27,7 +27,10 @@ describe('Subscription', () => {
 
     it('should ensure the defined "id" is selected', () => {
       expect(() =>
-        Article.subscribe(myAdminContext, { id: 'id', selection: '{ title }' }),
+        Article.subscribe(myAdminContext, {
+          uniqueConstraint: 'id',
+          selection: '{ title }',
+        }),
       ).toThrowErrorMatchingInlineSnapshot(
         `"The "Article#id" unique-constraint is not selected"`,
       );

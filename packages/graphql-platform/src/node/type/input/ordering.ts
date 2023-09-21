@@ -4,10 +4,7 @@ import type { Node } from '../../../node.js';
 import { Leaf } from '../../definition.js';
 import type { OperationContext } from '../../operation/context.js';
 import { NodeOrdering, OrderingDirection } from '../../statement/ordering.js';
-import {
-  MultipleReverseEdgeCountOrderingInput,
-  OrderingExpressionInput,
-} from './ordering/expression.js';
+import { OrderingExpressionInput } from './ordering/expression.js';
 
 export * from './ordering/expression.js';
 
@@ -42,14 +39,8 @@ export class NodeOrderingInputType extends utils.EnumInputType<OrderingExpressio
       ...Array.from(
         this.node.multipleReverseEdgeSet,
       ).flatMap<OrderingExpressionInput>((reverseEdge) => [
-        new MultipleReverseEdgeCountOrderingInput(
-          reverseEdge,
-          OrderingDirection.ASCENDING,
-        ),
-        new MultipleReverseEdgeCountOrderingInput(
-          reverseEdge,
-          OrderingDirection.DESCENDING,
-        ),
+        reverseEdge.getOrderingInput(OrderingDirection.ASCENDING),
+        reverseEdge.getOrderingInput(OrderingDirection.DESCENDING),
       ]),
     ];
   }
