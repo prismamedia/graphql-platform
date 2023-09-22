@@ -159,13 +159,13 @@ describe('Subscription', () => {
           { slug: 'my-updated-article' },
         ),
       ])('should discard filtered-out "change', (change) => {
-        const effect = subscription.getNodeChangeEffect(change);
+        const effect = subscription.getNodeChangesEffect(change);
 
         expect(effect).toBeUndefined();
       });
 
       it('should handle filtered-in "deletion"', () => {
-        const effect = subscription.getNodeChangeEffect(
+        const effect = subscription.getNodeChangesEffect(
           new NodeDeletion(
             Article,
             {},
@@ -193,7 +193,7 @@ describe('Subscription', () => {
       });
 
       it('should handle filtered-in "creation"', () => {
-        const effect = subscription.getNodeChangeEffect(
+        const effect = subscription.getNodeChangesEffect(
           new NodeCreation(
             Article,
             {},
@@ -244,7 +244,7 @@ describe('Subscription', () => {
       afterAll(() => subscription.dispose());
 
       it('the "creation" is an incomplete "upsert"', () => {
-        const effect = subscription.getNodeChangeEffect(
+        const effect = subscription.getNodeChangesEffect(
           new NodeCreation(
             Article,
             {},
@@ -272,7 +272,7 @@ describe('Subscription', () => {
       });
 
       it('the "creation" might be an "upsert"', () => {
-        const effect = subscription.getNodeChangeEffect(
+        const effect = subscription.getNodeChangesEffect(
           new NodeCreation(
             Article,
             {},
@@ -391,7 +391,7 @@ describe('Subscription', () => {
 
       it('should skip this User "creation"', () =>
         expect(
-          subscription.getNodeChangeEffect(
+          subscription.getNodeChangesEffect(
             new NodeCreation(
               User,
               {},
@@ -413,7 +413,7 @@ describe('Subscription', () => {
 
       it('should skip this User "deletion"', () =>
         expect(
-          subscription.getNodeChangeEffect(
+          subscription.getNodeChangesEffect(
             new NodeDeletion(
               User,
               {},
@@ -434,7 +434,7 @@ describe('Subscription', () => {
         ).toBeUndefined());
 
       it('should handle this User "update"', () => {
-        const effect = subscription.getNodeChangeEffect(
+        const effect = subscription.getNodeChangesEffect(
           createNodeUpdateFromComponentUpdates(
             User,
             {},
@@ -450,8 +450,8 @@ describe('Subscription', () => {
           ),
         );
 
-        expect(effect?.filter).toBeInstanceOf(NodeFilter);
-        expect(effect?.filter?.inputValue).toMatchInlineSnapshot(`
+        expect(effect?.graphChanges).toBeInstanceOf(NodeFilter);
+        expect(effect?.graphChanges?.inputValue).toMatchInlineSnapshot(`
           {
             "OR": [
               {
@@ -478,7 +478,7 @@ describe('Subscription', () => {
       });
 
       it('should handle this ArticleTag "creation"', () => {
-        const effect = subscription.getNodeChangeEffect(
+        const effect = subscription.getNodeChangesEffect(
           new NodeCreation(
             ArticleTag,
             {},
@@ -490,8 +490,8 @@ describe('Subscription', () => {
           ),
         );
 
-        expect(effect?.filter).toBeInstanceOf(NodeFilter);
-        expect(effect!.filter!.inputValue).toMatchInlineSnapshot(`
+        expect(effect?.graphChanges).toBeInstanceOf(NodeFilter);
+        expect(effect!.graphChanges!.inputValue).toMatchInlineSnapshot(`
           {
             "_id": 5,
           }
@@ -499,7 +499,7 @@ describe('Subscription', () => {
       });
 
       it('should handle this ArticleTag "deletion"', () => {
-        const effect = subscription.getNodeChangeEffect(
+        const effect = subscription.getNodeChangesEffect(
           new NodeDeletion(
             ArticleTag,
             {},
@@ -511,8 +511,8 @@ describe('Subscription', () => {
           ),
         );
 
-        expect(effect?.filter).toBeInstanceOf(NodeFilter);
-        expect(effect!.filter!.inputValue).toMatchInlineSnapshot(`
+        expect(effect?.graphChanges).toBeInstanceOf(NodeFilter);
+        expect(effect!.graphChanges!.inputValue).toMatchInlineSnapshot(`
           {
             "_id": 5,
           }
@@ -520,7 +520,7 @@ describe('Subscription', () => {
       });
 
       it('should handle this ArticleTag "update"', () => {
-        const effect = subscription.getNodeChangeEffect(
+        const effect = subscription.getNodeChangesEffect(
           createNodeUpdateFromComponentUpdates(
             ArticleTag,
             {},
@@ -533,8 +533,8 @@ describe('Subscription', () => {
           ),
         );
 
-        expect(effect?.filter).toBeInstanceOf(NodeFilter);
-        expect(effect!.filter!.inputValue).toMatchInlineSnapshot(`
+        expect(effect?.graphChanges).toBeInstanceOf(NodeFilter);
+        expect(effect!.graphChanges!.inputValue).toMatchInlineSnapshot(`
           {
             "_id": 5,
           }
@@ -542,7 +542,7 @@ describe('Subscription', () => {
       });
 
       it('should handle this UserProfile "creation"', () => {
-        const effect = subscription.getNodeChangeEffect(
+        const effect = subscription.getNodeChangesEffect(
           new NodeCreation(
             UserProfile,
             {},
@@ -556,8 +556,8 @@ describe('Subscription', () => {
           ),
         );
 
-        expect(effect?.filter).toBeInstanceOf(NodeFilter);
-        expect(effect!.filter!.inputValue).toMatchInlineSnapshot(`
+        expect(effect?.graphChanges).toBeInstanceOf(NodeFilter);
+        expect(effect!.graphChanges!.inputValue).toMatchInlineSnapshot(`
           {
             "OR": [
               {
@@ -576,7 +576,7 @@ describe('Subscription', () => {
       });
 
       it('should handle this UserProfile "deletion"', () => {
-        const effect = subscription.getNodeChangeEffect(
+        const effect = subscription.getNodeChangesEffect(
           new NodeDeletion(
             UserProfile,
             {},
@@ -590,8 +590,8 @@ describe('Subscription', () => {
           ),
         );
 
-        expect(effect?.filter).toBeInstanceOf(NodeFilter);
-        expect(effect!.filter!.inputValue).toMatchInlineSnapshot(`
+        expect(effect?.graphChanges).toBeInstanceOf(NodeFilter);
+        expect(effect!.graphChanges!.inputValue).toMatchInlineSnapshot(`
           {
             "OR": [
               {
@@ -610,7 +610,7 @@ describe('Subscription', () => {
       });
 
       it('should skip this UserProfile "update"', () => {
-        const effect = subscription.getNodeChangeEffect(
+        const effect = subscription.getNodeChangesEffect(
           createNodeUpdateFromComponentUpdates(
             UserProfile,
             {},
@@ -625,11 +625,11 @@ describe('Subscription', () => {
           ),
         );
 
-        expect(effect?.filter).toBeUndefined();
+        expect(effect?.graphChanges).toBeUndefined();
       });
 
       it('should handle this UserProfile "update"', () => {
-        const effect = subscription.getNodeChangeEffect(
+        const effect = subscription.getNodeChangesEffect(
           createNodeUpdateFromComponentUpdates(
             UserProfile,
             {},
@@ -644,8 +644,8 @@ describe('Subscription', () => {
           ),
         );
 
-        expect(effect?.filter).toBeInstanceOf(NodeFilter);
-        expect(effect!.filter!.inputValue).toMatchInlineSnapshot(`
+        expect(effect?.graphChanges).toBeInstanceOf(NodeFilter);
+        expect(effect!.graphChanges!.inputValue).toMatchInlineSnapshot(`
           {
             "createdBy": {
               "id": "1fc3ca20-8ac3-47e7-83e7-60b3ed7f87c5",
@@ -655,7 +655,7 @@ describe('Subscription', () => {
       });
 
       it('should skip the ArticleTag "creation" as an Article "creation" already handle it', () => {
-        const effect = subscription.getNodeChangeEffect([
+        const effect = subscription.getNodeChangesEffect([
           new NodeCreation(
             ArticleTag,
             {},
@@ -698,7 +698,7 @@ describe('Subscription', () => {
         ]);
 
         expect(effect?.maybeUpserts).toHaveLength(1);
-        expect(effect?.filter).toBeUndefined();
+        expect(effect?.graphChanges).toBeUndefined();
       });
     });
   });

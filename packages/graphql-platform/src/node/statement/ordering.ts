@@ -23,6 +23,7 @@ export class NodeOrdering {
    * Used in subscriptions to know wich nodes to fetch
    */
   public readonly dependencies?: DependencyGraph;
+  public readonly useGraph: boolean;
 
   public constructor(
     public readonly node: Node,
@@ -41,6 +42,10 @@ export class NodeOrdering {
           : dependencies || expression.dependencies,
       undefined,
     );
+
+    this.useGraph = this.dependencies?.children
+      ? this.dependencies?.children.size > 0
+      : false;
   }
 
   public equals(ordering: unknown): boolean {

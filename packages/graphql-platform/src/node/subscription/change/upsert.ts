@@ -7,17 +7,20 @@ export class NodeSubscriptionUpsert<
   TId extends UniqueConstraintValue = any,
   TValue extends NodeSelectedValue & TId = any,
   TRequestContext extends object = any,
-> extends AbstractNodeSubscriptionChange<TId, TRequestContext> {
+> extends AbstractNodeSubscriptionChange<TId, TValue, TRequestContext> {
   public override readonly kind = 'upsert';
 
+  public readonly value: Readonly<TValue>;
+
   public constructor(
-    subscription: NodeSubscription,
-    id: TId,
-    public readonly value: Readonly<TValue>,
+    subscription: NodeSubscription<TId, TValue, TRequestContext>,
+    value: unknown,
     requestContexts?: ReadonlyArray<TRequestContext>,
   ) {
-    super(subscription, id, requestContexts);
+    super(subscription, value, requestContexts);
 
-    Object.freeze(value);
+    this.value = Object.freeze(
+      subscription.selection.parseValue(value) as TValue,
+    );
   }
 }

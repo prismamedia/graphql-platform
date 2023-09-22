@@ -11,7 +11,7 @@ export type NodeSubscriptionChange<
   TValue extends NodeSelectedValue & TId = any,
   TRequestContext extends object = any,
 > =
-  | NodeSubscriptionDeletion<TId, TRequestContext>
+  | NodeSubscriptionDeletion<TId, TValue, TRequestContext>
   | NodeSubscriptionUpsert<TId, TValue, TRequestContext>;
 
 export const isNodeSubscriptionChange = <

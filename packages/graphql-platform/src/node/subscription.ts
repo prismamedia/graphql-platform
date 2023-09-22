@@ -15,6 +15,7 @@ import {
   NodeCreation,
   NodeDeletion,
   type NodeChange,
+  type NodeUpdate,
 } from './change.js';
 import { UniqueConstraint, type UniqueConstraintValue } from './definition.js';
 import type { ContextBoundNodeAPI, OperationContext } from './operation.js';
@@ -30,11 +31,45 @@ import {
   type NodeSubscriptionChange,
 } from './subscription/change.js';
 import { DependencyGraph } from './subscription/dependency-graph.js';
-import { NodeSubscriptionEffect } from './subscription/effect.js';
 import type { NodeFilterInputValue, RawNodeSelection } from './type.js';
 
 export * from './subscription/change.js';
 export * from './subscription/dependency-graph.js';
+
+/**
+ * Group all the effect that an aggregation of changes can have on a subscription
+ */
+type NodeChangesEffect = {
+  /**
+   * Pass-through deletions, we had everything we need in the NodeChange
+   */
+  deletions: Array<NodeSubscriptionDeletion>;
+
+  /**
+   * Pass-through upserts, we had everything we need in the NodeChange
+   */
+  upserts: Array<NodeSubscriptionUpsert>;
+
+  /**
+   * Filtered-in, but incomplete value
+   */
+  incompleteUpserts: Array<NodeCreation | NodeUpdate>;
+
+  /**
+   * Not filtered, but cannot be deletion
+   */
+  maybeUpserts: Array<NodeCreation | NodeUpdate>;
+
+  /**
+   * Not filtered, can be anything
+   */
+  maybeChanges: Array<NodeUpdate>;
+
+  /**
+   * Graph changes
+   */
+  graphChanges?: NodeFilter;
+};
 
 export type NodeSubscriptionEventDataByName<
   TId extends UniqueConstraintValue = any,
@@ -117,8 +152,6 @@ export class NodeSubscription<
 
   public readonly dependencies?: DependencyGraph;
 
-  readonly #isPureSelection: boolean;
-
   readonly #api: ContextBoundNodeAPI;
   readonly #signal?: AbortSignal;
   readonly #nodeChangeListener: BoundOff;
@@ -134,9 +167,13 @@ export class NodeSubscription<
   ) {
     super();
 
-    this.filter = node.filterInputType.parseAndFilter(
-      options?.where,
-    ).normalized;
+    // filter
+    {
+      const filter = node.filterInputType.parseAndFilter(options?.where);
+      assert.notEqual(filter.isFalse(), true);
+
+      this.filter = filter.normalized;
+    }
 
     this.selection = options?.selection
       ? node.outputType.select(options.selection)
@@ -188,8 +225,6 @@ export class NodeSubscription<
         ? this.filter.dependencies.mergeWith(this.selection.dependencies)
         : this.filter?.dependencies || this.selection.dependencies;
 
-    this.#isPureSelection = this.selection.isSubsetOf(node.selection);
-
     this.#api = node.createContextBoundAPI(context);
     this.#signal = options?.signal;
 
@@ -211,106 +246,9 @@ export class NodeSubscription<
     this.off();
   }
 
-  protected getRootChangeEffect(
-    change: NodeChange,
-  ): NodeSubscriptionEffect | undefined {
-    assert.equal(change.node, this.node);
-
-    if (change instanceof NodeDeletion) {
-      const filterValue =
-        !this.filter || this.filter.execute(change.oldValue, true);
-
-      switch (filterValue) {
-        case true:
-        case undefined:
-          return new NodeSubscriptionEffect(this, {
-            deletions: [
-              new NodeSubscriptionDeletion(
-                this,
-                this.uniqueConstraint.parseValue(change.oldValue),
-                [change.requestContext],
-              ),
-            ],
-          });
-      }
-    } else if (change instanceof NodeCreation) {
-      const filterValue =
-        !this.filter || this.filter.execute(change.newValue, true);
-
-      switch (filterValue) {
-        case true:
-          return new NodeSubscriptionEffect(
-            this,
-            this.#isPureSelection
-              ? {
-                  upserts: [
-                    new NodeSubscriptionUpsert(
-                      this,
-                      this.uniqueConstraint.parseValue(change.newValue),
-                      this.selection.parseValue(change.newValue),
-                      [change.requestContext],
-                    ),
-                  ],
-                }
-              : { incompleteUpserts: [change] },
-          );
-
-        case undefined:
-          return new NodeSubscriptionEffect(this, { maybeUpserts: [change] });
-      }
-    } else {
-      let oldFilterValue =
-        !this.filter || this.filter.execute(change.oldValue, true);
-      let newFilterValue =
-        !this.filter || this.filter.execute(change.newValue, true);
-
-      switch (newFilterValue) {
-        case true:
-          return oldFilterValue !== true ||
-            this.selection.isAffectedByRootUpdate(change)
-            ? new NodeSubscriptionEffect(
-                this,
-                this.#isPureSelection
-                  ? {
-                      upserts: [
-                        new NodeSubscriptionUpsert(
-                          this,
-                          this.uniqueConstraint.parseValue(change.newValue),
-                          this.selection.parseValue(change.newValue),
-                          [change.requestContext],
-                        ),
-                      ],
-                    }
-                  : { incompleteUpserts: [change] },
-              )
-            : undefined;
-
-        case false:
-          return oldFilterValue !== false
-            ? new NodeSubscriptionEffect(this, {
-                deletions: [
-                  new NodeSubscriptionDeletion(
-                    this,
-                    this.uniqueConstraint.parseValue(change.newValue),
-                    [change.requestContext],
-                  ),
-                ],
-              })
-            : undefined;
-
-        case undefined:
-          return new NodeSubscriptionEffect(this, {
-            [oldFilterValue === false ? 'maybeUpserts' : 'maybeChanges']: [
-              change,
-            ],
-          });
-      }
-    }
-  }
-
-  public getNodeChangeEffect(
+  public getNodeChangesEffect(
     changes: NodeChangeAggregation | ReadonlyArray<NodeChange> | NodeChange,
-  ): NodeSubscriptionEffect | undefined {
+  ): NodeChangesEffect | undefined {
     const aggregation =
       changes instanceof NodeChangeAggregation
         ? changes
@@ -318,17 +256,89 @@ export class NodeSubscription<
             Array.isArray(changes) ? changes : [changes],
           );
 
-    let effect: NodeSubscriptionEffect | undefined;
+    const effect: NodeChangesEffect = {
+      deletions: [],
+      upserts: [],
+      incompleteUpserts: [],
+      maybeUpserts: [],
+      maybeChanges: [],
+    };
 
     // root-changes
     const rootChanges = aggregation.changesByNode.get(this.node);
     if (rootChanges?.length) {
       rootChanges.forEach((change) => {
-        const rootChangeEffect = this.getRootChangeEffect(change);
-        if (rootChangeEffect) {
-          effect = effect
-            ? effect.mergeWith(rootChangeEffect)
-            : rootChangeEffect;
+        if (change instanceof NodeDeletion) {
+          const filterValue =
+            !this.filter || this.filter.execute(change.oldValue, true);
+
+          switch (filterValue) {
+            case true:
+            case undefined:
+              effect.deletions.push(
+                new NodeSubscriptionDeletion(this, change.oldValue, [
+                  change.requestContext,
+                ]),
+              );
+              break;
+          }
+        } else if (change instanceof NodeCreation) {
+          const filterValue =
+            !this.filter || this.filter.execute(change.newValue, true);
+
+          switch (filterValue) {
+            case true:
+              this.selection.useGraph
+                ? effect.incompleteUpserts.push(change)
+                : effect.upserts.push(
+                    new NodeSubscriptionUpsert(this, change.newValue, [
+                      change.requestContext,
+                    ]),
+                  );
+              break;
+
+            case undefined:
+              effect.maybeUpserts.push(change);
+              break;
+          }
+        } else {
+          let oldFilterValue =
+            !this.filter || this.filter.execute(change.oldValue, true);
+          let newFilterValue =
+            !this.filter || this.filter.execute(change.newValue, true);
+
+          switch (newFilterValue) {
+            case true:
+              if (
+                oldFilterValue !== true ||
+                this.selection.isAffectedByRootUpdate(change)
+              ) {
+                this.selection.useGraph
+                  ? effect.incompleteUpserts.push(change)
+                  : effect.upserts.push(
+                      new NodeSubscriptionUpsert(this, change.newValue, [
+                        change.requestContext,
+                      ]),
+                    );
+              }
+              break;
+
+            case false:
+              if (oldFilterValue !== false) {
+                effect.deletions.push(
+                  new NodeSubscriptionDeletion(this, change.newValue, [
+                    change.requestContext,
+                  ]),
+                );
+              }
+              break;
+
+            case undefined:
+              effect[
+                oldFilterValue === false ? 'maybeUpserts' : 'maybeChanges'
+              ].push(change);
+              break;
+          }
         }
       });
     }
@@ -350,63 +360,50 @@ export class NodeSubscription<
         ),
       );
 
-      if (!filter.isFalse()) {
-        const graphChangeEffect = new NodeSubscriptionEffect(this, {
-          filter,
-        });
-
-        effect = effect
-          ? effect.mergeWith(graphChangeEffect)
-          : graphChangeEffect;
-      }
+      !filter.isFalse() && (effect.graphChanges = filter);
     }
 
-    return effect;
+    return effect.deletions.length ||
+      effect.upserts.length ||
+      effect.incompleteUpserts.length ||
+      effect.maybeUpserts.length ||
+      effect.maybeChanges.length ||
+      effect.graphChanges
+      ? effect
+      : undefined;
   }
 
-  protected async *resolveNodeChangeEffect(
-    effect: NodeSubscriptionEffect,
+  protected async *resolveNodeChangesEffect(
+    effect: NodeChangesEffect,
   ): AsyncGenerator<
     NodeSubscriptionChange<TId, TValue, TRequestContext>,
     any,
     undefined
   > {
-    effect?.deletions?.length && (yield* effect.deletions);
-    effect?.upserts?.length && (yield* effect.upserts);
+    effect.deletions.length && (yield* effect.deletions);
+    effect.upserts.length && (yield* effect.upserts);
 
-    // incomplete-upserts
-    if (effect.incompleteUpserts?.length) {
-      const values = await this.#api.getSomeInOrderIfExists({
-        where: effect.incompleteUpserts.map(({ id }) => id),
-        selection: this.selection,
-      });
+    // incomplete-upserts & maybe-upserts & maybe-changes
+    if (
+      effect.incompleteUpserts.length ||
+      effect.maybeUpserts.length ||
+      effect.maybeChanges.length
+    ) {
+      const firstMaybeChangeIndex =
+        effect.incompleteUpserts.length + effect.maybeUpserts.length;
 
-      for (const [index, value] of values.entries()) {
-        if (value) {
-          const change = effect.incompleteUpserts[index];
-
-          yield new NodeSubscriptionUpsert(
-            this,
-            this.uniqueConstraint.parseValue(value) as any,
-            value as any,
-            [change.requestContext],
-          );
-        }
-      }
-    }
-
-    // maybe-upserts & maybe-changes
-    if (effect.maybeUpserts?.length || effect.maybeChanges?.length) {
-      const firstMaybeChangeIndex = effect.maybeUpserts?.length ?? 0;
-
-      const changes = (
-        effect.maybeUpserts?.length && effect.maybeChanges?.length
-          ? [...effect.maybeUpserts, ...effect.maybeChanges]
-          : effect.maybeUpserts || effect.maybeChanges
-      )!;
+      const changes = [
+        ...effect.incompleteUpserts,
+        ...effect.maybeUpserts,
+        ...effect.maybeChanges,
+      ];
 
       const values = await this.#api.getSomeInOrderIfExists({
-        subset: this.filter?.inputValue,
+        ...(this.filter &&
+          (effect.maybeUpserts.length || effect.maybeChanges.length) && {
+            // We don't need the filter for the "incomplete-upserts", they are already filtered-in
+            subset: this.filter?.inputValue,
+          }),
         where: changes.map(({ id }) => id),
         selection: this.selection,
       });
@@ -415,51 +412,47 @@ export class NodeSubscription<
         const change = changes[index];
 
         if (value) {
-          yield new NodeSubscriptionUpsert(
-            this,
-            this.uniqueConstraint.parseValue(value) as any,
-            value as any,
-            [change.requestContext],
-          );
+          yield new NodeSubscriptionUpsert(this, value, [
+            change.requestContext,
+          ]);
         } else if (index >= firstMaybeChangeIndex) {
-          yield new NodeSubscriptionDeletion(
-            this,
-            this.uniqueConstraint.parseValue(change.newValue) as any,
-            [change.requestContext],
-          );
+          yield new NodeSubscriptionDeletion(this, change.newValue, [
+            change.requestContext,
+          ]);
         }
       }
     }
 
-    // graph-dependencies
-    if (effect.filter) {
+    // graph-changes
+    if (effect.graphChanges) {
       // deletions
       if (this.filter) {
         const cursor = this.#api.scroll({
           where: {
-            AND: [this.filter.complement.inputValue, effect.filter.inputValue],
+            AND: [
+              this.filter.complement.inputValue,
+              effect.graphChanges.inputValue,
+            ],
           },
           selection: this.uniqueConstraint.selection,
         });
 
         for await (const id of cursor) {
-          yield new NodeSubscriptionDeletion(this, id as any);
+          yield new NodeSubscriptionDeletion(this, id);
         }
       }
 
       // upserts
       {
         const cursor = this.#api.scroll({
-          where: { AND: [this.filter?.inputValue, effect.filter.inputValue] },
+          where: {
+            AND: [this.filter?.inputValue, effect.graphChanges.inputValue],
+          },
           selection: this.selection,
         });
 
         for await (const value of cursor) {
-          yield new NodeSubscriptionUpsert(
-            this,
-            this.uniqueConstraint.parseValue(value) as any,
-            value as any,
-          );
+          yield new NodeSubscriptionUpsert(this, value);
         }
       }
     }
@@ -491,9 +484,9 @@ export class NodeSubscription<
             Array.isArray(changes) ? changes : [changes],
           );
 
-    const effect = this.getNodeChangeEffect(aggregation);
+    const effect = this.getNodeChangesEffect(aggregation);
     if (effect) {
-      for await (const change of this.resolveNodeChangeEffect(effect)) {
+      for await (const change of this.resolveNodeChangesEffect(effect)) {
         if (this.#signal?.aborted) {
           break;
         }

@@ -30,6 +30,7 @@ export class NodeSelection<TValue extends NodeSelectedValue = any> {
    * Used in subscriptions to know wich nodes to fetch
    */
   public readonly dependencies?: DependencyGraph;
+  public readonly useGraph: boolean;
 
   public constructor(
     public readonly node: Node,
@@ -52,6 +53,10 @@ export class NodeSelection<TValue extends NodeSelectedValue = any> {
           : dependencies || expression.dependencies,
       undefined,
     );
+
+    this.useGraph = this.dependencies?.children
+      ? this.dependencies?.children.size > 0
+      : false;
   }
 
   public isAkinTo(maybeSelection: unknown): maybeSelection is NodeSelection {

@@ -30,6 +30,7 @@ export class NodeFilter {
    * Used in subscriptions to know wich nodes to fetch
    */
   public readonly dependencies?: DependencyGraph;
+  public readonly useGraph: boolean;
 
   public constructor(
     public readonly node: Node,
@@ -37,6 +38,9 @@ export class NodeFilter {
   ) {
     this.score = filter.score;
     this.dependencies = filter.dependencies;
+    this.useGraph = this.dependencies?.children
+      ? this.dependencies?.children.size > 0
+      : false;
   }
 
   @Memoize()
