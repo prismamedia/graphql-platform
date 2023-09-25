@@ -170,7 +170,7 @@ export class NodeSubscription<
     // filter
     {
       const filter = node.filterInputType.parseAndFilter(options?.where);
-      assert.notEqual(filter.isFalse(), true);
+      assert(!filter.isFalse());
 
       this.filter = filter.normalized;
     }
