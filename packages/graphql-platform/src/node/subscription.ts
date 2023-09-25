@@ -17,7 +17,7 @@ import {
   type NodeChange,
   type NodeUpdate,
 } from './change.js';
-import { UniqueConstraint, type UniqueConstraintValue } from './definition.js';
+import type { UniqueConstraint, UniqueConstraintValue } from './definition.js';
 import type { ContextBoundNodeAPI, OperationContext } from './operation.js';
 import {
   NodeFilter,
@@ -104,8 +104,26 @@ export type NodeSubscriptionForEachOptions = Except<
   retry?: PRetryOptions | number | boolean;
 };
 
+export type NodeSubscriptionForBatchTask<
+  TId extends UniqueConstraintValue = any,
+  TValue extends NodeSelectedValue & TId = any,
+  TRequestContext extends object = any,
+> = (
+  changes: ReadonlyArray<NodeSubscriptionChange<TId, TValue, TRequestContext>>,
+  subscription: NodeSubscription<TId, TValue, TRequestContext>,
+) => Promisable<void>;
+
+export type NodeSubscriptionForBatchOptions = NodeSubscriptionForEachOptions & {
+  /**
+   * Optional, the maximum size of the batch
+   *
+   * Default: 100
+   */
+  batchSize?: number;
+};
+
 export type NodeSubscriptionOptions<TValue extends NodeSelectedValue = any> = {
-  where?: NodeFilterInputValue;
+  where?: NodeFilterInputValue | NodeFilter;
   selection?: RawNodeSelection<TValue>;
   uniqueConstraint?: UniqueConstraint['name'];
   signal?: AbortSignal;
@@ -147,7 +165,7 @@ export class NodeSubscription<
     AsyncIterable<NodeSubscriptionChange<TId, TValue, TRequestContext>>
 {
   public readonly uniqueConstraint: UniqueConstraint;
-  public readonly filter: NodeFilter | undefined;
+  public readonly filter?: NodeFilter;
   public readonly selection: NodeSelection<TValue>;
 
   public readonly dependencies?: DependencyGraph;
@@ -169,7 +187,10 @@ export class NodeSubscription<
 
     // filter
     {
-      const filter = node.filterInputType.parseAndFilter(options?.where);
+      const filter =
+        options?.where instanceof NodeFilter
+          ? options.where
+          : node.filterInputType.parseAndFilter(options?.where);
       assert(!filter.isFalse());
 
       this.filter = filter.normalized;
@@ -212,10 +233,7 @@ export class NodeSubscription<
         }
       }
 
-      assert(
-        uniqueConstraint instanceof UniqueConstraint,
-        `No immutable unique-constraint is selected`,
-      );
+      assert(uniqueConstraint, `No immutable unique-constraint is selected`);
 
       this.uniqueConstraint = uniqueConstraint;
     }
@@ -226,6 +244,7 @@ export class NodeSubscription<
         : this.filter?.dependencies || this.selection.dependencies;
 
     this.#api = node.createContextBoundAPI(context);
+
     this.#signal = options?.signal;
 
     this.#nodeChangeListener = node.gp.on(
@@ -509,7 +528,9 @@ export class NodeSubscription<
         yield change;
       }
 
-      await this.emit('idle', undefined);
+      if (!this.#signal?.aborted) {
+        await this.emit('idle', undefined);
+      }
     } while (
       !this.#signal?.aborted &&
       (await this.wait('change-enqueued', this.#signal).catch((error) => {
@@ -569,6 +590,74 @@ export class NodeSubscription<
       });
     } finally {
       tasks.clear();
+    }
+  }
+
+  public async forBatch(
+    task: NodeSubscriptionForBatchTask<TId, TValue, TRequestContext>,
+    {
+      batchSize,
+      retry: retryOptions,
+      ...queueOptions
+    }: NodeSubscriptionForBatchOptions = {},
+  ): Promise<void> {
+    const tasks = new PQueue({
+      ...queueOptions,
+      concurrency: queueOptions?.concurrency ?? 1,
+      throwOnTimeout: queueOptions?.throwOnTimeout ?? true,
+    });
+
+    const normalizedBatchSize = Math.max(1, batchSize || 100);
+
+    const normalizedRetryOptions: PRetryOptions | false = retryOptions
+      ? retryOptions === true
+        ? {}
+        : typeof retryOptions === 'number'
+        ? { retries: retryOptions }
+        : retryOptions
+      : false;
+
+    let batch: NodeSubscriptionChange[] = [];
+    const processBatch = () => {
+      if (batch.length) {
+        const changes = Object.freeze(batch);
+        batch = [];
+
+        const wrappedTask = () => task(changes, this);
+
+        tasks.add(
+          normalizedRetryOptions
+            ? () => PRetry(wrappedTask, normalizedRetryOptions)
+            : wrappedTask,
+        );
+      }
+    };
+
+    const processBatchOnIdle = this.on('idle', processBatch);
+
+    try {
+      await new Promise<void>(async (resolve, reject) => {
+        tasks.on('error', reject);
+
+        try {
+          for await (const change of this) {
+            await tasks.onEmpty();
+
+            if (batch.push(change) >= normalizedBatchSize) {
+              processBatch();
+            }
+          }
+
+          await tasks.onIdle();
+
+          resolve();
+        } catch (error) {
+          reject(error);
+        }
+      });
+    } finally {
+      tasks.clear();
+      processBatchOnIdle();
     }
   }
 }

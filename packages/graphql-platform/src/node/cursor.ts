@@ -14,9 +14,9 @@ import type { Except, Promisable } from 'type-fest';
 import type { ContextBoundNodeAPI, Node, OperationContext } from '../node.js';
 import { Leaf, type UniqueConstraint } from './definition.js';
 import {
+  NodeFilter,
   NodeOrdering,
   OrderingDirection,
-  type NodeFilter,
   type NodeSelectedValue,
   type NodeSelection,
 } from './statement.js';
@@ -92,7 +92,7 @@ export type NodeCursorForEachOptions = Except<
 };
 
 export type NodeCursorOptions<TValue extends NodeSelectedValue = any> = {
-  where?: NodeFilterInputValue;
+  where?: NodeFilterInputValue | NodeFilter;
   selection?: RawNodeSelection<TValue>;
   direction?: OrderingDirection;
   uniqueConstraint?: UniqueConstraint['name'];
@@ -105,7 +105,7 @@ export class NodeCursor<
 > implements AsyncIterable<TValue>
 {
   public readonly uniqueConstraint: UniqueConstraint;
-  public readonly filter: NodeFilter | undefined;
+  public readonly filter?: NodeFilter;
   public readonly ordering: NodeOrdering;
   public readonly selection: NodeSelection<TValue>;
 
@@ -145,9 +145,16 @@ export class NodeCursor<
       this.uniqueConstraint = uniqueConstraint;
     }
 
-    this.filter = node.filterInputType.parseAndFilter(
-      options?.where,
-    ).normalized;
+    // filter
+    {
+      const filter =
+        options?.where instanceof NodeFilter
+          ? options.where
+          : node.filterInputType.parseAndFilter(options?.where);
+      assert(!filter.isFalse());
+
+      this.filter = filter.normalized;
+    }
 
     this.selection = options?.selection
       ? node.outputType.select(options.selection)
