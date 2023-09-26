@@ -29,7 +29,7 @@ export class NodeCreationInputType extends utils.ObjectInputType<FieldCreationIn
         node.name,
         inflection.camelize(utils.MutationType.CREATION),
         excludedEdge
-          ? `Without${inflection.capitalize(excludedEdge.name)}`
+          ? `Without${inflection.camelize(excludedEdge.name)}`
           : undefined,
         'Input',
       ]
@@ -128,7 +128,9 @@ export class NodeCreationInputType extends utils.ObjectInputType<FieldCreationIn
   @Memoize()
   public override isPublic(): boolean {
     return (
-      super.isPublic() && this.componentFields.some((field) => field.isPublic())
+      this.node.isPubliclyMutable(utils.MutationType.CREATION) &&
+      super.isPublic() &&
+      this.componentFields.some((field) => field.isPublic())
     );
   }
 

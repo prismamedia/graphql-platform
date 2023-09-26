@@ -58,7 +58,7 @@ export class UpsertMutation<
   }
 
   @Memoize()
-  public getGraphQLOutputType() {
+  public getGraphQLFieldConfigType() {
     return new graphql.GraphQLNonNull(
       this.node.outputType.getGraphQLObjectType(),
     );

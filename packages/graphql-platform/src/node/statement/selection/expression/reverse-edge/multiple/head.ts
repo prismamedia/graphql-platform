@@ -4,8 +4,8 @@ import * as graphql from 'graphql';
 import assert from 'node:assert/strict';
 import { JsonObject } from 'type-fest';
 import type { MultipleReverseEdge } from '../../../../../definition.js';
-import { DependencyGraph } from '../../../../../subscription.js';
-import { NodeFilter, areFiltersEqual } from '../../../../filter.js';
+import { DependencyGraph } from '../../../../../operation/dependency-graph.js';
+import { areFiltersEqual, type NodeFilter } from '../../../../filter.js';
 import { areOrderingsEqual, type NodeOrdering } from '../../../../ordering.js';
 import type {
   NodeSelectedValue,
@@ -61,7 +61,7 @@ export class MultipleReverseEdgeHeadSelection<
       reverseEdge,
       this.headFilter?.dependencies,
       this.headOrdering?.dependencies,
-      this.headSelection?.dependencies,
+      headSelection?.dependencies,
     );
   }
 
@@ -113,7 +113,35 @@ export class MultipleReverseEdgeHeadSelection<
   }
 
   @Memoize()
-  public toGraphQLField(): graphql.FieldNode {
+  public toGraphQLFieldNode(): graphql.FieldNode {
+    const argumentNodes: graphql.ArgumentNode[] = [];
+
+    if (this.offset !== undefined) {
+      argumentNodes.push({
+        kind: graphql.Kind.ARGUMENT,
+        name: {
+          kind: graphql.Kind.NAME,
+          value: 'skip',
+        },
+        value: {
+          kind: graphql.Kind.INT,
+          value: String(this.offset),
+        },
+      });
+    }
+
+    argumentNodes.push({
+      kind: graphql.Kind.ARGUMENT,
+      name: {
+        kind: graphql.Kind.NAME,
+        value: 'first',
+      },
+      value: {
+        kind: graphql.Kind.INT,
+        value: String(this.limit),
+      },
+    });
+
     return {
       kind: graphql.Kind.FIELD,
       alias: this.alias
@@ -126,20 +154,8 @@ export class MultipleReverseEdgeHeadSelection<
         kind: graphql.Kind.NAME,
         value: this.name,
       },
-      arguments: [
-        {
-          kind: graphql.Kind.ARGUMENT,
-          name: {
-            kind: graphql.Kind.NAME,
-            value: 'first',
-          },
-          value: {
-            kind: graphql.Kind.INT,
-            value: String(this.limit),
-          },
-        },
-      ],
-      selectionSet: this.headSelection.toGraphQLSelectionSet(),
+      arguments: argumentNodes,
+      selectionSet: this.headSelection.toGraphQLSelectionSetNode(),
     };
   }
 

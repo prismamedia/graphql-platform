@@ -36,7 +36,7 @@ export class UpdateOneMutation<
     return this.node.getMutationByKey('update-one-if-exists').arguments;
   }
 
-  public getGraphQLOutputType() {
+  public getGraphQLFieldConfigType() {
     return new graphql.GraphQLNonNull(
       this.node.outputType.getGraphQLObjectType(),
     );

@@ -40,10 +40,10 @@ export abstract class AbstractOperation<
   TResult,
 > implements OperationInterface<TRequestContext>
 {
-  protected readonly gp: GraphQLPlatform;
+  protected readonly gp: GraphQLPlatform<TRequestContext>;
 
   protected abstract readonly selectionAware: TArgs extends {
-    selection: RawNodeSelection;
+    selection: unknown;
   }
     ? true
     : false;
@@ -74,7 +74,7 @@ export abstract class AbstractOperation<
   public abstract readonly description: string;
   public abstract readonly arguments?: ReadonlyArray<utils.Input>;
 
-  public constructor(public readonly node: Node) {
+  public constructor(public readonly node: Node<TRequestContext>) {
     this.gp = node.gp;
   }
 
@@ -137,8 +137,8 @@ export abstract class AbstractOperation<
   }
 
   protected parseArguments(
-    args: TArgs,
     context: OperationContext,
+    args: TArgs,
     path: utils.Path,
   ): NodeSelectionAwareArgs<TArgs> {
     let parsedArgs;
@@ -191,7 +191,7 @@ export abstract class AbstractOperation<
   ): Promise<TResult> {
     this.assertIsEnabled(path);
 
-    const parsedArguments = this.parseArguments(args, context, path);
+    const parsedArguments = this.parseArguments(context, args, path);
 
     return this.executeWithValidArgumentsAndContext(
       context,
@@ -226,7 +226,19 @@ export abstract class AbstractOperation<
     return this.internal(operationContext, authorization, args, path);
   }
 
-  public abstract getGraphQLOutputType(): graphql.GraphQLOutputType;
+  public abstract getGraphQLFieldConfigType(): graphql.GraphQLOutputType;
+
+  protected abstract getGraphQLFieldConfigSubscriber(): graphql.GraphQLFieldConfig<
+    undefined,
+    TRequestContext,
+    Omit<TArgs, 'selection'>
+  >['subscribe'];
+
+  protected abstract getGraphQLFieldConfigResolver(): graphql.GraphQLFieldConfig<
+    any,
+    TRequestContext,
+    Omit<TArgs, 'selection'>
+  >['resolve'];
 
   public getGraphQLFieldConfig(): graphql.GraphQLFieldConfig<
     undefined,
@@ -234,6 +246,9 @@ export abstract class AbstractOperation<
     Omit<TArgs, 'selection'>
   > {
     assert(this.isPublic(), `The "${this}" ${this.operationType} is private`);
+
+    const subscriber = this.getGraphQLFieldConfigSubscriber();
+    const resolver = this.getGraphQLFieldConfigResolver();
 
     return {
       ...(this.description && { description: this.description }),
@@ -243,17 +258,9 @@ export abstract class AbstractOperation<
       ...(this.arguments?.length && {
         args: utils.getGraphQLFieldConfigArgumentMap(this.arguments),
       }),
-      type: this.getGraphQLOutputType(),
-      resolve: (_, args, context, info) =>
-        this.execute(
-          context,
-          (this.selectionAware ? { ...args, selection: info } : args) as TArgs,
-          info.path,
-        ).catch((error) => {
-          throw error instanceof utils.GraphError
-            ? error.toGraphQLError()
-            : error;
-        }),
+      type: this.getGraphQLFieldConfigType(),
+      ...(subscriber && { subscribe: subscriber }),
+      ...(resolver && { resolve: resolver }),
     };
   }
 }

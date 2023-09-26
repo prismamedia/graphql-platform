@@ -35,7 +35,7 @@ export class NodeUpdateInputType extends utils.ObjectInputType<FieldUpdateInput>
         node.name,
         inflection.camelize(utils.MutationType.UPDATE),
         excludedEdge
-          ? `Without${inflection.capitalize(excludedEdge.name)}`
+          ? `Without${inflection.camelize(excludedEdge.name)}`
           : undefined,
         'Input',
       ]
@@ -134,7 +134,9 @@ export class NodeUpdateInputType extends utils.ObjectInputType<FieldUpdateInput>
   @Memoize()
   public override isPublic(): boolean {
     return (
-      super.isPublic() && this.componentFields.some((field) => field.isPublic())
+      this.node.isPubliclyMutable(utils.MutationType.UPDATE) &&
+      super.isPublic() &&
+      this.componentFields.some((field) => field.isPublic())
     );
   }
 

@@ -3,6 +3,7 @@ import { Memoize } from '@prismamedia/memoize';
 import { OperationTypeNode } from 'graphql';
 import inflection from 'inflection';
 import type { JsonObject, Promisable } from 'type-fest';
+import type { BrokerInterface } from './broker-interface.js';
 import type {
   ConnectorConfigOverride,
   ConnectorConfigOverrideKind,
@@ -10,7 +11,7 @@ import type {
 } from './connector-interface.js';
 import type { GraphQLPlatform } from './index.js';
 import type { NodeChange } from './node/change.js';
-import { NodeCursor, type NodeCursorOptions } from './node/cursor.js';
+import { NodeCursor, type NodeCursorConfig } from './node/cursor.js';
 import {
   Edge,
   Leaf,
@@ -48,10 +49,6 @@ import {
   type NodeSelectedValue,
 } from './node/statement.js';
 import {
-  NodeSubscription,
-  type NodeSubscriptionOptions,
-} from './node/subscription.js';
-import {
   NodeCreationInputType,
   NodeFilterInputType,
   NodeFilterInputValue,
@@ -70,7 +67,6 @@ export * from './node/loader.js';
 export * from './node/name.js';
 export * from './node/operation.js';
 export * from './node/statement.js';
-export * from './node/subscription.js';
 export * from './node/type.js';
 
 type OperationsByKeyByType<TRequestContext extends object = any> = {
@@ -92,19 +88,10 @@ export type NodeValue = NodeSelectedValue &
   UniqueConstraintValue &
   Record<Component['name'], ComponentValue>;
 
-export type NodeAuthorizer<
-  TRequestContext extends object,
-  TConnector extends ConnectorInterface,
-  TContainer extends object,
-> = (
-  this: GraphQLPlatform<TRequestContext, TConnector, TContainer>,
-  requestContext: TRequestContext,
-  mutationType?: utils.MutationType,
-) => NodeFilterInputValue | boolean;
-
 export type NodeConfig<
   TRequestContext extends object = any,
   TConnector extends ConnectorInterface = any,
+  TBroker extends BrokerInterface = any,
   TContainer extends object = any,
 > = {
   /**
@@ -175,7 +162,12 @@ export type NodeConfig<
   /**
    * Optional, fine-tune the output type generated from this node's definition
    */
-  output?: NodeOutputTypeConfig<TRequestContext, TConnector, TContainer>;
+  output?: NodeOutputTypeConfig<
+    TRequestContext,
+    TConnector,
+    TBroker,
+    TContainer
+  >;
 
   /**
    * Optional, fine-tune the "mutation":
@@ -186,13 +178,14 @@ export type NodeConfig<
   mutation?:
     | boolean
     | {
-        [TType in keyof MutationConfig<
-          TRequestContext,
-          TConnector,
-          TContainer
-        >]?:
+        [TType in keyof MutationConfig]?:
           | boolean
-          | MutationConfig<TRequestContext, TConnector, TContainer>[TType];
+          | MutationConfig<
+              TRequestContext,
+              TConnector,
+              TBroker,
+              TContainer
+            >[TType];
       };
 
   /**
@@ -201,36 +194,41 @@ export type NodeConfig<
    * - grant full access by returning either "true" or "undefined"
    * - grant access to a subset by returning a filter (= the "where" argument)
    */
-  authorization?: NodeAuthorizer<TRequestContext, TConnector, TContainer>;
+  authorization?: (
+    this: Node<TRequestContext, TConnector, TBroker, TContainer>,
+    requestContext: TRequestContext,
+    mutationType?: utils.MutationType,
+  ) => NodeFilterInputValue | boolean;
 
   /**
    * Optional, you may want to filter the "changes" to avoid some useless processing in the "change-aggregation" and "change" listeners
    */
   changeFilter?: (
-    this: Node<TRequestContext, TConnector, TContainer>,
-    change: NodeChange<TRequestContext, TConnector, TContainer>,
+    this: Node<TRequestContext, TConnector, TBroker, TContainer>,
+    change: NodeChange<TRequestContext>,
   ) => boolean;
 
   /**
    * Optional, register a change-aggregation-listener
    */
   onChangeAggregation?: (
-    this: Node<TRequestContext, TConnector, TContainer>,
-    changes: ReadonlyArray<NodeChange<TRequestContext, TConnector, TContainer>>,
+    this: Node<TRequestContext, TConnector, TBroker, TContainer>,
+    changes: ReadonlyArray<NodeChange<TRequestContext>>,
   ) => Promisable<void>;
 
   /**
    * Optional, register a change-listener
    */
   onChange?: (
-    this: Node<TRequestContext, TConnector, TContainer>,
-    change: NodeChange<TRequestContext, TConnector, TContainer>,
+    this: Node<TRequestContext, TConnector, TBroker, TContainer>,
+    change: NodeChange<TRequestContext>,
   ) => Promisable<void>;
 } & ConnectorConfigOverride<TConnector, ConnectorConfigOverrideKind.NODE>;
 
 export class Node<
   TRequestContext extends object = any,
   TConnector extends ConnectorInterface = any,
+  TBroker extends BrokerInterface = any,
   TContainer extends object = any,
 > {
   public readonly plural: string;
@@ -240,49 +238,36 @@ export class Node<
 
   public readonly componentsByName: ReadonlyMap<
     Component['name'],
-    Component<TRequestContext, TConnector, TContainer>
+    Component<TConnector>
   >;
 
-  public readonly componentSet: ReadonlySet<
-    Component<TRequestContext, TConnector, TContainer>
-  >;
+  public readonly componentSet: ReadonlySet<Component<TConnector>>;
 
-  public readonly leavesByName: ReadonlyMap<
-    Leaf['name'],
-    Leaf<TRequestContext, TConnector, TContainer>
-  >;
+  public readonly leavesByName: ReadonlyMap<Leaf['name'], Leaf<TConnector>>;
 
-  public readonly leafSet: ReadonlySet<
-    Leaf<TRequestContext, TConnector, TContainer>
-  >;
+  public readonly leafSet: ReadonlySet<Leaf<TConnector>>;
 
-  public readonly edgesByName: ReadonlyMap<
-    Edge['name'],
-    Edge<TRequestContext, TConnector, TContainer>
-  >;
+  public readonly edgesByName: ReadonlyMap<Edge['name'], Edge<TConnector>>;
 
-  public readonly edgeSet: ReadonlySet<
-    Edge<TRequestContext, TConnector, TContainer>
-  >;
+  public readonly edgeSet: ReadonlySet<Edge<TConnector>>;
 
   public readonly uniqueConstraintsByName: ReadonlyMap<
     UniqueConstraint['name'],
-    UniqueConstraint<TRequestContext, TConnector, TContainer>
+    UniqueConstraint<TConnector>
   >;
 
   public readonly uniqueConstraintSet: ReadonlySet<
-    UniqueConstraint<TRequestContext, TConnector, TContainer>
+    UniqueConstraint<TConnector>
   >;
 
-  public readonly identifier: UniqueConstraint<
-    TRequestContext,
-    TConnector,
-    TContainer
-  >;
+  /**
+   * An identifier is a non-nullable and immutable unique-constraint
+   */
+  public readonly identifierSet: ReadonlySet<UniqueConstraint<TConnector>>;
 
-  readonly #changeFilter?: (
-    change: NodeChange<TRequestContext, TConnector, TContainer>,
-  ) => boolean;
+  public readonly mainIdentifier: UniqueConstraint<TConnector>;
+
+  readonly #changeFilter?: (change: NodeChange<TRequestContext>) => boolean;
 
   /**
    * Make it easy to call the operations:
@@ -296,10 +281,16 @@ export class Node<
     public readonly gp: GraphQLPlatform<
       TRequestContext,
       TConnector,
+      TBroker,
       TContainer
     >,
     public readonly name: NodeName,
-    public readonly config: NodeConfig<TRequestContext, TConnector, TContainer>,
+    public readonly config: NodeConfig<
+      TRequestContext,
+      TConnector,
+      TBroker,
+      TContainer
+    >,
     public readonly configPath: utils.Path,
   ) {
     assertNodeName(name, configPath);
@@ -530,32 +521,48 @@ export class Node<
 
       this.uniqueConstraintSet = new Set(this.uniqueConstraintsByName.values());
 
-      // identifier (= the first unique-constraint)
+      // identifiers (= non-nullable and immutable unique-constraints)
       {
-        const identifierConfigPath = utils.addPath(uniquesConfigPath, 0);
+        this.identifierSet = new Set(
+          Array.from(this.uniqueConstraintSet).filter((uniqueConstraint) =>
+            uniqueConstraint.isIdentifier(),
+          ),
+        );
 
-        this.identifier = this.uniqueConstraintsByName.values().next().value;
-
-        if (this.identifier.isNullable()) {
-          throw new utils.GraphError(
-            `Expects its identifier (= the first unique-constraint, composed of the component${
-              this.identifier.isComposite() ? 's' : ''
-            } "${[...this.identifier.componentsByName.keys()].join(
-              ', ',
-            )}") to be non-nullable (= at least one of its components being non-nullable)`,
-            { path: identifierConfigPath },
+        if (!this.identifierSet.size) {
+          throw new utils.UnexpectedValueError(
+            `at least one identifier (= a non-nullable and immutable unique-constraint)`,
+            uniquesConfig,
+            { path: uniquesConfigPath },
           );
         }
 
-        if (this.identifier.isMutable()) {
-          throw new utils.GraphError(
-            `Expects its identifier (= the first unique-constraint, composed of the component${
-              this.identifier.isComposite() ? 's' : ''
-            } "${[...this.identifier.componentsByName.keys()].join(
-              ', ',
-            )}") to be immutable (= all its components being immutable)`,
-            { path: identifierConfigPath },
-          );
+        {
+          const mainIdentifierConfigPath = utils.addPath(uniquesConfigPath, 0);
+
+          this.mainIdentifier = Array.from(this.uniqueConstraintSet)[0];
+
+          if (this.mainIdentifier.isNullable()) {
+            throw new utils.GraphError(
+              `Expects its main-identifier (= the first unique-constraint, composed of the component${
+                this.mainIdentifier.isComposite() ? 's' : ''
+              } "${[...this.mainIdentifier.componentsByName.keys()].join(
+                ', ',
+              )}") to be non-nullable (= at least one of its components being non-nullable)`,
+              { path: mainIdentifierConfigPath },
+            );
+          }
+
+          if (this.mainIdentifier.isMutable()) {
+            throw new utils.GraphError(
+              `Expects its main-identifier (= the first unique-constraint, composed of the component${
+                this.mainIdentifier.isComposite() ? 's' : ''
+              } "${[...this.mainIdentifier.componentsByName.keys()].join(
+                ', ',
+              )}") to be immutable (= all its components being immutable)`,
+              { path: mainIdentifierConfigPath },
+            );
+          }
         }
       }
     }
@@ -596,7 +603,12 @@ export class Node<
   public getMutationConfig<TType extends utils.MutationType>(
     mutationType: TType,
   ): {
-    config?: MutationConfig<TRequestContext, TConnector, TContainer>[TType];
+    config?: MutationConfig<
+      TRequestContext,
+      TConnector,
+      TBroker,
+      TContainer
+    >[TType];
     configPath: utils.Path;
   } {
     const mutationsConfig = this.config.mutation;
@@ -709,30 +721,12 @@ export class Node<
     return isPublic;
   }
 
-  public isPubliclyCreatable(excludedEdge?: Edge): boolean {
-    excludedEdge && this.ensureEdge(excludedEdge);
-
-    return (
-      this.isPubliclyMutable(utils.MutationType.CREATION) &&
-      (!excludedEdge ||
-        Array.from(this.componentSet).some(
-          (component) =>
-            component !== excludedEdge && component.creationInput.isPublic(),
-        ))
-    );
+  public isPubliclyCreatable(): boolean {
+    return this.isPubliclyMutable(utils.MutationType.CREATION);
   }
 
-  public isPubliclyUpdatable(excludedEdge?: Edge): boolean {
-    excludedEdge && this.ensureEdge(excludedEdge);
-
-    return (
-      this.isPubliclyMutable(utils.MutationType.UPDATE) &&
-      (!excludedEdge ||
-        Array.from(this.componentSet).some(
-          (component) =>
-            component !== excludedEdge && component.updateInput?.isPublic(),
-        ))
-    );
+  public isPubliclyUpdatable(): boolean {
+    return this.isPubliclyMutable(utils.MutationType.UPDATE);
   }
 
   public isPubliclyDeletable(): boolean {
@@ -742,7 +736,7 @@ export class Node<
   public getComponentByName(
     name: Component['name'],
     path?: utils.Path,
-  ): Component<TRequestContext, TConnector, TContainer> {
+  ): Component<TConnector> {
     const component = this.componentsByName.get(name);
     if (!component) {
       throw new utils.UnexpectedValueError(
@@ -760,7 +754,7 @@ export class Node<
   public ensureComponent(
     componentOrName: Component | Component['name'],
     path?: utils.Path,
-  ): Component<TRequestContext, TConnector, TContainer> {
+  ): Component<TConnector> {
     if (typeof componentOrName === 'string') {
       return this.getComponentByName(componentOrName, path);
     } else if (
@@ -782,7 +776,7 @@ export class Node<
   public getLeafByName(
     name: Leaf['name'],
     path?: utils.Path,
-  ): Leaf<TRequestContext, TConnector, TContainer> {
+  ): Leaf<TConnector> {
     const leaf = this.leavesByName.get(name);
     if (!leaf) {
       throw new utils.UnexpectedValueError(
@@ -800,7 +794,7 @@ export class Node<
   public ensureLeaf(
     leafOrName: Leaf | Leaf['name'],
     path?: utils.Path,
-  ): Leaf<TRequestContext, TConnector, TContainer> {
+  ): Leaf<TConnector> {
     if (typeof leafOrName === 'string') {
       return this.getLeafByName(leafOrName, path);
     } else if (leafOrName instanceof Leaf && this.leafSet.has(leafOrName)) {
@@ -819,7 +813,7 @@ export class Node<
   public getEdgeByName(
     name: Edge['name'],
     path?: utils.Path,
-  ): Edge<TRequestContext, TConnector, TContainer> {
+  ): Edge<TConnector> {
     const edge = this.edgesByName.get(name);
     if (!edge) {
       throw new utils.UnexpectedValueError(
@@ -837,7 +831,7 @@ export class Node<
   public ensureEdge(
     edgeOrName: Edge | Edge['name'],
     path?: utils.Path,
-  ): Edge<TRequestContext, TConnector, TContainer> {
+  ): Edge<TConnector> {
     if (typeof edgeOrName === 'string') {
       return this.getEdgeByName(edgeOrName, path);
     } else if (edgeOrName instanceof Edge && this.edgeSet.has(edgeOrName)) {
@@ -856,7 +850,7 @@ export class Node<
   public getUniqueConstraintByName(
     name: UniqueConstraint['name'],
     path?: utils.Path,
-  ): UniqueConstraint<TRequestContext, TConnector, TContainer> {
+  ): UniqueConstraint<TConnector> {
     const uniqueConstraint = this.uniqueConstraintsByName.get(name);
     if (!uniqueConstraint) {
       throw new utils.UnexpectedValueError(
@@ -882,18 +876,6 @@ export class Node<
     );
   }
 
-  @Memoize((edge: Edge) => edge)
-  public isPubliclyPartiallyIdentifiableWithEdge(edge: Edge): boolean {
-    this.ensureEdge(edge);
-
-    return Array.from(this.uniqueConstraintSet).some(
-      (uniqueConstraint) =>
-        uniqueConstraint.isPublic() &&
-        uniqueConstraint.componentSet.has(edge) &&
-        uniqueConstraint.componentSet.size > 1,
-    );
-  }
-
   @Memoize()
   public get selection(): NodeSelection<NodeValue> {
     return new NodeSelection(
@@ -907,7 +889,7 @@ export class Node<
   @Memoize()
   public get reverseEdgesByName(): ReadonlyMap<
     ReverseEdge['name'],
-    ReverseEdge<TRequestContext, TConnector, TContainer>
+    ReverseEdge<TConnector>
   > {
     // Let's find all the edges heading to this node
     const referrersByNameByNodeName = new Map<
@@ -1102,16 +1084,14 @@ export class Node<
   }
 
   @Memoize()
-  public get reverseEdgeSet(): ReadonlySet<
-    ReverseEdge<TRequestContext, TConnector, TContainer>
-  > {
+  public get reverseEdgeSet(): ReadonlySet<ReverseEdge<TConnector>> {
     return new Set(this.reverseEdgesByName.values());
   }
 
   public getReverseEdgeByName(
     name: ReverseEdge['name'],
     path?: utils.Path,
-  ): ReverseEdge<TRequestContext, TConnector, TContainer> {
+  ): ReverseEdge<TConnector> {
     const reverseEdge = this.reverseEdgesByName.get(name);
     if (!reverseEdge) {
       throw new utils.UnexpectedValueError(
@@ -1129,7 +1109,7 @@ export class Node<
   @Memoize()
   public get uniqueReverseEdgesByName(): ReadonlyMap<
     UniqueReverseEdge['name'],
-    UniqueReverseEdge<TRequestContext, TConnector, TContainer>
+    UniqueReverseEdge<TConnector>
   > {
     return new Map(
       Array.from(this.reverseEdgesByName).filter(
@@ -1141,7 +1121,7 @@ export class Node<
 
   @Memoize()
   public get uniqueReverseEdgeSet(): ReadonlySet<
-    UniqueReverseEdge<TRequestContext, TConnector, TContainer>
+    UniqueReverseEdge<TConnector>
   > {
     return new Set(this.uniqueReverseEdgesByName.values());
   }
@@ -1149,7 +1129,7 @@ export class Node<
   public getUniqueReverseEdgeByName(
     name: UniqueReverseEdge['name'],
     path?: utils.Path,
-  ): UniqueReverseEdge<TRequestContext, TConnector, TContainer> {
+  ): UniqueReverseEdge<TConnector> {
     const reverseEdge = this.uniqueReverseEdgesByName.get(name);
     if (!reverseEdge) {
       throw new utils.UnexpectedValueError(
@@ -1167,7 +1147,7 @@ export class Node<
   @Memoize()
   public get multipleReverseEdgesByName(): ReadonlyMap<
     MultipleReverseEdge['name'],
-    MultipleReverseEdge<TRequestContext, TConnector, TContainer>
+    MultipleReverseEdge<TConnector>
   > {
     return new Map(
       Array.from(this.reverseEdgesByName).filter(
@@ -1179,7 +1159,7 @@ export class Node<
 
   @Memoize()
   public get multipleReverseEdgeSet(): ReadonlySet<
-    MultipleReverseEdge<TRequestContext, TConnector, TContainer>
+    MultipleReverseEdge<TConnector>
   > {
     return new Set(this.multipleReverseEdgesByName.values());
   }
@@ -1187,7 +1167,7 @@ export class Node<
   public getMultipleReverseEdgeByName(
     name: MultipleReverseEdge['name'],
     path?: utils.Path,
-  ): MultipleReverseEdge<TRequestContext, TConnector, TContainer> {
+  ): MultipleReverseEdge<TConnector> {
     const reverseEdge = this.multipleReverseEdgesByName.get(name);
     if (!reverseEdge) {
       throw new utils.UnexpectedValueError(
@@ -1205,7 +1185,7 @@ export class Node<
   @Memoize((onHeadDeletion: OnEdgeHeadDeletion) => onHeadDeletion)
   public getReverseEdgesByAction(
     onHeadDeletion: OnEdgeHeadDeletion,
-  ): ReadonlyArray<ReverseEdge<TRequestContext, TConnector, TContainer>> {
+  ): ReadonlyArray<ReverseEdge<TConnector>> {
     return Array.from(this.reverseEdgesByName.values()).filter(
       (reverseEdge) =>
         reverseEdge.originalEdge.onHeadDeletion === onHeadDeletion,
@@ -1216,8 +1196,8 @@ export class Node<
   public getReverseEdgesByHeadByAction(
     onHeadDeletion: OnEdgeHeadDeletion,
   ): ReadonlyMap<
-    Node<TRequestContext, TConnector, TContainer>,
-    ReadonlyArray<ReverseEdge<TRequestContext, TConnector, TContainer>>
+    Node<TRequestContext, TConnector, TBroker, TContainer>,
+    ReadonlyArray<ReverseEdge<TConnector>>
   > {
     const reverseEdgesByHead = new Map<Node, Array<ReverseEdge>>();
 
@@ -1430,17 +1410,6 @@ export class Node<
         );
       }
 
-      if (
-        !Array.from(this.uniqueConstraintSet).some((uniqueConstraint) =>
-          uniqueConstraint.isPublic(),
-        )
-      ) {
-        throw new utils.GraphError(
-          `Expects at least one public unique-constraint (= with all its components being public) as it is public`,
-          { path: this.configPath },
-        );
-      }
-
       if (this.isPubliclyCreatable()) {
         if (
           !Array.from(this.componentSet).some((component) =>
@@ -1499,6 +1468,13 @@ export class Node<
     this.isUpdatable() && this.updateInputType.validate();
 
     this.outputType.validate();
+
+    if (this.isPublic() && !this.uniqueFilterInputType.isPublic()) {
+      throw new utils.GraphError(
+        `Expects to be publicly identifiable as it is public`,
+        { path: this.configPath },
+      );
+    }
   }
 
   @Memoize()
@@ -1519,7 +1495,7 @@ export class Node<
     mutationType?: utils.MutationType,
   ): NodeFilter | undefined {
     const authorization: NodeFilterInputValue | boolean | undefined =
-      this.config.authorization?.call(this.gp, context.request, mutationType);
+      this.config.authorization?.call(this, context.request, mutationType);
 
     return this.filterInputType.parseAndFilter(
       authorization === true
@@ -1541,21 +1517,9 @@ export class Node<
     context:
       | utils.Thunkable<TRequestContext>
       | OperationContext<TRequestContext>,
-    options?: NodeCursorOptions<TValue>,
+    config: NodeCursorConfig<TValue>,
   ): NodeCursor<TValue, TRequestContext> {
-    return new NodeCursor(this, context, options);
-  }
-
-  public subscribe<
-    TId extends UniqueConstraintValue,
-    TValue extends NodeSelectedValue & TId,
-  >(
-    context:
-      | utils.Thunkable<TRequestContext>
-      | OperationContext<TRequestContext>,
-    options?: NodeSubscriptionOptions<TValue>,
-  ): NodeSubscription<TId, TValue, TRequestContext> {
-    return new NodeSubscription(this, context, options);
+    return new NodeCursor(this, context, config);
   }
 
   public parseValue(maybeValue: unknown, path?: utils.Path): NodeValue {
@@ -1578,9 +1542,7 @@ export class Node<
     return this.selection.stringify(maybeValue, path);
   }
 
-  public filterChange(
-    change: NodeChange<TRequestContext, TConnector, TContainer>,
-  ): boolean {
+  public filterChange(change: NodeChange<TRequestContext>): boolean {
     return this.#changeFilter ? this.#changeFilter(change) : true;
   }
 

@@ -1,11 +1,13 @@
 import * as utils from '@prismamedia/graphql-platform-utils';
+import { Memoize } from '@prismamedia/memoize';
 import * as graphql from 'graphql';
 import assert from 'node:assert/strict';
 import * as R from 'remeda';
 import type { JsonObject } from 'type-fest';
 import type { Node } from '../../node.js';
 import type { NodeUpdate } from '../change.js';
-import type { DependencyGraph } from '../subscription.js';
+import type { UniqueConstraint } from '../definition.js';
+import type { DependencyGraph } from '../operation.js';
 import {
   isComponentSelection,
   isReverseEdgeSelection,
@@ -22,9 +24,6 @@ export * from './selection/value.js';
 
 export class NodeSelection<TValue extends NodeSelectedValue = any> {
   public readonly expressions: ReadonlyArray<SelectionExpression>;
-
-  public readonly components: ReadonlyArray<ComponentSelection>;
-  public readonly reverseEdges: ReadonlyArray<ReverseEdgeSelection>;
 
   /**
    * Used in subscriptions to know wich nodes to fetch
@@ -43,9 +42,6 @@ export class NodeSelection<TValue extends NodeSelectedValue = any> {
 
     this.expressions = Array.from(expressionsByKey.values());
 
-    this.components = this.expressions.filter(isComponentSelection);
-    this.reverseEdges = this.expressions.filter(isReverseEdgeSelection);
-
     this.dependencies = this.expressions.reduce<DependencyGraph | undefined>(
       (dependencies, expression) =>
         dependencies && expression.dependencies
@@ -57,6 +53,58 @@ export class NodeSelection<TValue extends NodeSelectedValue = any> {
     this.useGraph = this.dependencies?.children
       ? this.dependencies?.children.size > 0
       : false;
+  }
+
+  @Memoize()
+  public get components(): ReadonlyArray<ComponentSelection> {
+    return this.expressions.filter(isComponentSelection);
+  }
+
+  @Memoize()
+  public get reverseEdges(): ReadonlyArray<ReverseEdgeSelection> {
+    return this.expressions.filter(isReverseEdgeSelection);
+  }
+
+  /**
+   * Returns the selected unique-constraints
+   */
+  @Memoize()
+  public get uniqueConstraints(): ReadonlyArray<UniqueConstraint> {
+    return Object.freeze(
+      Array.from(this.node.uniqueConstraintSet)
+        .filter((uniqueConstraint) =>
+          this.isSupersetOf(uniqueConstraint.selection),
+        )
+        .sort(
+          (a, b) =>
+            Math.min(
+              ...Array.from(a.componentSet, (component) =>
+                this.components.findIndex(
+                  (selection) => selection.component === component,
+                ),
+              ),
+            ) -
+            Math.min(
+              ...Array.from(b.componentSet, (component) =>
+                this.components.findIndex(
+                  (selection) => selection.component === component,
+                ),
+              ),
+            ),
+        ),
+    );
+  }
+
+  /**
+   * Returns the selected identifiers
+   */
+  @Memoize()
+  public get identifiers(): ReadonlyArray<UniqueConstraint> {
+    return Object.freeze(
+      this.uniqueConstraints.filter((uniqueConstraint) =>
+        uniqueConstraint.isIdentifier(),
+      ),
+    );
   }
 
   public isAkinTo(maybeSelection: unknown): maybeSelection is NodeSelection {
@@ -116,11 +164,11 @@ export class NodeSelection<TValue extends NodeSelectedValue = any> {
     );
   }
 
-  public toGraphQLSelectionSet(): graphql.SelectionSetNode {
+  public toGraphQLSelectionSetNode(): graphql.SelectionSetNode {
     return {
       kind: graphql.Kind.SELECTION_SET,
       selections: Array.from(this.expressions, (expression) =>
-        expression.toGraphQLField(),
+        expression.toGraphQLFieldNode(),
       ),
     };
   }

@@ -96,27 +96,34 @@ export class MultipleReverseEdgeHeadOutputType extends AbstractReverseEdgeOutput
 
     const argsPath = utils.addPath(path, argsPathKey);
 
-    return new MultipleReverseEdgeHeadSelection(
-      this.reverseEdge,
-      ast.alias?.value,
-      this.reverseEdge.head.filterInputType.filter(
-        args.where,
-        operationContext,
-        utils.addPath(argsPath, 'where'),
-      ).normalized,
-      this.reverseEdge.head.orderingInputType.sort(
-        args.orderBy,
-        operationContext,
-        utils.addPath(argsPath, 'orderBy'),
-      ).normalized,
-      args.skip || undefined,
-      args.first,
+    const headFilter = this.reverseEdge.head.filterInputType.filter(
+      args?.where,
+      operationContext,
+      utils.addPath(argsPath, 'where'),
+    ).normalized;
+
+    const headOrdering = this.reverseEdge.head.orderingInputType.sort(
+      args.orderBy,
+      operationContext,
+      utils.addPath(argsPath, 'orderBy'),
+    ).normalized;
+
+    const headSelection =
       this.reverseEdge.head.outputType.selectGraphQLSelectionSetNode(
         ast.selectionSet,
         operationContext,
         selectionContext,
         path,
-      ),
+      );
+
+    return new MultipleReverseEdgeHeadSelection(
+      this.reverseEdge,
+      ast.alias?.value,
+      headFilter,
+      headOrdering,
+      args.skip || undefined,
+      args.first,
+      headSelection,
     );
   }
 

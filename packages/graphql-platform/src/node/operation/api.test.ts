@@ -7,8 +7,8 @@ import {
 } from '../../__tests__/config.js';
 import { mockConnector } from '../../__tests__/connector-mock.js';
 import { GraphQLPlatform } from '../../index.js';
-import { NodeSubscription } from '../subscription.js';
 import { API, ContextBoundAPI } from './api.js';
+import { ChangesSubscriptionStream } from './subscription.js';
 
 describe('API', () => {
   let gp: MyGP;
@@ -45,15 +45,19 @@ describe('API', () => {
       ).resolves.toEqual([]);
 
       await expect(
-        api.Article.scroll(myAdminContext).toArray(),
+        api.Article.scroll(myAdminContext, { selection: `{ id }` }).toArray(),
       ).resolves.toEqual([]);
 
-      const ac = new AbortController();
-      const subscription = api.Article.subscribe(myAdminContext, {
-        signal: ac.signal,
-      });
-      expect(subscription).toBeInstanceOf(NodeSubscription);
-      subscription.on('idle', () => ac.abort());
+      {
+        const subscription = await api.Article.subscribeToChanges(
+          myAdminContext,
+          { selection: { onUpsert: `{ id }` } },
+        );
+
+        expect(subscription).toBeInstanceOf(ChangesSubscriptionStream);
+
+        subscription.on('idle', () => subscription.dispose());
+      }
     });
   });
 
@@ -80,10 +84,15 @@ describe('API', () => {
         api.Article.scroll({ selection: `{ id title }` }).toArray(),
       ).resolves.toEqual([]);
 
-      const ac = new AbortController();
-      const subscription = api.Article.subscribe({ signal: ac.signal });
-      expect(subscription).toBeInstanceOf(NodeSubscription);
-      subscription.on('idle', () => ac.abort());
+      {
+        const subscription = await api.Article.subscribeToChanges({
+          selection: { onUpsert: `{ id }` },
+        });
+
+        expect(subscription).toBeInstanceOf(ChangesSubscriptionStream);
+
+        subscription.on('idle', () => subscription.dispose());
+      }
     });
   });
 });

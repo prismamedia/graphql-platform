@@ -46,9 +46,8 @@ export class UpdateManyMutation<
   UpdateManyMutationArgs,
   UpdateManyMutationResult
 > {
-  readonly #config?: UpdateConfig<any, any, any> = this.node.getMutationConfig(
-    utils.MutationType.UPDATE,
-  ).config;
+  readonly #config?: UpdateConfig<any, any, any, any> =
+    this.node.getMutationConfig(utils.MutationType.UPDATE).config;
 
   protected readonly selectionAware = true;
 
@@ -80,7 +79,7 @@ export class UpdateManyMutation<
     ];
   }
 
-  public getGraphQLOutputType() {
+  public getGraphQLFieldConfigType() {
     return new graphql.GraphQLNonNull(
       new graphql.GraphQLList(
         new graphql.GraphQLNonNull(this.node.outputType.getGraphQLObjectType()),
@@ -165,7 +164,7 @@ export class UpdateManyMutation<
       );
 
     const currentIds = currentValues.map((currentValue) =>
-      this.node.identifier.parseValue(currentValue),
+      this.node.mainIdentifier.parseValue(currentValue),
     );
 
     // Resolve the edges' nested-actions into their value

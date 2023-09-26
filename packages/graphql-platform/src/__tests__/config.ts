@@ -2,16 +2,17 @@ import * as scalars from '@prismamedia/graphql-platform-scalars';
 import * as utils from '@prismamedia/graphql-platform-utils';
 import { GraphQLInterfaceType, GraphQLNonNull, GraphQLString } from 'graphql';
 import { randomUUID } from 'node:crypto';
+import type { Except } from 'type-fest';
 import {
   GraphQLPlatform,
   OnEdgeHeadDeletion,
-  type ConnectorConfig,
+  type BrokerInterface,
   type ConnectorConfigOverride,
   type ConnectorConfigOverrideKind,
   type ConnectorInterface,
-  type ContainerConfig,
   type CustomOperationsByNameByTypeConfig,
   type Edge,
+  type GraphQLPlatformConfig,
   type Leaf,
   type Node,
   type NodeConfig,
@@ -438,15 +439,21 @@ export const Article = {
   onChange(change) {
     // if (change.kind === utils.MutationType.CREATION) {
     //   console.debug(
-    //     `The article "${change.newValue.id}" has been created at "${change.at}"`,
+    //     `The article "${
+    //       change.newValue.id
+    //     }" has been created at "${change.at.toISOString()}"`,
     //   );
     // } else if (change.kind === utils.MutationType.UPDATE) {
     //   console.debug(
-    //     `The article "${change.newValue.id}" has been updated at "${change.at}"`,
+    //     `The article "${
+    //       change.newValue.id
+    //     }" has been updated at "${change.at.toISOString()}"`,
     //   );
     // } else {
     //   console.debug(
-    //     `The article "${change.oldValue.id}" has been deleted at "${change.at}"`,
+    //     `The article "${
+    //       change.oldValue.id
+    //     }" has been deleted at "${change.at.toISOString()}"`,
     //   );
     // }
   },
@@ -958,8 +965,9 @@ export const customOperations: CustomOperationsByNameByTypeConfig<MyContext> = {
 
 export type MyGP<
   TConnector extends ConnectorInterface = any,
+  TBroker extends BrokerInterface = any,
   TContainer extends object = any,
-> = GraphQLPlatform<MyContext, TConnector, TContainer>;
+> = GraphQLPlatform<MyContext, TConnector, TBroker, TContainer>;
 
 export type NodeConfigOverride<TConnector extends ConnectorInterface> = (
   nodeName: Node['name'],
@@ -994,21 +1002,29 @@ export type UniqueConstraintConfigOverride<
     >
   | undefined;
 
-export function createMyGP<
+export type MyGPConfig<
   TConnector extends ConnectorInterface,
+  TBroker extends BrokerInterface,
   TContainer extends object,
->(config?: {
+> = {
   overrides?: {
     node?: NodeConfigOverride<TConnector>;
     leaf?: LeafConfigOverride<TConnector>;
     edge?: EdgeConfigOverride<TConnector>;
     uniqueConstraint?: UniqueConstraintConfigOverride<TConnector>;
   };
+} & Except<
+  GraphQLPlatformConfig<MyContext, TConnector, TBroker, TContainer>,
+  'nodes'
+>;
 
-  connector?: ConnectorConfig<MyContext, TConnector>;
-
-  container?: ContainerConfig<MyContext, TConnector, TContainer>;
-}): MyGP<TConnector, TContainer> {
+export function createMyGP<
+  TConnector extends ConnectorInterface,
+  TBroker extends BrokerInterface,
+  TContainer extends object,
+>(
+  config?: MyGPConfig<TConnector, TBroker, TContainer>,
+): MyGP<TConnector, TBroker, TContainer> {
   return new GraphQLPlatform({
     nodes: Object.fromEntries(
       Object.entries<NodeConfig>(nodes).map(([nodeName, nodeConfig]) => [
@@ -1057,8 +1073,6 @@ export function createMyGP<
       ]),
     ),
 
-    connector: config?.connector,
-
-    container: config?.container,
+    ...config,
   });
 }

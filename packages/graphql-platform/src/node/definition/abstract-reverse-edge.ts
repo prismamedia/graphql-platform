@@ -36,12 +36,10 @@ export interface AbstractReverseEdgeConfig {
 }
 
 export abstract class AbstractReverseEdge<
-  TRequestContext extends object,
   TConnector extends ConnectorInterface,
-  TContainer extends object,
 > {
-  public readonly tail: Node<TRequestContext, TConnector, TContainer>;
-  public readonly head: Node<TRequestContext, TConnector, TContainer>;
+  public readonly tail: Node<any, TConnector>;
+  public readonly head: Node<any, TConnector>;
   public readonly description?: string;
   public readonly deprecationReason?: string;
   public readonly pascalCasedName: string;
@@ -49,7 +47,7 @@ export abstract class AbstractReverseEdge<
   public abstract readonly updateInput?: AbstractReverseEdgeUpdateInput<any>;
 
   public constructor(
-    public readonly originalEdge: Edge<TRequestContext, TConnector, TContainer>,
+    public readonly originalEdge: Edge<TConnector>,
     public readonly name: utils.Name,
     protected readonly config: AbstractReverseEdgeConfig,
     protected readonly configPath: utils.Path,

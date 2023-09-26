@@ -1,5 +1,4 @@
 import * as utils from '@prismamedia/graphql-platform-utils';
-import type { ConnectorInterface } from '../../../../../connector-interface.js';
 import type { MultipleReverseEdge } from '../../../../definition/reverse-edge/multiple.js';
 import type { OperationContext } from '../../../../operation/context.js';
 import {
@@ -32,11 +31,8 @@ export class MultipleReverseEdgeCountOrderingInput extends utils.EnumInputValue 
     );
   }
 
-  public sort<
-    TRequestContext extends object,
-    TConnector extends ConnectorInterface,
-  >(
-    _context?: OperationContext<TRequestContext, TConnector> | undefined,
+  public sort<TRequestContext extends object>(
+    _context?: OperationContext<TRequestContext> | undefined,
     _path?: utils.Path,
   ): MultipleReverseEdgeCountOrdering {
     return this.#expression;

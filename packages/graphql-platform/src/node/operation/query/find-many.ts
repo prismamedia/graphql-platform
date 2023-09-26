@@ -64,7 +64,7 @@ export class FindManyQuery<
     ];
   }
 
-  public getGraphQLOutputType() {
+  public getGraphQLFieldConfigType() {
     return new graphql.GraphQLNonNull(
       new graphql.GraphQLList(
         new graphql.GraphQLNonNull(this.node.outputType.getGraphQLObjectType()),

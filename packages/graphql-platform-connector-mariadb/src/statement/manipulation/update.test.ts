@@ -17,12 +17,12 @@ import { createMyGP, type MyGP } from '../../__tests__/config.js';
 
 describe('Update statement', () => {
   let gp: MyGP;
-  let changes: NodeChange[];
+  const changes: NodeChange[] = [];
 
   beforeAll(async () => {
     gp = createMyGP(`connector_mariadb_update_statement`);
     gp.on('node-change-aggregation', (aggregation) =>
-      changes?.push(...aggregation),
+      changes.push(...aggregation),
     );
 
     await gp.connector.setup();
@@ -30,7 +30,7 @@ describe('Update statement', () => {
   });
 
   beforeEach(() => {
-    changes = [];
+    changes.length = 0;
   });
 
   afterAll(() => gp.connector.teardown());

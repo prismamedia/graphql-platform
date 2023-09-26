@@ -1,6 +1,5 @@
 import * as utils from '@prismamedia/graphql-platform-utils';
 import DataLoader from 'dataloader';
-import type { ConnectorInterface } from '../connector-interface.js';
 import type { Node } from '../node.js';
 import type { OperationContext } from './operation/context.js';
 import { NotFoundError } from './operation/error.js';
@@ -19,10 +18,9 @@ export type NodeLoader = DataLoader<NodeLoaderKey, NodeLoaderValue>;
 
 export function createNodeLoader<
   TRequestContext extends object,
-  TConnector extends ConnectorInterface,
   TCacheKey = NodeLoaderKey,
 >(
-  node: Node<TRequestContext, TConnector>,
+  node: Node<TRequestContext>,
   context: utils.Thunkable<TRequestContext> | OperationContext<TRequestContext>,
   selection: NodeSelection,
   {

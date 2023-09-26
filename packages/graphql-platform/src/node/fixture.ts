@@ -224,6 +224,6 @@ export class NodeFixture<TRequestContext extends object = any> {
   ): Promise<UniqueConstraintValue> {
     const nodeValue = await this.load(context);
 
-    return this.node.identifier.parseValue(nodeValue);
+    return this.node.mainIdentifier.parseValue(nodeValue);
   }
 }

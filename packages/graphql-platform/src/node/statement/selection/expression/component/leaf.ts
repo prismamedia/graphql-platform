@@ -3,7 +3,7 @@ import * as graphql from 'graphql';
 import assert from 'node:assert/strict';
 import type { JsonValue } from 'type-fest';
 import type { Component, Leaf, LeafValue } from '../../../../definition.js';
-import { DependencyGraph } from '../../../../subscription.js';
+import { DependencyGraph } from '../../../../operation/dependency-graph.js';
 import type { SelectionExpressionInterface } from '../../expression-interface.js';
 
 export class LeafSelection implements SelectionExpressionInterface<LeafValue> {
@@ -45,7 +45,7 @@ export class LeafSelection implements SelectionExpressionInterface<LeafValue> {
     return this;
   }
 
-  public toGraphQLField(): graphql.FieldNode {
+  public toGraphQLFieldNode(): graphql.FieldNode {
     return {
       kind: graphql.Kind.FIELD,
       name: {

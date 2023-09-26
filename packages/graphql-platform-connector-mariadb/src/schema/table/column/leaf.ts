@@ -76,7 +76,7 @@ export class LeafColumn extends AbstractColumn {
 
   public constructor(
     table: Table,
-    public readonly leaf: core.Leaf<any, MariaDBConnector>,
+    public readonly leaf: core.Leaf<MariaDBConnector>,
   ) {
     super(table, leaf);
 
@@ -278,7 +278,7 @@ export class LeafColumn extends AbstractColumn {
       autoIncrementConfigPath,
     );
 
-    if (isAutoIncrement && !this.leaf.isIdentifier()) {
+    if (isAutoIncrement && !this.leaf.isMainIdentifier()) {
       throw new utils.UnexpectedValueError(
         `not to be "true" as "${this.leaf}" is not the identifier`,
         autoIncrementConfig,

@@ -43,7 +43,7 @@ export class CountQuery<TRequestContext extends object> extends AbstractQuery<
     ];
   }
 
-  public getGraphQLOutputType() {
+  public getGraphQLFieldConfigType() {
     return new graphql.GraphQLNonNull(scalars.typesByName.UnsignedInt);
   }
 

@@ -1,5 +1,6 @@
 import * as utils from '@prismamedia/graphql-platform-utils';
 import type * as graphql from 'graphql';
+import type { BrokerInterface } from './broker-interface.js';
 import type { ConnectorInterface } from './connector-interface.js';
 import type { GPBoundGraphQLFieldConfig } from './graphql-field-config.js';
 import type { GraphQLPlatform } from './index.js';
@@ -7,12 +8,14 @@ import type { GraphQLPlatform } from './index.js';
 export interface CustomOperationConfig<
   TRequestContext extends object = any,
   TConnector extends ConnectorInterface = any,
+  TBroker extends BrokerInterface = any,
   TContainer extends object = any,
   TArgs = any,
   TResult = unknown,
 > extends GPBoundGraphQLFieldConfig<
     TRequestContext,
     TConnector,
+    TBroker,
     TContainer,
     undefined,
     TArgs,
@@ -22,54 +25,70 @@ export interface CustomOperationConfig<
 export type ThunkableNillableCustomOperation<
   TRequestContext extends object = any,
   TConnector extends ConnectorInterface = any,
+  TBroker extends BrokerInterface = any,
   TContainer extends object = any,
+  TArgs = any,
+  TResult = unknown,
 > = utils.Thunkable<
   utils.Nillable<
-    CustomOperationConfig<TRequestContext, TConnector, TContainer>
+    CustomOperationConfig<
+      TRequestContext,
+      TConnector,
+      TBroker,
+      TContainer,
+      TArgs,
+      TResult
+    >
   >,
-  [gp: GraphQLPlatform<TRequestContext, TConnector, TContainer>]
+  [gp: GraphQLPlatform<TRequestContext, TConnector, TBroker, TContainer>]
 >;
 
 export type CustomOperationsByNameConfig<
   TRequestContext extends object = any,
   TConnector extends ConnectorInterface = any,
+  TBroker extends BrokerInterface = any,
   TContainer extends object = any,
 > = utils.Thunkable<
   utils.Nillable<{
     [operationName: utils.Name]: ThunkableNillableCustomOperation<
       TRequestContext,
       TConnector,
+      TBroker,
       TContainer
     >;
   }>,
-  [gp: GraphQLPlatform<TRequestContext, TConnector, TContainer>]
+  [gp: GraphQLPlatform<TRequestContext, TConnector, TBroker, TContainer>]
 >;
 
 export type CustomOperationsByNameByTypeConfig<
   TRequestContext extends object = any,
   TConnector extends ConnectorInterface = any,
+  TBroker extends BrokerInterface = any,
   TContainer extends object = any,
 > = utils.Thunkable<
   utils.Nillable<{
     [operationType in graphql.OperationTypeNode]?: CustomOperationsByNameConfig<
       TRequestContext,
       TConnector,
+      TBroker,
       TContainer
     >;
   }>,
-  [gp: GraphQLPlatform<TRequestContext, TConnector, TContainer>]
+  [gp: GraphQLPlatform<TRequestContext, TConnector, TBroker, TContainer>]
 >;
 
 export function getCustomOperationsByNameByType<
   TRequestContext extends object,
   TConnector extends ConnectorInterface,
+  TBroker extends BrokerInterface,
   TContainer extends object,
 >(
-  gp: GraphQLPlatform<TRequestContext, TConnector, TContainer>,
+  gp: GraphQLPlatform<TRequestContext, TConnector, TBroker, TContainer>,
   operationType: graphql.OperationTypeNode,
   config: CustomOperationsByNameByTypeConfig<
     TRequestContext,
     TConnector,
+    TBroker,
     TContainer
   >,
   configPath: utils.Path,

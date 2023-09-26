@@ -40,11 +40,7 @@ export type AbstractComponentConfig = {
   mutable?: utils.OptionalFlag;
 };
 
-export abstract class AbstractComponent<
-  TRequestContext extends object,
-  TConnector extends ConnectorInterface,
-  TContainer extends object,
-> {
+export abstract class AbstractComponent<TConnector extends ConnectorInterface> {
   public readonly indefinite: string;
   public readonly description?: string;
   public readonly deprecationReason?: string;
@@ -53,7 +49,7 @@ export abstract class AbstractComponent<
   public abstract readonly updateInput?: AbstractComponentUpdateInput<any>;
 
   public constructor(
-    public readonly node: Node<TRequestContext, TConnector, TContainer>,
+    public readonly node: Node<any, TConnector>,
     public readonly name: utils.Name,
     protected readonly config: AbstractComponentConfig,
     protected readonly configPath: utils.Path,
@@ -95,9 +91,7 @@ export abstract class AbstractComponent<
   }
 
   @Memoize()
-  public get referrerSet(): ReadonlySet<
-    Edge<TRequestContext, TConnector, TContainer>
-  > {
+  public get referrerSet(): ReadonlySet<Edge<TConnector>> {
     return new Set(
       Array.from(this.node.gp.nodesByName.values()).flatMap((node) =>
         Array.from(node.edgesByName.values()).filter((edge) =>
@@ -140,10 +134,10 @@ export abstract class AbstractComponent<
   public abstract isPublic(): boolean;
 
   @Memoize()
-  public isIdentifier(): boolean {
+  public isMainIdentifier(): boolean {
     return (
-      this.node.identifier.componentSet.size === 1 &&
-      this.node.identifier.componentSet.has(this as any)
+      this.node.mainIdentifier.componentSet.size === 1 &&
+      this.node.mainIdentifier.componentSet.has(this as any)
     );
   }
 
@@ -161,6 +155,7 @@ export abstract class AbstractComponent<
     this.isMutable();
     this.isNullable();
     this.isPublic();
+    this.isMainIdentifier();
     this.isUnique();
     this.selection;
   }

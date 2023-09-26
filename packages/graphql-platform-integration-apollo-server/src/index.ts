@@ -19,12 +19,14 @@ export type ApolloServerIntegrationOptions<
 export class ApolloServerIntegration<
   TRequestContext extends BaseContext,
   TConnector extends core.ConnectorInterface,
+  TBroker extends core.BrokerInterface,
   TContainer extends object,
 > extends ApolloServer<TRequestContext> {
   public constructor(
     public readonly gp: core.GraphQLPlatform<
       TRequestContext,
       TConnector,
+      TBroker,
       TContainer
     >,
     options?: ApolloServerIntegrationOptions<TRequestContext>,

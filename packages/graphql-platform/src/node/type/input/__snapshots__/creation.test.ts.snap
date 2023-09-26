@@ -63,9 +63,9 @@ input ArticleCreationWithoutCategoryInput {
 }"
 `;
 
-exports[`NodeCreationInputType Definition Article has a creation input type: ArticleCreationWithoutCreatedbyInput 1`] = `
+exports[`NodeCreationInputType Definition Article has a creation input type: ArticleCreationWithoutCreatedByInput 1`] = `
 """"The "Article" node's creation"""
-input ArticleCreationWithoutCreatedbyInput {
+input ArticleCreationWithoutCreatedByInput {
   """You can either provide an UUID or let one be generated for you"""
   id: UUIDv4
   status: ArticleStatus! = DRAFT
@@ -95,9 +95,9 @@ input ArticleCreationWithoutCreatedbyInput {
 }"
 `;
 
-exports[`NodeCreationInputType Definition Article has a creation input type: ArticleCreationWithoutUpdatedbyInput 1`] = `
+exports[`NodeCreationInputType Definition Article has a creation input type: ArticleCreationWithoutUpdatedByInput 1`] = `
 """"The "Article" node's creation"""
-input ArticleCreationWithoutUpdatedbyInput {
+input ArticleCreationWithoutUpdatedByInput {
   """You can either provide an UUID or let one be generated for you"""
   id: UUIDv4
   status: ArticleStatus! = DRAFT
@@ -182,9 +182,9 @@ input ArticleTagModerationCreationInput {
 }"
 `;
 
-exports[`NodeCreationInputType Definition ArticleTagModeration has a creation input type: ArticleTagModerationCreationWithoutArticletagInput 1`] = `
+exports[`NodeCreationInputType Definition ArticleTagModeration has a creation input type: ArticleTagModerationCreationWithoutArticleTagInput 1`] = `
 """"The "ArticleTagModeration" node's creation"""
-input ArticleTagModerationCreationWithoutArticletagInput {
+input ArticleTagModerationCreationWithoutArticleTagInput {
   moderator: ArticleTagModerationCreationModeratorInput!
   moderation: NonEmptyTrimmedString
 }"

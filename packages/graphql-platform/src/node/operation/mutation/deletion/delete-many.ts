@@ -36,7 +36,7 @@ export class DeleteManyMutation<
   DeleteManyMutationArgs,
   DeleteManyMutationResult
 > {
-  readonly #config?: DeletionConfig<any, any, any> =
+  readonly #config?: DeletionConfig<any, any, any, any> =
     this.node.getMutationConfig(utils.MutationType.DELETION).config;
 
   protected readonly selectionAware = true;
@@ -66,7 +66,7 @@ export class DeleteManyMutation<
   }
 
   @Memoize()
-  public getGraphQLOutputType() {
+  public getGraphQLFieldConfigType() {
     return new graphql.GraphQLNonNull(
       new graphql.GraphQLList(
         new graphql.GraphQLNonNull(this.node.outputType.getGraphQLObjectType()),
@@ -132,7 +132,7 @@ export class DeleteManyMutation<
     }
 
     const currentIds = currentValues.map((currentValue) =>
-      Object.freeze(this.node.identifier.parseValue(currentValue)),
+      Object.freeze(this.node.mainIdentifier.parseValue(currentValue)),
     );
 
     // Apply the "preDelete"-hook, if any
@@ -185,7 +185,7 @@ export class DeleteManyMutation<
                 })),
               },
               first: scalars.GRAPHQL_MAX_UNSIGNED_INT,
-              selection: head.identifier.selection,
+              selection: head.mainIdentifier.selection,
             }),
           ),
 
@@ -203,7 +203,7 @@ export class DeleteManyMutation<
               },
               first: scalars.GRAPHQL_MAX_UNSIGNED_INT,
               data: { [reverseEdge.originalEdge.name]: null },
-              selection: reverseEdge.head.identifier.selection,
+              selection: reverseEdge.head.mainIdentifier.selection,
             }),
           ),
         ]);

@@ -183,12 +183,12 @@ export class UniqueReverseEdgeUpdateInput extends AbstractReverseEdgeUpdateInput
                 nullable: false,
                 // We explicitly define the visibility as we don't want to expose this operation if the head it not publicly updatable, and it would as "update" is not required
                 public:
-                  reverseEdge.head.isPubliclyCreatable(
-                    reverseEdge.originalEdge,
-                  ) &&
-                  reverseEdge.head.isPubliclyUpdatable(
-                    reverseEdge.originalEdge,
-                  ),
+                  reverseEdge.head
+                    .getCreationWithoutEdgeInputType(reverseEdge.originalEdge)
+                    .isPublic() &&
+                  reverseEdge.head
+                    .getUpdateWithoutEdgeInputType(reverseEdge.originalEdge)
+                    .isPublic(),
               }),
             );
           }
@@ -238,7 +238,7 @@ export class UniqueReverseEdgeUpdateInput extends AbstractReverseEdgeUpdateInput
   ): Promise<void> {
     const headAPI = this.reverseEdge.head.createContextBoundAPI(context);
 
-    const selection = this.reverseEdge.head.identifier.selection;
+    const selection = this.reverseEdge.head.mainIdentifier.selection;
     const originalEdge = this.reverseEdge.originalEdge;
     const originalEdgeName = originalEdge.name;
     const originalEdgeValues = nodeValues.map((nodeValue) =>

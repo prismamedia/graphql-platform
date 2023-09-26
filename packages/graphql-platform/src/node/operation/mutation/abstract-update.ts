@@ -1,5 +1,6 @@
 import * as utils from '@prismamedia/graphql-platform-utils';
 import type { Except, Promisable } from 'type-fest';
+import type { BrokerInterface } from '../../../broker-interface.js';
 import type { ConnectorInterface } from '../../../connector-interface.js';
 import type { NodeValue } from '../../../node.js';
 import type { NodeUpdate } from '../../change.js';
@@ -15,8 +16,14 @@ import {
 interface AbstractUpdateHookArgs<
   TRequestContext extends object,
   TConnector extends ConnectorInterface,
+  TBroker extends BrokerInterface,
   TContainer extends object,
-> extends AbstractMutationHookArgs<TRequestContext, TConnector, TContainer> {
+> extends AbstractMutationHookArgs<
+    TRequestContext,
+    TConnector,
+    TBroker,
+    TContainer
+  > {
   /**
    * The provided "data" argument
    */
@@ -26,8 +33,14 @@ interface AbstractUpdateHookArgs<
 export interface PreUpdateArgs<
   TRequestContext extends object,
   TConnector extends ConnectorInterface,
+  TBroker extends BrokerInterface,
   TContainer extends object,
-> extends AbstractUpdateHookArgs<TRequestContext, TConnector, TContainer> {
+> extends AbstractUpdateHookArgs<
+    TRequestContext,
+    TConnector,
+    TBroker,
+    TContainer
+  > {
   /**
    * The current node's id
    */
@@ -52,12 +65,18 @@ export interface PreUpdateArgs<
 export interface PostUpdateArgs<
   TRequestContext extends object,
   TConnector extends ConnectorInterface,
+  TBroker extends BrokerInterface,
   TContainer extends object,
-> extends AbstractUpdateHookArgs<TRequestContext, TConnector, TContainer> {
+> extends AbstractUpdateHookArgs<
+    TRequestContext,
+    TConnector,
+    TBroker,
+    TContainer
+  > {
   /**
    * The uncommitted change
    */
-  readonly change: NodeUpdate<TRequestContext, TConnector, TContainer>;
+  readonly change: NodeUpdate<TRequestContext>;
 }
 
 /**
@@ -66,8 +85,14 @@ export interface PostUpdateArgs<
 export interface UpdateConfig<
   TRequestContext extends object,
   TConnector extends ConnectorInterface,
+  TBroker extends BrokerInterface,
   TContainer extends object,
-> extends AbstractMutationConfig<TRequestContext, TConnector, TContainer> {
+> extends AbstractMutationConfig<
+    TRequestContext,
+    TConnector,
+    TBroker,
+    TContainer
+  > {
   /**
    * Optional, add some "virtual" fields whose values can be used in the hooks
    */
@@ -82,7 +107,7 @@ export interface UpdateConfig<
    * Throwing an Error here will prevent the update
    */
   preUpdate?(
-    args: PreUpdateArgs<TRequestContext, TConnector, TContainer>,
+    args: PreUpdateArgs<TRequestContext, TConnector, TBroker, TContainer>,
   ): Promisable<void>;
 
   /**
@@ -91,7 +116,7 @@ export interface UpdateConfig<
    * Throwing an Error here will fail the update
    */
   postUpdate?(
-    args: PostUpdateArgs<TRequestContext, TConnector, TContainer>,
+    args: PostUpdateArgs<TRequestContext, TConnector, TBroker, TContainer>,
   ): Promisable<void>;
 }
 

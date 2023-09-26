@@ -40,15 +40,18 @@ export class UniqueReverseEdgeHeadOutputType extends AbstractReverseEdgeOutputTy
       );
     }
 
-    return new UniqueReverseEdgeHeadSelection(
-      this.reverseEdge,
-      ast.alias?.value,
+    const headSelection =
       this.reverseEdge.head.outputType.selectGraphQLSelectionSetNode(
         ast.selectionSet,
         operationContext,
         selectionContext,
         path,
-      ),
+      );
+
+    return new UniqueReverseEdgeHeadSelection(
+      this.reverseEdge,
+      ast.alias?.value,
+      headSelection,
     );
   }
 
@@ -61,7 +64,7 @@ export class UniqueReverseEdgeHeadOutputType extends AbstractReverseEdgeOutputTy
       this.reverseEdge,
       undefined,
       value === null
-        ? this.reverseEdge.head.identifier.selection
+        ? this.reverseEdge.head.mainIdentifier.selection
         : this.reverseEdge.head.outputType.selectShape(
             value,
             operationContext,

@@ -34,7 +34,7 @@ export class DeleteOneMutation<
     return this.node.getMutationByKey('delete-one-if-exists').arguments;
   }
 
-  public getGraphQLOutputType() {
+  public getGraphQLFieldConfigType() {
     return new graphql.GraphQLNonNull(
       this.node.outputType.getGraphQLObjectType(),
     );

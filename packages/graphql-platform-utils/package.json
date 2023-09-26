@@ -27,21 +27,21 @@
   },
   "devDependencies": {
     "@jest/globals": "29.7.0",
-    "@swc/core": "1.3.88",
+    "@swc/core": "1.3.95",
     "@swc/jest": "0.2.29",
     "@tsconfig/node18": "18.2.2",
-    "@types/indefinite": "2.3.1",
-    "@types/node": "18.17.19",
+    "@types/indefinite": "2.3.3",
+    "@types/node": "18.18.7",
     "graphql": "16.8.1",
     "jest": "29.7.0",
-    "publint": "0.2.2",
+    "publint": "0.2.5",
     "typescript": "5.2.2"
   },
   "dependencies": {
     "@prismamedia/memoize": "^5.0.1",
     "indefinite": "^2.4.3",
-    "remeda": "^1.27.0",
-    "type-fest": "^4.3.1"
+    "remeda": "^1.28.0",
+    "type-fest": "^4.6.0"
   },
   "peerDependencies": {
     "graphql": "^16.7.0"

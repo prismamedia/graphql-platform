@@ -15,20 +15,12 @@ export type ReverseEdgeConfig =
   | UniqueReverseEdgeConfig
   | MultipleReverseEdgeConfig;
 
-export type ReverseEdge<
-  TRequestContext extends object = any,
-  TConnector extends ConnectorInterface = any,
-  TContainer extends object = any,
-> =
-  | UniqueReverseEdge<TRequestContext, TConnector, TContainer>
-  | MultipleReverseEdge<TRequestContext, TConnector, TContainer>;
+export type ReverseEdge<TConnector extends ConnectorInterface = any> =
+  | UniqueReverseEdge<TConnector>
+  | MultipleReverseEdge<TConnector>;
 
-export const isReverseEdge = <
-  TRequestContext extends object = any,
-  TConnector extends ConnectorInterface = any,
-  TContainer extends object = any,
->(
+export const isReverseEdge = (
   maybeReverseEdge: unknown,
-): maybeReverseEdge is ReverseEdge<TRequestContext, TConnector, TContainer> =>
+): maybeReverseEdge is ReverseEdge =>
   maybeReverseEdge instanceof UniqueReverseEdge ||
   maybeReverseEdge instanceof MultipleReverseEdge;

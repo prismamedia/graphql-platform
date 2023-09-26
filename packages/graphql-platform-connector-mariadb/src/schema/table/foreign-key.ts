@@ -26,7 +26,7 @@ export class ForeignKey {
 
   public constructor(
     public readonly table: Table,
-    public readonly edge: core.Edge<any, MariaDBConnector>,
+    public readonly edge: core.Edge<MariaDBConnector>,
   ) {
     // config
     {

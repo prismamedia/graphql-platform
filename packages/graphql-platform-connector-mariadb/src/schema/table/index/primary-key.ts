@@ -18,13 +18,10 @@ export class PrimaryKey extends AbstractIndex {
 
   public constructor(
     table: Table,
-    public readonly uniqueConstraint: core.UniqueConstraint<
-      any,
-      MariaDBConnector
-    >,
+    public readonly uniqueConstraint: core.UniqueConstraint<MariaDBConnector>,
   ) {
     assert(
-      uniqueConstraint.isIdentifier(),
+      uniqueConstraint.isMainIdentifier(),
       `The "${uniqueConstraint}" unique-constraint is not the identifier`,
     );
 

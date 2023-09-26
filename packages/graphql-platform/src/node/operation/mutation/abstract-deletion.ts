@@ -1,5 +1,6 @@
 import * as utils from '@prismamedia/graphql-platform-utils';
 import type { Promisable } from 'type-fest';
+import type { BrokerInterface } from '../../../broker-interface.js';
 import type { ConnectorInterface } from '../../../connector-interface.js';
 import type { NodeValue } from '../../../node.js';
 import type { NodeDeletion } from '../../change.js';
@@ -13,14 +14,26 @@ import {
 interface AbstractDeletionHookArgs<
   TRequestContext extends object,
   TConnector extends ConnectorInterface,
+  TBroker extends BrokerInterface,
   TContainer extends object,
-> extends AbstractMutationHookArgs<TRequestContext, TConnector, TContainer> {}
+> extends AbstractMutationHookArgs<
+    TRequestContext,
+    TConnector,
+    TBroker,
+    TContainer
+  > {}
 
 export interface PreDeleteArgs<
   TRequestContext extends object,
   TConnector extends ConnectorInterface,
+  TBroker extends BrokerInterface,
   TContainer extends object,
-> extends AbstractDeletionHookArgs<TRequestContext, TConnector, TContainer> {
+> extends AbstractDeletionHookArgs<
+    TRequestContext,
+    TConnector,
+    TBroker,
+    TContainer
+  > {
   /**
    * The current node's id
    */
@@ -35,12 +48,18 @@ export interface PreDeleteArgs<
 export interface PostDeleteArgs<
   TRequestContext extends object,
   TConnector extends ConnectorInterface,
+  TBroker extends BrokerInterface,
   TContainer extends object,
-> extends AbstractDeletionHookArgs<TRequestContext, TConnector, TContainer> {
+> extends AbstractDeletionHookArgs<
+    TRequestContext,
+    TConnector,
+    TBroker,
+    TContainer
+  > {
   /**
    * The uncommitted change
    */
-  readonly change: NodeDeletion<TRequestContext, TConnector, TContainer>;
+  readonly change: NodeDeletion<TRequestContext>;
 }
 
 /**
@@ -49,15 +68,21 @@ export interface PostDeleteArgs<
 export interface DeletionConfig<
   TRequestContext extends object,
   TConnector extends ConnectorInterface,
+  TBroker extends BrokerInterface,
   TContainer extends object,
-> extends AbstractMutationConfig<TRequestContext, TConnector, TContainer> {
+> extends AbstractMutationConfig<
+    TRequestContext,
+    TConnector,
+    TBroker,
+    TContainer
+  > {
   /**
    * Optional, add some custom validation/logic over the "update" statement that is about to be sent to the connector,
    *
    * Throwing an Error here will prevent the deletion
    */
   preDelete?(
-    args: PreDeleteArgs<TRequestContext, TConnector, TContainer>,
+    args: PreDeleteArgs<TRequestContext, TConnector, TBroker, TContainer>,
   ): Promisable<void>;
 
   /**
@@ -66,7 +91,7 @@ export interface DeletionConfig<
    * Throwing an Error here will fail the deletion
    */
   postDelete?(
-    args: PostDeleteArgs<TRequestContext, TConnector, TContainer>,
+    args: PostDeleteArgs<TRequestContext, TConnector, TBroker, TContainer>,
   ): Promisable<void>;
 }
 

@@ -1,16 +1,48 @@
 import * as utils from '@prismamedia/graphql-platform-utils';
 import { Memoize } from '@prismamedia/memoize';
 import * as graphql from 'graphql';
-import assert from 'node:assert/strict';
-import type { PascalCase } from 'type-fest';
+import type { IterableElement, PascalCase } from 'type-fest';
+import type { BrokerInterface } from '../../broker-interface.js';
+import type { ConnectorInterface } from '../../connector-interface.js';
 import { AbstractOperation } from '../abstract-operation.js';
+
+export interface SubscriptionConfig<
+  TRequestContext extends object,
+  TConnector extends ConnectorInterface,
+  TBroker extends BrokerInterface,
+  TContainer extends object,
+> {
+  /**
+   * Optional, either the subscription is enabled or not
+   *
+   * @default true
+   */
+  enabled?: utils.OptionalFlag;
+
+  /**
+   * Optional, either the subscription is exposed publicly (= in the GraphQL API) or not
+   *
+   * @default false
+   */
+  public?: utils.OptionalFlag;
+}
 
 export abstract class AbstractSubscription<
   TRequestContext extends object,
   TArgs extends utils.Nillable<utils.PlainObject>,
-  TResult extends AsyncIterator<any>,
+  TResult extends AsyncIterable<any>,
 > extends AbstractOperation<TRequestContext, TArgs, TResult> {
   public readonly operationType = graphql.OperationTypeNode.SUBSCRIPTION;
+
+  @Memoize()
+  public override isEnabled(): boolean {
+    return super.isEnabled() && this.gp.subscriptionConfig.enabled;
+  }
+
+  @Memoize()
+  public override isPublic(): boolean {
+    return super.isPublic() && this.gp.subscriptionConfig.public;
+  }
 
   /**
    * This is unique for a node
@@ -24,37 +56,30 @@ export abstract class AbstractSubscription<
     )}` as any;
   }
 
-  @Memoize()
-  public override isEnabled(): boolean {
-    return false;
+  protected getGraphQLFieldConfigSubscriber(): NonNullable<
+    graphql.GraphQLFieldConfig<
+      undefined,
+      TRequestContext,
+      Omit<TArgs, 'selection'>
+    >['subscribe']
+  > {
+    return (_, args, context, info) =>
+      this.execute(
+        context,
+        (this.selectionAware ? { ...args, selection: info } : args) as TArgs,
+        info.path,
+      ).catch((error) => {
+        throw error instanceof utils.GraphError
+          ? error.toGraphQLError()
+          : error;
+      });
   }
 
-  public getGraphQLFieldConfig(): graphql.GraphQLFieldConfig<
-    undefined,
+  protected getGraphQLFieldConfigResolver(): graphql.GraphQLFieldConfig<
+    IterableElement<TResult>,
     TRequestContext,
     Omit<TArgs, 'selection'>
-  > {
-    assert(this.isPublic(), `The "${this}" ${this.operationType} is private`);
-
-    return {
-      ...(this.description && { description: this.description }),
-      ...(this.node.deprecationReason && {
-        deprecationReason: this.node.deprecationReason,
-      }),
-      ...(this.arguments?.length && {
-        args: utils.getGraphQLFieldConfigArgumentMap(this.arguments),
-      }),
-      type: this.getGraphQLOutputType(),
-      subscribe: (_, args, context, info) =>
-        this.execute(
-          context,
-          (this.selectionAware ? { ...args, selection: info } : args) as TArgs,
-          info.path,
-        ).catch((error) => {
-          throw error instanceof utils.GraphError
-            ? error.toGraphQLError()
-            : error;
-        }),
-    };
+  >['resolve'] {
+    return undefined;
   }
 }

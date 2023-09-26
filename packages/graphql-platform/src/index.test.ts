@@ -47,7 +47,11 @@ describe('GraphQL-Platform', () => {
     let gp: GraphQLPlatform;
 
     beforeAll(() => {
-      gp = new GraphQLPlatform({ nodes, customOperations });
+      gp = new GraphQLPlatform({
+        subscription: { public: true },
+        nodes,
+        customOperations,
+      });
     });
 
     it(`has nodes' definition`, () => {
@@ -69,21 +73,21 @@ describe('GraphQL-Platform', () => {
     >([
       [graphql.OperationTypeNode.QUERY, 63, 56],
       [graphql.OperationTypeNode.MUTATION, 83, 70],
-      [graphql.OperationTypeNode.SUBSCRIPTION, 0, 0],
+      [graphql.OperationTypeNode.SUBSCRIPTION, 9, 5],
     ])(
       `generates %s: %d enabled / %d public`,
       (operationType, enabledCount, publicCount) => {
         expect(
           Array.from<Operation>(
             gp.operationsByNameByType[operationType].values(),
-          ).filter((operation) => operation.isEnabled()),
-        ).toHaveLength(enabledCount);
+          ).filter((operation) => operation.isEnabled()).length,
+        ).toBe(enabledCount);
 
         expect(
           Array.from<Operation>(
             gp.operationsByNameByType[operationType].values(),
-          ).filter((operation) => operation.isPublic()),
-        ).toHaveLength(publicCount);
+          ).filter((operation) => operation.isPublic()).length,
+        ).toBe(publicCount);
       },
     );
 

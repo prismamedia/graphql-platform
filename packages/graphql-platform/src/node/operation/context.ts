@@ -1,5 +1,6 @@
 import * as utils from '@prismamedia/graphql-platform-utils';
 import { Memoize } from '@prismamedia/memoize';
+import type { BrokerInterface } from '../../broker-interface.js';
 import type { ConnectorInterface } from '../../connector-interface.js';
 import type { GraphQLPlatform } from '../../index.js';
 import type { Node } from '../../node.js';
@@ -10,6 +11,7 @@ import { UnauthorizedError } from './error.js';
 export class OperationContext<
   TRequestContext extends object = any,
   TConnector extends ConnectorInterface = any,
+  TBroker extends BrokerInterface = any,
   TContainer extends object = any,
 > {
   public constructor(
@@ -19,6 +21,7 @@ export class OperationContext<
     public readonly gp: GraphQLPlatform<
       TRequestContext,
       TConnector,
+      TBroker,
       TContainer
     >,
 

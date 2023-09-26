@@ -1,7 +1,7 @@
 import { Memoize } from '@prismamedia/memoize';
 import * as R from 'remeda';
 import type { Node } from '../../node.js';
-import type { DependencyGraph } from '../subscription.js';
+import type { DependencyGraph } from '../operation.js';
 import type { OrderByInputValue } from '../type.js';
 import type { OrderingExpression } from './ordering/expression.js';
 

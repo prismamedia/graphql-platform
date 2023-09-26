@@ -2,6 +2,7 @@ import { beforeAll, describe, expect, it } from '@jest/globals';
 import * as graphql from 'graphql';
 import {
   ArticleStatus,
+  MyContext,
   MyGP,
   myAdminContext,
   nodeNames,
@@ -136,13 +137,15 @@ describe(`NodeOutputType`, () => {
         [
           nodeName: string,
           fragment: string,
-          context: GraphQLSelectionContext | undefined,
-          selection: string,
+          requestContext: MyContext | undefined,
+          selectionContext: GraphQLSelectionContext | undefined,
+          expected: string,
         ]
       >([
         [
           'Article',
           `{ id }`,
+          undefined,
           undefined,
           `{
   id
@@ -152,6 +155,7 @@ describe(`NodeOutputType`, () => {
           'Article',
           `... { id }`,
           undefined,
+          undefined,
           `{
   id
 }`,
@@ -159,6 +163,7 @@ describe(`NodeOutputType`, () => {
         [
           'Article',
           `... on Article { id }`,
+          undefined,
           undefined,
           `{
   id
@@ -168,6 +173,7 @@ describe(`NodeOutputType`, () => {
           'Article',
           `fragment MyTestFragment on Article { id }`,
           undefined,
+          undefined,
           `{
   id
 }`,
@@ -175,6 +181,7 @@ describe(`NodeOutputType`, () => {
         [
           'Article',
           `{ id __typename lowerCasedTitle category { id _a: parent { _id } } }`,
+          undefined,
           undefined,
           `{
   id
@@ -210,6 +217,7 @@ describe(`NodeOutputType`, () => {
             createdArticleCount(where: { status: PUBLISHED })
           }`,
           undefined,
+          undefined,
           `{
   username
   profile {
@@ -238,12 +246,13 @@ describe(`NodeOutputType`, () => {
                 birthday
               }
             }
-            createdArticles(where: $filter, orderBy: [updatedAt_DESC], first: 10) {
+            createdArticles(where: $filter, orderBy: [updatedAt_DESC], skip: 5, first: 10) {
               _id
               id
             }
             createdArticleCount(where: $filter)
           }`,
+          undefined,
           { variableValues: { filter: { status: ArticleStatus.PUBLISHED } } },
           `{
   username
@@ -252,25 +261,32 @@ describe(`NodeOutputType`, () => {
     twitterHandle
     facebookId
   }
-  createdArticles(first: 10) {
+  createdArticles(skip: 5, first: 10) {
     _id
     id
   }
   createdArticleCount
 }`,
         ],
-      ])('%p.select(%p) = %p', (nodeName, fragment, context, selectionSet) => {
-        const node = gp.getNodeByName(nodeName);
-        const outputType = node.outputType;
+      ])(
+        '%p.select(%p) = %p',
+        (nodeName, fragment, requestContext, selectionContext, expected) => {
+          const node = gp.getNodeByName(nodeName);
+          const outputType = node.outputType;
 
-        expect(
-          graphql.print(
-            outputType
-              .select(fragment, undefined, context)
-              .toGraphQLSelectionSet(),
-          ),
-        ).toEqual(selectionSet);
-      });
+          expect(
+            graphql.print(
+              outputType
+                .select(
+                  fragment,
+                  requestContext && new OperationContext(gp, requestContext),
+                  selectionContext,
+                )
+                .toGraphQLSelectionSetNode(),
+            ),
+          ).toEqual(expected);
+        },
+      );
     });
   });
 });

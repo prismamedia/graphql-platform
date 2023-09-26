@@ -1,4 +1,4 @@
-import type { DependencyGraph } from '../../../subscription.js';
+import type { DependencyGraph } from '../../../operation/dependency-graph.js';
 import type { NodeSelectedValue } from '../../selection.js';
 import type { AndOperand, BooleanFilter, OrOperand } from '../boolean.js';
 

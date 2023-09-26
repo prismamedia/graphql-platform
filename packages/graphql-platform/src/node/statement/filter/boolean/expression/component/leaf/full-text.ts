@@ -5,7 +5,7 @@ import type {
   Component,
   Leaf,
 } from '../../../../../../definition/component.js';
-import { DependencyGraph } from '../../../../../../subscription.js';
+import { DependencyGraph } from '../../../../../../operation/dependency-graph.js';
 import type { NodeFilterInputValue } from '../../../../../../type.js';
 import type { BooleanFilter } from '../../../../boolean.js';
 import type { BooleanExpressionInterface } from '../../../expression-interface.js';

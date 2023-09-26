@@ -5,7 +5,7 @@ import assert from 'node:assert/strict';
 import * as R from 'remeda';
 import type { JsonObject } from 'type-fest';
 import type { Component, Edge } from '../../../../../definition.js';
-import { DependencyGraph } from '../../../../../subscription.js';
+import { DependencyGraph } from '../../../../../operation/dependency-graph.js';
 import type {
   NodeSelectedValue,
   NodeSelection,
@@ -78,14 +78,14 @@ export class EdgeHeadSelection<TValue extends EdgeHeadValue = any>
   }
 
   @Memoize()
-  public toGraphQLField(): graphql.FieldNode {
+  public toGraphQLFieldNode(): graphql.FieldNode {
     return {
       kind: graphql.Kind.FIELD,
       name: {
         kind: graphql.Kind.NAME,
         value: this.name,
       },
-      selectionSet: this.headSelection.toGraphQLSelectionSet(),
+      selectionSet: this.headSelection.toGraphQLSelectionSetNode(),
     };
   }
 

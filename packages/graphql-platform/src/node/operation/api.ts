@@ -3,11 +3,8 @@ import type { GraphQLPlatform } from '../../index.js';
 import type {
   Node,
   NodeCursor,
-  NodeCursorOptions,
+  NodeCursorConfig,
   NodeSelectedValue,
-  NodeSubscription,
-  NodeSubscriptionOptions,
-  UniqueConstraintValue,
 } from '../../node.js';
 import type { Operation, OperationType } from '../operation.js';
 import type { OperationContext } from './context.js';
@@ -17,18 +14,15 @@ export type NodeAPI<TRequestContext extends object> = {
   [TOperation in Operation<TRequestContext> as TOperation['method']]: TOperation['execute'];
 } & {
   scroll: Node<TRequestContext>['scroll'];
-  subscribe: Node<TRequestContext>['subscribe'];
 };
 
 export const createNodeAPI = <TRequestContext extends object>(
   node: Node<TRequestContext>,
 ): NodeAPI<TRequestContext> =>
   new Proxy<any>(Object.create(null), {
-    get: (_, method: 'scroll' | 'subscribe' | Operation['method']) => {
+    get: (_, method: 'scroll' | Operation['method']) => {
       if (method === 'scroll') {
         return node.scroll.bind(node);
-      } else if (method === 'subscribe') {
-        return node.subscribe.bind(node);
       }
 
       const operation = node.getOperationByMethod(method as any);
@@ -44,14 +38,8 @@ export type ContextBoundNodeAPI = {
   ) => ReturnType<TOperation['execute']>;
 } & {
   scroll: <TValue extends NodeSelectedValue>(
-    options?: NodeCursorOptions<TValue>,
+    config: NodeCursorConfig<TValue>,
   ) => NodeCursor<TValue>;
-  subscribe: <
-    TId extends UniqueConstraintValue,
-    TValue extends NodeSelectedValue & TId,
-  >(
-    options?: NodeSubscriptionOptions<TValue>,
-  ) => NodeSubscription<TId, TValue>;
 };
 
 export const createContextBoundNodeAPI = <TRequestContext extends object>(
@@ -59,11 +47,9 @@ export const createContextBoundNodeAPI = <TRequestContext extends object>(
   context: utils.Thunkable<TRequestContext> | OperationContext<TRequestContext>,
 ): ContextBoundNodeAPI =>
   new Proxy<any>(Object.create(null), {
-    get: (_, method: 'scroll' | 'subscribe' | Operation['method']) => {
+    get: (_, method: 'scroll' | Operation['method']) => {
       if (method === 'scroll') {
         return node.scroll.bind(node, utils.resolveThunkable(context));
-      } else if (method === 'subscribe') {
-        return node.subscribe.bind(node, utils.resolveThunkable(context));
       }
 
       const operation = node.getOperationByMethod(method as any);

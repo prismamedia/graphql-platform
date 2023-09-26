@@ -1,8 +1,9 @@
 import * as utils from '@prismamedia/graphql-platform-utils';
 import { Memoize } from '@prismamedia/memoize';
 import type * as graphql from 'graphql';
+import type { BrokerInterface } from '../../../../../broker-interface.js';
 import type { ConnectorInterface } from '../../../../../connector-interface.js';
-import type { GPBoundGraphQLFieldConfig } from '../../../../../graphql-field-config.js';
+import type { NodeBoundGraphQLFieldConfig } from '../../../../../graphql-field-config.js';
 import type { Node } from '../../../../../node.js';
 import type {
   NodeSelectedValue,
@@ -13,13 +14,15 @@ import type { NodeOutputType, RawNodeSelection } from '../../node.js';
 export interface VirtualFieldOutputConfig<
   TRequestContext extends object = any,
   TConnector extends ConnectorInterface = any,
+  TBroker extends BrokerInterface = any,
   TContainer extends object = any,
   TSource extends NodeSelectedValue = any,
   TArgs = any,
   TResult = unknown,
-> extends GPBoundGraphQLFieldConfig<
+> extends NodeBoundGraphQLFieldConfig<
     TRequestContext,
     TConnector,
+    TBroker,
     TContainer,
     TSource,
     TArgs,
@@ -37,27 +40,30 @@ export interface VirtualFieldOutputConfig<
 export type ThunkableNillableVirtualFieldOutputConfig<
   TRequestContext extends object = any,
   TConnector extends ConnectorInterface = any,
+  TBroker extends BrokerInterface = any,
   TContainer extends object = any,
 > = utils.Thunkable<
   utils.Nillable<
-    VirtualFieldOutputConfig<TRequestContext, TConnector, TContainer>
+    VirtualFieldOutputConfig<TRequestContext, TConnector, TBroker, TContainer>
   >,
-  [node: Node<TRequestContext, TConnector, TContainer>]
+  [node: Node<TRequestContext, TConnector, TBroker, TContainer>]
 >;
 
 export type ThunkableNillableVirtualFieldOutputConfigsByName<
   TRequestContext extends object = any,
   TConnector extends ConnectorInterface = any,
+  TBroker extends BrokerInterface = any,
   TContainer extends object = any,
 > = utils.Thunkable<
   utils.Nillable<{
     [fieldName: utils.Name]: ThunkableNillableVirtualFieldOutputConfig<
       TRequestContext,
       TConnector,
+      TBroker,
       TContainer
     >;
   }>,
-  [node: Node<TRequestContext, TConnector, TContainer>]
+  [node: Node<TRequestContext, TConnector, TBroker, TContainer>]
 >;
 
 export class VirtualFieldOutputType {
@@ -82,10 +88,10 @@ export class VirtualFieldOutputType {
     this.#graphql = {
       ...config,
       ...(config.resolve && {
-        resolve: config.resolve.bind(parent.node.gp),
+        resolve: config.resolve.bind(parent.node),
       }),
       ...(config.subscribe && {
-        subscribe: config.subscribe.bind(parent.node.gp),
+        subscribe: config.subscribe.bind(parent.node),
       }),
     };
   }

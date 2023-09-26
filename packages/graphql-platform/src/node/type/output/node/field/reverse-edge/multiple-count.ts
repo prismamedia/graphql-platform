@@ -64,14 +64,16 @@ export class MultipleReverseEdgeCountOutputType extends AbstractReverseEdgeOutpu
 
     const argsPath = utils.addPath(path, argsPathKey);
 
+    const headFilter = this.reverseEdge.head.filterInputType.filter(
+      args?.where,
+      operationContext,
+      utils.addPath(argsPath, 'where'),
+    ).normalized;
+
     return new MultipleReverseEdgeCountSelection(
       this.reverseEdge,
       ast.alias?.value,
-      this.reverseEdge.head.filterInputType.filter(
-        args?.where,
-        operationContext,
-        utils.addPath(argsPath, 'where'),
-      ).normalized,
+      headFilter,
     );
   }
 

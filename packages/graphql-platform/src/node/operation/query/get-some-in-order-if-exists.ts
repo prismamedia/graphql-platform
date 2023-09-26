@@ -59,7 +59,7 @@ export class GetSomeInOrderIfExistsQuery<
     ];
   }
 
-  public getGraphQLOutputType() {
+  public getGraphQLFieldConfigType() {
     return new graphql.GraphQLNonNull(
       new graphql.GraphQLList(this.node.outputType.getGraphQLObjectType()),
     );

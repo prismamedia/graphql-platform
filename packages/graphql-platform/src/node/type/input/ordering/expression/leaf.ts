@@ -1,6 +1,5 @@
 import * as utils from '@prismamedia/graphql-platform-utils';
 import assert from 'node:assert/strict';
-import type { ConnectorInterface } from '../../../../../connector-interface.js';
 import type { Leaf } from '../../../../definition/component/leaf.js';
 import type { OperationContext } from '../../../../operation/context.js';
 import {
@@ -32,11 +31,8 @@ export class LeafOrderingInput extends utils.EnumInputValue {
     this.#expression = new LeafOrdering(this.leaf, this.direction);
   }
 
-  public sort<
-    TRequestContext extends object,
-    TConnector extends ConnectorInterface,
-  >(
-    _context?: OperationContext<TRequestContext, TConnector> | undefined,
+  public sort<TRequestContext extends object>(
+    _context?: OperationContext<TRequestContext> | undefined,
     _path?: utils.Path,
   ): LeafOrdering {
     return this.#expression;

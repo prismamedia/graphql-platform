@@ -4,8 +4,8 @@ import { Memoize } from '@prismamedia/memoize';
 import * as graphql from 'graphql';
 import assert from 'node:assert/strict';
 import type { MultipleReverseEdge } from '../../../../../definition.js';
-import { DependencyGraph } from '../../../../../subscription.js';
-import { NodeFilter, areFiltersEqual } from '../../../../filter.js';
+import { DependencyGraph } from '../../../../../operation/dependency-graph.js';
+import { areFiltersEqual, type NodeFilter } from '../../../../filter.js';
 import type { SelectionExpressionInterface } from '../../../expression-interface.js';
 
 export type MultipleReverseEdgeCountSelectionArgs = utils.Nillable<{
@@ -76,7 +76,7 @@ export class MultipleReverseEdgeCountSelection
   }
 
   @Memoize()
-  public toGraphQLField(): graphql.FieldNode {
+  public toGraphQLFieldNode(): graphql.FieldNode {
     return {
       kind: graphql.Kind.FIELD,
       alias: this.alias

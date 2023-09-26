@@ -234,7 +234,7 @@ describe('Node', () => {
               },
             }),
         ).toThrowError(
-          '/GraphQLPlatformConfig/nodes/Test/uniques/0 - Expects its identifier (= the first unique-constraint, composed of the component "_id") to be non-nullable (= at least one of its components being non-nullable)',
+          "/GraphQLPlatformConfig/nodes/Test/uniques - Expects at least one identifier (= a non-nullable and immutable unique-constraint), got: [ [ '_id' ] ]",
         );
       });
 
@@ -252,7 +252,7 @@ describe('Node', () => {
               },
             }),
         ).toThrowError(
-          '/GraphQLPlatformConfig/nodes/Test/uniques/0 - Expects its identifier (= the first unique-constraint, composed of the component "_id") to be immutable (= all its components being immutable)',
+          "/GraphQLPlatformConfig/nodes/Test/uniques - Expects at least one identifier (= a non-nullable and immutable unique-constraint), got: [ [ '_id' ] ]",
         );
       });
 
@@ -556,19 +556,19 @@ describe('Node', () => {
     );
 
     it.each([
-      ['Article', ['_id'], ['_id'], []],
-      ['Category', ['_id'], ['_id'], []],
+      ['Article', ['_id'], [], ['_id', 'category-slug']],
+      ['Category', ['_id'], [], ['_id', 'parent-slug', 'parent-order']],
       ['Tag', [], [], []],
-      ['ArticleTag', [], [], []],
+      ['ArticleTag', [], [], ['article-tag', 'article-order']],
       ['User', ['createdAt', 'lastLoggedInAt'], [], []],
       ['UserProfile', [], [], []],
     ])(
-      '"%s" is public but has private component(s) / unique-constraint(s) / reverse-edge(s)',
+      '"%s" is public but has private component(s) / reverse-edge(s) / unique-constraint(s)',
       (
         nodeName,
         privateComponentNames,
-        privateUniqueConstraintNames,
         privateReverseEdgeNames,
+        privateUniqueConstraintNames,
       ) => {
         const node = gp.getNodeByName(nodeName);
 
@@ -577,25 +577,25 @@ describe('Node', () => {
         expect(
           Array.from(node.componentsByName.values())
             .filter((component) => !component.isPublic())
-            .map((component) => component.name),
+            .map(({ name }) => name),
         ).toEqual(privateComponentNames);
-
-        expect(
-          Array.from(node.uniqueConstraintsByName.values())
-            .filter((uniqueConstraint) => !uniqueConstraint.isPublic())
-            .map((uniqueConstraint) => uniqueConstraint.name),
-        ).toEqual(privateUniqueConstraintNames);
 
         expect(
           Array.from(node.reverseEdgesByName.values())
             .filter((reverseEdge) => !reverseEdge.isPublic())
-            .map((reverseEdge) => reverseEdge.name),
+            .map(({ name }) => name),
         ).toEqual(privateReverseEdgeNames);
+
+        expect(
+          Array.from(node.uniqueConstraintsByName.values())
+            .filter((uniqueConstraint) => !uniqueConstraint.isPublic())
+            .map(({ name }) => name),
+        ).toEqual(privateUniqueConstraintNames);
       },
     );
 
     it.each(['Log'])(
-      '"%s" is private so cannot have public component(s) / unique-constraint(s) / reverse-edge(s)',
+      '"%s" is private so cannot have public component(s) / reverse-edge(s) / unique-constraint(s)',
       (nodeName) => {
         const node = gp.getNodeByName(nodeName);
 
@@ -608,14 +608,14 @@ describe('Node', () => {
         ).toBeFalsy();
 
         expect(
-          Array.from(node.uniqueConstraintsByName.values()).some(
-            (uniqueConstraint) => uniqueConstraint.isPublic(),
+          Array.from(node.reverseEdgesByName.values()).some((reverseEdge) =>
+            reverseEdge.isPublic(),
           ),
         ).toBeFalsy();
 
         expect(
-          Array.from(node.reverseEdgesByName.values()).some((reverseEdge) =>
-            reverseEdge.isPublic(),
+          Array.from(node.uniqueConstraintsByName.values()).some(
+            (uniqueConstraint) => uniqueConstraint.isPublic(),
           ),
         ).toBeFalsy();
       },

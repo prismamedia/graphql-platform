@@ -32,7 +32,7 @@ export class CreateSomeMutation<
   CreateSomeMutationArgs,
   CreateSomeMutationResult
 > {
-  readonly #config?: CreationConfig<any, any, any> =
+  readonly #config?: CreationConfig<any, any, any, any> =
     this.node.getMutationConfig(utils.MutationType.CREATION).config;
 
   protected readonly selectionAware = true;
@@ -55,7 +55,7 @@ export class CreateSomeMutation<
     ];
   }
 
-  public getGraphQLOutputType() {
+  public getGraphQLFieldConfigType() {
     return new graphql.GraphQLNonNull(
       new graphql.GraphQLList(
         new graphql.GraphQLNonNull(this.node.outputType.getGraphQLObjectType()),
@@ -178,7 +178,7 @@ export class CreateSomeMutation<
           authorization,
           {
             where: newValues.map((newValue) =>
-              this.node.identifier.parseValue(newValue),
+              this.node.mainIdentifier.parseValue(newValue),
             ),
             selection: args.selection,
           },

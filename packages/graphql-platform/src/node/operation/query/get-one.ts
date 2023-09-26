@@ -30,7 +30,7 @@ export class GetOneQuery<TRequestContext extends object> extends AbstractQuery<
     return this.node.getQueryByKey('get-one-if-exists').arguments;
   }
 
-  public getGraphQLOutputType() {
+  public getGraphQLFieldConfigType() {
     return new graphql.GraphQLNonNull(
       this.node.outputType.getGraphQLObjectType(),
     );

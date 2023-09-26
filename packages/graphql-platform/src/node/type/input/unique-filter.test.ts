@@ -39,11 +39,12 @@ describe('NodeUniqueFilterInputType', () => {
         if (node.isPartiallyIdentifiableWithEdge(edge)) {
           const uniqueFilterInputType =
             node.getUniqueFilterWithoutEdgeInputType(edge);
+
           expect(uniqueFilterInputType).toBeInstanceOf(
             NodeUniqueFilterInputType,
           );
 
-          if (node.isPubliclyPartiallyIdentifiableWithEdge(edge)) {
+          if (uniqueFilterInputType.isPublic()) {
             expect(
               graphql.printType(uniqueFilterInputType.getGraphQLInputType()),
             ).toMatchSnapshot(uniqueFilterInputType.name);

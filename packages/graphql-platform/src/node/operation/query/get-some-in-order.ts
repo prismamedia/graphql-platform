@@ -33,7 +33,7 @@ export class GetSomeInOrderQuery<
     return this.node.getQueryByKey('get-some-in-order-if-exists').arguments;
   }
 
-  public getGraphQLOutputType() {
+  public getGraphQLFieldConfigType() {
     return new graphql.GraphQLNonNull(
       new graphql.GraphQLList(
         new graphql.GraphQLNonNull(this.node.outputType.getGraphQLObjectType()),

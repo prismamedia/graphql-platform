@@ -31,6 +31,9 @@ import {
   type LeafFilter,
 } from '../statement.js';
 
+/**
+ * Efficiently tracks the dependencies of a result-set
+ */
 export class DependencyGraph {
   public static fromLeaf(leafOrFilter: Leaf | LeafFilter): DependencyGraph {
     const [leaf, filter] = isLeafFilter(leafOrFilter)

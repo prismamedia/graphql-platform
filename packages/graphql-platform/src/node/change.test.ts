@@ -172,7 +172,6 @@ describe('Change', () => {
       }),
     ]);
 
-    expect(aggregate.requestContexts.length).toBe(1);
     expect(aggregate.size).toBe(5);
 
     expect(

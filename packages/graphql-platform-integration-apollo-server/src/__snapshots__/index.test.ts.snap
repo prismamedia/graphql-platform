@@ -157,3 +157,23 @@ exports[`GraphQL-Platform Integration Apollo Server creates an ApolloServer inst
   },
 }
 `;
+
+exports[`GraphQL-Platform Integration Apollo Server creates an ApolloServer instance 2`] = `
+{
+  "body": {
+    "kind": "single",
+    "singleResult": {
+      "data": {
+        "articles": null,
+      },
+      "errors": undefined,
+    },
+  },
+  "http": {
+    "headers": Map {
+      "cache-control" => "no-store",
+    },
+    "status": undefined,
+  },
+}
+`;

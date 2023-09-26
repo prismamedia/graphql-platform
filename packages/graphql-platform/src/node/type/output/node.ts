@@ -3,6 +3,7 @@ import { Memoize } from '@prismamedia/memoize';
 import * as graphql from 'graphql';
 import assert from 'node:assert/strict';
 import type { Except } from 'type-fest';
+import type { BrokerInterface } from '../../../broker-interface.js';
 import type { ConnectorInterface } from '../../../connector-interface.js';
 import type { Node } from '../../../node.js';
 import type { Component } from '../../definition.js';
@@ -58,16 +59,18 @@ export type RawNodeSelection<TValue extends NodeSelectedValue = any> =
 export interface NodeOutputTypeConfig<
   TRequestContext extends object,
   TConnector extends ConnectorInterface,
+  TBroker extends BrokerInterface,
   TContainer extends object,
 > {
   /**
    * Optional, add some "virtual" fields whose value is computed from the components' value
    *
-   * They are called "virtual" because their value is not stored
+   * They are called "virtual" because they are not persisted
    */
   virtualFields?: ThunkableNillableVirtualFieldOutputConfigsByName<
     TRequestContext,
     TConnector,
+    TBroker,
     TContainer
   >;
 
@@ -84,7 +87,7 @@ export interface NodeOutputTypeConfig<
 }
 
 export class NodeOutputType {
-  readonly #config?: NodeOutputTypeConfig<any, any, any>;
+  readonly #config?: NodeOutputTypeConfig<any, any, any, any>;
   readonly #configPath: utils.Path;
 
   public constructor(public readonly node: Node) {
@@ -108,7 +111,7 @@ export class NodeOutputType {
   > {
     const fields: NodeFieldOutputType[] = [];
 
-    for (const component of this.node.componentsByName.values()) {
+    for (const component of this.node.componentSet) {
       if (component instanceof Leaf) {
         fields.push(new LeafOutputType(component));
       } else {
@@ -116,7 +119,7 @@ export class NodeOutputType {
       }
     }
 
-    for (const reverseEdge of this.node.reverseEdgesByName.values()) {
+    for (const reverseEdge of this.node.reverseEdgeSet) {
       if (reverseEdge instanceof UniqueReverseEdge) {
         fields.push(new UniqueReverseEdgeHeadOutputType(reverseEdge));
       } else {

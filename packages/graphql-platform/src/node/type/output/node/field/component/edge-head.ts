@@ -48,16 +48,15 @@ export class EdgeHeadOutputType extends AbstractComponentOutputType<undefined> {
       operationContext?.ensureAuthorization(this.edge.head, path);
     }
 
-    return new EdgeHeadSelection(
-      this.edge,
-      ast.alias?.value,
+    const headSelection =
       this.edge.head.outputType.selectGraphQLSelectionSetNode(
         ast.selectionSet,
         operationContext,
         selectionContext,
         path,
-      ),
-    );
+      );
+
+    return new EdgeHeadSelection(this.edge, ast.alias?.value, headSelection);
   }
 
   public selectShape(
@@ -69,12 +68,16 @@ export class EdgeHeadOutputType extends AbstractComponentOutputType<undefined> {
       operationContext?.ensureAuthorization(this.edge.head, path);
     }
 
-    return value === null
-      ? this.edge.selection
-      : new EdgeHeadSelection(
-          this.edge,
-          undefined,
-          this.edge.head.outputType.selectShape(value, operationContext, path),
-        );
+    if (value === null) {
+      return this.edge.selection;
+    }
+
+    const headSelection = this.edge.head.outputType.selectShape(
+      value,
+      operationContext,
+      path,
+    );
+
+    return new EdgeHeadSelection(this.edge, undefined, headSelection);
   }
 }

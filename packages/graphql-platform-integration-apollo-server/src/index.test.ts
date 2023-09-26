@@ -12,7 +12,9 @@ describe('GraphQL-Platform Integration Apollo Server', () => {
   let gp: MyGP;
 
   beforeAll(async () => {
-    gp = createMyGP('integration_apollo_server');
+    gp = createMyGP('integration_apollo_server', {
+      subscription: { public: true },
+    });
 
     await gp.connector.setup();
     await gp.seed(myAdminContext, fixtures.constant);
@@ -49,6 +51,26 @@ describe('GraphQL-Platform Integration Apollo Server', () => {
           variables: {
             first: 10,
           },
+        },
+        { contextValue: myAdminContext },
+      ),
+    ).resolves.toMatchSnapshot();
+
+    await expect(
+      server.executeOperation(
+        {
+          query: `subscription SubscribeToArticleChanges {
+            articles(where: { status: PUBLISHED }) {
+              ... on ArticleDeletion {
+                id
+              }
+              ... on Article {
+                id
+                status
+                title
+              }
+            }
+          }`,
         },
         { contextValue: myAdminContext },
       ),

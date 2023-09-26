@@ -1,20 +1,17 @@
 import * as utils from '@prismamedia/graphql-platform-utils';
-import type { ConnectorInterface } from '../../connector-interface.js';
 import type { Node, NodeValue } from '../../node.js';
 import { AbstractNodeChange } from '../abstract-change.js';
 
 export class NodeCreation<
   TRequestContext extends object = any,
-  TConnector extends ConnectorInterface = any,
-  TContainer extends object = any,
-> extends AbstractNodeChange<TRequestContext, TConnector, TContainer> {
+> extends AbstractNodeChange<TRequestContext> {
   public override readonly kind = utils.MutationType.CREATION;
 
   public readonly oldValue: undefined;
   public readonly newValue: Readonly<NodeValue>;
 
   public constructor(
-    node: Node<TRequestContext, TConnector, TContainer>,
+    node: Node<TRequestContext>,
     requestContext: TRequestContext,
     maybeNewValue: unknown,
     createdAt?: Date,
@@ -24,7 +21,7 @@ export class NodeCreation<
 
     super(
       node,
-      node.identifier.parseValue(newValue),
+      node.mainIdentifier.parseValue(newValue),
       requestContext,
       createdAt,
       committedAt,

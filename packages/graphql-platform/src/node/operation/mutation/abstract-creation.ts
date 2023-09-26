@@ -1,5 +1,6 @@
 import * as utils from '@prismamedia/graphql-platform-utils';
 import type { Except, Promisable } from 'type-fest';
+import type { BrokerInterface } from '../../../broker-interface.js';
 import type { ConnectorInterface } from '../../../connector-interface.js';
 import type { NodeCreation } from '../../change.js';
 import type { NodeCreationValue } from '../../statement/creation.js';
@@ -13,8 +14,14 @@ import {
 interface AbstractCreationHookArgs<
   TRequestContext extends object,
   TConnector extends ConnectorInterface,
+  TBroker extends BrokerInterface,
   TContainer extends object,
-> extends AbstractMutationHookArgs<TRequestContext, TConnector, TContainer> {
+> extends AbstractMutationHookArgs<
+    TRequestContext,
+    TConnector,
+    TBroker,
+    TContainer
+  > {
   /**
    * The provided "data" argument
    */
@@ -24,8 +31,14 @@ interface AbstractCreationHookArgs<
 export interface PreCreateArgs<
   TRequestContext extends object,
   TConnector extends ConnectorInterface,
+  TBroker extends BrokerInterface,
   TContainer extends object,
-> extends AbstractCreationHookArgs<TRequestContext, TConnector, TContainer> {
+> extends AbstractCreationHookArgs<
+    TRequestContext,
+    TConnector,
+    TBroker,
+    TContainer
+  > {
   /**
    * The creation statement, as a mutable plain-object
    */
@@ -35,12 +48,18 @@ export interface PreCreateArgs<
 export interface PostCreateArgs<
   TRequestContext extends object,
   TConnector extends ConnectorInterface,
+  TBroker extends BrokerInterface,
   TContainer extends object,
-> extends AbstractCreationHookArgs<TRequestContext, TConnector, TContainer> {
+> extends AbstractCreationHookArgs<
+    TRequestContext,
+    TConnector,
+    TBroker,
+    TContainer
+  > {
   /**
    * The uncommitted change
    */
-  readonly change: NodeCreation<TRequestContext, TConnector, TContainer>;
+  readonly change: NodeCreation<TRequestContext>;
 }
 
 /**
@@ -49,8 +68,14 @@ export interface PostCreateArgs<
 export interface CreationConfig<
   TRequestContext extends object,
   TConnector extends ConnectorInterface,
+  TBroker extends BrokerInterface,
   TContainer extends object,
-> extends AbstractMutationConfig<TRequestContext, TConnector, TContainer> {
+> extends AbstractMutationConfig<
+    TRequestContext,
+    TConnector,
+    TBroker,
+    TContainer
+  > {
   /**
    * Optional, add some "virtual" fields whose values can be used in the hooks
    */
@@ -65,7 +90,7 @@ export interface CreationConfig<
    * Throwing an Error here will prevent the creation
    */
   preCreate?(
-    args: PreCreateArgs<TRequestContext, TConnector, TContainer>,
+    args: PreCreateArgs<TRequestContext, TConnector, TBroker, TContainer>,
   ): Promisable<void>;
 
   /**
@@ -74,7 +99,7 @@ export interface CreationConfig<
    * Throwing an Error here will fail the creation
    */
   postCreate?(
-    args: PostCreateArgs<TRequestContext, TConnector, TContainer>,
+    args: PostCreateArgs<TRequestContext, TConnector, TBroker, TContainer>,
   ): Promisable<void>;
 }
 

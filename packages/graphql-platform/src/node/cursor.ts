@@ -91,9 +91,26 @@ export type NodeCursorForEachOptions = Except<
     | { container: MultiProgressBar; name: string };
 };
 
-export type NodeCursorOptions<TValue extends NodeSelectedValue = any> = {
+export type NodeCursorByBatchTask<
+  TValue extends NodeSelectedValue = any,
+  TRequestContext extends object = any,
+> = (
+  values: ReadonlyArray<TValue>,
+  cursor: NodeCursor<TValue, TRequestContext>,
+) => Promisable<void>;
+
+export type NodeCursorByBatchOptions = NodeCursorForEachOptions & {
+  /**
+   * Optional, the maximum size of the batch
+   *
+   * Default: 100
+   */
+  batchSize?: number;
+};
+
+export type NodeCursorConfig<TValue extends NodeSelectedValue = any> = {
   where?: NodeFilterInputValue | NodeFilter;
-  selection?: RawNodeSelection<TValue>;
+  selection: RawNodeSelection<TValue>;
   direction?: OrderingDirection;
   uniqueConstraint?: UniqueConstraint['name'];
   chunkSize?: number;
@@ -119,15 +136,15 @@ export class NodeCursor<
     context:
       | utils.Thunkable<TRequestContext>
       | OperationContext<TRequestContext>,
-    options?: Readonly<NodeCursorOptions<TValue>>,
+    config: Readonly<NodeCursorConfig<TValue>>,
   ) {
     // unique-constraint
     {
       let uniqueConstraint: UniqueConstraint | undefined;
 
-      if (options?.uniqueConstraint) {
+      if (config?.uniqueConstraint) {
         uniqueConstraint = node.getUniqueConstraintByName(
-          options.uniqueConstraint,
+          config.uniqueConstraint,
         );
 
         assert(
@@ -148,17 +165,15 @@ export class NodeCursor<
     // filter
     {
       const filter =
-        options?.where instanceof NodeFilter
-          ? options.where
-          : node.filterInputType.parseAndFilter(options?.where);
+        config?.where instanceof NodeFilter
+          ? config.where
+          : node.filterInputType.parseAndFilter(config?.where);
       assert(!filter.isFalse());
 
       this.filter = filter.normalized;
     }
 
-    this.selection = options?.selection
-      ? node.outputType.select(options.selection)
-      : node.selection;
+    this.selection = node.outputType.select(config.selection);
 
     this.#internalSelection = this.selection.mergeWith(
       this.uniqueConstraint.selection,
@@ -166,7 +181,7 @@ export class NodeCursor<
 
     this.#api = node.createContextBoundAPI(context);
 
-    this.#direction = options?.direction || OrderingDirection.ASCENDING;
+    this.#direction = config?.direction || OrderingDirection.ASCENDING;
 
     this.ordering = new NodeOrdering(
       node,
@@ -177,7 +192,7 @@ export class NodeCursor<
       }),
     );
 
-    this.#chunkSize = Math.max(1, options?.chunkSize || 100);
+    this.#chunkSize = Math.max(1, config?.chunkSize || 100);
   }
 
   @Memoize((force: boolean = false) => force && doNotCache)
@@ -295,6 +310,122 @@ export class NodeCursor<
                 : wrappedTask,
             );
           }
+
+          await tasks.onIdle();
+
+          progressBar?.stop();
+
+          resolve();
+        } catch (error) {
+          reject(error);
+        }
+      });
+    } finally {
+      tasks.clear();
+    }
+  }
+
+  public async byBatch(
+    task: NodeCursorByBatchTask<TValue, TRequestContext>,
+    {
+      batchSize,
+      progressBar: progressBarOptions,
+      retry: retryOptions,
+      buffer: bufferOptions,
+      ...queueOptions
+    }: NodeCursorByBatchOptions = {},
+  ): Promise<void> {
+    const tasks = new PQueue({
+      ...queueOptions,
+      concurrency: queueOptions?.concurrency ?? 1,
+      throwOnTimeout: queueOptions?.throwOnTimeout ?? true,
+    });
+
+    const buffer = bufferOptions ?? tasks.concurrency;
+    assert(
+      typeof buffer === 'number' && buffer >= 1,
+      `The buffer has to be greater than or equal to 1, got ${inspect(buffer)}`,
+    );
+
+    const normalizedBatchSize = Math.max(1, batchSize || this.#chunkSize);
+
+    const normalizedRetryOptions: PRetryOptions | false = retryOptions
+      ? retryOptions === true
+        ? {}
+        : typeof retryOptions === 'number'
+        ? { retries: retryOptions }
+        : retryOptions
+      : false;
+
+    let currentIndex: number = 0;
+
+    let progressBar: ProgressBar | undefined;
+    if (progressBarOptions) {
+      if (
+        typeof progressBarOptions === 'object' &&
+        'container' in progressBarOptions &&
+        'name' in progressBarOptions
+      ) {
+        assert(
+          progressBarOptions.container instanceof MultiProgressBar,
+          `The "container" has to be a multi-progress-bar instance`,
+        );
+        assert.equal(
+          typeof progressBarOptions.name,
+          'string',
+          `The "name" has to be a string`,
+        );
+
+        progressBar = progressBarOptions.container.create(
+          await this.size(),
+          currentIndex,
+          { name: progressBarOptions.name },
+        );
+      } else {
+        progressBar =
+          progressBarOptions instanceof ProgressBar
+            ? progressBarOptions
+            : new ProgressBar({ format: defaultProgressBarFormat });
+
+        progressBar.start(await this.size(), currentIndex);
+      }
+    }
+
+    let batch: TValue[] = [];
+
+    const processBatch = () => {
+      if (batch.length) {
+        const values = Object.freeze(batch);
+        batch = [];
+
+        const wrappedTask = async () => {
+          await task(values, this);
+
+          progressBar?.increment(values.length);
+        };
+
+        tasks.add(
+          normalizedRetryOptions
+            ? () => PRetry(wrappedTask, normalizedRetryOptions)
+            : wrappedTask,
+        );
+      }
+    };
+
+    try {
+      await new Promise<void>(async (resolve, reject) => {
+        tasks.on('error', reject);
+
+        try {
+          for await (const value of this) {
+            await tasks.onSizeLessThan(buffer);
+
+            if (batch.push(value) >= normalizedBatchSize) {
+              processBatch();
+            }
+          }
+
+          processBatch();
 
           await tasks.onIdle();
 

@@ -13,21 +13,13 @@ export type ComponentConfig<TConnector extends ConnectorInterface = any> =
   | LeafConfig<TConnector>
   | EdgeConfig<TConnector>;
 
-export type Component<
-  TRequestContext extends object = any,
-  TConnector extends ConnectorInterface = any,
-  TContainer extends object = any,
-> =
-  | Leaf<TRequestContext, TConnector, TContainer>
-  | Edge<TRequestContext, TConnector, TContainer>;
+export type Component<TConnector extends ConnectorInterface = any> =
+  | Leaf<TConnector>
+  | Edge<TConnector>;
 
-export const isComponent = <
-  TRequestContext extends object = any,
-  TConnector extends ConnectorInterface = any,
-  TContainer extends object = any,
->(
+export const isComponent = (
   maybeComponent: unknown,
-): maybeComponent is Component<TRequestContext, TConnector, TContainer> =>
+): maybeComponent is Component =>
   maybeComponent instanceof Leaf || maybeComponent instanceof Edge;
 
 export type ComponentValue = LeafValue | ReferenceValue;

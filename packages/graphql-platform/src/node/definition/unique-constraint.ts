@@ -1,5 +1,8 @@
 import * as utils from '@prismamedia/graphql-platform-utils';
 import { Memoize } from '@prismamedia/memoize';
+import * as graphql from 'graphql';
+import inflection from 'inflection';
+import assert from 'node:assert/strict';
 import type { JsonObject } from 'type-fest';
 import type {
   ConnectorConfigOverride,
@@ -37,33 +40,21 @@ const isShortConfig = (
   config: UniqueConstraintConfig,
 ): config is ShortUniqueConstraintConfig => Array.isArray(config);
 
-export class UniqueConstraint<
-  TRequestContext extends object = any,
-  TConnector extends ConnectorInterface = any,
-  TContainer extends object = any,
-> {
+export class UniqueConstraint<TConnector extends ConnectorInterface = any> {
   public readonly config: FullUniqueConstraintConfig<TConnector>;
   public readonly name: utils.Name;
 
   public readonly componentsByName: ReadonlyMap<
     Component['name'],
-    Component<TRequestContext, TConnector, TContainer>
+    Component<TConnector>
   >;
 
-  public readonly componentSet: ReadonlySet<
-    Component<TRequestContext, TConnector, TContainer>
-  >;
-
-  public readonly leafSet: ReadonlySet<
-    Leaf<TRequestContext, TConnector, TContainer>
-  >;
-
-  public readonly edgeSet: ReadonlySet<
-    Edge<TRequestContext, TConnector, TContainer>
-  >;
+  public readonly componentSet: ReadonlySet<Component<TConnector>>;
+  public readonly leafSet: ReadonlySet<Leaf<TConnector>>;
+  public readonly edgeSet: ReadonlySet<Edge<TConnector>>;
 
   public constructor(
-    public readonly node: Node<TRequestContext, TConnector, TContainer>,
+    public readonly node: Node<any, TConnector>,
     config: UniqueConstraintConfig<TConnector>,
     public readonly configPath: utils.Path,
   ) {
@@ -143,9 +134,7 @@ export class UniqueConstraint<
   }
 
   @Memoize()
-  public get referrerSet(): ReadonlySet<
-    Edge<TRequestContext, TConnector, TContainer>
-  > {
+  public get referrerSet(): ReadonlySet<Edge<TConnector>> {
     return new Set(
       Array.from(this.node.gp.nodesByName.values()).flatMap((node) =>
         Array.from(node.edgesByName.values()).filter(
@@ -153,11 +142,6 @@ export class UniqueConstraint<
         ),
       ),
     );
-  }
-
-  @Memoize()
-  public isIdentifier(): boolean {
-    return this.node.identifier === this;
   }
 
   @Memoize()
@@ -179,10 +163,26 @@ export class UniqueConstraint<
     );
   }
 
+  /**
+   * Is an identifier if it's non-nullable and immutable
+   */
+  @Memoize()
+  public isIdentifier(): boolean {
+    return !this.isNullable() && !this.isMutable();
+  }
+
+  @Memoize()
+  public isMainIdentifier(): boolean {
+    return this.node.mainIdentifier === this;
+  }
+
   @Memoize()
   public isPublic(): boolean {
-    return Array.from(this.componentSet).every((component) =>
-      component.isPublic(),
+    return Array.from(this.componentSet).every(
+      (component) =>
+        component.isPublic() &&
+        (component instanceof Leaf ||
+          component.referencedUniqueConstraint.isPublic()),
     );
   }
 
@@ -208,13 +208,55 @@ export class UniqueConstraint<
 
   public validateDefinition(): void {
     this.referrerSet;
-    this.isIdentifier();
     this.isComposite();
     this.isMutable();
     this.isNullable();
+    this.isIdentifier();
+    this.isMainIdentifier();
     this.isPublic();
     this.isScrollable();
     this.selection;
+  }
+
+  @Memoize()
+  public getGraphQLObjectType(): graphql.GraphQLObjectType {
+    assert(this.isPublic(), `The "${this}" unique-constraint is private`);
+
+    return new graphql.GraphQLObjectType({
+      name: [
+        this.node.name,
+        ...Array.from(this.componentSet, ({ name }) =>
+          inflection.camelize(name),
+        ),
+      ].join(''),
+      fields: () =>
+        Array.from(this.componentSet).reduce((fields, component) => {
+          if (component.isPublic()) {
+            const type =
+              component instanceof Leaf
+                ? component.type
+                : component.referencedUniqueConstraint.isPublic()
+                ? component.referencedUniqueConstraint.getGraphQLObjectType()
+                : undefined;
+
+            if (type) {
+              fields[component.name] = {
+                ...(component.description && {
+                  description: component.description,
+                }),
+                ...(component.deprecationReason && {
+                  deprecationReason: component.deprecationReason,
+                }),
+                type: component.isNullable()
+                  ? type
+                  : new graphql.GraphQLNonNull(type),
+              };
+            }
+          }
+
+          return fields;
+        }, Object.create(null)),
+    });
   }
 
   public parseValue(

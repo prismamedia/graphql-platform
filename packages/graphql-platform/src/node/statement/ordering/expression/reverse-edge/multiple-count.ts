@@ -1,5 +1,5 @@
-import type { MultipleReverseEdge } from '../../../../definition/reverse-edge/multiple.js';
-import { DependencyGraph } from '../../../../subscription.js';
+import type { MultipleReverseEdge } from '../../../../definition.js';
+import { DependencyGraph } from '../../../../operation/dependency-graph.js';
 import type { OrderingDirection } from '../../direction.js';
 import type { OrderingExpressionInterface } from '../../expression-interface.js';
 

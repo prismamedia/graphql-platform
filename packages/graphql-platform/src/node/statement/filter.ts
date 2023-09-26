@@ -1,7 +1,7 @@
 import { Memoize } from '@prismamedia/memoize';
 import assert from 'node:assert/strict';
 import type { Node } from '../../node.js';
-import type { DependencyGraph } from '../subscription.js';
+import type { DependencyGraph } from '../operation.js';
 import type { NodeFilterInputValue } from '../type.js';
 import type { BooleanFilter } from './filter/boolean.js';
 import {

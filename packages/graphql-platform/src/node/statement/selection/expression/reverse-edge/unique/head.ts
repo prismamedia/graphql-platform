@@ -4,7 +4,7 @@ import * as graphql from 'graphql';
 import assert from 'node:assert/strict';
 import type { JsonObject } from 'type-fest';
 import type { UniqueReverseEdge } from '../../../../../definition.js';
-import { DependencyGraph } from '../../../../../subscription.js';
+import { DependencyGraph } from '../../../../../operation/dependency-graph.js';
 import type {
   NodeSelectedValue,
   NodeSelection,
@@ -80,14 +80,14 @@ export class UniqueReverseEdgeHeadSelection<
   }
 
   @Memoize()
-  public toGraphQLField(): graphql.FieldNode {
+  public toGraphQLFieldNode(): graphql.FieldNode {
     return {
       kind: graphql.Kind.FIELD,
       name: {
         kind: graphql.Kind.NAME,
         value: this.name,
       },
-      selectionSet: this.headSelection.toGraphQLSelectionSet(),
+      selectionSet: this.headSelection.toGraphQLSelectionSetNode(),
     };
   }
 

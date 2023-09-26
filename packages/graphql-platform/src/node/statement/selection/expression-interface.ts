@@ -1,7 +1,7 @@
 import type * as utils from '@prismamedia/graphql-platform-utils';
 import type * as graphql from 'graphql';
 import type { JsonValue } from 'type-fest';
-import type { DependencyGraph } from '../../subscription.js';
+import type { DependencyGraph } from '../../operation/dependency-graph.js';
 
 export interface SelectionExpressionInterface<
   TInternal = any,
@@ -14,7 +14,7 @@ export interface SelectionExpressionInterface<
   isAkinTo(expression: unknown): boolean;
   equals(expression: unknown): boolean;
   isSupersetOf(expression: unknown): boolean;
-  toGraphQLField(): graphql.FieldNode;
+  toGraphQLFieldNode(): graphql.FieldNode;
 
   parseValue(maybeValue: unknown, path?: utils.Path): TInternal;
   areValuesEqual(a: TInternal, b: TInternal): boolean;

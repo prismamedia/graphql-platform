@@ -14,5 +14,8 @@
     "rootDir": "src",
     "outDir": "dist"
   },
-  "references": [{ "path": "../graphql-platform" }]
+  "references": [
+    { "path": "../graphql-platform-connector-mariadb" },
+    { "path": "../graphql-platform" }
+  ]
 }

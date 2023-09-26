@@ -5,7 +5,9 @@ import {
 import * as utils from '@prismamedia/graphql-platform-utils';
 import { Memoize } from '@prismamedia/memoize';
 import * as graphql from 'graphql';
-import type { Except } from 'type-fest';
+import type { Except, IfAny } from 'type-fest';
+import type { BrokerInterface } from './broker-interface.js';
+import { InMemoryBroker } from './broker/in-memory.js';
 import type { ConnectorInterface } from './connector-interface.js';
 import {
   getCustomOperationsByNameByType,
@@ -28,12 +30,15 @@ import {
   type OperationContext,
   type OperationInterface,
   type OperationType,
+  type SubscriptionConfig,
 } from './node.js';
 import {
   Seeding,
   type NodeFixtureDataByReferenceByNodeName,
 } from './seeding.js';
 
+export * from './broker-interface.js';
+export * from './broker/in-memory.js';
 export * from './connector-interface.js';
 export * from './custom-operations.js';
 export * from './graphql-field-config.js';
@@ -50,23 +55,16 @@ type OperationsByNameByType<TRequestContext extends object = any> = {
 export type RequestContextAssertion<
   TRequestContext extends object = any,
   TConnector extends ConnectorInterface = any,
+  TBroker extends BrokerInterface = any,
   TContainer extends object = any,
 > = (
-  this: GraphQLPlatform<TRequestContext, TConnector, TContainer>,
+  this: GraphQLPlatform<TRequestContext, TConnector, TBroker, TContainer>,
   maybeRequestContext: object,
 ) => asserts maybeRequestContext is TRequestContext;
 
-export type EventDataByName<
-  TRequestContext extends object = any,
-  TConnector extends ConnectorInterface = any,
-  TContainer extends object = any,
-> = {
-  'node-change-aggregation': NodeChangeAggregation<
-    TRequestContext,
-    TConnector,
-    TContainer
-  >;
-  'node-change': NodeChange<TRequestContext, TConnector, TContainer>;
+export type EventDataByName<TRequestContext extends object = any> = {
+  'node-change-aggregation': NodeChangeAggregation<TRequestContext>;
+  'node-change': NodeChange<TRequestContext>;
 };
 
 export type ConnectorConfig<
@@ -74,23 +72,47 @@ export type ConnectorConfig<
   TConnector extends ConnectorInterface = any,
 > = utils.Thunkable<
   TConnector,
-  [gp: GraphQLPlatform<TRequestContext, any, any>, configPath: utils.Path]
+  [gp: GraphQLPlatform<TRequestContext>, configPath: utils.Path]
+>;
+
+export type BrokerConfig<
+  TRequestContext extends object = any,
+  TConnector extends ConnectorInterface = any,
+  TBroker extends BrokerInterface = any,
+> = utils.Thunkable<
+  TBroker,
+  [gp: GraphQLPlatform<TRequestContext, TConnector>, configPath: utils.Path]
 >;
 
 export type ContainerConfig<
   TRequestContext extends object = any,
   TConnector extends ConnectorInterface = any,
+  TBroker extends BrokerInterface = any,
   TContainer extends object = any,
 > = utils.Thunkable<
   TContainer,
-  [gp: GraphQLPlatform<TRequestContext, TConnector, {}>, configPath: utils.Path]
+  [
+    gp: GraphQLPlatform<TRequestContext, TConnector, TBroker>,
+    configPath: utils.Path,
+  ]
 >;
 
 export interface GraphQLPlatformConfig<
   TRequestContext extends object = any,
   TConnector extends ConnectorInterface = any,
+  TBroker extends BrokerInterface = any,
   TContainer extends object = any,
 > {
+  /**
+   * Optional, fine-tune the "subscription"
+   */
+  subscription?: SubscriptionConfig<
+    TRequestContext,
+    TConnector,
+    TBroker,
+    TContainer
+  >;
+
   /**
    * Required, provide the nodes' definition
    */
@@ -100,7 +122,12 @@ export interface GraphQLPlatformConfig<
      *
      * @see https://spec.graphql.org/draft/#sec-Names
      */
-    [nodeName: NodeName]: NodeConfig<TRequestContext, TConnector, TContainer>;
+    [nodeName: NodeName]: NodeConfig<
+      TRequestContext,
+      TConnector,
+      TBroker,
+      TContainer
+    >;
   };
 
   /**
@@ -109,6 +136,7 @@ export interface GraphQLPlatformConfig<
   customOperations?: CustomOperationsByNameByTypeConfig<
     TRequestContext,
     TConnector,
+    TBroker,
     TContainer
   >;
 
@@ -123,9 +151,14 @@ export interface GraphQLPlatformConfig<
   connector?: ConnectorConfig<TRequestContext, TConnector>;
 
   /**
+   * Optional, provide a broker to handle the subscriptions
+   */
+  broker?: BrokerConfig<TRequestContext, TConnector, TBroker>;
+
+  /**
    * Optional, given the GraphQL-Platform instance, build a service-container which will be accessible further in the hooks, the virtual-fields and the custom-operations' resolver
    */
-  container?: ContainerConfig<TRequestContext, TConnector, TContainer>;
+  container?: ContainerConfig<TRequestContext, TConnector, TBroker, TContainer>;
 
   /**
    * Optional, a method which asserts the request-context validity
@@ -139,6 +172,7 @@ export interface GraphQLPlatformConfig<
   requestContextAssertion?: RequestContextAssertion<
     TRequestContext,
     TConnector,
+    TBroker,
     TContainer
   >;
 
@@ -146,9 +180,9 @@ export interface GraphQLPlatformConfig<
    * Optional, register some event-listeners, all at once
    */
   on?: utils.Thunkable<
-    EventConfigByName<EventDataByName<TRequestContext, TConnector, TContainer>>,
+    EventConfigByName<EventDataByName<TRequestContext>>,
     [
-      gp: GraphQLPlatform<TRequestContext, TConnector, TContainer>,
+      gp: GraphQLPlatform<TRequestContext, TConnector, TBroker, TContainer>,
       configPath: utils.Path,
     ]
   >;
@@ -157,28 +191,34 @@ export interface GraphQLPlatformConfig<
 export class GraphQLPlatform<
   TRequestContext extends object = any,
   TConnector extends ConnectorInterface = any,
+  TBroker extends BrokerInterface = any,
   TContainer extends object = any,
-> extends AsyncEventEmitter<
-  EventDataByName<TRequestContext, TConnector, TContainer>
-> {
+> extends AsyncEventEmitter<EventDataByName<TRequestContext>> {
+  public readonly subscriptionConfig: {
+    readonly enabled: boolean;
+    readonly public: boolean;
+  };
+
   public readonly nodesByName: ReadonlyMap<
     Node['name'],
-    Node<TRequestContext, TConnector, TContainer>
+    Node<TRequestContext, TConnector, TBroker, TContainer>
   >;
 
   public readonly nodeSet: ReadonlySet<
-    Node<TRequestContext, TConnector, TContainer>
+    Node<TRequestContext, TConnector, TBroker, TContainer>
   >;
 
   public readonly operationsByNameByType: OperationsByNameByType<TRequestContext>;
 
-  readonly #connector?: TConnector;
-
-  public readonly container: Readonly<TContainer>;
-
   readonly #requestContextAssertion?: (
     maybeRequestContext: object,
   ) => asserts maybeRequestContext is TRequestContext;
+
+  readonly #connector?: TConnector;
+
+  public readonly broker: IfAny<TBroker, BrokerInterface, TBroker>;
+
+  public readonly container: Readonly<TContainer>;
 
   /**
    * Make it easy to call the operations, either through the "GraphAPI" or the "NodeAPI":
@@ -195,6 +235,7 @@ export class GraphQLPlatform<
     public readonly config: GraphQLPlatformConfig<
       TRequestContext,
       TConnector,
+      TBroker,
       TContainer
     >,
     public readonly configPath: utils.Path = utils.addPath(
@@ -205,6 +246,30 @@ export class GraphQLPlatform<
     utils.assertPlainObject(config, configPath);
 
     super();
+
+    // subscription-config
+    {
+      const subscriptionConfig = config.subscription;
+      const subscriptionConfigPath = utils.addPath(configPath, 'subscription');
+
+      utils.assertNillablePlainObject(
+        subscriptionConfig,
+        subscriptionConfigPath,
+      );
+
+      this.subscriptionConfig = Object.freeze({
+        enabled: utils.getOptionalFlag(
+          subscriptionConfig?.enabled,
+          true,
+          utils.addPath(subscriptionConfigPath, 'enabled'),
+        ),
+        public: utils.getOptionalFlag(
+          subscriptionConfig?.public,
+          false,
+          utils.addPath(subscriptionConfigPath, 'public'),
+        ),
+      });
+    }
 
     // nodes
     {
@@ -253,21 +318,21 @@ export class GraphQLPlatform<
           this.nodesByName.values(),
           (_, node) => node.validateDefinition(),
           undefined,
-          { path: nodesConfigPath },
+          { path: configPath },
         );
 
         utils.aggregateGraphError<Node, void>(
           this.nodesByName.values(),
           (_, node) => node.validateTypes(),
           undefined,
-          { path: nodesConfigPath },
+          { path: configPath },
         );
 
         utils.aggregateGraphError<Node, void>(
           this.nodesByName.values(),
           (_, node) => node.validateOperations(),
           undefined,
-          { path: nodesConfigPath },
+          { path: configPath },
         );
       }
     }
@@ -312,14 +377,21 @@ export class GraphQLPlatform<
 
     // connector
     {
-      const connectorConfig = config.connector;
-      const connectorConfigPath = utils.addPath(configPath, 'connector');
+      this.#connector =
+        utils.resolveThunkable(
+          config.connector,
+          this,
+          utils.addPath(configPath, 'connector'),
+        ) || undefined;
+    }
 
-      this.#connector = utils.resolveThunkable(
-        connectorConfig,
+    // broker
+    {
+      this.broker = (utils.resolveThunkable(
+        config.broker,
         this,
-        connectorConfigPath,
-      );
+        utils.addPath(configPath, 'broker'),
+      ) || new InMemoryBroker(this)) as any;
     }
 
     // container
@@ -373,7 +445,7 @@ export class GraphQLPlatform<
   public getNodeByName(
     name: Node['name'],
     path?: utils.Path,
-  ): Node<TRequestContext, TConnector, TContainer> {
+  ): Node<TRequestContext, TConnector, TBroker, TContainer> {
     const node = this.nodesByName.get(name);
     if (!node) {
       throw new utils.UnexpectedValueError(
@@ -391,7 +463,7 @@ export class GraphQLPlatform<
   public ensureNode(
     nodeOrName: Node | Node['name'],
     path?: utils.Path,
-  ): Node<TRequestContext, TConnector, TContainer> {
+  ): Node<TRequestContext, TConnector, TBroker, TContainer> {
     if (typeof nodeOrName === 'string') {
       return this.getNodeByName(nodeOrName, path);
     } else if (nodeOrName instanceof Node && this.nodeSet.has(nodeOrName)) {
@@ -452,7 +524,7 @@ export class GraphQLPlatform<
   }
 
   @Memoize()
-  public get connector(): TConnector {
+  public get connector(): IfAny<TConnector, ConnectorInterface, TConnector> {
     if (!this.#connector) {
       throw new utils.GraphError(`No connector has been provided`, {
         path: utils.addPath(this.configPath, 'connector'),

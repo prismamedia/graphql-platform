@@ -1,5 +1,9 @@
 import { afterAll, beforeAll, describe, expect, it } from '@jest/globals';
-import type { NodeSubscriptionChange } from '@prismamedia/graphql-platform';
+import {
+  ChangesSubscriptionDeletion,
+  type ChangesSubscriptionChange,
+  type InMemoryBroker,
+} from '@prismamedia/graphql-platform';
 import {
   ArticleStatus,
   myAdminContext,
@@ -8,7 +12,7 @@ import * as fixtures from '@prismamedia/graphql-platform/__tests__/fixture.js';
 import { createMyGP, type MyGP } from './__tests__/config.js';
 
 describe('Subscription', () => {
-  let gp: MyGP;
+  let gp: MyGP<InMemoryBroker>;
 
   beforeAll(async () => {
     gp = createMyGP(`connector_mariadb_subscription`);
@@ -23,31 +27,31 @@ describe('Subscription', () => {
     const Category = gp.getNodeByName('Category');
     const Tag = gp.getNodeByName('Tag');
 
-    const ac = new AbortController();
-
-    const subscription = Article.subscribe(myAdminContext, {
+    const subscription = await Article.api.subscribeToChanges(myAdminContext, {
       where: {
         status: ArticleStatus.PUBLISHED,
         category: { parent: null, slug: 'root' },
         tags_some: { tag: { deprecated_not: true } },
       },
-      selection: `{
-        id
-        title
-        category {
+      selection: {
+        onUpsert: `{
+          id
           title
-        }
-        tags(
-          where: { tag: { deprecated_not: true } },
-          orderBy: [order_ASC],
-          first: 10
-        ) {
-          tag {
+          category {
             title
           }
-        }
-      }`,
-      signal: ac.signal,
+          tags(
+            where: { tag: { deprecated_not: true } },
+            orderBy: [order_ASC],
+            first: 10
+          ) {
+            tag {
+              title
+            }
+          }
+        }`,
+        onDeletion: `{ id }`,
+      },
     });
 
     await gp.seed(myAdminContext, fixtures.constant);
@@ -105,16 +109,24 @@ describe('Subscription', () => {
       selection: `{ id }`,
     });
 
-    subscription.on('idle', () => ac.abort());
+    await gp.broker.onSubscriptionIdle(subscription);
+    subscription.on('idle', () => subscription.dispose());
 
-    const changes: NodeSubscriptionChange[] = [];
+    const changes: ChangesSubscriptionChange[] = [];
     for await (const change of subscription) {
       changes.push(change);
     }
 
     expect(changes.length).toBe(7);
     expect(
-      changes.map((change) => `${change.subscription.node}.${change.kind}`),
+      changes.map(
+        (change) =>
+          `${change.subscription.node}.${
+            change instanceof ChangesSubscriptionDeletion
+              ? 'deletion'
+              : 'upsert'
+          }`,
+      ),
     ).toMatchInlineSnapshot(`
       [
         "Article.upsert",
@@ -127,6 +139,6 @@ describe('Subscription', () => {
       ]
     `);
 
-    subscription.dispose();
+    await subscription.dispose();
   });
 });

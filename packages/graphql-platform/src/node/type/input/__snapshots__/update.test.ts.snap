@@ -61,9 +61,9 @@ input ArticleUpdateWithoutCategoryInput {
 }"
 `;
 
-exports[`NodeUpdateInputType Definition Article may have an update input type: ArticleUpdateWithoutCreatedbyInput 1`] = `
+exports[`NodeUpdateInputType Definition Article may have an update input type: ArticleUpdateWithoutCreatedByInput 1`] = `
 """"The "Article" node's update"""
-input ArticleUpdateWithoutCreatedbyInput {
+input ArticleUpdateWithoutCreatedByInput {
   status: ArticleStatus
   title: NonEmptyTrimmedString
   slug: NonEmptyTrimmedString
@@ -92,9 +92,9 @@ input ArticleUpdateWithoutCreatedbyInput {
 }"
 `;
 
-exports[`NodeUpdateInputType Definition Article may have an update input type: ArticleUpdateWithoutUpdatedbyInput 1`] = `
+exports[`NodeUpdateInputType Definition Article may have an update input type: ArticleUpdateWithoutUpdatedByInput 1`] = `
 """"The "Article" node's update"""
-input ArticleUpdateWithoutUpdatedbyInput {
+input ArticleUpdateWithoutUpdatedByInput {
   status: ArticleStatus
   title: NonEmptyTrimmedString
   slug: NonEmptyTrimmedString
@@ -169,9 +169,9 @@ input ArticleTagModerationUpdateInput {
 }"
 `;
 
-exports[`NodeUpdateInputType Definition ArticleTagModeration may have an update input type: ArticleTagModerationUpdateWithoutArticletagInput 1`] = `
+exports[`NodeUpdateInputType Definition ArticleTagModeration may have an update input type: ArticleTagModerationUpdateWithoutArticleTagInput 1`] = `
 """"The "ArticleTagModeration" node's update"""
-input ArticleTagModerationUpdateWithoutArticletagInput {
+input ArticleTagModerationUpdateWithoutArticleTagInput {
   moderation: NonEmptyTrimmedString
 }"
 `;

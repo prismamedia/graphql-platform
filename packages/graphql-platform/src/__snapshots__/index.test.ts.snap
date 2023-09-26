@@ -4,6 +4,7 @@ exports[`GraphQL-Platform Works generates a valid GraphQL Schema 1`] = `
 "schema {
   query: query
   mutation: mutation
+  subscription: subscription
 }
 
 type query {
@@ -1648,11 +1649,11 @@ input ArticleTagCreationArticleCreateIfNotExistsInput {
 }
 
 input ArticleTagCreationModerationsInput {
-  create: [ArticleTagModerationCreationWithoutArticletagInput!]
+  create: [ArticleTagModerationCreationWithoutArticleTagInput!]
 }
 
 """The "ArticleTagModeration" node's creation"""
-input ArticleTagModerationCreationWithoutArticletagInput {
+input ArticleTagModerationCreationWithoutArticleTagInput {
   moderator: ArticleTagModerationCreationModeratorInput!
   moderation: NonEmptyTrimmedString
 }
@@ -1948,11 +1949,11 @@ input ArticleTagUpdateWithoutArticleInput {
 input ArticleTagUpdateModerationsInput {
   deleteAll: Boolean
   deleteMany: ArticleTagModerationFilterInput
-  delete: [ArticleTagModerationUniqueFilterWithoutArticletagInput!]
-  deleteIfExists: [ArticleTagModerationUniqueFilterWithoutArticletagInput!]
-  create: [ArticleTagModerationCreationWithoutArticletagInput!]
+  delete: [ArticleTagModerationUniqueFilterWithoutArticleTagInput!]
+  deleteIfExists: [ArticleTagModerationUniqueFilterWithoutArticleTagInput!]
+  create: [ArticleTagModerationCreationWithoutArticleTagInput!]
   createIfNotExists: [ArticleTagUpdateModerationsCreateIfNotExistsInput!]
-  updateAll: ArticleTagModerationUpdateWithoutArticletagInput
+  updateAll: ArticleTagModerationUpdateWithoutArticleTagInput
   updateMany: ArticleTagUpdateModerationsUpdateManyInput
   update: [ArticleTagUpdateModerationsUpdateInput!]
   updateIfExists: [ArticleTagUpdateModerationsUpdateIfExistsInput!]
@@ -1963,39 +1964,39 @@ input ArticleTagUpdateModerationsInput {
 Given an "articleTag", identifies exactly one "ArticleTagModeration" with one of the following combination of components' value:
 - (articleTag) / moderator
 """
-input ArticleTagModerationUniqueFilterWithoutArticletagInput {
+input ArticleTagModerationUniqueFilterWithoutArticleTagInput {
   moderator: UserUniqueFilterInput!
 }
 
 input ArticleTagUpdateModerationsCreateIfNotExistsInput {
-  where: ArticleTagModerationUniqueFilterWithoutArticletagInput!
-  data: ArticleTagModerationCreationWithoutArticletagInput!
+  where: ArticleTagModerationUniqueFilterWithoutArticleTagInput!
+  data: ArticleTagModerationCreationWithoutArticleTagInput!
 }
 
 """The "ArticleTagModeration" node's update"""
-input ArticleTagModerationUpdateWithoutArticletagInput {
+input ArticleTagModerationUpdateWithoutArticleTagInput {
   moderation: NonEmptyTrimmedString
 }
 
 input ArticleTagUpdateModerationsUpdateManyInput {
   where: ArticleTagModerationFilterInput
-  data: ArticleTagModerationUpdateWithoutArticletagInput
+  data: ArticleTagModerationUpdateWithoutArticleTagInput
 }
 
 input ArticleTagUpdateModerationsUpdateInput {
-  where: ArticleTagModerationUniqueFilterWithoutArticletagInput!
-  data: ArticleTagModerationUpdateWithoutArticletagInput
+  where: ArticleTagModerationUniqueFilterWithoutArticleTagInput!
+  data: ArticleTagModerationUpdateWithoutArticleTagInput
 }
 
 input ArticleTagUpdateModerationsUpdateIfExistsInput {
-  where: ArticleTagModerationUniqueFilterWithoutArticletagInput!
-  data: ArticleTagModerationUpdateWithoutArticletagInput
+  where: ArticleTagModerationUniqueFilterWithoutArticleTagInput!
+  data: ArticleTagModerationUpdateWithoutArticleTagInput
 }
 
 input ArticleTagUpdateModerationsUpsertInput {
-  where: ArticleTagModerationUniqueFilterWithoutArticletagInput!
-  create: ArticleTagModerationCreationWithoutArticletagInput!
-  update: ArticleTagModerationUpdateWithoutArticletagInput
+  where: ArticleTagModerationUniqueFilterWithoutArticleTagInput!
+  create: ArticleTagModerationCreationWithoutArticleTagInput!
+  update: ArticleTagModerationUpdateWithoutArticleTagInput
 }
 
 input ArticleUpdateTagsUpdateManyInput {
@@ -2245,6 +2246,119 @@ input UserProfileCreationUserInput {
 
 """The "UserProfile" node's update"""
 input UserProfileUpdateInput {
+  birthday: Date
+  facebookId: ID
+  googleId: ID
+  twitterHandle: ID
+}
+
+type subscription {
+  """Subscribe to the "Articles"' changes"""
+  articles(where: ArticleFilterInput): ArticleChange
+
+  """Subscribe to the "Categories"' changes"""
+  categories(where: CategoryFilterInput): CategoryChange
+
+  """Subscribe to the "Tags"' changes"""
+  tags(where: TagFilterInput): TagChange
+
+  """Subscribe to the "Users"' changes"""
+  users(where: UserFilterInput): UserChange
+
+  """Subscribe to the "UserProfiles"' changes"""
+  userProfiles(where: UserProfileFilterInput): UserProfileChange
+}
+
+"""
+A single change in the "articles"'s subscription, either a deletion (= "ArticleDeletion") or an upsert (= "Article")
+"""
+union ArticleChange = ArticleDeletion | Article
+
+"""A single deletion in the "articles"'s subscription"""
+type ArticleDeletion {
+  """This UUID identifies an Article publicly"""
+  id: UUIDv4!
+  status: ArticleStatus!
+  title: NonEmptyTrimmedString!
+  slug: NonEmptyTrimmedString!
+
+  """The article's body"""
+  body: DraftJS
+  createdBy: UserId
+  createdAt: DateTime!
+  updatedBy: UserUsername
+  updatedAt: DateTime!
+
+  """Contains any arbitrary data you want to store alongside the article"""
+  metas: JSONObject
+
+  """Is the article highlighted?"""
+  highlighted: Boolean
+
+  """Is the article a partnership?"""
+  sponsored: Boolean
+  views: UnsignedBigInt!
+  score: UnsignedFloat!
+  machineTags: JSONArray
+}
+
+type UserId {
+  id: UUIDv4!
+}
+
+type UserUsername {
+  username: NonEmptyTrimmedString!
+}
+
+"""
+A single change in the "categories"'s subscription, either a deletion (= "CategoryDeletion") or an upsert (= "Category")
+"""
+union CategoryChange = CategoryDeletion | Category
+
+"""A single deletion in the "categories"'s subscription"""
+type CategoryDeletion {
+  id: UUIDv4!
+  title: NonEmptyTrimmedString!
+  slug: NonEmptyTrimmedString!
+  order: UnsignedInt!
+}
+
+"""
+A single change in the "tags"'s subscription, either a deletion (= "TagDeletion") or an upsert (= "Tag")
+"""
+union TagChange = TagDeletion | Tag
+
+"""A single deletion in the "tags"'s subscription"""
+type TagDeletion {
+  id: UUIDv4!
+
+  """A tag can be deprecated"""
+  deprecated: Boolean
+  title: NonEmptyTrimmedString!
+  slug: NonEmptyTrimmedString!
+  createdAt: DateTime!
+  updatedAt: DateTime!
+}
+
+"""
+A single change in the "users"'s subscription, either a deletion (= "UserDeletion") or an upsert (= "User")
+"""
+union UserChange = UserDeletion | User
+
+"""A single deletion in the "users"'s subscription"""
+type UserDeletion {
+  id: UUIDv4!
+  username: NonEmptyTrimmedString!
+}
+
+"""
+A single change in the "userProfiles"'s subscription, either a deletion (= "UserProfileDeletion") or an upsert (= "UserProfile")
+"""
+union UserProfileChange = UserProfileDeletion | UserProfile
+
+"""A single deletion in the "userProfiles"'s subscription"""
+type UserProfileDeletion {
+  user: UserId!
   birthday: Date
   facebookId: ID
   googleId: ID

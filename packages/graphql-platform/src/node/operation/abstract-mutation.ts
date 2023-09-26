@@ -2,6 +2,7 @@ import * as utils from '@prismamedia/graphql-platform-utils';
 import { Memoize } from '@prismamedia/memoize';
 import * as graphql from 'graphql';
 import type { CamelCase } from 'type-fest';
+import type { BrokerInterface } from '../../broker-interface.js';
 import type { ConnectorInterface } from '../../connector-interface.js';
 import type { GraphQLPlatform } from '../../index.js';
 import type { Node } from '../../node.js';
@@ -18,22 +19,23 @@ import type { MutationInterface } from './mutation/interface.js';
 export interface AbstractMutationHookArgs<
   TRequestContext extends object,
   TConnector extends ConnectorInterface,
+  TBroker extends BrokerInterface,
   TContainer extends object,
 > {
   /**
    * The GraphQL-Platform instance
    */
-  gp: GraphQLPlatform<TRequestContext, TConnector, TContainer>;
+  gp: GraphQLPlatform<TRequestContext, TConnector, TBroker, TContainer>;
 
   /**
    * The node's definition
    */
-  node: Node<TRequestContext, TConnector, TContainer>;
+  node: Node<TRequestContext, TConnector, TBroker, TContainer>;
 
   /**
    * The current context
    */
-  context: MutationContext<TRequestContext, TConnector, TContainer>;
+  context: MutationContext<TRequestContext, TConnector, TBroker, TContainer>;
 
   /**
    * The "context"-bound API, so you only have to provide the operations' args:
@@ -50,6 +52,7 @@ export interface AbstractMutationHookArgs<
 export interface AbstractMutationConfig<
   TRequestContext extends object,
   TConnector extends ConnectorInterface,
+  TBroker extends BrokerInterface,
   TContainer extends object,
 > {
   /**
@@ -142,7 +145,7 @@ export abstract class AbstractMutation<
 
     const authorization = this.ensureAuthorization(mutationContext, path);
 
-    const parsedArguments = this.parseArguments(args, mutationContext, path);
+    const parsedArguments = this.parseArguments(mutationContext, args, path);
 
     await catchConnectorWorkflowError(
       () => this.connector.preMutation?.(mutationContext),
@@ -204,5 +207,30 @@ export abstract class AbstractMutation<
     }
 
     return result;
+  }
+
+  protected getGraphQLFieldConfigSubscriber(): graphql.GraphQLFieldConfig<
+    undefined,
+    TRequestContext,
+    Omit<TArgs, 'selection'>
+  >['subscribe'] {
+    return undefined;
+  }
+
+  protected getGraphQLFieldConfigResolver(): graphql.GraphQLFieldConfig<
+    undefined,
+    TRequestContext,
+    Omit<TArgs, 'selection'>
+  >['resolve'] {
+    return (_, args, context, info) =>
+      this.execute(
+        context,
+        (this.selectionAware ? { ...args, selection: info } : args) as TArgs,
+        info.path,
+      ).catch((error) => {
+        throw error instanceof utils.GraphError
+          ? error.toGraphQLError()
+          : error;
+      });
   }
 }

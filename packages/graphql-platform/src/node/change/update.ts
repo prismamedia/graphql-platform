@@ -1,5 +1,4 @@
 import * as utils from '@prismamedia/graphql-platform-utils';
-import type { ConnectorInterface } from '../../connector-interface.js';
 import type { Component, ComponentValue, Node, NodeValue } from '../../node.js';
 import { AbstractNodeChange } from '../abstract-change.js';
 
@@ -10,21 +9,19 @@ export type ComponentUpdate<TValue extends ComponentValue = any> = {
 
 export class NodeUpdate<
   TRequestContext extends object = any,
-  TConnector extends ConnectorInterface = any,
-  TContainer extends object = any,
-> extends AbstractNodeChange<TRequestContext, TConnector, TContainer> {
+> extends AbstractNodeChange<TRequestContext> {
   public override readonly kind = utils.MutationType.UPDATE;
 
   public readonly oldValue: Readonly<NodeValue>;
   public readonly newValue: Readonly<NodeValue>;
 
   public readonly updatesByComponent: ReadonlyMap<
-    Component<TRequestContext, TConnector, TContainer>,
+    Component,
     Readonly<ComponentUpdate>
   >;
 
   public constructor(
-    node: Node<TRequestContext, TConnector, TContainer>,
+    node: Node<TRequestContext>,
     requestContext: TRequestContext,
     maybeOldValue: unknown,
     maybeNewValue: unknown,
@@ -36,7 +33,7 @@ export class NodeUpdate<
 
     super(
       node,
-      node.identifier.parseValue(newValue),
+      node.mainIdentifier.parseValue(newValue),
       requestContext,
       createdAt,
       committedAt,
@@ -90,16 +87,14 @@ export class NodeUpdate<
 
 export const createNodeUpdateFromComponentUpdates = <
   TRequestContext extends object = any,
-  TConnector extends ConnectorInterface = any,
-  TContainer extends object = any,
 >(
-  node: Node<TRequestContext, TConnector, TContainer>,
+  node: Node<TRequestContext>,
   requestContext: TRequestContext,
   maybeOldValue: NodeValue,
   updatesByComponent: Record<Component['name'], ComponentValue>,
   createdAt?: Date,
   committedAt?: Date,
-): NodeUpdate<TRequestContext, TConnector, TContainer> => {
+): NodeUpdate<TRequestContext> => {
   const oldValue = {
     ...Object.fromEntries(
       Array.from(node.componentSet, (component) => [component.name, null]),

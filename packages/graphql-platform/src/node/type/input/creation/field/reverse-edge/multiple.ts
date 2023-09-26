@@ -78,7 +78,7 @@ export class MultipleReverseEdgeCreationInput extends AbstractReverseEdgeCreatio
     const originalEdgeName = originalEdge.name;
     const originalEdgeValue =
       originalEdge.referencedUniqueConstraint.parseValue(nodeValue, path);
-    const selection = this.reverseEdge.head.identifier.selection;
+    const selection = this.reverseEdge.head.mainIdentifier.selection;
 
     await Promise.all(
       (Object.keys(inputValue) as MultipleReverseEdgeCreationInputAction[]).map(

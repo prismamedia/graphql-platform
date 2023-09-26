@@ -17,7 +17,7 @@ export class ReferenceColumn extends AbstractColumn {
 
   public constructor(
     table: Table,
-    public readonly edge: core.Edge<any, MariaDBConnector>,
+    public readonly edge: core.Edge<MariaDBConnector>,
     public readonly referencedColumn: Column,
     nameConfig: utils.Nillable<string>,
     nameConfigPath: utils.Path,
@@ -86,14 +86,14 @@ export interface ReferenceColumnTreeConfig {
  * The columns are grouped by their referenced component
  */
 export class ReferenceColumnTree {
-  readonly #currentEdge: core.Edge<any, MariaDBConnector>;
+  readonly #currentEdge: core.Edge<MariaDBConnector>;
   readonly #columnsByLeaf: ReadonlyMap<core.Leaf, ReferenceColumn>;
   readonly #columnTreesByEdge: ReadonlyMap<core.Edge, ReferenceColumnTree>;
 
   public constructor(
     schema: Schema,
-    root: core.Edge<any, MariaDBConnector>,
-    path: ReadonlyArray<core.Edge<any, MariaDBConnector>> = [],
+    root: core.Edge<MariaDBConnector>,
+    path: ReadonlyArray<core.Edge<MariaDBConnector>> = [],
   ) {
     const tail = schema.getTableByNode(root.tail);
     const head = schema.getTableByNode(root.head);
@@ -164,7 +164,7 @@ export class ReferenceColumnTree {
   }
 
   public at(
-    path: ReadonlyArray<core.Edge<any, MariaDBConnector>>,
+    path: ReadonlyArray<core.Edge<MariaDBConnector>>,
   ): ReferenceColumnTree {
     return path.reduce<ReferenceColumnTree>(
       (tree, edge) => tree.getColumnTreeByEdge(edge),

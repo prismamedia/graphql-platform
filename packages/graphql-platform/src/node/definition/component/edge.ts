@@ -76,10 +76,8 @@ export type EdgeConfig<TConnector extends ConnectorInterface = any> =
  * @see https://en.wikipedia.org/wiki/Glossary_of_graph_theory#edge
  */
 export class Edge<
-  TRequestContext extends object = any,
   TConnector extends ConnectorInterface = any,
-  TContainer extends object = any,
-> extends AbstractComponent<TRequestContext, TConnector, TContainer> {
+> extends AbstractComponent<TConnector> {
   readonly #headConfigPath: utils.Path;
   readonly #nodeHeadConfig: string;
   readonly #uniqueConstraintHeadConfig?: string;
@@ -87,7 +85,7 @@ export class Edge<
   public readonly onHeadDeletion: OnEdgeHeadDeletion;
 
   public constructor(
-    public readonly tail: Node<TRequestContext, TConnector, TContainer>,
+    public readonly tail: Node<any, TConnector>,
     name: utils.Name,
     public override readonly config: EdgeConfig<TConnector>,
     public override readonly configPath: utils.Path,
@@ -165,7 +163,7 @@ export class Edge<
   }
 
   @Memoize()
-  public get head(): Node<TRequestContext, TConnector, TContainer> {
+  public get head(): Node<any, TConnector> {
     return this.node.gp.getNodeByName(
       this.#nodeHeadConfig,
       this.#headConfigPath,
@@ -173,11 +171,7 @@ export class Edge<
   }
 
   @Memoize()
-  public get referencedUniqueConstraint(): UniqueConstraint<
-    TRequestContext,
-    TConnector,
-    TContainer
-  > {
+  public get referencedUniqueConstraint(): UniqueConstraint<TConnector> {
     let referencedUniqueConstraint: UniqueConstraint;
 
     if (this.#uniqueConstraintHeadConfig) {
@@ -188,7 +182,7 @@ export class Edge<
 
       referencedUniqueConstraint = uniqueConstraint;
     } else {
-      referencedUniqueConstraint = this.head.identifier;
+      referencedUniqueConstraint = this.head.mainIdentifier;
     }
 
     if (
@@ -266,11 +260,7 @@ export class Edge<
   }
 
   @Memoize()
-  public get reverseEdge(): ReverseEdge<
-    TRequestContext,
-    TConnector,
-    TContainer
-  > {
+  public get reverseEdge(): ReverseEdge<TConnector> {
     const reverseEdge = Array.from(this.head.reverseEdgesByName.values()).find(
       (reverseEdge) => reverseEdge.originalEdge === this,
     );

@@ -1,4 +1,5 @@
 import type * as utils from '@prismamedia/graphql-platform-utils';
+import type { BrokerInterface } from '../../../broker-interface.js';
 import type { ConnectorInterface } from '../../../connector-interface.js';
 import type { CreationConfig } from './abstract-creation.js';
 import type { DeletionConfig } from './abstract-deletion.js';
@@ -21,23 +22,27 @@ export type {
 } from './abstract-update.js';
 
 export interface MutationConfig<
-  TRequestContext extends object,
-  TConnector extends ConnectorInterface,
-  TContainer extends object,
+  TRequestContext extends object = any,
+  TConnector extends ConnectorInterface = any,
+  TBroker extends BrokerInterface = any,
+  TContainer extends object = any,
 > {
   [utils.MutationType.CREATION]: CreationConfig<
     TRequestContext,
     TConnector,
+    TBroker,
     TContainer
   >;
   [utils.MutationType.UPDATE]: UpdateConfig<
     TRequestContext,
     TConnector,
+    TBroker,
     TContainer
   >;
   [utils.MutationType.DELETION]: DeletionConfig<
     TRequestContext,
     TConnector,
+    TBroker,
     TContainer
   >;
 }

@@ -40,7 +40,7 @@ describe('NodeCreationInputType', () => {
         const creationInputType = node.getCreationWithoutEdgeInputType(edge);
         expect(creationInputType).toBeInstanceOf(NodeCreationInputType);
 
-        if (node.isPubliclyCreatable(edge)) {
+        if (creationInputType.isPublic()) {
           expect(
             graphql.printType(creationInputType.getGraphQLInputType()),
           ).toMatchSnapshot(creationInputType.name);

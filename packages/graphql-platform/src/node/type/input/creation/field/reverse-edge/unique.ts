@@ -82,7 +82,7 @@ export class UniqueReverseEdgeCreationInput extends AbstractReverseEdgeCreationI
     const originalEdgeName = originalEdge.name;
     const originalEdgeValue =
       originalEdge.referencedUniqueConstraint.parseValue(nodeValue, path);
-    const selection = this.reverseEdge.head.identifier.selection;
+    const selection = this.reverseEdge.head.mainIdentifier.selection;
 
     const maybeActionName = Object.keys(
       inputValue,

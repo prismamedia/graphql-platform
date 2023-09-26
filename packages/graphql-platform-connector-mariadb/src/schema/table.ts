@@ -158,14 +158,14 @@ export class Table {
 
     // primary-key
     {
-      this.primaryKey = new PrimaryKey(this, node.identifier);
+      this.primaryKey = new PrimaryKey(this, node.mainIdentifier);
     }
 
     // unique-indexes-by-unique-constraint
     {
       this.uniqueIndexesByUniqueConstraint = new Map(
         Array.from(node.uniqueConstraintsByName.values())
-          .filter((uniqueConstraint) => !uniqueConstraint.isIdentifier())
+          .filter((uniqueConstraint) => !uniqueConstraint.isMainIdentifier())
           .map((uniqueConstraint) => [
             uniqueConstraint,
             new UniqueIndex(this, uniqueConstraint),

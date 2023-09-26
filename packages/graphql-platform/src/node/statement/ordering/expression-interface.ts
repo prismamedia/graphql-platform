@@ -1,4 +1,4 @@
-import type { DependencyGraph } from '../../subscription.js';
+import type { DependencyGraph } from '../../operation/dependency-graph.js';
 import type { OrderingDirection } from './direction.js';
 
 export interface OrderingExpressionInterface {

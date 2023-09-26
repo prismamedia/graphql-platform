@@ -75,17 +75,15 @@ export type LeafConfig<TConnector extends ConnectorInterface = any> =
   } & ConnectorConfigOverride<TConnector, ConnectorConfigOverrideKind.LEAF>;
 
 export class Leaf<
-  TRequestContext extends object = any,
   TConnector extends ConnectorInterface = any,
-  TContainer extends object = any,
-> extends AbstractComponent<TRequestContext, TConnector, TContainer> {
+> extends AbstractComponent<TConnector> {
   public readonly type: LeafType;
   public readonly customParser?: LeafCustomParser;
   public override readonly selection: LeafSelection;
   readonly #comparator: (a: any, b: any) => boolean;
 
   public constructor(
-    node: Node<TRequestContext, TConnector, TContainer>,
+    node: Node<any, TConnector>,
     name: utils.Name,
     public override readonly config: LeafConfig<TConnector>,
     public override readonly configPath: utils.Path,

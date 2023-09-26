@@ -1,7 +1,7 @@
 import { Memoize } from '@prismamedia/memoize';
 import type { NodeSelectedValue } from '../../../../../../../node.js';
-import type { MultipleReverseEdge } from '../../../../../../definition/reverse-edge/multiple.js';
-import { DependencyGraph } from '../../../../../../subscription.js';
+import type { MultipleReverseEdge } from '../../../../../../definition.js';
+import { DependencyGraph } from '../../../../../../operation/dependency-graph.js';
 import type { NodeFilterInputValue } from '../../../../../../type.js';
 import type { BooleanFilter } from '../../../../boolean.js';
 import type { BooleanExpressionInterface } from '../../../expression-interface.js';

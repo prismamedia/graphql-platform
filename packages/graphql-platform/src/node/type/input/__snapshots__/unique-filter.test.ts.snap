@@ -80,12 +80,12 @@ input ArticleTagModerationUniqueFilterInput {
 }"
 `;
 
-exports[`NodeUniqueFilterInputType Definition ArticleTagModeration has a unique filter input type: ArticleTagModerationUniqueFilterWithoutArticletagInput 1`] = `
+exports[`NodeUniqueFilterInputType Definition ArticleTagModeration has a unique filter input type: ArticleTagModerationUniqueFilterWithoutArticleTagInput 1`] = `
 """"
 Given an "articleTag", identifies exactly one "ArticleTagModeration" with one of the following combination of components' value:
 - (articleTag) / moderator
 """
-input ArticleTagModerationUniqueFilterWithoutArticletagInput {
+input ArticleTagModerationUniqueFilterWithoutArticleTagInput {
   moderator: UserUniqueFilterInput!
 }"
 `;

@@ -69,7 +69,9 @@ describe('Cursor', () => {
     const gp = new GraphQLPlatform({ nodes });
 
     expect(() =>
-      gp.getNodeByName('ArticleTag').scroll(myAdminContext),
+      gp
+        .getNodeByName('ArticleTag')
+        .scroll(myAdminContext, { selection: `{ order }` }),
     ).toThrowError('The "ArticleTag" node is not scrollable');
   });
 });

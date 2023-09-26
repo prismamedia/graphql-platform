@@ -1,23 +1,33 @@
-import type { ContainerConfig } from '@prismamedia/graphql-platform';
+import type { BrokerInterface } from '@prismamedia/graphql-platform';
 import {
-  MyContext,
   createMyGP as baseCreateMyGP,
   type MyGP as BaseMyGP,
+  type MyGPConfig as BaseMyGPConfig,
 } from '@prismamedia/graphql-platform/__tests__/config.js';
 import assert from 'node:assert/strict';
+import type { Except } from 'type-fest';
 import { MariaDBConnector } from '../index.js';
 
-export type MyGP<TContainer extends object = any> = BaseMyGP<
-  MariaDBConnector,
-  TContainer
+export type MyGPConfig<
+  TBroker extends BrokerInterface,
+  TContainer extends object,
+> = Except<
+  BaseMyGPConfig<MariaDBConnector, TBroker, TContainer>,
+  'overrides' | 'connector'
 >;
 
-export function createMyGP<TContainer extends object>(
+export type MyGP<
+  TBroker extends BrokerInterface = any,
+  TContainer extends object = any,
+> = BaseMyGP<MariaDBConnector, TBroker, TContainer>;
+
+export function createMyGP<
+  TBroker extends BrokerInterface,
+  TContainer extends object,
+>(
   schemaName: string,
-  config?: {
-    container?: ContainerConfig<MyContext, MariaDBConnector, TContainer>;
-  },
-): MyGP<TContainer> {
+  config?: MyGPConfig<TBroker, TContainer>,
+): MyGP<TBroker, TContainer> {
   const host = process.env.MARIADB_HOST;
   assert(host, `The "MARIADB_HOST" variable must be provided`);
 
@@ -100,6 +110,6 @@ export function createMyGP<TContainer extends object>(
         configPath,
       ),
 
-    container: config?.container,
+    ...config,
   });
 }

@@ -1,6 +1,6 @@
 import assert from 'node:assert/strict';
-import type { Leaf } from '../../../../definition/component/leaf.js';
-import { DependencyGraph } from '../../../../subscription.js';
+import type { Leaf } from '../../../../definition.js';
+import { DependencyGraph } from '../../../../operation/dependency-graph.js';
 import type { OrderingDirection } from '../../direction.js';
 import type { OrderingExpressionInterface } from '../../expression-interface.js';
 

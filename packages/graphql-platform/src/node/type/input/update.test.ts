@@ -19,7 +19,7 @@ describe('NodeUpdateInputType', () => {
         const updateInputType = node.updateInputType;
         expect(updateInputType).toBeInstanceOf(NodeUpdateInputType);
 
-        if (node.isPubliclyUpdatable()) {
+        if (updateInputType.isPublic()) {
           expect(updateInputType.getGraphQLInputType()).toBeInstanceOf(
             graphql.GraphQLInputObjectType,
           );
@@ -39,7 +39,7 @@ describe('NodeUpdateInputType', () => {
           const updateInputType = node.getUpdateWithoutEdgeInputType(edge);
           expect(updateInputType).toBeInstanceOf(NodeUpdateInputType);
 
-          if (node.isPubliclyUpdatable(edge)) {
+          if (updateInputType.isPublic()) {
             expect(
               graphql.printType(updateInputType.getGraphQLInputType()),
             ).toMatchSnapshot(updateInputType.name);

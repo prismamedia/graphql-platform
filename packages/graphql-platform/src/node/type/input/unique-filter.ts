@@ -37,16 +37,15 @@ export class NodeUniqueFilterInputType extends utils.ObjectInputType {
       );
 
       candidates = Array.from(node.uniqueConstraintSet).filter(
-        (uniqueConstraint) =>
-          uniqueConstraint.componentSet.has(forcedEdge) &&
-          uniqueConstraint.componentSet.size > 1,
+        ({ componentSet }) =>
+          componentSet.has(forcedEdge) && componentSet.size > 1,
       );
     } else {
       candidates = Array.from(node.uniqueConstraintSet);
     }
 
-    const publicCandidates = candidates.filter((uniqueConstraint) =>
-      uniqueConstraint.isPublic(),
+    const publicCandidates = candidates.filter(({ componentSet }) =>
+      Array.from(componentSet).every((component) => component.isPublic()),
     );
 
     super({
@@ -54,7 +53,7 @@ export class NodeUniqueFilterInputType extends utils.ObjectInputType {
         node.name,
         'UniqueFilter',
         forcedEdge
-          ? `Without${inflection.capitalize(forcedEdge.name)}`
+          ? `Without${inflection.camelize(forcedEdge.name)}`
           : undefined,
         'Input',
       ]
@@ -99,13 +98,15 @@ export class NodeUniqueFilterInputType extends utils.ObjectInputType {
       return new utils.Input({
         name: component.name,
         description: component.description,
-        public: component.isPublic(),
         deprecated: component.deprecationReason,
         type: utils.nonOptionalInputTypeDecorator(
           type,
           this.#candidates.every(({ componentSet }) =>
             componentSet.has(component),
           ),
+        ),
+        public: this.#publicCandidates.some(({ componentSet }) =>
+          componentSet.has(component),
         ),
         publicType: utils.nonOptionalInputTypeDecorator(
           type,

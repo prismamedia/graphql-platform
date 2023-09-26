@@ -1,4 +1,4 @@
-import type * as utils from '@prismamedia/graphql-platform-utils';
+import * as utils from '@prismamedia/graphql-platform-utils';
 import { Memoize } from '@prismamedia/memoize';
 import * as graphql from 'graphql';
 import type { CamelCase } from 'type-fest';
@@ -16,5 +16,30 @@ export abstract class AbstractQuery<
     return this.key.replaceAll(/((?:-).)/g, ([_match, letter]) =>
       letter.toUpperCase(),
     ) as any;
+  }
+
+  protected getGraphQLFieldConfigSubscriber(): graphql.GraphQLFieldConfig<
+    undefined,
+    TRequestContext,
+    Omit<TArgs, 'selection'>
+  >['subscribe'] {
+    return undefined;
+  }
+
+  protected getGraphQLFieldConfigResolver(): graphql.GraphQLFieldConfig<
+    undefined,
+    TRequestContext,
+    Omit<TArgs, 'selection'>
+  >['resolve'] {
+    return (_, args, context, info) =>
+      this.execute(
+        context,
+        (this.selectionAware ? { ...args, selection: info } : args) as TArgs,
+        info.path,
+      ).catch((error) => {
+        throw error instanceof utils.GraphError
+          ? error.toGraphQLError()
+          : error;
+      });
   }
 }

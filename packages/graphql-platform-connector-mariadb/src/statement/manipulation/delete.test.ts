@@ -1,4 +1,11 @@
-import { afterAll, beforeAll, describe, expect, it } from '@jest/globals';
+import {
+  afterAll,
+  beforeAll,
+  beforeEach,
+  describe,
+  expect,
+  it,
+} from '@jest/globals';
 import { Node, NodeChange } from '@prismamedia/graphql-platform';
 import { MutationType } from '@prismamedia/graphql-platform-utils';
 import {
@@ -14,10 +21,16 @@ describe('Delete statement', () => {
 
   beforeAll(async () => {
     gp = createMyGP(`connector_mariadb_delete_statement`);
-    gp.on('node-change', (change) => changes.push(change));
+    gp.on('node-change-aggregation', (aggregation) =>
+      changes.push(...aggregation),
+    );
 
     await gp.connector.setup();
     await gp.seed(myAdminContext, fixtures.constant);
+  });
+
+  beforeEach(() => {
+    changes.length = 0;
   });
 
   afterAll(() => gp.connector.teardown());
@@ -44,8 +57,6 @@ describe('Delete statement', () => {
       },
     ],
   ])('generates statements', async (nodeName, context, args) => {
-    changes.length = 0;
-
     await expect(
       gp
         .getNodeByName(nodeName)

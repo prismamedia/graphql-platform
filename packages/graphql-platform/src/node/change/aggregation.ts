@@ -1,5 +1,4 @@
 import * as utils from '@prismamedia/graphql-platform-utils';
-import type { ConnectorInterface } from '../../connector-interface.js';
 import type { Component, Node } from '../../node.js';
 import {
   NodeCreation,
@@ -34,7 +33,7 @@ const aggregatorMatrix: NodeChangeAggregatorMatrix = {
         update.node,
         update.requestContext,
         update.newValue,
-        update.createdAt,
+        update.executedAt,
         update.committedAt,
       ),
 
@@ -51,7 +50,7 @@ const aggregatorMatrix: NodeChangeAggregatorMatrix = {
         update.requestContext,
         previousUpdate.oldValue,
         update.newValue,
-        update.createdAt,
+        update.executedAt,
         update.committedAt,
       ),
 
@@ -64,7 +63,7 @@ const aggregatorMatrix: NodeChangeAggregatorMatrix = {
         creation.requestContext,
         previousDeletion.oldValue,
         creation.newValue,
-        creation.createdAt,
+        creation.executedAt,
         creation.committedAt,
       ),
 
@@ -73,17 +72,12 @@ const aggregatorMatrix: NodeChangeAggregatorMatrix = {
   },
 };
 
-export class NodeChangeAggregation<
-  TRequestContext extends object = any,
-  TConnector extends ConnectorInterface = any,
-  TContainer extends object = any,
-> implements Iterable<NodeChange<TRequestContext, TConnector, TContainer>>
+export class NodeChangeAggregation<TRequestContext extends object = any>
+  implements Iterable<NodeChange<TRequestContext>>
 {
-  public readonly requestContexts: ReadonlyArray<TRequestContext>;
-
   public readonly changesByNode: ReadonlyMap<
-    Node<TRequestContext, TConnector, TContainer>,
-    ReadonlyArray<NodeChange<TRequestContext, TConnector, TContainer>>
+    Node<TRequestContext>,
+    ReadonlyArray<NodeChange<TRequestContext>>
   >;
 
   public readonly summary: {
@@ -95,8 +89,7 @@ export class NodeChangeAggregation<
 
   public readonly size: number;
 
-  public constructor(changes: ReadonlyArray<NodeChange>) {
-    const requestContextSet = new Set<TRequestContext>();
+  public constructor(changes: ReadonlyArray<NodeChange<TRequestContext>>) {
     const changesByIdByNode = new Map<
       Node,
       Map<NodeChange['stringifiedId'], NodeChange>
@@ -106,8 +99,6 @@ export class NodeChangeAggregation<
       if (!filterNodeChange(change)) {
         continue;
       }
-
-      requestContextSet.add(change.requestContext);
 
       let changesById = changesByIdByNode.get(change.node);
       if (!changesById) {
@@ -137,8 +128,6 @@ export class NodeChangeAggregation<
         }
       }
     }
-
-    this.requestContexts = Array.from(requestContextSet);
 
     this.changesByNode = new Map(
       Array.from(changesByIdByNode, ([node, changesByFlattenedId]) => [
@@ -185,9 +174,7 @@ export class NodeChangeAggregation<
     ).reduce((sum, length) => sum + length, 0);
   }
 
-  *[Symbol.iterator](): IterableIterator<
-    NodeChange<TRequestContext, TConnector, TContainer>
-  > {
+  public *[Symbol.iterator](): IterableIterator<NodeChange<TRequestContext>> {
     for (const changes of this.changesByNode.values()) {
       yield* changes;
     }

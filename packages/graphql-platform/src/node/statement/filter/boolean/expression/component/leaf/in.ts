@@ -6,7 +6,7 @@ import type {
   Leaf,
   LeafValue,
 } from '../../../../../../definition.js';
-import { DependencyGraph } from '../../../../../../subscription.js';
+import { DependencyGraph } from '../../../../../../operation/dependency-graph.js';
 import type { NodeFilterInputValue } from '../../../../../../type.js';
 import type { NodeSelectedValue } from '../../../../../selection.js';
 import { AndOperation, BooleanFilter } from '../../../../boolean.js';
