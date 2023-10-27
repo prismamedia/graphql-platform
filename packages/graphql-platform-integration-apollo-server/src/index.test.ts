@@ -1,5 +1,6 @@
 import { ApolloServer } from '@apollo/server';
 import { afterAll, beforeAll, describe, expect, it } from '@jest/globals';
+import type { InMemoryBroker } from '@prismamedia/graphql-platform';
 import {
   createMyGP,
   type MyGP,
@@ -9,7 +10,7 @@ import * as fixtures from '@prismamedia/graphql-platform/__tests__/fixture.js';
 import { ApolloServerIntegration } from './index.js';
 
 describe('GraphQL-Platform Integration Apollo Server', () => {
-  let gp: MyGP;
+  let gp: MyGP<InMemoryBroker>;
 
   beforeAll(async () => {
     gp = createMyGP('integration_apollo_server', {

@@ -221,6 +221,10 @@ export class ChangesSubscriptionStream<
         config.selection.onDeletion.isSubsetOf(this.node.selection),
         `Expects the "onDeletion" selection to be a subset of the "${this.node}"'s selection`,
       );
+      assert(
+        config.selection.onDeletion.isSubsetOf(this.onUpsertSelection),
+        `Expects the "onDeletion" selection to be a subset of the "onUpsert" selection`,
+      );
 
       this.onDeletionSelection = config.selection.onDeletion;
     }
@@ -562,7 +566,7 @@ export class ChangesSubscriptionStream<
         await change.acknowledge(BrokerAcknowledgementKind.ACK);
       }
 
-      if (!this.#queue.size) {
+      if (this.isEmpty()) {
         await this.emit('idle', undefined);
       }
     }

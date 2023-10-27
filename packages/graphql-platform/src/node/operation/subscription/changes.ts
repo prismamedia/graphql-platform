@@ -177,14 +177,20 @@ export class ChangesSubscription<
         });
       }
 
-      if (
-        selection.onDeletion &&
-        !selection.onDeletion.isSubsetOf(this.node.selection)
-      ) {
-        throw new utils.GraphError(
-          `Expects the "onDeletion" selection to be a subset of the "${this.node}"'s selection`,
-          { path: onDeletionPath },
-        );
+      if (selection.onDeletion) {
+        if (!selection.onDeletion.isSubsetOf(this.node.selection)) {
+          throw new utils.GraphError(
+            `Expects the "onDeletion" selection to be a subset of the "${this.node}"'s selection`,
+            { path: onDeletionPath },
+          );
+        }
+
+        if (!selection.onDeletion.isSubsetOf(selection.onUpsert)) {
+          throw new utils.GraphError(
+            `Expects the "onDeletion" selection to be a subset of the "onUpsert" selection`,
+            { path: onDeletionPath },
+          );
+        }
       }
 
       Object.assign(parsedArgs, { selection });

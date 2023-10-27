@@ -61,9 +61,9 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@apollo/server@npm:4.9.4":
-  version: 4.9.4
-  resolution: "@apollo/server@npm:4.9.4"
+"@apollo/server@npm:4.9.5":
+  version: 4.9.5
+  resolution: "@apollo/server@npm:4.9.5"
   dependencies:
     "@apollo/cache-control-types": "npm:^1.0.3"
     "@apollo/server-gateway-interface": "npm:^1.1.1"
@@ -93,7 +93,7 @@ __metadata:
     whatwg-mimetype: "npm:^3.0.0"
   peerDependencies:
     graphql: ^16.6.0
-  checksum: 70df37afa6deaedb9efedd80661fa14086ff36128b545951b05db396004c54ae0e31c94e553756f784dbedc111d8f1eba748dbf5f6d44eac3261744464b973a2
+  checksum: 68074b743a26e15bff06903ec0a1b6c0b0536ff69c4949818e8d64b8f027da4053967806076dfe793d8828fdf706b988939d74cade8a551e33d13da1bb29500a
   languageName: node
   linkType: hard
 
@@ -1044,10 +1044,10 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@prismamedia/async-event-emitter@npm:^5.3.1":
-  version: 5.3.1
-  resolution: "@prismamedia/async-event-emitter@npm:5.3.1"
-  checksum: d15ab8daf6a8ef2de106f35d5aaa91ba8faab5b207eefd9b85ce39762ccd39c21831384305b6f724d96e3a630d989cf6a8e32ab36fea89ebf5b7b4d71c638050
+"@prismamedia/async-event-emitter@npm:^5.3.2":
+  version: 5.3.2
+  resolution: "@prismamedia/async-event-emitter@npm:5.3.2"
+  checksum: b0ff31ee4d4b8e81ce8311630fdc78bfde3a562ff79bfa00422f2dc61f5b1ef9b43de85ba9f473f7fecb3313c8ce6012a0cc3af79762a90a3185c2c96368d49e
   languageName: node
   linkType: hard
 
@@ -1056,7 +1056,7 @@ __metadata:
   resolution: "@prismamedia/graphql-platform-connector-mariadb@workspace:packages/graphql-platform-connector-mariadb"
   dependencies:
     "@jest/globals": "npm:29.7.0"
-    "@prismamedia/async-event-emitter": "npm:^5.3.1"
+    "@prismamedia/async-event-emitter": "npm:^5.3.2"
     "@prismamedia/graphql-platform": "workspace:packages/graphql-platform"
     "@prismamedia/graphql-platform-scalars": "workspace:packages/graphql-platform-scalars"
     "@prismamedia/graphql-platform-utils": "workspace:packages/graphql-platform-utils"
@@ -1084,7 +1084,7 @@ __metadata:
   version: 0.0.0-use.local
   resolution: "@prismamedia/graphql-platform-integration-apollo-server@workspace:packages/graphql-platform-integration-apollo-server"
   dependencies:
-    "@apollo/server": "npm:4.9.4"
+    "@apollo/server": "npm:4.9.5"
     "@jest/globals": "npm:29.7.0"
     "@prismamedia/graphql-platform": "workspace:packages/graphql-platform"
     "@prismamedia/graphql-platform-connector-mariadb": "workspace:packages/graphql-platform-connector-mariadb"
@@ -1161,7 +1161,7 @@ __metadata:
   resolution: "@prismamedia/graphql-platform@workspace:packages/graphql-platform"
   dependencies:
     "@jest/globals": "npm:29.7.0"
-    "@prismamedia/async-event-emitter": "npm:^5.3.1"
+    "@prismamedia/async-event-emitter": "npm:^5.3.2"
     "@prismamedia/graphql-platform-scalars": "workspace:packages/graphql-platform-scalars"
     "@prismamedia/graphql-platform-utils": "workspace:packages/graphql-platform-utils"
     "@prismamedia/memoize": "npm:^5.0.1"

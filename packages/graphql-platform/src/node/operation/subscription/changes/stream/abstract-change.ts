@@ -30,12 +30,9 @@ export abstract class AbstractChangesSubscriptionChange<
     kind: BrokerAcknowledgementKind = BrokerAcknowledgementKind.ACK,
   ): Promise<void> {
     assert.equal(this.#acknowledged, undefined, `Already acknowledged`);
+    this.#acknowledged = kind;
 
-    try {
-      await this.#broker.acknowledgeSubscriptionChange?.(this as any, kind);
-    } finally {
-      this.#acknowledged = kind;
-    }
+    await this.#broker.acknowledgeSubscriptionChange?.(this as any, kind);
   }
 
   public isAcknowledged(): boolean {
