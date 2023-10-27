@@ -645,6 +645,7 @@ export class ChangesSubscriptionStream<
         }
       });
     } finally {
+      await this.dispose();
       tasks.clear();
     }
   }
@@ -730,8 +731,9 @@ export class ChangesSubscriptionStream<
         }
       });
     } finally {
-      tasks.clear();
       processBatchOnIdle();
+      await this.dispose();
+      tasks.clear();
     }
   }
 }
