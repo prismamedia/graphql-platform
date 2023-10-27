@@ -288,17 +288,10 @@ export class ChangesSubscription<
   }
 
   protected override getGraphQLFieldConfigResolver(): graphql.GraphQLFieldConfig<
-    ChangesSubscriptionChange,
+    ChangesSubscriptionChange | null,
     TRequestContext,
     Omit<ChangesSubscriptionArgs, 'selection'>
   >['resolve'] {
-    return (change, args, context, info) => {
-      if (change) {
-        const { subscription, ...rest } = change;
-        console.debug(rest);
-      }
-
-      return change;
-    };
+    return (change) => change?.value;
   }
 }

@@ -9,7 +9,7 @@ export abstract class AbstractChangesSubscriptionChange<
   TRequestContext extends object = any,
 > {
   readonly #broker: BrokerInterface;
-  public explicitAcknowledgement: boolean = false;
+  public manualAcknowledgement: boolean = false;
   #acknowledged?: BrokerAcknowledgementKind;
 
   public readonly initiators: ReadonlyArray<TRequestContext>;
@@ -37,5 +37,11 @@ export abstract class AbstractChangesSubscriptionChange<
 
   public isAcknowledged(): boolean {
     return this.#acknowledged !== undefined;
+  }
+
+  public async handleAutomaticAcknowledgement(): Promise<void> {
+    if (!this.manualAcknowledgement && !this.isAcknowledged()) {
+      await this.acknowledge(BrokerAcknowledgementKind.ACK);
+    }
   }
 }

@@ -135,8 +135,8 @@ export type ChangesSubscriptionStreamConfig<
 > = {
   filter?: NodeFilter;
   selection: {
-    onUpsert: NodeSelection<TUpsert>;
     onDeletion?: NodeSelection<TDeletion>;
+    onUpsert: NodeSelection<TUpsert>;
   };
 };
 
@@ -276,25 +276,42 @@ export class ChangesSubscriptionStream<
   > {
     this.#ac.signal.throwIfAborted();
 
-    return (
-      this.#queue.dequeue() ||
-      ((await this.wait('enqueued', this.#ac.signal).catch((error) => {
-        if (error instanceof AbortError) {
-          return undefined;
-        }
+    let change: ChangesSubscriptionChange | undefined;
 
-        throw error;
-      })) &&
-        this.#queue.dequeue())
-    );
+    change = this.#queue.dequeue();
+    if (change) {
+      return change;
+    }
+
+    await this.emit('idle', undefined);
+
+    if (this.#ac.signal.aborted) {
+      return;
+    }
+
+    change = this.#queue.dequeue();
+    if (change) {
+      return change;
+    }
+
+    try {
+      await this.wait('enqueued', this.#ac.signal);
+    } catch (error) {
+      if (error instanceof AbortError) {
+        return;
+      }
+
+      throw error;
+    }
+
+    return this.#queue.dequeue();
   }
 
-  public isEmpty(): boolean {
+  /**
+   * Is the queue of pending-changes empty?
+   */
+  public isQueueEmpty(): boolean {
     return this.#queue.size === 0;
-  }
-
-  public async onIdle(): Promise<void> {
-    this.isEmpty() || (await this.wait('idle'));
   }
 
   public getNodeChangesEffect(
@@ -550,26 +567,31 @@ export class ChangesSubscriptionStream<
     }
   }
 
-  public async *[Symbol.asyncIterator](): AsyncIterator<
-    ChangesSubscriptionChange<TUpsert, TDeletion, TRequestContext>
+  public [Symbol.asyncIterator](): AsyncIterator<
+    ChangesSubscriptionChange<TUpsert, TDeletion, TRequestContext>,
+    undefined
   > {
     this.#ac.signal.throwIfAborted();
 
-    await this.initialize();
-
     let change: ChangesSubscriptionChange | undefined;
 
-    while (!this.#ac.signal.aborted && (change = await this.dequeue())) {
-      yield change;
+    return {
+      next: async () => {
+        await change?.handleAutomaticAcknowledgement();
 
-      if (!change.explicitAcknowledgement && !change.isAcknowledged()) {
-        await change.acknowledge(BrokerAcknowledgementKind.ACK);
-      }
+        change = this.#ac.signal.aborted ? undefined : await this.dequeue();
 
-      if (this.isEmpty()) {
-        await this.emit('idle', undefined);
-      }
-    }
+        return change
+          ? { done: false, value: change }
+          : { done: true, value: undefined };
+      },
+      return: async () => {
+        await change?.handleAutomaticAcknowledgement();
+        await this.dispose();
+
+        return { done: true, value: undefined };
+      },
+    };
   }
 
   public async forEach(
@@ -594,7 +616,7 @@ export class ChangesSubscriptionStream<
 
         try {
           for await (const change of this) {
-            change.explicitAcknowledgement = true;
+            change.manualAcknowledgement = true;
 
             await tasks.onEmpty();
 
@@ -689,7 +711,7 @@ export class ChangesSubscriptionStream<
 
         try {
           for await (const change of this) {
-            change.explicitAcknowledgement = true;
+            change.manualAcknowledgement = true;
 
             await tasks.onEmpty();
 

@@ -110,11 +110,14 @@ describe('Subscription', () => {
     });
 
     await gp.broker.onSubscriptionIdle(subscription);
-    subscription.on('idle', () => subscription.dispose());
 
     const changes: ChangesSubscriptionChange[] = [];
     for await (const change of subscription) {
       changes.push(change);
+
+      if (subscription.isQueueEmpty()) {
+        break;
+      }
     }
 
     expect(changes.length).toBe(7);

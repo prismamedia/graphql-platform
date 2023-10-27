@@ -11,7 +11,9 @@ import { createServer } from 'node:http';
 import { WebSocketServer } from 'ws';
 import { ApolloServerIntegration } from '../index.js';
 
-const gp = createMyGP('expressjs_integration_apollo_server');
+const gp = createMyGP('expressjs_integration_apollo_server', {
+  subscription: { public: true },
+});
 await gp.connector.setup();
 await gp.seed(myAdminContext, fixtures.constant);
 
