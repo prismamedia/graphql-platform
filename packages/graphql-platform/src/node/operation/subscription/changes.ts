@@ -44,7 +44,7 @@ export class ChangesSubscription<
 > extends AbstractSubscription<
   TRequestContext,
   ChangesSubscriptionArgs,
-  ChangesSubscriptionStream
+  ChangesSubscriptionStream<any, any, TRequestContext>
 > {
   protected readonly selectionAware = true;
 
