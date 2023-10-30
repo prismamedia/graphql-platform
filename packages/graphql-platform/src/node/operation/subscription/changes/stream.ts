@@ -314,6 +314,25 @@ export class ChangesSubscriptionStream<
     return this.#queue.size === 0;
   }
 
+  /**
+   * Wait for the queue of pending-changes to be empty
+   */
+  public async onIdle(): Promise<void> {
+    if (this.isQueueEmpty()) {
+      return;
+    }
+
+    try {
+      await this.wait('idle', this.#ac.signal);
+    } catch (error) {
+      if (error instanceof AbortError) {
+        return;
+      }
+
+      throw error;
+    }
+  }
+
   public getNodeChangesEffect(
     changes:
       | NodeChangeAggregation<TRequestContext>
