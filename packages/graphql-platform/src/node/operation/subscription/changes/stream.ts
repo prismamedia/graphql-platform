@@ -483,8 +483,6 @@ export class ChangesSubscriptionStream<
   ): AsyncIterable<
     ChangesSubscriptionChange<TUpsert, TDeletion, TRequestContext>
   > {
-    this.#ac.signal.throwIfAborted();
-
     // pass-through changes
     yield* effect.deletions;
     yield* effect.upserts;
@@ -542,7 +540,11 @@ export class ChangesSubscriptionStream<
           },
           selection: this.onDeletionSelection,
         })) {
-          yield new ChangesSubscriptionDeletion(this, deletion, []);
+          yield new ChangesSubscriptionDeletion(
+            this,
+            deletion,
+            effect.maybeGraphChanges.initiators,
+          );
         }
       }
 
@@ -556,7 +558,11 @@ export class ChangesSubscriptionStream<
         },
         selection: this.onUpsertSelection,
       })) {
-        yield new ChangesSubscriptionUpsert(this, upsert, []);
+        yield new ChangesSubscriptionUpsert(
+          this,
+          upsert,
+          effect.maybeGraphChanges.initiators,
+        );
       }
     }
   }

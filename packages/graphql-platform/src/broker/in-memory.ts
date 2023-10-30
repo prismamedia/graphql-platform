@@ -21,7 +21,7 @@ export class InMemoryBroker implements BrokerInterface {
     public readonly gp: GraphQLPlatform,
     options?: Readonly<InMemoryBrokerOptions>,
   ) {
-    this.#maxQueueSize = Math.max(0, options?.maxQueueSize ?? 100);
+    this.#maxQueueSize = Math.max(0, options?.maxQueueSize ?? 25);
     this.#queuesBySubscription = new Map();
   }
 
