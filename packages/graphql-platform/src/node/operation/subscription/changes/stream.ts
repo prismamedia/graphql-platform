@@ -603,6 +603,7 @@ export class ChangesSubscriptionStream<
     return {
       next: async () => {
         await change?.handleAutomaticAcknowledgement();
+        await this.initialize();
 
         change = this.#ac.signal.aborted ? undefined : await this.dequeue();
 

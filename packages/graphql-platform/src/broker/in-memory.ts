@@ -66,7 +66,7 @@ export class InMemoryBroker implements BrokerInterface {
          * We process the node-changes in the order they are received
          */
         concurrency: 1,
-      }),
+      }).on('error', (error) => subscription.emit('error', error)),
     );
 
     this.subscribeToNodeChanges();
