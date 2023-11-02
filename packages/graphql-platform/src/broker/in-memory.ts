@@ -41,7 +41,7 @@ export class InMemoryBroker implements BrokerInterface {
                   for await (const change of subscription.resolveNodeChanges(
                     effect,
                   )) {
-                    subscription.enqueue(change);
+                    await subscription.enqueue(change);
                   }
                 });
               }
@@ -91,7 +91,7 @@ export class InMemoryBroker implements BrokerInterface {
     subscription: ChangesSubscriptionStream,
   ): Promise<void> {
     const queue = this.#queuesBySubscription.get(subscription);
-    assert(queue, `The given subscription does not exist`);
+    assert(queue, `The given subscription is not running`);
 
     await queue.onIdle();
   }

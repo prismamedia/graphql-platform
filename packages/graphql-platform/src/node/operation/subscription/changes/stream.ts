@@ -262,13 +262,13 @@ export class ChangesSubscriptionStream<
     }
   }
 
-  public enqueue(
+  public async enqueue(
     change: ChangesSubscriptionChange<TUpsert, TDeletion, TRequestContext>,
-  ): void {
+  ): Promise<void> {
     this.#ac.signal.throwIfAborted();
 
     this.#queue.enqueue(change);
-    this.emit('enqueued', change);
+    await this.emit('enqueued', change);
   }
 
   protected async dequeue(): Promise<

@@ -343,8 +343,8 @@ export class NodeCursor<
 
     const buffer = bufferOptions ?? tasks.concurrency;
     assert(
-      typeof buffer === 'number' && buffer >= 1,
-      `The buffer has to be greater than or equal to 1, got ${inspect(buffer)}`,
+      typeof buffer === 'number' && buffer >= 0,
+      `The buffer has to be greater than or equal to 0, got ${inspect(buffer)}`,
     );
 
     const normalizedBatchSize = Math.max(1, batchSize || this.#chunkSize);
@@ -418,7 +418,7 @@ export class NodeCursor<
 
         try {
           for await (const value of this) {
-            await tasks.onSizeLessThan(buffer);
+            await tasks.onSizeLessThan(buffer + 1);
 
             if (batch.push(value) >= normalizedBatchSize) {
               processBatch();

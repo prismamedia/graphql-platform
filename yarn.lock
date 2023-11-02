@@ -1078,7 +1078,7 @@ __metadata:
     "@swc/core": "npm:1.3.95"
     "@swc/jest": "npm:0.2.29"
     "@tsconfig/node18": "npm:18.2.2"
-    "@types/node": "npm:18.18.7"
+    "@types/node": "npm:18.18.8"
     "@types/semver": "npm:7.5.4"
     graphql: "npm:16.8.1"
     inflection: "npm:^3.0.0"
@@ -1107,7 +1107,7 @@ __metadata:
     "@types/body-parser": "npm:^1.19.4"
     "@types/cors": "npm:^2.8.15"
     "@types/express": "npm:^4.17.20"
-    "@types/node": "npm:18.18.7"
+    "@types/node": "npm:18.18.8"
     "@types/ws": "npm:^8.5.8"
     body-parser: "npm:1.20.2"
     cors: "npm:2.8.5"
@@ -1134,7 +1134,7 @@ __metadata:
     "@swc/jest": "npm:0.2.29"
     "@tsconfig/node18": "npm:18.2.2"
     "@types/draft-js": "npm:^0.11.14"
-    "@types/node": "npm:18.18.7"
+    "@types/node": "npm:18.18.8"
     entities: "npm:^4.5.0"
     graphql: "npm:16.8.1"
     jest: "npm:29.7.0"
@@ -1156,7 +1156,7 @@ __metadata:
     "@swc/jest": "npm:0.2.29"
     "@tsconfig/node18": "npm:18.2.2"
     "@types/indefinite": "npm:2.3.3"
-    "@types/node": "npm:18.18.7"
+    "@types/node": "npm:18.18.8"
     graphql: "npm:16.8.1"
     indefinite: "npm:^2.4.3"
     jest: "npm:29.7.0"
@@ -1182,7 +1182,7 @@ __metadata:
     "@swc/jest": "npm:0.2.29"
     "@tsconfig/node18": "npm:18.2.2"
     "@types/cli-progress": "npm:^3.11.4"
-    "@types/node": "npm:18.18.7"
+    "@types/node": "npm:18.18.8"
     cli-progress: "npm:^3.12.0"
     dataloader: "npm:^2.2.2"
     dependency-graph: "npm:^0.11.0"
@@ -1702,30 +1702,30 @@ __metadata:
   linkType: hard
 
 "@types/node-fetch@npm:^2.6.1":
-  version: 2.6.7
-  resolution: "@types/node-fetch@npm:2.6.7"
+  version: 2.6.8
+  resolution: "@types/node-fetch@npm:2.6.8"
   dependencies:
     "@types/node": "npm:*"
     form-data: "npm:^4.0.0"
-  checksum: 60c41b766da6698dd8e40c42d1c76992bec1b9a4817ac86fdceca6c3ddc7d1cdd7cd508848df652cccf0c127273a6d75f56d0cc6c65e7d583d8dcf8edc5f5964
+  checksum: c996336a67d415154b59eb02b93497a9f41f51eddc67b9d8911efd85c816f952780383284cee51a227fb20151264561a59e95a346ac8eb878255fbe952f36526
   languageName: node
   linkType: hard
 
 "@types/node@npm:*":
-  version: 20.8.9
-  resolution: "@types/node@npm:20.8.9"
+  version: 20.8.10
+  resolution: "@types/node@npm:20.8.10"
   dependencies:
     undici-types: "npm:~5.26.4"
-  checksum: 71e0023342272e63c47f3fab6082bd6c89d0b0c4262a1c2d0d52458560077f5c28ef5cfe704306eac43fc2e5111bef4e1cdbf08f565650520fad5e54005a8836
+  checksum: 8930039077c8ad74de74c724909412bea8110c3f8892bcef8dda3e9629073bed65632ee755f94b252bcdae8ca71cf83e89a4a440a105e2b1b7c9797b43483049
   languageName: node
   linkType: hard
 
-"@types/node@npm:18.18.7":
-  version: 18.18.7
-  resolution: "@types/node@npm:18.18.7"
+"@types/node@npm:18.18.8":
+  version: 18.18.8
+  resolution: "@types/node@npm:18.18.8"
   dependencies:
     undici-types: "npm:~5.26.4"
-  checksum: 4dee54745a6ef13e2904bd1b251687e47d5079996e2e00ae14a0f86d9f236e3966b5cbbbf96ff34317907230be24cf54cb353f2887e6783eab33b9b53c9d23e2
+  checksum: 25346cda374c3bb630a9055cf8b7dd49729d53502b81ba647336f459c751f66c73ae9ba755a63d7bd05b07afa2c90b5627af985998ef5cdb0bafb2db5ec7b520
   languageName: node
   linkType: hard
 
@@ -1758,13 +1758,13 @@ __metadata:
   linkType: hard
 
 "@types/react@npm:*":
-  version: 18.2.33
-  resolution: "@types/react@npm:18.2.33"
+  version: 18.2.34
+  resolution: "@types/react@npm:18.2.34"
   dependencies:
     "@types/prop-types": "npm:*"
     "@types/scheduler": "npm:*"
     csstype: "npm:^3.0.2"
-  checksum: 7f84dcf70eed3644973c7a47a63669d9e9ecc8d15b331fb272940a5c7cc322df11995eeeae1edfab5c278083cc3527477aa682c79f26667cfe8cd74481621884
+  checksum: 6d16f86b384e829edc3710b1dd9ec4eb1d6b26bc079c5cf605bd0cbf77ae6224f15c76949afadb7f53df4544cfe4025c1111fbe36732cd7f660a320fbc2e5866
   languageName: node
   linkType: hard
 
@@ -2356,9 +2356,9 @@ __metadata:
   linkType: hard
 
 "caniuse-lite@npm:^1.0.30001541":
-  version: 1.0.30001558
-  resolution: "caniuse-lite@npm:1.0.30001558"
-  checksum: 702e683ad1ccdca44991dc94012a486dd899c3136fc1c575b4b9b95d302bb7a2d13632363af7a506924e9f56758876d090d640bb212f91954f93cf7565a7be6f
+  version: 1.0.30001559
+  resolution: "caniuse-lite@npm:1.0.30001559"
+  checksum: 1ebeafb957b58e863b673ec2e78ea228ab43a24e4644a7050497dc5f798bdd9e4c510138c0807b65af8653c145cd09a9dff65faa1a9b34e30927dc4b67327122
   languageName: node
   linkType: hard
 
@@ -2746,9 +2746,9 @@ __metadata:
   linkType: hard
 
 "electron-to-chromium@npm:^1.4.535":
-  version: 1.4.569
-  resolution: "electron-to-chromium@npm:1.4.569"
-  checksum: 281b521125161fab14694a1580fb0f09f082aa656cdda491a77f422af592d26c8fbf77fb0ecaef12a409778baa4ca5ea96e43a6bd65fa296e39311603254b473
+  version: 1.4.574
+  resolution: "electron-to-chromium@npm:1.4.574"
+  checksum: 24d65a7d5b91dac010659dc33ec22d4358087e25985817bf6e1df53c6d9778452eb483170979d88bc2aeea96198f53d8ad023eb4b4866cc86b3cec8a72f3da82
   languageName: node
   linkType: hard
 
