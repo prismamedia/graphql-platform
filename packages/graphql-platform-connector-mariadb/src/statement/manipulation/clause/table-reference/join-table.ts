@@ -31,7 +31,11 @@ export class JoinTable extends AbstractTableReference {
   }
 
   public get kind(): JoinTableKind {
-    return this.edge.isNullable() ? JoinTableKind.LEFT : JoinTableKind.INNER;
+    return (this.parent instanceof JoinTable &&
+      this.parent.kind === JoinTableKind.LEFT) ||
+      this.edge.isNullable()
+      ? JoinTableKind.LEFT
+      : JoinTableKind.INNER;
   }
 
   @Memoize()
