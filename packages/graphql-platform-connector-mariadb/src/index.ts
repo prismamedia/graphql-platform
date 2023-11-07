@@ -9,6 +9,7 @@ import * as mariadb from 'mariadb';
 import assert from 'node:assert/strict';
 import { hrtime } from 'node:process';
 import * as semver from 'semver';
+import type { Except } from 'type-fest';
 import {
   Schema,
   type ForeignKeyIndexConfig,
@@ -49,7 +50,7 @@ export interface MariaDBConnectorConfig {
   collation?: string;
   version?: string;
   schema?: SchemaConfig;
-  pool?: mariadb.PoolConfig;
+  pool?: Except<mariadb.PoolConfig, 'logger'>;
 
   on?: EventConfigByName<MariaDBConnectorEventDataByName>;
 
@@ -101,7 +102,7 @@ export class MariaDBConnector
     };
   };
 
-  public readonly poolConfig?: mariadb.PoolConfig;
+  public readonly poolConfig?: Except<mariadb.PoolConfig, 'logger'>;
   public readonly poolConfigPath: utils.Path;
 
   public readonly charset: string;
@@ -156,25 +157,38 @@ export class MariaDBConnector
     if (!pool) {
       utils.assertPlainObject(this.poolConfig, this.poolConfigPath);
 
+      const logger: mariadb.PoolConfig['logger'] = {
+        error: (error) =>
+          this.emit(
+            'error',
+            Object.assign(error, { pool: StatementKind[kind] }),
+          ),
+      };
+
       this.#poolsByStatementKind.set(
         kind,
         (pool = mariadb.createPool(
           kind === StatementKind.DATA_MANIPULATION
             ? {
                 ...this.poolConfig,
-                database: this.schema.name,
+                autoJsonMap: false,
+                bigIntAsNumber: false,
                 charset: this.charset,
                 collation: this.collation,
+                database: this.schema.name,
                 dateStrings: true,
-                bigIntAsNumber: false,
                 decimalAsNumber: true,
                 insertIdAsNumber: false,
                 multipleStatements: false,
                 timezone: 'Z',
-                autoJsonMap: false,
                 ...({ bitOneIsBoolean: false } as any),
+                logger,
               }
-            : { ...this.poolConfig, connectionLimit: 1 },
+            : {
+                ...this.poolConfig,
+                connectionLimit: 1,
+                logger,
+              },
         )),
       );
     }
@@ -211,21 +225,19 @@ export class MariaDBConnector
     kind?: StatementKind,
   ): Promise<TResult> {
     return this.withConnection(async (connection) => {
-      let result: TResult;
-
       try {
         await connection.beginTransaction();
 
-        result = await callback(connection);
+        const result = await callback(connection);
 
         await connection.commit();
+
+        return result;
       } catch (error) {
         await connection.rollback();
 
         throw error;
       }
-
-      return result;
     }, kind);
   }
 
