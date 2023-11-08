@@ -150,7 +150,9 @@ export class MariaDBConnector
     this.schema = new Schema(this);
   }
 
-  public getPool(kind: StatementKind): mariadb.Pool {
+  public getPool(
+    kind: StatementKind = StatementKind.DATA_MANIPULATION,
+  ): mariadb.Pool {
     let pool = this.#poolsByStatementKind.get(kind);
     if (!pool) {
       utils.assertPlainObject(this.poolConfig, this.poolConfigPath);
@@ -208,39 +210,12 @@ export class MariaDBConnector
     );
   }
 
-  protected async throwOnFatalPoolError(
-    kind: StatementKind,
-    signal: AbortSignal,
-  ): Promise<void> {
-    try {
-      await this.throwOnError(signal);
-    } catch (error) {
-      if (
-        error instanceof mariadb.SqlError &&
-        error.fatal &&
-        (!('pool' in error) || error.pool === StatementKind[kind])
-      ) {
-        throw error;
-      }
-
-      return this.throwOnFatalPoolError(kind, signal);
-    }
-  }
-
   public async withConnection<TResult = unknown>(
     callback: (connection: mariadb.Connection) => Promise<TResult>,
-    kind: StatementKind = StatementKind.DATA_MANIPULATION,
+    kind?: StatementKind,
   ): Promise<TResult> {
     const pool = this.getPool(kind);
-
-    // It's a bit tricky, but the client does not throw errors on connection failure like:
-    // -> SqlError: (conn=284, no: 1049, SQLState: 42000) Unknown database '...'
-    const ac = new AbortController();
-    const [, connection] = await Promise.all([
-      this.throwOnFatalPoolError(kind, ac.signal),
-      pool.getConnection().finally(() => ac.abort()),
-    ]);
-
+    const connection = await pool.getConnection();
     try {
       return await callback(connection);
     } finally {
