@@ -1078,8 +1078,8 @@ __metadata:
     "@swc/core": "npm:1.3.96"
     "@swc/jest": "npm:0.2.29"
     "@tsconfig/node18": "npm:18.2.2"
-    "@types/node": "npm:18.18.8"
-    "@types/semver": "npm:7.5.4"
+    "@types/node": "npm:18.18.9"
+    "@types/semver": "npm:7.5.5"
     graphql: "npm:16.8.1"
     inflection: "npm:^3.0.0"
     jest: "npm:29.7.0"
@@ -1107,8 +1107,8 @@ __metadata:
     "@types/body-parser": "npm:^1.19.5"
     "@types/cors": "npm:^2.8.16"
     "@types/express": "npm:^4.17.21"
-    "@types/node": "npm:18.18.8"
-    "@types/ws": "npm:^8.5.8"
+    "@types/node": "npm:18.18.9"
+    "@types/ws": "npm:^8.5.9"
     body-parser: "npm:1.20.2"
     cors: "npm:2.8.5"
     express: "npm:4.18.2"
@@ -1134,7 +1134,7 @@ __metadata:
     "@swc/jest": "npm:0.2.29"
     "@tsconfig/node18": "npm:18.2.2"
     "@types/draft-js": "npm:^0.11.15"
-    "@types/node": "npm:18.18.8"
+    "@types/node": "npm:18.18.9"
     entities: "npm:^4.5.0"
     graphql: "npm:16.8.1"
     jest: "npm:29.7.0"
@@ -1156,7 +1156,7 @@ __metadata:
     "@swc/jest": "npm:0.2.29"
     "@tsconfig/node18": "npm:18.2.2"
     "@types/indefinite": "npm:2.3.4"
-    "@types/node": "npm:18.18.8"
+    "@types/node": "npm:18.18.9"
     graphql: "npm:16.8.1"
     indefinite: "npm:^2.4.3"
     jest: "npm:29.7.0"
@@ -1182,7 +1182,7 @@ __metadata:
     "@swc/jest": "npm:0.2.29"
     "@tsconfig/node18": "npm:18.2.2"
     "@types/cli-progress": "npm:^3.11.5"
-    "@types/node": "npm:18.18.8"
+    "@types/node": "npm:18.18.9"
     cli-progress: "npm:^3.12.0"
     dataloader: "npm:^2.2.2"
     dependency-graph: "npm:^0.11.0"
@@ -1742,12 +1742,12 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@types/node@npm:18.18.8":
-  version: 18.18.8
-  resolution: "@types/node@npm:18.18.8"
+"@types/node@npm:18.18.9":
+  version: 18.18.9
+  resolution: "@types/node@npm:18.18.9"
   dependencies:
     undici-types: "npm:~5.26.4"
-  checksum: 25346cda374c3bb630a9055cf8b7dd49729d53502b81ba647336f459c751f66c73ae9ba755a63d7bd05b07afa2c90b5627af985998ef5cdb0bafb2db5ec7b520
+  checksum: ebd98b117c868edc597807cd0dab214b6110b9cd5ee406632641d0cf5b8bd7cb199caaac657a046d9203c441dbcfb3c71154ffa2d615ec89f80e6972143e6ec8
   languageName: node
   linkType: hard
 
@@ -1813,7 +1813,14 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@types/semver@npm:7.5.4, @types/semver@npm:^7.1.0":
+"@types/semver@npm:7.5.5":
+  version: 7.5.5
+  resolution: "@types/semver@npm:7.5.5"
+  checksum: 1b0be2c4d830f5ef002a305308e06e3616fc38a41c9a2c5b4267df82a038d9bd0ba32ec1da82a52db84a720be7e4b69bac7593797d8dc1400a69069af8f19219
+  languageName: node
+  linkType: hard
+
+"@types/semver@npm:^7.1.0":
   version: 7.5.4
   resolution: "@types/semver@npm:7.5.4"
   checksum: e99c3edc8d64f56abcd891b9e44a45c4ae3cab551c8af5aa67b5df2b49e5fd03f74aac9da71fd5357a50a08d5deb95014516956b15b407052e07f25c7a4a606e
@@ -1855,12 +1862,12 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@types/ws@npm:^8.5.8":
-  version: 8.5.8
-  resolution: "@types/ws@npm:8.5.8"
+"@types/ws@npm:^8.5.9":
+  version: 8.5.9
+  resolution: "@types/ws@npm:8.5.9"
   dependencies:
     "@types/node": "npm:*"
-  checksum: 5f33608d1afa38236f0c0c6e153555d94d8ff74f54a21d1c062f4a93f0cb8c1aaecd6f11f0dd9a41774f79b1c56235aaccaad290e57f69350ccc9bd47c63b040
+  checksum: 7cf66383b8525196875157985658f7f6b40601265023c0fbaf935a22adc8b6133cc563e2683691d61becdc3d9612deb6e8376a5c4d2ec8349aa526d467c02be6
   languageName: node
   linkType: hard
 
