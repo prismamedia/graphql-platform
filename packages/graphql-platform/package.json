@@ -50,7 +50,7 @@
     "p-queue": "^7.4.1",
     "p-retry": "^6.1.0",
     "remeda": "^1.29.0",
-    "type-fest": "^4.6.0",
+    "type-fest": "^4.7.0",
     "yocto-queue": "^1.0.0"
   },
   "peerDependencies": {

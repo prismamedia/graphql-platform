@@ -269,14 +269,6 @@ export class Node<
 
   readonly #changeFilter?: (change: NodeChange<TRequestContext>) => boolean;
 
-  /**
-   * Make it easy to call the operations:
-   *
-   * @example
-   * const articles = await api.findMany(myRequestContext, { where: { status: ArticleStatus.Published }, first: 5, selection: `{ id title }` });
-   */
-  public readonly api: NodeAPI<TRequestContext>;
-
   public constructor(
     public readonly gp: GraphQLPlatform<
       TRequestContext,
@@ -579,11 +571,6 @@ export class Node<
         authorizationConfig,
         authorizationConfigPath,
       );
-    }
-
-    // API
-    {
-      this.api = createNodeAPI(this);
     }
   }
 
@@ -1543,7 +1530,18 @@ export class Node<
   }
 
   public filterChange(change: NodeChange<TRequestContext>): boolean {
-    return this.#changeFilter ? this.#changeFilter(change) : true;
+    return this.#changeFilter?.(change) ?? true;
+  }
+
+  /**
+   * Make it easy to call the operations:
+   *
+   * @example
+   * const articles = await api.findMany(myRequestContext, { where: { status: ArticleStatus.Published }, first: 5, selection: `{ id title }` });
+   */
+  @Memoize()
+  public get api(): NodeAPI<TRequestContext> {
+    return createNodeAPI(this);
   }
 
   /**

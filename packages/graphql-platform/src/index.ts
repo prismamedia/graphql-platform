@@ -220,17 +220,6 @@ export class GraphQLPlatform<
 
   public readonly container: Readonly<TContainer>;
 
-  /**
-   * Make it easy to call the operations, either through the "GraphAPI" or the "NodeAPI":
-   *
-   * @example <caption>GraphAPI</caption>
-   * const articles = await api.query.articles(myRequestContext, { where: { status: ArticleStatus.Published }, first: 5, selection: `{ id title }` });
-   *
-   * @example <caption>NodeAPI</caption>
-   * const articles = await api.Article.findMany(myRequestContext, { where: { status: ArticleStatus.Published }, first: 5, selection: `{ id title }` });
-   */
-  public readonly api: API<TRequestContext>;
-
   public constructor(
     public readonly config: GraphQLPlatformConfig<
       TRequestContext,
@@ -435,11 +424,6 @@ export class GraphQLPlatform<
         this.on(on);
       }
     }
-
-    // API
-    {
-      this.api = createAPI(this);
-    }
   }
 
   public getNodeByName(
@@ -585,6 +569,20 @@ export class GraphQLPlatform<
     graphql.assertValidSchema(schema);
 
     return schema;
+  }
+
+  /**
+   * Make it easy to call the operations, either through the "GraphAPI" or the "NodeAPI":
+   *
+   * @example <caption>GraphAPI</caption>
+   * const articles = await api.query.articles(myRequestContext, { where: { status: ArticleStatus.Published }, first: 5, selection: `{ id title }` });
+   *
+   * @example <caption>NodeAPI</caption>
+   * const articles = await api.Article.findMany(myRequestContext, { where: { status: ArticleStatus.Published }, first: 5, selection: `{ id title }` });
+   */
+  @Memoize()
+  public get api(): API<TRequestContext> {
+    return createAPI(this);
   }
 
   /**

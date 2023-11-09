@@ -1086,7 +1086,7 @@ __metadata:
     mariadb: "npm:^3.2.2"
     publint: "npm:0.2.5"
     semver: "npm:^7.5.4"
-    type-fest: "npm:^4.6.0"
+    type-fest: "npm:^4.7.0"
     typescript: "npm:5.2.2"
   peerDependencies:
     graphql: ^16.7.0
@@ -1139,7 +1139,7 @@ __metadata:
     graphql: "npm:16.8.1"
     jest: "npm:29.7.0"
     publint: "npm:0.2.5"
-    type-fest: "npm:^4.6.0"
+    type-fest: "npm:^4.7.0"
     typescript: "npm:5.2.2"
   peerDependencies:
     graphql: ^16.7.0
@@ -1162,7 +1162,7 @@ __metadata:
     jest: "npm:29.7.0"
     publint: "npm:0.2.5"
     remeda: "npm:^1.29.0"
-    type-fest: "npm:^4.6.0"
+    type-fest: "npm:^4.7.0"
     typescript: "npm:5.2.2"
   peerDependencies:
     graphql: ^16.7.0
@@ -1193,7 +1193,7 @@ __metadata:
     p-retry: "npm:^6.1.0"
     publint: "npm:0.2.5"
     remeda: "npm:^1.29.0"
-    type-fest: "npm:^4.6.0"
+    type-fest: "npm:^4.7.0"
     typescript: "npm:5.2.2"
     yocto-queue: "npm:^1.0.0"
   peerDependencies:
@@ -5648,10 +5648,10 @@ __metadata:
   languageName: node
   linkType: hard
 
-"type-fest@npm:^4.6.0":
-  version: 4.6.0
-  resolution: "type-fest@npm:4.6.0"
-  checksum: f0a3fc7785ac5b6bf264e5a844f80ac5a6f04fcf8c5b9bc51d5120428360d4c883ee120e722c6aef991db03a37a7c13313c06e5146f8c1839bbafc40e902cd30
+"type-fest@npm:^4.7.0":
+  version: 4.7.0
+  resolution: "type-fest@npm:4.7.0"
+  checksum: eebb9297b3f4a929db98ef56d459e1ca1cccac5cb53696fb2d6264b33a3df9857727fa7951796b29092d9d271ad7fc033970b23e3275ed26a61647988fe91fb4
   languageName: node
   linkType: hard
 

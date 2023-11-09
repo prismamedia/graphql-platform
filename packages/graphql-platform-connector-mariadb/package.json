@@ -48,7 +48,7 @@
     "inflection": "^3.0.0",
     "mariadb": "^3.2.2",
     "semver": "^7.5.4",
-    "type-fest": "^4.6.0"
+    "type-fest": "^4.7.0"
   },
   "peerDependencies": {
     "graphql": "^16.7.0"

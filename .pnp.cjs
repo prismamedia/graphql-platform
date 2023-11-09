@@ -1757,7 +1757,7 @@ const RAW_RUNTIME_STATE =
           ["p-retry", "npm:6.1.0"],\
           ["publint", "npm:0.2.5"],\
           ["remeda", "npm:1.29.0"],\
-          ["type-fest", "npm:4.6.0"],\
+          ["type-fest", "npm:4.7.0"],\
           ["typescript", "patch:typescript@npm%3A5.2.2#optional!builtin<compat/typescript>::version=5.2.2&hash=f3b441"],\
           ["yocto-queue", "npm:1.0.0"]\
         ],\
@@ -1791,7 +1791,7 @@ const RAW_RUNTIME_STATE =
           ["p-retry", "npm:6.1.0"],\
           ["publint", "npm:0.2.5"],\
           ["remeda", "npm:1.29.0"],\
-          ["type-fest", "npm:4.6.0"],\
+          ["type-fest", "npm:4.7.0"],\
           ["typescript", "patch:typescript@npm%3A5.2.2#optional!builtin<compat/typescript>::version=5.2.2&hash=f3b441"],\
           ["yocto-queue", "npm:1.0.0"]\
         ],\
@@ -1822,7 +1822,7 @@ const RAW_RUNTIME_STATE =
           ["mariadb", "npm:3.2.2"],\
           ["publint", "npm:0.2.5"],\
           ["semver", "npm:7.5.4"],\
-          ["type-fest", "npm:4.6.0"],\
+          ["type-fest", "npm:4.7.0"],\
           ["typescript", "patch:typescript@npm%3A5.2.2#optional!builtin<compat/typescript>::version=5.2.2&hash=f3b441"]\
         ],\
         "packagePeers": [\
@@ -1853,7 +1853,7 @@ const RAW_RUNTIME_STATE =
           ["mariadb", "npm:3.2.2"],\
           ["publint", "npm:0.2.5"],\
           ["semver", "npm:7.5.4"],\
-          ["type-fest", "npm:4.6.0"],\
+          ["type-fest", "npm:4.7.0"],\
           ["typescript", "patch:typescript@npm%3A5.2.2#optional!builtin<compat/typescript>::version=5.2.2&hash=f3b441"]\
         ],\
         "linkType": "SOFT"\
@@ -1906,7 +1906,7 @@ const RAW_RUNTIME_STATE =
           ["graphql", "npm:16.8.1"],\
           ["jest", "virtual:dc3fc578bfa5e06182a4d2be39ede0bc5b74940b1ffe0d70c26892ab140a4699787750fba175dc306292e80b4aa2c8c5f68c2a821e69b2c37e360c0dff36ff66#npm:29.7.0"],\
           ["publint", "npm:0.2.5"],\
-          ["type-fest", "npm:4.6.0"],\
+          ["type-fest", "npm:4.7.0"],\
           ["typescript", "patch:typescript@npm%3A5.2.2#optional!builtin<compat/typescript>::version=5.2.2&hash=f3b441"]\
         ],\
         "packagePeers": [\
@@ -1930,7 +1930,7 @@ const RAW_RUNTIME_STATE =
           ["graphql", "npm:16.8.1"],\
           ["jest", "virtual:dc3fc578bfa5e06182a4d2be39ede0bc5b74940b1ffe0d70c26892ab140a4699787750fba175dc306292e80b4aa2c8c5f68c2a821e69b2c37e360c0dff36ff66#npm:29.7.0"],\
           ["publint", "npm:0.2.5"],\
-          ["type-fest", "npm:4.6.0"],\
+          ["type-fest", "npm:4.7.0"],\
           ["typescript", "patch:typescript@npm%3A5.2.2#optional!builtin<compat/typescript>::version=5.2.2&hash=f3b441"]\
         ],\
         "linkType": "SOFT"\
@@ -1954,7 +1954,7 @@ const RAW_RUNTIME_STATE =
           ["jest", "virtual:dc3fc578bfa5e06182a4d2be39ede0bc5b74940b1ffe0d70c26892ab140a4699787750fba175dc306292e80b4aa2c8c5f68c2a821e69b2c37e360c0dff36ff66#npm:29.7.0"],\
           ["publint", "npm:0.2.5"],\
           ["remeda", "npm:1.29.0"],\
-          ["type-fest", "npm:4.6.0"],\
+          ["type-fest", "npm:4.7.0"],\
           ["typescript", "patch:typescript@npm%3A5.2.2#optional!builtin<compat/typescript>::version=5.2.2&hash=f3b441"]\
         ],\
         "packagePeers": [\
@@ -1979,7 +1979,7 @@ const RAW_RUNTIME_STATE =
           ["jest", "virtual:dc3fc578bfa5e06182a4d2be39ede0bc5b74940b1ffe0d70c26892ab140a4699787750fba175dc306292e80b4aa2c8c5f68c2a821e69b2c37e360c0dff36ff66#npm:29.7.0"],\
           ["publint", "npm:0.2.5"],\
           ["remeda", "npm:1.29.0"],\
-          ["type-fest", "npm:4.6.0"],\
+          ["type-fest", "npm:4.7.0"],\
           ["typescript", "patch:typescript@npm%3A5.2.2#optional!builtin<compat/typescript>::version=5.2.2&hash=f3b441"]\
         ],\
         "linkType": "SOFT"\
@@ -7184,10 +7184,10 @@ const RAW_RUNTIME_STATE =
         ],\
         "linkType": "HARD"\
       }],\
-      ["npm:4.6.0", {\
-        "packageLocation": "./.yarn/cache/type-fest-npm-4.6.0-0f72549fa3-f0a3fc7785.zip/node_modules/type-fest/",\
+      ["npm:4.7.0", {\
+        "packageLocation": "./.yarn/cache/type-fest-npm-4.7.0-276cffd802-eebb9297b3.zip/node_modules/type-fest/",\
         "packageDependencies": [\
-          ["type-fest", "npm:4.6.0"]\
+          ["type-fest", "npm:4.7.0"]\
         ],\
         "linkType": "HARD"\
       }]\
