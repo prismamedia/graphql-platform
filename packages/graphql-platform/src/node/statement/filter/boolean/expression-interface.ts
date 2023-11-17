@@ -1,4 +1,5 @@
-import type { DependencyGraph } from '../../../operation/dependency-graph.js';
+import type { NodeValue } from '../../../../node.js';
+import type { NodeChange, NodeUpdate } from '../../../change.js';
 import type { NodeSelectedValue } from '../../selection.js';
 import type { AndOperand, BooleanFilter, OrOperand } from '../boolean.js';
 
@@ -40,17 +41,22 @@ export interface BooleanExpressionInterface {
   or?(operand: OrOperand, remainingReducers: number): BooleanFilter | undefined;
 
   /**
-   * A developer-friendly representation of this expression
-   */
-  readonly ast: any;
-
-  /**
    * Execute this expression against a partial value, returns undefined if not applicable
    */
   execute(value: NodeSelectedValue): boolean | undefined;
 
   /**
-   * Returns the dependency graph of this expression, if any
+   * Is the provided update affecting this expression?
    */
-  readonly dependencies?: DependencyGraph;
+  isAffectedByNodeUpdate(update: NodeUpdate): boolean;
+
+  getAffectedGraphByNodeChange(
+    change: NodeChange,
+    visitedRootNodes?: NodeValue[],
+  ): BooleanFilter;
+
+  /**
+   * A developer-friendly representation of this expression
+   */
+  readonly ast: any;
 }

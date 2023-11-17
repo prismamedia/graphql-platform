@@ -10,7 +10,6 @@ import {
 
 export * from './operation/api.js';
 export * from './operation/context.js';
-export * from './operation/dependency-graph.js';
 export * from './operation/error.js';
 export * from './operation/interface.js';
 export * from './operation/mutation.js';

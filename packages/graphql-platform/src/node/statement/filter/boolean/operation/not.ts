@@ -1,5 +1,5 @@
-import type { NodeSelectedValue } from '../../../../../node.js';
-import type { DependencyGraph } from '../../../../operation/dependency-graph.js';
+import type { NodeSelectedValue, NodeValue } from '../../../../../node.js';
+import type { NodeChange, NodeUpdate } from '../../../../change.js';
 import type { NodeFilterInputValue } from '../../../../type.js';
 import type { BooleanFilter } from '../../boolean.js';
 import type { BooleanExpressionInterface } from '../expression-interface.js';
@@ -32,13 +32,11 @@ export class NotOperation implements BooleanExpressionInterface {
   public readonly key: string;
   public readonly score: number;
   public readonly complement: NotOperand;
-  public readonly dependencies?: DependencyGraph;
 
   public constructor(public readonly operand: NotOperand) {
     this.key = (this.constructor as typeof NotOperation).key;
     this.score = 1 + operand.score;
     this.complement = operand;
-    this.dependencies = operand.dependencies;
   }
 
   public equals(expression: unknown): expression is NotOperation {
@@ -66,6 +64,17 @@ export class NotOperation implements BooleanExpressionInterface {
     const result = this.operand.execute(value);
 
     return result === undefined ? undefined : !result;
+  }
+
+  public isAffectedByNodeUpdate(update: NodeUpdate): boolean {
+    return this.operand.isAffectedByNodeUpdate(update);
+  }
+
+  public getAffectedGraphByNodeChange(
+    change: NodeChange,
+    visitedRootNodes?: NodeValue[],
+  ): BooleanFilter {
+    return this.operand.getAffectedGraphByNodeChange(change, visitedRootNodes);
   }
 
   public get ast(): NotOperationAST {

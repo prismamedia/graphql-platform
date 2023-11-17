@@ -1,7 +1,7 @@
 import { Memoize } from '@prismamedia/memoize';
 import assert from 'node:assert/strict';
-import type { Node } from '../../node.js';
-import type { DependencyGraph } from '../operation.js';
+import type { Node, NodeValue } from '../../node.js';
+import type { NodeChange, NodeUpdate } from '../change.js';
 import type { NodeFilterInputValue } from '../type.js';
 import type { BooleanFilter } from './filter/boolean.js';
 import {
@@ -26,21 +26,11 @@ export class NodeFilter {
    */
   public readonly score: number;
 
-  /**
-   * Used in subscriptions to know wich nodes to fetch
-   */
-  public readonly dependencies?: DependencyGraph;
-  public readonly useGraph: boolean;
-
   public constructor(
     public readonly node: Node,
     public readonly filter: BooleanFilter,
   ) {
     this.score = filter.score;
-    this.dependencies = filter.dependencies;
-    this.useGraph = this.dependencies?.children
-      ? this.dependencies?.children.size > 0
-      : false;
   }
 
   @Memoize()
@@ -108,6 +98,22 @@ export class NodeFilter {
     }
 
     return result as any;
+  }
+
+  public isAffectedByNodeUpdate(update: NodeUpdate): boolean {
+    assert.equal(update.node, this.node);
+
+    return this.filter.isAffectedByNodeUpdate(update);
+  }
+
+  public getAffectedGraphByNodeChange(
+    change: NodeChange,
+    visitedRootNodes?: NodeValue[],
+  ): NodeFilter {
+    return new NodeFilter(
+      this.node,
+      this.filter.getAffectedGraphByNodeChange(change, visitedRootNodes),
+    );
   }
 
   public get ast(): NodeFilterAST {

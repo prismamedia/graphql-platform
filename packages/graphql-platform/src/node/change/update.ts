@@ -10,6 +10,34 @@ export type ComponentUpdate<TValue extends ComponentValue = any> = {
 export class NodeUpdate<
   TRequestContext extends object = any,
 > extends AbstractNodeChange<TRequestContext> {
+  public static createFromNonNullableComponents<TRequestContext extends object>(
+    node: Node<TRequestContext>,
+    requestContext: TRequestContext,
+    partialOldValue: Record<Component['name'], ComponentValue>,
+    partialNewValue: Record<Component['name'], ComponentValue>,
+    createdAt?: Date,
+    committedAt?: Date,
+  ) {
+    const oldValue = {
+      ...Object.fromEntries(
+        Array.from(node.componentSet, (component) => [
+          component.name,
+          component.isNullable() ? null : undefined,
+        ]),
+      ),
+      ...partialOldValue,
+    };
+
+    return new this(
+      node,
+      requestContext,
+      oldValue,
+      { ...oldValue, ...partialNewValue },
+      createdAt,
+      committedAt,
+    );
+  }
+
   public override readonly kind = utils.MutationType.UPDATE;
 
   public readonly oldValue: Readonly<NodeValue>;
@@ -46,17 +74,19 @@ export class NodeUpdate<
       Array.from(node.componentsByName.values()).reduce<
         [Component, ComponentUpdate][]
       >((entries, component) => {
-        const oldComponentValue: any = oldValue[component.name];
-        const newComponentValue: any = newValue[component.name];
+        if (component.isMutable()) {
+          const oldComponentValue: any = oldValue[component.name];
+          const newComponentValue: any = newValue[component.name];
 
-        if (!component.areValuesEqual(oldComponentValue, newComponentValue)) {
-          entries.push([
-            component,
-            Object.freeze({
-              oldValue: oldComponentValue,
-              newValue: newComponentValue,
-            }),
-          ]);
+          if (!component.areValuesEqual(oldComponentValue, newComponentValue)) {
+            entries.push([
+              component,
+              Object.freeze({
+                oldValue: oldComponentValue,
+                newValue: newComponentValue,
+              }),
+            ]);
+          }
         }
 
         return entries;
@@ -84,30 +114,3 @@ export class NodeUpdate<
     return this.updatesByComponent.get(component);
   }
 }
-
-export const createNodeUpdateFromComponentUpdates = <
-  TRequestContext extends object = any,
->(
-  node: Node<TRequestContext>,
-  requestContext: TRequestContext,
-  maybeOldValue: NodeValue,
-  updatesByComponent: Record<Component['name'], ComponentValue>,
-  createdAt?: Date,
-  committedAt?: Date,
-): NodeUpdate<TRequestContext> => {
-  const oldValue = {
-    ...Object.fromEntries(
-      Array.from(node.componentSet, (component) => [component.name, null]),
-    ),
-    ...maybeOldValue,
-  };
-
-  return new NodeUpdate(
-    node,
-    requestContext,
-    oldValue,
-    { ...oldValue, ...updatesByComponent },
-    createdAt,
-    committedAt,
-  );
-};

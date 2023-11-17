@@ -1,4 +1,6 @@
-import type { DependencyGraph } from '../../operation/dependency-graph.js';
+import type { NodeValue } from '../../../node.js';
+import type { NodeChange, NodeUpdate } from '../../change.js';
+import type { BooleanFilter } from '../filter.js';
 import type { OrderingDirection } from './direction.js';
 
 export interface OrderingExpressionInterface {
@@ -7,12 +9,17 @@ export interface OrderingExpressionInterface {
   equals(expression: unknown): boolean;
 
   /**
-   * A developer-friendly representation of this expression
+   * Is the provided update affecting this expression?
    */
-  ast: any;
+  isAffectedByNodeUpdate(update: NodeUpdate): boolean;
+
+  getAffectedGraphByNodeChange(
+    change: NodeChange,
+    visitedRootNodes?: NodeValue[],
+  ): BooleanFilter;
 
   /**
-   * Returns the dependency graph of this expression, if any
+   * A developer-friendly representation of this expression
    */
-  readonly dependencies?: DependencyGraph;
+  readonly ast: any;
 }

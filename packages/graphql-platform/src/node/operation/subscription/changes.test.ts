@@ -19,12 +19,7 @@ import {
   mockConnector,
 } from '../../../__tests__/connector-mock.js';
 import { GraphQLPlatform } from '../../../index.js';
-import {
-  NodeCreation,
-  NodeDeletion,
-  createNodeUpdateFromComponentUpdates,
-} from '../../change.js';
-import { NodeFilter } from '../../statement.js';
+import { NodeCreation, NodeDeletion, NodeUpdate } from '../../change.js';
 import { UnauthorizedError } from '../error.js';
 import {
   ChangesSubscriptionArgs,
@@ -89,19 +84,13 @@ describe('ChangesSubscription', () => {
           });
         });
 
-        afterAll(() => subscription.dispose());
+        afterAll(() => subscription?.dispose());
 
         it.each([
-          new NodeDeletion(
+          NodeDeletion.createFromNonNullableComponents(
             Article,
             {},
             {
-              ...Object.fromEntries(
-                Array.from(Article.componentSet, (component) => [
-                  component.name,
-                  null,
-                ]),
-              ),
               id: '271f9c10-327f-4be3-8b3d-97bb78c0f4a6',
               _id: 1,
               status: ArticleStatus.DRAFT,
@@ -113,16 +102,10 @@ describe('ChangesSubscription', () => {
               score: 1,
             },
           ),
-          new NodeCreation(
+          NodeCreation.createFromNonNullableComponents(
             Article,
             {},
             {
-              ...Object.fromEntries(
-                Array.from(Article.componentSet, (component) => [
-                  component.name,
-                  null,
-                ]),
-              ),
               id: '271f9c10-327f-4be3-8b3d-97bb78c0f4a6',
               _id: 1,
               status: ArticleStatus.DRAFT,
@@ -134,16 +117,10 @@ describe('ChangesSubscription', () => {
               score: 1,
             },
           ),
-          createNodeUpdateFromComponentUpdates(
+          NodeUpdate.createFromNonNullableComponents(
             Article,
             {},
             {
-              ...Object.fromEntries(
-                Array.from(Article.componentSet, (component) => [
-                  component.name,
-                  null,
-                ]),
-              ),
               id: '271f9c10-327f-4be3-8b3d-97bb78c0f4a6',
               _id: 1,
               status: ArticleStatus.DRAFT,
@@ -158,16 +135,10 @@ describe('ChangesSubscription', () => {
               status: ArticleStatus.DELETED,
             },
           ),
-          createNodeUpdateFromComponentUpdates(
+          NodeUpdate.createFromNonNullableComponents(
             Article,
             {},
             {
-              ...Object.fromEntries(
-                Array.from(Article.componentSet, (component) => [
-                  component.name,
-                  null,
-                ]),
-              ),
               id: '271f9c10-327f-4be3-8b3d-97bb78c0f4a6',
               _id: 1,
               status: ArticleStatus.PUBLISHED,
@@ -188,16 +159,10 @@ describe('ChangesSubscription', () => {
 
         it('should handle filtered-in "deletion"', () => {
           const effect = subscription.getNodeChangesEffect(
-            new NodeDeletion(
+            NodeDeletion.createFromNonNullableComponents(
               Article,
               {},
               {
-                ...Object.fromEntries(
-                  Array.from(Article.componentSet, (component) => [
-                    component.name,
-                    null,
-                  ]),
-                ),
                 id: '271f9c10-327f-4be3-8b3d-97bb78c0f4a6',
                 _id: 1,
                 status: ArticleStatus.PUBLISHED,
@@ -216,16 +181,10 @@ describe('ChangesSubscription', () => {
 
         it('should handle filtered-in "creation"', () => {
           const effect = subscription.getNodeChangesEffect(
-            new NodeCreation(
+            NodeCreation.createFromNonNullableComponents(
               Article,
               {},
               {
-                ...Object.fromEntries(
-                  Array.from(Article.componentSet, (component) => [
-                    component.name,
-                    null,
-                  ]),
-                ),
                 id: '271f9c10-327f-4be3-8b3d-97bb78c0f4a6',
                 _id: 1,
                 status: ArticleStatus.PUBLISHED,
@@ -274,16 +233,10 @@ describe('ChangesSubscription', () => {
 
         it('the "creation" is an incomplete "upsert"', () => {
           const effect = subscription.getNodeChangesEffect(
-            new NodeCreation(
+            NodeCreation.createFromNonNullableComponents(
               Article,
               {},
               {
-                ...Object.fromEntries(
-                  Array.from(Article.componentSet, (component) => [
-                    component.name,
-                    null,
-                  ]),
-                ),
                 id: '271f9c10-327f-4be3-8b3d-97bb78c0f4a6',
                 _id: 1,
                 status: ArticleStatus.PUBLISHED,
@@ -302,16 +255,10 @@ describe('ChangesSubscription', () => {
 
         it('the "creation" might be an "upsert"', () => {
           const effect = subscription.getNodeChangesEffect(
-            new NodeCreation(
+            NodeCreation.createFromNonNullableComponents(
               Article,
               {},
               {
-                ...Object.fromEntries(
-                  Array.from(Article.componentSet, (component) => [
-                    component.name,
-                    null,
-                  ]),
-                ),
                 id: '271f9c10-327f-4be3-8b3d-97bb78c0f4a6',
                 _id: 1,
                 status: ArticleStatus.DRAFT,
@@ -348,13 +295,6 @@ describe('ChangesSubscription', () => {
               },
               tags_some: {
                 tag: {
-                  articles_some: {
-                    article: {
-                      updatedBy: {
-                        lastLoggedInAt_gte: new Date('2023-01-01T00:00:00Z'),
-                      },
-                    },
-                  },
                   deprecated_not: true,
                 },
               },
@@ -380,64 +320,15 @@ describe('ChangesSubscription', () => {
           });
         });
 
-        afterAll(() => subscription.dispose());
-
-        it('has dependencies', () => {
-          expect(subscription.dependencies?.debug()).toMatchInlineSnapshot(`
-          {
-            "category": {
-              "title": undefined,
-            },
-            "createdBy": {
-              "lastLoggedInAt": undefined,
-              "profile": {
-                "birthday": undefined,
-                "user": undefined,
-              },
-              "username": undefined,
-            },
-            "id": undefined,
-            "status": undefined,
-            "tags": {
-              "article": undefined,
-              "order": undefined,
-              "tag": {
-                "articles": {
-                  "article": {
-                    "updatedBy": {
-                      "lastLoggedInAt": undefined,
-                    },
-                  },
-                  "tag": undefined,
-                },
-                "deprecated": undefined,
-                "title": undefined,
-              },
-            },
-            "title": undefined,
-            "updatedBy": {
-              "lastLoggedInAt": undefined,
-              "profile": {
-                "user": undefined,
-              },
-            },
-          }
-        `);
-        });
+        afterAll(() => subscription?.dispose());
 
         it('should skip this User "creation"', () =>
           expect(
             subscription.getNodeChangesEffect(
-              new NodeCreation(
+              NodeCreation.createFromNonNullableComponents(
                 User,
                 {},
                 {
-                  ...Object.fromEntries(
-                    Array.from(User.componentSet, (component) => [
-                      component.name,
-                      null,
-                    ]),
-                  ),
                   id: '20c816d1-d390-45a1-9711-83697bc97766',
                   username: 'test00',
                   createdAt: new Date(),
@@ -450,16 +341,10 @@ describe('ChangesSubscription', () => {
         it('should skip this User "deletion"', () =>
           expect(
             subscription.getNodeChangesEffect(
-              new NodeDeletion(
+              NodeDeletion.createFromNonNullableComponents(
                 User,
                 {},
                 {
-                  ...Object.fromEntries(
-                    Array.from(User.componentSet, (component) => [
-                      component.name,
-                      null,
-                    ]),
-                  ),
                   id: '1a04ef91-104e-457e-829c-f4561f77f1e3',
                   username: 'test01',
                   createdAt: new Date(),
@@ -471,7 +356,7 @@ describe('ChangesSubscription', () => {
 
         it('should handle this User "update"', () => {
           const effect = subscription.getNodeChangesEffect(
-            createNodeUpdateFromComponentUpdates(
+            NodeUpdate.createFromNonNullableComponents(
               User,
               {},
               {
@@ -486,59 +371,169 @@ describe('ChangesSubscription', () => {
             ),
           );
 
-          expect(effect?.maybeGraphChanges?.filter).toBeInstanceOf(NodeFilter);
           expect(effect?.maybeGraphChanges?.filter.inputValue)
             .toMatchInlineSnapshot(`
-          {
-            "OR": [
+            {
+              "createdBy": {
+                "id": "1a04ef91-104e-457e-829c-f4561f77f1e3",
+              },
+            }
+          `);
+        });
+
+        it("should handle only the root-creation if a reverse-edge's head filtered-in creation is heading to it", () => {
+          const effect = subscription.getNodeChangesEffect([
+            NodeCreation.createFromNonNullableComponents(
+              ArticleTag,
+              {},
               {
-                "tags_some": {
-                  "tag": {
-                    "articles_some": {
-                      "article": {
-                        "updatedBy": {
-                          "username": "test01",
-                        },
-                      },
-                    },
-                  },
-                },
+                article: { _id: 5 },
+                order: 1,
+                tag: { id: '75b1356c-6e88-4f94-9e84-1cd58c2afc23' },
+              },
+            ),
+            NodeCreation.createFromNonNullableComponents(
+              Article,
+              {},
+              {
+                id: '74a744c1-13d5-47aa-9006-52a05b72fa84',
+                _id: 5,
+                status: ArticleStatus.PUBLISHED,
+                slug: 'my-new-article',
+                title: 'My new article',
+                createdAt: new Date(),
+                updatedAt: new Date(),
+                views: 0,
+                score: 1,
+              },
+            ),
+          ]);
+
+          expect(effect?.maybeUpserts).toHaveLength(1);
+          expect(effect?.maybeGraphChanges).toBeUndefined();
+        });
+
+        it("should handle only the root-creation if a reverse-edge's head filtered-out creation is heading to it", () => {
+          const effect = subscription.getNodeChangesEffect([
+            NodeCreation.createFromNonNullableComponents(
+              ArticleTag,
+              {},
+              {
+                article: { _id: 5 },
+                order: 1,
+                tag: { id: '75b1356c-6e88-4f94-9e84-1cd58c2afc23' },
+              },
+            ),
+            NodeCreation.createFromNonNullableComponents(
+              Article,
+              {},
+              {
+                id: '74a744c1-13d5-47aa-9006-52a05b72fa84',
+                _id: 5,
+                status: ArticleStatus.DRAFT,
+                slug: 'my-new-article',
+                title: 'My new article',
+                createdAt: new Date(),
+                updatedAt: new Date(),
+                views: 0,
+                score: 1,
+              },
+            ),
+          ]);
+
+          expect(effect).toBeUndefined();
+        });
+
+        it('should handle only the root-update if a reverse-edge is heading to it', () => {
+          const effect = subscription.getNodeChangesEffect([
+            NodeCreation.createFromNonNullableComponents(
+              ArticleTag,
+              {},
+              {
+                article: { _id: 5 },
+                order: 1,
+                tag: { id: '75b1356c-6e88-4f94-9e84-1cd58c2afc23' },
+              },
+            ),
+            NodeUpdate.createFromNonNullableComponents(
+              Article,
+              {},
+              {
+                id: '271f9c10-327f-4be3-8b3d-97bb78c0f4a6',
+                _id: 5,
+                status: ArticleStatus.DRAFT,
+                slug: 'my-new-article',
+                title: 'My new article',
+                createdAt: new Date(),
+                updatedAt: new Date(),
+                views: 0,
+                score: 1,
               },
               {
-                "createdBy": {
-                  "id": "1a04ef91-104e-457e-829c-f4561f77f1e3",
-                },
+                status: ArticleStatus.DELETED,
               },
-            ],
-          }
-        `);
+            ),
+          ]);
+
+          expect(effect).toBeUndefined();
+        });
+
+        it('should handle only the root-deletion if a reverse-edge is heading to it', () => {
+          const effect = subscription.getNodeChangesEffect([
+            NodeDeletion.createFromNonNullableComponents(
+              ArticleTag,
+              {},
+              {
+                article: { _id: 5 },
+                order: 1,
+                tag: { id: '75b1356c-6e88-4f94-9e84-1cd58c2afc23' },
+              },
+            ),
+            NodeDeletion.createFromNonNullableComponents(
+              Article,
+              {},
+              {
+                id: '74a744c1-13d5-47aa-9006-52a05b72fa84',
+                _id: 5,
+                status: ArticleStatus.PUBLISHED,
+                slug: 'my-new-article',
+                title: 'My new article',
+                createdAt: new Date(),
+                updatedAt: new Date(),
+                views: 0,
+                score: 1,
+              },
+            ),
+          ]);
+
+          expect(effect?.deletions).toHaveLength(1);
+          expect(effect?.maybeGraphChanges).toBeUndefined();
         });
 
         it('should handle this ArticleTag "creation"', () => {
           const effect = subscription.getNodeChangesEffect(
-            new NodeCreation(
+            NodeCreation.createFromNonNullableComponents(
               ArticleTag,
               {},
               {
-                article: { _id: 5 },
+                article: { _id: 4 },
                 order: 1,
                 tag: { id: '75b1356c-6e88-4f94-9e84-1cd58c2afc23' },
               },
             ),
           );
 
-          expect(effect?.maybeGraphChanges?.filter).toBeInstanceOf(NodeFilter);
-          expect(effect!.maybeGraphChanges!.filter.inputValue)
+          expect(effect?.maybeGraphChanges?.filter.inputValue)
             .toMatchInlineSnapshot(`
-          {
-            "_id": 5,
-          }
-        `);
+            {
+              "_id": 4,
+            }
+          `);
         });
 
         it('should handle this ArticleTag "deletion"', () => {
           const effect = subscription.getNodeChangesEffect(
-            new NodeDeletion(
+            NodeDeletion.createFromNonNullableComponents(
               ArticleTag,
               {},
               {
@@ -549,22 +544,21 @@ describe('ChangesSubscription', () => {
             ),
           );
 
-          expect(effect?.maybeGraphChanges?.filter).toBeInstanceOf(NodeFilter);
-          expect(effect!.maybeGraphChanges!.filter.inputValue)
+          expect(effect?.maybeGraphChanges?.filter.inputValue)
             .toMatchInlineSnapshot(`
-          {
-            "_id": 5,
-          }
-        `);
+            {
+              "_id": 5,
+            }
+          `);
         });
 
         it('should handle this ArticleTag "update"', () => {
           const effect = subscription.getNodeChangesEffect(
-            createNodeUpdateFromComponentUpdates(
+            NodeUpdate.createFromNonNullableComponents(
               ArticleTag,
               {},
               {
-                article: { _id: 5 },
+                article: { _id: 6 },
                 order: 1,
                 tag: { id: '75b1356c-6e88-4f94-9e84-1cd58c2afc23' },
               },
@@ -572,18 +566,17 @@ describe('ChangesSubscription', () => {
             ),
           );
 
-          expect(effect?.maybeGraphChanges?.filter).toBeInstanceOf(NodeFilter);
-          expect(effect!.maybeGraphChanges!.filter.inputValue)
+          expect(effect?.maybeGraphChanges?.filter.inputValue)
             .toMatchInlineSnapshot(`
-          {
-            "_id": 5,
-          }
-        `);
+            {
+              "_id": 6,
+            }
+          `);
         });
 
         it('should handle this UserProfile "creation"', () => {
           const effect = subscription.getNodeChangesEffect(
-            new NodeCreation(
+            NodeCreation.createFromNonNullableComponents(
               UserProfile,
               {},
               {
@@ -596,29 +589,19 @@ describe('ChangesSubscription', () => {
             ),
           );
 
-          expect(effect?.maybeGraphChanges?.filter).toBeInstanceOf(NodeFilter);
-          expect(effect!.maybeGraphChanges!.filter.inputValue)
+          expect(effect?.maybeGraphChanges?.filter.inputValue)
             .toMatchInlineSnapshot(`
-          {
-            "OR": [
-              {
-                "createdBy": {
-                  "id": "5da4ac5b-1620-4bfc-aacb-acf4011e7300",
-                },
+            {
+              "updatedBy": {
+                "id": "5da4ac5b-1620-4bfc-aacb-acf4011e7300",
               },
-              {
-                "updatedBy": {
-                  "id": "5da4ac5b-1620-4bfc-aacb-acf4011e7300",
-                },
-              },
-            ],
-          }
-        `);
+            }
+          `);
         });
 
         it('should handle this UserProfile "deletion"', () => {
           const effect = subscription.getNodeChangesEffect(
-            new NodeDeletion(
+            NodeDeletion.createFromNonNullableComponents(
               UserProfile,
               {},
               {
@@ -631,29 +614,19 @@ describe('ChangesSubscription', () => {
             ),
           );
 
-          expect(effect?.maybeGraphChanges?.filter).toBeInstanceOf(NodeFilter);
-          expect(effect!.maybeGraphChanges!.filter.inputValue)
+          expect(effect?.maybeGraphChanges?.filter.inputValue)
             .toMatchInlineSnapshot(`
-          {
-            "OR": [
-              {
-                "createdBy": {
-                  "id": "16f4dbff-b1e6-4c0b-b192-a0f4a4d51ec2",
-                },
+            {
+              "updatedBy": {
+                "id": "16f4dbff-b1e6-4c0b-b192-a0f4a4d51ec2",
               },
-              {
-                "updatedBy": {
-                  "id": "16f4dbff-b1e6-4c0b-b192-a0f4a4d51ec2",
-                },
-              },
-            ],
-          }
-        `);
+            }
+          `);
         });
 
         it('should skip this UserProfile "update"', () => {
           const effect = subscription.getNodeChangesEffect(
-            createNodeUpdateFromComponentUpdates(
+            NodeUpdate.createFromNonNullableComponents(
               UserProfile,
               {},
               {
@@ -672,7 +645,7 @@ describe('ChangesSubscription', () => {
 
         it('should handle this UserProfile "update"', () => {
           const effect = subscription.getNodeChangesEffect(
-            createNodeUpdateFromComponentUpdates(
+            NodeUpdate.createFromNonNullableComponents(
               UserProfile,
               {},
               {
@@ -686,20 +659,19 @@ describe('ChangesSubscription', () => {
             ),
           );
 
-          expect(effect?.maybeGraphChanges?.filter).toBeInstanceOf(NodeFilter);
-          expect(effect!.maybeGraphChanges!.filter.inputValue)
+          expect(effect?.maybeGraphChanges?.filter.inputValue)
             .toMatchInlineSnapshot(`
-          {
-            "createdBy": {
-              "id": "1fc3ca20-8ac3-47e7-83e7-60b3ed7f87c5",
-            },
-          }
-        `);
+            {
+              "createdBy": {
+                "id": "1fc3ca20-8ac3-47e7-83e7-60b3ed7f87c5",
+              },
+            }
+          `);
         });
 
         it('should skip the ArticleTag "creation" as an Article "creation" already handle it', () => {
           const effect = subscription.getNodeChangesEffect([
-            new NodeCreation(
+            NodeCreation.createFromNonNullableComponents(
               ArticleTag,
               {},
               {
@@ -708,7 +680,7 @@ describe('ChangesSubscription', () => {
                 tag: { id: '75b1356c-6e88-4f94-9e84-1cd58c2afc23' },
               },
             ),
-            new NodeCreation(
+            NodeCreation.createFromNonNullableComponents(
               ArticleTag,
               {},
               {
@@ -717,16 +689,10 @@ describe('ChangesSubscription', () => {
                 tag: { id: 'ad7092ac-f7d3-4f57-9a82-b5688256cb57' },
               },
             ),
-            new NodeCreation(
+            NodeCreation.createFromNonNullableComponents(
               Article,
               {},
               {
-                ...Object.fromEntries(
-                  Array.from(Article.componentSet, (component) => [
-                    component.name,
-                    null,
-                  ]),
-                ),
                 id: '74a744c1-13d5-47aa-9006-52a05b72fa84',
                 _id: 5,
                 status: ArticleStatus.PUBLISHED,

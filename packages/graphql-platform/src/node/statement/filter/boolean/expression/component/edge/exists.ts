@@ -1,7 +1,8 @@
 import { Memoize } from '@prismamedia/memoize';
 import assert from 'node:assert/strict';
+import { NodeValue } from '../../../../../../../node.js';
+import { NodeChange, NodeUpdate } from '../../../../../../change.js';
 import type { Component, Edge } from '../../../../../../definition.js';
-import { DependencyGraph } from '../../../../../../operation/dependency-graph.js';
 import type { NodeFilterInputValue } from '../../../../../../type.js';
 import { NodeFilter, areFiltersEqual } from '../../../../../filter.js';
 import type { NodeSelectedValue } from '../../../../../selection.js';
@@ -30,7 +31,6 @@ export class EdgeExistsFilter implements BooleanExpressionInterface {
 
   public readonly component: Component;
   public readonly score: number;
-  public readonly dependencies: DependencyGraph;
 
   protected constructor(
     public readonly edge: Edge,
@@ -40,10 +40,6 @@ export class EdgeExistsFilter implements BooleanExpressionInterface {
 
     this.component = edge;
     this.score = 1 + (headFilter?.score ?? 0);
-    this.dependencies = DependencyGraph.fromEdge(
-      this,
-      headFilter?.dependencies,
-    );
   }
 
   public equals(expression: unknown): boolean {
@@ -114,6 +110,39 @@ export class EdgeExistsFilter implements BooleanExpressionInterface {
     }
 
     return this.headFilter ? this.headFilter.execute(edgeValue, true) : true;
+  }
+
+  public isAffectedByNodeUpdate(update: NodeUpdate): boolean {
+    return (
+      update.hasComponentUpdate(this.edge) &&
+      this.execute(update.oldValue) !== this.execute(update.newValue)
+    );
+  }
+
+  public getAffectedGraphByNodeChange(
+    change: NodeChange,
+    _visitedRootNodes?: NodeValue[],
+  ): BooleanFilter {
+    return this.headFilter
+      ? EdgeExistsFilter.create(
+          this.edge,
+          new NodeFilter(
+            this.edge.head,
+            OrOperation.create([
+              change.node === this.edge.head &&
+              change instanceof NodeUpdate &&
+              this.headFilter.isAffectedByNodeUpdate(change)
+                ? this.edge.head.filterInputType.filter(
+                    this.edge.referencedUniqueConstraint.parseValue(
+                      change.newValue,
+                    ),
+                  ).filter
+                : FalseValue,
+              this.headFilter.getAffectedGraphByNodeChange(change).filter,
+            ]),
+          ),
+        )
+      : FalseValue;
   }
 
   public get ast(): EdgeExistsFilterAST {

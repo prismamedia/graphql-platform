@@ -1,8 +1,9 @@
 import { Memoize } from '@prismamedia/memoize';
 import assert from 'node:assert/strict';
-import type { NodeSelectedValue } from '../../../../node.js';
-import type { DependencyGraph } from '../../../operation/dependency-graph.js';
+import type { NodeSelectedValue, NodeValue } from '../../../../node.js';
+import type { NodeChange, NodeUpdate } from '../../../change.js';
 import type { NodeFilterInputValue } from '../../../type.js';
+import type { BooleanFilter } from '../boolean.js';
 import type { BooleanExpressionInterface } from './expression-interface.js';
 
 export interface BooleanValueAST {
@@ -12,7 +13,6 @@ export interface BooleanValueAST {
 
 export class BooleanValue implements BooleanExpressionInterface {
   public readonly score: number;
-  public readonly dependencies?: DependencyGraph;
 
   public constructor(public readonly value: boolean) {
     assert.equal(typeof value, 'boolean');
@@ -40,6 +40,17 @@ export class BooleanValue implements BooleanExpressionInterface {
 
   public execute(_value: NodeSelectedValue): boolean {
     return this.value;
+  }
+
+  public isAffectedByNodeUpdate(_update: NodeUpdate): boolean {
+    return false;
+  }
+
+  public getAffectedGraphByNodeChange(
+    _change: NodeChange,
+    _visitedRootNodes?: NodeValue[],
+  ): BooleanFilter {
+    return FalseValue;
   }
 
   public get inputValue(): NodeFilterInputValue {

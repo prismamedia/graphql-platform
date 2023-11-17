@@ -2,8 +2,10 @@ import * as utils from '@prismamedia/graphql-platform-utils';
 import * as graphql from 'graphql';
 import assert from 'node:assert/strict';
 import type { JsonValue } from 'type-fest';
+import type { NodeValue } from '../../../../../node.js';
+import type { NodeChange, NodeUpdate } from '../../../../change.js';
 import type { Component, Leaf, LeafValue } from '../../../../definition.js';
-import { DependencyGraph } from '../../../../operation/dependency-graph.js';
+import { FalseValue, type BooleanFilter } from '../../../filter.js';
 import type { SelectionExpressionInterface } from '../../expression-interface.js';
 
 export class LeafSelection implements SelectionExpressionInterface<LeafValue> {
@@ -12,15 +14,11 @@ export class LeafSelection implements SelectionExpressionInterface<LeafValue> {
   public readonly name: string;
   public readonly key: string;
 
-  public readonly dependencies: DependencyGraph;
-
   public constructor(public readonly leaf: Leaf, alias: string | undefined) {
     this.component = leaf;
     this.alias = alias || undefined;
     this.name = leaf.name;
     this.key = this.alias ?? this.name;
-
-    this.dependencies = DependencyGraph.fromLeaf(leaf);
   }
 
   public isAkinTo(expression: unknown): expression is LeafSelection {
@@ -43,6 +41,17 @@ export class LeafSelection implements SelectionExpressionInterface<LeafValue> {
     assert(this.isAkinTo(expression));
 
     return this;
+  }
+
+  public isAffectedByNodeUpdate(update: NodeUpdate): boolean {
+    return update.hasComponentUpdate(this.leaf);
+  }
+
+  public getAffectedGraphByNodeChange(
+    _change: NodeChange,
+    _visitedRootNodes?: NodeValue[],
+  ): BooleanFilter {
+    return FalseValue;
   }
 
   public toGraphQLFieldNode(): graphql.FieldNode {
