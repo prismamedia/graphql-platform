@@ -4,10 +4,10 @@ import * as graphql from 'graphql';
 import assert from 'node:assert/strict';
 import * as R from 'remeda';
 import type { JsonObject } from 'type-fest';
-import type { Node } from '../../node.js';
-import type { NodeUpdate } from '../change.js';
+import type { Node, NodeValue } from '../../node.js';
+import { NodeChange, NodeUpdate } from '../change.js';
 import type { UniqueConstraint } from '../definition.js';
-import type { DependencyGraph } from '../operation.js';
+import { NodeFilter, OrOperation } from './filter.js';
 import {
   isComponentSelection,
   isReverseEdgeSelection,
@@ -25,12 +25,6 @@ export * from './selection/value.js';
 export class NodeSelection<TValue extends NodeSelectedValue = any> {
   public readonly expressions: ReadonlyArray<SelectionExpression>;
 
-  /**
-   * Used in subscriptions to know wich nodes to fetch
-   */
-  public readonly dependencies?: DependencyGraph;
-  public readonly useGraph: boolean;
-
   public constructor(
     public readonly node: Node,
     public readonly expressionsByKey: ReadonlyMap<
@@ -40,29 +34,23 @@ export class NodeSelection<TValue extends NodeSelectedValue = any> {
   ) {
     assert(expressionsByKey.size);
 
-    this.expressions = Array.from(expressionsByKey.values());
-
-    this.dependencies = this.expressions.reduce<DependencyGraph | undefined>(
-      (dependencies, expression) =>
-        dependencies && expression.dependencies
-          ? dependencies.mergeWith(expression.dependencies)
-          : dependencies || expression.dependencies,
-      undefined,
-    );
-
-    this.useGraph = this.dependencies?.children
-      ? this.dependencies?.children.size > 0
-      : false;
+    this.expressions = Object.freeze(Array.from(expressionsByKey.values()));
   }
 
+  /**
+   * Returns the selected components' selections
+   */
   @Memoize()
   public get components(): ReadonlyArray<ComponentSelection> {
-    return this.expressions.filter(isComponentSelection);
+    return Object.freeze(this.expressions.filter(isComponentSelection));
   }
 
+  /**
+   * Returns the selected reverse-edges' selections
+   */
   @Memoize()
   public get reverseEdges(): ReadonlyArray<ReverseEdgeSelection> {
-    return this.expressions.filter(isReverseEdgeSelection);
+    return Object.freeze(this.expressions.filter(isReverseEdgeSelection));
   }
 
   /**
@@ -107,6 +95,28 @@ export class NodeSelection<TValue extends NodeSelectedValue = any> {
     );
   }
 
+  public isAffectedByNodeUpdate(update: NodeUpdate): boolean {
+    assert.equal(update.node, this.node);
+
+    return this.expressions.some((expression) =>
+      expression.isAffectedByNodeUpdate(update),
+    );
+  }
+
+  public getAffectedGraphByNodeChange(
+    change: NodeChange,
+    visitedRootNodes?: NodeValue[],
+  ): NodeFilter {
+    return new NodeFilter(
+      this.node,
+      OrOperation.create(
+        this.expressions.map((expression) =>
+          expression.getAffectedGraphByNodeChange(change, visitedRootNodes),
+        ),
+      ),
+    );
+  }
+
   public isAkinTo(maybeSelection: unknown): maybeSelection is NodeSelection {
     return (
       maybeSelection instanceof NodeSelection &&
@@ -124,9 +134,6 @@ export class NodeSelection<TValue extends NodeSelectedValue = any> {
     );
   }
 
-  /**
-   * Returns true if the provided selection is a subset of this one
-   */
   public isSupersetOf(selection: NodeSelection): boolean {
     assert(this.isAkinTo(selection));
 
@@ -141,12 +148,9 @@ export class NodeSelection<TValue extends NodeSelectedValue = any> {
     return selection.isSupersetOf(this);
   }
 
-  public isAffectedByRootUpdate(update: NodeUpdate): boolean {
-    assert.equal(update.node, this.node);
-
-    return this.components.some(({ component }) =>
-      update.updatesByComponent.has(component),
-    );
+  @Memoize()
+  public isPure(): boolean {
+    return this.isSubsetOf(this.node.selection);
   }
 
   public mergeWith(

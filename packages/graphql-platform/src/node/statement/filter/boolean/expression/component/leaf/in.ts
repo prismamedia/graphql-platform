@@ -1,12 +1,13 @@
 import { Memoize } from '@prismamedia/memoize';
 import assert from 'node:assert/strict';
 import * as R from 'remeda';
+import { NodeValue } from '../../../../../../../node.js';
+import type { NodeChange, NodeUpdate } from '../../../../../../change.js';
 import type {
   Component,
   Leaf,
   LeafValue,
 } from '../../../../../../definition.js';
-import { DependencyGraph } from '../../../../../../operation/dependency-graph.js';
 import type { NodeFilterInputValue } from '../../../../../../type.js';
 import type { NodeSelectedValue } from '../../../../../selection.js';
 import { AndOperation, BooleanFilter } from '../../../../boolean.js';
@@ -47,7 +48,6 @@ export class LeafInFilter implements BooleanExpressionInterface {
 
   public readonly component: Component;
   public readonly score: number;
-  public readonly dependencies: DependencyGraph;
 
   protected constructor(
     public readonly leaf: Leaf,
@@ -57,7 +57,6 @@ export class LeafInFilter implements BooleanExpressionInterface {
 
     this.component = leaf;
     this.score = 1 + values.length;
-    this.dependencies = DependencyGraph.fromLeaf(this);
   }
 
   public has(value: LeafValue): boolean {
@@ -205,6 +204,20 @@ export class LeafInFilter implements BooleanExpressionInterface {
     }
 
     return this.has(leafValue);
+  }
+
+  public isAffectedByNodeUpdate(update: NodeUpdate): boolean {
+    return (
+      update.hasComponentUpdate(this.leaf) &&
+      this.execute(update.oldValue) !== this.execute(update.newValue)
+    );
+  }
+
+  public getAffectedGraphByNodeChange(
+    _change: NodeChange,
+    _visitedRootNodes?: NodeValue[],
+  ): BooleanFilter {
+    return FalseValue;
   }
 
   public get ast(): LeafInFilterAST {

@@ -1,14 +1,24 @@
 import assert from 'node:assert/strict';
 import {
-  DependencyGraph,
+  NodeValue,
   type NodeSelectedValue,
 } from '../../../../../../../node.js';
+import {
+  NodeCreation,
+  NodeDeletion,
+  NodeUpdate,
+  type NodeChange,
+} from '../../../../../../change.js';
 import type { MultipleReverseEdge } from '../../../../../../definition.js';
 import type { NodeFilterInputValue } from '../../../../../../type.js';
 import { NodeFilter, areFiltersEqual } from '../../../../../filter.js';
 import type { BooleanFilter } from '../../../../boolean.js';
 import type { BooleanExpressionInterface } from '../../../expression-interface.js';
-import type { AndOperand, OrOperand } from '../../../operation.js';
+import {
+  OrOperation,
+  type AndOperand,
+  type OrOperand,
+} from '../../../operation.js';
 import { FalseValue, TrueValue } from '../../../value.js';
 
 export interface MultipleReverseEdgeExistsFilterAST {
@@ -34,7 +44,6 @@ export class MultipleReverseEdgeExistsFilter
   public readonly key: string;
 
   public readonly score: number;
-  public readonly dependencies: DependencyGraph;
 
   protected constructor(
     public readonly reverseEdge: MultipleReverseEdge,
@@ -43,10 +52,6 @@ export class MultipleReverseEdgeExistsFilter
     this.key = `${reverseEdge.name}_some`;
 
     this.score = 1 + (headFilter?.score ?? 0);
-    this.dependencies = DependencyGraph.fromReverseEdge(
-      reverseEdge,
-      headFilter?.dependencies,
-    );
   }
 
   public equals(
@@ -100,6 +105,95 @@ export class MultipleReverseEdgeExistsFilter
           this.headFilter!.execute(reverseEdgeValue, true),
         )
       : true;
+  }
+
+  public isAffectedByNodeUpdate(_update: NodeUpdate): boolean {
+    return false;
+  }
+
+  public getAffectedGraphByNodeChange(
+    change: NodeChange,
+    visitedRootNodes?: NodeValue[],
+  ): BooleanFilter {
+    const operands: BooleanFilter[] = [];
+
+    if (change.node === this.reverseEdge.head) {
+      if (change instanceof NodeCreation) {
+        if (this.headFilter?.execute(change.newValue, true) !== false) {
+          const tailFilter = this.reverseEdge.tail.filterInputType.filter(
+            change.newValue[this.reverseEdge.originalEdge.name],
+          );
+
+          if (
+            !tailFilter.isFalse() &&
+            !visitedRootNodes?.some((visitedRootNode) =>
+              tailFilter.execute(visitedRootNode, false),
+            )
+          ) {
+            operands.push(tailFilter.filter);
+          }
+        }
+      } else if (change instanceof NodeDeletion) {
+        if (this.headFilter?.execute(change.oldValue, true) !== false) {
+          const tailFilter = this.reverseEdge.tail.filterInputType.filter(
+            change.oldValue[this.reverseEdge.originalEdge.name],
+          );
+
+          if (
+            !tailFilter.isFalse() &&
+            !visitedRootNodes?.some((visitedRootNode) =>
+              tailFilter.execute(visitedRootNode, false),
+            )
+          ) {
+            operands.push(tailFilter.filter);
+          }
+        }
+      } else if (
+        change.hasComponentUpdate(this.reverseEdge.originalEdge) ||
+        this.headFilter?.isAffectedByNodeUpdate(change)
+      ) {
+        if (this.headFilter?.execute(change.newValue, true) !== false) {
+          const newTailFilter = this.reverseEdge.tail.filterInputType.filter(
+            change.newValue[this.reverseEdge.originalEdge.name],
+          );
+
+          if (
+            !newTailFilter.isFalse() &&
+            !visitedRootNodes?.some((visitedRootNode) =>
+              newTailFilter.execute(visitedRootNode, false),
+            )
+          ) {
+            operands.push(newTailFilter.filter);
+          }
+        }
+
+        if (this.headFilter?.execute(change.oldValue, true) !== false) {
+          const oldTailFilter = this.reverseEdge.tail.filterInputType.filter(
+            change.oldValue[this.reverseEdge.originalEdge.name],
+          );
+
+          if (
+            !oldTailFilter.isFalse() &&
+            !visitedRootNodes?.some((visitedRootNode) =>
+              oldTailFilter.execute(visitedRootNode, false),
+            )
+          ) {
+            operands.push(oldTailFilter.filter);
+          }
+        }
+      }
+    }
+
+    if (this.headFilter) {
+      operands.push(
+        MultipleReverseEdgeExistsFilter.create(
+          this.reverseEdge,
+          this.headFilter.getAffectedGraphByNodeChange(change),
+        ),
+      );
+    }
+
+    return OrOperation.create(operands);
   }
 
   public get ast(): MultipleReverseEdgeExistsFilterAST {

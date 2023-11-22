@@ -1,14 +1,23 @@
 import { Memoize } from '@prismamedia/memoize';
-import type { NodeSelectedValue } from '../../../../../../../node.js';
+import type {
+  NodeSelectedValue,
+  NodeValue,
+} from '../../../../../../../node.js';
+import {
+  NodeCreation,
+  NodeDeletion,
+  type NodeChange,
+  type NodeUpdate,
+} from '../../../../../../change.js';
 import type { MultipleReverseEdge } from '../../../../../../definition.js';
-import { DependencyGraph } from '../../../../../../operation/dependency-graph.js';
 import type { NodeFilterInputValue } from '../../../../../../type.js';
 import type { BooleanFilter } from '../../../../boolean.js';
 import type { BooleanExpressionInterface } from '../../../expression-interface.js';
 import {
   NotOperation,
+  OrOperand,
+  OrOperation,
   type AndOperand,
-  type OrOperand,
 } from '../../../operation.js';
 import { FalseValue } from '../../../value.js';
 import { MultipleReverseEdgeExistsFilter } from './exists.js';
@@ -58,7 +67,6 @@ export class MultipleReverseEdgeCountFilter
   public readonly key: string;
 
   public readonly score: number;
-  public readonly dependencies: DependencyGraph;
 
   protected constructor(
     public readonly reverseEdge: MultipleReverseEdge,
@@ -71,7 +79,6 @@ export class MultipleReverseEdgeCountFilter
         : `${reverseEdge.countFieldName}_${operator}`;
 
     this.score = 2;
-    this.dependencies = DependencyGraph.fromReverseEdge(reverseEdge);
   }
 
   public equals(expression: unknown): boolean {
@@ -127,6 +134,75 @@ export class MultipleReverseEdgeCountFilter
 
   public execute(_value: NodeSelectedValue): undefined {
     return;
+  }
+
+  public isAffectedByNodeUpdate(_update: NodeUpdate): boolean {
+    return false;
+  }
+
+  public getAffectedGraphByNodeChange(
+    change: NodeChange,
+    visitedRootNodes?: NodeValue[],
+  ): BooleanFilter {
+    const operands: BooleanFilter[] = [];
+
+    if (change.node === this.reverseEdge.head) {
+      if (change instanceof NodeCreation) {
+        const tailFilter = this.reverseEdge.tail.filterInputType.filter(
+          change.newValue[this.reverseEdge.originalEdge.name],
+        );
+
+        if (
+          !tailFilter.isFalse() &&
+          !visitedRootNodes?.some((visitedRootNode) =>
+            tailFilter.execute(visitedRootNode, false),
+          )
+        ) {
+          operands.push(tailFilter.filter);
+        }
+      } else if (change instanceof NodeDeletion) {
+        const tailFilter = this.reverseEdge.tail.filterInputType.filter(
+          change.oldValue[this.reverseEdge.originalEdge.name],
+        );
+
+        if (
+          !tailFilter.isFalse() &&
+          !visitedRootNodes?.some((visitedRootNode) =>
+            tailFilter.execute(visitedRootNode, false),
+          )
+        ) {
+          operands.push(tailFilter.filter);
+        }
+      } else if (change.hasComponentUpdate(this.reverseEdge.originalEdge)) {
+        const newTailFilter = this.reverseEdge.tail.filterInputType.filter(
+          change.newValue[this.reverseEdge.originalEdge.name],
+        );
+
+        if (
+          !newTailFilter.isFalse() &&
+          !visitedRootNodes?.some((visitedRootNode) =>
+            newTailFilter.execute(visitedRootNode, false),
+          )
+        ) {
+          operands.push(newTailFilter.filter);
+        }
+
+        const oldTailFilter = this.reverseEdge.tail.filterInputType.filter(
+          change.oldValue[this.reverseEdge.originalEdge.name],
+        );
+
+        if (
+          !oldTailFilter.isFalse() &&
+          !visitedRootNodes?.some((visitedRootNode) =>
+            oldTailFilter.execute(visitedRootNode, false),
+          )
+        ) {
+          operands.push(oldTailFilter.filter);
+        }
+      }
+    }
+
+    return OrOperation.create(operands);
   }
 
   public get ast(): MultipleReverseEdgeCountFilterAST {

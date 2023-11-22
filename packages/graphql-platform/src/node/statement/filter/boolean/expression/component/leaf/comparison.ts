@@ -1,13 +1,16 @@
 import * as utils from '@prismamedia/graphql-platform-utils';
 import { Memoize } from '@prismamedia/memoize';
 import assert from 'node:assert/strict';
-import type { NodeSelectedValue } from '../../../../../../../node.js';
+import type {
+  NodeSelectedValue,
+  NodeValue,
+} from '../../../../../../../node.js';
+import type { NodeChange, NodeUpdate } from '../../../../../../change.js';
 import type {
   Component,
   Leaf,
   LeafValue,
 } from '../../../../../../definition/component.js';
-import { DependencyGraph } from '../../../../../../operation/dependency-graph.js';
 import type { NodeFilterInputValue } from '../../../../../../type.js';
 import type { BooleanFilter } from '../../../../boolean.js';
 import type { BooleanExpressionInterface } from '../../../expression-interface.js';
@@ -39,7 +42,6 @@ export class LeafComparisonFilter implements BooleanExpressionInterface {
 
   public readonly component: Component;
   public readonly score: number;
-  public readonly dependencies: DependencyGraph;
   readonly #complement?: LeafComparisonFilter;
 
   public constructor(
@@ -60,7 +62,6 @@ export class LeafComparisonFilter implements BooleanExpressionInterface {
 
     this.component = leaf;
     this.score = 2;
-    this.dependencies = DependencyGraph.fromLeaf(this);
 
     this.#complement = complement;
   }
@@ -266,6 +267,20 @@ export class LeafComparisonFilter implements BooleanExpressionInterface {
       default:
         throw new utils.UnreachableValueError(this.operator);
     }
+  }
+
+  public isAffectedByNodeUpdate(update: NodeUpdate): boolean {
+    return (
+      update.hasComponentUpdate(this.leaf) &&
+      this.execute(update.oldValue) !== this.execute(update.newValue)
+    );
+  }
+
+  public getAffectedGraphByNodeChange(
+    _change: NodeChange,
+    _visitedRootNodes?: NodeValue[],
+  ): BooleanFilter {
+    return FalseValue;
   }
 
   public get ast(): LeafComparisonFilterAST {

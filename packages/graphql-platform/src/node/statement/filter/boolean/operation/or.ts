@@ -1,5 +1,5 @@
-import type { NodeSelectedValue } from '../../../../../node.js';
-import type { DependencyGraph } from '../../../../operation/dependency-graph.js';
+import type { NodeSelectedValue, NodeValue } from '../../../../../node.js';
+import type { NodeChange, NodeUpdate } from '../../../../change.js';
 import type { NodeFilterInputValue } from '../../../../type.js';
 import type { BooleanFilter } from '../../boolean.js';
 import type { BooleanExpressionInterface } from '../expression-interface.js';
@@ -125,7 +125,6 @@ export class OrOperation implements BooleanExpressionInterface {
 
   public readonly key: string;
   public readonly score: number;
-  public readonly dependencies?: DependencyGraph;
 
   public constructor(
     public readonly operands: ReadonlyArray<OrOperand>,
@@ -133,13 +132,6 @@ export class OrOperation implements BooleanExpressionInterface {
   ) {
     this.key = (this.constructor as typeof OrOperation).key;
     this.score = 1 + operands.reduce((total, { score }) => total + score, 0);
-    this.dependencies = operands.reduce<DependencyGraph | undefined>(
-      (dependencies, operand) =>
-        dependencies && operand.dependencies
-          ? dependencies.mergeWith(operand.dependencies)
-          : dependencies || operand.dependencies,
-      undefined,
-    );
   }
 
   public has(expression: unknown): boolean {
@@ -186,6 +178,23 @@ export class OrOperation implements BooleanExpressionInterface {
     }
 
     return hasUndefinedOperand ? undefined : false;
+  }
+
+  public isAffectedByNodeUpdate(update: NodeUpdate): boolean {
+    return this.operands.some((operand) =>
+      operand.isAffectedByNodeUpdate(update),
+    );
+  }
+
+  public getAffectedGraphByNodeChange(
+    change: NodeChange,
+    visitedRootNodes?: NodeValue[],
+  ): BooleanFilter {
+    return OrOperation.create(
+      this.operands.map((operand) =>
+        operand.getAffectedGraphByNodeChange(change, visitedRootNodes),
+      ),
+    );
   }
 
   public get ast(): OrOperationAST | LeafInFilterAST {

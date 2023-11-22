@@ -1,14 +1,10 @@
 import assert from 'node:assert/strict';
-import {
-  BrokerAcknowledgementKind,
-  type BrokerInterface,
-} from '../../../../../broker-interface.js';
+import { BrokerAcknowledgementKind } from '../../../../../broker-interface.js';
 import type { ChangesSubscriptionStream } from '../stream.js';
 
 export abstract class AbstractChangesSubscriptionChange<
   TRequestContext extends object = any,
 > {
-  readonly #broker: BrokerInterface;
   public manualAcknowledgement: boolean = false;
   #acknowledged?: BrokerAcknowledgementKind;
 
@@ -22,7 +18,6 @@ export abstract class AbstractChangesSubscriptionChange<
     >,
     initiators: ReadonlyArray<TRequestContext>,
   ) {
-    this.#broker = subscription.node.gp.broker;
     this.initiators = Object.freeze(initiators);
   }
 
@@ -32,7 +27,10 @@ export abstract class AbstractChangesSubscriptionChange<
     assert.equal(this.#acknowledged, undefined, `Already acknowledged`);
     this.#acknowledged = kind;
 
-    await this.#broker.acknowledgeSubscriptionChange?.(this as any, kind);
+    await this.subscription.node.gp.broker.acknowledgeSubscriptionChange?.(
+      this as any,
+      kind,
+    );
   }
 
   public isAcknowledged(): boolean {

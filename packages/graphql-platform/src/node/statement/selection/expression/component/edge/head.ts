@@ -4,8 +4,16 @@ import * as graphql from 'graphql';
 import assert from 'node:assert/strict';
 import * as R from 'remeda';
 import type { JsonObject } from 'type-fest';
+import type { NodeValue } from '../../../../../../node.js';
+import { NodeUpdate, type NodeChange } from '../../../../../change.js';
 import type { Component, Edge } from '../../../../../definition.js';
-import { DependencyGraph } from '../../../../../operation/dependency-graph.js';
+import {
+  EdgeExistsFilter,
+  FalseValue,
+  NodeFilter,
+  OrOperation,
+  type BooleanFilter,
+} from '../../../../filter.js';
 import type {
   NodeSelectedValue,
   NodeSelection,
@@ -22,8 +30,6 @@ export class EdgeHeadSelection<TValue extends EdgeHeadValue = any>
   public readonly name: string;
   public readonly key: string;
 
-  public readonly dependencies: DependencyGraph;
-
   public constructor(
     public readonly edge: Edge,
     alias: string | undefined,
@@ -35,11 +41,6 @@ export class EdgeHeadSelection<TValue extends EdgeHeadValue = any>
     this.key = this.alias ?? this.name;
 
     assert.equal(edge.head, headSelection.node);
-
-    this.dependencies = DependencyGraph.fromEdge(
-      edge,
-      headSelection.dependencies,
-    );
   }
 
   public isAkinTo(expression: unknown): expression is EdgeHeadSelection {
@@ -74,6 +75,34 @@ export class EdgeHeadSelection<TValue extends EdgeHeadValue = any>
       this.edge,
       this.alias,
       this.headSelection.mergeWith(expression.headSelection, path),
+    );
+  }
+
+  public isAffectedByNodeUpdate(update: NodeUpdate): boolean {
+    return update.hasComponentUpdate(this.edge);
+  }
+
+  public getAffectedGraphByNodeChange(
+    change: NodeChange,
+    _visitedRootNodes?: NodeValue[],
+  ): BooleanFilter {
+    return EdgeExistsFilter.create(
+      this.edge,
+      new NodeFilter(
+        this.edge.head,
+        OrOperation.create([
+          change.node === this.edge.head &&
+          change instanceof NodeUpdate &&
+          this.headSelection.isAffectedByNodeUpdate(change)
+            ? this.edge.head.filterInputType.filter(
+                this.edge.referencedUniqueConstraint.parseValue(
+                  change.newValue,
+                ),
+              ).filter
+            : FalseValue,
+          this.headSelection.getAffectedGraphByNodeChange(change).filter,
+        ]),
+      ),
     );
   }
 

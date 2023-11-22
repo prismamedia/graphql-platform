@@ -1,8 +1,10 @@
 import { Memoize } from '@prismamedia/memoize';
+import assert from 'node:assert/strict';
 import * as R from 'remeda';
-import type { Node } from '../../node.js';
-import type { DependencyGraph } from '../operation.js';
+import type { Node, NodeValue } from '../../node.js';
+import type { NodeChange, NodeUpdate } from '../change.js';
 import type { OrderByInputValue } from '../type.js';
+import { NodeFilter, OrOperation } from './filter.js';
 import type { OrderingExpression } from './ordering/expression.js';
 
 export * from './ordering/direction.js';
@@ -19,12 +21,6 @@ export class NodeOrdering {
   public readonly expressions: ReadonlyArray<OrderingExpression>;
   public readonly normalized: NodeOrdering | undefined;
 
-  /**
-   * Used in subscriptions to know wich nodes to fetch
-   */
-  public readonly dependencies?: DependencyGraph;
-  public readonly useGraph: boolean;
-
   public constructor(
     public readonly node: Node,
     expressions: ReadonlyArray<OrderingExpression>,
@@ -34,18 +30,6 @@ export class NodeOrdering {
     );
 
     this.normalized = this.expressions.length === 0 ? undefined : this;
-
-    this.dependencies = this.expressions.reduce<DependencyGraph | undefined>(
-      (dependencies, expression) =>
-        dependencies && expression.dependencies
-          ? dependencies.mergeWith(expression.dependencies)
-          : dependencies || expression.dependencies,
-      undefined,
-    );
-
-    this.useGraph = this.dependencies?.children
-      ? this.dependencies?.children.size > 0
-      : false;
   }
 
   public equals(ordering: unknown): boolean {
@@ -56,6 +40,28 @@ export class NodeOrdering {
       ordering.expressions.every((expression, index) =>
         expression.equals(this.expressions[index]),
       )
+    );
+  }
+
+  public isAffectedByNodeUpdate(update: NodeUpdate): boolean {
+    assert.equal(update.node, this.node);
+
+    return this.expressions.some((expression) =>
+      expression.isAffectedByNodeUpdate(update),
+    );
+  }
+
+  public getAffectedGraphByNodeChange(
+    change: NodeChange,
+    visitedRootNodes?: NodeValue[],
+  ): NodeFilter {
+    return new NodeFilter(
+      this.node,
+      OrOperation.create(
+        this.expressions.map((expression) =>
+          expression.getAffectedGraphByNodeChange(change, visitedRootNodes),
+        ),
+      ),
     );
   }
 
