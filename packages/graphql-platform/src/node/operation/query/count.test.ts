@@ -36,10 +36,10 @@ describe('CountQuery', () => {
     describe('Fails', () => {
       it.each<[MyContext, CountQueryArgs]>([[myVisitorContext, undefined]])(
         'throws an UnauthorizedError',
-        async (context, args) => {
-          await expect(
-            gp.api.query.articleCount(context, args),
-          ).rejects.toThrowError(UnauthorizedError);
+        (context, args) => {
+          expect(() => gp.api.query.articleCount(context, args)).toThrowError(
+            UnauthorizedError,
+          );
 
           expect(gp.connector.count).toHaveBeenCalledTimes(0);
         },

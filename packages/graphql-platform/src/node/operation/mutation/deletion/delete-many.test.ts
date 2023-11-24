@@ -35,7 +35,7 @@ describe('DeleteManyMutation', () => {
         [myVisitorContext, { first: 5, selection: '{ id }' }],
         [myUserContext, { first: 5, selection: '{ id }' }],
       ])('throws an UnauthorizedError', async (context, args) => {
-        await expect(
+        await expect(() =>
           gp.api.mutation.deleteArticles(context, args),
         ).rejects.toThrowError(UnauthorizedError);
 

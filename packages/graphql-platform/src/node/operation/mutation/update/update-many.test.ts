@@ -33,7 +33,7 @@ describe('UpdateManyMutation', () => {
       it.each<[MyContext, UpdateManyMutationArgs]>([
         [myVisitorContext, { data: {}, first: 5, selection: '{ id }' }],
       ])('throws an UnauthorizedError', async (context, args) => {
-        await expect(
+        await expect(() =>
           gp.api.mutation.updateArticles(context, args),
         ).rejects.toThrowError(UnauthorizedError);
 

@@ -164,7 +164,7 @@ exports[`GraphQL-Platform Integration Apollo Server creates an ApolloServer inst
     "kind": "single",
     "singleResult": {
       "data": {
-        "articles": null,
+        "articleChanges": null,
       },
       "errors": undefined,
     },

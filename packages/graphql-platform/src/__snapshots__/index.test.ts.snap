@@ -2254,27 +2254,37 @@ input UserProfileUpdateInput {
 
 type subscription {
   """Subscribe to the "Articles"' changes"""
-  articles(where: ArticleFilterInput): ArticleChange
+  articleChanges(where: ArticleFilterInput): ArticleChange
+
+  """
+  Scroll the "Articles"
+  """
+  articles(where: ArticleFilterInput): Article
 
   """Subscribe to the "Categories"' changes"""
-  categories(where: CategoryFilterInput): CategoryChange
+  categoryChanges(where: CategoryFilterInput): CategoryChange
+
+  """
+  Scroll the "Categories"
+  """
+  categories(where: CategoryFilterInput): Category
 
   """Subscribe to the "Tags"' changes"""
-  tags(where: TagFilterInput): TagChange
+  tagChanges(where: TagFilterInput): TagChange
 
   """Subscribe to the "Users"' changes"""
-  users(where: UserFilterInput): UserChange
+  userChanges(where: UserFilterInput): UserChange
 
   """Subscribe to the "UserProfiles"' changes"""
-  userProfiles(where: UserProfileFilterInput): UserProfileChange
+  userProfileChanges(where: UserProfileFilterInput): UserProfileChange
 }
 
 """
-A single change in the "articles"'s subscription, either a deletion (= "ArticleDeletion") or an upsert (= "Article")
+A single change in the "articleChanges"'s subscription, either a deletion (= "ArticleDeletion") or an upsert (= "Article")
 """
 union ArticleChange = ArticleDeletion | Article
 
-"""A single deletion in the "articles"'s subscription"""
+"""A single deletion in the "articleChanges"'s subscription"""
 type ArticleDeletion {
   """This UUID identifies an Article publicly"""
   id: UUIDv4!
@@ -2311,11 +2321,11 @@ type UserUsername {
 }
 
 """
-A single change in the "categories"'s subscription, either a deletion (= "CategoryDeletion") or an upsert (= "Category")
+A single change in the "categoryChanges"'s subscription, either a deletion (= "CategoryDeletion") or an upsert (= "Category")
 """
 union CategoryChange = CategoryDeletion | Category
 
-"""A single deletion in the "categories"'s subscription"""
+"""A single deletion in the "categoryChanges"'s subscription"""
 type CategoryDeletion {
   id: UUIDv4!
   title: NonEmptyTrimmedString!
@@ -2324,11 +2334,11 @@ type CategoryDeletion {
 }
 
 """
-A single change in the "tags"'s subscription, either a deletion (= "TagDeletion") or an upsert (= "Tag")
+A single change in the "tagChanges"'s subscription, either a deletion (= "TagDeletion") or an upsert (= "Tag")
 """
 union TagChange = TagDeletion | Tag
 
-"""A single deletion in the "tags"'s subscription"""
+"""A single deletion in the "tagChanges"'s subscription"""
 type TagDeletion {
   id: UUIDv4!
 
@@ -2341,22 +2351,22 @@ type TagDeletion {
 }
 
 """
-A single change in the "users"'s subscription, either a deletion (= "UserDeletion") or an upsert (= "User")
+A single change in the "userChanges"'s subscription, either a deletion (= "UserDeletion") or an upsert (= "User")
 """
 union UserChange = UserDeletion | User
 
-"""A single deletion in the "users"'s subscription"""
+"""A single deletion in the "userChanges"'s subscription"""
 type UserDeletion {
   id: UUIDv4!
   username: NonEmptyTrimmedString!
 }
 
 """
-A single change in the "userProfiles"'s subscription, either a deletion (= "UserProfileDeletion") or an upsert (= "UserProfile")
+A single change in the "userProfileChanges"'s subscription, either a deletion (= "UserProfileDeletion") or an upsert (= "UserProfile")
 """
 union UserProfileChange = UserProfileDeletion | UserProfile
 
-"""A single deletion in the "userProfiles"'s subscription"""
+"""A single deletion in the "userProfileChanges"'s subscription"""
 type UserProfileDeletion {
   user: UserId!
   birthday: Date

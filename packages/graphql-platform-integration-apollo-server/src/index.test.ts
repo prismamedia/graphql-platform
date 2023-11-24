@@ -61,7 +61,7 @@ describe('GraphQL-Platform Integration Apollo Server', () => {
       server.executeOperation(
         {
           query: `subscription SubscribeToArticleChanges {
-            articles(where: { status: PUBLISHED }) {
+            articleChanges(where: { status: PUBLISHED }) {
               ... on ArticleDeletion {
                 id
               }

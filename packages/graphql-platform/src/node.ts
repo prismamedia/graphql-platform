@@ -11,7 +11,6 @@ import type {
 } from './connector-interface.js';
 import type { GraphQLPlatform } from './index.js';
 import type { NodeChange } from './node/change.js';
-import { NodeCursor, type NodeCursorConfig } from './node/cursor.js';
 import {
   Edge,
   Leaf,
@@ -60,7 +59,6 @@ import {
 } from './node/type.js';
 
 export * from './node/change.js';
-export * from './node/cursor.js';
 export * from './node/definition.js';
 export * from './node/fixture.js';
 export * from './node/loader.js';
@@ -1491,22 +1489,6 @@ export class Node<
         ? null
         : authorization,
     ).normalized;
-  }
-
-  @Memoize()
-  public isScrollable(): boolean {
-    return Array.from(this.uniqueConstraintSet).some((uniqueConstraint) =>
-      uniqueConstraint.isScrollable(),
-    );
-  }
-
-  public scroll<TValue extends NodeSelectedValue>(
-    context:
-      | utils.Thunkable<TRequestContext>
-      | OperationContext<TRequestContext>,
-    config: NodeCursorConfig<TValue>,
-  ): NodeCursor<TValue, TRequestContext> {
-    return new NodeCursor(this, context, config);
   }
 
   public parseValue(maybeValue: unknown, path?: utils.Path): NodeValue {

@@ -100,7 +100,7 @@ export type ChangesSubscriptionStreamForEachTask<
   TRequestContext extends object = any,
 > = (
   change: ChangesSubscriptionChange<TUpsert, TDeletion, TRequestContext>,
-  subscription: ChangesSubscriptionStream<TUpsert, TDeletion, TRequestContext>,
+  stream: ChangesSubscriptionStream<TUpsert, TDeletion, TRequestContext>,
 ) => Promisable<void>;
 
 export type ChangesSubscriptionStreamForEachOptions = Except<
@@ -116,7 +116,7 @@ export type ChangesSubscriptionStreamByBatchTask<
   changes: ReadonlyArray<
     ChangesSubscriptionChange<TUpsert, TDeletion, TRequestContext>
   >,
-  subscription: ChangesSubscriptionStream<TUpsert, TDeletion, TRequestContext>,
+  stream: ChangesSubscriptionStream<TUpsert, TDeletion, TRequestContext>,
 ) => Promisable<void>;
 
 export type ChangesSubscriptionStreamByBatchOptions =
@@ -146,7 +146,7 @@ export type ChangesSubscriptionStreamConfig<
  * @see https://en.wikipedia.org/wiki/Observer_pattern
  *
  * @example <caption>Query</caption>
- * articles(
+ * articleChanges(
  *   where: {
  *     OR: [
  *       { status: PUBLISHED },
@@ -193,8 +193,8 @@ export class ChangesSubscriptionStream<
   public constructor(
     public readonly node: Node<TRequestContext>,
     context:
-      | utils.Thunkable<TRequestContext>
-      | OperationContext<TRequestContext>,
+      | OperationContext<TRequestContext>
+      | utils.Thunkable<TRequestContext>,
     config: Readonly<ChangesSubscriptionStreamConfig<TUpsert, TDeletion>>,
   ) {
     super({
@@ -584,8 +584,7 @@ export class ChangesSubscriptionStream<
   }
 
   public [Symbol.asyncIterator](): AsyncIterator<
-    ChangesSubscriptionChange<TUpsert, TDeletion, TRequestContext>,
-    undefined
+    ChangesSubscriptionChange<TUpsert, TDeletion, TRequestContext>
   > {
     this.#ac.signal.throwIfAborted();
 
@@ -733,7 +732,7 @@ export class ChangesSubscriptionStream<
 
             await tasks.onEmpty();
 
-            if (batch.push(change) >= normalizedBatchSize) {
+            if (batch.push(change) === normalizedBatchSize) {
               processBatch();
             }
           }

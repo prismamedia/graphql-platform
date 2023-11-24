@@ -36,6 +36,7 @@ export type NodeSelectionAwareArgs<
 
 export abstract class AbstractOperation<
   TRequestContext extends object,
+  TOperationContext extends OperationContext<TRequestContext>,
   TArgs extends utils.Nillable<utils.PlainObject>,
   TResult,
 > implements OperationInterface<TRequestContext>
@@ -62,7 +63,7 @@ export abstract class AbstractOperation<
    *
    * It identifies the operation for a given node
    */
-  public abstract get method(): string;
+  public abstract readonly method: string;
 
   /**
    * This is unique
@@ -130,14 +131,14 @@ export abstract class AbstractOperation<
   }
 
   protected ensureAuthorization(
-    context: OperationContext,
+    context: TOperationContext,
     path: utils.Path,
   ): NodeFilter | undefined {
     return context.ensureAuthorization(this.node, path);
   }
 
   protected parseArguments(
-    context: OperationContext,
+    context: TOperationContext,
     args: TArgs,
     path: utils.Path,
   ): NodeSelectionAwareArgs<TArgs> {
@@ -177,18 +178,18 @@ export abstract class AbstractOperation<
    * The actual implementation with authorization, parsed arguments and context
    */
   protected abstract executeWithValidArgumentsAndContext(
-    context: OperationContext,
+    context: TOperationContext,
     authorization: NodeFilter | undefined,
     args: NodeSelectionAwareArgs<TArgs>,
     path: utils.Path,
-  ): Promise<TResult>;
+  ): TResult;
 
-  public async internal(
-    context: OperationContext<TRequestContext>,
+  public internal(
+    context: TOperationContext,
     authorization: NodeFilter | undefined,
     args: TArgs,
     path: utils.Path,
-  ): Promise<TResult> {
+  ): TResult {
     this.assertIsEnabled(path);
 
     const parsedArguments = this.parseArguments(context, args, path);
@@ -201,24 +202,24 @@ export abstract class AbstractOperation<
     );
   }
 
-  public async execute(
-    context: TRequestContext | OperationContext<TRequestContext>,
+  public execute(
+    context: TRequestContext | TOperationContext,
     args: TArgs,
     path: utils.Path = utils.addPath(
       utils.addPath(undefined, this.operationType),
       this.name,
     ),
-  ): Promise<TResult> {
+  ): TResult {
     this.assertIsEnabled(path);
 
-    let operationContext: OperationContext;
+    let operationContext: TOperationContext;
 
     if (context instanceof OperationContext) {
       operationContext = context;
     } else {
       this.gp.assertRequestContext(context, path);
 
-      operationContext = new OperationContext(this.gp, context);
+      operationContext = new OperationContext(this.gp, context) as any;
     }
 
     const authorization = this.ensureAuthorization(operationContext, path);

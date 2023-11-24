@@ -33,15 +33,17 @@ describe('ChangesSubscription', () => {
   });
 
   describe('Runtime', () => {
+    const Article = gp.getNodeByName('Article');
+
     beforeEach(() => clearAllConnectorMocks(gp.connector));
 
     describe('Fails', () => {
       it.each<[MyContext, ChangesSubscriptionArgs]>([
         [myVisitorContext, { selection: { onUpsert: ['id'] } }],
-      ])('throws an UnauthorizedError', async (context, args) => {
-        await expect(
-          gp.api.subscription.articles(context, args),
-        ).rejects.toThrowError(UnauthorizedError);
+      ])('throws an UnauthorizedError', (context, args) => {
+        expect(() =>
+          Article.api.subscribeToChanges(context, args),
+        ).toThrowError(UnauthorizedError);
 
         expect(gp.connector.find).toHaveBeenCalledTimes(0);
       });
@@ -57,15 +59,9 @@ describe('ChangesSubscription', () => {
         [myAdminContext, { where: null, selection: { onUpsert: '{ id }' } }],
       ])(
         'does no call the connector when it is not needed',
-        async (context, args) => {
-          const subscription = await gp.api.subscription.articles(
-            context,
-            args,
-          );
-
+        (context, args) => {
+          const subscription = Article.api.subscribeToChanges(context, args);
           expect(subscription).toBeInstanceOf(ChangesSubscriptionStream);
-
-          await subscription.dispose();
 
           expect(gp.connector.find).toHaveBeenCalledTimes(0);
         },
@@ -75,13 +71,15 @@ describe('ChangesSubscription', () => {
         let subscription: ChangesSubscriptionStream;
 
         beforeAll(async () => {
-          subscription = await Article.api.subscribeToChanges(myAdminContext, {
+          subscription = Article.api.subscribeToChanges(myAdminContext, {
             where: { status: ArticleStatus.PUBLISHED },
             selection: {
               onUpsert: `{ id title }`,
               onDeletion: `{ id }`,
             },
           });
+
+          await subscription.initialize();
         });
 
         afterAll(() => subscription?.dispose());

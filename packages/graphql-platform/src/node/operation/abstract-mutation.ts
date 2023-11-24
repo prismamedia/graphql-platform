@@ -6,10 +6,7 @@ import type { BrokerInterface } from '../../broker-interface.js';
 import type { ConnectorInterface } from '../../connector-interface.js';
 import type { GraphQLPlatform } from '../../index.js';
 import type { Node } from '../../node.js';
-import {
-  AbstractOperation,
-  type NodeSelectionAwareArgs,
-} from '../abstract-operation.js';
+import { AbstractOperation } from '../abstract-operation.js';
 import { AndOperation, NodeFilter } from '../statement/filter.js';
 import type { ContextBoundAPI } from './api.js';
 import { ConnectorWorkflowKind, catchConnectorWorkflowError } from './error.js';
@@ -71,7 +68,12 @@ export abstract class AbstractMutation<
     TArgs extends utils.Nillable<utils.PlainObject>,
     TResult,
   >
-  extends AbstractOperation<TRequestContext, TArgs, TResult>
+  extends AbstractOperation<
+    TRequestContext,
+    MutationContext<TRequestContext>,
+    TArgs,
+    Promise<TResult>
+  >
   implements MutationInterface<TRequestContext>
 {
   public readonly operationType = graphql.OperationTypeNode.MUTATION;
@@ -118,14 +120,7 @@ export abstract class AbstractMutation<
     );
   }
 
-  protected abstract override executeWithValidArgumentsAndContext(
-    context: MutationContext,
-    authorization: NodeFilter | undefined,
-    args: NodeSelectionAwareArgs<TArgs>,
-    path: utils.Path,
-  ): Promise<TResult>;
-
-  public override async execute(
+  public async execute(
     context: TRequestContext | MutationContext<TRequestContext>,
     args: TArgs,
     path: utils.Path = utils.addPath(
@@ -222,15 +217,18 @@ export abstract class AbstractMutation<
     TRequestContext,
     Omit<TArgs, 'selection'>
   >['resolve'] {
-    return (_, args, context, info) =>
-      this.execute(
-        context,
-        (this.selectionAware ? { ...args, selection: info } : args) as TArgs,
-        info.path,
-      ).catch((error) => {
+    return async (_, args, context, info) => {
+      try {
+        return await this.execute(
+          context,
+          (this.selectionAware ? { ...args, selection: info } : args) as TArgs,
+          info.path,
+        );
+      } catch (error) {
         throw error instanceof utils.GraphError
           ? error.toGraphQLError()
           : error;
-      });
+      }
+    };
   }
 }

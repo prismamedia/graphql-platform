@@ -27,7 +27,7 @@ describe('Subscription', () => {
     const Category = gp.getNodeByName('Category');
     const Tag = gp.getNodeByName('Tag');
 
-    const subscription = await Article.api.subscribeToChanges(myAdminContext, {
+    const subscription = Article.api.subscribeToChanges(myAdminContext, {
       where: {
         status: ArticleStatus.PUBLISHED,
         category: { parent: null, slug: 'root' },
@@ -53,6 +53,8 @@ describe('Subscription', () => {
         onDeletion: `{ id }`,
       },
     });
+
+    await subscription.initialize();
 
     await gp.seed(myAdminContext, fixtures.constant);
 

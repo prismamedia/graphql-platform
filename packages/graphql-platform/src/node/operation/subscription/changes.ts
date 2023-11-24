@@ -48,8 +48,9 @@ export class ChangesSubscription<
 > {
   protected readonly selectionAware = true;
 
-  public readonly key = 'changes';
-  public readonly name = inflection.camelize(this.node.plural, true);
+  public readonly key = 'changes' as const;
+  public readonly method = 'subscribeToChanges' as const;
+  public readonly name = `${inflection.camelize(this.node.name, true)}Changes`;
   public readonly description = `Subscribe to the "${this.node.plural}"' changes`;
 
   @Memoize()
@@ -201,12 +202,12 @@ export class ChangesSubscription<
     return parsedArgs as any;
   }
 
-  protected async executeWithValidArgumentsAndContext(
+  protected executeWithValidArgumentsAndContext(
     context: OperationContext,
     authorization: NodeFilter | undefined,
     args: ParsedChangesSubscriptionArgs,
     path: utils.Path,
-  ): Promise<ChangesSubscriptionStream> {
+  ): ChangesSubscriptionStream {
     const argsPath = utils.addPath(path, argsPathKey);
 
     const filter = new NodeFilter(
@@ -221,16 +222,12 @@ export class ChangesSubscription<
       ]),
     ).normalized;
 
-    const stream = new ChangesSubscriptionStream(this.node, context, {
+    return new ChangesSubscriptionStream(this.node, context, {
       filter,
       selection: args.selection,
     });
-    await stream.initialize();
-
-    return stream;
   }
 
-  @Memoize()
   protected getGraphQLDeletionType() {
     return new graphql.GraphQLObjectType({
       name: `${this.node}Deletion`,
@@ -265,12 +262,10 @@ export class ChangesSubscription<
     });
   }
 
-  @Memoize()
   protected getGraphQLUpsertType() {
     return this.node.outputType.getGraphQLObjectType();
   }
 
-  @Memoize()
   public getGraphQLFieldConfigType() {
     return new graphql.GraphQLUnionType({
       name: `${this.node}Change`,
