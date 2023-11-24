@@ -43,7 +43,7 @@ describe('CreateSomeMutation', () => {
           { data: [{ title: 'A title' }], selection: '{ id }' },
         ],
       ])('throws an UnauthorizedError', async (context, args) => {
-        await expect(
+        await expect(() =>
           gp.api.mutation.createArticles(context, args),
         ).rejects.toThrowError(UnauthorizedError);
 

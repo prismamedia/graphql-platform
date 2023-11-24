@@ -19,5 +19,5 @@ export interface OperationInterface<TRequestContext extends object = any> {
     context: TRequestContext | OperationContext<TRequestContext>,
     args: utils.Nillable<utils.PlainObject>,
     path?: utils.Path,
-  ): Promise<any>;
+  ): any;
 }

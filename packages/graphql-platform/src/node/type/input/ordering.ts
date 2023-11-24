@@ -12,9 +12,9 @@ export type NodeOrderingInputValue = utils.Nillable<
   OrderingExpressionInput['value']
 >;
 
-export type OrderByInputValue =
-  | NonNullable<NodeOrderingInputValue>[]
-  | utils.Nil;
+export type OrderByInputValue = utils.Nillable<
+  NonNullable<NodeOrderingInputValue>[]
+>;
 
 export class NodeOrderingInputType extends utils.EnumInputType<OrderingExpressionInput> {
   public constructor(public readonly node: Node) {

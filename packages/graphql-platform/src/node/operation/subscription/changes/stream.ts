@@ -2,6 +2,7 @@ import {
   AbortError,
   AsyncEventEmitter,
 } from '@prismamedia/async-event-emitter';
+import * as scalars from '@prismamedia/graphql-platform-scalars';
 import * as utils from '@prismamedia/graphql-platform-utils';
 import { Memoize } from '@prismamedia/memoize';
 import assert from 'node:assert/strict';
@@ -100,7 +101,7 @@ export type ChangesSubscriptionStreamForEachTask<
   TRequestContext extends object = any,
 > = (
   change: ChangesSubscriptionChange<TUpsert, TDeletion, TRequestContext>,
-  subscription: ChangesSubscriptionStream<TUpsert, TDeletion, TRequestContext>,
+  stream: ChangesSubscriptionStream<TUpsert, TDeletion, TRequestContext>,
 ) => Promisable<void>;
 
 export type ChangesSubscriptionStreamForEachOptions = Except<
@@ -116,7 +117,7 @@ export type ChangesSubscriptionStreamByBatchTask<
   changes: ReadonlyArray<
     ChangesSubscriptionChange<TUpsert, TDeletion, TRequestContext>
   >,
-  subscription: ChangesSubscriptionStream<TUpsert, TDeletion, TRequestContext>,
+  stream: ChangesSubscriptionStream<TUpsert, TDeletion, TRequestContext>,
 ) => Promisable<void>;
 
 export type ChangesSubscriptionStreamByBatchOptions =
@@ -146,7 +147,7 @@ export type ChangesSubscriptionStreamConfig<
  * @see https://en.wikipedia.org/wiki/Observer_pattern
  *
  * @example <caption>Query</caption>
- * articles(
+ * articleChanges(
  *   where: {
  *     OR: [
  *       { status: PUBLISHED },
@@ -182,6 +183,7 @@ export class ChangesSubscriptionStream<
   public readonly onUpsertSelection: NodeSelection<TUpsert>;
   public readonly onDeletionSelection?: NodeSelection<TDeletion>;
 
+  readonly #scrollable: boolean;
   readonly #broker: BrokerInterface;
   readonly #api: ContextBoundNodeAPI;
   readonly #ac: AbortController;
@@ -193,8 +195,8 @@ export class ChangesSubscriptionStream<
   public constructor(
     public readonly node: Node<TRequestContext>,
     context:
-      | utils.Thunkable<TRequestContext>
-      | OperationContext<TRequestContext>,
+      | OperationContext<TRequestContext>
+      | utils.Thunkable<TRequestContext>,
     config: Readonly<ChangesSubscriptionStreamConfig<TUpsert, TDeletion>>,
   ) {
     super({
@@ -227,6 +229,7 @@ export class ChangesSubscriptionStream<
       this.onDeletionSelection = config.selection.onDeletion;
     }
 
+    this.#scrollable = node.getSubscriptionByKey('scroll').isEnabled();
     this.#broker = node.gp.broker;
     this.#api = node.createContextBoundAPI(context);
     this.#ac = new AbortController();
@@ -522,7 +525,7 @@ export class ChangesSubscriptionStream<
     if (effect.maybeGraphChanges) {
       // deletions
       if (this.filter && this.onDeletionSelection) {
-        for await (const deletion of this.#api.scroll({
+        const args = {
           where: {
             AND: [
               this.filter.complement.inputValue,
@@ -530,30 +533,66 @@ export class ChangesSubscriptionStream<
             ],
           },
           selection: this.onDeletionSelection,
-        })) {
-          yield new ChangesSubscriptionDeletion(
-            this,
-            deletion,
-            effect.maybeGraphChanges.initiators,
-          );
+        } as const;
+
+        if (this.#scrollable) {
+          for await (const deletion of this.#api.scroll(args)) {
+            yield new ChangesSubscriptionDeletion(
+              this,
+              deletion,
+              effect.maybeGraphChanges.initiators,
+            );
+          }
+        } else {
+          const deletions = await this.#api.findMany({
+            ...args,
+            first: scalars.GRAPHQL_MAX_UNSIGNED_INT,
+          });
+
+          for (const deletion of deletions) {
+            yield new ChangesSubscriptionDeletion(
+              this,
+              deletion,
+              effect.maybeGraphChanges.initiators,
+            );
+          }
         }
       }
 
       // upserts
-      for await (const upsert of this.#api.scroll({
-        where: {
-          AND: [
-            this.filter?.inputValue,
-            effect.maybeGraphChanges.filter.inputValue,
-          ],
-        },
-        selection: this.onUpsertSelection,
-      })) {
-        yield new ChangesSubscriptionUpsert(
-          this,
-          upsert,
-          effect.maybeGraphChanges.initiators,
-        );
+      {
+        const args = {
+          where: {
+            AND: [
+              this.filter?.inputValue,
+              effect.maybeGraphChanges.filter.inputValue,
+            ],
+          },
+          selection: this.onUpsertSelection,
+        } as const;
+
+        if (this.#scrollable) {
+          for await (const upsert of this.#api.scroll(args)) {
+            yield new ChangesSubscriptionUpsert(
+              this,
+              upsert,
+              effect.maybeGraphChanges.initiators,
+            );
+          }
+        } else {
+          const upserts = await this.#api.findMany({
+            ...args,
+            first: scalars.GRAPHQL_MAX_UNSIGNED_INT,
+          });
+
+          for (const upsert of upserts) {
+            yield new ChangesSubscriptionUpsert(
+              this,
+              upsert,
+              effect.maybeGraphChanges.initiators,
+            );
+          }
+        }
       }
     }
   }
@@ -584,8 +623,7 @@ export class ChangesSubscriptionStream<
   }
 
   public [Symbol.asyncIterator](): AsyncIterator<
-    ChangesSubscriptionChange<TUpsert, TDeletion, TRequestContext>,
-    undefined
+    ChangesSubscriptionChange<TUpsert, TDeletion, TRequestContext>
   > {
     this.#ac.signal.throwIfAborted();
 
@@ -733,7 +771,7 @@ export class ChangesSubscriptionStream<
 
             await tasks.onEmpty();
 
-            if (batch.push(change) >= normalizedBatchSize) {
+            if (batch.push(change) === normalizedBatchSize) {
               processBatch();
             }
           }

@@ -1,5 +1,5 @@
 import * as utils from '@prismamedia/graphql-platform-utils';
-import { Memoize, doNotCache } from '@prismamedia/memoize';
+import { Memoize } from '@prismamedia/memoize';
 import {
   MultiBar as MultiProgressBar,
   SingleBar as ProgressBar,
@@ -11,16 +11,19 @@ import { inspect } from 'node:util';
 import PQueue, { Options as PQueueOptions } from 'p-queue';
 import PRetry, { Options as PRetryOptions } from 'p-retry';
 import type { Except, Promisable } from 'type-fest';
-import type { ContextBoundNodeAPI, Node, OperationContext } from '../node.js';
-import { Leaf, type UniqueConstraint } from './definition.js';
+import type { Node } from '../../../../node.js';
+import type {
+  ContextBoundNodeAPI,
+  OperationContext,
+} from '../../../operation.js';
 import {
+  LeafOrdering,
   NodeFilter,
-  NodeOrdering,
+  NodeSelection,
   OrderingDirection,
   type NodeSelectedValue,
-  type NodeSelection,
-} from './statement.js';
-import type { NodeFilterInputValue, RawNodeSelection } from './type.js';
+} from '../../../statement.js';
+import { LeafFilterInputType, NodeFilterInputValue } from '../../../type.js';
 
 export const defaultNamedProgressBarFormat =
   `[{bar}] {name} | {value}/{total} | {percentage}% | ETA: {eta_formatted} | Elapsed: {duration_formatted}` satisfies ProgressBarOptions['format'];
@@ -35,30 +38,16 @@ export {
   type ProgressBarOptions,
 };
 
-const pickAfterFilterInputValue = (
-  uniqueConstraint: UniqueConstraint,
-  direction: OrderingDirection,
-  value: NodeSelectedValue,
-): NonNullable<NodeFilterInputValue> =>
-  Object.fromEntries(
-    Array.from(uniqueConstraint.componentSet, (component) => [
-      `${component.name}_${
-        direction === OrderingDirection.ASCENDING ? 'gt' : 'lt'
-      }`,
-      value[component.name],
-    ]),
-  );
-
-export type NodeCursorForEachTask<
+export type ScrollSubscriptionStreamForEachTask<
   TValue extends NodeSelectedValue = any,
   TRequestContext extends object = any,
 > = (
   value: TValue,
   index: number,
-  cursor: NodeCursor<TValue, TRequestContext>,
+  stream: ScrollSubscriptionStream<TValue, TRequestContext>,
 ) => Promisable<void>;
 
-export type NodeCursorForEachOptions = Except<
+export type ScrollSubscriptionStreamForEachOptions = Except<
   PQueueOptions<any, any>,
   'autoStart' | 'queueClass'
 > & {
@@ -91,150 +80,195 @@ export type NodeCursorForEachOptions = Except<
     | { container: MultiProgressBar; name: string };
 };
 
-export type NodeCursorByBatchTask<
+export type ScrollSubscriptionStreamByBatchTask<
   TValue extends NodeSelectedValue = any,
   TRequestContext extends object = any,
 > = (
   values: ReadonlyArray<TValue>,
-  cursor: NodeCursor<TValue, TRequestContext>,
+  stream: ScrollSubscriptionStream<TValue, TRequestContext>,
 ) => Promisable<void>;
 
-export type NodeCursorByBatchOptions = NodeCursorForEachOptions & {
-  /**
-   * Optional, the maximum size of the batch
-   *
-   * Default: 100
-   */
-  batchSize?: number;
+export type ScrollSubscriptionStreamByBatchOptions =
+  ScrollSubscriptionStreamForEachOptions & {
+    /**
+     * Optional, the maximum size of the batch
+     *
+     * Default: 100
+     */
+    batchSize?: number;
+  };
+
+export type ScrollSubscriptionStreamConfig<
+  TValue extends NodeSelectedValue = any,
+> = {
+  filter?: NodeFilter;
+  ordering: LeafOrdering;
+  selection: NodeSelection<TValue>;
+  chunkSize: number;
 };
 
-export type NodeCursorConfig<TValue extends NodeSelectedValue = any> = {
-  where?: NodeFilterInputValue | NodeFilter;
-  selection: RawNodeSelection<TValue>;
-  direction?: OrderingDirection;
-  uniqueConstraint?: UniqueConstraint['name'];
-  chunkSize?: number;
-};
-
-export class NodeCursor<
+/**
+ * A scroll makes a collection consumable by chunks
+ *
+ * @example <caption>Query</caption>
+ * articles(
+ *   where: {
+ *     OR: [
+ *       { status: PUBLISHED },
+ *       { category: { slug: "my-selected-category" }},
+ *       { category: { articleCount_gt: 0 }},
+ *       { tags_some: { tag: { slug: "my-selected-tag" } }},
+ *       { tagCount_gte: 5 }
+ *     ]
+ *   }
+ * ) {
+ *   id
+ *   title
+ *   category { title }
+ *   tagCount(where: { tag: { deprecated_not: true } })
+ *   tags(where: { tag: { deprecated_not: true } }, orderBy: [order_ASC], first: 10) { tag { title } }
+ * }
+ */
+export class ScrollSubscriptionStream<
   TValue extends NodeSelectedValue = any,
   TRequestContext extends object = any,
 > implements AsyncIterable<TValue>
 {
-  public readonly uniqueConstraint: UniqueConstraint;
   public readonly filter?: NodeFilter;
-  public readonly ordering: NodeOrdering;
+  public readonly ordering: LeafOrdering;
   public readonly selection: NodeSelection<TValue>;
 
-  readonly #api: ContextBoundNodeAPI;
-  readonly #direction: OrderingDirection;
+  readonly #nextFilterInputType: LeafFilterInputType;
   readonly #internalSelection: NodeSelection;
   readonly #chunkSize: number;
+
+  readonly #api: ContextBoundNodeAPI;
+  readonly #ac: AbortController;
 
   public constructor(
     public readonly node: Node<TRequestContext>,
     context:
-      | utils.Thunkable<TRequestContext>
-      | OperationContext<TRequestContext>,
-    config: Readonly<NodeCursorConfig<TValue>>,
+      | OperationContext<TRequestContext>
+      | utils.Thunkable<TRequestContext>,
+    config: Readonly<ScrollSubscriptionStreamConfig<TValue>>,
   ) {
-    // unique-constraint
+    assert(config.filter === undefined || config.filter instanceof NodeFilter);
+    this.filter = config.filter?.normalized;
+
+    assert(
+      config.ordering instanceof LeafOrdering &&
+        config.ordering.leaf.isUnique() &&
+        !config.ordering.leaf.isNullable(),
+    );
+    this.ordering = config.ordering;
+
+    assert(config.selection instanceof NodeSelection);
+    this.selection = config.selection;
+
     {
-      let uniqueConstraint: UniqueConstraint | undefined;
+      const nextFilterInputType = node.filterInputType.fields.find(
+        (field): field is LeafFilterInputType =>
+          field instanceof LeafFilterInputType &&
+          field.leaf === this.ordering.leaf &&
+          field.id ===
+            (this.ordering.direction === OrderingDirection.ASCENDING
+              ? 'gt'
+              : 'lt'),
+      );
 
-      if (config?.uniqueConstraint) {
-        uniqueConstraint = node.getUniqueConstraintByName(
-          config.uniqueConstraint,
-        );
-
-        assert(
-          uniqueConstraint.isScrollable(),
-          `The "${uniqueConstraint}" unique-constraint is not scrollable`,
-        );
-      } else {
-        uniqueConstraint = Array.from(node.uniqueConstraintSet).find(
-          (uniqueConstraint) => uniqueConstraint.isScrollable(),
-        );
-
-        assert(uniqueConstraint, `The "${node}" node is not scrollable`);
-      }
-
-      this.uniqueConstraint = uniqueConstraint;
+      assert(nextFilterInputType);
+      this.#nextFilterInputType = nextFilterInputType;
     }
-
-    // filter
-    {
-      const filter =
-        config?.where instanceof NodeFilter
-          ? config.where
-          : node.filterInputType.parseAndFilter(config?.where);
-      assert(!filter.isFalse());
-
-      this.filter = filter.normalized;
-    }
-
-    this.selection = node.outputType.select(config.selection);
 
     this.#internalSelection = this.selection.mergeWith(
-      this.uniqueConstraint.selection,
+      node.outputType.selectComponents([this.ordering.leaf.name]),
     );
+
+    this.#chunkSize = Math.max(1, config.chunkSize);
 
     this.#api = node.createContextBoundAPI(context);
-
-    this.#direction = config?.direction || OrderingDirection.ASCENDING;
-
-    this.ordering = new NodeOrdering(
-      node,
-      Array.from(this.uniqueConstraint.componentSet, (component) => {
-        assert(component instanceof Leaf && component.isSortable());
-
-        return component.getOrderingInput(this.#direction).sort();
-      }),
-    );
-
-    this.#chunkSize = Math.max(1, config?.chunkSize || 100);
+    this.#ac = new AbortController();
   }
 
-  @Memoize((force: boolean = false) => force && doNotCache)
-  public async size(force: boolean = false): Promise<number> {
+  @Memoize()
+  public async initialize(): Promise<void> {
+    this.#ac.signal.throwIfAborted();
+
+    // Nothing to do
+  }
+
+  @Memoize()
+  public async dispose(): Promise<void> {
+    this.#ac.abort();
+
+    // Nothing to do
+  }
+
+  public [Symbol.asyncIterator](): AsyncIterator<TValue> {
+    this.#ac.signal.throwIfAborted();
+
+    let values: NodeSelectedValue[] = [];
+    let next: NodeFilterInputValue = undefined;
+
+    return {
+      next: async () => {
+        await this.initialize();
+
+        if (values.length === 0 && next !== null) {
+          values = await this.#api.findMany({
+            where: { AND: [next, this.filter?.inputValue] },
+            orderBy: [this.ordering.inputValue],
+            first: this.#chunkSize,
+            selection: this.#internalSelection,
+          });
+
+          next =
+            values.length === this.#chunkSize
+              ? {
+                  [this.#nextFilterInputType.name]:
+                    values.at(-1)![this.ordering.leaf.name],
+                }
+              : null;
+        }
+
+        const value = this.#ac.signal.aborted ? undefined : values.shift();
+
+        return value
+          ? { done: false, value: this.selection.parseValue(value) }
+          : { done: true, value: undefined };
+      },
+      return: async () => {
+        await this.dispose();
+
+        return { done: true, value: undefined };
+      },
+    };
+  }
+
+  public async size(): Promise<number> {
     return this.#api.count({ where: this.filter?.inputValue });
   }
 
-  public async *[Symbol.asyncIterator](): AsyncIterator<TValue> {
-    let after: NodeFilterInputValue;
-    let values: NodeSelectedValue[];
+  public async toArray(): Promise<TValue[]> {
+    const values: TValue[] = [];
 
-    do {
-      values = await this.#api.findMany({
-        where: { AND: [after, this.filter?.inputValue] },
-        orderBy: this.ordering.inputValue,
-        first: this.#chunkSize,
-        selection: this.#internalSelection,
-      });
+    for await (const value of this) {
+      values.push(value);
+    }
 
-      if (values.length) {
-        for (const value of values) {
-          yield this.selection.parseValue(value);
-        }
-
-        after = pickAfterFilterInputValue(
-          this.uniqueConstraint,
-          this.#direction,
-          values.at(-1)!,
-        );
-      }
-    } while (values.length === this.#chunkSize);
+    return values;
   }
 
   public async forEach(
-    task: NodeCursorForEachTask<TValue, TRequestContext>,
+    task: ScrollSubscriptionStreamForEachTask<TValue, TRequestContext>,
     {
       progressBar: progressBarOptions,
       retry: retryOptions,
       buffer: bufferOptions,
       ...queueOptions
-    }: NodeCursorForEachOptions = {},
+    }: ScrollSubscriptionStreamForEachOptions = {},
   ): Promise<void> {
+    this.#ac.signal.throwIfAborted();
     const tasks = new PQueue({
       ...queueOptions,
       concurrency: queueOptions?.concurrency ?? 1,
@@ -321,20 +355,22 @@ export class NodeCursor<
         }
       });
     } finally {
+      await this.dispose();
       tasks.clear();
     }
   }
 
   public async byBatch(
-    task: NodeCursorByBatchTask<TValue, TRequestContext>,
+    task: ScrollSubscriptionStreamByBatchTask<TValue, TRequestContext>,
     {
       batchSize,
       progressBar: progressBarOptions,
       retry: retryOptions,
       buffer: bufferOptions,
       ...queueOptions
-    }: NodeCursorByBatchOptions = {},
+    }: ScrollSubscriptionStreamByBatchOptions = {},
   ): Promise<void> {
+    this.#ac.signal.throwIfAborted();
     const tasks = new PQueue({
       ...queueOptions,
       concurrency: queueOptions?.concurrency ?? 1,
@@ -357,8 +393,6 @@ export class NodeCursor<
         : retryOptions
       : false;
 
-    let currentIndex: number = 0;
-
     let progressBar: ProgressBar | undefined;
     if (progressBarOptions) {
       if (
@@ -378,7 +412,7 @@ export class NodeCursor<
 
         progressBar = progressBarOptions.container.create(
           await this.size(),
-          currentIndex,
+          0,
           { name: progressBarOptions.name },
         );
       } else {
@@ -387,7 +421,7 @@ export class NodeCursor<
             ? progressBarOptions
             : new ProgressBar({ format: defaultProgressBarFormat });
 
-        progressBar.start(await this.size(), currentIndex);
+        progressBar.start(await this.size(), 0);
       }
     }
 
@@ -420,7 +454,7 @@ export class NodeCursor<
           for await (const value of this) {
             await tasks.onSizeLessThan(buffer + 1);
 
-            if (batch.push(value) >= normalizedBatchSize) {
+            if (batch.push(value) === normalizedBatchSize) {
               processBatch();
             }
           }
@@ -437,18 +471,8 @@ export class NodeCursor<
         }
       });
     } finally {
+      await this.dispose();
       tasks.clear();
     }
-  }
-
-  @Memoize((force: boolean = false) => force && doNotCache)
-  public async toArray(force: boolean = false): Promise<TValue[]> {
-    const values: TValue[] = [];
-
-    for await (const value of this) {
-      values.push(value);
-    }
-
-    return values;
   }
 }

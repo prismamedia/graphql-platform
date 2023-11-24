@@ -146,7 +146,7 @@ export class UniqueConstraint<TConnector extends ConnectorInterface = any> {
 
   @Memoize()
   public isComposite(): boolean {
-    return this.componentsByName.size > 1;
+    return this.componentSet.size > 1;
   }
 
   @Memoize()
@@ -189,9 +189,12 @@ export class UniqueConstraint<TConnector extends ConnectorInterface = any> {
   @Memoize()
   public isScrollable(): boolean {
     return (
-      this.componentsByName.size === 1 &&
+      this.componentSet.size === 1 &&
       Array.from(this.componentSet).every(
-        (component) => component instanceof Leaf && component.isSortable(),
+        (component) =>
+          component instanceof Leaf &&
+          !component.isNullable() &&
+          component.isSortable(),
       )
     );
   }
