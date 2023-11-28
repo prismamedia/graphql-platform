@@ -105,29 +105,27 @@ function parseEdgeFilter(
   tableReference: TableReference,
   filter: core.EdgeFilter,
 ): WhereCondition {
-  const foreignKey = tableReference.table.getForeignKeyByEdge(filter.edge);
-  const joinTable = tableReference.join(filter.edge);
-
   if (filter instanceof core.EdgeExistsFilter) {
-    const atLeastOneNonNullColumn = foreignKey.columns.map(
-      (column) =>
-        `${joinTable.getEscapedColumnIdentifier(
-          column.referencedColumn,
-        )} IS NOT NULL`,
-    );
+    return `EXISTS ${tableReference.subquery(
+      filter.edge,
+      '*',
+      filter.headFilter,
+    )}`;
+  } else {
+    throw new utils.UnreachableValueError(filter);
+  }
+}
 
-    const operands = [
-      // An edge exists if at least one of its head's column is non-null
-      atLeastOneNonNullColumn.length > 1
-        ? `(${atLeastOneNonNullColumn.join(' OR ')})`
-        : atLeastOneNonNullColumn[0],
-      // Then we append the provided head's filter, if any
-      filter.headFilter
-        ? parseBooleanFilter(joinTable, filter.headFilter.filter)
-        : undefined,
-    ].filter(Boolean) as string[];
-
-    return operands.length > 1 ? `(${operands.join(' AND ')})` : operands[0];
+function parseUniqueReverseEdgeFilter(
+  tableReference: TableReference,
+  filter: core.UniqueReverseEdgeFilter,
+): WhereCondition {
+  if (filter instanceof core.UniqueReverseEdgeExistsFilter) {
+    return `EXISTS ${tableReference.subquery(
+      filter.reverseEdge,
+      '*',
+      filter.headFilter,
+    )}`;
   } else {
     throw new utils.UnreachableValueError(filter);
   }
@@ -156,47 +154,16 @@ function parseMultipleReverseEdgeFilter(
         throw new utils.UnreachableValueError(filter.operator);
     }
 
-    return `(${tableReference.subquery(
+    return `${tableReference.subquery(
+      filter.reverseEdge,
       'COUNT(*)',
-      filter.reverseEdge,
-    )}) ${operator} ${filter.value}`;
+    )} ${operator} ${filter.value}`;
   } else if (filter instanceof core.MultipleReverseEdgeExistsFilter) {
-    return `EXISTS (${tableReference.subquery(
-      '*',
+    return `EXISTS ${tableReference.subquery(
       filter.reverseEdge,
+      '*',
       filter.headFilter,
-    )})`;
-  } else {
-    throw new utils.UnreachableValueError(filter);
-  }
-}
-
-function parseUniqueReverseEdgeFilter(
-  tableReference: TableReference,
-  filter: core.UniqueReverseEdgeFilter,
-): WhereCondition {
-  const joinTable = tableReference.join(filter.reverseEdge);
-  const foreignKey = joinTable.table.getForeignKeyByEdge(
-    filter.reverseEdge.originalEdge,
-  );
-
-  if (filter instanceof core.UniqueReverseEdgeExistsFilter) {
-    const atLeastOneNonNullColumn = foreignKey.columns.map(
-      (column) => `${joinTable.getEscapedColumnIdentifier(column)} IS NOT NULL`,
-    );
-
-    const operands = [
-      // A reverse-edge exists if at least one of its head's column is non-null
-      atLeastOneNonNullColumn.length > 1
-        ? `(${atLeastOneNonNullColumn.join(' OR ')})`
-        : atLeastOneNonNullColumn[0],
-      // Then we append the provided head's filter, if any
-      filter.headFilter
-        ? parseBooleanFilter(joinTable, filter.headFilter.filter)
-        : undefined,
-    ].filter(Boolean) as string[];
-
-    return operands.length > 1 ? `(${operands.join(' AND ')})` : operands[0];
+    )}`;
   } else {
     throw new utils.UnreachableValueError(filter);
   }
@@ -210,10 +177,10 @@ function parseBooleanExpression(
     return parseLeafFilter(tableReference, filter);
   } else if (core.isEdgeFilter(filter)) {
     return parseEdgeFilter(tableReference, filter);
-  } else if (core.isMultipleReverseEdgeFilter(filter)) {
-    return parseMultipleReverseEdgeFilter(tableReference, filter);
   } else if (core.isUniqueReverseEdgeFilter(filter)) {
     return parseUniqueReverseEdgeFilter(tableReference, filter);
+  } else if (core.isMultipleReverseEdgeFilter(filter)) {
+    return parseMultipleReverseEdgeFilter(tableReference, filter);
   } else {
     throw new utils.UnreachableValueError(filter);
   }

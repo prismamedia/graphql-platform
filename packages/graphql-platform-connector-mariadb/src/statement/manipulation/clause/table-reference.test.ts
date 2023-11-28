@@ -19,9 +19,7 @@ describe('Table reference', () => {
     await gp.connector.setup();
   });
 
-  afterAll(async () => {
-    await gp.connector.teardown();
-  });
+  afterAll(() => gp.connector.teardown());
 
   it.each([
     myVisitorContext,

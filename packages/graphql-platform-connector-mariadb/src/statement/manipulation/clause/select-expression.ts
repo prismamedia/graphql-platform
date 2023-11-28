@@ -17,18 +17,23 @@ function parseEdgeSelection(
   tableReference: TableReference,
   selection: core.EdgeSelection,
 ): string {
-  const foreignKey = tableReference.table.getForeignKeyByEdge(selection.edge);
-  const joinTable = tableReference.join(selection.edge);
-
   if (selection instanceof core.EdgeHeadSelection) {
-    return `IF(${foreignKey.columns
-      .map(
-        ({ referencedColumn }) =>
-          `${joinTable.getEscapedColumnIdentifier(
-            referencedColumn,
-          )} IS NOT NULL`,
-      )
-      .join(' OR ')}, ${selectNode(joinTable, selection.headSelection)}, NULL)`;
+    return tableReference.subquery(selection.edge, (headReference) =>
+      selectNode(headReference, selection.headSelection),
+    );
+  } else {
+    throw new utils.UnreachableValueError(selection);
+  }
+}
+
+function parseUniqueReverseEdgeSelection(
+  tableReference: TableReference,
+  selection: core.UniqueReverseEdgeSelection,
+): string {
+  if (selection instanceof core.UniqueReverseEdgeHeadSelection) {
+    return tableReference.subquery(selection.reverseEdge, (headReference) =>
+      selectNode(headReference, selection.headSelection),
+    );
   } else {
     throw new utils.UnreachableValueError(selection);
   }
@@ -39,47 +44,26 @@ function parseMultipleReverseEdgeSelection(
   selection: core.MultipleReverseEdgeSelection,
 ): string {
   if (selection instanceof core.MultipleReverseEdgeCountSelection) {
-    return `(${tableReference.subquery(
-      `COUNT(*)`,
+    return tableReference.subquery(
       selection.reverseEdge,
+      `COUNT(*)`,
       selection.headFilter,
-    )})`;
+    );
   } else if (selection instanceof core.MultipleReverseEdgeHeadSelection) {
-    return `(${tableReference.subquery(
-      (tableReference) =>
+    return tableReference.subquery(
+      selection.reverseEdge,
+      (headReference) =>
         `JSON_ARRAYAGG(${[
-          selectNode(tableReference, selection.headSelection),
+          selectNode(headReference, selection.headSelection),
           selection.headOrdering &&
-            `ORDER BY ${orderNode(tableReference, selection.headOrdering)}`,
-          selection.limit && `LIMIT ${selection.limit}`,
+            `ORDER BY ${orderNode(headReference, selection.headOrdering)}`,
+          `LIMIT ${selection.limit}`,
           selection.offset && `OFFSET ${selection.offset}`,
         ]
           .filter(Boolean)
           .join(' ')})`,
-      selection.reverseEdge,
       selection.headFilter,
-    )})`;
-  } else {
-    throw new utils.UnreachableValueError(selection);
-  }
-}
-
-function parseUniqueReverseEdgeSelection(
-  tableReference: TableReference,
-  selection: core.UniqueReverseEdgeSelection,
-): string {
-  const joinTable = tableReference.join(selection.reverseEdge);
-  const foreignKey = joinTable.table.getForeignKeyByEdge(
-    selection.reverseEdge.originalEdge,
-  );
-
-  if (selection instanceof core.UniqueReverseEdgeHeadSelection) {
-    return `IF(${foreignKey.columns
-      .map(
-        (column) =>
-          `${joinTable.getEscapedColumnIdentifier(column)} IS NOT NULL`,
-      )
-      .join(' OR ')}, ${selectNode(joinTable, selection.headSelection)}, NULL)`;
+    );
   } else {
     throw new utils.UnreachableValueError(selection);
   }
@@ -93,10 +77,10 @@ function parseSelectionExpression(
     return parseLeafSelection(tableReference, selection);
   } else if (core.isEdgeSelection(selection)) {
     return parseEdgeSelection(tableReference, selection);
-  } else if (core.isMultipleReverseEdgeSelection(selection)) {
-    return parseMultipleReverseEdgeSelection(tableReference, selection);
   } else if (core.isUniqueReverseEdgeSelection(selection)) {
     return parseUniqueReverseEdgeSelection(tableReference, selection);
+  } else if (core.isMultipleReverseEdgeSelection(selection)) {
+    return parseMultipleReverseEdgeSelection(tableReference, selection);
   } else {
     throw new utils.UnreachableValueError(selection);
   }

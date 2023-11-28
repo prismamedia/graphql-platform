@@ -24,10 +24,10 @@ export function orderNode(
           expression.leaf,
         )} ${direction}`;
       } else if (expression instanceof core.MultipleReverseEdgeCountOrdering) {
-        return `(${tableReference.subquery(
-          'COUNT(*)',
+        return `${tableReference.subquery(
           expression.reverseEdge,
-        )}) ${direction}`;
+          'COUNT(*)',
+        )} ${direction}`;
       } else {
         throw new utils.UnreachableValueError(expression);
       }

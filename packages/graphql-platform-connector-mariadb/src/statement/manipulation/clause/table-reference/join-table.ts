@@ -20,20 +20,24 @@ export class JoinTable extends AbstractTableReference {
 
   public constructor(
     public readonly parent: TableReference,
-    public readonly edge: core.Edge | core.UniqueReverseEdge,
+    public readonly edgeOrUniqueReverseEdge: core.Edge | core.UniqueReverseEdge,
   ) {
-    const head = parent.table.schema.getTableByNode(edge.head);
+    const head = parent.table.schema.getTableByNode(
+      edgeOrUniqueReverseEdge.head,
+    );
     super(head, parent.context);
 
-    this.authorization = parent.context.getAuthorization(edge.head);
-    this.alias = `${parent.alias}>${edge.name}`;
+    this.authorization = parent.context.getAuthorization(
+      edgeOrUniqueReverseEdge.head,
+    );
+    this.alias = `${parent.alias}>${edgeOrUniqueReverseEdge.name}`;
     this.depth = parent.depth + 1;
   }
 
   public get kind(): JoinTableKind {
     return (this.parent instanceof JoinTable &&
       this.parent.kind === JoinTableKind.LEFT) ||
-      this.edge.isNullable()
+      this.edgeOrUniqueReverseEdge.isNullable()
       ? JoinTableKind.LEFT
       : JoinTableKind.INNER;
   }
@@ -41,9 +45,9 @@ export class JoinTable extends AbstractTableReference {
   @Memoize()
   public get condition(): string {
     return [
-      ...(this.edge instanceof core.Edge
+      ...(this.edgeOrUniqueReverseEdge instanceof core.Edge
         ? this.parent.table
-            .getForeignKeyByEdge(this.edge)
+            .getForeignKeyByEdge(this.edgeOrUniqueReverseEdge)
             .columns.map(
               (column) =>
                 `${this.parent.getEscapedColumnIdentifier(
@@ -53,7 +57,7 @@ export class JoinTable extends AbstractTableReference {
                 )}`,
             )
         : this.table
-            .getForeignKeyByEdge(this.edge.originalEdge)
+            .getForeignKeyByEdge(this.edgeOrUniqueReverseEdge.originalEdge)
             .columns.map(
               (column) =>
                 `${this.parent.getEscapedColumnIdentifier(

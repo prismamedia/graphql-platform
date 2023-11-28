@@ -1,4 +1,5 @@
 import * as core from '@prismamedia/graphql-platform';
+import * as utils from '@prismamedia/graphql-platform-utils';
 import assert from 'node:assert/strict';
 import { escapeIdentifier } from '../../../escaping.js';
 import type { Column, Table } from '../../../schema.js';
@@ -30,19 +31,24 @@ export abstract class AbstractTableReference {
    * A leaf node will have a height of 0.
    */
   public get height(): number {
-    return this.subqueries.size || this.joinsByAlias.size
+    return this.joinsByAlias.size || this.subqueries.size
       ? Math.max(
-          ...Array.from(this.subqueries, (child) => child.height),
           ...Array.from(this.joinsByAlias.values(), (child) => child.height),
+          ...Array.from(this.subqueries, (child) => child.height),
         ) + 1
       : 0;
   }
 
-  public join(edge: core.Edge | core.UniqueReverseEdge): JoinTable {
-    assert(edge instanceof core.Edge || edge instanceof core.UniqueReverseEdge);
-    assert.equal(edge.tail, this.table.node);
+  public join(
+    edgeOrUniqueReverseEdge: core.Edge | core.UniqueReverseEdge,
+  ): JoinTable {
+    assert(
+      edgeOrUniqueReverseEdge instanceof core.Edge ||
+        edgeOrUniqueReverseEdge instanceof core.UniqueReverseEdge,
+    );
+    assert.equal(edgeOrUniqueReverseEdge.tail, this.table.node);
 
-    const joinTable = new JoinTable(this, edge);
+    const joinTable = new JoinTable(this, edgeOrUniqueReverseEdge);
 
     const maybeExistingJoinTable = this.joinsByAlias.get(joinTable.alias);
 
@@ -60,63 +66,81 @@ export abstract class AbstractTableReference {
    * @see https://mariadb.com/kb/en/subqueries/
    */
   public subquery(
-    selectExpressions: string | ((tableReference: TableFactor) => string),
-    reverseEdge: core.MultipleReverseEdge,
+    edgeOrReverseEdge: core.Edge | core.ReverseEdge,
+    selectExpressions: utils.Thunkable<string, [headReference: TableFactor]>,
     headFilter?: core.NodeFilter,
     headOrdering?: core.NodeOrdering,
-    limit?: number | null,
     offset?: number | null,
+    limit?: number | null,
   ): string {
-    assert(reverseEdge instanceof core.MultipleReverseEdge);
-    assert.equal(reverseEdge.tail, this.table.node);
+    assert.equal(edgeOrReverseEdge.tail, this.table.node);
 
-    const tail = this.table.schema.getTableByNode(reverseEdge.tail);
-    const head = this.table.schema.getTableByNode(reverseEdge.head);
-    const headAuthorization = this.context.getAuthorization(reverseEdge.head);
+    const head = this.table.schema.getTableByNode(edgeOrReverseEdge.head);
 
-    const tableReference = new TableFactor(
-      head,
-      this.context,
-      `${tail.name}>${reverseEdge.name}`,
+    const headAuthorization = this.context.getAuthorization(
+      edgeOrReverseEdge.head,
     );
 
-    this.subqueries.add(tableReference);
+    const headReference = new TableFactor(
+      head,
+      this.context,
+      `${this.alias}>${edgeOrReverseEdge.name}`,
+      this.depth + 1,
+    );
+
+    this.subqueries.add(headReference);
+
+    const mergedAuthorizationAndFilter = new core.NodeFilter(
+      edgeOrReverseEdge.head,
+      core.AndOperation.create([headAuthorization?.filter, headFilter?.filter]),
+    ).normalized;
 
     const whereCondition = [
-      ...head
-        .getForeignKeyByEdge(reverseEdge.originalEdge)
-        .columns.map(
-          (column) =>
-            `${this.getEscapedColumnIdentifier(
-              column.referencedColumn,
-            )} <=> ${tableReference.getEscapedColumnIdentifier(column)}`,
-        ),
-      headAuthorization
-        ? filterNode(tableReference, headAuthorization)
+      ...(edgeOrReverseEdge instanceof core.Edge
+        ? this.table
+            .getForeignKeyByEdge(edgeOrReverseEdge)
+            .columns.map(
+              (column) =>
+                `${this.getEscapedColumnIdentifier(
+                  column,
+                )} <=> ${headReference.getEscapedColumnIdentifier(
+                  column.referencedColumn,
+                )}`,
+            )
+        : head
+            .getForeignKeyByEdge(edgeOrReverseEdge.originalEdge)
+            .columns.map(
+              (column) =>
+                `${this.getEscapedColumnIdentifier(
+                  column.referencedColumn,
+                )} <=> ${headReference.getEscapedColumnIdentifier(column)}`,
+            )),
+      mergedAuthorizationAndFilter
+        ? filterNode(headReference, mergedAuthorizationAndFilter)
         : undefined,
-      headFilter ? filterNode(tableReference, headFilter) : undefined,
     ]
       .filter(Boolean)
       .join(' AND ');
 
     const orderingExpressions = headOrdering
-      ? orderNode(tableReference, headOrdering)
+      ? orderNode(headReference, headOrdering)
       : undefined;
 
-    return [
-      `SELECT ${
-        typeof selectExpressions === 'function'
-          ? selectExpressions(tableReference)
-          : selectExpressions
-      }`,
-      `FROM ${tableReference}`,
+    return `(${[
+      `SELECT ${utils.resolveThunkable(selectExpressions, headReference)}`,
+      `FROM ${headReference}`,
       `WHERE ${whereCondition}`,
       orderingExpressions && `ORDER BY ${orderingExpressions}`,
-      limit != null && `LIMIT ${limit}`,
+      limit != null
+        ? `LIMIT ${limit}`
+        : edgeOrReverseEdge instanceof core.Edge ||
+          edgeOrReverseEdge instanceof core.UniqueReverseEdge
+        ? `LIMIT 1`
+        : undefined,
       offset && `OFFSET ${offset}`,
     ]
       .filter(Boolean)
-      .join(' ');
+      .join(' ')})`;
   }
 
   public getEscapedColumnIdentifier(column: Column): string {

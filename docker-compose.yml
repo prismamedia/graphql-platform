@@ -6,8 +6,6 @@ services:
     command: --skip-bind-address
     environment:
       MARIADB_ROOT_PASSWORD: my_root_password_for_local
-    ports:
-      - 3306:3306
     logging:
       options:
         max-size: 50k
