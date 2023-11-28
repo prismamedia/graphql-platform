@@ -90,10 +90,10 @@ export abstract class AbstractTableReference {
 
     this.subqueries.add(headReference);
 
-    const mergedAuthorizationAndFilter = new core.NodeFilter(
-      edgeOrReverseEdge.head,
-      core.AndOperation.create([headAuthorization?.filter, headFilter?.filter]),
-    ).normalized;
+    const mergedAuthorizationAndFilter =
+      headAuthorization && headFilter
+        ? headAuthorization.and(headFilter).normalized
+        : headAuthorization || headFilter;
 
     const whereCondition = [
       ...(edgeOrReverseEdge instanceof core.Edge
