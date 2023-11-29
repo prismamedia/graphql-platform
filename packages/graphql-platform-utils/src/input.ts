@@ -323,12 +323,15 @@ export class Input<TValue = any> {
   public parseValue(
     maybeValue: unknown = this.getDefaultValue(),
     path: Path = addPath(undefined, this.name, this.type),
+    withCustomParser: boolean = true,
   ): TValue {
     const value = parseInputValue(this.type, maybeValue, path);
 
-    if (value != null && this.#customParser) {
+    if (value != null && this.#customParser && withCustomParser) {
+      let customParsedValue: TValue;
+
       try {
-        return this.#customParser(value, path);
+        customParsedValue = this.#customParser(value, path);
       } catch (error) {
         throw isGraphErrorWithPathEqualOrDescendantOf(error, path)
           ? error
@@ -337,6 +340,8 @@ export class Input<TValue = any> {
               path,
             });
       }
+
+      return this.parseValue(customParsedValue, path, false);
     }
 
     return value;

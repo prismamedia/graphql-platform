@@ -1057,10 +1057,10 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@prismamedia/async-event-emitter@npm:^5.4.0":
-  version: 5.4.0
-  resolution: "@prismamedia/async-event-emitter@npm:5.4.0"
-  checksum: f660f25a53d092fa87618e3732cb161a59a3856b72e144f51bd2319c28ad2ecd08191a996871d92df3ae48d87e84751523255f0866f9f2e5259c51e9060eb3ae
+"@prismamedia/async-event-emitter@npm:^5.4.1":
+  version: 5.4.1
+  resolution: "@prismamedia/async-event-emitter@npm:5.4.1"
+  checksum: deda6475358f38c5b5cdb83d26ac3b27073f50dccab4c734a0454d731478faa234fe02e93fd5e1ec0ab421bf7c3485c5b1c69b56e2315df3eec6f20568295cb8
   languageName: node
   linkType: hard
 
@@ -1069,7 +1069,7 @@ __metadata:
   resolution: "@prismamedia/graphql-platform-connector-mariadb@workspace:packages/graphql-platform-connector-mariadb"
   dependencies:
     "@jest/globals": "npm:29.7.0"
-    "@prismamedia/async-event-emitter": "npm:^5.4.0"
+    "@prismamedia/async-event-emitter": "npm:^5.4.1"
     "@prismamedia/graphql-platform": "workspace:packages/graphql-platform"
     "@prismamedia/graphql-platform-scalars": "workspace:packages/graphql-platform-scalars"
     "@prismamedia/graphql-platform-utils": "workspace:packages/graphql-platform-utils"
@@ -1174,7 +1174,7 @@ __metadata:
   resolution: "@prismamedia/graphql-platform@workspace:packages/graphql-platform"
   dependencies:
     "@jest/globals": "npm:29.7.0"
-    "@prismamedia/async-event-emitter": "npm:^5.4.0"
+    "@prismamedia/async-event-emitter": "npm:^5.4.1"
     "@prismamedia/graphql-platform-scalars": "workspace:packages/graphql-platform-scalars"
     "@prismamedia/graphql-platform-utils": "workspace:packages/graphql-platform-utils"
     "@prismamedia/memoize": "npm:^5.0.1"

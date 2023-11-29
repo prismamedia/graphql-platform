@@ -1723,10 +1723,10 @@ const RAW_RUNTIME_STATE =
       }]\
     ]],\
     ["@prismamedia/async-event-emitter", [\
-      ["npm:5.4.0", {\
-        "packageLocation": "./.yarn/cache/@prismamedia-async-event-emitter-npm-5.4.0-1a9bef66da-f660f25a53.zip/node_modules/@prismamedia/async-event-emitter/",\
+      ["npm:5.4.1", {\
+        "packageLocation": "./.yarn/cache/@prismamedia-async-event-emitter-npm-5.4.1-28b070c4a1-deda647535.zip/node_modules/@prismamedia/async-event-emitter/",\
         "packageDependencies": [\
-          ["@prismamedia/async-event-emitter", "npm:5.4.0"]\
+          ["@prismamedia/async-event-emitter", "npm:5.4.1"]\
         ],\
         "linkType": "HARD"\
       }]\
@@ -1737,7 +1737,7 @@ const RAW_RUNTIME_STATE =
         "packageDependencies": [\
           ["@prismamedia/graphql-platform", "virtual:a142b8d95b647c96a8af70c806a01cd284cac136ccab6d49cb14349537a01cfed611f4510033cc978f700e4a8cb9a4e3dbbf80269b8a747cf9214af105884b4d#workspace:packages/graphql-platform"],\
           ["@jest/globals", "npm:29.7.0"],\
-          ["@prismamedia/async-event-emitter", "npm:5.4.0"],\
+          ["@prismamedia/async-event-emitter", "npm:5.4.1"],\
           ["@prismamedia/graphql-platform-scalars", "virtual:6aa5de53097a6ad89dd6f5bb86e7514117f570cb46a75f75d77cb5990bf91bfadeda913e418fca44e97d5e167ac1fd89ff92fff8bd06a4e0277076b42b3c17dd#workspace:packages/graphql-platform-scalars"],\
           ["@prismamedia/graphql-platform-utils", "virtual:6aa5de53097a6ad89dd6f5bb86e7514117f570cb46a75f75d77cb5990bf91bfadeda913e418fca44e97d5e167ac1fd89ff92fff8bd06a4e0277076b42b3c17dd#workspace:packages/graphql-platform-utils"],\
           ["@prismamedia/memoize", "npm:5.0.1"],\
@@ -1772,7 +1772,7 @@ const RAW_RUNTIME_STATE =
         "packageDependencies": [\
           ["@prismamedia/graphql-platform", "workspace:packages/graphql-platform"],\
           ["@jest/globals", "npm:29.7.0"],\
-          ["@prismamedia/async-event-emitter", "npm:5.4.0"],\
+          ["@prismamedia/async-event-emitter", "npm:5.4.1"],\
           ["@prismamedia/graphql-platform-scalars", "virtual:6aa5de53097a6ad89dd6f5bb86e7514117f570cb46a75f75d77cb5990bf91bfadeda913e418fca44e97d5e167ac1fd89ff92fff8bd06a4e0277076b42b3c17dd#workspace:packages/graphql-platform-scalars"],\
           ["@prismamedia/graphql-platform-utils", "virtual:6aa5de53097a6ad89dd6f5bb86e7514117f570cb46a75f75d77cb5990bf91bfadeda913e418fca44e97d5e167ac1fd89ff92fff8bd06a4e0277076b42b3c17dd#workspace:packages/graphql-platform-utils"],\
           ["@prismamedia/memoize", "npm:5.0.1"],\
@@ -1804,7 +1804,7 @@ const RAW_RUNTIME_STATE =
         "packageDependencies": [\
           ["@prismamedia/graphql-platform-connector-mariadb", "virtual:b569f7060a52e570519d0836d34b2d239c388152dedaeac860fb1bfa896c6242686900b3d1bb4ddeaf747617e7676e1fc67474c34a54123a30f691be62dff202#workspace:packages/graphql-platform-connector-mariadb"],\
           ["@jest/globals", "npm:29.7.0"],\
-          ["@prismamedia/async-event-emitter", "npm:5.4.0"],\
+          ["@prismamedia/async-event-emitter", "npm:5.4.1"],\
           ["@prismamedia/graphql-platform", "virtual:a142b8d95b647c96a8af70c806a01cd284cac136ccab6d49cb14349537a01cfed611f4510033cc978f700e4a8cb9a4e3dbbf80269b8a747cf9214af105884b4d#workspace:packages/graphql-platform"],\
           ["@prismamedia/graphql-platform-scalars", "virtual:6aa5de53097a6ad89dd6f5bb86e7514117f570cb46a75f75d77cb5990bf91bfadeda913e418fca44e97d5e167ac1fd89ff92fff8bd06a4e0277076b42b3c17dd#workspace:packages/graphql-platform-scalars"],\
           ["@prismamedia/graphql-platform-utils", "virtual:6aa5de53097a6ad89dd6f5bb86e7514117f570cb46a75f75d77cb5990bf91bfadeda913e418fca44e97d5e167ac1fd89ff92fff8bd06a4e0277076b42b3c17dd#workspace:packages/graphql-platform-utils"],\
@@ -1836,7 +1836,7 @@ const RAW_RUNTIME_STATE =
         "packageDependencies": [\
           ["@prismamedia/graphql-platform-connector-mariadb", "workspace:packages/graphql-platform-connector-mariadb"],\
           ["@jest/globals", "npm:29.7.0"],\
-          ["@prismamedia/async-event-emitter", "npm:5.4.0"],\
+          ["@prismamedia/async-event-emitter", "npm:5.4.1"],\
           ["@prismamedia/graphql-platform", "virtual:a142b8d95b647c96a8af70c806a01cd284cac136ccab6d49cb14349537a01cfed611f4510033cc978f700e4a8cb9a4e3dbbf80269b8a747cf9214af105884b4d#workspace:packages/graphql-platform"],\
           ["@prismamedia/graphql-platform-scalars", "virtual:6aa5de53097a6ad89dd6f5bb86e7514117f570cb46a75f75d77cb5990bf91bfadeda913e418fca44e97d5e167ac1fd89ff92fff8bd06a4e0277076b42b3c17dd#workspace:packages/graphql-platform-scalars"],\
           ["@prismamedia/graphql-platform-utils", "virtual:6aa5de53097a6ad89dd6f5bb86e7514117f570cb46a75f75d77cb5990bf91bfadeda913e418fca44e97d5e167ac1fd89ff92fff8bd06a4e0277076b42b3c17dd#workspace:packages/graphql-platform-utils"],\

@@ -231,6 +231,7 @@ export class Leaf<
   public parseValue(
     maybeValue: unknown,
     path: utils.Path = utils.addPath(undefined, this.toString()),
+    withCustomParser: boolean = true,
   ): LeafValue {
     const value = utils.parseGraphQLLeafValue(this.type, maybeValue, path);
 
@@ -244,9 +245,11 @@ export class Leaf<
       return null;
     }
 
-    if (this.customParser) {
+    if (this.customParser && withCustomParser) {
+      let customParsedValue: LeafValue;
+
       try {
-        return this.customParser(value, path);
+        customParsedValue = this.customParser(value, path);
       } catch (error) {
         throw utils.isGraphErrorWithPathEqualOrDescendantOf(error, path)
           ? error
@@ -255,6 +258,8 @@ export class Leaf<
               path,
             });
       }
+
+      return this.parseValue(customParsedValue, path, false);
     }
 
     return value;
