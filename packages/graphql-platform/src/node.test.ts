@@ -61,16 +61,8 @@ describe('Node', () => {
     describe('Invalid component(s)', () => {
       it.each([
         [
-          {},
-          `/GraphQLPlatformConfig/nodes/Test/components - Expects a plain-object, got: undefined`,
-        ],
-        [
-          { components: undefined },
-          `/GraphQLPlatformConfig/nodes/Test/components - Expects a plain-object, got: undefined`,
-        ],
-        [
-          { components: null },
-          `/GraphQLPlatformConfig/nodes/Test/components - Expects a plain-object, got: null`,
+          { features: [{ components: null }], components: null },
+          `/GraphQLPlatformConfig/nodes/Test/components - Expects at least one component, got: null`,
         ],
         [
           { components: {} },
@@ -308,7 +300,7 @@ describe('Node', () => {
               },
             }),
         ).toThrowError(
-          `/GraphQLPlatformConfig/nodes/Log/reverseEdges - Expects no configuration as there is no node having an edge heading to the \"Log\" node, got: { myExtraReverseEdge: {} }`,
+          `/GraphQLPlatformConfig/nodes/Log/reverseEdges - Expects no configuration as there is no node heading to this \"Log\" node, got: { myExtraReverseEdge: {} }`,
         );
       });
 
@@ -328,7 +320,7 @@ describe('Node', () => {
               },
             }),
         ).toThrowError(
-          `/GraphQLPlatformConfig/nodes/User/reverseEdges/invalidEdge/originalEdge - Expects a node having an edge heading to the \"User\" node (= a value among \"Article, ArticleTagModeration, UserProfile\"), got: 'UnknownModel'`,
+          `/GraphQLPlatformConfig/nodes/User/reverseEdges/invalidEdge/originalEdge - Expects a node heading to this "User" node, got: 'UnknownModel'`,
         );
       });
 
@@ -348,7 +340,7 @@ describe('Node', () => {
               },
             }),
         ).toThrowError(
-          `/GraphQLPlatformConfig/nodes/User/reverseEdges/invalidEdge/originalEdge - Expects no more configuration for \"Article\"'s edge as there is no more edge heading to the \"User\" node`,
+          `/GraphQLPlatformConfig/nodes/User/reverseEdges/invalidEdge/originalEdge - Expects an edge heading to this "User" node, got: 'Article.unknownEdgeName'`,
         );
       });
 
@@ -367,7 +359,7 @@ describe('Node', () => {
               },
             }),
         ).toThrowError(
-          `/GraphQLPlatformConfig/nodes/User/reverseEdges/invalidEdge/originalEdge - Expects an edge heading to the \"User\" node (= a value among \"createdBy, updatedBy\"), got: 'unknownEdgeName'`,
+          `/GraphQLPlatformConfig/nodes/User/reverseEdges/invalidEdge/originalEdge - Expects an edge heading to this "User" node, got: 'Article.unknownEdgeName'`,
         );
       });
 
@@ -386,7 +378,7 @@ describe('Node', () => {
               },
             }),
         ).toThrowError(
-          `/GraphQLPlatformConfig/nodes/User/reverseEdges/invalidEdge/originalEdge - Expects an edge heading to the \"User\" node (= a value among \"createdBy, updatedBy\"), got: 'category'`,
+          `/GraphQLPlatformConfig/nodes/User/reverseEdges/invalidEdge/originalEdge - Expects an edge heading to this "User" node, got: 'Article.category'`,
         );
       });
     });

@@ -66,10 +66,10 @@ export interface PostCreateArgs<
  * Optional, fine-tune the "creation"
  */
 export interface CreationConfig<
-  TRequestContext extends object,
-  TConnector extends ConnectorInterface,
-  TBroker extends BrokerInterface,
-  TContainer extends object,
+  TRequestContext extends object = any,
+  TConnector extends ConnectorInterface = any,
+  TBroker extends BrokerInterface = any,
+  TContainer extends object = any,
 > extends AbstractMutationConfig<
     TRequestContext,
     TConnector,

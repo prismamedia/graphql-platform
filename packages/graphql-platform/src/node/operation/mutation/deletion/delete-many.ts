@@ -18,7 +18,7 @@ import {
   LifecycleHookError,
   LifecycleHookKind,
 } from '../../error.js';
-import { AbstractDeletion, type DeletionConfig } from '../abstract-deletion.js';
+import { AbstractDeletion } from '../abstract-deletion.js';
 import type { MutationContext } from '../context.js';
 
 export type DeleteManyMutationArgs = RawNodeSelectionAwareArgs<{
@@ -36,9 +36,6 @@ export class DeleteManyMutation<
   DeleteManyMutationArgs,
   DeleteManyMutationResult
 > {
-  readonly #config?: DeletionConfig<any, any, any, any> =
-    this.node.getMutationConfig(utils.MutationType.DELETION).config;
-
   protected readonly selectionAware = true;
 
   public readonly key = 'delete-many';
@@ -80,9 +77,6 @@ export class DeleteManyMutation<
     args: NodeSelectionAwareArgs<DeleteManyMutationArgs>,
     path: utils.Path,
   ): Promise<DeleteManyMutationResult> {
-    const preDelete = this.#config?.preDelete;
-    const postDelete = this.#config?.postDelete;
-
     if (args.first === 0) {
       return [];
     }
@@ -136,15 +130,12 @@ export class DeleteManyMutation<
     );
 
     // Apply the "preDelete"-hook, if any
-    if (preDelete) {
+    if (this.node.preDeletionHooks.length) {
       await Promise.all(
         currentValues.map(async (currentValue, index) => {
           try {
-            await preDelete({
-              gp: this.gp,
-              node: this.node,
+            await this.node.preDelete({
               context,
-              api: context.api,
               id: currentIds[index],
               current: Object.freeze(this.node.parseValue(currentValue)),
             });
@@ -233,13 +224,7 @@ export class DeleteManyMutation<
 
         // Apply the "postDelete"-hook, if any
         try {
-          await postDelete?.({
-            gp: this.gp,
-            node: this.node,
-            context,
-            api: context.api,
-            change,
-          });
+          await this.node.postDelete({ context, change });
         } catch (cause) {
           throw new LifecycleHookError(
             this.node,

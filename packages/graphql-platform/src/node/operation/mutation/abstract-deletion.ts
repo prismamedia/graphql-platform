@@ -66,10 +66,10 @@ export interface PostDeleteArgs<
  * Optional, fine-tune the "deletion"
  */
 export interface DeletionConfig<
-  TRequestContext extends object,
-  TConnector extends ConnectorInterface,
-  TBroker extends BrokerInterface,
-  TContainer extends object,
+  TRequestContext extends object = any,
+  TConnector extends ConnectorInterface = any,
+  TBroker extends BrokerInterface = any,
+  TContainer extends object = any,
 > extends AbstractMutationConfig<
     TRequestContext,
     TConnector,

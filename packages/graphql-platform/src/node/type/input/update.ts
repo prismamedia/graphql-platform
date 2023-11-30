@@ -75,51 +75,64 @@ export class NodeUpdateInputType extends utils.ObjectInputType<FieldUpdateInput>
 
   @Memoize()
   protected get virtualFields(): ReadonlyArray<utils.Input> {
-    const { config, configPath } = this.node.getMutationConfig(
-      utils.MutationType.UPDATE,
-    );
+    return [...this.node.features, this.node].flatMap((featureOrNode) => {
+      const { config, configPath } = featureOrNode.getMutationConfig(
+        utils.MutationType.UPDATE,
+      );
 
-    const virtualFieldsConfig = config?.virtualFields;
-    const virtualFieldsConfigPath = utils.addPath(configPath, 'virtualFields');
+      const virtualFieldsConfig = config?.virtualFields;
+      const virtualFieldsConfigPath = utils.addPath(
+        configPath,
+        'virtualFields',
+      );
 
-    utils.assertNillablePlainObject(
-      virtualFieldsConfig,
-      virtualFieldsConfigPath,
-    );
+      utils.assertNillablePlainObject(
+        virtualFieldsConfig,
+        virtualFieldsConfigPath,
+      );
 
-    return virtualFieldsConfig
-      ? utils.aggregateGraphError<
-          [utils.Name, Except<utils.InputConfig, 'name'>],
-          utils.Input[]
-        >(
-          Object.entries(virtualFieldsConfig),
-          (fields, [virtualFieldName, virtualFieldConfig]) => {
-            if (this.node.componentsByName.has(virtualFieldName)) {
-              throw new utils.UnexpectedValueError(
-                `not to have a component's name`,
-                virtualFieldName,
-                { path: virtualFieldsConfigPath },
-              );
-            } else if (this.node.reverseEdgesByName.has(virtualFieldName)) {
-              throw new utils.UnexpectedValueError(
-                `not to have a reverse-edge's name`,
-                virtualFieldName,
-                { path: virtualFieldsConfigPath },
-              );
-            }
+      return virtualFieldsConfig
+        ? utils.aggregateGraphError<
+            [utils.Name, Except<utils.InputConfig, 'name'>],
+            utils.Input[]
+          >(
+            Object.entries(virtualFieldsConfig),
+            (fields, [virtualFieldName, virtualFieldConfig]) => {
+              if (
+                this.componentFields.find(
+                  (field) => field.name === virtualFieldName,
+                )
+              ) {
+                throw new utils.UnexpectedValueError(
+                  `not to have a component-field's name`,
+                  virtualFieldName,
+                  { path: virtualFieldsConfigPath },
+                );
+              } else if (
+                this.reverseEdgeFields.find(
+                  (field) => field.name === virtualFieldName,
+                )
+              ) {
+                throw new utils.UnexpectedValueError(
+                  `not to have a reverse-edge-field's name`,
+                  virtualFieldName,
+                  { path: virtualFieldsConfigPath },
+                );
+              }
 
-            return [
-              ...fields,
-              new utils.Input(
-                { ...virtualFieldConfig, name: virtualFieldName },
-                utils.addPath(virtualFieldsConfigPath, virtualFieldName),
-              ),
-            ];
-          },
-          [],
-          { path: virtualFieldsConfigPath },
-        )
-      : [];
+              return [
+                ...fields,
+                new utils.Input(
+                  { ...virtualFieldConfig, name: virtualFieldName },
+                  utils.addPath(virtualFieldsConfigPath, virtualFieldName),
+                ),
+              ];
+            },
+            [],
+            { path: virtualFieldsConfigPath },
+          )
+        : [];
+    });
   }
 
   @Memoize()

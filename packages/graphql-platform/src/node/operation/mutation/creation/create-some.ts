@@ -16,7 +16,7 @@ import {
   LifecycleHookKind,
   catchConnectorOperationError,
 } from '../../error.js';
-import { AbstractCreation, type CreationConfig } from '../abstract-creation.js';
+import { AbstractCreation } from '../abstract-creation.js';
 import type { MutationContext } from '../context.js';
 
 export type CreateSomeMutationArgs = RawNodeSelectionAwareArgs<{
@@ -32,9 +32,6 @@ export class CreateSomeMutation<
   CreateSomeMutationArgs,
   CreateSomeMutationResult
 > {
-  readonly #config?: CreationConfig<any, any, any, any> =
-    this.node.getMutationConfig(utils.MutationType.CREATION).config;
-
   protected readonly selectionAware = true;
 
   public readonly key = 'create-some';
@@ -69,9 +66,6 @@ export class CreateSomeMutation<
     args: NodeSelectionAwareArgs<CreateSomeMutationArgs>,
     path: utils.Path,
   ): Promise<CreateSomeMutationResult> {
-    const preCreate = this.#config?.preCreate;
-    const postCreate = this.#config?.postCreate;
-
     // As the "data" will be provided to the hooks, we freeze it
     Object.freeze(args.data);
 
@@ -100,11 +94,8 @@ export class CreateSomeMutation<
 
         // Apply the "preCreate"-hook, if any
         try {
-          await preCreate?.({
-            gp: this.gp,
-            node: this.node,
+          await this.node.preCreate({
             context,
-            api: context.api,
             data,
             creation: statement.proxy,
           });
@@ -151,14 +142,7 @@ export class CreateSomeMutation<
 
         // Apply the "postCreate"-hook, if any
         try {
-          await postCreate?.({
-            gp: this.gp,
-            node: this.node,
-            context,
-            api: context.api,
-            data,
-            change,
-          });
+          await this.node.postCreate({ context, data, change });
         } catch (cause) {
           throw new LifecycleHookError(
             this.node,

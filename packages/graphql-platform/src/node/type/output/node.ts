@@ -132,21 +132,34 @@ export class NodeOutputType {
 
     // virtual-fields
     {
-      const virtualFieldConfigsByName = utils.resolveThunkable(
-        this.#config?.virtualFields,
-        this.node,
-      );
-      const virtualFieldConfigsByNamePath = utils.addPath(
-        this.#configPath,
-        'virtualFields',
-      );
+      [...this.node.features, this.node].forEach(({ config, configPath }) => {
+        const outputConfig = config.output;
+        const outputConfigPath = utils.addPath(configPath, 'output');
 
-      utils.assertNillablePlainObject(
-        virtualFieldConfigsByName,
-        virtualFieldConfigsByNamePath,
-      );
+        utils.assertNillablePlainObject(outputConfig, outputConfigPath);
 
-      if (virtualFieldConfigsByName) {
+        if (!outputConfig) {
+          return;
+        }
+
+        const virtualFieldConfigsByName = utils.resolveThunkable(
+          outputConfig.virtualFields,
+          this.node,
+        );
+        const virtualFieldConfigsByNamePath = utils.addPath(
+          outputConfigPath,
+          'virtualFields',
+        );
+
+        utils.assertNillablePlainObject(
+          virtualFieldConfigsByName,
+          virtualFieldConfigsByNamePath,
+        );
+
+        if (!virtualFieldConfigsByName) {
+          return;
+        }
+
         utils.aggregateGraphError<
           [utils.Name, ThunkableNillableVirtualFieldOutputConfig],
           void
@@ -189,7 +202,7 @@ export class NodeOutputType {
           undefined,
           { path: virtualFieldConfigsByNamePath },
         );
-      }
+      });
     }
 
     return new Map(fields.map((field) => [field.name, field]));

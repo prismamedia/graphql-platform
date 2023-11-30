@@ -27,7 +27,7 @@ import {
   LifecycleHookError,
   LifecycleHookKind,
 } from '../../error.js';
-import { AbstractUpdate, type UpdateConfig } from '../abstract-update.js';
+import { AbstractUpdate } from '../abstract-update.js';
 import type { MutationContext } from '../context.js';
 
 export type UpdateManyMutationArgs = RawNodeSelectionAwareArgs<{
@@ -46,9 +46,6 @@ export class UpdateManyMutation<
   UpdateManyMutationArgs,
   UpdateManyMutationResult
 > {
-  readonly #config?: UpdateConfig<any, any, any, any> =
-    this.node.getMutationConfig(utils.MutationType.UPDATE).config;
-
   protected readonly selectionAware = true;
 
   public readonly key = 'update-many';
@@ -93,9 +90,6 @@ export class UpdateManyMutation<
     { data, ...args }: NodeSelectionAwareArgs<UpdateManyMutationArgs>,
     path: utils.Path,
   ): Promise<UpdateManyMutationResult> {
-    const preUpdate = this.#config?.preUpdate;
-    const postUpdate = this.#config?.postUpdate;
-
     // As the "data" will be provided to the hooks, we freeze it
     Object.freeze(data);
 
@@ -154,7 +148,7 @@ export class UpdateManyMutation<
 
     const willEventuallyRefetchToGetReverseEdgeChanges =
       // We assume that the "postUpdate"-hook can change the reverse-edges
-      (postUpdate &&
+      (this.node.postUpdateHooks.length &&
         args.selection.expressions.some((expression) =>
           isReverseEdgeSelection(expression),
         )) ||
@@ -190,13 +184,10 @@ export class UpdateManyMutation<
           );
 
           if (!statement.isEmpty()) {
-            // Apply the "preUpdate"-hook
+            // Apply the "preUpdate"-hook, if any
             try {
-              await preUpdate?.({
-                gp: this.gp,
-                node: this.node,
+              await this.node.preUpdate({
                 context,
-                api: context.api,
                 data,
                 id: Object.freeze(currentIds[index]),
                 current: Object.freeze(this.node.parseValue(currentValue)),
@@ -286,15 +277,12 @@ export class UpdateManyMutation<
     );
 
     // Apply the "postUpdate"-hook
-    if (changes.length && postUpdate) {
+    if (changes.length && this.node.postUpdateHooks.length) {
       await Promise.all(
         changes.map(async (change) => {
           try {
-            await postUpdate({
-              gp: this.gp,
-              node: this.node,
+            await this.node.postUpdate({
               context,
-              api: context.api,
               data,
               change,
             });

@@ -2,7 +2,8 @@ import * as utils from '@prismamedia/graphql-platform-utils';
 import { Memoize } from '@prismamedia/memoize';
 import { OperationTypeNode } from 'graphql';
 import inflection from 'inflection';
-import type { JsonObject, Promisable } from 'type-fest';
+import * as R from 'remeda';
+import type { Except, JsonObject, Promisable } from 'type-fest';
 import type { BrokerInterface } from './broker-interface.js';
 import type {
   ConnectorConfigOverride,
@@ -27,12 +28,15 @@ import {
   type UniqueConstraintConfig,
   type UniqueConstraintValue,
 } from './node/definition.js';
+import { NodeFeature, type NodeFeatureConfig } from './node/feature.js';
 import { assertNodeName, type NodeName } from './node/name.js';
 import {
   createContextBoundNodeAPI,
   createNodeAPI,
   operationConstructorsByType,
   type ContextBoundNodeAPI,
+  type CreationConfig,
+  type DeletionConfig,
   type MutationConfig,
   type NodeAPI,
   type Operation,
@@ -40,6 +44,13 @@ import {
   type OperationContext,
   type OperationType,
   type OperationsByType,
+  type PostCreateArgs,
+  type PostDeleteArgs,
+  type PostUpdateArgs,
+  type PreCreateArgs,
+  type PreDeleteArgs,
+  type PreUpdateArgs,
+  type UpdateConfig,
 } from './node/operation.js';
 import {
   NodeSelection,
@@ -60,6 +71,7 @@ import {
 
 export * from './node/change.js';
 export * from './node/definition.js';
+export * from './node/feature.js';
 export * from './node/fixture.js';
 export * from './node/loader.js';
 export * from './node/name.js';
@@ -110,6 +122,16 @@ export type NodeConfig<
    * The information will be shown in all its operations
    */
   deprecated?: utils.OptionalDeprecation;
+
+  /**
+   * Optional, you can provide a set of features, an easy way to share some common configurations, including components, uniques, hooks...
+   */
+  features?: NodeFeatureConfig<
+    TRequestContext,
+    TConnector,
+    TBroker,
+    TContainer
+  >[];
 
   /**
    * A component is either a leaf (= an enum or a scalar) or an edge (= a link to another node)
@@ -233,6 +255,9 @@ export class Node<
   public readonly indefinite: string;
   public readonly description: string | undefined;
   public readonly deprecationReason: string | undefined;
+  public readonly features: ReadonlyArray<
+    NodeFeature<TRequestContext, TConnector, TBroker, TContainer>
+  >;
 
   public readonly componentsByName: ReadonlyMap<
     Component['name'],
@@ -390,66 +415,99 @@ export class Node<
       );
     }
 
+    // features
+    {
+      const featuresConfig = config.features;
+      const featuresConfigPath = utils.addPath(configPath, 'features');
+
+      utils.assertNillableArray<NodeFeatureConfig>(
+        featuresConfig,
+        featuresConfigPath,
+      );
+
+      this.features = (featuresConfig ?? []).map(
+        (featureConfig, index) =>
+          new NodeFeature(
+            this,
+            featureConfig,
+            utils.addPath(featuresConfigPath, index),
+          ),
+      );
+    }
+
     // components
     {
       const componentsConfig = config.components;
       const componentsConfigPath = utils.addPath(configPath, 'components');
 
-      utils.assertPlainObject(componentsConfig, componentsConfigPath);
+      this.componentsByName = new Map(
+        [...this.features, this].flatMap(({ config, configPath }) => {
+          const componentsConfig = config.components;
+          const componentsConfigPath = utils.addPath(configPath, 'components');
 
-      if (!Object.entries(componentsConfig).length) {
+          utils.assertNillablePlainObject(
+            componentsConfig,
+            componentsConfigPath,
+          );
+
+          return componentsConfig
+            ? utils.aggregateGraphError<
+                [Component['name'], ComponentConfig],
+                [Component['name'], Component][]
+              >(
+                Object.entries(componentsConfig),
+                (entries, [componentName, componentConfig]) => {
+                  const componentConfigPath = utils.addPath(
+                    componentsConfigPath,
+                    componentName,
+                  );
+
+                  utils.assertPlainObject(componentConfig, componentConfigPath);
+
+                  let component: Component;
+
+                  const kindConfig = componentConfig.kind;
+                  const kindConfigPath = utils.addPath(
+                    componentConfigPath,
+                    'kind',
+                  );
+
+                  if (!kindConfig || kindConfig === 'Leaf') {
+                    component = new Leaf(
+                      this,
+                      componentName,
+                      componentConfig,
+                      componentConfigPath,
+                    );
+                  } else if (kindConfig === 'Edge') {
+                    component = new Edge(
+                      this,
+                      componentName,
+                      componentConfig,
+                      componentConfigPath,
+                    );
+                  } else {
+                    throw new utils.UnreachableValueError(kindConfig, {
+                      path: kindConfigPath,
+                    });
+                  }
+
+                  return [...entries, [component.name, component]];
+                },
+                [],
+                { path: componentsConfigPath },
+              )
+            : [];
+        }),
+      );
+
+      if (!this.componentsByName.size) {
         throw new utils.UnexpectedValueError(
           `at least one component`,
           componentsConfig,
           { path: componentsConfigPath },
         );
       }
-
-      this.componentsByName = new Map(
-        utils.aggregateGraphError<
-          [Component['name'], ComponentConfig],
-          [Component['name'], Component][]
-        >(
-          Object.entries(componentsConfig),
-          (entries, [componentName, componentConfig]) => {
-            const componentConfigPath = utils.addPath(
-              componentsConfigPath,
-              componentName,
-            );
-
-            utils.assertPlainObject(componentConfig, componentConfigPath);
-
-            let component: Component;
-
-            const kindConfig = componentConfig.kind;
-            const kindConfigPath = utils.addPath(componentConfigPath, 'kind');
-
-            if (!kindConfig || kindConfig === 'Leaf') {
-              component = new Leaf(
-                this,
-                componentName,
-                componentConfig,
-                componentConfigPath,
-              );
-            } else if (kindConfig === 'Edge') {
-              component = new Edge(
-                this,
-                componentName,
-                componentConfig,
-                componentConfigPath,
-              );
-            } else {
-              throw new utils.UnreachableValueError(kindConfig, {
-                path: kindConfigPath,
-              });
-            }
-
-            return [...entries, [component.name, component]];
-          },
-          [],
-          { path: componentsConfigPath },
-        ),
-      );
 
       this.componentSet = new Set(this.componentsByName.values());
 
@@ -481,33 +539,45 @@ export class Node<
       const uniquesConfig = config.uniques;
       const uniquesConfigPath = utils.addPath(configPath, 'uniques');
 
-      if (!Array.isArray(uniquesConfig) || !uniquesConfig.length) {
+      this.uniqueConstraintsByName = new Map(
+        [...this.features, this].flatMap(({ config, configPath }) => {
+          const uniquesConfig = config.uniques;
+          const uniquesConfigPath = utils.addPath(configPath, 'uniques');
+
+          utils.assertNillableArray(uniquesConfig, uniquesConfigPath);
+
+          return uniquesConfig
+            ? utils.aggregateGraphError<
+                UniqueConstraintConfig,
+                [UniqueConstraint['name'], UniqueConstraint][]
+              >(
+                uniquesConfig,
+                (entries, uniqueConfig, index) => {
+                  const uniqueConstraint = new UniqueConstraint(
+                    this,
+                    uniqueConfig,
+                    utils.addPath(uniquesConfigPath, index),
+                  );
+
+                  return [
+                    ...entries,
+                    [uniqueConstraint.name, uniqueConstraint],
+                  ];
+                },
+                [],
+                { path: uniquesConfigPath },
+              )
+            : [];
+        }),
+      );
+
+      if (!this.uniqueConstraintsByName.size) {
         throw new utils.UnexpectedValueError(
           `at least one unique-constraint`,
           uniquesConfig,
           { path: uniquesConfigPath },
         );
       }
-
-      this.uniqueConstraintsByName = new Map(
-        utils.aggregateGraphError<
-          UniqueConstraintConfig,
-          [UniqueConstraint['name'], UniqueConstraint][]
-        >(
-          uniquesConfig,
-          (entries, uniqueConstraintConfig, index) => {
-            const unique = new UniqueConstraint(
-              this,
-              uniqueConstraintConfig,
-              utils.addPath(uniquesConfigPath, index),
-            );
-
-            return [...entries, [unique.name, unique]];
-          },
-          [],
-          { path: uniquesConfigPath },
-        ),
-      );
 
       this.uniqueConstraintSet = new Set(this.uniqueConstraintsByName.values());
 
@@ -718,6 +788,186 @@ export class Node<
     return this.isPubliclyMutable(utils.MutationType.DELETION);
   }
 
+  @Memoize()
+  public get preCreationHooks(): ReadonlyArray<
+    NonNullable<CreationConfig['preCreate']>
+  > {
+    return R.pipe(
+      [...this.features, this],
+      R.map(
+        (featureOrNode) =>
+          featureOrNode.getMutationConfig(utils.MutationType.CREATION).config
+            ?.preCreate,
+      ),
+      R.filter(R.isFunction),
+    );
+  }
+
+  public async preCreate(
+    args: Except<PreCreateArgs<any, any, any, any>, 'gp' | 'node' | 'api'>,
+  ): Promise<void> {
+    await Promise.all(
+      this.preCreationHooks.map((hook) =>
+        hook({
+          gp: this.gp,
+          node: this,
+          api: args.context.api,
+          ...args,
+        }),
+      ),
+    );
+  }
+
+  @Memoize()
+  public get postCreationHooks(): ReadonlyArray<
+    NonNullable<CreationConfig['postCreate']>
+  > {
+    return R.pipe(
+      [...this.features, this],
+      R.map(
+        (featureOrNode) =>
+          featureOrNode.getMutationConfig(utils.MutationType.CREATION).config
+            ?.postCreate,
+      ),
+      R.filter(R.isFunction),
+    );
+  }
+
+  public async postCreate(
+    args: Except<PostCreateArgs<any, any, any, any>, 'gp' | 'node' | 'api'>,
+  ): Promise<void> {
+    await Promise.all(
+      this.postCreationHooks.map((hook) =>
+        hook({
+          gp: this.gp,
+          node: this,
+          api: args.context.api,
+          ...args,
+        }),
+      ),
+    );
+  }
+
+  @Memoize()
+  public get preUpdateHooks(): ReadonlyArray<
+    NonNullable<UpdateConfig['preUpdate']>
+  > {
+    return R.pipe(
+      [...this.features, this],
+      R.map(
+        (featureOrNode) =>
+          featureOrNode.getMutationConfig(utils.MutationType.UPDATE).config
+            ?.preUpdate,
+      ),
+      R.filter(R.isFunction),
+    );
+  }
+
+  public async preUpdate(
+    args: Except<PreUpdateArgs<any, any, any, any>, 'gp' | 'node' | 'api'>,
+  ): Promise<void> {
+    await Promise.all(
+      this.preUpdateHooks.map((hook) =>
+        hook({
+          gp: this.gp,
+          node: this,
+          api: args.context.api,
+          ...args,
+        }),
+      ),
+    );
+  }
+
+  @Memoize()
+  public get postUpdateHooks(): ReadonlyArray<
+    NonNullable<UpdateConfig['postUpdate']>
+  > {
+    return R.pipe(
+      [...this.features, this],
+      R.map(
+        (featureOrNode) =>
+          featureOrNode.getMutationConfig(utils.MutationType.UPDATE).config
+            ?.postUpdate,
+      ),
+      R.filter(R.isFunction),
+    );
+  }
+
+  public async postUpdate(
+    args: Except<PostUpdateArgs<any, any, any, any>, 'gp' | 'node' | 'api'>,
+  ): Promise<void> {
+    await Promise.all(
+      this.postUpdateHooks.map((hook) =>
+        hook({
+          gp: this.gp,
+          node: this,
+          api: args.context.api,
+          ...args,
+        }),
+      ),
+    );
+  }
+
+  @Memoize()
+  public get preDeletionHooks(): ReadonlyArray<
+    NonNullable<DeletionConfig['preDelete']>
+  > {
+    return R.pipe(
+      [...this.features, this],
+      R.map(
+        (featureOrNode) =>
+          featureOrNode.getMutationConfig(utils.MutationType.DELETION).config
+            ?.preDelete,
+      ),
+      R.filter(R.isFunction),
+    );
+  }
+
+  public async preDelete(
+    args: Except<PreDeleteArgs<any, any, any, any>, 'gp' | 'node' | 'api'>,
+  ): Promise<void> {
+    await Promise.all(
+      this.preDeletionHooks.map((hook) =>
+        hook({
+          gp: this.gp,
+          node: this,
+          api: args.context.api,
+          ...args,
+        }),
+      ),
+    );
+  }
+
+  @Memoize()
+  public get postDeletionHooks(): ReadonlyArray<
+    NonNullable<DeletionConfig['postDelete']>
+  > {
+    return R.pipe(
+      [...this.features, this],
+      R.map(
+        (featureOrNode) =>
+          featureOrNode.getMutationConfig(utils.MutationType.DELETION).config
+            ?.postDelete,
+      ),
+      R.filter(R.isFunction),
+    );
+  }
+
+  public async postDelete(
+    args: Except<PostDeleteArgs<any, any, any, any>, 'gp' | 'node' | 'api'>,
+  ): Promise<void> {
+    await Promise.all(
+      this.postDeletionHooks.map((hook) =>
+        hook({
+          gp: this.gp,
+          node: this,
+          api: args.context.api,
+          ...args,
+        }),
+      ),
+    );
+  }
+
   public getComponentByName(
     name: Component['name'],
     path?: utils.Path,
@@ -876,25 +1126,6 @@ export class Node<
     ReverseEdge['name'],
     ReverseEdge<TConnector>
   > {
-    // Let's find all the edges heading to this node
-    const referrersByNameByNodeName = new Map<
-      Node['name'],
-      Map<Edge['name'], Edge>
-    >(
-      Array.from(
-        this.gp.nodesByName.values(),
-        (node): [Node['name'], Map<Edge['name'], Edge>] => [
-          node.name,
-          new Map(
-            Array.from(node.componentsByName).filter(
-              (entry): entry is [Edge['name'], Edge] =>
-                entry[1] instanceof Edge && entry[1].head === this,
-            ),
-          ),
-        ],
-      ).filter(([, referrersByName]) => referrersByName.size),
-    );
-
     const reverseEdgesConfig = this.config.reverseEdges;
     const reverseEdgesConfigPath = utils.addPath(
       this.configPath,
@@ -903,20 +1134,23 @@ export class Node<
 
     utils.assertNillablePlainObject(reverseEdgesConfig, reverseEdgesConfigPath);
 
-    // No reverse-edge
-    if (!referrersByNameByNodeName.size) {
-      if (
-        utils.isPlainObject(reverseEdgesConfig) &&
-        Object.entries(reverseEdgesConfig).length
-      ) {
-        throw new utils.UnexpectedValueError(
-          `no configuration as there is no node having an edge heading to the "${this}" node`,
-          reverseEdgesConfig,
-          { path: reverseEdgesConfigPath },
-        );
-      }
+    // Let's find all the edges heading to this node
+    const referrers = new Set(
+      Array.from(this.gp.nodeSet).flatMap((node) =>
+        Array.from(node.edgeSet).filter((edge) => edge.head === this),
+      ),
+    );
 
-      return new Map();
+    if (
+      !referrers.size &&
+      utils.isPlainObject(reverseEdgesConfig) &&
+      Object.entries(reverseEdgesConfig).length
+    ) {
+      throw new utils.UnexpectedValueError(
+        `no configuration as there is no node heading to this "${this}" node`,
+        reverseEdgesConfig,
+        { path: reverseEdgesConfigPath },
+      );
     }
 
     const reverseEdges = new Map(
@@ -961,46 +1195,25 @@ export class Node<
                 );
               }
 
-              const [nodeEdgeConfig, edgeEdgeConfig] =
-                originalEdgeConfig.split('.');
+              const [nodeName, edgeName] = originalEdgeConfig.split('.');
 
-              const referrersByName =
-                referrersByNameByNodeName.get(nodeEdgeConfig);
+              const originalEdge = Array.from(referrers).find(
+                (referrer) =>
+                  referrer.tail.name === nodeName &&
+                  (!edgeName || referrer.name === edgeName),
+              );
 
-              if (!referrersByName) {
+              if (!originalEdge) {
                 throw new utils.UnexpectedValueError(
-                  `a node having an edge heading to the "${this}" node (= a value among "${[
-                    ...referrersByNameByNodeName.keys(),
-                  ].join(', ')}")`,
-                  nodeEdgeConfig,
+                  `${
+                    edgeName ? `an edge` : `a node`
+                  } heading to this "${this}" node`,
+                  originalEdgeConfig,
                   { path: originalEdgeConfigPath },
                 );
-              } else if (!referrersByName.size) {
-                throw new utils.GraphError(
-                  `Expects no more configuration for "${nodeEdgeConfig}"'s edge as there is no more edge heading to the "${this}" node`,
-                  { path: originalEdgeConfigPath },
-                );
-              }
-
-              let originalEdge: Edge;
-
-              if (edgeEdgeConfig) {
-                if (!referrersByName.has(edgeEdgeConfig)) {
-                  throw new utils.UnexpectedValueError(
-                    `an edge heading to the "${this}" node (= a value among "${[
-                      ...referrersByName.keys(),
-                    ].join(', ')}")`,
-                    edgeEdgeConfig,
-                    { path: originalEdgeConfigPath },
-                  );
-                }
-
-                originalEdge = referrersByName.get(edgeEdgeConfig)!;
               } else {
-                originalEdge = referrersByName.values().next().value;
+                referrers.delete(originalEdge);
               }
-
-              referrersByName.delete(originalEdge.name);
 
               let reverseEdge: ReverseEdge;
 
@@ -1050,17 +1263,12 @@ export class Node<
         : undefined,
     );
 
-    const missingConfigs = Array.from(
-      referrersByNameByNodeName.values(),
-    ).flatMap((referrersByName) =>
-      Array.from(referrersByName.values(), String),
-    );
-
-    if (missingConfigs.length) {
+    if (referrers.size) {
       throw new utils.GraphError(
-        `Expects a configuration for the following referrer(s): ${missingConfigs.join(
-          ', ',
-        )}`,
+        `Expects a configuration for the following referrer(s): ${Array.from(
+          referrers,
+          String,
+        ).join(', ')}`,
         { path: reverseEdgesConfigPath },
       );
     }
