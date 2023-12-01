@@ -1035,7 +1035,8 @@ export function createMyGP<
           ...config?.overrides?.node?.(nodeName),
 
           components:
-            config?.overrides?.edge || config?.overrides?.leaf
+            nodeConfig.components &&
+            (config?.overrides?.edge || config?.overrides?.leaf)
               ? Object.fromEntries(
                   Object.entries(nodeConfig.components).map(
                     ([componentName, componentConfig]) => [
@@ -1052,23 +1053,24 @@ export function createMyGP<
                 )
               : nodeConfig.components,
 
-          uniques: config?.overrides?.uniqueConstraint
-            ? nodeConfig.uniques.map((unique, index) => {
-                const uniqueConstraintConfig = Array.isArray(unique)
-                  ? { components: unique }
-                  : unique;
+          uniques:
+            nodeConfig.uniques && config?.overrides?.uniqueConstraint
+              ? nodeConfig.uniques.map((unique, index) => {
+                  const uniqueConstraintConfig = Array.isArray(unique)
+                    ? { components: unique }
+                    : unique;
 
-                return {
-                  ...uniqueConstraintConfig,
+                  return {
+                    ...uniqueConstraintConfig,
 
-                  ...config?.overrides?.uniqueConstraint?.(
-                    index,
-                    uniqueConstraintConfig.name,
-                    nodeName,
-                  ),
-                };
-              })
-            : nodeConfig.uniques,
+                    ...config?.overrides?.uniqueConstraint?.(
+                      index,
+                      uniqueConstraintConfig.name,
+                      nodeName,
+                    ),
+                  };
+                })
+              : nodeConfig.uniques,
         },
       ]),
     ),

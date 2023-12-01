@@ -1078,15 +1078,15 @@ __metadata:
     "@swc/core": "npm:1.3.100"
     "@swc/jest": "npm:0.2.29"
     "@tsconfig/node18": "npm:18.2.2"
-    "@types/node": "npm:18.18.14"
+    "@types/node": "npm:18.19.2"
     "@types/semver": "npm:7.5.6"
     graphql: "npm:16.8.1"
     inflection: "npm:^3.0.0"
     jest: "npm:29.7.0"
     mariadb: "npm:^3.2.2"
-    publint: "npm:0.2.5"
+    publint: "npm:0.2.6"
     semver: "npm:^7.5.4"
-    type-fest: "npm:^4.8.2"
+    type-fest: "npm:^4.8.3"
     typescript: "npm:5.3.2"
   peerDependencies:
     graphql: ^16.7.0
@@ -1107,7 +1107,7 @@ __metadata:
     "@types/body-parser": "npm:^1.19.5"
     "@types/cors": "npm:^2.8.17"
     "@types/express": "npm:^4.17.21"
-    "@types/node": "npm:18.18.14"
+    "@types/node": "npm:18.19.2"
     "@types/ws": "npm:^8.5.10"
     body-parser: "npm:1.20.2"
     cors: "npm:2.8.5"
@@ -1115,7 +1115,7 @@ __metadata:
     graphql: "npm:16.8.1"
     graphql-ws: "npm:5.14.2"
     jest: "npm:29.7.0"
-    publint: "npm:0.2.5"
+    publint: "npm:0.2.6"
     typescript: "npm:5.3.2"
     ws: "npm:8.14.2"
   peerDependencies:
@@ -1134,12 +1134,12 @@ __metadata:
     "@swc/jest": "npm:0.2.29"
     "@tsconfig/node18": "npm:18.2.2"
     "@types/draft-js": "npm:^0.11.16"
-    "@types/node": "npm:18.18.14"
+    "@types/node": "npm:18.19.2"
     entities: "npm:^4.5.0"
     graphql: "npm:16.8.1"
     jest: "npm:29.7.0"
-    publint: "npm:0.2.5"
-    type-fest: "npm:^4.8.2"
+    publint: "npm:0.2.6"
+    type-fest: "npm:^4.8.3"
     typescript: "npm:5.3.2"
   peerDependencies:
     graphql: ^16.7.0
@@ -1156,13 +1156,13 @@ __metadata:
     "@swc/jest": "npm:0.2.29"
     "@tsconfig/node18": "npm:18.2.2"
     "@types/indefinite": "npm:2.3.4"
-    "@types/node": "npm:18.18.14"
+    "@types/node": "npm:18.19.2"
     graphql: "npm:16.8.1"
     indefinite: "npm:^2.4.3"
     jest: "npm:29.7.0"
-    publint: "npm:0.2.5"
+    publint: "npm:0.2.6"
     remeda: "npm:^1.29.0"
-    type-fest: "npm:^4.8.2"
+    type-fest: "npm:^4.8.3"
     typescript: "npm:5.3.2"
   peerDependencies:
     graphql: ^16.7.0
@@ -1182,7 +1182,7 @@ __metadata:
     "@swc/jest": "npm:0.2.29"
     "@tsconfig/node18": "npm:18.2.2"
     "@types/cli-progress": "npm:^3.11.5"
-    "@types/node": "npm:18.18.14"
+    "@types/node": "npm:18.19.2"
     cli-progress: "npm:^3.12.0"
     dataloader: "npm:^2.2.2"
     dependency-graph: "npm:^0.11.0"
@@ -1191,9 +1191,9 @@ __metadata:
     jest: "npm:29.7.0"
     p-queue: "npm:^7.4.1"
     p-retry: "npm:^6.1.0"
-    publint: "npm:0.2.5"
+    publint: "npm:0.2.6"
     remeda: "npm:^1.29.0"
-    type-fest: "npm:^4.8.2"
+    type-fest: "npm:^4.8.3"
     typescript: "npm:5.3.2"
     yocto-queue: "npm:^1.0.0"
   peerDependencies:
@@ -1710,12 +1710,12 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@types/node@npm:18.18.14":
-  version: 18.18.14
-  resolution: "@types/node@npm:18.18.14"
+"@types/node@npm:18.19.2":
+  version: 18.19.2
+  resolution: "@types/node@npm:18.19.2"
   dependencies:
     undici-types: "npm:~5.26.4"
-  checksum: 508e90549c2893ec3b8e5f133763a3983adf37b6c8cfb3f1ea066f63d45f57a7246cf6c23aa859417d41d5c0b3f76883d66a749d2f1aa1ca486a47231286a01f
+  checksum: 122958ac4be81ea2b53da53de29441f8d98d572cc5c704c6bba788343281a47185a405cf0c650a702b7549e09584a7a39a51f27658088a8d8192163bcac079a0
   languageName: node
   linkType: hard
 
@@ -4945,16 +4945,16 @@ __metadata:
   languageName: node
   linkType: hard
 
-"publint@npm:0.2.5":
-  version: 0.2.5
-  resolution: "publint@npm:0.2.5"
+"publint@npm:0.2.6":
+  version: 0.2.6
+  resolution: "publint@npm:0.2.6"
   dependencies:
     npm-packlist: "npm:^5.1.3"
     picocolors: "npm:^1.0.0"
     sade: "npm:^1.8.1"
   bin:
     publint: lib/cli.js
-  checksum: c716800f910366f2b11163a54b0ab75e14d2354811d18be253fb47d8e18aecfc5ee8d365c860c8d01e2b6a69dbd9bc29702ead8ecbd96ad7fbb330d58eaec668
+  checksum: fee89f120e2260bce0a7eceb663f57b3f641a1e30716437a2ae8992809226d2a8257ea934c7f61fbf5528f73e2f675ed034b638b58d7f2cdfb26829bad7e1311
   languageName: node
   linkType: hard
 
@@ -5609,10 +5609,10 @@ __metadata:
   languageName: node
   linkType: hard
 
-"type-fest@npm:^4.8.2":
-  version: 4.8.2
-  resolution: "type-fest@npm:4.8.2"
-  checksum: 86ea9b4c2a1784af7708b837948bd0b4c22d1b1bc15d95e0366213b983e802c09a76eccd56566e91ee5b7c961238b118fd256a7a323e7d79dc302773d40c99d2
+"type-fest@npm:^4.8.3":
+  version: 4.8.3
+  resolution: "type-fest@npm:4.8.3"
+  checksum: 90e440347c542282b0a92bb181fb30af529be6d6820dd7ec6141309f2ca143855a8fbca18969623b19bc15a3dcce6000af19f97cae81a39fbd2638c15a06d078
   languageName: node
   linkType: hard
 

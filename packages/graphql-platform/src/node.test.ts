@@ -48,11 +48,7 @@ describe('Node', () => {
         `throws an Error on invalid name: %s`,
         (invalidName, expectedError) => {
           expect(
-            () =>
-              new GraphQLPlatform({
-                // @ts-expect-error
-                nodes: { [invalidName]: {} },
-              }),
+            () => new GraphQLPlatform({ nodes: { [invalidName]: {} } }),
           ).toThrowError(expectedError);
         },
       );
@@ -680,16 +676,18 @@ describe('Node', () => {
                           : {}),
                         ...mutationConfig,
                       },
-                      components: Object.fromEntries(
-                        Object.entries(config.components).map<
-                          [utils.Name, ComponentConfig]
-                        >(([name, config]) => [
-                          name,
-                          (config.kind === 'Edge'
-                            ? R.omit(config, ['onHeadDeletion'])
-                            : config) as any,
-                        ]),
-                      ),
+                      components:
+                        config.components &&
+                        Object.fromEntries(
+                          Object.entries(config.components).map<
+                            [utils.Name, ComponentConfig]
+                          >(([name, config]) => [
+                            name,
+                            (config.kind === 'Edge'
+                              ? R.omit(config, ['onHeadDeletion'])
+                              : config) as any,
+                          ]),
+                        ),
                     },
                   ],
                 ),

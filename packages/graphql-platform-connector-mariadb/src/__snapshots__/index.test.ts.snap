@@ -26,7 +26,7 @@ exports[`GraphQL-Platform Connector MariaDB generates valid and stable schema 3`
   \`sponsored\` BOOLEAN NULL COMMENT 'Is the article a partnership?',
   \`views\` BIGINT UNSIGNED NOT NULL,
   \`score\` DOUBLE(10,2) UNSIGNED NOT NULL,
-  \`machine_tags\` TEXT CHARSET 'utf8mb4' COLLATE 'utf8mb4_unicode_520_ci' NULL,
+  \`machine_tags\` JSON NULL,
   PRIMARY KEY (\`private_id\`),
   UNIQUE INDEX \`unq_id\` (\`id\`),
   UNIQUE INDEX \`unq_category_private_id_slug\` (\`category_private_id\`,\`slug\`),

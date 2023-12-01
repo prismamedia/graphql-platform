@@ -138,7 +138,7 @@ export type NodeConfig<
    *
    * At least one must be defined
    */
-  components: {
+  components?: {
     /**
      * The components' name are expected to be valid against the GraphQL "Names" rules
      *
@@ -156,7 +156,7 @@ export type NodeConfig<
    *  - non-nullable (= at least one of its components being non-nullable)
    *  - immutable (= all its components being immutable)
    */
-  uniques: UniqueConstraintConfig<TConnector>[];
+  uniques?: UniqueConstraintConfig<TConnector>[];
 
   /**
    * Optional, define some reverse edges

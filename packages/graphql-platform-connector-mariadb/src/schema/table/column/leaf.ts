@@ -200,17 +200,12 @@ export class LeafColumn extends AbstractColumn {
             this.dataType = new JsonType<scalars.RawDraftContentState>();
             break;
 
-          case 'JSONObject':
-            this.dataType = new JsonType<JsonObject>();
+          case 'JSONArray':
+            this.dataType = new JsonType<JsonValue[]>();
             break;
 
-          case 'JSONArray':
-            this.dataType = new TextType<JsonValue[]>({
-              charset: this.table.defaultCharset,
-              collation: this.table.defaultCollation,
-              parser: (value) => JSON.parse(value),
-              serializer: (value) => JSON.stringify(value),
-            });
+          case 'JSONObject':
+            this.dataType = new JsonType<JsonObject>();
             break;
 
           default:
