@@ -122,7 +122,7 @@ describe('Subscription', () => {
       }
     }
 
-    expect(changes.length).toBe(7);
+    expect(changes.length).toBe(6);
     expect(
       changes.map(
         (change) =>
@@ -140,7 +140,6 @@ describe('Subscription', () => {
         "Article.deletion",
         "Article.deletion",
         "Article.deletion",
-        "Article.upsert",
       ]
     `);
 

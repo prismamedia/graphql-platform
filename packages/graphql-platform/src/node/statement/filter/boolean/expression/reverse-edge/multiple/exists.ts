@@ -15,6 +15,7 @@ import { NodeFilter, areFiltersEqual } from '../../../../../filter.js';
 import type { BooleanFilter } from '../../../../boolean.js';
 import type { BooleanExpressionInterface } from '../../../expression-interface.js';
 import {
+  AndOperation,
   OrOperation,
   type AndOperand,
   type OrOperand,
@@ -66,12 +67,22 @@ export class MultipleReverseEdgeExistsFilter
 
   public and(
     operand: AndOperand,
-    _remainingReducers: number,
+    remainingReducers: number,
   ): BooleanFilter | undefined {
     if (
       operand instanceof MultipleReverseEdgeExistsFilter &&
       operand.reverseEdge === this.reverseEdge
     ) {
+      return MultipleReverseEdgeExistsFilter.create(
+        this.reverseEdge,
+        new NodeFilter(
+          this.reverseEdge.head,
+          AndOperation.create(
+            [this.headFilter?.filter, operand.headFilter?.filter],
+            remainingReducers,
+          ),
+        ),
+      );
     }
 
     return;
@@ -79,12 +90,22 @@ export class MultipleReverseEdgeExistsFilter
 
   public or(
     operand: OrOperand,
-    _remainingReducers: number,
+    remainingReducers: number,
   ): BooleanFilter | undefined {
     if (
       operand instanceof MultipleReverseEdgeExistsFilter &&
       operand.reverseEdge === this.reverseEdge
     ) {
+      return MultipleReverseEdgeExistsFilter.create(
+        this.reverseEdge,
+        new NodeFilter(
+          this.reverseEdge.head,
+          OrOperation.create(
+            [this.headFilter?.filter, operand.headFilter?.filter],
+            remainingReducers,
+          ),
+        ),
+      );
     }
 
     return;
