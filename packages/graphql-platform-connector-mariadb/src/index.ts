@@ -158,13 +158,18 @@ export class MariaDBConnector
       utils.assertPlainObject(this.poolConfig, this.poolConfigPath);
 
       const logger: mariadb.PoolConfig['logger'] = {
-        error: (error) =>
-          this.emit(
-            'error',
-            Object.assign(error, { pool: StatementKind[kind] }),
-          ).catch(() => {
-            // Silently ignore the error
-          }),
+        error: async (error) => {
+          if (error instanceof mariadb.SqlError && error.fatal) {
+            try {
+              await this.emit(
+                'error',
+                Object.assign(error, { pool: StatementKind[kind] }),
+              );
+            } catch {
+              // Silently ignore the error
+            }
+          }
+        },
       };
 
       this.#poolsByStatementKind.set(
