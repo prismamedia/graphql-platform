@@ -1,7 +1,6 @@
 import {
   AsyncEventEmitter,
-  EventConfigByName,
-  EventListener,
+  type EventConfigByName,
 } from '@prismamedia/async-event-emitter';
 import * as core from '@prismamedia/graphql-platform';
 import * as utils from '@prismamedia/graphql-platform-utils';
@@ -20,7 +19,6 @@ import {
   type UniqueIndexConfig,
 } from './schema.js';
 import {
-  ExecutedStatement,
   InsertStatement,
   Statement,
   StatementKind,
@@ -42,7 +40,16 @@ export type OkPacket = {
 };
 
 export type MariaDBConnectorEventDataByName = {
-  'executed-statement': ExecutedStatement;
+  'executed-statement': {
+    statement: Statement;
+    result: any;
+    durationInSeconds: number;
+  };
+  'failed-statement': {
+    statement: Statement;
+    error: mariadb.SqlError;
+    durationInSeconds: number;
+  };
 };
 
 export interface MariaDBConnectorConfig {
@@ -51,16 +58,7 @@ export interface MariaDBConnectorConfig {
   version?: string;
   schema?: SchemaConfig;
   pool?: Except<mariadb.PoolConfig, 'logger'>;
-
   on?: EventConfigByName<MariaDBConnectorEventDataByName>;
-
-  /**
-   * Optional, act on the executed-statements
-   */
-  onExecutedStatement?: EventListener<
-    MariaDBConnectorEventDataByName,
-    'executed-statement'
-  >;
 }
 
 /**
@@ -128,12 +126,6 @@ export class MariaDBConnector
     utils.assertPlainObject(config, configPath);
 
     super(config.on);
-
-    // on-executed-statement
-    {
-      config.onExecutedStatement &&
-        this.on('executed-statement', config.onExecutedStatement);
-    }
 
     // pool-config
     {
@@ -268,8 +260,22 @@ export class MariaDBConnector
       result = await (maybeConnection
         ? maybeConnection.query(statement)
         : this.executeQuery(statement, statement.kind));
+
+      await this.emit('executed-statement', {
+        statement,
+        result,
+        durationInSeconds:
+          Math.round(Number(hrtime.bigint() - startedAt) / 10 ** 6) / 10 ** 3,
+      });
     } catch (error) {
       if (error instanceof mariadb.SqlError) {
+        await this.emit('failed-statement', {
+          statement,
+          error,
+          durationInSeconds:
+            Math.round(Number(hrtime.bigint() - startedAt) / 10 ** 6) / 10 ** 3,
+        });
+
         if (
           error.errno === 1062 &&
           (statement instanceof InsertStatement ||
@@ -301,12 +307,6 @@ export class MariaDBConnector
 
       throw error;
     }
-
-    await this.emit('executed-statement', {
-      statement,
-      result,
-      took: Math.round(Number(hrtime.bigint() - startedAt) / 10 ** 6) / 10 ** 3,
-    });
 
     return result;
   }

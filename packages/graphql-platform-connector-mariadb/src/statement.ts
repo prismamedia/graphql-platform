@@ -14,13 +14,3 @@ export type Statement =
   | AdministrativeStatement
   | DefinitionStatement
   | ManipulationStatement;
-
-export type ExecutedStatement = {
-  statement: Statement;
-  result: any;
-
-  /**
-   * Time spent to execute this statement, including the transport, in seconds
-   */
-  took: number;
-};

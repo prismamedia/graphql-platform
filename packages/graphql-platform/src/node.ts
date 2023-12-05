@@ -1379,7 +1379,7 @@ export class Node<
   public getReverseEdgesByAction(
     onHeadDeletion: OnEdgeHeadDeletion,
   ): ReadonlyArray<ReverseEdge<TConnector>> {
-    return Array.from(this.reverseEdgesByName.values()).filter(
+    return Array.from(this.reverseEdgeSet).filter(
       (reverseEdge) =>
         reverseEdge.originalEdge.onHeadDeletion === onHeadDeletion,
     );
