@@ -5,10 +5,10 @@ import {
 import * as scalars from '@prismamedia/graphql-platform-scalars';
 import * as utils from '@prismamedia/graphql-platform-utils';
 import { Memoize } from '@prismamedia/memoize';
+import Denque from 'denque';
 import assert from 'node:assert/strict';
 import PQueue, { Options as PQueueOptions } from 'p-queue';
 import type { Except, Promisable } from 'type-fest';
-import FIFO from 'yocto-queue';
 import {
   BrokerAcknowledgementKind,
   type BrokerInterface,
@@ -188,7 +188,7 @@ export class ChangesSubscriptionStream<
   readonly #api: ContextBoundNodeAPI;
   readonly #ac: AbortController;
 
-  readonly #queue: FIFO<
+  readonly #queue: Denque<
     ChangesSubscriptionChange<TUpsert, TDeletion, TRequestContext>
   >;
 
@@ -234,7 +234,7 @@ export class ChangesSubscriptionStream<
     this.#api = node.createContextBoundAPI(context);
     this.#ac = new AbortController();
 
-    this.#queue = new FIFO();
+    this.#queue = new Denque();
   }
 
   @Memoize()
@@ -261,7 +261,7 @@ export class ChangesSubscriptionStream<
   ): Promise<void> {
     this.#ac.signal.throwIfAborted();
 
-    this.#queue.enqueue(change);
+    this.#queue.push(change);
     await this.emit('enqueued', change);
   }
 
@@ -272,7 +272,7 @@ export class ChangesSubscriptionStream<
 
     let change: ChangesSubscriptionChange | undefined;
 
-    change = this.#queue.dequeue();
+    change = this.#queue.shift();
     if (change) {
       return change;
     }
@@ -283,7 +283,7 @@ export class ChangesSubscriptionStream<
       return;
     }
 
-    change = this.#queue.dequeue();
+    change = this.#queue.shift();
     if (change) {
       return change;
     }
@@ -298,14 +298,14 @@ export class ChangesSubscriptionStream<
       throw error;
     }
 
-    return this.#queue.dequeue();
+    return this.#queue.shift();
   }
 
   /**
    * Is the queue of pending-changes empty?
    */
   public isQueueEmpty(): boolean {
-    return this.#queue.size === 0;
+    return this.#queue.length === 0;
   }
 
   /**

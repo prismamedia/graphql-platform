@@ -83,11 +83,9 @@ export class LeafInFilter implements BooleanExpressionInterface {
   }
 
   @Memoize()
-  public get complement(): AndOperation {
-    return new AndOperation(
-      this.operands.map((operand) => operand.complement),
-      this,
-    );
+  public get complement(): BooleanFilter {
+    // De Morgan's law: NOT (A + B) = (NOT A) . (NOT B)
+    return new AndOperation(this.operands.map((operand) => operand.complement));
   }
 
   public and(

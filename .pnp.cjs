@@ -1749,6 +1749,7 @@ const RAW_RUNTIME_STATE =
           ["@types/node", "npm:18.19.2"],\
           ["cli-progress", "npm:3.12.0"],\
           ["dataloader", "npm:2.2.2"],\
+          ["denque", "npm:2.1.0"],\
           ["dependency-graph", "npm:0.11.0"],\
           ["graphql", "npm:16.8.1"],\
           ["inflection", "npm:3.0.0"],\
@@ -1758,8 +1759,7 @@ const RAW_RUNTIME_STATE =
           ["publint", "npm:0.2.6"],\
           ["remeda", "npm:1.29.0"],\
           ["type-fest", "npm:4.8.3"],\
-          ["typescript", "patch:typescript@npm%3A5.3.2#optional!builtin<compat/typescript>::version=5.3.2&hash=e012d7"],\
-          ["yocto-queue", "npm:1.0.0"]\
+          ["typescript", "patch:typescript@npm%3A5.3.2#optional!builtin<compat/typescript>::version=5.3.2&hash=e012d7"]\
         ],\
         "packagePeers": [\
           "@types/graphql",\
@@ -1783,6 +1783,7 @@ const RAW_RUNTIME_STATE =
           ["@types/node", "npm:18.19.2"],\
           ["cli-progress", "npm:3.12.0"],\
           ["dataloader", "npm:2.2.2"],\
+          ["denque", "npm:2.1.0"],\
           ["dependency-graph", "npm:0.11.0"],\
           ["graphql", "npm:16.8.1"],\
           ["inflection", "npm:3.0.0"],\
@@ -1792,8 +1793,7 @@ const RAW_RUNTIME_STATE =
           ["publint", "npm:0.2.6"],\
           ["remeda", "npm:1.29.0"],\
           ["type-fest", "npm:4.8.3"],\
-          ["typescript", "patch:typescript@npm%3A5.3.2#optional!builtin<compat/typescript>::version=5.3.2&hash=e012d7"],\
-          ["yocto-queue", "npm:1.0.0"]\
+          ["typescript", "patch:typescript@npm%3A5.3.2#optional!builtin<compat/typescript>::version=5.3.2&hash=e012d7"]\
         ],\
         "linkType": "SOFT"\
       }]\
@@ -7465,13 +7465,6 @@ const RAW_RUNTIME_STATE =
         "packageLocation": "./.yarn/cache/yocto-queue-npm-0.1.0-c6c9a7db29-f77b3d8d00.zip/node_modules/yocto-queue/",\
         "packageDependencies": [\
           ["yocto-queue", "npm:0.1.0"]\
-        ],\
-        "linkType": "HARD"\
-      }],\
-      ["npm:1.0.0", {\
-        "packageLocation": "./.yarn/cache/yocto-queue-npm-1.0.0-7b502f1987-2cac84540f.zip/node_modules/yocto-queue/",\
-        "packageDependencies": [\
-          ["yocto-queue", "npm:1.0.0"]\
         ],\
         "linkType": "HARD"\
       }]\

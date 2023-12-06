@@ -45,7 +45,7 @@ export class MultipleReverseEdgeCountFilter
 
     if (operator === 'gt') {
       if (value === 0) {
-        return MultipleReverseEdgeExistsFilter.create(reverseEdge);
+        return new MultipleReverseEdgeExistsFilter(reverseEdge);
       }
     } else if (operator === 'lt') {
       if (value === 0) {
@@ -55,8 +55,8 @@ export class MultipleReverseEdgeCountFilter
       }
     } else if (operator === 'eq') {
       if (value === 0) {
-        return NotOperation.create(
-          MultipleReverseEdgeExistsFilter.create(reverseEdge),
+        return new NotOperation(
+          new MultipleReverseEdgeExistsFilter(reverseEdge),
         );
       }
     }

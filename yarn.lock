@@ -1185,6 +1185,7 @@ __metadata:
     "@types/node": "npm:18.19.2"
     cli-progress: "npm:^3.12.0"
     dataloader: "npm:^2.2.2"
+    denque: "npm:^2.1.0"
     dependency-graph: "npm:^0.11.0"
     graphql: "npm:16.8.1"
     inflection: "npm:^3.0.0"
@@ -1195,7 +1196,6 @@ __metadata:
     remeda: "npm:^1.29.0"
     type-fest: "npm:^4.8.3"
     typescript: "npm:5.3.2"
-    yocto-queue: "npm:^1.0.0"
   peerDependencies:
     graphql: ^16.7.0
   languageName: unknown
@@ -5889,12 +5889,5 @@ __metadata:
   version: 0.1.0
   resolution: "yocto-queue@npm:0.1.0"
   checksum: f77b3d8d00310def622123df93d4ee654fc6a0096182af8bd60679ddcdfb3474c56c6c7190817c84a2785648cdee9d721c0154eb45698c62176c322fb46fc700
-  languageName: node
-  linkType: hard
-
-"yocto-queue@npm:^1.0.0":
-  version: 1.0.0
-  resolution: "yocto-queue@npm:1.0.0"
-  checksum: 2cac84540f65c64ccc1683c267edce396b26b1e931aa429660aefac8fbe0188167b7aee815a3c22fa59a28a58d898d1a2b1825048f834d8d629f4c2a5d443801
   languageName: node
   linkType: hard

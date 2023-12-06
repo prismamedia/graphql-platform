@@ -2028,6 +2028,67 @@ describe('NodeFilterInputType', () => {
                 },
               },
             ],
+
+            [
+              'An article WITH a specified tag OR another specified tag',
+              {
+                OR: [
+                  {
+                    tags_some: {
+                      article: { _id: 5 },
+                      tag: { id: 'ef31efed-361c-449c-a561-ed94eabbf60d' },
+                    },
+                  },
+                  {
+                    tags_some: {
+                      article: { _id: 6 },
+                      tag: { id: 'ef31efed-361c-449c-a561-ed94eabbf60d' },
+                    },
+                  },
+                ],
+              },
+              {
+                kind: 'MULTIPLE_REVERSE_EDGE_EXISTS',
+                reverseEdge: 'tags',
+                headFilter: {
+                  kind: 'NODE',
+                  node: 'ArticleTag',
+                  filter: {
+                    kind: 'AND',
+                    operands: [
+                      {
+                        kind: 'EDGE_EXISTS',
+                        edge: 'tag',
+                        headFilter: {
+                          kind: 'NODE',
+                          node: 'Tag',
+                          filter: {
+                            kind: 'LEAF',
+                            leaf: 'id',
+                            operator: 'EQ',
+                            value: 'ef31efed-361c-449c-a561-ed94eabbf60d',
+                          },
+                        },
+                      },
+                      {
+                        kind: 'EDGE_EXISTS',
+                        edge: 'article',
+                        headFilter: {
+                          kind: 'NODE',
+                          node: 'Article',
+                          filter: {
+                            kind: 'LEAF',
+                            leaf: '_id',
+                            operator: 'IN',
+                            values: [5, 6],
+                          },
+                        },
+                      },
+                    ],
+                  },
+                },
+              },
+            ],
           ])('%s', (_label, input, ast) => {
             const node = gp.getNodeByName('Article');
             const filter = node.filterInputType.parseAndFilter(input).filter;
@@ -2064,19 +2125,12 @@ describe('NodeFilterInputType', () => {
             },
             {
               kind: 'OR',
-              operands: expect.arrayContaining([
+              operands: [
                 {
                   kind: 'LEAF',
                   leaf: '_id',
                   operator: 'NOT',
                   value: 20,
-                },
-                {
-                  kind: 'NOT',
-                  operand: {
-                    kind: 'EDGE_EXISTS',
-                    edge: 'category',
-                  },
                 },
                 {
                   kind: 'LEAF',
@@ -2085,22 +2139,29 @@ describe('NodeFilterInputType', () => {
                   values: ['deleted', 'draft'],
                 },
                 {
-                  kind: 'EDGE_EXISTS',
-                  edge: 'category',
-                  headFilter: {
-                    kind: 'NODE',
-                    node: 'Category',
-                    filter: {
-                      kind: 'LEAF',
-                      leaf: 'slug',
-                      operator: 'IN',
-                      values: ['news', 'tv'],
+                  kind: 'NOT',
+                  operand: {
+                    kind: 'EDGE_EXISTS',
+                    edge: 'category',
+                    headFilter: {
+                      kind: 'NODE',
+                      node: 'Category',
+                      filter: {
+                        kind: 'NOT',
+                        operand: {
+                          kind: 'LEAF',
+                          leaf: 'slug',
+                          operator: 'IN',
+                          values: ['news', 'tv'],
+                        },
+                      },
                     },
                   },
                 },
-              ]) as any,
+              ],
             },
           ],
+
           [
             'A complex "AND"',
             {
@@ -2142,6 +2203,7 @@ describe('NodeFilterInputType', () => {
               ]) as any,
             },
           ],
+
           [
             'An "IN" with lot of values',
             {
@@ -2159,6 +2221,23 @@ describe('NodeFilterInputType', () => {
           const filter = node.filterInputType.parseAndFilter(input).filter;
 
           expect(filter.ast).toEqual(ast);
+        });
+
+        it('A big disjunction', () => {
+          const node = gp.getNodeByName('ArticleTag');
+          const items = Array(1000);
+
+          expect(
+            node.filterInputType.parseAndFilter({
+              OR: Array.from(items, (_, i) => ({
+                article: { _id: i },
+                tag: { id: '0f9131ff-e615-4a7a-ab9a-57c2032aaf6c' },
+              })),
+            }).inputValue,
+          ).toEqual({
+            article: { _id_in: Array.from(items, (_, i) => i) },
+            tag: { id: '0f9131ff-e615-4a7a-ab9a-57c2032aaf6c' },
+          });
         });
       });
     });

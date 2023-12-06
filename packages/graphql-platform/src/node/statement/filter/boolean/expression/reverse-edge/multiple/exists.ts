@@ -46,7 +46,7 @@ export class MultipleReverseEdgeExistsFilter
 
   public readonly score: number;
 
-  protected constructor(
+  public constructor(
     public readonly reverseEdge: MultipleReverseEdge,
     public readonly headFilter?: NodeFilter,
   ) {
@@ -63,6 +63,10 @@ export class MultipleReverseEdgeExistsFilter
       expression.reverseEdge === this.reverseEdge &&
       areFiltersEqual(expression.headFilter, this.headFilter)
     );
+  }
+
+  public get complement(): BooleanFilter | undefined {
+    return;
   }
 
   public and(

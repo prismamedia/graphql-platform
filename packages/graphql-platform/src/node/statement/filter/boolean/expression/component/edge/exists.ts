@@ -52,14 +52,11 @@ export class EdgeExistsFilter implements BooleanExpressionInterface {
 
   @Memoize()
   public get complement(): BooleanFilter | undefined {
-    return this.headFilter?.filter
-      ? new OrOperation(
-          [
-            new NotOperation(new EdgeExistsFilter(this.edge)),
-            new EdgeExistsFilter(this.edge, this.headFilter.complement),
-          ],
-          this,
-        )
+    return this.headFilter
+      ? new OrOperation([
+          new NotOperation(new EdgeExistsFilter(this.edge)),
+          new EdgeExistsFilter(this.edge, this.headFilter.complement),
+        ])
       : undefined;
   }
 

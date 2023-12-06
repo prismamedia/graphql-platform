@@ -1,3 +1,4 @@
+import Denque from 'denque';
 import type { NodeSelectedValue, NodeValue } from '../../../../../node.js';
 import type { NodeChange, NodeUpdate } from '../../../../change.js';
 import type { NodeFilterInputValue } from '../../../../type.js';
@@ -22,36 +23,84 @@ export class OrOperation implements BooleanExpressionInterface {
   protected static reducers(
     remainingReducers: number,
   ): Array<(a: OrOperand, b: OrOperand) => BooleanFilter | undefined> {
-    return [
-      // Idempotent law: A + A = A
-      (a: OrOperand, b: OrOperand) => (a.equals(b) ? a : undefined),
-      // Deeper optimizations
-      ...(remainingReducers
-        ? [
-            (a: OrOperand, b: OrOperand) => a.or(b, remainingReducers - 1),
-            (a: OrOperand, b: OrOperand) => b.or(a, remainingReducers - 1),
-            // Complement law: A + (NOT A) = 1
-            (a: OrOperand, b: OrOperand) =>
-              ('complement' in a && a.complement?.equals(b)) ||
-              ('complement' in b && b.complement?.equals(a))
-                ? TrueValue
-                : undefined,
-            // De Morgan's law: (NOT A) + (NOT B) = NOT (A . B)
-            (a: OrOperand, b: OrOperand) =>
-              'complement' in a &&
-              a.complement &&
-              'complement' in b &&
-              b.complement
-                ? NotOperation.create(
-                    AndOperation.create(
-                      [a.complement, b.complement],
+    return remainingReducers
+      ? [
+          // Idempotent law: A + A = A
+          (a: OrOperand, b: OrOperand) => (a.equals(b) ? a : undefined),
+          // Custom disjunctions
+          (a: OrOperand, b: OrOperand) => a.or(b, remainingReducers - 1),
+          (a: OrOperand, b: OrOperand) => b.or(a, remainingReducers - 1),
+          // Distributive law: (A . B) + (A . C) = A . (B + C)
+          (a: OrOperand, b: OrOperand) => {
+            if (a instanceof AndOperation && b instanceof AndOperation) {
+              const commonOperand = a.operands.find((operand) =>
+                b.has(operand),
+              );
+
+              if (commonOperand) {
+                return AndOperation.create(
+                  [
+                    commonOperand,
+                    OrOperation.create(
+                      [
+                        AndOperation.create(
+                          a.operands.filter(
+                            (operand) => !operand.equals(commonOperand),
+                          ),
+                          0,
+                        ),
+                        AndOperation.create(
+                          b.operands.filter(
+                            (operand) => !operand.equals(commonOperand),
+                          ),
+                          0,
+                        ),
+                      ],
                       remainingReducers - 1,
                     ),
-                  )
-                : undefined,
-          ]
-        : []),
-    ];
+                  ],
+                  remainingReducers - 1,
+                );
+              }
+            }
+          },
+          // Distributive law: (A . B) + C = (A + C) . (B + C)
+          (a: OrOperand, b: OrOperand) =>
+            a instanceof AndOperation
+              ? AndOperation.create(
+                  a.operands.map((aOperand) =>
+                    OrOperation.create([aOperand, b], remainingReducers - 1),
+                  ),
+                  remainingReducers - 1,
+                )
+              : undefined,
+          // Distributive law: A + (B . C) = (A + B) . (A + C)
+          (a: OrOperand, b: OrOperand) =>
+            b instanceof AndOperation
+              ? AndOperation.create(
+                  b.operands.map((bOperand) =>
+                    OrOperation.create([a, bOperand], remainingReducers - 1),
+                  ),
+                  remainingReducers - 1,
+                )
+              : undefined,
+          // Complement law: A + (NOT A) = 1
+          (a: OrOperand, b: OrOperand) =>
+            a.complement?.equals(b) || b.complement?.equals(a)
+              ? TrueValue
+              : undefined,
+          // De Morgan's law: (NOT A) + (NOT B) = NOT (A . B)
+          (a: OrOperand, b: OrOperand) =>
+            a.complement && b.complement
+              ? NotOperation.create(
+                  AndOperation.create(
+                    [a.complement, b.complement],
+                    remainingReducers - 1,
+                  ),
+                )
+              : undefined,
+        ]
+      : [];
   }
 
   /**
@@ -60,12 +109,12 @@ export class OrOperation implements BooleanExpressionInterface {
    * @see https://en.wikipedia.org/wiki/Logical_disjunction
    */
   public static create(
-    maybeOperands: ReadonlyArray<BooleanFilter | null | undefined>,
-    remainingReducers: number = 2,
+    maybeOperands: Array<BooleanFilter | null | undefined>,
+    remainingReducers: number = 5,
   ): BooleanFilter {
     const operands: OrOperand[] = [];
 
-    const queue = Array.from(maybeOperands);
+    const queue = new Denque(maybeOperands);
     const reducers = this.reducers(remainingReducers);
 
     while (queue.length) {
@@ -89,7 +138,7 @@ export class OrOperation implements BooleanExpressionInterface {
         }
       } else if (operand instanceof OrOperation) {
         // Associative law: A + (B + C) = A + B + C
-        queue.unshift(...operand.operands);
+        queue.splice(0, 0, ...operand.operands);
       } else if (
         !reducers.length ||
         !operands.some((previousOperand, index) =>
@@ -126,10 +175,7 @@ export class OrOperation implements BooleanExpressionInterface {
   public readonly key: string;
   public readonly score: number;
 
-  public constructor(
-    public readonly operands: ReadonlyArray<OrOperand>,
-    public readonly complement?: BooleanFilter,
-  ) {
+  public constructor(public readonly operands: ReadonlyArray<OrOperand>) {
     this.key = (this.constructor as typeof OrOperation).key;
     this.score = 1 + operands.reduce((total, { score }) => total + score, 0);
   }
@@ -146,22 +192,18 @@ export class OrOperation implements BooleanExpressionInterface {
     );
   }
 
+  public get complement(): BooleanFilter | undefined {
+    return;
+  }
+
   public and(
     operand: AndOperand,
-    remainingReducers: number,
+    _remainingReducers: number,
   ): BooleanFilter | undefined {
     // Absorption law: (A + B) . A = A
     if (this.has(operand)) {
       return operand;
     }
-
-    // Distributive law: (A + B) . C = (A . C) + (B . C)
-    return OrOperation.create(
-      this.operands.map((a) =>
-        AndOperation.create([a, operand], remainingReducers),
-      ),
-      remainingReducers,
-    );
   }
 
   public execute(value: NodeSelectedValue): boolean | undefined {

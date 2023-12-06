@@ -51,6 +51,10 @@ export class LeafFullTextFilter implements BooleanExpressionInterface {
     );
   }
 
+  public get complement(): undefined {
+    return;
+  }
+
   public and(
     _operand: AndOperand,
     _remainingReducers: number,

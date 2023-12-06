@@ -21,7 +21,7 @@ export interface BooleanExpressionInterface {
    *
    * @see https://en.wikipedia.org/wiki/Negation
    */
-  readonly complement?: BooleanFilter | undefined;
+  readonly complement: BooleanFilter | undefined;
 
   /**
    * Reduce the conjunction of this expression with the provided operand, if possible

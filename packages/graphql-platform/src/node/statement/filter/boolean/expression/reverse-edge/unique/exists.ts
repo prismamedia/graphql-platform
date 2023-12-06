@@ -65,18 +65,13 @@ export class UniqueReverseEdgeExistsFilter
   @Memoize()
   public get complement(): BooleanFilter | undefined {
     return this.headFilter
-      ? new OrOperation(
-          [
-            new NotOperation(
-              new UniqueReverseEdgeExistsFilter(this.reverseEdge),
-            ),
-            new UniqueReverseEdgeExistsFilter(
-              this.reverseEdge,
-              this.headFilter.complement,
-            ),
-          ],
-          this,
-        )
+      ? new OrOperation([
+          new NotOperation(new UniqueReverseEdgeExistsFilter(this.reverseEdge)),
+          new UniqueReverseEdgeExistsFilter(
+            this.reverseEdge,
+            this.headFilter.complement,
+          ),
+        ])
       : undefined;
   }
 

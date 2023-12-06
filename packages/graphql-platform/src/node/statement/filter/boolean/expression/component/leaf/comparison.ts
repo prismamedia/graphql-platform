@@ -42,13 +42,11 @@ export class LeafComparisonFilter implements BooleanExpressionInterface {
 
   public readonly component: Component;
   public readonly score: number;
-  readonly #complement?: LeafComparisonFilter;
 
   public constructor(
     public readonly leaf: Leaf,
     public readonly operator: 'eq' | 'not' | 'gt' | 'gte' | 'lt' | 'lte',
     public readonly value: LeafValue,
-    complement?: LeafComparisonFilter,
   ) {
     assert.notEqual(value, undefined);
     leaf.isNullable() || assert.notEqual(value, null);
@@ -62,8 +60,6 @@ export class LeafComparisonFilter implements BooleanExpressionInterface {
 
     this.component = leaf;
     this.score = 2;
-
-    this.#complement = complement;
   }
 
   public equals(expression: unknown): boolean {
@@ -93,20 +89,17 @@ export class LeafComparisonFilter implements BooleanExpressionInterface {
 
   @Memoize()
   public get complement(): LeafComparisonFilter {
-    return (
-      this.#complement ??
-      (this.operator === 'eq'
-        ? new LeafComparisonFilter(this.leaf, 'not', this.value, this)
-        : this.operator === 'not'
-        ? new LeafComparisonFilter(this.leaf, 'eq', this.value, this)
-        : this.operator === 'gt'
-        ? new LeafComparisonFilter(this.leaf, 'lte', this.value, this)
-        : this.operator === 'gte'
-        ? new LeafComparisonFilter(this.leaf, 'lt', this.value, this)
-        : this.operator === 'lt'
-        ? new LeafComparisonFilter(this.leaf, 'gte', this.value, this)
-        : new LeafComparisonFilter(this.leaf, 'gt', this.value, this))
-    );
+    return this.operator === 'eq'
+      ? new LeafComparisonFilter(this.leaf, 'not', this.value)
+      : this.operator === 'not'
+      ? new LeafComparisonFilter(this.leaf, 'eq', this.value)
+      : this.operator === 'gt'
+      ? new LeafComparisonFilter(this.leaf, 'lte', this.value)
+      : this.operator === 'gte'
+      ? new LeafComparisonFilter(this.leaf, 'lt', this.value)
+      : this.operator === 'lt'
+      ? new LeafComparisonFilter(this.leaf, 'gte', this.value)
+      : new LeafComparisonFilter(this.leaf, 'gt', this.value);
   }
 
   public and(
