@@ -24,6 +24,8 @@ export class NotOperation implements BooleanExpressionInterface {
   public static create(operand: BooleanFilter): BooleanFilter {
     return operand instanceof BooleanValue || operand instanceof NotOperation
       ? operand.complement
+      : operand.complement && operand.complement.score < 1 + operand.score
+      ? operand.complement
       : new this(operand);
   }
 

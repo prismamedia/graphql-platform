@@ -2152,7 +2152,7 @@ describe('NodeFilterInputType', () => {
                           kind: 'LEAF',
                           leaf: 'slug',
                           operator: 'IN',
-                          values: ['news', 'tv'],
+                          values: ['tv', 'news'],
                         },
                       },
                     },
@@ -2221,6 +2221,22 @@ describe('NodeFilterInputType', () => {
           const filter = node.filterInputType.parseAndFilter(input).filter;
 
           expect(filter.ast).toEqual(ast);
+        });
+
+        it('A big conjunction', () => {
+          const node = gp.getNodeByName('ArticleTag');
+          const items = Array(1000);
+
+          expect(
+            node.filterInputType.parseAndFilter({
+              AND: Array.from(items, (_, i) => ({
+                OR: [
+                  { article: { _id: i } },
+                  { tag: { id: '0f9131ff-e615-4a7a-ab9a-57c2032aaf6c' } },
+                ],
+              })),
+            }).inputValue,
+          ).toEqual({ tag: { id: '0f9131ff-e615-4a7a-ab9a-57c2032aaf6c' } });
         });
 
         it('A big disjunction', () => {

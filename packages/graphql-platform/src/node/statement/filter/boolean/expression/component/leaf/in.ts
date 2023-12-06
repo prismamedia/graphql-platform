@@ -1,7 +1,7 @@
 import { Memoize } from '@prismamedia/memoize';
 import assert from 'node:assert/strict';
 import * as R from 'remeda';
-import { NodeValue } from '../../../../../../../node.js';
+import type { NodeValue } from '../../../../../../../node.js';
 import type { NodeChange, NodeUpdate } from '../../../../../../change.js';
 import type {
   Component,
@@ -10,7 +10,7 @@ import type {
 } from '../../../../../../definition.js';
 import type { NodeFilterInputValue } from '../../../../../../type.js';
 import type { NodeSelectedValue } from '../../../../../selection.js';
-import { AndOperation, BooleanFilter } from '../../../../boolean.js';
+import type { BooleanFilter } from '../../../../boolean.js';
 import type { BooleanExpressionInterface } from '../../../expression-interface.js';
 import type { AndOperand } from '../../../operation/and.js';
 import { OrOperation, type OrOperand } from '../../../operation/or.js';
@@ -48,6 +48,7 @@ export class LeafInFilter implements BooleanExpressionInterface {
 
   public readonly component: Component;
   public readonly score: number;
+  public readonly complement: undefined;
 
   protected constructor(
     public readonly leaf: Leaf,
@@ -80,12 +81,6 @@ export class LeafInFilter implements BooleanExpressionInterface {
     return this.values.map(
       (value) => new LeafComparisonFilter(this.leaf, 'eq', value),
     );
-  }
-
-  @Memoize()
-  public get complement(): BooleanFilter {
-    // De Morgan's law: NOT (A + B) = (NOT A) . (NOT B)
-    return new AndOperation(this.operands.map((operand) => operand.complement));
   }
 
   public and(

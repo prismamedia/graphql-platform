@@ -206,9 +206,7 @@ export class DeleteManyMutation<
       () =>
         this.connector.delete(context, {
           node: this.node,
-          filter: this.node.filterInputType.filter({
-            OR: currentIds,
-          }),
+          filter: this.node.filterInputType.filter({ OR: currentIds }),
         }),
       this.node,
       ConnectorOperationKind.DELETE,

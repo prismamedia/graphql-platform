@@ -30,60 +30,6 @@ export class OrOperation implements BooleanExpressionInterface {
           // Custom disjunctions
           (a: OrOperand, b: OrOperand) => a.or(b, remainingReducers - 1),
           (a: OrOperand, b: OrOperand) => b.or(a, remainingReducers - 1),
-          // Distributive law: (A . B) + (A . C) = A . (B + C)
-          (a: OrOperand, b: OrOperand) => {
-            if (a instanceof AndOperation && b instanceof AndOperation) {
-              const commonOperand = a.operands.find((operand) =>
-                b.has(operand),
-              );
-
-              if (commonOperand) {
-                return AndOperation.create(
-                  [
-                    commonOperand,
-                    OrOperation.create(
-                      [
-                        AndOperation.create(
-                          a.operands.filter(
-                            (operand) => !operand.equals(commonOperand),
-                          ),
-                          0,
-                        ),
-                        AndOperation.create(
-                          b.operands.filter(
-                            (operand) => !operand.equals(commonOperand),
-                          ),
-                          0,
-                        ),
-                      ],
-                      remainingReducers - 1,
-                    ),
-                  ],
-                  remainingReducers - 1,
-                );
-              }
-            }
-          },
-          // Distributive law: (A . B) + C = (A + C) . (B + C)
-          (a: OrOperand, b: OrOperand) =>
-            a instanceof AndOperation
-              ? AndOperation.create(
-                  a.operands.map((aOperand) =>
-                    OrOperation.create([aOperand, b], remainingReducers - 1),
-                  ),
-                  remainingReducers - 1,
-                )
-              : undefined,
-          // Distributive law: A + (B . C) = (A + B) . (A + C)
-          (a: OrOperand, b: OrOperand) =>
-            b instanceof AndOperation
-              ? AndOperation.create(
-                  b.operands.map((bOperand) =>
-                    OrOperation.create([a, bOperand], remainingReducers - 1),
-                  ),
-                  remainingReducers - 1,
-                )
-              : undefined,
           // Complement law: A + (NOT A) = 1
           (a: OrOperand, b: OrOperand) =>
             a.complement?.equals(b) || b.complement?.equals(a)
@@ -141,7 +87,7 @@ export class OrOperation implements BooleanExpressionInterface {
         queue.splice(0, 0, ...operand.operands);
       } else if (
         !reducers.length ||
-        !operands.some((previousOperand, index) =>
+        !operands.some((previousOperand, previousOperandIndex) =>
           reducers.some((reducer) => {
             const disjunction = reducer(previousOperand, operand);
             if (
@@ -149,7 +95,7 @@ export class OrOperation implements BooleanExpressionInterface {
               disjunction.score < 1 + previousOperand.score + operand.score
             ) {
               if (previousOperand !== disjunction) {
-                operands.splice(index, 1);
+                operands.splice(previousOperandIndex, 1);
                 queue.unshift(disjunction);
               }
 
@@ -174,6 +120,7 @@ export class OrOperation implements BooleanExpressionInterface {
 
   public readonly key: string;
   public readonly score: number;
+  public readonly complement: undefined;
 
   public constructor(public readonly operands: ReadonlyArray<OrOperand>) {
     this.key = (this.constructor as typeof OrOperation).key;
@@ -192,18 +139,70 @@ export class OrOperation implements BooleanExpressionInterface {
     );
   }
 
-  public get complement(): BooleanFilter | undefined {
-    return;
-  }
-
   public and(
     operand: AndOperand,
-    _remainingReducers: number,
+    remainingReducers: number,
   ): BooleanFilter | undefined {
+    // Distributive law: (A + B) . (A + C) = A + (B . C)
+    if (operand instanceof OrOperation) {
+      let thisCommonOperandIndex: number | undefined;
+      let otherCommonOperandIndex: number | undefined;
+
+      const commonOperand = this.operands.find(
+        (thisOperand, thisOperandIndex) =>
+          operand.operands.some((otherOperand, otherOperandIndex) => {
+            if (thisOperand.equals(otherOperand)) {
+              thisCommonOperandIndex = thisOperandIndex;
+              otherCommonOperandIndex = otherOperandIndex;
+
+              return true;
+            }
+
+            return false;
+          }),
+      );
+
+      if (commonOperand) {
+        const thisOperands = this.operands.filter(
+          (_, index) => index !== thisCommonOperandIndex!,
+        );
+
+        const otherOperands = operand.operands.filter(
+          (_, index) => index !== otherCommonOperandIndex!,
+        );
+
+        return OrOperation.create(
+          [
+            commonOperand,
+            AndOperation.create(
+              [
+                thisOperands.length === 1
+                  ? thisOperands[0]
+                  : new OrOperation(thisOperands),
+                otherOperands.length === 1
+                  ? otherOperands[0]
+                  : new OrOperation(otherOperands),
+              ],
+              remainingReducers,
+            ),
+          ],
+          remainingReducers,
+        );
+      }
+    }
+
     // Absorption law: (A + B) . A = A
     if (this.has(operand)) {
       return operand;
     }
+
+    // Distributive law: (A + B) . C = (A . C) + (B . C)
+    return OrOperation.create(
+      this.operands.map((thisOperand) =>
+        AndOperation.create([thisOperand, operand], remainingReducers),
+      ),
+      remainingReducers,
+    );
   }
 
   public execute(value: NodeSelectedValue): boolean | undefined {
