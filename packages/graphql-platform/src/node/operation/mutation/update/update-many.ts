@@ -243,7 +243,7 @@ export class UpdateManyMutation<
 
           if (!change.isEmpty()) {
             // Let's everybody know about the update, if any
-            context.appendChange(change);
+            context.changes.push(change);
 
             changes.push(change);
           }

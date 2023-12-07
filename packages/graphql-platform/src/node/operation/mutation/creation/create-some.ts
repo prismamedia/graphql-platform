@@ -127,7 +127,7 @@ export class CreateSomeMutation<
         const change = new NodeCreation(this.node, context.request, newValue);
 
         // Let's everybody know about this created node
-        context.appendChange(change);
+        context.changes.push(change);
 
         // The "data" has been frozen above
         const data = args.data[index];

@@ -18,6 +18,7 @@ import {
   InvalidRequestContextError,
   MutationContext,
   Node,
+  NodeChangeAggregation,
   catchConnectorWorkflowError,
   createAPI,
   createContextBoundAPI,
@@ -25,7 +26,6 @@ import {
   type API,
   type ContextBoundAPI,
   type NodeChange,
-  type NodeChangeAggregation,
   type NodeConfig,
   type NodeName,
   type Operation,
@@ -657,7 +657,7 @@ export class GraphQLPlatform<
     {
       mutationContext.commitChanges();
 
-      const aggregation = mutationContext.aggregateChanges();
+      const aggregation = new NodeChangeAggregation(mutationContext.changes);
 
       if (aggregation.size) {
         await Promise.all([
