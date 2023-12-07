@@ -15,7 +15,7 @@
     "format": "prettier --cache --write .",
     "compile": "tsc --build",
     "compile:watch": "yarn run compile --watch",
-    "test": "yarn node --expose-gc --no-warnings --experimental-vm-modules $(yarn bin jest) --detectOpenHandles --logHeapUsage",
+    "test": "yarn node --no-warnings --experimental-vm-modules $(yarn bin jest) --detectOpenHandles",
     "test:watch": "yarn run test --watchAll"
   },
   "devDependencies": {

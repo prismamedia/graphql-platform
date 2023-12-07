@@ -5,7 +5,7 @@ import {
 import * as utils from '@prismamedia/graphql-platform-utils';
 import { Memoize } from '@prismamedia/memoize';
 import * as graphql from 'graphql';
-import type { Except, IfAny } from 'type-fest';
+import type { Except, IfAny, Promisable } from 'type-fest';
 import type { BrokerInterface } from './broker-interface.js';
 import { InMemoryBroker } from './broker/in-memory.js';
 import type { ConnectorInterface } from './connector-interface.js';
@@ -14,8 +14,11 @@ import {
   type CustomOperationsByNameByTypeConfig,
 } from './custom-operations.js';
 import {
+  ConnectorWorkflowKind,
   InvalidRequestContextError,
+  MutationContext,
   Node,
+  catchConnectorWorkflowError,
   createAPI,
   createContextBoundAPI,
   operationConstructorsByType,
@@ -600,5 +603,76 @@ export class GraphQLPlatform<
       | OperationContext<TRequestContext>,
   ): ContextBoundAPI {
     return createContextBoundAPI(this, context);
+  }
+
+  /**
+   * Given a request-context, will execute the task in a mutation-context then handle the node-changes at the end in case of success
+   */
+  public async withMutationContext<TResult>(
+    requestContext: TRequestContext,
+    task: (
+      mutationContext: MutationContext<TRequestContext>,
+    ) => Promisable<TResult>,
+    path?: utils.Path,
+  ): Promise<TResult> {
+    this.assertRequestContext(requestContext, path);
+
+    const mutationContext = new MutationContext(this, requestContext);
+
+    await catchConnectorWorkflowError(
+      () => this.connector.preMutation?.(mutationContext),
+      ConnectorWorkflowKind.PRE_MUTATION,
+      { path },
+    );
+
+    let result: TResult;
+
+    try {
+      result = await task(mutationContext);
+
+      await catchConnectorWorkflowError(
+        () => this.connector.postSuccessfulMutation?.(mutationContext),
+        ConnectorWorkflowKind.POST_SUCCESSFUL_MUTATION,
+        { path },
+      );
+    } catch (rawError) {
+      const error = utils.castToError(rawError);
+
+      await catchConnectorWorkflowError(
+        () => this.connector.postFailedMutation?.(mutationContext, error),
+        ConnectorWorkflowKind.POST_FAILED_MUTATION,
+        { path },
+      );
+
+      throw error;
+    } finally {
+      await catchConnectorWorkflowError(
+        () => this.connector.postMutation?.(mutationContext),
+        ConnectorWorkflowKind.POST_MUTATION,
+        { path },
+      );
+    }
+
+    // changes
+    {
+      mutationContext.commitChanges();
+
+      const aggregation = mutationContext.aggregateChanges();
+
+      if (aggregation.size) {
+        await Promise.all([
+          this.emit('node-change-aggregation', aggregation),
+          this.eventListenerCount('node-change')
+            ? Promise.all(
+                Array.from(aggregation, (change) =>
+                  this.emit('node-change', change),
+                ),
+              )
+            : undefined,
+        ]);
+      }
+    }
+
+    return result;
   }
 }

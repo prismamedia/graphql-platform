@@ -208,27 +208,27 @@ export class MariaDBConnector
   }
 
   public async withConnection<TResult = unknown>(
-    callback: (connection: mariadb.Connection) => Promise<TResult>,
+    task: (connection: mariadb.Connection) => Promise<TResult>,
     kind?: StatementKind,
   ): Promise<TResult> {
     const pool = this.getPool(kind);
     const connection = await pool.getConnection();
     try {
-      return await callback(connection);
+      return await task(connection);
     } finally {
       await connection.release();
     }
   }
 
   public async withConnectionInTransaction<TResult = unknown>(
-    callback: (connection: mariadb.Connection) => Promise<TResult>,
+    task: (connection: mariadb.Connection) => Promise<TResult>,
     kind?: StatementKind,
   ): Promise<TResult> {
     return this.withConnection(async (connection) => {
       try {
         await connection.beginTransaction();
 
-        const result = await callback(connection);
+        const result = await task(connection);
 
         await connection.commit();
 

@@ -2225,7 +2225,7 @@ describe('NodeFilterInputType', () => {
 
         it('A big conjunction', () => {
           const node = gp.getNodeByName('ArticleTag');
-          const items = Array(1000);
+          const items = Array(2500);
 
           expect(
             node.filterInputType.parseAndFilter({
@@ -2241,18 +2241,37 @@ describe('NodeFilterInputType', () => {
 
         it('A big disjunction', () => {
           const node = gp.getNodeByName('ArticleTag');
-          const items = Array(1000);
+          const items = Array(2500);
 
           expect(
             node.filterInputType.parseAndFilter({
               OR: Array.from(items, (_, i) => ({
                 article: { _id: i },
-                tag: { id: '0f9131ff-e615-4a7a-ab9a-57c2032aaf6c' },
+                tag: {
+                  id:
+                    i % 2
+                      ? '4085cf1e-188a-44c9-b053-1ffaa838eb16'
+                      : '0f9131ff-e615-4a7a-ab9a-57c2032aaf6c',
+                },
               })),
             }).inputValue,
           ).toEqual({
-            article: { _id_in: Array.from(items, (_, i) => i) },
-            tag: { id: '0f9131ff-e615-4a7a-ab9a-57c2032aaf6c' },
+            OR: [
+              {
+                article: {
+                  _id_in: Array.from(items, (_, i) => i).filter(
+                    (i) => !(i % 2),
+                  ),
+                },
+                tag: { id: '0f9131ff-e615-4a7a-ab9a-57c2032aaf6c' },
+              },
+              {
+                article: {
+                  _id_in: Array.from(items, (_, i) => i).filter((i) => i % 2),
+                },
+                tag: { id: '4085cf1e-188a-44c9-b053-1ffaa838eb16' },
+              },
+            ],
           });
         });
       });

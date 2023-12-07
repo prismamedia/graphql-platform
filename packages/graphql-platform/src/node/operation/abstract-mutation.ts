@@ -9,7 +9,6 @@ import type { Node } from '../../node.js';
 import { AbstractOperation } from '../abstract-operation.js';
 import { AndOperation, NodeFilter } from '../statement/filter.js';
 import type { ContextBoundAPI } from './api.js';
-import { ConnectorWorkflowKind, catchConnectorWorkflowError } from './error.js';
 import { MutationContext } from './mutation/context.js';
 import type { MutationInterface } from './mutation/interface.js';
 
@@ -128,80 +127,13 @@ export abstract class AbstractMutation<
       this.name,
     ),
   ): Promise<TResult> {
-    if (context instanceof MutationContext) {
-      return super.execute(context, args, path);
-    }
-
-    this.assertIsEnabled(path);
-
-    this.gp.assertRequestContext(context, path);
-
-    const mutationContext = new MutationContext(this.gp, context);
-
-    const authorization = this.ensureAuthorization(mutationContext, path);
-
-    const parsedArguments = this.parseArguments(mutationContext, args, path);
-
-    await catchConnectorWorkflowError(
-      () => this.connector.preMutation?.(mutationContext),
-      ConnectorWorkflowKind.PRE_MUTATION,
-      { path },
-    );
-
-    let result: TResult;
-
-    try {
-      result = await this.executeWithValidArgumentsAndContext(
-        mutationContext,
-        authorization,
-        parsedArguments,
-        path,
-      );
-
-      await catchConnectorWorkflowError(
-        () => this.connector.postSuccessfulMutation?.(mutationContext),
-        ConnectorWorkflowKind.POST_SUCCESSFUL_MUTATION,
-        { path },
-      );
-
-      mutationContext.commitChanges();
-    } catch (rawError) {
-      const error = utils.castToError(rawError);
-
-      await catchConnectorWorkflowError(
-        () => this.connector.postFailedMutation?.(mutationContext, error),
-        ConnectorWorkflowKind.POST_FAILED_MUTATION,
-        { path },
-      );
-
-      throw error;
-    } finally {
-      await catchConnectorWorkflowError(
-        () => this.connector.postMutation?.(mutationContext),
-        ConnectorWorkflowKind.POST_MUTATION,
-        { path },
-      );
-    }
-
-    // changes
-    {
-      const aggregation = mutationContext.aggregateChanges();
-
-      if (aggregation.size) {
-        await Promise.all([
-          this.gp.emit('node-change-aggregation', aggregation),
-          this.gp.eventListenerCount('node-change')
-            ? Promise.all(
-                Array.from(aggregation, (change) =>
-                  this.gp.emit('node-change', change),
-                ),
-              )
-            : undefined,
-        ]);
-      }
-    }
-
-    return result;
+    return context instanceof MutationContext
+      ? super.execute(context, args, path)
+      : this.gp.withMutationContext(
+          context,
+          (context) => super.execute(context, args, path),
+          path,
+        );
   }
 
   protected getGraphQLFieldConfigSubscriber(): graphql.GraphQLFieldConfig<

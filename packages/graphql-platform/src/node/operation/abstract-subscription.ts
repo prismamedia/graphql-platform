@@ -50,31 +50,6 @@ export abstract class AbstractSubscription<
     return super.isPublic() && this.gp.subscriptionConfig.public;
   }
 
-  public execute(
-    context: TRequestContext | OperationContext<TRequestContext>,
-    args: TArgs,
-    path: utils.Path = utils.addPath(
-      utils.addPath(undefined, this.operationType),
-      this.name,
-    ),
-  ): TResult {
-    this.assertIsEnabled(path);
-
-    let operationContext: OperationContext;
-
-    if (context instanceof OperationContext) {
-      operationContext = context;
-    } else {
-      this.gp.assertRequestContext(context, path);
-
-      operationContext = new OperationContext(this.gp, context);
-    }
-
-    const authorization = this.ensureAuthorization(operationContext, path);
-
-    return this.internal(operationContext, authorization, args, path);
-  }
-
   protected getGraphQLFieldConfigSubscriber(): NonNullable<
     graphql.GraphQLFieldConfig<
       undefined,
@@ -82,9 +57,9 @@ export abstract class AbstractSubscription<
       Omit<TArgs, 'selection'>
     >['subscribe']
   > {
-    return async (_, args, context, info) => {
+    return (_, args, context, info) => {
       try {
-        return await this.execute(
+        return this.execute(
           context,
           (this.selectionAware ? { ...args, selection: info } : args) as TArgs,
           info.path,

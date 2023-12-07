@@ -9,6 +9,7 @@ import { BooleanValue, FalseValue, TrueValue } from '../value.js';
 import { NotOperation } from './not.js';
 import { OrOperation, type OrOperand } from './or.js';
 
+export type RawAndOperand = BooleanFilter | null | undefined;
 export type AndOperand = BooleanExpression | OrOperation | NotOperation;
 
 export interface AndOperationAST {
@@ -21,6 +22,7 @@ export class AndOperation implements BooleanExpressionInterface {
 
   protected static reducers(
     remainingReducers: number,
+    queue: Denque<RawAndOperand>,
   ): Array<(a: AndOperand, b: AndOperand) => BooleanFilter | undefined> {
     return remainingReducers
       ? [
@@ -54,23 +56,23 @@ export class AndOperation implements BooleanExpressionInterface {
    * @see https://en.wikipedia.org/wiki/Logical_conjunction
    */
   public static create(
-    maybeOperands: Array<BooleanFilter | null | undefined>,
+    rawOperands: Array<RawAndOperand>,
     remainingReducers: number = 5,
   ): BooleanFilter {
     const operands: AndOperand[] = [];
 
-    const queue = new Denque(maybeOperands);
-    const reducers = this.reducers(remainingReducers);
+    const queue = new Denque(rawOperands);
+    const reducers = this.reducers(remainingReducers, queue);
 
     while (queue.length) {
-      const maybeOperand = queue.shift();
+      const rawOperand = queue.shift();
 
       const operand =
-        maybeOperand === undefined
+        rawOperand === undefined
           ? TrueValue
-          : maybeOperand === null
+          : rawOperand === null
           ? FalseValue
-          : maybeOperand;
+          : rawOperand;
 
       // Reduce recursively
       if (operand instanceof BooleanValue) {
@@ -88,14 +90,22 @@ export class AndOperation implements BooleanExpressionInterface {
         !reducers.length ||
         !operands.some((previousOperand, previousOperandIndex) =>
           reducers.some((reducer) => {
-            const conjunction = reducer(previousOperand, operand);
+            const reduction = reducer(previousOperand, operand);
             if (
-              conjunction &&
-              conjunction.score < 1 + previousOperand.score + operand.score
+              reduction &&
+              reduction.score < 1 + previousOperand.score + operand.score
             ) {
-              if (previousOperand !== conjunction) {
+              if (reduction !== previousOperand) {
                 operands.splice(previousOperandIndex, 1);
-                queue.unshift(conjunction);
+
+                if (
+                  reduction instanceof BooleanValue ||
+                  reduction instanceof AndOperation
+                ) {
+                  queue.unshift(reduction);
+                } else {
+                  operands.push(reduction);
+                }
               }
 
               return true;

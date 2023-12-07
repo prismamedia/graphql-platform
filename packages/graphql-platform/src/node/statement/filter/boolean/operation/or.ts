@@ -10,6 +10,7 @@ import { BooleanValue, FalseValue, TrueValue } from '../value.js';
 import { AndOperation, type AndOperand } from './and.js';
 import { NotOperation } from './not.js';
 
+export type RawOrOperand = BooleanFilter | null | undefined;
 export type OrOperand = BooleanExpression | AndOperation | NotOperation;
 
 export interface OrOperationAST {
@@ -22,6 +23,7 @@ export class OrOperation implements BooleanExpressionInterface {
 
   protected static reducers(
     remainingReducers: number,
+    queue: Denque<RawOrOperand>,
   ): Array<(a: OrOperand, b: OrOperand) => BooleanFilter | undefined> {
     return remainingReducers
       ? [
@@ -55,23 +57,23 @@ export class OrOperation implements BooleanExpressionInterface {
    * @see https://en.wikipedia.org/wiki/Logical_disjunction
    */
   public static create(
-    maybeOperands: Array<BooleanFilter | null | undefined>,
+    rawOperands: Array<RawOrOperand>,
     remainingReducers: number = 5,
   ): BooleanFilter {
     const operands: OrOperand[] = [];
 
-    const queue = new Denque(maybeOperands);
-    const reducers = this.reducers(remainingReducers);
+    const queue = new Denque(rawOperands);
+    const reducers = this.reducers(remainingReducers, queue);
 
     while (queue.length) {
-      const maybeOperand = queue.shift();
+      const rawOperand = queue.shift();
 
       const operand =
-        maybeOperand === undefined
+        rawOperand === undefined
           ? TrueValue
-          : maybeOperand === null
+          : rawOperand === null
           ? FalseValue
-          : maybeOperand;
+          : rawOperand;
 
       // Reduce recursively
       if (operand instanceof BooleanValue) {
@@ -80,7 +82,7 @@ export class OrOperation implements BooleanExpressionInterface {
           return operand;
         } else {
           // Identity law: A + 0 = A
-          continue;
+          // Do not keep
         }
       } else if (operand instanceof OrOperation) {
         // Associative law: A + (B + C) = A + B + C
@@ -89,14 +91,22 @@ export class OrOperation implements BooleanExpressionInterface {
         !reducers.length ||
         !operands.some((previousOperand, previousOperandIndex) =>
           reducers.some((reducer) => {
-            const disjunction = reducer(previousOperand, operand);
+            const reduction = reducer(previousOperand, operand);
             if (
-              disjunction &&
-              disjunction.score < 1 + previousOperand.score + operand.score
+              reduction &&
+              reduction.score < 1 + previousOperand.score + operand.score
             ) {
-              if (previousOperand !== disjunction) {
+              if (reduction !== previousOperand) {
                 operands.splice(previousOperandIndex, 1);
-                queue.unshift(disjunction);
+
+                if (
+                  reduction instanceof BooleanValue ||
+                  reduction instanceof OrOperation
+                ) {
+                  queue.unshift(reduction);
+                } else {
+                  operands.push(reduction);
+                }
               }
 
               return true;
