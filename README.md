@@ -6,7 +6,7 @@
 
 _Requirements_
 
-- NodeJS >=18.12
+- NodeJS >=20.10
 - GraphQL >=16
 
 ## Installation

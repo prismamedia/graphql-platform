@@ -19,11 +19,11 @@ jobs:
 
       matrix:
         node:
-          - 18
           - 20
+          - 21
 
         include:
-          - node: 18
+          - node: 20
             publish: true
             continue-on-error: false
 
