@@ -1,17 +1,17 @@
 import type * as utils from '@prismamedia/graphql-platform-utils';
 import type * as graphql from 'graphql';
-import type { JsonValue } from 'type-fest';
+import type { Promisable } from 'type-fest';
 import type { NodeValue } from '../../../node.js';
 import type { NodeChange, NodeUpdate } from '../../change.js';
+import type { OperationContext } from '../../operation.js';
 import type { BooleanFilter } from '../filter.js';
 
-export interface SelectionExpressionInterface<
-  TInternal = any,
-  TExternal extends JsonValue = any,
-> {
+export interface SelectionExpressionInterface<TSource = any, TValue = TSource> {
   readonly alias?: utils.Name;
   readonly name: utils.Name;
   readonly key: utils.Name;
+
+  readonly hasVirtualSelection: boolean;
 
   isAkinTo(expression: unknown): boolean;
 
@@ -31,9 +31,15 @@ export interface SelectionExpressionInterface<
 
   toGraphQLFieldNode(): graphql.FieldNode;
 
-  parseValue(maybeValue: unknown, path?: utils.Path): TInternal;
-  areValuesEqual(a: TInternal, b: TInternal): boolean;
-  uniqValues?(values: ReadonlyArray<TInternal>): TInternal[];
-  serialize(maybeValue: unknown, path?: utils.Path): TExternal;
-  stringify(maybeValue: unknown, path?: utils.Path): string;
+  parseSource(maybeSource: unknown, path?: utils.Path): TSource;
+
+  resolveValue(
+    source: TSource,
+    context: OperationContext,
+    path: utils.Path,
+  ): Promisable<TValue>;
+
+  pickValue(superSetOfValue: TValue): TValue;
+
+  areValuesEqual(a: TValue, b: TValue): boolean;
 }

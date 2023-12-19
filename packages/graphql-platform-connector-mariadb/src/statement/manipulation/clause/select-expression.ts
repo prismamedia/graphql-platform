@@ -81,6 +81,10 @@ function parseSelectionExpression(
     return parseUniqueReverseEdgeSelection(tableReference, selection);
   } else if (core.isMultipleReverseEdgeSelection(selection)) {
     return parseMultipleReverseEdgeSelection(tableReference, selection);
+  } else if (selection instanceof core.VirtualSelection) {
+    return selection.type.dependencies
+      ? selectNode(tableReference, selection.type.dependencies)
+      : 'NULL';
   } else {
     throw new utils.UnreachableValueError(selection);
   }

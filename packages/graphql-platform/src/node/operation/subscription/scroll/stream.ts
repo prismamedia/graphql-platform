@@ -234,7 +234,7 @@ export class ScrollSubscriptionStream<
         const value = this.#ac.signal.aborted ? undefined : values.shift();
 
         return value
-          ? { done: false, value: this.selection.parseValue(value) }
+          ? { done: false, value: this.selection.pickValue(value as any) }
           : { done: true, value: undefined };
       },
       return: async () => {

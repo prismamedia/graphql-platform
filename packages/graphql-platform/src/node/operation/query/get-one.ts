@@ -2,7 +2,7 @@ import type * as utils from '@prismamedia/graphql-platform-utils';
 import * as graphql from 'graphql';
 import inflection from 'inflection';
 import type { NodeSelectionAwareArgs } from '../../abstract-operation.js';
-import type { NodeFilter } from '../../statement/filter.js';
+import type { NodeFilter } from '../../statement.js';
 import { AbstractQuery } from '../abstract-query.js';
 import type { OperationContext } from '../context.js';
 import { NotFoundError } from '../error.js';

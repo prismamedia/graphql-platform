@@ -41,7 +41,7 @@ export class NodeCreation<
     createdAt?: Date,
     committedAt?: Date,
   ) {
-    const newValue = Object.freeze(node.parseValue(maybeNewValue));
+    const newValue = Object.freeze(node.selection.parseSource(maybeNewValue));
 
     super(
       node,

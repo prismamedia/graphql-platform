@@ -3,28 +3,29 @@ import { Memoize } from '@prismamedia/memoize';
 import * as graphql from 'graphql';
 import assert from 'node:assert/strict';
 import { argsPathKey } from '../../../abstract-operation.js';
-import type { OperationContext } from '../../../operation/context.js';
+import type { OperationContext } from '../../../operation.js';
 import type {
   NodeSelectedValue,
   SelectionExpression,
-} from '../../../statement/selection.js';
-import type { GraphQLSelectionContext } from '../node.js';
+} from '../../../statement.js';
+import type { GraphQLSelectionContext, NodeOutputType } from '../node.js';
 
-export interface AbstractNodeFieldOutputTypeConfig {
+export interface AbstractFieldOutputTypeConfig {
   name: utils.Name;
   public: boolean;
   description?: utils.OptionalDescription;
   deprecated?: utils.OptionalDeprecation;
 }
 
-export abstract class AbstractNodeFieldOutputType<
+export abstract class AbstractFieldOutputType<
   TArgs extends utils.Nillable<utils.PlainObject>,
 > {
+  public abstract readonly parent: NodeOutputType;
   public abstract readonly name: utils.Name;
   public abstract readonly description?: string;
   public abstract readonly deprecationReason?: string;
 
-  protected abstract readonly arguments?: ReadonlyArray<utils.Input>;
+  protected abstract readonly args?: ReadonlyArray<utils.Input>;
   protected abstract readonly type: graphql.GraphQLOutputType;
 
   public abstract isPublic(): boolean;
@@ -41,8 +42,8 @@ export abstract class AbstractNodeFieldOutputType<
       ...(this.deprecationReason && {
         deprecationReason: this.deprecationReason,
       }),
-      ...(this.arguments?.length && {
-        args: utils.getGraphQLFieldConfigArgumentMap(this.arguments),
+      ...(this.args?.length && {
+        args: utils.getGraphQLFieldConfigArgumentMap(this.args),
       }),
       type: this.type,
       resolve: (source, _args, _context, info) => source[info.path.key],
@@ -51,7 +52,7 @@ export abstract class AbstractNodeFieldOutputType<
 
   @Memoize()
   public validate(): void {
-    this.arguments;
+    this.args?.forEach((arg) => arg.validate());
 
     this.isPublic() && this.getGraphQLFieldConfig();
   }
@@ -61,7 +62,7 @@ export abstract class AbstractNodeFieldOutputType<
     context: GraphQLSelectionContext | undefined,
     path: utils.Path,
   ): Exclude<TArgs, null> {
-    if (!this.arguments?.length) {
+    if (!this.args?.length) {
       if (argumentNodes?.length) {
         throw new utils.GraphError(`Expects no arguments`, { path });
       }
@@ -70,7 +71,7 @@ export abstract class AbstractNodeFieldOutputType<
     }
 
     return utils.parseInputLiterals(
-      this.arguments,
+      this.args,
       argumentNodes,
       context?.variableValues,
       utils.addPath(path, argsPathKey),

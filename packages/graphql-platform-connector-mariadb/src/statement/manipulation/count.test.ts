@@ -42,7 +42,7 @@ describe('Count statement', () => {
     executedStatements.length = 0;
 
     await expect(
-      gp.getNodeByName(nodeName).getQueryByKey('count').execute(context, args),
+      gp.api[nodeName].count(context, args),
     ).resolves.toMatchSnapshot('result');
 
     expect(executedStatements).toMatchSnapshot('statements');

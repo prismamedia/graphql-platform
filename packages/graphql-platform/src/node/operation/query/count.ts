@@ -7,7 +7,7 @@ import {
   argsPathKey,
   type NodeSelectionAwareArgs,
 } from '../../abstract-operation.js';
-import { AndOperation, NodeFilter } from '../../statement/filter.js';
+import { AndOperation, NodeFilter } from '../../statement.js';
 import type { NodeFilterInputValue } from '../../type.js';
 import { AbstractQuery } from '../abstract-query.js';
 import type { OperationContext } from '../context.js';

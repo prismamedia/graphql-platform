@@ -2,27 +2,42 @@ import * as utils from '@prismamedia/graphql-platform-utils';
 import { Memoize } from '@prismamedia/memoize';
 import * as graphql from 'graphql';
 import assert from 'node:assert/strict';
-import * as R from 'remeda';
-import type { JsonObject } from 'type-fest';
 import type { Node, NodeValue } from '../../node.js';
 import { NodeChange, NodeUpdate } from '../change.js';
-import type { UniqueConstraint } from '../definition.js';
+import type {
+  Component,
+  ReverseEdge,
+  UniqueConstraint,
+} from '../definition.js';
+import type { OperationContext } from '../operation.js';
 import { NodeFilter, OrOperation } from './filter.js';
 import {
+  VirtualSelection,
   isComponentSelection,
   isReverseEdgeSelection,
   mergeSelectionExpressions,
-  type ComponentSelection,
-  type ReverseEdgeSelection,
   type SelectionExpression,
 } from './selection/expression.js';
-import type { NodeSelectedValue } from './selection/value.js';
 
 export * from './selection/expression-interface.js';
 export * from './selection/expression.js';
-export * from './selection/value.js';
 
-export class NodeSelection<TValue extends NodeSelectedValue = any> {
+export type NodeSelectedSource = {
+  [key: SelectionExpression['key']]: ReturnType<
+    SelectionExpression['parseSource']
+  >;
+};
+
+export type NodeSelectedValue = {
+  [key: SelectionExpression['key']]: Awaited<
+    ReturnType<SelectionExpression['resolveValue']>
+  >;
+};
+
+export class NodeSelection<
+  TSource extends NodeSelectedSource = any,
+  TValue extends NodeSelectedValue = TSource,
+> {
   public readonly expressions: ReadonlyArray<SelectionExpression>;
 
   public constructor(
@@ -32,25 +47,51 @@ export class NodeSelection<TValue extends NodeSelectedValue = any> {
       SelectionExpression
     >,
   ) {
-    assert(expressionsByKey.size);
+    assert(expressionsByKey.size, `The "${node}"'s selection is empty`);
 
     this.expressions = Object.freeze(Array.from(expressionsByKey.values()));
   }
 
   /**
-   * Returns the selected components' selections
+   * Returns the selected components
    */
   @Memoize()
-  public get components(): ReadonlyArray<ComponentSelection> {
-    return Object.freeze(this.expressions.filter(isComponentSelection));
+  public get components(): ReadonlyArray<Component> {
+    return Object.freeze(
+      Array.from(
+        new Set(
+          this.expressions.flatMap((expression) =>
+            isComponentSelection(expression)
+              ? [expression.component]
+              : expression instanceof VirtualSelection &&
+                expression.type.dependencies
+              ? expression.type.dependencies.components
+              : [],
+          ),
+        ),
+      ),
+    );
   }
 
   /**
-   * Returns the selected reverse-edges' selections
+   * Returns the selected reverse-edges
    */
   @Memoize()
-  public get reverseEdges(): ReadonlyArray<ReverseEdgeSelection> {
-    return Object.freeze(this.expressions.filter(isReverseEdgeSelection));
+  public get reverseEdges(): ReadonlyArray<ReverseEdge> {
+    return Object.freeze(
+      Array.from(
+        new Set(
+          this.expressions.flatMap((expression) =>
+            isReverseEdgeSelection(expression)
+              ? [expression.reverseEdge]
+              : expression instanceof VirtualSelection &&
+                expression.type.dependencies
+              ? expression.type.dependencies.reverseEdges
+              : [],
+          ),
+        ),
+      ),
+    );
   }
 
   /**
@@ -66,16 +107,16 @@ export class NodeSelection<TValue extends NodeSelectedValue = any> {
         .sort(
           (a, b) =>
             Math.min(
-              ...Array.from(a.componentSet, (component) =>
+              ...Array.from(a.componentSet, (aComponent) =>
                 this.components.findIndex(
-                  (selection) => selection.component === component,
+                  (thisComponent) => thisComponent === aComponent,
                 ),
               ),
             ) -
             Math.min(
-              ...Array.from(b.componentSet, (component) =>
+              ...Array.from(b.componentSet, (bComponent) =>
                 this.components.findIndex(
-                  (selection) => selection.component === component,
+                  (thisComponent) => thisComponent === bComponent,
                 ),
               ),
             ),
@@ -92,6 +133,15 @@ export class NodeSelection<TValue extends NodeSelectedValue = any> {
       this.uniqueConstraints.filter((uniqueConstraint) =>
         uniqueConstraint.isIdentifier(),
       ),
+    );
+  }
+
+  @Memoize()
+  public get hasVirtualSelection(): boolean {
+    return this.expressions.some(
+      (expression) =>
+        expression instanceof VirtualSelection ||
+        expression.hasVirtualSelection,
     );
   }
 
@@ -142,15 +192,9 @@ export class NodeSelection<TValue extends NodeSelectedValue = any> {
     );
   }
 
-  public isSubsetOf(selection: NodeSelection): boolean {
-    assert(this.isAkinTo(selection));
-
-    return selection.isSupersetOf(this);
-  }
-
   @Memoize()
   public isPure(): boolean {
-    return this.isSubsetOf(this.node.selection);
+    return this.node.selection.isSupersetOf(this);
   }
 
   public mergeWith(
@@ -171,30 +215,65 @@ export class NodeSelection<TValue extends NodeSelectedValue = any> {
   public toGraphQLSelectionSetNode(): graphql.SelectionSetNode {
     return {
       kind: graphql.Kind.SELECTION_SET,
-      selections: Array.from(this.expressions, (expression) =>
+      selections: this.expressions.map((expression) =>
         expression.toGraphQLFieldNode(),
       ),
     };
   }
 
-  public parseValue(
-    maybeValue: unknown,
+  public parseSource(
+    rawSource: unknown,
     path: utils.Path = utils.addPath(undefined, this.node.toString()),
-  ): TValue {
-    utils.assertPlainObject(maybeValue, path);
+  ): TSource {
+    utils.assertPlainObject(rawSource, path);
 
-    return utils.aggregateGraphError<SelectionExpression, TValue>(
+    return utils.aggregateGraphError<SelectionExpression, TSource>(
       this.expressions,
-      (document, expression) =>
-        Object.assign(document, {
-          [expression.key]: expression.parseValue(
-            maybeValue[expression.key],
-            utils.addPath(path, expression.key),
-          ),
-        }),
+      (document: any, expression) => {
+        document[expression.key] = expression.parseSource(
+          rawSource[expression.key],
+          utils.addPath(path, expression.key),
+        );
+
+        return document;
+      },
       Object.create(null),
       { path },
     );
+  }
+
+  public async resolveValue(
+    source: TSource,
+    context: OperationContext,
+    path: utils.Path = utils.addPath(undefined, this.node.toString()),
+  ): Promise<TValue> {
+    return this.hasVirtualSelection
+      ? Object.fromEntries(
+          await Promise.all(
+            this.expressions.map(async (expression) => [
+              expression.key,
+              expression instanceof VirtualSelection ||
+              expression.hasVirtualSelection
+                ? await expression.resolveValue(
+                    source[expression.key],
+                    context,
+                    utils.addPath(path, expression.key),
+                  )
+                : source[expression.key],
+            ]),
+          ),
+        )
+      : source;
+  }
+
+  public pickValue(superSetOfValue: TValue): TValue {
+    return this.expressions.reduce<TValue>((document: any, expression) => {
+      document[expression.key] = expression.pickValue(
+        superSetOfValue[expression.key],
+      );
+
+      return document;
+    }, Object.create(null));
   }
 
   public areValuesEqual(a: TValue, b: TValue): boolean {
@@ -216,54 +295,5 @@ export class NodeSelection<TValue extends NodeSelectedValue = any> {
       aKeySet.size === 0 &&
       bKeySet.size === 0
     );
-  }
-
-  public uniqValues(values: ReadonlyArray<TValue>): TValue[] {
-    return R.uniqWith(values, (a, b) => this.areValuesEqual(a, b));
-  }
-
-  public serialize(
-    maybeValue: unknown,
-    path: utils.Path = utils.addPath(undefined, this.node.toString()),
-  ): JsonObject {
-    utils.assertPlainObject(maybeValue, path);
-
-    return utils.aggregateGraphError<SelectionExpression, JsonObject>(
-      this.expressions,
-      (document, expression) =>
-        Object.assign(document, {
-          [expression.key]: expression.serialize(
-            maybeValue[expression.key],
-            utils.addPath(path, expression.key),
-          ),
-        }),
-      Object.create(null),
-      { path },
-    );
-  }
-
-  public stringify(
-    maybeValue: unknown,
-    path: utils.Path = utils.addPath(undefined, this.node.toString()),
-  ): string {
-    utils.assertPlainObject(maybeValue, path);
-
-    return `{${utils
-      .aggregateGraphError<SelectionExpression, string[]>(
-        this.expressions,
-        (stringifiedExpressions, expression) => {
-          stringifiedExpressions.push(
-            `"${expression.key}":${expression.stringify(
-              maybeValue[expression.key],
-              utils.addPath(path, expression.key),
-            )}`,
-          );
-
-          return stringifiedExpressions;
-        },
-        [],
-        { path },
-      )
-      .join(',')}}`;
   }
 }

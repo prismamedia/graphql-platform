@@ -5,10 +5,11 @@ import type {
   NodeSelectionAwareArgs,
   RawNodeSelectionAwareArgs,
 } from '../../../abstract-operation.js';
-import type { NodeFilter } from '../../../statement/filter.js';
-import type { NodeSelectedValue } from '../../../statement/selection/value.js';
-import type { NodeCreationInputValue } from '../../../type/input/creation.js';
-import type { NodeUniqueFilterInputValue } from '../../../type/input/unique-filter.js';
+import type { NodeFilter, NodeSelectedValue } from '../../../statement.js';
+import type {
+  NodeCreationInputValue,
+  NodeUniqueFilterInputValue,
+} from '../../../type.js';
 import { AbstractCreation } from '../abstract-creation.js';
 import type { MutationContext } from './../context.js';
 

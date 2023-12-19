@@ -2,7 +2,6 @@ import * as utils from '@prismamedia/graphql-platform-utils';
 import { Memoize } from '@prismamedia/memoize';
 import inflection from 'inflection';
 import assert from 'node:assert/strict';
-import type { JsonObject } from 'type-fest';
 import type {
   ConnectorConfigOverride,
   ConnectorConfigOverrideKind,
@@ -278,34 +277,5 @@ export class Edge<
   @Memoize()
   public override get updateInput(): EdgeUpdateInput | undefined {
     return this.isMutable() ? new EdgeUpdateInput(this) : undefined;
-  }
-
-  public parseValue(
-    maybeValue: unknown,
-    path: utils.Path = utils.addPath(undefined, this.toString()),
-  ): ReferenceValue {
-    return this.selection.parseValue(maybeValue, path);
-  }
-
-  public areValuesEqual(a: ReferenceValue, b: ReferenceValue): boolean {
-    return this.selection.areValuesEqual(a, b);
-  }
-
-  public uniqValues(values: ReadonlyArray<ReferenceValue>): ReferenceValue[] {
-    return this.selection.uniqValues(values);
-  }
-
-  public serialize(
-    maybeValue: unknown,
-    path: utils.Path = utils.addPath(undefined, this.toString()),
-  ): JsonObject | null {
-    return this.selection.serialize(maybeValue, path);
-  }
-
-  public stringify(
-    maybeValue: unknown,
-    path: utils.Path = utils.addPath(undefined, this.toString()),
-  ): string {
-    return this.selection.stringify(maybeValue, path);
   }
 }

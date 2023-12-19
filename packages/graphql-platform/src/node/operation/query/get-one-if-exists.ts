@@ -5,8 +5,7 @@ import {
   NodeSelectionAwareArgs,
   RawNodeSelectionAwareArgs,
 } from '../../abstract-operation.js';
-import type { NodeFilter } from '../../statement/filter.js';
-import type { NodeSelectedValue } from '../../statement/selection/value.js';
+import type { NodeFilter, NodeSelectedValue } from '../../statement.js';
 import type { NodeUniqueFilterInputValue } from '../../type.js';
 import { AbstractQuery } from '../abstract-query.js';
 import type { OperationContext } from '../context.js';

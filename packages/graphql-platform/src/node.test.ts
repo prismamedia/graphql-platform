@@ -394,6 +394,7 @@ describe('Node', () => {
                       myInvalidField: {
                         dependsOn: '{ unknownField }',
                         type: graphql.GraphQLString,
+                        resolve: () => 'Hello World!',
                       },
                     },
                   },

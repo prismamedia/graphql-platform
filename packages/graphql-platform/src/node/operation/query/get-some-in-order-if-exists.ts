@@ -7,8 +7,7 @@ import {
   NodeSelectionAwareArgs,
   RawNodeSelectionAwareArgs,
 } from '../../abstract-operation.js';
-import type { NodeFilter } from '../../statement/filter.js';
-import type { NodeSelectedValue } from '../../statement/selection.js';
+import type { NodeFilter, NodeSelectedValue } from '../../statement.js';
 import type {
   NodeFilterInputValue,
   NodeUniqueFilterInputValue,
@@ -74,51 +73,50 @@ export class GetSomeInOrderIfExistsQuery<
     const argsPath = utils.addPath(path, argsPathKey);
     const whereArgPath = utils.addPath(argsPath, 'where');
 
-    const unorderedNodeValues = await this.node
-      .getQueryByKey('find-many')
-      .internal(
-        context,
-        authorization,
-        {
-          where: { AND: [{ OR: args.where }, args.subset] },
-          first: args.where.length,
-          /**
-           * We need to select the data provided in the "unique-filters" to discriminate the returned nodes, imagine the following use:
-           *
-           * someArticlesIfExists(where: [
-           *  { id: "8c75f992-083e-4849-8020-4b3c156f484b" },
-           *  { _id: 3 },
-           *  { category: null, slug: "Welcome" },
-           *  { _id: 6 },
-           *  { category: { _id: 2 }, slug: "news" }
-           * ]) {
-           *   status
-           * }
-           *
-           * We need the following selection: { id _id category { _id } slug status }
-           */
-          selection: args.where.reduce(
-            (mergedSelection, filter, index) =>
-              mergedSelection.mergeWith(
-                this.node.outputType.selectShape(
-                  filter,
-                  context,
-                  utils.addPath(whereArgPath, index),
-                ),
-                path,
+    const unorderedValues = await this.node.getQueryByKey('find-many').internal(
+      context,
+      authorization,
+      {
+        where: { AND: [{ OR: args.where }, args.subset] },
+        first: args.where.length,
+        /**
+         * We need to select the data provided in the "unique-filters" to discriminate the returned nodes, imagine the following use:
+         *
+         * someArticlesIfExists(where: [
+         *  { id: "8c75f992-083e-4849-8020-4b3c156f484b" },
+         *  { _id: 3 },
+         *  { category: null, slug: "Welcome" },
+         *  { _id: 6 },
+         *  { category: { _id: 2 }, slug: "news" }
+         * ]) {
+         *   status
+         * }
+         *
+         * We need the following selection: { id _id category { _id } slug status }
+         */
+        selection: args.where.reduce(
+          (mergedSelection, filter, index) =>
+            mergedSelection.mergeWith(
+              this.node.outputType.selectShape(
+                filter,
+                context,
+                utils.addPath(whereArgPath, index),
               ),
-            args.selection,
-          ),
-        },
-        path,
-      );
+              path,
+            ),
+          args.selection,
+        ),
+      },
+      path,
+    );
 
     return args.where.map((key) => {
-      const maybeNodeValue = unorderedNodeValues.find((nodeValue) =>
-        this.node.filterInputType.filter(key).execute(nodeValue, false),
+      const keyFilter = this.node.filterInputType.filter(key);
+      const maybeValue = unorderedValues.find((value) =>
+        keyFilter.execute(value, false),
       );
 
-      return maybeNodeValue ? args.selection.parseValue(maybeNodeValue) : null;
+      return maybeValue ? args.selection.pickValue(maybeValue) : null;
     });
   }
 }

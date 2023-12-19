@@ -2,7 +2,6 @@ import * as utils from '@prismamedia/graphql-platform-utils';
 import { Memoize } from '@prismamedia/memoize';
 import * as graphql from 'graphql';
 import assert from 'node:assert/strict';
-import type { JsonObject } from 'type-fest';
 import type { NodeValue } from '../../../../../../node.js';
 import {
   NodeChange,
@@ -11,6 +10,7 @@ import {
   NodeUpdate,
 } from '../../../../../change.js';
 import type { UniqueReverseEdge } from '../../../../../definition.js';
+import type { OperationContext } from '../../../../../operation.js';
 import {
   OrOperation,
   UniqueReverseEdgeExistsFilter,
@@ -25,23 +25,27 @@ import type { SelectionExpressionInterface } from '../../../expression-interface
 export type UniqueReverseEdgeHeadValue = null | NodeSelectedValue;
 
 export class UniqueReverseEdgeHeadSelection<
-  TValue extends UniqueReverseEdgeHeadValue = any,
-> implements SelectionExpressionInterface<TValue>
+  TSource extends UniqueReverseEdgeHeadValue = any,
+  TValue = TSource,
+> implements SelectionExpressionInterface<TSource, TValue>
 {
-  public readonly alias?: string;
   public readonly name: string;
   public readonly key: string;
 
   public constructor(
     public readonly reverseEdge: UniqueReverseEdge,
-    alias: string | undefined,
-    public readonly headSelection: NodeSelection<NonNullable<TValue>>,
+    public readonly alias: string | undefined,
+    public readonly headSelection: NodeSelection,
   ) {
-    this.alias = alias || undefined;
     this.name = reverseEdge.name;
     this.key = this.alias ?? this.name;
 
     assert.equal(reverseEdge.head, headSelection.node);
+  }
+
+  @Memoize()
+  public get hasVirtualSelection(): boolean {
+    return this.headSelection.hasVirtualSelection;
   }
 
   public isAkinTo(
@@ -166,6 +170,12 @@ export class UniqueReverseEdgeHeadSelection<
   public toGraphQLFieldNode(): graphql.FieldNode {
     return {
       kind: graphql.Kind.FIELD,
+      ...(this.alias && {
+        alias: {
+          kind: graphql.Kind.NAME,
+          value: this.alias,
+        },
+      }),
       name: {
         kind: graphql.Kind.NAME,
         value: this.name,
@@ -174,35 +184,39 @@ export class UniqueReverseEdgeHeadSelection<
     };
   }
 
-  public parseValue(maybeValue: unknown, path?: utils.Path): TValue {
-    if (maybeValue === undefined) {
+  public parseSource(maybeSource: unknown, path?: utils.Path): TSource {
+    if (maybeSource === undefined) {
       throw new utils.UnexpectedValueError(
         `a non-undefined "${this.reverseEdge.head}"`,
-        maybeValue,
+        maybeSource,
         { path },
       );
     }
 
-    return maybeValue === null
-      ? (null as TValue)
-      : this.headSelection.parseValue(maybeValue, path);
+    return maybeSource === null
+      ? (null as TSource)
+      : this.headSelection.parseSource(maybeSource, path);
+  }
+
+  public async resolveValue(
+    source: TSource,
+    context: OperationContext,
+    path: utils.Path,
+  ): Promise<TValue> {
+    return source
+      ? this.headSelection.resolveValue(source, context, path)
+      : null;
+  }
+
+  public pickValue(superSetOfValue: TValue): TValue {
+    return superSetOfValue
+      ? this.headSelection.pickValue(superSetOfValue)
+      : null;
   }
 
   public areValuesEqual(a: TValue, b: TValue): boolean {
     return a === null || b === null
       ? a === b
       : this.headSelection.areValuesEqual(a, b);
-  }
-
-  public serialize(maybeValue: unknown, path?: utils.Path): JsonObject | null {
-    const value = this.parseValue(maybeValue, path);
-
-    return value === null ? null : this.headSelection.serialize(value, path);
-  }
-
-  public stringify(maybeValue: unknown, path?: utils.Path): string {
-    const value = this.parseValue(maybeValue, path);
-
-    return value === null ? 'null' : this.headSelection.stringify(value, path);
   }
 }

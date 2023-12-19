@@ -2,8 +2,7 @@ import * as utils from '@prismamedia/graphql-platform-utils';
 import * as graphql from 'graphql';
 import inflection from 'inflection';
 import type { NodeSelectionAwareArgs } from '../../abstract-operation.js';
-import type { NodeFilter } from '../../statement/filter.js';
-import type { NodeSelectedValue } from '../../statement/selection/value.js';
+import type { NodeFilter, NodeSelectedValue } from '../../statement.js';
 import { AbstractQuery } from '../abstract-query.js';
 import type { OperationContext } from '../context.js';
 import { NotFoundError } from '../error.js';
@@ -47,7 +46,7 @@ export class GetSomeInOrderQuery<
     args: NodeSelectionAwareArgs<GetSomeInOrderQueryArgs>,
     path: utils.Path,
   ): Promise<GetSomeInOrderQueryResult> {
-    const maybeNodeValues = await this.node
+    const maybeValues = await this.node
       .getQueryByKey('get-some-in-order-if-exists')
       .internal(context, authorization, args, path);
 
@@ -55,17 +54,17 @@ export class GetSomeInOrderQuery<
       NodeSelectedValue | null,
       GetSomeInOrderQueryResult
     >(
-      maybeNodeValues,
-      (nodeValues, maybeNodeValue, index) => {
-        if (!maybeNodeValue) {
+      maybeValues,
+      (values, maybeValue, index) => {
+        if (!maybeValue) {
           throw new NotFoundError(this.node, args.where[index], {
             path: utils.addPath(path, index),
           });
         }
 
-        nodeValues.push(maybeNodeValue);
+        values.push(maybeValue);
 
-        return nodeValues;
+        return values;
       },
       [],
       { path },

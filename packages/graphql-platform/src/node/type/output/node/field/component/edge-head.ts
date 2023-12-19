@@ -3,7 +3,7 @@ import * as graphql from 'graphql';
 import type { Edge } from '../../../../../definition/component/edge.js';
 import type { OperationContext } from '../../../../../operation/context.js';
 import { EdgeHeadSelection } from '../../../../../statement/selection/expression/component/edge/head.js';
-import type { GraphQLSelectionContext } from '../../../node.js';
+import type { GraphQLSelectionContext, NodeOutputType } from '../../../node.js';
 import { AbstractComponentOutputType } from '../abstract-component.js';
 
 export class EdgeHeadOutputType extends AbstractComponentOutputType<undefined> {
@@ -11,10 +11,10 @@ export class EdgeHeadOutputType extends AbstractComponentOutputType<undefined> {
   public readonly description?: string;
   public readonly deprecationReason?: string;
 
-  protected readonly arguments?: undefined;
+  protected readonly args?: undefined;
 
-  public constructor(public readonly edge: Edge) {
-    super(edge);
+  public constructor(parent: NodeOutputType, public readonly edge: Edge) {
+    super(parent, edge);
 
     this.name = edge.name;
     this.description = edge.description;

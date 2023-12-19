@@ -47,6 +47,7 @@ describe('GraphQL-Platform Integration Apollo Server', () => {
                 }
               }
               createdAt
+              lowerCasedTitle
             }
           }`,
           variables: {
@@ -60,7 +61,23 @@ describe('GraphQL-Platform Integration Apollo Server', () => {
     await expect(
       server.executeOperation(
         {
-          query: `subscription SubscribeToArticleChanges {
+          query: `subscription ArticleScroll {
+            articles(where: { status: PUBLISHED }) {
+              id
+              status
+              title
+              lowerCasedTitle
+            }
+          }`,
+        },
+        { contextValue: myAdminContext },
+      ),
+    ).resolves.toMatchSnapshot();
+
+    await expect(
+      server.executeOperation(
+        {
+          query: `subscription ArticleChanges {
             articleChanges(where: { status: PUBLISHED }) {
               ... on ArticleDeletion {
                 id
@@ -69,6 +86,7 @@ describe('GraphQL-Platform Integration Apollo Server', () => {
                 id
                 status
                 title
+                lowerCasedTitle
               }
             }
           }`,

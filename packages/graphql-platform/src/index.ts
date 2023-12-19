@@ -44,7 +44,6 @@ export * from './broker-interface.js';
 export * from './broker/in-memory.js';
 export * from './connector-interface.js';
 export * from './custom-operations.js';
-export * from './graphql-field-config.js';
 export * from './node.js';
 export * from './seeding.js';
 

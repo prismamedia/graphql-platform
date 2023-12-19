@@ -313,21 +313,14 @@ export class Table {
   ): TValue {
     utils.assertPlainObject(row, path);
 
-    return utils.aggregateGraphError<core.Component, TValue>(
-      this.node.componentsByName.values(),
-      (result, component) =>
-        Object.assign(result, {
-          [component.name]: component.parseValue(
-            component instanceof core.Leaf
-              ? this.getColumnByLeaf(component).pickLeafValueFromRow(row)
-              : this.getColumnTreeByEdge(component).pickReferenceValueFromRow(
-                  row,
-                ),
-            utils.addPath(path, component.name),
-          ),
-        }),
-      Object.create(null),
-    );
+    return Array.from(this.node.componentSet).reduce((result, component) => {
+      result[component.name] =
+        component instanceof core.Leaf
+          ? this.getColumnByLeaf(component).pickLeafValueFromRow(row)
+          : this.getColumnTreeByEdge(component).pickReferenceValueFromRow(row);
+
+      return result;
+    }, Object.create(null));
   }
 
   public parseJsonDocument<TValue extends core.NodeSelectedValue>(
@@ -337,68 +330,62 @@ export class Table {
   ): TValue {
     utils.assertPlainObject(jsonDocument, path);
 
-    return utils.aggregateGraphError(
-      selection.expressionsByKey.values(),
-      (result, expression) => {
-        const expressionPath = utils.addPath(path, expression.key);
-        const jsonValue = jsonDocument[expression.key];
-        let expressionValue: any;
+    return selection.expressions.reduce((result, expression) => {
+      const expressionPath = utils.addPath(path, expression.key);
+      const jsonValue = jsonDocument[expression.key];
 
-        if (expression instanceof core.LeafSelection) {
-          const column = this.getColumnByLeaf(expression.leaf);
+      if (expression instanceof core.LeafSelection) {
+        const column = this.getColumnByLeaf(expression.leaf);
 
-          expressionValue = column.dataType.parseJsonValue(jsonValue);
-        } else if (expression instanceof core.EdgeHeadSelection) {
-          const head = this.schema.getTableByNode(expression.edge.head);
+        result[expression.key] = column.dataType.parseJsonValue(jsonValue);
+      } else if (expression instanceof core.EdgeHeadSelection) {
+        const head = this.schema.getTableByNode(expression.edge.head);
 
-          expressionValue = jsonValue
-            ? head.parseJsonDocument(
-                jsonValue,
+        result[expression.key] = jsonValue
+          ? head.parseJsonDocument(
+              jsonValue,
+              expression.headSelection,
+              expressionPath,
+            )
+          : null;
+      } else if (expression instanceof core.MultipleReverseEdgeCountSelection) {
+        result[expression.key] = Number.parseInt(jsonValue, 10);
+      } else if (expression instanceof core.MultipleReverseEdgeHeadSelection) {
+        const head = this.schema.getTableByNode(expression.reverseEdge.head);
+
+        result[expression.key] = Array.isArray(jsonValue)
+          ? jsonValue.map((value, index) =>
+              head.parseJsonDocument(
+                value,
                 expression.headSelection,
-                expressionPath,
-              )
-            : null;
-        } else if (
-          expression instanceof core.MultipleReverseEdgeCountSelection
-        ) {
-          expressionValue = Number.parseInt(jsonValue, 10);
-        } else if (
-          expression instanceof core.MultipleReverseEdgeHeadSelection
-        ) {
-          const head = this.schema.getTableByNode(expression.reverseEdge.head);
+                utils.addPath(expressionPath, index),
+              ),
+            )
+          : [];
+      } else if (expression instanceof core.UniqueReverseEdgeHeadSelection) {
+        const head = this.schema.getTableByNode(expression.reverseEdge.head);
 
-          expressionValue = Array.isArray(jsonValue)
-            ? jsonValue.map((value, index) =>
-                head.parseJsonDocument(
-                  value,
-                  expression.headSelection,
-                  utils.addPath(expressionPath, index),
-                ),
-              )
-            : [];
-        } else if (expression instanceof core.UniqueReverseEdgeHeadSelection) {
-          const head = this.schema.getTableByNode(expression.reverseEdge.head);
+        result[expression.key] = jsonValue
+          ? head.parseJsonDocument(
+              jsonValue,
+              expression.headSelection,
+              expressionPath,
+            )
+          : null;
+      } else if (expression instanceof core.VirtualSelection) {
+        result[expression.key] = expression.type.dependencies
+          ? this.parseJsonDocument(
+              jsonValue,
+              expression.type.dependencies,
+              expressionPath,
+            )
+          : undefined;
+      } else {
+        throw new UnreachableValueError(expression);
+      }
 
-          expressionValue = jsonValue
-            ? head.parseJsonDocument(
-                jsonValue,
-                expression.headSelection,
-                expressionPath,
-              )
-            : null;
-        } else {
-          throw new UnreachableValueError(expression);
-        }
-
-        return Object.assign(result, {
-          [expression.key]: expression.parseValue(
-            expressionValue,
-            expressionPath,
-          ),
-        });
-      },
-      Object.create(null),
-    );
+      return result;
+    }, Object.create(null));
   }
 
   public async create(

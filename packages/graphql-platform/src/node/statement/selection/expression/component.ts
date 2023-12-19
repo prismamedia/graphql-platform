@@ -4,9 +4,9 @@ import { LeafSelection } from './component/leaf.js';
 export * from './component/edge.js';
 export * from './component/leaf.js';
 
-export type ComponentSelection = EdgeSelection | LeafSelection;
+export type ComponentSelection = LeafSelection | EdgeSelection;
 
 export const isComponentSelection = (
   maybeSelection: unknown,
 ): maybeSelection is ComponentSelection =>
-  isEdgeSelection(maybeSelection) || maybeSelection instanceof LeafSelection;
+  maybeSelection instanceof LeafSelection || isEdgeSelection(maybeSelection);

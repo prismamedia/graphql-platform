@@ -6,7 +6,7 @@ import type {
 } from '../../../../../definition/component/leaf.js';
 import type { OperationContext } from '../../../../../operation/context.js';
 import { LeafSelection } from '../../../../../statement/selection/expression/component/leaf.js';
-import type { GraphQLSelectionContext } from '../../../node.js';
+import type { GraphQLSelectionContext, NodeOutputType } from '../../../node.js';
 import { AbstractComponentOutputType } from '../abstract-component.js';
 
 export class LeafOutputType extends AbstractComponentOutputType<undefined> {
@@ -14,11 +14,11 @@ export class LeafOutputType extends AbstractComponentOutputType<undefined> {
   public readonly description?: string;
   public readonly deprecationReason?: string;
 
-  protected readonly arguments?: undefined;
+  protected readonly args?: undefined;
   protected readonly type: LeafType | graphql.GraphQLNonNull<LeafType>;
 
-  public constructor(public readonly leaf: Leaf) {
-    super(leaf);
+  public constructor(parent: NodeOutputType, public readonly leaf: Leaf) {
+    super(parent, leaf);
 
     this.name = leaf.name;
     this.description = leaf.description;

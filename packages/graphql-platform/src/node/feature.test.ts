@@ -71,6 +71,9 @@ describe('Feature', () => {
               return {
                 [`virtual${node.name}Output`]: {
                   type: GraphQLString,
+                  resolve(source, args, context) {
+                    return 'Hello World!';
+                  },
                 },
               };
             },

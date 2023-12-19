@@ -125,10 +125,10 @@ export class NodeUpdateStatement {
     if (update === undefined) {
       this.updatesByComponent.delete(component);
     } else {
-      const value = component.parseValue(update);
+      const value = component.selection.parseSource(update);
 
       if (
-        component.areValuesEqual(
+        component.selection.areValuesEqual(
           this.#currentValue[component.name] as any,
           value as any,
         )

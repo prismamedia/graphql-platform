@@ -10,7 +10,7 @@ import type {
   NodeFilterInputValue,
   OrderByInputValue,
 } from '../../../../input.js';
-import type { GraphQLSelectionContext } from '../../../node.js';
+import type { GraphQLSelectionContext, NodeOutputType } from '../../../node.js';
 import { AbstractReverseEdgeOutputType } from '../abstract-reverse-edge.js';
 
 export type MultipleReverseEdgeHeadOutputArgs = {
@@ -26,9 +26,10 @@ export class MultipleReverseEdgeHeadOutputType extends AbstractReverseEdgeOutput
   public readonly deprecationReason?: string;
 
   public constructor(
+    parent: NodeOutputType,
     public override readonly reverseEdge: MultipleReverseEdge,
   ) {
-    super(reverseEdge);
+    super(parent, reverseEdge);
 
     this.name = reverseEdge.name;
     this.description = reverseEdge.description;
@@ -36,7 +37,7 @@ export class MultipleReverseEdgeHeadOutputType extends AbstractReverseEdgeOutput
   }
 
   @Memoize()
-  protected get arguments(): ReadonlyArray<utils.Input> {
+  protected get args(): ReadonlyArray<utils.Input> {
     const defaults = this.reverseEdge.config.output?.defaultArgs;
 
     return [

@@ -11,10 +11,11 @@ import { Leaf } from '../../definition/component/leaf.js';
 import { UniqueReverseEdge } from '../../definition/reverse-edge/unique.js';
 import type { OperationContext } from '../../operation/context.js';
 import {
-  mergeSelectionExpressions,
-  NodeSelectedValue,
   NodeSelection,
   SelectionExpression,
+  mergeSelectionExpressions,
+  type NodeSelectedSource,
+  type NodeSelectedValue,
 } from '../../statement/selection.js';
 import {
   EdgeHeadOutputType,
@@ -22,10 +23,10 @@ import {
   MultipleReverseEdgeCountOutputType,
   MultipleReverseEdgeHeadOutputType,
   NodeFieldOutputType,
-  ThunkableNillableVirtualFieldOutputConfig,
-  ThunkableNillableVirtualFieldOutputConfigsByName,
+  ThunkableNillableVirtualOutputConfig,
+  ThunkableNillableVirtualOutputConfigsByName,
   UniqueReverseEdgeHeadOutputType,
-  VirtualFieldOutputType,
+  VirtualOutputType,
 } from './node/field.js';
 
 export * from './node/field.js';
@@ -49,8 +50,11 @@ export type GraphQLSelectionContext = Partial<
  */
 export type GraphQLFragment = string;
 
-export type RawNodeSelection<TValue extends NodeSelectedValue = any> =
-  | NodeSelection<TValue>
+export type RawNodeSelection<
+  TSource extends NodeSelectedSource = any,
+  TValue extends NodeSelectedValue = TSource,
+> =
+  | NodeSelection<TSource, TValue>
   | GraphQLSelectionAST
   | graphql.GraphQLResolveInfo
   | GraphQLFragment
@@ -67,7 +71,7 @@ export interface NodeOutputTypeConfig<
    *
    * They are called "virtual" because they are not persisted
    */
-  virtualFields?: ThunkableNillableVirtualFieldOutputConfigsByName<
+  virtualFields?: ThunkableNillableVirtualOutputConfigsByName<
     TRequestContext,
     TConnector,
     TBroker,
@@ -113,97 +117,95 @@ export class NodeOutputType {
 
     for (const component of this.node.componentSet) {
       if (component instanceof Leaf) {
-        fields.push(new LeafOutputType(component));
+        fields.push(new LeafOutputType(this, component));
       } else {
-        fields.push(new EdgeHeadOutputType(component));
+        fields.push(new EdgeHeadOutputType(this, component));
       }
     }
 
     for (const reverseEdge of this.node.reverseEdgeSet) {
       if (reverseEdge instanceof UniqueReverseEdge) {
-        fields.push(new UniqueReverseEdgeHeadOutputType(reverseEdge));
+        fields.push(new UniqueReverseEdgeHeadOutputType(this, reverseEdge));
       } else {
         fields.push(
-          new MultipleReverseEdgeHeadOutputType(reverseEdge),
-          new MultipleReverseEdgeCountOutputType(reverseEdge),
+          new MultipleReverseEdgeHeadOutputType(this, reverseEdge),
+          new MultipleReverseEdgeCountOutputType(this, reverseEdge),
         );
       }
     }
 
     // virtual-fields
-    {
-      [...this.node.features, this.node].forEach(({ config, configPath }) => {
-        const outputConfig = config.output;
-        const outputConfigPath = utils.addPath(configPath, 'output');
+    [...this.node.features, this.node].forEach(({ config, configPath }) => {
+      const outputConfig = config.output;
+      const outputConfigPath = utils.addPath(configPath, 'output');
 
-        utils.assertNillablePlainObject(outputConfig, outputConfigPath);
+      utils.assertNillablePlainObject(outputConfig, outputConfigPath);
 
-        if (!outputConfig) {
-          return;
-        }
+      if (!outputConfig) {
+        return;
+      }
 
-        const virtualFieldConfigsByName = utils.resolveThunkable(
-          outputConfig.virtualFields,
-          this.node,
-        );
-        const virtualFieldConfigsByNamePath = utils.addPath(
-          outputConfigPath,
-          'virtualFields',
-        );
+      const virtualFieldConfigsByName = utils.resolveThunkable(
+        outputConfig.virtualFields,
+        this.node,
+      );
+      const virtualFieldConfigsByNamePath = utils.addPath(
+        outputConfigPath,
+        'virtualFields',
+      );
 
-        utils.assertNillablePlainObject(
-          virtualFieldConfigsByName,
-          virtualFieldConfigsByNamePath,
-        );
+      utils.assertNillablePlainObject(
+        virtualFieldConfigsByName,
+        virtualFieldConfigsByNamePath,
+      );
 
-        if (!virtualFieldConfigsByName) {
-          return;
-        }
+      if (!virtualFieldConfigsByName) {
+        return;
+      }
 
-        utils.aggregateGraphError<
-          [utils.Name, ThunkableNillableVirtualFieldOutputConfig],
-          void
-        >(
-          Object.entries(virtualFieldConfigsByName),
-          (_, [virtualFieldName, thunkableNillableVirtualFieldConfig]) => {
-            const virtualFieldConfig = utils.resolveThunkable(
-              thunkableNillableVirtualFieldConfig,
-              this.node,
-            );
+      utils.aggregateGraphError<
+        [utils.Name, ThunkableNillableVirtualOutputConfig],
+        void
+      >(
+        Object.entries(virtualFieldConfigsByName),
+        (_, [virtualFieldName, thunkableNillableVirtualFieldConfig]) => {
+          const virtualFieldConfig = utils.resolveThunkable(
+            thunkableNillableVirtualFieldConfig,
+            this.node,
+          );
 
-            const virtualFieldConfigPath = utils.addPath(
-              virtualFieldConfigsByNamePath,
+          const virtualFieldConfigPath = utils.addPath(
+            virtualFieldConfigsByNamePath,
+            virtualFieldName,
+          );
+
+          utils.assertNillablePlainObject(
+            virtualFieldConfig,
+            virtualFieldConfigPath,
+          );
+
+          if (virtualFieldConfig) {
+            const virtualField = new VirtualOutputType(
+              this,
               virtualFieldName,
-            );
-
-            utils.assertNillablePlainObject(
               virtualFieldConfig,
               virtualFieldConfigPath,
             );
 
-            if (virtualFieldConfig) {
-              const virtualField = new VirtualFieldOutputType(
-                this,
-                virtualFieldName,
-                virtualFieldConfig,
-                virtualFieldConfigPath,
+            if (fields.some((field) => field.name === virtualField.name)) {
+              throw new utils.GraphError(
+                `At least 1 field already have this name`,
+                { path: virtualFieldConfigPath },
               );
-
-              if (fields.some((field) => field.name === virtualField.name)) {
-                throw new utils.GraphError(
-                  `At least 1 field already have this name`,
-                  { path: virtualFieldConfigPath },
-                );
-              }
-
-              fields.push(virtualField);
             }
-          },
-          undefined,
-          { path: virtualFieldConfigsByNamePath },
-        );
-      });
-    }
+
+            fields.push(virtualField);
+          }
+        },
+        undefined,
+        { path: virtualFieldConfigsByNamePath },
+      );
+    });
 
     return new Map(fields.map((field) => [field.name, field]));
   }
@@ -243,9 +245,7 @@ export class NodeOutputType {
       { path: this.#configPath },
     );
 
-    if (this.node.isPublic()) {
-      this.getGraphQLObjectType();
-    }
+    this.node.isPublic() && this.getGraphQLObjectType();
   }
 
   public getFieldByName(name: string, path?: utils.Path): NodeFieldOutputType {
@@ -471,25 +471,24 @@ export class NodeOutputType {
 
           switch (ast.kind) {
             case graphql.Kind.FIELD: {
+              const fieldAlias = ast.alias?.value;
               const fieldName = ast.name.value;
+              const fieldKey = fieldAlias ?? fieldName;
 
               // Handle the "__typename" meta field
               if (fieldName === graphql.TypeNameMetaFieldDef.name) {
                 return [];
               }
 
-              const fieldAlias = ast.alias?.value || undefined;
-              const fieldKey = fieldAlias ?? fieldName;
-              const field = this.getFieldByName(fieldName, path);
-
-              return field instanceof VirtualFieldOutputType
-                ? field.dependsOn?.expressions ?? []
-                : field.selectGraphQLFieldNode(
-                    ast,
-                    operationContext,
-                    selectionContext,
-                    utils.addPath(path, fieldKey),
-                  );
+              return this.getFieldByName(
+                fieldName,
+                path,
+              ).selectGraphQLFieldNode(
+                ast,
+                operationContext,
+                selectionContext,
+                utils.addPath(path, fieldKey),
+              );
             }
 
             case graphql.Kind.FRAGMENT_SPREAD: {
@@ -654,17 +653,12 @@ export class NodeOutputType {
       this.node,
       mergeSelectionExpressions(
         Object.entries(shape).flatMap<SelectionExpression>(
-          ([fieldName, fieldValue]) => {
-            const field = this.getFieldByName(fieldName, path);
-
-            return field instanceof VirtualFieldOutputType
-              ? field.dependsOn?.expressions ?? []
-              : field.selectShape(
-                  fieldValue,
-                  operationContext,
-                  utils.addPath(path, fieldName),
-                );
-          },
+          ([fieldName, fieldValue]) =>
+            this.getFieldByName(fieldName, path).selectShape(
+              fieldValue,
+              operationContext,
+              utils.addPath(path, fieldName),
+            ),
         ),
         path,
       ),

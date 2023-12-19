@@ -1,7 +1,7 @@
 import * as utils from '@prismamedia/graphql-platform-utils';
 import { Memoize } from '@prismamedia/memoize';
 import type { NodeSelectionAwareArgs } from '../../../abstract-operation.js';
-import type { NodeFilter } from '../../../statement/filter.js';
+import type { NodeFilter } from '../../../statement.js';
 import { AbstractDeletion } from '../abstract-deletion.js';
 import type { MutationContext } from '../context.js';
 import type {

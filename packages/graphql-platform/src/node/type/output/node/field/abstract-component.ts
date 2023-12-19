@@ -1,12 +1,16 @@
 import type * as utils from '@prismamedia/graphql-platform-utils';
 import { Memoize } from '@prismamedia/memoize';
 import type { Component } from '../../../../definition/component.js';
-import { AbstractNodeFieldOutputType } from '../abstract-field.js';
+import { NodeOutputType } from '../../node.js';
+import { AbstractFieldOutputType } from '../abstract-field.js';
 
 export abstract class AbstractComponentOutputType<
   TArgs extends utils.Nillable<utils.PlainObject>,
-> extends AbstractNodeFieldOutputType<TArgs> {
-  public constructor(public readonly component: Component) {
+> extends AbstractFieldOutputType<TArgs> {
+  public constructor(
+    public readonly parent: NodeOutputType,
+    public readonly component: Component,
+  ) {
     super();
   }
 

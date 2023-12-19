@@ -3,7 +3,6 @@ import { Memoize } from '@prismamedia/memoize';
 import * as graphql from 'graphql';
 import inflection from 'inflection';
 import assert from 'node:assert/strict';
-import type { JsonObject } from 'type-fest';
 import type {
   ConnectorConfigOverride,
   ConnectorConfigOverrideKind,
@@ -229,7 +228,7 @@ export class UniqueConstraint<TConnector extends ConnectorInterface = any> {
       name: [
         this.node.name,
         ...Array.from(this.componentSet, ({ name }) =>
-          inflection.camelize(name),
+          inflection.camelize(name, false),
         ),
       ].join(''),
       fields: () =>
@@ -266,12 +265,45 @@ export class UniqueConstraint<TConnector extends ConnectorInterface = any> {
     maybeValue: unknown,
     path: utils.Path = utils.addPath(undefined, this.toString()),
   ): UniqueConstraintValue {
-    const value = this.selection.parseValue(maybeValue, path);
+    utils.assertPlainObject(maybeValue, path);
 
-    if (
-      this.isNullable() &&
-      Array.from(this.componentSet).every(({ name }) => value[name] === null)
-    ) {
+    const value = Object.create(null);
+
+    let hasNonNullComponentValue: boolean = false;
+
+    for (const component of this.componentSet) {
+      let componentValue: ComponentValue;
+
+      const rawComponentValue = maybeValue[component.name];
+
+      if (rawComponentValue === undefined) {
+        throw new utils.UnexpectedUndefinedError(component.name, { path });
+      } else if (rawComponentValue === null) {
+        if (!component.isNullable()) {
+          throw new utils.UnexpectedNullError(component.name, { path });
+        }
+
+        componentValue = null;
+      } else {
+        const componentPath = utils.addPath(path, component.name);
+
+        componentValue =
+          component instanceof Leaf
+            ? component.parseValue(rawComponentValue, componentPath)
+            : component.referencedUniqueConstraint.parseValue(
+                rawComponentValue,
+                componentPath,
+              );
+      }
+
+      if (componentValue !== null) {
+        hasNonNullComponentValue = true;
+      }
+
+      value[component.name] = componentValue;
+    }
+
+    if (!hasNonNullComponentValue) {
       throw new utils.UnexpectedValueError(
         `at least one non-null component's value`,
         maybeValue,
@@ -282,30 +314,19 @@ export class UniqueConstraint<TConnector extends ConnectorInterface = any> {
     return value;
   }
 
-  public areValuesEqual(
-    a: UniqueConstraintValue,
-    b: UniqueConstraintValue,
-  ): boolean {
-    return this.selection.areValuesEqual(a, b);
-  }
-
-  public uniqValues(
-    values: ReadonlyArray<UniqueConstraintValue>,
-  ): UniqueConstraintValue[] {
-    return this.selection.uniqValues(values);
-  }
-
-  public serialize(
-    maybeValue: unknown,
-    path: utils.Path = utils.addPath(undefined, this.toString()),
-  ): JsonObject {
-    return this.selection.serialize(maybeValue, path);
-  }
-
-  public stringify(
-    maybeValue: unknown,
-    path: utils.Path = utils.addPath(undefined, this.toString()),
-  ): string {
-    return this.selection.stringify(maybeValue, path);
+  public stringify(value: UniqueConstraintValue): string {
+    return `{${Array.from(
+      this.componentSet,
+      (component) =>
+        `"${component.name}":${
+          value[component.name] === null
+            ? 'null'
+            : component instanceof Leaf
+            ? component.stringify(value[component.name])
+            : component.referencedUniqueConstraint.stringify(
+                value[component.name] as UniqueConstraintValue,
+              )
+        }`,
+    ).join(',')}}`;
   }
 }

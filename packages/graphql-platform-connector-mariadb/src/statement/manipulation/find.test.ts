@@ -41,6 +41,8 @@ describe('Find statement', () => {
           metas
           tagCount
           createdAt
+          lowerCasedTitle
+          upperCasedTitle
         }`,
       },
       [
@@ -54,6 +56,9 @@ describe('Find statement', () => {
           tagCount: 2,
           title: 'My first published article',
           views: 0n,
+          lowerCasedTitle: 'published-my first published article-news',
+          upperCasedTitle:
+            'PUBLISHED-MY FIRST PUBLISHED ARTICLE-NEWS-TV-HIGH-TECH',
         },
         {
           body: {
@@ -70,6 +75,8 @@ describe('Find statement', () => {
           tagCount: 1,
           title: 'My second published article',
           views: 1234567890n,
+          lowerCasedTitle: 'published-my second published article-home',
+          upperCasedTitle: 'PUBLISHED-MY SECOND PUBLISHED ARTICLE-HOME-FASHION',
         },
         {
           body: null,
@@ -81,6 +88,10 @@ describe('Find statement', () => {
           tagCount: 3,
           title: 'My first published article in root category',
           views: 0n,
+          lowerCasedTitle:
+            'published-my first published article in root category-root',
+          upperCasedTitle:
+            'PUBLISHED-MY FIRST PUBLISHED ARTICLE IN ROOT CATEGORY-ROOT-TV-HIGH-TECH',
         },
         {
           body: null,
@@ -92,6 +103,10 @@ describe('Find statement', () => {
           tagCount: 2,
           title: 'My second published article in root category',
           views: 0n,
+          lowerCasedTitle:
+            'published-my second published article in root category-root',
+          upperCasedTitle:
+            'PUBLISHED-MY SECOND PUBLISHED ARTICLE IN ROOT CATEGORY-ROOT-TV-FASHION',
         },
       ],
     ],
@@ -256,12 +271,9 @@ describe('Find statement', () => {
     async (nodeName, context, args, expectedResult) => {
       executedStatements.length = 0;
 
-      await expect(
-        gp
-          .getNodeByName(nodeName)
-          .getQueryByKey('find-many')
-          .execute(context, args),
-      ).resolves.toEqual(expectedResult);
+      await expect(gp.api[nodeName].findMany(context, args)).resolves.toEqual(
+        expectedResult,
+      );
 
       expect(executedStatements).toMatchSnapshot();
     },

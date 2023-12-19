@@ -218,12 +218,12 @@ export class ChangesSubscriptionStream<
     if (config.selection.onDeletion) {
       assert(config.selection.onDeletion instanceof NodeSelection);
       assert(
-        config.selection.onDeletion.isSubsetOf(this.node.selection),
+        config.selection.onDeletion.isPure(),
         `Expects the "onDeletion" selection to be a subset of the "${this.node}"'s selection`,
       );
       assert(
-        config.selection.onDeletion.isSubsetOf(this.onUpsertSelection),
-        `Expects the "onDeletion" selection to be a subset of the "onUpsert" selection`,
+        this.onUpsertSelection.isSupersetOf(config.selection.onDeletion),
+        `Expects the "onUpsert" selection to be a superset of the "onDeletion" selection`,
       );
 
       this.onDeletionSelection = config.selection.onDeletion;
@@ -359,9 +359,11 @@ export class ChangesSubscriptionStream<
         if (filterValue === true) {
           this.onUpsertSelection.isPure()
             ? effect.upserts.push(
-                new ChangesSubscriptionUpsert(this, change.newValue, [
-                  change.requestContext,
-                ]),
+                new ChangesSubscriptionUpsert(
+                  this,
+                  this.onUpsertSelection.pickValue(change.newValue as any),
+                  [change.requestContext],
+                ),
               )
             : effect.incompleteUpserts.push(change);
         } else if (filterValue === undefined) {
@@ -376,9 +378,11 @@ export class ChangesSubscriptionStream<
         if (filterValue !== false) {
           this.onDeletionSelection &&
             effect.deletions.push(
-              new ChangesSubscriptionDeletion(this, change.oldValue, [
-                change.requestContext,
-              ]),
+              new ChangesSubscriptionDeletion(
+                this,
+                this.onDeletionSelection.pickValue(change.oldValue as any),
+                [change.requestContext],
+              ),
             );
         }
 
@@ -399,9 +403,11 @@ export class ChangesSubscriptionStream<
           ) {
             this.onUpsertSelection.isPure()
               ? effect.upserts.push(
-                  new ChangesSubscriptionUpsert(this, change.newValue, [
-                    change.requestContext,
-                  ]),
+                  new ChangesSubscriptionUpsert(
+                    this,
+                    this.onUpsertSelection.pickValue(change.newValue as any),
+                    [change.requestContext],
+                  ),
                 )
               : effect.incompleteUpserts.push(change);
           }
@@ -409,9 +415,11 @@ export class ChangesSubscriptionStream<
           if (newFilterValue !== oldFilterValue) {
             this.onDeletionSelection &&
               effect.deletions.push(
-                new ChangesSubscriptionDeletion(this, change.newValue, [
-                  change.requestContext,
-                ]),
+                new ChangesSubscriptionDeletion(
+                  this,
+                  this.onDeletionSelection.pickValue(change.newValue as any),
+                  [change.requestContext],
+                ),
               );
           }
         } else {
@@ -487,7 +495,7 @@ export class ChangesSubscriptionStream<
       effect.incompleteUpserts.length ||
       effect.maybeUpserts.length
     ) {
-      const nodeChanges = [
+      const changes = [
         ...effect.maybeChanges,
         ...effect.incompleteUpserts,
         ...effect.maybeUpserts,
@@ -499,24 +507,26 @@ export class ChangesSubscriptionStream<
             // We don't need the filter for the "incomplete-upserts", they are already filtered-in
             subset: this.filter?.inputValue,
           }),
-        where: nodeChanges.map(({ id }) => id),
+        where: changes.map(({ id }) => id),
         selection: this.onUpsertSelection,
       });
 
       for (const [index, value] of values.entries()) {
-        const nodeChange = nodeChanges[index];
+        const change = changes[index];
 
         if (value) {
-          yield new ChangesSubscriptionUpsert(this, value, [
-            nodeChange.requestContext,
+          yield new ChangesSubscriptionUpsert(this, value as TUpsert, [
+            change.requestContext,
           ]);
         } else if (
           index < effect.maybeChanges.length &&
           this.onDeletionSelection
         ) {
-          yield new ChangesSubscriptionDeletion(this, nodeChange.newValue, [
-            nodeChange.requestContext,
-          ]);
+          yield new ChangesSubscriptionDeletion(
+            this,
+            this.onDeletionSelection.pickValue(change.newValue as any),
+            [change.requestContext],
+          );
         }
       }
     }
@@ -539,7 +549,7 @@ export class ChangesSubscriptionStream<
           for await (const deletion of this.#api.scroll(args)) {
             yield new ChangesSubscriptionDeletion(
               this,
-              deletion,
+              deletion as TDeletion,
               effect.maybeGraphChanges.initiators,
             );
           }
@@ -552,7 +562,7 @@ export class ChangesSubscriptionStream<
           for (const deletion of deletions) {
             yield new ChangesSubscriptionDeletion(
               this,
-              deletion,
+              deletion as TDeletion,
               effect.maybeGraphChanges.initiators,
             );
           }
@@ -575,7 +585,7 @@ export class ChangesSubscriptionStream<
           for await (const upsert of this.#api.scroll(args)) {
             yield new ChangesSubscriptionUpsert(
               this,
-              upsert,
+              upsert as TUpsert,
               effect.maybeGraphChanges.initiators,
             );
           }
@@ -588,7 +598,7 @@ export class ChangesSubscriptionStream<
           for (const upsert of upserts) {
             yield new ChangesSubscriptionUpsert(
               this,
-              upsert,
+              upsert as TUpsert,
               effect.maybeGraphChanges.initiators,
             );
           }

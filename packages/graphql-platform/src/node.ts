@@ -3,7 +3,7 @@ import { Memoize } from '@prismamedia/memoize';
 import { OperationTypeNode } from 'graphql';
 import inflection from 'inflection';
 import * as R from 'remeda';
-import type { Except, JsonObject, Promisable } from 'type-fest';
+import type { Except, Promisable } from 'type-fest';
 import type { BrokerInterface } from './broker-interface.js';
 import type {
   ConnectorConfigOverride,
@@ -1697,26 +1697,6 @@ export class Node<
         ? null
         : authorization,
     ).normalized;
-  }
-
-  public parseValue(maybeValue: unknown, path?: utils.Path): NodeValue {
-    return this.selection.parseValue(maybeValue, path);
-  }
-
-  public areValuesEqual(a: NodeValue, b: NodeValue): boolean {
-    return this.selection.areValuesEqual(a, b);
-  }
-
-  public uniqValues(values: ReadonlyArray<NodeValue>): NodeValue[] {
-    return this.selection.uniqValues(values);
-  }
-
-  public serialize(maybeValue: unknown, path?: utils.Path): JsonObject {
-    return this.selection.serialize(maybeValue, path);
-  }
-
-  public stringify(maybeValue: unknown, path?: utils.Path): string {
-    return this.selection.stringify(maybeValue, path);
   }
 
   public filterChange(change: NodeChange<TRequestContext>): boolean {

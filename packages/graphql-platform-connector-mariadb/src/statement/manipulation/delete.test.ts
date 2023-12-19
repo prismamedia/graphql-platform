@@ -58,10 +58,7 @@ describe('Delete statement', () => {
     ],
   ])('generates statements', async (nodeName, context, args) => {
     await expect(
-      gp
-        .getNodeByName(nodeName)
-        .getMutationByKey('delete-many')
-        .execute(context, args),
+      gp.api[nodeName].deleteMany(context, args),
     ).resolves.toMatchSnapshot('result');
 
     expect(

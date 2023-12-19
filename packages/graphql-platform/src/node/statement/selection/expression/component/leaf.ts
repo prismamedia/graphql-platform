@@ -1,24 +1,31 @@
 import * as utils from '@prismamedia/graphql-platform-utils';
 import * as graphql from 'graphql';
 import assert from 'node:assert/strict';
-import type { JsonValue } from 'type-fest';
 import type { NodeValue } from '../../../../../node.js';
 import type { NodeChange, NodeUpdate } from '../../../../change.js';
 import type { Component, Leaf, LeafValue } from '../../../../definition.js';
+import type { OperationContext } from '../../../../operation.js';
 import { FalseValue, type BooleanFilter } from '../../../filter.js';
 import type { SelectionExpressionInterface } from '../../expression-interface.js';
 
-export class LeafSelection implements SelectionExpressionInterface<LeafValue> {
+export class LeafSelection<TSource extends LeafValue = any, TValue = TSource>
+  implements SelectionExpressionInterface<TSource, TValue>
+{
   public readonly component: Component;
-  public readonly alias?: string;
   public readonly name: string;
   public readonly key: string;
 
-  public constructor(public readonly leaf: Leaf, alias: string | undefined) {
+  public constructor(
+    public readonly leaf: Leaf,
+    public readonly alias: string | undefined,
+  ) {
     this.component = leaf;
-    this.alias = alias || undefined;
     this.name = leaf.name;
     this.key = this.alias ?? this.name;
+  }
+
+  public get hasVirtualSelection(): boolean {
+    return false;
   }
 
   public isAkinTo(expression: unknown): expression is LeafSelection {
@@ -57,6 +64,12 @@ export class LeafSelection implements SelectionExpressionInterface<LeafValue> {
   public toGraphQLFieldNode(): graphql.FieldNode {
     return {
       kind: graphql.Kind.FIELD,
+      ...(this.alias && {
+        alias: {
+          kind: graphql.Kind.NAME,
+          value: this.alias,
+        },
+      }),
       name: {
         kind: graphql.Kind.NAME,
         value: this.name,
@@ -64,23 +77,26 @@ export class LeafSelection implements SelectionExpressionInterface<LeafValue> {
     };
   }
 
-  public parseValue(maybeValue: unknown, path?: utils.Path): LeafValue {
-    return this.leaf.parseValue(maybeValue, path);
+  public parseSource(
+    maybeValue: unknown,
+    path: utils.Path = utils.addPath(undefined, this.leaf.toString()),
+  ): TSource {
+    return this.leaf.parseValue(maybeValue, path) as any;
   }
 
-  public areValuesEqual(a: LeafValue, b: LeafValue): boolean {
-    return this.leaf.areValuesEqual(a, b);
+  public resolveValue(
+    source: TSource,
+    _context: OperationContext,
+    _path: utils.Path,
+  ): TValue {
+    return source as any;
   }
 
-  public uniqValues(values: ReadonlyArray<LeafValue>): LeafValue[] {
-    return this.leaf.uniqValues(values);
+  public pickValue(superSetOfValue: TValue): TValue {
+    return superSetOfValue;
   }
 
-  public serialize(maybeValue: unknown, path?: utils.Path): JsonValue {
-    return this.leaf.serialize(maybeValue, path);
-  }
-
-  public stringify(maybeValue: unknown, path?: utils.Path): string {
-    return this.leaf.stringify(maybeValue, path);
+  public areValuesEqual(a: TValue, b: TValue): boolean {
+    return this.leaf.areValuesEqual(a as any, b as any);
   }
 }

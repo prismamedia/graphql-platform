@@ -8,8 +8,11 @@ import {
   type NodeSelectionAwareArgs,
   type RawNodeSelectionAwareArgs,
 } from '../../abstract-operation.js';
-import { AndOperation, NodeFilter } from '../../statement/filter.js';
-import type { NodeSelectedValue } from '../../statement/selection/value.js';
+import {
+  AndOperation,
+  NodeFilter,
+  type NodeSelectedValue,
+} from '../../statement.js';
 import type { NodeFilterInputValue, OrderByInputValue } from '../../type.js';
 import { AbstractQuery } from '../abstract-query.js';
 import type { OperationContext } from '../context.js';
@@ -78,7 +81,7 @@ export class FindManyQuery<
     args: NodeSelectionAwareArgs<FindManyQueryArgs>,
     path: utils.Path,
   ): Promise<FindManyQueryResult> {
-    if (args.first === 0) {
+    if (!args.first) {
       return [];
     }
 
@@ -106,7 +109,7 @@ export class FindManyQuery<
       utils.addPath(argsPath, 'orderBy'),
     ).normalized;
 
-    return catchConnectorOperationError(
+    const rawSources = await catchConnectorOperationError(
       () =>
         this.connector.find(context, {
           node: this.node,
@@ -119,6 +122,16 @@ export class FindManyQuery<
       this.node,
       ConnectorOperationKind.FIND,
       { path },
+    );
+
+    return Promise.all(
+      rawSources.map((rawSource) =>
+        args.selection.resolveValue(
+          args.selection.parseSource(rawSource, path),
+          context,
+          path,
+        ),
+      ),
     );
   }
 }

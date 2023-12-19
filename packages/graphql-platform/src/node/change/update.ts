@@ -56,8 +56,8 @@ export class NodeUpdate<
     createdAt?: Date,
     committedAt?: Date,
   ) {
-    const oldValue = Object.freeze(node.parseValue(maybeOldValue));
-    const newValue = Object.freeze(node.parseValue(maybeNewValue));
+    const oldValue = Object.freeze(node.selection.parseSource(maybeOldValue));
+    const newValue = Object.freeze(node.selection.parseSource(maybeNewValue));
 
     super(
       node,
@@ -78,7 +78,12 @@ export class NodeUpdate<
           const oldComponentValue: any = oldValue[component.name];
           const newComponentValue: any = newValue[component.name];
 
-          if (!component.areValuesEqual(oldComponentValue, newComponentValue)) {
+          if (
+            !component.selection.areValuesEqual(
+              oldComponentValue,
+              newComponentValue,
+            )
+          ) {
             entries.push([
               component,
               Object.freeze({

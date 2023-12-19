@@ -11,6 +11,7 @@ import {
   NodeUpdate,
 } from '../../../../../change.js';
 import type { MultipleReverseEdge } from '../../../../../definition.js';
+import type { OperationContext } from '../../../../../operation.js';
 import {
   BooleanFilter,
   MultipleReverseEdgeExistsFilter,
@@ -26,20 +27,20 @@ export type MultipleReverseEdgeCountSelectionArgs = utils.Nillable<{
 
 export type MultipleReverseEdgeCountValue = number;
 
-export class MultipleReverseEdgeCountSelection
-  implements SelectionExpressionInterface<MultipleReverseEdgeCountValue>
+export class MultipleReverseEdgeCountSelection<
+  TSource extends MultipleReverseEdgeCountValue = any,
+  TValue = TSource,
+> implements SelectionExpressionInterface<TSource, TValue>
 {
-  public readonly alias?: string;
   public readonly name: string;
   public readonly key: string;
   public readonly headFilter?: NodeFilter;
 
   public constructor(
     public readonly reverseEdge: MultipleReverseEdge,
-    alias: string | undefined,
+    public readonly alias: string | undefined,
     headFilter: NodeFilter | undefined,
   ) {
-    this.alias = alias || undefined;
     this.name = reverseEdge.countFieldName;
     this.key = this.alias ?? this.name;
 
@@ -48,6 +49,10 @@ export class MultipleReverseEdgeCountSelection
 
       this.headFilter = headFilter.normalized;
     }
+  }
+
+  public get hasVirtualSelection(): boolean {
+    return false;
   }
 
   public isAkinTo(
@@ -173,12 +178,12 @@ export class MultipleReverseEdgeCountSelection
   public toGraphQLFieldNode(): graphql.FieldNode {
     return {
       kind: graphql.Kind.FIELD,
-      alias: this.alias
-        ? {
-            kind: graphql.Kind.NAME,
-            value: this.alias,
-          }
-        : undefined,
+      ...(this.alias && {
+        alias: {
+          kind: graphql.Kind.NAME,
+          value: this.alias,
+        },
+      }),
       name: {
         kind: graphql.Kind.NAME,
         value: this.name,
@@ -186,37 +191,35 @@ export class MultipleReverseEdgeCountSelection
     };
   }
 
-  public parseValue(
-    maybeValue: unknown,
-    path?: utils.Path,
-  ): MultipleReverseEdgeCountValue {
-    if (maybeValue == null) {
+  public parseSource(maybeSource: unknown, path?: utils.Path): TSource {
+    if (maybeSource == null) {
       throw new utils.UnexpectedValueError(
         `a non-nil "${scalars.typesByName.UnsignedInt}"`,
-        maybeValue,
+        maybeSource,
         { path },
       );
     }
 
     return utils.parseGraphQLScalarValue(
       scalars.typesByName.UnsignedInt,
-      maybeValue,
+      maybeSource,
       path,
-    )!;
+    ) as any;
   }
 
-  public areValuesEqual(
-    a: MultipleReverseEdgeCountValue,
-    b: MultipleReverseEdgeCountValue,
-  ): boolean {
+  public resolveValue(
+    source: TSource,
+    _context: OperationContext,
+    _path: utils.Path,
+  ): TValue {
+    return source as any;
+  }
+
+  public pickValue(superSetOfValue: TValue): TValue {
+    return superSetOfValue;
+  }
+
+  public areValuesEqual(a: TValue, b: TValue): boolean {
     return a === b;
-  }
-
-  public serialize(maybeValue: unknown, path?: utils.Path): number {
-    return this.parseValue(maybeValue, path);
-  }
-
-  public stringify(maybeValue: unknown, path?: utils.Path): string {
-    return JSON.stringify(this.serialize(maybeValue, path));
   }
 }

@@ -15,13 +15,14 @@ export abstract class AbstractNodeChange<TRequestContext extends object> {
   ) {
     Object.freeze(id);
 
-    const pureIdentifierLeaf =
-      node.mainIdentifier.componentSet.size === 1
-        ? node.mainIdentifier.leafSet.values().next().value
+    const pureLeafIdentifier =
+      node.mainIdentifier.leafSet.size === 1 &&
+      node.mainIdentifier.edgeSet.size === 0
+        ? [...node.mainIdentifier.leafSet][0]
         : undefined;
 
-    this.stringifiedId = pureIdentifierLeaf
-      ? pureIdentifierLeaf.stringify(id[pureIdentifierLeaf.name])
+    this.stringifiedId = pureLeafIdentifier
+      ? pureLeafIdentifier.stringify(id[pureLeafIdentifier.name])
       : node.mainIdentifier.stringify(id);
   }
 

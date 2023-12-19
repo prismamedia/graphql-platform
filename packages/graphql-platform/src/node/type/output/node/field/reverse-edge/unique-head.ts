@@ -3,7 +3,7 @@ import * as graphql from 'graphql';
 import type { UniqueReverseEdge } from '../../../../../definition/reverse-edge/unique.js';
 import type { OperationContext } from '../../../../../operation/context.js';
 import { UniqueReverseEdgeHeadSelection } from '../../../../../statement/selection/expression/reverse-edge/unique/head.js';
-import type { GraphQLSelectionContext } from '../../../node.js';
+import type { GraphQLSelectionContext, NodeOutputType } from '../../../node.js';
 import { AbstractReverseEdgeOutputType } from '../abstract-reverse-edge.js';
 
 export class UniqueReverseEdgeHeadOutputType extends AbstractReverseEdgeOutputType<undefined> {
@@ -11,10 +11,13 @@ export class UniqueReverseEdgeHeadOutputType extends AbstractReverseEdgeOutputTy
   public readonly description?: string;
   public readonly deprecationReason?: string;
 
-  protected readonly arguments?: undefined;
+  protected readonly args?: undefined;
 
-  public constructor(public override readonly reverseEdge: UniqueReverseEdge) {
-    super(reverseEdge);
+  public constructor(
+    parent: NodeOutputType,
+    public override readonly reverseEdge: UniqueReverseEdge,
+  ) {
+    super(parent, reverseEdge);
 
     this.name = reverseEdge.name;
     this.description = reverseEdge.description;

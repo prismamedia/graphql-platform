@@ -6,10 +6,9 @@ import type {
   RawNodeSelectionAwareArgs,
 } from '../../../abstract-operation.js';
 import { NodeCreation } from '../../../change.js';
-import { NodeCreationStatement } from '../../../statement/creation.js';
-import type { NodeFilter } from '../../../statement/filter.js';
-import type { NodeSelectedValue } from '../../../statement/selection.js';
-import type { NodeCreationInputValue } from '../../../type/input/creation.js';
+import type { NodeFilter, NodeSelectedValue } from '../../../statement.js';
+import { NodeCreationStatement } from '../../../statement.js';
+import type { NodeCreationInputValue } from '../../../type.js';
 import {
   ConnectorOperationKind,
   LifecycleHookError,
@@ -66,12 +65,12 @@ export class CreateSomeMutation<
     args: NodeSelectionAwareArgs<CreateSomeMutationArgs>,
     path: utils.Path,
   ): Promise<CreateSomeMutationResult> {
-    // As the "data" will be provided to the hooks, we freeze it
-    Object.freeze(args.data);
-
-    if (args.data.length === 0) {
+    if (!args.data.length) {
       return [];
     }
+
+    // As the "data" will be provided to the hooks, we freeze it
+    Object.freeze(args.data);
 
     // Build the "creation" statements based on the provided "data" argument
     const creations = await Promise.all(
@@ -112,19 +111,23 @@ export class CreateSomeMutation<
     );
 
     // Actually create the nodes
-    const newValues = await catchConnectorOperationError(
+    const rawNewSources = await catchConnectorOperationError(
       () => this.connector.create(context, { node: this.node, creations }),
       this.node,
       ConnectorOperationKind.CREATE,
       { path },
     );
 
-    await Promise.all(
-      newValues.map(async (newValue, index) => {
+    const newSources = await Promise.all(
+      rawNewSources.map(async (rawNewSource, index) => {
         const indexedPath =
-          newValues.length > 1 ? utils.addPath(path, index) : path;
+          rawNewSources.length > 1 ? utils.addPath(path, index) : path;
 
-        const change = new NodeCreation(this.node, context.request, newValue);
+        const change = new NodeCreation(
+          this.node,
+          context.request,
+          rawNewSource,
+        );
 
         // Let's everybody know about this created node
         context.changes.push(change);
@@ -150,19 +153,19 @@ export class CreateSomeMutation<
             { cause, path: indexedPath },
           );
         }
+
+        return change.newValue;
       }),
     );
 
-    return this.node.selection.isSupersetOf(args.selection)
-      ? newValues.map((newValue, index) =>
-          args.selection.parseValue(newValue, utils.addPath(path, index)),
-        )
+    return args.selection.isPure()
+      ? newSources.map((newSource) => args.selection.pickValue(newSource))
       : this.node.getQueryByKey('get-some-in-order').internal(
           context,
           authorization,
           {
-            where: newValues.map((newValue) =>
-              this.node.mainIdentifier.parseValue(newValue),
+            where: newSources.map((newSource) =>
+              this.node.mainIdentifier.selection.pickValue(newSource),
             ),
             selection: args.selection,
           },

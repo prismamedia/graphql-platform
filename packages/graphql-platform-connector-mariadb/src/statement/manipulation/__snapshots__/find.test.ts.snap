@@ -24,7 +24,44 @@ exports[`Find statement 0 - generates statements 1`] = `
       WHERE \`articles\`.\`private_id\` <=> \`articles>tags\`.\`article_private_id\`
     ),
     "createdAt",
-    \`articles\`.\`created_at\`
+    \`articles\`.\`created_at\`,
+    "lowerCasedTitle",
+    JSON_OBJECT(
+      "status",
+      \`articles\`.\`status\`,
+      "title",
+      \`articles\`.\`title\`,
+      "category",
+      (
+        SELECT JSON_OBJECT("title", \`articles>category\`.\`title\`)
+        FROM \`categories\` AS \`articles>category\`
+        WHERE \`articles\`.\`category_private_id\` <=> \`articles>category\`.\`private_id\`
+        LIMIT 1
+      )
+    ), "upperCasedTitle", JSON_OBJECT(
+      "status", \`articles\`.\`status\`, "title", \`articles\`.\`title\`, "category", (
+        SELECT JSON_OBJECT("title", \`articles>category\`.\`title\`)
+        FROM \`categories\` AS \`articles>category\`
+        WHERE \`articles\`.\`category_private_id\` <=> \`articles>category\`.\`private_id\`
+        LIMIT 1
+      ), "tags", (
+        SELECT JSON_ARRAYAGG(
+            JSON_OBJECT(
+              "tag",
+              (
+                SELECT JSON_OBJECT("title", \`articles>tags>tag\`.\`title\`)
+                FROM \`tags\` AS \`articles>tags>tag\`
+                WHERE \`articles>tags\`.\`tag_id\` <=> \`articles>tags>tag\`.\`id\`
+                LIMIT 1
+              )
+            )
+            ORDER BY \`articles>tags\`.\`order\` ASC
+            LIMIT 2
+          )
+        FROM \`article_tags\` AS \`articles>tags\`
+        WHERE \`articles\`.\`private_id\` <=> \`articles>tags\`.\`article_private_id\`
+      )
+    )
   ) as \`Article\`
 FROM \`articles\`
 WHERE \`articles\`.\`status\` <=> 'published'

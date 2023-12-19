@@ -13,6 +13,7 @@ exports[`GraphQL-Platform Integration Apollo Server creates an ApolloServer inst
               "entityMap": {},
             },
             "createdAt": "2022-01-01T00:00:00.000Z",
+            "lowerCasedTitle": "draft-my first draft article-home",
             "machineTags": null,
             "metas": {
               "myArbitraryKey": "with my arbitrary value",
@@ -27,6 +28,7 @@ exports[`GraphQL-Platform Integration Apollo Server creates an ApolloServer inst
           {
             "body": null,
             "createdAt": "2022-02-01T00:00:00.000Z",
+            "lowerCasedTitle": "draft-my second draft article-home",
             "machineTags": null,
             "metas": null,
             "score": 0.5,
@@ -39,6 +41,7 @@ exports[`GraphQL-Platform Integration Apollo Server creates an ApolloServer inst
           {
             "body": null,
             "createdAt": "2022-03-01T00:00:00.000Z",
+            "lowerCasedTitle": "published-my first published article-news",
             "machineTags": null,
             "metas": null,
             "score": 0.5,
@@ -67,6 +70,7 @@ exports[`GraphQL-Platform Integration Apollo Server creates an ApolloServer inst
               "entityMap": {},
             },
             "createdAt": "2022-04-01T00:00:00.000Z",
+            "lowerCasedTitle": "published-my second published article-home",
             "machineTags": [
               "namespace:key=a_value",
               "namespace:key=other_value",
@@ -91,6 +95,7 @@ exports[`GraphQL-Platform Integration Apollo Server creates an ApolloServer inst
           {
             "body": null,
             "createdAt": "2022-05-01T00:00:00.000Z",
+            "lowerCasedTitle": "published-my first published article in root category-root",
             "machineTags": null,
             "metas": null,
             "score": 0.5,
@@ -122,6 +127,7 @@ exports[`GraphQL-Platform Integration Apollo Server creates an ApolloServer inst
           {
             "body": null,
             "createdAt": "2022-06-01T00:00:00.000Z",
+            "lowerCasedTitle": "published-my second published article in root category-root",
             "machineTags": null,
             "metas": null,
             "score": 0.5,
@@ -159,6 +165,26 @@ exports[`GraphQL-Platform Integration Apollo Server creates an ApolloServer inst
 `;
 
 exports[`GraphQL-Platform Integration Apollo Server creates an ApolloServer instance 2`] = `
+{
+  "body": {
+    "kind": "single",
+    "singleResult": {
+      "data": {
+        "articles": null,
+      },
+      "errors": undefined,
+    },
+  },
+  "http": {
+    "headers": Map {
+      "cache-control" => "no-store",
+    },
+    "status": undefined,
+  },
+}
+`;
+
+exports[`GraphQL-Platform Integration Apollo Server creates an ApolloServer instance 3`] = `
 {
   "body": {
     "kind": "single",

@@ -87,7 +87,10 @@ export class NodeCreationStatement {
 
     value === undefined
       ? this.valuesByComponent.delete(component)
-      : this.valuesByComponent.set(component, component.parseValue(value));
+      : this.valuesByComponent.set(
+          component,
+          component.selection.parseSource(value),
+        );
   }
 
   public setValue(value: Readonly<NodeCreationValue>): void {

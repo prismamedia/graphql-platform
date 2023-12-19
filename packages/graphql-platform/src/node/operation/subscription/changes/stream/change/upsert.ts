@@ -10,13 +10,11 @@ export class ChangesSubscriptionUpsert<
 
   public constructor(
     subscription: ChangesSubscriptionStream<TValue, any, TRequestContext>,
-    value: unknown,
+    value: TValue,
     initiators: ReadonlyArray<TRequestContext>,
   ) {
     super(subscription, initiators);
 
-    this.value = Object.freeze(
-      subscription.onUpsertSelection.parseValue(value),
-    );
+    this.value = Object.freeze(value);
   }
 }

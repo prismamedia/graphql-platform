@@ -388,7 +388,11 @@ export const Article = {
   output: {
     virtualFields: (node) => ({
       lowerCasedTitle: {
-        dependsOn: '{ status title category { title } }',
+        dependsOn: `{
+          status
+          title
+          category { title }
+        }`,
         type: new GraphQLNonNull(scalars.typesByName.NonEmptyTrimmedString),
         description: `A custom field with a dependency`,
         resolve: ({
@@ -398,7 +402,7 @@ export const Article = {
         }: {
           status: ArticleStatus;
           title: string;
-          category: any;
+          category: { title: string } | null;
         }) =>
           (<string[]>[status, title, category?.title])
             .filter(Boolean)
@@ -407,8 +411,12 @@ export const Article = {
       },
       // An exemple of how to use the "Node" to build another custom field
       upperCasedTitle: {
-        dependsOn:
-          '{ status title category { title } tags(orderBy: [order_ASC], first: 2) { tag { title } } }',
+        dependsOn: `{
+          status
+          title
+          category { title }
+          tags(orderBy: [order_ASC], first: 2) { tag { title } }
+        }`,
         type: new GraphQLNonNull(node.getLeafByName('title').type),
         description: `A custom field with a dependency`,
         resolve: (
@@ -416,15 +424,23 @@ export const Article = {
             status,
             title,
             category,
+            tags,
           }: {
             status: ArticleStatus;
             title: string;
-            category: any;
+            category: { title: string } | null;
+            tags: { tag: { title: string } }[];
           },
-          args,
-          context,
+          _args,
+          _context,
+          _selectionSet,
         ) =>
-          (<string[]>[status, title, category?.title])
+          (<string[]>[
+            status,
+            title,
+            category?.title,
+            ...tags.map(({ tag }) => tag.title),
+          ])
             .filter(Boolean)
             .join('-')
             .toUpperCase(),

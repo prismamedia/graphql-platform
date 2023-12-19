@@ -2,7 +2,6 @@ import * as utils from '@prismamedia/graphql-platform-utils';
 import { Memoize } from '@prismamedia/memoize';
 import inflection from 'inflection';
 import assert from 'node:assert/strict';
-import * as R from 'remeda';
 import type { Component, Edge, Node, UniqueConstraint } from '../../../node.js';
 import { Leaf, type LeafValue } from '../../definition/component/leaf.js';
 
@@ -199,11 +198,5 @@ export class NodeUniqueFilterInputType extends utils.ObjectInputType {
                   b[componentName] as any,
                 );
           });
-  }
-
-  public uniqValues<T extends NodeUniqueFilterInputValue>(
-    values: ReadonlyArray<T>,
-  ): T[] {
-    return R.uniqWith(values, (a, b) => this.areValuesEqual(a, b));
   }
 }

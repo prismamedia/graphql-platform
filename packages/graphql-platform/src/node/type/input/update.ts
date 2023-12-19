@@ -5,10 +5,7 @@ import assert from 'node:assert/strict';
 import type { Except } from 'type-fest';
 import type { Edge, Node, NodeValue } from '../../../node.js';
 import type { MutationContext } from '../../operation.js';
-import {
-  isReverseEdgeSelection,
-  type NodeSelection,
-} from '../../statement/selection.js';
+import { type NodeSelection } from '../../statement/selection.js';
 import type { NodeUpdateValue } from '../../statement/update.js';
 import {
   ComponentUpdateInput,
@@ -190,11 +187,7 @@ export class NodeUpdateInputType extends utils.ObjectInputType<FieldUpdateInput>
     return this.reverseEdgeFields.some(
       (field) =>
         data[field.name] != null &&
-        selection.expressions.some(
-          (expression) =>
-            isReverseEdgeSelection(expression) &&
-            expression.reverseEdge === field.reverseEdge,
-        ),
+        selection.reverseEdges.includes(field.reverseEdge),
     );
   }
 

@@ -8,9 +8,12 @@ import {
   type RawNodeSelectionAwareArgs,
 } from '../../../abstract-operation.js';
 import { NodeDeletion } from '../../../change.js';
-import { OnEdgeHeadDeletion } from '../../../definition/component/edge.js';
-import { AndOperation, NodeFilter } from '../../../statement/filter.js';
-import type { NodeSelectedValue } from '../../../statement/selection.js';
+import { OnEdgeHeadDeletion } from '../../../definition.js';
+import {
+  AndOperation,
+  NodeFilter,
+  type NodeSelectedValue,
+} from '../../../statement.js';
 import type { NodeFilterInputValue, OrderByInputValue } from '../../../type.js';
 import {
   catchConnectorOperationError,
@@ -77,7 +80,7 @@ export class DeleteManyMutation<
     args: NodeSelectionAwareArgs<DeleteManyMutationArgs>,
     path: utils.Path,
   ): Promise<DeleteManyMutationResult> {
-    if (args.first === 0) {
+    if (!args.first) {
       return [];
     }
 
@@ -105,15 +108,17 @@ export class DeleteManyMutation<
       utils.addPath(argsPath, 'orderBy'),
     ).normalized;
 
+    const internalSelection = this.node.selection.mergeWith(args.selection);
+
     // Fetch the current nodes' value
-    const currentValues = await catchConnectorOperationError(
+    const rawOldSources = await catchConnectorOperationError(
       () =>
         this.connector.find(context, {
           node: this.node,
           ...(filter && { filter }),
           ...(ordering && { ordering }),
           limit: args.first,
-          selection: this.node.selection.mergeWith(args.selection),
+          selection: internalSelection,
           forMutation: utils.MutationType.DELETION,
         }),
       this.node,
@@ -121,23 +126,33 @@ export class DeleteManyMutation<
       { path },
     );
 
-    if (currentValues.length === 0) {
+    if (!rawOldSources.length) {
       return [];
     }
 
-    const currentIds = currentValues.map((currentValue) =>
-      Object.freeze(this.node.mainIdentifier.parseValue(currentValue)),
+    const oldValues = await Promise.all(
+      rawOldSources.map((rawOldSource) =>
+        internalSelection.resolveValue(
+          internalSelection.parseSource(rawOldSource, path),
+          context,
+          path,
+        ),
+      ),
+    );
+
+    const ids = oldValues.map((oldValue) =>
+      this.node.mainIdentifier.selection.pickValue(oldValue),
     );
 
     // Apply the "preDelete"-hook, if any
     if (this.node.preDeletionHooks.length) {
       await Promise.all(
-        currentValues.map(async (currentValue, index) => {
+        oldValues.map(async (oldValue, index) => {
           try {
             await this.node.preDelete({
               context,
-              id: currentIds[index],
-              current: Object.freeze(this.node.parseValue(currentValue)),
+              id: Object.freeze(ids[index]),
+              current: Object.freeze(this.node.selection.pickValue(oldValue)),
             });
           } catch (cause) {
             throw new LifecycleHookError(
@@ -167,9 +182,9 @@ export class DeleteManyMutation<
               where: {
                 OR: reverseEdges.map((reverseEdge) => ({
                   [reverseEdge.originalEdge.name]: {
-                    OR: currentValues.map((currentValue) =>
+                    OR: oldValues.map((oldValue) =>
                       reverseEdge.originalEdge.referencedUniqueConstraint.parseValue(
-                        currentValue,
+                        oldValue,
                       ),
                     ),
                   },
@@ -185,9 +200,9 @@ export class DeleteManyMutation<
             reverseEdge.head.getMutationByKey('update-many').execute(context, {
               where: {
                 [reverseEdge.originalEdge.name]: {
-                  OR: currentValues.map((currentValue) =>
+                  OR: oldValues.map((oldValue) =>
                     reverseEdge.originalEdge.referencedUniqueConstraint.parseValue(
-                      currentValue,
+                      oldValue,
                     ),
                   ),
                 },
@@ -206,7 +221,7 @@ export class DeleteManyMutation<
       () =>
         this.connector.delete(context, {
           node: this.node,
-          filter: this.node.filterInputType.filter({ OR: currentIds }),
+          filter: this.node.filterInputType.filter({ OR: ids }),
         }),
       this.node,
       ConnectorOperationKind.DELETE,
@@ -214,7 +229,7 @@ export class DeleteManyMutation<
     );
 
     return Promise.all(
-      currentValues.map(async (oldValue) => {
+      oldValues.map(async (oldValue) => {
         const change = new NodeDeletion(this.node, context.request, oldValue);
 
         // Let's everybody know about this deleted node
@@ -231,7 +246,7 @@ export class DeleteManyMutation<
           );
         }
 
-        return args.selection.parseValue(oldValue);
+        return args.selection.pickValue(oldValue);
       }),
     );
   }

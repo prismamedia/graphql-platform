@@ -8,17 +8,23 @@ import {
   isReverseEdgeSelection,
   type ReverseEdgeSelection,
 } from './expression/reverse-edge.js';
+import { VirtualSelection } from './expression/virtual.js';
 
 export * from './expression/component.js';
 export * from './expression/reverse-edge.js';
+export * from './expression/virtual.js';
 
-export type SelectionExpression = ComponentSelection | ReverseEdgeSelection;
+export type SelectionExpression =
+  | ComponentSelection
+  | ReverseEdgeSelection
+  | VirtualSelection;
 
 export const isSelectionExpression = (
   maybeSelection: unknown,
 ): maybeSelection is SelectionExpression =>
   isComponentSelection(maybeSelection) ||
-  isReverseEdgeSelection(maybeSelection);
+  isReverseEdgeSelection(maybeSelection) ||
+  maybeSelection instanceof VirtualSelection;
 
 export function mergeSelectionExpressions(
   expressions: Iterable<SelectionExpression>,
@@ -30,7 +36,7 @@ export function mergeSelectionExpressions(
   >();
 
   for (const expression of expressions) {
-    assert(isSelectionExpression(expression));
+    assert(isSelectionExpression(expression), `Invalid selection-expression`);
 
     const maybeSameKeyExpression = expressionsByKey.get(expression.key);
 

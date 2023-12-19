@@ -204,7 +204,7 @@ describe('ChangesSubscription', () => {
         let subscription: ChangesSubscriptionStream;
 
         beforeAll(async () => {
-          subscription = await Article.api.subscribeToChanges(myAdminContext, {
+          subscription = Article.api.subscribeToChanges(myAdminContext, {
             where: {
               OR: [
                 { status: ArticleStatus.PUBLISHED },
@@ -221,6 +221,7 @@ describe('ChangesSubscription', () => {
                 category { title }
                 tagCount(where: { tag: { deprecated_not: true } })
                 tags(where: { tag: { deprecated_not: true } }, orderBy: [order_ASC], first: 10) { tag { title } }
+                lowerCasedTitle
               }`,
               onDeletion: `{ id }`,
             },
@@ -278,7 +279,7 @@ describe('ChangesSubscription', () => {
         let subscription: ChangesSubscriptionStream;
 
         beforeAll(async () => {
-          subscription = await Article.api.subscribeToChanges(myAdminContext, {
+          subscription = Article.api.subscribeToChanges(myAdminContext, {
             where: {
               status: ArticleStatus.PUBLISHED,
               NOT: {

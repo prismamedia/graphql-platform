@@ -159,10 +159,7 @@ describe('Update statement', () => {
     ],
   ])('generates statements', async (nodeName, context, args) => {
     await expect(
-      gp
-        .getNodeByName(nodeName)
-        .getMutationByKey('update-many')
-        .execute(context, args),
+      gp.api[nodeName].updateMany(context, args),
     ).resolves.toMatchSnapshot('result');
 
     expect(

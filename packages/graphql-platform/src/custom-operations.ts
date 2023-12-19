@@ -1,9 +1,25 @@
 import * as utils from '@prismamedia/graphql-platform-utils';
 import type * as graphql from 'graphql';
+import type { Promisable } from 'type-fest';
 import type { BrokerInterface } from './broker-interface.js';
 import type { ConnectorInterface } from './connector-interface.js';
-import type { GPBoundGraphQLFieldConfig } from './graphql-field-config.js';
 import type { GraphQLPlatform } from './index.js';
+
+export type GPBoundGraphQLFieldResolver<
+  TRequestContext extends object,
+  TConnector extends ConnectorInterface,
+  TBroker extends BrokerInterface,
+  TContainer extends object,
+  TSource,
+  TArgs = any,
+  TResult = unknown,
+> = (
+  this: GraphQLPlatform<TRequestContext, TConnector, TBroker, TContainer>,
+  source: TSource,
+  args: TArgs,
+  context: TRequestContext,
+  info: graphql.GraphQLResolveInfo,
+) => Promisable<TResult>;
 
 export interface CustomOperationConfig<
   TRequestContext extends object = any,
@@ -12,7 +28,8 @@ export interface CustomOperationConfig<
   TContainer extends object = any,
   TArgs = any,
   TResult = unknown,
-> extends GPBoundGraphQLFieldConfig<
+> extends graphql.GraphQLFieldConfig<undefined, TRequestContext, TArgs> {
+  resolve?: GPBoundGraphQLFieldResolver<
     TRequestContext,
     TConnector,
     TBroker,
@@ -20,7 +37,17 @@ export interface CustomOperationConfig<
     undefined,
     TArgs,
     TResult
-  > {}
+  >;
+  subscribe?: GPBoundGraphQLFieldResolver<
+    TRequestContext,
+    TConnector,
+    TBroker,
+    TContainer,
+    undefined,
+    TArgs,
+    TResult
+  >;
+}
 
 export type ThunkableNillableCustomOperation<
   TRequestContext extends object = any,

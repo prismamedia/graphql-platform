@@ -1,62 +1,99 @@
 import * as utils from '@prismamedia/graphql-platform-utils';
 import { Memoize } from '@prismamedia/memoize';
 import type * as graphql from 'graphql';
+import type { Promisable } from 'type-fest';
 import type { BrokerInterface } from '../../../../../broker-interface.js';
 import type { ConnectorInterface } from '../../../../../connector-interface.js';
-import type { NodeBoundGraphQLFieldConfig } from '../../../../../graphql-field-config.js';
 import type { Node } from '../../../../../node.js';
+import { argsPathKey } from '../../../../abstract-operation.js';
+import type { OperationContext } from '../../../../operation.js';
+import {
+  VirtualSelection,
+  type NodeSelectedSource,
+  type NodeSelectedValue,
+  type NodeSelection,
+} from '../../../../statement.js';
 import type {
-  NodeSelectedValue,
-  NodeSelection,
-} from '../../../../statement/selection.js';
-import type { NodeOutputType, RawNodeSelection } from '../../node.js';
+  GraphQLSelectionContext,
+  NodeOutputType,
+  RawNodeSelection,
+} from '../../node.js';
+import { AbstractFieldOutputType } from '../abstract-field.js';
 
-export interface VirtualFieldOutputConfig<
+export interface VirtualOutputConfig<
   TRequestContext extends object = any,
   TConnector extends ConnectorInterface = any,
   TBroker extends BrokerInterface = any,
   TContainer extends object = any,
-  TSource extends NodeSelectedValue = any,
+  TSource extends NodeSelectedSource = any,
   TArgs = any,
   TResult = unknown,
-> extends NodeBoundGraphQLFieldConfig<
-    TRequestContext,
-    TConnector,
-    TBroker,
-    TContainer,
-    TSource,
-    TArgs,
-    TResult
-  > {
+> {
   /**
-   * Optional, in order to compute this virtual field value, you certainly need some other fields' value in the resolver's source,
+   * Optional, provide a description for this virtual-field
+   */
+  description?: utils.OptionalDescription;
+
+  /**
+   * Optional, either this virtual-field is deprecated or not
+   */
+  deprecated?: utils.OptionalDeprecation;
+
+  /**
+   * Optional, either this virtual-field is exposed publicly (in the GraphQL API) or not (only available in the internal API)
+   */
+  public?: utils.OptionalFlag;
+
+  /**
+   * Optional, in order to compute this virtual-field value, you certainly need some other fields' value in the resolver's source (= its first argument),
    * you can configure the dependency here, as a fragment/selectionSet
    *
    * Example: '{ id title }'
    */
   dependsOn?: RawNodeSelection<TSource>;
+
+  /**
+   * Optional, the definition of the arguments this virtual-field accepts
+   */
+  args?: ReadonlyArray<utils.Input>;
+
+  /**
+   * Required, the output type of this virtual-field
+   */
+  type: graphql.GraphQLOutputType;
+
+  /**
+   * Required, using the source, arguments, and request context, the resolver produces a value that is valid against the type defined above
+   */
+  resolve: (
+    this: Node<TRequestContext, TConnector, TBroker, TContainer>,
+    source: TSource,
+    args: TArgs,
+    context: OperationContext<TRequestContext, TConnector, TBroker, TContainer>,
+    selectionSet: graphql.FieldNode['selectionSet'],
+  ) => Promisable<TResult>;
 }
 
-export type ThunkableNillableVirtualFieldOutputConfig<
+export type ThunkableNillableVirtualOutputConfig<
   TRequestContext extends object = any,
   TConnector extends ConnectorInterface = any,
   TBroker extends BrokerInterface = any,
   TContainer extends object = any,
 > = utils.Thunkable<
   utils.Nillable<
-    VirtualFieldOutputConfig<TRequestContext, TConnector, TBroker, TContainer>
+    VirtualOutputConfig<TRequestContext, TConnector, TBroker, TContainer>
   >,
   [node: Node<TRequestContext, TConnector, TBroker, TContainer>]
 >;
 
-export type ThunkableNillableVirtualFieldOutputConfigsByName<
+export type ThunkableNillableVirtualOutputConfigsByName<
   TRequestContext extends object = any,
   TConnector extends ConnectorInterface = any,
   TBroker extends BrokerInterface = any,
   TContainer extends object = any,
 > = utils.Thunkable<
   utils.Nillable<{
-    [fieldName: utils.Name]: ThunkableNillableVirtualFieldOutputConfig<
+    [fieldName: utils.Name]: ThunkableNillableVirtualOutputConfig<
       TRequestContext,
       TConnector,
       TBroker,
@@ -66,63 +103,125 @@ export type ThunkableNillableVirtualFieldOutputConfigsByName<
   [node: Node<TRequestContext, TConnector, TBroker, TContainer>]
 >;
 
-export class VirtualFieldOutputType {
-  readonly #dependsOnConfig?: RawNodeSelection;
-  readonly #dependsOnConfigPath: utils.Path;
-  readonly #graphql: graphql.GraphQLFieldConfig<NodeSelectedValue, any>;
+export class VirtualOutputType<
+  TSource extends NodeSelectedValue | undefined = any,
+  TArgs extends utils.Nillable<utils.PlainObject> = any,
+  TResult = unknown,
+> extends AbstractFieldOutputType<TArgs> {
+  public readonly description?: string;
+  public readonly deprecationReason?: string;
+
+  protected readonly args?: ReadonlyArray<utils.Input>;
+  protected readonly type: graphql.GraphQLOutputType;
+
+  public readonly resolve: (
+    source: TSource,
+    args: TArgs,
+    context: OperationContext,
+    selectionSet: graphql.FieldNode['selectionSet'],
+  ) => Promisable<TResult>;
 
   public constructor(
     public readonly parent: NodeOutputType,
     public readonly name: utils.Name,
-    { dependsOn, ...config }: VirtualFieldOutputConfig,
-    public readonly configPath: utils.Path,
+    public readonly config: VirtualOutputConfig,
+    public readonly configPath?: utils.Path,
   ) {
+    super();
+
     utils.assertName(name, configPath);
 
-    // depends-on
-    {
-      this.#dependsOnConfig = dependsOn;
-      this.#dependsOnConfigPath = utils.addPath(configPath, 'dependsOn');
+    this.description = utils.getOptionalDescription(
+      config.description,
+      utils.addPath(configPath, 'description'),
+    );
+
+    this.deprecationReason = utils.getOptionalDeprecation(
+      config.deprecated,
+      `The "${name}" virtual-field is deprecated`,
+      utils.addPath(configPath, 'deprecated'),
+    );
+
+    this.args = config.args?.length ? config.args : undefined;
+    this.type = config.type;
+
+    this.resolve = utils
+      .ensureFunction(config.resolve, utils.addPath(configPath, 'resolve'))
+      .bind(parent.node);
+  }
+
+  @Memoize()
+  public override isPublic(): boolean {
+    const config = this.config.public;
+    const configPath = utils.addPath(this.configPath, 'public');
+
+    const isPublic = utils.getOptionalFlag(
+      config,
+      this.parent.node.isPublic(),
+      configPath,
+    );
+
+    if (isPublic && !this.parent.node.isPublic()) {
+      throw new utils.UnexpectedValueError(
+        `not to be "true" as the "${this.parent.node}" node is private`,
+        config,
+        { path: configPath },
+      );
     }
 
-    this.#graphql = {
-      ...config,
-      ...(config.resolve && {
-        resolve: config.resolve.bind(parent.node),
-      }),
-      ...(config.subscribe && {
-        subscribe: config.subscribe.bind(parent.node),
-      }),
-    };
+    return isPublic;
   }
 
   @Memoize()
-  public get dependsOn(): NodeSelection | undefined {
-    return this.#dependsOnConfig
-      ? this.parent.select(
-          this.#dependsOnConfig,
-          undefined,
-          undefined,
-          this.#dependsOnConfigPath,
-        )
-      : undefined;
-  }
+  public get dependencies(): NodeSelection | undefined {
+    const config = this.config.dependsOn;
+    const configPath = utils.addPath(this.configPath, 'dependsOn');
 
-  public isPublic(): boolean {
-    return true;
-  }
+    if (config) {
+      const selection = this.parent.select(
+        config,
+        undefined,
+        undefined,
+        configPath,
+      );
 
-  public getGraphQLFieldConfig(): graphql.GraphQLFieldConfig<
-    NodeSelectedValue,
-    any
-  > {
-    return this.#graphql;
+      if (selection.hasVirtualSelection) {
+        throw new utils.GraphError(`Expects not to depends on virtual-fields`, {
+          path: configPath,
+        });
+      }
+
+      return selection;
+    }
   }
 
   @Memoize()
-  public validate(): void {
-    this.dependsOn;
-    this.isPublic();
-    this.getGraphQLFieldConfig();
+  public override validate(): void {
+    super.validate();
+
+    this.dependencies;
+  }
+
+  public selectGraphQLFieldNode(
+    ast: graphql.FieldNode,
+    _operationContext: OperationContext | undefined,
+    selectionContext: GraphQLSelectionContext | undefined,
+    path: utils.Path,
+  ): VirtualSelection {
+    const args = this.parseGraphQLArgumentNodes(
+      ast.arguments,
+      selectionContext,
+      utils.addPath(path, argsPathKey),
+    );
+
+    return new VirtualSelection(this, ast.alias?.value, args, ast.selectionSet);
+  }
+
+  public selectShape(
+    value: unknown,
+    _operationContext: OperationContext | undefined,
+    path: utils.Path,
+  ): never {
+    throw new utils.UnexpectedValueError('not to be selected', value, { path });
   }
 }

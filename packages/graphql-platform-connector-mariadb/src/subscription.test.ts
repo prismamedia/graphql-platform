@@ -49,6 +49,7 @@ describe('Subscription', () => {
               title
             }
           }
+          lowerCasedTitle
         }`,
         onDeletion: `{ id }`,
       },

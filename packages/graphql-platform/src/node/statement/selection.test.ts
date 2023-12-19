@@ -2,10 +2,12 @@ import { beforeAll, describe, expect, it } from '@jest/globals';
 import {
   ArticleStatus,
   createMyGP,
+  myAdminContext,
   type MyGP,
 } from '../../__tests__/config.js';
-import type { Node } from '../../index.js';
+import type { Node } from '../../node.js';
 import { NodeCreation, NodeDeletion, NodeUpdate } from '../change.js';
+import { OperationContext } from '../operation.js';
 import { NodeSelection } from './selection.js';
 
 describe('Selection', () => {
@@ -32,6 +34,56 @@ describe('Selection', () => {
   });
 
   describe('Execution', () => {
+    it.each([
+      [
+        {
+          id: '37da4d42-bc8d-4a01-98de-4d2109e09130',
+          status: ArticleStatus.DRAFT,
+          lowerCasedTitle: {
+            status: ArticleStatus.DRAFT,
+            title: 'My title',
+            category: null,
+          },
+        },
+        {
+          id: '37da4d42-bc8d-4a01-98de-4d2109e09130',
+          status: ArticleStatus.DRAFT,
+          lowerCasedTitle: 'draft-my title',
+        },
+      ],
+      [
+        {
+          id: '37da4d42-bc8d-4a01-98de-4d2109e09130',
+          status: ArticleStatus.DRAFT,
+          lowerCasedTitle: {
+            status: ArticleStatus.DRAFT,
+            title: 'My title',
+            category: { title: 'My category' },
+          },
+        },
+        {
+          id: '37da4d42-bc8d-4a01-98de-4d2109e09130',
+          status: ArticleStatus.DRAFT,
+          lowerCasedTitle: 'draft-my title-my category',
+        },
+      ],
+    ])('Parses & resolves', async (source, value) => {
+      const selection = Article.outputType.select(`{
+        id
+        status
+        lowerCasedTitle
+      }`);
+
+      expect(selection.parseSource(source)).toEqual(source);
+
+      await expect(
+        selection.resolveValue(
+          source,
+          new OperationContext(gp, myAdminContext),
+        ),
+      ).resolves.toEqual(value);
+    });
+
     describe("Node-changes' effect", () => {
       let selection: NodeSelection;
 

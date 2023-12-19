@@ -179,16 +179,16 @@ export class ChangesSubscription<
       }
 
       if (selection.onDeletion) {
-        if (!selection.onDeletion.isSubsetOf(this.node.selection)) {
+        if (!selection.onDeletion.isPure()) {
           throw new utils.GraphError(
             `Expects the "onDeletion" selection to be a subset of the "${this.node}"'s selection`,
             { path: onDeletionPath },
           );
         }
 
-        if (!selection.onDeletion.isSubsetOf(selection.onUpsert)) {
+        if (!selection.onUpsert.isSupersetOf(selection.onDeletion)) {
           throw new utils.GraphError(
-            `Expects the "onDeletion" selection to be a subset of the "onUpsert" selection`,
+            `Expects the "onUpsert" selection to be a superset of the "onDeletion" selection`,
             { path: onDeletionPath },
           );
         }

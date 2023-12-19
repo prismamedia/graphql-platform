@@ -51,7 +51,6 @@ describe(`NodeOutputType`, () => {
                 output: {
                   virtualFields: {
                     username: {
-                      args: {},
                       type: new graphql.GraphQLNonNull(graphql.GraphQLString),
                       resolve: () => 'MyUsername',
                     },
@@ -180,17 +179,15 @@ describe(`NodeOutputType`, () => {
         ],
         [
           'Article',
-          `{ id __typename lowerCasedTitle category { id _a: parent { _id } } }`,
+          `{ id lowerCasedTitle category { id _a: parent { _id } } }`,
           undefined,
           undefined,
           `{
   id
-  status
-  title
+  lowerCasedTitle
   category {
-    title
     id
-    parent {
+    _a: parent {
       _id
     }
   }

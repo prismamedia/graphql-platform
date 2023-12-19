@@ -41,7 +41,7 @@ export class NodeDeletion<
     createdAt?: Date,
     committedAt?: Date,
   ) {
-    const oldValue = Object.freeze(node.parseValue(maybeOldValue));
+    const oldValue = Object.freeze(node.selection.parseSource(maybeOldValue));
 
     super(
       node,

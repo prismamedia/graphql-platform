@@ -2,7 +2,6 @@ import * as utils from '@prismamedia/graphql-platform-utils';
 import { Memoize } from '@prismamedia/memoize';
 import * as graphql from 'graphql';
 import assert from 'node:assert/strict';
-import { JsonObject } from 'type-fest';
 import type { NodeValue } from '../../../../../../node.js';
 import {
   NodeChange,
@@ -11,6 +10,7 @@ import {
   NodeUpdate,
 } from '../../../../../change.js';
 import type { MultipleReverseEdge } from '../../../../../definition.js';
+import type { OperationContext } from '../../../../../operation.js';
 import {
   MultipleReverseEdgeExistsFilter,
   NodeFilter,
@@ -28,10 +28,10 @@ import type { SelectionExpressionInterface } from '../../../expression-interface
 export type MultipleReverseEdgeHeadValue = NodeSelectedValue[];
 
 export class MultipleReverseEdgeHeadSelection<
-  TValue extends NodeSelectedValue = any,
-> implements SelectionExpressionInterface<TValue[]>
+  TSource extends NodeSelectedValue = any,
+  TValue = TSource,
+> implements SelectionExpressionInterface<TSource[], TValue[]>
 {
-  public readonly alias?: string;
   public readonly name: string;
   public readonly key: string;
   public readonly headFilter?: NodeFilter;
@@ -40,14 +40,13 @@ export class MultipleReverseEdgeHeadSelection<
 
   public constructor(
     public readonly reverseEdge: MultipleReverseEdge,
-    alias: string | undefined,
+    public readonly alias: string | undefined,
     headFilter: NodeFilter | undefined,
     headOrdering: NodeOrdering | undefined,
     offset: number | undefined,
     public readonly limit: number,
-    public readonly headSelection: NodeSelection<TValue>,
+    public readonly headSelection: NodeSelection,
   ) {
-    this.alias = alias || undefined;
     this.name = reverseEdge.name;
     this.key = this.alias ?? this.name;
 
@@ -66,6 +65,11 @@ export class MultipleReverseEdgeHeadSelection<
     this.offset = offset || undefined;
 
     assert.equal(reverseEdge.head, headSelection.node);
+  }
+
+  @Memoize()
+  public get hasVirtualSelection(): boolean {
+    return this.headSelection.hasVirtualSelection;
   }
 
   public isAkinTo(
@@ -245,12 +249,12 @@ export class MultipleReverseEdgeHeadSelection<
 
     return {
       kind: graphql.Kind.FIELD,
-      alias: this.alias
-        ? {
-            kind: graphql.Kind.NAME,
-            value: this.alias,
-          }
-        : undefined,
+      ...(this.alias && {
+        alias: {
+          kind: graphql.Kind.NAME,
+          value: this.alias,
+        },
+      }),
       name: {
         kind: graphql.Kind.NAME,
         value: this.name,
@@ -260,20 +264,23 @@ export class MultipleReverseEdgeHeadSelection<
     };
   }
 
-  public parseValue(maybeValues: unknown, path?: utils.Path): TValue[] {
-    if (!utils.isIterableObject(maybeValues)) {
+  public parseSource(maybeSources: unknown, path?: utils.Path): TSource[] {
+    if (!utils.isIterableObject(maybeSources)) {
       throw new utils.UnexpectedValueError(
         `an iterable of "${this.reverseEdge.name}"`,
-        maybeValues,
+        maybeSources,
         { path },
       );
     }
 
-    return utils.aggregateGraphError<unknown, TValue[]>(
-      maybeValues,
-      (documents, maybeValue, index) => {
+    return utils.aggregateGraphError<unknown, TSource[]>(
+      maybeSources,
+      (documents, maybeSource, index) => {
         documents.push(
-          this.headSelection.parseValue(maybeValue, utils.addPath(path, index)),
+          this.headSelection.parseSource(
+            maybeSource,
+            utils.addPath(path, index),
+          ),
         );
 
         return documents;
@@ -283,30 +290,34 @@ export class MultipleReverseEdgeHeadSelection<
     );
   }
 
+  public async resolveValue(
+    sources: TSource[],
+    context: OperationContext,
+    path: utils.Path,
+  ): Promise<TValue[]> {
+    return Promise.all(
+      sources.map((source, index) =>
+        this.headSelection.resolveValue(
+          source,
+          context,
+          utils.addPath(path, index),
+        ),
+      ),
+    );
+  }
+
+  public pickValue(superSetOfValues: TValue[]): TValue[] {
+    return superSetOfValues.map((superSetOfValue) =>
+      this.headSelection.pickValue(superSetOfValue),
+    );
+  }
+
   public areValuesEqual(a: TValue[], b: TValue[]): boolean {
     return (
       a.length === b.length &&
-      a.every((_item, index) =>
-        this.headSelection.areValuesEqual(a[index], b[index]),
+      a.every((item, index) =>
+        this.headSelection.areValuesEqual(item, b[index]),
       )
     );
-  }
-
-  public serialize(maybeValues: unknown, path?: utils.Path): JsonObject[] {
-    const values = this.parseValue(maybeValues, path);
-
-    return values.map((value, index) =>
-      this.headSelection.serialize(value, utils.addPath(path, index)),
-    );
-  }
-
-  public stringify(maybeValues: unknown, path?: utils.Path): string {
-    const values = this.parseValue(maybeValues, path);
-
-    return `[${values
-      .map((value, index) =>
-        this.headSelection.stringify(value, utils.addPath(path, index)),
-      )
-      .join(',')}]`;
   }
 }

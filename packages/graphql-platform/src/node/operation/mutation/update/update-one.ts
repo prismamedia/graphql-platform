@@ -4,10 +4,11 @@ import type {
   NodeSelectionAwareArgs,
   RawNodeSelectionAwareArgs,
 } from '../../../abstract-operation.js';
-import type { NodeFilter } from '../../../statement/filter.js';
-import type { NodeSelectedValue } from '../../../statement/selection/value.js';
-import type { NodeUniqueFilterInputValue } from '../../../type/input/unique-filter.js';
-import type { NodeUpdateInputValue } from '../../../type/input/update.js';
+import type { NodeFilter, NodeSelectedValue } from '../../../statement.js';
+import type {
+  NodeUniqueFilterInputValue,
+  NodeUpdateInputValue,
+} from '../../../type.js';
 import { NotFoundError } from '../../error.js';
 import { AbstractUpdate } from '../abstract-update.js';
 import type { MutationContext } from '../context.js';
