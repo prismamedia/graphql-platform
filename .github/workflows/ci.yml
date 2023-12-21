@@ -8,7 +8,7 @@ jobs:
 
     services:
       mariadb:
-        image: bitnami/mariadb:10.6
+        image: bitnami/mariadb:10.11
         env:
           MARIADB_ROOT_PASSWORD: my_root_password_for_tests
         ports: ['3306:3306']

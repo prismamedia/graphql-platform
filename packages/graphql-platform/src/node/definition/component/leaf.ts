@@ -269,7 +269,7 @@ export class Leaf<
     return a === null || b === null ? a === b : this.#comparator(a, b);
   }
 
-  public uniqValues(values: ReadonlyArray<LeafValue>): LeafValue[] {
+  public uniqValues<T extends LeafValue>(values: ReadonlyArray<T>): Array<T> {
     return R.uniqWith(values, (a, b) => this.areValuesEqual(a, b));
   }
 
