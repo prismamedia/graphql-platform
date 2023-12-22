@@ -393,18 +393,24 @@ export const Article = {
           title
           category { title }
         }`,
+        args: {
+          prefix: { description: 'Optional, a prefix', type: GraphQLString },
+        },
         type: new GraphQLNonNull(scalars.typesByName.NonEmptyTrimmedString),
         description: `A custom field with a dependency`,
-        resolve: ({
-          status,
-          title,
-          category,
-        }: {
-          status: ArticleStatus;
-          title: string;
-          category: { title: string } | null;
-        }) =>
-          (<string[]>[status, title, category?.title])
+        resolve: (
+          {
+            status,
+            title,
+            category,
+          }: {
+            status: ArticleStatus;
+            title: string;
+            category: { title: string } | null;
+          },
+          { prefix },
+        ) =>
+          (<string[]>[prefix, status, title, category?.title])
             .filter(Boolean)
             .join('-')
             .toLowerCase(),

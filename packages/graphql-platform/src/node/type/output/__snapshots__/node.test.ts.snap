@@ -37,7 +37,10 @@ type Article implements PublicNodeInterface {
   extension: ArticleExtension
 
   """A custom field with a dependency"""
-  lowerCasedTitle: NonEmptyTrimmedString!
+  lowerCasedTitle(
+    """Optional, a prefix"""
+    prefix: String
+  ): NonEmptyTrimmedString!
 
   """A custom field with a dependency"""
   upperCasedTitle: NonEmptyTrimmedString!

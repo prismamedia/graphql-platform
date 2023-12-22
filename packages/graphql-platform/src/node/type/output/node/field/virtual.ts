@@ -1,7 +1,7 @@
 import * as utils from '@prismamedia/graphql-platform-utils';
 import { Memoize } from '@prismamedia/memoize';
 import type * as graphql from 'graphql';
-import type { Promisable } from 'type-fest';
+import type { Except, Promisable } from 'type-fest';
 import type { BrokerInterface } from '../../../../../broker-interface.js';
 import type { ConnectorInterface } from '../../../../../connector-interface.js';
 import type { Node } from '../../../../../node.js';
@@ -55,7 +55,10 @@ export interface VirtualOutputConfig<
   /**
    * Optional, the definition of the arguments this virtual-field accepts
    */
-  args?: ReadonlyArray<utils.Input>;
+  args?: Record<
+    utils.InputConfig['name'],
+    utils.Nillable<Except<utils.InputConfig, 'name'>>
+  >;
 
   /**
    * Required, the output type of this virtual-field
@@ -142,7 +145,28 @@ export class VirtualOutputType<
       utils.addPath(configPath, 'deprecated'),
     );
 
-    this.args = config.args?.length ? config.args : undefined;
+    // args
+    {
+      const argsConfig = config.args;
+      const argsConfigPath = utils.addPath(configPath, 'args');
+
+      utils.assertNillablePlainObject(argsConfig, argsConfigPath);
+
+      const inputs: utils.Input[] = [];
+
+      if (argsConfig) {
+        for (const [name, config] of Object.entries(argsConfig)) {
+          if (config) {
+            const configPath = utils.addPath(argsConfigPath, name);
+
+            inputs.push(new utils.Input({ name, ...config }, configPath));
+          }
+        }
+      }
+
+      this.args = inputs.length ? inputs : undefined;
+    }
+
     this.type = config.type;
 
     this.resolve = utils
