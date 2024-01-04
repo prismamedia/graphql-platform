@@ -5,6 +5,7 @@ import {
   GraphQLDraftJS,
   GraphQLJSONArray,
   GraphQLJSONObject,
+  GraphQLJSONValue,
   GraphQLURL,
   type GetInternalValueByType,
   type Type,
@@ -27,7 +28,8 @@ export const getNonStrictEqualityComparatorByType = <TType extends Type>(
     ? (a: URL, b: URL) => a.toString() === b.toString()
     : type === GraphQLDraftJS ||
       type === GraphQLJSONArray ||
-      type === GraphQLJSONObject
+      type === GraphQLJSONObject ||
+      type === GraphQLJSONValue
     ? (a: any, b: any) => isDeepStrictEqual(a, b)
     : undefined) as any;
 

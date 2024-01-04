@@ -35,6 +35,38 @@ export function parseJsonArray(value: unknown, path?: utils.Path): JsonValue[] {
   );
 }
 
+export function parseNonNullJsonPrimitive(
+  value: unknown,
+  path?: utils.Path,
+): NonNullable<JsonPrimitive> {
+  if (
+    !(
+      typeof value === 'string' ||
+      typeof value === 'number' ||
+      typeof value === 'boolean'
+    )
+  ) {
+    throw new utils.UnexpectedValueError(
+      `a non-null JSON primitive (= a string, a number or a boolean)`,
+      value,
+      { path },
+    );
+  }
+
+  return value;
+}
+
+export function parseNonNullJsonValue(
+  value: unknown,
+  path?: utils.Path,
+): NonNullable<JsonValue> {
+  return utils.isPlainObject(value)
+    ? parseJsonObject(value, path)
+    : Array.isArray(value)
+    ? parseJsonArray(value, path)
+    : parseNonNullJsonPrimitive(value, path);
+}
+
 export function parseJsonPrimitive(
   value: unknown,
   path?: utils.Path,
@@ -105,7 +137,51 @@ export const GraphQLJSONObject = new graphql.GraphQLScalarType({
   },
 });
 
+export const GraphQLJSONPrimitive = new graphql.GraphQLScalarType({
+  name: 'JSONPrimitive',
+  description: 'The `JSONPrimitive` scalar type represents JSON primitives.',
+  specifiedByURL:
+    'http://www.ecma-international.org/publications/files/ECMA-ST/ECMA-404.pdf',
+  parseValue(value: unknown) {
+    return parseNonNullJsonPrimitive(value);
+  },
+  parseLiteral(ast, variables) {
+    if (ast.kind === graphql.Kind.OBJECT) {
+      return parseNonNullJsonPrimitive(
+        graphql.valueFromASTUntyped(ast, variables),
+      );
+    }
+
+    throw new TypeError(`Cannot parse literal: ${graphql.print(ast)}`);
+  },
+  serialize(value: unknown) {
+    return parseNonNullJsonPrimitive(value);
+  },
+});
+
+export const GraphQLJSONValue = new graphql.GraphQLScalarType({
+  name: 'JSONValue',
+  description: 'The `JSONValue` scalar type represents JSON values.',
+  specifiedByURL:
+    'http://www.ecma-international.org/publications/files/ECMA-ST/ECMA-404.pdf',
+  parseValue(value: unknown) {
+    return parseNonNullJsonValue(value);
+  },
+  parseLiteral(ast, variables) {
+    if (ast.kind === graphql.Kind.OBJECT) {
+      return parseNonNullJsonValue(graphql.valueFromASTUntyped(ast, variables));
+    }
+
+    throw new TypeError(`Cannot parse literal: ${graphql.print(ast)}`);
+  },
+  serialize(value: unknown) {
+    return parseNonNullJsonValue(value);
+  },
+});
+
 export const jsonTypesByName = {
   JSONArray: GraphQLJSONArray,
   JSONObject: GraphQLJSONObject,
+  JSONPrimitive: GraphQLJSONPrimitive,
+  JSONValue: GraphQLJSONValue,
 } satisfies Record<string, graphql.GraphQLScalarType>;

@@ -5,7 +5,12 @@ import { Memoize } from '@prismamedia/memoize';
 import * as graphql from 'graphql';
 import type { URL } from 'node:url';
 import * as semver from 'semver';
-import type { Constructor, JsonObject, JsonValue } from 'type-fest';
+import type {
+  Constructor,
+  JsonObject,
+  JsonPrimitive,
+  JsonValue,
+} from 'type-fest';
 import type { MariaDBConnector } from '../../../index.js';
 import { ensureIdentifierName } from '../../naming-strategy.js';
 import { Table } from '../../table.js';
@@ -206,6 +211,14 @@ export class LeafColumn extends AbstractColumn {
 
           case 'JSONObject':
             this.dataType = new JsonType<JsonObject>();
+            break;
+
+          case 'JSONPrimitive':
+            this.dataType = new JsonType<NonNullable<JsonPrimitive>>();
+            break;
+
+          case 'JSONValue':
+            this.dataType = new JsonType<NonNullable<JsonValue>>();
             break;
 
           default:
