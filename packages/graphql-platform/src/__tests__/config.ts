@@ -1,6 +1,6 @@
 import * as scalars from '@prismamedia/graphql-platform-scalars';
 import * as utils from '@prismamedia/graphql-platform-utils';
-import { GraphQLInterfaceType, GraphQLNonNull, GraphQLString } from 'graphql';
+import * as graphql from 'graphql';
 import { randomUUID } from 'node:crypto';
 import type { Except } from 'type-fest';
 import {
@@ -63,12 +63,12 @@ export const myUserContext = Object.freeze<MyContext>({
 
 export const myVisitorContext = Object.freeze<MyContext>({});
 
-export const PublicNodeInterfaceType = new GraphQLInterfaceType({
+export const PublicNodeInterfaceType = new graphql.GraphQLInterfaceType({
   name: 'PublicNodeInterface',
   description: 'Exemple of interface',
   fields: {
     id: {
-      type: new GraphQLNonNull(scalars.typesByName.UUIDv4),
+      type: new graphql.GraphQLNonNull(scalars.typesByName.UUIDv4),
       description: 'Every public node have a public id',
     },
   },
@@ -283,7 +283,7 @@ export const Article = {
     creation: {
       virtualFields: {
         htmlBody: {
-          type: GraphQLString,
+          type: graphql.GraphQLString,
           description: `It is possible to provide the article's body as raw HTML`,
         },
       },
@@ -329,7 +329,7 @@ export const Article = {
     update: {
       virtualFields: {
         htmlBody: {
-          type: GraphQLString,
+          type: graphql.GraphQLString,
           description: `It is possible to provide the article's body as raw HTML`,
         },
       },
@@ -391,12 +391,19 @@ export const Article = {
         dependsOn: `{
           status
           title
-          category { title }
+          category {
+            title
+          }
         }`,
         args: {
-          prefix: { description: 'Optional, a prefix', type: GraphQLString },
+          prefix: {
+            description: 'Optional, a prefix',
+            type: graphql.GraphQLString,
+          },
         },
-        type: new GraphQLNonNull(scalars.typesByName.NonEmptyTrimmedString),
+        type: new graphql.GraphQLNonNull(
+          scalars.typesByName.NonEmptyTrimmedString,
+        ),
         description: `A custom field with a dependency`,
         resolve: (
           {
@@ -420,10 +427,16 @@ export const Article = {
         dependsOn: `{
           status
           title
-          category { title }
-          tags(orderBy: [order_ASC], first: 2) { tag { title } }
+          category {
+            title
+          }
+          tags(orderBy: [order_ASC], first: 2) {
+            tag {
+              title
+            }
+          }
         }`,
-        type: new GraphQLNonNull(node.getLeafByName('title').type),
+        type: new graphql.GraphQLNonNull(node.getLeafByName('title').type),
         description: `A custom field with a dependency`,
         resolve: (
           {
@@ -450,6 +463,20 @@ export const Article = {
             .filter(Boolean)
             .join('-')
             .toUpperCase(),
+      },
+      similars: {
+        args: {
+          first: {
+            description: 'The number of similar articles to return',
+            type: utils.nonNillableInputType(scalars.GraphQLUnsignedInt),
+          },
+        },
+        type: new graphql.GraphQLNonNull(
+          new graphql.GraphQLList(
+            new graphql.GraphQLNonNull(node.outputType.getGraphQLObjectType()),
+          ),
+        ),
+        resolve: (_source, _args, _context, _info) => [],
       },
     }),
 
@@ -579,7 +606,7 @@ export const Category = {
     creation: {
       virtualFields: {
         htmlBody: {
-          type: GraphQLString,
+          type: graphql.GraphQLString,
           description: `It is possible to provide the article's body as raw HTML`,
         },
       },
@@ -974,7 +1001,7 @@ export const nodeNames = Object.keys(nodes);
 export const customOperations: CustomOperationsByNameByTypeConfig<MyContext> = {
   query: {
     whoAmI: () => ({
-      type: new GraphQLNonNull(GraphQLString),
+      type: new graphql.GraphQLNonNull(graphql.GraphQLString),
       resolve: (_, args, context) =>
         `Hello ${context.user?.name ?? 'world'}, I'm GraphQL-Platform`,
     }),

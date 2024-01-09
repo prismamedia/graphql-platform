@@ -20,6 +20,6 @@ describe('UnsignedBigInt', () => {
     [-34n, 'Expects an unsigned BigInt, got: -34n'],
     ['-56', "Expects an unsigned BigInt, got: '-56'"],
   ])('parseValue(%p) throws the following Error: %s', (input, error) => {
-    expect(() => GraphQLUnsignedBigInt.parseValue(input)).toThrowError(error);
+    expect(() => GraphQLUnsignedBigInt.parseValue(input)).toThrow(error);
   });
 });

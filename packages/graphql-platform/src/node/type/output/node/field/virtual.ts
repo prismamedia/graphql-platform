@@ -5,7 +5,6 @@ import type { Except, Promisable } from 'type-fest';
 import type { BrokerInterface } from '../../../../../broker-interface.js';
 import type { ConnectorInterface } from '../../../../../connector-interface.js';
 import type { Node } from '../../../../../node.js';
-import { argsPathKey } from '../../../../abstract-operation.js';
 import type { OperationContext } from '../../../../operation.js';
 import {
   VirtualSelection,
@@ -16,6 +15,7 @@ import {
 import type {
   GraphQLSelectionContext,
   NodeOutputType,
+  PartialGraphQLResolveInfo,
   RawNodeSelection,
 } from '../../node.js';
 import { AbstractFieldOutputType } from '../abstract-field.js';
@@ -73,7 +73,7 @@ export interface VirtualOutputConfig<
     source: TSource,
     args: TArgs,
     context: OperationContext<TRequestContext, TConnector, TBroker, TContainer>,
-    selectionSet: graphql.FieldNode['selectionSet'],
+    info: PartialGraphQLResolveInfo,
   ) => Promisable<TResult>;
 }
 
@@ -121,7 +121,7 @@ export class VirtualOutputType<
     source: TSource,
     args: TArgs,
     context: OperationContext,
-    selectionSet: graphql.FieldNode['selectionSet'],
+    info: PartialGraphQLResolveInfo,
   ) => Promisable<TResult>;
 
   public constructor(
@@ -235,10 +235,16 @@ export class VirtualOutputType<
     const args = this.parseGraphQLArgumentNodes(
       ast.arguments,
       selectionContext,
-      utils.addPath(path, argsPathKey),
+      path,
     );
 
-    return new VirtualSelection(this, ast.alias?.value, args, ast.selectionSet);
+    return new VirtualSelection(this, ast.alias?.value, args, {
+      fieldNodes: [ast],
+      returnType: this.type,
+      path,
+      fragments: selectionContext?.fragments ?? {},
+      variableValues: selectionContext?.variableValues ?? {},
+    });
   }
 
   public selectShape(

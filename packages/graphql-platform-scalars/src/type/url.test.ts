@@ -8,7 +8,7 @@ describe('URL', () => {
     'localhost',
     'www.adrian-grenier.net',
   ])('throws an Error on invalid value: %s', (input) => {
-    expect(() => GraphQLURL.parseValue(input)).toThrowError(
+    expect(() => GraphQLURL.parseValue(input)).toThrow(
       `Expects a valid URL, got: '${input}'`,
     );
   });

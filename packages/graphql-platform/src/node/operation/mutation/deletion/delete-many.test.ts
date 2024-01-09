@@ -37,7 +37,7 @@ describe('DeleteManyMutation', () => {
       ])('throws an UnauthorizedError', async (context, args) => {
         await expect(() =>
           gp.api.mutation.deleteArticles(context, args),
-        ).rejects.toThrowError(UnauthorizedError);
+        ).rejects.toThrow(UnauthorizedError);
 
         expect(gp.connector.find).toHaveBeenCalledTimes(0);
         expect(gp.connector.delete).toHaveBeenCalledTimes(0);

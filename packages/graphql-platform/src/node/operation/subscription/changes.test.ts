@@ -41,9 +41,9 @@ describe('ChangesSubscription', () => {
       it.each<[MyContext, ChangesSubscriptionArgs]>([
         [myVisitorContext, { selection: { onUpsert: ['id'] } }],
       ])('throws an UnauthorizedError', (context, args) => {
-        expect(() =>
-          Article.api.subscribeToChanges(context, args),
-        ).toThrowError(UnauthorizedError);
+        expect(() => Article.api.subscribeToChanges(context, args)).toThrow(
+          UnauthorizedError,
+        );
 
         expect(gp.connector.find).toHaveBeenCalledTimes(0);
       });

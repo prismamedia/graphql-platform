@@ -28,7 +28,7 @@ describe('NodeUpdateInputType', () => {
             graphql.printType(updateInputType.getGraphQLInputType()),
           ).toMatchSnapshot(updateInputType.name);
         } else {
-          expect(() => updateInputType.getGraphQLInputType()).toThrowError(
+          expect(() => updateInputType.getGraphQLInputType()).toThrow(
             `The "${nodeName}UpdateInput" input type is private`,
           );
         }
@@ -44,12 +44,12 @@ describe('NodeUpdateInputType', () => {
               graphql.printType(updateInputType.getGraphQLInputType()),
             ).toMatchSnapshot(updateInputType.name);
           } else {
-            expect(() => updateInputType.getGraphQLInputType()).toThrowError(
+            expect(() => updateInputType.getGraphQLInputType()).toThrow(
               `The "${nodeName}UpdateInput" input type is private`,
             );
           }
         } else {
-          expect(() => node.getUpdateWithoutEdgeInputType(edge)).toThrowError(
+          expect(() => node.getUpdateWithoutEdgeInputType(edge)).toThrow(
             `The "${nodeName}" node is not updatable`,
           );
         }
@@ -84,7 +84,7 @@ describe('NodeUpdateInputType', () => {
           const updateInputType = node.updateInputType;
           expect(updateInputType).toBeInstanceOf(NodeUpdateInputType);
 
-          expect(() => updateInputType.parseValue(value)).toThrowError(error);
+          expect(() => updateInputType.parseValue(value)).toThrow(error);
         },
       );
     });

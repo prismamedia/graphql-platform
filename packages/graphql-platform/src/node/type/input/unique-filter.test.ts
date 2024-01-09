@@ -30,7 +30,7 @@ describe('NodeUniqueFilterInputType', () => {
           graphql.printType(uniqueFilterInputType.getGraphQLInputType()),
         ).toMatchSnapshot(uniqueFilterInputType.name);
       } else {
-        expect(() => uniqueFilterInputType.getGraphQLInputType()).toThrowError(
+        expect(() => uniqueFilterInputType.getGraphQLInputType()).toThrow(
           `The "${nodeName}UniqueFilterInput" input type is private`,
         );
       }
@@ -49,16 +49,12 @@ describe('NodeUniqueFilterInputType', () => {
               graphql.printType(uniqueFilterInputType.getGraphQLInputType()),
             ).toMatchSnapshot(uniqueFilterInputType.name);
           } else {
-            expect(() =>
-              uniqueFilterInputType.getGraphQLInputType(),
-            ).toThrowError(
+            expect(() => uniqueFilterInputType.getGraphQLInputType()).toThrow(
               `The "${nodeName}UniqueFilterInput" input type is private`,
             );
           }
         } else {
-          expect(() =>
-            node.getUniqueFilterWithoutEdgeInputType(edge),
-          ).toThrowError(
+          expect(() => node.getUniqueFilterWithoutEdgeInputType(edge)).toThrow(
             `The "${nodeName}" node is not partially identifiable with the "${edge}" edge`,
           );
         }
@@ -103,9 +99,7 @@ describe('NodeUniqueFilterInputType', () => {
               )
             : node.uniqueFilterInputType;
 
-          expect(() => uniqueFilterInputType.parseValue(value)).toThrowError(
-            error,
-          );
+          expect(() => uniqueFilterInputType.parseValue(value)).toThrow(error);
         },
       );
     });

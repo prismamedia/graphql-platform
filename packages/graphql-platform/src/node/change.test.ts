@@ -74,13 +74,13 @@ describe('Change', () => {
     const Tag = gp.getNodeByName('Tag');
     const ArticleTag = gp.getNodeByName('ArticleTag');
 
-    expect(() => new NodeCreation(Article, myContext, {})).toThrowError(
+    expect(() => new NodeCreation(Article, myContext, {})).toThrow(
       '/Article - 2 errors:',
     );
-    expect(() => new NodeCreation(Tag, myContext, {})).toThrowError(
+    expect(() => new NodeCreation(Tag, myContext, {})).toThrow(
       '/Tag - 2 errors:',
     );
-    expect(() => new NodeCreation(ArticleTag, myContext, {})).toThrowError(
+    expect(() => new NodeCreation(ArticleTag, myContext, {})).toThrow(
       '/ArticleTag - 3 errors:',
     );
   });

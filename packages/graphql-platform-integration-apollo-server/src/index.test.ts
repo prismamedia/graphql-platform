@@ -48,6 +48,12 @@ describe('GraphQL-Platform Integration Apollo Server', () => {
               }
               createdAt
               lowerCasedTitle
+              similars(first: $first) {
+                title
+                similars(first: $first) {
+                  title
+                }
+              }
             }
           }`,
           variables: {

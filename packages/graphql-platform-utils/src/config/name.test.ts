@@ -16,6 +16,6 @@ describe('Name', () => {
     'ïnvalidName',
     'invalid-name',
   ])('assertName(%p) throws the error %p', (invalidValue) =>
-    expect(() => assertName(invalidValue)).toThrowError(),
+    expect(() => assertName(invalidValue)).toThrow(),
   );
 });

@@ -34,7 +34,7 @@ describe('GraphQL', () => {
       'Expects a "MyEnum" (= a value among "FIRST, TWO"), got: \'THIRD\'',
     ],
   ])('%p.parseValue(%p) throws an Error', (type, value, error) => {
-    expect(() => parseGraphQLLeafValue(type, value)).toThrowError(error);
+    expect(() => parseGraphQLLeafValue(type, value)).toThrow(error);
   });
 
   it('creates GraphQLEnumType from numeric enum', () => {

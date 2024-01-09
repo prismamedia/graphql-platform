@@ -60,6 +60,6 @@ describe('GraphQL-Platform Connector MariaDB', () => {
 
     await expect(
       gp.connector.withConnection((connection) => connection.ping()),
-    ).rejects.toThrowError(mariadb.SqlError);
+    ).rejects.toThrow(mariadb.SqlError);
   });
 });

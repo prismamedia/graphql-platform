@@ -28,7 +28,7 @@ describe('Schema', () => {
     const gp = gpsByTest.diagnosis;
     await gp.connector.teardown();
 
-    await expect(gp.connector.schema.diagnose()).rejects.toThrowError(
+    await expect(gp.connector.schema.diagnose()).rejects.toThrow(
       'The schema "tests_connector_mariadb_schema_diagnosis" is missing',
     );
 

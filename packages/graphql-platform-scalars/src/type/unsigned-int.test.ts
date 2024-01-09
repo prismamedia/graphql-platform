@@ -14,6 +14,6 @@ describe('UnsignedInt', () => {
     [-12, 'Expects an unsigned 32-bit integer, got: -12'],
     ['34', "Expects an unsigned 32-bit integer, got: '34'"],
   ])('parseValue(%p) throws the following Error: %s', (input, error) => {
-    expect(() => GraphQLUnsignedInt.parseValue(input)).toThrowError(error);
+    expect(() => GraphQLUnsignedInt.parseValue(input)).toThrow(error);
   });
 });

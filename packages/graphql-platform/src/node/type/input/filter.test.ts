@@ -34,7 +34,7 @@ describe('NodeFilterInputType', () => {
           graphql.printType(filterInputType.getGraphQLInputType()),
         ).toMatchSnapshot(filterInputType.name);
       } else {
-        expect(() => filterInputType.getGraphQLInputType()).toThrowError(
+        expect(() => filterInputType.getGraphQLInputType()).toThrow(
           `The "${nodeName}FilterInput" input type is private`,
         );
       }
@@ -62,9 +62,7 @@ describe('NodeFilterInputType', () => {
           const node = gp.getNodeByName(nodeName);
           const filterInputType = node.filterInputType;
 
-          expect(() => filterInputType.parseAndFilter(input)).toThrowError(
-            error,
-          );
+          expect(() => filterInputType.parseAndFilter(input)).toThrow(error);
         },
       );
 

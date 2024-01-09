@@ -17,7 +17,7 @@ describe('GraphQL-Platform', () => {
       [null, `/GraphQLPlatformConfig - Expects a plain-object, got: null`],
     ])('throws an Error on invalid config: %p', (config, expectedError) => {
       // @ts-expect-error
-      expect(() => new GraphQLPlatform(config)).toThrowError(expectedError);
+      expect(() => new GraphQLPlatform(config)).toThrow(expectedError);
     });
 
     it.each([
@@ -39,7 +39,7 @@ describe('GraphQL-Platform', () => {
       ],
     ])('throws an Error on invalid nodes: %p', (config, expectedError) => {
       // @ts-expect-error
-      expect(() => new GraphQLPlatform(config)).toThrowError(expectedError);
+      expect(() => new GraphQLPlatform(config)).toThrow(expectedError);
     });
   });
 

@@ -1,11 +1,8 @@
 import * as utils from '@prismamedia/graphql-platform-utils';
 import * as graphql from 'graphql';
-import type {
-  Leaf,
-  LeafType,
-} from '../../../../../definition/component/leaf.js';
-import type { OperationContext } from '../../../../../operation/context.js';
-import { LeafSelection } from '../../../../../statement/selection/expression/component/leaf.js';
+import type { Leaf, LeafType } from '../../../../../definition.js';
+import type { OperationContext } from '../../../../../operation.js';
+import { LeafSelection } from '../../../../../statement.js';
 import type { GraphQLSelectionContext, NodeOutputType } from '../../../node.js';
 import { AbstractComponentOutputType } from '../abstract-component.js';
 

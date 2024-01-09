@@ -37,7 +37,7 @@ describe('CountQuery', () => {
       it.each<[MyContext, CountQueryArgs]>([[myVisitorContext, undefined]])(
         'throws an UnauthorizedError',
         (context, args) => {
-          expect(() => gp.api.query.articleCount(context, args)).toThrowError(
+          expect(() => gp.api.query.articleCount(context, args)).toThrow(
             UnauthorizedError,
           );
 

@@ -64,7 +64,7 @@ describe('DraftJS', () => {
       '/blocks/0/entityRanges/0/key - Expects a value among "0", got: 1',
     ],
   ])('throws an Error on invalid value', (input, error) => {
-    expect(() => GraphQLDraftJS.parseValue(input)).toThrowError(error);
+    expect(() => GraphQLDraftJS.parseValue(input)).toThrow(error);
   });
 
   it.each<[input: RawDraftContentState]>([

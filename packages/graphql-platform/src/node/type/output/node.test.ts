@@ -34,7 +34,7 @@ describe(`NodeOutputType`, () => {
           graphql.printType(nodeOutputType.getGraphQLObjectType()),
         ).toMatchSnapshot();
       } else {
-        expect(() => nodeOutputType.getGraphQLObjectType()).toThrowError(
+        expect(() => nodeOutputType.getGraphQLObjectType()).toThrow(
           `The "${nodeName}" node is private`,
         );
       }
@@ -59,7 +59,7 @@ describe(`NodeOutputType`, () => {
               },
             },
           }),
-      ).toThrowError();
+      ).toThrow();
     });
   });
 
@@ -82,7 +82,7 @@ describe(`NodeOutputType`, () => {
           'Article',
           `{ unknownField }`,
           myAdminContext,
-          'Expects an "Article"\'s field among "_id, id, status, title, slug, body, category, createdBy, createdAt, updatedBy, updatedAt, metas, highlighted, sponsored, views, score, machineTags, tags, tagCount, extension, lowerCasedTitle, upperCasedTitle", got: \'unknownField\'',
+          'Expects an "Article"\'s field among "_id, id, status, title, slug, body, category, createdBy, createdAt, updatedBy, updatedAt, metas, highlighted, sponsored, views, score, machineTags, tags, tagCount, extension, lowerCasedTitle, upperCasedTitle, similars", got: \'unknownField\'',
         ],
         [
           'Article',
@@ -126,7 +126,7 @@ describe(`NodeOutputType`, () => {
               input,
               new OperationContext(gp, requestContext),
             ),
-          ).toThrowError(error);
+          ).toThrow(error);
         },
       );
     });
@@ -179,7 +179,17 @@ describe(`NodeOutputType`, () => {
         ],
         [
           'Article',
-          `{ id lowerCasedTitle category { id _a: parent { _id } } }`,
+          `{
+            id
+            lowerCasedTitle
+            category { id _a: parent { _id } }
+            similars(first: 5) { 
+              title
+              similars(first: 10) {
+                slug
+              }
+            }
+          }`,
           undefined,
           undefined,
           `{
@@ -189,6 +199,12 @@ describe(`NodeOutputType`, () => {
     id
     _a: parent {
       _id
+    }
+  }
+  similars(first: 5) {
+    title
+    similars(first: 10) {
+      slug
     }
   }
 }`,

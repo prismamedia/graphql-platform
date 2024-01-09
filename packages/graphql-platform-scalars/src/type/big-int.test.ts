@@ -19,6 +19,6 @@ describe('BigInt', () => {
     ['', "Expects a BigInt, got: ''"],
     ['a123', 'Cannot convert a123 to a BigInt'],
   ])('parseValue(%p) throws the following Error: %s', (input, error) => {
-    expect(() => GraphQLBigInt.parseValue(input)).toThrowError(error);
+    expect(() => GraphQLBigInt.parseValue(input)).toThrow(error);
   });
 });

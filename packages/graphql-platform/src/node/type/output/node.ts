@@ -50,15 +50,29 @@ export type GraphQLSelectionContext = Partial<
  */
 export type GraphQLFragment = string;
 
+export type PartialGraphQLResolveInfo = Pick<
+  graphql.GraphQLResolveInfo,
+  'fieldNodes' | 'returnType' | 'path' | 'fragments' | 'variableValues'
+>;
+
+export const isPartialGraphQLResolveInfo = (
+  maybePartialGraphQLResolveInfo: unknown,
+): maybePartialGraphQLResolveInfo is PartialGraphQLResolveInfo =>
+  utils.isPlainObject(maybePartialGraphQLResolveInfo) &&
+  Array.isArray(maybePartialGraphQLResolveInfo['fieldNodes']) &&
+  maybePartialGraphQLResolveInfo['fieldNodes'].length > 0 &&
+  graphql.isOutputType(maybePartialGraphQLResolveInfo['returnType']) &&
+  utils.isPath(maybePartialGraphQLResolveInfo['path']);
+
 export type RawNodeSelection<
   TSource extends NodeSelectedSource = any,
   TValue extends NodeSelectedValue = TSource,
 > =
   | NodeSelection<TSource, TValue>
-  | GraphQLSelectionAST
-  | graphql.GraphQLResolveInfo
+  | Component['name'][]
   | GraphQLFragment
-  | Component['name'][];
+  | GraphQLSelectionAST
+  | PartialGraphQLResolveInfo;
 
 export interface NodeOutputTypeConfig<
   TRequestContext extends object,
@@ -532,12 +546,12 @@ export class NodeOutputType {
 
   public selectGraphQLResolveInfo(
     {
-      fieldNodes,
-      fragments,
-      path,
       returnType,
+      fieldNodes,
+      path,
+      fragments,
       variableValues,
-    }: graphql.GraphQLResolveInfo,
+    }: PartialGraphQLResolveInfo,
     operationContext?: OperationContext,
   ): NodeSelection {
     const namedReturnType = graphql.getNamedType(returnType);
@@ -631,7 +645,7 @@ export class NodeOutputType {
     }
 
     // GraphQL resolve info
-    if (utils.isGraphQLResolveInfo(rawSelection)) {
+    if (isPartialGraphQLResolveInfo(rawSelection)) {
       return this.selectGraphQLResolveInfo(rawSelection, operationContext);
     }
 

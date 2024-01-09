@@ -5,7 +5,7 @@ describe('NodeName', () => {
   it.each(['invalidName', 'Invalid_name', '_InvalidName'])(
     '"%s" is not valid',
     (input) => {
-      expect(() => ensureNodeName(input)).toThrowError();
+      expect(() => ensureNodeName(input)).toThrow();
     },
   );
 

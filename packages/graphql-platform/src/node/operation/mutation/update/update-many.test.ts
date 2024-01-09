@@ -35,7 +35,7 @@ describe('UpdateManyMutation', () => {
       ])('throws an UnauthorizedError', async (context, args) => {
         await expect(() =>
           gp.api.mutation.updateArticles(context, args),
-        ).rejects.toThrowError(UnauthorizedError);
+        ).rejects.toThrow(UnauthorizedError);
 
         expect(gp.connector.find).toHaveBeenCalledTimes(0);
         expect(gp.connector.update).toHaveBeenCalledTimes(0);

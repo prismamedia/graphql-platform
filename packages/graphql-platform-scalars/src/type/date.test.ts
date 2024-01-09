@@ -13,7 +13,7 @@ describe('Date', () => {
       "Expects a date string compliant with the ISO 8601 extended format, got: '2000-02-15T10:00:00Z'",
     ],
   ])('parseValue(%p) throws the following Error: %s', (input, error) => {
-    expect(() => GraphQLDate.parseValue(input)).toThrowError(error);
+    expect(() => GraphQLDate.parseValue(input)).toThrow(error);
   });
 
   it.each([

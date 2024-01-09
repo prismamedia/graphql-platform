@@ -55,7 +55,7 @@ describe('Enum', () => {
 
       ['FOUR', 0].forEach((key) => {
         expect(isKey(key)).toBe(false);
-        expect(() => ensureKey(key)).toThrowError();
+        expect(() => ensureKey(key)).toThrow();
       });
     });
 
@@ -69,7 +69,7 @@ describe('Enum', () => {
 
       [-1, '1', 'ONE'].forEach((value) => {
         expect(isValue(value)).toBe(false);
-        expect(() => ensureValue(value)).toThrowError();
+        expect(() => ensureValue(value)).toThrow();
       });
     });
 

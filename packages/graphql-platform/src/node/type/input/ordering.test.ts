@@ -30,7 +30,7 @@ describe('NodeOrderingInputType', () => {
           printType(orderingInputType.getGraphQLInputType()),
         ).toMatchSnapshot(orderingInputType.name);
       } else {
-        expect(() => orderingInputType.getGraphQLInputType()).toThrowError(
+        expect(() => orderingInputType.getGraphQLInputType()).toThrow(
           `The "${nodeName}OrderingInput" input type is private`,
         );
       }
@@ -51,7 +51,7 @@ describe('NodeOrderingInputType', () => {
           const node = gp.getNodeByName(nodeName);
           const orderingInputType = node.orderingInputType;
 
-          expect(() => orderingInputType.sort(input)).toThrowError(error);
+          expect(() => orderingInputType.sort(input)).toThrow(error);
         },
       );
     });

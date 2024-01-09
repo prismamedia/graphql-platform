@@ -387,13 +387,13 @@ __metadata:
   linkType: hard
 
 "@babel/helpers@npm:^7.23.7":
-  version: 7.23.7
-  resolution: "@babel/helpers@npm:7.23.7"
+  version: 7.23.8
+  resolution: "@babel/helpers@npm:7.23.8"
   dependencies:
     "@babel/template": "npm:^7.22.15"
     "@babel/traverse": "npm:^7.23.7"
     "@babel/types": "npm:^7.23.6"
-  checksum: ec07061dc871d406ed82c8757c4d7a510aaf15145799fb0a2c3bd3c72ca101fe82a02dd5f83ca604fbbba5de5408dd731bb1452150562bed4f3b0a2846f81f61
+  checksum: 4c392351910102403b6a7c922319077b179c276e422a4e45b243b45610f813a05a043b6b116cbf5eb4b437fb51b9a2dfc2b7c65f38a0de7fde1f97d08a675313
   languageName: node
   linkType: hard
 
@@ -1077,7 +1077,7 @@ __metadata:
     "@swc/core": "npm:1.3.102"
     "@swc/jest": "npm:0.2.29"
     "@tsconfig/node20": "npm:20.1.2"
-    "@types/node": "npm:20.10.7"
+    "@types/node": "npm:20.10.8"
     "@types/semver": "npm:7.5.6"
     graphql: "npm:16.8.1"
     inflection: "npm:^3.0.0"
@@ -1106,7 +1106,7 @@ __metadata:
     "@types/body-parser": "npm:^1.19.5"
     "@types/cors": "npm:^2.8.17"
     "@types/express": "npm:^4.17.21"
-    "@types/node": "npm:20.10.7"
+    "@types/node": "npm:20.10.8"
     "@types/ws": "npm:^8.5.10"
     body-parser: "npm:1.20.2"
     cors: "npm:2.8.5"
@@ -1133,7 +1133,7 @@ __metadata:
     "@swc/jest": "npm:0.2.29"
     "@tsconfig/node20": "npm:20.1.2"
     "@types/draft-js": "npm:^0.11.17"
-    "@types/node": "npm:20.10.7"
+    "@types/node": "npm:20.10.8"
     entities: "npm:^4.5.0"
     graphql: "npm:16.8.1"
     jest: "npm:29.7.0"
@@ -1155,12 +1155,12 @@ __metadata:
     "@swc/jest": "npm:0.2.29"
     "@tsconfig/node20": "npm:20.1.2"
     "@types/indefinite": "npm:2.3.4"
-    "@types/node": "npm:20.10.7"
+    "@types/node": "npm:20.10.8"
     graphql: "npm:16.8.1"
     indefinite: "npm:^2.4.3"
     jest: "npm:29.7.0"
     publint: "npm:0.2.7"
-    remeda: "npm:^1.34.0"
+    remeda: "npm:^1.36.0"
     type-fest: "npm:^4.9.0"
     typescript: "npm:5.3.3"
   peerDependencies:
@@ -1181,7 +1181,7 @@ __metadata:
     "@swc/jest": "npm:0.2.29"
     "@tsconfig/node20": "npm:20.1.2"
     "@types/cli-progress": "npm:^3.11.5"
-    "@types/node": "npm:20.10.7"
+    "@types/node": "npm:20.10.8"
     cli-progress: "npm:^3.12.0"
     dataloader: "npm:^2.2.2"
     denque: "npm:^2.1.0"
@@ -1192,7 +1192,7 @@ __metadata:
     p-queue: "npm:^8.0.1"
     p-retry: "npm:^6.2.0"
     publint: "npm:0.2.7"
-    remeda: "npm:^1.34.0"
+    remeda: "npm:^1.36.0"
     type-fest: "npm:^4.9.0"
     typescript: "npm:5.3.3"
   peerDependencies:
@@ -1710,12 +1710,12 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@types/node@npm:*, @types/node@npm:20.10.7":
-  version: 20.10.7
-  resolution: "@types/node@npm:20.10.7"
+"@types/node@npm:*, @types/node@npm:20.10.8":
+  version: 20.10.8
+  resolution: "@types/node@npm:20.10.8"
   dependencies:
     undici-types: "npm:~5.26.4"
-  checksum: 4a1ba3fb7fc0a262c6b2d5ec763cec7abf5b5d6b2d277798ddbf05227f5778f9a806987821fd4d3eacd6f37c946ac61a9c64fb79ae4b84daaec12354158835a3
+  checksum: 820efb084997bb62635883c820bc00c4bd01c71d66b8191fe8559256d6612f6665bbf682ed700bc55a99d48ff1e646d987c6f51afb3cffdb772f267727706277
   languageName: node
   linkType: hard
 
@@ -2736,9 +2736,9 @@ __metadata:
   linkType: hard
 
 "electron-to-chromium@npm:^1.4.601":
-  version: 1.4.623
-  resolution: "electron-to-chromium@npm:1.4.623"
-  checksum: 483640dbbedf46d627f264aae7bd2ef723326488fa5b7730fbe9c53f5bdde25ce421e54134b88ef85649e4473f42e73709692da5bbfb6aec7c08cdfe8c0037e2
+  version: 1.4.626
+  resolution: "electron-to-chromium@npm:1.4.626"
+  checksum: d7ca1471313adb21da9c4a8967913de24fa9ea73eae7852b076e0d8291b2d202c252c34c1195212c4826bc149fa66273a2b9a429637a97668947492bb8bee3a0
   languageName: node
   linkType: hard
 
@@ -5036,10 +5036,10 @@ __metadata:
   languageName: node
   linkType: hard
 
-"remeda@npm:^1.34.0":
-  version: 1.34.0
-  resolution: "remeda@npm:1.34.0"
-  checksum: ebdfebce29cc5c9d1d88bcddc57d84a95ce60837a69e42724c182aaae95894c811edf22b0db58ab32c5630c7fc1b7849a106d1f244680581c07c568dc7add5fe
+"remeda@npm:^1.36.0":
+  version: 1.36.0
+  resolution: "remeda@npm:1.36.0"
+  checksum: 95204edcc83056bd46f51f2e396574fdf0afa8311bca6cd2448a16734a3a3e2a02d5e99856323096bf9918dbc2b750cb51ddee3993736c24f174104dac9fcc37
   languageName: node
   linkType: hard
 

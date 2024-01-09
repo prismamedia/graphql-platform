@@ -54,7 +54,7 @@ describe('ScrollSubscription', () => {
       it.each<[MyContext, ScrollSubscriptionArgs]>([
         [myVisitorContext, { selection: `{ id }` }],
       ])('throws an UnauthorizedError', (context, args) => {
-        expect(() => Article.api.scroll(context, args)).toThrowError(
+        expect(() => Article.api.scroll(context, args)).toThrow(
           UnauthorizedError,
         );
 

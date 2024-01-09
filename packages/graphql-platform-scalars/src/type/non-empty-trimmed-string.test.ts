@@ -5,7 +5,7 @@ describe('NonEmptyTrimmedString', () => {
   it.each([[''], [' '], [' \n \t ']])(
     'parseValue(%p) throws the following Error: %s',
     (value) => {
-      expect(() => GraphQLNonEmptyTrimmedString.parseValue(value)).toThrowError(
+      expect(() => GraphQLNonEmptyTrimmedString.parseValue(value)).toThrow(
         `Expects a non-empty trimmed string, got:`,
       );
     },

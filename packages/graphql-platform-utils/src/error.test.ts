@@ -62,7 +62,7 @@ describe('Error', () => {
     ])('displays useful informations', (error, expectation) => {
       expect(() => {
         throw error;
-      }).toThrowError(expectation);
+      }).toThrow(expectation);
     });
   });
 });

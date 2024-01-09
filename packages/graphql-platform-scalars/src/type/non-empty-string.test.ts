@@ -7,7 +7,7 @@ describe('NonEmptyString', () => {
   });
 
   it.each([['']])('parseValue(%p) throws the following Error: %s', (value) => {
-    expect(() => GraphQLNonEmptyString.parseValue(value)).toThrowError(
+    expect(() => GraphQLNonEmptyString.parseValue(value)).toThrow(
       `Expects a non-empty string, got:`,
     );
   });

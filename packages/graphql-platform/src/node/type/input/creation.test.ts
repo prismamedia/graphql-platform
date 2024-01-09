@@ -31,7 +31,7 @@ describe('NodeCreationInputType', () => {
           graphql.printType(creationInputType.getGraphQLInputType()),
         ).toMatchSnapshot(creationInputType.name);
       } else {
-        expect(() => creationInputType.getGraphQLInputType()).toThrowError(
+        expect(() => creationInputType.getGraphQLInputType()).toThrow(
           `The "${nodeName}CreationInput" input type is private`,
         );
       }
@@ -45,7 +45,7 @@ describe('NodeCreationInputType', () => {
             graphql.printType(creationInputType.getGraphQLInputType()),
           ).toMatchSnapshot(creationInputType.name);
         } else {
-          expect(() => creationInputType.getGraphQLInputType()).toThrowError(
+          expect(() => creationInputType.getGraphQLInputType()).toThrow(
             `The "${nodeName}CreationInput" input type is private`,
           );
         }
@@ -86,7 +86,7 @@ describe('NodeCreationInputType', () => {
           const node = gp.getNodeByName(nodeName);
           const creationInputType = node.creationInputType;
 
-          expect(() => creationInputType.parseValue(value)).toThrowError(error);
+          expect(() => creationInputType.parseValue(value)).toThrow(error);
         },
       );
     });

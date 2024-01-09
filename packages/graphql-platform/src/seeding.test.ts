@@ -35,7 +35,7 @@ describe('Seeding', () => {
             },
           },
         }),
-    ).toThrowError('Dependency Cycle Found: root -> home -> root');
+    ).toThrow('Dependency Cycle Found: root -> home -> root');
   });
 
   it('orders by dependencies', () => {

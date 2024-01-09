@@ -49,7 +49,7 @@ describe('Node', () => {
         (invalidName, expectedError) => {
           expect(
             () => new GraphQLPlatform({ nodes: { [invalidName]: {} } }),
-          ).toThrowError(expectedError);
+          ).toThrow(expectedError);
         },
       );
     });
@@ -75,7 +75,7 @@ describe('Node', () => {
                   Test: config,
                 },
               }),
-          ).toThrowError(expectedError);
+          ).toThrow(expectedError);
         },
       );
 
@@ -100,7 +100,7 @@ describe('Node', () => {
                   },
                 },
               }),
-          ).toThrowError(
+          ).toThrow(
             "/GraphQLPlatformConfig/nodes/Article/components/edgeToAMissingModel/head - Expects a node's name among \"Article, ArticleExtension, Category, Tag, ArticleTag, ArticleTagModeration, User, UserProfile, Log\", got: 'MissingModel'",
           );
         });
@@ -123,7 +123,7 @@ describe('Node', () => {
                   },
                 },
               }),
-          ).toThrowError(
+          ).toThrow(
             `/GraphQLPlatformConfig/nodes/Article/components/edgeToAMissingReference/head - Expects an "Article"'s unique-constraint among "_id, id, category-slug", got: 'missingUnique'`,
           );
         });
@@ -145,7 +145,7 @@ describe('Node', () => {
                   },
                 },
               }),
-          ).toThrowError(
+          ).toThrow(
             "/GraphQLPlatformConfig/nodes/Category/components/parent/head - Expects a unique-constraint not refering itself, got: 'parent-slug'",
           );
         });
@@ -181,8 +181,7 @@ describe('Node', () => {
                   },
                 },
               }),
-          )
-            .toThrowError(`/GraphQLPlatformConfig/nodes/Test/components - 2 errors:
+          ).toThrow(`/GraphQLPlatformConfig/nodes/Test/components - 2 errors:
 └ ./parent/onHeadDeletion - Expects not to be "CASCADE" as the node "Test" cannot be deleted, got: 'CASCADE'
 └ ./brother/onHeadDeletion - Expects not to be "SET_NULL" as the edge "Test.brother" is immutable, got: 'SET_NULL'`);
         });
@@ -203,7 +202,7 @@ describe('Node', () => {
                 },
               },
             }),
-        ).toThrowError(
+        ).toThrow(
           `/GraphQLPlatformConfig/nodes/Test/uniques - Expects at least one unique-constraint, got: []`,
         );
       });
@@ -221,7 +220,7 @@ describe('Node', () => {
                 },
               },
             }),
-        ).toThrowError(
+        ).toThrow(
           "/GraphQLPlatformConfig/nodes/Test/uniques - Expects at least one identifier (= a non-nullable and immutable unique-constraint), got: [ [ '_id' ] ]",
         );
       });
@@ -239,7 +238,7 @@ describe('Node', () => {
                 },
               },
             }),
-        ).toThrowError(
+        ).toThrow(
           "/GraphQLPlatformConfig/nodes/Test/uniques - Expects at least one identifier (= a non-nullable and immutable unique-constraint), got: [ [ '_id' ] ]",
         );
       });
@@ -256,7 +255,7 @@ describe('Node', () => {
                 },
               },
             }),
-        ).toThrowError(
+        ).toThrow(
           '/GraphQLPlatformConfig/nodes/Article/uniques/0 - Expects at least one component, got: []',
         );
       });
@@ -273,7 +272,7 @@ describe('Node', () => {
                 },
               },
             }),
-        ).toThrowError(
+        ).toThrow(
           `/GraphQLPlatformConfig/nodes/Article/uniques/0/0 - Expects an "Article"'s component among "_id, id, status, title, slug, body, category, createdBy, createdAt, updatedBy, updatedAt, metas, highlighted, sponsored, views, score, machineTags", got: 'missingComponent'`,
         );
       });
@@ -295,7 +294,7 @@ describe('Node', () => {
                 },
               },
             }),
-        ).toThrowError(
+        ).toThrow(
           `/GraphQLPlatformConfig/nodes/Log/reverseEdges - Expects no configuration as there is no node heading to this \"Log\" node, got: { myExtraReverseEdge: {} }`,
         );
       });
@@ -315,7 +314,7 @@ describe('Node', () => {
                 },
               },
             }),
-        ).toThrowError(
+        ).toThrow(
           `/GraphQLPlatformConfig/nodes/User/reverseEdges/invalidEdge/originalEdge - Expects a node heading to this "User" node, got: 'UnknownModel'`,
         );
       });
@@ -335,7 +334,7 @@ describe('Node', () => {
                 },
               },
             }),
-        ).toThrowError(
+        ).toThrow(
           `/GraphQLPlatformConfig/nodes/User/reverseEdges/invalidEdge/originalEdge - Expects an edge heading to this "User" node, got: 'Article.unknownEdgeName'`,
         );
       });
@@ -354,7 +353,7 @@ describe('Node', () => {
                 },
               },
             }),
-        ).toThrowError(
+        ).toThrow(
           `/GraphQLPlatformConfig/nodes/User/reverseEdges/invalidEdge/originalEdge - Expects an edge heading to this "User" node, got: 'Article.unknownEdgeName'`,
         );
       });
@@ -373,7 +372,7 @@ describe('Node', () => {
                 },
               },
             }),
-        ).toThrowError(
+        ).toThrow(
           `/GraphQLPlatformConfig/nodes/User/reverseEdges/invalidEdge/originalEdge - Expects an edge heading to this "User" node, got: 'Article.category'`,
         );
       });
@@ -401,7 +400,7 @@ describe('Node', () => {
                 },
               },
             }),
-        ).toThrowError(
+        ).toThrow(
           `/GraphQLPlatformConfig/nodes/Article/output/virtualFields/myInvalidField/dependsOn - Expects an \"Article\"'s field among`,
         );
       });
@@ -426,7 +425,7 @@ describe('Node', () => {
                 },
               },
             }),
-        ).toThrowError(
+        ).toThrow(
           '/GraphQLPlatformConfig/nodes/Hit - Expects at least one mutable component as it is mutable',
         );
       });
@@ -458,7 +457,7 @@ describe('Node', () => {
                 },
               },
             }),
-        ).toThrowError(
+        ).toThrow(
           '/GraphQLPlatformConfig/nodes/Test - Expects at least one publicly mutable component as it is publicly updatable',
         );
       });

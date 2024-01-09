@@ -5,9 +5,14 @@ import { isDeepStrictEqual } from 'node:util';
 import type { NodeSelectedValue, NodeValue } from '../../../../node.js';
 import type { NodeChange, NodeUpdate } from '../../../change.js';
 import type { OperationContext } from '../../../operation.js';
-import type { VirtualOutputType } from '../../../type.js';
+import type {
+  PartialGraphQLResolveInfo,
+  VirtualOutputType,
+} from '../../../type.js';
 import { FalseValue, type BooleanFilter } from '../../filter.js';
 import type { SelectionExpressionInterface } from '../expression-interface.js';
+
+export type VirtualSelectionInfo = {};
 
 export class VirtualSelection<
   TSource extends NodeSelectedValue | undefined = any,
@@ -22,7 +27,7 @@ export class VirtualSelection<
     public readonly type: VirtualOutputType<TSource, TArgs, TValue>,
     public readonly alias: string | undefined,
     public readonly args: TArgs,
-    public readonly selectionSet: graphql.FieldNode['selectionSet'],
+    public readonly info: PartialGraphQLResolveInfo,
   ) {
     this.name = type.name;
     this.key = this.alias ?? this.name;
@@ -43,15 +48,14 @@ export class VirtualSelection<
 
   public equals(expression: unknown): expression is VirtualSelection {
     return (
-      this.isAkinTo(expression) &&
-      isDeepStrictEqual(expression.selectionSet, this.selectionSet)
+      this.isAkinTo(expression) && isDeepStrictEqual(expression.info, this.info)
     );
   }
 
   public isSupersetOf(expression: unknown): boolean {
     if (this.isAkinTo(expression)) {
-      assert.equal(expression.selectionSet, undefined, 'Not implemented yet');
-      assert.equal(this.selectionSet, undefined, 'Not implemented yet');
+      assert.equal(expression.info, undefined, 'Not implemented yet');
+      assert.equal(this.info, undefined, 'Not implemented yet');
 
       return true;
     }
@@ -63,8 +67,8 @@ export class VirtualSelection<
     assert(this.isAkinTo(expression));
 
     assert.deepEqual(
-      expression.selectionSet,
-      this.selectionSet,
+      expression.info,
+      this.info,
       `Cannot merge two different selection-sets, yet`,
     );
 
@@ -88,20 +92,7 @@ export class VirtualSelection<
   }
 
   public toGraphQLFieldNode(): graphql.FieldNode {
-    return {
-      kind: graphql.Kind.FIELD,
-      ...(this.alias && {
-        alias: {
-          kind: graphql.Kind.NAME,
-          value: this.alias,
-        },
-      }),
-      name: {
-        kind: graphql.Kind.NAME,
-        value: this.name,
-      },
-      ...(this.selectionSet && { selectionSet: this.selectionSet }),
-    };
+    return this.info.fieldNodes[0];
   }
 
   public parseSource(maybeSource: unknown, path?: utils.Path): TSource {
@@ -114,12 +105,7 @@ export class VirtualSelection<
     path: utils.Path,
   ): Promise<TValue> {
     try {
-      return await this.type.resolve(
-        source,
-        this.args,
-        context,
-        this.selectionSet,
-      );
+      return await this.type.resolve(source, this.args, context, this.info);
     } catch (error) {
       throw utils.isGraphErrorWithPathEqualOrDescendantOf(error, path)
         ? error

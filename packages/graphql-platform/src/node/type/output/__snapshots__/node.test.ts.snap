@@ -44,6 +44,10 @@ type Article implements PublicNodeInterface {
 
   """A custom field with a dependency"""
   upperCasedTitle: NonEmptyTrimmedString!
+  similars(
+    """The number of similar articles to return"""
+    first: UnsignedInt!
+  ): [Article!]!
 }"
 `;
 

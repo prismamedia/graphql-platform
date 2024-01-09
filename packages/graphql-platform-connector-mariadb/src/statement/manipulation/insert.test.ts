@@ -162,6 +162,6 @@ RETURNING
         },
         selection: `{ id }`,
       }),
-    ).rejects.toThrowError(core.DuplicateError);
+    ).rejects.toThrow(core.DuplicateError);
   });
 });

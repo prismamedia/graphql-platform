@@ -27,6 +27,6 @@ describe('OptionalFlag', () => {
   ])('getOptionalFlag(%p, true) throws the error %p', (invalidValue, error) =>
     expect(() =>
       getOptionalFlag(invalidValue, true, optionalFlagConfigPath),
-    ).toThrowError(error),
+    ).toThrow(error),
   );
 });

@@ -19,6 +19,7 @@ exports[`GraphQL-Platform Integration Apollo Server creates an ApolloServer inst
               "myArbitraryKey": "with my arbitrary value",
             },
             "score": 0.5,
+            "similars": [],
             "status": "DRAFT",
             "tagCount": 0,
             "tags": [],
@@ -32,6 +33,7 @@ exports[`GraphQL-Platform Integration Apollo Server creates an ApolloServer inst
             "machineTags": null,
             "metas": null,
             "score": 0.5,
+            "similars": [],
             "status": "DRAFT",
             "tagCount": 0,
             "tags": [],
@@ -45,6 +47,7 @@ exports[`GraphQL-Platform Integration Apollo Server creates an ApolloServer inst
             "machineTags": null,
             "metas": null,
             "score": 0.5,
+            "similars": [],
             "status": "PUBLISHED",
             "tagCount": 2,
             "tags": [
@@ -79,6 +82,7 @@ exports[`GraphQL-Platform Integration Apollo Server creates an ApolloServer inst
               "aKey": "withAnyValue",
             },
             "score": 0.12,
+            "similars": [],
             "status": "PUBLISHED",
             "tagCount": 1,
             "tags": [
@@ -99,6 +103,7 @@ exports[`GraphQL-Platform Integration Apollo Server creates an ApolloServer inst
             "machineTags": null,
             "metas": null,
             "score": 0.5,
+            "similars": [],
             "status": "PUBLISHED",
             "tagCount": 3,
             "tags": [
@@ -131,6 +136,7 @@ exports[`GraphQL-Platform Integration Apollo Server creates an ApolloServer inst
             "machineTags": null,
             "metas": null,
             "score": 0.5,
+            "similars": [],
             "status": "PUBLISHED",
             "tagCount": 2,
             "tags": [

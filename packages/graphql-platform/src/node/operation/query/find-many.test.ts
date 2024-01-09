@@ -38,7 +38,7 @@ describe('FindManyQuery', () => {
       it.each<[MyContext, FindManyQueryArgs]>([
         [myVisitorContext, { first: 5, selection: ['id'] }],
       ])('throws an UnauthorizedError', (context, args) => {
-        expect(() => gp.api.query.articles(context, args)).toThrowError(
+        expect(() => gp.api.query.articles(context, args)).toThrow(
           UnauthorizedError,
         );
 

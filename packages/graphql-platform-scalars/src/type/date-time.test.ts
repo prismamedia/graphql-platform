@@ -16,7 +16,7 @@ describe('DateTime', () => {
       "Expects a date-time string compliant with the ISO 8601 extended format, got: '2000-02-30T10:00:00'",
     ],
   ])('parseValue(%p) throws the following Error: %s', (input, error) => {
-    expect(() => GraphQLDateTime.parseValue(input)).toThrowError(error);
+    expect(() => GraphQLDateTime.parseValue(input)).toThrow(error);
   });
 
   it.each([

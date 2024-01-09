@@ -1,8 +1,8 @@
 import * as utils from '@prismamedia/graphql-platform-utils';
 import * as graphql from 'graphql';
-import type { Edge } from '../../../../../definition/component/edge.js';
-import type { OperationContext } from '../../../../../operation/context.js';
-import { EdgeHeadSelection } from '../../../../../statement/selection/expression/component/edge/head.js';
+import type { Edge } from '../../../../../definition.js';
+import type { OperationContext } from '../../../../../operation.js';
+import { EdgeHeadSelection } from '../../../../../statement.js';
 import type { GraphQLSelectionContext, NodeOutputType } from '../../../node.js';
 import { AbstractComponentOutputType } from '../abstract-component.js';
 

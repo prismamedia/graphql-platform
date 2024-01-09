@@ -50,7 +50,7 @@ describe('Input', () => {
       `/InputWithCustomValidationAndInvalidThunkedDefaultValue/defaultValue - Expects to be valid against the type "Int" and the custom-parser, got: 16`,
     ],
   ])('cannot have an invalid defaultValue', (config, error) => {
-    expect(() => new Input(config)).toThrowError(error);
+    expect(() => new Input(config)).toThrow(error);
   });
 
   it.each<

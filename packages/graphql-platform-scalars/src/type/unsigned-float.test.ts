@@ -13,6 +13,6 @@ describe('UnsignedFloat', () => {
     [-34.56, 'Expects an unsigned float, got: -34.56'],
     ['78', 'Float cannot represent non numeric value: "78"'],
   ])('parseValue(%p) throws the following Error: %s', (input, error) => {
-    expect(() => GraphQLUnsignedFloat.parseValue(input)).toThrowError(error);
+    expect(() => GraphQLUnsignedFloat.parseValue(input)).toThrow(error);
   });
 });

@@ -5,7 +5,7 @@ describe('EmailAddress', () => {
   it.each([['y vann.boucher@gmail.com'], [' ']])(
     'parseValue(%p) throws the following Error: %s',
     (value) => {
-      expect(() => GraphQLEmailAddress.parseValue(value)).toThrowError(
+      expect(() => GraphQLEmailAddress.parseValue(value)).toThrow(
         `Expects an email address, got:`,
       );
     },

@@ -45,7 +45,7 @@ describe('CreateSomeMutation', () => {
       ])('throws an UnauthorizedError', async (context, args) => {
         await expect(() =>
           gp.api.mutation.createArticles(context, args),
-        ).rejects.toThrowError(UnauthorizedError);
+        ).rejects.toThrow(UnauthorizedError);
 
         expect(gp.connector.create).toHaveBeenCalledTimes(0);
       });
@@ -72,7 +72,7 @@ describe('CreateSomeMutation', () => {
             ],
             selection: '{ id }',
           }),
-        ).rejects.toThrowError(ConnectorWorkflowError);
+        ).rejects.toThrow(ConnectorWorkflowError);
       });
 
       it('throws a ConnectorOperationError', async () => {
@@ -97,7 +97,7 @@ describe('CreateSomeMutation', () => {
             ],
             selection: '{ id }',
           }),
-        ).rejects.toThrowError(ConnectorOperationError);
+        ).rejects.toThrow(ConnectorOperationError);
       });
 
       it('throws a LifecycleHookError', async () => {
@@ -117,7 +117,7 @@ describe('CreateSomeMutation', () => {
             ],
             selection: '{ id }',
           }),
-        ).rejects.toThrowError(LifecycleHookError);
+        ).rejects.toThrow(LifecycleHookError);
       });
     });
 

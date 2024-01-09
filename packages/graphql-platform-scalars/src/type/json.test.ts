@@ -20,7 +20,7 @@ describe('JSON', () => {
   ])(
     '%p.parseValue(%p) throws an Error on invalid value',
     (type, input, error) => {
-      expect(() => type.parseValue(input)).toThrowError(error);
+      expect(() => type.parseValue(input)).toThrow(error);
     },
   );
 

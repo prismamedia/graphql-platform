@@ -9,7 +9,7 @@ describe('Type', () => {
       [scalarType, null],
     ]),
   )('throws an Error on %s.parseValue(%s)', (scalarType, value) => {
-    expect(() => scalarType.parseValue(value)).toThrowError();
+    expect(() => scalarType.parseValue(value)).toThrow();
   });
 
   it.each(
@@ -18,7 +18,7 @@ describe('Type', () => {
       [scalarType, null],
     ]),
   )('throws an Error on %s.parseLiteral(%s)', (scalarType, value) => {
-    expect(() => scalarType.parseLiteral(value)).toThrowError();
+    expect(() => scalarType.parseLiteral(value)).toThrow();
   });
 
   it.each(
@@ -27,6 +27,6 @@ describe('Type', () => {
       [scalarType, null],
     ]),
   )('throws an Error on %s.serialize(%s)', (scalarType, value) => {
-    expect(() => scalarType.serialize(value)).toThrowError();
+    expect(() => scalarType.serialize(value)).toThrow();
   });
 });
