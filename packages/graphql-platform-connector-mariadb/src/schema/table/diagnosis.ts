@@ -1,10 +1,11 @@
 import * as utils from '@prismamedia/graphql-platform-utils';
 import assert from 'node:assert/strict';
 import { inspect } from 'node:util';
-import type {
-  ColumnInformation,
-  ForeignKeyInformation,
-  TableInformation,
+import {
+  FixTableStatement,
+  type ColumnInformation,
+  type ForeignKeyInformation,
+  type TableInformation,
 } from '../../statement.js';
 import type { DiagnosisError } from '../diagnosis.js';
 import type { Table } from '../table.js';
@@ -430,5 +431,13 @@ export class TableDiagnosis {
 
   public printSummary(): string {
     return inspect(this.summarize(), undefined, 10);
+  }
+
+  public async fix(): Promise<void> {
+    if (FixTableStatement.supports(this)) {
+      await this.table.schema.connector.executeStatement(
+        new FixTableStatement(this),
+      );
+    }
   }
 }

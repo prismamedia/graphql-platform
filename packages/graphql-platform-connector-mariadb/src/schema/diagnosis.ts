@@ -2,7 +2,11 @@ import * as utils from '@prismamedia/graphql-platform-utils';
 import assert from 'node:assert/strict';
 import { inspect } from 'node:util';
 import type { Schema } from '../schema.js';
-import { SchemaInformation, TableInformation } from '../statement.js';
+import {
+  FixSchemaStatement,
+  SchemaInformation,
+  TableInformation,
+} from '../statement.js';
 import {
   TableDiagnosis,
   type ColumnInformationsByColumnName,
@@ -216,5 +220,15 @@ export class SchemaDiagnosis {
 
   public printSummary(): string {
     return inspect(this.summarize(), undefined, 10);
+  }
+
+  public async fix(): Promise<void> {
+    if (FixSchemaStatement.supports(this)) {
+      await this.schema.connector.executeStatement(
+        new FixSchemaStatement(this),
+      );
+    }
+
+    await Promise.all(this.invalidTables.map((diagnosis) => diagnosis.fix()));
   }
 }
