@@ -29,6 +29,8 @@ export class FixSchemaStatement implements mariadb.QueryOptions {
         `DEFAULT CHARSET = ${escapeStringValue(schema.defaultCharset)}`,
       collationError &&
         `DEFAULT COLLATE = ${escapeStringValue(schema.defaultCollation)}`,
-    ].join(EOL);
+    ]
+      .filter(Boolean)
+      .join(EOL);
   }
 }

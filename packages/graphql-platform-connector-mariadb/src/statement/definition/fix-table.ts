@@ -16,12 +16,28 @@ export class FixTableStatement implements mariadb.QueryOptions {
     collationError,
     invalidColumns,
     commentError,
+    extraForeignKeys,
+    extraIndexes,
+    extraColumns,
+    missingColumns,
+    missingIndexes,
+    missingForeignKeys,
+    invalidForeignKeys,
+    invalidIndexes,
   }: TableDiagnosis): boolean {
     return Boolean(
       engineError ||
         collationError ||
         invalidColumns.some((diagnosis) => diagnosis.collationError) ||
-        commentError,
+        commentError ||
+        extraForeignKeys.length ||
+        extraIndexes.length ||
+        extraColumns.length ||
+        missingColumns.length ||
+        missingIndexes.length ||
+        missingForeignKeys.length ||
+        invalidForeignKeys.length ||
+        invalidIndexes.length,
     );
   }
 
@@ -31,6 +47,14 @@ export class FixTableStatement implements mariadb.QueryOptions {
     collationError,
     invalidColumns,
     commentError,
+    extraForeignKeys,
+    extraIndexes,
+    extraColumns,
+    missingColumns,
+    missingIndexes,
+    missingForeignKeys,
+    invalidForeignKeys,
+    invalidIndexes,
   }: TableDiagnosis) {
     this.sql = [
       `ALTER TABLE ${escapeIdentifier(table.qualifiedName)}`,
@@ -48,6 +72,29 @@ export class FixTableStatement implements mariadb.QueryOptions {
         commentError &&
           table.comment &&
           `COMMENT ${escapeStringValue(table.comment)}`,
+        ...extraForeignKeys.map(
+          (foreignKey) => `DROP FOREIGN KEY ${escapeIdentifier(foreignKey)}`,
+        ),
+        ...extraIndexes.map((index) => `DROP INDEX ${escapeIdentifier(index)}`),
+        ...extraColumns.map(
+          (column) => `DROP COLUMN ${escapeIdentifier(column)}`,
+        ),
+        ...missingColumns.map(
+          (column) =>
+            `ADD COLUMN ${escapeIdentifier(column.name)} ${column.definition}`,
+        ),
+        ...missingIndexes.map((index) => `ADD ${index.definition}`),
+        ...missingForeignKeys.map(
+          (foreignKey) => `ADD ${foreignKey.definition}`,
+        ),
+        ...invalidForeignKeys.flatMap(({ foreignKey }) => [
+          `DROP FOREIGN KEY ${escapeIdentifier(foreignKey.name)}`,
+          `ADD ${foreignKey.definition}`,
+        ]),
+        ...invalidIndexes.flatMap(({ index }) => [
+          `DROP INDEX ${escapeIdentifier(index.name)}`,
+          `ADD ${index.definition}`,
+        ]),
       ]
         .filter(Boolean)
         .join(`,${EOL}`),
