@@ -3,20 +3,19 @@ import * as utils from '@prismamedia/graphql-platform-utils';
 import assert from 'node:assert/strict';
 import type { SetOptional } from 'type-fest';
 import { escapeStringValue } from '../../../../escaping.js';
+import type { ColumnInformation } from '../../../../statement.js';
 import {
-  AbstractDataType,
-  type AbstractDataTypeConfig,
-} from '../../abstract-data-type.js';
+  AbstractStringDataType,
+  type AbstractStringDataTypeConfig,
+} from '../abstract-string-data-type.js';
 
 export interface TextTypeConfig<TLeafValue extends core.LeafValue = any>
-  extends AbstractDataTypeConfig<
+  extends AbstractStringDataTypeConfig<
     TextType['kind'] | 'LONG' | 'LONG VARCHAR',
     TLeafValue,
     string
   > {
   length?: number;
-  charset?: string;
-  collation?: string;
 }
 
 /**
@@ -24,14 +23,12 @@ export interface TextTypeConfig<TLeafValue extends core.LeafValue = any>
  */
 export class TextType<
   TLeafValue extends core.LeafValue = any,
-> extends AbstractDataType<
+> extends AbstractStringDataType<
   'LONGTEXT' | 'MEDIUMTEXT' | 'TEXT' | 'TINYTEXT',
   TLeafValue,
   string
 > {
   public readonly length?: number;
-  public readonly charset?: string;
-  public readonly collation?: string;
   public readonly definition: string;
 
   public constructor(
@@ -70,9 +67,6 @@ export class TextType<
       this.length = lengthConfig;
     }
 
-    this.charset = config?.charset || undefined;
-    this.collation = config?.collation || undefined;
-
     this.definition = [
       `${this.kind}${this.length ? `(${this.length})` : ''}`,
       this.charset && `CHARSET ${escapeStringValue(this.charset)}`,
@@ -86,5 +80,14 @@ export class TextType<
     assert.equal(typeof value, 'string');
 
     return escapeStringValue(value);
+  }
+
+  public isInformationValid(information: ColumnInformation): boolean {
+    return (
+      super.isInformationValid(information) &&
+      (!this.length ||
+        !information.CHARACTER_MAXIMUM_LENGTH ||
+        this.length === Number(information.CHARACTER_MAXIMUM_LENGTH))
+    );
   }
 }

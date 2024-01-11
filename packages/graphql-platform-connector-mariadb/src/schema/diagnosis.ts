@@ -1,10 +1,12 @@
 import * as utils from '@prismamedia/graphql-platform-utils';
 import assert from 'node:assert/strict';
 import { inspect } from 'node:util';
-import type { Schema } from '../schema.js';
+import { escapeIdentifier } from '../escaping.js';
+import type { Schema, TableDiagnosisFixConfig } from '../schema.js';
 import {
   FixSchemaStatement,
   SchemaInformation,
+  StatementKind,
   TableInformation,
 } from '../statement.js';
 import {
@@ -63,9 +65,27 @@ export type SchemaDiagnosisSummary = {
   collation?: DiagnosisError;
   comment?: DiagnosisError;
 
-  missingTables?: ReadonlyArray<Table['name']>;
-  invalidTables?: Record<Table['name'], TableDiagnosisSummary>;
-  extraTables?: ReadonlyArray<Table['name']>;
+  tables?: {
+    extra?: ReadonlyArray<Table['name']>;
+    missing?: ReadonlyArray<Table['name']>;
+    invalid?: Record<Table['name'], TableDiagnosisSummary>;
+  };
+};
+
+export type SchemaDiagnosisFixConfig = {
+  comment?: boolean;
+  charset?: boolean;
+  collation?: boolean;
+
+  engine?: boolean;
+  foreignKeys?: boolean;
+  indexes?: boolean;
+  columns?: boolean;
+
+  tables?:
+    | boolean
+    | ReadonlyArray<Table['name']>
+    | Record<Table['name'], boolean | TableDiagnosisFixConfig>;
 };
 
 export class SchemaDiagnosis {
@@ -194,26 +214,30 @@ export class SchemaDiagnosis {
 
   public summarize(): SchemaDiagnosisSummary {
     return {
+      ...(this.commentError && { comment: this.commentError }),
       ...(this.charsetError && {
         charset: this.charsetError,
       }),
       ...(this.collationError && {
         collation: this.collationError,
       }),
-      ...(this.commentError && { comment: this.commentError }),
-      ...(this.missingTables.length && {
-        missingTables: this.missingTables.map((table) => table.name),
-      }),
-      ...(this.invalidTables.length && {
-        invalidTables: Object.fromEntries(
-          this.invalidTables.map((diagnosis) => [
-            diagnosis.table.name,
-            diagnosis.summarize(),
-          ]),
-        ),
-      }),
-      ...(this.extraTables.length && {
-        extraTables: this.extraTables,
+      ...((this.extraTables.length ||
+        this.missingTables.length ||
+        this.invalidTables.length) && {
+        tables: {
+          ...(this.extraTables.length && { extra: this.extraTables }),
+          ...(this.missingTables.length && {
+            missing: this.missingTables.map(({ name }) => name),
+          }),
+          ...(this.invalidTables.length && {
+            invalid: Object.fromEntries(
+              this.invalidTables.map((diagnosis) => [
+                diagnosis.table.name,
+                diagnosis.summarize(),
+              ]),
+            ),
+          }),
+        },
       }),
     };
   }
@@ -222,13 +246,111 @@ export class SchemaDiagnosis {
     return inspect(this.summarize(), undefined, 10);
   }
 
-  public async fix(): Promise<void> {
-    if (FixSchemaStatement.supports(this)) {
-      await this.schema.connector.executeStatement(
-        new FixSchemaStatement(this),
-      );
-    }
+  public fixesComment(config?: SchemaDiagnosisFixConfig): boolean {
+    return Boolean(
+      this.commentError && utils.getOptionalFlag(config?.comment, true),
+    );
+  }
 
-    await Promise.all(this.invalidTables.map((diagnosis) => diagnosis.fix()));
+  public fixesCharset(config?: SchemaDiagnosisFixConfig): boolean {
+    return Boolean(
+      this.charsetError && utils.getOptionalFlag(config?.charset, true),
+    );
+  }
+
+  public fixesCollation(config?: SchemaDiagnosisFixConfig): boolean {
+    return Boolean(
+      this.collationError && utils.getOptionalFlag(config?.collation, true),
+    );
+  }
+
+  public fixesTables(
+    config?: SchemaDiagnosisFixConfig,
+  ): Record<Table['name'], TableDiagnosisFixConfig> {
+    const fixableTableNames = [
+      ...this.extraTables,
+      ...this.missingTables.map(({ name }) => name),
+      ...this.invalidTables.map(({ table: { name } }) => name),
+    ];
+
+    const defaults: TableDiagnosisFixConfig = {
+      comment: config?.comment,
+      collation: config?.collation,
+      engine: config?.engine,
+      foreignKeys: config?.foreignKeys,
+      indexes: config?.indexes,
+      columns: config?.columns,
+    };
+
+    return Object.fromEntries<TableDiagnosisFixConfig>(
+      config?.tables == null || config.tables === true
+        ? fixableTableNames.map((name) => [name, defaults])
+        : config.tables === false
+        ? []
+        : Array.isArray(config.tables)
+        ? config.tables.map((name) => [name, defaults])
+        : Object.entries(config.tables)
+            .filter(
+              (entry): entry is [string, true | TableDiagnosisFixConfig] =>
+                entry[1] !== false,
+            )
+            .map(([name, config]) => [
+              name,
+              config === true ? defaults : { ...defaults, ...config },
+            ]),
+    );
+  }
+
+  public async fix(config?: SchemaDiagnosisFixConfig): Promise<void> {
+    await this.schema.connector.withConnection(async (connection) => {
+      if (FixSchemaStatement.fixes(this, config)) {
+        await this.schema.connector.executeStatement(
+          new FixSchemaStatement(this, config),
+          connection,
+        );
+      }
+
+      const configsByTable = this.fixesTables(config);
+
+      await Promise.all(
+        this.extraTables.map(async (tableName) => {
+          const config = configsByTable[tableName];
+          if (config) {
+            await connection.query(
+              `DROP TABLE IF EXISTS ${escapeIdentifier(
+                `${this.schema.name}.${tableName}`,
+              )}`,
+            );
+          }
+        }),
+      );
+
+      await Promise.all(
+        this.missingTables.map(async (table) => {
+          const config = configsByTable[table.name];
+          if (config) {
+            await table.create({ withoutForeignKeys: true }, connection);
+          }
+        }),
+      );
+
+      await Promise.all(
+        this.invalidTables.map(async (tableDiagnosis) => {
+          const config = configsByTable[tableDiagnosis.table.name];
+          if (config) {
+            await tableDiagnosis.fix(config, connection);
+          }
+        }),
+      );
+
+      await Promise.all(
+        this.missingTables.map(async (table) => {
+          const config = configsByTable[table.name];
+          if (config && config.foreignKeys !== false) {
+            await table.addForeignKeys(undefined, connection);
+          }
+        }),
+      );
+    }, StatementKind.DATA_DEFINITION);
   }
 }

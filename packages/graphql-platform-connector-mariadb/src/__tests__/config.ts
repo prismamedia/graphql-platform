@@ -58,7 +58,11 @@ export function createMyGP<
         leaf === '_id'
           ? { column: { autoIncrement: true } }
           : node === 'Article' && leaf === 'title'
-          ? { column: { fullTextIndex: true } }
+          ? {
+              column: {
+                fullTextIndex: true,
+              },
+            }
           : node === 'Article' && leaf === 'updatedAt'
           ? {
               column: {

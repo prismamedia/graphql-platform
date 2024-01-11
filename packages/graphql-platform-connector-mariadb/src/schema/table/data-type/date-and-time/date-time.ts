@@ -3,6 +3,7 @@ import * as utils from '@prismamedia/graphql-platform-utils';
 import assert from 'node:assert/strict';
 import type { SetOptional } from 'type-fest';
 import { escapeStringValue } from '../../../../escaping.js';
+import type { ColumnInformation } from '../../../../statement.js';
 import {
   AbstractDataType,
   type AbstractDataTypeConfig,
@@ -78,6 +79,14 @@ export class DateTimeType<
       value
         .toISOString()
         .replace(/^(?<date>[^T]+)T(?<time>[^Z]+)Z$/, '$<date> $<time>'),
+    );
+  }
+
+  public isInformationValid(information: ColumnInformation): boolean {
+    return (
+      super.isInformationValid(information) &&
+      (!information.NUMERIC_PRECISION ||
+        this.microsecondPrecision === Number(information.NUMERIC_PRECISION))
     );
   }
 }

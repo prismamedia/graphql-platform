@@ -2,14 +2,15 @@ import type * as core from '@prismamedia/graphql-platform';
 import * as utils from '@prismamedia/graphql-platform-utils';
 import assert from 'node:assert/strict';
 import type { SetOptional } from 'type-fest';
+import type { ColumnInformation } from '../../../../statement.js';
 import {
-  AbstractDataType,
-  type AbstractDataTypeConfig,
-} from '../../abstract-data-type.js';
+  AbstractNumericDataType,
+  type AbstractNumericDataTypeConfig,
+} from '../abstract-numeric-data-type.js';
 import type { NumericDataTypeModifier } from './modifier.js';
 
 export interface FloatTypeConfig<TLeafValue extends core.LeafValue = any>
-  extends AbstractDataTypeConfig<FloatType['kind'], TLeafValue, number> {
+  extends AbstractNumericDataTypeConfig<FloatType['kind'], TLeafValue, number> {
   precision?: number;
   scale?: number;
   modifiers?: ReadonlyArray<NumericDataTypeModifier>;
@@ -20,10 +21,9 @@ export interface FloatTypeConfig<TLeafValue extends core.LeafValue = any>
  */
 export class FloatType<
   TLeafValue extends core.LeafValue = any,
-> extends AbstractDataType<'FLOAT', TLeafValue, number> {
+> extends AbstractNumericDataType<'FLOAT', TLeafValue, number> {
   public readonly precision?: number;
   public readonly scale?: number;
-  public readonly modifiers: ReadonlyArray<NumericDataTypeModifier>;
   public readonly definition: string;
 
   public constructor(
@@ -70,8 +70,6 @@ export class FloatType<
       this.scale = scaleConfig;
     }
 
-    this.modifiers = Object.freeze([...new Set(config?.modifiers)]);
-
     this.definition = [
       `${this.kind}(${this.precision},${this.scale})`,
       this.modifiers?.join(' '),
@@ -84,5 +82,17 @@ export class FloatType<
     assert.equal(typeof value, 'number');
 
     return value.toString(10);
+  }
+
+  public override isInformationValid(information: ColumnInformation): boolean {
+    return (
+      super.isInformationValid(information) &&
+      (!this.precision ||
+        !information.NUMERIC_PRECISION ||
+        this.precision === Number(information.NUMERIC_PRECISION)) &&
+      (!this.scale ||
+        !information.NUMERIC_SCALE ||
+        this.scale === Number(information.NUMERIC_SCALE))
+    );
   }
 }

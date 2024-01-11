@@ -42,11 +42,9 @@ export class BooleanType<
     return value ? '1' : '0';
   }
 
-  public override isInformationValid(
-    information: ColumnInformation['DATA_TYPE'],
-  ): boolean {
+  public override isInformationValid(information: ColumnInformation): boolean {
     return (
-      'TINYINT'.localeCompare(information, undefined, {
+      'TINYINT(1)'.localeCompare(information['COLUMN_TYPE'], undefined, {
         sensitivity: 'base',
       }) === 0
     );

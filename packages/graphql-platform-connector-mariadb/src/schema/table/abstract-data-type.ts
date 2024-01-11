@@ -95,11 +95,9 @@ export abstract class AbstractDataType<
     return 'NULL';
   }
 
-  public isInformationValid(
-    information: ColumnInformation['DATA_TYPE'],
-  ): boolean {
+  public isInformationValid(information: ColumnInformation): boolean {
     return (
-      this.kind.localeCompare(information, undefined, {
+      this.kind.localeCompare(information['DATA_TYPE'], undefined, {
         sensitivity: 'base',
       }) === 0
     );

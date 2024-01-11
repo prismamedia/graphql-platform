@@ -1,7 +1,8 @@
 import type * as mariadb from 'mariadb';
+import assert from 'node:assert';
 import { EOL } from 'node:os';
 import { escapeIdentifier, escapeStringValue } from '../../escaping.js';
-import type { TableDiagnosis } from '../../schema.js';
+import type { TableDiagnosis, TableDiagnosisFixConfig } from '../../schema.js';
 import { StatementKind } from '../kind.js';
 
 /**
@@ -11,90 +12,107 @@ export class FixTableStatement implements mariadb.QueryOptions {
   public readonly kind = StatementKind.DATA_DEFINITION;
   public readonly sql: string;
 
-  public static supports({
-    engineError,
-    collationError,
-    invalidColumns,
-    commentError,
-    extraForeignKeys,
-    extraIndexes,
-    extraColumns,
-    missingColumns,
-    missingIndexes,
-    missingForeignKeys,
-    invalidForeignKeys,
-    invalidIndexes,
-  }: TableDiagnosis): boolean {
-    return Boolean(
-      engineError ||
-        collationError ||
-        invalidColumns.some((diagnosis) => diagnosis.collationError) ||
-        commentError ||
-        extraForeignKeys.length ||
-        extraIndexes.length ||
-        extraColumns.length ||
-        missingColumns.length ||
-        missingIndexes.length ||
-        missingForeignKeys.length ||
-        invalidForeignKeys.length ||
-        invalidIndexes.length,
+  public static fixes(
+    diagnosis: TableDiagnosis,
+    config?: TableDiagnosisFixConfig,
+  ): boolean {
+    return (
+      diagnosis.fixesComment(config) ||
+      diagnosis.fixesEngine(config) ||
+      diagnosis.fixesCollation(config) ||
+      diagnosis.fixesForeignKeys(config).length > 0 ||
+      diagnosis.fixesIndexes(config).length > 0 ||
+      diagnosis.fixesColumns(config).length > 0
     );
   }
 
-  public constructor({
-    table,
-    engineError,
-    collationError,
-    invalidColumns,
-    commentError,
-    extraForeignKeys,
-    extraIndexes,
-    extraColumns,
-    missingColumns,
-    missingIndexes,
-    missingForeignKeys,
-    invalidForeignKeys,
-    invalidIndexes,
-  }: TableDiagnosis) {
+  public constructor(
+    diagnosis: TableDiagnosis,
+    config?: TableDiagnosisFixConfig,
+  ) {
+    assert(
+      (this.constructor as typeof FixTableStatement).fixes(diagnosis, config),
+    );
+
     this.sql = [
-      `ALTER TABLE ${escapeIdentifier(table.qualifiedName)}`,
+      `ALTER TABLE ${escapeIdentifier(diagnosis.table.qualifiedName)}`,
       [
-        engineError && `ENGINE = ${escapeStringValue(table.engine)}`,
-        collationError ||
-          (invalidColumns.some((diagnosis) => diagnosis.collationError) &&
-            `CONVERT TO CHARACTER SET ${escapeStringValue(
-              table.defaultCharset,
-            )} COLLATE ${escapeStringValue(table.defaultCollation)}`),
-        collationError &&
-          `DEFAULT CHARSET = ${escapeStringValue(table.defaultCharset)}`,
-        collationError &&
-          `DEFAULT COLLATE = ${escapeStringValue(table.defaultCollation)}`,
-        commentError &&
-          table.comment &&
-          `COMMENT ${escapeStringValue(table.comment)}`,
-        ...extraForeignKeys.map(
-          (foreignKey) => `DROP FOREIGN KEY ${escapeIdentifier(foreignKey)}`,
-        ),
-        ...extraIndexes.map((index) => `DROP INDEX ${escapeIdentifier(index)}`),
-        ...extraColumns.map(
-          (column) => `DROP COLUMN ${escapeIdentifier(column)}`,
-        ),
-        ...missingColumns.map(
-          (column) =>
-            `ADD COLUMN ${escapeIdentifier(column.name)} ${column.definition}`,
-        ),
-        ...missingIndexes.map((index) => `ADD ${index.definition}`),
-        ...missingForeignKeys.map(
-          (foreignKey) => `ADD ${foreignKey.definition}`,
-        ),
-        ...invalidForeignKeys.flatMap(({ foreignKey }) => [
-          `DROP FOREIGN KEY ${escapeIdentifier(foreignKey.name)}`,
-          `ADD ${foreignKey.definition}`,
-        ]),
-        ...invalidIndexes.flatMap(({ index }) => [
-          `DROP INDEX ${escapeIdentifier(index.name)}`,
-          `ADD ${index.definition}`,
-        ]),
+        diagnosis.fixesComment(config) &&
+          `COMMENT = ${escapeStringValue(diagnosis.table.comment ?? '')}`,
+
+        diagnosis.fixesEngine(config) &&
+          `ENGINE = ${escapeStringValue(diagnosis.table.engine)}`,
+
+        ...(diagnosis.fixesCollation(config)
+          ? [
+              `CONVERT TO CHARACTER SET ${escapeStringValue(
+                diagnosis.table.defaultCharset,
+              )} COLLATE ${escapeStringValue(
+                diagnosis.table.defaultCollation,
+              )}`,
+              `DEFAULT CHARSET = ${escapeStringValue(
+                diagnosis.table.defaultCharset,
+              )}`,
+              `DEFAULT COLLATE = ${escapeStringValue(
+                diagnosis.table.defaultCollation,
+              )}`,
+            ]
+          : []),
+
+        ...diagnosis.extraForeignKeys
+          .filter((name) => diagnosis.fixesForeignKeys(config).includes(name))
+          .map((name) => `DROP FOREIGN KEY ${escapeIdentifier(name)}`),
+
+        ...diagnosis.invalidForeignKeys
+          .filter(({ foreignKey: { name } }) =>
+            diagnosis.fixesForeignKeys(config).includes(name),
+          )
+          .map(
+            ({ foreignKey: { name } }) =>
+              `DROP FOREIGN KEY ${escapeIdentifier(name)}`,
+          ),
+
+        ...diagnosis.extraIndexes
+          .filter((name) => diagnosis.fixesIndexes(config).includes(name))
+          .map((name) => `DROP INDEX ${escapeIdentifier(name)}`),
+
+        ...diagnosis.invalidIndexes
+          .filter(({ index: { name } }) =>
+            diagnosis.fixesIndexes(config).includes(name),
+          )
+          .map(
+            ({ index: { name } }) => `DROP INDEX  ${escapeIdentifier(name)}`,
+          ),
+
+        ...diagnosis.extraColumns
+          .filter((name) => diagnosis.fixesColumns(config).includes(name))
+          .map((name) => `DROP COLUMN ${escapeIdentifier(name)}`),
+
+        ...diagnosis.invalidColumns
+          .filter(({ column: { name } }) =>
+            diagnosis.fixesColumns(config).includes(name),
+          )
+          .map(
+            ({ column: { name, definition } }) =>
+              `MODIFY COLUMN ${escapeIdentifier(name)} ${definition}`,
+          ),
+
+        ...diagnosis.missingColumns
+          .filter(({ name }) => diagnosis.fixesColumns(config).includes(name))
+          .map(
+            ({ name, definition }) =>
+              `ADD COLUMN ${escapeIdentifier(name)} ${definition}`,
+          ),
+
+        ...diagnosis.missingIndexes
+          .filter(({ name }) => diagnosis.fixesIndexes(config).includes(name))
+          .map(({ definition }) => `ADD ${definition}`),
+
+        ...diagnosis.missingForeignKeys
+          .filter(({ name }) =>
+            diagnosis.fixesForeignKeys(config).includes(name),
+          )
+          .map(({ definition }) => `ADD ${definition}`),
       ]
         .filter(Boolean)
         .join(`,${EOL}`),

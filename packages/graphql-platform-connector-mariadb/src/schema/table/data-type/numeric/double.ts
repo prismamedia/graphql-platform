@@ -2,14 +2,15 @@ import type * as core from '@prismamedia/graphql-platform';
 import * as utils from '@prismamedia/graphql-platform-utils';
 import assert from 'node:assert/strict';
 import type { SetOptional } from 'type-fest';
+import type { ColumnInformation } from '../../../../statement.js';
 import {
-  AbstractDataType,
-  type AbstractDataTypeConfig,
-} from '../../abstract-data-type.js';
+  AbstractNumericDataType,
+  type AbstractNumericDataTypeConfig,
+} from '../abstract-numeric-data-type.js';
 import type { NumericDataTypeModifier } from './modifier.js';
 
 export interface DoubleTypeConfig<TLeafValue extends core.LeafValue = any>
-  extends AbstractDataTypeConfig<
+  extends AbstractNumericDataTypeConfig<
     DoubleType['kind'] | 'DOUBLE PRECISION' | 'REAL',
     TLeafValue,
     number
@@ -24,10 +25,9 @@ export interface DoubleTypeConfig<TLeafValue extends core.LeafValue = any>
  */
 export class DoubleType<
   TLeafValue extends core.LeafValue = any,
-> extends AbstractDataType<'DOUBLE', TLeafValue, number> {
+> extends AbstractNumericDataType<'DOUBLE', TLeafValue, number> {
   public readonly precision?: number;
   public readonly scale?: number;
-  public readonly modifiers: ReadonlyArray<NumericDataTypeModifier>;
   public readonly definition: string;
 
   public constructor(
@@ -90,8 +90,6 @@ export class DoubleType<
       this.scale = 0;
     }
 
-    this.modifiers = Object.freeze([...new Set(config?.modifiers)]);
-
     this.definition = [
       `${this.kind}(${this.precision},${this.scale})`,
       this.modifiers?.join(' '),
@@ -104,5 +102,17 @@ export class DoubleType<
     assert.equal(typeof value, 'number');
 
     return value.toString(10);
+  }
+
+  public override isInformationValid(information: ColumnInformation): boolean {
+    return (
+      super.isInformationValid(information) &&
+      (!this.precision ||
+        !information.NUMERIC_PRECISION ||
+        this.precision === Number(information.NUMERIC_PRECISION)) &&
+      (!this.scale ||
+        !information.NUMERIC_SCALE ||
+        this.scale === Number(information.NUMERIC_SCALE))
+    );
   }
 }

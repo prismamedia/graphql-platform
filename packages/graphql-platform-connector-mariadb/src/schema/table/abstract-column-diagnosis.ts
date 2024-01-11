@@ -53,10 +53,11 @@ export abstract class AbstractColumnDiagnosis<
       utils.getOptionalFlag(options?.collation, true) &&
       'collation' in column.dataType &&
       information.COLLATION_NAME &&
-      new Intl.Collator(undefined, { sensitivity: 'base' }).compare(
-        column.dataType.collation || column.table.defaultCollation,
-        information.COLLATION_NAME,
-      ) !== 0
+      (
+        column.dataType.collation || column.table.defaultCollation
+      ).localeCompare(information.COLLATION_NAME, undefined, {
+        sensitivity: 'base',
+      }) !== 0
     ) {
       this.collationError = {
         expected: column.dataType.collation || column.table.defaultCollation,
@@ -79,11 +80,11 @@ export abstract class AbstractColumnDiagnosis<
 
     if (
       utils.getOptionalFlag(options?.dataType, true) &&
-      !column.dataType.isInformationValid(information.DATA_TYPE)
+      !column.dataType.isInformationValid(information)
     ) {
       this.dataTypeError = {
-        expected: column.dataType.kind,
-        actual: information.DATA_TYPE,
+        expected: column.dataType.definition,
+        actual: information.COLUMN_TYPE,
       };
     }
 

@@ -29,6 +29,9 @@ export class CreateSchemaStatement implements mariadb.QueryOptions {
         .join(' '),
       `DEFAULT CHARSET = ${escapeStringValue(schema.defaultCharset)}`,
       `DEFAULT COLLATE = ${escapeStringValue(schema.defaultCollation)}`,
-    ].join(EOL);
+      schema.comment && `COMMENT = ${escapeStringValue(schema.comment)}`,
+    ]
+      .filter(Boolean)
+      .join(EOL);
   }
 }

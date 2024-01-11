@@ -2,20 +2,19 @@ import type * as core from '@prismamedia/graphql-platform';
 import * as utils from '@prismamedia/graphql-platform-utils';
 import assert from 'node:assert/strict';
 import type { SetOptional } from 'type-fest';
+import type { ColumnInformation } from '../../../../statement.js';
 import {
-  AbstractDataType,
-  type AbstractDataTypeConfig,
-} from '../../abstract-data-type.js';
-import type { NumericDataTypeModifier } from './modifier.js';
+  AbstractNumericDataType,
+  type AbstractNumericDataTypeConfig,
+} from '../abstract-numeric-data-type.js';
 
 export interface IntTypeConfig<TLeafValue extends core.LeafValue = any>
-  extends AbstractDataTypeConfig<
+  extends AbstractNumericDataTypeConfig<
     IntType['kind'] | 'INT4' | 'INT3' | 'INT2' | 'INT1',
     TLeafValue,
     number
   > {
   length?: number;
-  modifiers?: ReadonlyArray<NumericDataTypeModifier>;
 }
 
 /**
@@ -23,13 +22,12 @@ export interface IntTypeConfig<TLeafValue extends core.LeafValue = any>
  */
 export class IntType<
   TLeafValue extends core.LeafValue = any,
-> extends AbstractDataType<
+> extends AbstractNumericDataType<
   'INT' | 'MEDIUMINT' | 'SMALLINT' | 'TINYINT',
   TLeafValue,
   number
 > {
   public readonly length?: number;
-  public readonly modifiers: ReadonlyArray<NumericDataTypeModifier>;
   public readonly definition: string;
 
   public constructor(
@@ -72,8 +70,6 @@ export class IntType<
       this.length = lengthConfig;
     }
 
-    this.modifiers = Object.freeze([...new Set(config?.modifiers)]);
-
     this.definition = [
       `${this.kind}${this.length ? `(${this.length})` : ''}`,
       this.modifiers?.join(' '),
@@ -87,5 +83,14 @@ export class IntType<
     assert(Number.isInteger(value));
 
     return value.toString(10);
+  }
+
+  public override isInformationValid(information: ColumnInformation): boolean {
+    return (
+      super.isInformationValid(information) &&
+      (!this.length ||
+        !information.NUMERIC_PRECISION ||
+        this.length === Number(information.NUMERIC_PRECISION))
+    );
   }
 }

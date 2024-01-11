@@ -2,14 +2,15 @@ import type * as core from '@prismamedia/graphql-platform';
 import * as utils from '@prismamedia/graphql-platform-utils';
 import assert from 'node:assert/strict';
 import type { SetOptional } from 'type-fest';
+import type { ColumnInformation } from '../../../../statement.js';
 import {
-  AbstractDataType,
-  type AbstractDataTypeConfig,
-} from '../../abstract-data-type.js';
+  AbstractNumericDataType,
+  type AbstractNumericDataTypeConfig,
+} from '../abstract-numeric-data-type.js';
 import type { NumericDataTypeModifier } from './modifier.js';
 
 export interface BigIntTypeConfig<TLeafValue extends core.LeafValue = any>
-  extends AbstractDataTypeConfig<
+  extends AbstractNumericDataTypeConfig<
     BigIntType['kind'] | 'INT8',
     TLeafValue,
     bigint
@@ -23,9 +24,8 @@ export interface BigIntTypeConfig<TLeafValue extends core.LeafValue = any>
  */
 export class BigIntType<
   TLeafValue extends core.LeafValue = any,
-> extends AbstractDataType<'BIGINT', TLeafValue, bigint> {
+> extends AbstractNumericDataType<'BIGINT', TLeafValue, bigint> {
   public readonly length?: number;
-  public readonly modifiers: ReadonlyArray<NumericDataTypeModifier>;
   public readonly definition: string;
 
   public constructor(
@@ -53,8 +53,6 @@ export class BigIntType<
       this.length = lengthConfig;
     }
 
-    this.modifiers = Object.freeze([...new Set(config?.modifiers)]);
-
     this.definition = [
       `${this.kind}${this.length ? `(${this.length})` : ''}`,
       this.modifiers?.join(' '),
@@ -79,5 +77,14 @@ export class BigIntType<
     assert.equal(typeof value, 'bigint');
 
     return value.toString(10);
+  }
+
+  public override isInformationValid(information: ColumnInformation): boolean {
+    return (
+      super.isInformationValid(information) &&
+      (!this.length ||
+        !information.NUMERIC_PRECISION ||
+        this.length === Number(information.NUMERIC_PRECISION))
+    );
   }
 }

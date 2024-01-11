@@ -1,7 +1,10 @@
 import * as utils from '@prismamedia/graphql-platform-utils';
+import type { Connection } from 'mariadb';
 import assert from 'node:assert/strict';
 import { inspect } from 'node:util';
+import * as R from 'remeda';
 import {
+  FixTableInvalidIndexesAndForeignKeysStatement,
   FixTableStatement,
   type ColumnInformation,
   type ForeignKeyInformation,
@@ -66,9 +69,9 @@ export type TableDiagnosisInformations = {
 };
 
 export type TableDiagnosisOptions = {
+  comment?: utils.OptionalFlag;
   engine?: utils.OptionalFlag;
   collation?: utils.OptionalFlag;
-  comment?: utils.OptionalFlag;
 
   columns?: ColumnDiagnosisOptions;
   extraColumns?: utils.OptionalFlag | Column['name'][];
@@ -81,27 +84,43 @@ export type TableDiagnosisOptions = {
 };
 
 export type TableDiagnosisSummary = {
+  comment?: DiagnosisError;
   engine?: DiagnosisError;
   collation?: DiagnosisError;
-  comment?: DiagnosisError;
 
-  missingColumns?: ReadonlyArray<Column['name']>;
-  invalidColumns?: Record<Column['name'], ColumnDiagnosisSummary>;
-  extraColumns?: ReadonlyArray<Column['name']>;
+  columns?: {
+    extra?: ReadonlyArray<Column['name']>;
+    missing?: ReadonlyArray<Column['name']>;
+    invalid?: Record<Column['name'], ColumnDiagnosisSummary>;
+  };
 
-  missingIndexes?: ReadonlyArray<Index['name']>;
-  invalidIndexes?: Record<Index['name'], IndexDiagnosisSummary>;
-  extraIndexes?: ReadonlyArray<Index['name']>;
+  indexes?: {
+    extra?: ReadonlyArray<Index['name']>;
+    missing?: ReadonlyArray<Index['name']>;
+    invalid?: Record<Index['name'], IndexDiagnosisSummary>;
+  };
 
-  missingForeignKeys?: ReadonlyArray<ForeignKey['name']>;
-  invalidForeignKeys?: Record<ForeignKey['name'], ForeignKeyDiagnosisSummary>;
-  extraForeignKeys?: ReadonlyArray<ForeignKey['name']>;
+  foreignKeys?: {
+    extra?: ReadonlyArray<ForeignKey['name']>;
+    missing?: ReadonlyArray<ForeignKey['name']>;
+    invalid?: Record<ForeignKey['name'], ForeignKeyDiagnosisSummary>;
+  };
+};
+
+export type TableDiagnosisFixConfig = {
+  comment?: boolean;
+  engine?: boolean;
+  collation?: boolean;
+
+  foreignKeys?: boolean | ReadonlyArray<ForeignKey['name']>;
+  indexes?: boolean | ReadonlyArray<Index['name']>;
+  columns?: boolean | ReadonlyArray<Column['name']>;
 };
 
 export class TableDiagnosis {
+  public readonly commentError?: DiagnosisError;
   public readonly engineError?: DiagnosisError;
   public readonly collationError?: DiagnosisError;
-  public readonly commentError?: DiagnosisError;
 
   public readonly diagnosesByColumn: ReadonlyMap<Column, ColumnDiagnosis>;
   public readonly missingColumns: ReadonlyArray<Column>;
@@ -132,6 +151,19 @@ export class TableDiagnosis {
       assert.equal(informations.table.TABLE_NAME, table.name);
 
       if (
+        utils.getOptionalFlag(options?.comment, true) &&
+        new Intl.Collator(undefined, { sensitivity: 'base' }).compare(
+          table.comment || '',
+          informations.table.TABLE_COMMENT || '',
+        ) !== 0
+      ) {
+        this.commentError = {
+          expected: table.comment,
+          actual: informations.table.TABLE_COMMENT || undefined,
+        };
+      }
+
+      if (
         utils.getOptionalFlag(options?.engine, true) &&
         new Intl.Collator(undefined, { sensitivity: 'base' }).compare(
           table.engine,
@@ -154,19 +186,6 @@ export class TableDiagnosis {
         this.collationError = {
           expected: table.defaultCollation,
           actual: informations.table.TABLE_COLLATION,
-        };
-      }
-
-      if (
-        utils.getOptionalFlag(options?.comment, true) &&
-        new Intl.Collator(undefined, { sensitivity: 'base' }).compare(
-          table.comment || '',
-          informations.table.TABLE_COMMENT || '',
-        ) !== 0
-      ) {
-        this.commentError = {
-          expected: table.comment,
-          actual: informations.table.TABLE_COMMENT || undefined,
         };
       }
     }
@@ -379,52 +398,73 @@ export class TableDiagnosis {
 
   public summarize(): TableDiagnosisSummary {
     return {
+      ...(this.commentError && { comment: this.commentError }),
       ...(this.engineError && { engine: this.engineError }),
       ...(this.collationError && {
         collation: this.collationError,
       }),
-      ...(this.commentError && { comment: this.commentError }),
-      ...(this.missingColumns.length && {
-        missingColumns: this.missingColumns.map((column) => column.name),
+
+      ...((this.extraColumns.length ||
+        this.missingColumns.length ||
+        this.invalidColumns.length) && {
+        columns: {
+          ...(this.extraColumns.length && {
+            extra: this.extraColumns,
+          }),
+          ...(this.missingColumns.length && {
+            missing: this.missingColumns.map(({ name }) => name),
+          }),
+          ...(this.invalidColumns.length && {
+            invalid: Object.fromEntries(
+              this.invalidColumns.map((diagnosis) => [
+                diagnosis.column.name,
+                diagnosis.summarize(),
+              ]),
+            ),
+          }),
+        },
       }),
-      ...(this.invalidColumns.length && {
-        invalidColumns: Object.fromEntries(
-          this.invalidColumns.map((diagnosis) => [
-            diagnosis.column.name,
-            diagnosis.summarize(),
-          ]),
-        ),
+
+      ...((this.extraIndexes.length ||
+        this.missingIndexes.length ||
+        this.invalidIndexes.length) && {
+        indexes: {
+          ...(this.extraIndexes.length && {
+            extra: this.extraIndexes,
+          }),
+          ...(this.missingIndexes.length && {
+            missing: this.missingIndexes.map(({ name }) => name),
+          }),
+          ...(this.invalidIndexes.length && {
+            invalid: Object.fromEntries(
+              this.invalidIndexes.map((diagnosis) => [
+                diagnosis.index.name,
+                diagnosis.summarize(),
+              ]),
+            ),
+          }),
+        },
       }),
-      ...(this.extraColumns.length && {
-        extraColumns: this.extraColumns,
-      }),
-      ...(this.missingIndexes.length && {
-        missingIndexes: this.missingIndexes.map((index) => index.name),
-      }),
-      ...(this.invalidIndexes.length && {
-        invalidIndexes: Object.fromEntries(
-          this.invalidIndexes.map((diagnosis) => [
-            diagnosis.index.name,
-            diagnosis.summarize(),
-          ]),
-        ),
-      }),
-      ...(this.extraIndexes.length && {
-        extraIndexes: this.extraIndexes,
-      }),
-      ...(this.missingForeignKeys.length && {
-        missingForeignKeys: this.missingForeignKeys.map((fk) => fk.name),
-      }),
-      ...(this.invalidForeignKeys.length && {
-        invalidForeignKeys: Object.fromEntries(
-          this.invalidForeignKeys.map((diagnosis) => [
-            diagnosis.foreignKey.name,
-            diagnosis.summarize(),
-          ]),
-        ),
-      }),
-      ...(this.extraForeignKeys.length && {
-        extraForeignKeys: this.extraForeignKeys,
+
+      ...((this.extraForeignKeys.length ||
+        this.missingForeignKeys.length ||
+        this.invalidForeignKeys.length) && {
+        foreignKeys: {
+          ...(this.extraForeignKeys.length && {
+            extra: this.extraForeignKeys,
+          }),
+          ...(this.missingForeignKeys.length && {
+            missing: this.missingForeignKeys.map(({ name }) => name),
+          }),
+          ...(this.invalidForeignKeys.length && {
+            invalid: Object.fromEntries(
+              this.invalidForeignKeys.map((diagnosis) => [
+                diagnosis.foreignKey.name,
+                diagnosis.summarize(),
+              ]),
+            ),
+          }),
+        },
       }),
     };
   }
@@ -433,11 +473,86 @@ export class TableDiagnosis {
     return inspect(this.summarize(), undefined, 10);
   }
 
-  public async fix(): Promise<void> {
-    if (FixTableStatement.supports(this)) {
+  public fixesComment(config?: TableDiagnosisFixConfig): boolean {
+    return Boolean(
+      this.commentError && utils.getOptionalFlag(config?.comment, true),
+    );
+  }
+
+  public fixesEngine(config?: TableDiagnosisFixConfig): boolean {
+    return Boolean(
+      this.engineError && utils.getOptionalFlag(config?.engine, true),
+    );
+  }
+
+  public fixesCollation(config?: TableDiagnosisFixConfig): boolean {
+    return Boolean(
+      (this.collationError ||
+        this.invalidColumns.some(({ collationError }) => collationError)) &&
+        utils.getOptionalFlag(config?.collation, true),
+    );
+  }
+
+  public fixesForeignKeys(
+    config?: TableDiagnosisFixConfig,
+  ): Array<ForeignKey['name']> {
+    const fixableForeignKeyNames = [
+      ...this.extraForeignKeys,
+      ...this.missingForeignKeys.map(({ name }) => name),
+      ...this.invalidForeignKeys.map(({ foreignKey: { name } }) => name),
+    ];
+
+    return config?.foreignKeys == null || config.foreignKeys === true
+      ? fixableForeignKeyNames
+      : config.foreignKeys === false
+      ? []
+      : R.intersection(fixableForeignKeyNames, config.foreignKeys);
+  }
+
+  public fixesIndexes(config?: TableDiagnosisFixConfig): Array<Index['name']> {
+    const fixableIndexNames = [
+      ...this.extraIndexes,
+      ...this.missingIndexes.map(({ name }) => name),
+      ...this.invalidIndexes.map(({ index: { name } }) => name),
+    ];
+
+    return config?.indexes == null || config.indexes === true
+      ? fixableIndexNames
+      : config.indexes === false
+      ? []
+      : R.intersection(fixableIndexNames, config.indexes);
+  }
+
+  public fixesColumns(config?: TableDiagnosisFixConfig): Array<Column['name']> {
+    const fixableColumnNames = [
+      ...this.extraColumns,
+      ...this.missingColumns.map(({ name }) => name),
+      ...this.invalidColumns.map(({ column: { name } }) => name),
+    ];
+
+    return config?.columns == null || config.columns === true
+      ? fixableColumnNames
+      : config.columns === false
+      ? []
+      : R.intersection(fixableColumnNames, config.columns);
+  }
+
+  public async fix(
+    config?: TableDiagnosisFixConfig,
+    connection?: Connection,
+  ): Promise<void> {
+    if (FixTableStatement.fixes(this, config)) {
       await this.table.schema.connector.executeStatement(
-        new FixTableStatement(this),
+        new FixTableStatement(this, config),
+        connection,
       );
+
+      if (FixTableInvalidIndexesAndForeignKeysStatement.fixes(this, config)) {
+        await this.table.schema.connector.executeStatement(
+          new FixTableInvalidIndexesAndForeignKeysStatement(this, config),
+          connection,
+        );
+      }
     }
   }
 }

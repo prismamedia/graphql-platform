@@ -3,16 +3,15 @@ import * as utils from '@prismamedia/graphql-platform-utils';
 import assert from 'node:assert/strict';
 import type { SetOptional } from 'type-fest';
 import { escapeStringValue } from '../../../../escaping.js';
+import type { ColumnInformation } from '../../../../statement.js';
 import {
-  AbstractDataType,
-  type AbstractDataTypeConfig,
-} from '../../abstract-data-type.js';
+  AbstractStringDataType,
+  type AbstractStringDataTypeConfig,
+} from '../abstract-string-data-type.js';
 
 export interface EnumTypeConfig<TLeafValue extends core.LeafValue = any>
-  extends AbstractDataTypeConfig<EnumType['kind'], TLeafValue, string> {
+  extends AbstractStringDataTypeConfig<EnumType['kind'], TLeafValue, string> {
   values: ReadonlyArray<string>;
-  charset?: string;
-  collation?: string;
 }
 
 /**
@@ -20,10 +19,8 @@ export interface EnumTypeConfig<TLeafValue extends core.LeafValue = any>
  */
 export class EnumType<
   TLeafValue extends core.LeafValue = any,
-> extends AbstractDataType<'ENUM', TLeafValue, string> {
+> extends AbstractStringDataType<'ENUM', TLeafValue, string> {
   public readonly values: ReadonlyArray<string>;
-  public readonly charset?: string;
-  public readonly collation?: string;
   public readonly definition: string;
 
   public constructor(
@@ -56,9 +53,6 @@ export class EnumType<
       this.values = Object.freeze([...new Set(valuesConfig)]);
     }
 
-    this.charset = config?.charset || undefined;
-    this.collation = config?.collation || undefined;
-
     this.definition = [
       `${this.kind}(${this.values
         .map((value) => escapeStringValue(value))
@@ -75,5 +69,14 @@ export class EnumType<
     assert(this.values.includes(value as any));
 
     return escapeStringValue(value);
+  }
+
+  public isInformationValid(information: ColumnInformation): boolean {
+    return (
+      super.isInformationValid(information) &&
+      information.COLUMN_TYPE.substring(this.kind.length).startsWith(
+        `(${this.values.map((value) => escapeStringValue(value)).join(',')})`,
+      )
+    );
   }
 }

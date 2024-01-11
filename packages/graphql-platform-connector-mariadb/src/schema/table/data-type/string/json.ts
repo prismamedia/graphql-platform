@@ -53,11 +53,9 @@ export class JsonType<
     return escapeStringValue(JSON.stringify(value));
   }
 
-  public override isInformationValid(
-    information: ColumnInformation['DATA_TYPE'],
-  ): boolean {
+  public override isInformationValid(information: ColumnInformation): boolean {
     return (
-      'LONGTEXT'.localeCompare(information, undefined, {
+      'LONGTEXT'.localeCompare(information['DATA_TYPE'], undefined, {
         sensitivity: 'base',
       }) === 0
     );
