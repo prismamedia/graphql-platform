@@ -359,10 +359,10 @@ export class SchemaDiagnosis {
 
   public async fix(
     config?: SchemaDiagnosisFixConfig,
-    connection?: Connection,
+    maybeConnection?: Connection,
   ): Promise<void> {
-    return connection
-      ? this.doFixWithConnection(config, connection)
+    return maybeConnection
+      ? this.doFixWithConnection(config, maybeConnection)
       : this.schema.connector.withConnection(
           (connection) => this.doFixWithConnection(config, connection),
           StatementKind.DATA_DEFINITION,

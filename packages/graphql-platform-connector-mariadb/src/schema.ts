@@ -188,6 +188,7 @@ export class Schema {
 
   public async diagnose(
     options: SchemaDiagnosisOptions | undefined = this.config?.diagnosis,
+    maybeConnection?: mariadb.Connection,
   ): Promise<SchemaDiagnosis> {
     const [
       schemaInformations,
@@ -198,18 +199,23 @@ export class Schema {
     ] = await Promise.all([
       this.connector.executeStatement<SchemaInformation[]>(
         new GetSchemaInformationStatement(this),
+        maybeConnection,
       ),
       this.connector.executeStatement<TableInformation[]>(
         new GetTableInformationStatement(this),
+        maybeConnection,
       ),
       this.connector.executeStatement<ColumnInformation[]>(
         new GetColumnInformationStatement(this),
+        maybeConnection,
       ),
       this.connector.executeStatement<IndexInformation[]>(
         new GetIndexInformationStatement(this),
+        maybeConnection,
       ),
       this.connector.executeStatement<ForeignKeyInformation[]>(
         new GetForeignKeyInformationStatement(this),
+        maybeConnection,
       ),
     ]);
 
