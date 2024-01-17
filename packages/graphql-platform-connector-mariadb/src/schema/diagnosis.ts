@@ -74,16 +74,14 @@ export type SchemaDiagnosisSummary = {
 };
 
 export type SchemaDiagnosisFixConfig = {
-  comment?: boolean;
   charset?: boolean;
   collation?: boolean;
-
+  columns?: boolean;
+  comment?: boolean;
   engine?: boolean;
   foreignKeys?: boolean;
   indexes?: boolean;
-
   nullable?: boolean;
-  columns?: boolean;
 
   tables?:
     | boolean
@@ -278,13 +276,13 @@ export class SchemaDiagnosis {
     config?: SchemaDiagnosisFixConfig,
   ): Record<Table['name'], TableDiagnosisFixConfig> {
     const defaults: TableDiagnosisFixConfig = {
-      comment: config?.comment,
       collation: config?.collation,
+      columns: config?.columns,
+      comment: config?.comment,
       engine: config?.engine,
       foreignKeys: config?.foreignKeys,
       indexes: config?.indexes,
       nullable: config?.nullable,
-      columns: config?.columns,
     };
 
     return Object.fromEntries<TableDiagnosisFixConfig>(
@@ -374,11 +372,12 @@ export class SchemaDiagnosis {
           table.foreignKeys.filter(
             (foreignKey) =>
               invalidForeignKeys.includes(foreignKey) ||
-              foreignKey.columns.some(
+              (foreignKey.columns.some(
                 (column) =>
                   invalidColumns.includes(column) ||
                   invalidColumns.includes(column.referencedColumn),
-              ),
+              ) &&
+                !tableDiagnosis?.missingForeignKeys.includes(foreignKey)),
           ),
         ];
       }),
