@@ -97,6 +97,7 @@ export class SchemaDiagnosis {
   public readonly missingTables: ReadonlyArray<Table>;
   public readonly invalidTables: ReadonlyArray<TableDiagnosis>;
   public readonly extraTables: ReadonlyArray<Table['name']>;
+  public readonly fixableTableNames: ReadonlyArray<Table['name']>;
 
   public constructor(
     public readonly schema: Schema,
@@ -198,6 +199,12 @@ export class SchemaDiagnosis {
         : utils.getOptionalFlag(options?.extraTables, true)
         ? extraTableNames
         : [];
+
+      this.fixableTableNames = Object.freeze([
+        ...this.extraTables,
+        ...this.missingTables.map(({ name }) => name),
+        ...this.invalidTables.map(({ table: { name } }) => name),
+      ]);
     }
   }
 
@@ -267,12 +274,6 @@ export class SchemaDiagnosis {
   public fixesTables(
     config?: SchemaDiagnosisFixConfig,
   ): Record<Table['name'], TableDiagnosisFixConfig> {
-    const fixableTableNames = [
-      ...this.extraTables,
-      ...this.missingTables.map(({ name }) => name),
-      ...this.invalidTables.map(({ table: { name } }) => name),
-    ];
-
     const defaults: TableDiagnosisFixConfig = {
       comment: config?.comment,
       collation: config?.collation,
@@ -284,7 +285,7 @@ export class SchemaDiagnosis {
 
     return Object.fromEntries<TableDiagnosisFixConfig>(
       config?.tables == null || config.tables === true
-        ? fixableTableNames.map((name) => [name, defaults])
+        ? this.fixableTableNames.map((name) => [name, defaults])
         : config.tables === false
         ? []
         : Array.isArray(config.tables)

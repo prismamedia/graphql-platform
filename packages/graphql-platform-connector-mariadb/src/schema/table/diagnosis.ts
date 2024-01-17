@@ -126,11 +126,13 @@ export class TableDiagnosis {
   public readonly missingColumns: ReadonlyArray<Column>;
   public readonly invalidColumns: ReadonlyArray<ColumnDiagnosis>;
   public readonly extraColumns: ReadonlyArray<Column['name']>;
+  public readonly fixableColumnNames: ReadonlyArray<Column['name']>;
 
   public readonly diagnosesByIndex: ReadonlyMap<Index, IndexDiagnosis>;
   public readonly missingIndexes: ReadonlyArray<Index>;
   public readonly invalidIndexes: ReadonlyArray<IndexDiagnosis>;
   public readonly extraIndexes: ReadonlyArray<Index['name']>;
+  public readonly fixableIndexNames: ReadonlyArray<Index['name']>;
 
   public readonly diagnosesByForeignKey: ReadonlyMap<
     ForeignKey,
@@ -139,6 +141,7 @@ export class TableDiagnosis {
   public readonly missingForeignKeys: ReadonlyArray<ForeignKey>;
   public readonly invalidForeignKeys: ReadonlyArray<ForeignKeyDiagnosis>;
   public readonly extraForeignKeys: ReadonlyArray<ForeignKey['name']>;
+  public readonly fixableForeignKeyNames: ReadonlyArray<ForeignKey['name']>;
 
   public constructor(
     public readonly table: Table,
@@ -246,6 +249,12 @@ export class TableDiagnosis {
         : utils.getOptionalFlag(options?.extraColumns, true)
         ? extraColumnNames
         : [];
+
+      this.fixableColumnNames = Object.freeze([
+        ...this.extraColumns,
+        ...this.missingColumns.map(({ name }) => name),
+        ...this.invalidColumns.map(({ column: { name } }) => name),
+      ]);
     }
 
     // indexes
@@ -320,6 +329,12 @@ export class TableDiagnosis {
         : utils.getOptionalFlag(options?.extraIndexes, true)
         ? extraIndexNames
         : [];
+
+      this.fixableIndexNames = Object.freeze([
+        ...this.extraIndexes,
+        ...this.missingIndexes.map(({ name }) => name),
+        ...this.invalidIndexes.map(({ index: { name } }) => name),
+      ]);
     }
 
     // foreign-keys
@@ -376,6 +391,12 @@ export class TableDiagnosis {
         : utils.getOptionalFlag(options?.extraForeignKeys, true)
         ? extraForeignKeyNames
         : [];
+
+      this.fixableForeignKeyNames = Object.freeze([
+        ...this.extraForeignKeys,
+        ...this.missingForeignKeys.map(({ name }) => name),
+        ...this.invalidForeignKeys.map(({ foreignKey: { name } }) => name),
+      ]);
     }
   }
 
@@ -496,45 +517,27 @@ export class TableDiagnosis {
   public fixesForeignKeys(
     config?: TableDiagnosisFixConfig,
   ): Array<ForeignKey['name']> {
-    const fixableForeignKeyNames = [
-      ...this.extraForeignKeys,
-      ...this.missingForeignKeys.map(({ name }) => name),
-      ...this.invalidForeignKeys.map(({ foreignKey: { name } }) => name),
-    ];
-
     return config?.foreignKeys == null || config.foreignKeys === true
-      ? fixableForeignKeyNames
+      ? [...this.fixableForeignKeyNames]
       : config.foreignKeys === false
       ? []
-      : R.intersection(fixableForeignKeyNames, config.foreignKeys);
+      : R.intersection(this.fixableForeignKeyNames, config.foreignKeys);
   }
 
   public fixesIndexes(config?: TableDiagnosisFixConfig): Array<Index['name']> {
-    const fixableIndexNames = [
-      ...this.extraIndexes,
-      ...this.missingIndexes.map(({ name }) => name),
-      ...this.invalidIndexes.map(({ index: { name } }) => name),
-    ];
-
     return config?.indexes == null || config.indexes === true
-      ? fixableIndexNames
+      ? [...this.fixableIndexNames]
       : config.indexes === false
       ? []
-      : R.intersection(fixableIndexNames, config.indexes);
+      : R.intersection(this.fixableIndexNames, config.indexes);
   }
 
   public fixesColumns(config?: TableDiagnosisFixConfig): Array<Column['name']> {
-    const fixableColumnNames = [
-      ...this.extraColumns,
-      ...this.missingColumns.map(({ name }) => name),
-      ...this.invalidColumns.map(({ column: { name } }) => name),
-    ];
-
     return config?.columns == null || config.columns === true
-      ? fixableColumnNames
+      ? [...this.fixableColumnNames]
       : config.columns === false
       ? []
-      : R.intersection(fixableColumnNames, config.columns);
+      : R.intersection(this.fixableColumnNames, config.columns);
   }
 
   public async fix(
