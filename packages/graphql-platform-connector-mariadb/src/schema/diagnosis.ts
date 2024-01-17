@@ -1,4 +1,5 @@
 import * as utils from '@prismamedia/graphql-platform-utils';
+import type { Connection } from 'mariadb';
 import assert from 'node:assert/strict';
 import { inspect } from 'node:util';
 import { escapeIdentifier } from '../escaping.js';
@@ -302,56 +303,69 @@ export class SchemaDiagnosis {
     );
   }
 
-  public async fix(config?: SchemaDiagnosisFixConfig): Promise<void> {
-    await this.schema.connector.withConnection(async (connection) => {
-      if (FixSchemaStatement.fixes(this, config)) {
-        await this.schema.connector.executeStatement(
-          new FixSchemaStatement(this, config),
-          connection,
+  protected async doFixWithConnection(
+    config: SchemaDiagnosisFixConfig | undefined,
+    connection: Connection,
+  ): Promise<void> {
+    if (FixSchemaStatement.fixes(this, config)) {
+      await this.schema.connector.executeStatement(
+        new FixSchemaStatement(this, config),
+        connection,
+      );
+    }
+
+    const configsByTable = this.fixesTables(config);
+
+    await Promise.all(
+      this.extraTables.map(async (tableName) => {
+        const config = configsByTable[tableName];
+        if (config) {
+          await connection.query(
+            `DROP TABLE IF EXISTS ${escapeIdentifier(
+              `${this.schema.name}.${tableName}`,
+            )}`,
+          );
+        }
+      }),
+    );
+
+    await Promise.all(
+      this.missingTables.map(async (table) => {
+        const config = configsByTable[table.name];
+        if (config) {
+          await table.create({ withoutForeignKeys: true }, connection);
+        }
+      }),
+    );
+
+    await Promise.all(
+      this.invalidTables.map(async (tableDiagnosis) => {
+        const config = configsByTable[tableDiagnosis.table.name];
+        if (config) {
+          await tableDiagnosis.fix(config, connection);
+        }
+      }),
+    );
+
+    await Promise.all(
+      this.missingTables.map(async (table) => {
+        const config = configsByTable[table.name];
+        if (config && config.foreignKeys !== false) {
+          await table.addForeignKeys(undefined, connection);
+        }
+      }),
+    );
+  }
+
+  public async fix(
+    config?: SchemaDiagnosisFixConfig,
+    connection?: Connection,
+  ): Promise<void> {
+    return connection
+      ? this.doFixWithConnection(config, connection)
+      : this.schema.connector.withConnection(
+          (connection) => this.doFixWithConnection(config, connection),
+          StatementKind.DATA_DEFINITION,
         );
-      }
-
-      const configsByTable = this.fixesTables(config);
-
-      await Promise.all(
-        this.extraTables.map(async (tableName) => {
-          const config = configsByTable[tableName];
-          if (config) {
-            await connection.query(
-              `DROP TABLE IF EXISTS ${escapeIdentifier(
-                `${this.schema.name}.${tableName}`,
-              )}`,
-            );
-          }
-        }),
-      );
-
-      await Promise.all(
-        this.missingTables.map(async (table) => {
-          const config = configsByTable[table.name];
-          if (config) {
-            await table.create({ withoutForeignKeys: true }, connection);
-          }
-        }),
-      );
-
-      await Promise.all(
-        this.invalidTables.map(async (tableDiagnosis) => {
-          const config = configsByTable[tableDiagnosis.table.name];
-          if (config) {
-            await tableDiagnosis.fix(config, connection);
-          }
-        }),
-      );
-
-      await Promise.all(
-        this.missingTables.map(async (table) => {
-          const config = configsByTable[table.name];
-          if (config && config.foreignKeys !== false) {
-            await table.addForeignKeys(undefined, connection);
-          }
-        }),
-      );
-    }, StatementKind.DATA_DEFINITION);
   }
 }

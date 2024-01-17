@@ -541,8 +541,8 @@ export class TableDiagnosis {
   }
 
   public async fix(
-    config?: TableDiagnosisFixConfig,
-    connection?: Connection,
+    config: TableDiagnosisFixConfig | undefined,
+    connection: Connection,
   ): Promise<void> {
     if (FixTableStatement.fixes(this, config)) {
       await this.table.schema.connector.executeStatement(
