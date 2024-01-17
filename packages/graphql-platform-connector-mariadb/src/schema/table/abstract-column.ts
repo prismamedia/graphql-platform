@@ -42,16 +42,23 @@ export abstract class AbstractColumn {
   /**
    * @see https://mariadb.com/kb/en/create-table/#column-definitions
    */
-  @Memoize()
-  public get definition(): string {
+  public getDefinition(nullable: boolean): string {
     return [
       this.dataType.definition,
       this.isAutoIncrement() && 'AUTO_INCREMENT',
-      this.isNullable() ? 'NULL' : 'NOT NULL',
+      nullable ? 'NULL' : 'NOT NULL',
       this.comment && `COMMENT ${escapeStringValue(this.comment)}`,
     ]
       .filter(Boolean)
       .join(' ');
+  }
+
+  /**
+   * @see https://mariadb.com/kb/en/create-table/#column-definitions
+   */
+  @Memoize()
+  public get definition(): string {
+    return this.getDefinition(this.isNullable());
   }
 
   public pickLeafValueFromRow(row: utils.PlainObject): core.LeafValue {

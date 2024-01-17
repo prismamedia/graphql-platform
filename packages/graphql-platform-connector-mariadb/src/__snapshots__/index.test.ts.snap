@@ -148,24 +148,24 @@ DEFAULT COLLATE = 'utf8mb4_unicode_520_ci'"
 
 exports[`GraphQL-Platform Connector MariaDB generates valid and stable schema 4`] = `
 "ALTER TABLE \`tests_connector_mariadb\`.\`articles\`
-  ADD FOREIGN KEY \`fk_articles_category_private_id\` (\`category_private_id\`) REFERENCES \`categories\` (\`private_id\`) ON UPDATE RESTRICT ON DELETE RESTRICT,
-  ADD FOREIGN KEY \`fk_articles_created_by_id\` (\`created_by_id\`) REFERENCES \`users\` (\`id\`) ON UPDATE RESTRICT ON DELETE RESTRICT,
-  ADD FOREIGN KEY \`fk_articles_updated_by_username\` (\`updated_by_username\`) REFERENCES \`users\` (\`username\`) ON UPDATE RESTRICT ON DELETE RESTRICT
+ADD FOREIGN KEY \`fk_articles_category_private_id\` (\`category_private_id\`) REFERENCES \`categories\` (\`private_id\`) ON UPDATE RESTRICT ON DELETE RESTRICT,
+ADD FOREIGN KEY \`fk_articles_created_by_id\` (\`created_by_id\`) REFERENCES \`users\` (\`id\`) ON UPDATE RESTRICT ON DELETE RESTRICT,
+ADD FOREIGN KEY \`fk_articles_updated_by_username\` (\`updated_by_username\`) REFERENCES \`users\` (\`username\`) ON UPDATE RESTRICT ON DELETE RESTRICT
 
 ALTER TABLE \`tests_connector_mariadb\`.\`article_extensions\`
-  ADD FOREIGN KEY \`fk_article_extensions_article_private_id\` (\`article_private_id\`) REFERENCES \`articles\` (\`private_id\`) ON UPDATE RESTRICT ON DELETE RESTRICT
+ADD FOREIGN KEY \`fk_article_extensions_article_private_id\` (\`article_private_id\`) REFERENCES \`articles\` (\`private_id\`) ON UPDATE RESTRICT ON DELETE RESTRICT
 
 ALTER TABLE \`tests_connector_mariadb\`.\`categories\`
-  ADD FOREIGN KEY \`fk_categories_parent_private_id\` (\`parent_private_id\`) REFERENCES \`categories\` (\`private_id\`) ON UPDATE RESTRICT ON DELETE RESTRICT
+ADD FOREIGN KEY \`fk_categories_parent_private_id\` (\`parent_private_id\`) REFERENCES \`categories\` (\`private_id\`) ON UPDATE RESTRICT ON DELETE RESTRICT
 
 ALTER TABLE \`tests_connector_mariadb\`.\`article_tags\`
-  ADD FOREIGN KEY \`fk_article_tags_article_private_id\` (\`article_private_id\`) REFERENCES \`articles\` (\`private_id\`) ON UPDATE RESTRICT ON DELETE RESTRICT,
-  ADD FOREIGN KEY \`fk_article_tags_tag_id\` (\`tag_id\`) REFERENCES \`tags\` (\`id\`) ON UPDATE RESTRICT ON DELETE RESTRICT
+ADD FOREIGN KEY \`fk_article_tags_article_private_id\` (\`article_private_id\`) REFERENCES \`articles\` (\`private_id\`) ON UPDATE RESTRICT ON DELETE RESTRICT,
+ADD FOREIGN KEY \`fk_article_tags_tag_id\` (\`tag_id\`) REFERENCES \`tags\` (\`id\`) ON UPDATE RESTRICT ON DELETE RESTRICT
 
 ALTER TABLE \`tests_connector_mariadb\`.\`article_tag_moderations\`
-  ADD FOREIGN KEY \`my_custom_fk_name\` (\`theArticlePrivateId\`,\`theTagId\`) REFERENCES \`article_tags\` (\`article_private_id\`,\`tag_id\`) ON UPDATE RESTRICT ON DELETE RESTRICT,
-  ADD FOREIGN KEY \`fk_article_tag_moderations_moderator_id\` (\`moderator_id\`) REFERENCES \`users\` (\`id\`) ON UPDATE RESTRICT ON DELETE RESTRICT
+ADD FOREIGN KEY \`my_custom_fk_name\` (\`theArticlePrivateId\`,\`theTagId\`) REFERENCES \`article_tags\` (\`article_private_id\`,\`tag_id\`) ON UPDATE RESTRICT ON DELETE RESTRICT,
+ADD FOREIGN KEY \`fk_article_tag_moderations_moderator_id\` (\`moderator_id\`) REFERENCES \`users\` (\`id\`) ON UPDATE RESTRICT ON DELETE RESTRICT
 
 ALTER TABLE \`tests_connector_mariadb\`.\`user_profiles\`
-  ADD FOREIGN KEY \`fk_user_profiles_theUserId\` (\`theUserId\`) REFERENCES \`users\` (\`id\`) ON UPDATE RESTRICT ON DELETE RESTRICT"
+ADD FOREIGN KEY \`fk_user_profiles_theUserId\` (\`theUserId\`) REFERENCES \`users\` (\`id\`) ON UPDATE RESTRICT ON DELETE RESTRICT"
 `;

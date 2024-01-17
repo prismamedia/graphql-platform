@@ -3,7 +3,7 @@ import type { Connection } from 'mariadb';
 import assert from 'node:assert/strict';
 import { inspect } from 'node:util';
 import { escapeIdentifier } from '../escaping.js';
-import type { Schema, TableDiagnosisFixConfig } from '../schema.js';
+import type { ForeignKey, Schema, TableDiagnosisFixConfig } from '../schema.js';
 import {
   FixSchemaStatement,
   SchemaInformation,
@@ -81,6 +81,8 @@ export type SchemaDiagnosisFixConfig = {
   engine?: boolean;
   foreignKeys?: boolean;
   indexes?: boolean;
+
+  nullable?: boolean;
   columns?: boolean;
 
   tables?:
@@ -281,6 +283,7 @@ export class SchemaDiagnosis {
       engine: config?.engine,
       foreignKeys: config?.foreignKeys,
       indexes: config?.indexes,
+      nullable: config?.nullable,
       columns: config?.columns,
     };
 
@@ -338,6 +341,55 @@ export class SchemaDiagnosis {
       }),
     );
 
+    const invalidColumns = this.invalidTables.flatMap((tableDiagnosis) => {
+      const config = configsByTable[tableDiagnosis.table.name];
+      if (config) {
+        const fixableColumns = tableDiagnosis.fixesColumns(config);
+
+        return tableDiagnosis.invalidColumns
+          .map(({ column }) => column)
+          .filter(({ name }) => fixableColumns.includes(name));
+      }
+
+      return [];
+    });
+
+    const invalidForeignKeysByTable = new Map<Table, ForeignKey[]>(
+      this.schema.tables.map((table) => {
+        let invalidForeignKeys: ForeignKey[] = [];
+
+        const tableDiagnosis = this.diagnosesByTable.get(table);
+        const config = configsByTable[table.name];
+
+        if (tableDiagnosis && config) {
+          const fixableForeignKeys = tableDiagnosis.fixesForeignKeys(config);
+
+          invalidForeignKeys = tableDiagnosis?.invalidForeignKeys
+            .map(({ foreignKey }) => foreignKey)
+            .filter(({ name }) => fixableForeignKeys.includes(name));
+        }
+
+        return [
+          table,
+          table.foreignKeys.filter(
+            (foreignKey) =>
+              invalidForeignKeys.includes(foreignKey) ||
+              foreignKey.columns.some(
+                (column) =>
+                  invalidColumns.includes(column) ||
+                  invalidColumns.includes(column.referencedColumn),
+              ),
+          ),
+        ];
+      }),
+    );
+
+    await Promise.all(
+      Array.from(invalidForeignKeysByTable, ([table, foreignKeys]) =>
+        table.dropForeignKeys(foreignKeys, connection),
+      ),
+    );
+
     await Promise.all(
       this.invalidTables.map(async (tableDiagnosis) => {
         const config = configsByTable[tableDiagnosis.table.name];
@@ -348,11 +400,32 @@ export class SchemaDiagnosis {
     );
 
     await Promise.all(
-      this.missingTables.map(async (table) => {
+      Array.from(invalidForeignKeysByTable, ([table, foreignKeys]) => {
+        const foreignKeySet = new Set(foreignKeys);
+
         const config = configsByTable[table.name];
         if (config && config.foreignKeys !== false) {
-          await table.addForeignKeys(undefined, connection);
+          if (
+            this.missingTables.find((missingTable) => missingTable === table)
+          ) {
+            table.foreignKeys.forEach((foreignKey) =>
+              foreignKeySet.add(foreignKey),
+            );
+          }
+
+          const tableDiagnosis = this.diagnosesByTable.get(table);
+          if (tableDiagnosis) {
+            const fixableForeignKeys = tableDiagnosis.fixesForeignKeys(config);
+
+            tableDiagnosis.missingForeignKeys.forEach((foreignKey) => {
+              if (fixableForeignKeys.includes(foreignKey.name)) {
+                foreignKeySet.add(foreignKey);
+              }
+            });
+          }
         }
+
+        return table.addForeignKeys([...foreignKeySet], connection);
       }),
     );
   }

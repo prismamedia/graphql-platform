@@ -1,6 +1,6 @@
 import * as utils from '@prismamedia/graphql-platform-utils';
 import assert from 'node:assert/strict';
-import { ColumnInformation } from '../../statement.js';
+import type { ColumnInformation } from '../../statement.js';
 import type { DiagnosisError } from '../diagnosis.js';
 import type { AbstractColumn } from './abstract-column.js';
 

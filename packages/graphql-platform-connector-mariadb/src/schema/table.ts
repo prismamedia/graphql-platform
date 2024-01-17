@@ -12,10 +12,10 @@ import {
   CountStatement,
   CreateTableStatement,
   DeleteStatement,
+  DropTableForeignKeysStatement,
   FindStatement,
   InsertStatement,
   UpdateStatement,
-  type AddTableForeignKeysStatementConfig,
   type CreateTableStatementConfig,
   type DeleteStatementConfig,
   type InsertStatementConfig,
@@ -398,13 +398,26 @@ export class Table {
     );
   }
 
-  public async addForeignKeys(
-    config?: AddTableForeignKeysStatementConfig,
+  public async dropForeignKeys(
+    foreignKeys: ReadonlyArray<ForeignKey | ForeignKey['name']> = this
+      .foreignKeys,
     maybeConnection?: mariadb.Connection,
   ): Promise<void> {
-    if (this.foreignKeysByEdge.size) {
+    if (foreignKeys.length) {
       await this.schema.connector.executeStatement(
-        new AddTableForeignKeysStatement(this, config),
+        new DropTableForeignKeysStatement(this, foreignKeys),
+        maybeConnection,
+      );
+    }
+  }
+
+  public async addForeignKeys(
+    foreignKeys: ReadonlyArray<ForeignKey> = this.foreignKeys,
+    maybeConnection?: mariadb.Connection,
+  ): Promise<void> {
+    if (foreignKeys.length) {
+      await this.schema.connector.executeStatement(
+        new AddTableForeignKeysStatement(this, foreignKeys),
         maybeConnection,
       );
     }

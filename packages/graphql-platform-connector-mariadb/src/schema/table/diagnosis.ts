@@ -4,7 +4,6 @@ import assert from 'node:assert/strict';
 import { inspect } from 'node:util';
 import * as R from 'remeda';
 import {
-  FixTableInvalidIndexesAndForeignKeysStatement,
   FixTableStatement,
   type ColumnInformation,
   type ForeignKeyInformation,
@@ -114,6 +113,8 @@ export type TableDiagnosisFixConfig = {
 
   foreignKeys?: boolean | ReadonlyArray<ForeignKey['name']>;
   indexes?: boolean | ReadonlyArray<Index['name']>;
+
+  nullable?: boolean;
   columns?: boolean | ReadonlyArray<Column['name']>;
 };
 
@@ -549,13 +550,6 @@ export class TableDiagnosis {
         new FixTableStatement(this, config),
         connection,
       );
-
-      if (FixTableInvalidIndexesAndForeignKeysStatement.fixes(this, config)) {
-        await this.table.schema.connector.executeStatement(
-          new FixTableInvalidIndexesAndForeignKeysStatement(this, config),
-          connection,
-        );
-      }
     }
   }
 }

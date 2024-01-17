@@ -37,7 +37,7 @@ describe('GraphQL-Platform Connector MariaDB', () => {
     expect(
       Array.from(gp.connector.schema.tablesByNode.values(), (table) =>
         table.foreignKeysByEdge.size
-          ? new AddTableForeignKeysStatement(table).sql
+          ? new AddTableForeignKeysStatement(table, table.foreignKeys).sql
           : undefined,
       )
         .filter(Boolean)
