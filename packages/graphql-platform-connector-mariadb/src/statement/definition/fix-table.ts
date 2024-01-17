@@ -2,7 +2,6 @@ import * as utils from '@prismamedia/graphql-platform-utils';
 import type * as mariadb from 'mariadb';
 import assert from 'node:assert';
 import { EOL } from 'node:os';
-import * as R from 'remeda';
 import { escapeIdentifier, escapeStringValue } from '../../escaping.js';
 import type { TableDiagnosis, TableDiagnosisFixConfig } from '../../schema.js';
 import { StatementKind } from '../kind.js';
@@ -22,10 +21,6 @@ export class FixTableStatement implements mariadb.QueryOptions {
       diagnosis.fixesComment(config) ||
       diagnosis.fixesEngine(config) ||
       diagnosis.fixesCollation(config) ||
-      R.intersection(
-        diagnosis.extraForeignKeys,
-        diagnosis.fixesForeignKeys(config),
-      ).length > 0 ||
       diagnosis.fixesIndexes(config).length > 0 ||
       diagnosis.fixesColumns(config).length > 0
     );
@@ -39,7 +34,6 @@ export class FixTableStatement implements mariadb.QueryOptions {
       (this.constructor as typeof FixTableStatement).fixes(diagnosis, config),
     );
 
-    const fixableForeignKeys = diagnosis.fixesForeignKeys(config);
     const fixableIndexes = diagnosis.fixesIndexes(config);
     const fixableColumns = diagnosis.fixesColumns(config);
 
@@ -67,10 +61,6 @@ export class FixTableStatement implements mariadb.QueryOptions {
               )}`,
             ]
           : []),
-
-        ...diagnosis.extraForeignKeys
-          .filter((name) => fixableForeignKeys.includes(name))
-          .map((name) => `DROP FOREIGN KEY ${escapeIdentifier(name)}`),
 
         ...diagnosis.extraIndexes
           .filter((name) => fixableIndexes.includes(name))

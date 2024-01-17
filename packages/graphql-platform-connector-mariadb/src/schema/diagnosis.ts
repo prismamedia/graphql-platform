@@ -354,15 +354,15 @@ export class SchemaDiagnosis {
 
     const invalidForeignKeysByTable = new Map<Table, ForeignKey[]>(
       this.schema.tables.map((table) => {
-        let invalidForeignKeys: ForeignKey[] = [];
-
         const tableDiagnosis = this.diagnosesByTable.get(table);
         const config = configsByTable[table.name];
+
+        let invalidForeignKeys: ForeignKey[] = [];
 
         if (tableDiagnosis && config) {
           const fixableForeignKeys = tableDiagnosis.fixesForeignKeys(config);
 
-          invalidForeignKeys = tableDiagnosis?.invalidForeignKeys
+          invalidForeignKeys = tableDiagnosis.invalidForeignKeys
             .map(({ foreignKey }) => foreignKey)
             .filter(({ name }) => fixableForeignKeys.includes(name));
         }
@@ -384,9 +384,25 @@ export class SchemaDiagnosis {
     );
 
     await Promise.all(
-      Array.from(invalidForeignKeysByTable, ([table, foreignKeys]) =>
-        table.dropForeignKeys(foreignKeys, connection),
-      ),
+      Array.from(invalidForeignKeysByTable, ([table, foreignKeys]) => {
+        const tableDiagnosis = this.diagnosesByTable.get(table);
+        const config = configsByTable[table.name];
+
+        let extraForeignKeys: ForeignKey['name'][] = [];
+
+        if (tableDiagnosis && config) {
+          const fixableForeignKeys = tableDiagnosis.fixesForeignKeys(config);
+
+          extraForeignKeys = tableDiagnosis.extraForeignKeys.filter((name) =>
+            fixableForeignKeys.includes(name),
+          );
+        }
+
+        return table.dropForeignKeys(
+          [...foreignKeys, ...extraForeignKeys],
+          connection,
+        );
+      }),
     );
 
     await Promise.all(
