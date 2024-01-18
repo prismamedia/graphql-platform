@@ -9,6 +9,7 @@ import { StatementKind } from '../kind.js';
  */
 export type ColumnInformation = {
   CHARACTER_MAXIMUM_LENGTH: bigint | null;
+  CHARACTER_OCTET_LENGTH: bigint | null;
   CHARACTER_SET_NAME: string | null;
   COLLATION_NAME: string | null;
   COLUMN_COMMENT: string;
@@ -23,6 +24,7 @@ export type ColumnInformation = {
   NUMERIC_PRECISION: bigint | null;
   NUMERIC_SCALE: bigint | null;
   ORDINAL_POSITION: bigint;
+  TABLE_CATALOG: string;
   TABLE_NAME: string;
   TABLE_SCHEMA: string;
 };

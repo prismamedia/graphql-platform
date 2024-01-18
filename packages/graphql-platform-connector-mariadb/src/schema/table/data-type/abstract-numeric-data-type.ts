@@ -42,9 +42,7 @@ export abstract class AbstractNumericDataType<
       .map((modifier) => modifier.toUpperCase());
 
     return (
-      this.kind.localeCompare(information['DATA_TYPE'], undefined, {
-        sensitivity: 'base',
-      }) === 0 &&
+      super.isInformationValid(information) &&
       this.modifiers.length === actualModifiers.length &&
       this.modifiers.every((modifier) => actualModifiers.includes(modifier))
     );

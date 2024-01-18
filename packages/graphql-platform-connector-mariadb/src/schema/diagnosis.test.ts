@@ -208,9 +208,12 @@ describe('SchemaDiagnosis', () => {
               invalid: {
                 slug: {
                   dataType: {
-                    actual: 'varchar(50)',
-                    expected:
-                      "VARCHAR(255) CHARSET 'utf8mb4' COLLATE 'utf8mb4_unicode_520_ci'",
+                    expected: 'VARCHAR(255)',
+                    actual: {
+                      DATA_TYPE: 'varchar',
+                      CHARACTER_MAXIMUM_LENGTH: 50n,
+                      CHARACTER_OCTET_LENGTH: 200n,
+                    },
                   },
                   nullable: {
                     actual: 'YES',

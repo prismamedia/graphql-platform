@@ -159,11 +159,7 @@ export class LeafColumn extends AbstractColumn {
           case 'NonEmptyString':
           case 'NonEmptyTrimmedString':
           case 'String':
-            this.dataType = new VarCharType<string>({
-              length: 255,
-              charset: this.table.defaultCharset,
-              collation: this.table.defaultCollation,
-            });
+            this.dataType = new VarCharType<string>({ length: 255 });
             break;
 
           case 'UUID':
@@ -176,11 +172,7 @@ export class LeafColumn extends AbstractColumn {
               this.table.schema.connector.version &&
               semver.gte(this.table.schema.connector.version, '10.7.0')
                 ? new UuidType<string>()
-                : new CharType<string>({
-                    length: 36,
-                    charset: this.table.defaultCharset,
-                    collation: this.table.defaultCollation,
-                  });
+                : new CharType<string>({ length: 36 });
             break;
 
           case 'Date':
@@ -194,8 +186,6 @@ export class LeafColumn extends AbstractColumn {
           case 'URL':
             this.dataType = new VarCharType<URL>({
               length: 255,
-              charset: this.table.defaultCharset,
-              collation: this.table.defaultCollation,
               parser: (value) => scalars.parseURL(value),
               serializer: (value) => value.toString(),
             });

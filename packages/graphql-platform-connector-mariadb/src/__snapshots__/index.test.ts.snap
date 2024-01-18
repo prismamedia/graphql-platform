@@ -13,13 +13,13 @@ exports[`GraphQL-Platform Connector MariaDB generates valid and stable schema 3`
   \`private_id\` INT UNSIGNED AUTO_INCREMENT NOT NULL COMMENT 'This id is used to identify an Article internally',
   \`id\` UUID NOT NULL COMMENT 'This UUID identifies an Article publicly',
   \`status\` ENUM('draft','published','deleted') NOT NULL,
-  \`title\` VARCHAR(255) CHARSET 'utf8mb4' COLLATE 'utf8mb4_unicode_520_ci' NOT NULL,
-  \`slug\` VARCHAR(255) CHARSET 'utf8mb4' COLLATE 'utf8mb4_unicode_520_ci' NOT NULL,
+  \`title\` VARCHAR(255) NOT NULL,
+  \`slug\` VARCHAR(255) NOT NULL,
   \`body\` JSON NULL COMMENT 'The article\\'s body',
   \`category_private_id\` INT UNSIGNED NULL,
   \`created_by_id\` UUID NULL,
   \`created_at\` DATETIME(3) NOT NULL,
-  \`updated_by_username\` VARCHAR(255) CHARSET 'utf8mb4' COLLATE 'utf8mb4_unicode_520_ci' NULL,
+  \`updated_by_username\` VARCHAR(255) NULL,
   \`updated_at\` TIMESTAMP(0) NOT NULL,
   \`metas\` JSON NULL COMMENT 'Contains any arbitrary data you want to store alongside the article',
   \`highlighted\` BOOLEAN NULL COMMENT 'Is the article highlighted?',
@@ -45,7 +45,7 @@ COMMENT 'The article is the main resource, written by the journalists'
 
 CREATE TABLE \`tests_connector_mariadb\`.\`article_extensions\` (
   \`article_private_id\` INT UNSIGNED NOT NULL,
-  \`source\` VARCHAR(255) CHARSET 'utf8mb4' COLLATE 'utf8mb4_unicode_520_ci' NULL COMMENT 'The source of the article',
+  \`source\` VARCHAR(255) NULL COMMENT 'The source of the article',
   PRIMARY KEY (\`article_private_id\`),
   FOREIGN KEY \`fk_article_extensions_article_private_id\` (\`article_private_id\`) REFERENCES \`articles\` (\`private_id\`) ON UPDATE RESTRICT ON DELETE RESTRICT
 )
@@ -56,8 +56,8 @@ DEFAULT COLLATE = 'utf8mb4_unicode_520_ci'
 CREATE TABLE \`tests_connector_mariadb\`.\`categories\` (
   \`private_id\` INT UNSIGNED AUTO_INCREMENT NOT NULL,
   \`id\` UUID NOT NULL,
-  \`title\` VARCHAR(255) CHARSET 'utf8mb4' COLLATE 'utf8mb4_unicode_520_ci' NOT NULL,
-  \`slug\` VARCHAR(255) CHARSET 'utf8mb4' COLLATE 'utf8mb4_unicode_520_ci' NOT NULL,
+  \`title\` VARCHAR(255) NOT NULL,
+  \`slug\` VARCHAR(255) NOT NULL,
   \`parent_private_id\` INT UNSIGNED NULL,
   \`order\` INT UNSIGNED NOT NULL,
   PRIMARY KEY (\`private_id\`),
@@ -73,8 +73,8 @@ DEFAULT COLLATE = 'utf8mb4_unicode_520_ci'
 CREATE TABLE \`tests_connector_mariadb\`.\`tags\` (
   \`id\` UUID NOT NULL,
   \`deprecated\` BOOLEAN NULL COMMENT 'A tag can be deprecated',
-  \`title\` VARCHAR(255) CHARSET 'utf8mb4' COLLATE 'utf8mb4_unicode_520_ci' NOT NULL,
-  \`slug\` VARCHAR(255) CHARSET 'utf8mb4' COLLATE 'utf8mb4_unicode_520_ci' NOT NULL,
+  \`title\` VARCHAR(255) NOT NULL,
+  \`slug\` VARCHAR(255) NOT NULL,
   \`created_at\` DATETIME(3) NOT NULL,
   \`updated_at\` DATETIME(3) NOT NULL,
   PRIMARY KEY (\`id\`),
@@ -101,7 +101,7 @@ CREATE TABLE \`tests_connector_mariadb\`.\`article_tag_moderations\` (
   \`theArticlePrivateId\` INT UNSIGNED NOT NULL,
   \`theTagId\` UUID NOT NULL,
   \`moderator_id\` UUID NOT NULL,
-  \`moderation\` VARCHAR(255) CHARSET 'utf8mb4' COLLATE 'utf8mb4_unicode_520_ci' NULL,
+  \`moderation\` VARCHAR(255) NULL,
   PRIMARY KEY (\`theArticlePrivateId\`,\`theTagId\`,\`moderator_id\`),
   FOREIGN KEY \`my_custom_fk_name\` (\`theArticlePrivateId\`,\`theTagId\`) REFERENCES \`article_tags\` (\`article_private_id\`,\`tag_id\`) ON UPDATE RESTRICT ON DELETE RESTRICT,
   FOREIGN KEY \`fk_article_tag_moderations_moderator_id\` (\`moderator_id\`) REFERENCES \`users\` (\`id\`) ON UPDATE RESTRICT ON DELETE RESTRICT
@@ -112,7 +112,7 @@ DEFAULT COLLATE = 'utf8mb4_unicode_520_ci'
 
 CREATE TABLE \`tests_connector_mariadb\`.\`users\` (
   \`id\` UUID NOT NULL,
-  \`username\` VARCHAR(255) CHARSET 'utf8mb4' COLLATE 'utf8mb4_unicode_520_ci' NOT NULL,
+  \`username\` VARCHAR(255) NOT NULL,
   \`created_at\` DATETIME(3) NOT NULL,
   \`last_logged_in_at\` TIMESTAMP(0) NULL,
   PRIMARY KEY (\`id\`),
@@ -125,9 +125,9 @@ DEFAULT COLLATE = 'utf8mb4_unicode_520_ci'
 CREATE TABLE \`tests_connector_mariadb\`.\`user_profiles\` (
   \`theUserId\` UUID NOT NULL,
   \`birthday\` DATE NULL,
-  \`facebook_id\` VARCHAR(255) CHARSET 'utf8mb4' COLLATE 'utf8mb4_unicode_520_ci' NULL,
-  \`google_id\` VARCHAR(255) CHARSET 'utf8mb4' COLLATE 'utf8mb4_unicode_520_ci' NULL,
-  \`twitter_handle\` VARCHAR(255) CHARSET 'utf8mb4' COLLATE 'utf8mb4_unicode_520_ci' NULL,
+  \`facebook_id\` VARCHAR(255) NULL,
+  \`google_id\` VARCHAR(255) NULL,
+  \`twitter_handle\` VARCHAR(255) NULL,
   PRIMARY KEY (\`theUserId\`),
   FOREIGN KEY \`fk_user_profiles_theUserId\` (\`theUserId\`) REFERENCES \`users\` (\`id\`) ON UPDATE RESTRICT ON DELETE RESTRICT
 )
@@ -137,7 +137,7 @@ DEFAULT COLLATE = 'utf8mb4_unicode_520_ci'
 
 CREATE TABLE \`tests_connector_mariadb\`.\`logs\` (
   \`private_id\` INT UNSIGNED AUTO_INCREMENT NOT NULL,
-  \`message\` VARCHAR(255) CHARSET 'utf8mb4' COLLATE 'utf8mb4_unicode_520_ci' NOT NULL,
+  \`message\` VARCHAR(255) NOT NULL,
   \`created_at\` DATETIME(3) NOT NULL,
   PRIMARY KEY (\`private_id\`)
 )

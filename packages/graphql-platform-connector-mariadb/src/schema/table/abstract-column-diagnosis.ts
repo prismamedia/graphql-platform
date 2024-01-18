@@ -1,5 +1,6 @@
 import * as utils from '@prismamedia/graphql-platform-utils';
 import assert from 'node:assert/strict';
+import * as R from 'remeda';
 import type {
   ColumnInformation,
   ConstraintInformation,
@@ -106,7 +107,18 @@ export abstract class AbstractColumnDiagnosis<
     ) {
       this.dataTypeError = {
         expected: column.dataType.definition,
-        actual: informations.column.COLUMN_TYPE,
+        actual: R.pipe(
+          informations.column,
+          R.pick([
+            'DATA_TYPE',
+            'CHARACTER_MAXIMUM_LENGTH',
+            'CHARACTER_OCTET_LENGTH',
+            'DATETIME_PRECISION',
+            'NUMERIC_PRECISION',
+            'NUMERIC_SCALE',
+          ]),
+          R.omitBy((value) => value == null),
+        ),
       };
     }
 
