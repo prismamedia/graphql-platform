@@ -393,6 +393,7 @@ export class SchemaDiagnosis {
                   invalidColumns.includes(column) ||
                   invalidColumns.includes(column.referencedColumn),
               ) &&
+                !this.missingTables.includes(table) &&
                 !tableDiagnosis?.missingForeignKeys.includes(foreignKey)),
           ),
         ];
