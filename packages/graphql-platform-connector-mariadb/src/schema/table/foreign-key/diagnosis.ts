@@ -18,6 +18,8 @@ export class ForeignKeyDiagnosis {
   public readonly onUpdateError?: DiagnosisError;
   public readonly onDeleteError?: DiagnosisError;
 
+  public readonly errorCount: number;
+
   public constructor(
     public readonly foreignKey: ForeignKey,
     information: ForeignKeyInformation,
@@ -70,15 +72,16 @@ export class ForeignKeyDiagnosis {
         actual: information.DELETE_RULE,
       };
     }
+
+    this.errorCount =
+      (this.referencedTableError ? 1 : 0) +
+      (this.referencedUniqueIndexError ? 1 : 0) +
+      (this.onUpdateError ? 1 : 0) +
+      (this.onDeleteError ? 1 : 0);
   }
 
   public isValid(): boolean {
-    return (
-      !this.referencedTableError &&
-      !this.referencedUniqueIndexError &&
-      !this.onUpdateError &&
-      !this.onDeleteError
-    );
+    return !this.errorCount;
   }
 
   public summarize(): ForeignKeyDiagnosisSummary {

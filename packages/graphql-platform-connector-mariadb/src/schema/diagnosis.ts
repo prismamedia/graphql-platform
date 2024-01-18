@@ -2,6 +2,7 @@ import * as utils from '@prismamedia/graphql-platform-utils';
 import type { Connection } from 'mariadb';
 import assert from 'node:assert/strict';
 import { inspect } from 'node:util';
+import * as R from 'remeda';
 import { escapeIdentifier } from '../escaping.js';
 import type { ForeignKey, Schema, TableDiagnosisFixConfig } from '../schema.js';
 import {
@@ -62,6 +63,8 @@ export type SchemaDiagnosisOptions = {
 };
 
 export type SchemaDiagnosisSummary = {
+  errors: number;
+
   charset?: DiagnosisError;
   collation?: DiagnosisError;
   comment?: DiagnosisError;
@@ -99,6 +102,8 @@ export class SchemaDiagnosis {
   public readonly invalidTables: ReadonlyArray<TableDiagnosis>;
   public readonly extraTables: ReadonlyArray<Table['name']>;
   public readonly fixableTableNames: ReadonlyArray<Table['name']>;
+
+  public readonly errorCount: number;
 
   public constructor(
     public readonly schema: Schema,
@@ -207,21 +212,28 @@ export class SchemaDiagnosis {
         ...this.invalidTables.map(({ table: { name } }) => name),
       ]);
     }
+
+    this.errorCount =
+      (this.commentError ? 1 : 0) +
+      (this.charsetError ? 1 : 0) +
+      (this.collationError ? 1 : 0) +
+      this.extraTables.length +
+      R.sumBy(
+        this.missingTables,
+        ({ foreignKeys, indexes, columns }) =>
+          foreignKeys.length + indexes.length + columns.length,
+      ) +
+      R.sumBy(this.invalidTables, ({ errorCount }) => errorCount);
   }
 
   public isValid(): boolean {
-    return (
-      !this.charsetError &&
-      !this.collationError &&
-      !this.commentError &&
-      !this.missingTables.length &&
-      !this.invalidTables.length &&
-      !this.extraTables.length
-    );
+    return !this.errorCount;
   }
 
   public summarize(): SchemaDiagnosisSummary {
     return {
+      errors: this.errorCount,
+
       ...(this.commentError && { comment: this.commentError }),
       ...(this.charsetError && {
         charset: this.charsetError,
@@ -341,15 +353,17 @@ export class SchemaDiagnosis {
 
     const invalidColumns = this.invalidTables.flatMap((tableDiagnosis) => {
       const config = configsByTable[tableDiagnosis.table.name];
-      if (config) {
-        const fixableColumns = tableDiagnosis.fixesColumns(config);
 
-        return tableDiagnosis.invalidColumns
-          .map(({ column }) => column)
-          .filter(({ name }) => fixableColumns.includes(name));
-      }
-
-      return [];
+      return config
+        ? R.pipe(
+            tableDiagnosis.invalidColumns,
+            R.map(({ column }) => column),
+            R.intersectionWith(
+              tableDiagnosis.fixesColumns(config),
+              (a, b) => a.name === b,
+            ),
+          )
+        : [];
     });
 
     const invalidForeignKeysByTable = new Map<Table, ForeignKey[]>(
@@ -357,15 +371,17 @@ export class SchemaDiagnosis {
         const tableDiagnosis = this.diagnosesByTable.get(table);
         const config = configsByTable[table.name];
 
-        let invalidForeignKeys: ForeignKey[] = [];
-
-        if (tableDiagnosis && config) {
-          const fixableForeignKeys = tableDiagnosis.fixesForeignKeys(config);
-
-          invalidForeignKeys = tableDiagnosis.invalidForeignKeys
-            .map(({ foreignKey }) => foreignKey)
-            .filter(({ name }) => fixableForeignKeys.includes(name));
-        }
+        const invalidForeignKeys: ForeignKey[] =
+          tableDiagnosis && config
+            ? R.pipe(
+                tableDiagnosis.invalidForeignKeys,
+                R.map(({ foreignKey }) => foreignKey),
+                R.intersectionWith(
+                  tableDiagnosis.fixesForeignKeys(config),
+                  (a, b) => a.name === b,
+                ),
+              )
+            : [];
 
         return [
           table,
@@ -388,15 +404,13 @@ export class SchemaDiagnosis {
         const tableDiagnosis = this.diagnosesByTable.get(table);
         const config = configsByTable[table.name];
 
-        let extraForeignKeys: ForeignKey['name'][] = [];
-
-        if (tableDiagnosis && config) {
-          const fixableForeignKeys = tableDiagnosis.fixesForeignKeys(config);
-
-          extraForeignKeys = tableDiagnosis.extraForeignKeys.filter((name) =>
-            fixableForeignKeys.includes(name),
-          );
-        }
+        const extraForeignKeys: ForeignKey['name'][] =
+          tableDiagnosis && config
+            ? R.intersection(
+                tableDiagnosis.extraForeignKeys,
+                tableDiagnosis.fixesForeignKeys(config),
+              )
+            : [];
 
         return table.dropForeignKeys(
           [...foreignKeys, ...extraForeignKeys],

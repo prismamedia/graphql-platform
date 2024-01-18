@@ -143,6 +143,8 @@ export class TableDiagnosis {
   public readonly extraForeignKeys: ReadonlyArray<ForeignKey['name']>;
   public readonly fixableForeignKeyNames: ReadonlyArray<ForeignKey['name']>;
 
+  public readonly errorCount: number;
+
   public constructor(
     public readonly table: Table,
     informations: TableDiagnosisInformations,
@@ -398,23 +400,24 @@ export class TableDiagnosis {
         ...this.invalidForeignKeys.map(({ foreignKey: { name } }) => name),
       ]);
     }
+
+    this.errorCount =
+      (this.commentError ? 1 : 0) +
+      (this.engineError ? 1 : 0) +
+      (this.collationError ? 1 : 0) +
+      this.extraColumns.length +
+      this.missingColumns.length +
+      R.sumBy(this.invalidColumns, ({ errorCount }) => errorCount) +
+      this.extraIndexes.length +
+      this.missingIndexes.length +
+      R.sumBy(this.invalidIndexes, ({ errorCount }) => errorCount) +
+      this.extraForeignKeys.length +
+      this.missingForeignKeys.length +
+      R.sumBy(this.invalidForeignKeys, ({ errorCount }) => errorCount);
   }
 
   public isValid(): boolean {
-    return (
-      !this.engineError &&
-      !this.collationError &&
-      !this.commentError &&
-      !this.missingColumns.length &&
-      !this.invalidColumns.length &&
-      !this.extraColumns.length &&
-      !this.missingIndexes.length &&
-      !this.invalidIndexes.length &&
-      !this.extraIndexes.length &&
-      !this.missingForeignKeys.length &&
-      !this.invalidForeignKeys.length &&
-      !this.extraForeignKeys.length
-    );
+    return !this.errorCount;
   }
 
   public summarize(): TableDiagnosisSummary {

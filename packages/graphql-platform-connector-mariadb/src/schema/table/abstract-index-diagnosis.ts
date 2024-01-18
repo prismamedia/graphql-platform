@@ -20,6 +20,8 @@ export abstract class AbstractIndexDiagnosis<
 > {
   public readonly columnsError?: DiagnosisError;
 
+  public readonly errorCount: number;
+
   public constructor(
     public readonly index: TIndex,
     indexInformationsByColumnName: IndexInformationsByColumnName,
@@ -32,7 +34,7 @@ export abstract class AbstractIndexDiagnosis<
     });
 
     const actualColumnNames = Array.from(indexInformationsByColumnName.keys());
-    const expectedColumnNames = index.columns.map((column) => column.name);
+    const expectedColumnNames = index.columns.map(({ name }) => name);
 
     if (
       !actualColumnNames.every(
@@ -44,10 +46,12 @@ export abstract class AbstractIndexDiagnosis<
         expected: expectedColumnNames,
       };
     }
+
+    this.errorCount = this.columnsError ? 1 : 0;
   }
 
   public isValid(): boolean {
-    return !this.columnsError;
+    return !this.errorCount;
   }
 
   public summarize(): IndexDiagnosisSummary {

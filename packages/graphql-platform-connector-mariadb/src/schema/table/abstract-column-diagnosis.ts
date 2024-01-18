@@ -29,6 +29,8 @@ export abstract class AbstractColumnDiagnosis<
   public readonly dataTypeError?: DiagnosisError;
   public readonly nullableError?: DiagnosisError;
 
+  public readonly errorCount: number;
+
   public constructor(
     public readonly column: TColumn,
     information: ColumnInformation,
@@ -97,28 +99,29 @@ export abstract class AbstractColumnDiagnosis<
         actual: information.IS_NULLABLE,
       };
     }
+
+    this.errorCount =
+      (this.commentError ? 1 : 0) +
+      (this.autoIncrementError ? 1 : 0) +
+      (this.collationError ? 1 : 0) +
+      (this.dataTypeError ? 1 : 0) +
+      (this.nullableError ? 1 : 0);
   }
 
   public isValid(): boolean {
-    return (
-      !this.autoIncrementError &&
-      !this.collationError &&
-      !this.commentError &&
-      !this.dataTypeError &&
-      !this.nullableError
-    );
+    return !this.errorCount;
   }
 
   public summarize(): ColumnDiagnosisSummary {
     return {
+      ...(this.commentError && {
+        comment: this.commentError,
+      }),
       ...(this.autoIncrementError && {
         autoIncrement: this.autoIncrementError,
       }),
       ...(this.collationError && {
         collation: this.collationError,
-      }),
-      ...(this.commentError && {
-        comment: this.commentError,
       }),
       ...(this.dataTypeError && {
         dataType: this.dataTypeError,

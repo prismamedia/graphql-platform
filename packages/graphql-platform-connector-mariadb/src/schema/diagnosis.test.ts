@@ -50,6 +50,8 @@ describe('SchemaDiagnosis', () => {
     expect(diagnosis).toBeInstanceOf(SchemaDiagnosis);
     expect(diagnosis.isValid()).toBeFalsy();
     expect(diagnosis.summarize()).toEqual({
+      errors: 84,
+
       collation: {
         actual: 'utf8mb4_general_ci',
         expected: 'utf8mb4_unicode_520_ci',
@@ -81,6 +83,7 @@ describe('SchemaDiagnosis', () => {
     expect(diagnosis).toBeInstanceOf(SchemaDiagnosis);
     expect(diagnosis.isValid()).toBeFalsy();
     expect(diagnosis.summarize()).toEqual({
+      errors: 82,
       tables: {
         extra: ['extra_table'],
         missing: [
@@ -108,6 +111,8 @@ describe('SchemaDiagnosis', () => {
     expect(diagnosis).toBeInstanceOf(SchemaDiagnosis);
     expect(diagnosis.isValid()).toBeFalsy();
     expect(diagnosis.summarize()).toEqual({
+      errors: 44,
+
       tables: {
         missing: [
           'tags',
@@ -165,6 +170,8 @@ describe('SchemaDiagnosis', () => {
     expect(diagnosis).toBeInstanceOf(SchemaDiagnosis);
     expect(diagnosis.isValid()).toBeFalsy();
     expect(diagnosis.summarize()).toEqual({
+      errors: 52,
+
       tables: {
         missing: [
           'tags',
@@ -244,6 +251,8 @@ describe('SchemaDiagnosis', () => {
     expect(diagnosis).toBeInstanceOf(SchemaDiagnosis);
     expect(diagnosis.isValid()).toBeFalsy();
     expect(diagnosis.summarize()).toEqual({
+      errors: 12,
+
       tables: {
         invalid: {
           articles: {
