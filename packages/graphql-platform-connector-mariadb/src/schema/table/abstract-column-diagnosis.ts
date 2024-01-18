@@ -1,14 +1,23 @@
 import * as utils from '@prismamedia/graphql-platform-utils';
 import assert from 'node:assert/strict';
-import type { ColumnInformation } from '../../statement.js';
+import type {
+  ColumnInformation,
+  ConstraintInformation,
+} from '../../statement.js';
 import type { DiagnosisError } from '../diagnosis.js';
 import type { AbstractColumn } from './abstract-column.js';
+
+export type ColumnDiagnosisInformations = {
+  column: ColumnInformation;
+  constraint: ConstraintInformation | undefined;
+};
 
 export type ColumnDiagnosisOptions = {
   autoIncrement?: utils.OptionalFlag;
   collation?: utils.OptionalFlag;
   comment?: utils.OptionalFlag;
   dataType?: utils.OptionalFlag;
+  constraint?: utils.OptionalFlag;
   nullable?: utils.OptionalFlag;
 };
 
@@ -17,6 +26,7 @@ export type ColumnDiagnosisSummary = {
   collation?: DiagnosisError;
   comment?: DiagnosisError;
   dataType?: DiagnosisError;
+  constraint?: DiagnosisError;
   nullable?: DiagnosisError;
 };
 
@@ -27,43 +37,53 @@ export abstract class AbstractColumnDiagnosis<
   public readonly collationError?: DiagnosisError;
   public readonly commentError?: DiagnosisError;
   public readonly dataTypeError?: DiagnosisError;
+  public readonly constraintError?: DiagnosisError;
   public readonly nullableError?: DiagnosisError;
 
   public readonly errorCount: number;
 
   public constructor(
     public readonly column: TColumn,
-    information: ColumnInformation,
+    informations: ColumnDiagnosisInformations,
     options?: ColumnDiagnosisOptions,
   ) {
-    assert.equal(information.TABLE_SCHEMA, column.table.schema.name);
-    assert.equal(information.TABLE_NAME, column.table.name);
-    assert.equal(information.COLUMN_NAME, column.name);
+    assert.equal(informations.column.TABLE_SCHEMA, column.table.schema.name);
+    assert.equal(informations.column.TABLE_NAME, column.table.name);
+    assert.equal(informations.column.COLUMN_NAME, column.name);
+
+    if (informations.constraint) {
+      assert.equal(
+        informations.constraint.CONSTRAINT_SCHEMA,
+        column.table.schema.name,
+      );
+      assert.equal(informations.constraint.TABLE_NAME, column.table.name);
+      assert.equal(informations.constraint.CONSTRAINT_NAME, column.name);
+    }
 
     if (
       utils.getOptionalFlag(options?.autoIncrement, true) &&
-      new RegExp('auto_increment', 'i').test(information.EXTRA) !==
+      new RegExp('auto_increment', 'i').test(informations.column.EXTRA) !==
         column.isAutoIncrement()
     ) {
       this.autoIncrementError = {
         expected: column.isAutoIncrement(),
-        actual: information.EXTRA,
+        actual: informations.column.EXTRA,
       };
     }
 
     if (
       utils.getOptionalFlag(options?.collation, true) &&
       'collation' in column.dataType &&
-      information.COLLATION_NAME &&
+      informations.column.COLLATION_NAME &&
       (
         column.dataType.collation || column.table.defaultCollation
-      ).localeCompare(information.COLLATION_NAME, undefined, {
+      ).localeCompare(informations.column.COLLATION_NAME, undefined, {
         sensitivity: 'base',
       }) !== 0
     ) {
       this.collationError = {
         expected: column.dataType.collation || column.table.defaultCollation,
-        actual: information.COLLATION_NAME,
+        actual: informations.column.COLLATION_NAME,
       };
     }
 
@@ -71,32 +91,45 @@ export abstract class AbstractColumnDiagnosis<
       utils.getOptionalFlag(options?.comment, true) &&
       new Intl.Collator(undefined, { sensitivity: 'base' }).compare(
         column.comment || '',
-        information.COLUMN_COMMENT || '',
+        informations.column.COLUMN_COMMENT || '',
       ) !== 0
     ) {
       this.commentError = {
         expected: column.comment,
-        actual: information.COLUMN_COMMENT || undefined,
+        actual: informations.column.COLUMN_COMMENT || undefined,
       };
     }
 
     if (
       utils.getOptionalFlag(options?.dataType, true) &&
-      !column.dataType.isInformationValid(information)
+      !column.dataType.isInformationValid(informations.column)
     ) {
       this.dataTypeError = {
         expected: column.dataType.definition,
-        actual: information.COLUMN_TYPE,
+        actual: informations.column.COLUMN_TYPE,
+      };
+    }
+
+    if (
+      utils.getOptionalFlag(options?.constraint, true) &&
+      new Intl.Collator(undefined, { sensitivity: 'base' }).compare(
+        column.constraint || '',
+        informations.constraint?.CHECK_CLAUSE || '',
+      ) !== 0
+    ) {
+      this.constraintError = {
+        expected: column.constraint,
+        actual: informations.constraint?.CHECK_CLAUSE,
       };
     }
 
     if (
       utils.getOptionalFlag(options?.nullable, true) &&
-      (information.IS_NULLABLE === 'YES') !== column.isNullable()
+      (informations.column.IS_NULLABLE === 'YES') !== column.isNullable()
     ) {
       this.nullableError = {
         expected: column.isNullable(),
-        actual: information.IS_NULLABLE,
+        actual: informations.column.IS_NULLABLE,
       };
     }
 
@@ -105,6 +138,7 @@ export abstract class AbstractColumnDiagnosis<
       (this.autoIncrementError ? 1 : 0) +
       (this.collationError ? 1 : 0) +
       (this.dataTypeError ? 1 : 0) +
+      (this.constraintError ? 1 : 0) +
       (this.nullableError ? 1 : 0);
   }
 
@@ -125,6 +159,9 @@ export abstract class AbstractColumnDiagnosis<
       }),
       ...(this.dataTypeError && {
         dataType: this.dataTypeError,
+      }),
+      ...(this.constraintError && {
+        constraint: this.constraintError,
       }),
       ...(this.nullableError && {
         nullable: this.nullableError,

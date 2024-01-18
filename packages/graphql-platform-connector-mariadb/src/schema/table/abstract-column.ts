@@ -1,7 +1,7 @@
 import type * as core from '@prismamedia/graphql-platform';
 import type * as utils from '@prismamedia/graphql-platform-utils';
 import { Memoize } from '@prismamedia/memoize';
-import { escapeStringValue } from '../../escaping.js';
+import { escapeIdentifier, escapeStringValue } from '../../escaping.js';
 import type { Table } from '../table.js';
 import type { DataType } from './data-type.js';
 
@@ -38,6 +38,13 @@ export abstract class AbstractColumn {
   public abstract isAutoIncrement(): boolean;
 
   public abstract isNullable(): boolean;
+
+  @Memoize()
+  public get constraint(): string | undefined {
+    return this.dataType.kind === 'JSON'
+      ? `JSON_VALID(${escapeIdentifier(this.name)})`
+      : undefined;
+  }
 
   /**
    * @see https://mariadb.com/kb/en/create-table/#column-definitions

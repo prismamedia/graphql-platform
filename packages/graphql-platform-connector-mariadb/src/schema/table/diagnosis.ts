@@ -6,12 +6,14 @@ import * as R from 'remeda';
 import {
   FixTableStatement,
   type ColumnInformation,
+  type ConstraintInformation,
   type ForeignKeyInformation,
   type TableInformation,
 } from '../../statement.js';
 import type { DiagnosisError } from '../diagnosis.js';
 import type { Table } from '../table.js';
 import type {
+  ColumnDiagnosisInformations,
   ColumnDiagnosisOptions,
   ColumnDiagnosisSummary,
 } from './abstract-column-diagnosis.js';
@@ -50,6 +52,11 @@ export type ColumnInformationsByColumnName = Map<
   ColumnInformation
 >;
 
+export type ConstraintInformationsByColumnName = Map<
+  Column['name'],
+  ConstraintInformation
+>;
+
 export type IndexInformationsByColumnNameByIndexName = Map<
   Index['name'],
   IndexInformationsByColumnName
@@ -63,6 +70,7 @@ export type ForeignKeyInformationsByForeignKeyName = Map<
 export type TableDiagnosisInformations = {
   table: TableInformation;
   columns: ColumnInformationsByColumnName | undefined;
+  constraints: ConstraintInformationsByColumnName | undefined;
   indexes: IndexInformationsByColumnNameByIndexName | undefined;
   foreignKeys: ForeignKeyInformationsByForeignKeyName | undefined;
 };
@@ -201,6 +209,11 @@ export class TableDiagnosis {
         table.columns.reduce<[Column, ColumnDiagnosis][]>((entries, column) => {
           const columnInformation = informations.columns?.get(column.name);
           if (columnInformation) {
+            const columnInformations: ColumnDiagnosisInformations = {
+              column: columnInformation,
+              constraint: informations.constraints?.get(column.name),
+            };
+
             const columnDiagnosisOptions: ColumnDiagnosisOptions = {
               collation: options?.collation,
               comment: options?.comment,
@@ -212,12 +225,12 @@ export class TableDiagnosis {
               column instanceof LeafColumn
                 ? new LeafColumnDiagnosis(
                     column,
-                    columnInformation,
+                    columnInformations,
                     columnDiagnosisOptions,
                   )
                 : new ReferenceColumnDiagnosis(
                     column,
-                    columnInformation,
+                    columnInformations,
                     columnDiagnosisOptions,
                   ),
             ]);

@@ -14,6 +14,7 @@ import {
 import {
   TableDiagnosis,
   type ColumnInformationsByColumnName,
+  type ConstraintInformationsByColumnName,
   type ForeignKeyInformationsByForeignKeyName,
   type IndexInformationsByColumnNameByIndexName,
   type Table,
@@ -35,6 +36,11 @@ export type ColumnInformationsByColumnNameByTableName = Map<
   ColumnInformationsByColumnName
 >;
 
+export type ConstraintInformationsByColumnNameByTableName = Map<
+  Table['name'],
+  ConstraintInformationsByColumnName
+>;
+
 export type IndexInformationsByIndexNameByTableName = Map<
   Table['name'],
   IndexInformationsByColumnNameByIndexName
@@ -49,6 +55,7 @@ export type SchemaDiagnosisInformations = {
   schema: SchemaInformation;
   tables: TableInformationsByTableName;
   columns: ColumnInformationsByColumnNameByTableName;
+  constraints: ConstraintInformationsByColumnNameByTableName;
   indexes: IndexInformationsByIndexNameByTableName;
   foreignKeys: ForeignKeyInformationsByForeignKeyNameByTableName;
 };
@@ -167,6 +174,7 @@ export class SchemaDiagnosis {
                 {
                   table: tableInformation,
                   columns: informations.columns.get(table.name),
+                  constraints: informations.constraints.get(table.name),
                   indexes: informations.indexes.get(table.name),
                   foreignKeys: informations.foreignKeys.get(table.name),
                 },

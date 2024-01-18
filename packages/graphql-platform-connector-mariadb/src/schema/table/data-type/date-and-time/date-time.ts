@@ -82,7 +82,7 @@ export class DateTimeType<
     );
   }
 
-  public isInformationValid(information: ColumnInformation): boolean {
+  public override isInformationValid(information: ColumnInformation): boolean {
     return (
       super.isInformationValid(information) &&
       (!information.NUMERIC_PRECISION ||

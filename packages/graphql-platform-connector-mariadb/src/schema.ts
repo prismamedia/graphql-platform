@@ -13,24 +13,27 @@ import {
   type SchemaNamingStrategyConfig,
 } from './schema/naming-strategy.js';
 import {
-  ColumnInformationsByColumnName,
-  ForeignKeyInformationsByForeignKeyName,
-  IndexInformationsByColumnNameByIndexName,
   Table,
+  type ColumnInformationsByColumnName,
+  type ConstraintInformationsByColumnName,
+  type ForeignKeyInformationsByForeignKeyName,
+  type IndexInformationsByColumnNameByIndexName,
 } from './schema/table.js';
 import {
   CreateSchemaStatement,
-  CreateSchemaStatementConfig,
   DropSchemaStatement,
-  DropSchemaStatementConfig,
-  ForeignKeyInformation,
   GetColumnInformationStatement,
+  GetConstraintInformationStatement,
   GetForeignKeyInformationStatement,
   GetIndexInformationStatement,
   GetSchemaInformationStatement,
   GetTableInformationStatement,
-  IndexInformation,
   type ColumnInformation,
+  type ConstraintInformation,
+  type CreateSchemaStatementConfig,
+  type DropSchemaStatementConfig,
+  type ForeignKeyInformation,
+  type IndexInformation,
   type SchemaInformation,
   type TableInformation,
 } from './statement.js';
@@ -194,6 +197,7 @@ export class Schema {
       schemaInformations,
       tableInformations,
       columnInformations,
+      constraintInformations,
       indexInformations,
       foreignKeyInformations,
     ] = await Promise.all([
@@ -207,6 +211,10 @@ export class Schema {
       ),
       this.connector.executeStatement<ColumnInformation[]>(
         new GetColumnInformationStatement(this),
+        maybeConnection,
+      ),
+      this.connector.executeStatement<ConstraintInformation[]>(
+        new GetConstraintInformationStatement(this),
         maybeConnection,
       ),
       this.connector.executeStatement<IndexInformation[]>(
@@ -254,6 +262,32 @@ export class Schema {
         columnInformation.COLUMN_NAME,
         columnInformation,
       );
+    }
+
+    const constraintInformationsByColumnNameByTableName = new Map<
+      Table['name'],
+      ConstraintInformationsByColumnName
+    >();
+
+    for (const constraintInformation of constraintInformations) {
+      if (constraintInformation.LEVEL === 'Column') {
+        let constraintInformationsByColumnName =
+          constraintInformationsByColumnNameByTableName.get(
+            constraintInformation.TABLE_NAME,
+          );
+
+        if (!constraintInformationsByColumnName) {
+          constraintInformationsByColumnNameByTableName.set(
+            constraintInformation.TABLE_NAME,
+            (constraintInformationsByColumnName = new Map()),
+          );
+        }
+
+        constraintInformationsByColumnName.set(
+          constraintInformation.CONSTRAINT_NAME,
+          constraintInformation,
+        );
+      }
     }
 
     const indexInformationsByColumnNameByIndexNameByTableName = new Map<
@@ -322,6 +356,7 @@ export class Schema {
         schema: schemaInformation,
         tables: tableInformationsByTableName,
         columns: columnInformationsByColumnNameByTableName,
+        constraints: constraintInformationsByColumnNameByTableName,
         indexes: indexInformationsByColumnNameByIndexNameByTableName,
         foreignKeys: foreignKeyInformationsByForeignKeyNameByTableName,
       },

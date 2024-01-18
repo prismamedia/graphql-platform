@@ -82,7 +82,7 @@ export class TextType<
     return escapeStringValue(value);
   }
 
-  public isInformationValid(information: ColumnInformation): boolean {
+  public override isInformationValid(information: ColumnInformation): boolean {
     return (
       super.isInformationValid(information) &&
       (!this.length ||

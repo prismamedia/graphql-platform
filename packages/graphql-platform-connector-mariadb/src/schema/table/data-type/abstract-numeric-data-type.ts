@@ -36,7 +36,7 @@ export abstract class AbstractNumericDataType<
     );
   }
 
-  public isInformationValid(information: ColumnInformation): boolean {
+  public override isInformationValid(information: ColumnInformation): boolean {
     const actualModifiers = information.COLUMN_TYPE.split(' ')
       .slice(1)
       .map((modifier) => modifier.toUpperCase());
