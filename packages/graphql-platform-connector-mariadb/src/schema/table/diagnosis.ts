@@ -116,13 +116,12 @@ export type TableDiagnosisSummary = {
 
 export type TableDiagnosisFixConfig = {
   collation?: boolean;
+  columns?: boolean | ReadonlyArray<Column['name']>;
   comment?: boolean;
   engine?: boolean;
-  nullable?: boolean;
-
   foreignKeys?: boolean | ReadonlyArray<ForeignKey['name']>;
   indexes?: boolean | ReadonlyArray<Index['name']>;
-  columns?: boolean | ReadonlyArray<Column['name']>;
+  nullable?: boolean;
 };
 
 export class TableDiagnosis {
@@ -549,11 +548,22 @@ export class TableDiagnosis {
   }
 
   public fixesColumns(config?: TableDiagnosisFixConfig): Array<Column['name']> {
-    return config?.columns == null || config.columns === true
-      ? [...this.fixableColumnNames]
-      : config.columns === false
-      ? []
-      : R.intersection(this.fixableColumnNames, config.columns);
+    const fixableColumnNames =
+      config?.columns == null || config.columns === true
+        ? [...this.fixableColumnNames]
+        : config.columns === false
+        ? []
+        : R.intersection(this.fixableColumnNames, config.columns);
+
+    return utils.getOptionalFlag(config?.nullable, true)
+      ? fixableColumnNames
+      : fixableColumnNames.filter(
+          (columnName) =>
+            !this.invalidColumns.some(
+              ({ column, errorCount, nullableError }) =>
+                column.name === columnName && errorCount === 1 && nullableError,
+            ),
+        );
   }
 
   public async fix(
