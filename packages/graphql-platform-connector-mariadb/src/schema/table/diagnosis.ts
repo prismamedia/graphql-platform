@@ -561,7 +561,10 @@ export class TableDiagnosis {
           (columnName) =>
             !this.invalidColumns.some(
               ({ column, errorCount, nullableError }) =>
-                column.name === columnName && errorCount === 1 && nullableError,
+                column.name === columnName &&
+                !column.isNullable() &&
+                errorCount === 1 &&
+                nullableError,
             ),
         );
   }
