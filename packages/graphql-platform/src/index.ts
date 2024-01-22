@@ -654,7 +654,11 @@ export class GraphQLPlatform<
 
     // changes
     {
-      mutationContext.commitChanges();
+      const now = new Date();
+
+      for (const change of mutationContext.changes) {
+        change.committedAt = now;
+      }
 
       const aggregation = new NodeChangeAggregation(mutationContext.changes);
 

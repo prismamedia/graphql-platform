@@ -13,10 +13,4 @@ export class MutationContext<
    * Contains the nodes' changes that will be fired after the success of the whole mutation, including all the nested actions
    */
   public readonly changes: NodeChange[] = [];
-
-  public commitChanges(at: Date = new Date()): void {
-    for (const change of this.changes) {
-      change.committedAt = at;
-    }
-  }
 }

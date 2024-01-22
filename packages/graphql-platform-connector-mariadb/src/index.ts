@@ -170,6 +170,11 @@ export class MariaDBConnector
           kind === StatementKind.DATA_MANIPULATION
             ? {
                 ...this.poolConfig,
+                sessionVariables: {
+                  ...this.poolConfig.sessionVariables,
+                  // For "JSON_ARRAYAGG" & "JSON_OBJECTAGG", 100M instead of the default 1M
+                  group_concat_max_len: 104857600,
+                },
                 autoJsonMap: false,
                 bigIntAsNumber: false,
                 charset: this.charset,
