@@ -278,11 +278,15 @@ export class MariaDBConnector
       });
     } catch (error) {
       if (error instanceof mariadb.SqlError) {
+        const durationInSeconds =
+          Math.round(Number(hrtime.bigint() - startedAt) / 10 ** 6) / 10 ** 3;
+
+        Object.assign(error, { sql: statement.sql, durationInSeconds });
+
         await this.emit('failed-statement', {
           statement,
           error,
-          durationInSeconds:
-            Math.round(Number(hrtime.bigint() - startedAt) / 10 ** 6) / 10 ** 3,
+          durationInSeconds,
         });
 
         if (
