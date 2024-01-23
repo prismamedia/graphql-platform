@@ -48,7 +48,7 @@ export class FindStatement implements mariadb.QueryOptions {
       orderingExpressions && `ORDER BY ${orderingExpressions}`,
       `LIMIT ${limit}`,
       offset && `OFFSET ${offset}`,
-      statement.forMutation != null && 'FOR UPDATE',
+      statement.forMutation != null && 'LOCK IN SHARE MODE',
     ]
       .filter(Boolean)
       .join(EOL);
