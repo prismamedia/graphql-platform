@@ -1376,7 +1376,7 @@ export class Node<
   }
 
   @Memoize((onHeadDeletion: OnEdgeHeadDeletion) => onHeadDeletion)
-  public getReverseEdgesByAction(
+  public getReverseEdgesByActionOnOriginalEdgeDeletion(
     onHeadDeletion: OnEdgeHeadDeletion,
   ): ReadonlyArray<ReverseEdge<TConnector>> {
     return Array.from(this.reverseEdgeSet).filter(
@@ -1386,7 +1386,7 @@ export class Node<
   }
 
   @Memoize((onHeadDeletion: OnEdgeHeadDeletion) => onHeadDeletion)
-  public getReverseEdgesByHeadByAction(
+  public getReverseEdgesByHeadByActionOnOriginalEdgeDeletion(
     onHeadDeletion: OnEdgeHeadDeletion,
   ): ReadonlyMap<
     Node<TRequestContext, TConnector, TBroker, TContainer>,
@@ -1394,7 +1394,9 @@ export class Node<
   > {
     const reverseEdgesByHead = new Map<Node, Array<ReverseEdge>>();
 
-    for (const reverseEdge of this.getReverseEdgesByAction(onHeadDeletion)) {
+    for (const reverseEdge of this.getReverseEdgesByActionOnOriginalEdgeDeletion(
+      onHeadDeletion,
+    )) {
       let reverseEdges = reverseEdgesByHead.get(reverseEdge.head);
       if (!reverseEdges) {
         reverseEdgesByHead.set(reverseEdge.head, (reverseEdges = []));
