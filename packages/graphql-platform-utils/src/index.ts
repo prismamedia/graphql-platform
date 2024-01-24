@@ -1,5 +1,6 @@
 export * from './array.js';
 export * from './arrayable.js';
+export * from './collator.js';
 export * from './config.js';
 export * from './enum.js';
 export * from './error.js';

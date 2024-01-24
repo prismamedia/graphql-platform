@@ -43,10 +43,6 @@ export class BooleanType<
   }
 
   public override isInformationValid(information: ColumnInformation): boolean {
-    return (
-      'TINYINT(1)'.localeCompare(information['COLUMN_TYPE'], undefined, {
-        sensitivity: 'base',
-      }) === 0
-    );
+    return !utils.baseEnCollator.compare('TINYINT(1)', information.COLUMN_TYPE);
   }
 }

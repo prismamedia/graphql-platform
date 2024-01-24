@@ -89,8 +89,10 @@ export class IntType<
     return (
       super.isInformationValid(information) &&
       (!this.length ||
-        !information.NUMERIC_PRECISION ||
-        this.length === Number(information.NUMERIC_PRECISION))
+        !utils.baseEnCollator.compare(
+          this.definition.split(' ')[0],
+          information.COLUMN_TYPE.split(' ')[0],
+        ))
     );
   }
 }

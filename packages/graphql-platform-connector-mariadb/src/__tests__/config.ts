@@ -69,6 +69,12 @@ export function createMyGP<
                 dataType: { kind: 'TIMESTAMP', microsecondPrecision: 0 },
               },
             }
+          : node === 'Category' && leaf === 'order'
+          ? {
+              column: {
+                dataType: { kind: 'INT', length: 3, modifiers: ['UNSIGNED'] },
+              },
+            }
           : node === 'User' && leaf === 'lastLoggedInAt'
           ? {
               column: {

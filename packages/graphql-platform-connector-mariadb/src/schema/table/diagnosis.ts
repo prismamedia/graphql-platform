@@ -164,10 +164,10 @@ export class TableDiagnosis {
 
       if (
         utils.getOptionalFlag(options?.comment, true) &&
-        new Intl.Collator(undefined, { sensitivity: 'base' }).compare(
+        utils.baseEnCollator.compare(
           table.comment || '',
           informations.table.TABLE_COMMENT || '',
-        ) !== 0
+        )
       ) {
         this.commentError = {
           expected: table.comment,
@@ -177,10 +177,7 @@ export class TableDiagnosis {
 
       if (
         utils.getOptionalFlag(options?.engine, true) &&
-        new Intl.Collator(undefined, { sensitivity: 'base' }).compare(
-          table.engine,
-          informations.table.ENGINE,
-        ) !== 0
+        utils.baseEnCollator.compare(table.engine, informations.table.ENGINE)
       ) {
         this.engineError = {
           expected: table.engine,
@@ -190,10 +187,10 @@ export class TableDiagnosis {
 
       if (
         utils.getOptionalFlag(options?.collation, true) &&
-        new Intl.Collator(undefined, { sensitivity: 'base' }).compare(
+        utils.baseEnCollator.compare(
           table.defaultCollation,
           informations.table.TABLE_COLLATION,
-        ) !== 0
+        )
       ) {
         this.collationError = {
           expected: table.defaultCollation,

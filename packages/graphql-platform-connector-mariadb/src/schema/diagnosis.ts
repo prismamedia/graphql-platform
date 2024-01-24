@@ -123,10 +123,10 @@ export class SchemaDiagnosis {
 
       if (
         utils.getOptionalFlag(options?.charset, true) &&
-        new Intl.Collator(undefined, { sensitivity: 'base' }).compare(
+        utils.baseEnCollator.compare(
           schema.defaultCharset,
           informations.schema.DEFAULT_CHARACTER_SET_NAME,
-        ) !== 0
+        )
       ) {
         this.charsetError = {
           expected: schema.defaultCharset,
@@ -136,10 +136,10 @@ export class SchemaDiagnosis {
 
       if (
         utils.getOptionalFlag(options?.collation, true) &&
-        new Intl.Collator(undefined, { sensitivity: 'base' }).compare(
+        utils.baseEnCollator.compare(
           schema.defaultCollation,
           informations.schema.DEFAULT_COLLATION_NAME,
-        ) !== 0
+        )
       ) {
         this.collationError = {
           expected: schema.defaultCollation,
@@ -149,10 +149,10 @@ export class SchemaDiagnosis {
 
       if (
         utils.getOptionalFlag(options?.comment, true) &&
-        new Intl.Collator(undefined, { sensitivity: 'base' }).compare(
+        utils.baseEnCollator.compare(
           schema.comment || '',
           informations.schema.SCHEMA_COMMENT || '',
-        ) !== 0
+        )
       ) {
         this.commentError = {
           expected: schema.comment,

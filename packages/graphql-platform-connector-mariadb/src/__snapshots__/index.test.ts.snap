@@ -59,7 +59,7 @@ CREATE TABLE \`tests_connector_mariadb\`.\`categories\` (
   \`title\` VARCHAR(255) NOT NULL,
   \`slug\` VARCHAR(255) NOT NULL,
   \`parent_private_id\` INT UNSIGNED NULL,
-  \`order\` INT UNSIGNED NOT NULL,
+  \`order\` INT(3) UNSIGNED NOT NULL,
   PRIMARY KEY (\`private_id\`),
   UNIQUE INDEX \`unq_id\` (\`id\`),
   UNIQUE INDEX \`unq_parent_private_id_slug\` (\`parent_private_id\`,\`slug\`),

@@ -1,5 +1,5 @@
 import type * as core from '@prismamedia/graphql-platform';
-import type * as utils from '@prismamedia/graphql-platform-utils';
+import * as utils from '@prismamedia/graphql-platform-utils';
 import type { ColumnInformation } from '../../../statement.js';
 import {
   AbstractDataType,
@@ -37,14 +37,14 @@ export abstract class AbstractNumericDataType<
   }
 
   public override isInformationValid(information: ColumnInformation): boolean {
-    const actualModifiers = information.COLUMN_TYPE.split(' ')
-      .slice(1)
-      .map((modifier) => modifier.toUpperCase());
+    const actualModifiers = information.COLUMN_TYPE.split(' ').slice(1);
 
     return (
       super.isInformationValid(information) &&
       this.modifiers.length === actualModifiers.length &&
-      this.modifiers.every((modifier) => actualModifiers.includes(modifier))
+      this.modifiers.every((a) =>
+        actualModifiers.some((b) => !utils.baseEnCollator.compare(a, b)),
+      )
     );
   }
 }
