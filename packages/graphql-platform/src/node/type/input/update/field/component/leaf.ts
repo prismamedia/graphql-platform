@@ -8,10 +8,8 @@ import { AbstractComponentUpdateInput } from '../abstract-component.js';
 
 export type LeafUpdateInputValue = utils.Nillable<LeafValue>;
 
-export type LeafUpdateInputConfig = Except<
-  SetOptional<utils.InputConfig<LeafUpdateInputValue>, 'type'>,
-  'name' | 'optional'
->;
+export type LeafUpdateInputConfig<TValue extends LeafUpdateInputValue = any> =
+  Except<SetOptional<utils.InputConfig<TValue>, 'type'>, 'name' | 'optional'>;
 
 export class LeafUpdateInput extends AbstractComponentUpdateInput<LeafUpdateInputValue> {
   public constructor(public readonly leaf: Leaf) {
@@ -23,7 +21,14 @@ export class LeafUpdateInput extends AbstractComponentUpdateInput<LeafUpdateInpu
 
     super(
       leaf,
-      { type: leaf.type, parser: leaf.customParser, ...config },
+      {
+        type: leaf.type,
+        ...(leaf.customParser && {
+          parser: (value, path) =>
+            leaf.customParser!(value, utils.MutationType.UPDATE, path),
+        }),
+        ...config,
+      },
       configPath,
     );
   }

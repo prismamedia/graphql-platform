@@ -8,10 +8,9 @@ import { AbstractComponentCreationInput } from '../abstract-component.js';
 
 export type LeafCreationInputValue = utils.Nillable<LeafValue>;
 
-export type LeafCreationInputConfig = Except<
-  SetOptional<utils.InputConfig<LeafCreationInputValue>, 'type'>,
-  'name'
->;
+export type LeafCreationInputConfig<
+  TValue extends LeafCreationInputValue = any,
+> = Except<SetOptional<utils.InputConfig<TValue>, 'type'>, 'name'>;
 
 export class LeafCreationInput extends AbstractComponentCreationInput<LeafCreationInputValue> {
   public constructor(public readonly leaf: Leaf) {
@@ -23,7 +22,14 @@ export class LeafCreationInput extends AbstractComponentCreationInput<LeafCreati
 
     super(
       leaf,
-      { type: leaf.type, parser: leaf.customParser, ...config },
+      {
+        type: leaf.type,
+        ...(leaf.customParser && {
+          parser: (value, path) =>
+            leaf.customParser!(value, utils.MutationType.CREATION, path),
+        }),
+        ...config,
+      },
       configPath,
     );
   }

@@ -37,7 +37,8 @@ export type LeafValue = ReturnType<LeafType['parseValue']> | null;
 
 export type LeafCustomParser<TValue extends LeafValue = any> = (
   value: NonNullable<TValue>,
-  path: utils.Path,
+  mutationType?: utils.MutationType.CREATION | utils.MutationType.UPDATE,
+  path?: utils.Path,
 ) => TValue;
 
 export type LeafConfig<TConnector extends ConnectorInterface = any> =
@@ -52,7 +53,7 @@ export type LeafConfig<TConnector extends ConnectorInterface = any> =
     type: scalars.TypeName | LeafType;
 
     /**
-     * Optional, add some custom validation or normalization on top of the "type"'s parser
+     * Optional, add some custom validation or normalization on top of the "type"'s parser, given the value and the context among "query" (= !mutationType) / "creation" / "update"
      */
     parser?: LeafCustomParser;
 
@@ -249,7 +250,7 @@ export class Leaf<
       let customParsedValue: LeafValue;
 
       try {
-        customParsedValue = this.customParser(value, path);
+        customParsedValue = this.customParser(value, undefined, path);
       } catch (error) {
         throw utils.isGraphErrorWithPathEqualOrDescendantOf(error, path)
           ? error
