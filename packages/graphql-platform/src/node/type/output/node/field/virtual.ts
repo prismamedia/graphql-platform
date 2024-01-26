@@ -82,9 +82,20 @@ export type ThunkableNillableVirtualOutputConfig<
   TConnector extends ConnectorInterface = any,
   TBroker extends BrokerInterface = any,
   TContainer extends object = any,
+  TSource extends NodeSelectedSource = any,
+  TArgs = any,
+  TResult = unknown,
 > = utils.Thunkable<
   utils.Nillable<
-    VirtualOutputConfig<TRequestContext, TConnector, TBroker, TContainer>
+    VirtualOutputConfig<
+      TRequestContext,
+      TConnector,
+      TBroker,
+      TContainer,
+      TSource,
+      TArgs,
+      TResult
+    >
   >,
   [node: Node<TRequestContext, TConnector, TBroker, TContainer>]
 >;

@@ -192,7 +192,7 @@ export class MariaDBConnector
                 ...this.poolConfig,
                 sessionVariables: {
                   ...this.poolConfig.sessionVariables,
-                  max_statement_time: 3600,
+                  max_statement_time: 60 * 60 * 12,
                 },
                 connectionLimit: 1,
                 logger,
