@@ -39,9 +39,9 @@ function parseLeafFilter(
 
     switch (filter.operator) {
       case 'eq':
-        return column.isNullable()
-          ? `${columnIdentifier} <=> ${serializedColumnValue}`
-          : `${columnIdentifier} = ${serializedColumnValue}`;
+        return `${columnIdentifier} ${
+          column.isNullable() ? '<=>' : '='
+        } ${serializedColumnValue}`;
 
       case 'not':
         return column.isNullable()

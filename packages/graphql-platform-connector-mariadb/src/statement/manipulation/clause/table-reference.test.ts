@@ -80,7 +80,7 @@ describe('Table reference', () => {
         LEFT JOIN \`categories\` AS \`articles>category>parent>parent\` ON \`articles>category>parent\`.\`parent_private_id\` <= > \`articles>category>parent>parent\`.\`private_id\`
         LEFT JOIN \`categories\` AS \`articles>category>parent>parent>parent\` ON \`articles>category>parent>parent\`.\`parent_private_id\` <= > \`articles>category>parent>parent>parent\`.\`private_id\`
         LEFT JOIN \`users\` AS \`articles>createdBy\` ON \`articles\`.\`created_by_id\` <= > \`articles>createdBy\`.\`id\`
-        LEFT JOIN \`user_profiles\` AS \`articles>createdBy>profile\` ON \`articles>createdBy\`.\`id\` <= > \`articles>createdBy>profile\`.\`theUserId\`"
+        LEFT JOIN \`user_profiles\` AS \`articles>createdBy>profile\` ON \`articles>createdBy\`.\`id\` = \`articles>createdBy>profile\`.\`theUserId\`"
     `);
   });
 });

@@ -50,11 +50,11 @@ export class JoinTable extends AbstractTableReference {
             .getForeignKeyByEdge(this.edgeOrUniqueReverseEdge)
             .columns.map(
               (column) =>
-                `${this.parent.getEscapedColumnIdentifier(
-                  column,
-                )} <=> ${this.getEscapedColumnIdentifier(
-                  column.referencedColumn,
-                )}`,
+                `${this.parent.getEscapedColumnIdentifier(column)} ${
+                  column.isNullable() || column.referencedColumn.isNullable()
+                    ? '<=>'
+                    : '='
+                } ${this.getEscapedColumnIdentifier(column.referencedColumn)}`,
             )
         : this.table
             .getForeignKeyByEdge(this.edgeOrUniqueReverseEdge.originalEdge)
@@ -62,7 +62,11 @@ export class JoinTable extends AbstractTableReference {
               (column) =>
                 `${this.parent.getEscapedColumnIdentifier(
                   column.referencedColumn,
-                )} <=> ${this.getEscapedColumnIdentifier(column)}`,
+                )} ${
+                  column.referencedColumn.isNullable() || column.isNullable()
+                    ? '<=>'
+                    : '='
+                } ${this.getEscapedColumnIdentifier(column)}`,
             )),
       this.authorization ? filterNode(this, this.authorization) : undefined,
     ]

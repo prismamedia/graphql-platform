@@ -6,7 +6,7 @@ FROM \`articles\`
   LEFT JOIN \`categories\` AS \`articles>category\` ON \`articles\`.\`category_private_id\` <= > \`articles>category\`.\`private_id\`
   LEFT JOIN \`users\` AS \`articles>createdBy\` ON \`articles\`.\`created_by_id\` <= > \`articles>createdBy\`.\`id\`
   AND FALSE
-  LEFT JOIN \`user_profiles\` AS \`articles>createdBy>profile\` ON \`articles>createdBy\`.\`id\` <= > \`articles>createdBy>profile\`.\`theUserId\`"
+  LEFT JOIN \`user_profiles\` AS \`articles>createdBy>profile\` ON \`articles>createdBy\`.\`id\` = \`articles>createdBy>profile\`.\`theUserId\`"
 `;
 
 exports[`Table reference generates valid SQL with authorization 2`] = `
@@ -14,7 +14,7 @@ exports[`Table reference generates valid SQL with authorization 2`] = `
 FROM \`articles\`
   LEFT JOIN \`categories\` AS \`articles>category\` ON \`articles\`.\`category_private_id\` <= > \`articles>category\`.\`private_id\`
   LEFT JOIN \`users\` AS \`articles>createdBy\` ON \`articles\`.\`created_by_id\` <= > \`articles>createdBy\`.\`id\`
-  LEFT JOIN \`user_profiles\` AS \`articles>createdBy>profile\` ON \`articles>createdBy\`.\`id\` <= > \`articles>createdBy>profile\`.\`theUserId\`"
+  LEFT JOIN \`user_profiles\` AS \`articles>createdBy>profile\` ON \`articles>createdBy\`.\`id\` = \`articles>createdBy>profile\`.\`theUserId\`"
 `;
 
 exports[`Table reference generates valid SQL with authorization 3`] = `
@@ -22,7 +22,7 @@ exports[`Table reference generates valid SQL with authorization 3`] = `
 FROM \`articles\`
   LEFT JOIN \`categories\` AS \`articles>category\` ON \`articles\`.\`category_private_id\` <= > \`articles>category\`.\`private_id\`
   LEFT JOIN \`users\` AS \`articles>createdBy\` ON \`articles\`.\`created_by_id\` <= > \`articles>createdBy\`.\`id\`
-  LEFT JOIN \`user_profiles\` AS \`articles>createdBy>profile\` ON \`articles>createdBy\`.\`id\` <= > \`articles>createdBy>profile\`.\`theUserId\`"
+  LEFT JOIN \`user_profiles\` AS \`articles>createdBy>profile\` ON \`articles>createdBy\`.\`id\` = \`articles>createdBy>profile\`.\`theUserId\`"
 `;
 
 exports[`Table reference generates valid SQL with authorization 4`] = `
@@ -30,5 +30,5 @@ exports[`Table reference generates valid SQL with authorization 4`] = `
 FROM \`articles\`
   LEFT JOIN \`categories\` AS \`articles>category\` ON \`articles\`.\`category_private_id\` <= > \`articles>category\`.\`private_id\`
   LEFT JOIN \`users\` AS \`articles>createdBy\` ON \`articles\`.\`created_by_id\` <= > \`articles>createdBy\`.\`id\`
-  LEFT JOIN \`user_profiles\` AS \`articles>createdBy>profile\` ON \`articles>createdBy\`.\`id\` <= > \`articles>createdBy>profile\`.\`theUserId\`"
+  LEFT JOIN \`user_profiles\` AS \`articles>createdBy>profile\` ON \`articles>createdBy\`.\`id\` = \`articles>createdBy>profile\`.\`theUserId\`"
 `;

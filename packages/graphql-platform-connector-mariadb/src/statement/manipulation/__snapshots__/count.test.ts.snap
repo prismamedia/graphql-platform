@@ -37,7 +37,7 @@ WHERE (
     AND (
       SELECT COUNT(*)
       FROM \`article_tags\` AS \`articles>tags\`
-      WHERE \`articles\`.\`private_id\` <=> \`articles>tags\`.\`article_private_id\`
+      WHERE \`articles\`.\`private_id\` = \`articles>tags\`.\`article_private_id\`
     ) > 4
   )",
 ]

@@ -21,7 +21,7 @@ exports[`Find statement 0 - generates statements 1`] = `
     (
       SELECT COUNT(*)
       FROM \`article_tags\` AS \`articles>tags\`
-      WHERE \`articles\`.\`private_id\` <=> \`articles>tags\`.\`article_private_id\`
+      WHERE \`articles\`.\`private_id\` = \`articles>tags\`.\`article_private_id\`
     ),
     "createdAt",
     \`articles\`.\`created_at\`,
@@ -51,7 +51,7 @@ exports[`Find statement 0 - generates statements 1`] = `
               (
                 SELECT JSON_OBJECT("title", \`articles>tags>tag\`.\`title\`)
                 FROM \`tags\` AS \`articles>tags>tag\`
-                WHERE \`articles>tags\`.\`tag_id\` <=> \`articles>tags>tag\`.\`id\`
+                WHERE \`articles>tags\`.\`tag_id\` = \`articles>tags>tag\`.\`id\`
                 LIMIT 1
               )
             )
@@ -59,7 +59,7 @@ exports[`Find statement 0 - generates statements 1`] = `
             LIMIT 2
           )
         FROM \`article_tags\` AS \`articles>tags\`
-        WHERE \`articles\`.\`private_id\` <=> \`articles>tags\`.\`article_private_id\`
+        WHERE \`articles\`.\`private_id\` = \`articles>tags\`.\`article_private_id\`
       )
     )
   ) as \`Article\`
@@ -112,7 +112,7 @@ exports[`Find statement 2 - generates statements 1`] = `
                 \`articles>createdBy>profile\`.\`twitter_handle\`
               )
             FROM \`user_profiles\` AS \`articles>createdBy>profile\`
-            WHERE \`articles>createdBy\`.\`id\` <=> \`articles>createdBy>profile\`.\`theUserId\`
+            WHERE \`articles>createdBy\`.\`id\` = \`articles>createdBy>profile\`.\`theUserId\`
             LIMIT 1
           )
         )
@@ -122,17 +122,17 @@ exports[`Find statement 2 - generates statements 1`] = `
     ), "allTagCount", (
       SELECT COUNT(*)
       FROM \`article_tags\` AS \`articles>tags\`
-      WHERE \`articles\`.\`private_id\` <=> \`articles>tags\`.\`article_private_id\`
+      WHERE \`articles\`.\`private_id\` = \`articles>tags\`.\`article_private_id\`
     ),
     "filteredTagCount",
     (
       SELECT COUNT(*)
       FROM \`article_tags\` AS \`articles>tags\`
-      WHERE \`articles\`.\`private_id\` <=> \`articles>tags\`.\`article_private_id\`
+      WHERE \`articles\`.\`private_id\` = \`articles>tags\`.\`article_private_id\`
         AND NOT EXISTS (
           SELECT *
           FROM \`tags\` AS \`articles>tags>tag\`
-          WHERE \`articles>tags\`.\`tag_id\` <=> \`articles>tags>tag\`.\`id\`
+          WHERE \`articles>tags\`.\`tag_id\` = \`articles>tags>tag\`.\`id\`
             AND \`articles>tags>tag\`.\`deprecated\` <=> 1
           LIMIT 1
         )
@@ -150,7 +150,7 @@ exports[`Find statement 2 - generates statements 1`] = `
                   \`articles>tags>tag\`.\`deprecated\`
                 )
               FROM \`tags\` AS \`articles>tags>tag\`
-              WHERE \`articles>tags\`.\`tag_id\` <=> \`articles>tags>tag\`.\`id\`
+              WHERE \`articles>tags\`.\`tag_id\` = \`articles>tags>tag\`.\`id\`
               LIMIT 1
             )
           )
@@ -158,7 +158,7 @@ exports[`Find statement 2 - generates statements 1`] = `
           LIMIT 5
         )
       FROM \`article_tags\` AS \`articles>tags\`
-      WHERE \`articles\`.\`private_id\` <=> \`articles>tags\`.\`article_private_id\`
+      WHERE \`articles\`.\`private_id\` = \`articles>tags\`.\`article_private_id\`
     ),
     "filteredTags",
     (
@@ -170,7 +170,7 @@ exports[`Find statement 2 - generates statements 1`] = `
             (
               SELECT JSON_OBJECT("title", \`articles>tags>tag\`.\`title\`)
               FROM \`tags\` AS \`articles>tags>tag\`
-              WHERE \`articles>tags\`.\`tag_id\` <=> \`articles>tags>tag\`.\`id\`
+              WHERE \`articles>tags\`.\`tag_id\` = \`articles>tags>tag\`.\`id\`
               LIMIT 1
             )
           )
@@ -178,11 +178,11 @@ exports[`Find statement 2 - generates statements 1`] = `
           LIMIT 5
         )
       FROM \`article_tags\` AS \`articles>tags\`
-      WHERE \`articles\`.\`private_id\` <=> \`articles>tags\`.\`article_private_id\`
+      WHERE \`articles\`.\`private_id\` = \`articles>tags\`.\`article_private_id\`
         AND NOT EXISTS (
           SELECT *
           FROM \`tags\` AS \`articles>tags>tag\`
-          WHERE \`articles>tags\`.\`tag_id\` <=> \`articles>tags>tag\`.\`id\`
+          WHERE \`articles>tags\`.\`tag_id\` = \`articles>tags>tag\`.\`id\`
             AND \`articles>tags>tag\`.\`deprecated\` <=> 1
           LIMIT 1
         )
@@ -205,7 +205,7 @@ WHERE (
         AND EXISTS (
           SELECT *
           FROM \`user_profiles\` AS \`articles>createdBy>profile\`
-          WHERE \`articles>createdBy\`.\`id\` <=> \`articles>createdBy>profile\`.\`theUserId\`
+          WHERE \`articles>createdBy\`.\`id\` = \`articles>createdBy>profile\`.\`theUserId\`
             AND (
               NOT (
                 \`articles>createdBy>profile\`.\`facebook_id\` <=> NULL
@@ -225,11 +225,11 @@ WHERE (
     AND EXISTS (
       SELECT *
       FROM \`article_tags\` AS \`articles>tags\`
-      WHERE \`articles\`.\`private_id\` <=> \`articles>tags\`.\`article_private_id\`
+      WHERE \`articles\`.\`private_id\` = \`articles>tags\`.\`article_private_id\`
         AND EXISTS (
           SELECT *
           FROM \`tags\` AS \`articles>tags>tag\`
-          WHERE \`articles>tags\`.\`tag_id\` <=> \`articles>tags>tag\`.\`id\`
+          WHERE \`articles>tags\`.\`tag_id\` = \`articles>tags>tag\`.\`id\`
             AND NOT (\`articles>tags>tag\`.\`deprecated\` <=> 1)
           LIMIT 1
         )
@@ -237,7 +237,7 @@ WHERE (
     AND (
       SELECT COUNT(*)
       FROM \`article_tags\` AS \`articles>tags\`
-      WHERE \`articles\`.\`private_id\` <=> \`articles>tags\`.\`article_private_id\`
+      WHERE \`articles\`.\`private_id\` = \`articles>tags\`.\`article_private_id\`
     ) > 5
     AND (
       \`articles\`.\`body\` <=> NULL
@@ -282,7 +282,7 @@ exports[`Find statement 3 - generates statements 1`] = `
           LIMIT 1 OFFSET 1
         )
       FROM \`article_tags\` AS \`articles>tags\`
-      WHERE \`articles\`.\`private_id\` <=> \`articles>tags\`.\`article_private_id\`
+      WHERE \`articles\`.\`private_id\` = \`articles>tags\`.\`article_private_id\`
     ),
     "penultimate",
     (
@@ -292,7 +292,7 @@ exports[`Find statement 3 - generates statements 1`] = `
           LIMIT 1 OFFSET 1
         )
       FROM \`article_tags\` AS \`articles>tags\`
-      WHERE \`articles\`.\`private_id\` <=> \`articles>tags\`.\`article_private_id\`
+      WHERE \`articles\`.\`private_id\` = \`articles>tags\`.\`article_private_id\`
     ),
     "all",
     (
@@ -302,14 +302,14 @@ exports[`Find statement 3 - generates statements 1`] = `
           LIMIT 10
         )
       FROM \`article_tags\` AS \`articles>tags\`
-      WHERE \`articles\`.\`private_id\` <=> \`articles>tags\`.\`article_private_id\`
+      WHERE \`articles\`.\`private_id\` = \`articles>tags\`.\`article_private_id\`
     )
   ) as \`Article\`
 FROM \`articles\`
 WHERE (
     SELECT COUNT(*)
     FROM \`article_tags\` AS \`articles>tags\`
-    WHERE \`articles\`.\`private_id\` <=> \`articles>tags\`.\`article_private_id\`
+    WHERE \`articles\`.\`private_id\` = \`articles>tags\`.\`article_private_id\`
   ) > 1
 ORDER BY \`articles\`.\`created_at\` ASC
 LIMIT 1",

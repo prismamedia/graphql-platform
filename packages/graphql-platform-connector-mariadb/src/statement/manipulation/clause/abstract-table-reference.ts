@@ -101,9 +101,11 @@ export abstract class AbstractTableReference {
             .getForeignKeyByEdge(edgeOrReverseEdge)
             .columns.map(
               (column) =>
-                `${this.getEscapedColumnIdentifier(
-                  column,
-                )} <=> ${headReference.getEscapedColumnIdentifier(
+                `${this.getEscapedColumnIdentifier(column)} ${
+                  column.isNullable() || column.referencedColumn.isNullable()
+                    ? '<=>'
+                    : '='
+                } ${headReference.getEscapedColumnIdentifier(
                   column.referencedColumn,
                 )}`,
             )
@@ -111,9 +113,11 @@ export abstract class AbstractTableReference {
             .getForeignKeyByEdge(edgeOrReverseEdge.originalEdge)
             .columns.map(
               (column) =>
-                `${this.getEscapedColumnIdentifier(
-                  column.referencedColumn,
-                )} <=> ${headReference.getEscapedColumnIdentifier(column)}`,
+                `${this.getEscapedColumnIdentifier(column.referencedColumn)} ${
+                  column.referencedColumn.isNullable() || column.isNullable()
+                    ? '<=>'
+                    : '='
+                } ${headReference.getEscapedColumnIdentifier(column)}`,
             )),
       mergedAuthorizationAndFilter
         ? filterNode(headReference, mergedAuthorizationAndFilter)
