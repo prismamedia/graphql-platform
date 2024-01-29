@@ -64,7 +64,7 @@ exports[`Find statement 0 - generates statements 1`] = `
     )
   ) as \`Article\`
 FROM \`articles\`
-WHERE \`articles\`.\`status\` <=> 'published'
+WHERE \`articles\`.\`status\` = 'published'
 ORDER BY \`articles\`.\`created_at\` ASC
 LIMIT 5",
 ]
@@ -190,12 +190,12 @@ exports[`Find statement 2 - generates statements 1`] = `
   ) as \`Article\`
 FROM \`articles\`
 WHERE (
-    \`articles\`.\`status\` <=> 'published'
+    \`articles\`.\`status\` = 'published'
     AND EXISTS (
       SELECT *
       FROM \`categories\` AS \`articles>category\`
       WHERE \`articles\`.\`category_private_id\` <=> \`articles>category\`.\`private_id\`
-        AND \`articles>category\`.\`slug\` <=> 'tv'
+        AND \`articles>category\`.\`slug\` = 'tv'
       LIMIT 1
     )
     AND EXISTS (

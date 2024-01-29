@@ -194,7 +194,9 @@ export class DeleteManyMutation<
               })
               .catch((cause) => {
                 throw new utils.GraphError(
-                  `An error occurred while applying the "on-head-deletion" action of the original-edge of "${
+                  `An error occurred while applying the "on-edge-head-deletion" action "${
+                    OnEdgeHeadDeletion[OnEdgeHeadDeletion.CASCADE]
+                  }" of the original-edge of "${
                     this.node
                   }"'s reverse-edge(s) heading to "${head}": ${reverseEdges
                     .map(
@@ -234,7 +236,11 @@ export class DeleteManyMutation<
               })
               .catch((cause) => {
                 throw new utils.GraphError(
-                  `An error occurred while applying the "on-head-deletion" action of the original-edge of "${this.node}"'s reverse-edge "${name}": ${originalEdge}`,
+                  `An error occurred while applying the "on-edge-head-deletion" action "${
+                    OnEdgeHeadDeletion[OnEdgeHeadDeletion.SET_NULL]
+                  }" of the original-edge of "${
+                    this.node
+                  }"'s reverse-edge "${name}": ${originalEdge}`,
                   { path, cause },
                 );
               }),

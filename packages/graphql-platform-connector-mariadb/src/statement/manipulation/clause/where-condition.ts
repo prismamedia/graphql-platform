@@ -39,10 +39,14 @@ function parseLeafFilter(
 
     switch (filter.operator) {
       case 'eq':
-        return `${columnIdentifier} <=> ${serializedColumnValue}`;
+        return column.isNullable()
+          ? `${columnIdentifier} <=> ${serializedColumnValue}`
+          : `${columnIdentifier} = ${serializedColumnValue}`;
 
       case 'not':
-        return `NOT (${columnIdentifier} <=> ${serializedColumnValue})`;
+        return column.isNullable()
+          ? `NOT (${columnIdentifier} <=> ${serializedColumnValue})`
+          : `${columnIdentifier} != ${serializedColumnValue}`;
 
       case 'gt':
         return `${columnIdentifier} > ${serializedColumnValue}`;
