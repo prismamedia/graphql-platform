@@ -3,22 +3,44 @@ import * as scalars from '@prismamedia/graphql-platform-scalars';
 import * as utils from '@prismamedia/graphql-platform-utils';
 import assert from 'node:assert/strict';
 import { escapeStringValue } from '../../../escaping.js';
+import { LeafColumn, type ReferenceColumnTree } from '../../../schema.js';
 import type { TableReference } from './table-reference.js';
 
 export type WhereCondition = string;
 
+export function AND(conditions: ReadonlyArray<WhereCondition>): WhereCondition {
+  return conditions.length > 1
+    ? `(${conditions.join(' AND ')})`
+    : conditions.length === 1
+    ? conditions[0]
+    : 'TRUE';
+}
+
+export function OR(conditions: ReadonlyArray<WhereCondition>): WhereCondition {
+  return conditions.length > 1
+    ? `(${conditions.join(' OR ')})`
+    : conditions.length === 1
+    ? conditions[0]
+    : 'FALSE';
+}
+
 function parseBooleanOperation(
   tableReference: TableReference,
   filter: core.BooleanOperation,
+  referenceColumnTree?: ReferenceColumnTree,
 ): WhereCondition {
   if (filter instanceof core.AndOperation) {
-    return `(${filter.operands
-      .map((operand) => parseBooleanFilter(tableReference, operand))
-      .join(' AND ')})`;
+    return AND(
+      filter.operands.map((operand) =>
+        parseBooleanFilter(tableReference, operand, referenceColumnTree),
+      ),
+    );
   } else if (filter instanceof core.OrOperation) {
-    return `(${filter.operands
-      .map((operand) => parseBooleanFilter(tableReference, operand))
-      .join(' OR ')})`;
+    return OR(
+      filter.operands.map((operand) =>
+        parseBooleanFilter(tableReference, operand, referenceColumnTree),
+      ),
+    );
   } else if (filter instanceof core.NotOperation) {
     return `NOT ${parseBooleanFilter(tableReference, filter.operand)}`;
   } else {
@@ -29,8 +51,12 @@ function parseBooleanOperation(
 function parseLeafFilter(
   tableReference: TableReference,
   filter: core.LeafFilter,
+  referenceColumnTree?: ReferenceColumnTree,
 ): WhereCondition {
-  const column = tableReference.table.getColumnByLeaf(filter.leaf);
+  const column =
+    referenceColumnTree?.getColumnByLeaf(filter.leaf) ??
+    tableReference.table.getColumnByLeaf(filter.leaf);
+
   const columnDataType = column.dataType;
   const columnIdentifier = tableReference.getEscapedColumnIdentifier(column);
 
@@ -39,13 +65,18 @@ function parseLeafFilter(
 
     switch (filter.operator) {
       case 'eq':
-        return `${columnIdentifier} ${
-          column.isNullable() ? '<=>' : '='
-        } ${serializedColumnValue}`;
+        return filter.value === null
+          ? `${columnIdentifier} IS NULL`
+          : `${columnIdentifier} = ${serializedColumnValue}`;
 
       case 'not':
-        return column.isNullable()
-          ? `NOT (${columnIdentifier} <=> ${serializedColumnValue})`
+        return filter.value === null
+          ? `${columnIdentifier} IS NOT NULL`
+          : column.isNullable()
+          ? OR([
+              `${columnIdentifier} IS NULL`,
+              `${columnIdentifier} != ${serializedColumnValue}`,
+            ])
           : `${columnIdentifier} != ${serializedColumnValue}`;
 
       case 'gt':
@@ -66,7 +97,7 @@ function parseLeafFilter(
   } else if (filter instanceof core.LeafFullTextFilter) {
     switch (filter.operator) {
       case 'contains':
-        return column.fullTextIndex
+        return column instanceof LeafColumn && column.fullTextIndex
           ? // @see https://mariadb.com/kb/en/match-against/
             `MATCH (${columnIdentifier}) AGAINST (${escapeStringValue(
               filter.value,
@@ -108,13 +139,69 @@ function parseLeafFilter(
 function parseEdgeFilter(
   tableReference: TableReference,
   filter: core.EdgeFilter,
+  referenceColumnTree?: ReferenceColumnTree,
 ): WhereCondition {
+  const edge = filter.edge;
+
   if (filter instanceof core.EdgeExistsFilter) {
-    return `EXISTS ${tableReference.subquery(
-      filter.edge,
-      '*',
-      filter.headFilter,
-    )}`;
+    if (referenceColumnTree) {
+      const subTree = referenceColumnTree.getColumnTreeByEdge(edge);
+
+      return AND(
+        [
+          edge.isNullable()
+            ? OR(
+                subTree.columns.map(
+                  (column) =>
+                    `${tableReference.getEscapedColumnIdentifier(
+                      column,
+                    )} IS NOT NULL`,
+                ),
+              )
+            : undefined,
+          filter.headFilter
+            ? filterNode(tableReference, filter.headFilter, subTree)
+            : undefined,
+        ].filter(utils.isNonNil),
+      );
+    }
+
+    const headAuthorization = tableReference.context.getAuthorization(
+      edge.head,
+    );
+
+    const mergedHeadAuthorizationAndHeadFilter =
+      headAuthorization && filter.headFilter
+        ? headAuthorization.and(filter.headFilter).normalized
+        : headAuthorization || filter.headFilter;
+
+    return AND(
+      [
+        edge.isNullable()
+          ? OR(
+              tableReference.table
+                .getForeignKeyByEdge(edge)
+                .columns.map(
+                  (column) =>
+                    `${tableReference.getEscapedColumnIdentifier(
+                      column,
+                    )} IS NOT NULL`,
+                ),
+            )
+          : undefined,
+        mergedHeadAuthorizationAndHeadFilter
+          ? mergedHeadAuthorizationAndHeadFilter.isExecutableWithUniqueConstraint(
+              edge.referencedUniqueConstraint,
+            )
+            ? filterNode(
+                tableReference,
+                mergedHeadAuthorizationAndHeadFilter,
+                tableReference.table.getColumnTreeByEdge(edge),
+              )
+            : `EXISTS ${tableReference.subquery(edge, '*', filter.headFilter)}`
+          : undefined,
+      ].filter(utils.isNonNil),
+    );
   } else {
     throw new utils.UnreachableValueError(filter);
   }
@@ -141,6 +228,7 @@ function parseMultipleReverseEdgeFilter(
 ): WhereCondition {
   if (filter instanceof core.MultipleReverseEdgeCountFilter) {
     let operator: string;
+
     switch (filter.operator) {
       case 'eq':
         operator = '=';
@@ -176,11 +264,12 @@ function parseMultipleReverseEdgeFilter(
 function parseBooleanExpression(
   tableReference: TableReference,
   filter: core.BooleanExpression,
+  referenceColumnTree?: ReferenceColumnTree,
 ): WhereCondition {
   if (core.isLeafFilter(filter)) {
-    return parseLeafFilter(tableReference, filter);
+    return parseLeafFilter(tableReference, filter, referenceColumnTree);
   } else if (core.isEdgeFilter(filter)) {
-    return parseEdgeFilter(tableReference, filter);
+    return parseEdgeFilter(tableReference, filter, referenceColumnTree);
   } else if (core.isUniqueReverseEdgeFilter(filter)) {
     return parseUniqueReverseEdgeFilter(tableReference, filter);
   } else if (core.isMultipleReverseEdgeFilter(filter)) {
@@ -193,11 +282,12 @@ function parseBooleanExpression(
 function parseBooleanFilter(
   tableReference: TableReference,
   filter: core.BooleanFilter,
+  referenceColumnTree?: ReferenceColumnTree,
 ): WhereCondition {
   if (core.isBooleanOperation(filter)) {
-    return parseBooleanOperation(tableReference, filter);
+    return parseBooleanOperation(tableReference, filter, referenceColumnTree);
   } else if (core.isBooleanExpression(filter)) {
-    return parseBooleanExpression(tableReference, filter);
+    return parseBooleanExpression(tableReference, filter, referenceColumnTree);
   } else if (filter instanceof core.BooleanValue) {
     return filter.value ? 'TRUE' : 'FALSE';
   } else {
@@ -208,8 +298,15 @@ function parseBooleanFilter(
 export function filterNode(
   tableReference: TableReference,
   nodeFilter: core.NodeFilter,
+  referenceColumnTree?: ReferenceColumnTree,
 ): WhereCondition {
-  assert.equal(tableReference.table.node, nodeFilter.node);
+  referenceColumnTree
+    ? assert.equal(referenceColumnTree.currentEdge.head, nodeFilter.node)
+    : assert.equal(tableReference.table.node, nodeFilter.node);
 
-  return parseBooleanFilter(tableReference, nodeFilter.filter);
+  return parseBooleanFilter(
+    tableReference,
+    nodeFilter.filter,
+    referenceColumnTree,
+  );
 }

@@ -7,6 +7,7 @@ import type {
   Component,
   Leaf,
   LeafValue,
+  UniqueConstraint,
 } from '../../../../../../definition.js';
 import type { NodeFilterInputValue } from '../../../../../../type.js';
 import type { NodeSelectedValue } from '../../../../../selection.js';
@@ -197,6 +198,10 @@ export class LeafInFilter implements BooleanExpressionInterface {
     }
 
     return this.has(leafValue);
+  }
+
+  public isExecutableWithUniqueConstraint(unique: UniqueConstraint): boolean {
+    return unique.leafSet.has(this.leaf);
   }
 
   public isAffectedByNodeUpdate(update: NodeUpdate): boolean {

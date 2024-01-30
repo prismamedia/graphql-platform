@@ -10,7 +10,10 @@ import {
   NodeDeletion,
   NodeUpdate,
 } from '../../../../../../change.js';
-import type { UniqueReverseEdge } from '../../../../../../definition.js';
+import type {
+  UniqueConstraint,
+  UniqueReverseEdge,
+} from '../../../../../../definition.js';
 import type { NodeFilterInputValue } from '../../../../../../type.js';
 import { NodeFilter, areFiltersEqual } from '../../../../../filter.js';
 import type { BooleanFilter } from '../../../../boolean.js';
@@ -130,6 +133,10 @@ export class UniqueReverseEdgeExistsFilter
     return this.headFilter
       ? this.headFilter.execute(reverseEdgeValue, true)
       : true;
+  }
+
+  public isExecutableWithUniqueConstraint(_unique: UniqueConstraint): boolean {
+    return false;
   }
 
   public isAffectedByNodeUpdate(_update: NodeUpdate): boolean {

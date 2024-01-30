@@ -1,8 +1,11 @@
 import * as core from '@prismamedia/graphql-platform';
 import * as utils from '@prismamedia/graphql-platform-utils';
 import { Memoize } from '@prismamedia/memoize';
+import assert from 'node:assert/strict';
 import { escapeIdentifier } from '../../escaping.js';
 import type { MariaDBConnector } from '../../index.js';
+import type { TableReference } from '../../statement/manipulation/clause/table-reference.js';
+import type { WhereCondition } from '../../statement/manipulation/clause/where-condition.js';
 import { ensureIdentifierName } from '../naming-strategy.js';
 import type { Table } from '../table.js';
 import type { ReferenceColumn } from './column/reference.js';
@@ -107,5 +110,20 @@ export class ForeignKey {
     ]
       .filter(Boolean)
       .join(' ');
+  }
+
+  public getJoinConditions(
+    tail: TableReference,
+    head: TableReference,
+  ): Array<WhereCondition> {
+    assert.equal(tail.table.node, this.edge.tail);
+    assert.equal(head.table.node, this.edge.head);
+
+    return this.columns.map(
+      (column) =>
+        `${tail.getEscapedColumnIdentifier(column)} ${
+          column.referencedColumn.isNullable() ? '<=>' : '='
+        } ${head.getEscapedColumnIdentifier(column.referencedColumn)}`,
+    );
   }
 }

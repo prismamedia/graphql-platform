@@ -21,7 +21,7 @@ exports[`Find statement 0 - generates statements 1`] = `
     (
       SELECT COUNT(*)
       FROM \`article_tags\` AS \`articles>tags\`
-      WHERE \`articles\`.\`private_id\` = \`articles>tags\`.\`article_private_id\`
+      WHERE \`articles>tags\`.\`article_private_id\` = \`articles\`.\`private_id\`
     ),
     "createdAt",
     \`articles\`.\`created_at\`,
@@ -32,19 +32,34 @@ exports[`Find statement 0 - generates statements 1`] = `
       "title",
       \`articles\`.\`title\`,
       "category",
-      (
-        SELECT JSON_OBJECT("title", \`articles>category\`.\`title\`)
-        FROM \`categories\` AS \`articles>category\`
-        WHERE \`articles\`.\`category_private_id\` <=> \`articles>category\`.\`private_id\`
-        LIMIT 1
+      IF(
+        \`articles\`.\`category_private_id\` IS NOT NULL,
+        (
+          SELECT JSON_OBJECT("title", \`articles>category\`.\`title\`)
+          FROM \`categories\` AS \`articles>category\`
+          WHERE \`articles\`.\`category_private_id\` = \`articles>category\`.\`private_id\`
+          LIMIT 1
+        ), NULL
       )
-    ), "upperCasedTitle", JSON_OBJECT(
-      "status", \`articles\`.\`status\`, "title", \`articles\`.\`title\`, "category", (
-        SELECT JSON_OBJECT("title", \`articles>category\`.\`title\`)
-        FROM \`categories\` AS \`articles>category\`
-        WHERE \`articles\`.\`category_private_id\` <=> \`articles>category\`.\`private_id\`
-        LIMIT 1
-      ), "tags", (
+    ),
+    "upperCasedTitle",
+    JSON_OBJECT(
+      "status",
+      \`articles\`.\`status\`,
+      "title",
+      \`articles\`.\`title\`,
+      "category",
+      IF(
+        \`articles\`.\`category_private_id\` IS NOT NULL,
+        (
+          SELECT JSON_OBJECT("title", \`articles>category\`.\`title\`)
+          FROM \`categories\` AS \`articles>category\`
+          WHERE \`articles\`.\`category_private_id\` = \`articles>category\`.\`private_id\`
+          LIMIT 1
+        ), NULL
+      ),
+      "tags",
+      (
         SELECT JSON_ARRAYAGG(
             JSON_OBJECT(
               "tag",
@@ -59,7 +74,7 @@ exports[`Find statement 0 - generates statements 1`] = `
             LIMIT 2
           )
         FROM \`article_tags\` AS \`articles>tags\`
-        WHERE \`articles\`.\`private_id\` = \`articles>tags\`.\`article_private_id\`
+        WHERE \`articles>tags\`.\`article_private_id\` = \`articles\`.\`private_id\`
       )
     )
   ) as \`Article\`
@@ -87,53 +102,102 @@ LIMIT 5",
 exports[`Find statement 2 - generates statements 1`] = `
 [
   "SELECT JSON_OBJECT(
+    "title",
+    \`articles\`.\`title\`,
+    "category",
+    IF(
+      \`articles\`.\`category_private_id\` IS NOT NULL,
+      JSON_OBJECT("_id", \`articles\`.\`category_private_id\`),
+      NULL
+    )
+  ) as \`Article\`
+FROM \`articles\`
+WHERE NOT \`articles\`.\`category_private_id\` IS NOT NULL
+LIMIT 5",
+]
+`;
+
+exports[`Find statement 3 - generates statements 1`] = `
+[
+  "SELECT JSON_OBJECT(
+    "title",
+    \`articles\`.\`title\`,
+    "category",
+    IF(
+      \`articles\`.\`category_private_id\` IS NOT NULL,
+      JSON_OBJECT("_id", \`articles\`.\`category_private_id\`),
+      NULL
+    )
+  ) as \`Article\`
+FROM \`articles\`
+WHERE (
+    \`articles\`.\`category_private_id\` IS NOT NULL
+    AND \`articles\`.\`category_private_id\` = 5
+  )
+LIMIT 5",
+]
+`;
+
+exports[`Find statement 4 - generates statements 1`] = `
+[
+  "SELECT JSON_OBJECT(
     "status",
     \`articles\`.\`status\`,
     "title",
     \`articles\`.\`title\`,
     "category",
-    (
-      SELECT JSON_OBJECT("title", \`articles>category\`.\`title\`)
-      FROM \`categories\` AS \`articles>category\`
-      WHERE \`articles\`.\`category_private_id\` <=> \`articles>category\`.\`private_id\`
-      LIMIT 1
-    ), "createdBy", (
-      SELECT JSON_OBJECT(
-          "username",
-          \`articles>createdBy\`.\`username\`,
-          "profile",
-          (
-            SELECT JSON_OBJECT(
-                "facebookId",
-                \`articles>createdBy>profile\`.\`facebook_id\`,
-                "googleId",
-                \`articles>createdBy>profile\`.\`google_id\`,
-                "twitterHandle",
-                \`articles>createdBy>profile\`.\`twitter_handle\`
-              )
-            FROM \`user_profiles\` AS \`articles>createdBy>profile\`
-            WHERE \`articles>createdBy\`.\`id\` = \`articles>createdBy>profile\`.\`theUserId\`
-            LIMIT 1
+    IF(
+      \`articles\`.\`category_private_id\` IS NOT NULL,
+      (
+        SELECT JSON_OBJECT("title", \`articles>category\`.\`title\`)
+        FROM \`categories\` AS \`articles>category\`
+        WHERE \`articles\`.\`category_private_id\` = \`articles>category\`.\`private_id\`
+        LIMIT 1
+      ), NULL
+    ),
+    "createdBy",
+    IF(
+      \`articles\`.\`created_by_id\` IS NOT NULL,
+      (
+        SELECT JSON_OBJECT(
+            "username",
+            \`articles>createdBy\`.\`username\`,
+            "profile",
+            (
+              SELECT JSON_OBJECT(
+                  "facebookId",
+                  \`articles>createdBy>profile\`.\`facebook_id\`,
+                  "googleId",
+                  \`articles>createdBy>profile\`.\`google_id\`,
+                  "twitterHandle",
+                  \`articles>createdBy>profile\`.\`twitter_handle\`
+                )
+              FROM \`user_profiles\` AS \`articles>createdBy>profile\`
+              WHERE \`articles>createdBy>profile\`.\`theUserId\` = \`articles>createdBy\`.\`id\`
+              LIMIT 1
+            )
           )
-        )
-      FROM \`users\` AS \`articles>createdBy\`
-      WHERE \`articles\`.\`created_by_id\` <=> \`articles>createdBy\`.\`id\`
-      LIMIT 1
-    ), "allTagCount", (
+        FROM \`users\` AS \`articles>createdBy\`
+        WHERE \`articles\`.\`created_by_id\` = \`articles>createdBy\`.\`id\`
+        LIMIT 1
+      ), NULL
+    ),
+    "allTagCount",
+    (
       SELECT COUNT(*)
       FROM \`article_tags\` AS \`articles>tags\`
-      WHERE \`articles\`.\`private_id\` = \`articles>tags\`.\`article_private_id\`
+      WHERE \`articles>tags\`.\`article_private_id\` = \`articles\`.\`private_id\`
     ),
     "filteredTagCount",
     (
       SELECT COUNT(*)
       FROM \`article_tags\` AS \`articles>tags\`
-      WHERE \`articles\`.\`private_id\` = \`articles>tags\`.\`article_private_id\`
+      WHERE \`articles>tags\`.\`article_private_id\` = \`articles\`.\`private_id\`
         AND NOT EXISTS (
           SELECT *
           FROM \`tags\` AS \`articles>tags>tag\`
           WHERE \`articles>tags\`.\`tag_id\` = \`articles>tags>tag\`.\`id\`
-            AND \`articles>tags>tag\`.\`deprecated\` <=> 1
+            AND \`articles>tags>tag\`.\`deprecated\` = 1
           LIMIT 1
         )
     ), "allTags", (
@@ -158,7 +222,7 @@ exports[`Find statement 2 - generates statements 1`] = `
           LIMIT 5
         )
       FROM \`article_tags\` AS \`articles>tags\`
-      WHERE \`articles\`.\`private_id\` = \`articles>tags\`.\`article_private_id\`
+      WHERE \`articles>tags\`.\`article_private_id\` = \`articles\`.\`private_id\`
     ),
     "filteredTags",
     (
@@ -178,12 +242,12 @@ exports[`Find statement 2 - generates statements 1`] = `
           LIMIT 5
         )
       FROM \`article_tags\` AS \`articles>tags\`
-      WHERE \`articles\`.\`private_id\` = \`articles>tags\`.\`article_private_id\`
+      WHERE \`articles>tags\`.\`article_private_id\` = \`articles\`.\`private_id\`
         AND NOT EXISTS (
           SELECT *
           FROM \`tags\` AS \`articles>tags>tag\`
           WHERE \`articles>tags\`.\`tag_id\` = \`articles>tags>tag\`.\`id\`
-            AND \`articles>tags>tag\`.\`deprecated\` <=> 1
+            AND \`articles>tags>tag\`.\`deprecated\` = 1
           LIMIT 1
         )
     )
@@ -191,56 +255,59 @@ exports[`Find statement 2 - generates statements 1`] = `
 FROM \`articles\`
 WHERE (
     \`articles\`.\`status\` = 'published'
-    AND EXISTS (
-      SELECT *
-      FROM \`categories\` AS \`articles>category\`
-      WHERE \`articles\`.\`category_private_id\` <=> \`articles>category\`.\`private_id\`
-        AND \`articles>category\`.\`slug\` = 'tv'
-      LIMIT 1
+    AND (
+      \`articles\`.\`category_private_id\` IS NOT NULL
+      AND EXISTS (
+        SELECT *
+        FROM \`categories\` AS \`articles>category\`
+        WHERE \`articles\`.\`category_private_id\` = \`articles>category\`.\`private_id\`
+          AND \`articles>category\`.\`slug\` = 'tv'
+        LIMIT 1
+      )
     )
-    AND EXISTS (
-      SELECT *
-      FROM \`users\` AS \`articles>createdBy\`
-      WHERE \`articles\`.\`created_by_id\` <=> \`articles>createdBy\`.\`id\`
-        AND EXISTS (
-          SELECT *
-          FROM \`user_profiles\` AS \`articles>createdBy>profile\`
-          WHERE \`articles>createdBy\`.\`id\` = \`articles>createdBy>profile\`.\`theUserId\`
-            AND (
-              NOT (
-                \`articles>createdBy>profile\`.\`facebook_id\` <=> NULL
+    AND (
+      \`articles\`.\`created_by_id\` IS NOT NULL
+      AND EXISTS (
+        SELECT *
+        FROM \`users\` AS \`articles>createdBy\`
+        WHERE \`articles\`.\`created_by_id\` = \`articles>createdBy\`.\`id\`
+          AND EXISTS (
+            SELECT *
+            FROM \`user_profiles\` AS \`articles>createdBy>profile\`
+            WHERE \`articles>createdBy>profile\`.\`theUserId\` = \`articles>createdBy\`.\`id\`
+              AND (
+                \`articles>createdBy>profile\`.\`facebook_id\` IS NOT NULL
+                OR \`articles>createdBy>profile\`.\`google_id\` IS NOT NULL
+                OR \`articles>createdBy>profile\`.\`twitter_handle\` IS NOT NULL
               )
-              OR NOT (
-                \`articles>createdBy>profile\`.\`google_id\` <=> NULL
-              )
-              OR NOT (
-                \`articles>createdBy>profile\`.\`twitter_handle\` <=> NULL
-              )
-            )
-          LIMIT 1
-        )
-      LIMIT 1
+            LIMIT 1
+          )
+        LIMIT 1
+      )
     )
     AND \`articles\`.\`created_at\` >= '2022-01-01 00:00:00.000'
     AND EXISTS (
       SELECT *
       FROM \`article_tags\` AS \`articles>tags\`
-      WHERE \`articles\`.\`private_id\` = \`articles>tags\`.\`article_private_id\`
+      WHERE \`articles>tags\`.\`article_private_id\` = \`articles\`.\`private_id\`
         AND EXISTS (
           SELECT *
           FROM \`tags\` AS \`articles>tags>tag\`
           WHERE \`articles>tags\`.\`tag_id\` = \`articles>tags>tag\`.\`id\`
-            AND NOT (\`articles>tags>tag\`.\`deprecated\` <=> 1)
+            AND (
+              \`articles>tags>tag\`.\`deprecated\` IS NULL
+              OR \`articles>tags>tag\`.\`deprecated\` != 1
+            )
           LIMIT 1
         )
     )
     AND (
       SELECT COUNT(*)
       FROM \`article_tags\` AS \`articles>tags\`
-      WHERE \`articles\`.\`private_id\` = \`articles>tags\`.\`article_private_id\`
+      WHERE \`articles>tags\`.\`article_private_id\` = \`articles\`.\`private_id\`
     ) > 5
     AND (
-      \`articles\`.\`body\` <=> NULL
+      \`articles\`.\`body\` IS NULL
       OR JSON_SEARCH(
         \`articles\`.\`body\`,
         'one',
@@ -269,7 +336,7 @@ LIMIT 5",
 ]
 `;
 
-exports[`Find statement 3 - generates statements 1`] = `
+exports[`Find statement 5 - generates statements 1`] = `
 [
   "SELECT JSON_OBJECT(
     "title",
@@ -282,7 +349,7 @@ exports[`Find statement 3 - generates statements 1`] = `
           LIMIT 1 OFFSET 1
         )
       FROM \`article_tags\` AS \`articles>tags\`
-      WHERE \`articles\`.\`private_id\` = \`articles>tags\`.\`article_private_id\`
+      WHERE \`articles>tags\`.\`article_private_id\` = \`articles\`.\`private_id\`
     ),
     "penultimate",
     (
@@ -292,7 +359,7 @@ exports[`Find statement 3 - generates statements 1`] = `
           LIMIT 1 OFFSET 1
         )
       FROM \`article_tags\` AS \`articles>tags\`
-      WHERE \`articles\`.\`private_id\` = \`articles>tags\`.\`article_private_id\`
+      WHERE \`articles>tags\`.\`article_private_id\` = \`articles\`.\`private_id\`
     ),
     "all",
     (
@@ -302,21 +369,21 @@ exports[`Find statement 3 - generates statements 1`] = `
           LIMIT 10
         )
       FROM \`article_tags\` AS \`articles>tags\`
-      WHERE \`articles\`.\`private_id\` = \`articles>tags\`.\`article_private_id\`
+      WHERE \`articles>tags\`.\`article_private_id\` = \`articles\`.\`private_id\`
     )
   ) as \`Article\`
 FROM \`articles\`
 WHERE (
     SELECT COUNT(*)
     FROM \`article_tags\` AS \`articles>tags\`
-    WHERE \`articles\`.\`private_id\` = \`articles>tags\`.\`article_private_id\`
+    WHERE \`articles>tags\`.\`article_private_id\` = \`articles\`.\`private_id\`
   ) > 1
 ORDER BY \`articles\`.\`created_at\` ASC
 LIMIT 1",
 ]
 `;
 
-exports[`Find statement 4 - generates statements 1`] = `
+exports[`Find statement 6 - generates statements 1`] = `
 [
   "SELECT JSON_OBJECT(
     "title",
@@ -325,32 +392,60 @@ exports[`Find statement 4 - generates statements 1`] = `
     (
       SELECT COUNT(*)
       FROM \`categories\` AS \`categories>children\`
-      WHERE \`categories\`.\`private_id\` <=> \`categories>children\`.\`parent_private_id\`
+      WHERE \`categories>children\`.\`parent_private_id\` = \`categories\`.\`private_id\`
     ),
     "children",
     (
       SELECT JSON_ARRAYAGG(
           JSON_OBJECT(
             "parent",
-            (
-              SELECT JSON_OBJECT("title", \`categories>children>parent\`.\`title\`)
-              FROM \`categories\` AS \`categories>children>parent\`
-              WHERE \`categories>children\`.\`parent_private_id\` <=> \`categories>children>parent\`.\`private_id\`
-              LIMIT 1
-            ), "title", \`categories>children\`.\`title\`
+            IF(
+              \`categories>children\`.\`parent_private_id\` IS NOT NULL,
+              (
+                SELECT JSON_OBJECT("title", \`categories>children>parent\`.\`title\`)
+                FROM \`categories\` AS \`categories>children>parent\`
+                WHERE \`categories>children\`.\`parent_private_id\` = \`categories>children>parent\`.\`private_id\`
+                LIMIT 1
+              ), NULL
+            ),
+            "title",
+            \`categories>children\`.\`title\`
           )
           LIMIT 10
         )
       FROM \`categories\` AS \`categories>children\`
-      WHERE \`categories\`.\`private_id\` <=> \`categories>children\`.\`parent_private_id\`
+      WHERE \`categories>children\`.\`parent_private_id\` = \`categories\`.\`private_id\`
     )
   ) as \`Category\`
 FROM \`categories\`
-WHERE NOT EXISTS (
-    SELECT *
-    FROM \`categories\` AS \`categories>parent\`
-    WHERE \`categories\`.\`parent_private_id\` <=> \`categories>parent\`.\`private_id\`
-    LIMIT 1
+WHERE NOT \`categories\`.\`parent_private_id\` IS NOT NULL
+LIMIT 1",
+]
+`;
+
+exports[`Find statement 7 - generates statements 1`] = `
+[
+  "SELECT JSON_OBJECT(
+    "moderation",
+    \`article_tag_moderations\`.\`moderation\`,
+    "articleTag",
+    JSON_OBJECT(
+      "article",
+      JSON_OBJECT(
+        "_id",
+        \`article_tag_moderations\`.\`theArticlePrivateId\`
+      ),
+      "tag",
+      JSON_OBJECT("id", \`article_tag_moderations\`.\`theTagId\`)
+    )
+  ) as \`ArticleTagModeration\`
+FROM \`article_tag_moderations\`
+WHERE (
+    (
+      \`article_tag_moderations\`.\`theArticlePrivateId\` = 5
+      AND \`article_tag_moderations\`.\`theTagId\` = '5d6e37f3-0416-4f4a-a405-66b67cc590b9'
+    )
+    AND \`article_tag_moderations\`.\`moderation\` IS NOT NULL
   )
 LIMIT 1",
 ]

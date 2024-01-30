@@ -2,7 +2,11 @@ import { Memoize } from '@prismamedia/memoize';
 import assert from 'node:assert/strict';
 import { NodeValue } from '../../../../../../../node.js';
 import { NodeChange, NodeUpdate } from '../../../../../../change.js';
-import type { Component, Edge } from '../../../../../../definition.js';
+import type {
+  Component,
+  Edge,
+  UniqueConstraint,
+} from '../../../../../../definition.js';
 import type { NodeFilterInputValue } from '../../../../../../type.js';
 import { NodeFilter, areFiltersEqual } from '../../../../../filter.js';
 import type { NodeSelectedValue } from '../../../../../selection.js';
@@ -107,6 +111,16 @@ export class EdgeExistsFilter implements BooleanExpressionInterface {
     }
 
     return this.headFilter ? this.headFilter.execute(edgeValue, true) : true;
+  }
+
+  public isExecutableWithUniqueConstraint(unique: UniqueConstraint): boolean {
+    return (
+      unique.edgeSet.has(this.edge) &&
+      (!this.headFilter ||
+        this.headFilter.isExecutableWithUniqueConstraint(
+          this.edge.referencedUniqueConstraint,
+        ))
+    );
   }
 
   public isAffectedByNodeUpdate(update: NodeUpdate): boolean {

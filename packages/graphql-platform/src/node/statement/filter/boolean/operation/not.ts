@@ -1,4 +1,8 @@
-import type { NodeSelectedValue, NodeValue } from '../../../../../node.js';
+import type {
+  NodeSelectedValue,
+  NodeValue,
+  UniqueConstraint,
+} from '../../../../../node.js';
 import type { NodeChange, NodeUpdate } from '../../../../change.js';
 import type { NodeFilterInputValue } from '../../../../type.js';
 import type { BooleanFilter } from '../../boolean.js';
@@ -66,6 +70,10 @@ export class NotOperation implements BooleanExpressionInterface {
     const result = this.operand.execute(value);
 
     return result === undefined ? undefined : !result;
+  }
+
+  public isExecutableWithUniqueConstraint(unique: UniqueConstraint): boolean {
+    return this.operand.isExecutableWithUniqueConstraint(unique);
   }
 
   public isAffectedByNodeUpdate(update: NodeUpdate): boolean {

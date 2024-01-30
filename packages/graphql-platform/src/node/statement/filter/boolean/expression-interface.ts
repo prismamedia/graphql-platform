@@ -1,4 +1,4 @@
-import type { NodeValue } from '../../../../node.js';
+import type { NodeValue, UniqueConstraint } from '../../../../node.js';
 import type { NodeChange, NodeUpdate } from '../../../change.js';
 import type { NodeSelectedValue } from '../../selection.js';
 import type { AndOperand, BooleanFilter, OrOperand } from '../boolean.js';
@@ -46,7 +46,12 @@ export interface BooleanExpressionInterface {
   execute(value: NodeSelectedValue): boolean | undefined;
 
   /**
-   * Is the provided update affecting this expression?
+   * Is the provided unique-constraint's value enough to execute this filter's expression?
+   */
+  isExecutableWithUniqueConstraint(unique: UniqueConstraint): boolean;
+
+  /**
+   * Is the provided node-update affecting this filter's expression?
    */
   isAffectedByNodeUpdate(update: NodeUpdate): boolean;
 

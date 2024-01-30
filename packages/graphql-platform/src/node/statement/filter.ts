@@ -1,6 +1,6 @@
 import { Memoize } from '@prismamedia/memoize';
 import assert from 'node:assert/strict';
-import type { Node, NodeValue } from '../../node.js';
+import type { Node, NodeValue, UniqueConstraint } from '../../node.js';
 import type { NodeChange, NodeUpdate } from '../change.js';
 import type { NodeFilterInputValue } from '../type.js';
 import type { BooleanFilter } from './filter/boolean.js';
@@ -100,6 +100,18 @@ export class NodeFilter {
     return result as any;
   }
 
+  /**
+   * Is the provided unique-constraint's value enough to execute this filter?
+   */
+  public isExecutableWithUniqueConstraint(unique: UniqueConstraint): boolean {
+    assert.equal(unique.node, this.node);
+
+    return this.filter.isExecutableWithUniqueConstraint(unique);
+  }
+
+  /**
+   * Is the provided node-update affecting this filter?
+   */
   public isAffectedByNodeUpdate(update: NodeUpdate): boolean {
     assert.equal(update.node, this.node);
 

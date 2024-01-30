@@ -4,7 +4,7 @@ import {
   createMyGP,
   type MyGP,
 } from '../../__tests__/config.js';
-import type { Node } from '../../node.js';
+import type { Node, UniqueConstraint } from '../../node.js';
 import { NodeCreation, NodeDeletion, NodeUpdate } from '../change.js';
 import type { NodeFilterInputValue } from '../type/input/filter.js';
 import type { NodeFilter } from './filter.js';
@@ -22,6 +22,34 @@ describe('Filter', () => {
     Article = gp.getNodeByName('Article');
     ArticleExtension = gp.getNodeByName('ArticleExtension');
     UserProfile = gp.getNodeByName('UserProfile');
+  });
+
+  describe('Definition', () => {
+    it.each<
+      [
+        nodeName: string,
+        filter: NodeFilterInputValue,
+        uniqueName: UniqueConstraint['name'],
+        expected: boolean,
+      ]
+    >([
+      ['Article', { title_contains: 'newss' }, '_id', false],
+
+      ['Article', { _id: 5 }, '_id', true],
+      ['Article', { OR: [{ _id: 5 }, { _id_gt: 6 }] }, '_id', true],
+    ])(
+      '%# - %s.filter(%p).isExecutableWithUnique(%p) = %p',
+      (nodeName, filter, uniqueName, expected) => {
+        const node = gp.getNodeByName(nodeName);
+        const unique = node.getUniqueConstraintByName(uniqueName);
+
+        expect(
+          node.filterInputType
+            .parseAndFilter(filter)
+            .isExecutableWithUniqueConstraint(unique),
+        ).toEqual(expected);
+      },
+    );
   });
 
   describe('Execution', () => {

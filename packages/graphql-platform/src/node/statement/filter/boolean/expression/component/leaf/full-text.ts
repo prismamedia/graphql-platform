@@ -3,6 +3,7 @@ import * as utils from '@prismamedia/graphql-platform-utils';
 import type {
   NodeSelectedValue,
   NodeValue,
+  UniqueConstraint,
 } from '../../../../../../../node.js';
 import type { NodeChange, NodeUpdate } from '../../../../../../change.js';
 import type {
@@ -104,6 +105,10 @@ export class LeafFullTextFilter implements BooleanExpressionInterface {
       default:
         throw new utils.UnreachableValueError(this.operator);
     }
+  }
+
+  public isExecutableWithUniqueConstraint(unique: UniqueConstraint): boolean {
+    return unique.leafSet.has(this.leaf);
   }
 
   public isAffectedByNodeUpdate(update: NodeUpdate): boolean {

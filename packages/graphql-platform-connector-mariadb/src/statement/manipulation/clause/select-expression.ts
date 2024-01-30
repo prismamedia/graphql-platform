@@ -1,26 +1,107 @@
 import * as core from '@prismamedia/graphql-platform';
 import * as utils from '@prismamedia/graphql-platform-utils';
 import assert from 'node:assert/strict';
+import type { ReferenceColumnTree } from '../../../schema.js';
 import { orderNode } from './ordering-expression.js';
 import type { TableReference } from './table-reference.js';
+import { AND, OR, filterNode } from './where-condition.js';
 
 export type SelectExpression = string;
 
 function parseLeafSelection(
   tableReference: TableReference,
   selection: core.LeafSelection,
+  referenceColumnTree?: ReferenceColumnTree,
 ): string {
-  return tableReference.getEscapedColumnIdentifierByLeaf(selection.leaf);
+  const column =
+    referenceColumnTree?.getColumnByLeaf(selection.leaf) ??
+    tableReference.table.getColumnByLeaf(selection.leaf);
+
+  return tableReference.getEscapedColumnIdentifier(column);
 }
 
 function parseEdgeSelection(
   tableReference: TableReference,
   selection: core.EdgeSelection,
+  referenceColumnTree?: ReferenceColumnTree,
 ): string {
+  const edge = selection.edge;
+
   if (selection instanceof core.EdgeHeadSelection) {
-    return tableReference.subquery(selection.edge, (headReference) =>
-      selectNode(headReference, selection.headSelection),
+    if (referenceColumnTree) {
+      const subTree = referenceColumnTree.getColumnTreeByEdge(edge);
+
+      const parsedHeadSelection = selectNode(
+        tableReference,
+        selection.headSelection,
+        subTree,
+      );
+
+      return edge.isNullable()
+        ? `IF(
+          ${OR(
+            subTree.columns.map(
+              (column) =>
+                `${tableReference.getEscapedColumnIdentifier(
+                  column,
+                )} IS NOT NULL`,
+            ),
+          )},
+          ${parsedHeadSelection},
+          NULL
+        )`
+        : parsedHeadSelection;
+    }
+
+    const headAuthorization = tableReference.context.getAuthorization(
+      edge.head,
     );
+
+    const parsedHeadAuthorization =
+      headAuthorization?.isExecutableWithUniqueConstraint(
+        edge.referencedUniqueConstraint,
+      )
+        ? filterNode(
+            tableReference,
+            headAuthorization,
+            tableReference.table.getColumnTreeByEdge(edge),
+          )
+        : undefined;
+
+    const parsedHeadSelection =
+      edge.referencedUniqueConstraint.selection.isSupersetOf(
+        selection.headSelection,
+      )
+        ? selectNode(
+            tableReference,
+            selection.headSelection,
+            tableReference.table.getColumnTreeByEdge(edge),
+          )
+        : tableReference.subquery(selection.edge, (headReference) =>
+            selectNode(headReference, selection.headSelection),
+          );
+
+    return edge.isNullable() || parsedHeadAuthorization
+      ? `IF(
+        ${AND(
+          [
+            OR(
+              tableReference.table
+                .getForeignKeyByEdge(edge)
+                .columns.map(
+                  (column) =>
+                    `${tableReference.getEscapedColumnIdentifier(
+                      column,
+                    )} IS NOT NULL`,
+                ),
+            ),
+            parsedHeadAuthorization,
+          ].filter(utils.isNonNil),
+        )},
+        ${parsedHeadSelection},
+        NULL
+      )`
+      : parsedHeadSelection;
   } else {
     throw new utils.UnreachableValueError(selection);
   }
@@ -72,18 +153,23 @@ function parseMultipleReverseEdgeSelection(
 function parseSelectionExpression(
   tableReference: TableReference,
   selection: core.SelectionExpression,
+  referenceColumnTree?: ReferenceColumnTree,
 ): string {
   if (selection instanceof core.LeafSelection) {
-    return parseLeafSelection(tableReference, selection);
+    return parseLeafSelection(tableReference, selection, referenceColumnTree);
   } else if (core.isEdgeSelection(selection)) {
-    return parseEdgeSelection(tableReference, selection);
+    return parseEdgeSelection(tableReference, selection, referenceColumnTree);
   } else if (core.isUniqueReverseEdgeSelection(selection)) {
     return parseUniqueReverseEdgeSelection(tableReference, selection);
   } else if (core.isMultipleReverseEdgeSelection(selection)) {
     return parseMultipleReverseEdgeSelection(tableReference, selection);
   } else if (selection instanceof core.VirtualSelection) {
     return selection.type.dependencies
-      ? selectNode(tableReference, selection.type.dependencies)
+      ? selectNode(
+          tableReference,
+          selection.type.dependencies,
+          referenceColumnTree,
+        )
       : 'NULL';
   } else {
     throw new utils.UnreachableValueError(selection);
@@ -96,13 +182,16 @@ function parseSelectionExpression(
 export function selectNode(
   tableReference: TableReference,
   nodeSelection: core.NodeSelection,
+  referenceColumnTree?: ReferenceColumnTree,
 ): SelectExpression {
-  assert.equal(tableReference.table.node, nodeSelection.node);
+  referenceColumnTree
+    ? assert.equal(referenceColumnTree.currentEdge.head, nodeSelection.node)
+    : assert.equal(tableReference.table.node, nodeSelection.node);
 
   return `JSON_OBJECT(${nodeSelection.expressions
     .flatMap((expression) => [
       `"${expression.key}"`,
-      parseSelectionExpression(tableReference, expression),
+      parseSelectionExpression(tableReference, expression, referenceColumnTree),
     ])
     .join(', ')})`;
 }

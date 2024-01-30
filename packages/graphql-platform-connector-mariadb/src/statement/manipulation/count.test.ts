@@ -38,6 +38,16 @@ describe('Count statement', () => {
         },
       },
     ],
+    [
+      'Article',
+      myAdminContext,
+      {
+        where: {
+          status: ArticleStatus.PUBLISHED,
+          category: { _id: 10 },
+        },
+      },
+    ],
   ])('generates statements', async (nodeName, context, args) => {
     executedStatements.length = 0;
 

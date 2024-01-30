@@ -1,6 +1,10 @@
 import { Memoize } from '@prismamedia/memoize';
 import assert from 'node:assert/strict';
-import type { NodeSelectedValue, NodeValue } from '../../../../node.js';
+import type {
+  NodeSelectedValue,
+  NodeValue,
+  UniqueConstraint,
+} from '../../../../node.js';
 import type { NodeChange, NodeUpdate } from '../../../change.js';
 import type { NodeFilterInputValue } from '../../../type.js';
 import type { BooleanFilter } from '../boolean.js';
@@ -40,6 +44,10 @@ export class BooleanValue implements BooleanExpressionInterface {
 
   public execute(_value: NodeSelectedValue): boolean {
     return this.value;
+  }
+
+  public isExecutableWithUniqueConstraint(_unique: UniqueConstraint): boolean {
+    return true;
   }
 
   public isAffectedByNodeUpdate(_update: NodeUpdate): boolean {

@@ -148,6 +148,32 @@ describe('Find statement', () => {
       'Article',
       myAdminContext,
       {
+        where: { category_is_null: true },
+        first: 5,
+        selection: `{
+          title
+          category { _id }
+        }`,
+      },
+      [],
+    ],
+    [
+      'Article',
+      myAdminContext,
+      {
+        where: { category: { _id: 5 } },
+        first: 5,
+        selection: `{
+          title
+          category { _id }
+        }`,
+      },
+      [],
+    ],
+    [
+      'Article',
+      myAdminContext,
+      {
         where: {
           OR: [
             { body_is_null: true },
@@ -265,6 +291,28 @@ describe('Find statement', () => {
           ],
         },
       ],
+    ],
+    [
+      'ArticleTagModeration',
+      myAdminContext,
+      {
+        where: {
+          moderation_is_null: false,
+          articleTag: {
+            article: { _id: 5 },
+            tag: { id: '5d6e37f3-0416-4f4a-a405-66b67cc590b9' },
+          },
+        },
+        first: 1,
+        selection: `{
+          moderation
+          articleTag {
+            article { _id },
+            tag { id },
+          },
+        }`,
+      },
+      [],
     ],
   ])(
     '%# - generates statements',

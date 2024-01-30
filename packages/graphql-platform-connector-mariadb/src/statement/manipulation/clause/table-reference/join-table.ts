@@ -3,7 +3,7 @@ import { Memoize } from '@prismamedia/memoize';
 import { escapeIdentifier } from '../../../../escaping.js';
 import { AbstractTableReference } from '../abstract-table-reference.js';
 import type { TableReference } from '../table-reference.js';
-import { filterNode } from '../where-condition.js';
+import { WhereCondition, filterNode } from '../where-condition.js';
 
 export enum JoinTableKind {
   LEFT,
@@ -14,24 +14,26 @@ export enum JoinTableKind {
  * @see https://mariadb.com/kb/en/join-syntax/
  */
 export class JoinTable extends AbstractTableReference {
-  protected readonly authorization?: core.NodeFilter;
   public override readonly alias: string;
   public override readonly depth: number;
+
+  protected readonly authorization?: core.NodeFilter;
 
   public constructor(
     public readonly parent: TableReference,
     public readonly edgeOrUniqueReverseEdge: core.Edge | core.UniqueReverseEdge,
   ) {
-    const head = parent.table.schema.getTableByNode(
-      edgeOrUniqueReverseEdge.head,
+    super(
+      parent.table.schema.getTableByNode(edgeOrUniqueReverseEdge.head),
+      parent.context,
     );
-    super(head, parent.context);
 
-    this.authorization = parent.context.getAuthorization(
-      edgeOrUniqueReverseEdge.head,
-    );
     this.alias = `${parent.alias}>${edgeOrUniqueReverseEdge.name}`;
     this.depth = parent.depth + 1;
+
+    this.authorization = this.context.getAuthorization(
+      edgeOrUniqueReverseEdge.head,
+    );
   }
 
   public get kind(): JoinTableKind {
@@ -43,31 +45,9 @@ export class JoinTable extends AbstractTableReference {
   }
 
   @Memoize()
-  public get condition(): string {
+  public get condition(): WhereCondition {
     return [
-      ...(this.edgeOrUniqueReverseEdge instanceof core.Edge
-        ? this.parent.table
-            .getForeignKeyByEdge(this.edgeOrUniqueReverseEdge)
-            .columns.map(
-              (column) =>
-                `${this.parent.getEscapedColumnIdentifier(column)} ${
-                  column.isNullable() || column.referencedColumn.isNullable()
-                    ? '<=>'
-                    : '='
-                } ${this.getEscapedColumnIdentifier(column.referencedColumn)}`,
-            )
-        : this.table
-            .getForeignKeyByEdge(this.edgeOrUniqueReverseEdge.originalEdge)
-            .columns.map(
-              (column) =>
-                `${this.parent.getEscapedColumnIdentifier(
-                  column.referencedColumn,
-                )} ${
-                  column.referencedColumn.isNullable() || column.isNullable()
-                    ? '<=>'
-                    : '='
-                } ${this.getEscapedColumnIdentifier(column)}`,
-            )),
+      ...this.parent.getJoinConditions(this.edgeOrUniqueReverseEdge, this),
       this.authorization ? filterNode(this, this.authorization) : undefined,
     ]
       .filter(Boolean)

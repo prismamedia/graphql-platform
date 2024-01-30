@@ -86,7 +86,8 @@ export interface ReferenceColumnTreeConfig {
  * The columns are grouped by their referenced component
  */
 export class ReferenceColumnTree {
-  readonly #currentEdge: core.Edge<MariaDBConnector>;
+  public readonly currentEdge: core.Edge<MariaDBConnector>;
+
   readonly #columnsByLeaf: ReadonlyMap<core.Leaf, ReferenceColumn>;
   readonly #columnTreesByEdge: ReadonlyMap<core.Edge, ReferenceColumnTree>;
 
@@ -122,14 +123,14 @@ export class ReferenceColumnTree {
 
     // current-edge
     {
-      this.#currentEdge = path.at(-1) ?? root;
+      this.currentEdge = path.at(-1) ?? root;
     }
 
     // columns-by-leaf
     {
       this.#columnsByLeaf = new Map(
         Array.from(
-          this.#currentEdge.referencedUniqueConstraint.leafSet,
+          this.currentEdge.referencedUniqueConstraint.leafSet,
           (leaf) => [
             leaf,
             new ReferenceColumn(
@@ -153,7 +154,7 @@ export class ReferenceColumnTree {
     {
       this.#columnTreesByEdge = new Map(
         Array.from(
-          this.#currentEdge.referencedUniqueConstraint.edgeSet,
+          this.currentEdge.referencedUniqueConstraint.edgeSet,
           (edge) => [
             edge,
             new ReferenceColumnTree(schema, root, [...path, edge]),
@@ -176,9 +177,7 @@ export class ReferenceColumnTree {
     const column = this.#columnsByLeaf.get(leaf);
     assert(
       column,
-      `The leaf "${leaf}" is not part of the unique-constraint "${
-        this.#currentEdge.referencedUniqueConstraint
-      }"`,
+      `The leaf "${leaf}" is not part of the unique-constraint "${this.currentEdge.referencedUniqueConstraint}"`,
     );
 
     return column;
@@ -188,9 +187,7 @@ export class ReferenceColumnTree {
     const columnTree = this.#columnTreesByEdge.get(edge);
     assert(
       columnTree,
-      `The edge "${edge}" is not part of the unique-constraint "${
-        this.#currentEdge.referencedUniqueConstraint
-      }"`,
+      `The edge "${edge}" is not part of the unique-constraint "${this.currentEdge.referencedUniqueConstraint}"`,
     );
 
     return columnTree;
@@ -200,7 +197,7 @@ export class ReferenceColumnTree {
   public get columns(): ReadonlyArray<ReferenceColumn> {
     return Object.freeze(
       Array.from(
-        this.#currentEdge.referencedUniqueConstraint.componentsByName.values(),
+        this.currentEdge.referencedUniqueConstraint.componentsByName.values(),
       ).flatMap((component) =>
         component instanceof core.Leaf
           ? this.getColumnByLeaf(component)
@@ -214,7 +211,7 @@ export class ReferenceColumnTree {
   ): core.ReferenceValue {
     return this.columns.some((column) => row[column.name] !== null)
       ? Array.from(
-          this.#currentEdge.referencedUniqueConstraint.componentsByName.values(),
+          this.currentEdge.referencedUniqueConstraint.componentsByName.values(),
         ).reduce(
           (uniqueConstraintValue, component) =>
             Object.assign(uniqueConstraintValue, {

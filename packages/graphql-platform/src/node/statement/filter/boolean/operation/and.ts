@@ -1,5 +1,9 @@
 import Denque from 'denque';
-import type { NodeSelectedValue, NodeValue } from '../../../../../node.js';
+import type {
+  NodeSelectedValue,
+  NodeValue,
+  UniqueConstraint,
+} from '../../../../../node.js';
 import type { NodeChange, NodeUpdate } from '../../../../change.js';
 import type { NodeFilterInputValue } from '../../../../type.js';
 import type { BooleanFilter } from '../../boolean.js';
@@ -228,6 +232,12 @@ export class AndOperation implements BooleanExpressionInterface {
     }
 
     return hasUndefinedOperand ? undefined : true;
+  }
+
+  public isExecutableWithUniqueConstraint(unique: UniqueConstraint): boolean {
+    return this.operands.every((operand) =>
+      operand.isExecutableWithUniqueConstraint(unique),
+    );
   }
 
   public isAffectedByNodeUpdate(update: NodeUpdate): boolean {

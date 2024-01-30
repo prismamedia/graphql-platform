@@ -4,8 +4,12 @@ import assert from 'node:assert/strict';
 import { escapeIdentifier } from '../../../escaping.js';
 import type { Column, Table } from '../../../schema.js';
 import { orderNode } from './ordering-expression.js';
-import { JoinTable, TableFactor } from './table-reference.js';
-import { filterNode } from './where-condition.js';
+import {
+  JoinTable,
+  TableFactor,
+  type TableReference,
+} from './table-reference.js';
+import { filterNode, type WhereCondition } from './where-condition.js';
 
 export abstract class AbstractTableReference {
   public abstract readonly alias: string;
@@ -37,6 +41,22 @@ export abstract class AbstractTableReference {
           ...Array.from(this.subqueries, (child) => child.height),
         ) + 1
       : 0;
+  }
+
+  public getJoinConditions(
+    edgeOrReverseEdge: core.Edge | core.ReverseEdge,
+    head: TableReference,
+  ): Array<WhereCondition> {
+    assert.equal(edgeOrReverseEdge.tail, this.table.node);
+    assert.equal(edgeOrReverseEdge.head, head.table.node);
+
+    return edgeOrReverseEdge instanceof core.Edge
+      ? this.table
+          .getForeignKeyByEdge(edgeOrReverseEdge)
+          .getJoinConditions(this, head)
+      : head.table
+          .getForeignKeyByEdge(edgeOrReverseEdge.originalEdge)
+          .getJoinConditions(head, this);
   }
 
   public join(
@@ -75,14 +95,14 @@ export abstract class AbstractTableReference {
   ): string {
     assert.equal(edgeOrReverseEdge.tail, this.table.node);
 
-    const head = this.table.schema.getTableByNode(edgeOrReverseEdge.head);
-
     const headAuthorization = this.context.getAuthorization(
       edgeOrReverseEdge.head,
     );
 
+    const headTable = this.table.schema.getTableByNode(edgeOrReverseEdge.head);
+
     const headReference = new TableFactor(
-      head,
+      headTable,
       this.context,
       `${this.alias}>${edgeOrReverseEdge.name}`,
       this.depth + 1,
@@ -95,30 +115,8 @@ export abstract class AbstractTableReference {
         ? headAuthorization.and(headFilter).normalized
         : headAuthorization || headFilter;
 
-    const whereCondition = [
-      ...(edgeOrReverseEdge instanceof core.Edge
-        ? this.table
-            .getForeignKeyByEdge(edgeOrReverseEdge)
-            .columns.map(
-              (column) =>
-                `${this.getEscapedColumnIdentifier(column)} ${
-                  column.isNullable() || column.referencedColumn.isNullable()
-                    ? '<=>'
-                    : '='
-                } ${headReference.getEscapedColumnIdentifier(
-                  column.referencedColumn,
-                )}`,
-            )
-        : head
-            .getForeignKeyByEdge(edgeOrReverseEdge.originalEdge)
-            .columns.map(
-              (column) =>
-                `${this.getEscapedColumnIdentifier(column.referencedColumn)} ${
-                  column.referencedColumn.isNullable() || column.isNullable()
-                    ? '<=>'
-                    : '='
-                } ${headReference.getEscapedColumnIdentifier(column)}`,
-            )),
+    const whereCondition: WhereCondition = [
+      ...this.getJoinConditions(edgeOrReverseEdge, headReference),
       mergedAuthorizationAndFilter
         ? filterNode(headReference, mergedAuthorizationAndFilter)
         : undefined,

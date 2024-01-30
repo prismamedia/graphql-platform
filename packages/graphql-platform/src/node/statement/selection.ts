@@ -145,6 +145,9 @@ export class NodeSelection<
     );
   }
 
+  /**
+   * Is the provided node-update affecting this selection?
+   */
   public isAffectedByNodeUpdate(update: NodeUpdate): boolean {
     assert.equal(update.node, this.node);
 
