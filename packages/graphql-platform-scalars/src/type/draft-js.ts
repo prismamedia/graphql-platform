@@ -209,19 +209,16 @@ export function parseRawDraftContentBlock(
       );
     }
 
-    utils.aggregateGraphError<any, RawDraftInlineStyleRange[]>(
+    utils.aggregateGraphError<unknown, void>(
       maybeRawDraftContentBlock.inlineStyleRanges,
-      (inlineStyleRanges, value, index) => {
+      (_, rawValue, index) =>
         inlineStyleRanges.push(
           parseRawDraftInlineStyleRange(
-            value,
+            rawValue,
             utils.addPath(inlineStyleRangesPath, index),
           ),
-        );
-
-        return inlineStyleRanges;
-      },
-      inlineStyleRanges,
+        ),
+      undefined,
       { path: inlineStyleRangesPath },
     );
   }
@@ -239,20 +236,17 @@ export function parseRawDraftContentBlock(
       );
     }
 
-    utils.aggregateGraphError<any, RawDraftEntityRange[]>(
+    utils.aggregateGraphError<unknown, void>(
       maybeRawDraftContentBlock.entityRanges,
-      (entityRanges, value, index) => {
+      (_, rawValue, index) =>
         entityRanges.push(
           parseRawDraftEntityRange(
-            value,
+            rawValue,
             entityMap,
             utils.addPath(entityRangesPath, index),
           ),
-        );
-
-        return entityRanges;
-      },
-      entityRanges,
+        ),
+      undefined,
       { path: entityRangesPath },
     );
   }
@@ -302,45 +296,27 @@ export function parseRawDraftContentState(
     if (maybeRawDraftContentState.entityMap != null) {
       const entityMapPath = utils.addPath(path, 'entityMap');
 
-      if (utils.isPlainObject(maybeRawDraftContentState.entityMap)) {
-        utils.aggregateGraphError<
-          [string, RawDraftEntity],
-          Record<string, RawDraftEntity>
-        >(
+      if (
+        utils.isPlainObject(maybeRawDraftContentState.entityMap) ||
+        Array.isArray(maybeRawDraftContentState.entityMap)
+      ) {
+        utils.aggregateGraphError<[number | string, unknown], void>(
           Object.entries(maybeRawDraftContentState.entityMap),
-          (entityMap, [key, value]) => {
-            if (!Number.isSafeInteger(Number.parseInt(key, 10))) {
-              throw new utils.UnexpectedValueError(`an integer`, key, {
-                path: utils.addPath(entityMapPath, key),
+          (_, [rawKey, rawValue]) => {
+            const entityPath = utils.addPath(entityMapPath, rawKey);
+
+            const key =
+              typeof rawKey === 'string' ? Number.parseInt(rawKey, 10) : rawKey;
+
+            if (!Number.isSafeInteger(key)) {
+              throw new utils.UnexpectedValueError(`an integer`, rawKey, {
+                path: entityPath,
               });
             }
 
-            Object.assign(entityMap, {
-              [key]: parseRawDraftEntity(
-                value,
-                utils.addPath(entityMapPath, key),
-              ),
-            });
-
-            return entityMap;
+            entityMap[key] = parseRawDraftEntity(rawValue, entityPath);
           },
-          entityMap,
-          { path: entityMapPath },
-        );
-      } else if (Array.isArray(maybeRawDraftContentState.entityMap)) {
-        utils.aggregateGraphError<
-          RawDraftEntity,
-          Record<string, RawDraftEntity>
-        >(
-          maybeRawDraftContentState.entityMap,
-          (entityMap, value, index) =>
-            Object.assign(entityMap, {
-              [index]: parseRawDraftEntity(
-                value,
-                utils.addPath(entityMapPath, index),
-              ),
-            }),
-          entityMap,
+          undefined,
           { path: entityMapPath },
         );
       } else {
@@ -366,20 +342,17 @@ export function parseRawDraftContentState(
       );
     }
 
-    utils.aggregateGraphError<any, RawDraftContentBlock[]>(
+    utils.aggregateGraphError<unknown, void>(
       maybeRawDraftContentState.blocks,
-      (blocks, block, index) => {
+      (_, rawBlock, index) =>
         blocks.push(
           parseRawDraftContentBlock(
-            block,
+            rawBlock,
             entityMap,
             utils.addPath(blocksPath, index),
           ),
-        );
-
-        return blocks;
-      },
-      blocks,
+        ),
+      undefined,
       { path: blocksPath },
     );
   }
@@ -412,3 +385,115 @@ export const GraphQLDraftJS = new graphql.GraphQLScalarType({
     return parseRawDraftContentState(value);
   },
 });
+
+export function normalizeRawDraftContentBlock(
+  maybeRawDraftContentBlock: unknown,
+  entityMap: RawDraftContentState['entityMap'],
+  path?: utils.Path,
+): RawDraftContentBlock {
+  utils.assertPlainObject(maybeRawDraftContentBlock, path);
+
+  return parseRawDraftContentBlock(
+    {
+      ...maybeRawDraftContentBlock,
+      entityRanges: Array.isArray(maybeRawDraftContentBlock.entityRanges)
+        ? maybeRawDraftContentBlock.entityRanges.filter(
+            (maybeRawDraftEntityRange: unknown) =>
+              utils.isPlainObject(maybeRawDraftEntityRange) &&
+              Number.isSafeInteger(maybeRawDraftEntityRange.key) &&
+              maybeRawDraftEntityRange.key in entityMap,
+          )
+        : [],
+    },
+    entityMap,
+    path,
+  );
+}
+
+/**
+ * Removes all the entities that are not used by the blocks & blocks' entity-ranges referencing inexistent entities
+ */
+export function normalizeRawDraftContentState(
+  maybeRawDraftContentState: unknown,
+  path?: utils.Path,
+): RawDraftContentState | null {
+  utils.assertPlainObject(maybeRawDraftContentState, path);
+
+  // entityMap
+  const entityMap: RawDraftContentState['entityMap'] = Object.create(null);
+  {
+    if (maybeRawDraftContentState.entityMap != null) {
+      const entityMapPath = utils.addPath(path, 'entityMap');
+
+      if (
+        utils.isPlainObject(maybeRawDraftContentState.entityMap) ||
+        Array.isArray(maybeRawDraftContentState.entityMap)
+      ) {
+        utils.aggregateGraphError<[number | string, unknown], void>(
+          Object.entries(maybeRawDraftContentState.entityMap),
+          (_, [rawKey, rawValue]) => {
+            const entityPath = utils.addPath(entityMapPath, rawKey);
+
+            const key =
+              typeof rawKey === 'string' ? Number.parseInt(rawKey, 10) : rawKey;
+
+            if (Number.isSafeInteger(key)) {
+              entityMap[key] = parseRawDraftEntity(rawValue, entityPath);
+            }
+          },
+          undefined,
+          { path: entityMapPath },
+        );
+      } else {
+        throw new utils.UnexpectedValueError(
+          maybeRawDraftContentState.entityMap,
+          `a RawDraftEntityMap or an array of RawDraftEntity`,
+          { path: entityMapPath },
+        );
+      }
+    }
+  }
+
+  // blocks
+  const blocks: RawDraftContentBlock[] = [];
+  {
+    const blocksPath = utils.addPath(path, 'blocks');
+
+    if (!Array.isArray(maybeRawDraftContentState.blocks)) {
+      throw new utils.UnexpectedValueError(
+        `an array of RawDraftContentBlock`,
+        maybeRawDraftContentState.blocks,
+        { path: blocksPath },
+      );
+    }
+
+    utils.aggregateGraphError<unknown, void>(
+      maybeRawDraftContentState.blocks,
+      (_, rawBlock, index) =>
+        blocks.push(
+          normalizeRawDraftContentBlock(
+            rawBlock,
+            entityMap,
+            utils.addPath(blocksPath, index),
+          ),
+        ),
+      undefined,
+      { path: blocksPath },
+    );
+  }
+
+  return blocks.length
+    ? {
+        entityMap: Object.fromEntries(
+          Object.entries(entityMap).filter(([key]) =>
+            blocks.some((block) =>
+              block.entityRanges.some(
+                (entityRange) => String(entityRange.key) === key,
+              ),
+            ),
+          ),
+        ),
+        blocks,
+      }
+    : null;
+}
