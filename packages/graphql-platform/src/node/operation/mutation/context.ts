@@ -10,7 +10,16 @@ export class MutationContext<
   TContainer extends object = any,
 > extends OperationContext<TRequestContext, TConnector, TBroker, TContainer> {
   /**
+   * Optional, enable or disable the changes tracking context-wide
+   */
+  public changesTracking: boolean = this.gp.nodeChangesTracking;
+
+  /**
    * Contains the nodes' changes that will be fired after the success of the whole mutation, including all the nested actions
    */
   public readonly changes: NodeChange[] = [];
+
+  public trackChanges(...changes: ReadonlyArray<NodeChange>): void {
+    this.changesTracking && this.changes.push(...changes);
+  }
 }

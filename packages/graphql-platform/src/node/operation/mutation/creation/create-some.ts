@@ -130,7 +130,7 @@ export class CreateSomeMutation<
         );
 
         // Let's everybody know about this created node
-        context.changes.push(change);
+        context.trackChanges(change);
 
         // The "data" has been frozen above
         const data = args.data[index];

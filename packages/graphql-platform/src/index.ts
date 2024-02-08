@@ -179,6 +179,13 @@ export interface GraphQLPlatformConfig<
   >;
 
   /**
+   * Optional, enable or disable the nodes' changes tracking instance-wide
+   *
+   * @default true
+   */
+  nodeChangesTracking?: utils.OptionalFlag;
+
+  /**
    * Optional, register some event-listeners, all at once
    */
   on?: utils.Thunkable<
@@ -215,6 +222,8 @@ export class GraphQLPlatform<
   readonly #requestContextAssertion?: (
     maybeRequestContext: object,
   ) => asserts maybeRequestContext is TRequestContext;
+
+  public readonly nodeChangesTracking: boolean;
 
   readonly #connector?: TConnector;
 
@@ -364,6 +373,15 @@ export class GraphQLPlatform<
         this.#requestContextAssertion =
           requestContextAssertionConfig.bind(this);
       }
+    }
+
+    // node-changes-tracking
+    {
+      this.nodeChangesTracking = utils.getOptionalFlag(
+        config.nodeChangesTracking,
+        true,
+        utils.addPath(configPath, 'nodeChangesTracking'),
+      );
     }
 
     // connector
@@ -653,7 +671,7 @@ export class GraphQLPlatform<
     }
 
     // changes
-    {
+    if (mutationContext.changes.length) {
       const now = new Date();
 
       for (const change of mutationContext.changes) {
