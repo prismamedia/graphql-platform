@@ -190,7 +190,9 @@ export function parseRawDraftContentBlock(
 
       text = entities
         // Decodes entities, we target UTF-8
-        .decodeHTMLStrict(maybeRawDraftContentBlock.text);
+        .decodeHTMLStrict(maybeRawDraftContentBlock.text)
+        // Trim
+        .trim();
     } else {
       text = '';
     }
