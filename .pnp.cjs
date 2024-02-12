@@ -1891,7 +1891,6 @@ const RAW_RUNTIME_STATE =
           ["@types/draft-js", "npm:0.11.17"],\
           ["@types/graphql", null],\
           ["@types/node", "npm:20.11.17"],\
-          ["entities", "npm:4.5.0"],\
           ["graphql", "npm:16.8.1"],\
           ["jest", "virtual:dc3fc578bfa5e06182a4d2be39ede0bc5b74940b1ffe0d70c26892ab140a4699787750fba175dc306292e80b4aa2c8c5f68c2a821e69b2c37e360c0dff36ff66#npm:29.7.0"],\
           ["publint", "npm:0.2.7"],\
@@ -1915,7 +1914,6 @@ const RAW_RUNTIME_STATE =
           ["@tsconfig/node20", "npm:20.1.2"],\
           ["@types/draft-js", "npm:0.11.17"],\
           ["@types/node", "npm:20.11.17"],\
-          ["entities", "npm:4.5.0"],\
           ["graphql", "npm:16.8.1"],\
           ["jest", "virtual:dc3fc578bfa5e06182a4d2be39ede0bc5b74940b1ffe0d70c26892ab140a4699787750fba175dc306292e80b4aa2c8c5f68c2a821e69b2c37e360c0dff36ff66#npm:29.7.0"],\
           ["publint", "npm:0.2.7"],\
@@ -3895,15 +3893,6 @@ const RAW_RUNTIME_STATE =
         "packageDependencies": [\
           ["end-of-stream", "npm:1.4.4"],\
           ["once", "npm:1.4.0"]\
-        ],\
-        "linkType": "HARD"\
-      }]\
-    ]],\
-    ["entities", [\
-      ["npm:4.5.0", {\
-        "packageLocation": "./.yarn/cache/entities-npm-4.5.0-7cdb83b832-ede2a35c9b.zip/node_modules/entities/",\
-        "packageDependencies": [\
-          ["entities", "npm:4.5.0"]\
         ],\
         "linkType": "HARD"\
       }]\

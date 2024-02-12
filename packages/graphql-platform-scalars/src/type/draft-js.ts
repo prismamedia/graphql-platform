@@ -5,7 +5,6 @@ import type {
   RawDraftEntityRange,
   RawDraftInlineStyleRange,
 } from 'draft-js';
-import * as entities from 'entities';
 import * as graphql from 'graphql';
 import { parseNonEmptyString } from './non-empty-string.js';
 
@@ -188,11 +187,7 @@ export function parseRawDraftContentBlock(
         );
       }
 
-      text = entities
-        // Decodes entities, we target UTF-8
-        .decodeHTML(maybeRawDraftContentBlock.text)
-        // Trim
-        .trim();
+      text = maybeRawDraftContentBlock.text;
     } else {
       text = '';
     }

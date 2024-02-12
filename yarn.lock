@@ -1122,7 +1122,6 @@ __metadata:
     "@tsconfig/node20": "npm:20.1.2"
     "@types/draft-js": "npm:^0.11.17"
     "@types/node": "npm:20.11.17"
-    entities: "npm:^4.5.0"
     graphql: "npm:16.8.1"
     jest: "npm:29.7.0"
     publint: "npm:0.2.7"
@@ -2767,13 +2766,6 @@ __metadata:
   dependencies:
     once: "npm:^1.4.0"
   checksum: 10/530a5a5a1e517e962854a31693dbb5c0b2fc40b46dad2a56a2deec656ca040631124f4795823acc68238147805f8b021abbe221f4afed5ef3c8e8efc2024908b
-  languageName: node
-  linkType: hard
-
-"entities@npm:^4.5.0":
-  version: 4.5.0
-  resolution: "entities@npm:4.5.0"
-  checksum: 10/ede2a35c9bce1aeccd055a1b445d41c75a14a2bb1cd22e242f20cf04d236cdcd7f9c859eb83f76885327bfae0c25bf03303665ee1ce3d47c5927b98b0e3e3d48
   languageName: node
   linkType: hard
 
