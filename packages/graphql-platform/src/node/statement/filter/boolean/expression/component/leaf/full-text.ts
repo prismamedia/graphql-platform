@@ -107,7 +107,7 @@ export class LeafFullTextFilter implements BooleanExpressionInterface {
     }
   }
 
-  public isExecutableWithUniqueConstraint(unique: UniqueConstraint): boolean {
+  public isExecutableWithinUniqueConstraint(unique: UniqueConstraint): boolean {
     return unique.leafSet.has(this.leaf);
   }
 

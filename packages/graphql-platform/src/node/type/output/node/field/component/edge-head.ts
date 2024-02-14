@@ -11,7 +11,7 @@ export class EdgeHeadOutputType extends AbstractComponentOutputType<undefined> {
   public readonly description?: string;
   public readonly deprecationReason?: string;
 
-  protected readonly args?: undefined;
+  public readonly args?: undefined;
 
   public constructor(parent: NodeOutputType, public readonly edge: Edge) {
     super(parent, edge);
@@ -21,7 +21,7 @@ export class EdgeHeadOutputType extends AbstractComponentOutputType<undefined> {
     this.deprecationReason = edge.deprecationReason;
   }
 
-  protected get type() {
+  public get type() {
     return this.edge.isNullable()
       ? this.edge.head.outputType.getGraphQLObjectType()
       : new graphql.GraphQLNonNull(

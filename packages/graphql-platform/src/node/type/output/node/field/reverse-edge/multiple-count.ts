@@ -31,7 +31,7 @@ export class MultipleReverseEdgeCountOutputType extends AbstractReverseEdgeOutpu
   }
 
   @Memoize()
-  protected get args(): ReadonlyArray<utils.Input> {
+  public get args(): ReadonlyArray<utils.Input> {
     const defaults = this.reverseEdge.config.output?.defaultArgs;
 
     return [
@@ -43,7 +43,7 @@ export class MultipleReverseEdgeCountOutputType extends AbstractReverseEdgeOutpu
     ];
   }
 
-  protected get type() {
+  public get type() {
     return new graphql.GraphQLNonNull(scalars.typesByName.UnsignedInt);
   }
 

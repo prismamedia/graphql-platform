@@ -11,6 +11,10 @@ import {
 } from '../../../../../change.js';
 import type { MultipleReverseEdge } from '../../../../../definition.js';
 import type { OperationContext } from '../../../../../operation.js';
+import type {
+  NodeFilterInputValue,
+  OrderByInputValue,
+} from '../../../../../type.js';
 import {
   MultipleReverseEdgeExistsFilter,
   NodeFilter,
@@ -18,7 +22,7 @@ import {
   areFiltersEqual,
   type BooleanFilter,
 } from '../../../../filter.js';
-import { areOrderingsEqual, type NodeOrdering } from '../../../../ordering.js';
+import { NodeOrdering, areOrderingsEqual } from '../../../../ordering.js';
 import type {
   NodeSelectedValue,
   NodeSelection,
@@ -41,8 +45,8 @@ export class MultipleReverseEdgeHeadSelection<
   public constructor(
     public readonly reverseEdge: MultipleReverseEdge,
     public readonly alias: string | undefined,
-    headFilter: NodeFilter | undefined,
-    headOrdering: NodeOrdering | undefined,
+    headFilter: NodeFilter | NodeFilterInputValue | undefined,
+    headOrdering: NodeOrdering | OrderByInputValue | undefined,
     offset: number | undefined,
     public readonly limit: number,
     public readonly headSelection: NodeSelection,
@@ -51,15 +55,25 @@ export class MultipleReverseEdgeHeadSelection<
     this.key = this.alias ?? this.name;
 
     if (headFilter) {
-      assert.equal(reverseEdge.head, headFilter.node);
+      if (headFilter instanceof NodeFilter) {
+        assert.equal(reverseEdge.head, headFilter.node);
 
-      this.headFilter = headFilter.normalized;
+        this.headFilter = headFilter.normalized;
+      } else {
+        this.headFilter =
+          reverseEdge.head.filterInputType.filter(headFilter).normalized;
+      }
     }
 
     if (headOrdering) {
-      assert.equal(reverseEdge.head, headOrdering.node);
+      if (headOrdering instanceof NodeOrdering) {
+        assert.equal(reverseEdge.head, headOrdering.node);
 
-      this.headOrdering = headOrdering.normalized;
+        this.headOrdering = headOrdering.normalized;
+      } else {
+        this.headOrdering =
+          reverseEdge.head.orderingInputType.sort(headOrdering).normalized;
+      }
     }
 
     this.offset = offset || undefined;

@@ -119,7 +119,7 @@ export abstract class AbstractMutation<
     );
   }
 
-  public async execute(
+  public override async execute(
     context: TRequestContext | MutationContext<TRequestContext>,
     args: TArgs,
     path: utils.Path = utils.addPath(

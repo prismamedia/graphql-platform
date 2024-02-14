@@ -12,12 +12,13 @@ import {
 } from '../../../../../change.js';
 import type { MultipleReverseEdge } from '../../../../../definition.js';
 import type { OperationContext } from '../../../../../operation.js';
+import type { NodeFilterInputValue } from '../../../../../type.js';
 import {
   BooleanFilter,
   MultipleReverseEdgeExistsFilter,
+  NodeFilter,
   OrOperation,
   areFiltersEqual,
-  type NodeFilter,
 } from '../../../../filter.js';
 import type { SelectionExpressionInterface } from '../../../expression-interface.js';
 
@@ -39,15 +40,20 @@ export class MultipleReverseEdgeCountSelection<
   public constructor(
     public readonly reverseEdge: MultipleReverseEdge,
     public readonly alias: string | undefined,
-    headFilter: NodeFilter | undefined,
+    headFilter: NodeFilter | NodeFilterInputValue | undefined,
   ) {
     this.name = reverseEdge.countFieldName;
     this.key = this.alias ?? this.name;
 
     if (headFilter) {
-      assert.equal(reverseEdge.head, headFilter.node);
+      if (headFilter instanceof NodeFilter) {
+        assert.equal(reverseEdge.head, headFilter.node);
 
-      this.headFilter = headFilter.normalized;
+        this.headFilter = headFilter.normalized;
+      } else {
+        this.headFilter =
+          reverseEdge.head.filterInputType.filter(headFilter).normalized;
+      }
     }
   }
 

@@ -11,7 +11,7 @@ export class UniqueReverseEdgeHeadOutputType extends AbstractReverseEdgeOutputTy
   public readonly description?: string;
   public readonly deprecationReason?: string;
 
-  protected readonly args?: undefined;
+  public readonly args?: undefined;
 
   public constructor(
     parent: NodeOutputType,
@@ -24,7 +24,7 @@ export class UniqueReverseEdgeHeadOutputType extends AbstractReverseEdgeOutputTy
     this.deprecationReason = reverseEdge.deprecationReason;
   }
 
-  protected get type() {
+  public get type() {
     return this.reverseEdge.head.outputType.getGraphQLObjectType();
   }
 

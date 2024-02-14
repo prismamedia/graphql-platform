@@ -135,7 +135,9 @@ export class UniqueReverseEdgeExistsFilter
       : true;
   }
 
-  public isExecutableWithUniqueConstraint(_unique: UniqueConstraint): boolean {
+  public isExecutableWithinUniqueConstraint(
+    _unique: UniqueConstraint,
+  ): boolean {
     return false;
   }
 

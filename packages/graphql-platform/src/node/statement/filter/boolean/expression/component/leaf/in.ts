@@ -200,7 +200,7 @@ export class LeafInFilter implements BooleanExpressionInterface {
     return this.has(leafValue);
   }
 
-  public isExecutableWithUniqueConstraint(unique: UniqueConstraint): boolean {
+  public isExecutableWithinUniqueConstraint(unique: UniqueConstraint): boolean {
     return unique.leafSet.has(this.leaf);
   }
 

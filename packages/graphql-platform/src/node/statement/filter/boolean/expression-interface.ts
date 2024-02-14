@@ -48,7 +48,7 @@ export interface BooleanExpressionInterface {
   /**
    * Is the provided unique-constraint's value enough to execute this filter's expression?
    */
-  isExecutableWithUniqueConstraint(unique: UniqueConstraint): boolean;
+  isExecutableWithinUniqueConstraint(unique: UniqueConstraint): boolean;
 
   /**
    * Is the provided node-update affecting this filter's expression?

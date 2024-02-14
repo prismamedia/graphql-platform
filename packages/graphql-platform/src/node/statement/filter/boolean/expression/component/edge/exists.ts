@@ -113,11 +113,11 @@ export class EdgeExistsFilter implements BooleanExpressionInterface {
     return this.headFilter ? this.headFilter.execute(edgeValue, true) : true;
   }
 
-  public isExecutableWithUniqueConstraint(unique: UniqueConstraint): boolean {
+  public isExecutableWithinUniqueConstraint(unique: UniqueConstraint): boolean {
     return (
       unique.edgeSet.has(this.edge) &&
       (!this.headFilter ||
-        this.headFilter.isExecutableWithUniqueConstraint(
+        this.headFilter.isExecutableWithinUniqueConstraint(
           this.edge.referencedUniqueConstraint,
         ))
     );

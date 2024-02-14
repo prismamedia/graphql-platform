@@ -234,9 +234,9 @@ export class AndOperation implements BooleanExpressionInterface {
     return hasUndefinedOperand ? undefined : true;
   }
 
-  public isExecutableWithUniqueConstraint(unique: UniqueConstraint): boolean {
+  public isExecutableWithinUniqueConstraint(unique: UniqueConstraint): boolean {
     return this.operands.every((operand) =>
-      operand.isExecutableWithUniqueConstraint(unique),
+      operand.isExecutableWithinUniqueConstraint(unique),
     );
   }
 

@@ -11,8 +11,8 @@ export class LeafOutputType extends AbstractComponentOutputType<undefined> {
   public readonly description?: string;
   public readonly deprecationReason?: string;
 
-  protected readonly args?: undefined;
-  protected readonly type: LeafType | graphql.GraphQLNonNull<LeafType>;
+  public readonly args?: undefined;
+  public readonly type: LeafType | graphql.GraphQLNonNull<LeafType>;
 
   public constructor(parent: NodeOutputType, public readonly leaf: Leaf) {
     super(parent, leaf);

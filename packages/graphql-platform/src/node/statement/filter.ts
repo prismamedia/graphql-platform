@@ -64,18 +64,17 @@ export class NodeFilter {
     );
   }
 
+  @Memoize()
   public isTrue(): boolean {
     return this.filter.equals(TrueValue);
   }
 
+  @Memoize()
   public isFalse(): boolean {
     return this.filter.equals(FalseValue);
   }
 
-  public isUnique(): boolean {
-    return this.node.uniqueFilterInputType.isValid(this.inputValue);
-  }
-
+  @Memoize()
   public get normalized(): NodeFilter | undefined {
     return this.isTrue() ? undefined : this;
   }
@@ -103,10 +102,10 @@ export class NodeFilter {
   /**
    * Is the provided unique-constraint's value enough to execute this filter?
    */
-  public isExecutableWithUniqueConstraint(unique: UniqueConstraint): boolean {
+  public isExecutableWithinUniqueConstraint(unique: UniqueConstraint): boolean {
     assert.equal(unique.node, this.node);
 
-    return this.filter.isExecutableWithUniqueConstraint(unique);
+    return this.filter.isExecutableWithinUniqueConstraint(unique);
   }
 
   /**
@@ -128,6 +127,7 @@ export class NodeFilter {
     );
   }
 
+  @Memoize()
   public get ast(): NodeFilterAST {
     return {
       kind: 'NODE',
@@ -139,6 +139,11 @@ export class NodeFilter {
   @Memoize()
   public get inputValue(): NodeFilterInputValue {
     return this.filter.inputValue;
+  }
+
+  @Memoize()
+  public isUnique(): boolean {
+    return this.node.uniqueFilterInputType.isValid(this.inputValue);
   }
 }
 

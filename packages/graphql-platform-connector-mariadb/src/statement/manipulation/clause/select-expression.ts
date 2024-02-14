@@ -58,7 +58,7 @@ function parseEdgeSelection(
     );
 
     const parsedHeadAuthorization =
-      headAuthorization?.isExecutableWithUniqueConstraint(
+      headAuthorization?.isExecutableWithinUniqueConstraint(
         edge.referencedUniqueConstraint,
       )
         ? filterNode(

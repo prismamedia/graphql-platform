@@ -72,8 +72,8 @@ export class NotOperation implements BooleanExpressionInterface {
     return result === undefined ? undefined : !result;
   }
 
-  public isExecutableWithUniqueConstraint(unique: UniqueConstraint): boolean {
-    return this.operand.isExecutableWithUniqueConstraint(unique);
+  public isExecutableWithinUniqueConstraint(unique: UniqueConstraint): boolean {
+    return this.operand.isExecutableWithinUniqueConstraint(unique);
   }
 
   public isAffectedByNodeUpdate(update: NodeUpdate): boolean {

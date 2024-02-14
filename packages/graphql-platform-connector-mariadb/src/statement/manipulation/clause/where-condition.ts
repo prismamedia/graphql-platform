@@ -190,7 +190,7 @@ function parseEdgeFilter(
             )
           : undefined,
         mergedHeadAuthorizationAndHeadFilter
-          ? mergedHeadAuthorizationAndHeadFilter.isExecutableWithUniqueConstraint(
+          ? mergedHeadAuthorizationAndHeadFilter.isExecutableWithinUniqueConstraint(
               edge.referencedUniqueConstraint,
             )
             ? filterNode(

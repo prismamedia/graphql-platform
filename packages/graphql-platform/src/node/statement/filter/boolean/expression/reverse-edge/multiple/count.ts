@@ -139,7 +139,9 @@ export class MultipleReverseEdgeCountFilter
     return;
   }
 
-  public isExecutableWithUniqueConstraint(_unique: UniqueConstraint): boolean {
+  public isExecutableWithinUniqueConstraint(
+    _unique: UniqueConstraint,
+  ): boolean {
     return false;
   }
 

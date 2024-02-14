@@ -25,8 +25,8 @@ export abstract class AbstractFieldOutputType<
   public abstract readonly description?: string;
   public abstract readonly deprecationReason?: string;
 
-  protected abstract readonly args?: ReadonlyArray<utils.Input>;
-  protected abstract readonly type: graphql.GraphQLOutputType;
+  public abstract readonly args?: ReadonlyArray<utils.Input>;
+  public abstract readonly type: graphql.GraphQLOutputType;
 
   public abstract isPublic(): boolean;
 

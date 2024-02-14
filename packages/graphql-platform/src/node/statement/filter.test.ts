@@ -38,7 +38,7 @@ describe('Filter', () => {
       ['Article', { _id: 5 }, '_id', true],
       ['Article', { OR: [{ _id: 5 }, { _id_gt: 6 }] }, '_id', true],
     ])(
-      '%# - %s.filter(%p).isExecutableWithUnique(%p) = %p',
+      '%# - %s.filter(%p).isExecutableWithinUniqueConstraint(%p) = %p',
       (nodeName, filter, uniqueName, expected) => {
         const node = gp.getNodeByName(nodeName);
         const unique = node.getUniqueConstraintByName(uniqueName);
@@ -46,7 +46,7 @@ describe('Filter', () => {
         expect(
           node.filterInputType
             .parseAndFilter(filter)
-            .isExecutableWithUniqueConstraint(unique),
+            .isExecutableWithinUniqueConstraint(unique),
         ).toEqual(expected);
       },
     );

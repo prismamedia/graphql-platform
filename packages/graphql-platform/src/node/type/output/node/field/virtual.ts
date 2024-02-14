@@ -125,8 +125,8 @@ export class VirtualOutputType<
   public readonly description?: string;
   public readonly deprecationReason?: string;
 
-  protected readonly args?: ReadonlyArray<utils.Input>;
-  protected readonly type: graphql.GraphQLOutputType;
+  public readonly args?: ReadonlyArray<utils.Input>;
+  public readonly type: graphql.GraphQLOutputType;
 
   public readonly resolve: (
     source: TSource,
