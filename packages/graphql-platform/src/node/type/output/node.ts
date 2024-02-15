@@ -6,9 +6,7 @@ import type { Except } from 'type-fest';
 import type { BrokerInterface } from '../../../broker-interface.js';
 import type { ConnectorInterface } from '../../../connector-interface.js';
 import type { Node } from '../../../node.js';
-import type { Component } from '../../definition.js';
-import { Leaf } from '../../definition/component/leaf.js';
-import { UniqueReverseEdge } from '../../definition/reverse-edge/unique.js';
+import { Leaf, UniqueReverseEdge, type Component } from '../../definition.js';
 import type { OperationContext } from '../../operation/context.js';
 import {
   NodeSelection,
@@ -27,7 +25,9 @@ import {
   ThunkableNillableVirtualOutputConfigsByName,
   UniqueReverseEdgeHeadOutputType,
   VirtualOutputType,
+  isMultipleReverseEdgeOutputType,
   type ComponentOutputType,
+  type MultipleReverseEdgeOutputType,
   type ReverseEdgeOutputType,
 } from './node/field.js';
 
@@ -142,6 +142,32 @@ export class NodeOutputType {
   }
 
   @Memoize()
+  public get leafFieldsByName(): ReadonlyMap<
+    LeafOutputType['name'],
+    LeafOutputType
+  > {
+    return new Map(
+      Array.from(this.componentFieldsByName).filter(
+        (entry): entry is [string, LeafOutputType] =>
+          entry[1] instanceof LeafOutputType,
+      ),
+    );
+  }
+
+  @Memoize()
+  public get edgeFieldsByName(): ReadonlyMap<
+    EdgeHeadOutputType['name'],
+    EdgeHeadOutputType
+  > {
+    return new Map(
+      Array.from(this.componentFieldsByName).filter(
+        (entry): entry is [string, EdgeHeadOutputType] =>
+          entry[1] instanceof EdgeHeadOutputType,
+      ),
+    );
+  }
+
+  @Memoize()
   public get reverseEdgeFieldsByName(): ReadonlyMap<
     ReverseEdgeOutputType['name'],
     ReverseEdgeOutputType
@@ -161,6 +187,32 @@ export class NodeOutputType {
 
         return fields.map((field) => [field.name, field]);
       }),
+    );
+  }
+
+  @Memoize()
+  public get uniqueReverseEdgeFieldsByName(): ReadonlyMap<
+    UniqueReverseEdgeHeadOutputType['name'],
+    UniqueReverseEdgeHeadOutputType
+  > {
+    return new Map(
+      Array.from(this.reverseEdgeFieldsByName).filter(
+        (entry): entry is [string, UniqueReverseEdgeHeadOutputType] =>
+          entry[1] instanceof UniqueReverseEdgeHeadOutputType,
+      ),
+    );
+  }
+
+  @Memoize()
+  public get multipleReverseEdgeFieldsByName(): ReadonlyMap<
+    MultipleReverseEdgeOutputType['name'],
+    MultipleReverseEdgeOutputType
+  > {
+    return new Map(
+      Array.from(this.reverseEdgeFieldsByName).filter(
+        (entry): entry is [string, MultipleReverseEdgeOutputType] =>
+          isMultipleReverseEdgeOutputType(entry[1]),
+      ),
     );
   }
 
