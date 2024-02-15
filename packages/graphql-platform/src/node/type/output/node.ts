@@ -27,6 +27,8 @@ import {
   ThunkableNillableVirtualOutputConfigsByName,
   UniqueReverseEdgeHeadOutputType,
   VirtualOutputType,
+  type ComponentOutputType,
+  type ReverseEdgeOutputType,
 } from './node/field.js';
 
 export * from './node/field.js';
@@ -123,30 +125,56 @@ export class NodeOutputType {
   }
 
   @Memoize()
-  public get fieldsByName(): ReadonlyMap<
-    NodeFieldOutputType['name'],
-    NodeFieldOutputType
+  public get componentFieldsByName(): ReadonlyMap<
+    ComponentOutputType['name'],
+    ComponentOutputType
   > {
-    const fields: NodeFieldOutputType[] = [];
+    return new Map(
+      Array.from(this.node.componentSet, (component) => {
+        const field =
+          component instanceof Leaf
+            ? new LeafOutputType(this, component)
+            : new EdgeHeadOutputType(this, component);
 
-    for (const component of this.node.componentSet) {
-      if (component instanceof Leaf) {
-        fields.push(new LeafOutputType(this, component));
-      } else {
-        fields.push(new EdgeHeadOutputType(this, component));
-      }
-    }
+        return [field.name, field];
+      }),
+    );
+  }
 
-    for (const reverseEdge of this.node.reverseEdgeSet) {
-      if (reverseEdge instanceof UniqueReverseEdge) {
-        fields.push(new UniqueReverseEdgeHeadOutputType(this, reverseEdge));
-      } else {
-        fields.push(
-          new MultipleReverseEdgeHeadOutputType(this, reverseEdge),
-          new MultipleReverseEdgeCountOutputType(this, reverseEdge),
-        );
-      }
-    }
+  @Memoize()
+  public get reverseEdgeFieldsByName(): ReadonlyMap<
+    ReverseEdgeOutputType['name'],
+    ReverseEdgeOutputType
+  > {
+    return new Map(
+      Array.from(this.node.reverseEdgeSet).flatMap((reverseEdge) => {
+        const fields: ReverseEdgeOutputType[] = [];
+
+        if (reverseEdge instanceof UniqueReverseEdge) {
+          fields.push(new UniqueReverseEdgeHeadOutputType(this, reverseEdge));
+        } else {
+          fields.push(
+            new MultipleReverseEdgeHeadOutputType(this, reverseEdge),
+            new MultipleReverseEdgeCountOutputType(this, reverseEdge),
+          );
+        }
+
+        return fields.map((field) => [field.name, field]);
+      }),
+    );
+  }
+
+  @Memoize()
+  public get virtualFieldsByName(): ReadonlyMap<
+    VirtualOutputType['name'],
+    VirtualOutputType
+  > {
+    const fields: VirtualOutputType[] = [];
+
+    const currentFieldNameSet = new Set([
+      ...this.componentFieldsByName.keys(),
+      ...this.reverseEdgeFieldsByName.keys(),
+    ]);
 
     // virtual-fields
     [...this.node.features, this.node].forEach(({ config, configPath }) => {
@@ -206,11 +234,13 @@ export class NodeOutputType {
               virtualFieldConfigPath,
             );
 
-            if (fields.some((field) => field.name === virtualField.name)) {
+            if (currentFieldNameSet.has(virtualField.name)) {
               throw new utils.GraphError(
                 `At least 1 field already have this name`,
                 { path: virtualFieldConfigPath },
               );
+            } else {
+              currentFieldNameSet.add(virtualField.name);
             }
 
             fields.push(virtualField);
@@ -222,6 +252,18 @@ export class NodeOutputType {
     });
 
     return new Map(fields.map((field) => [field.name, field]));
+  }
+
+  @Memoize()
+  public get fieldsByName(): ReadonlyMap<
+    NodeFieldOutputType['name'],
+    NodeFieldOutputType
+  > {
+    return new Map<NodeFieldOutputType['name'], NodeFieldOutputType>([
+      ...this.componentFieldsByName,
+      ...this.reverseEdgeFieldsByName,
+      ...this.virtualFieldsByName,
+    ]);
   }
 
   @Memoize()

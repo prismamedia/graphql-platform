@@ -216,7 +216,7 @@ export class ScrollSubscriptionStream<
 
         if (values.length === 0 && next !== null) {
           values = await this.#api.findMany({
-            where: { AND: [next, this.filter?.inputValue] },
+            where: { AND: [this.filter?.inputValue, next] },
             orderBy: [this.ordering.inputValue],
             first: this.#chunkSize,
             selection: this.#internalSelection,

@@ -8,6 +8,7 @@ import {
   type Subscription,
 } from './operation/subscription.js';
 
+export { argsPathKey } from './abstract-operation.js';
 export * from './operation/api.js';
 export * from './operation/context.js';
 export * from './operation/error.js';
