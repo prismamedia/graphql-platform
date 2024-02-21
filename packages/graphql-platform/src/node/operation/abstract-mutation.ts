@@ -7,7 +7,7 @@ import type { ConnectorInterface } from '../../connector-interface.js';
 import type { GraphQLPlatform } from '../../index.js';
 import type { Node } from '../../node.js';
 import { AbstractOperation } from '../abstract-operation.js';
-import { AndOperation, NodeFilter } from '../statement/filter.js';
+import { AndOperation, NodeFilter, TrueValue } from '../statement/filter.js';
 import type { ContextBoundAPI } from './api.js';
 import { MutationContext } from './mutation/context.js';
 import type { MutationInterface } from './mutation/interface.js';
@@ -106,17 +106,17 @@ export abstract class AbstractMutation<
     context: MutationContext,
     path: utils.Path,
   ): NodeFilter | undefined {
-    return this.mutationTypes.reduce<NodeFilter | undefined>(
-      (authorization, mutationType) =>
-        new NodeFilter(
-          this.node,
-          AndOperation.create([
-            authorization?.filter,
-            context.ensureAuthorization(this.node, path, mutationType)?.filter,
-          ]),
-        ).normalized,
-      super.ensureAuthorization(context, path),
-    );
+    return new NodeFilter(
+      this.node,
+      AndOperation.create([
+        super.ensureAuthorization(context, path)?.filter ?? TrueValue,
+        ...this.mutationTypes.map(
+          (mutationType) =>
+            context.ensureAuthorization(this.node, path, mutationType)
+              ?.filter ?? TrueValue,
+        ),
+      ]),
+    ).normalized;
   }
 
   public override async execute(

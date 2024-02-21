@@ -183,7 +183,6 @@ export const Article = {
     createdBy: {
       kind: 'Edge',
       head: 'User',
-      nullable: true,
       mutable: false,
 
       creation: {
@@ -204,7 +203,6 @@ export const Article = {
     updatedBy: {
       kind: 'Edge',
       head: 'User.username',
-      nullable: true,
 
       creation: {
         public: false,

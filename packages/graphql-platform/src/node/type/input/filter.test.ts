@@ -10,7 +10,7 @@ import {
 } from '../../../__tests__/config.js';
 import { GraphQLPlatform } from '../../../index.js';
 import { BooleanFilter } from '../../statement.js';
-import { NodeFilterInputType, NodeFilterInputValue } from './filter.js';
+import { NodeFilterInputType, type NodeFilterInputValue } from './filter.js';
 
 describe('NodeFilterInputType', () => {
   let gp: MyGP;
@@ -74,15 +74,12 @@ describe('NodeFilterInputType', () => {
         // These filters return FALSE
         it.each<NodeFilterInputValue>([
           null,
-          { id_in: [] },
+          { NOT: {} },
+          { AND: [null] },
           { OR: [] },
           { OR: [null] },
+          { id_in: [] },
           { category: { OR: [] } },
-          { category: { OR: [null] } },
-          { updatedBy: { OR: [] } },
-          { updatedBy: { OR: [null] } },
-          { NOT: {} },
-          { NOT: { id: undefined } },
         ])('%# - ArticleFilterInput.filter(%p) = FALSE', (input) => {
           const node = gp.getNodeByName('Article');
           const filterInputType = node.filterInputType;
@@ -104,30 +101,31 @@ describe('NodeFilterInputType', () => {
         it.each<NodeFilterInputValue>([
           undefined,
           {},
-          { id: undefined },
-          { id_not_in: [] },
+          { NOT: null },
           { AND: [] },
           { AND: [undefined] },
           { AND: [{}] },
-          { AND: [{ id: undefined }] },
           { OR: [undefined] },
           { OR: [{}] },
-          { OR: [{ id: undefined }] },
-          { NOT: undefined },
+          { id_not_in: [] },
         ])('%# - ArticleFilterInput.filter(%p) = TRUE', (input) => {
           const node = gp.getNodeByName('Article');
           const filterInputType = node.filterInputType;
 
-          expect(
-            filterInputType
-              .parseAndFilter(
-                input,
-                undefined,
-                utils.addPath(undefined, filterInputType.name),
-              )
-              .isTrue(),
-          ).toBeTruthy();
+          expect(filterInputType.parseAndFilter(input).isTrue()).toBeTruthy();
         });
+
+        it.each([{}])(
+          '%# - ArticleExtensionFilterInput.filter({ article: %p }) = TRUE',
+          (article) => {
+            const node = gp.getNodeByName('ArticleExtension');
+            const filterInputType = node.filterInputType;
+
+            expect(
+              filterInputType.parseAndFilter({ article }).isTrue(),
+            ).toBeTruthy();
+          },
+        );
       });
 
       describe('Components', () => {
@@ -1572,15 +1570,6 @@ describe('NodeFilterInputType', () => {
           >([
             [
               'An article WITH any "category" - 0',
-              { category_is_null: false },
-              {
-                kind: 'EDGE_EXISTS',
-                edge: 'category',
-              },
-            ],
-
-            [
-              'An article WITH any "category" - 1',
               { category_not: null },
               {
                 kind: 'EDGE_EXISTS',
@@ -1589,7 +1578,7 @@ describe('NodeFilterInputType', () => {
             ],
 
             [
-              'An article WITH any "category" - 2',
+              'An article WITH any "category" - 1',
               { category: {} },
               {
                 kind: 'EDGE_EXISTS',
@@ -1761,7 +1750,7 @@ describe('NodeFilterInputType', () => {
             ],
 
             [
-              'A user WITH any "profile" - 1',
+              'A user WITH any "profile" - 2',
               { profile: {} },
               {
                 kind: 'UNIQUE_REVERSE_EDGE_EXISTS',
@@ -1813,7 +1802,7 @@ describe('NodeFilterInputType', () => {
             ],
 
             [
-              'A user WITHOUT any "profile" - 1',
+              'A user WITHOUT any "profile" - 2',
               { profile_not: {} },
               {
                 kind: 'NOT',

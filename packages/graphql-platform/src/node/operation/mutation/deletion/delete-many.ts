@@ -9,11 +9,7 @@ import {
 } from '../../../abstract-operation.js';
 import { NodeDeletion } from '../../../change.js';
 import { OnEdgeHeadDeletion } from '../../../definition.js';
-import {
-  AndOperation,
-  NodeFilter,
-  type NodeSelectedValue,
-} from '../../../statement.js';
+import { NodeFilter, type NodeSelectedValue } from '../../../statement.js';
 import type { NodeFilterInputValue, OrderByInputValue } from '../../../type.js';
 import {
   catchConnectorOperationError,
@@ -86,17 +82,15 @@ export class DeleteManyMutation<
 
     const argsPath = utils.addPath(path, argsPathKey);
 
-    const filter = new NodeFilter(
-      this.node,
-      AndOperation.create([
-        authorization?.filter,
-        this.node.filterInputType.filter(
-          args.where,
-          context,
-          utils.addPath(argsPath, 'where'),
-        ).filter,
-      ]),
+    const where = this.node.filterInputType.filter(
+      args.where,
+      context,
+      utils.addPath(argsPath, 'where'),
     ).normalized;
+
+    const filter = (
+      authorization && where ? authorization.and(where) : authorization || where
+    )?.normalized;
 
     if (filter?.isFalse()) {
       return [];

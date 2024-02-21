@@ -7,7 +7,7 @@ import {
   argsPathKey,
   type NodeSelectionAwareArgs,
 } from '../../abstract-operation.js';
-import { AndOperation, NodeFilter } from '../../statement.js';
+import { NodeFilter } from '../../statement.js';
 import type { NodeFilterInputValue } from '../../type.js';
 import { AbstractQuery } from '../abstract-query.js';
 import type { OperationContext } from '../context.js';
@@ -55,17 +55,15 @@ export class CountQuery<TRequestContext extends object> extends AbstractQuery<
   ): Promise<CountQueryResult> {
     const argsPath = utils.addPath(path, argsPathKey);
 
-    const filter = new NodeFilter(
-      this.node,
-      AndOperation.create([
-        authorization?.filter,
-        this.node.filterInputType.filter(
-          args?.where,
-          context,
-          utils.addPath(argsPath, 'where'),
-        ).filter,
-      ]),
+    const where = this.node.filterInputType.filter(
+      args?.where,
+      context,
+      utils.addPath(argsPath, 'where'),
     ).normalized;
+
+    const filter = (
+      authorization && where ? authorization.and(where) : authorization || where
+    )?.normalized;
 
     if (filter?.isFalse()) {
       return 0;

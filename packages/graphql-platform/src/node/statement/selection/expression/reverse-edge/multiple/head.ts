@@ -16,6 +16,7 @@ import type {
   OrderByInputValue,
 } from '../../../../../type.js';
 import {
+  FalseValue,
   MultipleReverseEdgeExistsFilter,
   NodeFilter,
   OrOperation,
@@ -219,9 +220,9 @@ export class MultipleReverseEdgeHeadSelection<
           this.reverseEdge.head,
           OrOperation.create([
             this.headFilter?.getAffectedGraphByNodeChange(change).filter ??
-              null,
+              FalseValue,
             this.headOrdering?.getAffectedGraphByNodeChange(change).filter ??
-              null,
+              FalseValue,
             this.headSelection.getAffectedGraphByNodeChange(change).filter,
           ]),
         ),

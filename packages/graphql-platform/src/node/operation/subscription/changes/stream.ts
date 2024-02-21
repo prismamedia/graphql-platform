@@ -446,7 +446,7 @@ export class ChangesSubscriptionStream<
               this.filter?.getAffectedGraphByNodeChange(
                 change,
                 visitedRootNodes,
-              ).filter ?? null,
+              ).filter ?? FalseValue,
               this.onUpsertSelection.getAffectedGraphByNodeChange(
                 change,
                 visitedRootNodes,

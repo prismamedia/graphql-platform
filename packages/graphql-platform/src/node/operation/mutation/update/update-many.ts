@@ -12,7 +12,6 @@ import {
 import { NodeUpdate } from '../../../change.js';
 import type { UniqueConstraintValue } from '../../../definition.js';
 import {
-  AndOperation,
   NodeFilter,
   NodeUpdateStatement,
   NodeUpdateValue,
@@ -106,17 +105,15 @@ export class UpdateManyMutation<
 
     const argsPath = utils.addPath(path, argsPathKey);
 
-    const filter = new NodeFilter(
-      this.node,
-      AndOperation.create([
-        authorization?.filter,
-        this.node.filterInputType.filter(
-          args.where,
-          context,
-          utils.addPath(argsPath, 'where'),
-        ).filter,
-      ]),
+    const where = this.node.filterInputType.filter(
+      args.where,
+      context,
+      utils.addPath(argsPath, 'where'),
     ).normalized;
+
+    const filter = (
+      authorization && where ? authorization.and(where) : authorization || where
+    )?.normalized;
 
     if (filter?.isFalse()) {
       return [];

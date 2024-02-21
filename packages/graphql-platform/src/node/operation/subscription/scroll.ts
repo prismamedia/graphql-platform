@@ -7,7 +7,7 @@ import {
   type NodeSelectionAwareArgs,
   type RawNodeSelectionAwareArgs,
 } from '../../abstract-operation.js';
-import { AndOperation, NodeFilter } from '../../statement.js';
+import { NodeFilter } from '../../statement.js';
 import type { NodeFilterInputValue } from '../../type.js';
 import { AbstractSubscription } from '../abstract-subscription.js';
 import type { OperationContext } from '../context.js';
@@ -88,17 +88,15 @@ export class ScrollSubscription<
   ): ScrollSubscriptionStream {
     const argsPath = utils.addPath(path, argsPathKey);
 
-    const filter = new NodeFilter(
-      this.node,
-      AndOperation.create([
-        authorization?.filter,
-        this.node.filterInputType.filter(
-          args?.where,
-          context,
-          utils.addPath(argsPath, 'where'),
-        ).filter,
-      ]),
+    const where = this.node.filterInputType.filter(
+      args.where,
+      context,
+      utils.addPath(argsPath, 'where'),
     ).normalized;
+
+    const filter = (
+      authorization && where ? authorization.and(where) : authorization || where
+    )?.normalized;
 
     const ordering = this.orderingInputType.getEnumValue(args.orderBy).sort();
 

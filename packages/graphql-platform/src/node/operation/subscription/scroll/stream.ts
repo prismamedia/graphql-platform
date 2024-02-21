@@ -269,16 +269,17 @@ export class ScrollSubscriptionStream<
     }: ScrollSubscriptionStreamForEachOptions = {},
   ): Promise<void> {
     this.#ac.signal.throwIfAborted();
+
     const tasks = new PQueue({
       ...queueOptions,
-      concurrency: queueOptions?.concurrency ?? 1,
-      throwOnTimeout: queueOptions?.throwOnTimeout ?? true,
+      concurrency: queueOptions.concurrency ?? 1,
+      throwOnTimeout: queueOptions.throwOnTimeout ?? true,
     });
 
     const buffer = bufferOptions ?? tasks.concurrency;
     assert(
-      typeof buffer === 'number' && buffer >= 1,
-      `The buffer has to be greater than or equal to 1, got ${inspect(buffer)}`,
+      typeof buffer === 'number' && buffer >= 0,
+      `The buffer has to be greater than or equal to 0, got ${inspect(buffer)}`,
     );
 
     const normalizedRetryOptions: PRetryOptions | false = retryOptions
@@ -329,7 +330,7 @@ export class ScrollSubscriptionStream<
 
         try {
           for await (const value of this) {
-            await tasks.onSizeLessThan(buffer);
+            await tasks.onSizeLessThan(buffer + 1);
 
             const taskIndex = currentIndex++;
             const wrappedTask = async () => {
@@ -371,10 +372,11 @@ export class ScrollSubscriptionStream<
     }: ScrollSubscriptionStreamByBatchOptions = {},
   ): Promise<void> {
     this.#ac.signal.throwIfAborted();
+
     const tasks = new PQueue({
       ...queueOptions,
-      concurrency: queueOptions?.concurrency ?? 1,
-      throwOnTimeout: queueOptions?.throwOnTimeout ?? true,
+      concurrency: queueOptions.concurrency ?? 1,
+      throwOnTimeout: queueOptions.throwOnTimeout ?? true,
     });
 
     const buffer = bufferOptions ?? tasks.concurrency;

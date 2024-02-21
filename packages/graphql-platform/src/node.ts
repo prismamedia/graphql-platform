@@ -61,11 +61,11 @@ import {
 import {
   NodeCreationInputType,
   NodeFilterInputType,
-  NodeFilterInputValue,
   NodeOrderingInputType,
   NodeOutputType,
   NodeUniqueFilterInputType,
   NodeUpdateInputType,
+  type NodeFilterInputValue,
   type NodeOutputTypeConfig,
 } from './node/type.js';
 
@@ -1689,7 +1689,7 @@ export class Node<
     context: OperationContext,
     mutationType?: utils.MutationType,
   ): NodeFilter | undefined {
-    const authorization: NodeFilterInputValue | boolean | undefined =
+    const authorization: NodeFilterInputValue | boolean =
       this.config.authorization?.call(this, context.request, mutationType);
 
     return this.filterInputType.parseAndFilter(

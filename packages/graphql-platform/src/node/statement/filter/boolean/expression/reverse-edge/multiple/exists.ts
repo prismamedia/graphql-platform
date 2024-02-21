@@ -38,11 +38,17 @@ export class MultipleReverseEdgeExistsFilter
     reverseEdge: MultipleReverseEdge,
     headFilter?: NodeFilter,
   ): BooleanFilter {
-    headFilter && assert.equal(reverseEdge.head, headFilter.node);
+    if (headFilter) {
+      assert.equal(reverseEdge.head, headFilter.node);
 
-    return headFilter?.isFalse()
-      ? FalseValue
-      : new this(reverseEdge, headFilter?.normalized);
+      if (!headFilter.normalized) {
+        return MultipleReverseEdgeExistsFilter.create(reverseEdge);
+      } else if (headFilter.isFalse()) {
+        return FalseValue;
+      }
+    }
+
+    return new this(reverseEdge, headFilter);
   }
 
   public readonly key: string;
@@ -82,13 +88,15 @@ export class MultipleReverseEdgeExistsFilter
     ) {
       return MultipleReverseEdgeExistsFilter.create(
         this.reverseEdge,
-        new NodeFilter(
-          this.reverseEdge.head,
-          AndOperation.create(
-            [this.headFilter?.filter, operand.headFilter?.filter],
-            remainingReducers,
-          ),
-        ),
+        this.headFilter && operand.headFilter
+          ? new NodeFilter(
+              this.reverseEdge.head,
+              AndOperation.create(
+                [this.headFilter.filter, operand.headFilter.filter],
+                remainingReducers,
+              ),
+            )
+          : this.headFilter || operand.headFilter,
       );
     }
 
@@ -105,13 +113,15 @@ export class MultipleReverseEdgeExistsFilter
     ) {
       return MultipleReverseEdgeExistsFilter.create(
         this.reverseEdge,
-        new NodeFilter(
-          this.reverseEdge.head,
-          OrOperation.create(
-            [this.headFilter?.filter, operand.headFilter?.filter],
-            remainingReducers,
-          ),
-        ),
+        this.headFilter && operand.headFilter
+          ? new NodeFilter(
+              this.reverseEdge.head,
+              OrOperation.create(
+                [this.headFilter.filter, operand.headFilter.filter],
+                remainingReducers,
+              ),
+            )
+          : undefined,
       );
     }
 
@@ -119,18 +129,20 @@ export class MultipleReverseEdgeExistsFilter
   }
 
   public execute(value: NodeSelectedValue): boolean | undefined {
-    const reverseEdgeValues = value[this.reverseEdge.name];
-    if (reverseEdgeValues === undefined) {
-      return;
-    }
+    const reverseEdgeHeadValues = value[this.reverseEdge.name];
 
-    if (!Array.isArray(reverseEdgeValues) || !reverseEdgeValues.length) {
+    if (reverseEdgeHeadValues === undefined) {
+      return;
+    } else if (
+      !Array.isArray(reverseEdgeHeadValues) ||
+      !reverseEdgeHeadValues.length
+    ) {
       return false;
     }
 
     return this.headFilter
-      ? reverseEdgeValues.some((reverseEdgeValue) =>
-          this.headFilter!.execute(reverseEdgeValue, true),
+      ? reverseEdgeHeadValues.some((reverseEdgeHeadValue) =>
+          this.headFilter!.execute(reverseEdgeHeadValue, true),
         )
       : true;
   }

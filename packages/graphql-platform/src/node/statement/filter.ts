@@ -38,22 +38,36 @@ export class NodeFilter {
     return new NodeFilter(this.node, NotOperation.create(this.filter));
   }
 
-  public and(other: NodeFilter): NodeFilter {
-    assert.equal(other.node, this.node);
+  public and(...others: ReadonlyArray<NodeFilter>): NodeFilter | this {
+    return others.length
+      ? new NodeFilter(
+          this.node,
+          AndOperation.create([
+            this.filter,
+            ...others.map((other) => {
+              assert.equal(other.node, this.node);
 
-    return new NodeFilter(
-      this.node,
-      AndOperation.create([this.filter, other.filter]),
-    );
+              return other.filter;
+            }),
+          ]),
+        )
+      : this;
   }
 
-  public or(other: NodeFilter): NodeFilter {
-    assert.equal(other.node, this.node);
+  public or(...others: ReadonlyArray<NodeFilter>): NodeFilter | this {
+    return others.length
+      ? new NodeFilter(
+          this.node,
+          OrOperation.create([
+            this.filter,
+            ...others.map((other) => {
+              assert.equal(other.node, this.node);
 
-    return new NodeFilter(
-      this.node,
-      OrOperation.create([this.filter, other.filter]),
-    );
+              return other.filter;
+            }),
+          ]),
+        )
+      : this;
   }
 
   public equals(filter: unknown): boolean {

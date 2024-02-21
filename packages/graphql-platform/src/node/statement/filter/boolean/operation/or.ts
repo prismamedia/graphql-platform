@@ -1,4 +1,5 @@
 import Denque from 'denque';
+import assert from 'node:assert/strict';
 import type {
   NodeSelectedValue,
   NodeValue,
@@ -14,7 +15,6 @@ import { BooleanValue, FalseValue, TrueValue } from '../value.js';
 import { AndOperation, type AndOperand } from './and.js';
 import { NotOperation } from './not.js';
 
-export type RawOrOperand = BooleanFilter | null | undefined;
 export type OrOperand = BooleanExpression | AndOperation | NotOperation;
 
 export interface OrOperationAST {
@@ -27,7 +27,7 @@ export class OrOperation implements BooleanExpressionInterface {
 
   protected static reducers(
     remainingReducers: number,
-    queue: Denque<RawOrOperand>,
+    _queue: Denque<BooleanFilter>,
   ): Array<(a: OrOperand, b: OrOperand) => BooleanFilter | undefined> {
     return remainingReducers
       ? [
@@ -61,7 +61,7 @@ export class OrOperation implements BooleanExpressionInterface {
    * @see https://en.wikipedia.org/wiki/Logical_disjunction
    */
   public static create(
-    rawOperands: Array<RawOrOperand>,
+    rawOperands: Array<BooleanFilter>,
     remainingReducers: number = 5,
   ): BooleanFilter {
     const operands: OrOperand[] = [];
@@ -70,14 +70,8 @@ export class OrOperation implements BooleanExpressionInterface {
     const reducers = this.reducers(remainingReducers, queue);
 
     while (queue.length) {
-      const rawOperand = queue.shift();
-
-      const operand =
-        rawOperand === undefined
-          ? TrueValue
-          : rawOperand === null
-          ? FalseValue
-          : rawOperand;
+      const operand = queue.shift();
+      assert(operand != null, `Expects a valid operand`);
 
       // Reduce recursively
       if (operand instanceof BooleanValue) {

@@ -83,21 +83,19 @@ function parseEdgeSelection(
 
     return edge.isNullable() || parsedHeadAuthorization
       ? `IF(
-        ${AND(
-          [
-            OR(
-              tableReference.table
-                .getForeignKeyByEdge(edge)
-                .columns.map(
-                  (column) =>
-                    `${tableReference.getEscapedColumnIdentifier(
-                      column,
-                    )} IS NOT NULL`,
-                ),
-            ),
-            parsedHeadAuthorization,
-          ].filter(utils.isNonNil),
-        )},
+        ${AND([
+          OR(
+            tableReference.table
+              .getForeignKeyByEdge(edge)
+              .columns.map(
+                (column) =>
+                  `${tableReference.getEscapedColumnIdentifier(
+                    column,
+                  )} IS NOT NULL`,
+              ),
+          ),
+          parsedHeadAuthorization,
+        ])},
         ${parsedHeadSelection},
         NULL
       )`

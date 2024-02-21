@@ -24,11 +24,19 @@ export interface EdgeExistsFilterAST {
 
 export class EdgeExistsFilter implements BooleanExpressionInterface {
   public static create(edge: Edge, headFilter?: NodeFilter): BooleanFilter {
-    headFilter && assert.equal(edge.head, headFilter.node);
+    if (headFilter) {
+      assert.equal(edge.head, headFilter.node);
 
-    return headFilter?.isFalse()
-      ? FalseValue
-      : new this(edge, headFilter?.normalized);
+      if (!headFilter.normalized) {
+        return EdgeExistsFilter.create(edge);
+      } else if (headFilter.isFalse()) {
+        return FalseValue;
+      }
+    } else if (!edge.isNullable()) {
+      return TrueValue;
+    }
+
+    return new this(edge, headFilter);
   }
 
   public readonly key: string;
@@ -71,13 +79,15 @@ export class EdgeExistsFilter implements BooleanExpressionInterface {
     if (operand instanceof EdgeExistsFilter && operand.edge === this.edge) {
       return EdgeExistsFilter.create(
         this.edge,
-        new NodeFilter(
-          this.edge.head,
-          AndOperation.create(
-            [this.headFilter?.filter, operand.headFilter?.filter],
-            remainingReducers,
-          ),
-        ),
+        this.headFilter && operand.headFilter
+          ? new NodeFilter(
+              this.edge.head,
+              AndOperation.create(
+                [this.headFilter.filter, operand.headFilter.filter],
+                remainingReducers,
+              ),
+            )
+          : this.headFilter || operand.headFilter,
       );
     }
   }
@@ -89,28 +99,31 @@ export class EdgeExistsFilter implements BooleanExpressionInterface {
     if (operand instanceof EdgeExistsFilter && operand.edge === this.edge) {
       return EdgeExistsFilter.create(
         this.edge,
-        new NodeFilter(
-          this.edge.head,
-          OrOperation.create(
-            [this.headFilter?.filter, operand.headFilter?.filter],
-            remainingReducers,
-          ),
-        ),
+        this.headFilter && operand.headFilter
+          ? new NodeFilter(
+              this.edge.head,
+              OrOperation.create(
+                [this.headFilter.filter, operand.headFilter.filter],
+                remainingReducers,
+              ),
+            )
+          : undefined,
       );
     }
   }
 
   public execute(value: NodeSelectedValue): boolean | undefined {
-    const edgeValue = value[this.edge.name];
-    if (edgeValue === undefined) {
-      return;
-    }
+    const edgeHeadValue = value[this.edge.name];
 
-    if (!edgeValue) {
+    if (edgeHeadValue === undefined) {
+      return;
+    } else if (edgeHeadValue === null) {
       return false;
     }
 
-    return this.headFilter ? this.headFilter.execute(edgeValue, true) : true;
+    return this.headFilter
+      ? this.headFilter.execute(edgeHeadValue, true)
+      : true;
   }
 
   public isExecutableWithinUniqueConstraint(unique: UniqueConstraint): boolean {

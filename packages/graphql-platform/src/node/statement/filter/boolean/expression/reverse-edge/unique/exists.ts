@@ -35,11 +35,17 @@ export class UniqueReverseEdgeExistsFilter
     reverseEdge: UniqueReverseEdge,
     headFilter?: NodeFilter,
   ): BooleanFilter {
-    headFilter && assert.equal(reverseEdge.head, headFilter.node);
+    if (headFilter) {
+      assert.equal(reverseEdge.head, headFilter.node);
 
-    return headFilter?.isFalse()
-      ? FalseValue
-      : new this(reverseEdge, headFilter?.normalized);
+      if (!headFilter.normalized) {
+        return UniqueReverseEdgeExistsFilter.create(reverseEdge);
+      } else if (headFilter.isFalse()) {
+        return FalseValue;
+      }
+    }
+
+    return new this(reverseEdge, headFilter);
   }
 
   public readonly key: string;
@@ -88,13 +94,15 @@ export class UniqueReverseEdgeExistsFilter
     ) {
       return UniqueReverseEdgeExistsFilter.create(
         this.reverseEdge,
-        new NodeFilter(
-          this.reverseEdge.head,
-          AndOperation.create(
-            [this.headFilter?.filter, operand.headFilter?.filter],
-            remainingReducers,
-          ),
-        ),
+        this.headFilter && operand.headFilter
+          ? new NodeFilter(
+              this.reverseEdge.head,
+              AndOperation.create(
+                [this.headFilter.filter, operand.headFilter.filter],
+                remainingReducers,
+              ),
+            )
+          : this.headFilter || operand.headFilter,
       );
     }
   }
@@ -109,29 +117,30 @@ export class UniqueReverseEdgeExistsFilter
     ) {
       return UniqueReverseEdgeExistsFilter.create(
         this.reverseEdge,
-        new NodeFilter(
-          this.reverseEdge.head,
-          OrOperation.create(
-            [this.headFilter?.filter, operand.headFilter?.filter],
-            remainingReducers,
-          ),
-        ),
+        this.headFilter && operand.headFilter
+          ? new NodeFilter(
+              this.reverseEdge.head,
+              OrOperation.create(
+                [this.headFilter.filter, operand.headFilter.filter],
+                remainingReducers,
+              ),
+            )
+          : undefined,
       );
     }
   }
 
   public execute(value: NodeSelectedValue): boolean | undefined {
-    const reverseEdgeValue = value[this.reverseEdge.name];
-    if (reverseEdgeValue === undefined) {
-      return;
-    }
+    const reverseEdgeHeadValue = value[this.reverseEdge.name];
 
-    if (!reverseEdgeValue) {
+    if (reverseEdgeHeadValue === undefined) {
+      return;
+    } else if (reverseEdgeHeadValue === null) {
       return false;
     }
 
     return this.headFilter
-      ? this.headFilter.execute(reverseEdgeValue, true)
+      ? this.headFilter.execute(reverseEdgeHeadValue, true)
       : true;
   }
 

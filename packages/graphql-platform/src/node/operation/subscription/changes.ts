@@ -6,7 +6,7 @@ import * as R from 'remeda';
 import type { Merge } from 'type-fest';
 import { argsPathKey } from '../../abstract-operation.js';
 import { Leaf } from '../../definition.js';
-import { AndOperation, NodeFilter, NodeSelection } from '../../statement.js';
+import { NodeFilter, NodeSelection } from '../../statement.js';
 import type { NodeFilterInputValue, RawNodeSelection } from '../../type.js';
 import { AbstractSubscription } from '../abstract-subscription.js';
 import type { OperationContext } from '../context.js';
@@ -210,17 +210,15 @@ export class ChangesSubscription<
   ): ChangesSubscriptionStream {
     const argsPath = utils.addPath(path, argsPathKey);
 
-    const filter = new NodeFilter(
-      this.node,
-      AndOperation.create([
-        authorization?.filter,
-        this.node.filterInputType.filter(
-          args?.where,
-          context,
-          utils.addPath(argsPath, 'where'),
-        ).filter,
-      ]),
+    const where = this.node.filterInputType.filter(
+      args.where,
+      context,
+      utils.addPath(argsPath, 'where'),
     ).normalized;
+
+    const filter = (
+      authorization && where ? authorization.and(where) : authorization || where
+    )?.normalized;
 
     return new ChangesSubscriptionStream(this.node, context, {
       filter,

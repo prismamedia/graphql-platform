@@ -8,7 +8,11 @@ import type { TableReference } from './table-reference.js';
 
 export type WhereCondition = string;
 
-export function AND(conditions: ReadonlyArray<WhereCondition>): WhereCondition {
+export function AND(
+  maybeConditions: ReadonlyArray<utils.Nillable<WhereCondition>>,
+): WhereCondition {
+  const conditions = maybeConditions.filter(utils.isNonNil);
+
   return conditions.length > 1
     ? `(${conditions.join(' AND ')})`
     : conditions.length === 1
@@ -16,7 +20,11 @@ export function AND(conditions: ReadonlyArray<WhereCondition>): WhereCondition {
     : 'TRUE';
 }
 
-export function OR(conditions: ReadonlyArray<WhereCondition>): WhereCondition {
+export function OR(
+  maybeConditions: ReadonlyArray<utils.Nillable<WhereCondition>>,
+): WhereCondition {
+  const conditions = maybeConditions.filter(utils.isNonNil);
+
   return conditions.length > 1
     ? `(${conditions.join(' OR ')})`
     : conditions.length === 1
@@ -147,23 +155,21 @@ function parseEdgeFilter(
     if (referenceColumnTree) {
       const subTree = referenceColumnTree.getColumnTreeByEdge(edge);
 
-      return AND(
-        [
-          edge.isNullable()
-            ? OR(
-                subTree.columns.map(
-                  (column) =>
-                    `${tableReference.getEscapedColumnIdentifier(
-                      column,
-                    )} IS NOT NULL`,
-                ),
-              )
-            : undefined,
-          filter.headFilter
-            ? filterNode(tableReference, filter.headFilter, subTree)
-            : undefined,
-        ].filter(utils.isNonNil),
-      );
+      return AND([
+        edge.isNullable()
+          ? OR(
+              subTree.columns.map(
+                (column) =>
+                  `${tableReference.getEscapedColumnIdentifier(
+                    column,
+                  )} IS NOT NULL`,
+              ),
+            )
+          : undefined,
+        filter.headFilter
+          ? filterNode(tableReference, filter.headFilter, subTree)
+          : undefined,
+      ]);
     }
 
     const headAuthorization = tableReference.context.getAuthorization(
@@ -175,33 +181,31 @@ function parseEdgeFilter(
         ? headAuthorization.and(filter.headFilter).normalized
         : headAuthorization || filter.headFilter;
 
-    return AND(
-      [
-        edge.isNullable()
-          ? OR(
-              tableReference.table
-                .getForeignKeyByEdge(edge)
-                .columns.map(
-                  (column) =>
-                    `${tableReference.getEscapedColumnIdentifier(
-                      column,
-                    )} IS NOT NULL`,
-                ),
+    return AND([
+      edge.isNullable()
+        ? OR(
+            tableReference.table
+              .getForeignKeyByEdge(edge)
+              .columns.map(
+                (column) =>
+                  `${tableReference.getEscapedColumnIdentifier(
+                    column,
+                  )} IS NOT NULL`,
+              ),
+          )
+        : undefined,
+      mergedHeadAuthorizationAndHeadFilter
+        ? mergedHeadAuthorizationAndHeadFilter.isExecutableWithinUniqueConstraint(
+            edge.referencedUniqueConstraint,
+          )
+          ? filterNode(
+              tableReference,
+              mergedHeadAuthorizationAndHeadFilter,
+              tableReference.table.getColumnTreeByEdge(edge),
             )
-          : undefined,
-        mergedHeadAuthorizationAndHeadFilter
-          ? mergedHeadAuthorizationAndHeadFilter.isExecutableWithinUniqueConstraint(
-              edge.referencedUniqueConstraint,
-            )
-            ? filterNode(
-                tableReference,
-                mergedHeadAuthorizationAndHeadFilter,
-                tableReference.table.getColumnTreeByEdge(edge),
-              )
-            : `EXISTS ${tableReference.subquery(edge, '*', filter.headFilter)}`
-          : undefined,
-      ].filter(utils.isNonNil),
-    );
+          : `EXISTS ${tableReference.subquery(edge, '*', filter.headFilter)}`
+        : undefined,
+    ]);
   } else {
     throw new utils.UnreachableValueError(filter);
   }
