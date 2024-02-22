@@ -1,6 +1,6 @@
 import * as utils from '@prismamedia/graphql-platform-utils';
 import { Memoize } from '@prismamedia/memoize';
-import type * as graphql from 'graphql';
+import * as graphql from 'graphql';
 import type { Except, Promisable } from 'type-fest';
 import type { BrokerInterface } from '../../../../../broker-interface.js';
 import type { ConnectorInterface } from '../../../../../connector-interface.js';
@@ -127,6 +127,7 @@ export class VirtualOutputType<
 
   public readonly args?: ReadonlyArray<utils.Input>;
   public readonly type: graphql.GraphQLOutputType;
+  public readonly namedType: graphql.GraphQLNamedOutputType;
 
   public readonly resolve: (
     source: TSource,
@@ -179,6 +180,7 @@ export class VirtualOutputType<
     }
 
     this.type = config.type;
+    this.namedType = graphql.getNamedType(config.type);
 
     this.resolve = utils
       .ensureFunction(config.resolve, utils.addPath(configPath, 'resolve'))
