@@ -16,11 +16,19 @@ export type OrderByInputValue = utils.Nillable<
   NonNullable<NodeOrderingInputValue>[]
 >;
 
+export type NodeOrderingInputTypeOverride = {
+  name?: string;
+  description?: string;
+};
+
 export class NodeOrderingInputType extends utils.EnumInputType<OrderingExpressionInput> {
-  public constructor(public readonly node: Node) {
+  public constructor(
+    public readonly node: Node,
+    override?: Partial<NodeOrderingInputTypeOverride>,
+  ) {
     super({
-      name: `${node}OrderingInput`,
-      description: `Order the "${node}" nodes`,
+      name: override?.name ?? `${node}OrderingInput`,
+      description: override?.description ?? `Order the "${node}" nodes`,
     });
   }
 

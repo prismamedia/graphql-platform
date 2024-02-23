@@ -36,11 +36,19 @@ export * from './filter/field.js';
 
 export type NodeFilterInputValue = utils.Nillable<utils.PlainObject>;
 
+export type NodeFilterInputTypeOverride = {
+  name?: string;
+  description?: string;
+};
+
 export class NodeFilterInputType extends utils.ObjectInputType<FieldFilterInputType> {
-  public constructor(public readonly node: Node) {
+  public constructor(
+    public readonly node: Node,
+    override?: Partial<NodeFilterInputTypeOverride>,
+  ) {
     super({
-      name: `${node}FilterInput`,
-      description: `The "${node}" nodes' filter`,
+      name: override?.name ?? `${node}FilterInput`,
+      description: override?.description ?? `The "${node}" nodes' filter`,
     });
   }
 
@@ -399,19 +407,17 @@ export class NodeFilterInputType extends utils.ObjectInputType<FieldFilterInputT
   @Memoize()
   public override get fields(): ReadonlyArray<FieldFilterInputType> {
     return [
-      ...Array.from(
-        this.node.componentsByName.values(),
-      ).flatMap<FieldFilterInputType>((component) =>
-        component instanceof Leaf
-          ? this.getLeafFields(component)
-          : this.getEdgeFields(component),
+      ...Array.from(this.node.componentSet).flatMap<FieldFilterInputType>(
+        (component) =>
+          component instanceof Leaf
+            ? this.getLeafFields(component)
+            : this.getEdgeFields(component),
       ),
-      ...Array.from(
-        this.node.reverseEdgesByName.values(),
-      ).flatMap<FieldFilterInputType>((reverseEdge) =>
-        reverseEdge instanceof UniqueReverseEdge
-          ? this.getUniqueReverseEdgeFields(reverseEdge)
-          : this.getMultipleReverseEdgeFields(reverseEdge),
+      ...Array.from(this.node.reverseEdgeSet).flatMap<FieldFilterInputType>(
+        (reverseEdge) =>
+          reverseEdge instanceof UniqueReverseEdge
+            ? this.getUniqueReverseEdgeFields(reverseEdge)
+            : this.getMultipleReverseEdgeFields(reverseEdge),
       ),
       ...this.getBooleanOperationFields(),
     ];
