@@ -1065,13 +1065,13 @@ __metadata:
     "@swc/jest": "npm:0.2.36"
     "@tsconfig/node20": "npm:20.1.2"
     "@types/node": "npm:20.11.20"
-    "@types/semver": "npm:7.5.7"
+    "@types/semver": "npm:7.5.8"
     graphql: "npm:16.8.1"
     inflection: "npm:^3.0.0"
     jest: "npm:29.7.0"
     mariadb: "npm:^3.2.3"
     publint: "npm:0.2.7"
-    remeda: "npm:^1.44.0"
+    remeda: "npm:^1.44.1"
     semver: "npm:^7.6.0"
     type-fest: "npm:^4.10.3"
     typescript: "npm:5.3.3"
@@ -1147,7 +1147,7 @@ __metadata:
     indefinite: "npm:^2.5.1"
     jest: "npm:29.7.0"
     publint: "npm:0.2.7"
-    remeda: "npm:^1.44.0"
+    remeda: "npm:^1.44.1"
     type-fest: "npm:^4.10.3"
     typescript: "npm:5.3.3"
   peerDependencies:
@@ -1179,7 +1179,7 @@ __metadata:
     p-queue: "npm:^8.0.1"
     p-retry: "npm:^6.2.0"
     publint: "npm:0.2.7"
-    remeda: "npm:^1.44.0"
+    remeda: "npm:^1.44.1"
     type-fest: "npm:^4.10.3"
     typescript: "npm:5.3.3"
   peerDependencies:
@@ -1778,7 +1778,14 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@types/semver@npm:7.5.7, @types/semver@npm:^7.1.0":
+"@types/semver@npm:7.5.8":
+  version: 7.5.8
+  resolution: "@types/semver@npm:7.5.8"
+  checksum: 10/3496808818ddb36deabfe4974fd343a78101fa242c4690044ccdc3b95dcf8785b494f5d628f2f47f38a702f8db9c53c67f47d7818f2be1b79f2efb09692e1178
+  languageName: node
+  linkType: hard
+
+"@types/semver@npm:^7.1.0":
   version: 7.5.7
   resolution: "@types/semver@npm:7.5.7"
   checksum: 10/535d88ec577fe59e38211881f79a1e2ba391e9e1516f8fff74e7196a5ba54315bace9c67a4616c334c830c89027d70a9f473a4ceb634526086a9da39180f2f9a
@@ -5046,10 +5053,10 @@ __metadata:
   languageName: node
   linkType: hard
 
-"remeda@npm:^1.44.0":
-  version: 1.44.0
-  resolution: "remeda@npm:1.44.0"
-  checksum: 10/7470f6a37ee43b6f80c26ea15515e8dca9de37740b3f4d1761555f87eb6a743a7a9d5f08f474c83372aa9aa4058c3d5ed2a724ce57aee31946cadaebbc0e48cd
+"remeda@npm:^1.44.1":
+  version: 1.44.1
+  resolution: "remeda@npm:1.44.1"
+  checksum: 10/79581ccad0be86865bf6c61344e908a834e4effb4732d041cc40552c26e6efd8e131f5ec172d9ec62e37e096dc7e503d6ac69d8999127dfa7345e4a166806668
   languageName: node
   linkType: hard
 

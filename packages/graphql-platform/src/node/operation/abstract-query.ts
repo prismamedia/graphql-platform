@@ -1,7 +1,7 @@
 import * as utils from '@prismamedia/graphql-platform-utils';
 import { Memoize } from '@prismamedia/memoize';
 import * as graphql from 'graphql';
-import type { CamelCase, Promisable } from 'type-fest';
+import type { CamelCase } from 'type-fest';
 import { AbstractOperation } from '../abstract-operation.js';
 import type { OperationContext } from './context.js';
 
@@ -13,7 +13,7 @@ export abstract class AbstractQuery<
   TRequestContext,
   OperationContext<TRequestContext>,
   TArgs,
-  Promisable<TResult>
+  Promise<TResult>
 > {
   public readonly operationType = graphql.OperationTypeNode.QUERY;
 

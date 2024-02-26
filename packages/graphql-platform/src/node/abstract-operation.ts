@@ -79,11 +79,14 @@ export abstract class AbstractOperation<
     this.gp = node.gp;
   }
 
+  protected get connector(): ConnectorInterface {
+    return this.gp.connector;
+  }
+
   public toString(): string {
     return this.name;
   }
 
-  @Memoize()
   public isEnabled(): boolean {
     return true;
   }
@@ -115,10 +118,6 @@ export abstract class AbstractOperation<
     if (this.isPublic()) {
       this.getGraphQLFieldConfig();
     }
-  }
-
-  protected get connector(): ConnectorInterface {
-    return this.gp.connector;
   }
 
   protected assertIsEnabled(path: utils.Path): void {
