@@ -42,7 +42,7 @@ export type NodeFilterInputTypeOverride = {
 };
 
 export class NodeFilterInputType extends utils.ObjectInputType<FieldFilterInputType> {
-  public static getLeafFields(leaf: Leaf): LeafFilterInputType[] {
+  public static createLeafFields(leaf: Leaf): LeafFilterInputType[] {
     const fields: LeafFilterInputType[] = (['eq', 'not'] as const).map(
       (operator) =>
         new LeafFilterInputType<LeafValue>(leaf, operator, {
@@ -160,7 +160,7 @@ export class NodeFilterInputType extends utils.ObjectInputType<FieldFilterInputT
     return fields;
   }
 
-  public static getEdgeFields(
+  public static createEdgeFields(
     edge: Edge,
     headFilterInputType: NodeFilterInputType = edge.head.filterInputType,
   ): EdgeFilterInputType[] {
@@ -211,7 +211,7 @@ export class NodeFilterInputType extends utils.ObjectInputType<FieldFilterInputT
     return fields;
   }
 
-  public static getUniqueReverseEdgeFields(
+  public static createUniqueReverseEdgeFields(
     reverseEdge: UniqueReverseEdge,
     headFilterInputType: NodeFilterInputType = reverseEdge.head.filterInputType,
   ): ReverseEdgeFilterInputType[] {
@@ -271,7 +271,7 @@ export class NodeFilterInputType extends utils.ObjectInputType<FieldFilterInputT
    *    = !set.some(filter);
    *    = set.every(!filter);
    */
-  public static getMultipleReverseEdgeFields(
+  public static createMultipleReverseEdgeFields(
     reverseEdge: MultipleReverseEdge,
     headFilterInputType: NodeFilterInputType = reverseEdge.head.filterInputType,
   ): ReverseEdgeFilterInputType[] {
@@ -359,7 +359,7 @@ export class NodeFilterInputType extends utils.ObjectInputType<FieldFilterInputT
     });
   }
 
-  protected getBooleanOperationFields(): BooleanOperationFilterInputType[] {
+  public createBooleanOperationFields(): BooleanOperationFilterInputType[] {
     return [
       new BooleanOperationFilterInputType<NodeFilterInputValue[]>({
         name: 'AND',
@@ -410,16 +410,16 @@ export class NodeFilterInputType extends utils.ObjectInputType<FieldFilterInputT
       ...Array.from(this.node.componentSet).flatMap<FieldFilterInputType>(
         (component) =>
           component instanceof Leaf
-            ? constructor.getLeafFields(component)
-            : constructor.getEdgeFields(component),
+            ? constructor.createLeafFields(component)
+            : constructor.createEdgeFields(component),
       ),
       ...Array.from(this.node.reverseEdgeSet).flatMap<FieldFilterInputType>(
         (reverseEdge) =>
           reverseEdge instanceof UniqueReverseEdge
-            ? constructor.getUniqueReverseEdgeFields(reverseEdge)
-            : constructor.getMultipleReverseEdgeFields(reverseEdge),
+            ? constructor.createUniqueReverseEdgeFields(reverseEdge)
+            : constructor.createMultipleReverseEdgeFields(reverseEdge),
       ),
-      ...this.getBooleanOperationFields(),
+      ...this.createBooleanOperationFields(),
     ];
   }
 
