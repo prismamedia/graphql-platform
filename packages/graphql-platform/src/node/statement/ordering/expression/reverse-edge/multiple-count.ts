@@ -6,15 +6,10 @@ import {
   type NodeUpdate,
 } from '../../../../change.js';
 import type { MultipleReverseEdge } from '../../../../definition.js';
+import type { NodeOrderingInputValue } from '../../../../type.js';
 import { OrOperation, type BooleanFilter } from '../../../filter.js';
 import type { OrderingDirection } from '../../direction.js';
 import type { OrderingExpressionInterface } from '../../expression-interface.js';
-
-export interface MultipleReverseEdgeCountOrderingAST {
-  kind: 'MULTIPLE_REVERSE_EDGE_COUNT';
-  reverseEdge: MultipleReverseEdge['name'];
-  direction: OrderingDirection;
-}
 
 export class MultipleReverseEdgeCountOrdering
   implements OrderingExpressionInterface
@@ -39,7 +34,7 @@ export class MultipleReverseEdgeCountOrdering
   public getAffectedGraphByNodeChange(
     change: NodeChange,
     visitedRootNodes?: NodeValue[],
-  ): BooleanFilter {
+  ): BooleanFilter | null {
     const operands: BooleanFilter[] = [];
 
     if (change.node === this.reverseEdge.head) {
@@ -98,18 +93,10 @@ export class MultipleReverseEdgeCountOrdering
       }
     }
 
-    return OrOperation.create(operands);
+    return operands.length ? OrOperation.create(operands) : null;
   }
 
-  public get ast(): MultipleReverseEdgeCountOrderingAST {
-    return {
-      kind: 'MULTIPLE_REVERSE_EDGE_COUNT',
-      reverseEdge: this.reverseEdge.name,
-      direction: this.direction,
-    };
-  }
-
-  public get inputValue() {
+  public get inputValue(): NonNullable<NodeOrderingInputValue> {
     return this.reverseEdge.getOrderingInput(this.direction).name;
   }
 }

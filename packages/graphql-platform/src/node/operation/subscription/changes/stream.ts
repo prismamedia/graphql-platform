@@ -442,22 +442,30 @@ export class ChangesSubscriptionStream<
         this.node,
         OrOperation.create(
           Array.from(aggregation, (change) => {
-            const filter = OrOperation.create([
+            const affectedFilterGraph =
               this.filter?.getAffectedGraphByNodeChange(
                 change,
                 visitedRootNodes,
-              ).filter ?? FalseValue,
+              );
+
+            const affectedSelectionGraph =
               this.onUpsertSelection.getAffectedGraphByNodeChange(
                 change,
                 visitedRootNodes,
-              ).filter,
-            ]);
+              );
 
-            if (!filter.equals(FalseValue)) {
+            const affectedGraph =
+              affectedFilterGraph && affectedSelectionGraph
+                ? affectedFilterGraph.or(affectedSelectionGraph)
+                : affectedFilterGraph ?? affectedSelectionGraph;
+
+            if (affectedGraph && !affectedGraph.isFalse()) {
               initiatorSet.add(change.requestContext);
+
+              return affectedGraph.filter;
             }
 
-            return filter;
+            return FalseValue;
           }),
         ),
       );

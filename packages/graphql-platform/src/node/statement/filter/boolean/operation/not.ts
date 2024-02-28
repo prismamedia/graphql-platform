@@ -5,26 +5,19 @@ import type {
 } from '../../../../../node.js';
 import type { NodeChange, NodeUpdate } from '../../../../change.js';
 import type { NodeFilterInputValue } from '../../../../type.js';
+import { AbstractBooleanFilter } from '../../abstract.js';
 import type { BooleanFilter } from '../../boolean.js';
-import type { BooleanExpressionInterface } from '../expression-interface.js';
 import type { BooleanExpression } from '../expression.js';
 import { BooleanValue } from '../value.js';
-import { AndOperation, type AndOperand } from './and.js';
-import { OrOperation, type OrOperand } from './or.js';
+import { AndOperation } from './and.js';
+import { OrOperation } from './or.js';
 
 export type NotOperand = BooleanExpression | AndOperation | OrOperation;
-
-export interface NotOperationAST {
-  kind: 'NOT';
-  operand: NotOperand['ast'];
-}
 
 /**
  * @see https://en.wikipedia.org/wiki/Negation
  */
-export class NotOperation implements BooleanExpressionInterface {
-  public static key: string = 'NOT';
-
+export class NotOperation extends AbstractBooleanFilter {
   public static create(operand: BooleanFilter): BooleanFilter {
     return operand instanceof BooleanValue || operand instanceof NotOperation
       ? operand.complement
@@ -33,11 +26,12 @@ export class NotOperation implements BooleanExpressionInterface {
       : new this(operand);
   }
 
-  public readonly key: string;
+  public readonly key = 'NOT' as const;
   public readonly score: number;
 
   public constructor(public readonly operand: NotOperand) {
-    this.key = (this.constructor as typeof NotOperation).key;
+    super();
+
     this.score = 1 + operand.score;
   }
 
@@ -48,50 +42,31 @@ export class NotOperation implements BooleanExpressionInterface {
     );
   }
 
-  public get complement(): NotOperand {
+  public override get complement(): NotOperand {
     return this.operand;
   }
 
-  public and(
-    _operand: AndOperand,
-    _remainingReducers: number,
-  ): BooleanFilter | undefined {
-    return;
-  }
-
-  public or(
-    _operand: OrOperand,
-    _remainingReducers: number,
-  ): BooleanFilter | undefined {
-    return;
-  }
-
-  public execute(value: NodeSelectedValue): boolean | undefined {
+  public override execute(value: NodeSelectedValue): boolean | undefined {
     const result = this.operand.execute(value);
 
     return result === undefined ? undefined : !result;
   }
 
-  public isExecutableWithinUniqueConstraint(unique: UniqueConstraint): boolean {
+  public override isExecutableWithinUniqueConstraint(
+    unique: UniqueConstraint,
+  ): boolean {
     return this.operand.isExecutableWithinUniqueConstraint(unique);
   }
 
-  public isAffectedByNodeUpdate(update: NodeUpdate): boolean {
+  public override isAffectedByNodeUpdate(update: NodeUpdate): boolean {
     return this.operand.isAffectedByNodeUpdate(update);
   }
 
-  public getAffectedGraphByNodeChange(
+  public override getAffectedGraphByNodeChange(
     change: NodeChange,
     visitedRootNodes?: NodeValue[],
-  ): BooleanFilter {
+  ): BooleanFilter | null {
     return this.operand.getAffectedGraphByNodeChange(change, visitedRootNodes);
-  }
-
-  public get ast(): NotOperationAST {
-    return {
-      kind: 'NOT',
-      operand: this.operand.ast,
-    };
   }
 
   public get inputValue(): NodeFilterInputValue {

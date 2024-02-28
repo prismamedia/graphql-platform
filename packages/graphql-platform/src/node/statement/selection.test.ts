@@ -143,9 +143,7 @@ describe('Selection', () => {
           );
 
           expect(selection.isAffectedByNodeUpdate(update)).toBe(false);
-          expect(
-            selection.getAffectedGraphByNodeChange(update).inputValue,
-          ).toBe(null);
+          expect(selection.getAffectedGraphByNodeChange(update)).toBeNull();
         });
 
         it('The updated "title" does not change any document if there is no "createdBy" or "updatedBy"', () => {
@@ -169,9 +167,7 @@ describe('Selection', () => {
           );
 
           expect(selection.isAffectedByNodeUpdate(update)).toBe(true);
-          expect(
-            selection.getAffectedGraphByNodeChange(update).inputValue,
-          ).toBe(null);
+          expect(selection.getAffectedGraphByNodeChange(update)).toBeNull();
         });
 
         it('The updated "title" may change some document(s) if there is a "createdBy" or an "updatedBy"', () => {
@@ -198,7 +194,7 @@ describe('Selection', () => {
 
           expect(selection.isAffectedByNodeUpdate(update)).toBe(true);
           expect(
-            selection.getAffectedGraphByNodeChange(update).inputValue,
+            selection.getAffectedGraphByNodeChange(update)?.inputValue,
           ).toEqual({
             OR: [
               { createdBy: { id: '9121c47b-87b6-4334-ae1d-4c9777e87576' } },
@@ -229,7 +225,7 @@ describe('Selection', () => {
           );
 
           expect(
-            selection.getAffectedGraphByNodeChange(update).inputValue,
+            selection.getAffectedGraphByNodeChange(update)?.inputValue,
           ).toEqual({ updatedBy: { username: 'yvann' } });
         });
       });
@@ -251,9 +247,7 @@ describe('Selection', () => {
             },
           );
 
-          expect(
-            selection.getAffectedGraphByNodeChange(update).inputValue,
-          ).toBe(null);
+          expect(selection.getAffectedGraphByNodeChange(update)).toBeNull();
         });
 
         it('The updated "parent" may change some document(s)', () => {
@@ -273,7 +267,7 @@ describe('Selection', () => {
           );
 
           expect(
-            selection.getAffectedGraphByNodeChange(update).inputValue,
+            selection.getAffectedGraphByNodeChange(update)?.inputValue,
           ).toEqual({
             category: { _id: 10 },
           });
@@ -295,9 +289,7 @@ describe('Selection', () => {
             },
           );
 
-          expect(
-            selection.getAffectedGraphByNodeChange(update).inputValue,
-          ).toBe(null);
+          expect(selection.getAffectedGraphByNodeChange(update)).toBeNull();
         });
       });
 
@@ -310,7 +302,7 @@ describe('Selection', () => {
           );
 
           expect(
-            selection.getAffectedGraphByNodeChange(creation).inputValue,
+            selection.getAffectedGraphByNodeChange(creation)?.inputValue,
           ).toEqual({
             OR: [
               { createdBy: { id: '16050880-dabc-4348-bd3b-d41efe1b6057' } },
@@ -327,7 +319,7 @@ describe('Selection', () => {
           );
 
           expect(
-            selection.getAffectedGraphByNodeChange(deletion).inputValue,
+            selection.getAffectedGraphByNodeChange(deletion)?.inputValue,
           ).toEqual({
             OR: [
               { createdBy: { id: '7caf940a-058a-4ef2-a8bf-ac2d6cae3485' } },
@@ -348,9 +340,7 @@ describe('Selection', () => {
             },
           );
 
-          expect(
-            selection.getAffectedGraphByNodeChange(update).inputValue,
-          ).toBe(null);
+          expect(selection.getAffectedGraphByNodeChange(update)).toBeNull();
         });
 
         it('The updated "facebookId" may change some document(s)', () => {
@@ -366,7 +356,7 @@ describe('Selection', () => {
           );
 
           expect(
-            selection.getAffectedGraphByNodeChange(update).inputValue,
+            selection.getAffectedGraphByNodeChange(update)?.inputValue,
           ).toEqual({
             OR: [
               { createdBy: { id: '8e3587e8-2e4e-46a4-a6e0-27f08aebb215' } },
@@ -389,7 +379,7 @@ describe('Selection', () => {
           );
 
           expect(
-            selection.getAffectedGraphByNodeChange(creation).inputValue,
+            selection.getAffectedGraphByNodeChange(creation)?.inputValue,
           ).toEqual({ _id: 2 });
         });
 
@@ -405,7 +395,7 @@ describe('Selection', () => {
           );
 
           expect(
-            selection.getAffectedGraphByNodeChange(deletion).inputValue,
+            selection.getAffectedGraphByNodeChange(deletion)?.inputValue,
           ).toEqual({ _id: 3 });
         });
 
@@ -424,7 +414,7 @@ describe('Selection', () => {
           );
 
           expect(
-            selection.getAffectedGraphByNodeChange(update).inputValue,
+            selection.getAffectedGraphByNodeChange(update)?.inputValue,
           ).toEqual({ _id: 4 });
         });
 
@@ -442,9 +432,7 @@ describe('Selection', () => {
             },
           );
 
-          expect(
-            selection.getAffectedGraphByNodeChange(update).inputValue,
-          ).toBe(null);
+          expect(selection.getAffectedGraphByNodeChange(update)).toBeNull();
         });
       });
 
@@ -466,7 +454,7 @@ describe('Selection', () => {
           );
 
           expect(
-            selection.getAffectedGraphByNodeChange(update).inputValue,
+            selection.getAffectedGraphByNodeChange(update)?.inputValue,
           ).toEqual({
             tags_some: { tag: { id: '68f3d88d-1308-4019-8118-fc20042e8c20' } },
           });
@@ -488,9 +476,7 @@ describe('Selection', () => {
             },
           );
 
-          expect(
-            selection.getAffectedGraphByNodeChange(update).inputValue,
-          ).toBe(null);
+          expect(selection.getAffectedGraphByNodeChange(update)).toBeNull();
         });
       });
     });

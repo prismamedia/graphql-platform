@@ -2,6 +2,7 @@ import * as utils from '@prismamedia/graphql-platform-utils';
 import { Memoize } from '@prismamedia/memoize';
 import * as graphql from 'graphql';
 import assert from 'node:assert/strict';
+import * as R from 'remeda';
 import type { Node, NodeValue } from '../../node.js';
 import { NodeChange, NodeUpdate } from '../change.js';
 import type {
@@ -10,7 +11,7 @@ import type {
   UniqueConstraint,
 } from '../definition.js';
 import type { OperationContext } from '../operation.js';
-import { NodeFilter, OrOperation } from './filter.js';
+import { FalseValue, NodeFilter, OrOperation } from './filter.js';
 import {
   VirtualSelection,
   isComponentSelection,
@@ -159,15 +160,20 @@ export class NodeSelection<
   public getAffectedGraphByNodeChange(
     change: NodeChange,
     visitedRootNodes?: NodeValue[],
-  ): NodeFilter {
-    return new NodeFilter(
-      this.node,
-      OrOperation.create(
-        this.expressions.map((expression) =>
+  ): NodeFilter | null {
+    const filter = OrOperation.create(
+      R.pipe(
+        this.expressions,
+        R.map((expression) =>
           expression.getAffectedGraphByNodeChange(change, visitedRootNodes),
         ),
+        R.filter(R.isNonNull),
       ),
     );
+
+    return !filter.equals(FalseValue)
+      ? new NodeFilter(this.node, filter)
+      : null;
   }
 
   public isAkinTo(maybeSelection: unknown): maybeSelection is NodeSelection {

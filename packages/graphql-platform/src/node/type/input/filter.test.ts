@@ -9,7 +9,6 @@ import {
   nodes,
 } from '../../../__tests__/config.js';
 import { GraphQLPlatform } from '../../../index.js';
-import { BooleanFilter } from '../../statement.js';
 import { NodeFilterInputType, type NodeFilterInputValue } from './filter.js';
 
 describe('NodeFilterInputType', () => {
@@ -136,45 +135,22 @@ describe('NodeFilterInputType', () => {
               tests?: [
                 label: string,
                 input: NodeFilterInputValue,
-                ast: BooleanFilter['ast'],
+                output: NodeFilterInputValue,
               ][],
             ]
           >([
             [
               `Idempotent law`,
               [
-                [
-                  'OR',
-                  { _id_in: [1, 2, 3, 2, 1] },
-                  {
-                    kind: 'LEAF',
-                    leaf: '_id',
-                    operator: 'IN',
-                    values: [1, 2, 3],
-                  },
-                ],
-                [
-                  'AND',
-                  { AND: [{ _id: 1 }, { _id: 1 }] },
-                  {
-                    kind: 'LEAF',
-                    leaf: '_id',
-                    operator: 'EQ',
-                    value: 1,
-                  },
-                ],
+                ['OR', { _id_in: [1, 2, 3, 2, 1] }, { _id_in: [1, 2, 3] }],
+                ['AND', { AND: [{ _id: 1 }, { _id: 1 }] }, { _id: 1 }],
                 [
                   'AND & OR',
                   {
                     AND: [{ _id_in: [1, 2, 3, 4] }, { _id_in: [2, 3, 4, 1] }],
                     OR: [{ _id_in: [3, 4, 1, 2] }, { _id_in: [4, 1, 2, 3] }],
                   },
-                  {
-                    kind: 'LEAF',
-                    leaf: '_id',
-                    operator: 'IN',
-                    values: [1, 2, 3, 4],
-                  },
+                  { _id_in: [1, 2, 3, 4] },
                 ],
               ],
             ],
@@ -191,12 +167,7 @@ describe('NodeFilterInputType', () => {
                       },
                     ],
                   },
-                  {
-                    kind: 'LEAF',
-                    leaf: '_id',
-                    operator: 'EQ',
-                    value: 1,
-                  },
+                  { _id: 1 },
                 ],
                 [
                   'AND',
@@ -206,34 +177,15 @@ describe('NodeFilterInputType', () => {
                       { OR: [{ _id: 1 }, { status: ArticleStatus.PUBLISHED }] },
                     ],
                   },
-                  {
-                    kind: 'LEAF',
-                    leaf: '_id',
-                    operator: 'EQ',
-                    value: 1,
-                  },
+                  { _id: 1 },
                 ],
               ],
             ],
             [
               'Complementation',
               [
-                [
-                  'OR',
-                  { OR: [{ _id: 5 }, { _id_not: 5 }] },
-                  {
-                    kind: 'BOOLEAN',
-                    value: true,
-                  },
-                ],
-                [
-                  'AND',
-                  { AND: [{ _id: 5 }, { _id_not: 5 }] },
-                  {
-                    kind: 'BOOLEAN',
-                    value: false,
-                  },
-                ],
+                ['OR', { OR: [{ _id: 5 }, { _id_not: 5 }] }, {}],
+                ['AND', { AND: [{ _id: 5 }, { _id_not: 5 }] }, null],
               ],
             ],
             [
@@ -241,420 +193,103 @@ describe('NodeFilterInputType', () => {
               Object.entries({
                 eq: {
                   eq: [
-                    [5, 4, { kind: 'BOOLEAN', value: false }],
-                    [
-                      5,
-                      5,
-                      { kind: 'LEAF', leaf: '_id', operator: 'EQ', value: 5 },
-                    ],
-                    [5, 6, { kind: 'BOOLEAN', value: false }],
+                    [5, 4, null],
+                    [5, 5, { _id: 5 }],
+                    [5, 6, null],
                   ],
                   not: [
-                    [
-                      5,
-                      4,
-                      { kind: 'LEAF', leaf: '_id', operator: 'EQ', value: 5 },
-                    ],
-                    [5, 5, { kind: 'BOOLEAN', value: false }],
-                    [
-                      5,
-                      6,
-                      { kind: 'LEAF', leaf: '_id', operator: 'EQ', value: 5 },
-                    ],
+                    [5, 4, { _id: 5 }],
+                    [5, 5, null],
+                    [5, 6, { _id: 5 }],
                   ],
                   gt: [
-                    [
-                      5,
-                      4,
-                      {
-                        kind: 'LEAF',
-                        leaf: '_id',
-                        operator: 'EQ',
-                        value: 5,
-                      },
-                    ],
-                    [5, 5, { kind: 'BOOLEAN', value: false }],
-                    [5, 6, { kind: 'BOOLEAN', value: false }],
+                    [5, 4, { _id: 5 }],
+                    [5, 5, null],
+                    [5, 6, null],
                   ],
                   gte: [
-                    [
-                      5,
-                      4,
-                      {
-                        kind: 'LEAF',
-                        leaf: '_id',
-                        operator: 'EQ',
-                        value: 5,
-                      },
-                    ],
-                    [
-                      5,
-                      5,
-                      {
-                        kind: 'LEAF',
-                        leaf: '_id',
-                        operator: 'EQ',
-                        value: 5,
-                      },
-                    ],
-                    [5, 6, { kind: 'BOOLEAN', value: false }],
+                    [5, 4, { _id: 5 }],
+                    [5, 5, { _id: 5 }],
+                    [5, 6, null],
                   ],
                   lt: [
-                    [5, 4, { kind: 'BOOLEAN', value: false }],
-                    [5, 5, { kind: 'BOOLEAN', value: false }],
-                    [
-                      5,
-                      6,
-                      {
-                        kind: 'LEAF',
-                        leaf: '_id',
-                        operator: 'EQ',
-                        value: 5,
-                      },
-                    ],
+                    [5, 4, null],
+                    [5, 5, null],
+                    [5, 6, { _id: 5 }],
                   ],
                   lte: [
-                    [5, 4, { kind: 'BOOLEAN', value: false }],
-                    [
-                      5,
-                      5,
-                      {
-                        kind: 'LEAF',
-                        leaf: '_id',
-                        operator: 'EQ',
-                        value: 5,
-                      },
-                    ],
-                    [
-                      5,
-                      6,
-                      {
-                        kind: 'LEAF',
-                        leaf: '_id',
-                        operator: 'EQ',
-                        value: 5,
-                      },
-                    ],
+                    [5, 4, null],
+                    [5, 5, { _id: 5 }],
+                    [5, 6, { _id: 5 }],
                   ],
                 },
                 gt: {
                   gt: [
-                    [
-                      5,
-                      4,
-                      {
-                        kind: 'LEAF',
-                        leaf: '_id',
-                        operator: 'GT',
-                        value: 5,
-                      },
-                    ],
-                    [
-                      5,
-                      5,
-                      {
-                        kind: 'LEAF',
-                        leaf: '_id',
-                        operator: 'GT',
-                        value: 5,
-                      },
-                    ],
-                    [
-                      5,
-                      6,
-                      {
-                        kind: 'LEAF',
-                        leaf: '_id',
-                        operator: 'GT',
-                        value: 6,
-                      },
-                    ],
+                    [5, 4, { _id_gt: 5 }],
+                    [5, 5, { _id_gt: 5 }],
+                    [5, 6, { _id_gt: 6 }],
                   ],
                   gte: [
-                    [
-                      5,
-                      4,
-                      {
-                        kind: 'LEAF',
-                        leaf: '_id',
-                        operator: 'GT',
-                        value: 5,
-                      },
-                    ],
-                    [
-                      5,
-                      5,
-                      {
-                        kind: 'LEAF',
-                        leaf: '_id',
-                        operator: 'GT',
-                        value: 5,
-                      },
-                    ],
-                    [
-                      5,
-                      6,
-                      {
-                        kind: 'LEAF',
-                        leaf: '_id',
-                        operator: 'GTE',
-                        value: 6,
-                      },
-                    ],
+                    [5, 4, { _id_gt: 5 }],
+                    [5, 5, { _id_gt: 5 }],
+                    [5, 6, { _id_gte: 6 }],
                   ],
                   lt: [
-                    [5, 4, { kind: 'BOOLEAN', value: false }],
-                    [5, 5, { kind: 'BOOLEAN', value: false }],
-                    [
-                      5,
-                      6,
-                      {
-                        kind: 'AND',
-                        operands: expect.arrayContaining([
-                          {
-                            kind: 'LEAF',
-                            leaf: '_id',
-                            operator: 'GT',
-                            value: 5,
-                          },
-                          {
-                            kind: 'LEAF',
-                            leaf: '_id',
-                            operator: 'LT',
-                            value: 6,
-                          },
-                        ]),
-                      },
-                    ],
+                    [5, 4, null],
+                    [5, 5, null],
+                    [5, 6, { _id_gt: 5, _id_lt: 6 }],
                   ],
                   lte: [
-                    [5, 4, { kind: 'BOOLEAN', value: false }],
-                    [5, 5, { kind: 'BOOLEAN', value: false }],
-                    [
-                      5,
-                      6,
-                      {
-                        kind: 'AND',
-                        operands: expect.arrayContaining([
-                          {
-                            kind: 'LEAF',
-                            leaf: '_id',
-                            operator: 'GT',
-                            value: 5,
-                          },
-                          {
-                            kind: 'LEAF',
-                            leaf: '_id',
-                            operator: 'LTE',
-                            value: 6,
-                          },
-                        ]),
-                      },
-                    ],
+                    [5, 4, null],
+                    [5, 5, null],
+                    [5, 6, { _id_gt: 5, _id_lte: 6 }],
                   ],
                 },
                 gte: {
                   gte: [
-                    [
-                      5,
-                      4,
-                      {
-                        kind: 'LEAF',
-                        leaf: '_id',
-                        operator: 'GTE',
-                        value: 5,
-                      },
-                    ],
-                    [
-                      5,
-                      5,
-                      {
-                        kind: 'LEAF',
-                        leaf: '_id',
-                        operator: 'GTE',
-                        value: 5,
-                      },
-                    ],
-                    [
-                      5,
-                      6,
-                      {
-                        kind: 'LEAF',
-                        leaf: '_id',
-                        operator: 'GTE',
-                        value: 6,
-                      },
-                    ],
+                    [5, 4, { _id_gte: 5 }],
+                    [5, 5, { _id_gte: 5 }],
+                    [5, 6, { _id_gte: 6 }],
                   ],
                   lt: [
-                    [5, 4, { kind: 'BOOLEAN', value: false }],
-                    [5, 5, { kind: 'BOOLEAN', value: false }],
-                    [
-                      5,
-                      6,
-                      {
-                        kind: 'AND',
-                        operands: expect.arrayContaining([
-                          {
-                            kind: 'LEAF',
-                            leaf: '_id',
-                            operator: 'GTE',
-                            value: 5,
-                          },
-                          {
-                            kind: 'LEAF',
-                            leaf: '_id',
-                            operator: 'LT',
-                            value: 6,
-                          },
-                        ]),
-                      },
-                    ],
+                    [5, 4, null],
+                    [5, 5, null],
+                    [5, 6, { _id_gte: 5, _id_lt: 6 }],
                   ],
                   lte: [
-                    [5, 4, { kind: 'BOOLEAN', value: false }],
-                    [
-                      5,
-                      5,
-                      {
-                        kind: 'LEAF',
-                        leaf: '_id',
-                        operator: 'EQ',
-                        value: 5,
-                      },
-                    ],
-                    [
-                      5,
-                      6,
-                      {
-                        kind: 'AND',
-                        operands: expect.arrayContaining([
-                          {
-                            kind: 'LEAF',
-                            leaf: '_id',
-                            operator: 'GTE',
-                            value: 5,
-                          },
-                          {
-                            kind: 'LEAF',
-                            leaf: '_id',
-                            operator: 'LTE',
-                            value: 6,
-                          },
-                        ]),
-                      },
-                    ],
+                    [5, 4, null],
+                    [5, 5, { _id: 5 }],
+                    [5, 6, { _id_gte: 5, _id_lte: 6 }],
                   ],
                 },
                 lt: {
                   lt: [
-                    [
-                      5,
-                      4,
-                      {
-                        kind: 'LEAF',
-                        leaf: '_id',
-                        operator: 'LT',
-                        value: 4,
-                      },
-                    ],
-                    [
-                      5,
-                      5,
-                      {
-                        kind: 'LEAF',
-                        leaf: '_id',
-                        operator: 'LT',
-                        value: 5,
-                      },
-                    ],
-                    [
-                      5,
-                      6,
-                      {
-                        kind: 'LEAF',
-                        leaf: '_id',
-                        operator: 'LT',
-                        value: 5,
-                      },
-                    ],
+                    [5, 4, { _id_lt: 4 }],
+                    [5, 5, { _id_lt: 5 }],
+                    [5, 6, { _id_lt: 5 }],
                   ],
                   lte: [
-                    [
-                      5,
-                      4,
-                      {
-                        kind: 'LEAF',
-                        leaf: '_id',
-                        operator: 'LTE',
-                        value: 4,
-                      },
-                    ],
-                    [
-                      5,
-                      5,
-                      {
-                        kind: 'LEAF',
-                        leaf: '_id',
-                        operator: 'LT',
-                        value: 5,
-                      },
-                    ],
-                    [
-                      5,
-                      6,
-                      {
-                        kind: 'LEAF',
-                        leaf: '_id',
-                        operator: 'LT',
-                        value: 5,
-                      },
-                    ],
+                    [5, 4, { _id_lte: 4 }],
+                    [5, 5, { _id_lt: 5 }],
+                    [5, 6, { _id_lt: 5 }],
                   ],
                 },
                 lte: {
                   lte: [
-                    [
-                      5,
-                      4,
-                      {
-                        kind: 'LEAF',
-                        leaf: '_id',
-                        operator: 'LTE',
-                        value: 4,
-                      },
-                    ],
-                    [
-                      5,
-                      5,
-                      {
-                        kind: 'LEAF',
-                        leaf: '_id',
-                        operator: 'LTE',
-                        value: 5,
-                      },
-                    ],
-                    [
-                      5,
-                      6,
-                      {
-                        kind: 'LEAF',
-                        leaf: '_id',
-                        operator: 'LTE',
-                        value: 5,
-                      },
-                    ],
+                    [5, 4, { _id_lte: 4 }],
+                    [5, 5, { _id_lte: 5 }],
+                    [5, 6, { _id_lte: 5 }],
                   ],
                 },
               } as const).flatMap<
                 [
                   label: string,
                   input: NodeFilterInputValue,
-                  ast: BooleanFilter['ast'],
+                  output: NodeFilterInputValue,
                 ]
               >(([aOperator, config]) =>
                 Object.entries(config).flatMap(([bOperator, values]) =>
-                  values.map(([aValue, bValue, ast]: any): any => [
+                  values.map(([aValue, bValue, output]: any): any => [
                     `${aOperator}-${aValue} AND ${bOperator}-${bValue}`,
                     {
                       AND: [
@@ -668,7 +303,7 @@ describe('NodeFilterInputType', () => {
                         },
                       ],
                     },
-                    ast,
+                    output,
                   ]),
                 ),
               ),
@@ -678,546 +313,103 @@ describe('NodeFilterInputType', () => {
               Object.entries({
                 eq: {
                   eq: [
-                    [
-                      5,
-                      4,
-                      {
-                        kind: 'LEAF',
-                        leaf: '_id',
-                        operator: 'IN',
-                        values: [5, 4],
-                      },
-                    ],
-                    [
-                      5,
-                      5,
-                      { kind: 'LEAF', leaf: '_id', operator: 'EQ', value: 5 },
-                    ],
-                    [
-                      5,
-                      6,
-                      {
-                        kind: 'LEAF',
-                        leaf: '_id',
-                        operator: 'IN',
-                        values: [5, 6],
-                      },
-                    ],
+                    [5, 4, { _id_in: [5, 4] }],
+                    [5, 5, { _id: 5 }],
+                    [5, 6, { _id_in: [5, 6] }],
                   ],
                   not: [
-                    [
-                      5,
-                      4,
-                      {
-                        kind: 'LEAF',
-                        leaf: '_id',
-                        operator: 'NOT',
-                        value: 4,
-                      },
-                    ],
-                    [5, 5, { kind: 'BOOLEAN', value: true }],
-                    [
-                      5,
-                      6,
-                      {
-                        kind: 'LEAF',
-                        leaf: '_id',
-                        operator: 'NOT',
-                        value: 6,
-                      },
-                    ],
+                    [5, 4, { _id_not: 4 }],
+                    [5, 5, {}],
+                    [5, 6, { _id_not: 6 }],
                   ],
                   gt: [
-                    [
-                      5,
-                      4,
-                      {
-                        kind: 'LEAF',
-                        leaf: '_id',
-                        operator: 'GT',
-                        value: 4,
-                      },
-                    ],
-                    [
-                      5,
-                      5,
-                      {
-                        kind: 'LEAF',
-                        leaf: '_id',
-                        operator: 'GTE',
-                        value: 5,
-                      },
-                    ],
-                    [
-                      5,
-                      6,
-                      {
-                        kind: 'OR',
-                        operands: [
-                          {
-                            kind: 'LEAF',
-                            leaf: '_id',
-                            operator: 'EQ',
-                            value: 5,
-                          },
-                          {
-                            kind: 'LEAF',
-                            leaf: '_id',
-                            operator: 'GT',
-                            value: 6,
-                          },
-                        ],
-                      },
-                    ],
+                    [5, 4, { _id_gt: 4 }],
+                    [5, 5, { _id_gte: 5 }],
+                    [5, 6, { OR: [{ _id: 5 }, { _id_gt: 6 }] }],
                   ],
                   gte: [
-                    [
-                      5,
-                      4,
-                      {
-                        kind: 'LEAF',
-                        leaf: '_id',
-                        operator: 'GTE',
-                        value: 4,
-                      },
-                    ],
-                    [
-                      5,
-                      5,
-                      {
-                        kind: 'LEAF',
-                        leaf: '_id',
-                        operator: 'GTE',
-                        value: 5,
-                      },
-                    ],
-                    [
-                      5,
-                      6,
-                      {
-                        kind: 'OR',
-                        operands: [
-                          {
-                            kind: 'LEAF',
-                            leaf: '_id',
-                            operator: 'EQ',
-                            value: 5,
-                          },
-                          {
-                            kind: 'LEAF',
-                            leaf: '_id',
-                            operator: 'GTE',
-                            value: 6,
-                          },
-                        ],
-                      },
-                    ],
+                    [5, 4, { _id_gte: 4 }],
+                    [5, 5, { _id_gte: 5 }],
+                    [5, 6, { OR: [{ _id: 5 }, { _id_gte: 6 }] }],
                   ],
                   lt: [
-                    [
-                      5,
-                      4,
-                      {
-                        kind: 'OR',
-                        operands: [
-                          {
-                            kind: 'LEAF',
-                            leaf: '_id',
-                            operator: 'EQ',
-                            value: 5,
-                          },
-                          {
-                            kind: 'LEAF',
-                            leaf: '_id',
-                            operator: 'LT',
-                            value: 4,
-                          },
-                        ],
-                      },
-                    ],
-                    [
-                      5,
-                      5,
-                      {
-                        kind: 'LEAF',
-                        leaf: '_id',
-                        operator: 'LTE',
-                        value: 5,
-                      },
-                    ],
-                    [
-                      5,
-                      6,
-                      {
-                        kind: 'LEAF',
-                        leaf: '_id',
-                        operator: 'LT',
-                        value: 6,
-                      },
-                    ],
+                    [5, 4, { OR: [{ _id: 5 }, { _id_lt: 4 }] }],
+                    [5, 5, { _id_lte: 5 }],
+                    [5, 6, { _id_lt: 6 }],
                   ],
                   lte: [
-                    [
-                      5,
-                      4,
-                      {
-                        kind: 'OR',
-                        operands: [
-                          {
-                            kind: 'LEAF',
-                            leaf: '_id',
-                            operator: 'EQ',
-                            value: 5,
-                          },
-                          {
-                            kind: 'LEAF',
-                            leaf: '_id',
-                            operator: 'LTE',
-                            value: 4,
-                          },
-                        ],
-                      },
-                    ],
-                    [
-                      5,
-                      5,
-                      {
-                        kind: 'LEAF',
-                        leaf: '_id',
-                        operator: 'LTE',
-                        value: 5,
-                      },
-                    ],
-                    [
-                      5,
-                      6,
-                      {
-                        kind: 'LEAF',
-                        leaf: '_id',
-                        operator: 'LTE',
-                        value: 6,
-                      },
-                    ],
+                    [5, 4, { OR: [{ _id: 5 }, { _id_lte: 4 }] }],
+                    [5, 5, { _id_lte: 5 }],
+                    [5, 6, { _id_lte: 6 }],
                   ],
                 },
                 gt: {
                   gt: [
-                    [
-                      5,
-                      4,
-                      {
-                        kind: 'LEAF',
-                        leaf: '_id',
-                        operator: 'GT',
-                        value: 4,
-                      },
-                    ],
-                    [
-                      5,
-                      5,
-                      {
-                        kind: 'LEAF',
-                        leaf: '_id',
-                        operator: 'GT',
-                        value: 5,
-                      },
-                    ],
-                    [
-                      5,
-                      6,
-                      {
-                        kind: 'LEAF',
-                        leaf: '_id',
-                        operator: 'GT',
-                        value: 5,
-                      },
-                    ],
+                    [5, 4, { _id_gt: 4 }],
+                    [5, 5, { _id_gt: 5 }],
+                    [5, 6, { _id_gt: 5 }],
                   ],
                   gte: [
-                    [
-                      5,
-                      4,
-                      {
-                        kind: 'LEAF',
-                        leaf: '_id',
-                        operator: 'GTE',
-                        value: 4,
-                      },
-                    ],
-                    [
-                      5,
-                      5,
-                      {
-                        kind: 'LEAF',
-                        leaf: '_id',
-                        operator: 'GTE',
-                        value: 5,
-                      },
-                    ],
-                    [
-                      5,
-                      6,
-                      {
-                        kind: 'LEAF',
-                        leaf: '_id',
-                        operator: 'GT',
-                        value: 5,
-                      },
-                    ],
+                    [5, 4, { _id_gte: 4 }],
+                    [5, 5, { _id_gte: 5 }],
+                    [5, 6, { _id_gt: 5 }],
                   ],
                   lt: [
-                    [
-                      5,
-                      4,
-                      {
-                        kind: 'OR',
-                        operands: [
-                          {
-                            kind: 'LEAF',
-                            leaf: '_id',
-                            operator: 'GT',
-                            value: 5,
-                          },
-                          {
-                            kind: 'LEAF',
-                            leaf: '_id',
-                            operator: 'LT',
-                            value: 4,
-                          },
-                        ],
-                      },
-                    ],
-                    [
-                      5,
-                      5,
-                      {
-                        kind: 'LEAF',
-                        leaf: '_id',
-                        operator: 'NOT',
-                        value: 5,
-                      },
-                    ],
-                    [5, 6, { kind: 'BOOLEAN', value: true }],
+                    [5, 4, { OR: [{ _id_gt: 5 }, { _id_lt: 4 }] }],
+                    [5, 5, { _id_not: 5 }],
+                    [5, 6, {}],
                   ],
                   lte: [
-                    [
-                      5,
-                      4,
-                      {
-                        kind: 'OR',
-                        operands: expect.arrayContaining([
-                          {
-                            kind: 'LEAF',
-                            leaf: '_id',
-                            operator: 'GT',
-                            value: 5,
-                          },
-                          {
-                            kind: 'LEAF',
-                            leaf: '_id',
-                            operator: 'LTE',
-                            value: 4,
-                          },
-                        ]),
-                      },
-                    ],
-                    [5, 5, { kind: 'BOOLEAN', value: true }],
-                    [5, 6, { kind: 'BOOLEAN', value: true }],
+                    [5, 4, { OR: [{ _id_gt: 5 }, { _id_lte: 4 }] }],
+                    [5, 5, {}],
+                    [5, 6, {}],
                   ],
                 },
                 gte: {
                   gte: [
-                    [
-                      5,
-                      4,
-                      {
-                        kind: 'LEAF',
-                        leaf: '_id',
-                        operator: 'GTE',
-                        value: 4,
-                      },
-                    ],
-                    [
-                      5,
-                      5,
-                      {
-                        kind: 'LEAF',
-                        leaf: '_id',
-                        operator: 'GTE',
-                        value: 5,
-                      },
-                    ],
-                    [
-                      5,
-                      6,
-                      {
-                        kind: 'LEAF',
-                        leaf: '_id',
-                        operator: 'GTE',
-                        value: 5,
-                      },
-                    ],
+                    [5, 4, { _id_gte: 4 }],
+                    [5, 5, { _id_gte: 5 }],
+                    [5, 6, { _id_gte: 5 }],
                   ],
                   lt: [
-                    [
-                      5,
-                      4,
-                      {
-                        kind: 'OR',
-                        operands: [
-                          {
-                            kind: 'LEAF',
-                            leaf: '_id',
-                            operator: 'GTE',
-                            value: 5,
-                          },
-                          {
-                            kind: 'LEAF',
-                            leaf: '_id',
-                            operator: 'LT',
-                            value: 4,
-                          },
-                        ],
-                      },
-                    ],
-                    [5, 5, { kind: 'BOOLEAN', value: true }],
-                    [5, 6, { kind: 'BOOLEAN', value: true }],
+                    [5, 4, { OR: [{ _id_gte: 5 }, { _id_lt: 4 }] }],
+                    [5, 5, {}],
+                    [5, 6, {}],
                   ],
                   lte: [
-                    [
-                      5,
-                      4,
-                      {
-                        kind: 'OR',
-                        operands: expect.arrayContaining([
-                          {
-                            kind: 'LEAF',
-                            leaf: '_id',
-                            operator: 'GTE',
-                            value: 5,
-                          },
-                          {
-                            kind: 'LEAF',
-                            leaf: '_id',
-                            operator: 'LTE',
-                            value: 4,
-                          },
-                        ]),
-                      },
-                    ],
-                    [5, 5, { kind: 'BOOLEAN', value: true }],
-                    [5, 6, { kind: 'BOOLEAN', value: true }],
+                    [5, 4, { OR: [{ _id_gte: 5 }, { _id_lte: 4 }] }],
+                    [5, 5, {}],
+                    [5, 6, {}],
                   ],
                 },
                 lt: {
                   lt: [
-                    [
-                      5,
-                      4,
-                      {
-                        kind: 'LEAF',
-                        leaf: '_id',
-                        operator: 'LT',
-                        value: 5,
-                      },
-                    ],
-                    [
-                      5,
-                      5,
-                      {
-                        kind: 'LEAF',
-                        leaf: '_id',
-                        operator: 'LT',
-                        value: 5,
-                      },
-                    ],
-                    [
-                      5,
-                      6,
-                      {
-                        kind: 'LEAF',
-                        leaf: '_id',
-                        operator: 'LT',
-                        value: 6,
-                      },
-                    ],
+                    [5, 4, { _id_lt: 5 }],
+                    [5, 5, { _id_lt: 5 }],
+                    [5, 6, { _id_lt: 6 }],
                   ],
                   lte: [
-                    [
-                      5,
-                      4,
-                      {
-                        kind: 'LEAF',
-                        leaf: '_id',
-                        operator: 'LT',
-                        value: 5,
-                      },
-                    ],
-                    [
-                      5,
-                      5,
-                      {
-                        kind: 'LEAF',
-                        leaf: '_id',
-                        operator: 'LTE',
-                        value: 5,
-                      },
-                    ],
-                    [
-                      5,
-                      6,
-                      {
-                        kind: 'LEAF',
-                        leaf: '_id',
-                        operator: 'LTE',
-                        value: 6,
-                      },
-                    ],
+                    [5, 4, { _id_lt: 5 }],
+                    [5, 5, { _id_lte: 5 }],
+                    [5, 6, { _id_lte: 6 }],
                   ],
                 },
                 lte: {
                   lte: [
-                    [
-                      5,
-                      4,
-                      {
-                        kind: 'LEAF',
-                        leaf: '_id',
-                        operator: 'LTE',
-                        value: 5,
-                      },
-                    ],
-                    [
-                      5,
-                      5,
-                      {
-                        kind: 'LEAF',
-                        leaf: '_id',
-                        operator: 'LTE',
-                        value: 5,
-                      },
-                    ],
-                    [
-                      5,
-                      6,
-                      {
-                        kind: 'LEAF',
-                        leaf: '_id',
-                        operator: 'LTE',
-                        value: 6,
-                      },
-                    ],
+                    [5, 4, { _id_lte: 5 }],
+                    [5, 5, { _id_lte: 5 }],
+                    [5, 6, { _id_lte: 6 }],
                   ],
                 },
               } as const).flatMap<
                 [
                   label: string,
                   input: NodeFilterInputValue,
-                  ast: BooleanFilter['ast'],
+                  output: NodeFilterInputValue,
                 ]
               >(([aOperator, config]) =>
                 Object.entries(config).flatMap(([bOperator, values]) =>
-                  values.map(([aValue, bValue, ast]: any): any => [
+                  values.map(([aValue, bValue, output]: any): any => [
                     `${aOperator}-${aValue} OR ${bOperator}-${bValue}`,
                     {
                       OR: [
@@ -1231,7 +423,7 @@ describe('NodeFilterInputType', () => {
                         },
                       ],
                     },
-                    ast,
+                    output,
                   ]),
                 ),
               ),
@@ -1242,107 +434,58 @@ describe('NodeFilterInputType', () => {
                 [
                   'IN-5-10',
                   { AND: [{ _id_in: [0, 5, 10] }, { _id_in: [5, 10] }] },
-                  {
-                    kind: 'LEAF',
-                    leaf: '_id',
-                    operator: 'IN',
-                    values: expect.arrayContaining([5, 10]) as any,
-                  },
+                  { _id_in: [5, 10] },
                 ],
                 [
                   'IN-4-6',
                   { AND: [{ _id_in: [0, 5, 10] }, { _id_in: [4, 6] }] },
-                  { kind: 'BOOLEAN', value: false },
+                  null,
                 ],
-                [
-                  'EQ-4',
-                  { AND: [{ _id_in: [0, 5, 10] }, { _id: 4 }] },
-                  { kind: 'BOOLEAN', value: false },
-                ],
+                ['EQ-4', { AND: [{ _id_in: [0, 5, 10] }, { _id: 4 }] }, null],
                 [
                   'EQ-5',
                   { AND: [{ _id_in: [0, 5, 10] }, { _id: 5 }] },
-                  {
-                    kind: 'LEAF',
-                    leaf: '_id',
-                    operator: 'EQ',
-                    value: 5,
-                  },
+                  { _id: 5 },
                 ],
                 [
                   'NOT-4',
                   { AND: [{ _id_in: [0, 5, 10] }, { _id_not: 4 }] },
-                  {
-                    kind: 'LEAF',
-                    leaf: '_id',
-                    operator: 'IN',
-                    values: expect.arrayContaining([0, 5, 10]) as any,
-                  },
+                  { _id_in: [0, 5, 10] },
                 ],
                 [
                   'NOT-5',
                   { AND: [{ _id_in: [0, 5, 10] }, { _id_not: 5 }] },
-                  {
-                    kind: 'LEAF',
-                    leaf: '_id',
-                    operator: 'IN',
-                    values: expect.arrayContaining([0, 10]) as any,
-                  },
+                  { _id_in: [0, 10] },
                 ],
                 [
                   'GT-0',
                   { AND: [{ _id_in: [0, 5, 10] }, { _id_gt: 0 }] },
-                  {
-                    kind: 'LEAF',
-                    leaf: '_id',
-                    operator: 'IN',
-                    values: expect.arrayContaining([5, 10]) as any,
-                  },
+                  { _id_in: [5, 10] },
                 ],
                 [
                   'GT-5',
                   { AND: [{ _id_in: [0, 5, 10] }, { _id_gt: 5 }] },
-                  {
-                    kind: 'LEAF',
-                    leaf: '_id',
-                    operator: 'EQ',
-                    value: 10,
-                  },
+                  { _id: 10 },
                 ],
                 [
                   'GT-10',
                   { AND: [{ _id_in: [0, 5, 10] }, { _id_gt: 10 }] },
-                  { kind: 'BOOLEAN', value: false },
+                  null,
                 ],
                 [
                   'GTE-0',
                   { AND: [{ _id_in: [0, 5, 10] }, { _id_gte: 0 }] },
-                  {
-                    kind: 'LEAF',
-                    leaf: '_id',
-                    operator: 'IN',
-                    values: expect.arrayContaining([0, 5, 10]) as any,
-                  },
+                  { _id_in: [0, 5, 10] },
                 ],
                 [
                   'GTE-5',
                   { AND: [{ _id_in: [0, 5, 10] }, { _id_gte: 5 }] },
-                  {
-                    kind: 'LEAF',
-                    leaf: '_id',
-                    operator: 'IN',
-                    values: expect.arrayContaining([5, 10]) as any,
-                  },
+                  { _id_in: [5, 10] },
                 ],
                 [
                   'GTE-10',
                   { AND: [{ _id_in: [0, 5, 10] }, { _id_gte: 10 }] },
-                  {
-                    kind: 'LEAF',
-                    leaf: '_id',
-                    operator: 'EQ',
-                    value: 10,
-                  },
+                  { _id: 10 },
                 ],
               ],
             ],
@@ -1352,161 +495,58 @@ describe('NodeFilterInputType', () => {
                 [
                   'IN-5-10',
                   { OR: [{ _id_in: [0, 5, 10] }, { _id_in: [5, 10] }] },
-                  {
-                    kind: 'LEAF',
-                    leaf: '_id',
-                    operator: 'IN',
-                    values: expect.arrayContaining([0, 5, 10]) as any,
-                  },
+                  { _id_in: [0, 5, 10] },
                 ],
                 [
                   'OR-4-6',
                   { OR: [{ _id_in: [0, 5, 10] }, { _id_in: [4, 6] }] },
-                  {
-                    kind: 'LEAF',
-                    leaf: '_id',
-                    operator: 'IN',
-                    values: expect.arrayContaining([0, 4, 5, 6, 10]) as any,
-                  },
+                  { _id_in: [0, 5, 10, 4, 6] },
                 ],
                 [
                   'EQ-4',
                   { OR: [{ _id_in: [0, 5, 10] }, { _id: 4 }] },
-                  {
-                    kind: 'LEAF',
-                    leaf: '_id',
-                    operator: 'IN',
-                    values: expect.arrayContaining([0, 4, 5, 10]) as any,
-                  },
+                  { _id_in: [0, 5, 10, 4] },
                 ],
                 [
                   'EQ-5',
                   { OR: [{ _id_in: [0, 5, 10] }, { _id: 5 }] },
-                  {
-                    kind: 'LEAF',
-                    leaf: '_id',
-                    operator: 'IN',
-                    values: expect.arrayContaining([0, 5, 10]) as any,
-                  },
+                  { _id_in: [0, 5, 10] },
                 ],
                 [
                   'NOT-4',
                   { OR: [{ _id_in: [0, 5, 10] }, { _id_not: 4 }] },
-                  {
-                    kind: 'LEAF',
-                    leaf: '_id',
-                    operator: 'NOT',
-                    value: 4,
-                  },
+                  { _id_not: 4 },
                 ],
-                [
-                  'NOT-5',
-                  { OR: [{ _id_in: [0, 5, 10] }, { _id_not: 5 }] },
-                  { kind: 'BOOLEAN', value: true },
-                ],
+                ['NOT-5', { OR: [{ _id_in: [0, 5, 10] }, { _id_not: 5 }] }, {}],
                 [
                   'GT-0',
                   { OR: [{ _id_in: [0, 5, 10] }, { _id_gt: 0 }] },
-                  {
-                    kind: 'LEAF',
-                    leaf: '_id',
-                    operator: 'GTE',
-                    value: 0,
-                  },
+                  { _id_gte: 0 },
                 ],
                 [
                   'GT-5',
                   { OR: [{ _id_in: [0, 5, 10] }, { _id_gt: 5 }] },
-                  {
-                    kind: 'OR',
-                    operands: expect.arrayContaining([
-                      {
-                        kind: 'LEAF',
-                        leaf: '_id',
-                        operator: 'IN',
-                        values: expect.arrayContaining([0, 5]) as any,
-                      },
-                      {
-                        kind: 'LEAF',
-                        leaf: '_id',
-                        operator: 'GT',
-                        value: 5,
-                      },
-                    ]) as any,
-                  },
+                  { OR: [{ _id_in: [0, 5] }, { _id_gt: 5 }] },
                 ],
                 [
                   'GT-10',
                   { OR: [{ _id_in: [0, 5, 10] }, { _id_gt: 10 }] },
-                  {
-                    kind: 'OR',
-                    operands: expect.arrayContaining([
-                      {
-                        kind: 'LEAF',
-                        leaf: '_id',
-                        operator: 'IN',
-                        values: expect.arrayContaining([0, 5, 10]) as any,
-                      },
-                      {
-                        kind: 'LEAF',
-                        leaf: '_id',
-                        operator: 'GT',
-                        value: 10,
-                      },
-                    ]) as any,
-                  },
+                  { OR: [{ _id_in: [0, 5, 10] }, { _id_gt: 10 }] },
                 ],
                 [
                   'GTE-0',
                   { OR: [{ _id_in: [0, 5, 10] }, { _id_gte: 0 }] },
-                  {
-                    kind: 'LEAF',
-                    leaf: '_id',
-                    operator: 'GTE',
-                    value: 0,
-                  },
+                  { _id_gte: 0 },
                 ],
                 [
                   'GTE-5',
                   { OR: [{ _id_in: [0, 5, 10] }, { _id_gte: 5 }] },
-                  {
-                    kind: 'OR',
-                    operands: expect.arrayContaining([
-                      {
-                        kind: 'LEAF',
-                        leaf: '_id',
-                        operator: 'EQ',
-                        value: 0,
-                      },
-                      {
-                        kind: 'LEAF',
-                        leaf: '_id',
-                        operator: 'GTE',
-                        value: 5,
-                      },
-                    ]) as any,
-                  },
+                  { OR: [{ _id: 0 }, { _id_gte: 5 }] },
                 ],
                 [
                   'GTE-10',
                   { OR: [{ _id_in: [0, 5, 10] }, { _id_gte: 10 }] },
-                  {
-                    kind: 'OR',
-                    operands: expect.arrayContaining([
-                      {
-                        kind: 'LEAF',
-                        leaf: '_id',
-                        operator: 'IN',
-                        values: expect.arrayContaining([0, 5]) as any,
-                      },
-                      {
-                        kind: 'LEAF',
-                        leaf: '_id',
-                        operator: 'GTE',
-                        value: 10,
-                      },
-                    ]) as any,
-                  },
+                  { OR: [{ _id_in: [0, 5] }, { _id_gte: 10 }] },
                 ],
               ],
             ],
@@ -1521,27 +561,9 @@ describe('NodeFilterInputType', () => {
                     createdAt_gte: '2021-01-01T00:00:00Z',
                   },
                   {
-                    kind: 'AND',
-                    operands: [
-                      {
-                        kind: 'LEAF',
-                        leaf: 'id',
-                        operator: 'EQ',
-                        value: '94de8a4b-a25f-4659-ba13-c84761ef135b',
-                      },
-                      {
-                        kind: 'LEAF',
-                        leaf: 'title',
-                        operator: 'CONTAINS',
-                        value: 'FRANCE',
-                      },
-                      {
-                        kind: 'LEAF',
-                        leaf: 'createdAt',
-                        operator: 'GTE',
-                        value: new Date('2021-01-01T00:00:00.000Z'),
-                      },
-                    ],
+                    id: '94de8a4b-a25f-4659-ba13-c84761ef135b',
+                    title_contains: 'FRANCE',
+                    createdAt_gte: new Date('2021-01-01T00:00:00.000Z'),
                   },
                 ],
               ],
@@ -1550,13 +572,13 @@ describe('NodeFilterInputType', () => {
             `%s`,
             (_label, tests) =>
               tests?.length &&
-              it.each(tests)(`%# - %s`, (_label, input, ast) => {
-                const node = gp.getNodeByName('Article');
-                const filter =
-                  node.filterInputType.parseAndFilter(input).filter;
-
-                expect(filter.ast).toEqual(ast);
-              }),
+              it.each(tests)(`%# - %s`, (_label, input, output) =>
+                expect(
+                  gp
+                    .getNodeByName('Article')
+                    .filterInputType.parseAndFilter(input).filter.inputValue,
+                ).toEqual(output),
+              ),
           );
         });
 
@@ -1565,99 +587,55 @@ describe('NodeFilterInputType', () => {
             [
               label: string,
               input: NodeFilterInputValue,
-              ast: BooleanFilter['ast'],
+              output: NodeFilterInputValue,
             ]
           >([
             [
               'An article WITH any "category" - 0',
               { category_not: null },
-              {
-                kind: 'EDGE_EXISTS',
-                edge: 'category',
-              },
+              { category: {} },
             ],
 
             [
               'An article WITH any "category" - 1',
               { category: {} },
-              {
-                kind: 'EDGE_EXISTS',
-                edge: 'category',
-              },
+              { category: {} },
             ],
 
             [
               'An article in the specified "category"',
               { category: { slug: 'news' } },
-              {
-                kind: 'EDGE_EXISTS',
-                edge: 'category',
-                headFilter: {
-                  kind: 'NODE',
-                  node: 'Category',
-                  filter: {
-                    kind: 'LEAF',
-                    leaf: 'slug',
-                    operator: 'EQ',
-                    value: 'news',
-                  },
-                },
-              },
+              { category: { slug: 'news' } },
             ],
 
             [
               'An article WITHOUT any "category" - 0',
               { category_is_null: true },
-              {
-                kind: 'NOT',
-                operand: { kind: 'EDGE_EXISTS', edge: 'category' },
-              },
+              { NOT: { category: {} } },
             ],
 
             [
               'An article WITHOUT any "category" - 1',
               { category: null },
-              {
-                kind: 'NOT',
-                operand: { kind: 'EDGE_EXISTS', edge: 'category' },
-              },
+              { NOT: { category: {} } },
             ],
 
             [
               'An article WITHOUT any "category" - 2',
               { category_not: {} },
-              {
-                kind: 'NOT',
-                operand: { kind: 'EDGE_EXISTS', edge: 'category' },
-              },
+              { NOT: { category: {} } },
             ],
 
             [
               'An article not in the specified "category"',
               { category_not: { slug: 'news' } },
-              {
-                kind: 'NOT',
-                operand: {
-                  kind: 'EDGE_EXISTS',
-                  edge: 'category',
-                  headFilter: {
-                    kind: 'NODE',
-                    node: 'Category',
-                    filter: {
-                      kind: 'LEAF',
-                      leaf: 'slug',
-                      operator: 'EQ',
-                      value: 'news',
-                    },
-                  },
-                },
-              },
+              { NOT: { category: { slug: 'news' } } },
             ],
 
             [
               'AND - 0',
               { AND: [{ category_not: {} }, { category: {} }] },
-              { kind: 'BOOLEAN', value: false },
+              null,
             ],
 
             [
@@ -1665,7 +643,7 @@ describe('NodeFilterInputType', () => {
               {
                 AND: [{ category_not: {} }, { category: { slug: 'news' } }],
               },
-              { kind: 'BOOLEAN', value: false },
+              null,
             ],
 
             [
@@ -1676,7 +654,7 @@ describe('NodeFilterInputType', () => {
                   { category: { slug: 'news' } },
                 ],
               },
-              { kind: 'BOOLEAN', value: false },
+              null,
             ],
 
             [
@@ -1687,20 +665,7 @@ describe('NodeFilterInputType', () => {
                   { category: { slug: 'tv' } },
                 ],
               },
-              {
-                kind: 'EDGE_EXISTS',
-                edge: 'category',
-                headFilter: {
-                  kind: 'NODE',
-                  node: 'Category',
-                  filter: {
-                    kind: 'LEAF',
-                    leaf: 'slug',
-                    operator: 'IN',
-                    values: ['news', 'tv'],
-                  },
-                },
-              },
+              { category: { slug_in: ['news', 'tv'] } },
             ],
 
             [
@@ -1708,17 +673,14 @@ describe('NodeFilterInputType', () => {
               {
                 OR: [{ category: { slug: 'news' } }, { category: {} }],
               },
-              {
-                kind: 'EDGE_EXISTS',
-                edge: 'category',
-              },
+              { category: {} },
             ],
-          ])('%s', (_label, input, ast) => {
-            const node = gp.getNodeByName('Article');
-            const filter = node.filterInputType.parseAndFilter(input).filter;
-
-            expect(filter.ast).toEqual(ast);
-          });
+          ])('%s', (_label, input, output) =>
+            expect(
+              gp.getNodeByName('Article').filterInputType.parseAndFilter(input)
+                .filter.inputValue,
+            ).toEqual(output),
+          );
         });
       });
 
@@ -1728,118 +690,54 @@ describe('NodeFilterInputType', () => {
             [
               label: string,
               input: NodeFilterInputValue,
-              ast: BooleanFilter['ast'],
+              output: NodeFilterInputValue,
             ]
           >([
             [
               'A user WITH any "profile" - 0',
               { profile_is_null: false },
-              {
-                kind: 'UNIQUE_REVERSE_EDGE_EXISTS',
-                reverseEdge: 'profile',
-              },
+              { profile: {} },
             ],
 
             [
               'A user WITH any "profile" - 1',
               { profile_not: null },
-              {
-                kind: 'UNIQUE_REVERSE_EDGE_EXISTS',
-                reverseEdge: 'profile',
-              },
+              { profile: {} },
             ],
 
-            [
-              'A user WITH any "profile" - 2',
-              { profile: {} },
-              {
-                kind: 'UNIQUE_REVERSE_EDGE_EXISTS',
-                reverseEdge: 'profile',
-              },
-            ],
+            ['A user WITH any "profile" - 2', { profile: {} }, { profile: {} }],
 
             [
               'An user with the specified "profile"',
               { profile: { birthday_not: null } },
-              {
-                kind: 'UNIQUE_REVERSE_EDGE_EXISTS',
-                reverseEdge: 'profile',
-                headFilter: {
-                  kind: 'NODE',
-                  node: 'UserProfile',
-                  filter: {
-                    kind: 'LEAF',
-                    leaf: 'birthday',
-                    operator: 'NOT',
-                    value: null,
-                  },
-                },
-              },
+              { profile: { birthday_not: null } },
             ],
 
             [
               'A user WITHOUT any "profile" - 0',
               { profile_is_null: true },
-              {
-                kind: 'NOT',
-                operand: {
-                  kind: 'UNIQUE_REVERSE_EDGE_EXISTS',
-                  reverseEdge: 'profile',
-                },
-              },
+              { NOT: { profile: {} } },
             ],
 
             [
               'A user WITHOUT any "profile" - 1',
               { profile: null },
-              {
-                kind: 'NOT',
-                operand: {
-                  kind: 'UNIQUE_REVERSE_EDGE_EXISTS',
-                  reverseEdge: 'profile',
-                },
-              },
+              { NOT: { profile: {} } },
             ],
 
             [
               'A user WITHOUT any "profile" - 2',
               { profile_not: {} },
-              {
-                kind: 'NOT',
-                operand: {
-                  kind: 'UNIQUE_REVERSE_EDGE_EXISTS',
-                  reverseEdge: 'profile',
-                },
-              },
+              { NOT: { profile: {} } },
             ],
 
             [
               'A user not having the specified "profile"',
               { profile_not: { birthday_not: null } },
-              {
-                kind: 'NOT',
-                operand: {
-                  kind: 'UNIQUE_REVERSE_EDGE_EXISTS',
-                  reverseEdge: 'profile',
-                  headFilter: {
-                    kind: 'NODE',
-                    node: 'UserProfile',
-                    filter: {
-                      kind: 'LEAF',
-                      leaf: 'birthday',
-                      operator: 'NOT',
-                      value: null,
-                    },
-                  },
-                },
-              },
+              { NOT: { profile: { birthday_not: null } } },
             ],
 
-            [
-              'AND - 0',
-              { AND: [{ profile_not: {} }, { profile: {} }] },
-              { kind: 'BOOLEAN', value: false },
-            ],
+            ['AND - 0', { AND: [{ profile_not: {} }, { profile: {} }] }, null],
 
             [
               'AND - 1',
@@ -1849,7 +747,7 @@ describe('NodeFilterInputType', () => {
                   { profile: { twitterHandle: '@yvannboucher' } },
                 ],
               },
-              { kind: 'BOOLEAN', value: false },
+              null,
             ],
 
             [
@@ -1860,31 +758,7 @@ describe('NodeFilterInputType', () => {
                   { profile: { facebookId: 'leeb' } },
                 ],
               },
-              {
-                kind: 'UNIQUE_REVERSE_EDGE_EXISTS',
-                reverseEdge: 'profile',
-                headFilter: {
-                  kind: 'NODE',
-                  node: 'UserProfile',
-                  filter: {
-                    kind: 'AND',
-                    operands: [
-                      {
-                        kind: 'LEAF',
-                        leaf: 'twitterHandle',
-                        operator: 'EQ',
-                        value: 'ryanmdahl',
-                      },
-                      {
-                        kind: 'LEAF',
-                        leaf: 'facebookId',
-                        operator: 'EQ',
-                        value: 'leeb',
-                      },
-                    ],
-                  },
-                },
-              },
+              { profile: { twitterHandle: 'ryanmdahl', facebookId: 'leeb' } },
             ],
 
             [
@@ -1895,20 +769,7 @@ describe('NodeFilterInputType', () => {
                   { profile: { twitterHandle: 'leeb' } },
                 ],
               },
-              {
-                kind: 'UNIQUE_REVERSE_EDGE_EXISTS',
-                reverseEdge: 'profile',
-                headFilter: {
-                  kind: 'NODE',
-                  node: 'UserProfile',
-                  filter: {
-                    kind: 'LEAF',
-                    leaf: 'twitterHandle',
-                    operator: 'IN',
-                    values: ['ryanmdahl', 'leeb'],
-                  },
-                },
-              },
+              { profile: { twitterHandle_in: ['ryanmdahl', 'leeb'] } },
             ],
 
             [
@@ -1919,17 +780,14 @@ describe('NodeFilterInputType', () => {
                   { profile: {} },
                 ],
               },
-              {
-                kind: 'UNIQUE_REVERSE_EDGE_EXISTS',
-                reverseEdge: 'profile',
-              },
+              { profile: {} },
             ],
-          ])('%s', (_label, input, ast) => {
-            const node = gp.getNodeByName('User');
-            const filter = node.filterInputType.parseAndFilter(input).filter;
-
-            expect(filter.ast).toEqual(ast);
-          });
+          ])('%s', (_label, input, output) =>
+            expect(
+              gp.getNodeByName('User').filterInputType.parseAndFilter(input)
+                .filter.inputValue,
+            ).toEqual(output),
+          );
         });
 
         describe('Multiple', () => {
@@ -1937,44 +795,21 @@ describe('NodeFilterInputType', () => {
             [
               label: string,
               input: NodeFilterInputValue,
-              ast: BooleanFilter['ast'],
+              output: NodeFilterInputValue,
             ]
           >([
             [
               'An article WITH some "tags"',
               { tags_some: {} },
-              {
-                kind: 'MULTIPLE_REVERSE_EDGE_EXISTS',
-                reverseEdge: 'tags',
-              },
+              { tags_some: {} },
             ],
 
             [
               'An article WITHOUT any deprecated "tags" - 0',
               { tags_none: { tag: { deprecated: true } } },
               {
-                kind: 'NOT',
-                operand: {
-                  kind: 'MULTIPLE_REVERSE_EDGE_EXISTS',
-                  reverseEdge: 'tags',
-                  headFilter: {
-                    kind: 'NODE',
-                    node: 'ArticleTag',
-                    filter: {
-                      kind: 'EDGE_EXISTS',
-                      edge: 'tag',
-                      headFilter: {
-                        kind: 'NODE',
-                        node: 'Tag',
-                        filter: {
-                          kind: 'LEAF',
-                          leaf: 'deprecated',
-                          operator: 'EQ',
-                          value: true,
-                        },
-                      },
-                    },
-                  },
+                NOT: {
+                  tags_some: { tag: { deprecated: true } },
                 },
               },
             ],
@@ -1987,31 +822,8 @@ describe('NodeFilterInputType', () => {
                 },
               },
               {
-                kind: 'NOT',
-                operand: {
-                  kind: 'MULTIPLE_REVERSE_EDGE_EXISTS',
-                  reverseEdge: 'tags',
-                  headFilter: {
-                    kind: 'NODE',
-                    node: 'ArticleTag',
-                    filter: {
-                      kind: 'NOT',
-                      operand: {
-                        kind: 'EDGE_EXISTS',
-                        edge: 'tag',
-                        headFilter: {
-                          kind: 'NODE',
-                          node: 'Tag',
-                          filter: {
-                            kind: 'LEAF',
-                            leaf: 'deprecated',
-                            operator: 'IN',
-                            values: [null, false],
-                          },
-                        },
-                      },
-                    },
-                  },
+                NOT: {
+                  tags_some: { NOT: { tag: { deprecated_in: [null, false] } } },
                 },
               },
             ],
@@ -2035,53 +847,18 @@ describe('NodeFilterInputType', () => {
                 ],
               },
               {
-                kind: 'MULTIPLE_REVERSE_EDGE_EXISTS',
-                reverseEdge: 'tags',
-                headFilter: {
-                  kind: 'NODE',
-                  node: 'ArticleTag',
-                  filter: {
-                    kind: 'AND',
-                    operands: [
-                      {
-                        kind: 'EDGE_EXISTS',
-                        edge: 'tag',
-                        headFilter: {
-                          kind: 'NODE',
-                          node: 'Tag',
-                          filter: {
-                            kind: 'LEAF',
-                            leaf: 'id',
-                            operator: 'EQ',
-                            value: 'ef31efed-361c-449c-a561-ed94eabbf60d',
-                          },
-                        },
-                      },
-                      {
-                        kind: 'EDGE_EXISTS',
-                        edge: 'article',
-                        headFilter: {
-                          kind: 'NODE',
-                          node: 'Article',
-                          filter: {
-                            kind: 'LEAF',
-                            leaf: '_id',
-                            operator: 'IN',
-                            values: [5, 6],
-                          },
-                        },
-                      },
-                    ],
-                  },
+                tags_some: {
+                  article: { _id_in: [5, 6] },
+                  tag: { id: 'ef31efed-361c-449c-a561-ed94eabbf60d' },
                 },
               },
             ],
-          ])('%s', (_label, input, ast) => {
-            const node = gp.getNodeByName('Article');
-            const filter = node.filterInputType.parseAndFilter(input).filter;
-
-            expect(filter.ast).toEqual(ast);
-          });
+          ])('%s', (_label, input, output) =>
+            expect(
+              gp.getNodeByName('Article').filterInputType.parseAndFilter(input)
+                .filter.inputValue,
+            ).toEqual(output),
+          );
         });
       });
 
@@ -2090,7 +867,7 @@ describe('NodeFilterInputType', () => {
           [
             label: string,
             input: NodeFilterInputValue,
-            ast: BooleanFilter['ast'],
+            output: NodeFilterInputValue,
           ]
         >([
           [
@@ -2111,40 +888,10 @@ describe('NodeFilterInputType', () => {
               ],
             },
             {
-              kind: 'OR',
-              operands: [
-                {
-                  kind: 'LEAF',
-                  leaf: '_id',
-                  operator: 'NOT',
-                  value: 20,
-                },
-                {
-                  kind: 'LEAF',
-                  leaf: 'status',
-                  operator: 'IN',
-                  values: ['deleted', 'draft'],
-                },
-                {
-                  kind: 'NOT',
-                  operand: {
-                    kind: 'EDGE_EXISTS',
-                    edge: 'category',
-                    headFilter: {
-                      kind: 'NODE',
-                      node: 'Category',
-                      filter: {
-                        kind: 'NOT',
-                        operand: {
-                          kind: 'LEAF',
-                          leaf: 'slug',
-                          operator: 'IN',
-                          values: ['tv', 'news'],
-                        },
-                      },
-                    },
-                  },
-                },
+              OR: [
+                { _id_not: 20 },
+                { status_in: [ArticleStatus.DELETED, ArticleStatus.DRAFT] },
+                { NOT: { category: { NOT: { slug_in: ['tv', 'news'] } } } },
               ],
             },
           ],
@@ -2162,32 +909,8 @@ describe('NodeFilterInputType', () => {
               ],
             },
             {
-              kind: 'AND',
-              operands: expect.arrayContaining([
-                {
-                  kind: 'EDGE_EXISTS',
-                  edge: 'category',
-                  headFilter: {
-                    kind: 'NODE',
-                    node: 'Category',
-                    filter: {
-                      kind: 'LEAF',
-                      leaf: 'slug',
-                      operator: 'IN',
-                      values: ['news', 'home'],
-                    },
-                  },
-                },
-                {
-                  kind: 'NOT',
-                  operand: {
-                    kind: 'LEAF',
-                    leaf: '_id',
-                    operator: 'IN',
-                    values: expect.arrayContaining([1, 2, 4, 5, 6, 3]),
-                  },
-                },
-              ]) as any,
+              category: { slug_in: ['news', 'home'] },
+              NOT: { _id_in: [1, 2, 3, 4, 5, 6] },
             },
           ],
 
@@ -2196,19 +919,14 @@ describe('NodeFilterInputType', () => {
             {
               OR: [{ _id: 1 }, { _id_in: R.range(2, 1000) }],
             },
-            {
-              kind: 'LEAF',
-              leaf: '_id',
-              operator: 'IN',
-              values: expect.arrayContaining([1, 999]) as any,
-            },
+            { _id_in: expect.arrayContaining([1, 999]) },
           ],
-        ])('%s', (_label, input, ast) => {
-          const node = gp.getNodeByName('Article');
-          const filter = node.filterInputType.parseAndFilter(input).filter;
-
-          expect(filter.ast).toEqual(ast);
-        });
+        ])('%s', (_label, input, output) =>
+          expect(
+            gp.getNodeByName('Article').filterInputType.parseAndFilter(input)
+              .filter.inputValue,
+          ).toEqual(output),
+        );
 
         it('A big conjunction', () => {
           const node = gp.getNodeByName('ArticleTag');

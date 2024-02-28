@@ -2,27 +2,17 @@ import { Memoize } from '@prismamedia/memoize';
 import assert from 'node:assert/strict';
 import { NodeValue } from '../../../../../../../node.js';
 import { NodeChange, NodeUpdate } from '../../../../../../change.js';
-import type {
-  Component,
-  Edge,
-  UniqueConstraint,
-} from '../../../../../../definition.js';
+import type { Edge, UniqueConstraint } from '../../../../../../definition.js';
 import type { NodeFilterInputValue } from '../../../../../../type.js';
 import { NodeFilter, areFiltersEqual } from '../../../../../filter.js';
 import type { NodeSelectedValue } from '../../../../../selection.js';
 import type { BooleanFilter } from '../../../../boolean.js';
-import type { BooleanExpressionInterface } from '../../../expression-interface.js';
 import type { AndOperand, OrOperand } from '../../../operation.js';
 import { AndOperation, NotOperation, OrOperation } from '../../../operation.js';
 import { FalseValue, TrueValue } from '../../../value.js';
+import { AbstractComponentFilter } from '../abstract.js';
 
-export interface EdgeExistsFilterAST {
-  kind: 'EDGE_EXISTS';
-  edge: Edge['name'];
-  headFilter?: NodeFilter['ast'];
-}
-
-export class EdgeExistsFilter implements BooleanExpressionInterface {
+export class EdgeExistsFilter extends AbstractComponentFilter {
   public static create(edge: Edge, headFilter?: NodeFilter): BooleanFilter {
     if (headFilter) {
       assert.equal(edge.head, headFilter.node);
@@ -40,21 +30,19 @@ export class EdgeExistsFilter implements BooleanExpressionInterface {
   }
 
   public readonly key: string;
-
-  public readonly component: Component;
   public readonly score: number;
 
   protected constructor(
     public readonly edge: Edge,
     public readonly headFilter?: NodeFilter,
   ) {
-    this.key = edge.name;
+    super(edge);
 
-    this.component = edge;
+    this.key = edge.name;
     this.score = 1 + (headFilter?.score ?? 0);
   }
 
-  public equals(expression: unknown): boolean {
+  public equals(expression: unknown): expression is EdgeExistsFilter {
     return (
       expression instanceof EdgeExistsFilter &&
       expression.edge === this.edge &&
@@ -63,7 +51,7 @@ export class EdgeExistsFilter implements BooleanExpressionInterface {
   }
 
   @Memoize()
-  public get complement(): BooleanFilter | undefined {
+  public override get complement(): BooleanFilter | undefined {
     return this.headFilter
       ? new OrOperation([
           new NotOperation(new EdgeExistsFilter(this.edge)),
@@ -72,7 +60,7 @@ export class EdgeExistsFilter implements BooleanExpressionInterface {
       : undefined;
   }
 
-  public and(
+  public override and(
     operand: AndOperand,
     remainingReducers: number,
   ): BooleanFilter | undefined {
@@ -92,7 +80,7 @@ export class EdgeExistsFilter implements BooleanExpressionInterface {
     }
   }
 
-  public or(
+  public override or(
     operand: OrOperand,
     remainingReducers: number,
   ): BooleanFilter | undefined {
@@ -112,7 +100,7 @@ export class EdgeExistsFilter implements BooleanExpressionInterface {
     }
   }
 
-  public execute(value: NodeSelectedValue): boolean | undefined {
+  public override execute(value: NodeSelectedValue): boolean | undefined {
     const edgeHeadValue = value[this.edge.name];
 
     if (edgeHeadValue === undefined) {
@@ -126,7 +114,9 @@ export class EdgeExistsFilter implements BooleanExpressionInterface {
       : true;
   }
 
-  public isExecutableWithinUniqueConstraint(unique: UniqueConstraint): boolean {
+  public override isExecutableWithinUniqueConstraint(
+    unique: UniqueConstraint,
+  ): boolean {
     return (
       unique.edgeSet.has(this.edge) &&
       (!this.headFilter ||
@@ -136,45 +126,50 @@ export class EdgeExistsFilter implements BooleanExpressionInterface {
     );
   }
 
-  public isAffectedByNodeUpdate(update: NodeUpdate): boolean {
+  public override isAffectedByNodeUpdate(update: NodeUpdate): boolean {
     return (
       update.hasComponentUpdate(this.edge) &&
       this.execute(update.oldValue) !== this.execute(update.newValue)
     );
   }
 
-  public getAffectedGraphByNodeChange(
+  public override getAffectedGraphByNodeChange(
     change: NodeChange,
     _visitedRootNodes?: NodeValue[],
-  ): BooleanFilter {
-    return this.headFilter
-      ? EdgeExistsFilter.create(
-          this.edge,
-          new NodeFilter(
-            this.edge.head,
-            OrOperation.create([
-              change.node === this.edge.head &&
-              change instanceof NodeUpdate &&
-              this.headFilter.isAffectedByNodeUpdate(change)
-                ? this.edge.head.filterInputType.filter(
-                    this.edge.referencedUniqueConstraint.parseValue(
-                      change.newValue,
-                    ),
-                  ).filter
-                : FalseValue,
-              this.headFilter.getAffectedGraphByNodeChange(change).filter,
-            ]),
-          ),
-        )
-      : FalseValue;
-  }
+  ): BooleanFilter | null {
+    if (this.headFilter) {
+      const operands: BooleanFilter[] = [];
 
-  public get ast(): EdgeExistsFilterAST {
-    return {
-      kind: 'EDGE_EXISTS',
-      edge: this.edge.name,
-      ...(this.headFilter && { headFilter: this.headFilter.ast }),
-    };
+      if (
+        change.node === this.edge.head &&
+        change instanceof NodeUpdate &&
+        this.headFilter.isAffectedByNodeUpdate(change)
+      ) {
+        operands.push(
+          this.edge.head.filterInputType.filter(
+            this.edge.referencedUniqueConstraint.parseValue(change.newValue),
+          ).filter,
+        );
+      }
+
+      {
+        const affectedHeadFilter =
+          this.headFilter.getAffectedGraphByNodeChange(change);
+
+        if (affectedHeadFilter) {
+          operands.push(affectedHeadFilter.filter);
+        }
+      }
+
+      if (operands.length) {
+        return EdgeExistsFilter.create(
+          this.edge,
+          new NodeFilter(this.edge.head, OrOperation.create(operands)),
+        );
+      }
+    }
+
+    return null;
   }
 
   public get inputValue(): NodeFilterInputValue {

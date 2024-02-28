@@ -14,12 +14,6 @@ import type { NodeSelectedValue } from './selection.js';
 
 export * from './filter/boolean.js';
 
-export interface NodeFilterAST {
-  kind: 'NODE';
-  node: Node['name'];
-  filter: BooleanFilter['ast'];
-}
-
 export class NodeFilter {
   /**
    * Used to sort filters, the lower the better/simpler
@@ -134,20 +128,15 @@ export class NodeFilter {
   public getAffectedGraphByNodeChange(
     change: NodeChange,
     visitedRootNodes?: NodeValue[],
-  ): NodeFilter {
-    return new NodeFilter(
-      this.node,
-      this.filter.getAffectedGraphByNodeChange(change, visitedRootNodes),
+  ): NodeFilter | null {
+    const filter = this.filter.getAffectedGraphByNodeChange(
+      change,
+      visitedRootNodes,
     );
-  }
 
-  @Memoize()
-  public get ast(): NodeFilterAST {
-    return {
-      kind: 'NODE',
-      node: this.node.name,
-      filter: this.filter.ast,
-    };
+    return filter && !filter.equals(FalseValue)
+      ? new NodeFilter(this.node, filter)
+      : null;
   }
 
   @Memoize()

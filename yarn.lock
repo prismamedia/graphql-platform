@@ -1064,7 +1064,7 @@ __metadata:
     "@swc/core": "npm:1.4.2"
     "@swc/jest": "npm:0.2.36"
     "@tsconfig/node20": "npm:20.1.2"
-    "@types/node": "npm:20.11.20"
+    "@types/node": "npm:20.11.21"
     "@types/semver": "npm:7.5.8"
     graphql: "npm:16.8.1"
     inflection: "npm:^3.0.0"
@@ -1094,7 +1094,7 @@ __metadata:
     "@types/body-parser": "npm:^1.19.5"
     "@types/cors": "npm:^2.8.17"
     "@types/express": "npm:^4.17.21"
-    "@types/node": "npm:20.11.20"
+    "@types/node": "npm:20.11.21"
     "@types/ws": "npm:^8.5.10"
     body-parser: "npm:1.20.2"
     cors: "npm:2.8.5"
@@ -1121,7 +1121,7 @@ __metadata:
     "@swc/jest": "npm:0.2.36"
     "@tsconfig/node20": "npm:20.1.2"
     "@types/draft-js": "npm:^0.11.17"
-    "@types/node": "npm:20.11.20"
+    "@types/node": "npm:20.11.21"
     graphql: "npm:16.8.1"
     jest: "npm:29.7.0"
     publint: "npm:0.2.7"
@@ -1142,7 +1142,7 @@ __metadata:
     "@swc/jest": "npm:0.2.36"
     "@tsconfig/node20": "npm:20.1.2"
     "@types/indefinite": "npm:2.3.4"
-    "@types/node": "npm:20.11.20"
+    "@types/node": "npm:20.11.21"
     graphql: "npm:16.8.1"
     indefinite: "npm:^2.5.1"
     jest: "npm:29.7.0"
@@ -1168,7 +1168,7 @@ __metadata:
     "@swc/jest": "npm:0.2.36"
     "@tsconfig/node20": "npm:20.1.2"
     "@types/cli-progress": "npm:^3.11.5"
-    "@types/node": "npm:20.11.20"
+    "@types/node": "npm:20.11.21"
     cli-progress: "npm:^3.12.0"
     dataloader: "npm:^2.2.2"
     denque: "npm:^2.1.0"
@@ -1707,12 +1707,12 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@types/node@npm:20.11.20":
-  version: 20.11.20
-  resolution: "@types/node@npm:20.11.20"
+"@types/node@npm:20.11.21":
+  version: 20.11.21
+  resolution: "@types/node@npm:20.11.21"
   dependencies:
     undici-types: "npm:~5.26.4"
-  checksum: 10/ff449bdc94810dadb54e0f77dd587c6505ef79ffa5a208c16eb29b223365b188f4c935a3abaf0906a01d05257c3da1f72465594a841d35bcf7b6deac7a6938fb
+  checksum: 10/a31ecc6a3c615bca310ffe7dea23613153ff9e1e175c09d14198402b2cef9b1bb1bf3912aff6ffc6cb01b99a025ec6dd6474c797bfb0aaf83daf4edaea063760
   languageName: node
   linkType: hard
 

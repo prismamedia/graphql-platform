@@ -1,5 +1,6 @@
 import Denque from 'denque';
 import assert from 'node:assert/strict';
+import * as R from 'remeda';
 import type {
   NodeSelectedValue,
   NodeValue,
@@ -7,8 +8,8 @@ import type {
 } from '../../../../../node.js';
 import type { NodeChange, NodeUpdate } from '../../../../change.js';
 import type { NodeFilterInputValue } from '../../../../type.js';
+import { AbstractBooleanFilter } from '../../abstract.js';
 import type { BooleanFilter } from '../../boolean.js';
-import type { BooleanExpressionInterface } from '../expression-interface.js';
 import type { BooleanExpression } from '../expression.js';
 import { BooleanValue, FalseValue, TrueValue } from '../value.js';
 import { NotOperation } from './not.js';
@@ -16,14 +17,7 @@ import { OrOperation, type OrOperand } from './or.js';
 
 export type AndOperand = BooleanExpression | OrOperation | NotOperation;
 
-export interface AndOperationAST {
-  kind: 'AND';
-  operands: AndOperand['ast'][];
-}
-
-export class AndOperation implements BooleanExpressionInterface {
-  public static key: string = 'AND';
-
+export class AndOperation extends AbstractBooleanFilter {
   protected static reducers(
     remainingReducers: number,
     _queue: Denque<BooleanFilter>,
@@ -125,13 +119,14 @@ export class AndOperation implements BooleanExpressionInterface {
       : new this(operands);
   }
 
-  public readonly key: string;
+  public readonly key = 'AND' as const;
   public readonly score: number;
-  public readonly complement: undefined;
 
   public constructor(public readonly operands: ReadonlyArray<AndOperand>) {
-    this.key = (this.constructor as typeof AndOperation).key;
-    this.score = 1 + operands.reduce((total, { score }) => total + score, 0);
+    super();
+
+    this.score =
+      1 + operands.reduce((total, operand) => total + operand.score, 0);
   }
 
   public has(expression: unknown): boolean {
@@ -146,7 +141,7 @@ export class AndOperation implements BooleanExpressionInterface {
     );
   }
 
-  public or(
+  public override or(
     operand: OrOperand,
     remainingReducers: number,
   ): BooleanFilter | undefined {
@@ -212,7 +207,7 @@ export class AndOperation implements BooleanExpressionInterface {
     );
   }
 
-  public execute(value: NodeSelectedValue): boolean | undefined {
+  public override execute(value: NodeSelectedValue): boolean | undefined {
     let hasUndefinedOperand: boolean = false;
 
     for (const operand of this.operands) {
@@ -228,34 +223,35 @@ export class AndOperation implements BooleanExpressionInterface {
     return hasUndefinedOperand ? undefined : true;
   }
 
-  public isExecutableWithinUniqueConstraint(unique: UniqueConstraint): boolean {
+  public override isExecutableWithinUniqueConstraint(
+    unique: UniqueConstraint,
+  ): boolean {
     return this.operands.every((operand) =>
       operand.isExecutableWithinUniqueConstraint(unique),
     );
   }
 
-  public isAffectedByNodeUpdate(update: NodeUpdate): boolean {
+  public override isAffectedByNodeUpdate(update: NodeUpdate): boolean {
     return this.operands.some((operand) =>
       operand.isAffectedByNodeUpdate(update),
     );
   }
 
-  public getAffectedGraphByNodeChange(
+  public override getAffectedGraphByNodeChange(
     change: NodeChange,
     visitedRootNodes?: NodeValue[],
-  ): BooleanFilter {
-    return OrOperation.create(
-      this.operands.map((operand) =>
-        operand.getAffectedGraphByNodeChange(change, visitedRootNodes),
+  ): BooleanFilter | null {
+    const filter = OrOperation.create(
+      R.pipe(
+        this.operands,
+        R.map((operand) =>
+          operand.getAffectedGraphByNodeChange(change, visitedRootNodes),
+        ),
+        R.filter(R.isNonNull),
       ),
     );
-  }
 
-  public get ast(): AndOperationAST {
-    return {
-      kind: 'AND',
-      operands: this.operands.map(({ ast }) => ast),
-    };
+    return filter.equals(FalseValue) ? null : filter;
   }
 
   public get inputValue(): NodeFilterInputValue {

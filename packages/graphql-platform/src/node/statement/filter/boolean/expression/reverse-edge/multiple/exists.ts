@@ -6,17 +6,12 @@ import {
 import {
   NodeCreation,
   NodeDeletion,
-  NodeUpdate,
   type NodeChange,
 } from '../../../../../../change.js';
-import type {
-  MultipleReverseEdge,
-  UniqueConstraint,
-} from '../../../../../../definition.js';
+import type { MultipleReverseEdge } from '../../../../../../definition.js';
 import type { NodeFilterInputValue } from '../../../../../../type.js';
 import { NodeFilter, areFiltersEqual } from '../../../../../filter.js';
 import type { BooleanFilter } from '../../../../boolean.js';
-import type { BooleanExpressionInterface } from '../../../expression-interface.js';
 import {
   AndOperation,
   OrOperation,
@@ -24,16 +19,9 @@ import {
   type OrOperand,
 } from '../../../operation.js';
 import { FalseValue, TrueValue } from '../../../value.js';
+import { AbstractReverseEdgeFilter } from '../abstract.js';
 
-export interface MultipleReverseEdgeExistsFilterAST {
-  kind: 'MULTIPLE_REVERSE_EDGE_EXISTS';
-  reverseEdge: MultipleReverseEdge['name'];
-  headFilter?: NodeFilter['ast'];
-}
-
-export class MultipleReverseEdgeExistsFilter
-  implements BooleanExpressionInterface
-{
+export class MultipleReverseEdgeExistsFilter extends AbstractReverseEdgeFilter {
   public static create(
     reverseEdge: MultipleReverseEdge,
     headFilter?: NodeFilter,
@@ -52,15 +40,15 @@ export class MultipleReverseEdgeExistsFilter
   }
 
   public readonly key: string;
-
   public readonly score: number;
 
   public constructor(
-    public readonly reverseEdge: MultipleReverseEdge,
+    public override readonly reverseEdge: MultipleReverseEdge,
     public readonly headFilter?: NodeFilter,
   ) {
-    this.key = `${reverseEdge.name}_some`;
+    super(reverseEdge);
 
+    this.key = `${reverseEdge.name}_some`;
     this.score = 1 + (headFilter?.score ?? 0);
   }
 
@@ -74,11 +62,7 @@ export class MultipleReverseEdgeExistsFilter
     );
   }
 
-  public get complement(): BooleanFilter | undefined {
-    return;
-  }
-
-  public and(
+  public override and(
     operand: AndOperand,
     remainingReducers: number,
   ): BooleanFilter | undefined {
@@ -103,7 +87,7 @@ export class MultipleReverseEdgeExistsFilter
     return;
   }
 
-  public or(
+  public override or(
     operand: OrOperand,
     remainingReducers: number,
   ): BooleanFilter | undefined {
@@ -128,7 +112,7 @@ export class MultipleReverseEdgeExistsFilter
     return;
   }
 
-  public execute(value: NodeSelectedValue): boolean | undefined {
+  public override execute(value: NodeSelectedValue): boolean | undefined {
     const reverseEdgeHeadValues = value[this.reverseEdge.name];
 
     if (reverseEdgeHeadValues === undefined) {
@@ -147,20 +131,10 @@ export class MultipleReverseEdgeExistsFilter
       : true;
   }
 
-  public isExecutableWithinUniqueConstraint(
-    _unique: UniqueConstraint,
-  ): boolean {
-    return false;
-  }
-
-  public isAffectedByNodeUpdate(_update: NodeUpdate): boolean {
-    return false;
-  }
-
-  public getAffectedGraphByNodeChange(
+  public override getAffectedGraphByNodeChange(
     change: NodeChange,
     visitedRootNodes?: NodeValue[],
-  ): BooleanFilter {
+  ): BooleanFilter | null {
     const operands: BooleanFilter[] = [];
 
     if (change.node === this.reverseEdge.head) {
@@ -230,24 +204,21 @@ export class MultipleReverseEdgeExistsFilter
       }
     }
 
-    if (this.headFilter) {
-      operands.push(
-        MultipleReverseEdgeExistsFilter.create(
-          this.reverseEdge,
-          this.headFilter.getAffectedGraphByNodeChange(change),
-        ),
-      );
+    {
+      const affectedHeadFilter =
+        this.headFilter?.getAffectedGraphByNodeChange(change);
+
+      if (affectedHeadFilter) {
+        operands.push(
+          MultipleReverseEdgeExistsFilter.create(
+            this.reverseEdge,
+            affectedHeadFilter,
+          ),
+        );
+      }
     }
 
-    return OrOperation.create(operands);
-  }
-
-  public get ast(): MultipleReverseEdgeExistsFilterAST {
-    return {
-      kind: 'MULTIPLE_REVERSE_EDGE_EXISTS',
-      reverseEdge: this.reverseEdge.name,
-      ...(this.headFilter && { headFilter: this.headFilter.ast }),
-    };
+    return operands.length ? OrOperation.create(operands) : null;
   }
 
   public get inputValue(): NodeFilterInputValue {

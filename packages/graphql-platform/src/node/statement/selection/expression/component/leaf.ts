@@ -5,7 +5,7 @@ import type { NodeValue } from '../../../../../node.js';
 import type { NodeChange, NodeUpdate } from '../../../../change.js';
 import type { Component, Leaf, LeafValue } from '../../../../definition.js';
 import type { OperationContext } from '../../../../operation.js';
-import { FalseValue, type BooleanFilter } from '../../../filter.js';
+import { type BooleanFilter } from '../../../filter.js';
 import type { SelectionExpressionInterface } from '../../expression-interface.js';
 
 export class LeafSelection<TSource extends LeafValue = any, TValue = TSource>
@@ -57,8 +57,8 @@ export class LeafSelection<TSource extends LeafValue = any, TValue = TSource>
   public getAffectedGraphByNodeChange(
     _change: NodeChange,
     _visitedRootNodes?: NodeValue[],
-  ): BooleanFilter {
-    return FalseValue;
+  ): BooleanFilter | null {
+    return null;
   }
 
   public toGraphQLFieldNode(): graphql.FieldNode {

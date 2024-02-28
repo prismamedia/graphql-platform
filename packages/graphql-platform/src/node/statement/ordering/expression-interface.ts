@@ -1,5 +1,6 @@
 import type { NodeValue } from '../../../node.js';
 import type { NodeChange, NodeUpdate } from '../../change.js';
+import type { NodeOrderingInputValue } from '../../type.js';
 import type { BooleanFilter } from '../filter.js';
 import type { OrderingDirection } from './direction.js';
 
@@ -16,10 +17,10 @@ export interface OrderingExpressionInterface {
   getAffectedGraphByNodeChange(
     change: NodeChange,
     visitedRootNodes?: NodeValue[],
-  ): BooleanFilter;
+  ): BooleanFilter | null;
 
   /**
-   * A developer-friendly representation of this expression
+   * Returns the input-value for this expression
    */
-  readonly ast: any;
+  inputValue: NonNullable<NodeOrderingInputValue>;
 }

@@ -98,7 +98,7 @@ export class MultipleReverseEdgeCountSelection<
   public getAffectedGraphByNodeChange(
     change: NodeChange,
     visitedRootNodes?: NodeValue[],
-  ): BooleanFilter {
+  ): BooleanFilter | null {
     const operands: BooleanFilter[] = [];
 
     if (change.node === this.reverseEdge.head) {
@@ -168,16 +168,21 @@ export class MultipleReverseEdgeCountSelection<
       }
     }
 
-    if (this.headFilter) {
-      operands.push(
-        MultipleReverseEdgeExistsFilter.create(
-          this.reverseEdge,
-          this.headFilter.getAffectedGraphByNodeChange(change),
-        ),
-      );
+    {
+      const affectedHeadFilter =
+        this.headFilter?.getAffectedGraphByNodeChange(change);
+
+      if (affectedHeadFilter) {
+        operands.push(
+          MultipleReverseEdgeExistsFilter.create(
+            this.reverseEdge,
+            affectedHeadFilter,
+          ),
+        );
+      }
     }
 
-    return OrOperation.create(operands);
+    return operands.length ? OrOperation.create(operands) : null;
   }
 
   @Memoize()

@@ -2,34 +2,19 @@ import * as scalars from '@prismamedia/graphql-platform-scalars';
 import * as utils from '@prismamedia/graphql-platform-utils';
 import type {
   NodeSelectedValue,
-  NodeValue,
   UniqueConstraint,
 } from '../../../../../../../node.js';
-import type { NodeChange, NodeUpdate } from '../../../../../../change.js';
-import type {
-  Component,
-  Leaf,
-} from '../../../../../../definition/component.js';
+import type { NodeUpdate } from '../../../../../../change.js';
+import type { Leaf } from '../../../../../../definition/component.js';
 import type { NodeFilterInputValue } from '../../../../../../type.js';
-import { FalseValue, type BooleanFilter } from '../../../../boolean.js';
-import type { BooleanExpressionInterface } from '../../../expression-interface.js';
-import type { AndOperand, OrOperand } from '../../../operation.js';
+import { AbstractLeafFilter } from './abstract.js';
 
-export interface LeafFullTextFilterAST {
-  kind: 'LEAF';
-  leaf: Leaf['name'];
-  operator: Uppercase<LeafFullTextFilter['operator']>;
-  value: LeafFullTextFilter['value'];
-}
-
-export class LeafFullTextFilter implements BooleanExpressionInterface {
+export class LeafFullTextFilter extends AbstractLeafFilter {
   public readonly key: string;
-
-  public readonly component: Component;
   public readonly score: number;
 
   public constructor(
-    public readonly leaf: Leaf,
+    leaf: Leaf,
     public readonly operator: 'contains' | 'starts_with' | 'ends_with',
     public readonly value: string,
   ) {
@@ -37,13 +22,13 @@ export class LeafFullTextFilter implements BooleanExpressionInterface {
       throw new utils.UnexpectedValueError(value, `a non-empty string`);
     }
 
-    this.key = `${leaf.name}_${operator}`;
+    super(leaf);
 
-    this.component = leaf;
+    this.key = `${leaf.name}_${operator}`;
     this.score = 2;
   }
 
-  public equals(expression: unknown): boolean {
+  public equals(expression: unknown): expression is LeafFullTextFilter {
     return (
       expression instanceof LeafFullTextFilter &&
       expression.leaf === this.leaf &&
@@ -52,25 +37,7 @@ export class LeafFullTextFilter implements BooleanExpressionInterface {
     );
   }
 
-  public get complement(): undefined {
-    return;
-  }
-
-  public and(
-    _operand: AndOperand,
-    _remainingReducers: number,
-  ): BooleanFilter | undefined {
-    return;
-  }
-
-  public or(
-    _operand: OrOperand,
-    _remainingReducers: number,
-  ): BooleanFilter | undefined {
-    return;
-  }
-
-  public execute(value: NodeSelectedValue): boolean | undefined {
+  public override execute(value: NodeSelectedValue): boolean | undefined {
     const leafValue = value[this.leaf.name];
     if (leafValue === undefined) {
       return;
@@ -107,31 +74,17 @@ export class LeafFullTextFilter implements BooleanExpressionInterface {
     }
   }
 
-  public isExecutableWithinUniqueConstraint(unique: UniqueConstraint): boolean {
+  public override isExecutableWithinUniqueConstraint(
+    unique: UniqueConstraint,
+  ): boolean {
     return unique.leafSet.has(this.leaf);
   }
 
-  public isAffectedByNodeUpdate(update: NodeUpdate): boolean {
+  public override isAffectedByNodeUpdate(update: NodeUpdate): boolean {
     return (
       update.hasComponentUpdate(this.leaf) &&
       this.execute(update.oldValue) !== this.execute(update.newValue)
     );
-  }
-
-  public getAffectedGraphByNodeChange(
-    _change: NodeChange,
-    _visitedRootNodes?: NodeValue[],
-  ): BooleanFilter {
-    return FalseValue;
-  }
-
-  public get ast(): LeafFullTextFilterAST {
-    return {
-      kind: 'LEAF',
-      leaf: this.leaf.name,
-      operator: this.operator.toUpperCase() as any,
-      value: this.value,
-    };
   }
 
   public get inputValue(): NodeFilterInputValue {

@@ -9,7 +9,7 @@ import type {
   PartialGraphQLResolveInfo,
   VirtualOutputType,
 } from '../../../type.js';
-import { FalseValue, type BooleanFilter } from '../../filter.js';
+import { type BooleanFilter } from '../../filter.js';
 import type { SelectionExpressionInterface } from '../expression-interface.js';
 
 export type VirtualSelectionInfo = {};
@@ -82,12 +82,12 @@ export class VirtualSelection<
   public getAffectedGraphByNodeChange(
     change: NodeChange,
     visitedRootNodes?: NodeValue[],
-  ): BooleanFilter {
+  ): BooleanFilter | null {
     return (
       this.type.dependencies?.getAffectedGraphByNodeChange(
         change,
         visitedRootNodes,
-      ).filter ?? FalseValue
+      )?.filter ?? null
     );
   }
 

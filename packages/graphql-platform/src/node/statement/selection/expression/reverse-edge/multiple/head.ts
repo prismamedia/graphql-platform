@@ -141,7 +141,7 @@ export class MultipleReverseEdgeHeadSelection<
   public getAffectedGraphByNodeChange(
     change: NodeChange,
     visitedRootNodes?: NodeValue[],
-  ): BooleanFilter {
+  ): BooleanFilter | null {
     const operands: BooleanFilter[] = [];
 
     if (change.node === this.reverseEdge.head) {
@@ -213,23 +213,34 @@ export class MultipleReverseEdgeHeadSelection<
       }
     }
 
-    operands.push(
-      MultipleReverseEdgeExistsFilter.create(
-        this.reverseEdge,
-        new NodeFilter(
-          this.reverseEdge.head,
-          OrOperation.create([
-            this.headFilter?.getAffectedGraphByNodeChange(change).filter ??
-              FalseValue,
-            this.headOrdering?.getAffectedGraphByNodeChange(change).filter ??
-              FalseValue,
-            this.headSelection.getAffectedGraphByNodeChange(change).filter,
-          ]),
-        ),
-      ),
-    );
+    {
+      const affectedHeadFilter =
+        this.headFilter?.getAffectedGraphByNodeChange(change);
 
-    return OrOperation.create(operands);
+      const affectedHeadOrdering =
+        this.headOrdering?.getAffectedGraphByNodeChange(change);
+
+      const affectedHeadSelection =
+        this.headSelection.getAffectedGraphByNodeChange(change);
+
+      if (affectedHeadFilter || affectedHeadOrdering || affectedHeadSelection) {
+        operands.push(
+          MultipleReverseEdgeExistsFilter.create(
+            this.reverseEdge,
+            new NodeFilter(
+              this.reverseEdge.head,
+              OrOperation.create([
+                affectedHeadFilter?.filter ?? FalseValue,
+                affectedHeadOrdering?.filter ?? FalseValue,
+                affectedHeadSelection?.filter ?? FalseValue,
+              ]),
+            ),
+          ),
+        );
+      }
+    }
+
+    return operands.length ? OrOperation.create(operands) : null;
   }
 
   @Memoize()

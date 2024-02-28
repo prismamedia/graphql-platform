@@ -8,7 +8,6 @@ import type { Component, Edge } from '../../../../../definition.js';
 import type { OperationContext } from '../../../../../operation.js';
 import {
   EdgeExistsFilter,
-  FalseValue,
   NodeFilter,
   OrOperation,
   type BooleanFilter,
@@ -89,25 +88,36 @@ export class EdgeHeadSelection<
   public getAffectedGraphByNodeChange(
     change: NodeChange,
     _visitedRootNodes?: NodeValue[],
-  ): BooleanFilter {
-    return EdgeExistsFilter.create(
-      this.edge,
-      new NodeFilter(
-        this.edge.head,
-        OrOperation.create([
-          change.node === this.edge.head &&
-          change instanceof NodeUpdate &&
-          this.headSelection.isAffectedByNodeUpdate(change)
-            ? this.edge.head.filterInputType.filter(
-                this.edge.referencedUniqueConstraint.parseValue(
-                  change.newValue,
-                ),
-              ).filter
-            : FalseValue,
-          this.headSelection.getAffectedGraphByNodeChange(change).filter,
-        ]),
-      ),
-    );
+  ): BooleanFilter | null {
+    const operands: BooleanFilter[] = [];
+
+    if (
+      change.node === this.edge.head &&
+      change instanceof NodeUpdate &&
+      this.headSelection.isAffectedByNodeUpdate(change)
+    ) {
+      operands.push(
+        this.edge.head.filterInputType.filter(
+          this.edge.referencedUniqueConstraint.parseValue(change.newValue),
+        ).filter,
+      );
+    }
+
+    {
+      const affectedHeadSelection =
+        this.headSelection.getAffectedGraphByNodeChange(change);
+
+      if (affectedHeadSelection) {
+        operands.push(affectedHeadSelection.filter);
+      }
+    }
+
+    return operands.length
+      ? EdgeExistsFilter.create(
+          this.edge,
+          new NodeFilter(this.edge.head, OrOperation.create(operands)),
+        )
+      : null;
   }
 
   @Memoize()

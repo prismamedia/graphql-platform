@@ -4,18 +4,12 @@ import * as R from 'remeda';
 import type { Node, NodeValue } from '../../node.js';
 import type { NodeChange, NodeUpdate } from '../change.js';
 import type { OrderByInputValue } from '../type.js';
-import { NodeFilter, OrOperation } from './filter.js';
+import { FalseValue, NodeFilter, OrOperation } from './filter.js';
 import type { OrderingExpression } from './ordering/expression.js';
 
 export * from './ordering/direction.js';
 export * from './ordering/expression-interface.js';
 export * from './ordering/expression.js';
-
-export interface NodeOrderingAST {
-  kind: 'NODE';
-  node: Node['name'];
-  expressions: OrderingExpression['ast'][];
-}
 
 export class NodeOrdering {
   public readonly expressions: ReadonlyArray<OrderingExpression>;
@@ -54,27 +48,24 @@ export class NodeOrdering {
   public getAffectedGraphByNodeChange(
     change: NodeChange,
     visitedRootNodes?: NodeValue[],
-  ): NodeFilter {
-    return new NodeFilter(
-      this.node,
-      OrOperation.create(
-        this.expressions.map((expression) =>
+  ): NodeFilter | null {
+    const filter = OrOperation.create(
+      R.pipe(
+        this.expressions,
+        R.map((expression) =>
           expression.getAffectedGraphByNodeChange(change, visitedRootNodes),
         ),
+        R.filter(R.isNonNull),
       ),
     );
-  }
 
-  public get ast(): NodeOrderingAST {
-    return {
-      kind: 'NODE',
-      node: this.node.name,
-      expressions: this.expressions.map(({ ast }) => ast),
-    };
+    return !filter.equals(FalseValue)
+      ? new NodeFilter(this.node, filter)
+      : null;
   }
 
   @Memoize()
-  public get inputValue(): OrderByInputValue {
+  public get inputValue(): NonNullable<OrderByInputValue> {
     return Array.from(this.expressions, ({ inputValue }) => inputValue);
   }
 }

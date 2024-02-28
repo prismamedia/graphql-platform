@@ -143,9 +143,7 @@ describe('Filter', () => {
           );
 
           expect(filter.isAffectedByNodeUpdate(update)).toBe(false);
-          expect(filter.getAffectedGraphByNodeChange(update).inputValue).toBe(
-            null,
-          );
+          expect(filter.getAffectedGraphByNodeChange(update)).toBeNull();
         });
 
         it('The updated "title" may change some document(s)', () => {
@@ -170,9 +168,7 @@ describe('Filter', () => {
             );
 
             expect(filter.isAffectedByNodeUpdate(update)).toBe(false);
-            expect(filter.getAffectedGraphByNodeChange(update).inputValue).toBe(
-              null,
-            );
+            expect(filter.getAffectedGraphByNodeChange(update)).toBeNull();
           }
 
           {
@@ -196,9 +192,7 @@ describe('Filter', () => {
             );
 
             expect(filter.isAffectedByNodeUpdate(update)).toBe(true);
-            expect(filter.getAffectedGraphByNodeChange(update).inputValue).toBe(
-              null,
-            );
+            expect(filter.getAffectedGraphByNodeChange(update)).toBeNull();
           }
 
           {
@@ -222,9 +216,7 @@ describe('Filter', () => {
             );
 
             expect(filter.isAffectedByNodeUpdate(update)).toBe(false);
-            expect(filter.getAffectedGraphByNodeChange(update).inputValue).toBe(
-              null,
-            );
+            expect(filter.getAffectedGraphByNodeChange(update)).toBeNull();
           }
         });
 
@@ -249,9 +241,7 @@ describe('Filter', () => {
           );
 
           expect(filter.isAffectedByNodeUpdate(update)).toBe(false);
-          expect(filter.getAffectedGraphByNodeChange(update).inputValue).toBe(
-            null,
-          );
+          expect(filter.getAffectedGraphByNodeChange(update)).toBeNull();
         });
 
         it('The updated "title" may change some document(s) if there is a "createdBy"', () => {
@@ -278,7 +268,7 @@ describe('Filter', () => {
 
           expect(filter.isAffectedByNodeUpdate(update)).toBe(false);
           expect(
-            filter.getAffectedGraphByNodeChange(update).inputValue,
+            filter.getAffectedGraphByNodeChange(update)?.inputValue,
           ).toEqual({
             createdBy: { id: '9121c47b-87b6-4334-ae1d-4c9777e87576' },
           });
@@ -305,9 +295,7 @@ describe('Filter', () => {
           );
 
           expect(filter.isAffectedByNodeUpdate(update)).toBe(false);
-          expect(filter.getAffectedGraphByNodeChange(update).inputValue).toBe(
-            null,
-          );
+          expect(filter.getAffectedGraphByNodeChange(update)).toBeNull();
         });
 
         it('The updated "title" may change some document(s) if there is an "updatedBy"', () => {
@@ -334,7 +322,7 @@ describe('Filter', () => {
 
           expect(filter.isAffectedByNodeUpdate(update)).toBe(false);
           expect(
-            filter.getAffectedGraphByNodeChange(update).inputValue,
+            filter.getAffectedGraphByNodeChange(update)?.inputValue,
           ).toEqual({ updatedBy: { username: 'yvann' } });
         });
       });
@@ -351,7 +339,7 @@ describe('Filter', () => {
           );
 
           expect(
-            filter.getAffectedGraphByNodeChange(creation).inputValue,
+            filter.getAffectedGraphByNodeChange(creation)?.inputValue,
           ).toEqual({ _id: 4 });
         });
 
@@ -366,7 +354,7 @@ describe('Filter', () => {
           );
 
           expect(
-            filter.getAffectedGraphByNodeChange(deletion).inputValue,
+            filter.getAffectedGraphByNodeChange(deletion)?.inputValue,
           ).toEqual({ _id: 5 });
         });
 
@@ -383,9 +371,7 @@ describe('Filter', () => {
             },
           );
 
-          expect(filter.getAffectedGraphByNodeChange(update).inputValue).toBe(
-            null,
-          );
+          expect(filter.getAffectedGraphByNodeChange(update)).toBeNull();
         });
       });
 
@@ -401,7 +387,7 @@ describe('Filter', () => {
           );
 
           expect(
-            filter.getAffectedGraphByNodeChange(creation).inputValue,
+            filter.getAffectedGraphByNodeChange(creation)?.inputValue,
           ).toEqual({
             createdBy: { id: '16050880-dabc-4348-bd3b-d41efe1b6057' },
           });
@@ -418,7 +404,7 @@ describe('Filter', () => {
           );
 
           expect(
-            filter.getAffectedGraphByNodeChange(deletion).inputValue,
+            filter.getAffectedGraphByNodeChange(deletion)?.inputValue,
           ).toEqual({
             createdBy: { id: '7caf940a-058a-4ef2-a8bf-ac2d6cae3485' },
           });
@@ -436,9 +422,7 @@ describe('Filter', () => {
             },
           );
 
-          expect(filter.getAffectedGraphByNodeChange(update).inputValue).toBe(
-            null,
-          );
+          expect(filter.getAffectedGraphByNodeChange(update)).toBeNull();
         });
 
         it('The updated "facebookId" may change some document(s)', () => {
@@ -455,7 +439,7 @@ describe('Filter', () => {
           );
 
           expect(
-            filter.getAffectedGraphByNodeChange(update).inputValue,
+            filter.getAffectedGraphByNodeChange(update)?.inputValue,
           ).toEqual({
             createdBy: { id: '8e3587e8-2e4e-46a4-a6e0-27f08aebb215' },
           });

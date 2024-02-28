@@ -1,10 +1,8 @@
 import { Memoize } from '@prismamedia/memoize';
 import assert from 'node:assert/strict';
 import * as R from 'remeda';
-import type { NodeValue } from '../../../../../../../node.js';
-import type { NodeChange, NodeUpdate } from '../../../../../../change.js';
+import type { NodeUpdate } from '../../../../../../change.js';
 import type {
-  Component,
   Leaf,
   LeafValue,
   UniqueConstraint,
@@ -12,23 +10,16 @@ import type {
 import type { NodeFilterInputValue } from '../../../../../../type.js';
 import type { NodeSelectedValue } from '../../../../../selection.js';
 import type { BooleanFilter } from '../../../../boolean.js';
-import type { BooleanExpressionInterface } from '../../../expression-interface.js';
 import type { AndOperand } from '../../../operation/and.js';
 import { OrOperation, type OrOperand } from '../../../operation/or.js';
 import { FalseValue, TrueValue } from '../../../value.js';
+import { AbstractLeafFilter } from './abstract.js';
 import {
   LeafComparisonFilter,
   sortableLeafComparisonOperatorSet,
 } from './comparison.js';
 
-export interface LeafInFilterAST {
-  kind: 'LEAF';
-  leaf: Leaf['name'];
-  operator: 'IN';
-  values: LeafInFilter['values'];
-}
-
-export class LeafInFilter implements BooleanExpressionInterface {
+export class LeafInFilter extends AbstractLeafFilter {
   public static create(
     leaf: Leaf,
     rawValues: ReadonlyArray<LeafValue>,
@@ -46,18 +37,15 @@ export class LeafInFilter implements BooleanExpressionInterface {
   }
 
   public readonly key: string;
-
-  public readonly component: Component;
   public readonly score: number;
-  public readonly complement: undefined;
 
   protected constructor(
-    public readonly leaf: Leaf,
+    leaf: Leaf,
     public readonly values: ReadonlyArray<LeafValue>,
   ) {
-    this.key = `${leaf.name}_in`;
+    super(leaf);
 
-    this.component = leaf;
+    this.key = `${leaf.name}_in`;
     this.score = 1 + values.length;
   }
 
@@ -84,22 +72,22 @@ export class LeafInFilter implements BooleanExpressionInterface {
     );
   }
 
-  public and(
+  public override and(
     operand: AndOperand,
     _remainingReducers: number,
   ): BooleanFilter | undefined {
     if (operand instanceof LeafInFilter && operand.leaf === this.leaf) {
-      const values = R.intersectionWith(
+      const intersection = R.intersectionWith(
         this.values,
         operand.values,
         this.leaf.areValuesEqual.bind(this.leaf),
       );
 
-      return values.length === this.values.length
+      return intersection.length === this.values.length
         ? this
-        : values.length === operand.values.length
+        : intersection.length === operand.values.length
         ? operand
-        : LeafInFilter.create(this.leaf, values);
+        : LeafInFilter.create(this.leaf, intersection);
     } else if (
       operand instanceof LeafComparisonFilter &&
       operand.leaf === this.leaf
@@ -141,7 +129,7 @@ export class LeafInFilter implements BooleanExpressionInterface {
     }
   }
 
-  public or(
+  public override or(
     operand: OrOperand,
     _remainingReducers: number,
   ): BooleanFilter | undefined {
@@ -191,7 +179,7 @@ export class LeafInFilter implements BooleanExpressionInterface {
     }
   }
 
-  public execute(value: NodeSelectedValue): boolean | undefined {
+  public override execute(value: NodeSelectedValue): boolean | undefined {
     const leafValue = value[this.leaf.name];
     if (leafValue === undefined) {
       return;
@@ -200,31 +188,17 @@ export class LeafInFilter implements BooleanExpressionInterface {
     return this.has(leafValue);
   }
 
-  public isExecutableWithinUniqueConstraint(unique: UniqueConstraint): boolean {
+  public override isExecutableWithinUniqueConstraint(
+    unique: UniqueConstraint,
+  ): boolean {
     return unique.leafSet.has(this.leaf);
   }
 
-  public isAffectedByNodeUpdate(update: NodeUpdate): boolean {
+  public override isAffectedByNodeUpdate(update: NodeUpdate): boolean {
     return (
       update.hasComponentUpdate(this.leaf) &&
       this.execute(update.oldValue) !== this.execute(update.newValue)
     );
-  }
-
-  public getAffectedGraphByNodeChange(
-    _change: NodeChange,
-    _visitedRootNodes?: NodeValue[],
-  ): BooleanFilter {
-    return FalseValue;
-  }
-
-  public get ast(): LeafInFilterAST {
-    return {
-      kind: 'LEAF',
-      leaf: this.leaf.name,
-      operator: 'IN',
-      values: this.values,
-    };
   }
 
   public get inputValue(): NodeFilterInputValue {

@@ -54,9 +54,7 @@ describe('Ordering', () => {
           );
 
           expect(ordering.isAffectedByNodeUpdate(update)).toBe(false);
-          expect(ordering.getAffectedGraphByNodeChange(update).inputValue).toBe(
-            null,
-          );
+          expect(ordering.getAffectedGraphByNodeChange(update)).toBeNull();
         });
       });
 
@@ -73,7 +71,7 @@ describe('Ordering', () => {
           );
 
           expect(
-            ordering.getAffectedGraphByNodeChange(creation).inputValue,
+            ordering.getAffectedGraphByNodeChange(creation)?.inputValue,
           ).toEqual({ _id: 2 });
         });
 
@@ -89,7 +87,7 @@ describe('Ordering', () => {
           );
 
           expect(
-            ordering.getAffectedGraphByNodeChange(deletion).inputValue,
+            ordering.getAffectedGraphByNodeChange(deletion)?.inputValue,
           ).toEqual({ _id: 3 });
         });
 
@@ -107,9 +105,7 @@ describe('Ordering', () => {
             },
           );
 
-          expect(ordering.getAffectedGraphByNodeChange(update).inputValue).toBe(
-            null,
-          );
+          expect(ordering.getAffectedGraphByNodeChange(update)).toBeNull();
         });
       });
     });

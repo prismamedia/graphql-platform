@@ -94,7 +94,7 @@ export class UniqueReverseEdgeHeadSelection<
   public getAffectedGraphByNodeChange(
     change: NodeChange,
     visitedRootNodes?: NodeValue[],
-  ): BooleanFilter {
+  ): BooleanFilter | null {
     const operands: BooleanFilter[] = [];
 
     if (change.node === this.reverseEdge.head) {
@@ -156,14 +156,21 @@ export class UniqueReverseEdgeHeadSelection<
       }
     }
 
-    operands.push(
-      UniqueReverseEdgeExistsFilter.create(
-        this.reverseEdge,
-        this.headSelection.getAffectedGraphByNodeChange(change),
-      ),
-    );
+    {
+      const affectedHeadSelection =
+        this.headSelection.getAffectedGraphByNodeChange(change);
 
-    return OrOperation.create(operands);
+      if (affectedHeadSelection) {
+        operands.push(
+          UniqueReverseEdgeExistsFilter.create(
+            this.reverseEdge,
+            affectedHeadSelection,
+          ),
+        );
+      }
+    }
+
+    return operands.length ? OrOperation.create(operands) : null;
   }
 
   @Memoize()

@@ -27,7 +27,7 @@ export interface SelectionExpressionInterface<TSource = any, TValue = TSource> {
   getAffectedGraphByNodeChange(
     change: NodeChange,
     visitedRootNodes?: NodeValue[],
-  ): BooleanFilter;
+  ): BooleanFilter | null;
 
   toGraphQLFieldNode(): graphql.FieldNode;
 

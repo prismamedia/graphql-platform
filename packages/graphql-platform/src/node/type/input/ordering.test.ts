@@ -2,10 +2,6 @@ import { beforeAll, describe, expect, it } from '@jest/globals';
 import { GraphQLEnumType, printType } from 'graphql';
 import { MyGP, nodeNames, nodes } from '../../../__tests__/config.js';
 import { GraphQLPlatform } from '../../../index.js';
-import {
-  OrderingDirection,
-  OrderingExpression,
-} from '../../statement/ordering.js';
 import { NodeOrderingInputType, OrderByInputValue } from './ordering.js';
 
 describe('NodeOrderingInputType', () => {
@@ -57,62 +53,23 @@ describe('NodeOrderingInputType', () => {
     });
 
     describe('Works', () => {
-      it.each<
-        [
-          string,
-          OrderByInputValue,
-          ReadonlyArray<OrderingExpression['ast']> | undefined,
-        ]
-      >([
+      it.each<[string, OrderByInputValue, OrderByInputValue]>([
         ['Article', undefined, undefined],
         ['Article', null, undefined],
         ['Article', [], undefined],
-        [
-          'Article',
-          ['createdAt_ASC'],
-          [
-            {
-              kind: 'LEAF',
-              leaf: 'createdAt',
-              direction: OrderingDirection.ASCENDING,
-            },
-          ],
-        ],
+        ['Article', ['createdAt_ASC'], ['createdAt_ASC']],
         [
           'Article',
           ['tagCount_DESC', 'updatedAt_ASC'],
-          [
-            {
-              kind: 'MULTIPLE_REVERSE_EDGE_COUNT',
-              reverseEdge: 'tags',
-              direction: OrderingDirection.DESCENDING,
-            },
-            {
-              kind: 'LEAF',
-              leaf: 'updatedAt',
-              direction: OrderingDirection.ASCENDING,
-            },
-          ],
+          ['tagCount_DESC', 'updatedAt_ASC'],
         ],
-        [
-          'Article',
-          ['_id_ASC'],
-          [
-            {
-              kind: 'LEAF',
-              leaf: '_id',
-              direction: OrderingDirection.ASCENDING,
-            },
-          ],
-        ],
-      ])('%sOrderingInput.sort(%p)', (nodeName, input, expressions) => {
-        const node = gp.getNodeByName(nodeName);
-        const orderingInputType = node.orderingInputType;
-
+        ['Article', ['_id_ASC'], ['_id_ASC']],
+      ])('%sOrderingInput.sort(%p)', (nodeName, input, output) =>
         expect(
-          orderingInputType.sort(input).normalized?.ast.expressions,
-        ).toEqual(expressions);
-      });
+          gp.getNodeByName(nodeName).orderingInputType.sort(input).normalized
+            ?.inputValue,
+        ).toEqual(output),
+      );
     });
   });
 });

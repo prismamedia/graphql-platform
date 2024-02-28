@@ -273,7 +273,7 @@ describe('Seeding', () => {
 
             default:
               throw new Error(
-                `"count" not implemented for "${node.name}/${filter?.filter.ast}"`,
+                `"count" not implemented for "${node.name}/${filter?.filter.inputValue}"`,
               );
           }
         },
@@ -339,7 +339,7 @@ describe('Seeding', () => {
 
             default:
               throw new Error(
-                `"find" not implemented for "${node.name}/${filter?.filter.ast}/${ordering?.ast}/${offset}/${limit}/${forMutation}"`,
+                `"find" not implemented for "${node.name}/${filter?.filter.inputValue}/${ordering?.inputValue}/${offset}/${limit}/${forMutation}"`,
               );
           }
         },

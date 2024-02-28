@@ -139,6 +139,9 @@ function parseLeafFilter(
     return `${columnIdentifier} IN (${filter.values
       .map((value) => columnDataType.serialize(value))
       .join(',')})`;
+  } else if (filter instanceof core.AbstractLeafFilter) {
+    // TODO: Allow the handling of custom leaf-filters
+    throw new utils.UnexpectedValueError(`a supported-expression`, filter);
   } else {
     throw new utils.UnreachableValueError(filter);
   }
@@ -211,6 +214,20 @@ function parseEdgeFilter(
   }
 }
 
+function parseComponentFilter(
+  tableReference: TableReference,
+  filter: core.ComponentFilter,
+  referenceColumnTree?: ReferenceColumnTree,
+): WhereCondition {
+  if (core.isLeafFilter(filter)) {
+    return parseLeafFilter(tableReference, filter, referenceColumnTree);
+  } else if (core.isEdgeFilter(filter)) {
+    return parseEdgeFilter(tableReference, filter, referenceColumnTree);
+  } else {
+    throw new utils.UnreachableValueError(filter);
+  }
+}
+
 function parseUniqueReverseEdgeFilter(
   tableReference: TableReference,
   filter: core.UniqueReverseEdgeFilter,
@@ -265,19 +282,31 @@ function parseMultipleReverseEdgeFilter(
   }
 }
 
+function parseReverseEdgeFilter(
+  tableReference: TableReference,
+  filter: core.ReverseEdgeFilter,
+): WhereCondition {
+  if (core.isUniqueReverseEdgeFilter(filter)) {
+    return parseUniqueReverseEdgeFilter(tableReference, filter);
+  } else if (core.isMultipleReverseEdgeFilter(filter)) {
+    return parseMultipleReverseEdgeFilter(tableReference, filter);
+  } else {
+    throw new utils.UnreachableValueError(filter);
+  }
+}
+
 function parseBooleanExpression(
   tableReference: TableReference,
   filter: core.BooleanExpression,
   referenceColumnTree?: ReferenceColumnTree,
 ): WhereCondition {
-  if (core.isLeafFilter(filter)) {
-    return parseLeafFilter(tableReference, filter, referenceColumnTree);
-  } else if (core.isEdgeFilter(filter)) {
-    return parseEdgeFilter(tableReference, filter, referenceColumnTree);
-  } else if (core.isUniqueReverseEdgeFilter(filter)) {
-    return parseUniqueReverseEdgeFilter(tableReference, filter);
-  } else if (core.isMultipleReverseEdgeFilter(filter)) {
-    return parseMultipleReverseEdgeFilter(tableReference, filter);
+  if (core.isComponentFilter(filter)) {
+    return parseComponentFilter(tableReference, filter, referenceColumnTree);
+  } else if (core.isReverseEdgeFilter(filter)) {
+    return parseReverseEdgeFilter(tableReference, filter);
+  } else if (filter instanceof core.AbstractBooleanExpression) {
+    // TODO: Allow the handling of custom boolean-expressions
+    throw new utils.UnexpectedValueError(`a supported-expression`, filter);
   } else {
     throw new utils.UnreachableValueError(filter);
   }
