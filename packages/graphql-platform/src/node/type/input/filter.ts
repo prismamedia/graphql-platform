@@ -345,29 +345,33 @@ export class NodeFilterInputType extends utils.ObjectInputType<FieldFilterInputT
       ),
       ...(['eq', 'not', 'gt', 'gte', 'lt', 'lte'] as const).map(
         (operator) =>
-          new ReverseEdgeFilterInputType<number>(reverseEdge, operator, {
-            name:
-              operator === 'eq'
-                ? reverseEdge.countFieldName
-                : `${reverseEdge.countFieldName}_${operator}`,
-            type: new utils.NonNullableInputType(
-              scalars.typesByName.UnsignedInt,
-            ),
-            filter: (value, _context, _path) =>
-              operator === 'not'
-                ? NotOperation.create(
-                    MultipleReverseEdgeCountFilter.create(
+          new ReverseEdgeFilterInputType<number>(
+            reverseEdge,
+            `count_${operator}`,
+            {
+              name:
+                operator === 'eq'
+                  ? reverseEdge.countFieldName
+                  : `${reverseEdge.countFieldName}_${operator}`,
+              type: new utils.NonNullableInputType(
+                scalars.typesByName.UnsignedInt,
+              ),
+              filter: (value, _context, _path) =>
+                operator === 'not'
+                  ? NotOperation.create(
+                      MultipleReverseEdgeCountFilter.create(
+                        reverseEdge,
+                        'eq',
+                        value,
+                      ),
+                    )
+                  : MultipleReverseEdgeCountFilter.create(
                       reverseEdge,
-                      'eq',
+                      operator,
                       value,
                     ),
-                  )
-                : MultipleReverseEdgeCountFilter.create(
-                    reverseEdge,
-                    operator,
-                    value,
-                  ),
-          }),
+            },
+          ),
       ),
     ];
   }
