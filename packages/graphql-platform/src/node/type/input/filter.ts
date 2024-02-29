@@ -141,9 +141,11 @@ export class NodeFilterInputType extends utils.ObjectInputType<FieldFilterInputT
     if (
       [
         scalars.typesByName.DraftJS,
+        scalars.typesByName.EmailAddress,
         scalars.typesByName.NonEmptyString,
         scalars.typesByName.NonEmptyTrimmedString,
         scalars.typesByName.String,
+        scalars.typesByName.URL,
       ].includes(leaf.type as any)
     ) {
       for (const operator of [

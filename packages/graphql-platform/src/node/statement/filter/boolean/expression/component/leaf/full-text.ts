@@ -53,21 +53,21 @@ export class LeafFullTextFilter extends AbstractLeafFilter {
           ? (leafValue as scalars.RawDraftContentState).blocks.some((block) =>
               block.text.includes(this.value),
             )
-          : leafValue.includes(this.value);
+          : String(leafValue).includes(this.value);
 
       case 'starts_with':
         return this.leaf.type === scalars.typesByName.DraftJS
           ? (leafValue as scalars.RawDraftContentState).blocks
               .at(0)
               ?.text.startsWith(this.value)
-          : leafValue.startsWith(this.value);
+          : String(leafValue).startsWith(this.value);
 
       case 'ends_with':
         return this.leaf.type === scalars.typesByName.DraftJS
           ? (leafValue as scalars.RawDraftContentState).blocks
               .at(-1)
               ?.text.endsWith(this.value)
-          : leafValue.endsWith(this.value);
+          : String(leafValue).endsWith(this.value);
 
       default:
         throw new utils.UnreachableValueError(this.operator);
