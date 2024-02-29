@@ -64,3 +64,5 @@ export const uuidTypesByName = {
   UUIDv4: GraphQLUUIDv4,
   UUIDv5: GraphQLUUIDv5,
 } satisfies Record<string, graphql.GraphQLScalarType>;
+
+export const uuidTypes = Object.values(uuidTypesByName);

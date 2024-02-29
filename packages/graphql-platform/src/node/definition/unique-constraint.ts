@@ -13,6 +13,7 @@ import {
   NodeSelection,
   mergeSelectionExpressions,
 } from '../statement/selection.js';
+import { NodeFilterInputType } from '../type.js';
 import type { Component, ComponentValue } from './component.js';
 import { Edge } from './component/edge.js';
 import { Leaf } from './component/leaf.js';
@@ -83,10 +84,22 @@ export class UniqueConstraint<TConnector extends ConnectorInterface = any> {
         utils.aggregateGraphError<string, [Component['name'], Component][]>(
           this.config.components.values(),
           (entries, componentName, index) => {
+            const componentPath = utils.addPath(componentsConfigPath, index);
+
             const component = node.getComponentByName(
               componentName,
-              utils.addPath(componentsConfigPath, index),
+              componentPath,
             );
+
+            if (
+              component instanceof Leaf &&
+              NodeFilterInputType.jsonTypes.includes(component.type as any)
+            ) {
+              throw new utils.GraphError(
+                `The "${component}"'s type is not supported in a unique-constraint`,
+                { path: componentPath },
+              );
+            }
 
             return [...entries, [component.name, component]];
           },

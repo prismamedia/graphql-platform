@@ -31,8 +31,6 @@ input ArticleFilterInput {
   slug_not_starts_with: NonEmptyString
   slug_ends_with: NonEmptyString
   slug_not_ends_with: NonEmptyString
-  body: DraftJS
-  body_not: DraftJS
   body_is_null: Boolean
   body_contains: NonEmptyString
   body_not_contains: NonEmptyString
@@ -48,25 +46,23 @@ input ArticleFilterInput {
   createdBy_is_null: Boolean
   createdAt: DateTime
   createdAt_not: DateTime
-  createdAt_in: [DateTime!]
-  createdAt_not_in: [DateTime!]
   createdAt_gt: DateTime
   createdAt_gte: DateTime
   createdAt_lt: DateTime
   createdAt_lte: DateTime
+  createdAt_in: [DateTime!]
+  createdAt_not_in: [DateTime!]
   updatedBy: UserFilterInput
   updatedBy_not: UserFilterInput
   updatedBy_is_null: Boolean
   updatedAt: DateTime
   updatedAt_not: DateTime
-  updatedAt_in: [DateTime!]
-  updatedAt_not_in: [DateTime!]
   updatedAt_gt: DateTime
   updatedAt_gte: DateTime
   updatedAt_lt: DateTime
   updatedAt_lte: DateTime
-  metas: JSONObject
-  metas_not: JSONObject
+  updatedAt_in: [DateTime!]
+  updatedAt_not_in: [DateTime!]
   metas_is_null: Boolean
   highlighted: Boolean
   highlighted_not: Boolean
@@ -80,22 +76,20 @@ input ArticleFilterInput {
   sponsored_not_in: [Boolean]
   views: UnsignedBigInt
   views_not: UnsignedBigInt
-  views_in: [UnsignedBigInt!]
-  views_not_in: [UnsignedBigInt!]
   views_gt: UnsignedBigInt
   views_gte: UnsignedBigInt
   views_lt: UnsignedBigInt
   views_lte: UnsignedBigInt
+  views_in: [UnsignedBigInt!]
+  views_not_in: [UnsignedBigInt!]
   score: UnsignedFloat
   score_not: UnsignedFloat
-  score_in: [UnsignedFloat!]
-  score_not_in: [UnsignedFloat!]
   score_gt: UnsignedFloat
   score_gte: UnsignedFloat
   score_lt: UnsignedFloat
   score_lte: UnsignedFloat
-  machineTags: JSONArray
-  machineTags_not: JSONArray
+  score_in: [UnsignedFloat!]
+  score_not_in: [UnsignedFloat!]
   machineTags_is_null: Boolean
   tags_every: ArticleTagFilterInput
   tags_some: ArticleTagFilterInput
@@ -146,12 +140,12 @@ input ArticleTagFilterInput {
   tag_not: TagFilterInput
   order: UnsignedInt
   order_not: UnsignedInt
-  order_in: [UnsignedInt!]
-  order_not_in: [UnsignedInt!]
   order_gt: UnsignedInt
   order_gte: UnsignedInt
   order_lt: UnsignedInt
   order_lte: UnsignedInt
+  order_in: [UnsignedInt!]
+  order_not_in: [UnsignedInt!]
   moderations_every: ArticleTagModerationFilterInput
   moderations_some: ArticleTagModerationFilterInput
   moderations_none: ArticleTagModerationFilterInput
@@ -223,12 +217,12 @@ input CategoryFilterInput {
   parent_is_null: Boolean
   order: UnsignedInt
   order_not: UnsignedInt
-  order_in: [UnsignedInt!]
-  order_not_in: [UnsignedInt!]
   order_gt: UnsignedInt
   order_gte: UnsignedInt
   order_lt: UnsignedInt
   order_lte: UnsignedInt
+  order_in: [UnsignedInt!]
+  order_not_in: [UnsignedInt!]
   children_every: CategoryFilterInput
   children_some: CategoryFilterInput
   children_none: CategoryFilterInput
@@ -287,20 +281,20 @@ input TagFilterInput {
   slug_not_ends_with: NonEmptyString
   createdAt: DateTime
   createdAt_not: DateTime
-  createdAt_in: [DateTime!]
-  createdAt_not_in: [DateTime!]
   createdAt_gt: DateTime
   createdAt_gte: DateTime
   createdAt_lt: DateTime
   createdAt_lte: DateTime
+  createdAt_in: [DateTime!]
+  createdAt_not_in: [DateTime!]
   updatedAt: DateTime
   updatedAt_not: DateTime
-  updatedAt_in: [DateTime!]
-  updatedAt_not_in: [DateTime!]
   updatedAt_gt: DateTime
   updatedAt_gte: DateTime
   updatedAt_lt: DateTime
   updatedAt_lte: DateTime
+  updatedAt_in: [DateTime!]
+  updatedAt_not_in: [DateTime!]
   articles_every: ArticleTagFilterInput
   articles_some: ArticleTagFilterInput
   articles_none: ArticleTagFilterInput
@@ -377,12 +371,12 @@ input UserProfileFilterInput {
   birthday: Date
   birthday_not: Date
   birthday_is_null: Boolean
-  birthday_in: [Date]
-  birthday_not_in: [Date]
   birthday_gt: Date
   birthday_gte: Date
   birthday_lt: Date
   birthday_lte: Date
+  birthday_in: [Date]
+  birthday_not_in: [Date]
   facebookId: ID
   facebookId_not: ID
   facebookId_is_null: Boolean

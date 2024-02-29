@@ -393,8 +393,6 @@ input ArticleFilterInput {
   slug_not_starts_with: NonEmptyString
   slug_ends_with: NonEmptyString
   slug_not_ends_with: NonEmptyString
-  body: DraftJS
-  body_not: DraftJS
   body_is_null: Boolean
   body_contains: NonEmptyString
   body_not_contains: NonEmptyString
@@ -410,25 +408,23 @@ input ArticleFilterInput {
   createdBy_is_null: Boolean
   createdAt: DateTime
   createdAt_not: DateTime
-  createdAt_in: [DateTime!]
-  createdAt_not_in: [DateTime!]
   createdAt_gt: DateTime
   createdAt_gte: DateTime
   createdAt_lt: DateTime
   createdAt_lte: DateTime
+  createdAt_in: [DateTime!]
+  createdAt_not_in: [DateTime!]
   updatedBy: UserFilterInput
   updatedBy_not: UserFilterInput
   updatedBy_is_null: Boolean
   updatedAt: DateTime
   updatedAt_not: DateTime
-  updatedAt_in: [DateTime!]
-  updatedAt_not_in: [DateTime!]
   updatedAt_gt: DateTime
   updatedAt_gte: DateTime
   updatedAt_lt: DateTime
   updatedAt_lte: DateTime
-  metas: JSONObject
-  metas_not: JSONObject
+  updatedAt_in: [DateTime!]
+  updatedAt_not_in: [DateTime!]
   metas_is_null: Boolean
   highlighted: Boolean
   highlighted_not: Boolean
@@ -442,22 +438,20 @@ input ArticleFilterInput {
   sponsored_not_in: [Boolean]
   views: UnsignedBigInt
   views_not: UnsignedBigInt
-  views_in: [UnsignedBigInt!]
-  views_not_in: [UnsignedBigInt!]
   views_gt: UnsignedBigInt
   views_gte: UnsignedBigInt
   views_lt: UnsignedBigInt
   views_lte: UnsignedBigInt
+  views_in: [UnsignedBigInt!]
+  views_not_in: [UnsignedBigInt!]
   score: UnsignedFloat
   score_not: UnsignedFloat
-  score_in: [UnsignedFloat!]
-  score_not_in: [UnsignedFloat!]
   score_gt: UnsignedFloat
   score_gte: UnsignedFloat
   score_lt: UnsignedFloat
   score_lte: UnsignedFloat
-  machineTags: JSONArray
-  machineTags_not: JSONArray
+  score_in: [UnsignedFloat!]
+  score_not_in: [UnsignedFloat!]
   machineTags_is_null: Boolean
   tags_every: ArticleTagFilterInput
   tags_some: ArticleTagFilterInput
@@ -493,11 +487,6 @@ scalar NonEmptyTrimmedString
 """A non-empty string."""
 scalar NonEmptyString
 
-"""
-The DraftJS raw state contains a list of content blocks, as well as a map of all relevant entity objects.
-"""
-scalar DraftJS @specifiedBy(url: "https://draftjs.org/docs/api-reference-data-conversion/#convertfromraw")
-
 """The "Category" nodes' filter"""
 input CategoryFilterInput {
   id: UUIDv4
@@ -529,12 +518,12 @@ input CategoryFilterInput {
   parent_is_null: Boolean
   order: UnsignedInt
   order_not: UnsignedInt
-  order_in: [UnsignedInt!]
-  order_not_in: [UnsignedInt!]
   order_gt: UnsignedInt
   order_gte: UnsignedInt
   order_lt: UnsignedInt
   order_lte: UnsignedInt
+  order_in: [UnsignedInt!]
+  order_not_in: [UnsignedInt!]
   children_every: CategoryFilterInput
   children_some: CategoryFilterInput
   children_none: CategoryFilterInput
@@ -616,12 +605,12 @@ input UserProfileFilterInput {
   birthday: Date
   birthday_not: Date
   birthday_is_null: Boolean
-  birthday_in: [Date]
-  birthday_not_in: [Date]
   birthday_gt: Date
   birthday_gte: Date
   birthday_lt: Date
   birthday_lte: Date
+  birthday_in: [Date]
+  birthday_not_in: [Date]
   facebookId: ID
   facebookId_not: ID
   facebookId_is_null: Boolean
@@ -677,12 +666,12 @@ input ArticleTagFilterInput {
   tag_not: TagFilterInput
   order: UnsignedInt
   order_not: UnsignedInt
-  order_in: [UnsignedInt!]
-  order_not_in: [UnsignedInt!]
   order_gt: UnsignedInt
   order_gte: UnsignedInt
   order_lt: UnsignedInt
   order_lte: UnsignedInt
+  order_in: [UnsignedInt!]
+  order_not_in: [UnsignedInt!]
   moderations_every: ArticleTagModerationFilterInput
   moderations_some: ArticleTagModerationFilterInput
   moderations_none: ArticleTagModerationFilterInput
@@ -730,20 +719,20 @@ input TagFilterInput {
   slug_not_ends_with: NonEmptyString
   createdAt: DateTime
   createdAt_not: DateTime
-  createdAt_in: [DateTime!]
-  createdAt_not_in: [DateTime!]
   createdAt_gt: DateTime
   createdAt_gte: DateTime
   createdAt_lt: DateTime
   createdAt_lte: DateTime
+  createdAt_in: [DateTime!]
+  createdAt_not_in: [DateTime!]
   updatedAt: DateTime
   updatedAt_not: DateTime
-  updatedAt_in: [DateTime!]
-  updatedAt_not_in: [DateTime!]
   updatedAt_gt: DateTime
   updatedAt_gte: DateTime
   updatedAt_lt: DateTime
   updatedAt_lte: DateTime
+  updatedAt_in: [DateTime!]
+  updatedAt_not_in: [DateTime!]
   articles_every: ArticleTagFilterInput
   articles_some: ArticleTagFilterInput
   articles_none: ArticleTagFilterInput
@@ -763,9 +752,6 @@ A date-time string, such as "2007-12-03T10:15:30.123Z", compliant with the ISO 8
 """
 scalar DateTime @specifiedBy(url: "https://en.wikipedia.org/wiki/ISO_8601")
 
-"""The \`JSONObject\` scalar type represents JSON objects."""
-scalar JSONObject @specifiedBy(url: "http://www.ecma-international.org/publications/files/ECMA-ST/ECMA-404.pdf")
-
 """
 The \`UnsignedBigInt\` scalar type represents non-fractional unsigned whole numeric values.
 """
@@ -775,9 +761,6 @@ scalar UnsignedBigInt @specifiedBy(url: "https://tc39.es/ecma262/multipage/numbe
 The \`UnsignedFloat\` scalar type represents unsigned double-precision fractional values.
 """
 scalar UnsignedFloat @specifiedBy(url: "https://en.wikipedia.org/wiki/IEEE_floating_point")
-
-"""The \`JSONArray\` scalar type represents JSON arrays."""
-scalar JSONArray @specifiedBy(url: "http://www.ecma-international.org/publications/files/ECMA-ST/ECMA-404.pdf")
 
 """The "ArticleExtension" nodes' filter"""
 input ArticleExtensionFilterInput {
@@ -878,6 +861,11 @@ interface PublicNodeInterface {
   """Every public node have a public id"""
   id: UUIDv4!
 }
+
+"""
+The DraftJS raw state contains a list of content blocks, as well as a map of all relevant entity objects.
+"""
+scalar DraftJS @specifiedBy(url: "https://draftjs.org/docs/api-reference-data-conversion/#convertfromraw")
 
 type Category implements PublicNodeInterface {
   id: UUIDv4!
@@ -1044,6 +1032,12 @@ enum ArticleTagOrderingInput {
   """from the highest number of "moderations" to the lowest"""
   moderationCount_DESC
 }
+
+"""The \`JSONObject\` scalar type represents JSON objects."""
+scalar JSONObject @specifiedBy(url: "http://www.ecma-international.org/publications/files/ECMA-ST/ECMA-404.pdf")
+
+"""The \`JSONArray\` scalar type represents JSON arrays."""
+scalar JSONArray @specifiedBy(url: "http://www.ecma-international.org/publications/files/ECMA-ST/ECMA-404.pdf")
 
 type ArticleExtension {
   article: Article!

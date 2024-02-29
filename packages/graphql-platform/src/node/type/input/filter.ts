@@ -42,18 +42,25 @@ export type NodeFilterInputTypeOverride = {
 };
 
 export class NodeFilterInputType extends utils.ObjectInputType<FieldFilterInputType> {
-  public static createLeafFields(leaf: Leaf): LeafFilterInputType[] {
-    const fields: LeafFilterInputType[] = (['eq', 'not'] as const).map(
-      (operator) =>
-        new LeafFilterInputType<LeafValue>(leaf, operator, {
-          type: utils.nonNullableInputTypeDecorator(
-            leaf.type,
-            !leaf.isNullable(),
-          ),
-          filter: (value, _context, _path) =>
-            new LeafComparisonFilter(leaf, operator, value),
-        }),
-    );
+  public static jsonTypes = [scalars.typesByName.DraftJS, ...scalars.jsonTypes];
+
+  public static createLeafComparisonFields(leaf: Leaf): LeafFilterInputType[] {
+    const fields: LeafFilterInputType[] = [];
+
+    if (!this.jsonTypes.includes(leaf.type as any)) {
+      for (const operator of ['eq', 'not'] as const) {
+        fields.push(
+          new LeafFilterInputType<LeafValue>(leaf, operator, {
+            type: utils.nonNullableInputTypeDecorator(
+              leaf.type,
+              !leaf.isNullable(),
+            ),
+            filter: (value, _context, _path) =>
+              new LeafComparisonFilter(leaf, operator, value),
+          }),
+        );
+      }
+    }
 
     // is_null
     if (leaf.isNullable()) {
@@ -66,15 +73,30 @@ export class NodeFilterInputType extends utils.ObjectInputType<FieldFilterInputT
       );
     }
 
+    // gt, gte, lt, lte
+    if (leaf.isSortable()) {
+      for (const operator of sortableLeafComparisonOperatorSet) {
+        fields.push(
+          new LeafFilterInputType<NonNullable<LeafValue>>(leaf, operator, {
+            type: new utils.NonNullableInputType(leaf.type),
+            filter: (value, _context, _path) =>
+              new LeafComparisonFilter(leaf, operator, value),
+          }),
+        );
+      }
+    }
+
+    return fields;
+  }
+
+  public static createLeafInFields(leaf: Leaf): LeafFilterInputType[] {
+    const fields: LeafFilterInputType[] = [];
+
     // in, not_in
     if (
       graphql.isEnumType(leaf.type) ||
       (leaf.type === scalars.typesByName.Boolean && leaf.isNullable()) ||
-      ![
-        scalars.typesByName.DraftJS,
-        scalars.typesByName.JSONArray,
-        scalars.typesByName.JSONObject,
-      ].includes(leaf.type as any)
+      !this.jsonTypes.includes(leaf.type as any)
     ) {
       fields.push(
         new LeafFilterInputType<LeafValue[]>(leaf, 'in', {
@@ -108,18 +130,11 @@ export class NodeFilterInputType extends utils.ObjectInputType<FieldFilterInputT
       );
     }
 
-    // gt, gte, lt, lte
-    if (leaf.isSortable()) {
-      for (const operator of sortableLeafComparisonOperatorSet) {
-        fields.push(
-          new LeafFilterInputType<NonNullable<LeafValue>>(leaf, operator, {
-            type: new utils.NonNullableInputType(leaf.type),
-            filter: (value, _context, _path) =>
-              new LeafComparisonFilter(leaf, operator, value),
-          }),
-        );
-      }
-    }
+    return fields;
+  }
+
+  public static createLeafFullTextFields(leaf: Leaf): LeafFilterInputType[] {
+    const fields: LeafFilterInputType[] = [];
 
     // Full-text search
     // contains, starts_with, ends_with
@@ -158,6 +173,14 @@ export class NodeFilterInputType extends utils.ObjectInputType<FieldFilterInputT
     }
 
     return fields;
+  }
+
+  public static createLeafFields(leaf: Leaf): LeafFilterInputType[] {
+    return [
+      ...this.createLeafComparisonFields(leaf),
+      ...this.createLeafInFields(leaf),
+      ...this.createLeafFullTextFields(leaf),
+    ];
   }
 
   public static createEdgeFields(

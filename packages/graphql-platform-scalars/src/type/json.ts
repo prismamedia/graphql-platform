@@ -185,3 +185,5 @@ export const jsonTypesByName = {
   JSONPrimitive: GraphQLJSONPrimitive,
   JSONValue: GraphQLJSONValue,
 } satisfies Record<string, graphql.GraphQLScalarType>;
+
+export const jsonTypes = Object.values(jsonTypesByName);
