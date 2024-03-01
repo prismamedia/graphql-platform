@@ -13,7 +13,7 @@ import { GraphQLUnsignedBigInt } from './type/unsigned-bigint.js';
 import { GraphQLUnsignedFloat } from './type/unsigned-float.js';
 import { GraphQLUnsignedInt } from './type/unsigned-int.js';
 import { GraphQLURL } from './type/url.js';
-import { uuidTypesByName } from './type/uuid.js';
+import { uuidTypes, uuidTypesByName } from './type/uuid.js';
 
 export * from './type/big-int.js';
 export * from './type/date-time.js';
@@ -109,3 +109,40 @@ export function ensureType(maybeType: unknown, path?: utils.Path): Type {
 
   return maybeType;
 }
+
+export const intTypes = [
+  typesByName.Int,
+  typesByName.UnsignedInt,
+] as const satisfies ReadonlyArray<Type>;
+
+export const floatTypes = [
+  typesByName.Float,
+  typesByName.UnsignedFloat,
+] as const satisfies ReadonlyArray<Type>;
+
+export const numberTypes = [
+  ...intTypes,
+  ...floatTypes,
+] as const satisfies ReadonlyArray<Type>;
+
+export const bigintTypes = [
+  typesByName.BigInt,
+  typesByName.UnsignedBigInt,
+] as const satisfies ReadonlyArray<Type>;
+
+export const dateTypes = [
+  typesByName.Date,
+  typesByName.DateTime,
+] as const satisfies ReadonlyArray<Type>;
+
+export const idTypes = [
+  typesByName.ID,
+  ...uuidTypes,
+] as const satisfies ReadonlyArray<Type>;
+
+export const stringTypes = [
+  typesByName.EmailAddress,
+  typesByName.NonEmptyString,
+  typesByName.NonEmptyTrimmedString,
+  typesByName.String,
+] as const satisfies ReadonlyArray<Type>;

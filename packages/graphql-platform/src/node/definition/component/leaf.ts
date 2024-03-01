@@ -58,7 +58,14 @@ export type LeafConfig<TConnector extends ConnectorInterface = any> =
     parser?: LeafCustomParser;
 
     /**
-     * Optional, is the node sortable using this component's value ?
+     * Optional, is this leaf's value comparable?
+     *
+     * Default: true for all but JSON and DraftJS types
+     */
+    comparable?: utils.OptionalFlag;
+
+    /**
+     * Optional, is the node sortable using this leaf's value?
      *
      * Default: guessed from its type
      */
@@ -185,30 +192,53 @@ export class Leaf<
   }
 
   @Memoize()
+  public isComparable(): boolean {
+    const comparableConfig = this.config.comparable;
+    const comparableConfigPath = utils.addPath(this.configPath, 'comparable');
+
+    const comparable = utils.getOptionalFlag(
+      comparableConfig,
+      ![scalars.typesByName.DraftJS, ...scalars.jsonTypes].includes(
+        this.type as any,
+      ),
+      comparableConfigPath,
+    );
+
+    return comparable;
+  }
+
+  @Memoize()
   public isSortable(): boolean {
     const sortableConfig = this.config.sortable;
     const sortableConfigPath = utils.addPath(this.configPath, 'sortable');
 
-    return utils.getOptionalFlag(
+    const sortable = utils.getOptionalFlag(
       sortableConfig,
-      [
-        scalars.typesByName.BigInt,
-        scalars.typesByName.Date,
-        scalars.typesByName.DateTime,
-        scalars.typesByName.Float,
-        scalars.typesByName.Int,
-        scalars.typesByName.UnsignedBigInt,
-        scalars.typesByName.UnsignedFloat,
-        scalars.typesByName.UnsignedInt,
-      ].includes(this.type as any),
+      this.isComparable() &&
+        [
+          ...scalars.bigintTypes,
+          ...scalars.numberTypes,
+          ...scalars.dateTypes,
+        ].includes(this.type as any),
       sortableConfigPath,
     );
+
+    if (sortable && !this.isComparable()) {
+      throw new utils.UnexpectedValueError(
+        `not to be sortable as it is not comparable`,
+        sortableConfig,
+        { path: sortableConfigPath },
+      );
+    }
+
+    return sortable;
   }
 
   @Memoize()
   public override validateDefinition(): void {
     super.validateDefinition();
 
+    this.isComparable();
     this.isSortable();
   }
 

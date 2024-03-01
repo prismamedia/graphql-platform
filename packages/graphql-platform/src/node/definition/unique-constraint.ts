@@ -13,7 +13,6 @@ import {
   NodeSelection,
   mergeSelectionExpressions,
 } from '../statement/selection.js';
-import { NodeFilterInputType } from '../type.js';
 import type { Component, ComponentValue } from './component.js';
 import { Edge } from './component/edge.js';
 import { Leaf } from './component/leaf.js';
@@ -91,12 +90,9 @@ export class UniqueConstraint<TConnector extends ConnectorInterface = any> {
               componentPath,
             );
 
-            if (
-              component instanceof Leaf &&
-              NodeFilterInputType.jsonTypes.includes(component.type as any)
-            ) {
+            if (component instanceof Leaf && !component.isComparable()) {
               throw new utils.GraphError(
-                `The "${component}"'s type is not supported in a unique-constraint`,
+                `The "${component}" leaf is not comparable, therefore it cannot be part of a unique-constraint`,
                 { path: componentPath },
               );
             }

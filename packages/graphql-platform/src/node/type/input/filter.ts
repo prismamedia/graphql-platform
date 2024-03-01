@@ -1,7 +1,6 @@
 import * as scalars from '@prismamedia/graphql-platform-scalars';
 import * as utils from '@prismamedia/graphql-platform-utils';
 import { Memoize } from '@prismamedia/memoize';
-import * as graphql from 'graphql';
 import type { Edge, Node } from '../../../node.js';
 import { Leaf, type LeafValue } from '../../definition/component/leaf.js';
 import type { MultipleReverseEdge } from '../../definition/reverse-edge/multiple.js';
@@ -42,12 +41,10 @@ export type NodeFilterInputTypeOverride = {
 };
 
 export class NodeFilterInputType extends utils.ObjectInputType<FieldFilterInputType> {
-  public static jsonTypes = [scalars.typesByName.DraftJS, ...scalars.jsonTypes];
-
   public static createLeafComparisonFields(leaf: Leaf): LeafFilterInputType[] {
     const fields: LeafFilterInputType[] = [];
 
-    if (!this.jsonTypes.includes(leaf.type as any)) {
+    if (leaf.isComparable()) {
       for (const operator of ['eq', 'not'] as const) {
         fields.push(
           new LeafFilterInputType<LeafValue>(leaf, operator, {
@@ -59,6 +56,19 @@ export class NodeFilterInputType extends utils.ObjectInputType<FieldFilterInputT
               new LeafComparisonFilter(leaf, operator, value),
           }),
         );
+      }
+
+      // gt, gte, lt, lte
+      if (leaf.isSortable()) {
+        for (const operator of sortableLeafComparisonOperatorSet) {
+          fields.push(
+            new LeafFilterInputType<NonNullable<LeafValue>>(leaf, operator, {
+              type: new utils.NonNullableInputType(leaf.type),
+              filter: (value, _context, _path) =>
+                new LeafComparisonFilter(leaf, operator, value),
+            }),
+          );
+        }
       }
     }
 
@@ -73,64 +83,44 @@ export class NodeFilterInputType extends utils.ObjectInputType<FieldFilterInputT
       );
     }
 
-    // gt, gte, lt, lte
-    if (leaf.isSortable()) {
-      for (const operator of sortableLeafComparisonOperatorSet) {
-        fields.push(
-          new LeafFilterInputType<NonNullable<LeafValue>>(leaf, operator, {
-            type: new utils.NonNullableInputType(leaf.type),
-            filter: (value, _context, _path) =>
-              new LeafComparisonFilter(leaf, operator, value),
-          }),
-        );
-      }
-    }
-
     return fields;
   }
 
   public static createLeafInFields(leaf: Leaf): LeafFilterInputType[] {
-    const fields: LeafFilterInputType[] = [];
-
-    // in, not_in
-    if (
-      graphql.isEnumType(leaf.type) ||
-      (leaf.type === scalars.typesByName.Boolean && leaf.isNullable()) ||
-      !this.jsonTypes.includes(leaf.type as any)
-    ) {
-      fields.push(
-        new LeafFilterInputType<LeafValue[]>(leaf, 'in', {
-          type: new utils.NonNullableInputType(
-            new utils.ListableInputType(
-              new utils.NonOptionalInputType(
-                utils.nonNullableInputTypeDecorator(
-                  leaf.type,
-                  !leaf.isNullable(),
+    return leaf.isComparable() &&
+      (leaf.type !== scalars.typesByName.Boolean || leaf.isNullable())
+      ? // in, not_in
+        [
+          new LeafFilterInputType<LeafValue[]>(leaf, 'in', {
+            type: new utils.NonNullableInputType(
+              new utils.ListableInputType(
+                new utils.NonOptionalInputType(
+                  utils.nonNullableInputTypeDecorator(
+                    leaf.type,
+                    !leaf.isNullable(),
+                  ),
                 ),
               ),
             ),
-          ),
-          filter: (values, _context, _path) =>
-            LeafInFilter.create(leaf, values),
-        }),
-        new LeafFilterInputType<LeafValue[]>(leaf, 'not_in', {
-          type: new utils.NonNullableInputType(
-            new utils.ListableInputType(
-              new utils.NonOptionalInputType(
-                utils.nonNullableInputTypeDecorator(
-                  leaf.type,
-                  !leaf.isNullable(),
+            filter: (values, _context, _path) =>
+              LeafInFilter.create(leaf, values),
+          }),
+          new LeafFilterInputType<LeafValue[]>(leaf, 'not_in', {
+            type: new utils.NonNullableInputType(
+              new utils.ListableInputType(
+                new utils.NonOptionalInputType(
+                  utils.nonNullableInputTypeDecorator(
+                    leaf.type,
+                    !leaf.isNullable(),
+                  ),
                 ),
               ),
             ),
-          ),
-          filter: (values, _context, _path) =>
-            NotOperation.create(LeafInFilter.create(leaf, values)),
-        }),
-      );
-    }
-
-    return fields;
+            filter: (values, _context, _path) =>
+              NotOperation.create(LeafInFilter.create(leaf, values)),
+          }),
+        ]
+      : [];
   }
 
   public static createLeafFullTextFields(leaf: Leaf): LeafFilterInputType[] {
@@ -141,11 +131,8 @@ export class NodeFilterInputType extends utils.ObjectInputType<FieldFilterInputT
     if (
       [
         scalars.typesByName.DraftJS,
-        scalars.typesByName.EmailAddress,
-        scalars.typesByName.NonEmptyString,
-        scalars.typesByName.NonEmptyTrimmedString,
-        scalars.typesByName.String,
         scalars.typesByName.URL,
+        ...scalars.stringTypes,
       ].includes(leaf.type as any)
     ) {
       for (const operator of [

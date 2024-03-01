@@ -1064,7 +1064,7 @@ __metadata:
     "@swc/core": "npm:1.4.2"
     "@swc/jest": "npm:0.2.36"
     "@tsconfig/node20": "npm:20.1.2"
-    "@types/node": "npm:20.11.23"
+    "@types/node": "npm:20.11.24"
     "@types/semver": "npm:7.5.8"
     graphql: "npm:16.8.1"
     inflection: "npm:^3.0.0"
@@ -1094,7 +1094,7 @@ __metadata:
     "@types/body-parser": "npm:^1.19.5"
     "@types/cors": "npm:^2.8.17"
     "@types/express": "npm:^4.17.21"
-    "@types/node": "npm:20.11.23"
+    "@types/node": "npm:20.11.24"
     "@types/ws": "npm:^8.5.10"
     body-parser: "npm:1.20.2"
     cors: "npm:2.8.5"
@@ -1120,8 +1120,8 @@ __metadata:
     "@swc/core": "npm:1.4.2"
     "@swc/jest": "npm:0.2.36"
     "@tsconfig/node20": "npm:20.1.2"
-    "@types/draft-js": "npm:^0.11.17"
-    "@types/node": "npm:20.11.23"
+    "@types/draft-js": "npm:^0.11.18"
+    "@types/node": "npm:20.11.24"
     graphql: "npm:16.8.1"
     jest: "npm:29.7.0"
     publint: "npm:0.2.7"
@@ -1142,7 +1142,7 @@ __metadata:
     "@swc/jest": "npm:0.2.36"
     "@tsconfig/node20": "npm:20.1.2"
     "@types/indefinite": "npm:2.3.4"
-    "@types/node": "npm:20.11.23"
+    "@types/node": "npm:20.11.24"
     graphql: "npm:16.8.1"
     indefinite: "npm:^2.5.1"
     jest: "npm:29.7.0"
@@ -1168,7 +1168,7 @@ __metadata:
     "@swc/jest": "npm:0.2.36"
     "@tsconfig/node20": "npm:20.1.2"
     "@types/cli-progress": "npm:^3.11.5"
-    "@types/node": "npm:20.11.23"
+    "@types/node": "npm:20.11.24"
     cli-progress: "npm:^3.12.0"
     dataloader: "npm:^2.2.2"
     denque: "npm:^2.1.0"
@@ -1555,13 +1555,13 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@types/draft-js@npm:^0.11.17":
-  version: 0.11.17
-  resolution: "@types/draft-js@npm:0.11.17"
+"@types/draft-js@npm:^0.11.18":
+  version: 0.11.18
+  resolution: "@types/draft-js@npm:0.11.18"
   dependencies:
     "@types/react": "npm:*"
     immutable: "npm:~3.7.4"
-  checksum: 10/18559cb66e4b30756c4cfda5d1ed814ae8784128201f258c8837cc5f803387f66389076eebfaadf6c959432eef0c846f2937c8e3bc7998c29ce8867199198001
+  checksum: 10/c8b2fabde25a1708d6f3f7116ee685530424158703e547978dffcb89bbdf85f927fcdefa17dd13e626d6a9153b91358bd91b95d08520b12a5b9cfab7fb7f5686
   languageName: node
   linkType: hard
 
@@ -1698,12 +1698,21 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@types/node@npm:*, @types/node@npm:20.11.23":
+"@types/node@npm:*":
   version: 20.11.23
   resolution: "@types/node@npm:20.11.23"
   dependencies:
     undici-types: "npm:~5.26.4"
   checksum: 10/fc2a86444461fd74a77c565ff6f854f354e5b637eacc42dc1f35bc859025a11bf495a785ca0439a84e0560157491a89735c0dbff48101113334d30d4b20fb1a3
+  languageName: node
+  linkType: hard
+
+"@types/node@npm:20.11.24":
+  version: 20.11.24
+  resolution: "@types/node@npm:20.11.24"
+  dependencies:
+    undici-types: "npm:~5.26.4"
+  checksum: 10/7f34bfae5f9b98b9910230af4b4c52dc7fb2d1e96fdebfbc3d7576f8ab3d100076f193f9469add9e7418b455294155e7e6a028498cc5e98f9d49349875a459cf
   languageName: node
   linkType: hard
 

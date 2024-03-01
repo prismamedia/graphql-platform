@@ -604,11 +604,11 @@ input UserProfileFilterInput {
   user_not: UserFilterInput
   birthday: Date
   birthday_not: Date
-  birthday_is_null: Boolean
   birthday_gt: Date
   birthday_gte: Date
   birthday_lt: Date
   birthday_lte: Date
+  birthday_is_null: Boolean
   birthday_in: [Date]
   birthday_not_in: [Date]
   facebookId: ID
