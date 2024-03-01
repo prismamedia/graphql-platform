@@ -45,6 +45,7 @@ export class NodeFilterInputType extends utils.ObjectInputType<FieldFilterInputT
     const fields: LeafFilterInputType[] = [];
 
     if (leaf.isComparable()) {
+      // eq, not
       for (const operator of ['eq', 'not'] as const) {
         fields.push(
           new LeafFilterInputType<LeafValue>(leaf, operator, {
@@ -54,6 +55,40 @@ export class NodeFilterInputType extends utils.ObjectInputType<FieldFilterInputT
             ),
             filter: (value, _context, _path) =>
               new LeafComparisonFilter(leaf, operator, value),
+          }),
+        );
+      }
+
+      if (leaf.type !== scalars.typesByName.Boolean || leaf.isNullable()) {
+        // in, not_in
+        fields.push(
+          new LeafFilterInputType<LeafValue[]>(leaf, 'in', {
+            type: new utils.NonNullableInputType(
+              new utils.ListableInputType(
+                new utils.NonOptionalInputType(
+                  utils.nonNullableInputTypeDecorator(
+                    leaf.type,
+                    !leaf.isNullable(),
+                  ),
+                ),
+              ),
+            ),
+            filter: (values, _context, _path) =>
+              LeafInFilter.create(leaf, values),
+          }),
+          new LeafFilterInputType<LeafValue[]>(leaf, 'not_in', {
+            type: new utils.NonNullableInputType(
+              new utils.ListableInputType(
+                new utils.NonOptionalInputType(
+                  utils.nonNullableInputTypeDecorator(
+                    leaf.type,
+                    !leaf.isNullable(),
+                  ),
+                ),
+              ),
+            ),
+            filter: (values, _context, _path) =>
+              NotOperation.create(LeafInFilter.create(leaf, values)),
           }),
         );
       }
@@ -84,43 +119,6 @@ export class NodeFilterInputType extends utils.ObjectInputType<FieldFilterInputT
     }
 
     return fields;
-  }
-
-  public static createLeafInFields(leaf: Leaf): LeafFilterInputType[] {
-    return leaf.isComparable() &&
-      (leaf.type !== scalars.typesByName.Boolean || leaf.isNullable())
-      ? // in, not_in
-        [
-          new LeafFilterInputType<LeafValue[]>(leaf, 'in', {
-            type: new utils.NonNullableInputType(
-              new utils.ListableInputType(
-                new utils.NonOptionalInputType(
-                  utils.nonNullableInputTypeDecorator(
-                    leaf.type,
-                    !leaf.isNullable(),
-                  ),
-                ),
-              ),
-            ),
-            filter: (values, _context, _path) =>
-              LeafInFilter.create(leaf, values),
-          }),
-          new LeafFilterInputType<LeafValue[]>(leaf, 'not_in', {
-            type: new utils.NonNullableInputType(
-              new utils.ListableInputType(
-                new utils.NonOptionalInputType(
-                  utils.nonNullableInputTypeDecorator(
-                    leaf.type,
-                    !leaf.isNullable(),
-                  ),
-                ),
-              ),
-            ),
-            filter: (values, _context, _path) =>
-              NotOperation.create(LeafInFilter.create(leaf, values)),
-          }),
-        ]
-      : [];
   }
 
   public static createLeafFullTextFields(leaf: Leaf): LeafFilterInputType[] {
@@ -167,7 +165,6 @@ export class NodeFilterInputType extends utils.ObjectInputType<FieldFilterInputT
   public static createLeafFields(leaf: Leaf): LeafFilterInputType[] {
     return [
       ...this.createLeafComparisonFields(leaf),
-      ...this.createLeafInFields(leaf),
       ...this.createLeafFullTextFields(leaf),
     ];
   }
