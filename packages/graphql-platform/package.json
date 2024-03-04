@@ -50,7 +50,7 @@
     "inflection": "^3.0.0",
     "p-queue": "^8.0.1",
     "p-retry": "^6.2.0",
-    "remeda": "^1.45.2",
+    "remeda": "^1.46.2",
     "type-fest": "^4.10.3"
   },
   "peerDependencies": {

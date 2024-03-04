@@ -266,6 +266,14 @@ export class LeafComparisonFilter extends AbstractLeafFilter {
   }
 
   public get inputValue(): NodeFilterInputValue {
+    if (
+      this.value === null &&
+      ['eq', 'not'].includes(this.operator) &&
+      !this.leaf.isComparable()
+    ) {
+      return { [`${this.leaf.name}_is_null`]: this.operator === 'eq' };
+    }
+
     return { [this.key]: this.value };
   }
 }

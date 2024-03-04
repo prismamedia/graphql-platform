@@ -1744,7 +1744,7 @@ const RAW_RUNTIME_STATE =
           ["p-queue", "npm:8.0.1"],\
           ["p-retry", "npm:6.2.0"],\
           ["publint", "npm:0.2.7"],\
-          ["remeda", "npm:1.45.2"],\
+          ["remeda", "npm:1.46.2"],\
           ["type-fest", "npm:4.10.3"],\
           ["typescript", "patch:typescript@npm%3A5.3.3#optional!builtin<compat/typescript>::version=5.3.3&hash=e012d7"]\
         ],\
@@ -1778,7 +1778,7 @@ const RAW_RUNTIME_STATE =
           ["p-queue", "npm:8.0.1"],\
           ["p-retry", "npm:6.2.0"],\
           ["publint", "npm:0.2.7"],\
-          ["remeda", "npm:1.45.2"],\
+          ["remeda", "npm:1.46.2"],\
           ["type-fest", "npm:4.10.3"],\
           ["typescript", "patch:typescript@npm%3A5.3.3#optional!builtin<compat/typescript>::version=5.3.3&hash=e012d7"]\
         ],\
@@ -1808,7 +1808,7 @@ const RAW_RUNTIME_STATE =
           ["jest", "virtual:dc3fc578bfa5e06182a4d2be39ede0bc5b74940b1ffe0d70c26892ab140a4699787750fba175dc306292e80b4aa2c8c5f68c2a821e69b2c37e360c0dff36ff66#npm:29.7.0"],\
           ["mariadb", "npm:3.2.3"],\
           ["publint", "npm:0.2.7"],\
-          ["remeda", "npm:1.45.2"],\
+          ["remeda", "npm:1.46.2"],\
           ["semver", "npm:7.6.0"],\
           ["type-fest", "npm:4.10.3"],\
           ["typescript", "patch:typescript@npm%3A5.3.3#optional!builtin<compat/typescript>::version=5.3.3&hash=e012d7"]\
@@ -1840,7 +1840,7 @@ const RAW_RUNTIME_STATE =
           ["jest", "virtual:dc3fc578bfa5e06182a4d2be39ede0bc5b74940b1ffe0d70c26892ab140a4699787750fba175dc306292e80b4aa2c8c5f68c2a821e69b2c37e360c0dff36ff66#npm:29.7.0"],\
           ["mariadb", "npm:3.2.3"],\
           ["publint", "npm:0.2.7"],\
-          ["remeda", "npm:1.45.2"],\
+          ["remeda", "npm:1.46.2"],\
           ["semver", "npm:7.6.0"],\
           ["type-fest", "npm:4.10.3"],\
           ["typescript", "patch:typescript@npm%3A5.3.3#optional!builtin<compat/typescript>::version=5.3.3&hash=e012d7"]\
@@ -1940,7 +1940,7 @@ const RAW_RUNTIME_STATE =
           ["indefinite", "npm:2.5.1"],\
           ["jest", "virtual:dc3fc578bfa5e06182a4d2be39ede0bc5b74940b1ffe0d70c26892ab140a4699787750fba175dc306292e80b4aa2c8c5f68c2a821e69b2c37e360c0dff36ff66#npm:29.7.0"],\
           ["publint", "npm:0.2.7"],\
-          ["remeda", "npm:1.45.2"],\
+          ["remeda", "npm:1.46.2"],\
           ["type-fest", "npm:4.10.3"],\
           ["typescript", "patch:typescript@npm%3A5.3.3#optional!builtin<compat/typescript>::version=5.3.3&hash=e012d7"]\
         ],\
@@ -1965,7 +1965,7 @@ const RAW_RUNTIME_STATE =
           ["indefinite", "npm:2.5.1"],\
           ["jest", "virtual:dc3fc578bfa5e06182a4d2be39ede0bc5b74940b1ffe0d70c26892ab140a4699787750fba175dc306292e80b4aa2c8c5f68c2a821e69b2c37e360c0dff36ff66#npm:29.7.0"],\
           ["publint", "npm:0.2.7"],\
-          ["remeda", "npm:1.45.2"],\
+          ["remeda", "npm:1.46.2"],\
           ["type-fest", "npm:4.10.3"],\
           ["typescript", "patch:typescript@npm%3A5.3.3#optional!builtin<compat/typescript>::version=5.3.3&hash=e012d7"]\
         ],\
@@ -6490,10 +6490,10 @@ const RAW_RUNTIME_STATE =
       }]\
     ]],\
     ["remeda", [\
-      ["npm:1.45.2", {\
-        "packageLocation": "./.yarn/cache/remeda-npm-1.45.2-67c07cb36f-2a01889270.zip/node_modules/remeda/",\
+      ["npm:1.46.2", {\
+        "packageLocation": "./.yarn/cache/remeda-npm-1.46.2-95cd5996e2-602362c7e8.zip/node_modules/remeda/",\
         "packageDependencies": [\
-          ["remeda", "npm:1.45.2"]\
+          ["remeda", "npm:1.46.2"]\
         ],\
         "linkType": "HARD"\
       }]\

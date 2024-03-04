@@ -47,7 +47,7 @@
     "@prismamedia/memoize": "^5.0.2",
     "inflection": "^3.0.0",
     "mariadb": "^3.2.3",
-    "remeda": "^1.45.2",
+    "remeda": "^1.46.2",
     "semver": "^7.6.0",
     "type-fest": "^4.10.3"
   },
