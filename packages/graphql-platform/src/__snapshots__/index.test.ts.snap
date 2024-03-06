@@ -51,6 +51,9 @@ type query {
     subset: ArticleFilterInput
   ): [Article]!
 
+  """Custom query to get articles"""
+  customArticles: UnsignedInt!
+
   """
   Gets the number of "ArticleExtensions"
   """
@@ -1189,6 +1192,9 @@ type mutation {
 
   """Updates an existing "Article" or creates a new one"""
   upsertArticle(where: ArticleUniqueFilterInput!, create: ArticleCreationInput!, update: ArticleUpdateInput): Article!
+
+  """Custom deletion"""
+  customDeletionArticles: UnsignedInt!
 
   """Creates one "ArticleExtension", throws an error if it already exists"""
   createArticleExtension(data: ArticleExtensionCreationInput!): ArticleExtension!

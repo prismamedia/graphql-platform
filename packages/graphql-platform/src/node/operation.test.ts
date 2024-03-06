@@ -1,9 +1,12 @@
 import { beforeAll, describe, expect, it } from '@jest/globals';
 import { MyGP, nodes } from '../__tests__/config.js';
-import { GraphQLPlatform } from '../index.js';
-import { AbstractMutation } from './operation/abstract-mutation.js';
-import { AbstractQuery } from './operation/abstract-query.js';
-import { AbstractSubscription } from './operation/abstract-subscription.js';
+import {
+  AbstractDeletion,
+  AbstractMutation,
+  AbstractQuery,
+  AbstractSubscription,
+  GraphQLPlatform,
+} from '../index.js';
 
 describe('Operation', () => {
   let gp: MyGP;
@@ -12,7 +15,7 @@ describe('Operation', () => {
     gp = new GraphQLPlatform({ nodes });
   });
 
-  it('are actually registered', () => {
+  it('instanciates core-operations', () => {
     for (const node of gp.nodesByName.values()) {
       for (const mutation of node.operationsByType.mutation) {
         expect(mutation).toBeInstanceOf(AbstractMutation);
@@ -22,7 +25,7 @@ describe('Operation', () => {
 
       for (const query of node.operationsByType.query) {
         expect(query).toBeInstanceOf(AbstractQuery);
-        expect(query.isEnabled()).toBe(true);
+        expect(query.isEnabled()).toBeTruthy();
         expect(typeof query.isPublic()).toBe('boolean');
       }
 
@@ -31,6 +34,31 @@ describe('Operation', () => {
         expect(typeof subscription.isEnabled()).toBe('boolean');
         expect(typeof subscription.isPublic()).toBe('boolean');
       }
+    }
+  });
+
+  it('instanciates custom-operations', () => {
+    const Article = gp.getNodeByName('Article');
+
+    {
+      const query = Article.getQueryByKey('custom');
+      expect(query).toBeInstanceOf(AbstractQuery);
+      expect(query.name).toEqual('customArticles');
+      expect(query.isPublic()).toBeTruthy();
+    }
+
+    {
+      const query = Article.getQueryByKey('customPrivate');
+      expect(query).toBeInstanceOf(AbstractQuery);
+      expect(query.name).toEqual('customPrivateArticles');
+      expect(query.isPublic()).toBeFalsy();
+    }
+
+    {
+      const mutation = Article.getMutationByKey('customDeletion');
+      expect(mutation).toBeInstanceOf(AbstractDeletion);
+      expect(mutation.name).toEqual('customDeletionArticles');
+      expect(mutation.isPublic()).toBeTruthy();
     }
   });
 });

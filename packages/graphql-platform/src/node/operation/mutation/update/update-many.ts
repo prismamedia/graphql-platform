@@ -51,10 +51,10 @@ export class UpdateManyMutation<
 
   public readonly key = 'update-many';
   public readonly name = `update${this.node.plural}`;
-  public readonly description = `Updates many "${this.node.plural}"`;
+  public override readonly description = `Updates many "${this.node.plural}"`;
 
   @Memoize()
-  public get arguments() {
+  public override get arguments() {
     return [
       new utils.Input({
         name: 'where',

@@ -3,6 +3,7 @@ import type { Node } from '../../node.js';
 import { ChangesSubscription } from './subscription/changes.js';
 import { ScrollSubscription } from './subscription/scroll.js';
 
+export * from './abstract-subscription.js';
 export type { SubscriptionConfig } from './abstract-subscription.js';
 export * from './subscription/changes.js';
 export * from './subscription/scroll.js';

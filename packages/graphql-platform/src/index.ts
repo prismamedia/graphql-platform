@@ -22,7 +22,6 @@ import {
   catchConnectorWorkflowError,
   createAPI,
   createContextBoundAPI,
-  operationConstructorsByType,
   type API,
   type ContextBoundAPI,
   type NodeChange,
@@ -217,7 +216,7 @@ export class GraphQLPlatform<
     Node<TRequestContext, TConnector, TBroker, TContainer>
   >;
 
-  public readonly operationsByNameByType: OperationsByNameByType<TRequestContext>;
+  public readonly nodeOperationsByNameByType: OperationsByNameByType<TRequestContext>;
 
   readonly #requestContextAssertion?: (
     maybeRequestContext: object,
@@ -337,22 +336,20 @@ export class GraphQLPlatform<
       }
     }
 
-    // operations
+    // node-operations
     {
-      this.operationsByNameByType = Object.fromEntries(
-        (Object.keys(operationConstructorsByType) as OperationType[]).map(
-          (type): any => [
-            type,
-            new Map(
-              Array.from(this.nodesByName.values()).flatMap((node) =>
-                node.operationsByType[type].map((operation) => [
-                  operation.name,
-                  operation,
-                ]),
-              ),
+      this.nodeOperationsByNameByType = Object.fromEntries(
+        utils.operationTypes.map((type): any => [
+          type,
+          new Map(
+            Array.from(this.nodesByName.values()).flatMap((node) =>
+              node.operationsByType[type].map((operation) => [
+                operation.name,
+                operation,
+              ]),
             ),
-          ],
-        ),
+          ),
+        ]),
       ) as OperationsByNameByType;
     }
 
@@ -486,10 +483,12 @@ export class GraphQLPlatform<
     name: string,
     path?: utils.Path,
   ): OperationInterface<TRequestContext> {
-    const operationsByName = this.operationsByNameByType[type];
+    const operationsByName = this.nodeOperationsByNameByType[type];
     if (!operationsByName) {
       throw new utils.UnexpectedValueError(
-        `a type among "${Object.keys(this.operationsByNameByType).join(', ')}"`,
+        `a type among "${Object.keys(this.nodeOperationsByNameByType).join(
+          ', ',
+        )}"`,
         type,
         { path },
       );
@@ -498,7 +497,7 @@ export class GraphQLPlatform<
     const operation = operationsByName.get(name);
     if (!operation) {
       throw new utils.UnexpectedValueError(
-        `a ${type} among "${[...operationsByName.keys()].join(', ')}"`,
+        `a ${name} among "${[...operationsByName.keys()].join(', ')}"`,
         name,
         { path },
       );
@@ -556,9 +555,9 @@ export class GraphQLPlatform<
           .map((type): [string, graphql.GraphQLObjectType] | undefined => {
             const fields: graphql.GraphQLFieldConfigMap<any, any> = {
               // Core-operations
-              ...(this.operationsByNameByType[type]?.size &&
+              ...(this.nodeOperationsByNameByType[type]?.size &&
                 Object.fromEntries(
-                  [...this.operationsByNameByType[type].values()]
+                  [...this.nodeOperationsByNameByType[type].values()]
                     .filter((operation) => operation.isPublic())
                     .map((operation) => [
                       operation.name,

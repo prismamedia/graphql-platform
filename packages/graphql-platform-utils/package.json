@@ -27,7 +27,7 @@
   },
   "devDependencies": {
     "@jest/globals": "29.7.0",
-    "@swc/core": "1.4.2",
+    "@swc/core": "1.4.4",
     "@swc/jest": "0.2.36",
     "@tsconfig/node20": "20.1.2",
     "@types/indefinite": "2.3.4",
@@ -41,7 +41,7 @@
     "@prismamedia/memoize": "^5.0.2",
     "indefinite": "^2.5.1",
     "remeda": "^1.46.2",
-    "type-fest": "^4.10.3"
+    "type-fest": "^4.11.1"
   },
   "peerDependencies": {
     "graphql": "^16.7.0"

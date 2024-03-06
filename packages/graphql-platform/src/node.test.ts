@@ -18,7 +18,7 @@ const hasEnabledMutationByType = (
   gp: GraphQLPlatform,
   type?: utils.MutationType,
 ): boolean =>
-  [...gp.operationsByNameByType.mutation.values()].some(
+  [...gp.nodeOperationsByNameByType.mutation.values()].some(
     (mutation) =>
       mutation.isEnabled() && (!type || mutation.mutationTypes.includes(type)),
   );
@@ -27,7 +27,7 @@ const hasPublicMutationByType = (
   gp: GraphQLPlatform,
   type?: utils.MutationType,
 ): boolean =>
-  [...gp.operationsByNameByType.mutation.values()].some(
+  [...gp.nodeOperationsByNameByType.mutation.values()].some(
     (mutation) =>
       mutation.isPublic() && (!type || mutation.mutationTypes.includes(type)),
   );

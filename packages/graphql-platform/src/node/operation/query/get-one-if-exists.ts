@@ -27,10 +27,10 @@ export class GetOneIfExistsQuery<
 
   public readonly key = 'get-one-if-exists';
   public readonly name = `${inflection.camelize(this.node.name, true)}IfExists`;
-  public readonly description = `Retrieves one "${this.node}" if it exists, returns null otherwise`;
+  public override readonly description = `Retrieves one "${this.node}" if it exists, returns null otherwise`;
 
   @Memoize()
-  public get arguments() {
+  public override get arguments() {
     return [
       new utils.Input({
         name: 'where',

@@ -37,10 +37,10 @@ export class FindManyQuery<
 
   public readonly key = 'find-many';
   public readonly name = inflection.camelize(this.node.plural, true);
-  public readonly description = `Retrieves a list of "${this.node.plural}"`;
+  public override readonly description = `Retrieves a list of "${this.node.plural}"`;
 
   @Memoize()
-  public get arguments() {
+  public override get arguments() {
     return [
       new utils.Input({
         name: 'where',

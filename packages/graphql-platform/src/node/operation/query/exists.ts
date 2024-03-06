@@ -22,10 +22,10 @@ export class ExistsQuery<TRequestContext extends object> extends AbstractQuery<
 
   public readonly key = 'exists';
   public readonly name = `${inflection.camelize(this.node.name, true)}Exists`;
-  public readonly description = `Either the "${this.node}" exists or not?`;
+  public override readonly description = `Either the "${this.node}" exists or not?`;
 
   @Memoize()
-  public get arguments() {
+  public override get arguments() {
     return [
       new utils.Input({
         name: 'where',

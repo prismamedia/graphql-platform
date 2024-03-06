@@ -27,9 +27,9 @@ export class DeleteOneMutation<
 
   public readonly key = 'delete-one';
   public readonly name = `delete${this.node}`;
-  public readonly description = `Deletes one "${this.node}", throws an error if it does not exists`;
+  public override readonly description = `Deletes one "${this.node}", throws an error if it does not exists`;
 
-  public get arguments() {
+  public override get arguments() {
     return this.node.getMutationByKey('delete-one-if-exists').arguments;
   }
 

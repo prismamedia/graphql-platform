@@ -36,10 +36,10 @@ export class GetSomeInOrderIfExistsQuery<
     this.node.plural,
     true,
   )}InOrderIfExists`;
-  public readonly description = `Given a list of unique-filter's value, retrieves the corresponding "${this.node.plural}", or null, in the same order`;
+  public override readonly description = `Given a list of unique-filter's value, retrieves the corresponding "${this.node.plural}", or null, in the same order`;
 
   @Memoize()
-  public get arguments() {
+  public override get arguments() {
     return [
       new utils.Input({
         name: 'where',

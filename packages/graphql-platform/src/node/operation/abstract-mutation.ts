@@ -63,9 +63,9 @@ export interface AbstractMutationConfig<
 }
 
 export abstract class AbstractMutation<
-    TRequestContext extends object,
-    TArgs extends utils.Nillable<utils.PlainObject>,
-    TResult,
+    TRequestContext extends object = any,
+    TArgs extends utils.Nillable<utils.PlainObject> = any,
+    TResult = any,
   >
   extends AbstractOperation<
     TRequestContext,

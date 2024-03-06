@@ -71,21 +71,21 @@ describe('GraphQL-Platform', () => {
     it.each<
       [operationType: OperationType, enabledCount: number, publicCount: number]
     >([
-      [graphql.OperationTypeNode.QUERY, 63, 56],
-      [graphql.OperationTypeNode.MUTATION, 83, 70],
+      [graphql.OperationTypeNode.QUERY, 65, 57],
+      [graphql.OperationTypeNode.MUTATION, 84, 71],
       [graphql.OperationTypeNode.SUBSCRIPTION, 12, 7],
     ])(
       `generates %s: %d enabled / %d public`,
       (operationType, enabledCount, publicCount) => {
         expect(
           Array.from<Operation>(
-            gp.operationsByNameByType[operationType].values(),
+            gp.nodeOperationsByNameByType[operationType].values(),
           ).filter((operation) => operation.isEnabled()).length,
         ).toBe(enabledCount);
 
         expect(
           Array.from<Operation>(
-            gp.operationsByNameByType[operationType].values(),
+            gp.nodeOperationsByNameByType[operationType].values(),
           ).filter((operation) => operation.isPublic()).length,
         ).toBe(publicCount);
       },

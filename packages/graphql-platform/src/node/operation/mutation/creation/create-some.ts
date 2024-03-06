@@ -35,10 +35,10 @@ export class CreateSomeMutation<
 
   public readonly key = 'create-some';
   public readonly name = `create${this.node.plural}`;
-  public readonly description = `Creates some "${this.node}", throws an error if they already exist`;
+  public override readonly description = `Creates some "${this.node}", throws an error if they already exist`;
 
   @Memoize()
-  public get arguments() {
+  public override get arguments() {
     return [
       new utils.Input({
         name: 'data',

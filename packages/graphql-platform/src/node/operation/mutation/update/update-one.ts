@@ -31,9 +31,9 @@ export class UpdateOneMutation<
 
   public readonly key = 'update-one';
   public readonly name = `update${this.node}`;
-  public readonly description = `Updates one "${this.node}", throws an error if it does not exists`;
+  public override readonly description = `Updates one "${this.node}", throws an error if it does not exists`;
 
-  public get arguments() {
+  public override get arguments() {
     return this.node.getMutationByKey('update-one-if-exists').arguments;
   }
 

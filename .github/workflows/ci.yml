@@ -30,7 +30,7 @@ jobs:
     continue-on-error: ${{ matrix.continue-on-error == true }}
 
     container:
-      image: node:${{ matrix.node }}
+      image: node:${{ matrix.node }}-alpine
 
     steps:
       - name: Checkout the code

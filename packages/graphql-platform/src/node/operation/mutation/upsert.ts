@@ -38,10 +38,10 @@ export class UpsertMutation<
 
   public readonly key = 'upsert';
   public readonly name = `upsert${this.node}`;
-  public readonly description = `Updates an existing "${this.node}" or creates a new one`;
+  public override readonly description = `Updates an existing "${this.node}" or creates a new one`;
 
   @Memoize()
-  public get arguments() {
+  public override get arguments() {
     return [
       new utils.Input({
         name: 'where',

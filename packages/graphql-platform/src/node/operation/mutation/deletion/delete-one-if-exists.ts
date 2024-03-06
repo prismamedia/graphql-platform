@@ -24,10 +24,10 @@ export class DeleteOneIfExistsMutation<
 
   public readonly key = 'delete-one-if-exists';
   public readonly name = `delete${this.node}IfExists`;
-  public readonly description = `Deletes one "${this.node}" if it exists, returns null otherwise`;
+  public override readonly description = `Deletes one "${this.node}" if it exists, returns null otherwise`;
 
   @Memoize()
-  public get arguments() {
+  public override get arguments() {
     return [
       new utils.Input({
         name: 'where',

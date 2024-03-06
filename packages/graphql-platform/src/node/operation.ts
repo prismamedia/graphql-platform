@@ -1,4 +1,4 @@
-import { OperationTypeNode } from 'graphql';
+import * as graphql from 'graphql';
 import type { Constructor } from 'type-fest';
 import type { Node } from '../node.js';
 import { mutationConstructors, type Mutation } from './operation/mutation.js';
@@ -18,9 +18,9 @@ export * from './operation/query.js';
 export * from './operation/subscription.js';
 
 export type OperationByType<TRequestContext extends object = any> = {
-  [OperationTypeNode.MUTATION]: Mutation<TRequestContext>;
-  [OperationTypeNode.QUERY]: Query<TRequestContext>;
-  [OperationTypeNode.SUBSCRIPTION]: Subscription<TRequestContext>;
+  [graphql.OperationTypeNode.MUTATION]: Mutation<TRequestContext>;
+  [graphql.OperationTypeNode.QUERY]: Query<TRequestContext>;
+  [graphql.OperationTypeNode.SUBSCRIPTION]: Subscription<TRequestContext>;
 };
 
 export type OperationType = keyof OperationByType;
@@ -29,10 +29,10 @@ export type Operation<TRequestContext extends object = any> =
   OperationByType<TRequestContext>[OperationType];
 
 export const operationConstructorsByType = {
-  [OperationTypeNode.MUTATION]: mutationConstructors,
-  [OperationTypeNode.QUERY]: queryConstructors,
-  [OperationTypeNode.SUBSCRIPTION]: subscriptionConstructors,
-} satisfies {
+  [graphql.OperationTypeNode.MUTATION]: mutationConstructors,
+  [graphql.OperationTypeNode.QUERY]: queryConstructors,
+  [graphql.OperationTypeNode.SUBSCRIPTION]: subscriptionConstructors,
+} as const satisfies {
   [TType in OperationType]: Constructor<OperationByType[TType], [Node]>[];
 };
 

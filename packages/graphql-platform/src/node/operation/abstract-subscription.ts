@@ -29,9 +29,9 @@ export interface SubscriptionConfig<
 }
 
 export abstract class AbstractSubscription<
-  TRequestContext extends object,
-  TArgs extends utils.Nillable<utils.PlainObject>,
-  TResult extends AsyncIterable<any>,
+  TRequestContext extends object = any,
+  TArgs extends utils.Nillable<utils.PlainObject> = any,
+  TResult extends AsyncIterable<any> = any,
 > extends AbstractOperation<
   TRequestContext,
   OperationContext<TRequestContext>,

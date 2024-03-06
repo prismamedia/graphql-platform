@@ -39,10 +39,10 @@ export class DeleteManyMutation<
 
   public readonly key = 'delete-many';
   public readonly name = `delete${this.node.plural}`;
-  public readonly description = `Deletes many "${this.node.plural}"`;
+  public override readonly description = `Deletes many "${this.node.plural}"`;
 
   @Memoize()
-  public get arguments() {
+  public override get arguments() {
     return [
       new utils.Input({
         name: 'where',

@@ -1,9 +1,9 @@
 import * as utils from '@prismamedia/graphql-platform-utils';
 import { Memoize } from '@prismamedia/memoize';
-import { OperationTypeNode } from 'graphql';
+import * as graphql from 'graphql';
 import inflection from 'inflection';
 import * as R from 'remeda';
-import type { Except, Promisable } from 'type-fest';
+import type { Constructor, Except, Promisable } from 'type-fest';
 import type { BrokerInterface } from './broker-interface.js';
 import type {
   ConnectorConfigOverride,
@@ -52,6 +52,8 @@ import {
   type PreUpdateArgs,
   type UpdateConfig,
 } from './node/operation.js';
+import type { AbstractMutation } from './node/operation/abstract-mutation.js';
+import type { AbstractQuery } from './node/operation/abstract-query.js';
 import {
   NodeSelection,
   mergeSelectionExpressions,
@@ -190,6 +192,16 @@ export type NodeConfig<
   >;
 
   /**
+   * Optional, fine-tune the "query"
+   */
+  query?: {
+    /**
+     * Optional, add some custom-queries
+     */
+    customs?: Constructor<AbstractQuery, [Node]>[];
+  };
+
+  /**
    * Optional, fine-tune the "mutation":
    *
    * - "true" means all the "mutations" are enabled
@@ -197,7 +209,7 @@ export type NodeConfig<
    */
   mutation?:
     | boolean
-    | {
+    | ({
         [TType in keyof MutationConfig]?:
           | boolean
           | MutationConfig<
@@ -206,7 +218,12 @@ export type NodeConfig<
               TBroker,
               TContainer
             >[TType];
-      };
+      } & {
+        /**
+         * Optional, add some custom-mutations
+         */
+        customs?: Constructor<AbstractMutation, [Node]>[];
+      });
 
   /**
    * Optional, fine-tune the access to these nodes, given the request-context and the access-type among "query" (= !mutationType) / "creation" / "update" / "deletion":
@@ -1458,17 +1475,26 @@ export class Node<
   @Memoize()
   public get operationsByType(): Readonly<OperationsByType<TRequestContext>> {
     return Object.fromEntries(
-      Object.entries(operationConstructorsByType).map(
-        ([type, operationConstructors]) => [
-          type,
-          operationConstructors.map((constructor) => new constructor(this)),
-        ],
-      ),
+      utils.operationTypes.map((type) => [
+        type,
+        (
+          [
+            ...(operationConstructorsByType[type] ?? []),
+            ...(type === graphql.OperationTypeNode.MUTATION
+              ? (R.isPlainObject(this.config.mutation) &&
+                  this.config.mutation.customs) ||
+                []
+              : type === graphql.OperationTypeNode.QUERY
+              ? this.config.query?.customs || []
+              : []),
+          ] as Constructor<Operation, [Node]>[]
+        ).map((constructor) => new constructor(this)),
+      ]),
     ) as any;
   }
 
   @Memoize()
-  protected get operationsByKeyByType(): Readonly<
+  public get operationsByKeyByType(): Readonly<
     OperationsByKeyByType<TRequestContext>
   > {
     return Object.fromEntries(
@@ -1510,28 +1536,40 @@ export class Node<
     return operation;
   }
 
-  public getMutationByKey<TKey extends keyof OperationsByKeyByType['mutation']>(
-    key: TKey,
-    path?: utils.Path,
-  ): OperationsByKeyByType<TRequestContext>['mutation'][TKey] {
-    return this.getOperationByTypeAndKey(OperationTypeNode.MUTATION, key, path);
-  }
-
-  public getQueryByKey<TKey extends keyof OperationsByKeyByType['query']>(
-    key: TKey,
-    path?: utils.Path,
-  ): OperationsByKeyByType<TRequestContext>['query'][TKey] {
-    return this.getOperationByTypeAndKey(OperationTypeNode.QUERY, key, path);
-  }
-
-  public getSubscriptionByKey<
-    TKey extends keyof OperationsByKeyByType['subscription'],
+  public getMutationByKey<
+    TKey extends keyof OperationsByKeyByType[graphql.OperationTypeNode.MUTATION],
   >(
     key: TKey,
     path?: utils.Path,
-  ): OperationsByKeyByType<TRequestContext>['subscription'][TKey] {
+  ): OperationsByKeyByType<TRequestContext>[graphql.OperationTypeNode.MUTATION][TKey] {
     return this.getOperationByTypeAndKey(
-      OperationTypeNode.SUBSCRIPTION,
+      graphql.OperationTypeNode.MUTATION,
+      key,
+      path,
+    );
+  }
+
+  public getQueryByKey<
+    TKey extends keyof OperationsByKeyByType[graphql.OperationTypeNode.QUERY],
+  >(
+    key: TKey,
+    path?: utils.Path,
+  ): OperationsByKeyByType<TRequestContext>[graphql.OperationTypeNode.QUERY][TKey] {
+    return this.getOperationByTypeAndKey(
+      graphql.OperationTypeNode.QUERY,
+      key,
+      path,
+    );
+  }
+
+  public getSubscriptionByKey<
+    TKey extends keyof OperationsByKeyByType[graphql.OperationTypeNode.SUBSCRIPTION],
+  >(
+    key: TKey,
+    path?: utils.Path,
+  ): OperationsByKeyByType<TRequestContext>[graphql.OperationTypeNode.SUBSCRIPTION][TKey] {
+    return this.getOperationByTypeAndKey(
+      graphql.OperationTypeNode.SUBSCRIPTION,
       key,
       path,
     );

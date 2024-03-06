@@ -38,7 +38,7 @@ export class ScrollSubscription<
   public readonly key = 'scroll' as const;
   public readonly method = 'scroll' as const;
   public readonly name = inflection.camelize(this.node.plural, true);
-  public readonly description = `Scroll the "${this.node.plural}"`;
+  public override readonly description = `Scroll the "${this.node.plural}"`;
 
   @Memoize()
   public override isEnabled(): boolean {
@@ -56,7 +56,7 @@ export class ScrollSubscription<
   }
 
   @Memoize()
-  public get arguments() {
+  public override get arguments() {
     const firstOrderingInputValue = this.orderingInputType.enumValues[0];
 
     return [

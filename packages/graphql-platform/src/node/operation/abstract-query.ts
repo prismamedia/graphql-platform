@@ -6,9 +6,9 @@ import { AbstractOperation } from '../abstract-operation.js';
 import type { OperationContext } from './context.js';
 
 export abstract class AbstractQuery<
-  TRequestContext extends object,
-  TArgs extends utils.Nillable<utils.PlainObject>,
-  TResult,
+  TRequestContext extends object = any,
+  TArgs extends utils.Nillable<utils.PlainObject> = any,
+  TResult = any,
 > extends AbstractOperation<
   TRequestContext,
   OperationContext<TRequestContext>,

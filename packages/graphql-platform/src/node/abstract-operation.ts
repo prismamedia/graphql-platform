@@ -56,7 +56,7 @@ export abstract class AbstractOperation<
    *
    * It identifies the operation for a given node and operation-type
    */
-  public abstract readonly key: string;
+  public abstract readonly key: string & {};
 
   /**
    * This is unique for a node
@@ -72,8 +72,10 @@ export abstract class AbstractOperation<
    */
   public abstract readonly name: string;
 
-  public abstract readonly description: string;
-  public abstract readonly arguments?: ReadonlyArray<utils.Input>;
+  /**
+   * Optional, a user-friendly description
+   */
+  public readonly description?: string;
 
   public constructor(public readonly node: Node<TRequestContext>) {
     this.gp = node.gp;
@@ -136,6 +138,13 @@ export abstract class AbstractOperation<
     return context.ensureAuthorization(this.node, path);
   }
 
+  /**
+   * Optional, the arguments of the operation
+   */
+  public get arguments(): ReadonlyArray<utils.Input> | undefined {
+    return;
+  }
+
   protected parseArguments(
     context: TOperationContext,
     args: TArgs,
@@ -145,7 +154,7 @@ export abstract class AbstractOperation<
 
     try {
       parsedArgs = utils.parseInputValues(
-        this.arguments || [],
+        this.arguments ?? [],
         this.selectionAware && utils.isPlainObject(args)
           ? R.omit(args, ['selection'])
           : args,

@@ -42,7 +42,7 @@ export class LeafComparisonFilter extends AbstractLeafFilter {
     leaf.isNullable() || assert.notEqual(value, null);
 
     if (sortableLeafComparisonOperatorSet.has(operator as any)) {
-      assert.notEqual(value, null);
+      leaf.isNullable() && assert.notEqual(value, null);
       assert(leaf.isSortable(), `The "${leaf}" leaf is not sortable`);
     }
 

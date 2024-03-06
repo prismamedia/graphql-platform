@@ -4,6 +4,8 @@ import * as graphql from 'graphql';
 import { randomUUID } from 'node:crypto';
 import type { Except } from 'type-fest';
 import {
+  AbstractDeletion,
+  AbstractQuery,
   GraphQLPlatform,
   OnEdgeHeadDeletion,
   type BrokerInterface,
@@ -86,6 +88,55 @@ export const ArticleStatusType = utils.createGraphQLEnumType(
   'ArticleStatus',
   ArticleStatus,
 );
+
+class MyCustomQuery extends AbstractQuery {
+  key = 'custom';
+  name = 'customArticles';
+  description = 'Custom query to get articles';
+  selectionAware = false;
+
+  async executeWithValidArgumentsAndContext() {
+    return null;
+  }
+
+  getGraphQLFieldConfigType() {
+    return new graphql.GraphQLNonNull(scalars.typesByName.UnsignedInt);
+  }
+}
+
+class MyCustomPrivateQuery extends AbstractQuery {
+  key = 'customPrivate';
+  name = 'customPrivateArticles';
+  description = 'Custom query, private, to get articles';
+  selectionAware = false;
+
+  isPublic() {
+    return false;
+  }
+
+  async executeWithValidArgumentsAndContext() {
+    return null;
+  }
+
+  getGraphQLFieldConfigType() {
+    return new graphql.GraphQLNonNull(scalars.typesByName.UnsignedInt);
+  }
+}
+
+class MyCustomDeletion extends AbstractDeletion {
+  key = 'customDeletion';
+  name = 'customDeletionArticles';
+  description = 'Custom deletion';
+  selectionAware = false;
+
+  async executeWithValidArgumentsAndContext() {
+    return null;
+  }
+
+  getGraphQLFieldConfigType() {
+    return new graphql.GraphQLNonNull(scalars.typesByName.UnsignedInt);
+  }
+}
 
 export const Article = {
   authorization({ user }, mutationType) {
@@ -277,6 +328,10 @@ export const Article = {
     },
   },
 
+  query: {
+    customs: [MyCustomQuery, MyCustomPrivateQuery],
+  },
+
   mutation: {
     creation: {
       virtualFields: {
@@ -381,6 +436,8 @@ export const Article = {
 
       postDelete({ change }) {},
     },
+
+    customs: [MyCustomDeletion],
   },
 
   output: {

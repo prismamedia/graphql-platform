@@ -34,10 +34,10 @@ export class CreateOneIfNotExistsMutation<
 
   public readonly key = 'create-one-if-not-exists';
   public readonly name = `create${this.node}IfNotExists`;
-  public readonly description = `Creates one "${this.node}" if it does not exist, returns the existing otherwise`;
+  public override readonly description = `Creates one "${this.node}" if it does not exist, returns the existing otherwise`;
 
   @Memoize()
-  public get arguments() {
+  public override get arguments() {
     return [
       new utils.Input({
         name: 'where',

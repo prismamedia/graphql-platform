@@ -24,10 +24,10 @@ export class UpdateOneIfExistsMutation<
 
   public readonly key = 'update-one-if-exists';
   public readonly name = `update${this.node}IfExists`;
-  public readonly description = `Updates one "${this.node}" if it exists, returns null otherwise`;
+  public override readonly description = `Updates one "${this.node}" if it exists, returns null otherwise`;
 
   @Memoize()
-  public get arguments() {
+  public override get arguments() {
     return [
       new utils.Input({
         name: 'where',

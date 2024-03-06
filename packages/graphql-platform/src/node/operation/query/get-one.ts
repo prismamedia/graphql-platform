@@ -24,9 +24,9 @@ export class GetOneQuery<TRequestContext extends object> extends AbstractQuery<
 
   public readonly key = 'get-one';
   public readonly name = inflection.camelize(this.node.name, true);
-  public readonly description = `Retrieves one "${this.node}", throws an error if it does not exist`;
+  public override readonly description = `Retrieves one "${this.node}", throws an error if it does not exist`;
 
-  public get arguments() {
+  public override get arguments() {
     return this.node.getQueryByKey('get-one-if-exists').arguments;
   }
 

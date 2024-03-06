@@ -31,10 +31,10 @@ export class CountQuery<TRequestContext extends object> extends AbstractQuery<
 
   public readonly key = 'count';
   public readonly name = `${inflection.camelize(this.node.name, true)}Count`;
-  public readonly description = `Gets the number of "${this.node.plural}"`;
+  public override readonly description = `Gets the number of "${this.node.plural}"`;
 
   @Memoize()
-  public get arguments() {
+  public override get arguments() {
     return [
       new utils.Input({
         name: 'where',

@@ -121,9 +121,9 @@ export interface UpdateConfig<
 }
 
 export abstract class AbstractUpdate<
-  TRequestContext extends object,
-  TArgs extends utils.Nillable<utils.PlainObject>,
-  TResult,
+  TRequestContext extends object = any,
+  TArgs extends utils.Nillable<utils.PlainObject> = any,
+  TResult = any,
 > extends AbstractMutation<TRequestContext, TArgs, TResult> {
   public readonly mutationTypes = [utils.MutationType.UPDATE];
 }

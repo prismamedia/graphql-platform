@@ -51,7 +51,7 @@ export class ChangesSubscription<
   public readonly key = 'changes' as const;
   public readonly method = 'subscribeToChanges' as const;
   public readonly name = `${inflection.camelize(this.node.name, true)}Changes`;
-  public readonly description = `Subscribe to the "${this.node.plural}"' changes`;
+  public override readonly description = `Subscribe to the "${this.node.plural}"' changes`;
 
   @Memoize()
   public override isEnabled(): boolean {
@@ -75,7 +75,7 @@ export class ChangesSubscription<
   }
 
   @Memoize()
-  public get arguments() {
+  public override get arguments() {
     return [
       new utils.Input({
         name: 'where',

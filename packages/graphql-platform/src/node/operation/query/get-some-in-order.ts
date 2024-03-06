@@ -26,9 +26,9 @@ export class GetSomeInOrderQuery<
     this.node.plural,
     true,
   )}InOrder`;
-  public readonly description = `Given a list of unique-filter's value, retrieves the corresponding "${this.node.plural}" in the same order, throws an error if one does not exist`;
+  public override readonly description = `Given a list of unique-filter's value, retrieves the corresponding "${this.node.plural}" in the same order, throws an error if one does not exist`;
 
-  public get arguments() {
+  public override get arguments() {
     return this.node.getQueryByKey('get-some-in-order-if-exists').arguments;
   }
 
