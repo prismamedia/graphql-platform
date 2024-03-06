@@ -5,7 +5,7 @@ import {
 import * as utils from '@prismamedia/graphql-platform-utils';
 import { Memoize } from '@prismamedia/memoize';
 import * as graphql from 'graphql';
-import type { Except, IfAny, Promisable } from 'type-fest';
+import type { Except, Promisable } from 'type-fest';
 import type { BrokerInterface } from './broker-interface.js';
 import { InMemoryBroker } from './broker/in-memory.js';
 import type { ConnectorInterface } from './connector-interface.js';
@@ -30,7 +30,6 @@ import {
   type Operation,
   type OperationByType,
   type OperationContext,
-  type OperationInterface,
   type OperationType,
   type SubscriptionConfig,
 } from './node.js';
@@ -226,7 +225,7 @@ export class GraphQLPlatform<
 
   readonly #connector?: TConnector;
 
-  public readonly broker: IfAny<TBroker, BrokerInterface, TBroker>;
+  public readonly broker: TBroker;
 
   public readonly container: Readonly<TContainer>;
 
@@ -482,7 +481,7 @@ export class GraphQLPlatform<
     type: graphql.OperationTypeNode,
     name: string,
     path?: utils.Path,
-  ): OperationInterface<TRequestContext> {
+  ): Operation<TRequestContext> {
     const operationsByName = this.nodeOperationsByNameByType[type];
     if (!operationsByName) {
       throw new utils.UnexpectedValueError(
@@ -527,7 +526,7 @@ export class GraphQLPlatform<
   }
 
   @Memoize()
-  public get connector(): IfAny<TConnector, ConnectorInterface, TConnector> {
+  public get connector(): TConnector {
     if (!this.#connector) {
       throw new utils.GraphError(`No connector has been provided`, {
         path: utils.addPath(this.configPath, 'connector'),
@@ -627,7 +626,12 @@ export class GraphQLPlatform<
   public async withMutationContext<TResult>(
     requestContext: TRequestContext,
     task: (
-      mutationContext: MutationContext<TRequestContext>,
+      mutationContext: MutationContext<
+        TRequestContext,
+        TConnector,
+        TBroker,
+        TContainer
+      >,
     ) => Promisable<TResult>,
     path?: utils.Path,
   ): Promise<TResult> {

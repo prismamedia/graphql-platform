@@ -5,7 +5,6 @@ import type { IterableElement } from 'type-fest';
 import type { BrokerInterface } from '../../broker-interface.js';
 import type { ConnectorInterface } from '../../connector-interface.js';
 import { AbstractOperation } from '../abstract-operation.js';
-import { OperationContext } from './context.js';
 
 export interface SubscriptionConfig<
   TRequestContext extends object,
@@ -30,11 +29,16 @@ export interface SubscriptionConfig<
 
 export abstract class AbstractSubscription<
   TRequestContext extends object = any,
+  TConnector extends ConnectorInterface = any,
+  TBroker extends BrokerInterface = any,
+  TContainer extends object = any,
   TArgs extends utils.Nillable<utils.PlainObject> = any,
   TResult extends AsyncIterable<any> = any,
 > extends AbstractOperation<
   TRequestContext,
-  OperationContext<TRequestContext>,
+  TConnector,
+  TBroker,
+  TContainer,
   TArgs,
   TResult
 > {

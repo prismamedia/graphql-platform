@@ -10,7 +10,6 @@ import { AbstractOperation } from '../abstract-operation.js';
 import { AndOperation, NodeFilter, TrueValue } from '../statement/filter.js';
 import type { ContextBoundAPI } from './api.js';
 import { MutationContext } from './mutation/context.js';
-import type { MutationInterface } from './mutation/interface.js';
 
 export interface AbstractMutationHookArgs<
   TRequestContext extends object,
@@ -63,18 +62,20 @@ export interface AbstractMutationConfig<
 }
 
 export abstract class AbstractMutation<
-    TRequestContext extends object = any,
-    TArgs extends utils.Nillable<utils.PlainObject> = any,
-    TResult = any,
-  >
-  extends AbstractOperation<
-    TRequestContext,
-    MutationContext<TRequestContext>,
-    TArgs,
-    Promise<TResult>
-  >
-  implements MutationInterface<TRequestContext>
-{
+  TRequestContext extends object = any,
+  TConnector extends ConnectorInterface = any,
+  TBroker extends BrokerInterface = any,
+  TContainer extends object = any,
+  TArgs extends utils.Nillable<utils.PlainObject> = any,
+  TResult = any,
+> extends AbstractOperation<
+  TRequestContext,
+  TConnector,
+  TBroker,
+  TContainer,
+  TArgs,
+  Promise<TResult>
+> {
   public readonly operationType = graphql.OperationTypeNode.MUTATION;
   public abstract readonly mutationTypes: ReadonlyArray<utils.MutationType>;
 
@@ -120,7 +121,7 @@ export abstract class AbstractMutation<
   }
 
   public override async execute(
-    context: TRequestContext | MutationContext<TRequestContext>,
+    context: TRequestContext | MutationContext,
     args: TArgs,
     path: utils.Path = utils.addPath(
       utils.addPath(undefined, this.operationType),

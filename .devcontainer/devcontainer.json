@@ -9,5 +9,8 @@
     "vscode": {
       "extensions": ["arcanis.vscode-zipfs"]
     }
+  },
+  "features": {
+    "ghcr.io/cirolosapio/devcontainers-features/alpine-git:0": {}
   }
 }

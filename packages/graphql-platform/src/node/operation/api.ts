@@ -3,7 +3,6 @@ import type { GraphQLPlatform } from '../../index.js';
 import type { Node } from '../../node.js';
 import type { Operation, OperationType } from '../operation.js';
 import { OperationContext } from './context.js';
-import type { OperationInterface } from './interface.js';
 
 export type NodeAPI<TRequestContext extends object> = {
   [TOperation in Operation<TRequestContext> as TOperation['method']]: TOperation['execute'];
@@ -46,8 +45,8 @@ export const createContextBoundNodeAPI = <TRequestContext extends object>(
 
 export type API<TRequestContext extends object> = {
   [TType in OperationType]: Record<
-    OperationInterface['name'],
-    OperationInterface<TRequestContext>['execute']
+    Operation['name'],
+    Operation<TRequestContext>['execute']
   >;
 } & {
   [TNode: Node['name']]: NodeAPI<TRequestContext>;
@@ -60,7 +59,7 @@ export const createAPI = <TRequestContext extends object>(
     get: (_, operationTypeOrNodeName: OperationType | Node['name']) =>
       utils.operationTypeSet.has(operationTypeOrNodeName as any)
         ? new Proxy<any>(Object.create(null), {
-            get: (_, name: OperationInterface['name']) => {
+            get: (_, name: Operation['name']) => {
               const operation = gp.getOperationByTypeAndName(
                 operationTypeOrNodeName as any,
                 name as any,
@@ -74,11 +73,11 @@ export const createAPI = <TRequestContext extends object>(
 
 export type ContextBoundAPI = {
   [TType in OperationType]: Record<
-    OperationInterface['name'],
+    Operation['name'],
     (
-      args: Parameters<OperationInterface['execute']>[1],
-      path?: Parameters<OperationInterface['execute']>[2],
-    ) => ReturnType<OperationInterface['execute']>
+      args: Parameters<Operation['execute']>[1],
+      path?: Parameters<Operation['execute']>[2],
+    ) => ReturnType<Operation['execute']>
   >;
 } & {
   [TNode: Node['name']]: ContextBoundNodeAPI;
@@ -92,13 +91,13 @@ export const createContextBoundAPI = <TRequestContext extends object>(
     get: (_, operationTypeOrNodeName: OperationType | Node['name']) =>
       utils.operationTypeSet.has(operationTypeOrNodeName as any)
         ? new Proxy<any>(Object.create(null), {
-            get: (_, name: OperationInterface['name']) => {
+            get: (_, name: Operation['name']) => {
               const operation = gp.getOperationByTypeAndName(
                 operationTypeOrNodeName as any,
                 name as any,
               );
 
-              return operation.execute.bind(
+              return (operation.execute as any).bind(
                 operation,
                 utils.resolveThunkable(context),
               );

@@ -3,6 +3,8 @@ import * as utils from '@prismamedia/graphql-platform-utils';
 import { Memoize } from '@prismamedia/memoize';
 import * as graphql from 'graphql';
 import inflection from 'inflection';
+import type { BrokerInterface } from '../../../broker-interface.js';
+import type { ConnectorInterface } from '../../../connector-interface.js';
 import type { NodeSelectionAwareArgs } from '../../abstract-operation.js';
 import type { NodeFilter } from '../../statement.js';
 import type { NodeUniqueFilterInputValue } from '../../type.js';
@@ -15,6 +17,9 @@ export type ExistsQueryResult = boolean;
 
 export class ExistsQuery<TRequestContext extends object> extends AbstractQuery<
   TRequestContext,
+  ConnectorInterface,
+  BrokerInterface,
+  object,
   ExistsQueryArgs,
   ExistsQueryResult
 > {

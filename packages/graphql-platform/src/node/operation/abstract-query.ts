@@ -2,16 +2,22 @@ import * as utils from '@prismamedia/graphql-platform-utils';
 import { Memoize } from '@prismamedia/memoize';
 import * as graphql from 'graphql';
 import type { CamelCase } from 'type-fest';
+import type { BrokerInterface } from '../../broker-interface.js';
+import type { ConnectorInterface } from '../../connector-interface.js';
 import { AbstractOperation } from '../abstract-operation.js';
-import type { OperationContext } from './context.js';
 
 export abstract class AbstractQuery<
   TRequestContext extends object = any,
+  TConnector extends ConnectorInterface = any,
+  TBroker extends BrokerInterface = any,
+  TContainer extends object = any,
   TArgs extends utils.Nillable<utils.PlainObject> = any,
   TResult = any,
 > extends AbstractOperation<
   TRequestContext,
-  OperationContext<TRequestContext>,
+  TConnector,
+  TBroker,
+  TContainer,
   TArgs,
   Promise<TResult>
 > {

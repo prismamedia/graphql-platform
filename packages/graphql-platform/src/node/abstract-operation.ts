@@ -4,6 +4,7 @@ import * as graphql from 'graphql';
 import assert from 'node:assert/strict';
 import * as R from 'remeda';
 import type { Merge } from 'type-fest';
+import type { BrokerInterface } from '../broker-interface.js';
 import type { ConnectorInterface } from '../connector-interface.js';
 import type { GraphQLPlatform } from '../index.js';
 import type { Node } from '../node.js';
@@ -12,7 +13,6 @@ import {
   InvalidArgumentsError,
   InvalidSelectionError,
 } from './operation/error.js';
-import type { OperationInterface } from './operation/interface.js';
 import type { NodeFilter } from './statement/filter.js';
 import type { NodeSelection } from './statement/selection.js';
 import type { RawNodeSelection } from './type/output/node.js';
@@ -36,12 +36,18 @@ export type NodeSelectionAwareArgs<
 
 export abstract class AbstractOperation<
   TRequestContext extends object,
-  TOperationContext extends OperationContext<TRequestContext>,
+  TConnector extends ConnectorInterface,
+  TBroker extends BrokerInterface,
+  TContainer extends object,
   TArgs extends utils.Nillable<utils.PlainObject>,
   TResult,
-> implements OperationInterface<TRequestContext>
-{
-  protected readonly gp: GraphQLPlatform<TRequestContext>;
+> {
+  protected readonly gp: GraphQLPlatform<
+    TRequestContext,
+    TConnector,
+    TBroker,
+    TContainer
+  >;
 
   protected abstract readonly selectionAware: TArgs extends {
     selection: unknown;
@@ -77,12 +83,27 @@ export abstract class AbstractOperation<
    */
   public readonly description?: string;
 
-  public constructor(public readonly node: Node<TRequestContext>) {
+  public constructor(
+    public readonly node: Node<
+      TRequestContext,
+      TConnector,
+      TBroker,
+      TContainer
+    >,
+  ) {
     this.gp = node.gp;
   }
 
-  protected get connector(): ConnectorInterface {
+  protected get connector(): TConnector {
     return this.gp.connector;
+  }
+
+  protected get broker(): TBroker {
+    return this.gp.broker;
+  }
+
+  protected get container(): TContainer {
+    return this.gp.container;
   }
 
   public toString(): string {
@@ -132,7 +153,7 @@ export abstract class AbstractOperation<
   }
 
   protected ensureAuthorization(
-    context: TOperationContext,
+    context: OperationContext,
     path: utils.Path,
   ): NodeFilter | undefined {
     return context.ensureAuthorization(this.node, path);
@@ -146,7 +167,7 @@ export abstract class AbstractOperation<
   }
 
   protected parseArguments(
-    context: TOperationContext,
+    context: OperationContext,
     args: TArgs,
     path: utils.Path,
   ): NodeSelectionAwareArgs<TArgs> {
@@ -186,14 +207,14 @@ export abstract class AbstractOperation<
    * The actual implementation with authorization, parsed arguments and context
    */
   protected abstract executeWithValidArgumentsAndContext(
-    context: TOperationContext,
+    context: OperationContext,
     authorization: NodeFilter | undefined,
     args: NodeSelectionAwareArgs<TArgs>,
     path: utils.Path,
   ): TResult;
 
   public internal(
-    context: TOperationContext,
+    context: OperationContext,
     authorization: NodeFilter | undefined,
     args: TArgs,
     path: utils.Path,
@@ -211,7 +232,7 @@ export abstract class AbstractOperation<
   }
 
   public execute(
-    context: TRequestContext | TOperationContext,
+    context: TRequestContext | OperationContext,
     args: TArgs,
     path: utils.Path = utils.addPath(
       utils.addPath(undefined, this.operationType),
@@ -220,9 +241,11 @@ export abstract class AbstractOperation<
   ): TResult {
     this.assertIsEnabled(path);
 
-    let operationContext: TOperationContext;
+    let operationContext: OperationContext;
 
     if (context instanceof OperationContext) {
+      assert.equal(context.gp, this.gp);
+
       operationContext = context;
     } else {
       this.gp.assertRequestContext(context, path);

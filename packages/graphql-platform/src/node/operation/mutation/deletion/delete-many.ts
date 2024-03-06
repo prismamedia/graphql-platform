@@ -2,6 +2,8 @@ import * as scalars from '@prismamedia/graphql-platform-scalars';
 import * as utils from '@prismamedia/graphql-platform-utils';
 import { Memoize } from '@prismamedia/memoize';
 import * as graphql from 'graphql';
+import type { BrokerInterface } from '../../../../broker-interface.js';
+import type { ConnectorInterface } from '../../../../connector-interface.js';
 import {
   argsPathKey,
   type NodeSelectionAwareArgs,
@@ -32,6 +34,9 @@ export class DeleteManyMutation<
   TRequestContext extends object,
 > extends AbstractDeletion<
   TRequestContext,
+  ConnectorInterface,
+  BrokerInterface,
+  object,
   DeleteManyMutationArgs,
   DeleteManyMutationResult
 > {

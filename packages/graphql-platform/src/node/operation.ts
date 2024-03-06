@@ -8,11 +8,14 @@ import {
   type Subscription,
 } from './operation/subscription.js';
 
-export { argsPathKey } from './abstract-operation.js';
+export {
+  argsPathKey,
+  type NodeSelectionAwareArgs,
+  type RawNodeSelectionAwareArgs,
+} from './abstract-operation.js';
 export * from './operation/api.js';
 export * from './operation/context.js';
 export * from './operation/error.js';
-export * from './operation/interface.js';
 export * from './operation/mutation.js';
 export * from './operation/query.js';
 export * from './operation/subscription.js';

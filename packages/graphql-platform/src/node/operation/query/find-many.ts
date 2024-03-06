@@ -3,6 +3,8 @@ import * as utils from '@prismamedia/graphql-platform-utils';
 import { Memoize } from '@prismamedia/memoize';
 import * as graphql from 'graphql';
 import inflection from 'inflection';
+import type { BrokerInterface } from '../../../broker-interface.js';
+import type { ConnectorInterface } from '../../../connector-interface.js';
 import {
   argsPathKey,
   type NodeSelectionAwareArgs,
@@ -30,6 +32,9 @@ export class FindManyQuery<
   TRequestContext extends object,
 > extends AbstractQuery<
   TRequestContext,
+  ConnectorInterface,
+  BrokerInterface,
+  object,
   FindManyQueryArgs,
   FindManyQueryResult
 > {
