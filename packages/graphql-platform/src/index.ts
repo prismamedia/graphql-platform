@@ -496,7 +496,7 @@ export class GraphQLPlatform<
     const operation = operationsByName.get(name);
     if (!operation) {
       throw new utils.UnexpectedValueError(
-        `a ${name} among "${[...operationsByName.keys()].join(', ')}"`,
+        `a name among "${[...operationsByName.keys()].join(', ')}"`,
         name,
         { path },
       );

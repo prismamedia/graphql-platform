@@ -35,12 +35,12 @@ export type NodeSelectionAwareArgs<
 >;
 
 export abstract class AbstractOperation<
-  TRequestContext extends object,
-  TConnector extends ConnectorInterface,
-  TBroker extends BrokerInterface,
-  TContainer extends object,
-  TArgs extends utils.Nillable<utils.PlainObject>,
-  TResult,
+  TRequestContext extends object = any,
+  TConnector extends ConnectorInterface = any,
+  TBroker extends BrokerInterface = any,
+  TContainer extends object = any,
+  TArgs extends utils.Nillable<utils.PlainObject> = any,
+  TResult = any,
 > {
   protected readonly gp: GraphQLPlatform<
     TRequestContext,

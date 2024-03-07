@@ -31,11 +31,13 @@ import {
 import { NodeFeature, type NodeFeatureConfig } from './node/feature.js';
 import { assertNodeName, type NodeName } from './node/name.js';
 import {
+  constructCustomOperation,
   createContextBoundNodeAPI,
   createNodeAPI,
   operationConstructorsByType,
   type ContextBoundNodeAPI,
   type CreationConfig,
+  type CustomOperationConstructor,
   type DeletionConfig,
   type MutationConfig,
   type NodeAPI,
@@ -52,8 +54,6 @@ import {
   type PreUpdateArgs,
   type UpdateConfig,
 } from './node/operation.js';
-import type { AbstractMutation } from './node/operation/abstract-mutation.js';
-import type { AbstractQuery } from './node/operation/abstract-query.js';
 import {
   NodeSelection,
   mergeSelectionExpressions,
@@ -198,7 +198,12 @@ export type NodeConfig<
     /**
      * Optional, add some custom-queries
      */
-    customs?: Constructor<AbstractQuery, [Node]>[];
+    customs?: CustomOperationConstructor<
+      TRequestContext,
+      TConnector,
+      TBroker,
+      TContainer
+    >[];
   };
 
   /**
@@ -222,7 +227,12 @@ export type NodeConfig<
         /**
          * Optional, add some custom-mutations
          */
-        customs?: Constructor<AbstractMutation, [Node]>[];
+        customs?: CustomOperationConstructor<
+          TRequestContext,
+          TConnector,
+          TBroker,
+          TContainer
+        >[];
       });
 
   /**
@@ -1475,21 +1485,38 @@ export class Node<
   @Memoize()
   public get operationsByType(): Readonly<OperationsByType<TRequestContext>> {
     return Object.fromEntries(
-      utils.operationTypes.map((type) => [
-        type,
-        (
-          [
-            ...(operationConstructorsByType[type] ?? []),
-            ...(type === graphql.OperationTypeNode.MUTATION
-              ? (R.isPlainObject(this.config.mutation) &&
-                  this.config.mutation.customs) ||
-                []
-              : type === graphql.OperationTypeNode.QUERY
-              ? this.config.query?.customs || []
-              : []),
-          ] as Constructor<Operation, [Node]>[]
-        ).map((constructor) => new constructor(this)),
-      ]),
+      utils.operationTypes.map((type) => {
+        const operations: Operation[] = [];
+
+        operationConstructorsByType[type]?.forEach(
+          (constructor: Constructor<Operation, [Node]>) =>
+            operations.push(new constructor(this)),
+        );
+
+        if (type === graphql.OperationTypeNode.QUERY) {
+          [...this.features, this].forEach(({ config: { query } }) => {
+            if (Array.isArray(query?.customs)) {
+              operations.push(
+                ...query.customs.map((constructor) =>
+                  constructCustomOperation(constructor, this, type),
+                ),
+              );
+            }
+          });
+        } else if (type === graphql.OperationTypeNode.MUTATION) {
+          [...this.features, this].forEach(({ config: { mutation } }) => {
+            if (R.isPlainObject(mutation) && Array.isArray(mutation.customs)) {
+              operations.push(
+                ...mutation.customs.map((constructor) =>
+                  constructCustomOperation(constructor, this, type),
+                ),
+              );
+            }
+          });
+        }
+
+        return [type, operations];
+      }),
     ) as any;
   }
 

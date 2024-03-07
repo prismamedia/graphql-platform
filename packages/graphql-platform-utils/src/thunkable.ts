@@ -6,6 +6,4 @@ export const resolveThunkable = <T, TArgs extends any[]>(
   thunkable: Thunkable<T, TArgs>,
   ...args: TArgs
 ): T =>
-  typeof thunkable === 'function'
-    ? (thunkable as (...args: TArgs) => T)(...args)
-    : thunkable;
+  typeof thunkable === 'function' ? (thunkable as any)(...args) : thunkable;

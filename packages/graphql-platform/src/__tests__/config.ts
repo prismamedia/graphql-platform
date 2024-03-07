@@ -329,7 +329,7 @@ export const Article = {
   },
 
   query: {
-    customs: [MyCustomQuery, MyCustomPrivateQuery],
+    customs: [(node) => new MyCustomQuery(node), MyCustomPrivateQuery],
   },
 
   mutation: {

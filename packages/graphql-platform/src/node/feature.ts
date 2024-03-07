@@ -7,7 +7,10 @@ import {
   type ComponentConfig,
   type UniqueConstraintConfig,
 } from './definition.js';
-import type { MutationConfig } from './operation.js';
+import type {
+  CustomOperationConstructor,
+  MutationConfig,
+} from './operation.js';
 import type { NodeOutputTypeConfig } from './type.js';
 
 export type NodeFeatureConfig<
@@ -22,6 +25,20 @@ export type NodeFeatureConfig<
 
   uniques?: UniqueConstraintConfig<TConnector>[];
 
+  output?: Pick<
+    NodeOutputTypeConfig<TRequestContext, TConnector, TBroker, TContainer>,
+    'virtualFields'
+  >;
+
+  query?: {
+    customs?: CustomOperationConstructor<
+      TRequestContext,
+      TConnector,
+      TBroker,
+      TContainer
+    >[];
+  };
+
   mutation?: {
     [TType in keyof MutationConfig]?: MutationConfig<
       TRequestContext,
@@ -29,12 +46,14 @@ export type NodeFeatureConfig<
       TBroker,
       TContainer
     >[TType];
+  } & {
+    customs?: CustomOperationConstructor<
+      TRequestContext,
+      TConnector,
+      TBroker,
+      TContainer
+    >[];
   };
-
-  output?: Pick<
-    NodeOutputTypeConfig<TRequestContext, TConnector, TBroker, TContainer>,
-    'virtualFields'
-  >;
 };
 
 export class NodeFeature<

@@ -1064,7 +1064,7 @@ __metadata:
     "@swc/core": "npm:1.4.5"
     "@swc/jest": "npm:0.2.36"
     "@tsconfig/node20": "npm:20.1.2"
-    "@types/node": "npm:20.11.24"
+    "@types/node": "npm:20.11.25"
     "@types/semver": "npm:7.5.8"
     graphql: "npm:16.8.1"
     inflection: "npm:^3.0.0"
@@ -1074,7 +1074,7 @@ __metadata:
     remeda: "npm:^1.47.0"
     semver: "npm:^7.6.0"
     type-fest: "npm:^4.11.1"
-    typescript: "npm:5.3.3"
+    typescript: "npm:5.4.2"
   peerDependencies:
     graphql: ^16.7.0
   languageName: unknown
@@ -1094,7 +1094,7 @@ __metadata:
     "@types/body-parser": "npm:^1.19.5"
     "@types/cors": "npm:^2.8.17"
     "@types/express": "npm:^4.17.21"
-    "@types/node": "npm:20.11.24"
+    "@types/node": "npm:20.11.25"
     "@types/ws": "npm:^8.5.10"
     body-parser: "npm:1.20.2"
     cors: "npm:2.8.5"
@@ -1103,7 +1103,7 @@ __metadata:
     graphql-ws: "npm:5.15.0"
     jest: "npm:29.7.0"
     publint: "npm:0.2.7"
-    typescript: "npm:5.3.3"
+    typescript: "npm:5.4.2"
     ws: "npm:8.16.0"
   peerDependencies:
     "@apollo/server": ^4.7.1
@@ -1121,12 +1121,12 @@ __metadata:
     "@swc/jest": "npm:0.2.36"
     "@tsconfig/node20": "npm:20.1.2"
     "@types/draft-js": "npm:^0.11.18"
-    "@types/node": "npm:20.11.24"
+    "@types/node": "npm:20.11.25"
     graphql: "npm:16.8.1"
     jest: "npm:29.7.0"
     publint: "npm:0.2.7"
     type-fest: "npm:^4.11.1"
-    typescript: "npm:5.3.3"
+    typescript: "npm:5.4.2"
   peerDependencies:
     graphql: ^16.7.0
   languageName: unknown
@@ -1142,14 +1142,14 @@ __metadata:
     "@swc/jest": "npm:0.2.36"
     "@tsconfig/node20": "npm:20.1.2"
     "@types/indefinite": "npm:2.3.4"
-    "@types/node": "npm:20.11.24"
+    "@types/node": "npm:20.11.25"
     graphql: "npm:16.8.1"
     indefinite: "npm:^2.5.1"
     jest: "npm:29.7.0"
     publint: "npm:0.2.7"
     remeda: "npm:^1.47.0"
     type-fest: "npm:^4.11.1"
-    typescript: "npm:5.3.3"
+    typescript: "npm:5.4.2"
   peerDependencies:
     graphql: ^16.7.0
   languageName: unknown
@@ -1168,7 +1168,7 @@ __metadata:
     "@swc/jest": "npm:0.2.36"
     "@tsconfig/node20": "npm:20.1.2"
     "@types/cli-progress": "npm:^3.11.5"
-    "@types/node": "npm:20.11.24"
+    "@types/node": "npm:20.11.25"
     cli-progress: "npm:^3.12.0"
     dataloader: "npm:^2.2.2"
     denque: "npm:^2.1.0"
@@ -1181,7 +1181,7 @@ __metadata:
     publint: "npm:0.2.7"
     remeda: "npm:^1.47.0"
     type-fest: "npm:^4.11.1"
-    typescript: "npm:5.3.3"
+    typescript: "npm:5.4.2"
   peerDependencies:
     graphql: ^16.7.0
   languageName: unknown
@@ -1707,12 +1707,12 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@types/node@npm:20.11.24":
-  version: 20.11.24
-  resolution: "@types/node@npm:20.11.24"
+"@types/node@npm:20.11.25":
+  version: 20.11.25
+  resolution: "@types/node@npm:20.11.25"
   dependencies:
     undici-types: "npm:~5.26.4"
-  checksum: 10/7f34bfae5f9b98b9910230af4b4c52dc7fb2d1e96fdebfbc3d7576f8ab3d100076f193f9469add9e7418b455294155e7e6a028498cc5e98f9d49349875a459cf
+  checksum: 10/861265f1bbb151404bd8842b595f027a4ff067c61ecff9a37b9f7f53922c18dd532c8e795e8e7675dd8dba056645623fd2b9848d5ef72863ec3609096cd2923e
   languageName: node
   linkType: hard
 
@@ -5128,7 +5128,7 @@ __metadata:
     "@yarnpkg/sdks": "npm:3.1.0"
     jest: "npm:29.7.0"
     prettier: "npm:2.8.8"
-    typescript: "npm:5.3.3"
+    typescript: "npm:5.4.2"
   languageName: unknown
   linkType: soft
 
@@ -5614,23 +5614,23 @@ __metadata:
   languageName: node
   linkType: hard
 
-"typescript@npm:5.3.3":
-  version: 5.3.3
-  resolution: "typescript@npm:5.3.3"
+"typescript@npm:5.4.2":
+  version: 5.4.2
+  resolution: "typescript@npm:5.4.2"
   bin:
     tsc: bin/tsc
     tsserver: bin/tsserver
-  checksum: 10/6e4e6a14a50c222b3d14d4ea2f729e79f972fa536ac1522b91202a9a65af3605c2928c4a790a4a50aa13694d461c479ba92cedaeb1e7b190aadaa4e4b96b8e18
+  checksum: 10/f8cfdc630ab1672f004e9561eb2916935b2d267792d07ce93e97fc601c7a65191af32033d5e9c0169b7dc37da7db9bf320f7432bc84527cb7697effaa4e4559d
   languageName: node
   linkType: hard
 
-"typescript@patch:typescript@npm%3A5.3.3#optional!builtin<compat/typescript>":
-  version: 5.3.3
-  resolution: "typescript@patch:typescript@npm%3A5.3.3#optional!builtin<compat/typescript>::version=5.3.3&hash=e012d7"
+"typescript@patch:typescript@npm%3A5.4.2#optional!builtin<compat/typescript>":
+  version: 5.4.2
+  resolution: "typescript@patch:typescript@npm%3A5.4.2#optional!builtin<compat/typescript>::version=5.4.2&hash=5adc0c"
   bin:
     tsc: bin/tsc
     tsserver: bin/tsserver
-  checksum: 10/c93786fcc9a70718ba1e3819bab56064ead5817004d1b8186f8ca66165f3a2d0100fee91fa64c840dcd45f994ca5d615d8e1f566d39a7470fc1e014dbb4cf15d
+  checksum: 10/f5f9a4133c2670761f0166eae5b3bafbc4a3fc24f0f42a93c9c893d9e9d6e66ea066969c5e7483fa66b4ae0e99125592553f3b92fd3599484de8be13b0615176
   languageName: node
   linkType: hard
 

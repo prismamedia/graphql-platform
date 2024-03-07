@@ -32,12 +32,12 @@
     "@swc/core": "1.4.5",
     "@swc/jest": "0.2.36",
     "@tsconfig/node20": "20.1.2",
-    "@types/node": "20.11.24",
+    "@types/node": "20.11.25",
     "@types/semver": "7.5.8",
     "graphql": "16.8.1",
     "jest": "29.7.0",
     "publint": "0.2.7",
-    "typescript": "5.3.3"
+    "typescript": "5.4.2"
   },
   "dependencies": {
     "@prismamedia/async-event-emitter": "^5.4.2",

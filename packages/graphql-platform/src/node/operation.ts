@@ -15,6 +15,7 @@ export {
 } from './abstract-operation.js';
 export * from './operation/api.js';
 export * from './operation/context.js';
+export * from './operation/custom.js';
 export * from './operation/error.js';
 export * from './operation/mutation.js';
 export * from './operation/query.js';
