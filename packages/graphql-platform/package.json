@@ -28,7 +28,7 @@
   },
   "devDependencies": {
     "@jest/globals": "29.7.0",
-    "@swc/core": "1.4.5",
+    "@swc/core": "1.4.6",
     "@swc/jest": "0.2.36",
     "@tsconfig/node20": "20.1.2",
     "@types/node": "20.11.25",
@@ -50,8 +50,8 @@
     "inflection": "^3.0.0",
     "p-queue": "^8.0.1",
     "p-retry": "^6.2.0",
-    "remeda": "^1.47.0",
-    "type-fest": "^4.11.1"
+    "remeda": "^1.47.1",
+    "type-fest": "^4.12.0"
   },
   "peerDependencies": {
     "graphql": "^16.7.0"

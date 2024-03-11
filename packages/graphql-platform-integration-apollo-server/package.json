@@ -29,7 +29,7 @@
     "@apollo/server": "4.10.1",
     "@jest/globals": "29.7.0",
     "@prismamedia/graphql-platform-connector-mariadb": "workspace:packages/graphql-platform-connector-mariadb",
-    "@swc/core": "1.4.5",
+    "@swc/core": "1.4.6",
     "@swc/jest": "0.2.36",
     "@tsconfig/node20": "20.1.2",
     "@types/body-parser": "^1.19.5",

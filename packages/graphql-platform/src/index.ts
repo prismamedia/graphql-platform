@@ -221,7 +221,7 @@ export class GraphQLPlatform<
     maybeRequestContext: object,
   ) => asserts maybeRequestContext is TRequestContext;
 
-  public readonly nodeChangesTracking: boolean;
+  public nodeChangesTracking: boolean;
 
   readonly #connector?: TConnector;
 
@@ -313,21 +313,21 @@ export class GraphQLPlatform<
        */
       {
         utils.aggregateGraphError<Node, void>(
-          this.nodesByName.values(),
+          this.nodeSet,
           (_, node) => node.validateDefinition(),
           undefined,
           { path: configPath },
         );
 
         utils.aggregateGraphError<Node, void>(
-          this.nodesByName.values(),
+          this.nodeSet,
           (_, node) => node.validateTypes(),
           undefined,
           { path: configPath },
         );
 
         utils.aggregateGraphError<Node, void>(
-          this.nodesByName.values(),
+          this.nodeSet,
           (_, node) => node.validateOperations(),
           undefined,
           { path: configPath },
