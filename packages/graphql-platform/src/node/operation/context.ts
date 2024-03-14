@@ -33,9 +33,17 @@ export class OperationContext<
     public readonly request: TRequestContext,
   ) {}
 
+  /**
+   * Returns a "context"-bound version of the API, so the developer only has to provide the operations' args
+   */
+  @Memoize()
+  public get api(): ContextBoundAPI {
+    return this.gp.createContextBoundAPI(this);
+  }
+
   @Memoize(
     (node: Node, mutationType?: utils.MutationType) =>
-      `${node}-${mutationType ?? ''}`,
+      `${node}#${mutationType ?? ''}`,
   )
   public getAuthorization(
     node: Node,
@@ -65,13 +73,5 @@ export class OperationContext<
     }
 
     return authorization;
-  }
-
-  /**
-   * Returns a "context"-bound version of the API, so the developer only has to provide the operations' args
-   */
-  @Memoize()
-  public get api(): ContextBoundAPI {
-    return this.gp.createContextBoundAPI(this);
   }
 }
