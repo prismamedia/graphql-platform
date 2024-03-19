@@ -252,9 +252,13 @@ export class MariaDBConnector
 
   public async executeQuery<TResult extends OkPacket | utils.PlainObject[]>(
     query: string | mariadb.QueryOptions,
+    values?: any,
     kind?: StatementKind,
   ): Promise<TResult> {
-    return this.withConnection((connection) => connection.query(query), kind);
+    return this.withConnection(
+      (connection) => connection.query(query, values),
+      kind,
+    );
   }
 
   public async executeStatement<TResult extends OkPacket | utils.PlainObject[]>(
@@ -268,7 +272,7 @@ export class MariaDBConnector
     try {
       result = await (maybeConnection
         ? maybeConnection.query(statement)
-        : this.executeQuery(statement, statement.kind));
+        : this.executeQuery(statement, undefined, statement.kind));
 
       await this.emit('executed-statement', {
         statement,

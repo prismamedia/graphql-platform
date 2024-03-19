@@ -162,6 +162,7 @@ describe('SchemaDiagnosis', () => {
           `ADD FOREIGN KEY fk_categories_parent_private_id (parent_private_id) REFERENCES categories (private_id) ON DELETE CASCADE ON UPDATE CASCADE`,
         ].join(`,${EOL}`),
       ].join(EOL),
+      undefined,
       StatementKind.DATA_DEFINITION,
     );
 
