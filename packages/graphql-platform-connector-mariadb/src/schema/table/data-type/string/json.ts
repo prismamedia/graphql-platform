@@ -33,7 +33,11 @@ export class JsonType<
     // As the connection is configured with "autoJsonMap: false"
     columnValue: string,
   ): JsonObject {
-    assert.equal(typeof columnValue, 'string');
+    assert.equal(
+      typeof columnValue,
+      'string',
+      `"${this.kind}" column expects a "string", got: ${typeof columnValue}`,
+    );
 
     return JSON.parse(columnValue);
   }
@@ -42,7 +46,11 @@ export class JsonType<
     // MariaDB automatically parses the JSON column, so we do not do it twice
     jsonValue: JsonObject,
   ): JsonObject {
-    assert.equal(typeof jsonValue, 'object');
+    assert.equal(
+      typeof jsonValue,
+      'object',
+      `"${this.kind}" column expects an "object", got: ${typeof jsonValue}`,
+    );
 
     return jsonValue;
   }

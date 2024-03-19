@@ -62,13 +62,21 @@ export class BigIntType<
   }
 
   protected override doParseColumnValue(columnValue: bigint): bigint {
-    assert.equal(typeof columnValue, 'bigint');
+    assert.equal(
+      typeof columnValue,
+      'bigint',
+      `"${this.kind}" column expects a "bigint", got: ${typeof columnValue}`,
+    );
 
     return columnValue;
   }
 
   protected override doParseJsonValue(jsonValue: number): bigint {
-    assert.equal(typeof jsonValue, 'number');
+    assert.equal(
+      typeof jsonValue,
+      'number',
+      `"${this.kind}" column expects a "number", got: ${typeof jsonValue}`,
+    );
 
     return BigInt(jsonValue);
   }
