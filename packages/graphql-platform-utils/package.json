@@ -35,13 +35,13 @@
     "graphql": "16.8.1",
     "jest": "29.7.0",
     "publint": "0.2.7",
-    "typescript": "5.4.2"
+    "typescript": "5.4.3"
   },
   "dependencies": {
     "@prismamedia/memoize": "^5.0.2",
     "indefinite": "^2.5.1",
-    "remeda": "^1.54.0",
-    "type-fest": "^4.13.0"
+    "remeda": "^1.55.0",
+    "type-fest": "^4.13.1"
   },
   "peerDependencies": {
     "graphql": "^16.7.0"

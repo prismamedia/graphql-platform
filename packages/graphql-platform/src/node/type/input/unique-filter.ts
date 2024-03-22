@@ -162,14 +162,28 @@ export class NodeUniqueFilterInputType extends utils.ObjectInputType {
     });
   }
 
+  public ensureValue(
+    maybeValue: unknown,
+    path?: utils.Path,
+  ): NonNullable<NodeUniqueFilterInputValue> {
+    const value = this.parseValue(maybeValue, path);
+    if (value == null) {
+      throw new NodeUniqueFilterNotFoundError(this.node, maybeValue, {
+        path,
+      });
+    }
+
+    return value;
+  }
+
   public isValid(
     maybeValue: unknown,
     path?: utils.Path,
   ): maybeValue is utils.NonNillable<NodeUniqueFilterInputValue> {
     try {
-      const value = this.parseValue(maybeValue, path);
+      this.ensureValue(maybeValue, path);
 
-      return value != null;
+      return true;
     } catch (error) {
       if (error instanceof NodeUniqueFilterNotFoundError) {
         return false;
