@@ -301,7 +301,7 @@ export class Leaf<
   }
 
   public uniqValues<T extends LeafValue>(values: ReadonlyArray<T>): Array<T> {
-    return R.uniqWith(values, (a, b) => this.areValuesEqual(a, b));
+    return R.uniqueWith(values, (a, b) => this.areValuesEqual(a, b));
   }
 
   public serialize(

@@ -24,8 +24,12 @@ export type NodeUniqueFilterInputValue = utils.Nillable<{
 
 export class NodeUniqueFilterInputType extends utils.ObjectInputType {
   readonly #forcedEdge?: Edge;
+
   readonly #candidates: ReadonlyArray<UniqueConstraint>;
+  readonly #components: ReadonlyArray<Component>;
+
   readonly #publicCandidates: ReadonlyArray<UniqueConstraint>;
+  readonly #publicComponents: ReadonlyArray<Component>;
 
   public constructor(public readonly node: Node, forcedEdge?: Edge) {
     let candidates: UniqueConstraint[];
@@ -75,19 +79,29 @@ export class NodeUniqueFilterInputType extends utils.ObjectInputType {
     });
 
     this.#forcedEdge = forcedEdge;
+
     this.#candidates = candidates;
+    this.#components = Array.from(
+      new Set(
+        candidates
+          .flatMap(({ componentSet }) => Array.from(componentSet))
+          .filter((component) => component !== this.#forcedEdge),
+      ),
+    );
+
     this.#publicCandidates = publicCandidates;
+    this.#publicComponents = Array.from(
+      new Set(
+        publicCandidates
+          .flatMap(({ componentSet }) => Array.from(componentSet))
+          .filter((component) => component !== this.#forcedEdge),
+      ),
+    );
   }
 
   @Memoize()
   public override get fields(): ReadonlyArray<utils.Input> {
-    const componentSet = new Set<Component>(
-      this.#candidates
-        .flatMap(({ componentSet }) => Array.from(componentSet))
-        .filter((component) => component !== this.#forcedEdge),
-    );
-
-    return Array.from(componentSet, (component) => {
+    return this.#components.map((component) => {
       const type = utils.nonNullableInputTypeDecorator(
         component instanceof Leaf
           ? component.type
@@ -162,26 +176,70 @@ export class NodeUniqueFilterInputType extends utils.ObjectInputType {
     });
   }
 
-  public ensureValue(
-    maybeValue: unknown,
-    path?: utils.Path,
-  ): NonNullable<NodeUniqueFilterInputValue> {
-    const value = this.parseValue(maybeValue, path);
-    if (value == null) {
-      throw new NodeUniqueFilterNotFoundError(this.node, maybeValue, {
-        path,
-      });
-    }
-
-    return value;
-  }
-
   public isValid(
     maybeValue: unknown,
     path?: utils.Path,
   ): maybeValue is utils.NonNillable<NodeUniqueFilterInputValue> {
+    if (maybeValue == null) {
+      return false;
+    }
+
     try {
-      this.ensureValue(maybeValue, path);
+      this.parseValue(maybeValue, path);
+
+      return true;
+    } catch (error) {
+      if (error instanceof NodeUniqueFilterNotFoundError) {
+        return false;
+      }
+
+      throw error;
+    }
+  }
+
+  /**
+   * Ensuring there is a unique-filter's value in the provided "value", allowing extra properties
+   */
+  public pickValue(
+    maybeValue: unknown,
+    path?: utils.Path,
+  ): NonNullable<NodeUniqueFilterInputValue> {
+    utils.assertPlainObject(maybeValue, path);
+
+    return this.parseValue(
+      R.pipe(
+        this.#components,
+        R.filter((component) => maybeValue[component.name] !== undefined),
+        R.mapToObj((component) => {
+          const componentValue = maybeValue[component.name];
+
+          return [
+            component.name,
+            componentValue === null
+              ? null
+              : component instanceof Leaf
+              ? componentValue
+              : component.head.uniqueFilterInputType.pickValue(
+                  componentValue,
+                  utils.addPath(path, component.name),
+                ),
+          ];
+        }),
+      ),
+      path,
+    ) as NonNullable<NodeUniqueFilterInputValue>;
+  }
+
+  public hasValid(
+    maybeValue: unknown,
+    path?: utils.Path,
+  ): maybeValue is utils.NonNillable<NodeUniqueFilterInputValue> {
+    if (maybeValue == null) {
+      return false;
+    }
+
+    try {
+      this.pickValue(maybeValue, path);
 
       return true;
     } catch (error) {
@@ -218,6 +276,6 @@ export class NodeUniqueFilterInputType extends utils.ObjectInputType {
   public uniqValues<T extends NodeUniqueFilterInputValue>(
     values: ReadonlyArray<T>,
   ): Array<T> {
-    return R.uniqWith(values, (a, b) => this.areValuesEqual(a, b));
+    return R.uniqueWith(values, (a, b) => this.areValuesEqual(a, b));
   }
 }

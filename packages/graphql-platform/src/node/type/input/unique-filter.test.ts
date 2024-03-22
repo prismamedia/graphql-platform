@@ -173,6 +173,24 @@ describe('NodeUniqueFilterInputType', () => {
           expect(uniqueFilterInputType.parseValue(inputValue)).toEqual(
             parsedValue,
           );
+
+          if (inputValue != null) {
+            expect(uniqueFilterInputType.isValid(inputValue)).toBeTruthy();
+
+            expect(
+              uniqueFilterInputType.pickValue({
+                ...inputValue,
+                unknown: 'any',
+              }),
+            ).toEqual(parsedValue);
+
+            expect(
+              uniqueFilterInputType.hasValid({
+                ...inputValue,
+                unknown: 'any',
+              }),
+            ).toBeTruthy();
+          }
         },
       );
 

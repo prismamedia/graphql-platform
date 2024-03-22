@@ -20,7 +20,7 @@ export class NodeOrdering {
     expressions: ReadonlyArray<OrderingExpression>,
   ) {
     this.expressions = Object.freeze(
-      R.uniqWith(expressions, (a, b) => a.equals(b)),
+      R.uniqueWith(expressions, (a, b) => a.equals(b)),
     );
 
     this.normalized = this.expressions.length === 0 ? undefined : this;
