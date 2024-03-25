@@ -1,5 +1,4 @@
 import * as scalars from '@prismamedia/graphql-platform-scalars';
-import * as graphql from 'graphql';
 import type * as mariadb from 'mariadb';
 import assert from 'node:assert/strict';
 import { EOL } from 'node:os';
@@ -15,7 +14,7 @@ export const trimWhitespaces = (expr: string) =>
 export const normalizeDoubleSpaces = (expr: string) =>
   `REGEXP_REPLACE(${expr}, '\\\\s+', ' ')`;
 
-export const normalizeJSON = (
+const normalizeJSON = (
   expr: string,
   type: 'ARRAY' | 'OBJECT',
   onInvalid: string,
@@ -79,12 +78,8 @@ export class NormalizeStatement implements mariadb.QueryOptions {
           let normalizers: Array<LeafColumnNormalizer | undefined> = [];
 
           switch (column.leaf.type) {
-            case graphql.GraphQLString:
             case scalars.GraphQLNonEmptyString:
-            case scalars.GraphQLNonEmptyTrimmedString:
               normalizers = [
-                trimWhitespaces,
-                normalizeDoubleSpaces,
                 column.isNullable()
                   ? (expr) => `NULLIF(${expr}, '')`
                   : undefined,
@@ -92,6 +87,7 @@ export class NormalizeStatement implements mariadb.QueryOptions {
               break;
 
             case scalars.GraphQLEmailAddress:
+            case scalars.GraphQLNonEmptyTrimmedString:
             case scalars.GraphQLURL:
               normalizers = [
                 trimWhitespaces,
