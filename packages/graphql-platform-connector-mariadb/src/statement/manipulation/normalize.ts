@@ -8,6 +8,8 @@ import { StatementKind } from '../kind.js';
 
 export type LeafColumnNormalizer = (expr: string) => string;
 
+export const nullIfEmptyString = (expr: string) => `NULLIF(${expr}, '')`;
+
 export const trimWhitespaces = (expr: string) =>
   `REGEXP_REPLACE(${expr}, '^\\\\s+|\\\\s+$', '')`;
 
@@ -57,7 +59,7 @@ export interface NormalizeStatementConfig {
    */
   ignore?: boolean;
 
-  customize?: (column: LeafColumn, expr?: string) => string | undefined;
+  customize?: (column: LeafColumn, expr: string) => string | undefined;
 }
 
 /**
@@ -80,9 +82,7 @@ export class NormalizeStatement implements mariadb.QueryOptions {
           switch (column.leaf.type) {
             case scalars.GraphQLNonEmptyString:
               normalizers = [
-                column.isNullable()
-                  ? (expr) => `NULLIF(${expr}, '')`
-                  : undefined,
+                column.isNullable() ? nullIfEmptyString : undefined,
               ];
               break;
 
@@ -91,9 +91,7 @@ export class NormalizeStatement implements mariadb.QueryOptions {
             case scalars.GraphQLURL:
               normalizers = [
                 trimWhitespaces,
-                column.isNullable()
-                  ? (expr) => `NULLIF(${expr}, '')`
-                  : undefined,
+                column.isNullable() ? nullIfEmptyString : undefined,
               ];
               break;
 
@@ -123,7 +121,7 @@ export class NormalizeStatement implements mariadb.QueryOptions {
             initialValue,
           );
 
-          config?.customize && (expr = config.customize(column, expr));
+          config?.customize && (expr = config.customize(column, expr!));
 
           return expr && expr !== initialValue ? [column, expr] : undefined;
         },
