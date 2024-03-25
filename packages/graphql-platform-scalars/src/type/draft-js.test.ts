@@ -235,6 +235,54 @@ describe('DraftJS', () => {
         },
       },
     ],
+    [
+      {
+        blocks: {
+          5: {
+            key: 'abc',
+            type: 'unstyled',
+            text: 'abcde',
+            depth: 0,
+            inlineStyleRanges: [],
+            entityRanges: [
+              { key: 1, offset: 0, length: 5 },
+              { key: 5, offset: 0, length: 5 },
+            ],
+          },
+        },
+        entityMap: [
+          {
+            type: 'LINK',
+            mutability: 'MUTABLE',
+            data: { path: '/home' },
+          },
+          {
+            type: 'LINK',
+            mutability: 'MUTABLE',
+            data: { path: '/news' },
+          },
+        ],
+      },
+      {
+        blocks: [
+          {
+            key: 'abc',
+            type: 'unstyled',
+            text: 'abcde',
+            depth: 0,
+            inlineStyleRanges: [],
+            entityRanges: [{ key: 1, offset: 0, length: 5 }],
+          },
+        ],
+        entityMap: {
+          1: {
+            type: 'LINK',
+            mutability: 'MUTABLE',
+            data: { path: '/news' },
+          },
+        },
+      },
+    ],
   ])('%# - normalizeRawDraftContentState(%o) = %o', (input, output) => {
     expect(normalizeRawDraftContentState(input)).toEqual(output);
   });

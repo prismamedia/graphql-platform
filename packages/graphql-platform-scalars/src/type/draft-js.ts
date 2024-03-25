@@ -456,27 +456,41 @@ export function normalizeRawDraftContentState(
   {
     const blocksPath = utils.addPath(path, 'blocks');
 
-    if (!Array.isArray(maybeRawDraftContentState.blocks)) {
+    if (Array.isArray(maybeRawDraftContentState.blocks)) {
+      utils.aggregateGraphError<unknown, void>(
+        maybeRawDraftContentState.blocks,
+        (_, rawBlock, index) =>
+          blocks.push(
+            normalizeRawDraftContentBlock(
+              rawBlock,
+              entityMap,
+              utils.addPath(blocksPath, index),
+            ),
+          ),
+        undefined,
+        { path: blocksPath },
+      );
+    } else if (utils.isPlainObject(maybeRawDraftContentState.blocks)) {
+      utils.aggregateGraphError<[string, unknown], void>(
+        Object.entries(maybeRawDraftContentState.blocks),
+        (_, [index, rawBlock]) =>
+          blocks.push(
+            normalizeRawDraftContentBlock(
+              rawBlock,
+              entityMap,
+              utils.addPath(blocksPath, index),
+            ),
+          ),
+        undefined,
+        { path: blocksPath },
+      );
+    } else {
       throw new utils.UnexpectedValueError(
-        `an array of RawDraftContentBlock`,
+        `an array, or a numeric-indexed record, of RawDraftContentBlock`,
         maybeRawDraftContentState.blocks,
         { path: blocksPath },
       );
     }
-
-    utils.aggregateGraphError<unknown, void>(
-      maybeRawDraftContentState.blocks,
-      (_, rawBlock, index) =>
-        blocks.push(
-          normalizeRawDraftContentBlock(
-            rawBlock,
-            entityMap,
-            utils.addPath(blocksPath, index),
-          ),
-        ),
-      undefined,
-      { path: blocksPath },
-    );
   }
 
   return blocks.length

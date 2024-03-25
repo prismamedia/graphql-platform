@@ -2,12 +2,14 @@ import { CountStatement } from './manipulation/count.js';
 import { DeleteStatement } from './manipulation/delete.js';
 import { FindStatement } from './manipulation/find.js';
 import { InsertStatement } from './manipulation/insert.js';
+import { NormalizeStatement } from './manipulation/normalize.js';
 import { UpdateStatement } from './manipulation/update.js';
 
 export * from './manipulation/count.js';
 export * from './manipulation/delete.js';
 export * from './manipulation/find.js';
 export * from './manipulation/insert.js';
+export * from './manipulation/normalize.js';
 export * from './manipulation/update.js';
 
 /**
@@ -18,7 +20,8 @@ export type ManipulationStatement =
   | DeleteStatement
   | FindStatement
   | InsertStatement
-  | UpdateStatement;
+  | UpdateStatement
+  | NormalizeStatement;
 
 export function isManipulationStatement(
   maybeStatement: unknown,
@@ -28,6 +31,7 @@ export function isManipulationStatement(
     maybeStatement instanceof DeleteStatement ||
     maybeStatement instanceof FindStatement ||
     maybeStatement instanceof InsertStatement ||
-    maybeStatement instanceof UpdateStatement
+    maybeStatement instanceof UpdateStatement ||
+    maybeStatement instanceof NormalizeStatement
   );
 }

@@ -15,10 +15,12 @@ import {
   DropTableForeignKeysStatement,
   FindStatement,
   InsertStatement,
+  NormalizeStatement,
   UpdateStatement,
   type CreateTableStatementConfig,
   type DeleteStatementConfig,
   type InsertStatementConfig,
+  type NormalizeStatementConfig,
   type UpdateStatementConfig,
 } from '../statement.js';
 import { ensureIdentifierName } from './naming-strategy.js';
@@ -418,6 +420,18 @@ export class Table {
     if (foreignKeys.length) {
       await this.schema.connector.executeStatement(
         new AddTableForeignKeysStatement(this, foreignKeys),
+        maybeConnection,
+      );
+    }
+  }
+
+  public async normalize(
+    config?: NormalizeStatementConfig,
+    maybeConnection?: mariadb.Connection,
+  ): Promise<void> {
+    if (NormalizeStatement.normalizations(this, config).size) {
+      await this.schema.connector.executeStatement(
+        new NormalizeStatement(this, config),
         maybeConnection,
       );
     }

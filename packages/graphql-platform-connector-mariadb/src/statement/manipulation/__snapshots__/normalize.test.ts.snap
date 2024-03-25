@@ -1,0 +1,109 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`Normalize statement generates "normalize" statement for "Article" 1`] = `
+"UPDATE \`articles\`
+SET
+  \`title\` = REGEXP_REPLACE(REGEXP_REPLACE(\`title\`, '^\\\\s+|\\\\s+$', ''), '\\\\s+', ' '),
+  \`slug\` = REGEXP_REPLACE(REGEXP_REPLACE(\`slug\`, '^\\\\s+|\\\\s+$', ''), '\\\\s+', ' '),
+  \`body\` = IF(JSON_VALID(\`body\`) AND JSON_EXISTS(\`body\`, '$.blocks') AND JSON_TYPE(JSON_EXTRACT(\`body\`, '$.blocks')) != 'NULL' AND JSON_LENGTH(\`body\`, '$.blocks') > 0, JSON_COMPACT(\`body\`), NULL),
+  \`metas\` = IF(JSON_VALID(\`metas\`) AND JSON_TYPE(\`metas\`) = 'OBJECT' AND JSON_LENGTH(\`metas\`) > 0, JSON_COMPACT(\`metas\`), NULL),
+  \`machine_tags\` = IF(JSON_VALID(\`machine_tags\`) AND JSON_TYPE(\`machine_tags\`) = 'ARRAY' AND JSON_LENGTH(\`machine_tags\`) > 0, JSON_COMPACT(\`machine_tags\`), NULL)"
+`;
+
+exports[`Normalize statement generates "normalize" statement for "Article" 2`] = `
+OkPacket {
+  "affectedRows": 6,
+  "insertId": 0n,
+  "warningStatus": 0,
+}
+`;
+
+exports[`Normalize statement generates "normalize" statement for "ArticleExtension" 1`] = `
+"UPDATE \`article_extensions\`
+SET
+  \`source\` = NULLIF(REGEXP_REPLACE(REGEXP_REPLACE(\`source\`, '^\\\\s+|\\\\s+$', ''), '\\\\s+', ' '), '')"
+`;
+
+exports[`Normalize statement generates "normalize" statement for "ArticleExtension" 2`] = `
+OkPacket {
+  "affectedRows": 1,
+  "insertId": 0n,
+  "warningStatus": 0,
+}
+`;
+
+exports[`Normalize statement generates "normalize" statement for "ArticleTag" 1`] = `"No normalization to perform on "article_tags""`;
+
+exports[`Normalize statement generates "normalize" statement for "ArticleTagModeration" 1`] = `
+"UPDATE \`article_tag_moderations\`
+SET
+  \`moderation\` = NULLIF(REGEXP_REPLACE(REGEXP_REPLACE(\`moderation\`, '^\\\\s+|\\\\s+$', ''), '\\\\s+', ' '), '')"
+`;
+
+exports[`Normalize statement generates "normalize" statement for "ArticleTagModeration" 2`] = `
+OkPacket {
+  "affectedRows": 3,
+  "insertId": 0n,
+  "warningStatus": 0,
+}
+`;
+
+exports[`Normalize statement generates "normalize" statement for "Category" 1`] = `
+"UPDATE \`categories\`
+SET
+  \`title\` = REGEXP_REPLACE(REGEXP_REPLACE(\`title\`, '^\\\\s+|\\\\s+$', ''), '\\\\s+', ' '),
+  \`slug\` = REGEXP_REPLACE(REGEXP_REPLACE(\`slug\`, '^\\\\s+|\\\\s+$', ''), '\\\\s+', ' ')"
+`;
+
+exports[`Normalize statement generates "normalize" statement for "Category" 2`] = `
+OkPacket {
+  "affectedRows": 3,
+  "insertId": 0n,
+  "warningStatus": 0,
+}
+`;
+
+exports[`Normalize statement generates "normalize" statement for "Log" 1`] = `
+"UPDATE \`logs\`
+SET
+  \`message\` = REGEXP_REPLACE(REGEXP_REPLACE(\`message\`, '^\\\\s+|\\\\s+$', ''), '\\\\s+', ' ')"
+`;
+
+exports[`Normalize statement generates "normalize" statement for "Log" 2`] = `
+OkPacket {
+  "affectedRows": 0,
+  "insertId": 0n,
+  "warningStatus": 0,
+}
+`;
+
+exports[`Normalize statement generates "normalize" statement for "Tag" 1`] = `
+"UPDATE \`tags\`
+SET
+  \`title\` = REGEXP_REPLACE(REGEXP_REPLACE(\`title\`, '^\\\\s+|\\\\s+$', ''), '\\\\s+', ' '),
+  \`slug\` = REGEXP_REPLACE(REGEXP_REPLACE(\`slug\`, '^\\\\s+|\\\\s+$', ''), '\\\\s+', ' ')"
+`;
+
+exports[`Normalize statement generates "normalize" statement for "Tag" 2`] = `
+OkPacket {
+  "affectedRows": 3,
+  "insertId": 0n,
+  "warningStatus": 0,
+}
+`;
+
+exports[`Normalize statement generates "normalize" statement for "User" 1`] = `
+"UPDATE \`users\`
+SET
+  \`username\` = REGEXP_REPLACE(REGEXP_REPLACE(\`username\`, '^\\\\s+|\\\\s+$', ''), '\\\\s+', ' ')"
+`;
+
+exports[`Normalize statement generates "normalize" statement for "User" 2`] = `
+OkPacket {
+  "affectedRows": 2,
+  "insertId": 0n,
+  "warningStatus": 0,
+}
+`;
+
+exports[`Normalize statement generates "normalize" statement for "UserProfile" 1`] = `"No normalization to perform on "user_profiles""`;
