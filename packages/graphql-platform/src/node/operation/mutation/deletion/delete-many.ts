@@ -14,10 +14,10 @@ import { OnEdgeHeadDeletion } from '../../../definition.js';
 import { NodeFilter, type NodeSelectedValue } from '../../../statement.js';
 import type { NodeFilterInputValue, OrderByInputValue } from '../../../type.js';
 import {
-  catchConnectorOperationError,
   ConnectorOperationKind,
   LifecycleHookError,
   LifecycleHookKind,
+  catchConnectorOperationError,
 } from '../../error.js';
 import { AbstractDeletion } from '../abstract-deletion.js';
 import type { MutationContext } from '../context.js';
@@ -144,7 +144,7 @@ export class DeleteManyMutation<
     );
 
     // Apply the "preDelete"-hook, if any
-    if (this.node.preDeletionHooks.length) {
+    if (this.node.preDeleteHooksByPriority.size) {
       await Promise.all(
         oldValues.map(async (oldValue, index) => {
           try {
@@ -265,7 +265,7 @@ export class DeleteManyMutation<
         const change = new NodeDeletion(this.node, context.request, oldValue);
 
         // Let's everybody know about this deleted node
-        context.trackChanges(change);
+        context.track(change);
 
         // Apply the "postDelete"-hook, if any
         try {

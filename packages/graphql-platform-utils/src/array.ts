@@ -11,6 +11,12 @@ export function assertArray<T>(
   }
 }
 
+export function ensureArray<T>(maybeArray: unknown, path?: Path): T[] {
+  assertArray<T>(maybeArray, path);
+
+  return maybeArray;
+}
+
 export function assertNillableArray<T>(
   maybeNillableArray: unknown,
   path?: Path,
@@ -18,4 +24,13 @@ export function assertNillableArray<T>(
   if (!isNil(maybeNillableArray)) {
     assertArray(maybeNillableArray, path);
   }
+}
+
+export function ensureNillableArray<T>(
+  maybeNillableArray: unknown,
+  path?: Path,
+): Nillable<T[]> {
+  assertNillableArray<T>(maybeNillableArray, path);
+
+  return maybeNillableArray;
 }

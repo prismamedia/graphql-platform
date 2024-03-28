@@ -229,7 +229,7 @@ export class NodeOutputType {
     ]);
 
     // virtual-fields
-    [...this.node.features, this.node].forEach(({ config, configPath }) => {
+    this.node.features.forEach(({ config, configPath }) => {
       const outputConfig = config.output;
       const outputConfigPath = utils.addPath(configPath, 'output');
 

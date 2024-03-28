@@ -72,8 +72,8 @@ export class NodeUpdateInputType extends utils.ObjectInputType<FieldUpdateInput>
 
   @Memoize()
   protected get virtualFields(): ReadonlyArray<utils.Input> {
-    return [...this.node.features, this.node].flatMap((featureOrNode) => {
-      const { config, configPath } = featureOrNode.getMutationConfig(
+    return this.node.features.flatMap((feature) => {
+      const { config, configPath } = feature.getMutationConfig(
         utils.MutationType.UPDATE,
       );
 

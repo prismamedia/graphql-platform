@@ -21,6 +21,14 @@ export type NodeFeatureConfig<
 > = {
   name?: string;
 
+  /**
+   * Optional, define the priority of this feature, against the others features and the main configuration (having the priority 0)
+   * An higher priority will be executed first
+   *
+   * Default: 0
+   */
+  priority?: number;
+
   components?: Record<string, ComponentConfig<TConnector>>;
 
   uniques?: UniqueConstraintConfig<TConnector>[];
@@ -64,6 +72,8 @@ export class NodeFeature<
 > {
   public readonly configPath: utils.Path;
 
+  public readonly priority: number;
+
   public constructor(
     public readonly node: Node,
     public readonly config: NodeFeatureConfig<
@@ -80,6 +90,8 @@ export class NodeFeature<
       typeof config.name === 'string' && config.name
         ? utils.addPath(configPath, config.name)
         : configPath;
+
+    this.priority = config.priority ?? node.priority;
   }
 
   @Memoize((mutationType: utils.MutationType) => mutationType)

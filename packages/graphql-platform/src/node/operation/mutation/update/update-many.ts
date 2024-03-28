@@ -25,10 +25,10 @@ import type {
   OrderByInputValue,
 } from '../../../type.js';
 import {
-  catchConnectorOperationError,
   ConnectorOperationKind,
   LifecycleHookError,
   LifecycleHookKind,
+  catchConnectorOperationError,
 } from '../../error.js';
 import { AbstractUpdate } from '../abstract-update.js';
 import type { MutationContext } from '../context.js';
@@ -164,7 +164,7 @@ export class UpdateManyMutation<
     const willEventuallyRefetch =
       args.selection.reverseEdges.length &&
       // We assume that the "postUpdate"-hook can change the reverse-edges
-      (this.node.postUpdateHooks.length ||
+      (this.node.postUpdateHooksByPriority.size ||
         this.node.updateInputType.hasActionOnSelectedReverseEdge(
           data,
           args.selection,
@@ -256,7 +256,7 @@ export class UpdateManyMutation<
       );
 
       // Let's everybody know about the update, if any
-      context.trackChanges(...changes);
+      context.track(...changes);
     } else {
       newValues = willEventuallyRefetch
         ? oldSources
@@ -282,7 +282,7 @@ export class UpdateManyMutation<
     );
 
     // Apply the "postUpdate"-hook
-    if (this.node.postUpdateHooks.length) {
+    if (this.node.postUpdateHooksByPriority.size) {
       await Promise.all(
         changes.map(async (change) => {
           try {

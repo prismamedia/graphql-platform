@@ -24,7 +24,7 @@ export class MutationContext<
    */
   public readonly userData: Map<any, any> = new Map();
 
-  public trackChanges(...changes: ReadonlyArray<NodeChange>): void {
+  public track(...changes: ReadonlyArray<NodeChange>): void {
     this.changesTracking && this.changes.push(...changes);
   }
 }
