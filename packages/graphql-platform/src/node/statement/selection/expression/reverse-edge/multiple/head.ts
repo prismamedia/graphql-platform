@@ -317,9 +317,9 @@ export class MultipleReverseEdgeHeadSelection<
   }
 
   public async resolveValue(
-    sources: TSource[],
+    sources: ReadonlyArray<TSource>,
     context: OperationContext,
-    path: utils.Path,
+    path?: utils.Path,
   ): Promise<TValue[]> {
     return Promise.all(
       sources.map((source, index) =>
@@ -332,9 +332,12 @@ export class MultipleReverseEdgeHeadSelection<
     );
   }
 
-  public pickValue(superSetOfValues: TValue[]): TValue[] {
-    return superSetOfValues.map((superSetOfValue) =>
-      this.headSelection.pickValue(superSetOfValue),
+  public pickValue(
+    superSetOfValues: ReadonlyArray<TValue>,
+    path?: utils.Path,
+  ): TValue[] {
+    return superSetOfValues.map((superSetOfValue, index) =>
+      this.headSelection.pickValue(superSetOfValue, utils.addPath(path, index)),
     );
   }
 

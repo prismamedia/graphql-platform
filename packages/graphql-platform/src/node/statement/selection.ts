@@ -275,10 +275,18 @@ export class NodeSelection<
       : source;
   }
 
-  public pickValue(superSetOfValue: TValue): TValue {
+  public pickValue(
+    superSetOfValue: TValue,
+    path: utils.Path = utils.addPath(undefined, this.node.toString()),
+  ): TValue {
     return this.expressions.reduce<TValue>((document: any, expression) => {
+      if (typeof superSetOfValue[expression.key] === 'undefined') {
+        throw new utils.UnexpectedUndefinedError(expression.key, { path });
+      }
+
       document[expression.key] = expression.pickValue(
         superSetOfValue[expression.key],
+        utils.addPath(path, expression.key),
       );
 
       return document;

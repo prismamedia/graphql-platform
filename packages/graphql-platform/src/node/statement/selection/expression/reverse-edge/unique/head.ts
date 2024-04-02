@@ -208,16 +208,16 @@ export class UniqueReverseEdgeHeadSelection<
   public async resolveValue(
     source: TSource,
     context: OperationContext,
-    path: utils.Path,
+    path?: utils.Path,
   ): Promise<TValue> {
     return source
       ? this.headSelection.resolveValue(source, context, path)
       : null;
   }
 
-  public pickValue(superSetOfValue: TValue): TValue {
+  public pickValue(superSetOfValue: TValue, path?: utils.Path): TValue {
     return superSetOfValue
-      ? this.headSelection.pickValue(superSetOfValue)
+      ? this.headSelection.pickValue(superSetOfValue, path)
       : null;
   }
 

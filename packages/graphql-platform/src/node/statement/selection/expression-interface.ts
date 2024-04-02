@@ -36,10 +36,10 @@ export interface SelectionExpressionInterface<TSource = any, TValue = TSource> {
   resolveValue(
     source: TSource,
     context: OperationContext,
-    path: utils.Path,
+    path?: utils.Path,
   ): Promisable<TValue>;
 
-  pickValue(superSetOfValue: TValue): TValue;
+  pickValue(superSetOfValue: TValue, path?: utils.Path): TValue;
 
   areValuesEqual(a: TValue, b: TValue): boolean;
 }

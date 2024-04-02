@@ -221,12 +221,12 @@ export class MultipleReverseEdgeCountSelection<
   public resolveValue(
     source: TSource,
     _context: OperationContext,
-    _path: utils.Path,
+    _path?: utils.Path,
   ): TValue {
     return source as any;
   }
 
-  public pickValue(superSetOfValue: TValue): TValue {
+  public pickValue(superSetOfValue: TValue, _path?: utils.Path): TValue {
     return superSetOfValue;
   }
 
