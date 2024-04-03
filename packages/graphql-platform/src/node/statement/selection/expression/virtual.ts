@@ -116,7 +116,7 @@ export class VirtualSelection<
     }
   }
 
-  public pickValue(superSetOfValue: TValue): TValue {
+  public pickValue(superSetOfValue: TValue, _path?: utils.Path): TValue {
     return superSetOfValue;
   }
 

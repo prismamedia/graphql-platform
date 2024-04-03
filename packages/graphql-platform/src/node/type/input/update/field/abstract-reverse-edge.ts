@@ -19,7 +19,6 @@ export abstract class AbstractReverseEdgeUpdateInput<
       deprecated: reverseEdge.deprecationReason,
       ...config,
       name: reverseEdge.name,
-      public: reverseEdge.isPublic(),
       optional: true,
       nullable: false,
     });

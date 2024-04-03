@@ -1065,7 +1065,7 @@ __metadata:
     "@swc/core": "npm:1.4.11"
     "@swc/jest": "npm:0.2.36"
     "@tsconfig/node20": "npm:20.1.4"
-    "@types/node": "npm:20.12.2"
+    "@types/node": "npm:20.12.3"
     "@types/semver": "npm:7.5.8"
     graphql: "npm:16.8.1"
     inflection: "npm:^3.0.0"
@@ -1074,7 +1074,7 @@ __metadata:
     publint: "npm:0.2.7"
     remeda: "npm:^1.57.0"
     semver: "npm:^7.6.0"
-    type-fest: "npm:^4.14.0"
+    type-fest: "npm:^4.15.0"
     typescript: "npm:5.4.3"
   peerDependencies:
     graphql: ^16.7.0
@@ -1095,7 +1095,7 @@ __metadata:
     "@types/body-parser": "npm:^1.19.5"
     "@types/cors": "npm:^2.8.17"
     "@types/express": "npm:^4.17.21"
-    "@types/node": "npm:20.12.2"
+    "@types/node": "npm:20.12.3"
     "@types/ws": "npm:^8.5.10"
     body-parser: "npm:1.20.2"
     cors: "npm:2.8.5"
@@ -1122,11 +1122,11 @@ __metadata:
     "@swc/jest": "npm:0.2.36"
     "@tsconfig/node20": "npm:20.1.4"
     "@types/draft-js": "npm:^0.11.18"
-    "@types/node": "npm:20.12.2"
+    "@types/node": "npm:20.12.3"
     graphql: "npm:16.8.1"
     jest: "npm:29.7.0"
     publint: "npm:0.2.7"
-    type-fest: "npm:^4.14.0"
+    type-fest: "npm:^4.15.0"
     typescript: "npm:5.4.3"
   peerDependencies:
     graphql: ^16.7.0
@@ -1143,13 +1143,13 @@ __metadata:
     "@swc/jest": "npm:0.2.36"
     "@tsconfig/node20": "npm:20.1.4"
     "@types/indefinite": "npm:2.3.4"
-    "@types/node": "npm:20.12.2"
+    "@types/node": "npm:20.12.3"
     graphql: "npm:16.8.1"
     indefinite: "npm:^2.5.1"
     jest: "npm:29.7.0"
     publint: "npm:0.2.7"
     remeda: "npm:^1.57.0"
-    type-fest: "npm:^4.14.0"
+    type-fest: "npm:^4.15.0"
     typescript: "npm:5.4.3"
   peerDependencies:
     graphql: ^16.7.0
@@ -1169,7 +1169,7 @@ __metadata:
     "@swc/jest": "npm:0.2.36"
     "@tsconfig/node20": "npm:20.1.4"
     "@types/cli-progress": "npm:^3.11.5"
-    "@types/node": "npm:20.12.2"
+    "@types/node": "npm:20.12.3"
     cli-progress: "npm:^3.12.0"
     dataloader: "npm:^2.2.2"
     denque: "npm:^2.1.0"
@@ -1181,7 +1181,7 @@ __metadata:
     p-retry: "npm:^6.2.0"
     publint: "npm:0.2.7"
     remeda: "npm:^1.57.0"
-    type-fest: "npm:^4.14.0"
+    type-fest: "npm:^4.15.0"
     typescript: "npm:5.4.3"
   peerDependencies:
     graphql: ^16.7.0
@@ -1694,12 +1694,21 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@types/node@npm:*, @types/node@npm:20.12.2, @types/node@npm:^20.11.17":
+"@types/node@npm:*, @types/node@npm:^20.11.17":
   version: 20.12.2
   resolution: "@types/node@npm:20.12.2"
   dependencies:
     undici-types: "npm:~5.26.4"
   checksum: 10/f1f0ebfe475aefa183763b856e0023b81b76554196e8676a45b9fcfd1012cdd20d32adefb3c0330001c0011e074676603c34c24821a4924228250ea13a75da43
+  languageName: node
+  linkType: hard
+
+"@types/node@npm:20.12.3":
+  version: 20.12.3
+  resolution: "@types/node@npm:20.12.3"
+  dependencies:
+    undici-types: "npm:~5.26.4"
+  checksum: 10/3f3c5c6ba118a18aa997c51cdc3c66259d69021f87475a99ed6c913a6956e22de49748e09843bf6447a7a63ae474e61945a6dbcca93e23b2359fc0b6f9914f7a
   languageName: node
   linkType: hard
 
@@ -5569,10 +5578,10 @@ __metadata:
   languageName: node
   linkType: hard
 
-"type-fest@npm:^4.14.0":
-  version: 4.14.0
-  resolution: "type-fest@npm:4.14.0"
-  checksum: 10/fcf3b62fed194a3fc3d22bf287af3b1e1e93d4b5cb9723c093b694998d1588f27cc78dc4942ff4d319bb94ec60cb4afe5d1cd3d50ef144e47e327acbc34a5234
+"type-fest@npm:^4.15.0":
+  version: 4.15.0
+  resolution: "type-fest@npm:4.15.0"
+  checksum: 10/8f897551877daa0df7bb17a21b6acd8a21ac5a0bdb14dbfd353b16013fed99f23c6d9c12a2c7685c8dededb4739ec8bfb120a914330f8b11a478a89758a11acc
   languageName: node
   linkType: hard
 
