@@ -145,23 +145,21 @@ export class DeleteManyMutation<
 
     // Apply the "preDelete"-hook, if any
     if (this.node.preDeleteHooksByPriority.size) {
-      await Promise.all(
-        oldValues.map(async (oldValue, index) => {
-          try {
-            await this.node.preDelete({
-              context,
-              id: Object.freeze(ids[index]),
-              current: Object.freeze(this.node.selection.pickValue(oldValue)),
-            });
-          } catch (cause) {
-            throw new LifecycleHookError(
-              this.node,
-              LifecycleHookKind.PRE_DELETE,
-              { cause, path },
-            );
-          }
-        }),
-      );
+      for (const [index, oldValue] of oldValues.entries()) {
+        try {
+          await this.node.preDelete({
+            context,
+            id: Object.freeze(ids[index]),
+            current: Object.freeze(this.node.selection.pickValue(oldValue)),
+          });
+        } catch (cause) {
+          throw new LifecycleHookError(
+            this.node,
+            LifecycleHookKind.PRE_DELETE,
+            { cause, path },
+          );
+        }
+      }
     }
 
     // Apply the related nodes' "OnHeadDeletion" action
@@ -171,42 +169,35 @@ export class DeleteManyMutation<
           OnEdgeHeadDeletion.CASCADE,
         );
 
-      if (cascadeReverseEdgesByHead.size) {
-        await Promise.all(
-          Array.from(cascadeReverseEdgesByHead, ([head, reverseEdges]) =>
-            head
-              .getMutationByKey('delete-many')
-              .execute(context, {
-                where: {
-                  OR: reverseEdges.map(({ originalEdge }) => ({
-                    [originalEdge.name]: {
-                      OR: oldValues.map((oldValue) =>
-                        originalEdge.referencedUniqueConstraint.parseValue(
-                          oldValue,
-                        ),
-                      ),
-                    },
-                  })),
+      for (const [head, reverseEdges] of cascadeReverseEdgesByHead) {
+        try {
+          await head.getMutationByKey('delete-many').execute(context, {
+            where: {
+              OR: reverseEdges.map(({ originalEdge }) => ({
+                [originalEdge.name]: {
+                  OR: oldValues.map((oldValue) =>
+                    originalEdge.referencedUniqueConstraint.parseValue(
+                      oldValue,
+                    ),
+                  ),
                 },
-                first: scalars.GRAPHQL_MAX_UNSIGNED_INT,
-                selection: head.mainIdentifier.selection,
-              })
-              .catch((cause) => {
-                throw new utils.GraphError(
-                  `An error occurred while applying the "on-edge-head-deletion" action "${
-                    OnEdgeHeadDeletion[OnEdgeHeadDeletion.CASCADE]
-                  }" of the original-edge of "${
-                    this.node
-                  }"'s reverse-edge(s) heading to "${head}": ${reverseEdges
-                    .map(
-                      ({ name, originalEdge }) => `${name} (${originalEdge})`,
-                    )
-                    .join(', ')}`,
-                  { path, cause },
-                );
-              }),
-          ),
-        );
+              })),
+            },
+            first: scalars.GRAPHQL_MAX_UNSIGNED_INT,
+            selection: head.mainIdentifier.selection,
+          });
+        } catch (cause) {
+          throw new utils.GraphError(
+            `An error occurred while applying the "on-edge-head-deletion" action "${
+              OnEdgeHeadDeletion[OnEdgeHeadDeletion.CASCADE]
+            }" of the original-edge of "${
+              this.node
+            }"'s reverse-edge(s) heading to "${head}": ${reverseEdges
+              .map(({ name, originalEdge }) => `${name} (${originalEdge})`)
+              .join(', ')}`,
+            { path, cause },
+          );
+        }
       }
 
       const setNullReverseEdges =
@@ -214,37 +205,30 @@ export class DeleteManyMutation<
           OnEdgeHeadDeletion.SET_NULL,
         );
 
-      if (setNullReverseEdges.length) {
-        await Promise.all(
-          setNullReverseEdges.map(({ name, head, originalEdge }) =>
-            head
-              .getMutationByKey('update-many')
-              .execute(context, {
-                where: {
-                  [originalEdge.name]: {
-                    OR: oldValues.map((oldValue) =>
-                      originalEdge.referencedUniqueConstraint.parseValue(
-                        oldValue,
-                      ),
-                    ),
-                  },
-                },
-                first: scalars.GRAPHQL_MAX_UNSIGNED_INT,
-                data: { [originalEdge.name]: null },
-                selection: head.mainIdentifier.selection,
-              })
-              .catch((cause) => {
-                throw new utils.GraphError(
-                  `An error occurred while applying the "on-edge-head-deletion" action "${
-                    OnEdgeHeadDeletion[OnEdgeHeadDeletion.SET_NULL]
-                  }" of the original-edge of "${
-                    this.node
-                  }"'s reverse-edge "${name}": ${originalEdge}`,
-                  { path, cause },
-                );
-              }),
-          ),
-        );
+      for (const { name, head, originalEdge } of setNullReverseEdges) {
+        try {
+          await head.getMutationByKey('update-many').execute(context, {
+            where: {
+              [originalEdge.name]: {
+                OR: oldValues.map((oldValue) =>
+                  originalEdge.referencedUniqueConstraint.parseValue(oldValue),
+                ),
+              },
+            },
+            first: scalars.GRAPHQL_MAX_UNSIGNED_INT,
+            data: { [originalEdge.name]: null },
+            selection: head.mainIdentifier.selection,
+          });
+        } catch (cause) {
+          throw new utils.GraphError(
+            `An error occurred while applying the "on-edge-head-deletion" action "${
+              OnEdgeHeadDeletion[OnEdgeHeadDeletion.SET_NULL]
+            }" of the original-edge of "${
+              this.node
+            }"'s reverse-edge "${name}": ${originalEdge}`,
+            { path, cause },
+          );
+        }
       }
     }
 

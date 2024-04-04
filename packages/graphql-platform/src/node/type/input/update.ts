@@ -3,9 +3,14 @@ import { Memoize } from '@prismamedia/memoize';
 import inflection from 'inflection';
 import assert from 'node:assert/strict';
 import type { Except } from 'type-fest';
-import type { Edge, Node, NodeValue } from '../../../node.js';
+import type {
+  Component,
+  Edge,
+  Node,
+  NodeValue,
+  ReverseEdge,
+} from '../../../node.js';
 import type { MutationContext } from '../../operation.js';
-import { type NodeSelection } from '../../statement/selection.js';
 import type { NodeUpdateValue } from '../../statement/update.js';
 import {
   ComponentUpdateInput,
@@ -150,6 +155,16 @@ export class NodeUpdateInputType extends utils.ObjectInputType<FieldUpdateInput>
     );
   }
 
+  public hasComponentUpdates(
+    data: Readonly<NonNullable<NodeUpdateInputValue>>,
+    components: ReadonlyArray<Component> = Array.from(this.node.componentSet),
+  ): boolean {
+    return this.componentFields.some(
+      (field) =>
+        data[field.name] !== undefined && components.includes(field.component),
+    );
+  }
+
   public async resolveUpdate(
     currentValues: ReadonlyArray<NodeValue>,
     data: Readonly<NonNullable<NodeUpdateInputValue>>,
@@ -158,36 +173,36 @@ export class NodeUpdateInputType extends utils.ObjectInputType<FieldUpdateInput>
   ): Promise<NodeUpdateValue> {
     const resolvedUpdate: NodeUpdateValue = Object.create(null);
 
-    await Promise.all(
-      this.componentFields.map(async (field) => {
-        const fieldData = data[field.name];
-        const componentUpdate =
-          fieldData == null || field instanceof LeafUpdateInput
-            ? fieldData
-            : await field.resolveUpdate(
-                currentValues,
-                fieldData,
-                context,
-                utils.addPath(path, field.name),
-              );
+    for (const field of this.componentFields) {
+      const fieldData = data[field.name];
 
-        if (componentUpdate !== undefined) {
-          Object.assign(resolvedUpdate, { [field.name]: componentUpdate });
-        }
-      }),
-    );
+      const componentUpdate =
+        fieldData == null || field instanceof LeafUpdateInput
+          ? fieldData
+          : await field.resolveUpdate(
+              currentValues,
+              fieldData,
+              context,
+              utils.addPath(path, field.name),
+            );
+
+      if (componentUpdate !== undefined) {
+        Object.assign(resolvedUpdate, { [field.name]: componentUpdate });
+      }
+    }
 
     return resolvedUpdate;
   }
 
-  public hasActionOnSelectedReverseEdge(
+  public hasReverseEdgeActions(
     data: Readonly<NonNullable<NodeUpdateInputValue>>,
-    selection: NodeSelection,
+    reverseEdges: ReadonlyArray<ReverseEdge> = Array.from(
+      this.node.reverseEdgeSet,
+    ),
   ): boolean {
     return this.reverseEdgeFields.some(
       (field) =>
-        data[field.name] != null &&
-        selection.reverseEdges.includes(field.reverseEdge),
+        data[field.name] != null && reverseEdges.includes(field.reverseEdge),
     );
   }
 
@@ -197,19 +212,17 @@ export class NodeUpdateInputType extends utils.ObjectInputType<FieldUpdateInput>
     context: MutationContext,
     path?: utils.Path,
   ): Promise<void> {
-    await Promise.all(
-      this.reverseEdgeFields.map(async (field) => {
-        const fieldData = data[field.name];
+    for (const field of this.reverseEdgeFields) {
+      const fieldData = data[field.name];
 
-        if (fieldData != null) {
-          await field.applyActions(
-            nodeValues,
-            fieldData,
-            context,
-            utils.addPath(path, field.name),
-          );
-        }
-      }),
-    );
+      if (fieldData != null) {
+        await field.applyActions(
+          nodeValues,
+          fieldData,
+          context,
+          utils.addPath(path, field.name),
+        );
+      }
+    }
   }
 }

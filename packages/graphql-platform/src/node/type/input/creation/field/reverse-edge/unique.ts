@@ -84,34 +84,37 @@ export class UniqueReverseEdgeCreationInput extends AbstractReverseEdgeCreationI
       originalEdge.referencedUniqueConstraint.parseValue(nodeValue, path);
     const selection = this.reverseEdge.head.mainIdentifier.selection;
 
-    const maybeActionName = Object.keys(
-      inputValue,
-    )[0] as UniqueReverseEdgeCreationInputAction;
-    const actionPath = utils.addPath(path, maybeActionName);
+    const maybeActionName = (
+      Object.keys(inputValue) as UniqueReverseEdgeCreationInputAction[]
+    ).at(0);
 
-    switch (maybeActionName) {
-      case UniqueReverseEdgeCreationInputAction.CREATE: {
-        const data = inputValue[maybeActionName]!;
+    if (maybeActionName) {
+      const actionPath = utils.addPath(path, maybeActionName);
 
-        await headAPI.createOne(
-          {
-            data: {
-              ...data,
-              [originalEdgeName]: {
-                [EdgeUpdateInputAction.CONNECT]: originalEdgeValue,
+      switch (maybeActionName) {
+        case UniqueReverseEdgeCreationInputAction.CREATE: {
+          const data = inputValue[maybeActionName]!;
+
+          await headAPI.createOne(
+            {
+              data: {
+                ...data,
+                [originalEdgeName]: {
+                  [EdgeUpdateInputAction.CONNECT]: originalEdgeValue,
+                },
               },
+              selection,
             },
-            selection,
-          },
-          actionPath,
-        );
-        break;
-      }
+            actionPath,
+          );
+          break;
+        }
 
-      default:
-        throw new utils.UnreachableValueError(maybeActionName, {
-          path,
-        });
+        default:
+          throw new utils.UnreachableValueError(maybeActionName, {
+            path,
+          });
+      }
     }
   }
 }

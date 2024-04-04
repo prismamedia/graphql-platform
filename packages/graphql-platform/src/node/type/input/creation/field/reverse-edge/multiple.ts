@@ -80,37 +80,35 @@ export class MultipleReverseEdgeCreationInput extends AbstractReverseEdgeCreatio
       originalEdge.referencedUniqueConstraint.parseValue(nodeValue, path);
     const selection = this.reverseEdge.head.mainIdentifier.selection;
 
-    await Promise.all(
-      (Object.keys(inputValue) as MultipleReverseEdgeCreationInputAction[]).map(
-        async (actionName) => {
-          const actionPath = utils.addPath(path, actionName);
+    for (const actionName of Object.keys(
+      inputValue,
+    ) as MultipleReverseEdgeCreationInputAction[]) {
+      const actionPath = utils.addPath(path, actionName);
 
-          switch (actionName) {
-            case MultipleReverseEdgeCreationInputAction.CREATE_SOME: {
-              const actionData = inputValue[actionName]!;
+      switch (actionName) {
+        case MultipleReverseEdgeCreationInputAction.CREATE_SOME: {
+          const actionData = inputValue[actionName]!;
 
-              await headAPI.createSome(
-                {
-                  data: actionData.map((data) => ({
-                    ...data,
-                    [originalEdgeName]: {
-                      [EdgeUpdateInputAction.CONNECT]: originalEdgeValue,
-                    },
-                  })),
-                  selection,
+          await headAPI.createSome(
+            {
+              data: actionData.map((data) => ({
+                ...data,
+                [originalEdgeName]: {
+                  [EdgeUpdateInputAction.CONNECT]: originalEdgeValue,
                 },
-                actionPath,
-              );
-              break;
-            }
+              })),
+              selection,
+            },
+            actionPath,
+          );
+          break;
+        }
 
-            default:
-              throw new utils.UnreachableValueError(actionName, {
-                path,
-              });
-          }
-        },
-      ),
-    );
+        default:
+          throw new utils.UnreachableValueError(actionName, {
+            path,
+          });
+      }
+    }
   }
 }

@@ -178,93 +178,100 @@ export class EdgeUpdateInput extends AbstractComponentUpdateInput<EdgeUpdateInpu
 
     const selection = this.edge.referencedUniqueConstraint.selection;
 
-    const actionName = Object.keys(inputValue)[0] as EdgeUpdateInputAction;
-    const actionPath = utils.addPath(path, actionName);
+    const actionName = (Object.keys(inputValue) as EdgeUpdateInputAction[]).at(
+      0,
+    );
 
-    switch (actionName) {
-      case EdgeUpdateInputAction.DISCONNECT:
-      case EdgeUpdateInputAction.DISCONNECT_IF_EXISTS: {
-        const actionData = inputValue[actionName]!;
+    if (actionName) {
+      const actionPath = utils.addPath(path, actionName);
 
-        if (actionData === true) {
-          if (
-            actionName === EdgeUpdateInputAction.DISCONNECT &&
-            currentValues.some((currentValue) => !currentValue[this.edge.name])
-          ) {
-            throw new utils.GraphError(
-              `The "${this.edge.tail.plural}" is not connected to any "${this.edge.head.plural}"`,
-              { path: actionPath },
-            );
+      switch (actionName) {
+        case EdgeUpdateInputAction.DISCONNECT:
+        case EdgeUpdateInputAction.DISCONNECT_IF_EXISTS: {
+          const actionData = inputValue[actionName]!;
+
+          if (actionData === true) {
+            if (
+              actionName === EdgeUpdateInputAction.DISCONNECT &&
+              currentValues.some(
+                (currentValue) => !currentValue[this.edge.name],
+              )
+            ) {
+              throw new utils.GraphError(
+                `The "${this.edge.tail.plural}" is not connected to any "${this.edge.head.plural}"`,
+                { path: actionPath },
+              );
+            }
+
+            return null;
           }
 
-          return null;
+          return undefined;
         }
 
-        return undefined;
-      }
+        case EdgeUpdateInputAction.CONNECT: {
+          const where = inputValue[actionName]!;
 
-      case EdgeUpdateInputAction.CONNECT: {
-        const where = inputValue[actionName]!;
-
-        return headAPI.getOne({ where, selection }, actionPath);
-      }
-
-      case EdgeUpdateInputAction.CONNECT_IF_EXISTS: {
-        const where = inputValue[actionName]!;
-
-        return headAPI.getOneIfExists({ where, selection }, actionPath);
-      }
-
-      case EdgeUpdateInputAction.CREATE: {
-        const data = inputValue[actionName]!;
-
-        return headAPI.createOne({ data, selection }, actionPath);
-      }
-
-      case EdgeUpdateInputAction.CREATE_IF_NOT_EXISTS: {
-        const { where, data } = inputValue[actionName]!;
-
-        return headAPI.createOneIfNotExists(
-          { where, data, selection },
-          actionPath,
-        );
-      }
-
-      case EdgeUpdateInputAction.UPDATE:
-      case EdgeUpdateInputAction.UPDATE_IF_EXISTS: {
-        const data = inputValue[actionName]!;
-
-        const references: UniqueConstraintValue[] = [];
-
-        for (const currentValue of currentValues) {
-          const reference: ReferenceValue = currentValue[this.edge.name];
-          if (reference) {
-            references.push(reference);
-          } else if (actionName === EdgeUpdateInputAction.UPDATE) {
-            throw new utils.GraphError(
-              `The "${this.edge.tail.plural}" is not connected to any "${this.edge.head.plural}"`,
-              { path: actionPath },
-            );
-          }
+          return headAPI.getOne({ where, selection }, actionPath);
         }
 
-        if (references.length) {
-          await headAPI.updateMany(
-            {
-              where: { OR: references },
-              first: references.length,
-              data,
-              selection,
-            },
+        case EdgeUpdateInputAction.CONNECT_IF_EXISTS: {
+          const where = inputValue[actionName]!;
+
+          return headAPI.getOneIfExists({ where, selection }, actionPath);
+        }
+
+        case EdgeUpdateInputAction.CREATE: {
+          const data = inputValue[actionName]!;
+
+          return headAPI.createOne({ data, selection }, actionPath);
+        }
+
+        case EdgeUpdateInputAction.CREATE_IF_NOT_EXISTS: {
+          const { where, data } = inputValue[actionName]!;
+
+          return headAPI.createOneIfNotExists(
+            { where, data, selection },
             actionPath,
           );
         }
 
-        return undefined;
-      }
+        case EdgeUpdateInputAction.UPDATE:
+        case EdgeUpdateInputAction.UPDATE_IF_EXISTS: {
+          const data = inputValue[actionName]!;
 
-      default:
-        throw new utils.UnreachableValueError(actionName, { path });
+          const references: UniqueConstraintValue[] = [];
+
+          for (const currentValue of currentValues) {
+            const reference: ReferenceValue = currentValue[this.edge.name];
+            if (reference) {
+              references.push(reference);
+            } else if (actionName === EdgeUpdateInputAction.UPDATE) {
+              throw new utils.GraphError(
+                `The "${this.edge.tail.plural}" is not connected to any "${this.edge.head.plural}"`,
+                { path: actionPath },
+              );
+            }
+          }
+
+          if (references.length) {
+            await headAPI.updateMany(
+              {
+                where: { OR: references },
+                first: references.length,
+                data,
+                selection,
+              },
+              actionPath,
+            );
+          }
+
+          return undefined;
+        }
+
+        default:
+          throw new utils.UnreachableValueError(actionName, { path });
+      }
     }
   }
 }

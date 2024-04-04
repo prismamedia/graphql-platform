@@ -33,6 +33,23 @@ Map {
 }
 `;
 
+exports[`Update statement generates statements: changes 4`] = `
+Map {
+  "Article" => Map {
+    "update" => 2,
+  },
+  "ArticleTag" => Map {
+    "deletion" => 6,
+    "creation" => 20,
+  },
+  "Tag" => Map {
+    "creation" => 10,
+  },
+}
+`;
+
+exports[`Update statement generates statements: changes 5`] = `Map {}`;
+
 exports[`Update statement generates statements: result 1`] = `
 [
   {
@@ -143,6 +160,32 @@ exports[`Update statement generates statements: result 3`] = `
         },
       },
     ],
+    "title": "My second draft article",
+  },
+]
+`;
+
+exports[`Update statement generates statements: result 4`] = `
+[
+  {
+    "status": "published",
+    "title": "My first draft article",
+  },
+  {
+    "status": "published",
+    "title": "My second draft article",
+  },
+]
+`;
+
+exports[`Update statement generates statements: result 5`] = `
+[
+  {
+    "status": "published",
+    "title": "My first draft article",
+  },
+  {
+    "status": "published",
     "title": "My second draft article",
   },
 ]

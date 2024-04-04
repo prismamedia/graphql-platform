@@ -81,10 +81,20 @@ const destructiveActionNames = [
 
 type DestructiveActionName = IterableElement<typeof destructiveActionNames>;
 
+const isDestructiveActionName = (
+  maybeDestructiveActionName: unknown,
+): maybeDestructiveActionName is DestructiveActionName =>
+  destructiveActionNames.includes(maybeDestructiveActionName as any);
+
 type NonDestructiveActionName = Exclude<
   MultipleReverseEdgeUpdateInputAction,
   DestructiveActionName
 >;
+
+const isNonDestructiveActionName = (
+  maybeNonDestructiveActionName: unknown,
+): maybeNonDestructiveActionName is NonDestructiveActionName =>
+  !isDestructiveActionName(maybeNonDestructiveActionName);
 
 export class MultipleReverseEdgeUpdateInput extends AbstractReverseEdgeUpdateInput<MultipleReverseEdgeUpdateInputValue> {
   public static supports(reverseEdge: MultipleReverseEdge): boolean {
@@ -456,176 +466,207 @@ export class MultipleReverseEdgeUpdateInput extends AbstractReverseEdgeUpdateInp
       originalEdge.referencedUniqueConstraint.parseValue(nodeValue),
     );
 
-    // First, we apply destructive actions
-    await Promise.all(
-      R.intersection<DestructiveActionName>(
-        Object.keys(inputValue) as any,
-        destructiveActionNames,
-      ).map(async (actionName) => {
-        const actionPath = utils.addPath(path, actionName);
+    // Apply destructive actions first, if any
+    for (const actionName of R.filter(
+      R.keys.strict(inputValue),
+      isDestructiveActionName,
+    )) {
+      const actionPath = utils.addPath(path, actionName);
 
-        switch (actionName) {
-          case MultipleReverseEdgeUpdateInputAction.DELETE_ALL: {
-            const actionData = inputValue[actionName]!;
+      switch (actionName) {
+        case MultipleReverseEdgeUpdateInputAction.DELETE_ALL: {
+          const actionData = inputValue[actionName]!;
 
-            if (actionData === true) {
-              await headAPI.deleteMany(
+          if (actionData === true) {
+            await headAPI.deleteMany(
+              {
+                where: { [originalEdgeName]: { OR: originalEdgeValues } },
+                first: scalars.GRAPHQL_MAX_UNSIGNED_INT,
+                selection,
+              },
+              actionPath,
+            );
+          }
+          break;
+        }
+
+        case MultipleReverseEdgeUpdateInputAction.DELETE_MANY: {
+          const where = inputValue[actionName]!;
+
+          await headAPI.deleteMany(
+            {
+              where: {
+                AND: [
+                  { [originalEdgeName]: { OR: originalEdgeValues } },
+                  where,
+                ],
+              },
+              first: scalars.GRAPHQL_MAX_UNSIGNED_INT,
+              selection,
+            },
+            actionPath,
+          );
+          break;
+        }
+
+        case MultipleReverseEdgeUpdateInputAction.DELETE_SOME: {
+          const actionData = inputValue[actionName]!;
+
+          for (const originalEdgeValue of originalEdgeValues) {
+            for (const [index, where] of actionData.entries()) {
+              await headAPI.deleteOne(
                 {
-                  where: { [originalEdgeName]: { OR: originalEdgeValues } },
-                  first: scalars.GRAPHQL_MAX_UNSIGNED_INT,
+                  where: {
+                    ...where,
+                    [originalEdgeName]: originalEdgeValue,
+                  },
                   selection,
                 },
-                actionPath,
+                utils.addPath(actionPath, index),
               );
             }
-            break;
           }
-
-          case MultipleReverseEdgeUpdateInputAction.DELETE_MANY: {
-            const where = inputValue[actionName]!;
-
-            await headAPI.deleteMany(
-              {
-                where: {
-                  AND: [
-                    { [originalEdgeName]: { OR: originalEdgeValues } },
-                    where,
-                  ],
-                },
-                first: scalars.GRAPHQL_MAX_UNSIGNED_INT,
-                selection,
-              },
-              actionPath,
-            );
-            break;
-          }
-
-          case MultipleReverseEdgeUpdateInputAction.DELETE_SOME: {
-            const actionData = inputValue[actionName]!;
-
-            await Promise.all(
-              originalEdgeValues.map((originalEdgeValue) =>
-                Promise.all(
-                  actionData.map((where, index) =>
-                    headAPI.deleteOne(
-                      {
-                        where: {
-                          ...where,
-                          [originalEdgeName]: originalEdgeValue,
-                        },
-                        selection,
-                      },
-                      utils.addPath(actionPath, index),
-                    ),
-                  ),
-                ),
-              ),
-            );
-            break;
-          }
-
-          case MultipleReverseEdgeUpdateInputAction.DELETE_SOME_IF_EXISTS: {
-            const actionData = inputValue[actionName]!;
-
-            await headAPI.deleteMany(
-              {
-                where: {
-                  AND: [
-                    { [originalEdgeName]: { OR: originalEdgeValues } },
-                    { OR: actionData },
-                  ],
-                },
-                first: scalars.GRAPHQL_MAX_UNSIGNED_INT,
-                selection,
-              },
-              actionPath,
-            );
-            break;
-          }
-
-          default:
-            throw new utils.UnreachableValueError(actionName, { path });
+          break;
         }
-      }),
-    );
 
-    // Then the others
-    await Promise.all(
-      R.difference<NonDestructiveActionName>(
-        Object.keys(inputValue) as any,
-        destructiveActionNames as any,
-      ).map(async (actionName) => {
-        const actionPath = utils.addPath(path, actionName);
+        case MultipleReverseEdgeUpdateInputAction.DELETE_SOME_IF_EXISTS: {
+          const actionData = inputValue[actionName]!;
 
-        switch (actionName) {
-          case MultipleReverseEdgeUpdateInputAction.CREATE_SOME: {
-            const actionData = inputValue[actionName]!;
+          await headAPI.deleteMany(
+            {
+              where: {
+                AND: [
+                  { [originalEdgeName]: { OR: originalEdgeValues } },
+                  { OR: actionData },
+                ],
+              },
+              first: scalars.GRAPHQL_MAX_UNSIGNED_INT,
+              selection,
+            },
+            actionPath,
+          );
+          break;
+        }
 
-            await headAPI.createSome(
-              {
-                data: originalEdgeValues.flatMap((originalEdgeValue) =>
-                  actionData.map((data) => ({
+        default:
+          throw new utils.UnreachableValueError(actionName, { path });
+      }
+    }
+
+    // Then the non-destructive ones, if any
+    for (const actionName of R.filter(
+      R.keys.strict(inputValue),
+      isNonDestructiveActionName,
+    )) {
+      const actionPath = utils.addPath(path, actionName);
+
+      switch (actionName) {
+        case MultipleReverseEdgeUpdateInputAction.CREATE_SOME: {
+          const actionData = inputValue[actionName]!;
+
+          await headAPI.createSome(
+            {
+              data: originalEdgeValues.flatMap((originalEdgeValue) =>
+                actionData.map((data) => ({
+                  ...data,
+                  [originalEdgeName]: {
+                    [EdgeUpdateInputAction.CONNECT]: originalEdgeValue,
+                  },
+                })),
+              ),
+              selection,
+            },
+            actionPath,
+          );
+          break;
+        }
+
+        case MultipleReverseEdgeUpdateInputAction.CREATE_SOME_IF_NOT_EXISTS: {
+          const actionData = inputValue[actionName]!;
+
+          for (const originalEdgeValue of originalEdgeValues) {
+            for (const [index, { where, data }] of actionData.entries()) {
+              await headAPI.createOneIfNotExists(
+                {
+                  where: {
+                    ...where,
+                    [originalEdgeName]: originalEdgeValue,
+                  },
+                  data: {
                     ...data,
                     [originalEdgeName]: {
                       [EdgeUpdateInputAction.CONNECT]: originalEdgeValue,
                     },
-                  })),
-                ),
-                selection,
+                  },
+                  selection,
+                },
+                utils.addPath(actionPath, index),
+              );
+            }
+          }
+          break;
+        }
+
+        case MultipleReverseEdgeUpdateInputAction.UPDATE_ALL: {
+          const data = inputValue[actionName]!;
+
+          await headAPI.updateMany(
+            {
+              where: { [originalEdgeName]: { OR: originalEdgeValues } },
+              first: scalars.GRAPHQL_MAX_UNSIGNED_INT,
+              data,
+              selection,
+            },
+            actionPath,
+          );
+          break;
+        }
+
+        case MultipleReverseEdgeUpdateInputAction.UPDATE_MANY: {
+          const { where, data } = inputValue[actionName]!;
+
+          await headAPI.updateMany(
+            {
+              where: {
+                AND: [
+                  { [originalEdgeName]: { OR: originalEdgeValues } },
+                  where,
+                ],
               },
-              actionPath,
-            );
-            break;
+              first: scalars.GRAPHQL_MAX_UNSIGNED_INT,
+              data,
+              selection,
+            },
+            actionPath,
+          );
+          break;
+        }
+
+        case MultipleReverseEdgeUpdateInputAction.UPDATE_SOME: {
+          const actionData = inputValue[actionName]!;
+
+          for (const originalEdgeValue of originalEdgeValues) {
+            for (const [index, { where, data }] of actionData.entries()) {
+              await headAPI.updateOne(
+                {
+                  where: {
+                    ...where,
+                    [originalEdgeName]: originalEdgeValue,
+                  },
+                  data,
+                  selection,
+                },
+                utils.addPath(actionPath, index),
+              );
+            }
           }
+          break;
+        }
 
-          case MultipleReverseEdgeUpdateInputAction.CREATE_SOME_IF_NOT_EXISTS: {
-            const actionData = inputValue[actionName]!;
+        case MultipleReverseEdgeUpdateInputAction.UPDATE_SOME_IF_EXISTS: {
+          const actionData = inputValue[actionName]!;
 
-            await Promise.all(
-              originalEdgeValues.map((originalEdgeValue) =>
-                Promise.all(
-                  actionData.map(({ where, data }, index) =>
-                    headAPI.createOneIfNotExists(
-                      {
-                        where: {
-                          ...where,
-                          [originalEdgeName]: originalEdgeValue,
-                        },
-                        data: {
-                          ...data,
-                          [originalEdgeName]: {
-                            [EdgeUpdateInputAction.CONNECT]: originalEdgeValue,
-                          },
-                        },
-                        selection,
-                      },
-                      utils.addPath(actionPath, index),
-                    ),
-                  ),
-                ),
-              ),
-            );
-            break;
-          }
-
-          case MultipleReverseEdgeUpdateInputAction.UPDATE_ALL: {
-            const data = inputValue[actionName]!;
-
-            await headAPI.updateMany(
-              {
-                where: { [originalEdgeName]: { OR: originalEdgeValues } },
-                first: scalars.GRAPHQL_MAX_UNSIGNED_INT,
-                data,
-                selection,
-              },
-              actionPath,
-            );
-            break;
-          }
-
-          case MultipleReverseEdgeUpdateInputAction.UPDATE_MANY: {
-            const { where, data } = inputValue[actionName]!;
-
+          for (const [index, { where, data }] of actionData.entries()) {
             await headAPI.updateMany(
               {
                 where: {
@@ -634,99 +675,49 @@ export class MultipleReverseEdgeUpdateInput extends AbstractReverseEdgeUpdateInp
                     where,
                   ],
                 },
-                first: scalars.GRAPHQL_MAX_UNSIGNED_INT,
+                first: originalEdgeValues.length,
                 data,
                 selection,
               },
-              actionPath,
+              utils.addPath(actionPath, index),
             );
-            break;
           }
-
-          case MultipleReverseEdgeUpdateInputAction.UPDATE_SOME: {
-            const actionData = inputValue[actionName]!;
-
-            await Promise.all(
-              originalEdgeValues.map((originalEdgeValue) =>
-                Promise.all(
-                  actionData.map(({ where, data }, index) =>
-                    headAPI.updateOne(
-                      {
-                        where: {
-                          ...where,
-                          [originalEdgeName]: originalEdgeValue,
-                        },
-                        data,
-                        selection,
-                      },
-                      utils.addPath(actionPath, index),
-                    ),
-                  ),
-                ),
-              ),
-            );
-            break;
-          }
-
-          case MultipleReverseEdgeUpdateInputAction.UPDATE_SOME_IF_EXISTS: {
-            const actionData = inputValue[actionName]!;
-
-            await Promise.all(
-              actionData.map(({ where, data }, index) =>
-                headAPI.updateMany(
-                  {
-                    where: {
-                      AND: [
-                        { [originalEdgeName]: { OR: originalEdgeValues } },
-                        where,
-                      ],
-                    },
-                    first: originalEdgeValues.length,
-                    data,
-                    selection,
-                  },
-                  utils.addPath(actionPath, index),
-                ),
-              ),
-            );
-            break;
-          }
-
-          case MultipleReverseEdgeUpdateInputAction.UPSERT_SOME: {
-            const actionData = inputValue[actionName]!;
-
-            await Promise.all(
-              originalEdgeValues.map((originalEdgeValue) =>
-                Promise.all(
-                  actionData.map(({ where, create, update }, index) =>
-                    headAPI.upsert(
-                      {
-                        where: {
-                          ...where,
-                          [originalEdgeName]: originalEdgeValue,
-                        },
-                        create: {
-                          ...create,
-                          [originalEdgeName]: {
-                            [EdgeUpdateInputAction.CONNECT]: originalEdgeValue,
-                          },
-                        },
-                        update,
-                        selection,
-                      },
-                      utils.addPath(actionPath, index),
-                    ),
-                  ),
-                ),
-              ),
-            );
-            break;
-          }
-
-          default:
-            throw new utils.UnreachableValueError(actionName, { path });
+          break;
         }
-      }),
-    );
+
+        case MultipleReverseEdgeUpdateInputAction.UPSERT_SOME: {
+          const actionData = inputValue[actionName]!;
+
+          for (const originalEdgeValue of originalEdgeValues) {
+            for (const [
+              index,
+              { where, create, update },
+            ] of actionData.entries()) {
+              await headAPI.upsert(
+                {
+                  where: {
+                    ...where,
+                    [originalEdgeName]: originalEdgeValue,
+                  },
+                  create: {
+                    ...create,
+                    [originalEdgeName]: {
+                      [EdgeUpdateInputAction.CONNECT]: originalEdgeValue,
+                    },
+                  },
+                  update,
+                  selection,
+                },
+                utils.addPath(actionPath, index),
+              );
+            }
+          }
+          break;
+        }
+
+        default:
+          throw new utils.UnreachableValueError(actionName, { path });
+      }
+    }
   }
 }

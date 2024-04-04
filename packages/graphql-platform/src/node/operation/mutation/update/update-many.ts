@@ -139,7 +139,9 @@ export class UpdateManyMutation<
           ...(ordering && { ordering }),
           limit: args.first,
           selection: this.node.selection,
-          forMutation: utils.MutationType.UPDATE,
+          forMutation: this.node.updateInputType.hasComponentUpdates(data)
+            ? utils.MutationType.UPDATE
+            : undefined,
         }),
       this.node,
       ConnectorOperationKind.FIND,
@@ -165,9 +167,9 @@ export class UpdateManyMutation<
       args.selection.reverseEdges.length &&
       // We assume that the "postUpdate"-hook can change the reverse-edges
       (this.node.postUpdateHooksByPriority.size ||
-        this.node.updateInputType.hasActionOnSelectedReverseEdge(
+        this.node.updateInputType.hasReverseEdgeActions(
           data,
-          args.selection,
+          args.selection.reverseEdges,
         ));
 
     // Resolve the edges' nested-actions into their value
@@ -181,49 +183,47 @@ export class UpdateManyMutation<
 
     let hasUpdate = false;
 
-    await Promise.all(
-      oldSources.map(async (oldSource, index) => {
-        // Create a statement for it
-        const statement = new NodeUpdateStatement(this.node, oldSource, update);
+    for (const [index, oldSource] of oldSources.entries()) {
+      // Create a statement for it
+      const statement = new NodeUpdateStatement(this.node, oldSource, update);
+
+      if (!statement.isEmpty()) {
+        // Apply the "preUpdate"-hook, if any
+        try {
+          await this.node.preUpdate({
+            context,
+            data,
+            id: Object.freeze(ids[index]),
+            current: Object.freeze(oldSource),
+            update: statement.updateProxy,
+            target: statement.targetProxy,
+          });
+        } catch (cause) {
+          throw new LifecycleHookError(
+            this.node,
+            LifecycleHookKind.PRE_UPDATE,
+            { cause, path },
+          );
+        }
 
         if (!statement.isEmpty()) {
-          // Apply the "preUpdate"-hook, if any
-          try {
-            await this.node.preUpdate({
-              context,
-              data,
-              id: Object.freeze(ids[index]),
-              current: Object.freeze(oldSource),
-              update: statement.updateProxy,
-              target: statement.targetProxy,
-            });
-          } catch (cause) {
-            throw new LifecycleHookError(
-              this.node,
-              LifecycleHookKind.PRE_UPDATE,
-              { cause, path },
-            );
-          }
+          // Actually update the node
+          await catchConnectorOperationError(
+            () =>
+              this.connector.update(context, {
+                node: this.node,
+                update: statement,
+                filter: this.node.filterInputType.filter(ids[index]),
+              }),
+            this.node,
+            ConnectorOperationKind.UPDATE,
+            { path },
+          );
 
-          if (!statement.isEmpty()) {
-            // Actually update the node
-            await catchConnectorOperationError(
-              () =>
-                this.connector.update(context, {
-                  node: this.node,
-                  update: statement,
-                  filter: this.node.filterInputType.filter(ids[index]),
-                }),
-              this.node,
-              ConnectorOperationKind.UPDATE,
-              { path },
-            );
-
-            hasUpdate ||= true;
-          }
+          hasUpdate ||= true;
         }
-      }),
-    );
+      }
+    }
 
     let newValues: NodeSelectedValue[];
     let changes: NodeUpdate[];

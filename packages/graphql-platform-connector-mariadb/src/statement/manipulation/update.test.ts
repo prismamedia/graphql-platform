@@ -13,6 +13,7 @@ import {
   myAdminContext,
 } from '@prismamedia/graphql-platform/__tests__/config.js';
 import * as fixtures from '@prismamedia/graphql-platform/__tests__/fixture.js';
+import * as R from 'remeda';
 import { createMyGP, type MyGP } from '../../__tests__/config.js';
 
 describe('Update statement', () => {
@@ -51,12 +52,10 @@ describe('Update statement', () => {
           updatedAt: new Date('2022-06-01T00:00:00Z'),
           updatedBy: null,
         },
-        where: {
-          status: ArticleStatus.PUBLISHED,
-        },
+        where: { status: ArticleStatus.PUBLISHED },
         orderBy: ['createdAt_ASC'],
         first: 10,
-        selection: `{ 
+        selection: `{
           status
           title
           score
@@ -84,12 +83,10 @@ describe('Update statement', () => {
           },
           updatedAt: new Date('2022-06-01T00:00:00Z'),
         },
-        where: {
-          status: ArticleStatus.DRAFT,
-        },
+        where: { status: ArticleStatus.DRAFT },
         orderBy: ['createdAt_ASC'],
         first: 10,
-        selection: `{ 
+        selection: `{
           status
           title
           score
@@ -139,9 +136,7 @@ describe('Update statement', () => {
           },
           updatedAt: new Date('2022-06-01T00:00:00Z'),
         },
-        where: {
-          status: ArticleStatus.PUBLISHED,
-        },
+        where: { status: ArticleStatus.PUBLISHED },
         orderBy: ['createdAt_ASC'],
         first: 10,
         selection: `{
@@ -154,6 +149,60 @@ describe('Update statement', () => {
               title
             }
           }
+        }`,
+      },
+    ],
+    [
+      'Article',
+      myAdminContext,
+      {
+        data: {
+          tags: {
+            deleteAll: true,
+            create: R.range(0, 10).map((order) => ({
+              order,
+              tag: {
+                createIfNotExists: {
+                  where: { slug: `tag-${order}` },
+                  data: { title: `Tag ${order}` },
+                },
+              },
+            })),
+          },
+        },
+        where: { status_not: ArticleStatus.DELETED },
+        orderBy: ['createdAt_ASC'],
+        first: 10,
+        selection: `{
+          status
+          title
+        }`,
+      },
+    ],
+    [
+      'Article',
+      myAdminContext,
+      {
+        data: {
+          tags: {
+            deleteAll: true,
+            create: R.range(0, 10).map((order) => ({
+              order,
+              tag: {
+                createIfNotExists: {
+                  where: { slug: `tag-${order}` },
+                  data: { title: `Tag ${order}` },
+                },
+              },
+            })),
+          },
+        },
+        where: { status_not: ArticleStatus.DELETED },
+        orderBy: ['createdAt_ASC'],
+        first: 10,
+        selection: `{
+          status
+          title
         }`,
       },
     ],

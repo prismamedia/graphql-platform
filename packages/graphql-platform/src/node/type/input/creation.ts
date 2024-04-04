@@ -3,7 +3,7 @@ import { Memoize } from '@prismamedia/memoize';
 import inflection from 'inflection';
 import assert from 'node:assert/strict';
 import type { Except } from 'type-fest';
-import type { Edge, Node, NodeValue } from '../../../node.js';
+import type { Edge, Node, NodeValue, ReverseEdge } from '../../../node.js';
 import type { MutationContext } from '../../operation.js';
 import type { NodeCreationValue } from '../../statement/creation.js';
 import {
@@ -154,31 +154,36 @@ export class NodeCreationInputType extends utils.ObjectInputType<FieldCreationIn
   ): Promise<NodeCreationValue> {
     const resolvedValue: NodeCreationValue = Object.create(null);
 
-    await Promise.all(
-      this.componentFields.map(async (field) => {
-        const fieldData = data[field.name];
-        const componentValue =
-          fieldData == null || field instanceof LeafCreationInput
-            ? fieldData
-            : await field.resolveValue(
-                fieldData,
-                context,
-                utils.addPath(path, field.name),
-              );
+    for (const field of this.componentFields) {
+      const fieldData = data[field.name];
 
-        if (componentValue !== undefined) {
-          Object.assign(resolvedValue, { [field.name]: componentValue });
-        }
-      }),
-    );
+      const componentValue =
+        fieldData == null || field instanceof LeafCreationInput
+          ? fieldData
+          : await field.resolveValue(
+              fieldData,
+              context,
+              utils.addPath(path, field.name),
+            );
+
+      if (componentValue !== undefined) {
+        Object.assign(resolvedValue, { [field.name]: componentValue });
+      }
+    }
 
     return resolvedValue;
   }
 
   public hasReverseEdgeActions(
     data: Readonly<NonNullable<NodeCreationInputValue>>,
+    reverseEdges: ReadonlyArray<ReverseEdge> = Array.from(
+      this.node.reverseEdgeSet,
+    ),
   ): boolean {
-    return this.reverseEdgeFields.some((field) => data[field.name] != null);
+    return this.reverseEdgeFields.some(
+      (field) =>
+        data[field.name] != null && reverseEdges.includes(field.reverseEdge),
+    );
   }
 
   public async applyReverseEdgeActions(
@@ -187,19 +192,17 @@ export class NodeCreationInputType extends utils.ObjectInputType<FieldCreationIn
     context: MutationContext,
     path?: utils.Path,
   ): Promise<void> {
-    await Promise.all(
-      this.reverseEdgeFields.map(async (field) => {
-        const fieldData = data[field.name];
+    for (const field of this.reverseEdgeFields) {
+      const fieldData = data[field.name];
 
-        if (fieldData != null) {
-          await field.applyActions(
-            nodeValue,
-            fieldData,
-            context,
-            utils.addPath(path, field.name),
-          );
-        }
-      }),
-    );
+      if (fieldData != null) {
+        await field.applyActions(
+          nodeValue,
+          fieldData,
+          context,
+          utils.addPath(path, field.name),
+        );
+      }
+    }
   }
 }

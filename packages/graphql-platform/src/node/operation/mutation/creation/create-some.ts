@@ -78,42 +78,41 @@ export class CreateSomeMutation<
     Object.freeze(args.data);
 
     // Build the "creation" statements based on the provided "data" argument
-    const creations = await Promise.all(
-      args.data.map(async (data, index) => {
-        const indexedPath =
-          args.data.length > 1 ? utils.addPath(path, index) : path;
+    const creations: NodeCreationStatement[] = [];
 
-        // As the "data" will be provided to the hooks, we freeze it
-        Object.freeze(data);
+    for (const [index, data] of args.data.entries()) {
+      const indexedPath =
+        args.data.length > 1 ? utils.addPath(path, index) : path;
 
-        // Resolve the edges' nested-actions into their value
-        const value = await this.node.creationInputType.resolveValue(
-          data,
+      // As the "data" will be provided to the hooks, we freeze it
+      Object.freeze(data);
+
+      // Resolve the edges' nested-actions into their value
+      const value = await this.node.creationInputType.resolveValue(
+        data,
+        context,
+        indexedPath,
+      );
+
+      // Create a statement with it
+      const statement = new NodeCreationStatement(this.node, value);
+
+      // Apply the "preCreate"-hook, if any
+      try {
+        await this.node.preCreate({
           context,
-          indexedPath,
-        );
+          data,
+          creation: statement.proxy,
+        });
+      } catch (cause) {
+        throw new LifecycleHookError(this.node, LifecycleHookKind.PRE_CREATE, {
+          cause,
+          path: indexedPath,
+        });
+      }
 
-        // Create a statement with it
-        const statement = new NodeCreationStatement(this.node, value);
-
-        // Apply the "preCreate"-hook, if any
-        try {
-          await this.node.preCreate({
-            context,
-            data,
-            creation: statement.proxy,
-          });
-        } catch (cause) {
-          throw new LifecycleHookError(
-            this.node,
-            LifecycleHookKind.PRE_CREATE,
-            { cause, path: indexedPath },
-          );
-        }
-
-        return statement;
-      }),
-    );
+      creations.push(statement);
+    }
 
     // Actually create the nodes
     const rawNewSources = await catchConnectorOperationError(

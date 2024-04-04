@@ -52,18 +52,20 @@ const destructiveActionNames = [
 
 type DestructiveActionName = IterableElement<typeof destructiveActionNames>;
 
+const isDestructiveActionName = (
+  maybeDestructiveActionName: unknown,
+): maybeDestructiveActionName is DestructiveActionName =>
+  destructiveActionNames.includes(maybeDestructiveActionName as any);
+
 type NonDestructiveActionName = Exclude<
   UniqueReverseEdgeUpdateInputAction,
   DestructiveActionName
 >;
 
-const nonDestructiveActionNames = [
-  UniqueReverseEdgeUpdateInputAction.CREATE,
-  UniqueReverseEdgeUpdateInputAction.CREATE_IF_NOT_EXISTS,
-  UniqueReverseEdgeUpdateInputAction.UPDATE,
-  UniqueReverseEdgeUpdateInputAction.UPDATE_IF_EXISTS,
-  UniqueReverseEdgeUpdateInputAction.UPSERT,
-] satisfies NonDestructiveActionName[];
+const isNonDestructiveActionName = (
+  maybeNonDestructiveActionName: unknown,
+): maybeNonDestructiveActionName is NonDestructiveActionName =>
+  !isDestructiveActionName(maybeNonDestructiveActionName);
 
 export class UniqueReverseEdgeUpdateInput extends AbstractReverseEdgeUpdateInput<UniqueReverseEdgeUpdateInputValue> {
   public static supports(reverseEdge: UniqueReverseEdge): boolean {
@@ -197,29 +199,23 @@ export class UniqueReverseEdgeUpdateInput extends AbstractReverseEdgeUpdateInput
         },
       }),
       parser(inputValue, path) {
-        const inputActionNames = Object.keys(
-          inputValue,
-        ) as UniqueReverseEdgeUpdateInputAction[];
-
         if (
-          R.intersection(inputActionNames, destructiveActionNames).length > 1
+          R.filter(R.keys.strict(inputValue), isDestructiveActionName).length >
+          1
         ) {
           throw new utils.UnexpectedValueError(
-            `no more than one destructive action among ${destructiveActionNames.join(
-              ', ',
-            )}`,
+            `no more than one destructive action`,
             inputValue,
             { path },
           );
         }
 
         if (
-          R.intersection(inputActionNames, nonDestructiveActionNames).length > 1
+          R.filter(R.keys.strict(inputValue), isNonDestructiveActionName)
+            .length > 1
         ) {
           throw new utils.UnexpectedValueError(
-            `no more than one action among ${nonDestructiveActionNames.join(
-              ', ',
-            )}`,
+            `no more than one non-destructive action`,
             inputValue,
             { path },
           );
@@ -245,17 +241,11 @@ export class UniqueReverseEdgeUpdateInput extends AbstractReverseEdgeUpdateInput
       originalEdge.referencedUniqueConstraint.parseValue(nodeValue),
     );
 
-    const inputActionNames = Object.keys(
-      inputValue,
-    ) as UniqueReverseEdgeUpdateInputAction[];
+    const inputActionNames = R.keys.strict(inputValue);
 
-    // Apply destructive action first
+    // Apply destructive action first, if any
     {
-      const maybeActionName = inputActionNames.find(
-        (actionName): actionName is DestructiveActionName =>
-          destructiveActionNames.includes(actionName as any),
-      );
-
+      const maybeActionName = inputActionNames.find(isDestructiveActionName);
       if (maybeActionName) {
         const actionPath = utils.addPath(path, maybeActionName);
 
@@ -264,17 +254,15 @@ export class UniqueReverseEdgeUpdateInput extends AbstractReverseEdgeUpdateInput
             const actionData = inputValue[maybeActionName]!;
 
             if (actionData === true) {
-              await Promise.all(
-                originalEdgeValues.map((originalEdgeValue) =>
-                  headAPI.deleteOne(
-                    {
-                      where: { [originalEdgeName]: originalEdgeValue },
-                      selection,
-                    },
-                    actionPath,
-                  ),
-                ),
-              );
+              for (const originalEdgeValue of originalEdgeValues) {
+                await headAPI.deleteOne(
+                  {
+                    where: { [originalEdgeName]: originalEdgeValue },
+                    selection,
+                  },
+                  actionPath,
+                );
+              }
             }
             break;
           }
@@ -301,13 +289,9 @@ export class UniqueReverseEdgeUpdateInput extends AbstractReverseEdgeUpdateInput
       }
     }
 
-    // Then the others
+    // Then the non-destructive, if any
     {
-      const maybeActionName = inputActionNames.find(
-        (actionName): actionName is NonDestructiveActionName =>
-          nonDestructiveActionNames.includes(actionName as any),
-      );
-
+      const maybeActionName = inputActionNames.find(isNonDestructiveActionName);
       if (maybeActionName) {
         const actionPath = utils.addPath(path, maybeActionName);
 
@@ -333,41 +317,37 @@ export class UniqueReverseEdgeUpdateInput extends AbstractReverseEdgeUpdateInput
           case UniqueReverseEdgeUpdateInputAction.CREATE_IF_NOT_EXISTS: {
             const data = inputValue[maybeActionName]!;
 
-            await Promise.all(
-              originalEdgeValues.map((originalEdgeValue) =>
-                headAPI.createOneIfNotExists(
-                  {
-                    where: { [originalEdgeName]: originalEdgeValue },
-                    data: {
-                      ...data,
-                      [originalEdgeName]: {
-                        [EdgeUpdateInputAction.CONNECT]: originalEdgeValue,
-                      },
+            for (const originalEdgeValue of originalEdgeValues) {
+              await headAPI.createOneIfNotExists(
+                {
+                  where: { [originalEdgeName]: originalEdgeValue },
+                  data: {
+                    ...data,
+                    [originalEdgeName]: {
+                      [EdgeUpdateInputAction.CONNECT]: originalEdgeValue,
                     },
-                    selection,
                   },
-                  actionPath,
-                ),
-              ),
-            );
+                  selection,
+                },
+                actionPath,
+              );
+            }
             break;
           }
 
           case UniqueReverseEdgeUpdateInputAction.UPDATE: {
             const data = inputValue[maybeActionName]!;
 
-            await Promise.all(
-              originalEdgeValues.map((originalEdgeValue) =>
-                headAPI.updateOne(
-                  {
-                    where: { [originalEdgeName]: originalEdgeValue },
-                    data,
-                    selection,
-                  },
-                  actionPath,
-                ),
-              ),
-            );
+            for (const originalEdgeValue of originalEdgeValues) {
+              await headAPI.updateOne(
+                {
+                  where: { [originalEdgeName]: originalEdgeValue },
+                  data,
+                  selection,
+                },
+                actionPath,
+              );
+            }
             break;
           }
 
@@ -389,24 +369,22 @@ export class UniqueReverseEdgeUpdateInput extends AbstractReverseEdgeUpdateInput
           case UniqueReverseEdgeUpdateInputAction.UPSERT: {
             const { create, update } = inputValue[maybeActionName]!;
 
-            await Promise.all(
-              originalEdgeValues.map((originalEdgeValue) =>
-                headAPI.upsert(
-                  {
-                    where: { [originalEdgeName]: originalEdgeValue },
-                    create: {
-                      ...create,
-                      [originalEdgeName]: {
-                        [EdgeUpdateInputAction.CONNECT]: originalEdgeValue,
-                      },
+            for (const originalEdgeValue of originalEdgeValues) {
+              await headAPI.upsert(
+                {
+                  where: { [originalEdgeName]: originalEdgeValue },
+                  create: {
+                    ...create,
+                    [originalEdgeName]: {
+                      [EdgeUpdateInputAction.CONNECT]: originalEdgeValue,
                     },
-                    update,
-                    selection,
                   },
-                  actionPath,
-                ),
-              ),
-            );
+                  update,
+                  selection,
+                },
+                actionPath,
+              );
+            }
             break;
           }
 

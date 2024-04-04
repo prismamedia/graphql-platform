@@ -303,9 +303,11 @@ export class MariaDBConnector
           );
 
           const uniqueIndex = match?.groups?.unique
-            ? statement.table.uniqueIndexes.find(
-                (uniqueIndex) => uniqueIndex.name === match?.groups?.unique,
-              )
+            ? match?.groups?.unique === 'PRIMARY'
+              ? statement.table.primaryKey
+              : statement.table.uniqueIndexes.find(
+                  (uniqueIndex) => uniqueIndex.name === match?.groups?.unique,
+                )
             : undefined;
 
           throw new core.DuplicateError(

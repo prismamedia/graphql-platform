@@ -133,41 +133,46 @@ export class EdgeCreationInput extends AbstractComponentCreationInput<EdgeCreati
 
     const selection = this.edge.referencedUniqueConstraint.selection;
 
-    const actionName = Object.keys(inputValue)[0] as EdgeCreationInputAction;
-    const actionPath = utils.addPath(path, actionName);
+    const actionName = (
+      Object.keys(inputValue) as EdgeCreationInputAction[]
+    ).at(0);
 
-    switch (actionName) {
-      case EdgeCreationInputAction.CONNECT: {
-        const where = inputValue[actionName]!;
+    if (actionName) {
+      const actionPath = utils.addPath(path, actionName);
 
-        return headAPI.getOne({ where, selection }, actionPath);
+      switch (actionName) {
+        case EdgeCreationInputAction.CONNECT: {
+          const where = inputValue[actionName]!;
+
+          return headAPI.getOne({ where, selection }, actionPath);
+        }
+
+        case EdgeCreationInputAction.CONNECT_IF_EXISTS: {
+          const where = inputValue[actionName]!;
+
+          return headAPI.getOneIfExists({ where, selection }, actionPath);
+        }
+
+        case EdgeCreationInputAction.CREATE: {
+          const data = inputValue[actionName]!;
+
+          return headAPI.createOne({ data, selection }, actionPath);
+        }
+
+        case EdgeCreationInputAction.CREATE_IF_NOT_EXISTS: {
+          const { where, data } = inputValue[actionName]!;
+
+          return headAPI.createOneIfNotExists(
+            { where, data, selection },
+            actionPath,
+          );
+        }
+
+        default:
+          throw new utils.UnreachableValueError(actionName, {
+            path,
+          });
       }
-
-      case EdgeCreationInputAction.CONNECT_IF_EXISTS: {
-        const where = inputValue[actionName]!;
-
-        return headAPI.getOneIfExists({ where, selection }, actionPath);
-      }
-
-      case EdgeCreationInputAction.CREATE: {
-        const data = inputValue[actionName]!;
-
-        return headAPI.createOne({ data, selection }, actionPath);
-      }
-
-      case EdgeCreationInputAction.CREATE_IF_NOT_EXISTS: {
-        const { where, data } = inputValue[actionName]!;
-
-        return headAPI.createOneIfNotExists(
-          { where, data, selection },
-          actionPath,
-        );
-      }
-
-      default:
-        throw new utils.UnreachableValueError(actionName, {
-          path,
-        });
     }
   }
 }
