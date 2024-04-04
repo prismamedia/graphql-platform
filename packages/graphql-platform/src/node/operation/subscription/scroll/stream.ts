@@ -3,7 +3,6 @@ import { Memoize } from '@prismamedia/memoize';
 import {
   MultiBar as MultiProgressBar,
   SingleBar as ProgressBar,
-  Presets as ProgressBarPresets,
   type Options as ProgressBarOptions,
 } from 'cli-progress';
 import assert from 'node:assert/strict';
@@ -32,11 +31,11 @@ export const defaultProgressBarFormat =
   `[{bar}] {value}/{total} | {percentage}% | ETA: {eta_formatted} | Elapsed: {duration_formatted}` satisfies ProgressBarOptions['format'];
 
 export {
-  MultiProgressBar,
-  ProgressBar,
-  ProgressBarPresets,
-  type ProgressBarOptions,
-};
+  MultiBar as MultiProgressBar,
+  SingleBar as ProgressBar,
+  Presets as ProgressBarPresets,
+  type Options as ProgressBarOptions,
+} from 'cli-progress';
 
 export type ScrollSubscriptionStreamForEachTask<
   TValue extends NodeSelectedValue = any,

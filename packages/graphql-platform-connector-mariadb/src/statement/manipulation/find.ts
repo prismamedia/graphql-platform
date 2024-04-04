@@ -48,7 +48,8 @@ export class FindStatement implements mariadb.QueryOptions {
       orderingExpressions && `ORDER BY ${orderingExpressions}`,
       `LIMIT ${limit}`,
       offset && `OFFSET ${offset}`,
-      statement.forMutation != null && 'FOR UPDATE',
+      // Removed because of the "Deadlock found when trying to get lock; try restarting transaction" error in the nested-actions
+      // statement.forMutation != null && 'FOR UPDATE',
     ]
       .filter(Boolean)
       .join(EOL);
