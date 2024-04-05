@@ -1,12 +1,4 @@
-import {
-  afterAll,
-  beforeAll,
-  beforeEach,
-  describe,
-  expect,
-  it,
-} from '@jest/globals';
-import { NodeChange } from '@prismamedia/graphql-platform';
+import { afterAll, beforeAll, describe, expect, it } from '@jest/globals';
 import {
   ArticleStatus,
   myAdminContext,
@@ -17,20 +9,12 @@ import { createMyGP, type MyGP } from '../../__tests__/config.js';
 
 describe('Update statement', () => {
   let gp: MyGP;
-  const changes: NodeChange[] = [];
 
   beforeAll(async () => {
     gp = createMyGP(`connector_mariadb_update_statement`);
-    gp.on('node-change-aggregation', (aggregation) =>
-      changes.push(...aggregation),
-    );
 
     await gp.connector.setup();
     await gp.seed(myAdminContext, fixtures.constant);
-  });
-
-  beforeEach(() => {
-    changes.length = 0;
   });
 
   afterAll(() => gp.connector.teardown());
