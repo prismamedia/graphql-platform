@@ -1,56 +1,6 @@
 // Jest Snapshot v1, https://goo.gl/fbAQLP
 
-exports[`Update statement generates statements: changes 1`] = `
-Map {
-  "Article" => Map {
-    "update" => 4,
-  },
-  "ArticleTagModeration" => Map {
-    "deletion" => 3,
-  },
-  "ArticleTag" => Map {
-    "deletion" => 8,
-  },
-}
-`;
-
-exports[`Update statement generates statements: changes 2`] = `
-Map {
-  "Article" => Map {
-    "update" => 2,
-  },
-  "ArticleTag" => Map {
-    "creation" => 2,
-  },
-}
-`;
-
-exports[`Update statement generates statements: changes 3`] = `
-Map {
-  "ArticleTag" => Map {
-    "creation" => 4,
-  },
-}
-`;
-
-exports[`Update statement generates statements: changes 4`] = `
-Map {
-  "Article" => Map {
-    "update" => 2,
-  },
-  "ArticleTag" => Map {
-    "deletion" => 6,
-    "creation" => 20,
-  },
-  "Tag" => Map {
-    "creation" => 10,
-  },
-}
-`;
-
-exports[`Update statement generates statements: changes 5`] = `Map {}`;
-
-exports[`Update statement generates statements: result 1`] = `
+exports[`Update statement generates statements 1`] = `
 [
   {
     "score": 0,
@@ -79,7 +29,7 @@ exports[`Update statement generates statements: result 1`] = `
 ]
 `;
 
-exports[`Update statement generates statements: result 2`] = `
+exports[`Update statement generates statements 2`] = `
 [
   {
     "score": 1,
@@ -110,7 +60,7 @@ exports[`Update statement generates statements: result 2`] = `
 ]
 `;
 
-exports[`Update statement generates statements: result 3`] = `
+exports[`Update statement generates statements 3`] = `
 [
   {
     "score": 1,
@@ -165,27 +115,631 @@ exports[`Update statement generates statements: result 3`] = `
 ]
 `;
 
-exports[`Update statement generates statements: result 4`] = `
+exports[`Update statement generates statements 4`] = `
 [
   {
-    "status": "published",
+    "tags": [
+      {
+        "order": 0,
+        "tag": {
+          "title": "Tag 0",
+        },
+      },
+      {
+        "order": 1,
+        "tag": {
+          "title": "Tag 1",
+        },
+      },
+      {
+        "order": 2,
+        "tag": {
+          "title": "Tag 2",
+        },
+      },
+      {
+        "order": 3,
+        "tag": {
+          "title": "Tag 3",
+        },
+      },
+      {
+        "order": 4,
+        "tag": {
+          "title": "Tag 4",
+        },
+      },
+      {
+        "order": 5,
+        "tag": {
+          "title": "Tag 5",
+        },
+      },
+      {
+        "order": 6,
+        "tag": {
+          "title": "Tag 6",
+        },
+      },
+      {
+        "order": 7,
+        "tag": {
+          "title": "Tag 7",
+        },
+      },
+      {
+        "order": 8,
+        "tag": {
+          "title": "Tag 8",
+        },
+      },
+      {
+        "order": 9,
+        "tag": {
+          "title": "Tag 9",
+        },
+      },
+      {
+        "order": 10,
+        "tag": {
+          "title": "Tag 10",
+        },
+      },
+      {
+        "order": 11,
+        "tag": {
+          "title": "Tag 11",
+        },
+      },
+      {
+        "order": 12,
+        "tag": {
+          "title": "Tag 12",
+        },
+      },
+      {
+        "order": 13,
+        "tag": {
+          "title": "Tag 13",
+        },
+      },
+      {
+        "order": 14,
+        "tag": {
+          "title": "Tag 14",
+        },
+      },
+      {
+        "order": 15,
+        "tag": {
+          "title": "Tag 15",
+        },
+      },
+      {
+        "order": 16,
+        "tag": {
+          "title": "Tag 16",
+        },
+      },
+      {
+        "order": 17,
+        "tag": {
+          "title": "Tag 17",
+        },
+      },
+      {
+        "order": 18,
+        "tag": {
+          "title": "Tag 18",
+        },
+      },
+      {
+        "order": 19,
+        "tag": {
+          "title": "Tag 19",
+        },
+      },
+      {
+        "order": 20,
+        "tag": {
+          "title": "Tag 20",
+        },
+      },
+      {
+        "order": 21,
+        "tag": {
+          "title": "Tag 21",
+        },
+      },
+      {
+        "order": 22,
+        "tag": {
+          "title": "Tag 22",
+        },
+      },
+      {
+        "order": 23,
+        "tag": {
+          "title": "Tag 23",
+        },
+      },
+      {
+        "order": 24,
+        "tag": {
+          "title": "Tag 24",
+        },
+      },
+    ],
     "title": "My first draft article",
   },
   {
-    "status": "published",
+    "tags": [
+      {
+        "order": 0,
+        "tag": {
+          "title": "Tag 0",
+        },
+      },
+      {
+        "order": 1,
+        "tag": {
+          "title": "Tag 1",
+        },
+      },
+      {
+        "order": 2,
+        "tag": {
+          "title": "Tag 2",
+        },
+      },
+      {
+        "order": 3,
+        "tag": {
+          "title": "Tag 3",
+        },
+      },
+      {
+        "order": 4,
+        "tag": {
+          "title": "Tag 4",
+        },
+      },
+      {
+        "order": 5,
+        "tag": {
+          "title": "Tag 5",
+        },
+      },
+      {
+        "order": 6,
+        "tag": {
+          "title": "Tag 6",
+        },
+      },
+      {
+        "order": 7,
+        "tag": {
+          "title": "Tag 7",
+        },
+      },
+      {
+        "order": 8,
+        "tag": {
+          "title": "Tag 8",
+        },
+      },
+      {
+        "order": 9,
+        "tag": {
+          "title": "Tag 9",
+        },
+      },
+      {
+        "order": 10,
+        "tag": {
+          "title": "Tag 10",
+        },
+      },
+      {
+        "order": 11,
+        "tag": {
+          "title": "Tag 11",
+        },
+      },
+      {
+        "order": 12,
+        "tag": {
+          "title": "Tag 12",
+        },
+      },
+      {
+        "order": 13,
+        "tag": {
+          "title": "Tag 13",
+        },
+      },
+      {
+        "order": 14,
+        "tag": {
+          "title": "Tag 14",
+        },
+      },
+      {
+        "order": 15,
+        "tag": {
+          "title": "Tag 15",
+        },
+      },
+      {
+        "order": 16,
+        "tag": {
+          "title": "Tag 16",
+        },
+      },
+      {
+        "order": 17,
+        "tag": {
+          "title": "Tag 17",
+        },
+      },
+      {
+        "order": 18,
+        "tag": {
+          "title": "Tag 18",
+        },
+      },
+      {
+        "order": 19,
+        "tag": {
+          "title": "Tag 19",
+        },
+      },
+      {
+        "order": 20,
+        "tag": {
+          "title": "Tag 20",
+        },
+      },
+      {
+        "order": 21,
+        "tag": {
+          "title": "Tag 21",
+        },
+      },
+      {
+        "order": 22,
+        "tag": {
+          "title": "Tag 22",
+        },
+      },
+      {
+        "order": 23,
+        "tag": {
+          "title": "Tag 23",
+        },
+      },
+      {
+        "order": 24,
+        "tag": {
+          "title": "Tag 24",
+        },
+      },
+    ],
     "title": "My second draft article",
   },
 ]
 `;
 
-exports[`Update statement generates statements: result 5`] = `
+exports[`Update statement generates statements 5`] = `
 [
   {
-    "status": "published",
+    "tags": [
+      {
+        "order": 0,
+        "tag": {
+          "title": "Tag 0",
+        },
+      },
+      {
+        "order": 1,
+        "tag": {
+          "title": "Tag 1",
+        },
+      },
+      {
+        "order": 2,
+        "tag": {
+          "title": "Tag 2",
+        },
+      },
+      {
+        "order": 3,
+        "tag": {
+          "title": "Tag 3",
+        },
+      },
+      {
+        "order": 4,
+        "tag": {
+          "title": "Tag 4",
+        },
+      },
+      {
+        "order": 5,
+        "tag": {
+          "title": "Tag 5",
+        },
+      },
+      {
+        "order": 6,
+        "tag": {
+          "title": "Tag 6",
+        },
+      },
+      {
+        "order": 7,
+        "tag": {
+          "title": "Tag 7",
+        },
+      },
+      {
+        "order": 8,
+        "tag": {
+          "title": "Tag 8",
+        },
+      },
+      {
+        "order": 9,
+        "tag": {
+          "title": "Tag 9",
+        },
+      },
+      {
+        "order": 10,
+        "tag": {
+          "title": "Tag 10",
+        },
+      },
+      {
+        "order": 11,
+        "tag": {
+          "title": "Tag 11",
+        },
+      },
+      {
+        "order": 12,
+        "tag": {
+          "title": "Tag 12",
+        },
+      },
+      {
+        "order": 13,
+        "tag": {
+          "title": "Tag 13",
+        },
+      },
+      {
+        "order": 14,
+        "tag": {
+          "title": "Tag 14",
+        },
+      },
+      {
+        "order": 15,
+        "tag": {
+          "title": "Tag 15",
+        },
+      },
+      {
+        "order": 16,
+        "tag": {
+          "title": "Tag 16",
+        },
+      },
+      {
+        "order": 17,
+        "tag": {
+          "title": "Tag 17",
+        },
+      },
+      {
+        "order": 18,
+        "tag": {
+          "title": "Tag 18",
+        },
+      },
+      {
+        "order": 19,
+        "tag": {
+          "title": "Tag 19",
+        },
+      },
+      {
+        "order": 20,
+        "tag": {
+          "title": "Tag 20",
+        },
+      },
+      {
+        "order": 21,
+        "tag": {
+          "title": "Tag 21",
+        },
+      },
+      {
+        "order": 22,
+        "tag": {
+          "title": "Tag 22",
+        },
+      },
+      {
+        "order": 23,
+        "tag": {
+          "title": "Tag 23",
+        },
+      },
+      {
+        "order": 24,
+        "tag": {
+          "title": "Tag 24",
+        },
+      },
+    ],
     "title": "My first draft article",
   },
   {
-    "status": "published",
+    "tags": [
+      {
+        "order": 0,
+        "tag": {
+          "title": "Tag 0",
+        },
+      },
+      {
+        "order": 1,
+        "tag": {
+          "title": "Tag 1",
+        },
+      },
+      {
+        "order": 2,
+        "tag": {
+          "title": "Tag 2",
+        },
+      },
+      {
+        "order": 3,
+        "tag": {
+          "title": "Tag 3",
+        },
+      },
+      {
+        "order": 4,
+        "tag": {
+          "title": "Tag 4",
+        },
+      },
+      {
+        "order": 5,
+        "tag": {
+          "title": "Tag 5",
+        },
+      },
+      {
+        "order": 6,
+        "tag": {
+          "title": "Tag 6",
+        },
+      },
+      {
+        "order": 7,
+        "tag": {
+          "title": "Tag 7",
+        },
+      },
+      {
+        "order": 8,
+        "tag": {
+          "title": "Tag 8",
+        },
+      },
+      {
+        "order": 9,
+        "tag": {
+          "title": "Tag 9",
+        },
+      },
+      {
+        "order": 10,
+        "tag": {
+          "title": "Tag 10",
+        },
+      },
+      {
+        "order": 11,
+        "tag": {
+          "title": "Tag 11",
+        },
+      },
+      {
+        "order": 12,
+        "tag": {
+          "title": "Tag 12",
+        },
+      },
+      {
+        "order": 13,
+        "tag": {
+          "title": "Tag 13",
+        },
+      },
+      {
+        "order": 14,
+        "tag": {
+          "title": "Tag 14",
+        },
+      },
+      {
+        "order": 15,
+        "tag": {
+          "title": "Tag 15",
+        },
+      },
+      {
+        "order": 16,
+        "tag": {
+          "title": "Tag 16",
+        },
+      },
+      {
+        "order": 17,
+        "tag": {
+          "title": "Tag 17",
+        },
+      },
+      {
+        "order": 18,
+        "tag": {
+          "title": "Tag 18",
+        },
+      },
+      {
+        "order": 19,
+        "tag": {
+          "title": "Tag 19",
+        },
+      },
+      {
+        "order": 20,
+        "tag": {
+          "title": "Tag 20",
+        },
+      },
+      {
+        "order": 21,
+        "tag": {
+          "title": "Tag 21",
+        },
+      },
+      {
+        "order": 22,
+        "tag": {
+          "title": "Tag 22",
+        },
+      },
+      {
+        "order": 23,
+        "tag": {
+          "title": "Tag 23",
+        },
+      },
+      {
+        "order": 24,
+        "tag": {
+          "title": "Tag 24",
+        },
+      },
+    ],
     "title": "My second draft article",
   },
 ]

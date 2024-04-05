@@ -18,6 +18,7 @@ import { AbstractComponentUpdateInput } from '../abstract-component.js';
 export enum EdgeUpdateInputAction {
   DISCONNECT = 'disconnect',
   DISCONNECT_IF_EXISTS = 'disconnectIfExists',
+  REFERENCE = 'reference',
   CONNECT = 'connect',
   CONNECT_IF_EXISTS = 'connectIfExists',
   CREATE = 'create',
@@ -30,6 +31,7 @@ export type EdgeUpdateInputValue = utils.Nillable<
   RequireExactlyOne<{
     [EdgeUpdateInputAction.DISCONNECT]: boolean;
     [EdgeUpdateInputAction.DISCONNECT_IF_EXISTS]: boolean;
+    [EdgeUpdateInputAction.REFERENCE]: NonNullable<ReferenceValue>;
     [EdgeUpdateInputAction.CONNECT]: NonNullable<NodeUniqueFilterInputValue>;
     [EdgeUpdateInputAction.CONNECT_IF_EXISTS]: NonNullable<NodeUniqueFilterInputValue>;
     [EdgeUpdateInputAction.CREATE]: NonNullable<NodeCreationInputValue>;
@@ -67,6 +69,13 @@ export class EdgeUpdateInput extends AbstractComponentUpdateInput<EdgeUpdateInpu
           ].join(''),
           fields: () => {
             const fields: utils.Input[] = [
+              new utils.Input({
+                name: EdgeUpdateInputAction.REFERENCE,
+                description: `Reference ${edge.head.indefinite} to an existing "${edge.tail}" through the "${edge}" edge, used internally when we know that the reference exists.`,
+                type: edge.head.uniqueFilterInputType,
+                nullable: false,
+                public: false,
+              }),
               new utils.Input({
                 name: EdgeUpdateInputAction.CONNECT,
                 description: `Connect ${edge.head.indefinite} to an existing "${edge.tail}" through the "${edge}" edge, throw an error if it does not exist.`,
@@ -208,6 +217,9 @@ export class EdgeUpdateInput extends AbstractComponentUpdateInput<EdgeUpdateInpu
 
           return undefined;
         }
+
+        case EdgeUpdateInputAction.REFERENCE:
+          return selection.parseSource(inputValue[actionName], actionPath);
 
         case EdgeUpdateInputAction.CONNECT: {
           const where = inputValue[actionName]!;

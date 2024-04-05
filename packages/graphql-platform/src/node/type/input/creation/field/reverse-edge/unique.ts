@@ -100,7 +100,7 @@ export class UniqueReverseEdgeCreationInput extends AbstractReverseEdgeCreationI
               data: {
                 ...data,
                 [originalEdgeName]: {
-                  [EdgeUpdateInputAction.CONNECT]: originalEdgeValue,
+                  [EdgeUpdateInputAction.REFERENCE]: originalEdgeValue,
                 },
               },
               selection,

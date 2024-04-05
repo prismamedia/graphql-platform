@@ -1,7 +1,10 @@
 import * as utils from '@prismamedia/graphql-platform-utils';
 import inflection from 'inflection';
 import type { Except, RequireExactlyOne } from 'type-fest';
-import type { Edge } from '../../../../../definition/component/edge.js';
+import type {
+  Edge,
+  ReferenceValue,
+} from '../../../../../definition/component/edge.js';
 import type { MutationContext } from '../../../../../operation/mutation/context.js';
 import type { EdgeCreationValue } from '../../../../../statement/creation.js';
 import type { NodeCreationInputValue } from '../../../creation.js';
@@ -9,6 +12,7 @@ import type { NodeUniqueFilterInputValue } from '../../../unique-filter.js';
 import { AbstractComponentCreationInput } from '../abstract-component.js';
 
 export enum EdgeCreationInputAction {
+  REFERENCE = 'reference',
   CONNECT = 'connect',
   CONNECT_IF_EXISTS = 'connectIfExists',
   CREATE = 'create',
@@ -17,6 +21,7 @@ export enum EdgeCreationInputAction {
 
 export type EdgeCreationInputValue = utils.Nillable<
   RequireExactlyOne<{
+    [EdgeCreationInputAction.REFERENCE]: NonNullable<ReferenceValue>;
     [EdgeCreationInputAction.CONNECT]: NonNullable<NodeUniqueFilterInputValue>;
     [EdgeCreationInputAction.CONNECT_IF_EXISTS]: NonNullable<NodeUniqueFilterInputValue>;
     [EdgeCreationInputAction.CREATE]: NonNullable<NodeCreationInputValue>;
@@ -52,6 +57,13 @@ export class EdgeCreationInput extends AbstractComponentCreationInput<EdgeCreati
           ].join(''),
           fields: () => {
             const fields: utils.Input[] = [
+              new utils.Input({
+                name: EdgeCreationInputAction.REFERENCE,
+                description: `Reference ${edge.head.indefinite} to a new "${edge.tail}" through the "${edge}" edge, used internally when we know that the reference exists.`,
+                type: edge.head.uniqueFilterInputType,
+                nullable: false,
+                public: false,
+              }),
               new utils.Input({
                 name: EdgeCreationInputAction.CONNECT,
                 description: `Connect ${edge.head.indefinite} to a new "${edge.tail}" through the "${edge}" edge, throw an error if it does not exist.`,
@@ -141,6 +153,9 @@ export class EdgeCreationInput extends AbstractComponentCreationInput<EdgeCreati
       const actionPath = utils.addPath(path, actionName);
 
       switch (actionName) {
+        case EdgeCreationInputAction.REFERENCE:
+          return selection.parseSource(inputValue[actionName], actionPath);
+
         case EdgeCreationInputAction.CONNECT: {
           const where = inputValue[actionName]!;
 

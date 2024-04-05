@@ -94,7 +94,7 @@ export class MultipleReverseEdgeCreationInput extends AbstractReverseEdgeCreatio
               data: actionData.map((data) => ({
                 ...data,
                 [originalEdgeName]: {
-                  [EdgeUpdateInputAction.CONNECT]: originalEdgeValue,
+                  [EdgeUpdateInputAction.REFERENCE]: originalEdgeValue,
                 },
               })),
               selection,

@@ -6,8 +6,7 @@ import {
   expect,
   it,
 } from '@jest/globals';
-import { Node, NodeChange } from '@prismamedia/graphql-platform';
-import { MutationType } from '@prismamedia/graphql-platform-utils';
+import { NodeChange } from '@prismamedia/graphql-platform';
 import {
   ArticleStatus,
   myAdminContext,
@@ -159,7 +158,7 @@ describe('Update statement', () => {
         data: {
           tags: {
             deleteAll: true,
-            create: R.range(0, 10).map((order) => ({
+            create: R.range(0, 25).map((order) => ({
               order,
               tag: {
                 createIfNotExists: {
@@ -172,10 +171,15 @@ describe('Update statement', () => {
         },
         where: { status_not: ArticleStatus.DELETED },
         orderBy: ['createdAt_ASC'],
-        first: 10,
+        first: 5,
         selection: `{
-          status
           title
+          tags(orderBy: [order_ASC], first: 50) {
+            order
+            tag {
+              title
+            }
+          }
         }`,
       },
     ],
@@ -186,7 +190,7 @@ describe('Update statement', () => {
         data: {
           tags: {
             deleteAll: true,
-            create: R.range(0, 10).map((order) => ({
+            create: R.range(0, 25).map((order) => ({
               order,
               tag: {
                 createIfNotExists: {
@@ -199,41 +203,21 @@ describe('Update statement', () => {
         },
         where: { status_not: ArticleStatus.DELETED },
         orderBy: ['createdAt_ASC'],
-        first: 10,
+        first: 5,
         selection: `{
-          status
           title
+          tags(orderBy: [order_ASC], first: 50) {
+            order
+            tag {
+              title
+            }
+          }
         }`,
       },
     ],
   ])('generates statements', async (nodeName, context, args) => {
     await expect(
       gp.api[nodeName].updateMany(context, args),
-    ).resolves.toMatchSnapshot('result');
-
-    expect(
-      changes.reduce<Map<Node['name'], Map<MutationType, number>>>(
-        (changesByMutationTypeByNodeName, change) => {
-          let changesByMutationType = changesByMutationTypeByNodeName.get(
-            change.node.name,
-          );
-
-          if (!changesByMutationType) {
-            changesByMutationTypeByNodeName.set(
-              change.node.name,
-              (changesByMutationType = new Map()),
-            );
-          }
-
-          changesByMutationType.set(
-            change.kind,
-            (changesByMutationType.get(change.kind) ?? 0) + 1,
-          );
-
-          return changesByMutationTypeByNodeName;
-        },
-        new Map(),
-      ),
-    ).toMatchSnapshot('changes');
+    ).resolves.toMatchSnapshot();
   });
 });

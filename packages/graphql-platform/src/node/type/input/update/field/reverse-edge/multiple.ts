@@ -570,7 +570,7 @@ export class MultipleReverseEdgeUpdateInput extends AbstractReverseEdgeUpdateInp
                 actionData.map((data) => ({
                   ...data,
                   [originalEdgeName]: {
-                    [EdgeUpdateInputAction.CONNECT]: originalEdgeValue,
+                    [EdgeUpdateInputAction.REFERENCE]: originalEdgeValue,
                   },
                 })),
               ),
@@ -595,7 +595,7 @@ export class MultipleReverseEdgeUpdateInput extends AbstractReverseEdgeUpdateInp
                   data: {
                     ...data,
                     [originalEdgeName]: {
-                      [EdgeUpdateInputAction.CONNECT]: originalEdgeValue,
+                      [EdgeUpdateInputAction.REFERENCE]: originalEdgeValue,
                     },
                   },
                   selection,
@@ -702,7 +702,7 @@ export class MultipleReverseEdgeUpdateInput extends AbstractReverseEdgeUpdateInp
                   create: {
                     ...create,
                     [originalEdgeName]: {
-                      [EdgeUpdateInputAction.CONNECT]: originalEdgeValue,
+                      [EdgeUpdateInputAction.REFERENCE]: originalEdgeValue,
                     },
                   },
                   update,
