@@ -5,6 +5,7 @@ import type {
   Node,
   NodeCreationInputValue,
   NodeValue,
+  UniqueConstraint,
   UniqueConstraintValue,
 } from '../node.js';
 import type { Seeding } from '../seeding.js';
@@ -103,9 +104,12 @@ async function extractData<TRequestContext extends object>(
             ? fieldValue
             : field instanceof EdgeCreationInput
             ? fieldValue && {
-                [EdgeCreationInputAction.CONNECT]: await dependencyGraph
+                [EdgeCreationInputAction.REFERENCE]: await dependencyGraph
                   .getNodeData(fieldValue)
-                  .getIdentifier(context),
+                  .getUniqueConstraintValue(
+                    context,
+                    field.edge.referencedUniqueConstraint,
+                  ),
               }
             : field instanceof MultipleReverseEdgeCreationInput
             ? fieldValue && {
@@ -218,12 +222,18 @@ export class NodeFixture<TRequestContext extends object = any> {
       .execute(context, { data, selection: this.node.selection }, this.#path);
   }
 
-  @Memoize((context: TRequestContext) => context)
-  public async getIdentifier(
+  public async getUniqueConstraintValue(
     context: TRequestContext,
+    uniqueConstraint: UniqueConstraint,
   ): Promise<UniqueConstraintValue> {
     const nodeValue = await this.load(context);
 
-    return this.node.mainIdentifier.parseValue(nodeValue);
+    return uniqueConstraint.parseValue(nodeValue);
+  }
+
+  public async getIdentifier(
+    context: TRequestContext,
+  ): Promise<UniqueConstraintValue> {
+    return this.getUniqueConstraintValue(context, this.node.mainIdentifier);
   }
 }

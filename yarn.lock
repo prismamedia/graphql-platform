@@ -1072,10 +1072,10 @@ __metadata:
     jest: "npm:29.7.0"
     mariadb: "npm:^3.3.0"
     publint: "npm:0.2.7"
-    remeda: "npm:^1.58.0"
+    remeda: "npm:^1.58.1"
     semver: "npm:^7.6.0"
     type-fest: "npm:^4.15.0"
-    typescript: "npm:5.4.4"
+    typescript: "npm:5.4.5"
   peerDependencies:
     graphql: ^16.7.0
   languageName: unknown
@@ -1104,7 +1104,7 @@ __metadata:
     graphql-ws: "npm:5.16.0"
     jest: "npm:29.7.0"
     publint: "npm:0.2.7"
-    typescript: "npm:5.4.4"
+    typescript: "npm:5.4.5"
     ws: "npm:8.16.0"
   peerDependencies:
     "@apollo/server": ^4.7.1
@@ -1127,7 +1127,7 @@ __metadata:
     jest: "npm:29.7.0"
     publint: "npm:0.2.7"
     type-fest: "npm:^4.15.0"
-    typescript: "npm:5.4.4"
+    typescript: "npm:5.4.5"
   peerDependencies:
     graphql: ^16.7.0
   languageName: unknown
@@ -1148,9 +1148,9 @@ __metadata:
     indefinite: "npm:^2.5.1"
     jest: "npm:29.7.0"
     publint: "npm:0.2.7"
-    remeda: "npm:^1.58.0"
+    remeda: "npm:^1.58.1"
     type-fest: "npm:^4.15.0"
-    typescript: "npm:5.4.4"
+    typescript: "npm:5.4.5"
   peerDependencies:
     graphql: ^16.7.0
   languageName: unknown
@@ -1180,9 +1180,9 @@ __metadata:
     p-queue: "npm:^8.0.1"
     p-retry: "npm:^6.2.0"
     publint: "npm:0.2.7"
-    remeda: "npm:^1.58.0"
+    remeda: "npm:^1.58.1"
     type-fest: "npm:^4.15.0"
-    typescript: "npm:5.4.4"
+    typescript: "npm:5.4.5"
   peerDependencies:
     graphql: ^16.7.0
   languageName: unknown
@@ -4995,10 +4995,10 @@ __metadata:
   languageName: node
   linkType: hard
 
-"remeda@npm:^1.58.0":
-  version: 1.58.0
-  resolution: "remeda@npm:1.58.0"
-  checksum: 10/8ab923135c15e6f6f019e99abf0629b4350c89513e886337ea7dd408db9968bc305f7fc1a4f00e14a8948c1e440be704f9927fcb74e12b832ba0e6c6b2b6570f
+"remeda@npm:^1.58.1":
+  version: 1.58.1
+  resolution: "remeda@npm:1.58.1"
+  checksum: 10/c8f6667db6a7e9ac553bb683fe7ea16dc52662eada04b46d2ff9e24bcb1855b1bdce84cb7bec87236ef3c6995130bf3e8bb6330805491b4c3c83086a7ada8000
   languageName: node
   linkType: hard
 
@@ -5109,7 +5109,7 @@ __metadata:
     "@yarnpkg/sdks": "npm:3.1.0"
     jest: "npm:29.7.0"
     prettier: "npm:2.8.8"
-    typescript: "npm:5.4.4"
+    typescript: "npm:5.4.5"
   languageName: unknown
   linkType: soft
 
@@ -5595,23 +5595,23 @@ __metadata:
   languageName: node
   linkType: hard
 
-"typescript@npm:5.4.4":
-  version: 5.4.4
-  resolution: "typescript@npm:5.4.4"
+"typescript@npm:5.4.5":
+  version: 5.4.5
+  resolution: "typescript@npm:5.4.5"
   bin:
     tsc: bin/tsc
     tsserver: bin/tsserver
-  checksum: 10/bade322d88fd93c8179e262aca9ba7f7b4417c09117879819c87946578c782ab123e3acb4733046a6e38714c47ef927360045a1f9292a1bff3a05a6577d27ca2
+  checksum: 10/d04a9e27e6d83861f2126665aa8d84847e8ebabcea9125b9ebc30370b98cb38b5dff2508d74e2326a744938191a83a69aa9fddab41f193ffa43eabfdf3f190a5
   languageName: node
   linkType: hard
 
-"typescript@patch:typescript@npm%3A5.4.4#optional!builtin<compat/typescript>":
-  version: 5.4.4
-  resolution: "typescript@patch:typescript@npm%3A5.4.4#optional!builtin<compat/typescript>::version=5.4.4&hash=5adc0c"
+"typescript@patch:typescript@npm%3A5.4.5#optional!builtin<compat/typescript>":
+  version: 5.4.5
+  resolution: "typescript@patch:typescript@npm%3A5.4.5#optional!builtin<compat/typescript>::version=5.4.5&hash=5adc0c"
   bin:
     tsc: bin/tsc
     tsserver: bin/tsserver
-  checksum: 10/88aff3244c31d4c6ede05b4fd28732fc8935a7fc638f2a3dcbbb767d1ac98e4b077f21ec74bc97f43c9307bc3f27e2359def1d793f9918c3429a744408fd75b4
+  checksum: 10/760f7d92fb383dbf7dee2443bf902f4365db2117f96f875cf809167f6103d55064de973db9f78fe8f31ec08fff52b2c969aee0d310939c0a3798ec75d0bca2e1
   languageName: node
   linkType: hard
 
