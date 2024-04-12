@@ -71,7 +71,7 @@ export type ScrollSubscriptionStreamForEachOptions = Except<
    *
    * Anything but throwing an error will let the process continue
    */
-  onError?: (error: Error) => void;
+  onError?: (error: Error) => Promisable<void>;
 
   /**
    * Optional, either:
@@ -268,10 +268,10 @@ export class ScrollSubscriptionStream<
   public async forEach(
     task: ScrollSubscriptionStreamForEachTask<TValue, TRequestContext>,
     {
+      onError,
       progressBar: progressBarOptions,
       retry: retryOptions,
       buffer: bufferOptions,
-      onError,
       ...queueOptions
     }: ScrollSubscriptionStreamForEachOptions = {},
   ): Promise<void> {
@@ -283,15 +283,15 @@ export class ScrollSubscriptionStream<
       throwOnTimeout: queueOptions.throwOnTimeout ?? true,
     });
 
+    assert(
+      onError == null || typeof onError === 'function',
+      'The "onError" has to be a function',
+    );
+
     const buffer = bufferOptions ?? tasks.concurrency;
     assert(
       typeof buffer === 'number' && buffer >= 0,
       `The buffer has to be greater than or equal to 0, got ${inspect(buffer)}`,
-    );
-
-    assert(
-      onError == null || typeof onError === 'function',
-      'The "onError" has to be a function',
     );
 
     const normalizedRetryOptions: PRetryOptions | false = retryOptions
@@ -338,35 +338,37 @@ export class ScrollSubscriptionStream<
 
     try {
       await new Promise<void>(async (resolve, reject) => {
-        tasks.on(
-          'error',
-          onError
-            ? (error) => {
-                try {
-                  onError(utils.castToError(error));
-                } catch (error) {
-                  reject(error);
-                }
-              }
-            : reject,
-        );
+        tasks.on('error', reject);
 
         try {
           for await (const value of this) {
             await tasks.onSizeLessThan(buffer + 1);
 
-            const taskIndex = currentIndex++;
-            const wrappedTask = async () => {
-              await task(value, taskIndex, this);
+            const boundTask = task.bind(undefined, value, ++currentIndex, this);
 
-              progressBar?.increment();
-            };
+            const retryTaskWrapper = normalizedRetryOptions
+              ? () => PRetry(boundTask, normalizedRetryOptions)
+              : boundTask;
 
-            tasks.add(
-              normalizedRetryOptions
-                ? () => PRetry(wrappedTask, normalizedRetryOptions)
-                : wrappedTask,
-            );
+            const onErrorTaskWrapper = onError
+              ? async () => {
+                  try {
+                    await retryTaskWrapper();
+                  } catch (error) {
+                    await onError(utils.castToError(error));
+                  }
+                }
+              : retryTaskWrapper;
+
+            const progressBarTaskWrapper = progressBar
+              ? async () => {
+                  await onErrorTaskWrapper();
+
+                  progressBar.increment();
+                }
+              : onErrorTaskWrapper;
+
+            tasks.add(progressBarTaskWrapper);
           }
 
           await tasks.onIdle();
@@ -388,10 +390,10 @@ export class ScrollSubscriptionStream<
     task: ScrollSubscriptionStreamByBatchTask<TValue, TRequestContext>,
     {
       batchSize,
+      onError,
       progressBar: progressBarOptions,
       retry: retryOptions,
       buffer: bufferOptions,
-      onError,
       ...queueOptions
     }: ScrollSubscriptionStreamByBatchOptions = {},
   ): Promise<void> {
@@ -403,15 +405,15 @@ export class ScrollSubscriptionStream<
       throwOnTimeout: queueOptions.throwOnTimeout ?? true,
     });
 
+    assert(
+      onError == null || typeof onError === 'function',
+      'The "onError" has to be a function',
+    );
+
     const buffer = bufferOptions ?? tasks.concurrency;
     assert(
       typeof buffer === 'number' && buffer >= 0,
       `The buffer has to be greater than or equal to 0, got ${inspect(buffer)}`,
-    );
-
-    assert(
-      onError == null || typeof onError === 'function',
-      'The "onError" has to be a function',
     );
 
     const normalizedBatchSize = Math.max(1, batchSize || this.#chunkSize);
@@ -463,34 +465,37 @@ export class ScrollSubscriptionStream<
         const values = Object.freeze(batch);
         batch = [];
 
-        const wrappedTask = async () => {
-          await task(values, this);
+        const boundTask = task.bind(undefined, values, this);
 
-          progressBar?.increment(values.length);
-        };
+        const retryTaskWrapper = normalizedRetryOptions
+          ? () => PRetry(boundTask, normalizedRetryOptions)
+          : boundTask;
 
-        tasks.add(
-          normalizedRetryOptions
-            ? () => PRetry(wrappedTask, normalizedRetryOptions)
-            : wrappedTask,
-        );
+        const onErrorTaskWrapper = onError
+          ? async () => {
+              try {
+                await retryTaskWrapper();
+              } catch (error) {
+                await onError(utils.castToError(error));
+              }
+            }
+          : retryTaskWrapper;
+
+        const progressBarTaskWrapper = progressBar
+          ? async () => {
+              await onErrorTaskWrapper();
+
+              progressBar.increment(values.length);
+            }
+          : onErrorTaskWrapper;
+
+        tasks.add(progressBarTaskWrapper);
       }
     };
 
     try {
       await new Promise<void>(async (resolve, reject) => {
-        tasks.on(
-          'error',
-          onError
-            ? (error) => {
-                try {
-                  onError(utils.castToError(error));
-                } catch (error) {
-                  reject(error);
-                }
-              }
-            : reject,
-        );
+        tasks.on('error', reject);
 
         try {
           for await (const value of this) {
