@@ -67,11 +67,11 @@ export type ScrollSubscriptionStreamForEachOptions = Except<
   retry?: PRetryOptions | number | boolean;
 
   /**
-   * Optional, change the default behavior when an error is encountered, which is to stop the stream and throw that error
+   * Optional, let the cursor continue on error, if a number is provided it defines the maximum number of errors allowed before an AggregateError is thrown
    *
-   * Anything but throwing an error will let the process continue
+   * @default false
    */
-  onError?: (error: Error) => Promisable<void>;
+  continueOnError?: boolean | number;
 
   /**
    * Optional, either:
@@ -268,7 +268,7 @@ export class ScrollSubscriptionStream<
   public async forEach(
     task: ScrollSubscriptionStreamForEachTask<TValue, TRequestContext>,
     {
-      onError,
+      continueOnError,
       progressBar: progressBarOptions,
       retry: retryOptions,
       buffer: bufferOptions,
@@ -284,8 +284,9 @@ export class ScrollSubscriptionStream<
     });
 
     assert(
-      onError == null || typeof onError === 'function',
-      'The "onError" has to be a function',
+      continueOnError == null ||
+        ['boolean', 'number'].includes(typeof continueOnError),
+      'The "continueOnError" has to be a boolean or a positive integer',
     );
 
     const buffer = bufferOptions ?? tasks.concurrency;
@@ -336,6 +337,13 @@ export class ScrollSubscriptionStream<
       }
     }
 
+    const errors: unknown[] = [];
+    const maxErrorCount = continueOnError
+      ? continueOnError === true
+        ? Infinity
+        : continueOnError
+      : 0;
+
     try {
       await new Promise<void>(async (resolve, reject) => {
         tasks.on('error', reject);
@@ -350,23 +358,26 @@ export class ScrollSubscriptionStream<
               ? () => PRetry(boundTask, normalizedRetryOptions)
               : boundTask;
 
-            const onErrorTaskWrapper = onError
-              ? async () => {
-                  try {
-                    await retryTaskWrapper();
-                  } catch (error) {
-                    await onError(utils.castToError(error));
+            const continueOnErrorTaskWrapper =
+              maxErrorCount > 0
+                ? async () => {
+                    try {
+                      await retryTaskWrapper();
+                    } catch (error) {
+                      if (errors.push(error) >= maxErrorCount) {
+                        throw new AggregateError(errors);
+                      }
+                    }
                   }
-                }
-              : retryTaskWrapper;
+                : retryTaskWrapper;
 
             const progressBarTaskWrapper = progressBar
               ? async () => {
-                  await onErrorTaskWrapper();
+                  await continueOnErrorTaskWrapper();
 
                   progressBar.increment();
                 }
-              : onErrorTaskWrapper;
+              : continueOnErrorTaskWrapper;
 
             tasks.add(progressBarTaskWrapper);
           }
@@ -384,13 +395,17 @@ export class ScrollSubscriptionStream<
       await this.dispose();
       tasks.clear();
     }
+
+    if (errors.length) {
+      throw new AggregateError(errors);
+    }
   }
 
   public async byBatch(
     task: ScrollSubscriptionStreamByBatchTask<TValue, TRequestContext>,
     {
       batchSize,
-      onError,
+      continueOnError,
       progressBar: progressBarOptions,
       retry: retryOptions,
       buffer: bufferOptions,
@@ -406,8 +421,9 @@ export class ScrollSubscriptionStream<
     });
 
     assert(
-      onError == null || typeof onError === 'function',
-      'The "onError" has to be a function',
+      continueOnError == null ||
+        ['boolean', 'number'].includes(typeof continueOnError),
+      'The "continueOnError" has to be a boolean or a positive integer',
     );
 
     const buffer = bufferOptions ?? tasks.concurrency;
@@ -460,6 +476,13 @@ export class ScrollSubscriptionStream<
 
     let batch: TValue[] = [];
 
+    const errors: unknown[] = [];
+    const maxErrorCount = continueOnError
+      ? continueOnError === true
+        ? Infinity
+        : continueOnError
+      : 0;
+
     const processBatch = () => {
       if (batch.length) {
         const values = Object.freeze(batch);
@@ -471,23 +494,26 @@ export class ScrollSubscriptionStream<
           ? () => PRetry(boundTask, normalizedRetryOptions)
           : boundTask;
 
-        const onErrorTaskWrapper = onError
-          ? async () => {
-              try {
-                await retryTaskWrapper();
-              } catch (error) {
-                await onError(utils.castToError(error));
+        const continueOnErrorTaskWrapper =
+          maxErrorCount > 0
+            ? async () => {
+                try {
+                  await retryTaskWrapper();
+                } catch (error) {
+                  if (errors.push(error) >= maxErrorCount) {
+                    throw new AggregateError(errors);
+                  }
+                }
               }
-            }
-          : retryTaskWrapper;
+            : retryTaskWrapper;
 
         const progressBarTaskWrapper = progressBar
           ? async () => {
-              await onErrorTaskWrapper();
+              await continueOnErrorTaskWrapper();
 
               progressBar.increment(values.length);
             }
-          : onErrorTaskWrapper;
+          : continueOnErrorTaskWrapper;
 
         tasks.add(progressBarTaskWrapper);
       }
@@ -520,6 +546,10 @@ export class ScrollSubscriptionStream<
     } finally {
       await this.dispose();
       tasks.clear();
+    }
+
+    if (errors.length) {
+      throw new AggregateError(errors);
     }
   }
 }
