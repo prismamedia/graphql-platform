@@ -9,6 +9,7 @@ import type {
   UniqueConstraintValue,
 } from '../node.js';
 import type { Seeding } from '../seeding.js';
+import type { MutationContext } from './operation.js';
 import {
   EdgeCreationInput,
   EdgeCreationInputAction,
@@ -83,11 +84,58 @@ function extractDependencies(
   return dependencies;
 }
 
+async function extractFieldValue<TRequestContext extends object>(
+  dependencyGraph: DepGraph<NodeFixture>,
+  field: FieldCreationInput,
+  value: any,
+  context: TRequestContext | MutationContext<TRequestContext>,
+  path: utils.Path,
+): Promise<any> {
+  return value == null || field instanceof LeafCreationInput
+    ? value
+    : field instanceof EdgeCreationInput
+    ? {
+        [EdgeCreationInputAction.REFERENCE]: await dependencyGraph
+          .getNodeData(value)
+          .getUniqueConstraintValue(
+            context,
+            field.edge.referencedUniqueConstraint,
+          ),
+      }
+    : field instanceof MultipleReverseEdgeCreationInput
+    ? {
+        [MultipleReverseEdgeCreationInputAction.CREATE_SOME]: await Promise.all(
+          utils
+            .resolveArrayable(value)
+            .map((data, index) =>
+              extractData(
+                dependencyGraph,
+                field.reverseEdge.head,
+                data,
+                context,
+                utils.addPath(path, index),
+              ),
+            ),
+        ),
+      }
+    : field instanceof UniqueReverseEdgeCreationInput
+    ? {
+        [UniqueReverseEdgeCreationInputAction.CREATE]: await extractData(
+          dependencyGraph,
+          field.reverseEdge.head,
+          value,
+          context,
+          path,
+        ),
+      }
+    : value;
+}
+
 async function extractData<TRequestContext extends object>(
   dependencyGraph: DepGraph<NodeFixture>,
   node: Node,
   data: NodeFixtureData,
-  context: TRequestContext,
+  context: TRequestContext | MutationContext<TRequestContext>,
   path: utils.Path,
 ): Promise<NonNullable<NodeCreationInputValue>> {
   utils.assertPlainObject(data, path);
@@ -99,47 +147,14 @@ async function extractData<TRequestContext extends object>(
         const fieldPath = utils.addPath(path, field.name);
 
         return [
-          fieldName,
-          field instanceof LeafCreationInput
-            ? fieldValue
-            : field instanceof EdgeCreationInput
-            ? fieldValue && {
-                [EdgeCreationInputAction.REFERENCE]: await dependencyGraph
-                  .getNodeData(fieldValue)
-                  .getUniqueConstraintValue(
-                    context,
-                    field.edge.referencedUniqueConstraint,
-                  ),
-              }
-            : field instanceof MultipleReverseEdgeCreationInput
-            ? fieldValue && {
-                [MultipleReverseEdgeCreationInputAction.CREATE_SOME]:
-                  await Promise.all(
-                    utils
-                      .resolveArrayable(fieldValue)
-                      .map((data, index) =>
-                        extractData(
-                          dependencyGraph,
-                          field.reverseEdge.head,
-                          data,
-                          context,
-                          utils.addPath(fieldPath, index),
-                        ),
-                      ),
-                  ),
-              }
-            : field instanceof UniqueReverseEdgeCreationInput
-            ? fieldValue && {
-                [UniqueReverseEdgeCreationInputAction.CREATE]:
-                  await extractData(
-                    dependencyGraph,
-                    field.reverseEdge.head,
-                    fieldValue,
-                    context,
-                    fieldPath,
-                  ),
-              }
-            : fieldValue,
+          field.name,
+          await extractFieldValue<TRequestContext>(
+            dependencyGraph,
+            field,
+            fieldValue,
+            context,
+            fieldPath,
+          ),
         ];
       }),
     ),
@@ -207,9 +222,11 @@ export class NodeFixture<TRequestContext extends object = any> {
     );
   }
 
-  @Memoize((context: TRequestContext) => context)
-  public async load(context: TRequestContext): Promise<NodeValue> {
-    const data = await extractData(
+  @Memoize(() => true)
+  public async load(
+    context: TRequestContext | MutationContext<TRequestContext>,
+  ): Promise<NodeValue> {
+    const data = await extractData<TRequestContext>(
       this.seeding.dependencyGraph,
       this.node,
       this.data,
@@ -224,16 +241,10 @@ export class NodeFixture<TRequestContext extends object = any> {
 
   public async getUniqueConstraintValue(
     context: TRequestContext,
-    uniqueConstraint: UniqueConstraint,
+    uniqueConstraint: UniqueConstraint = this.node.mainIdentifier,
   ): Promise<UniqueConstraintValue> {
     const nodeValue = await this.load(context);
 
     return uniqueConstraint.parseValue(nodeValue);
-  }
-
-  public async getIdentifier(
-    context: TRequestContext,
-  ): Promise<UniqueConstraintValue> {
-    return this.getUniqueConstraintValue(context, this.node.mainIdentifier);
   }
 }

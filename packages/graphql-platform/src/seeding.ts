@@ -1,8 +1,7 @@
 import * as utils from '@prismamedia/graphql-platform-utils';
-import { Memoize } from '@prismamedia/memoize';
 import { DepGraph } from 'dependency-graph';
 import type { GraphQLPlatform } from './index.js';
-import type { Node } from './node.js';
+import type { MutationContext, Node } from './node.js';
 import {
   NodeFixture,
   type NodeFixtureData,
@@ -73,8 +72,9 @@ export class Seeding<TRequestContext extends object = any> {
       .map((reference) => this.dependencyGraph.getNodeData(reference));
   }
 
-  @Memoize((context: TRequestContext) => context)
-  public async load(context: TRequestContext): Promise<void> {
+  public async load(
+    context: TRequestContext | MutationContext<TRequestContext>,
+  ): Promise<void> {
     await Promise.all(this.fixtures.map((fixture) => fixture.load(context)));
   }
 }

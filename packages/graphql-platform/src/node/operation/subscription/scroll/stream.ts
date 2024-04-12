@@ -67,6 +67,13 @@ export type ScrollSubscriptionStreamForEachOptions = Except<
   retry?: PRetryOptions | number | boolean;
 
   /**
+   * Optional, change the default behavior when an error is encountered, which is to stop the stream and throw that error
+   *
+   * Anything but throwing an error will let the process continue
+   */
+  onError?: (error: Error) => void;
+
+  /**
    * Optional, either:
    * - provide a progress-bar which will be updated with the current progress
    * - provide a multi-progress-bar on which will be appended a new one which will be updated with the current progress
@@ -264,6 +271,7 @@ export class ScrollSubscriptionStream<
       progressBar: progressBarOptions,
       retry: retryOptions,
       buffer: bufferOptions,
+      onError,
       ...queueOptions
     }: ScrollSubscriptionStreamForEachOptions = {},
   ): Promise<void> {
@@ -279,6 +287,11 @@ export class ScrollSubscriptionStream<
     assert(
       typeof buffer === 'number' && buffer >= 0,
       `The buffer has to be greater than or equal to 0, got ${inspect(buffer)}`,
+    );
+
+    assert(
+      onError == null || typeof onError === 'function',
+      'The "onError" has to be a function',
     );
 
     const normalizedRetryOptions: PRetryOptions | false = retryOptions
@@ -325,7 +338,18 @@ export class ScrollSubscriptionStream<
 
     try {
       await new Promise<void>(async (resolve, reject) => {
-        tasks.on('error', reject);
+        tasks.on(
+          'error',
+          onError
+            ? (error) => {
+                try {
+                  onError(utils.castToError(error));
+                } catch (error) {
+                  reject(error);
+                }
+              }
+            : reject,
+        );
 
         try {
           for await (const value of this) {
@@ -367,6 +391,7 @@ export class ScrollSubscriptionStream<
       progressBar: progressBarOptions,
       retry: retryOptions,
       buffer: bufferOptions,
+      onError,
       ...queueOptions
     }: ScrollSubscriptionStreamByBatchOptions = {},
   ): Promise<void> {
@@ -382,6 +407,11 @@ export class ScrollSubscriptionStream<
     assert(
       typeof buffer === 'number' && buffer >= 0,
       `The buffer has to be greater than or equal to 0, got ${inspect(buffer)}`,
+    );
+
+    assert(
+      onError == null || typeof onError === 'function',
+      'The "onError" has to be a function',
     );
 
     const normalizedBatchSize = Math.max(1, batchSize || this.#chunkSize);
@@ -449,7 +479,18 @@ export class ScrollSubscriptionStream<
 
     try {
       await new Promise<void>(async (resolve, reject) => {
-        tasks.on('error', reject);
+        tasks.on(
+          'error',
+          onError
+            ? (error) => {
+                try {
+                  onError(utils.castToError(error));
+                } catch (error) {
+                  reject(error);
+                }
+              }
+            : reject,
+        );
 
         try {
           for await (const value of this) {

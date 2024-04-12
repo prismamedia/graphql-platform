@@ -537,7 +537,7 @@ export class GraphQLPlatform<
   }
 
   public async seed(
-    context: TRequestContext,
+    context: TRequestContext | MutationContext<TRequestContext>,
     fixtures: NodeFixtureDataByReferenceByNodeName,
   ): Promise<void> {
     const seeding = new Seeding(this, fixtures);
