@@ -26,10 +26,10 @@
     "test:watch": "yarn run test --watchAll"
   },
   "devDependencies": {
-    "@apollo/server": "4.10.2",
+    "@apollo/server": "4.10.4",
     "@jest/globals": "29.7.0",
     "@prismamedia/graphql-platform-connector-mariadb": "workspace:packages/graphql-platform-connector-mariadb",
-    "@swc/core": "1.4.13",
+    "@swc/core": "1.4.16",
     "@swc/jest": "0.2.36",
     "@tsconfig/node20": "20.1.4",
     "@types/body-parser": "^1.19.5",

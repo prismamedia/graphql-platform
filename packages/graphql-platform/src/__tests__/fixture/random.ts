@@ -81,17 +81,13 @@ export default function (
     Tag: Object.fromEntries(
       Array.from(new Array(config.Tag.count), (_, index) => [
         `tag_${index}`,
-        {
-          title: `My tag #${index}`,
-        },
+        { title: `My tag #${index}` },
       ]),
     ),
     User: Object.fromEntries(
       Array.from(new Array(config.User.count), (_, index) => [
         `user_${index}`,
-        {
-          username: `my_username_#${index}`,
-        },
+        { username: `my_username_#${index}` },
       ]),
     ),
     Article: Object.fromEntries(

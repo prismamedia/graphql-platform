@@ -27,7 +27,7 @@
   },
   "devDependencies": {
     "@jest/globals": "29.7.0",
-    "@swc/core": "1.4.13",
+    "@swc/core": "1.4.16",
     "@swc/jest": "0.2.36",
     "@tsconfig/node20": "20.1.4",
     "@types/node": "20.12.7",

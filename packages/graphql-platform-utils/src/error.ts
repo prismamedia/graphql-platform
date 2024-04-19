@@ -60,7 +60,6 @@ export class GraphError extends Error {
     });
 
     this.name = new.target.name;
-    Object.setPrototypeOf(this, new.target.prototype);
 
     Object.defineProperty(this, 'path', {
       value: path || undefined,
@@ -158,7 +157,6 @@ export class AggregateGraphError extends AggregateError {
     );
 
     this.name = new.target.name;
-    Object.setPrototypeOf(this, new.target.prototype);
 
     Object.defineProperty(this, 'path', {
       value: path || undefined,
