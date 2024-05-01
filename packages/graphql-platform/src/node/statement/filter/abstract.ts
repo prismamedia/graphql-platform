@@ -1,3 +1,4 @@
+import * as graphql from 'graphql';
 import type {
   NodeSelectedValue,
   NodeValue,
@@ -25,9 +26,16 @@ export abstract class AbstractBooleanFilter {
   public abstract equals(expression: unknown): boolean;
 
   /**
+   * Returns the AST for this expression
+   */
+  public abstract get ast():
+    | graphql.ConstObjectValueNode
+    | graphql.NullValueNode;
+
+  /**
    * Returns the input-value for this expression
    */
-  public abstract get inputValue(): NodeFilterInputValue;
+  public abstract get inputValue(): Exclude<NodeFilterInputValue, undefined>;
 
   /**
    * Returns the logical negation, if possible

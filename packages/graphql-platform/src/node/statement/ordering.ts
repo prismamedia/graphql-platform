@@ -1,4 +1,5 @@
 import { Memoize } from '@prismamedia/memoize';
+import * as graphql from 'graphql';
 import assert from 'node:assert/strict';
 import * as R from 'remeda';
 import type { Node, NodeValue } from '../../node.js';
@@ -65,8 +66,21 @@ export class NodeOrdering {
   }
 
   @Memoize()
+  public get ast(): graphql.ConstListValueNode {
+    return {
+      kind: graphql.Kind.LIST,
+      values: this.expressions.map(({ ast }) => ast),
+    };
+  }
+
+  @Memoize()
+  public toString(): string {
+    return graphql.print(this.ast);
+  }
+
+  @Memoize()
   public get inputValue(): NonNullable<OrderByInputValue> {
-    return Array.from(this.expressions, ({ inputValue }) => inputValue);
+    return this.expressions.map(({ inputValue }) => inputValue);
   }
 }
 

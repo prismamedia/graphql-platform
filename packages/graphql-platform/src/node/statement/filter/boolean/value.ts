@@ -1,7 +1,7 @@
 import { Memoize } from '@prismamedia/memoize';
+import * as graphql from 'graphql';
 import assert from 'node:assert/strict';
 import type { NodeSelectedValue, UniqueConstraint } from '../../../../node.js';
-import type { NodeFilterInputValue } from '../../../type.js';
 import { AbstractBooleanFilter } from '../abstract.js';
 
 export class BooleanValue extends AbstractBooleanFilter {
@@ -35,7 +35,13 @@ export class BooleanValue extends AbstractBooleanFilter {
     return true;
   }
 
-  public get inputValue(): NodeFilterInputValue {
+  public get ast(): graphql.ConstObjectValueNode | graphql.NullValueNode {
+    return this.value
+      ? { kind: graphql.Kind.OBJECT, fields: [] }
+      : { kind: graphql.Kind.NULL };
+  }
+
+  public get inputValue() {
     return this.value ? {} : null;
   }
 }

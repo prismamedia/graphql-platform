@@ -1,4 +1,5 @@
 import { Memoize } from '@prismamedia/memoize';
+import * as graphql from 'graphql';
 import assert from 'node:assert/strict';
 import * as R from 'remeda';
 import type { NodeUpdate } from '../../../../../../change.js';
@@ -201,7 +202,28 @@ export class LeafInFilter extends AbstractLeafFilter {
     );
   }
 
-  public get inputValue(): NodeFilterInputValue {
+  public get ast(): graphql.ConstObjectValueNode {
+    return {
+      kind: graphql.Kind.OBJECT,
+      fields: [
+        {
+          kind: graphql.Kind.OBJECT_FIELD,
+          name: {
+            kind: graphql.Kind.NAME,
+            value: this.key,
+          },
+          value: {
+            kind: graphql.Kind.LIST,
+            values: this.values.map(
+              (value) => graphql.astFromValue(value, this.leaf.type) as any,
+            ),
+          },
+        },
+      ],
+    };
+  }
+
+  public get inputValue(): NonNullable<NodeFilterInputValue> {
     return { [this.key]: this.values };
   }
 }

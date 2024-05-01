@@ -1,15 +1,14 @@
 import * as utils from '@prismamedia/graphql-platform-utils';
 import { Memoize } from '@prismamedia/memoize';
+import * as graphql from 'graphql';
 import assert from 'node:assert/strict';
-import type {
-  NodeSelectedValue,
-  UniqueConstraint,
-} from '../../../../../../../node.js';
+import type { NodeSelectedValue } from '../../../../../../../node.js';
 import type { NodeUpdate } from '../../../../../../change.js';
 import type {
   Leaf,
   LeafValue,
-} from '../../../../../../definition/component.js';
+  UniqueConstraint,
+} from '../../../../../../definition.js';
 import type { NodeFilterInputValue } from '../../../../../../type.js';
 import type { BooleanFilter } from '../../../../boolean.js';
 import {
@@ -265,7 +264,46 @@ export class LeafComparisonFilter extends AbstractLeafFilter {
     );
   }
 
-  public get inputValue(): NodeFilterInputValue {
+  public get ast(): graphql.ConstObjectValueNode {
+    if (
+      this.value === null &&
+      ['eq', 'not'].includes(this.operator) &&
+      !this.leaf.isComparable()
+    ) {
+      return {
+        kind: graphql.Kind.OBJECT,
+        fields: [
+          {
+            kind: graphql.Kind.OBJECT_FIELD,
+            name: {
+              kind: graphql.Kind.NAME,
+              value: `${this.leaf.name}_is_null`,
+            },
+            value: {
+              kind: graphql.Kind.BOOLEAN,
+              value: this.operator === 'eq',
+            },
+          },
+        ],
+      };
+    }
+
+    return {
+      kind: graphql.Kind.OBJECT,
+      fields: [
+        {
+          kind: graphql.Kind.OBJECT_FIELD,
+          name: {
+            kind: graphql.Kind.NAME,
+            value: this.key,
+          },
+          value: graphql.astFromValue(this.value, this.leaf.type) as any,
+        },
+      ],
+    };
+  }
+
+  public get inputValue(): NonNullable<NodeFilterInputValue> {
     if (
       this.value === null &&
       ['eq', 'not'].includes(this.operator) &&

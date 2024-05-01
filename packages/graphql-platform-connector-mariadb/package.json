@@ -29,7 +29,7 @@
   "devDependencies": {
     "@jest/globals": "29.7.0",
     "@sqltools/formatter": "1.2.5",
-    "@swc/core": "1.4.16",
+    "@swc/core": "1.4.17",
     "@swc/jest": "0.2.36",
     "@tsconfig/node20": "20.1.4",
     "@types/node": "20.12.7",
@@ -47,9 +47,9 @@
     "@prismamedia/memoize": "^5.0.2",
     "inflection": "^3.0.0",
     "mariadb": "^3.3.0",
-    "remeda": "^1.60.1",
+    "remeda": "^1.61.0",
     "semver": "^7.6.0",
-    "type-fest": "^4.15.0"
+    "type-fest": "^4.18.0"
   },
   "peerDependencies": {
     "graphql": "^16.7.0"

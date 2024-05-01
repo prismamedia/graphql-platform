@@ -120,8 +120,7 @@ export class EdgeHeadSelection<
       : null;
   }
 
-  @Memoize()
-  public toGraphQLFieldNode(): graphql.FieldNode {
+  public get ast(): graphql.FieldNode {
     return {
       kind: graphql.Kind.FIELD,
       ...(this.alias && {
@@ -134,7 +133,7 @@ export class EdgeHeadSelection<
         kind: graphql.Kind.NAME,
         value: this.name,
       },
-      selectionSet: this.headSelection.toGraphQLSelectionSetNode(),
+      selectionSet: this.headSelection.ast,
     };
   }
 

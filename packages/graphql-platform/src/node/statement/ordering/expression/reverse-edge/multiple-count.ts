@@ -1,3 +1,4 @@
+import type * as graphql from 'graphql';
 import type { NodeValue } from '../../../../../node.js';
 import {
   NodeCreation,
@@ -94,6 +95,10 @@ export class MultipleReverseEdgeCountOrdering
     }
 
     return operands.length ? OrOperation.create(operands) : null;
+  }
+
+  public get ast(): graphql.EnumValueNode {
+    return this.reverseEdge.getOrderingInput(this.direction).ast;
   }
 
   public get inputValue(): NonNullable<NodeOrderingInputValue> {

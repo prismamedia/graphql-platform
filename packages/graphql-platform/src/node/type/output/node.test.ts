@@ -238,11 +238,15 @@ describe(`NodeOutputType`, () => {
     twitterHandle
     facebookId
   }
-  createdArticles(first: 10) {
+  createdArticles(
+    where: {status: PUBLISHED}
+    orderBy: [updatedAt_DESC]
+    first: 10
+  ) {
     _id
     id
   }
-  createdArticleCount
+  createdArticleCount(where: {status: PUBLISHED})
 }`,
         ],
         [
@@ -274,11 +278,16 @@ describe(`NodeOutputType`, () => {
     twitterHandle
     facebookId
   }
-  createdArticles(skip: 5, first: 10) {
+  createdArticles(
+    where: {status: PUBLISHED}
+    orderBy: [updatedAt_DESC]
+    skip: 5
+    first: 10
+  ) {
     _id
     id
   }
-  createdArticleCount
+  createdArticleCount(where: {status: PUBLISHED})
 }`,
         ],
       ])(
@@ -288,14 +297,12 @@ describe(`NodeOutputType`, () => {
           const outputType = node.outputType;
 
           expect(
-            graphql.print(
-              outputType
-                .select(
-                  fragment,
-                  requestContext && new OperationContext(gp, requestContext),
-                  selectionContext,
-                )
-                .toGraphQLSelectionSetNode(),
+            String(
+              outputType.select(
+                fragment,
+                requestContext && new OperationContext(gp, requestContext),
+                selectionContext,
+              ),
             ),
           ).toEqual(expected);
         },

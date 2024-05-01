@@ -1,3 +1,4 @@
+import * as graphql from 'graphql';
 import assert from 'node:assert/strict';
 import {
   NodeValue,
@@ -221,11 +222,20 @@ export class MultipleReverseEdgeExistsFilter extends AbstractReverseEdgeFilter {
     return operands.length ? OrOperation.create(operands) : null;
   }
 
-  public get inputValue(): NodeFilterInputValue {
+  public get ast(): graphql.ConstObjectValueNode {
     return {
-      [this.key]: this.headFilter
-        ? this.headFilter.inputValue
-        : TrueValue.inputValue,
+      kind: graphql.Kind.OBJECT,
+      fields: [
+        {
+          kind: graphql.Kind.OBJECT_FIELD,
+          name: { kind: graphql.Kind.NAME, value: this.key },
+          value: (this.headFilter ?? TrueValue).ast,
+        },
+      ],
     };
+  }
+
+  public get inputValue(): NonNullable<NodeFilterInputValue> {
+    return { [this.key]: (this.headFilter ?? TrueValue).inputValue };
   }
 }

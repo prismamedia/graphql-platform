@@ -1,5 +1,6 @@
 import * as scalars from '@prismamedia/graphql-platform-scalars';
 import * as utils from '@prismamedia/graphql-platform-utils';
+import * as graphql from 'graphql';
 import type {
   NodeSelectedValue,
   UniqueConstraint,
@@ -87,7 +88,26 @@ export class LeafFullTextFilter extends AbstractLeafFilter {
     );
   }
 
-  public get inputValue(): NodeFilterInputValue {
+  public get ast(): graphql.ConstObjectValueNode {
+    return {
+      kind: graphql.Kind.OBJECT,
+      fields: [
+        {
+          kind: graphql.Kind.OBJECT_FIELD,
+          name: {
+            kind: graphql.Kind.NAME,
+            value: this.key,
+          },
+          value: {
+            kind: graphql.Kind.STRING,
+            value: this.value,
+          },
+        },
+      ],
+    };
+  }
+
+  public get inputValue(): NonNullable<NodeFilterInputValue> {
     return { [this.key]: this.value };
   }
 }

@@ -243,50 +243,47 @@ export class MultipleReverseEdgeHeadSelection<
     return operands.length ? OrOperation.create(operands) : null;
   }
 
-  @Memoize()
-  public toGraphQLFieldNode(): graphql.FieldNode {
-    const argumentNodes: graphql.ArgumentNode[] = [];
+  public get ast(): graphql.FieldNode {
+    const argumentNodes: graphql.ConstArgumentNode[] = [];
+
+    if (this.headFilter) {
+      argumentNodes.push({
+        kind: graphql.Kind.ARGUMENT,
+        name: { kind: graphql.Kind.NAME, value: 'where' },
+        value: this.headFilter.ast,
+      });
+    }
+
+    if (this.headOrdering) {
+      argumentNodes.push({
+        kind: graphql.Kind.ARGUMENT,
+        name: { kind: graphql.Kind.NAME, value: 'orderBy' },
+        value: this.headOrdering.ast,
+      });
+    }
 
     if (this.offset !== undefined) {
       argumentNodes.push({
         kind: graphql.Kind.ARGUMENT,
-        name: {
-          kind: graphql.Kind.NAME,
-          value: 'skip',
-        },
-        value: {
-          kind: graphql.Kind.INT,
-          value: String(this.offset),
-        },
+        name: { kind: graphql.Kind.NAME, value: 'skip' },
+        value: { kind: graphql.Kind.INT, value: String(this.offset) },
       });
     }
 
     argumentNodes.push({
       kind: graphql.Kind.ARGUMENT,
-      name: {
-        kind: graphql.Kind.NAME,
-        value: 'first',
-      },
-      value: {
-        kind: graphql.Kind.INT,
-        value: String(this.limit),
-      },
+      name: { kind: graphql.Kind.NAME, value: 'first' },
+      value: { kind: graphql.Kind.INT, value: String(this.limit) },
     });
 
     return {
       kind: graphql.Kind.FIELD,
       ...(this.alias && {
-        alias: {
-          kind: graphql.Kind.NAME,
-          value: this.alias,
-        },
+        alias: { kind: graphql.Kind.NAME, value: this.alias },
       }),
-      name: {
-        kind: graphql.Kind.NAME,
-        value: this.name,
-      },
-      arguments: argumentNodes,
-      selectionSet: this.headSelection.toGraphQLSelectionSetNode(),
+      name: { kind: graphql.Kind.NAME, value: this.name },
+      ...(argumentNodes.length && { arguments: argumentNodes }),
+      selectionSet: this.headSelection.ast,
     };
   }
 

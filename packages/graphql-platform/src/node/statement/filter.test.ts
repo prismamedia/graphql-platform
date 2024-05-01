@@ -38,7 +38,7 @@ describe('Filter', () => {
       ['Article', { _id: 5 }, '_id', true],
       ['Article', { OR: [{ _id: 5 }, { _id_gt: 6 }] }, '_id', true],
     ])(
-      '%# - %s.filter(%p).isExecutableWithinUniqueConstraint(%p) = %p',
+      '%# - %s.filter(%o).isExecutableWithinUniqueConstraint(%p) = %p',
       (nodeName, filter, uniqueName, expected) => {
         const node = gp.getNodeByName(nodeName);
         const unique = node.getUniqueConstraintByName(uniqueName);
@@ -50,6 +50,22 @@ describe('Filter', () => {
         ).toEqual(expected);
       },
     );
+
+    it.each<[nodeName: string, input: NodeFilterInputValue, expected: string]>([
+      ['Article', undefined, '{}'],
+      ['Article', null, 'null'],
+      ['Article', { _id_gt: 4, _id_lt: 8 }, '{_id_gt: 4, _id_lt: 8}'],
+      ['Article', { status: ArticleStatus.PUBLISHED }, '{status: PUBLISHED}'],
+      ['Article', { views_gt: BigInt(123456) }, '{views_gt: "123456"}'],
+      ['Article', { score_gte: 0.5 }, '{score_gte: 0.5}'],
+      ['Article', { category: {} }, '{category: {}}'],
+    ])('%# - %s.filter(%o) = %p', (nodeName, input, expected) => {
+      const node = gp.getNodeByName(nodeName);
+      const filterInputType = node.filterInputType;
+      const filter = filterInputType.parseAndFilter(input);
+
+      expect(String(filter)).toEqual(expected);
+    });
   });
 
   describe('Execution', () => {

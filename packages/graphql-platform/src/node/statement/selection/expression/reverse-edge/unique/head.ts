@@ -173,21 +173,14 @@ export class UniqueReverseEdgeHeadSelection<
     return operands.length ? OrOperation.create(operands) : null;
   }
 
-  @Memoize()
-  public toGraphQLFieldNode(): graphql.FieldNode {
+  public get ast(): graphql.FieldNode {
     return {
       kind: graphql.Kind.FIELD,
       ...(this.alias && {
-        alias: {
-          kind: graphql.Kind.NAME,
-          value: this.alias,
-        },
+        alias: { kind: graphql.Kind.NAME, value: this.alias },
       }),
-      name: {
-        kind: graphql.Kind.NAME,
-        value: this.name,
-      },
-      selectionSet: this.headSelection.toGraphQLSelectionSetNode(),
+      name: { kind: graphql.Kind.NAME, value: this.name },
+      selectionSet: this.headSelection.ast,
     };
   }
 

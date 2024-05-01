@@ -61,7 +61,7 @@ export class LeafSelection<TSource extends LeafValue = any, TValue = TSource>
     return null;
   }
 
-  public toGraphQLFieldNode(): graphql.FieldNode {
+  public get ast(): graphql.FieldNode {
     return {
       kind: graphql.Kind.FIELD,
       ...(this.alias && {

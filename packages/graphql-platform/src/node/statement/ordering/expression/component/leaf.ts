@@ -1,9 +1,10 @@
+import type * as graphql from 'graphql';
 import assert from 'node:assert/strict';
 import { NodeValue } from '../../../../../node.js';
 import type { NodeChange, NodeUpdate } from '../../../../change.js';
 import type { Leaf } from '../../../../definition.js';
 import type { NodeOrderingInputValue } from '../../../../type.js';
-import { type BooleanFilter } from '../../../filter.js';
+import type { BooleanFilter } from '../../../filter.js';
 import type { OrderingDirection } from '../../direction.js';
 import type { OrderingExpressionInterface } from '../../expression-interface.js';
 
@@ -32,6 +33,10 @@ export class LeafOrdering implements OrderingExpressionInterface {
     _visitedRootNodes?: NodeValue[],
   ): BooleanFilter | null {
     return null;
+  }
+
+  public get ast(): graphql.EnumValueNode {
+    return this.leaf.getOrderingInput(this.direction).ast;
   }
 
   public get inputValue(): NonNullable<NodeOrderingInputValue> {

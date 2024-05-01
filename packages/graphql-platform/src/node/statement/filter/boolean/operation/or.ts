@@ -1,4 +1,5 @@
 import Denque from 'denque';
+import * as graphql from 'graphql';
 import assert from 'node:assert/strict';
 import * as R from 'remeda';
 import type {
@@ -254,7 +255,26 @@ export class OrOperation extends AbstractBooleanFilter {
     return filter.equals(FalseValue) ? null : filter;
   }
 
-  public get inputValue(): NodeFilterInputValue {
+  public get ast(): graphql.ConstObjectValueNode {
+    return {
+      kind: graphql.Kind.OBJECT,
+      fields: [
+        {
+          kind: graphql.Kind.OBJECT_FIELD,
+          name: {
+            kind: graphql.Kind.NAME,
+            value: this.key,
+          },
+          value: {
+            kind: graphql.Kind.LIST,
+            values: this.operands.map(({ ast }) => ast),
+          },
+        },
+      ],
+    };
+  }
+
+  public get inputValue(): NonNullable<NodeFilterInputValue> {
     return { [this.key]: this.operands.map(({ inputValue }) => inputValue) };
   }
 }

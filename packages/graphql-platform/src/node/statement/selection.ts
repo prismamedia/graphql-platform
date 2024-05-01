@@ -221,13 +221,17 @@ export class NodeSelection<
     );
   }
 
-  public toGraphQLSelectionSetNode(): graphql.SelectionSetNode {
+  @Memoize()
+  public get ast(): graphql.SelectionSetNode {
     return {
       kind: graphql.Kind.SELECTION_SET,
-      selections: this.expressions.map((expression) =>
-        expression.toGraphQLFieldNode(),
-      ),
+      selections: this.expressions.map(({ ast }) => ast),
     };
+  }
+
+  @Memoize()
+  public toString(): string {
+    return graphql.print(this.ast);
   }
 
   public parseSource(

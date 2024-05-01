@@ -1,4 +1,5 @@
 import { Memoize } from '@prismamedia/memoize';
+import * as graphql from 'graphql';
 import type { MultipleReverseEdge } from '../../../../../../definition.js';
 import type { NodeFilterInputValue } from '../../../../../../type.js';
 import type { BooleanFilter } from '../../../../boolean.js';
@@ -104,7 +105,20 @@ export class MultipleReverseEdgeCountFilter extends AbstractReverseEdgeFilter {
     }
   }
 
-  public get inputValue(): NodeFilterInputValue {
+  public get ast(): graphql.ConstObjectValueNode {
+    return {
+      kind: graphql.Kind.OBJECT,
+      fields: [
+        {
+          kind: graphql.Kind.OBJECT_FIELD,
+          name: { kind: graphql.Kind.NAME, value: this.key },
+          value: { kind: graphql.Kind.INT, value: String(this.value) },
+        },
+      ],
+    };
+  }
+
+  public get inputValue(): NonNullable<NodeFilterInputValue> {
     return { [this.key]: this.value };
   }
 }

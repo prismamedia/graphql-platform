@@ -22,6 +22,7 @@ export class VirtualSelection<
 {
   public readonly name: string;
   public readonly key: string;
+  public readonly ast: graphql.FieldNode;
 
   public constructor(
     public readonly type: VirtualOutputType<TSource, TArgs, TValue>,
@@ -30,7 +31,8 @@ export class VirtualSelection<
     public readonly info: PartialGraphQLResolveInfo,
   ) {
     this.name = type.name;
-    this.key = this.alias ?? this.name;
+    this.key = alias ?? this.name;
+    this.ast = info.fieldNodes[0];
   }
 
   public get hasVirtualSelection(): boolean {
@@ -89,10 +91,6 @@ export class VirtualSelection<
         visitedRootNodes,
       )?.filter ?? null
     );
-  }
-
-  public toGraphQLFieldNode(): graphql.FieldNode {
-    return this.info.fieldNodes[0];
   }
 
   public parseSource(maybeSource: unknown, path?: utils.Path): TSource {

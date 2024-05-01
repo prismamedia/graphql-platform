@@ -1,6 +1,5 @@
 import * as scalars from '@prismamedia/graphql-platform-scalars';
 import * as utils from '@prismamedia/graphql-platform-utils';
-import { Memoize } from '@prismamedia/memoize';
 import * as graphql from 'graphql';
 import assert from 'node:assert/strict';
 import type { NodeValue } from '../../../../../../node.js';
@@ -185,20 +184,24 @@ export class MultipleReverseEdgeCountSelection<
     return operands.length ? OrOperation.create(operands) : null;
   }
 
-  @Memoize()
-  public toGraphQLFieldNode(): graphql.FieldNode {
+  public get ast(): graphql.FieldNode {
+    const argumentNodes: graphql.ConstArgumentNode[] = [];
+
+    if (this.headFilter) {
+      argumentNodes.push({
+        kind: graphql.Kind.ARGUMENT,
+        name: { kind: graphql.Kind.NAME, value: 'where' },
+        value: this.headFilter.ast,
+      });
+    }
+
     return {
       kind: graphql.Kind.FIELD,
       ...(this.alias && {
-        alias: {
-          kind: graphql.Kind.NAME,
-          value: this.alias,
-        },
+        alias: { kind: graphql.Kind.NAME, value: this.alias },
       }),
-      name: {
-        kind: graphql.Kind.NAME,
-        value: this.name,
-      },
+      name: { kind: graphql.Kind.NAME, value: this.name },
+      ...(argumentNodes.length && { arguments: argumentNodes }),
     };
   }
 

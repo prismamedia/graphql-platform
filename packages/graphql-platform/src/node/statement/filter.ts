@@ -1,4 +1,5 @@
 import { Memoize } from '@prismamedia/memoize';
+import * as graphql from 'graphql';
 import assert from 'node:assert/strict';
 import type { Node, NodeValue, UniqueConstraint } from '../../node.js';
 import type { NodeChange, NodeUpdate } from '../change.js';
@@ -140,13 +141,23 @@ export class NodeFilter {
   }
 
   @Memoize()
-  public get inputValue(): NodeFilterInputValue {
-    return this.filter.inputValue;
+  public isUnique(): boolean {
+    return this.node.uniqueFilterInputType.isValid(this.inputValue);
   }
 
   @Memoize()
-  public isUnique(): boolean {
-    return this.node.uniqueFilterInputType.isValid(this.inputValue);
+  public get ast(): graphql.ConstObjectValueNode | graphql.NullValueNode {
+    return this.filter.ast;
+  }
+
+  @Memoize()
+  public toString(): string {
+    return graphql.print(this.ast);
+  }
+
+  @Memoize()
+  public get inputValue(): Exclude<NodeFilterInputValue, undefined> {
+    return this.filter.inputValue;
   }
 }
 

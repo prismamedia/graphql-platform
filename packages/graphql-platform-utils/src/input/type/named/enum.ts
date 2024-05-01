@@ -11,9 +11,9 @@ import {
   type OptionalFlag,
 } from '../../../config.js';
 import {
-  aggregateGraphError,
   GraphError,
   UnexpectedValueError,
+  aggregateGraphError,
 } from '../../../error.js';
 import { indefinite } from '../../../indefinite.js';
 import { isNil, type Nillable } from '../../../nil.js';
@@ -61,6 +61,7 @@ export class EnumInputValue {
   public readonly name: string;
   public readonly description?: string;
   public readonly deprecationReason?: string;
+  public readonly ast: graphql.EnumValueNode;
 
   public constructor(
     public readonly config: EnumInputValueConfig,
@@ -139,6 +140,14 @@ export class EnumInputValue {
         `"${this.name}" is deprecated`,
         deprecatedConfigPath,
       );
+    }
+
+    // ast
+    {
+      this.ast = {
+        kind: graphql.Kind.ENUM,
+        value: this.name,
+      };
     }
   }
 

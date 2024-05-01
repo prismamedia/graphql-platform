@@ -1,3 +1,4 @@
+import * as graphql from 'graphql';
 import type {
   NodeSelectedValue,
   NodeValue,
@@ -69,7 +70,23 @@ export class NotOperation extends AbstractBooleanFilter {
     return this.operand.getAffectedGraphByNodeChange(change, visitedRootNodes);
   }
 
-  public get inputValue(): NodeFilterInputValue {
+  public get ast(): graphql.ConstObjectValueNode {
+    return {
+      kind: graphql.Kind.OBJECT,
+      fields: [
+        {
+          kind: graphql.Kind.OBJECT_FIELD,
+          name: {
+            kind: graphql.Kind.NAME,
+            value: this.key,
+          },
+          value: this.operand.ast,
+        },
+      ],
+    };
+  }
+
+  public get inputValue(): NonNullable<NodeFilterInputValue> {
     return { [this.key]: this.operand.inputValue };
   }
 }

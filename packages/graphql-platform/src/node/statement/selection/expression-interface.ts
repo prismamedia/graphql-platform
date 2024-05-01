@@ -10,6 +10,7 @@ export interface SelectionExpressionInterface<TSource = any, TValue = TSource> {
   readonly alias?: utils.Name;
   readonly name: utils.Name;
   readonly key: utils.Name;
+  readonly ast: graphql.FieldNode;
 
   readonly hasVirtualSelection: boolean;
 
@@ -28,8 +29,6 @@ export interface SelectionExpressionInterface<TSource = any, TValue = TSource> {
     change: NodeChange,
     visitedRootNodes?: NodeValue[],
   ): BooleanFilter | null;
-
-  toGraphQLFieldNode(): graphql.FieldNode;
 
   parseSource(maybeSource: unknown, path?: utils.Path): TSource;
 
