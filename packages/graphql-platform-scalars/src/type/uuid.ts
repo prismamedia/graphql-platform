@@ -4,20 +4,24 @@ import type { UUID } from 'node:crypto';
 
 export type UUIDVersion = 1 | 2 | 3 | 4 | 5;
 
-export function parseUUID(
-  value: unknown,
-  version?: UUIDVersion,
-  path?: utils.Path,
-): UUID {
-  if (
-    typeof value !== 'string' ||
-    !new RegExp(
+export function isUUID(value: unknown, version?: UUIDVersion): value is UUID {
+  return (
+    typeof value === 'string' &&
+    new RegExp(
       `^[0-9a-f]{8}-[0-9a-f]{4}-${
         version ?? '[0-9]'
       }[0-9a-f]{3}-[89AB][0-9a-f]{3}-[0-9a-f]{12}$`,
       'i',
     ).test(value)
-  ) {
+  );
+}
+
+export function parseUUID(
+  value: unknown,
+  version?: UUIDVersion,
+  path?: utils.Path,
+): UUID {
+  if (!isUUID(value, version)) {
     throw new utils.UnexpectedValueError(
       `an UUID${version ? ` version ${version}` : ''}`,
       value,
