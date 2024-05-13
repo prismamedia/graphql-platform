@@ -4,12 +4,7 @@
   "service": "project",
   "overrideCommand": true,
   "workspaceFolder": "/workspace",
-  "postStartCommand": "yarn && yarn sdks vscode",
-  "customizations": {
-    "vscode": {
-      "extensions": ["arcanis.vscode-zipfs"]
-    }
-  },
+  "postStartCommand": "yarn",
   "features": {
     "ghcr.io/cirolosapio/devcontainers-features/alpine-git:0": {}
   }

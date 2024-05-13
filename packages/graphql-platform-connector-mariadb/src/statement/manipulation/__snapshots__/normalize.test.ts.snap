@@ -12,7 +12,7 @@ SET
 
 exports[`Normalize statement generates "normalize" statement for "Article" 2`] = `
 OkPacket {
-  "affectedRows": 6,
+  "affectedRows": 7,
   "insertId": 0n,
   "warningStatus": 0,
 }

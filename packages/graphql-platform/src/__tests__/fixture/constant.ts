@@ -162,6 +162,13 @@ export const Article = {
     createdAt: new Date('2022-06-01T00:00:00Z'),
     createdBy: 'user_yvann',
   },
+  article_07: {
+    category: 'category_root',
+    title: 'My third published article in root category',
+    status: ArticleStatus.PUBLISHED,
+    createdAt: new Date('2022-07-01T00:00:00Z'),
+    createdBy: 'user_marine',
+  },
 } satisfies NodeFixtureDataByReference;
 
 export default {

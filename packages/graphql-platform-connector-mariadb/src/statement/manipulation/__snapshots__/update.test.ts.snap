@@ -26,6 +26,12 @@ exports[`Update statement generates statements 1`] = `
     "tags": [],
     "title": "My second published article in root category",
   },
+  {
+    "score": 0,
+    "status": "deleted",
+    "tags": [],
+    "title": "My third published article in root category",
+  },
 ]
 `;
 

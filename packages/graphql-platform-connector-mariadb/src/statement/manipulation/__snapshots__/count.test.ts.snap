@@ -1,8 +1,8 @@
 // Jest Snapshot v1, https://goo.gl/fbAQLP
 
-exports[`Count statement generates statements: result 1`] = `4`;
+exports[`Count statement generates statements: result 1`] = `5`;
 
-exports[`Count statement generates statements: result 2`] = `6`;
+exports[`Count statement generates statements: result 2`] = `7`;
 
 exports[`Count statement generates statements: result 3`] = `0`;
 

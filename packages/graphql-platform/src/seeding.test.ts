@@ -41,26 +41,24 @@ describe('Seeding', () => {
   it('orders by dependencies', () => {
     const seeding = new Seeding(gp, fixtures.constant);
 
-    expect(seeding.fixtures.length).toMatchInlineSnapshot(`14`);
-    expect(seeding.fixtures.map(({ reference }) => reference))
-      .toMatchInlineSnapshot(`
-      [
-        "category_root",
-        "category_home",
-        "article_01",
-        "article_02",
-        "category_news",
-        "user_marine",
-        "tag_01",
-        "tag_02",
-        "user_yvann",
-        "article_03",
-        "tag_03",
-        "article_04",
-        "article_05",
-        "article_06",
-      ]
-    `);
+    expect(seeding.fixtures.length).toBe(15);
+    expect(seeding.fixtures.map(({ reference }) => reference)).toEqual([
+      'category_root',
+      'category_home',
+      'article_01',
+      'article_02',
+      'category_news',
+      'user_marine',
+      'tag_01',
+      'tag_02',
+      'user_yvann',
+      'article_03',
+      'tag_03',
+      'article_04',
+      'article_05',
+      'article_06',
+      'article_07',
+    ]);
   });
 
   it('loads the fixtures', async () => {
@@ -140,6 +138,18 @@ describe('Seeding', () => {
                       ...creation.value,
                       _id: 6,
                       id: 'e260c62d-8979-4ad3-bfd9-34ea0072c191',
+                      body: null,
+                      metas: null,
+                      highlighted: null,
+                      sponsored: null,
+                      machineTags: null,
+                    };
+
+                  case 'My third published article in root category':
+                    return {
+                      ...creation.value,
+                      _id: 7,
+                      id: '611a38b5-3af6-4cff-b47f-27479f5ba1c1',
                       body: null,
                       metas: null,
                       highlighted: null,

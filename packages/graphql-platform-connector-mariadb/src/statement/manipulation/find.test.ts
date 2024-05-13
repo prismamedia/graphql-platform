@@ -108,6 +108,21 @@ describe('Find statement', () => {
           upperCasedTitle:
             'PUBLISHED-MY SECOND PUBLISHED ARTICLE IN ROOT CATEGORY-ROOT-TV-FASHION',
         },
+        {
+          body: null,
+          createdAt: new Date('2022-07-01T00:00:00.000Z'),
+          lowerCasedTitle:
+            'published-my third published article in root category-root',
+          machineTags: null,
+          metas: null,
+          score: 0.5,
+          status: 'published',
+          tagCount: 0,
+          title: 'My third published article in root category',
+          upperCasedTitle:
+            'PUBLISHED-MY THIRD PUBLISHED ARTICLE IN ROOT CATEGORY-ROOT',
+          views: 0n,
+        },
       ],
     ],
     [
