@@ -24,11 +24,31 @@ import {
 } from '../../../statement.js';
 import { LeafFilterInputType, NodeFilterInputValue } from '../../../type.js';
 
+const averageFormattedKey = 'average_formatted';
+
 export const defaultNamedProgressBarFormat =
-  `[{bar}] {name} | {value}/{total} | {percentage}% | ETA: {eta_formatted} | Elapsed: {duration_formatted}` satisfies ProgressBarOptions['format'];
+  `[{bar}] {name} | {value}/{total} ({${averageFormattedKey}}) | {percentage}% | ETA: {eta_formatted} | Elapsed: {duration_formatted}` satisfies ProgressBarOptions['format'];
 
 export const defaultProgressBarFormat =
-  `[{bar}] {value}/{total} | {percentage}% | ETA: {eta_formatted} | Elapsed: {duration_formatted}` satisfies ProgressBarOptions['format'];
+  `[{bar}] {value}/{total} ({${averageFormattedKey}}) | {percentage}% | ETA: {eta_formatted} | Elapsed: {duration_formatted}` satisfies ProgressBarOptions['format'];
+
+function incrementProgressBar(progress: ProgressBar, increment: number): void {
+  const elapsedTimeInMs = progress.startTime
+    ? new Date().getTime() - progress.startTime
+    : 0;
+
+  progress.increment(increment, {
+    ...(elapsedTimeInMs > 0 && {
+      [averageFormattedKey]: `${(
+        (progress.value + increment) /
+        (elapsedTimeInMs / 1000)
+      ).toLocaleString('en-US', {
+        maximumSignificantDigits: 3,
+        useGrouping: false,
+      })}/s`,
+    }),
+  });
+}
 
 export {
   MultiBar as MultiProgressBar,
@@ -325,7 +345,10 @@ export class ScrollSubscriptionStream<
         progressBar = progressBarOptions.container.create(
           await this.size(),
           currentIndex,
-          { name: progressBarOptions.name },
+          {
+            name: progressBarOptions.name,
+            [averageFormattedKey]: '-/s',
+          },
         );
       } else {
         progressBar =
@@ -333,7 +356,9 @@ export class ScrollSubscriptionStream<
             ? progressBarOptions
             : new ProgressBar({ format: defaultProgressBarFormat });
 
-        progressBar.start(await this.size(), currentIndex);
+        progressBar.start(await this.size(), currentIndex, {
+          [averageFormattedKey]: '-/s',
+        });
       }
     }
 
@@ -375,7 +400,7 @@ export class ScrollSubscriptionStream<
               ? async () => {
                   await continueOnErrorTaskWrapper();
 
-                  progressBar.increment();
+                  incrementProgressBar(progressBar, 1);
                 }
               : continueOnErrorTaskWrapper;
 
@@ -511,7 +536,7 @@ export class ScrollSubscriptionStream<
           ? async () => {
               await continueOnErrorTaskWrapper();
 
-              progressBar.increment(values.length);
+              incrementProgressBar(progressBar, values.length);
             }
           : continueOnErrorTaskWrapper;
 
