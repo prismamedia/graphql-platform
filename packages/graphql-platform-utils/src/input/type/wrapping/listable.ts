@@ -78,6 +78,6 @@ export function ListableInputTypeDecorator(
   return type instanceof ListableInputType && !listable
     ? type.ofType
     : !(type instanceof ListableInputType) && listable
-    ? new ListableInputType(type)
-    : type;
+      ? new ListableInputType(type)
+      : type;
 }

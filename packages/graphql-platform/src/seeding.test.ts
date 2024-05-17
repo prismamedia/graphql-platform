@@ -241,18 +241,18 @@ describe('Seeding', () => {
 
             case 'ArticleTag':
               return creations.map(
-                (creation): NodeValue => ({ ...creation.value } as NodeValue),
+                (creation): NodeValue => ({ ...creation.value }) as NodeValue,
               );
 
             case 'ArticleTagModeration':
               return creations.map(
-                (creation): NodeValue => ({ ...creation.value } as NodeValue),
+                (creation): NodeValue => ({ ...creation.value }) as NodeValue,
               );
 
             case 'User':
               return creations.map(
                 (creation): NodeValue =>
-                  ({ lastLoggedInAt: null, ...creation.value } as NodeValue),
+                  ({ lastLoggedInAt: null, ...creation.value }) as NodeValue,
               );
 
             case 'UserProfile':
@@ -324,9 +324,9 @@ describe('Seeding', () => {
                 ? filter.filter.value === 'c395757e-8a40-456a-b006-221ef3490456'
                   ? [{ id: filter.filter.value, username: 'yvann' }]
                   : filter.filter.value ===
-                    '654173f4-8fa6-42df-9941-f5a6a4d0b97e'
-                  ? [{ id: filter.filter.value, username: 'marine' }]
-                  : []
+                      '654173f4-8fa6-42df-9941-f5a6a4d0b97e'
+                    ? [{ id: filter.filter.value, username: 'marine' }]
+                    : []
                 : [];
 
             case 'UserProfile':

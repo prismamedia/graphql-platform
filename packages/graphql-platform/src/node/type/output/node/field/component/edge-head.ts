@@ -13,7 +13,10 @@ export class EdgeHeadOutputType extends AbstractComponentOutputType<undefined> {
 
   public readonly args?: undefined;
 
-  public constructor(parent: NodeOutputType, public readonly edge: Edge) {
+  public constructor(
+    parent: NodeOutputType,
+    public readonly edge: Edge,
+  ) {
     super(parent, edge);
 
     this.name = edge.name;

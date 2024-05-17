@@ -41,8 +41,8 @@ export class TextType<
         kind: !config?.kind
           ? 'TEXT'
           : config.kind === 'LONG' || config.kind === 'LONG VARCHAR'
-          ? 'MEDIUMTEXT'
-          : config.kind,
+            ? 'MEDIUMTEXT'
+            : config.kind,
         serializer: config?.serializer ?? String,
       },
       configPath,

@@ -242,8 +242,8 @@ export class ChangesSubscription<
               component instanceof Leaf
                 ? component.type
                 : component.referencedUniqueConstraint.isPublic()
-                ? component.referencedUniqueConstraint.getGraphQLObjectType()
-                : undefined;
+                  ? component.referencedUniqueConstraint.getGraphQLObjectType()
+                  : undefined;
 
             if (type) {
               fields[component.name] = {

@@ -116,8 +116,8 @@ export class OrOperation extends AbstractBooleanFilter {
       ? // An empty disjunction is FALSE
         FalseValue
       : operands.length === 1
-      ? operands[0]
-      : new this(operands);
+        ? operands[0]
+        : new this(operands);
   }
 
   public readonly key = 'OR' as const;

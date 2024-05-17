@@ -677,11 +677,14 @@ export class ChangesSubscriptionStream<
   ): Promise<void> {
     this.#ac.signal.throwIfAborted();
 
-    const tasks = new PQueue({
-      ...queueOptions,
-      concurrency: queueOptions?.concurrency ?? 1,
-      throwOnTimeout: queueOptions?.throwOnTimeout ?? true,
-    });
+    using tasks = Object.assign(
+      new PQueue({
+        ...queueOptions,
+        concurrency: queueOptions?.concurrency ?? 1,
+        throwOnTimeout: queueOptions?.throwOnTimeout ?? true,
+      }),
+      { [Symbol.dispose]: () => tasks.clear() },
+    );
 
     try {
       await new Promise<void>(async (resolve, reject) => {
@@ -719,7 +722,6 @@ export class ChangesSubscriptionStream<
       });
     } finally {
       await this.dispose();
-      tasks.clear();
     }
   }
 
@@ -736,11 +738,14 @@ export class ChangesSubscriptionStream<
   ): Promise<void> {
     this.#ac.signal.throwIfAborted();
 
-    const tasks = new PQueue({
-      ...queueOptions,
-      concurrency: queueOptions?.concurrency ?? 1,
-      throwOnTimeout: queueOptions?.throwOnTimeout ?? true,
-    });
+    using tasks = Object.assign(
+      new PQueue({
+        ...queueOptions,
+        concurrency: queueOptions?.concurrency ?? 1,
+        throwOnTimeout: queueOptions?.throwOnTimeout ?? true,
+      }),
+      { [Symbol.dispose]: () => tasks.clear() },
+    );
 
     const normalizedBatchSize = Math.max(1, batchSize || 100);
 
@@ -806,7 +811,6 @@ export class ChangesSubscriptionStream<
     } finally {
       processBatchOnIdle();
       await this.dispose();
-      tasks.clear();
     }
   }
 }

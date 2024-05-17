@@ -67,10 +67,10 @@ const gp = new GraphQLPlatform<MyContext>({
                   ? // They can "create" new articles
                     true
                   : mutationType === utils.MutationType.UPDATE
-                  ? // They can "update" the articles they have created
-                    { createdBy: { id: user.id } }
-                  : // They cannot "delete" articles
-                    false
+                    ? // They can "update" the articles they have created
+                      { createdBy: { id: user.id } }
+                    : // They cannot "delete" articles
+                      false
                 : // They can "query" all the articles
                   true;
 

@@ -116,8 +116,8 @@ export class AndOperation extends AbstractBooleanFilter {
       ? // An empty conjunction is TRUE
         TrueValue
       : operands.length === 1
-      ? operands[0]
-      : new this(operands);
+        ? operands[0]
+        : new this(operands);
   }
 
   public readonly key = 'AND' as const;

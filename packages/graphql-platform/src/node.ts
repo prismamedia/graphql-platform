@@ -1648,7 +1648,8 @@ export class Node<
   }
 
   public getMutationByKey<
-    TKey extends keyof OperationsByKeyByType[graphql.OperationTypeNode.MUTATION],
+    TKey extends
+      keyof OperationsByKeyByType[graphql.OperationTypeNode.MUTATION],
   >(
     key: TKey,
     path?: utils.Path,
@@ -1674,7 +1675,8 @@ export class Node<
   }
 
   public getSubscriptionByKey<
-    TKey extends keyof OperationsByKeyByType[graphql.OperationTypeNode.SUBSCRIPTION],
+    TKey extends
+      keyof OperationsByKeyByType[graphql.OperationTypeNode.SUBSCRIPTION],
   >(
     key: TKey,
     path?: utils.Path,
@@ -1852,8 +1854,8 @@ export class Node<
       authorization === true
         ? undefined
         : authorization === false
-        ? null
-        : authorization,
+          ? null
+          : authorization,
     ).normalized;
   }
 

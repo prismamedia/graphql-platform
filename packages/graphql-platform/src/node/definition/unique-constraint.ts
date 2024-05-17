@@ -247,8 +247,8 @@ export class UniqueConstraint<TConnector extends ConnectorInterface = any> {
               component instanceof Leaf
                 ? component.type
                 : component.referencedUniqueConstraint.isPublic()
-                ? component.referencedUniqueConstraint.getGraphQLObjectType()
-                : undefined;
+                  ? component.referencedUniqueConstraint.getGraphQLObjectType()
+                  : undefined;
 
             if (type) {
               fields[component.name] = {
@@ -331,10 +331,10 @@ export class UniqueConstraint<TConnector extends ConnectorInterface = any> {
           value[component.name] === null
             ? 'null'
             : component instanceof Leaf
-            ? component.stringify(value[component.name])
-            : component.referencedUniqueConstraint.stringify(
-                value[component.name] as UniqueConstraintValue,
-              )
+              ? component.stringify(value[component.name])
+              : component.referencedUniqueConstraint.stringify(
+                  value[component.name] as UniqueConstraintValue,
+                )
         }`,
     ).join(',')}}`;
   }

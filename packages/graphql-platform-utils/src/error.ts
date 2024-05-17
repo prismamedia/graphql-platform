@@ -16,8 +16,8 @@ export const castToError = (error: unknown): Error =>
   error instanceof Error
     ? error
     : isPlainObject(error)
-    ? Object.assign(new Error(error['message']), error)
-    : new Error(error as any);
+      ? Object.assign(new Error(error['message']), error)
+      : new Error(error as any);
 
 export function setGraphErrorAncestor<TError = unknown>(
   error: TError,

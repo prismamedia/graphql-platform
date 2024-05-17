@@ -58,43 +58,50 @@ export function createMyGP<
         leaf === '_id'
           ? { column: { autoIncrement: true } }
           : node === 'Article' && leaf === 'title'
-          ? {
-              column: {
-                fullTextIndex: true,
-              },
-            }
-          : node === 'Article' && leaf === 'updatedAt'
-          ? {
-              column: {
-                dataType: { kind: 'TIMESTAMP', microsecondPrecision: 0 },
-              },
-            }
-          : node === 'Category' && leaf === 'order'
-          ? {
-              column: {
-                dataType: { kind: 'INT', length: 3, modifiers: ['UNSIGNED'] },
-              },
-            }
-          : node === 'User' && leaf === 'lastLoggedInAt'
-          ? {
-              column: {
-                dataType: { kind: 'TIMESTAMP', microsecondPrecision: 0 },
-              },
-            }
-          : undefined,
+            ? {
+                column: {
+                  fullTextIndex: true,
+                },
+              }
+            : node === 'Article' && leaf === 'updatedAt'
+              ? {
+                  column: {
+                    dataType: { kind: 'TIMESTAMP', microsecondPrecision: 0 },
+                  },
+                }
+              : node === 'Category' && leaf === 'order'
+                ? {
+                    column: {
+                      dataType: {
+                        kind: 'INT',
+                        length: 3,
+                        modifiers: ['UNSIGNED'],
+                      },
+                    },
+                  }
+                : node === 'User' && leaf === 'lastLoggedInAt'
+                  ? {
+                      column: {
+                        dataType: {
+                          kind: 'TIMESTAMP',
+                          microsecondPrecision: 0,
+                        },
+                      },
+                    }
+                  : undefined,
 
       edge: (edge, node) =>
         node === 'UserProfile' && edge === 'user'
           ? { columns: { id: 'theUserId' } }
           : node === 'ArticleTagModeration' && edge === 'articleTag'
-          ? {
-              columns: {
-                article: { _id: 'theArticlePrivateId' },
-                tag: { id: 'theTagId' },
-              },
-              foreignKey: { name: 'my_custom_fk_name' },
-            }
-          : undefined,
+            ? {
+                columns: {
+                  article: { _id: 'theArticlePrivateId' },
+                  tag: { id: 'theTagId' },
+                },
+                foreignKey: { name: 'my_custom_fk_name' },
+              }
+            : undefined,
     },
 
     connector: (gp, configPath) =>

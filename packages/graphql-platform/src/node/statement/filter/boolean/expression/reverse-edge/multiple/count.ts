@@ -79,12 +79,12 @@ export class MultipleReverseEdgeCountFilter extends AbstractReverseEdgeFilter {
           this.value,
         )
       : this.operator === 'lt'
-      ? MultipleReverseEdgeCountFilter.create(
-          this.reverseEdge,
-          'gte',
-          this.value,
-        )
-      : undefined;
+        ? MultipleReverseEdgeCountFilter.create(
+            this.reverseEdge,
+            'gte',
+            this.value,
+          )
+        : undefined;
   }
 
   public override and(

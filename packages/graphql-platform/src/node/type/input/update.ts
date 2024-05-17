@@ -26,7 +26,10 @@ export type NodeUpdateInputValue = utils.Nillable<utils.PlainObject>;
 export class NodeUpdateInputType extends utils.ObjectInputType<FieldUpdateInput> {
   readonly #excludedEdge?: Edge;
 
-  public constructor(public readonly node: Node, excludedEdge?: Edge) {
+  public constructor(
+    public readonly node: Node,
+    excludedEdge?: Edge,
+  ) {
     assert(
       node.isUpdatable(excludedEdge),
       `The "${node}" node is not updatable`,

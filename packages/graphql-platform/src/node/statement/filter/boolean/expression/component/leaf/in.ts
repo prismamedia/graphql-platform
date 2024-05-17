@@ -33,8 +33,8 @@ export class LeafInFilter extends AbstractLeafFilter {
     return values.length === 0
       ? FalseValue
       : values.length === 1
-      ? new LeafComparisonFilter(leaf, 'eq', values[0])
-      : new this(leaf, values);
+        ? new LeafComparisonFilter(leaf, 'eq', values[0])
+        : new this(leaf, values);
   }
 
   public readonly key: string;
@@ -87,8 +87,8 @@ export class LeafInFilter extends AbstractLeafFilter {
       return intersection.length === this.values.length
         ? this
         : intersection.length === operand.values.length
-        ? operand
-        : LeafInFilter.create(this.leaf, intersection);
+          ? operand
+          : LeafInFilter.create(this.leaf, intersection);
     } else if (
       operand instanceof LeafComparisonFilter &&
       operand.leaf === this.leaf
@@ -112,16 +112,16 @@ export class LeafInFilter extends AbstractLeafFilter {
                 (value) => value !== null && value > operand.value!,
               )
             : operand.operator === 'gte'
-            ? this.values.filter(
-                (value) => value !== null && value >= operand.value!,
-              )
-            : operand.operator === 'lt'
-            ? this.values.filter(
-                (value) => value !== null && value < operand.value!,
-              )
-            : this.values.filter(
-                (value) => value !== null && value <= operand.value!,
-              );
+              ? this.values.filter(
+                  (value) => value !== null && value >= operand.value!,
+                )
+              : operand.operator === 'lt'
+                ? this.values.filter(
+                    (value) => value !== null && value < operand.value!,
+                  )
+                : this.values.filter(
+                    (value) => value !== null && value <= operand.value!,
+                  );
 
         return values.length === this.values.length
           ? this
@@ -159,16 +159,16 @@ export class LeafInFilter extends AbstractLeafFilter {
                 (value) => value === null || value <= operand.value!,
               )
             : operand.operator === 'gte'
-            ? this.values.filter(
-                (value) => value === null || value < operand.value!,
-              )
-            : operand.operator === 'lt'
-            ? this.values.filter(
-                (value) => value === null || value >= operand.value!,
-              )
-            : this.values.filter(
-                (value) => value === null || value > operand.value!,
-              );
+              ? this.values.filter(
+                  (value) => value === null || value < operand.value!,
+                )
+              : operand.operator === 'lt'
+                ? this.values.filter(
+                    (value) => value === null || value >= operand.value!,
+                  )
+                : this.values.filter(
+                    (value) => value === null || value > operand.value!,
+                  );
 
         return values.length === this.values.length
           ? undefined

@@ -25,13 +25,13 @@ export const getNonStrictEqualityComparatorByType = <TType extends Type>(
   (type === GraphQLDateTime || type === GraphQLDate
     ? (a: Date, b: Date) => a.getTime() === b.getTime()
     : type === GraphQLURL
-    ? (a: URL, b: URL) => a.toString() === b.toString()
-    : type === GraphQLDraftJS ||
-      type === GraphQLJSONArray ||
-      type === GraphQLJSONObject ||
-      type === GraphQLJSONValue
-    ? (a: any, b: any) => isDeepStrictEqual(a, b)
-    : undefined) as any;
+      ? (a: URL, b: URL) => a.toString() === b.toString()
+      : type === GraphQLDraftJS ||
+          type === GraphQLJSONArray ||
+          type === GraphQLJSONObject ||
+          type === GraphQLJSONValue
+        ? (a: any, b: any) => isDeepStrictEqual(a, b)
+        : undefined) as any;
 
 export const getComparatorByType = <TType extends Type>(
   type: TType,

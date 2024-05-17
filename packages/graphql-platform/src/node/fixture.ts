@@ -94,41 +94,42 @@ async function extractFieldValue<TRequestContext extends object>(
   return value == null || field instanceof LeafCreationInput
     ? value
     : field instanceof EdgeCreationInput
-    ? {
-        [EdgeCreationInputAction.REFERENCE]: await dependencyGraph
-          .getNodeData(value)
-          .getUniqueConstraintValue(
-            context,
-            field.edge.referencedUniqueConstraint,
-          ),
-      }
-    : field instanceof MultipleReverseEdgeCreationInput
-    ? {
-        [MultipleReverseEdgeCreationInputAction.CREATE_SOME]: await Promise.all(
-          utils
-            .resolveArrayable(value)
-            .map((data, index) =>
-              extractData(
+      ? {
+          [EdgeCreationInputAction.REFERENCE]: await dependencyGraph
+            .getNodeData(value)
+            .getUniqueConstraintValue(
+              context,
+              field.edge.referencedUniqueConstraint,
+            ),
+        }
+      : field instanceof MultipleReverseEdgeCreationInput
+        ? {
+            [MultipleReverseEdgeCreationInputAction.CREATE_SOME]:
+              await Promise.all(
+                utils
+                  .resolveArrayable(value)
+                  .map((data, index) =>
+                    extractData(
+                      dependencyGraph,
+                      field.reverseEdge.head,
+                      data,
+                      context,
+                      utils.addPath(path, index),
+                    ),
+                  ),
+              ),
+          }
+        : field instanceof UniqueReverseEdgeCreationInput
+          ? {
+              [UniqueReverseEdgeCreationInputAction.CREATE]: await extractData(
                 dependencyGraph,
                 field.reverseEdge.head,
-                data,
+                value,
                 context,
-                utils.addPath(path, index),
+                path,
               ),
-            ),
-        ),
-      }
-    : field instanceof UniqueReverseEdgeCreationInput
-    ? {
-        [UniqueReverseEdgeCreationInputAction.CREATE]: await extractData(
-          dependencyGraph,
-          field.reverseEdge.head,
-          value,
-          context,
-          path,
-        ),
-      }
-    : value;
+            }
+          : value;
 }
 
 async function extractData<TRequestContext extends object>(

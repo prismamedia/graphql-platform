@@ -216,38 +216,44 @@ export class MariaDBConnector
     );
   }
 
+  public async getConnection(
+    kind?: StatementKind,
+  ): Promise<mariadb.Connection & AsyncDisposable> {
+    const pool = this.getPool(kind);
+    const connection = await pool.getConnection();
+
+    return Object.assign(connection, {
+      [Symbol.asyncDispose]: () => connection.release(),
+    });
+  }
+
   public async withConnection<TResult = unknown>(
     task: (connection: mariadb.Connection) => Promise<TResult>,
     kind?: StatementKind,
   ): Promise<TResult> {
-    const pool = this.getPool(kind);
-    const connection = await pool.getConnection();
-    try {
-      return await task(connection);
-    } finally {
-      await connection.release();
-    }
+    await using connection = await this.getConnection(kind);
+
+    return await task(connection);
   }
 
   public async withConnectionInTransaction<TResult = unknown>(
     task: (connection: mariadb.Connection) => Promise<TResult>,
     kind?: StatementKind,
   ): Promise<TResult> {
-    return this.withConnection(async (connection) => {
-      try {
-        await connection.beginTransaction();
+    await using connection = await this.getConnection(kind);
+    await connection.beginTransaction();
 
-        const result = await task(connection);
+    try {
+      const result = await task(connection);
 
-        await connection.commit();
+      await connection.commit();
 
-        return result;
-      } catch (error) {
-        await connection.rollback();
+      return result;
+    } catch (error) {
+      await connection.rollback();
 
-        throw error;
-      }
-    }, kind);
+      throw error;
+    }
   }
 
   public async executeQuery<TResult extends OkPacket | utils.PlainObject[]>(
@@ -255,10 +261,9 @@ export class MariaDBConnector
     values?: any,
     kind?: StatementKind,
   ): Promise<TResult> {
-    return this.withConnection(
-      (connection) => connection.query(query, values),
-      kind,
-    );
+    await using connection = await this.getConnection(kind);
+
+    return await connection.query(query, values);
   }
 
   public async executeStatement<TResult extends OkPacket | utils.PlainObject[]>(

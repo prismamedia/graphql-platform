@@ -446,16 +446,16 @@ export class NodeFilterInputType extends utils.ObjectInputType<FieldFilterInputT
       value === undefined
         ? TrueValue
         : value === null
-        ? FalseValue
-        : AndOperation.create(
-            Object.entries(value).map(([filterName, filterValue]) =>
-              this.getFieldByName(filterName, path).filter(
-                filterValue,
-                context,
-                utils.addPath(path, filterName),
+          ? FalseValue
+          : AndOperation.create(
+              Object.entries(value).map(([filterName, filterValue]) =>
+                this.getFieldByName(filterName, path).filter(
+                  filterValue,
+                  context,
+                  utils.addPath(path, filterName),
+                ),
               ),
             ),
-          ),
     );
   }
 

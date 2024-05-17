@@ -65,5 +65,5 @@ export const printPath = (path: Path, ancestor?: Path): string =>
   ancestor
     ? `.${printPath(getRelativePath(path, ancestor))}`
     : path.prev
-    ? `${printPath(path.prev)}/${path.key}`
-    : `/${path.key}`;
+      ? `${printPath(path.prev)}/${path.key}`
+      : `/${path.key}`;

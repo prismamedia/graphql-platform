@@ -23,8 +23,8 @@ export class NotOperation extends AbstractBooleanFilter {
     return operand instanceof BooleanValue || operand instanceof NotOperation
       ? operand.complement
       : operand.complement && operand.complement.score < 1 + operand.score
-      ? operand.complement
-      : new this(operand);
+        ? operand.complement
+        : new this(operand);
   }
 
   public readonly key = 'NOT' as const;

@@ -16,8 +16,8 @@ export function AND(
   return conditions.length > 1
     ? `(${conditions.join(' AND ')})`
     : conditions.length === 1
-    ? conditions[0]
-    : 'TRUE';
+      ? conditions[0]
+      : 'TRUE';
 }
 
 export function OR(
@@ -28,8 +28,8 @@ export function OR(
   return conditions.length > 1
     ? `(${conditions.join(' OR ')})`
     : conditions.length === 1
-    ? conditions[0]
-    : 'FALSE';
+      ? conditions[0]
+      : 'FALSE';
 }
 
 function parseBooleanOperation(
@@ -81,11 +81,11 @@ function parseLeafFilter(
         return filter.value === null
           ? `${columnIdentifier} IS NOT NULL`
           : column.isNullable()
-          ? OR([
-              `${columnIdentifier} IS NULL`,
-              `${columnIdentifier} != ${serializedColumnValue}`,
-            ])
-          : `${columnIdentifier} != ${serializedColumnValue}`;
+            ? OR([
+                `${columnIdentifier} IS NULL`,
+                `${columnIdentifier} != ${serializedColumnValue}`,
+              ])
+            : `${columnIdentifier} != ${serializedColumnValue}`;
 
       case 'gt':
         return `${columnIdentifier} > ${serializedColumnValue}`;
@@ -111,12 +111,12 @@ function parseLeafFilter(
               filter.value,
             )} IN BOOLEAN MODE)`
           : filter.leaf.type === scalars.typesByName.DraftJS
-          ? `JSON_SEARCH(${columnIdentifier}, 'one', ${escapeStringValue(
-              `%${filter.value}%`,
-            )}, NULL, '$.blocks[*].text') IS NOT NULL`
-          : `${columnIdentifier} LIKE ${escapeStringValue(
-              `%${filter.value}%`,
-            )}`;
+            ? `JSON_SEARCH(${columnIdentifier}, 'one', ${escapeStringValue(
+                `%${filter.value}%`,
+              )}, NULL, '$.blocks[*].text') IS NOT NULL`
+            : `${columnIdentifier} LIKE ${escapeStringValue(
+                `%${filter.value}%`,
+              )}`;
 
       case 'starts_with':
         return filter.leaf.type === scalars.typesByName.DraftJS

@@ -258,8 +258,8 @@ export class TableDiagnosis {
               ),
           )
         : utils.getOptionalFlag(options?.extraColumns, true)
-        ? extraColumnNames
-        : [];
+          ? extraColumnNames
+          : [];
 
       this.fixableColumnNames = Object.freeze([
         ...this.extraColumns,
@@ -291,22 +291,22 @@ export class TableDiagnosis {
                     indexDiagnosisOptions,
                   )
                 : index instanceof PlainIndex
-                ? new PlainIndexDiagnosis(
-                    index,
-                    indexInformationByColumnName,
-                    indexDiagnosisOptions,
-                  )
-                : index instanceof PrimaryKey
-                ? new PrimaryKeyDiagnosis(
-                    index,
-                    indexInformationByColumnName,
-                    indexDiagnosisOptions,
-                  )
-                : new UniqueIndexDiagnosis(
-                    index,
-                    indexInformationByColumnName,
-                    indexDiagnosisOptions,
-                  ),
+                  ? new PlainIndexDiagnosis(
+                      index,
+                      indexInformationByColumnName,
+                      indexDiagnosisOptions,
+                    )
+                  : index instanceof PrimaryKey
+                    ? new PrimaryKeyDiagnosis(
+                        index,
+                        indexInformationByColumnName,
+                        indexDiagnosisOptions,
+                      )
+                    : new UniqueIndexDiagnosis(
+                        index,
+                        indexInformationByColumnName,
+                        indexDiagnosisOptions,
+                      ),
             ]);
           }
 
@@ -338,8 +338,8 @@ export class TableDiagnosis {
               ),
           )
         : utils.getOptionalFlag(options?.extraIndexes, true)
-        ? extraIndexNames
-        : [];
+          ? extraIndexNames
+          : [];
 
       this.fixableIndexNames = Object.freeze([
         ...this.extraIndexes,
@@ -400,8 +400,8 @@ export class TableDiagnosis {
               ),
           )
         : utils.getOptionalFlag(options?.extraForeignKeys, true)
-        ? extraForeignKeyNames
-        : [];
+          ? extraForeignKeyNames
+          : [];
 
       this.fixableForeignKeyNames = Object.freeze([
         ...this.extraForeignKeys,
@@ -532,16 +532,16 @@ export class TableDiagnosis {
     return config?.foreignKeys == null || config.foreignKeys === true
       ? [...this.fixableForeignKeyNames]
       : config.foreignKeys === false
-      ? []
-      : R.intersection(this.fixableForeignKeyNames, config.foreignKeys);
+        ? []
+        : R.intersection(this.fixableForeignKeyNames, config.foreignKeys);
   }
 
   public fixesIndexes(config?: TableDiagnosisFixConfig): Array<Index['name']> {
     return config?.indexes == null || config.indexes === true
       ? [...this.fixableIndexNames]
       : config.indexes === false
-      ? []
-      : R.intersection(this.fixableIndexNames, config.indexes);
+        ? []
+        : R.intersection(this.fixableIndexNames, config.indexes);
   }
 
   public fixesColumns(config?: TableDiagnosisFixConfig): Array<Column['name']> {
@@ -549,8 +549,8 @@ export class TableDiagnosis {
       config?.columns == null || config.columns === true
         ? [...this.fixableColumnNames]
         : config.columns === false
-        ? []
-        : R.intersection(this.fixableColumnNames, config.columns);
+          ? []
+          : R.intersection(this.fixableColumnNames, config.columns);
 
     return utils.getOptionalFlag(config?.nullable, true)
       ? fixableColumnNames

@@ -94,6 +94,21 @@ describe('ScrollSubscription', () => {
         await expect(cursor.toArray()).resolves.toEqual(articles);
         expect(gp.connector.find).toHaveBeenCalledTimes(3);
       });
+
+      it('stops a cursor through for-await-of', async () => {
+        const cursor = Article.api.scroll(myAdminContext, {
+          selection: '{ _id id }',
+          chunkSize: 2,
+        });
+
+        for await (const value of cursor) {
+          if (value._id >= 3) {
+            break;
+          }
+        }
+
+        expect(gp.connector.find).toHaveBeenCalledTimes(1);
+      });
     });
   });
 });

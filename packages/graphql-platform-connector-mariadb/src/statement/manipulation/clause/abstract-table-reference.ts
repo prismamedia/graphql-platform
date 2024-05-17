@@ -136,9 +136,9 @@ export abstract class AbstractTableReference {
       limit != null
         ? `LIMIT ${limit}`
         : edgeOrReverseEdge instanceof core.Edge ||
-          edgeOrReverseEdge instanceof core.UniqueReverseEdge
-        ? `LIMIT 1`
-        : undefined,
+            edgeOrReverseEdge instanceof core.UniqueReverseEdge
+          ? `LIMIT 1`
+          : undefined,
       offset && `OFFSET ${offset}`,
     ]
       .filter(Boolean)

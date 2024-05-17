@@ -152,10 +152,10 @@ export const Article = {
               ? // They can "create" new articles
                 true
               : mutationType === utils.MutationType.UPDATE
-              ? // They can "update" the articles they have created
-                { createdBy: { id: user.id } }
-              : // They cannot "delete" articles
-                false
+                ? // They can "update" the articles they have created
+                  { createdBy: { id: user.id } }
+                : // They cannot "delete" articles
+                  false
             : // They can "query" all the articles
               true;
 
@@ -711,10 +711,10 @@ export const Tag = {
         ? // The "admins" can do as they please
           true
         : user?.role === 'JOURNALIST'
-        ? // The "journalists" can only "create" tags
-          mutationType === utils.MutationType.CREATION
-        : // Others cannot mutate the tags
-          false
+          ? // The "journalists" can only "create" tags
+            mutationType === utils.MutationType.CREATION
+          : // Others cannot mutate the tags
+            false
       : // Everybody can read all the tags
         true,
 
@@ -811,12 +811,12 @@ export const ArticleTag = {
         ? // The "admins" can do as they please
           true
         : user?.role === 'JOURNALIST'
-        ? mutationType === utils.MutationType.CREATION
-          ? // The "journalists" can link tags to the articles
-            true
-          : // The "journalists" can re-order/unlink tags to the articles they have created only
-            { article: { createdBy: { id: user.id } } }
-        : false
+          ? mutationType === utils.MutationType.CREATION
+            ? // The "journalists" can link tags to the articles
+              true
+            : // The "journalists" can re-order/unlink tags to the articles they have created only
+              { article: { createdBy: { id: user.id } } }
+          : false
       : // Every connected user can "query" all the article-tag links
         user !== undefined,
 
@@ -967,11 +967,11 @@ export const UserProfile = {
         ? // The "admins" can do as they please
           true
         : user !== undefined
-        ? mutationType === utils.MutationType.UPDATE
-          ? // Every connected user can "update" its profile only
-            { user: { id: user.id } }
+          ? mutationType === utils.MutationType.UPDATE
+            ? // Every connected user can "update" its profile only
+              { user: { id: user.id } }
+            : false
           : false
-        : false
       : // Every connected user can "query" the profiles
         true,
 

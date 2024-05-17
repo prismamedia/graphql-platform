@@ -563,15 +563,15 @@ export class NodeOutputType {
                       ) === true,
                   )
                 : directive.name.value === 'include'
-                ? directive.arguments?.find(
-                    (argument) =>
-                      argument.name.value === 'if' &&
-                      graphql.valueFromASTUntyped(
-                        argument.value,
-                        selectionContext?.variableValues,
-                      ) === false,
-                  )
-                : false,
+                  ? directive.arguments?.find(
+                      (argument) =>
+                        argument.name.value === 'if' &&
+                        graphql.valueFromASTUntyped(
+                          argument.value,
+                          selectionContext?.variableValues,
+                        ) === false,
+                    )
+                  : false,
             )
           ) {
             return [];

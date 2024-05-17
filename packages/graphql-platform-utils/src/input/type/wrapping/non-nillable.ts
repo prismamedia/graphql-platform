@@ -27,6 +27,6 @@ export function nonNillableInputTypeDecorator(
   return isNonNillableInputType(type) && !nonNillable
     ? getNillableInputType(type)
     : !isNonNillableInputType(type) && nonNillable
-    ? nonNillableInputType(type)
-    : type;
+      ? nonNillableInputType(type)
+      : type;
 }

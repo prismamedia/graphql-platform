@@ -211,8 +211,8 @@ export class SchemaDiagnosis {
               ),
           )
         : utils.getOptionalFlag(options?.extraTables, true)
-        ? extraTableNames
-        : [];
+          ? extraTableNames
+          : [];
 
       this.fixableTableNames = Object.freeze([
         ...this.extraTables,
@@ -309,18 +309,18 @@ export class SchemaDiagnosis {
       config?.tables == null || config.tables === true
         ? this.fixableTableNames.map((name) => [name, defaults])
         : config.tables === false
-        ? []
-        : Array.isArray(config.tables)
-        ? config.tables.map((name) => [name, defaults])
-        : Object.entries(config.tables)
-            .filter(
-              (entry): entry is [string, true | TableDiagnosisFixConfig] =>
-                entry[1] !== false,
-            )
-            .map(([name, config]) => [
-              name,
-              config === true ? defaults : { ...defaults, ...config },
-            ]),
+          ? []
+          : Array.isArray(config.tables)
+            ? config.tables.map((name) => [name, defaults])
+            : Object.entries(config.tables)
+                .filter(
+                  (entry): entry is [string, true | TableDiagnosisFixConfig] =>
+                    entry[1] !== false,
+                )
+                .map(([name, config]) => [
+                  name,
+                  config === true ? defaults : { ...defaults, ...config },
+                ]),
     );
   }
 

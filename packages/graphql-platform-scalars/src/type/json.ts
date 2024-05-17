@@ -63,8 +63,8 @@ export function parseNonNullJsonValue(
   return utils.isPlainObject(value)
     ? parseJsonObject(value, path)
     : Array.isArray(value)
-    ? parseJsonArray(value, path)
-    : parseNonNullJsonPrimitive(value, path);
+      ? parseJsonArray(value, path)
+      : parseNonNullJsonPrimitive(value, path);
 }
 
 export function parseJsonPrimitive(
@@ -93,8 +93,8 @@ export function parseJsonValue(value: unknown, path?: utils.Path): JsonValue {
   return utils.isPlainObject(value)
     ? parseJsonObject(value, path)
     : Array.isArray(value)
-    ? parseJsonArray(value, path)
-    : parseJsonPrimitive(value, path);
+      ? parseJsonArray(value, path)
+      : parseJsonPrimitive(value, path);
 }
 
 export const GraphQLJSONArray = new graphql.GraphQLScalarType({

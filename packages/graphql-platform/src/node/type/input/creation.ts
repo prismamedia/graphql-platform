@@ -20,7 +20,10 @@ export type NodeCreationInputValue = utils.Nillable<utils.PlainObject>;
 export class NodeCreationInputType extends utils.ObjectInputType<FieldCreationInput> {
   readonly #excludedEdge?: Edge;
 
-  public constructor(public readonly node: Node, excludedEdge?: Edge) {
+  public constructor(
+    public readonly node: Node,
+    excludedEdge?: Edge,
+  ) {
     excludedEdge && node.ensureEdge(excludedEdge);
     assert(node.isCreatable(), `The "${node}" node is not creatable`);
 

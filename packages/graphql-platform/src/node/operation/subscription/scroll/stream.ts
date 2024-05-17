@@ -1,5 +1,4 @@
 import * as utils from '@prismamedia/graphql-platform-utils';
-import { Memoize } from '@prismamedia/memoize';
 import {
   MultiBar as MultiProgressBar,
   SingleBar as ProgressBar,
@@ -64,7 +63,7 @@ export type ScrollSubscriptionStreamForEachTask<
   value: TValue,
   index: number,
   stream: ScrollSubscriptionStream<TValue, TRequestContext>,
-) => Promisable<void>;
+) => Promisable<any>;
 
 export type ScrollSubscriptionStreamForEachOptions = Except<
   PQueueOptions<any, any>,
@@ -112,7 +111,7 @@ export type ScrollSubscriptionStreamByBatchTask<
 > = (
   values: ReadonlyArray<TValue>,
   stream: ScrollSubscriptionStream<TValue, TRequestContext>,
-) => Promisable<void>;
+) => Promisable<any>;
 
 export type ScrollSubscriptionStreamByBatchOptions =
   ScrollSubscriptionStreamForEachOptions & {
@@ -167,9 +166,7 @@ export class ScrollSubscriptionStream<
   readonly #nextFilterInputType: LeafFilterInputType;
   readonly #internalSelection: NodeSelection;
   readonly #chunkSize: number;
-
   readonly #api: ContextBoundNodeAPI;
-  readonly #ac: AbortController;
 
   public constructor(
     public readonly node: Node<TRequestContext>,
@@ -213,33 +210,14 @@ export class ScrollSubscriptionStream<
     this.#chunkSize = Math.max(1, config.chunkSize);
 
     this.#api = node.createContextBoundAPI(context);
-    this.#ac = new AbortController();
-  }
-
-  @Memoize()
-  public async initialize(): Promise<void> {
-    this.#ac.signal.throwIfAborted();
-
-    // Nothing to do
-  }
-
-  @Memoize()
-  public async dispose(): Promise<void> {
-    this.#ac.abort();
-
-    // Nothing to do
   }
 
   public [Symbol.asyncIterator](): AsyncIterator<TValue> {
-    this.#ac.signal.throwIfAborted();
-
     let values: NodeSelectedValue[] = [];
     let next: NodeFilterInputValue = undefined;
 
     return {
       next: async () => {
-        await this.initialize();
-
         if (values.length === 0 && next !== null) {
           values = await this.#api.findMany({
             where: { AND: [this.filter?.inputValue, next] },
@@ -257,14 +235,14 @@ export class ScrollSubscriptionStream<
               : null;
         }
 
-        const value = this.#ac.signal.aborted ? undefined : values.shift();
+        const value = values.shift();
 
         return value
           ? { done: false, value: this.selection.pickValue(value as any) }
           : { done: true, value: undefined };
       },
       return: async () => {
-        await this.dispose();
+        values = [];
 
         return { done: true, value: undefined };
       },
@@ -295,13 +273,14 @@ export class ScrollSubscriptionStream<
       ...queueOptions
     }: ScrollSubscriptionStreamForEachOptions = {},
   ): Promise<void> {
-    this.#ac.signal.throwIfAborted();
-
-    const tasks = new PQueue({
-      ...queueOptions,
-      concurrency: queueOptions.concurrency ?? 1,
-      throwOnTimeout: queueOptions.throwOnTimeout ?? true,
-    });
+    using tasks = Object.assign(
+      new PQueue({
+        ...queueOptions,
+        concurrency: queueOptions.concurrency ?? 1,
+        throwOnTimeout: queueOptions.throwOnTimeout ?? true,
+      }),
+      { [Symbol.dispose]: () => tasks.clear() },
+    );
 
     assert(
       continueOnError == null ||
@@ -319,8 +298,8 @@ export class ScrollSubscriptionStream<
       ? retryOptions === true
         ? {}
         : typeof retryOptions === 'number'
-        ? { retries: retryOptions }
-        : retryOptions
+          ? { retries: retryOptions }
+          : retryOptions
       : false;
 
     let currentIndex: number = 0;
@@ -369,60 +348,57 @@ export class ScrollSubscriptionStream<
         : continueOnError
       : 0;
 
-    try {
-      await new Promise<void>(async (resolve, reject) => {
-        tasks.on('error', reject);
+    await new Promise<void>(async (resolve, reject) => {
+      tasks.on('error', reject);
 
-        try {
-          for await (const value of this) {
-            await tasks.onSizeLessThan(buffer + 1);
+      try {
+        for await (const value of this) {
+          await tasks.onSizeLessThan(buffer + 1);
 
-            const boundTask = task.bind(undefined, value, ++currentIndex, this);
+          const boundTask = task.bind(undefined, value, ++currentIndex, this);
 
-            const retryTaskWrapper = normalizedRetryOptions
-              ? () => PRetry(boundTask, normalizedRetryOptions)
-              : boundTask;
+          const retryTaskWrapper = normalizedRetryOptions
+            ? () => PRetry(boundTask, normalizedRetryOptions)
+            : boundTask;
 
-            const continueOnErrorTaskWrapper =
-              maxErrorCount > 0
-                ? async () => {
-                    try {
-                      await retryTaskWrapper();
-                    } catch (error) {
-                      if (errors.push(error) >= maxErrorCount) {
-                        throw new AggregateError(errors);
-                      }
+          const continueOnErrorTaskWrapper =
+            maxErrorCount > 0
+              ? async () => {
+                  try {
+                    await retryTaskWrapper();
+                  } catch (error) {
+                    if (errors.push(error) >= maxErrorCount) {
+                      throw errors.length > 1
+                        ? new AggregateError(errors)
+                        : errors[0];
                     }
                   }
-                : retryTaskWrapper;
-
-            const progressBarTaskWrapper = progressBar
-              ? async () => {
-                  await continueOnErrorTaskWrapper();
-
-                  incrementProgressBar(progressBar, 1);
                 }
-              : continueOnErrorTaskWrapper;
+              : retryTaskWrapper;
 
-            tasks.add(progressBarTaskWrapper);
-          }
+          const progressBarTaskWrapper = progressBar
+            ? async () => {
+                await continueOnErrorTaskWrapper();
 
-          await tasks.onIdle();
+                incrementProgressBar(progressBar, 1);
+              }
+            : continueOnErrorTaskWrapper;
 
-          progressBar?.stop();
-
-          resolve();
-        } catch (error) {
-          reject(error);
+          tasks.add(progressBarTaskWrapper);
         }
-      });
-    } finally {
-      await this.dispose();
-      tasks.clear();
-    }
+
+        await tasks.onIdle();
+
+        progressBar?.stop();
+
+        resolve();
+      } catch (error) {
+        reject(error);
+      }
+    });
 
     if (errors.length) {
-      throw new AggregateError(errors);
+      throw errors.length > 1 ? new AggregateError(errors) : errors[0];
     }
   }
 
@@ -437,13 +413,14 @@ export class ScrollSubscriptionStream<
       ...queueOptions
     }: ScrollSubscriptionStreamByBatchOptions = {},
   ): Promise<void> {
-    this.#ac.signal.throwIfAborted();
-
-    const tasks = new PQueue({
-      ...queueOptions,
-      concurrency: queueOptions.concurrency ?? 1,
-      throwOnTimeout: queueOptions.throwOnTimeout ?? true,
-    });
+    using tasks = Object.assign(
+      new PQueue({
+        ...queueOptions,
+        concurrency: queueOptions.concurrency ?? 1,
+        throwOnTimeout: queueOptions.throwOnTimeout ?? true,
+      }),
+      { [Symbol.dispose]: () => tasks.clear() },
+    );
 
     assert(
       continueOnError == null ||
@@ -463,8 +440,8 @@ export class ScrollSubscriptionStream<
       ? retryOptions === true
         ? {}
         : typeof retryOptions === 'number'
-        ? { retries: retryOptions }
-        : retryOptions
+          ? { retries: retryOptions }
+          : retryOptions
       : false;
 
     let progressBar: ProgressBar | undefined;
@@ -499,14 +476,14 @@ export class ScrollSubscriptionStream<
       }
     }
 
-    let batch: TValue[] = [];
-
     const errors: unknown[] = [];
     const maxErrorCount = continueOnError
       ? continueOnError === true
         ? Infinity
         : continueOnError
       : 0;
+
+    let batch: TValue[] = [];
 
     const processBatch = () => {
       if (batch.length) {
@@ -526,7 +503,9 @@ export class ScrollSubscriptionStream<
                   await retryTaskWrapper();
                 } catch (error) {
                   if (errors.push(error) >= maxErrorCount) {
-                    throw new AggregateError(errors);
+                    throw errors.length > 1
+                      ? new AggregateError(errors)
+                      : errors[0];
                   }
                 }
               }
@@ -544,37 +523,32 @@ export class ScrollSubscriptionStream<
       }
     };
 
-    try {
-      await new Promise<void>(async (resolve, reject) => {
-        tasks.on('error', reject);
+    await new Promise<void>(async (resolve, reject) => {
+      tasks.on('error', reject);
 
-        try {
-          for await (const value of this) {
-            await tasks.onSizeLessThan(buffer + 1);
+      try {
+        for await (const value of this) {
+          await tasks.onSizeLessThan(buffer + 1);
 
-            if (batch.push(value) === normalizedBatchSize) {
-              processBatch();
-            }
+          if (batch.push(value) >= normalizedBatchSize) {
+            processBatch();
           }
-
-          processBatch();
-
-          await tasks.onIdle();
-
-          progressBar?.stop();
-
-          resolve();
-        } catch (error) {
-          reject(error);
         }
-      });
-    } finally {
-      await this.dispose();
-      tasks.clear();
-    }
+
+        processBatch();
+
+        await tasks.onIdle();
+
+        progressBar?.stop();
+
+        resolve();
+      } catch (error) {
+        reject(error);
+      }
+    });
 
     if (errors.length) {
-      throw new AggregateError(errors);
+      throw errors.length > 1 ? new AggregateError(errors) : errors[0];
     }
   }
 }

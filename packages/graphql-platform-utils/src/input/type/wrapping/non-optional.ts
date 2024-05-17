@@ -87,9 +87,9 @@ export function getOptionalInputType(type: InputType): InputType {
   return type instanceof NonOptionalInputType
     ? type.ofType
     : type instanceof NonNullableInputType &&
-      type.ofType instanceof NonOptionalInputType
-    ? new NonNullableInputType(type.ofType.ofType)
-    : type;
+        type.ofType instanceof NonOptionalInputType
+      ? new NonNullableInputType(type.ofType.ofType)
+      : type;
 }
 
 export function nonOptionalInputTypeDecorator(
@@ -99,8 +99,8 @@ export function nonOptionalInputTypeDecorator(
   return isNonOptionalInputType(type) && !nonOptional
     ? getOptionalInputType(type)
     : !isNonOptionalInputType(type) && nonOptional
-    ? new NonOptionalInputType(type)
-    : type;
+      ? new NonOptionalInputType(type)
+      : type;
 }
 
 export type Optional<T> = T | undefined;

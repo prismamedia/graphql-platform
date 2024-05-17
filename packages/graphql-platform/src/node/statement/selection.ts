@@ -65,9 +65,9 @@ export class NodeSelection<
             isComponentSelection(expression)
               ? [expression.component]
               : expression instanceof VirtualSelection &&
-                expression.type.dependencies
-              ? expression.type.dependencies.components
-              : [],
+                  expression.type.dependencies
+                ? expression.type.dependencies.components
+                : [],
           ),
         ),
       ),
@@ -86,9 +86,9 @@ export class NodeSelection<
             isReverseEdgeSelection(expression)
               ? [expression.reverseEdge]
               : expression instanceof VirtualSelection &&
-                expression.type.dependencies
-              ? expression.type.dependencies.reverseEdges
-              : [],
+                  expression.type.dependencies
+                ? expression.type.dependencies.reverseEdges
+                : [],
           ),
         ),
       ),

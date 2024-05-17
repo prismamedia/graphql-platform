@@ -41,12 +41,12 @@ export class IntType<
           !config?.kind || config.kind === 'INT4'
             ? 'INT'
             : config.kind === 'INT3'
-            ? 'MEDIUMINT'
-            : config.kind === 'INT2'
-            ? 'SMALLINT'
-            : config.kind === 'INT1'
-            ? 'TINYINT'
-            : config.kind,
+              ? 'MEDIUMINT'
+              : config.kind === 'INT2'
+                ? 'SMALLINT'
+                : config.kind === 'INT1'
+                  ? 'TINYINT'
+                  : config.kind,
       },
       configPath,
     );

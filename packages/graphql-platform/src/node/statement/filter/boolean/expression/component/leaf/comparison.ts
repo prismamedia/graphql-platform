@@ -81,14 +81,14 @@ export class LeafComparisonFilter extends AbstractLeafFilter {
     return this.operator === 'eq'
       ? new LeafComparisonFilter(this.leaf, 'not', this.value)
       : this.operator === 'not'
-      ? new LeafComparisonFilter(this.leaf, 'eq', this.value)
-      : this.operator === 'gt'
-      ? new LeafComparisonFilter(this.leaf, 'lte', this.value)
-      : this.operator === 'gte'
-      ? new LeafComparisonFilter(this.leaf, 'lt', this.value)
-      : this.operator === 'lt'
-      ? new LeafComparisonFilter(this.leaf, 'gte', this.value)
-      : new LeafComparisonFilter(this.leaf, 'gt', this.value);
+        ? new LeafComparisonFilter(this.leaf, 'eq', this.value)
+        : this.operator === 'gt'
+          ? new LeafComparisonFilter(this.leaf, 'lte', this.value)
+          : this.operator === 'gte'
+            ? new LeafComparisonFilter(this.leaf, 'lt', this.value)
+            : this.operator === 'lt'
+              ? new LeafComparisonFilter(this.leaf, 'gte', this.value)
+              : new LeafComparisonFilter(this.leaf, 'gt', this.value);
   }
 
   public override and(
@@ -190,14 +190,14 @@ export class LeafComparisonFilter extends AbstractLeafFilter {
           return this.leaf.areValuesEqual(this.value, operand.value)
             ? new LeafComparisonFilter(this.leaf, 'gte', this.value)
             : this.value > operand.value
-            ? operand
-            : undefined;
+              ? operand
+              : undefined;
         } else if (operand.operator === 'lt') {
           return this.leaf.areValuesEqual(this.value, operand.value)
             ? new LeafComparisonFilter(this.leaf, 'lte', this.value)
             : this.value < operand.value
-            ? operand
-            : undefined;
+              ? operand
+              : undefined;
         }
       }
 
@@ -211,8 +211,8 @@ export class LeafComparisonFilter extends AbstractLeafFilter {
         return this.leaf.areValuesEqual(this.value, operand.value)
           ? new LeafComparisonFilter(this.leaf, 'not', this.value)
           : this.value < operand.value
-          ? TrueValue
-          : undefined;
+            ? TrueValue
+            : undefined;
       }
     }
   }

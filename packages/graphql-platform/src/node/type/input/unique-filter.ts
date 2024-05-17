@@ -31,7 +31,10 @@ export class NodeUniqueFilterInputType extends utils.ObjectInputType {
   readonly #publicCandidates: ReadonlyArray<UniqueConstraint>;
   readonly #publicComponents: ReadonlyArray<Component>;
 
-  public constructor(public readonly node: Node, forcedEdge?: Edge) {
+  public constructor(
+    public readonly node: Node,
+    forcedEdge?: Edge,
+  ) {
     let candidates: UniqueConstraint[];
     if (forcedEdge) {
       node.ensureEdge(forcedEdge);
@@ -218,11 +221,11 @@ export class NodeUniqueFilterInputType extends utils.ObjectInputType {
             componentValue === null
               ? null
               : component instanceof Leaf
-              ? componentValue
-              : component.head.uniqueFilterInputType.pickValue(
-                  componentValue,
-                  utils.addPath(path, component.name),
-                ),
+                ? componentValue
+                : component.head.uniqueFilterInputType.pickValue(
+                    componentValue,
+                    utils.addPath(path, component.name),
+                  ),
           ];
         }),
       ),
