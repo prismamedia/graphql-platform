@@ -49,10 +49,9 @@ describe('API', () => {
       ).resolves.toEqual([]);
 
       {
-        const subscription = await api.Article.subscribeToChanges(
-          myAdminContext,
-          { selection: { onUpsert: `{ id }` } },
-        );
+        const subscription = api.Article.subscribeToChanges(myAdminContext, {
+          selection: { onUpsert: `{ id }` },
+        });
 
         expect(subscription).toBeInstanceOf(ChangesSubscriptionStream);
 
@@ -85,7 +84,7 @@ describe('API', () => {
       ).resolves.toEqual([]);
 
       {
-        const subscription = await api.Article.subscribeToChanges({
+        const subscription = api.Article.subscribeToChanges({
           selection: { onUpsert: `{ id }` },
         });
 
