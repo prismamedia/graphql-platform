@@ -201,8 +201,8 @@ export class UniqueConstraint<TConnector extends ConnectorInterface = any> {
       Array.from(this.componentSet).every(
         (component) =>
           component instanceof Leaf &&
-          !component.isNullable() &&
-          component.isSortable(),
+          component.isSortable() &&
+          !component.isNullable(),
       )
     );
   }

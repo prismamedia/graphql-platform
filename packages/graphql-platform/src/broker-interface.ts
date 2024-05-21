@@ -2,6 +2,7 @@ import type { Promisable } from 'type-fest';
 import type {
   ChangesSubscriptionChange,
   ChangesSubscriptionStream,
+  NodeChangeAggregation,
 } from './node.js';
 
 export enum BrokerAcknowledgementKind {
@@ -11,6 +12,11 @@ export enum BrokerAcknowledgementKind {
 }
 
 export interface BrokerInterface {
+  /**
+   * Notify the broker about the given, local, node-changes
+   */
+  onLocalNodeChanges(changes: NodeChangeAggregation): Promisable<void>;
+
   /**
    * Do whatever is needed to initialize the subscription and to subscribe to the node-changes
    */

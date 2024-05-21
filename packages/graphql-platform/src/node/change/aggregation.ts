@@ -179,4 +179,21 @@ export class NodeChangeAggregation<TRequestContext extends object = any>
       yield* changes;
     }
   }
+
+  public mergeWith(
+    ...aggregations: ReadonlyArray<NodeChangeAggregation<TRequestContext>>
+  ): NodeChangeAggregation<TRequestContext> | this {
+    return aggregations.length
+      ? new NodeChangeAggregation(
+          [this, ...aggregations].reduce<NodeChange[]>(
+            (changes, aggregation) => {
+              changes.push(...aggregation);
+
+              return changes;
+            },
+            [],
+          ),
+        )
+      : this;
+  }
 }

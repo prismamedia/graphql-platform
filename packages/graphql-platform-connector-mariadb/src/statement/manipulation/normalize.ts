@@ -81,6 +81,12 @@ export class NormalizeStatement implements mariadb.QueryOptions {
 
           switch (column.leaf.type) {
             case scalars.GraphQLNonEmptyString:
+            case scalars.GraphQLUUID:
+            case scalars.GraphQLUUIDv1:
+            case scalars.GraphQLUUIDv2:
+            case scalars.GraphQLUUIDv3:
+            case scalars.GraphQLUUIDv4:
+            case scalars.GraphQLUUIDv5:
               normalizers = [
                 column.isNullable() ? nullIfEmptyString : undefined,
               ];

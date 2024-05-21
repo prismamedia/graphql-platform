@@ -1,4 +1,3 @@
-import * as utils from '@prismamedia/graphql-platform-utils';
 import {
   MultiBar as MultiProgressBar,
   SingleBar as ProgressBar,
@@ -170,9 +169,7 @@ export class ScrollSubscriptionStream<
 
   public constructor(
     public readonly node: Node<TRequestContext>,
-    context:
-      | OperationContext<TRequestContext>
-      | utils.Thunkable<TRequestContext>,
+    context: OperationContext<TRequestContext>,
     config: Readonly<ScrollSubscriptionStreamConfig<TValue>>,
   ) {
     assert(config.filter === undefined || config.filter instanceof NodeFilter);

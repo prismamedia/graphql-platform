@@ -1,9 +1,11 @@
-import type { BoundOff } from '@prismamedia/async-event-emitter';
 import assert from 'node:assert/strict';
 import PQueue from 'p-queue';
 import type { BrokerInterface } from '../broker-interface.js';
 import type { GraphQLPlatform } from '../index.js';
-import type { ChangesSubscriptionStream } from '../node.js';
+import type {
+  ChangesSubscriptionStream,
+  NodeChangeAggregation,
+} from '../node.js';
 
 export interface InMemoryBrokerOptions {
   /**
@@ -15,47 +17,34 @@ export interface InMemoryBrokerOptions {
 export class InMemoryBroker implements BrokerInterface {
   readonly #maxQueueSize: number;
   readonly #queuesBySubscription: Map<ChangesSubscriptionStream, PQueue>;
-  #nodeChangesSubscription?: BoundOff;
 
   public constructor(
     public readonly gp: GraphQLPlatform,
     options?: Readonly<InMemoryBrokerOptions>,
   ) {
-    this.#maxQueueSize = Math.max(0, options?.maxQueueSize ?? 25);
+    this.#maxQueueSize = Math.max(0, options?.maxQueueSize ?? 10);
     this.#queuesBySubscription = new Map();
   }
 
-  protected subscribeToNodeChanges(): void {
-    this.#nodeChangesSubscription ??= this.gp.on(
-      'node-change-aggregation',
-      (changes) =>
-        Promise.all(
-          Array.from(
-            this.#queuesBySubscription,
-            async ([subscription, queue]) => {
-              const effect = subscription.getNodeChangesEffect(changes);
-              if (effect) {
-                await queue.onSizeLessThan(this.#maxQueueSize + 1);
+  public async onLocalNodeChanges(
+    changes: NodeChangeAggregation,
+  ): Promise<void> {
+    await Promise.all(
+      Array.from(this.#queuesBySubscription, async ([subscription, queue]) => {
+        const effect = subscription.getNodeChangesEffect(changes);
+        if (effect) {
+          await queue.onSizeLessThan(this.#maxQueueSize + 1);
 
-                queue.add(async () => {
-                  for await (const change of subscription.resolveNodeChanges(
-                    effect,
-                  )) {
-                    await subscription.enqueue(change);
-                  }
-                });
-              }
-            },
-          ),
-        ),
+          queue.add(async () => {
+            for await (const change of subscription.resolveNodeChanges(
+              effect,
+            )) {
+              await subscription.enqueue(change);
+            }
+          });
+        }
+      }),
     );
-  }
-
-  protected unsubscribeFromNodeChanges(): void {
-    if (this.#nodeChangesSubscription) {
-      this.#nodeChangesSubscription();
-      this.#nodeChangesSubscription = undefined;
-    }
   }
 
   public initializeSubscription(subscription: ChangesSubscriptionStream): void {
@@ -68,23 +57,12 @@ export class InMemoryBroker implements BrokerInterface {
         concurrency: 1,
       }).on('error', (error) => subscription.emit('error', error)),
     );
-
-    this.subscribeToNodeChanges();
   }
 
   public async disposeSubscription(
     subscription: ChangesSubscriptionStream,
   ): Promise<void> {
-    const queue = this.#queuesBySubscription.get(subscription);
-
-    if (
-      this.#queuesBySubscription.delete(subscription) &&
-      !this.#queuesBySubscription.size
-    ) {
-      this.unsubscribeFromNodeChanges();
-    }
-
-    queue?.clear();
+    this.#queuesBySubscription.delete(subscription);
   }
 
   public async onSubscriptionIdle(

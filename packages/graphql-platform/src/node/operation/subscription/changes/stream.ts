@@ -194,9 +194,7 @@ export class ChangesSubscriptionStream<
 
   public constructor(
     public readonly node: Node<TRequestContext>,
-    context:
-      | OperationContext<TRequestContext>
-      | utils.Thunkable<TRequestContext>,
+    context: OperationContext<TRequestContext>,
     config: Readonly<ChangesSubscriptionStreamConfig<TUpsert, TDeletion>>,
   ) {
     super({
@@ -330,77 +328,31 @@ export class ChangesSubscriptionStream<
   public getNodeChangesEffect(
     changes:
       | NodeChangeAggregation<TRequestContext>
-      | ReadonlyArray<NodeChange<TRequestContext>>
-      | NodeChange<TRequestContext>,
+      | utils.Arrayable<NodeChange<TRequestContext>>,
   ): NodeChangesEffect<TUpsert, TDeletion, TRequestContext> | undefined {
-    const aggregation: NodeChangeAggregation<TRequestContext> =
+    const aggregation =
       changes instanceof NodeChangeAggregation
         ? changes
-        : new NodeChangeAggregation(
-            Array.isArray(changes) ? changes : [changes],
-          );
+        : new NodeChangeAggregation(utils.resolveArrayable(changes));
 
-    const effect: NodeChangesEffect = {
-      deletions: [],
-      upserts: [],
-      incompleteUpserts: [],
-      maybeUpserts: [],
-      maybeChanges: [],
-    };
+    if (aggregation.size) {
+      const effect: NodeChangesEffect = {
+        deletions: [],
+        upserts: [],
+        incompleteUpserts: [],
+        maybeUpserts: [],
+        maybeChanges: [],
+      };
 
-    const visitedRootNodes: NodeValue[] = [];
+      const visitedRootNodes: NodeValue[] = [];
 
-    // root-changes
-    aggregation.changesByNode.get(this.node)?.forEach((change) => {
-      if (change instanceof NodeCreation) {
-        const filterValue =
-          !this.filter || this.filter.execute(change.newValue, true);
+      // root-changes
+      aggregation.changesByNode.get(this.node)?.forEach((change) => {
+        if (change instanceof NodeCreation) {
+          const filterValue =
+            !this.filter || this.filter.execute(change.newValue, true);
 
-        if (filterValue === true) {
-          this.onUpsertSelection.isPure()
-            ? effect.upserts.push(
-                new ChangesSubscriptionUpsert(
-                  this,
-                  this.onUpsertSelection.pickValue(change.newValue as any),
-                  [change.requestContext],
-                ),
-              )
-            : effect.incompleteUpserts.push(change);
-        } else if (filterValue === undefined) {
-          effect.maybeUpserts.push(change);
-        }
-
-        visitedRootNodes.push(change.newValue);
-      } else if (change instanceof NodeDeletion) {
-        const filterValue =
-          !this.filter || this.filter.execute(change.oldValue, true);
-
-        if (filterValue !== false) {
-          this.onDeletionSelection &&
-            effect.deletions.push(
-              new ChangesSubscriptionDeletion(
-                this,
-                this.onDeletionSelection.pickValue(change.oldValue as any),
-                [change.requestContext],
-              ),
-            );
-        }
-
-        visitedRootNodes.push(change.oldValue);
-      } else if (
-        this.filter?.isAffectedByNodeUpdate(change) ||
-        this.onUpsertSelection.isAffectedByNodeUpdate(change)
-      ) {
-        let newFilterValue =
-          !this.filter || this.filter.execute(change.newValue, true);
-        let oldFilterValue =
-          !this.filter || this.filter.execute(change.oldValue, true);
-
-        if (newFilterValue === true) {
-          if (
-            newFilterValue !== oldFilterValue ||
-            this.onUpsertSelection.isAffectedByNodeUpdate(change)
-          ) {
+          if (filterValue === true) {
             this.onUpsertSelection.isPure()
               ? effect.upserts.push(
                   new ChangesSubscriptionUpsert(
@@ -410,82 +362,129 @@ export class ChangesSubscriptionStream<
                   ),
                 )
               : effect.incompleteUpserts.push(change);
+          } else if (filterValue === undefined) {
+            effect.maybeUpserts.push(change);
           }
-        } else if (newFilterValue === false) {
-          if (newFilterValue !== oldFilterValue) {
+
+          visitedRootNodes.push(change.newValue);
+        } else if (change instanceof NodeDeletion) {
+          const filterValue =
+            !this.filter || this.filter.execute(change.oldValue, true);
+
+          if (filterValue !== false) {
             this.onDeletionSelection &&
               effect.deletions.push(
                 new ChangesSubscriptionDeletion(
                   this,
-                  this.onDeletionSelection.pickValue(change.newValue as any),
+                  this.onDeletionSelection.pickValue(change.oldValue as any),
                   [change.requestContext],
                 ),
               );
           }
-        } else {
-          effect[
-            oldFilterValue === false ? 'maybeUpserts' : 'maybeChanges'
-          ].push(change);
-        }
 
-        visitedRootNodes.push(change.newValue);
-      } else if (this.filter?.execute(change.newValue, true) === false) {
-        visitedRootNodes.push(change.newValue);
-      }
-    });
+          visitedRootNodes.push(change.oldValue);
+        } else if (
+          this.filter?.isAffectedByNodeUpdate(change) ||
+          this.onUpsertSelection.isAffectedByNodeUpdate(change)
+        ) {
+          let newFilterValue =
+            !this.filter || this.filter.execute(change.newValue, true);
+          let oldFilterValue =
+            !this.filter || this.filter.execute(change.oldValue, true);
 
-    // graph-changes
-    {
-      const initiatorSet = new Set<TRequestContext>();
-
-      const filter = new NodeFilter(
-        this.node,
-        OrOperation.create(
-          Array.from(aggregation, (change) => {
-            const affectedFilterGraph =
-              this.filter?.getAffectedGraphByNodeChange(
-                change,
-                visitedRootNodes,
-              );
-
-            const affectedSelectionGraph =
-              this.onUpsertSelection.getAffectedGraphByNodeChange(
-                change,
-                visitedRootNodes,
-              );
-
-            const affectedGraph =
-              affectedFilterGraph && affectedSelectionGraph
-                ? affectedFilterGraph.or(affectedSelectionGraph)
-                : affectedFilterGraph ?? affectedSelectionGraph;
-
-            if (affectedGraph && !affectedGraph.isFalse()) {
-              initiatorSet.add(change.requestContext);
-
-              return affectedGraph.filter;
+          if (newFilterValue === true) {
+            if (
+              newFilterValue !== oldFilterValue ||
+              this.onUpsertSelection.isAffectedByNodeUpdate(change)
+            ) {
+              this.onUpsertSelection.isPure()
+                ? effect.upserts.push(
+                    new ChangesSubscriptionUpsert(
+                      this,
+                      this.onUpsertSelection.pickValue(change.newValue as any),
+                      [change.requestContext],
+                    ),
+                  )
+                : effect.incompleteUpserts.push(change);
             }
+          } else if (newFilterValue === false) {
+            if (newFilterValue !== oldFilterValue) {
+              this.onDeletionSelection &&
+                effect.deletions.push(
+                  new ChangesSubscriptionDeletion(
+                    this,
+                    this.onDeletionSelection.pickValue(change.newValue as any),
+                    [change.requestContext],
+                  ),
+                );
+            }
+          } else {
+            effect[
+              oldFilterValue === false ? 'maybeUpserts' : 'maybeChanges'
+            ].push(change);
+          }
 
-            return FalseValue;
-          }),
-        ),
-      );
+          visitedRootNodes.push(change.newValue);
+        } else if (this.filter?.execute(change.newValue, true) === false) {
+          visitedRootNodes.push(change.newValue);
+        }
+      });
 
-      if (!filter.isFalse()) {
-        effect.maybeGraphChanges = {
-          initiators: Array.from(initiatorSet),
-          filter,
-        };
+      // graph-changes
+      {
+        const initiatorSet = new Set<TRequestContext>();
+
+        const filter = new NodeFilter(
+          this.node,
+          OrOperation.create(
+            Array.from(aggregation, (change) => {
+              const affectedFilterGraph =
+                this.filter?.getAffectedGraphByNodeChange(
+                  change,
+                  visitedRootNodes,
+                );
+
+              const affectedSelectionGraph =
+                this.onUpsertSelection.getAffectedGraphByNodeChange(
+                  change,
+                  visitedRootNodes,
+                );
+
+              const affectedGraph =
+                affectedFilterGraph && affectedSelectionGraph
+                  ? affectedFilterGraph.or(affectedSelectionGraph)
+                  : affectedFilterGraph ?? affectedSelectionGraph;
+
+              if (affectedGraph && !affectedGraph.isFalse()) {
+                initiatorSet.add(change.requestContext);
+
+                return affectedGraph.filter;
+              }
+
+              return FalseValue;
+            }),
+          ),
+        );
+
+        if (!filter.isFalse()) {
+          effect.maybeGraphChanges = {
+            initiators: Array.from(initiatorSet),
+            filter,
+          };
+        }
+      }
+
+      if (
+        effect.deletions.length ||
+        effect.upserts.length ||
+        effect.incompleteUpserts.length ||
+        effect.maybeUpserts.length ||
+        effect.maybeChanges.length ||
+        effect.maybeGraphChanges
+      ) {
+        return effect;
       }
     }
-
-    return effect.deletions.length ||
-      effect.upserts.length ||
-      effect.incompleteUpserts.length ||
-      effect.maybeUpserts.length ||
-      effect.maybeChanges.length ||
-      effect.maybeGraphChanges
-      ? effect
-      : undefined;
   }
 
   protected async *resolveNodeChangesEffect(
