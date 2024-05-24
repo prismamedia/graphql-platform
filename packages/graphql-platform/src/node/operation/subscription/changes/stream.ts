@@ -1,99 +1,31 @@
-import {
-  AbortError,
-  AsyncEventEmitter,
-} from '@prismamedia/async-event-emitter';
-import * as scalars from '@prismamedia/graphql-platform-scalars';
+import { AsyncEventEmitter } from '@prismamedia/async-event-emitter';
 import * as utils from '@prismamedia/graphql-platform-utils';
 import { Memoize } from '@prismamedia/memoize';
-import Denque from 'denque';
 import assert from 'node:assert/strict';
-import PQueue, { Options as PQueueOptions } from 'p-queue';
+import { inspect } from 'node:util';
+import type { Options as PQueueOptions } from 'p-queue';
+import PQueue from 'p-queue';
 import type { Except, Promisable } from 'type-fest';
-import {
-  BrokerAcknowledgementKind,
-  type BrokerInterface,
+import type {
+  BrokerInterface,
+  NodeChangeAggregationSubscriptionInterface,
 } from '../../../../broker-interface.js';
 import type { Node, NodeValue } from '../../../../node.js';
-import {
-  NodeChangeAggregation,
-  NodeCreation,
-  NodeDeletion,
-  type NodeChange,
-  type NodeUpdate,
-} from '../../../change.js';
+import { NodeChangeAggregation, type NodeChange } from '../../../change.js';
 import type {
   ContextBoundNodeAPI,
   OperationContext,
 } from '../../../operation.js';
 import {
-  FalseValue,
   NodeFilter,
   NodeSelection,
-  OrOperation,
   type NodeSelectedValue,
 } from '../../../statement.js';
-import {
-  ChangesSubscriptionDeletion,
-  ChangesSubscriptionUpsert,
-  type ChangesSubscriptionChange,
-} from './stream/change.js';
+import type { ChangesSubscriptionChange } from './stream/change.js';
+import { ChangesSubscriptionEffect } from './stream/effect.js';
 
 export * from './stream/change.js';
-
-/**
- * Group all the effect that an aggregation of changes can have on a subscription
- */
-export type NodeChangesEffect<
-  TUpsert extends NodeSelectedValue = any,
-  TDeletion extends NodeValue = any,
-  TRequestContext extends object = any,
-> = {
-  /**
-   * Pass-through deletions, we had everything we need in the NodeChange
-   */
-  deletions: Array<ChangesSubscriptionDeletion<TDeletion, TRequestContext>>;
-
-  /**
-   * Pass-through upserts, we had everything we need in the NodeChange
-   */
-  upserts: Array<ChangesSubscriptionUpsert<TUpsert, TRequestContext>>;
-
-  /**
-   * Filtered-in, but incomplete value
-   */
-  incompleteUpserts: Array<
-    NodeCreation<TRequestContext> | NodeUpdate<TRequestContext>
-  >;
-
-  /**
-   * Not filtered, but cannot be deletion
-   */
-  maybeUpserts: Array<
-    NodeCreation<TRequestContext> | NodeUpdate<TRequestContext>
-  >;
-
-  /**
-   * Not filtered, can be anything
-   */
-  maybeChanges: Array<NodeUpdate<TRequestContext>>;
-
-  /**
-   * Graph changes
-   */
-  maybeGraphChanges?: {
-    initiators: Array<TRequestContext>;
-    filter: NodeFilter;
-  };
-};
-
-export type ChangesSubscriptionStreamEvents<
-  TUpsert extends NodeSelectedValue = any,
-  TDeletion extends NodeValue = any,
-  TRequestContext extends object = any,
-> = {
-  enqueued: ChangesSubscriptionChange<TUpsert, TDeletion, TRequestContext>;
-  idle: undefined;
-};
+export * from './stream/effect.js';
 
 export type ChangesSubscriptionStreamForEachTask<
   TUpsert extends NodeSelectedValue = any,
@@ -102,7 +34,7 @@ export type ChangesSubscriptionStreamForEachTask<
 > = (
   change: ChangesSubscriptionChange<TUpsert, TDeletion, TRequestContext>,
   stream: ChangesSubscriptionStream<TUpsert, TDeletion, TRequestContext>,
-) => Promisable<void>;
+) => Promisable<any>;
 
 export type ChangesSubscriptionStreamForEachOptions = Except<
   PQueueOptions<any, any>,
@@ -118,7 +50,7 @@ export type ChangesSubscriptionStreamByBatchTask<
     ChangesSubscriptionChange<TUpsert, TDeletion, TRequestContext>
   >,
   stream: ChangesSubscriptionStream<TUpsert, TDeletion, TRequestContext>,
-) => Promisable<void>;
+) => Promisable<any>;
 
 export type ChangesSubscriptionStreamByBatchOptions =
   ChangesSubscriptionStreamForEachOptions & {
@@ -129,6 +61,10 @@ export type ChangesSubscriptionStreamByBatchOptions =
      */
     batchSize?: number;
   };
+
+export type ChangesSubscriptionStreamEvents = {
+  'post-effect': ChangesSubscriptionEffect;
+};
 
 export type ChangesSubscriptionStreamConfig<
   TUpsert extends NodeSelectedValue = any,
@@ -170,51 +106,46 @@ export class ChangesSubscriptionStream<
     TDeletion extends NodeValue = any,
     TRequestContext extends object = any,
   >
-  extends AsyncEventEmitter<
-    ChangesSubscriptionStreamEvents<TUpsert, TDeletion, TRequestContext>
-  >
+  extends AsyncEventEmitter<ChangesSubscriptionStreamEvents>
   implements
     AsyncIterable<
       ChangesSubscriptionChange<TUpsert, TDeletion, TRequestContext>
-    >
+    >,
+    AsyncDisposable
 {
   public readonly filter?: NodeFilter;
-
   public readonly onUpsertSelection: NodeSelection<TUpsert>;
   public readonly onDeletionSelection?: NodeSelection<TDeletion>;
 
-  readonly #scrollable: boolean;
-  readonly #broker: BrokerInterface;
-  readonly #api: ContextBoundNodeAPI;
-  readonly #ac: AbortController;
+  public readonly api: ContextBoundNodeAPI;
+  public readonly scrollable: boolean;
 
-  readonly #queue: Denque<
-    ChangesSubscriptionChange<TUpsert, TDeletion, TRequestContext>
-  >;
+  readonly #broker: BrokerInterface;
+
+  readonly #ac: AbortController = new AbortController();
+  public readonly signal: AbortSignal = this.#ac.signal;
 
   public constructor(
     public readonly node: Node<TRequestContext>,
     context: OperationContext<TRequestContext>,
     config: Readonly<ChangesSubscriptionStreamConfig<TUpsert, TDeletion>>,
   ) {
-    super({
-      error: (cause) =>
-        node.gp.emit(
-          'error',
-          new Error(
-            `An error occurred in the "${node.plural}"' changes subscription`,
-            { cause },
-          ),
-        ),
-    });
+    super();
 
-    this.filter = config.filter?.normalized;
+    if (config.filter) {
+      assert(config.filter instanceof NodeFilter);
+      assert.equal(config.filter.node, node);
+
+      this.filter = config.filter?.normalized;
+    }
 
     assert(config.selection.onUpsert instanceof NodeSelection);
+    assert.equal(config.selection.onUpsert.node, node);
     this.onUpsertSelection = config.selection.onUpsert;
 
     if (config.selection.onDeletion) {
       assert(config.selection.onDeletion instanceof NodeSelection);
+      assert.equal(config.selection.onDeletion.node, node);
       assert(
         config.selection.onDeletion.isPure(),
         `Expects the "onDeletion" selection to be a subset of the "${this.node}"'s selection`,
@@ -227,438 +158,73 @@ export class ChangesSubscriptionStream<
       this.onDeletionSelection = config.selection.onDeletion;
     }
 
-    this.#scrollable = node.getSubscriptionByKey('scroll').isEnabled();
-    this.#broker = node.gp.broker;
-    this.#api = node.createContextBoundAPI(context);
-    this.#ac = new AbortController();
+    this.api = node.createContextBoundAPI(context);
+    this.scrollable = node.getSubscriptionByKey('scroll').isEnabled();
 
-    this.#queue = new Denque();
+    this.#broker = node.gp.broker;
   }
 
   @Memoize()
-  public async initialize(): Promise<void> {
-    this.#ac.signal.throwIfAborted();
+  public async subscribeToNodeChanges(): Promise<NodeChangeAggregationSubscriptionInterface> {
+    this.signal.throwIfAborted();
 
-    await this.#broker.initializeSubscription?.(this);
+    return this.#broker.subscribe(this);
   }
 
   @Memoize()
   public async dispose(): Promise<void> {
     this.#ac.abort();
 
-    try {
-      await this.#broker.disposeSubscription?.(this);
-    } finally {
-      this.off();
-      this.#queue.clear();
-    }
+    await this.#broker.unsubscribe?.(this);
   }
 
-  public async enqueue(
-    change: ChangesSubscriptionChange<TUpsert, TDeletion, TRequestContext>,
-  ): Promise<void> {
-    this.#ac.signal.throwIfAborted();
-
-    this.#queue.push(change);
-    await this.emit('enqueued', change);
-  }
-
-  protected async dequeue(): Promise<
-    ChangesSubscriptionChange<TUpsert, TDeletion, TRequestContext> | undefined
-  > {
-    this.#ac.signal.throwIfAborted();
-
-    let change: ChangesSubscriptionChange | undefined;
-
-    change = this.#queue.shift();
-    if (change) {
-      return change;
-    }
-
-    await this.emit('idle', undefined);
-
-    if (this.#ac.signal.aborted) {
-      return;
-    }
-
-    change = this.#queue.shift();
-    if (change) {
-      return change;
-    }
-
-    try {
-      await this.wait('enqueued', this.#ac.signal);
-    } catch (error) {
-      if (error instanceof AbortError) {
-        return;
-      }
-
-      throw error;
-    }
-
-    return this.#queue.shift();
-  }
-
-  /**
-   * Is the queue of pending-changes empty?
-   */
-  public isQueueEmpty(): boolean {
-    return this.#queue.length === 0;
-  }
-
-  /**
-   * Wait for the queue of pending-changes to be empty
-   */
-  public async onIdle(): Promise<void> {
-    if (this.isQueueEmpty()) {
-      return;
-    }
-
-    try {
-      await this.wait('idle', this.#ac.signal);
-    } catch (error) {
-      if (error instanceof AbortError) {
-        return;
-      }
-
-      throw error;
-    }
+  public async [Symbol.asyncDispose](): Promise<void> {
+    await this.dispose();
   }
 
   public getNodeChangesEffect(
     changes:
       | NodeChangeAggregation<TRequestContext>
       | utils.Arrayable<NodeChange<TRequestContext>>,
-  ): NodeChangesEffect<TUpsert, TDeletion, TRequestContext> | undefined {
-    const aggregation =
+  ): ChangesSubscriptionEffect<TUpsert, TDeletion, TRequestContext> {
+    return ChangesSubscriptionEffect.createFromNodeChangeAggregation(
+      this,
       changes instanceof NodeChangeAggregation
         ? changes
-        : new NodeChangeAggregation(utils.resolveArrayable(changes));
-
-    if (aggregation.size) {
-      const effect: NodeChangesEffect = {
-        deletions: [],
-        upserts: [],
-        incompleteUpserts: [],
-        maybeUpserts: [],
-        maybeChanges: [],
-      };
-
-      const visitedRootNodes: NodeValue[] = [];
-
-      // root-changes
-      aggregation.changesByNode.get(this.node)?.forEach((change) => {
-        if (change instanceof NodeCreation) {
-          const filterValue =
-            !this.filter || this.filter.execute(change.newValue, true);
-
-          if (filterValue === true) {
-            this.onUpsertSelection.isPure()
-              ? effect.upserts.push(
-                  new ChangesSubscriptionUpsert(
-                    this,
-                    this.onUpsertSelection.pickValue(change.newValue as any),
-                    [change.requestContext],
-                  ),
-                )
-              : effect.incompleteUpserts.push(change);
-          } else if (filterValue === undefined) {
-            effect.maybeUpserts.push(change);
-          }
-
-          visitedRootNodes.push(change.newValue);
-        } else if (change instanceof NodeDeletion) {
-          const filterValue =
-            !this.filter || this.filter.execute(change.oldValue, true);
-
-          if (filterValue !== false) {
-            this.onDeletionSelection &&
-              effect.deletions.push(
-                new ChangesSubscriptionDeletion(
-                  this,
-                  this.onDeletionSelection.pickValue(change.oldValue as any),
-                  [change.requestContext],
-                ),
-              );
-          }
-
-          visitedRootNodes.push(change.oldValue);
-        } else if (
-          this.filter?.isAffectedByNodeUpdate(change) ||
-          this.onUpsertSelection.isAffectedByNodeUpdate(change)
-        ) {
-          let newFilterValue =
-            !this.filter || this.filter.execute(change.newValue, true);
-          let oldFilterValue =
-            !this.filter || this.filter.execute(change.oldValue, true);
-
-          if (newFilterValue === true) {
-            if (
-              newFilterValue !== oldFilterValue ||
-              this.onUpsertSelection.isAffectedByNodeUpdate(change)
-            ) {
-              this.onUpsertSelection.isPure()
-                ? effect.upserts.push(
-                    new ChangesSubscriptionUpsert(
-                      this,
-                      this.onUpsertSelection.pickValue(change.newValue as any),
-                      [change.requestContext],
-                    ),
-                  )
-                : effect.incompleteUpserts.push(change);
-            }
-          } else if (newFilterValue === false) {
-            if (newFilterValue !== oldFilterValue) {
-              this.onDeletionSelection &&
-                effect.deletions.push(
-                  new ChangesSubscriptionDeletion(
-                    this,
-                    this.onDeletionSelection.pickValue(change.newValue as any),
-                    [change.requestContext],
-                  ),
-                );
-            }
-          } else {
-            effect[
-              oldFilterValue === false ? 'maybeUpserts' : 'maybeChanges'
-            ].push(change);
-          }
-
-          visitedRootNodes.push(change.newValue);
-        } else if (this.filter?.execute(change.newValue, true) === false) {
-          visitedRootNodes.push(change.newValue);
-        }
-      });
-
-      // graph-changes
-      {
-        const initiatorSet = new Set<TRequestContext>();
-
-        const filter = new NodeFilter(
-          this.node,
-          OrOperation.create(
-            Array.from(aggregation, (change) => {
-              const affectedFilterGraph =
-                this.filter?.getAffectedGraphByNodeChange(
-                  change,
-                  visitedRootNodes,
-                );
-
-              const affectedSelectionGraph =
-                this.onUpsertSelection.getAffectedGraphByNodeChange(
-                  change,
-                  visitedRootNodes,
-                );
-
-              const affectedGraph =
-                affectedFilterGraph && affectedSelectionGraph
-                  ? affectedFilterGraph.or(affectedSelectionGraph)
-                  : affectedFilterGraph ?? affectedSelectionGraph;
-
-              if (affectedGraph && !affectedGraph.isFalse()) {
-                initiatorSet.add(change.requestContext);
-
-                return affectedGraph.filter;
-              }
-
-              return FalseValue;
-            }),
-          ),
-        );
-
-        if (!filter.isFalse()) {
-          effect.maybeGraphChanges = {
-            initiators: Array.from(initiatorSet),
-            filter,
-          };
-        }
-      }
-
-      if (
-        effect.deletions.length ||
-        effect.upserts.length ||
-        effect.incompleteUpserts.length ||
-        effect.maybeUpserts.length ||
-        effect.maybeChanges.length ||
-        effect.maybeGraphChanges
-      ) {
-        return effect;
-      }
-    }
+        : new NodeChangeAggregation(utils.resolveArrayable(changes)),
+    );
   }
 
-  protected async *resolveNodeChangesEffect(
-    effect: NodeChangesEffect<TUpsert, TDeletion, TRequestContext>,
-  ): AsyncIterable<
-    ChangesSubscriptionChange<TUpsert, TDeletion, TRequestContext>
+  @Memoize()
+  protected async *changes(): AsyncIterator<
+    ChangesSubscriptionChange<TUpsert, TDeletion, TRequestContext>,
+    undefined
   > {
-    // pass-through changes
-    yield* effect.deletions;
-    yield* effect.upserts;
+    const nodeChangeSubscription = await this.subscribeToNodeChanges();
 
-    // maybe-changes & incomplete-upserts & maybe-upserts
-    if (
-      effect.maybeChanges.length ||
-      effect.incompleteUpserts.length ||
-      effect.maybeUpserts.length
-    ) {
-      const changes = [
-        ...effect.maybeChanges,
-        ...effect.incompleteUpserts,
-        ...effect.maybeUpserts,
-      ];
+    for await (const nodeChanges of nodeChangeSubscription) {
+      const effect = this.getNodeChangesEffect(nodeChanges);
+      if (!effect.isEmpty()) {
+        for await (const change of effect) {
+          yield change;
 
-      const values = await this.#api.getSomeInOrderIfExists({
-        ...(this.filter &&
-          (effect.maybeUpserts.length || effect.maybeChanges.length) && {
-            // We don't need the filter for the "incomplete-upserts", they are already filtered-in
-            subset: this.filter?.inputValue,
-          }),
-        where: changes.map(({ id }) => id),
-        selection: this.onUpsertSelection,
-      });
-
-      for (const [index, value] of values.entries()) {
-        const change = changes[index];
-
-        if (value) {
-          yield new ChangesSubscriptionUpsert(this, value as TUpsert, [
-            change.requestContext,
-          ]);
-        } else if (
-          index < effect.maybeChanges.length &&
-          this.onDeletionSelection
-        ) {
-          yield new ChangesSubscriptionDeletion(
-            this,
-            this.onDeletionSelection.pickValue(change.newValue as any),
-            [change.requestContext],
-          );
-        }
-      }
-    }
-
-    // graph-changes
-    if (effect.maybeGraphChanges) {
-      // deletions
-      if (this.filter && this.onDeletionSelection) {
-        const args = {
-          where: {
-            AND: [
-              this.filter.complement.inputValue,
-              effect.maybeGraphChanges.filter.inputValue,
-            ],
-          },
-          selection: this.onDeletionSelection,
-        } as const;
-
-        if (this.#scrollable) {
-          for await (const deletion of this.#api.scroll(args)) {
-            yield new ChangesSubscriptionDeletion(
-              this,
-              deletion as TDeletion,
-              effect.maybeGraphChanges.initiators,
-            );
-          }
-        } else {
-          const deletions = await this.#api.findMany({
-            ...args,
-            first: scalars.GRAPHQL_MAX_UNSIGNED_INT,
-          });
-
-          for (const deletion of deletions) {
-            yield new ChangesSubscriptionDeletion(
-              this,
-              deletion as TDeletion,
-              effect.maybeGraphChanges.initiators,
-            );
+          if (this.signal.aborted) {
+            return;
           }
         }
-      }
 
-      // upserts
-      {
-        const args = {
-          where: {
-            AND: [
-              this.filter?.inputValue,
-              effect.maybeGraphChanges.filter.inputValue,
-            ],
-          },
-          selection: this.onUpsertSelection,
-        } as const;
-
-        if (this.#scrollable) {
-          for await (const upsert of this.#api.scroll(args)) {
-            yield new ChangesSubscriptionUpsert(
-              this,
-              upsert as TUpsert,
-              effect.maybeGraphChanges.initiators,
-            );
-          }
-        } else {
-          const upserts = await this.#api.findMany({
-            ...args,
-            first: scalars.GRAPHQL_MAX_UNSIGNED_INT,
-          });
-
-          for (const upsert of upserts) {
-            yield new ChangesSubscriptionUpsert(
-              this,
-              upsert as TUpsert,
-              effect.maybeGraphChanges.initiators,
-            );
-          }
-        }
-      }
-    }
-  }
-
-  public async *resolveNodeChanges(
-    changesOrEffect:
-      | NodeChangeAggregation<TRequestContext>
-      | NodeChangesEffect<TUpsert, TDeletion, TRequestContext>,
-  ): AsyncIterable<
-    ChangesSubscriptionChange<TUpsert, TDeletion, TRequestContext>
-  > {
-    this.#ac.signal.throwIfAborted();
-
-    const effect =
-      changesOrEffect instanceof NodeChangeAggregation
-        ? this.getNodeChangesEffect(changesOrEffect)
-        : changesOrEffect;
-
-    if (effect) {
-      for await (const change of this.resolveNodeChangesEffect(effect)) {
-        if (this.#ac.signal.aborted) {
-          break;
-        }
-
-        yield change;
+        await this.emit('post-effect', effect);
       }
     }
   }
 
   public [Symbol.asyncIterator](): AsyncIterator<
-    ChangesSubscriptionChange<TUpsert, TDeletion, TRequestContext>
+    ChangesSubscriptionChange<TUpsert, TDeletion, TRequestContext>,
+    undefined
   > {
-    this.#ac.signal.throwIfAborted();
-
-    let change: ChangesSubscriptionChange | undefined;
-
     return {
-      next: async () => {
-        await change?.handleAutomaticAcknowledgement();
-        await this.initialize();
-
-        change = this.#ac.signal.aborted ? undefined : await this.dequeue();
-
-        return change
-          ? { done: false, value: change }
-          : { done: true, value: undefined };
-      },
+      next: () => this.changes().next(),
       return: async () => {
-        await change?.handleAutomaticAcknowledgement();
         await this.dispose();
 
         return { done: true, value: undefined };
@@ -674,7 +240,7 @@ export class ChangesSubscriptionStream<
     >,
     queueOptions?: ChangesSubscriptionStreamForEachOptions,
   ): Promise<void> {
-    this.#ac.signal.throwIfAborted();
+    this.signal.throwIfAborted();
 
     using tasks = Object.assign(
       new PQueue({
@@ -685,43 +251,25 @@ export class ChangesSubscriptionStream<
       { [Symbol.dispose]: () => tasks.clear() },
     );
 
-    try {
-      await new Promise<void>(async (resolve, reject) => {
-        tasks.on('error', reject);
+    this.on('post-effect', () => tasks.onIdle(), this.signal);
 
-        try {
-          for await (const change of this) {
-            change.manualAcknowledgement = true;
+    await new Promise<void>(async (resolve, reject) => {
+      tasks.on('error', reject);
 
-            await tasks.onEmpty();
+      try {
+        for await (const change of this) {
+          await tasks.onSizeLessThan(tasks.concurrency);
 
-            tasks.add(async () => {
-              try {
-                await task(change, this);
-
-                if (!change.isAcknowledged()) {
-                  await change.acknowledge(BrokerAcknowledgementKind.ACK);
-                }
-              } catch (error) {
-                if (!change.isAcknowledged()) {
-                  await change.acknowledge(BrokerAcknowledgementKind.REJECT);
-                }
-
-                throw error;
-              }
-            });
+          if (!this.signal.aborted) {
+            tasks.add(() => task(change, this));
           }
-
-          await tasks.onIdle();
-
-          resolve();
-        } catch (error) {
-          reject(error);
         }
-      });
-    } finally {
-      await this.dispose();
-    }
+
+        resolve();
+      } catch (error) {
+        reject(error);
+      }
+    });
   }
 
   public async byBatch(
@@ -731,11 +279,16 @@ export class ChangesSubscriptionStream<
       TRequestContext
     >,
     {
-      batchSize,
+      batchSize: batchSize = 100,
       ...queueOptions
     }: ChangesSubscriptionStreamByBatchOptions = {},
   ): Promise<void> {
-    this.#ac.signal.throwIfAborted();
+    this.signal.throwIfAborted();
+
+    assert(
+      typeof batchSize === 'number' && batchSize >= 1,
+      `The batch-size has to be greater than or equal to 1, got ${inspect(batchSize)}`,
+    );
 
     using tasks = Object.assign(
       new PQueue({
@@ -746,70 +299,41 @@ export class ChangesSubscriptionStream<
       { [Symbol.dispose]: () => tasks.clear() },
     );
 
-    const normalizedBatchSize = Math.max(1, batchSize || 100);
-
     let batch: ChangesSubscriptionChange[] = [];
 
-    const processBatch = () => {
+    const enqueueBatch = () => {
       if (batch.length) {
-        const changes = Object.freeze(batch);
+        const current = Object.freeze(batch);
         batch = [];
-
-        tasks.add(async () => {
-          try {
-            await task(changes, this);
-
-            await Promise.all(
-              changes.map((change) => {
-                if (!change.isAcknowledged()) {
-                  return change.acknowledge(BrokerAcknowledgementKind.ACK);
-                }
-              }),
-            );
-          } catch (error) {
-            await Promise.all(
-              changes.map((change) => {
-                if (!change.isAcknowledged()) {
-                  return change.acknowledge(BrokerAcknowledgementKind.REJECT);
-                }
-              }),
-            );
-
-            throw error;
-          }
-        });
+        tasks.add(() => task(current, this));
       }
     };
 
-    const processBatchOnIdle = this.on('idle', processBatch);
+    this.on(
+      'post-effect',
+      async () => {
+        enqueueBatch();
+        await tasks.onIdle();
+      },
+      this.signal,
+    );
 
-    try {
-      await new Promise<void>(async (resolve, reject) => {
-        tasks.on('error', reject);
+    await new Promise<void>(async (resolve, reject) => {
+      tasks.on('error', reject);
 
-        try {
-          for await (const change of this) {
-            change.manualAcknowledgement = true;
+      try {
+        for await (const change of this) {
+          await tasks.onSizeLessThan(tasks.concurrency);
 
-            await tasks.onEmpty();
-
-            if (batch.push(change) === normalizedBatchSize) {
-              processBatch();
-            }
+          if (!this.signal.aborted && batch.push(change) >= batchSize) {
+            enqueueBatch();
           }
-
-          processBatch();
-
-          await tasks.onIdle();
-
-          resolve();
-        } catch (error) {
-          reject(error);
         }
-      });
-    } finally {
-      processBatchOnIdle();
-      await this.dispose();
-    }
+
+        resolve();
+      } catch (error) {
+        reject(error);
+      }
+    });
   }
 }

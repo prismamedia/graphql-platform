@@ -5,16 +5,16 @@ import { AbstractChangesSubscriptionChange } from '../abstract-change.js';
 export class ChangesSubscriptionUpsert<
   TValue extends NodeSelectedValue = any,
   TRequestContext extends object = any,
-> extends AbstractChangesSubscriptionChange<TRequestContext> {
-  public readonly value: Readonly<TValue>;
-
+> extends AbstractChangesSubscriptionChange<TValue, TRequestContext> {
   public constructor(
-    subscription: ChangesSubscriptionStream<TValue, any, TRequestContext>,
-    value: TValue,
+    subscription: ChangesSubscriptionStream,
+    value: Readonly<TValue>,
     initiators: ReadonlyArray<TRequestContext>,
   ) {
-    super(subscription, initiators);
-
-    this.value = Object.freeze(value);
+    super(
+      subscription,
+      subscription.onUpsertSelection.pickValue(value),
+      initiators,
+    );
   }
 }

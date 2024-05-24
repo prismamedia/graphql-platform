@@ -284,7 +284,7 @@ export class NodeSelection<
     path: utils.Path = utils.addPath(undefined, this.node.toString()),
   ): TValue {
     return this.expressions.reduce<TValue>((document: any, expression) => {
-      if (typeof superSetOfValue[expression.key] === 'undefined') {
+      if (superSetOfValue[expression.key] === undefined) {
         throw new utils.UnexpectedUndefinedError(expression.key, { path });
       }
 

@@ -59,8 +59,11 @@ describe('ChangesSubscription', () => {
         [myAdminContext, { where: null, selection: { onUpsert: '{ id }' } }],
       ])(
         'does no call the connector when it is not needed',
-        (context, args) => {
-          const subscription = Article.api.subscribeToChanges(context, args);
+        async (context, args) => {
+          const subscription = await Article.api.subscribeToChanges(
+            context,
+            args,
+          );
           expect(subscription).toBeInstanceOf(ChangesSubscriptionStream);
 
           expect(gp.connector.find).toHaveBeenCalledTimes(0);
@@ -71,18 +74,16 @@ describe('ChangesSubscription', () => {
         let subscription: ChangesSubscriptionStream;
 
         beforeAll(async () => {
-          subscription = Article.api.subscribeToChanges(myAdminContext, {
+          subscription = await Article.api.subscribeToChanges(myAdminContext, {
             where: { status: ArticleStatus.PUBLISHED },
             selection: {
               onUpsert: `{ id title }`,
               onDeletion: `{ id }`,
             },
           });
-
-          await subscription.initialize();
         });
 
-        afterAll(() => subscription?.dispose());
+        afterAll(() => subscription.dispose());
 
         it.each([
           NodeDeletion.createFromNonNullableComponents(
@@ -152,7 +153,7 @@ describe('ChangesSubscription', () => {
         ])('should discard filtered-out "change', (change) => {
           const effect = subscription.getNodeChangesEffect(change);
 
-          expect(effect).toBeUndefined();
+          expect(effect.isEmpty()).toBeTruthy();
         });
 
         it('should handle filtered-in "deletion"', () => {
@@ -174,7 +175,7 @@ describe('ChangesSubscription', () => {
             ),
           );
 
-          expect(effect?.deletions).toHaveLength(1);
+          expect(effect.deletions).toHaveLength(1);
         });
 
         it('should handle filtered-in "creation"', () => {
@@ -196,7 +197,7 @@ describe('ChangesSubscription', () => {
             ),
           );
 
-          expect(effect?.upserts).toHaveLength(1);
+          expect(effect.upserts).toHaveLength(1);
         });
       });
 
@@ -204,7 +205,7 @@ describe('ChangesSubscription', () => {
         let subscription: ChangesSubscriptionStream;
 
         beforeAll(async () => {
-          subscription = Article.api.subscribeToChanges(myAdminContext, {
+          subscription = await Article.api.subscribeToChanges(myAdminContext, {
             where: {
               OR: [
                 { status: ArticleStatus.PUBLISHED },
@@ -249,7 +250,7 @@ describe('ChangesSubscription', () => {
             ),
           );
 
-          expect(effect?.incompleteUpserts).toHaveLength(1);
+          expect(effect.incompleteUpserts).toHaveLength(1);
         });
 
         it('the "creation" might be an "upsert"', () => {
@@ -271,7 +272,7 @@ describe('ChangesSubscription', () => {
             ),
           );
 
-          expect(effect?.maybeUpserts).toHaveLength(1);
+          expect(effect.maybeUpserts).toHaveLength(1);
         });
       });
 
@@ -279,7 +280,7 @@ describe('ChangesSubscription', () => {
         let subscription: ChangesSubscriptionStream;
 
         beforeAll(async () => {
-          subscription = Article.api.subscribeToChanges(myAdminContext, {
+          subscription = await Article.api.subscribeToChanges(myAdminContext, {
             where: {
               status: ArticleStatus.PUBLISHED,
               NOT: {
@@ -319,39 +320,43 @@ describe('ChangesSubscription', () => {
           });
         });
 
-        afterAll(() => subscription?.dispose());
+        afterAll(() => subscription.dispose());
 
         it('should skip this User "creation"', () =>
           expect(
-            subscription.getNodeChangesEffect(
-              NodeCreation.createFromNonNullableComponents(
-                User,
-                {},
-                {
-                  id: '20c816d1-d390-45a1-9711-83697bc97766',
-                  username: 'test00',
-                  createdAt: new Date(),
-                  lastLoggedInAt: new Date(),
-                },
-              ),
-            ),
-          ).toBeUndefined());
+            subscription
+              .getNodeChangesEffect(
+                NodeCreation.createFromNonNullableComponents(
+                  User,
+                  {},
+                  {
+                    id: '20c816d1-d390-45a1-9711-83697bc97766',
+                    username: 'test00',
+                    createdAt: new Date(),
+                    lastLoggedInAt: new Date(),
+                  },
+                ),
+              )
+              .isEmpty(),
+          ).toBeTruthy());
 
         it('should skip this User "deletion"', () =>
           expect(
-            subscription.getNodeChangesEffect(
-              NodeDeletion.createFromNonNullableComponents(
-                User,
-                {},
-                {
-                  id: '1a04ef91-104e-457e-829c-f4561f77f1e3',
-                  username: 'test01',
-                  createdAt: new Date(),
-                  lastLoggedInAt: new Date(),
-                },
-              ),
-            ),
-          ).toBeUndefined());
+            subscription
+              .getNodeChangesEffect(
+                NodeDeletion.createFromNonNullableComponents(
+                  User,
+                  {},
+                  {
+                    id: '1a04ef91-104e-457e-829c-f4561f77f1e3',
+                    username: 'test01',
+                    createdAt: new Date(),
+                    lastLoggedInAt: new Date(),
+                  },
+                ),
+              )
+              .isEmpty(),
+          ).toBeTruthy());
 
         it('should handle this User "update"', () => {
           const effect = subscription.getNodeChangesEffect(
@@ -370,7 +375,7 @@ describe('ChangesSubscription', () => {
             ),
           );
 
-          expect(effect?.maybeGraphChanges?.filter.inputValue)
+          expect(effect.maybeGraphChanges?.filter.inputValue)
             .toMatchInlineSnapshot(`
             {
               "createdBy": {
@@ -408,8 +413,8 @@ describe('ChangesSubscription', () => {
             ),
           ]);
 
-          expect(effect?.maybeUpserts).toHaveLength(1);
-          expect(effect?.maybeGraphChanges).toBeUndefined();
+          expect(effect.maybeUpserts).toHaveLength(1);
+          expect(effect.maybeGraphChanges).toBeUndefined();
         });
 
         it("should handle only the root-creation if a reverse-edge's head filtered-out creation is heading to it", () => {
@@ -440,7 +445,7 @@ describe('ChangesSubscription', () => {
             ),
           ]);
 
-          expect(effect).toBeUndefined();
+          expect(effect.isEmpty()).toBeTruthy();
         });
 
         it('should handle only the root-update if a reverse-edge is heading to it', () => {
@@ -474,7 +479,7 @@ describe('ChangesSubscription', () => {
             ),
           ]);
 
-          expect(effect).toBeUndefined();
+          expect(effect.isEmpty()).toBeTruthy();
         });
 
         it('should handle only the root-deletion if a reverse-edge is heading to it', () => {
@@ -505,8 +510,8 @@ describe('ChangesSubscription', () => {
             ),
           ]);
 
-          expect(effect?.deletions).toHaveLength(1);
-          expect(effect?.maybeGraphChanges).toBeUndefined();
+          expect(effect.deletions).toHaveLength(1);
+          expect(effect.maybeGraphChanges).toBeUndefined();
         });
 
         it('should handle this ArticleTag "creation"', () => {
@@ -522,7 +527,7 @@ describe('ChangesSubscription', () => {
             ),
           );
 
-          expect(effect?.maybeGraphChanges?.filter.inputValue)
+          expect(effect.maybeGraphChanges?.filter.inputValue)
             .toMatchInlineSnapshot(`
             {
               "_id": 4,
@@ -543,7 +548,7 @@ describe('ChangesSubscription', () => {
             ),
           );
 
-          expect(effect?.maybeGraphChanges?.filter.inputValue)
+          expect(effect.maybeGraphChanges?.filter.inputValue)
             .toMatchInlineSnapshot(`
             {
               "_id": 5,
@@ -565,7 +570,7 @@ describe('ChangesSubscription', () => {
             ),
           );
 
-          expect(effect?.maybeGraphChanges?.filter.inputValue)
+          expect(effect.maybeGraphChanges?.filter.inputValue)
             .toMatchInlineSnapshot(`
             {
               "_id": 6,
@@ -588,7 +593,7 @@ describe('ChangesSubscription', () => {
             ),
           );
 
-          expect(effect?.maybeGraphChanges?.filter.inputValue)
+          expect(effect.maybeGraphChanges?.filter.inputValue)
             .toMatchInlineSnapshot(`
             {
               "updatedBy": {
@@ -613,7 +618,7 @@ describe('ChangesSubscription', () => {
             ),
           );
 
-          expect(effect?.maybeGraphChanges?.filter.inputValue)
+          expect(effect.maybeGraphChanges?.filter.inputValue)
             .toMatchInlineSnapshot(`
             {
               "updatedBy": {
@@ -639,7 +644,7 @@ describe('ChangesSubscription', () => {
             ),
           );
 
-          expect(effect?.maybeGraphChanges).toBeUndefined();
+          expect(effect.maybeGraphChanges).toBeUndefined();
         });
 
         it('should handle this UserProfile "update"', () => {
@@ -658,7 +663,7 @@ describe('ChangesSubscription', () => {
             ),
           );
 
-          expect(effect?.maybeGraphChanges?.filter.inputValue)
+          expect(effect.maybeGraphChanges?.filter.inputValue)
             .toMatchInlineSnapshot(`
             {
               "createdBy": {
@@ -705,8 +710,8 @@ describe('ChangesSubscription', () => {
             ),
           ]);
 
-          expect(effect?.maybeUpserts).toHaveLength(1);
-          expect(effect?.maybeGraphChanges).toBeUndefined();
+          expect(effect.maybeUpserts).toHaveLength(1);
+          expect(effect.maybeGraphChanges).toBeUndefined();
         });
       });
     });

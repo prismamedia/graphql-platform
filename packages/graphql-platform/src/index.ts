@@ -685,7 +685,7 @@ export class GraphQLPlatform<
 
       if (aggregation.size) {
         await Promise.all([
-          this.broker?.onLocalNodeChanges(aggregation),
+          this.broker?.publish(aggregation),
           this.emit('node-change-aggregation', aggregation),
           this.eventListenerCount('node-change')
             ? Promise.all(

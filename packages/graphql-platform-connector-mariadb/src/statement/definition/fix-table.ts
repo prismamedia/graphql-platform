@@ -38,7 +38,7 @@ export class FixTableStatement implements mariadb.QueryOptions {
     const fixableColumns = diagnosis.fixesColumns(config);
 
     this.sql = [
-      `ALTER TABLE ${escapeIdentifier(diagnosis.table.qualifiedName)}`,
+      `ALTER IGNORE TABLE ${escapeIdentifier(diagnosis.table.qualifiedName)}`,
       [
         diagnosis.fixesComment(config) &&
           `COMMENT = ${escapeStringValue(diagnosis.table.comment ?? '')}`,

@@ -49,13 +49,12 @@ describe('API', () => {
       ).resolves.toEqual([]);
 
       {
-        const subscription = api.Article.subscribeToChanges(myAdminContext, {
-          selection: { onUpsert: `{ id }` },
-        });
+        await using subscription = await api.Article.subscribeToChanges(
+          myAdminContext,
+          { selection: { onUpsert: `{ id }` } },
+        );
 
         expect(subscription).toBeInstanceOf(ChangesSubscriptionStream);
-
-        subscription.on('idle', () => subscription.dispose());
       }
     });
   });
@@ -84,13 +83,11 @@ describe('API', () => {
       ).resolves.toEqual([]);
 
       {
-        const subscription = api.Article.subscribeToChanges({
+        await using subscription = await api.Article.subscribeToChanges({
           selection: { onUpsert: `{ id }` },
         });
 
         expect(subscription).toBeInstanceOf(ChangesSubscriptionStream);
-
-        subscription.on('idle', () => subscription.dispose());
       }
     });
   });

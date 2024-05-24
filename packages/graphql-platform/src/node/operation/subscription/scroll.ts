@@ -1,6 +1,7 @@
 import * as scalars from '@prismamedia/graphql-platform-scalars';
 import * as utils from '@prismamedia/graphql-platform-utils';
 import { Memoize } from '@prismamedia/memoize';
+import * as graphql from 'graphql';
 import inflection from 'inflection';
 import type { BrokerInterface } from '../../../broker-interface.js';
 import type { ConnectorInterface } from '../../../connector-interface.js';
@@ -9,7 +10,7 @@ import {
   type NodeSelectionAwareArgs,
   type RawNodeSelectionAwareArgs,
 } from '../../abstract-operation.js';
-import { NodeFilter } from '../../statement.js';
+import { NodeFilter, type NodeSelectedValue } from '../../statement.js';
 import type { NodeFilterInputValue } from '../../type.js';
 import { AbstractSubscription } from '../abstract-subscription.js';
 import type { OperationContext } from '../context.js';
@@ -115,5 +116,13 @@ export class ScrollSubscription<
 
   public getGraphQLFieldConfigType() {
     return this.node.outputType.getGraphQLObjectType();
+  }
+
+  protected override getGraphQLFieldConfigResolver(): graphql.GraphQLFieldConfig<
+    NodeSelectedValue | null,
+    TRequestContext,
+    Omit<ScrollSubscriptionArgs, 'selection'>
+  >['resolve'] {
+    return (value) => value;
   }
 }

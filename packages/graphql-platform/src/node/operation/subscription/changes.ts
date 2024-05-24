@@ -21,6 +21,13 @@ import {
 
 export * from './changes/stream.js';
 
+const ChangeKindProperty = Symbol('ChangeKind');
+
+enum ChangeKind {
+  Deletion = 'DELETION',
+  Upsert = 'UPSERT',
+}
+
 export type ChangesSubscriptionArgs = {
   where?: NodeFilterInputValue;
   selection:
@@ -49,7 +56,7 @@ export class ChangesSubscription<
   BrokerInterface,
   object,
   ChangesSubscriptionArgs,
-  ChangesSubscriptionStream<any, any, TRequestContext>
+  Promise<ChangesSubscriptionStream<any, any, TRequestContext>>
 > {
   protected readonly selectionAware = true;
 
@@ -116,9 +123,9 @@ export class ChangesSubscription<
               onUpsert: args.selection.fieldNodes[0]?.selectionSet?.selections
                 .filter(
                   (selection): selection is graphql.InlineFragmentNode =>
-                    selection.kind === 'InlineFragment' &&
+                    selection.kind === graphql.Kind.INLINE_FRAGMENT &&
                     selection.typeCondition?.name.value ===
-                      this.getGraphQLUpsertType().name,
+                      this.graphqlUpsertType.name,
                 )
                 .reduce<NodeSelection | undefined>(
                   (maybeSelection, inlineFragment) => {
@@ -139,9 +146,9 @@ export class ChangesSubscription<
               onDeletion: args.selection.fieldNodes[0]?.selectionSet?.selections
                 .filter(
                   (selection): selection is graphql.InlineFragmentNode =>
-                    selection.kind === 'InlineFragment' &&
+                    selection.kind === graphql.Kind.INLINE_FRAGMENT &&
                     selection.typeCondition?.name.value ===
-                      this.getGraphQLDeletionType().name,
+                      this.graphqlDeletionType.name,
                 )
                 .reduce<NodeSelection | undefined>(
                   (maybeSelection, inlineFragment) => {
@@ -207,12 +214,12 @@ export class ChangesSubscription<
     return parsedArgs as any;
   }
 
-  protected executeWithValidArgumentsAndContext(
+  protected async executeWithValidArgumentsAndContext(
     context: OperationContext,
     authorization: NodeFilter | undefined,
     args: ParsedChangesSubscriptionArgs,
     path: utils.Path,
-  ): ChangesSubscriptionStream {
+  ): Promise<ChangesSubscriptionStream> {
     const argsPath = utils.addPath(path, argsPathKey);
 
     const where = this.node.filterInputType.filter(
@@ -225,13 +232,17 @@ export class ChangesSubscription<
       authorization && where ? authorization.and(where) : authorization || where
     )?.normalized;
 
-    return new ChangesSubscriptionStream(this.node, context, {
+    const stream = new ChangesSubscriptionStream(this.node, context, {
       filter,
       selection: args.selection,
     });
+    await stream.subscribeToNodeChanges();
+
+    return stream;
   }
 
-  protected getGraphQLDeletionType() {
+  @Memoize()
+  public get graphqlDeletionType() {
     return new graphql.GraphQLObjectType({
       name: `${this.node}Deletion`,
       description: `A single deletion in the "${this.name}"'s subscription`,
@@ -265,24 +276,23 @@ export class ChangesSubscription<
     });
   }
 
-  protected getGraphQLUpsertType() {
+  public get graphqlUpsertType() {
     return this.node.outputType.getGraphQLObjectType();
   }
 
   public getGraphQLFieldConfigType() {
     return new graphql.GraphQLUnionType({
       name: `${this.node}Change`,
-      description: `A single change in the "${
-        this.name
-      }"'s subscription, either a deletion (= "${
-        this.getGraphQLDeletionType().name
-      }") or an upsert (= "${this.getGraphQLUpsertType().name}")`,
-      types: [this.getGraphQLDeletionType(), this.getGraphQLUpsertType()],
+      description: `A single change in the "${this.name}"'s subscription, either a deletion (= "${this.graphqlDeletionType.name}") or an upsert (= "${this.graphqlUpsertType.name}")`,
+      types: [this.graphqlDeletionType, this.graphqlUpsertType],
       resolveType: (change) =>
-        change instanceof ChangesSubscriptionDeletion
-          ? this.getGraphQLDeletionType().name
-          : this.getGraphQLUpsertType().name,
-    } satisfies graphql.GraphQLUnionTypeConfig<ChangesSubscriptionChange, any>);
+        change[ChangeKindProperty] === ChangeKind.Deletion
+          ? this.graphqlDeletionType.name
+          : this.graphqlUpsertType.name,
+    } satisfies graphql.GraphQLUnionTypeConfig<
+      { [ChangeKindProperty]: ChangeKind } & ChangesSubscriptionChange['value'],
+      any
+    >);
   }
 
   protected override getGraphQLFieldConfigResolver(): graphql.GraphQLFieldConfig<
@@ -290,6 +300,11 @@ export class ChangesSubscription<
     TRequestContext,
     Omit<ChangesSubscriptionArgs, 'selection'>
   >['resolve'] {
-    return (change) => change?.value;
+    return (change) =>
+      change
+        ? change instanceof ChangesSubscriptionDeletion
+          ? { [ChangeKindProperty]: ChangeKind.Deletion, ...change.value }
+          : { [ChangeKindProperty]: ChangeKind.Upsert, ...change.value }
+        : null;
   }
 }

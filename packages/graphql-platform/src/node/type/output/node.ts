@@ -441,6 +441,15 @@ export class NodeOutputType {
     );
   }
 
+  @Memoize()
+  protected get typeNames(): ReadonlySet<graphql.GraphQLObjectType['name']> {
+    return new Set([
+      this.node.name,
+      this.node.getSubscriptionByKey('changes').graphqlDeletionType.name,
+      this.node.getSubscriptionByKey('changes').graphqlUpsertType.name,
+    ]);
+  }
+
   public selectGraphQLDocumentNode(
     ast: graphql.DocumentNode,
     operationContext?: OperationContext,
@@ -454,9 +463,8 @@ export class NodeOutputType {
         definitionNode.kind === graphql.Kind.FRAGMENT_DEFINITION,
     );
 
-    const fragmentDefinition = fragmentDefinitions.find(
-      (definitionNode) =>
-        definitionNode.typeCondition.name.value === this.node.name,
+    const fragmentDefinition = fragmentDefinitions.find((definitionNode) =>
+      this.typeNames.has(definitionNode.typeCondition.name.value),
     );
 
     if (!fragmentDefinition) {
@@ -494,9 +502,9 @@ export class NodeOutputType {
   ): NodeSelection {
     utils.assertGraphQLASTNode(ast, graphql.Kind.FRAGMENT_DEFINITION, path);
 
-    if (ast.typeCondition.name.value !== this.node.name) {
+    if (!this.typeNames.has(ast.typeCondition.name.value)) {
       throw new utils.UnexpectedValueError(
-        `a GraphQL ${graphql.Kind.FRAGMENT_DEFINITION} on "${this.node}"`,
+        `a GraphQL ${graphql.Kind.FRAGMENT_DEFINITION} on "${this}"`,
         ast,
         { path },
       );
@@ -518,9 +526,12 @@ export class NodeOutputType {
   ): NodeSelection {
     utils.assertGraphQLASTNode(ast, graphql.Kind.INLINE_FRAGMENT, path);
 
-    if (ast.typeCondition && ast.typeCondition.name.value !== this.node.name) {
+    if (
+      ast.typeCondition &&
+      !this.typeNames.has(ast.typeCondition.name.value)
+    ) {
       throw new utils.UnexpectedValueError(
-        `a GraphQL ${graphql.Kind.INLINE_FRAGMENT} on "${this.node}"`,
+        `a GraphQL ${graphql.Kind.INLINE_FRAGMENT} on "${this}"`,
         ast,
         { path },
       );

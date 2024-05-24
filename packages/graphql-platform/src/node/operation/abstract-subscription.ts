@@ -1,7 +1,7 @@
 import * as utils from '@prismamedia/graphql-platform-utils';
 import { Memoize } from '@prismamedia/memoize';
 import * as graphql from 'graphql';
-import type { IterableElement } from 'type-fest';
+import type { IterableElement, Promisable } from 'type-fest';
 import type { BrokerInterface } from '../../broker-interface.js';
 import type { ConnectorInterface } from '../../connector-interface.js';
 import { AbstractOperation } from '../abstract-operation.js';
@@ -33,7 +33,7 @@ export abstract class AbstractSubscription<
   TBroker extends BrokerInterface = any,
   TContainer extends object = any,
   TArgs extends utils.Nillable<utils.PlainObject> = any,
-  TResult extends AsyncIterable<any> = any,
+  TResult extends Promisable<AsyncIterable<any>> = any,
 > extends AbstractOperation<
   TRequestContext,
   TConnector,
@@ -61,19 +61,22 @@ export abstract class AbstractSubscription<
       Omit<TArgs, 'selection'>
     >['subscribe']
   > {
-    return (_, args, context, info) => {
-      try {
-        return this.execute(
-          context,
-          (this.selectionAware ? { ...args, selection: info } : args) as TArgs,
-          info.path,
-        );
-      } catch (error) {
+    return (_, args, context, info) =>
+      new Promise((resolve) =>
+        resolve(
+          this.execute(
+            context,
+            (this.selectionAware
+              ? { ...args, selection: info }
+              : args) as TArgs,
+            info.path,
+          ),
+        ),
+      ).catch((error) => {
         throw error instanceof utils.GraphError
           ? error.toGraphQLError()
           : error;
-      }
-    };
+      });
   }
 
   protected getGraphQLFieldConfigResolver(): graphql.GraphQLFieldConfig<

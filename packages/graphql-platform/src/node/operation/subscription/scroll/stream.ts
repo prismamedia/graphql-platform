@@ -209,41 +209,28 @@ export class ScrollSubscriptionStream<
     this.#api = node.createContextBoundAPI(context);
   }
 
-  public [Symbol.asyncIterator](): AsyncIterator<TValue> {
-    let values: NodeSelectedValue[] = [];
-    let next: NodeFilterInputValue = undefined;
+  public async *[Symbol.asyncIterator](): AsyncIterator<TValue> {
+    let next: NodeFilterInputValue;
+    while (next !== null) {
+      const values = await this.#api.findMany({
+        where: { AND: [this.filter?.inputValue, next] },
+        orderBy: [this.ordering.inputValue],
+        first: this.#chunkSize,
+        selection: this.#internalSelection,
+      });
 
-    return {
-      next: async () => {
-        if (values.length === 0 && next !== null) {
-          values = await this.#api.findMany({
-            where: { AND: [this.filter?.inputValue, next] },
-            orderBy: [this.ordering.inputValue],
-            first: this.#chunkSize,
-            selection: this.#internalSelection,
-          });
+      next =
+        values.length === this.#chunkSize
+          ? {
+              [this.#nextFilterInputType.name]:
+                values.at(-1)![this.ordering.leaf.name],
+            }
+          : null;
 
-          next =
-            values.length === this.#chunkSize
-              ? {
-                  [this.#nextFilterInputType.name]:
-                    values.at(-1)![this.ordering.leaf.name],
-                }
-              : null;
-        }
-
-        const value = values.shift();
-
-        return value
-          ? { done: false, value: this.selection.pickValue(value as any) }
-          : { done: true, value: undefined };
-      },
-      return: async () => {
-        values = [];
-
-        return { done: true, value: undefined };
-      },
-    };
+      for (const value of values) {
+        yield this.selection.pickValue(value as any);
+      }
+    }
   }
 
   public async size(): Promise<number> {
@@ -270,6 +257,12 @@ export class ScrollSubscriptionStream<
       ...queueOptions
     }: ScrollSubscriptionStreamForEachOptions = {},
   ): Promise<void> {
+    assert(
+      continueOnError == null ||
+        ['boolean', 'number'].includes(typeof continueOnError),
+      'The "continueOnError" has to be a boolean or a positive integer',
+    );
+
     using tasks = Object.assign(
       new PQueue({
         ...queueOptions,
@@ -279,16 +272,10 @@ export class ScrollSubscriptionStream<
       { [Symbol.dispose]: () => tasks.clear() },
     );
 
-    assert(
-      continueOnError == null ||
-        ['boolean', 'number'].includes(typeof continueOnError),
-      'The "continueOnError" has to be a boolean or a positive integer',
-    );
-
     const buffer = bufferOptions ?? tasks.concurrency;
     assert(
-      typeof buffer === 'number' && buffer >= 0,
-      `The buffer has to be greater than or equal to 0, got ${inspect(buffer)}`,
+      typeof buffer === 'number' && buffer >= 1,
+      `The buffer has to be greater than or equal to 1, got ${inspect(buffer)}`,
     );
 
     const normalizedRetryOptions: PRetryOptions | false = retryOptions
@@ -350,7 +337,7 @@ export class ScrollSubscriptionStream<
 
       try {
         for await (const value of this) {
-          await tasks.onSizeLessThan(buffer + 1);
+          await tasks.onSizeLessThan(buffer);
 
           const boundTask = task.bind(undefined, value, ++currentIndex, this);
 
@@ -402,14 +389,25 @@ export class ScrollSubscriptionStream<
   public async byBatch(
     task: ScrollSubscriptionStreamByBatchTask<TValue, TRequestContext>,
     {
-      batchSize,
+      batchSize = this.#chunkSize,
+      buffer: bufferOptions,
       continueOnError,
       progressBar: progressBarOptions,
       retry: retryOptions,
-      buffer: bufferOptions,
       ...queueOptions
     }: ScrollSubscriptionStreamByBatchOptions = {},
   ): Promise<void> {
+    assert(
+      continueOnError == null ||
+        ['boolean', 'number'].includes(typeof continueOnError),
+      'The "continueOnError" has to be a boolean or a positive integer',
+    );
+
+    assert(
+      typeof batchSize === 'number' && batchSize >= 1,
+      `The batch-size has to be greater than or equal to 1, got ${inspect(batchSize)}`,
+    );
+
     using tasks = Object.assign(
       new PQueue({
         ...queueOptions,
@@ -419,19 +417,11 @@ export class ScrollSubscriptionStream<
       { [Symbol.dispose]: () => tasks.clear() },
     );
 
-    assert(
-      continueOnError == null ||
-        ['boolean', 'number'].includes(typeof continueOnError),
-      'The "continueOnError" has to be a boolean or a positive integer',
-    );
-
     const buffer = bufferOptions ?? tasks.concurrency;
     assert(
-      typeof buffer === 'number' && buffer >= 0,
-      `The buffer has to be greater than or equal to 0, got ${inspect(buffer)}`,
+      typeof buffer === 'number' && buffer >= 1,
+      `The buffer has to be greater than or equal to 1, got ${inspect(buffer)}`,
     );
-
-    const normalizedBatchSize = Math.max(1, batchSize || this.#chunkSize);
 
     const normalizedRetryOptions: PRetryOptions | false = retryOptions
       ? retryOptions === true
@@ -482,7 +472,7 @@ export class ScrollSubscriptionStream<
 
     let batch: TValue[] = [];
 
-    const processBatch = () => {
+    const enqueueBatch = () => {
       if (batch.length) {
         const values = Object.freeze(batch);
         batch = [];
@@ -525,14 +515,14 @@ export class ScrollSubscriptionStream<
 
       try {
         for await (const value of this) {
-          await tasks.onSizeLessThan(buffer + 1);
+          await tasks.onSizeLessThan(buffer);
 
-          if (batch.push(value) >= normalizedBatchSize) {
-            processBatch();
+          if (batch.push(value) >= batchSize) {
+            enqueueBatch();
           }
         }
 
-        processBatch();
+        enqueueBatch();
 
         await tasks.onIdle();
 

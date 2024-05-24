@@ -1,76 +1,45 @@
-import assert from 'node:assert/strict';
-import PQueue from 'p-queue';
+import type { EventListener } from '@prismamedia/async-event-emitter';
 import type { BrokerInterface } from '../broker-interface.js';
 import type { GraphQLPlatform } from '../index.js';
 import type {
   ChangesSubscriptionStream,
   NodeChangeAggregation,
 } from '../node.js';
+import {
+  InMemorySubscription,
+  type InMemorySubscriptionEvents,
+} from './in-memory/subscription.js';
 
-export interface InMemoryBrokerOptions {
-  /**
-   * The maximum number of node-changes, having an effect on the subscription, that can be queued
-   */
-  maxQueueSize?: number;
-}
+export * from './in-memory/subscription.js';
 
 export class InMemoryBroker implements BrokerInterface {
-  readonly #maxQueueSize: number;
-  readonly #queuesBySubscription: Map<ChangesSubscriptionStream, PQueue>;
+  readonly #subscriptions: Map<ChangesSubscriptionStream, InMemorySubscription>;
 
-  public constructor(
-    public readonly gp: GraphQLPlatform,
-    options?: Readonly<InMemoryBrokerOptions>,
-  ) {
-    this.#maxQueueSize = Math.max(0, options?.maxQueueSize ?? 10);
-    this.#queuesBySubscription = new Map();
+  public constructor(public readonly gp: GraphQLPlatform) {
+    this.#subscriptions = new Map();
   }
 
-  public async onLocalNodeChanges(
-    changes: NodeChangeAggregation,
-  ): Promise<void> {
-    await Promise.all(
-      Array.from(this.#queuesBySubscription, async ([subscription, queue]) => {
-        const effect = subscription.getNodeChangesEffect(changes);
-        if (effect) {
-          await queue.onSizeLessThan(this.#maxQueueSize + 1);
-
-          queue.add(async () => {
-            for await (const change of subscription.resolveNodeChanges(
-              effect,
-            )) {
-              await subscription.enqueue(change);
-            }
-          });
-        }
-      }),
-    );
+  public publish(changes: NodeChangeAggregation): void {
+    this.#subscriptions.forEach((queue) => queue.enqueue(changes));
   }
 
-  public initializeSubscription(subscription: ChangesSubscriptionStream): void {
-    this.#queuesBySubscription.set(
-      subscription,
-      new PQueue({
-        /**
-         * We process the node-changes in the order they are received
-         */
-        concurrency: 1,
-      }).on('error', (error) => subscription.emit('error', error)),
-    );
-  }
-
-  public async disposeSubscription(
+  public subscribe(
     subscription: ChangesSubscriptionStream,
-  ): Promise<void> {
-    this.#queuesBySubscription.delete(subscription);
+  ): InMemorySubscription {
+    const queue = new InMemorySubscription(this, subscription);
+    this.#subscriptions.set(subscription, queue);
+
+    return queue;
   }
 
-  public async onSubscriptionIdle(
+  public onIdle(
     subscription: ChangesSubscriptionStream,
-  ): Promise<void> {
-    const queue = this.#queuesBySubscription.get(subscription);
-    assert(queue, `The given subscription is not running`);
+    listener: EventListener<InMemorySubscriptionEvents, 'idle'>,
+  ): void {
+    this.#subscriptions.get(subscription)?.onIdle(listener);
+  }
 
-    await queue.onIdle();
+  public unsubscribe(subscription: ChangesSubscriptionStream): void {
+    this.#subscriptions.delete(subscription);
   }
 }
