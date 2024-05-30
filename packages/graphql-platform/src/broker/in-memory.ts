@@ -39,6 +39,12 @@ export class InMemoryBroker implements BrokerInterface {
     this.#subscriptions.get(subscription)?.onIdle(listener);
   }
 
+  public async waitForIdle(
+    subscription: ChangesSubscriptionStream,
+  ): Promise<void> {
+    await this.#subscriptions.get(subscription)?.waitForIdle();
+  }
+
   public unsubscribe(subscription: ChangesSubscriptionStream): void {
     this.#subscriptions.delete(subscription);
   }

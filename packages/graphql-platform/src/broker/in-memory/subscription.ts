@@ -61,6 +61,12 @@ export class InMemorySubscription
     this.on('idle', listener, this.#signal);
   }
 
+  public async waitForIdle(): Promise<void> {
+    if (this.#queue.size()) {
+      await this.wait('idle', this.#signal);
+    }
+  }
+
   public async [Symbol.asyncDispose](): Promise<void> {
     this.broker.unsubscribe(this.subscription);
   }
