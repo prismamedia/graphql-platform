@@ -4,8 +4,5 @@
   "service": "project",
   "overrideCommand": true,
   "workspaceFolder": "/workspace",
-  "postStartCommand": "yarn",
-  "features": {
-    "ghcr.io/cirolosapio/devcontainers-features/alpine-git:0": {}
-  }
+  "postStartCommand": "yarn"
 }
