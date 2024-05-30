@@ -61,6 +61,7 @@ import {
   type NodeSelectedValue,
 } from './node/statement.js';
 import {
+  DeletionOutputType,
   NodeCreationInputType,
   NodeFilterInputType,
   NodeOrderingInputType,
@@ -1522,6 +1523,11 @@ export class Node<
   @Memoize()
   public get outputType(): NodeOutputType {
     return new NodeOutputType(this);
+  }
+
+  @Memoize()
+  public get deletionOutputType(): DeletionOutputType {
+    return new DeletionOutputType(this);
   }
 
   @Memoize()

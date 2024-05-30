@@ -7,7 +7,6 @@ import type { Merge } from 'type-fest';
 import type { BrokerInterface } from '../../../broker-interface.js';
 import type { ConnectorInterface } from '../../../connector-interface.js';
 import { argsPathKey } from '../../abstract-operation.js';
-import { Leaf } from '../../definition.js';
 import { NodeFilter, NodeSelection } from '../../statement.js';
 import type { NodeFilterInputValue, RawNodeSelection } from '../../type.js';
 import { AbstractSubscription } from '../abstract-subscription.js';
@@ -125,7 +124,7 @@ export class ChangesSubscription<
                   (selection): selection is graphql.InlineFragmentNode =>
                     selection.kind === graphql.Kind.INLINE_FRAGMENT &&
                     selection.typeCondition?.name.value ===
-                      this.graphqlUpsertType.name,
+                      this.node.outputType.name,
                 )
                 .reduce<NodeSelection | undefined>(
                   (maybeSelection, inlineFragment) => {
@@ -148,7 +147,7 @@ export class ChangesSubscription<
                   (selection): selection is graphql.InlineFragmentNode =>
                     selection.kind === graphql.Kind.INLINE_FRAGMENT &&
                     selection.typeCondition?.name.value ===
-                      this.graphqlDeletionType.name,
+                      this.node.deletionOutputType.name,
                 )
                 .reduce<NodeSelection | undefined>(
                   (maybeSelection, inlineFragment) => {
@@ -241,54 +240,18 @@ export class ChangesSubscription<
     return stream;
   }
 
-  @Memoize()
-  public get graphqlDeletionType() {
-    return new graphql.GraphQLObjectType({
-      name: `${this.node}Deletion`,
-      description: `A single deletion in the "${this.name}"'s subscription`,
-      fields: () =>
-        Array.from(this.node.componentSet).reduce((fields, component) => {
-          if (component.isPublic()) {
-            const type =
-              component instanceof Leaf
-                ? component.type
-                : component.referencedUniqueConstraint.isPublic()
-                  ? component.referencedUniqueConstraint.getGraphQLObjectType()
-                  : undefined;
-
-            if (type) {
-              fields[component.name] = {
-                ...(component.description && {
-                  description: component.description,
-                }),
-                ...(component.deprecationReason && {
-                  deprecationReason: component.deprecationReason,
-                }),
-                type: component.isNullable()
-                  ? type
-                  : new graphql.GraphQLNonNull(type),
-              };
-            }
-          }
-
-          return fields;
-        }, Object.create(null)),
-    });
-  }
-
-  public get graphqlUpsertType() {
-    return this.node.outputType.getGraphQLObjectType();
-  }
-
   public getGraphQLFieldConfigType() {
     return new graphql.GraphQLUnionType({
       name: `${this.node}Change`,
-      description: `A single change in the "${this.name}"'s subscription, either a deletion (= "${this.graphqlDeletionType.name}") or an upsert (= "${this.graphqlUpsertType.name}")`,
-      types: [this.graphqlDeletionType, this.graphqlUpsertType],
+      description: `A single change in the "${this.name}"'s subscription, either a deletion (= "${this.node.deletionOutputType}") or an upsert (= "${this.node.outputType}")`,
+      types: [
+        this.node.deletionOutputType.getGraphQLObjectType(),
+        this.node.outputType.getGraphQLObjectType(),
+      ],
       resolveType: (change) =>
         change[ChangeKindProperty] === ChangeKind.Deletion
-          ? this.graphqlDeletionType.name
-          : this.graphqlUpsertType.name,
+          ? this.node.deletionOutputType.name
+          : this.node.outputType.name,
     } satisfies graphql.GraphQLUnionTypeConfig<
       { [ChangeKindProperty]: ChangeKind } & ChangesSubscriptionChange['value'],
       any

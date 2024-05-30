@@ -1,3 +1,4 @@
+import type { Name } from '@prismamedia/graphql-platform-utils';
 import * as utils from '@prismamedia/graphql-platform-utils';
 import { Memoize } from '@prismamedia/memoize';
 import * as graphql from 'graphql';
@@ -107,6 +108,8 @@ export interface NodeOutputTypeConfig<
 }
 
 export class NodeOutputType {
+  public readonly name: Name;
+
   readonly #config?: NodeOutputTypeConfig<any, any, any, any>;
   readonly #configPath: utils.Path;
 
@@ -118,10 +121,12 @@ export class NodeOutputType {
 
       utils.assertNillablePlainObject(this.#config, this.#configPath);
     }
+
+    this.name = node.name;
   }
 
   public toString(): string {
-    return this.node.name;
+    return this.name;
   }
 
   @Memoize()
@@ -324,7 +329,7 @@ export class NodeOutputType {
 
     return new graphql.GraphQLObjectType({
       ...this.#config?.graphql,
-      name: this.node.name,
+      name: this.name,
       description: this.node.description,
       fields: () =>
         Object.fromEntries(
@@ -443,11 +448,7 @@ export class NodeOutputType {
 
   @Memoize()
   protected get typeNames(): ReadonlySet<graphql.GraphQLObjectType['name']> {
-    return new Set([
-      this.node.name,
-      this.node.getSubscriptionByKey('changes').graphqlDeletionType.name,
-      this.node.getSubscriptionByKey('changes').graphqlUpsertType.name,
-    ]);
+    return new Set([this.name, this.node.deletionOutputType.name]);
   }
 
   public selectGraphQLDocumentNode(
