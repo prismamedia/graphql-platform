@@ -80,13 +80,22 @@ export class NormalizeStatement implements mariadb.QueryOptions {
           let normalizers: Array<LeafColumnNormalizer | undefined> = [];
 
           switch (column.leaf.type) {
-            case scalars.GraphQLNonEmptyString:
             case scalars.GraphQLUUID:
             case scalars.GraphQLUUIDv1:
             case scalars.GraphQLUUIDv2:
             case scalars.GraphQLUUIDv3:
             case scalars.GraphQLUUIDv4:
             case scalars.GraphQLUUIDv5:
+              normalizers =
+                column.dataType.kind === 'UUID'
+                  ? []
+                  : [
+                      trimWhitespaces,
+                      column.isNullable() ? nullIfEmptyString : undefined,
+                    ];
+              break;
+
+            case scalars.GraphQLNonEmptyString:
               normalizers = [
                 column.isNullable() ? nullIfEmptyString : undefined,
               ];

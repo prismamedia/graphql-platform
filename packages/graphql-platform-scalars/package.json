@@ -30,7 +30,7 @@
     "@swc/core": "1.5.7",
     "@swc/jest": "0.2.36",
     "@tsconfig/node20": "20.1.4",
-    "@types/node": "20.12.12",
+    "@types/node": "20.12.13",
     "graphql": "16.8.1",
     "jest": "30.0.0-alpha.5",
     "publint": "0.2.8",
