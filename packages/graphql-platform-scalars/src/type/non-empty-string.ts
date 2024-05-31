@@ -1,6 +1,10 @@
 import * as utils from '@prismamedia/graphql-platform-utils';
 import * as graphql from 'graphql';
 
+export function isNonEmptyString(value: unknown): value is string {
+  return typeof value === 'string' && value.length > 0;
+}
+
 export function parseNonEmptyString(value: unknown, path?: utils.Path): string {
   if (typeof value !== 'string' || !value) {
     throw new utils.UnexpectedValueError('a non-empty string', value, { path });

@@ -1,6 +1,10 @@
 import * as utils from '@prismamedia/graphql-platform-utils';
 import * as graphql from 'graphql';
 
+export function isNonEmptyTrimmedString(value: unknown): value is string {
+  return typeof value === 'string' && value.trim().length > 0;
+}
+
 export function parseNonEmptyTrimmedString(
   value: unknown,
   path?: utils.Path,
