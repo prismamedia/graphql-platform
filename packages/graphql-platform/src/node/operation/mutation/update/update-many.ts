@@ -243,7 +243,7 @@ export class UpdateManyMutation<
 
       changes = R.pipe(
         oldSources,
-        R.map.indexed(
+        R.map(
           (oldValue, index) =>
             new NodeUpdate(
               this.node,

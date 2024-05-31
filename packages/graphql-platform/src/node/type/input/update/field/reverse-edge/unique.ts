@@ -199,10 +199,7 @@ export class UniqueReverseEdgeUpdateInput extends AbstractReverseEdgeUpdateInput
         },
       }),
       parser(inputValue, path) {
-        if (
-          R.filter(R.keys.strict(inputValue), isDestructiveActionName).length >
-          1
-        ) {
+        if (R.filter(R.keys(inputValue), isDestructiveActionName).length > 1) {
           throw new utils.UnexpectedValueError(
             `no more than one destructive action`,
             inputValue,
@@ -211,8 +208,7 @@ export class UniqueReverseEdgeUpdateInput extends AbstractReverseEdgeUpdateInput
         }
 
         if (
-          R.filter(R.keys.strict(inputValue), isNonDestructiveActionName)
-            .length > 1
+          R.filter(R.keys(inputValue), isNonDestructiveActionName).length > 1
         ) {
           throw new utils.UnexpectedValueError(
             `no more than one non-destructive action`,
@@ -241,7 +237,7 @@ export class UniqueReverseEdgeUpdateInput extends AbstractReverseEdgeUpdateInput
       originalEdge.referencedUniqueConstraint.parseValue(nodeValue),
     );
 
-    const inputActionNames = R.keys.strict(inputValue);
+    const inputActionNames = R.keys(inputValue);
 
     // Apply destructive action first, if any
     {

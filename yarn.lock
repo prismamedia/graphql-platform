@@ -1089,7 +1089,7 @@ __metadata:
     jest: "npm:30.0.0-alpha.5"
     mariadb: "npm:^3.3.0"
     publint: "npm:0.2.8"
-    remeda: "npm:^1.61.0"
+    remeda: "npm:^2.0.0"
     semver: "npm:^7.6.2"
     type-fest: "npm:^4.18.3"
     typescript: "npm:5.4.5"
@@ -1165,7 +1165,7 @@ __metadata:
     indefinite: "npm:^2.5.1"
     jest: "npm:30.0.0-alpha.5"
     publint: "npm:0.2.8"
-    remeda: "npm:^1.61.0"
+    remeda: "npm:^2.0.0"
     type-fest: "npm:^4.18.3"
     typescript: "npm:5.4.5"
   peerDependencies:
@@ -1197,7 +1197,7 @@ __metadata:
     p-queue: "npm:^8.0.1"
     p-retry: "npm:^6.2.0"
     publint: "npm:0.2.8"
-    remeda: "npm:^1.61.0"
+    remeda: "npm:^2.0.0"
     type-fest: "npm:^4.18.3"
     typescript: "npm:5.4.5"
   peerDependencies:
@@ -1565,14 +1565,14 @@ __metadata:
   linkType: hard
 
 "@types/express-serve-static-core@npm:^4.17.30, @types/express-serve-static-core@npm:^4.17.33":
-  version: 4.19.1
-  resolution: "@types/express-serve-static-core@npm:4.19.1"
+  version: 4.19.3
+  resolution: "@types/express-serve-static-core@npm:4.19.3"
   dependencies:
     "@types/node": "npm:*"
     "@types/qs": "npm:*"
     "@types/range-parser": "npm:*"
     "@types/send": "npm:*"
-  checksum: 10/a400e2c6a2d64373290f0fa25fa2d70bad44fbb1d12a56237a8dfb3bf300bc102d6f5fa6aaed2ce853e37226589905ce0d658ad1b9c0115d9cd7ce446608140c
+  checksum: 10/f07b8f365caae1680ca061f2c60d8e32612002ba286e65b5a8a9012a911931075d28e8ad38d7dbfad1ebf20172b455268e9674a653e813da7f1a547ae1fad8af
   languageName: node
   linkType: hard
 
@@ -1658,16 +1658,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@types/node@npm:*, @types/node@npm:^20.11.17":
-  version: 20.12.12
-  resolution: "@types/node@npm:20.12.12"
-  dependencies:
-    undici-types: "npm:~5.26.4"
-  checksum: 10/e3945da0a3017bdc1f88f15bdfb823f526b2a717bd58d4640082d6eb0bd2794b5c99bfb914b9e9324ec116dce36066990353ed1c777e8a7b0641f772575793c4
-  languageName: node
-  linkType: hard
-
-"@types/node@npm:20.12.13":
+"@types/node@npm:*, @types/node@npm:20.12.13, @types/node@npm:^20.11.17":
   version: 20.12.13
   resolution: "@types/node@npm:20.12.13"
   dependencies:
@@ -2130,9 +2121,9 @@ __metadata:
   linkType: hard
 
 "caniuse-lite@npm:^1.0.30001587":
-  version: 1.0.30001624
-  resolution: "caniuse-lite@npm:1.0.30001624"
-  checksum: 10/238d3ca78c8a17eaff77b77f83d80d1917df9230dadb05873966df0703fd5211d54233ffeb602cbc3f8f80d47b0653cdd0a83dae355f82c483cf602c1bf3005c
+  version: 1.0.30001625
+  resolution: "caniuse-lite@npm:1.0.30001625"
+  checksum: 10/583a310a4dca7ec8339bd959756259af441525a86fe6b799b9c6fc202a60ade530ad622962d83fc03cb1a759fd56eed1f255301239884e8ea5db22bcb7da9fa0
   languageName: node
   linkType: hard
 
@@ -2461,9 +2452,9 @@ __metadata:
   linkType: hard
 
 "electron-to-chromium@npm:^1.4.668":
-  version: 1.4.783
-  resolution: "electron-to-chromium@npm:1.4.783"
-  checksum: 10/d9ce717bb320d4dc5886fd314e35e7bf0e2b025504d9909b371b5485712ee2eb453c8dbc133d5adbd59dac0e7e84d01f33c500c1707b777ea988afd4b6b94f50
+  version: 1.4.787
+  resolution: "electron-to-chromium@npm:1.4.787"
+  checksum: 10/eb8f6a50c5c8d3d84b95d5b6691907c881eb19d984c8712b819c8f0e175d173f0ea4daf58c04a438556cc1592624ddd8ed3bce9b37e96ce2ce586116b8707f96
   languageName: node
   linkType: hard
 
@@ -4575,10 +4566,12 @@ __metadata:
   languageName: node
   linkType: hard
 
-"remeda@npm:^1.61.0":
-  version: 1.61.0
-  resolution: "remeda@npm:1.61.0"
-  checksum: 10/0b0ec8688e340c7525a8788e99701b174ddca2eaf230d47f9e087d9aaccd54c7181a1f58bf4f95cb9c12bc1d26f03b17e3d3d9046a59225074a7ac3fa1356da3
+"remeda@npm:^2.0.0":
+  version: 2.0.0
+  resolution: "remeda@npm:2.0.0"
+  dependencies:
+    type-fest: "npm:^4.18.2"
+  checksum: 10/fd22393bcefe71ea61af86f359c6aad44f7662882f3db3c4e556468b48fd9b56bf1411b5c7ad596bd01a1d37ce3a137833f0fb5ebbb23b2bbac253ac0654e011
   languageName: node
   linkType: hard
 
@@ -5100,7 +5093,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"type-fest@npm:^4.18.3":
+"type-fest@npm:^4.18.2, type-fest@npm:^4.18.3":
   version: 4.18.3
   resolution: "type-fest@npm:4.18.3"
   checksum: 10/eb750920d0ef3639177f581edd6489d972c5c5827abb602a9c9662889aad148a7d558257e36c563f1beb81a2e417faec52ecec9799b28531d8335856f91e6dff

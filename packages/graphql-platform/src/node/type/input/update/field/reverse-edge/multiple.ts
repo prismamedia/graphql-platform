@@ -468,7 +468,7 @@ export class MultipleReverseEdgeUpdateInput extends AbstractReverseEdgeUpdateInp
 
     // Apply destructive actions first, if any
     for (const actionName of R.filter(
-      R.keys.strict(inputValue),
+      R.keys(inputValue),
       isDestructiveActionName,
     )) {
       const actionPath = utils.addPath(path, actionName);
@@ -555,7 +555,7 @@ export class MultipleReverseEdgeUpdateInput extends AbstractReverseEdgeUpdateInp
 
     // Then the non-destructive ones, if any
     for (const actionName of R.filter(
-      R.keys.strict(inputValue),
+      R.keys(inputValue),
       isNonDestructiveActionName,
     )) {
       const actionPath = utils.addPath(path, actionName);

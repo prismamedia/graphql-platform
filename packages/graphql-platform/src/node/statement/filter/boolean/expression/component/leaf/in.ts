@@ -81,7 +81,7 @@ export class LeafInFilter extends AbstractLeafFilter {
       const intersection = R.intersectionWith(
         this.values,
         operand.values,
-        this.leaf.areValuesEqual.bind(this.leaf),
+        (a, b) => this.leaf.areValuesEqual(a, b),
       );
 
       return intersection.length === this.values.length

@@ -484,11 +484,11 @@ export class Node<
         R.pipe(
           this.features,
           R.groupBy(({ priority }) => priority),
-          R.values,
-          R.map((nodeOrFeatures) => [
-            nodeOrFeatures[0].priority,
-            nodeOrFeatures,
-          ]),
+          R.values(),
+          R.map(
+            (nodeOrFeatures) =>
+              [nodeOrFeatures[0].priority, nodeOrFeatures] as const,
+          ),
         ),
       );
     }

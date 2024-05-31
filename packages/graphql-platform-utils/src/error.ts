@@ -222,7 +222,7 @@ export const aggregateGraphError = <TInput, TOuput>(
     initialValue,
   );
 
-  const deduplicatedErrors = R.uniqBy(errors, (error) =>
+  const deduplicatedErrors = R.uniqueBy(errors, (error) =>
     error instanceof Error ? error.message : String(error),
   );
 
