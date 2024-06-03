@@ -415,9 +415,9 @@ export class SchemaDiagnosis {
 
         const extraForeignKeys: ForeignKey['name'][] =
           tableDiagnosis && config
-            ? R.filter(
+            ? R.intersection(
                 tableDiagnosis.extraForeignKeys,
-                R.isIncludedIn(tableDiagnosis.fixesForeignKeys(config)),
+                tableDiagnosis.fixesForeignKeys(config),
               )
             : [];
 

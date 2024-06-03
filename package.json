@@ -20,7 +20,7 @@
   },
   "devDependencies": {
     "jest": "30.0.0-alpha.5",
-    "prettier": "3.2.5",
+    "prettier": "3.3.0",
     "typescript": "5.4.5"
   },
   "packageManager": "yarn@4.2.2"

@@ -533,10 +533,7 @@ export class TableDiagnosis {
       ? [...this.fixableForeignKeyNames]
       : config.foreignKeys === false
         ? []
-        : R.filter(
-            this.fixableForeignKeyNames,
-            R.isIncludedIn(config.foreignKeys),
-          );
+        : R.intersection(this.fixableForeignKeyNames, config.foreignKeys);
   }
 
   public fixesIndexes(config?: TableDiagnosisFixConfig): Array<Index['name']> {
@@ -544,7 +541,7 @@ export class TableDiagnosis {
       ? [...this.fixableIndexNames]
       : config.indexes === false
         ? []
-        : R.filter(this.fixableIndexNames, R.isIncludedIn(config.indexes));
+        : R.intersection(this.fixableIndexNames, config.indexes);
   }
 
   public fixesColumns(config?: TableDiagnosisFixConfig): Array<Column['name']> {
@@ -553,7 +550,7 @@ export class TableDiagnosis {
         ? [...this.fixableColumnNames]
         : config.columns === false
           ? []
-          : R.filter(this.fixableColumnNames, R.isIncludedIn(config.columns));
+          : R.intersection(this.fixableColumnNames, config.columns);
 
     return utils.getOptionalFlag(config?.nullable, true)
       ? fixableColumnNames
