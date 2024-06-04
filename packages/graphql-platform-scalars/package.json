@@ -30,7 +30,7 @@
     "@swc/core": "1.5.24",
     "@swc/jest": "0.2.36",
     "@tsconfig/node20": "20.1.4",
-    "@types/node": "20.14.0",
+    "@types/node": "20.14.1",
     "graphql": "16.8.1",
     "jest": "30.0.0-alpha.5",
     "publint": "0.2.8",
@@ -39,7 +39,7 @@
   "dependencies": {
     "@prismamedia/graphql-platform-utils": "workspace:packages/graphql-platform-utils",
     "@types/draft-js": "^0.11.18",
-    "type-fest": "^4.18.3"
+    "type-fest": "^4.19.0"
   },
   "peerDependencies": {
     "graphql": "^16.7.0"

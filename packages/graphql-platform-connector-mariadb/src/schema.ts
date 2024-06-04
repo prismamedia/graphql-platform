@@ -190,7 +190,7 @@ export class Schema {
   }
 
   public async diagnose(
-    options: SchemaDiagnosisOptions | undefined = this.config?.diagnosis,
+    options?: SchemaDiagnosisOptions,
     maybeConnection?: mariadb.Connection,
   ): Promise<SchemaDiagnosis> {
     const [
@@ -360,7 +360,7 @@ export class Schema {
         indexes: indexInformationsByColumnNameByIndexNameByTableName,
         foreignKeys: foreignKeyInformationsByForeignKeyNameByTableName,
       },
-      options,
+      { ...this.config?.diagnosis, ...options },
     );
   }
 }

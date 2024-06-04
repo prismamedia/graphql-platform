@@ -1,5 +1,5 @@
-import { AbstractFieldFilterInputType } from '../abstract-field.js';
+import { AbstractFieldFilterInput } from '../abstract-field.js';
 
-export class BooleanOperationFilterInputType<
+export class BooleanOperationFilterInput<
   TValue = any,
-> extends AbstractFieldFilterInputType<TValue> {}
+> extends AbstractFieldFilterInput<TValue> {}

@@ -1,25 +1,25 @@
 import type { Except, SetOptional } from 'type-fest';
 import type { ReverseEdge } from '../../../../definition/reverse-edge.js';
 import {
-  AbstractFieldFilterInputType,
-  AbstractFieldFilterInputTypeConfig,
+  AbstractFieldFilterInput,
+  AbstractFieldFilterInputConfig,
 } from '../abstract-field.js';
 
-export type ReverseEdgeFilterInputTypeConfig<TValue> = Except<
-  SetOptional<AbstractFieldFilterInputTypeConfig<TValue>, 'name'>,
+export type ReverseEdgeFilterInputConfig<TValue> = Except<
+  SetOptional<AbstractFieldFilterInputConfig<TValue>, 'name'>,
   'public'
 >;
 
-export class ReverseEdgeFilterInputType<
+export class ReverseEdgeFilterInput<
   TValue = any,
-> extends AbstractFieldFilterInputType<TValue> {
+> extends AbstractFieldFilterInput<TValue> {
   public constructor(
     public readonly reverseEdge: ReverseEdge,
     public readonly id: string,
     {
       name = id === 'eq' ? reverseEdge.name : `${reverseEdge.name}_${id}`,
       ...config
-    }: ReverseEdgeFilterInputTypeConfig<TValue>,
+    }: ReverseEdgeFilterInputConfig<TValue>,
   ) {
     super({
       deprecated: reverseEdge.deprecationReason,

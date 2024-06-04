@@ -20,7 +20,7 @@ import {
   OrderingDirection,
   type NodeSelectedValue,
 } from '../../../statement.js';
-import { LeafFilterInputType, NodeFilterInputValue } from '../../../type.js';
+import { LeafFilterInput, NodeFilterInputValue } from '../../../type.js';
 
 const averageFormattedKey = 'average_formatted';
 
@@ -162,7 +162,7 @@ export class ScrollSubscriptionStream<
   public readonly ordering: LeafOrdering;
   public readonly selection: NodeSelection<TValue>;
 
-  readonly #nextFilterInputType: LeafFilterInputType;
+  readonly #nextFilterInput: LeafFilterInput;
   readonly #internalSelection: NodeSelection;
   readonly #chunkSize: number;
   readonly #api: ContextBoundNodeAPI;
@@ -186,9 +186,9 @@ export class ScrollSubscriptionStream<
     this.selection = config.selection;
 
     {
-      const nextFilterInputType = node.filterInputType.fields.find(
-        (field): field is LeafFilterInputType =>
-          field instanceof LeafFilterInputType &&
+      const nextFilterInput = node.filterInputType.fields.find(
+        (field): field is LeafFilterInput =>
+          field instanceof LeafFilterInput &&
           field.leaf === this.ordering.leaf &&
           field.id ===
             (this.ordering.direction === OrderingDirection.ASCENDING
@@ -196,8 +196,8 @@ export class ScrollSubscriptionStream<
               : 'lt'),
       );
 
-      assert(nextFilterInputType);
-      this.#nextFilterInputType = nextFilterInputType;
+      assert(nextFilterInput);
+      this.#nextFilterInput = nextFilterInput;
     }
 
     this.#internalSelection = this.selection.mergeWith(
@@ -222,7 +222,7 @@ export class ScrollSubscriptionStream<
       next =
         values.length === this.#chunkSize
           ? {
-              [this.#nextFilterInputType.name]:
+              [this.#nextFilterInput.name]:
                 values.at(-1)![this.ordering.leaf.name],
             }
           : null;

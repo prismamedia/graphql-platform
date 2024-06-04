@@ -1,25 +1,25 @@
 import type { Except, SetOptional } from 'type-fest';
 import type { Leaf } from '../../../../definition/component/leaf.js';
 import {
-  AbstractFieldFilterInputType,
-  AbstractFieldFilterInputTypeConfig,
+  AbstractFieldFilterInput,
+  AbstractFieldFilterInputConfig,
 } from '../abstract-field.js';
 
-export type LeafFilterInputTypeConfig<TValue> = Except<
-  SetOptional<AbstractFieldFilterInputTypeConfig<TValue>, 'name'>,
+export type LeafFilterInputConfig<TValue> = Except<
+  SetOptional<AbstractFieldFilterInputConfig<TValue>, 'name'>,
   'public'
 >;
 
-export class LeafFilterInputType<
+export class LeafFilterInput<
   TValue = any,
-> extends AbstractFieldFilterInputType<TValue> {
+> extends AbstractFieldFilterInput<TValue> {
   public constructor(
     public readonly leaf: Leaf,
     public readonly id: string,
     {
       name = id === 'eq' ? leaf.name : `${leaf.name}_${id}`,
       ...config
-    }: LeafFilterInputTypeConfig<TValue>,
+    }: LeafFilterInputConfig<TValue>,
   ) {
     super({
       deprecated: leaf.deprecationReason,
