@@ -17,6 +17,7 @@ export type Mutation<TRequestContext extends object = any> =
   | Creation<TRequestContext>
   | Update<TRequestContext>
   | Deletion<TRequestContext>
+  // | ReplaceMutation<TRequestContext>
   | UpsertMutation<TRequestContext>
   | AbstractMutation<TRequestContext>;
 
@@ -24,5 +25,6 @@ export const mutationConstructors = [
   ...creationConstructors,
   ...updateConstructors,
   ...deletionConstructors,
+  // ReplaceMutation,
   UpsertMutation,
 ] satisfies Constructor<Mutation, [Node]>[];

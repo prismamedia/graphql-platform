@@ -29,15 +29,15 @@
   "devDependencies": {
     "@jest/globals": "30.0.0-alpha.5",
     "@sqltools/formatter": "1.2.5",
-    "@swc/core": "1.5.24",
+    "@swc/core": "1.6.5",
     "@swc/jest": "0.2.36",
     "@tsconfig/node20": "20.1.4",
-    "@types/node": "20.14.1",
+    "@types/node": "20.14.8",
     "@types/semver": "7.5.8",
-    "graphql": "16.8.1",
+    "graphql": "16.9.0",
     "jest": "30.0.0-alpha.5",
     "publint": "0.2.8",
-    "typescript": "5.4.5"
+    "typescript": "5.5.2"
   },
   "dependencies": {
     "@prismamedia/async-event-emitter": "^5.5.0",
@@ -46,12 +46,12 @@
     "@prismamedia/graphql-platform-utils": "workspace:packages/graphql-platform-utils",
     "@prismamedia/memoize": "^5.0.2",
     "inflection": "^3.0.0",
-    "mariadb": "^3.3.0",
-    "remeda": "^2.0.3",
+    "mariadb": "^3.3.1",
+    "remeda": "^2.2.0",
     "semver": "^7.6.2",
-    "type-fest": "^4.19.0"
+    "type-fest": "^4.20.1"
   },
   "peerDependencies": {
-    "graphql": "^16.7.0"
+    "graphql": "^16.9.0"
   }
 }

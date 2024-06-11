@@ -875,9 +875,9 @@ export class Node<
       await Promise.all(
         hooks.map((hook) =>
           hook({
+            api: args.context.api,
             gp: this.gp,
             node: this,
-            api: args.context.api,
             ...args,
           }),
         ),
@@ -914,9 +914,9 @@ export class Node<
       await Promise.all(
         hooks.map((hook) =>
           hook({
+            api: args.context.api,
             gp: this.gp,
             node: this,
-            api: args.context.api,
             ...args,
           }),
         ),
@@ -953,9 +953,9 @@ export class Node<
       await Promise.all(
         hooks.map((hook) =>
           hook({
+            api: args.context.api,
             gp: this.gp,
             node: this,
-            api: args.context.api,
             ...args,
           }),
         ),
@@ -992,9 +992,9 @@ export class Node<
       await Promise.all(
         hooks.map((hook) =>
           hook({
+            api: args.context.api,
             gp: this.gp,
             node: this,
-            api: args.context.api,
             ...args,
           }),
         ),
@@ -1031,9 +1031,9 @@ export class Node<
       await Promise.all(
         hooks.map((hook) =>
           hook({
+            api: args.context.api,
             gp: this.gp,
             node: this,
-            api: args.context.api,
             ...args,
           }),
         ),

@@ -72,7 +72,7 @@ export type RawNodeSelection<
   TValue extends NodeSelectedValue = TSource,
 > =
   | NodeSelection<TSource, TValue>
-  | Component['name'][]
+  | ReadonlyArray<Component['name']>
   | GraphQLFragment
   | GraphQLSelectionAST
   | PartialGraphQLResolveInfo;
@@ -377,7 +377,7 @@ export class NodeOutputType {
   }
 
   public selectComponents(
-    componentNames: Component['name'][],
+    componentNames: ReadonlyArray<Component['name']>,
     _operationContext?: OperationContext,
     path?: utils.Path,
   ): NodeSelection {
