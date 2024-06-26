@@ -443,7 +443,7 @@ export const Article = {
   output: {
     virtualFields: (node) => ({
       lowerCasedTitle: {
-        dependsOn: `{
+        dependsOn: (_field) => `{
           status
           title
           category {

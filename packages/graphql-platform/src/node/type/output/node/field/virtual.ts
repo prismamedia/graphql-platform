@@ -50,7 +50,10 @@ export interface VirtualOutputConfig<
    *
    * Example: '{ id title }'
    */
-  dependsOn?: RawNodeSelection<TSource>;
+  dependsOn?: utils.Thunkable<
+    RawNodeSelection<TSource>,
+    [field: VirtualOutputType]
+  >;
 
   /**
    * Optional, the definition of the arguments this virtual-field accepts
@@ -216,7 +219,7 @@ export class VirtualOutputType<
 
     if (config) {
       const selection = this.parent.select(
-        config,
+        utils.resolveThunkable(config, this),
         undefined,
         undefined,
         configPath,

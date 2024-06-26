@@ -1086,7 +1086,7 @@ __metadata:
     "@swc/core": "npm:1.6.5"
     "@swc/jest": "npm:0.2.36"
     "@tsconfig/node20": "npm:20.1.4"
-    "@types/node": "npm:20.14.8"
+    "@types/node": "npm:20.14.9"
     "@types/semver": "npm:7.5.8"
     graphql: "npm:16.9.0"
     inflection: "npm:^3.0.0"
@@ -1116,7 +1116,7 @@ __metadata:
     "@types/body-parser": "npm:^1.19.5"
     "@types/cors": "npm:^2.8.17"
     "@types/express": "npm:^4.17.21"
-    "@types/node": "npm:20.14.8"
+    "@types/node": "npm:20.14.9"
     "@types/ws": "npm:^8.5.10"
     body-parser: "npm:1.20.2"
     cors: "npm:2.8.5"
@@ -1143,7 +1143,7 @@ __metadata:
     "@swc/jest": "npm:0.2.36"
     "@tsconfig/node20": "npm:20.1.4"
     "@types/draft-js": "npm:^0.11.18"
-    "@types/node": "npm:20.14.8"
+    "@types/node": "npm:20.14.9"
     graphql: "npm:16.9.0"
     jest: "npm:30.0.0-alpha.5"
     publint: "npm:0.2.8"
@@ -1164,7 +1164,7 @@ __metadata:
     "@swc/jest": "npm:0.2.36"
     "@tsconfig/node20": "npm:20.1.4"
     "@types/indefinite": "npm:2.3.4"
-    "@types/node": "npm:20.14.8"
+    "@types/node": "npm:20.14.9"
     graphql: "npm:16.9.0"
     indefinite: "npm:^2.5.1"
     jest: "npm:30.0.0-alpha.5"
@@ -1190,7 +1190,7 @@ __metadata:
     "@swc/jest": "npm:0.2.36"
     "@tsconfig/node20": "npm:20.1.4"
     "@types/cli-progress": "npm:^3.11.5"
-    "@types/node": "npm:20.14.8"
+    "@types/node": "npm:20.14.9"
     cli-progress: "npm:^3.12.0"
     dataloader: "npm:^2.2.2"
     denque: "npm:^2.1.0"
@@ -1662,12 +1662,21 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@types/node@npm:*, @types/node@npm:20.14.8, @types/node@npm:^20.11.17":
+"@types/node@npm:*, @types/node@npm:^20.11.17":
   version: 20.14.8
   resolution: "@types/node@npm:20.14.8"
   dependencies:
     undici-types: "npm:~5.26.4"
   checksum: 10/73822f66f269ce865df7e2f586787ac7444bd1169fd265cbed1e851b72787f1170517c5b616e0308ec2fbc0934ec6403b0f28d4152acbb0486071aec41167d51
+  languageName: node
+  linkType: hard
+
+"@types/node@npm:20.14.9":
+  version: 20.14.9
+  resolution: "@types/node@npm:20.14.9"
+  dependencies:
+    undici-types: "npm:~5.26.4"
+  checksum: 10/f313b06c79be92f5d3541159ef813b9fc606941f951ecf826e940658c6d4952755ca2f06277b746326cef0697ed79a04676ecde053d32e1121b3352c8168d2e9
   languageName: node
   linkType: hard
 
