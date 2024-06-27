@@ -45,17 +45,6 @@ export interface VirtualOutputConfig<
   public?: utils.OptionalFlag;
 
   /**
-   * Optional, in order to compute this virtual-field value, you certainly need some other fields' value in the resolver's source (= its first argument),
-   * you can configure the dependency here, as a fragment/selectionSet
-   *
-   * Example: '{ id title }'
-   */
-  dependsOn?: utils.Thunkable<
-    RawNodeSelection<TSource>,
-    [field: VirtualOutputType]
-  >;
-
-  /**
    * Optional, the definition of the arguments this virtual-field accepts
    */
   args?: Record<
@@ -67,6 +56,17 @@ export interface VirtualOutputConfig<
    * Required, the output type of this virtual-field
    */
   type: graphql.GraphQLOutputType;
+
+  /**
+   * Optional, in order to compute this virtual-field value, you certainly need some other fields' value in the resolver's source (= its first argument),
+   * you can configure the dependency here, as a fragment/selectionSet
+   *
+   * Example: '{ id title }'
+   */
+  dependsOn?: utils.Thunkable<
+    RawNodeSelection<TSource>,
+    [field: VirtualOutputType]
+  >;
 
   /**
    * Required, using the source, arguments, and request context, the resolver produces a value that is valid against the type defined above

@@ -1093,7 +1093,7 @@ __metadata:
     jest: "npm:30.0.0-alpha.5"
     mariadb: "npm:^3.3.1"
     publint: "npm:0.2.8"
-    remeda: "npm:^2.2.0"
+    remeda: "npm:^2.2.1"
     semver: "npm:^7.6.2"
     type-fest: "npm:^4.20.1"
     typescript: "npm:5.5.2"
@@ -1169,7 +1169,7 @@ __metadata:
     indefinite: "npm:^2.5.1"
     jest: "npm:30.0.0-alpha.5"
     publint: "npm:0.2.8"
-    remeda: "npm:^2.2.0"
+    remeda: "npm:^2.2.1"
     type-fest: "npm:^4.20.1"
     typescript: "npm:5.5.2"
   peerDependencies:
@@ -1201,7 +1201,7 @@ __metadata:
     p-queue: "npm:^8.0.1"
     p-retry: "npm:^6.2.0"
     publint: "npm:0.2.8"
-    remeda: "npm:^2.2.0"
+    remeda: "npm:^2.2.1"
     type-fest: "npm:^4.20.1"
     typescript: "npm:5.5.2"
   peerDependencies:
@@ -4587,12 +4587,12 @@ __metadata:
   languageName: node
   linkType: hard
 
-"remeda@npm:^2.2.0":
-  version: 2.2.0
-  resolution: "remeda@npm:2.2.0"
+"remeda@npm:^2.2.1":
+  version: 2.2.1
+  resolution: "remeda@npm:2.2.1"
   dependencies:
-    type-fest: "npm:^4.20.0"
-  checksum: 10/648c01475dece39eafdd95603ea8057f6f37bc060c8273c180fe64f805458b2fed93039c63b8b88d7cbb60c68f7eabe3e8df9ef5fecfd3d4de390c830f3d8c06
+    type-fest: "npm:^4.20.1"
+  checksum: 10/40ce7b2ab14b98c2304a94340db14178c4752a13c5a507297ce68744d891b71f4f4ea2a4f0fa4630d8ee6c39ec089f896864c11d08f3223b5655af40cde187b9
   languageName: node
   linkType: hard
 
@@ -5114,7 +5114,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"type-fest@npm:^4.20.0, type-fest@npm:^4.20.1":
+"type-fest@npm:^4.20.1":
   version: 4.20.1
   resolution: "type-fest@npm:4.20.1"
   checksum: 10/52dc64fae094949008afb79f21b02eca0289c8dc41ed1cfff88f343230edb476fca4815e1b5d58acf5e07fdc7a1b098504473b5931ef418e6f38a3edb70fc1df

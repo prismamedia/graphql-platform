@@ -451,7 +451,10 @@ export class ScrollSubscriptionStream<
         progressBar = progressBarOptions.container.create(
           await this.size(),
           0,
-          { name: progressBarOptions.name },
+          {
+            name: progressBarOptions.name,
+            [averageFormattedKey]: '-/s',
+          },
         );
       } else {
         progressBar =
@@ -459,7 +462,9 @@ export class ScrollSubscriptionStream<
             ? progressBarOptions
             : new ProgressBar({ format: defaultProgressBarFormat });
 
-        progressBar.start(await this.size(), 0);
+        progressBar.start(await this.size(), 0, {
+          [averageFormattedKey]: '-/s',
+        });
       }
     }
 
