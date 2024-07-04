@@ -29,7 +29,7 @@
   "devDependencies": {
     "@jest/globals": "30.0.0-alpha.5",
     "@sqltools/formatter": "1.2.5",
-    "@swc/core": "1.6.5",
+    "@swc/core": "1.6.7",
     "@swc/jest": "0.2.36",
     "@tsconfig/node20": "20.1.4",
     "@types/node": "20.14.9",
@@ -37,7 +37,7 @@
     "graphql": "16.9.0",
     "jest": "30.0.0-alpha.5",
     "publint": "0.2.8",
-    "typescript": "5.5.2"
+    "typescript": "5.5.3"
   },
   "dependencies": {
     "@prismamedia/async-event-emitter": "^5.5.0",
@@ -47,9 +47,9 @@
     "@prismamedia/memoize": "^5.0.2",
     "inflection": "^3.0.0",
     "mariadb": "^3.3.1",
-    "remeda": "^2.2.1",
+    "remeda": "^2.3.0",
     "semver": "^7.6.2",
-    "type-fest": "^4.20.1"
+    "type-fest": "^4.21.0"
   },
   "peerDependencies": {
     "graphql": "^16.9.0"

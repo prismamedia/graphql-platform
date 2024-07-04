@@ -27,19 +27,19 @@
   },
   "devDependencies": {
     "@jest/globals": "30.0.0-alpha.5",
-    "@swc/core": "1.6.5",
+    "@swc/core": "1.6.7",
     "@swc/jest": "0.2.36",
     "@tsconfig/node20": "20.1.4",
     "@types/node": "20.14.9",
     "graphql": "16.9.0",
     "jest": "30.0.0-alpha.5",
     "publint": "0.2.8",
-    "typescript": "5.5.2"
+    "typescript": "5.5.3"
   },
   "dependencies": {
     "@prismamedia/graphql-platform-utils": "workspace:packages/graphql-platform-utils",
     "@types/draft-js": "^0.11.18",
-    "type-fest": "^4.20.1"
+    "type-fest": "^4.21.0"
   },
   "peerDependencies": {
     "graphql": "^16.9.0"
