@@ -12,6 +12,7 @@ export * from './mutation/context.js';
 export * from './mutation/creation.js';
 export * from './mutation/deletion.js';
 export * from './mutation/update.js';
+export * from './mutation/upsert.js';
 
 export type Mutation<TRequestContext extends object = any> =
   | Creation<TRequestContext>
