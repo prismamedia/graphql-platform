@@ -1,4 +1,5 @@
 import * as scalars from '@prismamedia/graphql-platform-scalars';
+import * as graphql from 'graphql';
 import type * as mariadb from 'mariadb';
 import assert from 'node:assert/strict';
 import { EOL } from 'node:os';
@@ -12,6 +13,9 @@ export const nullIfEmptyString = (expr: string) => `NULLIF(${expr}, '')`;
 
 export const trimWhitespaces = (expr: string) =>
   `REGEXP_REPLACE(${expr}, '^\\\\s+|\\\\s+$', '')`;
+
+export const nullIfEmptyTrimmedString = (expr: string) =>
+  nullIfEmptyString(trimWhitespaces(expr));
 
 export const normalizeDoubleSpaces = (expr: string) =>
   `REGEXP_REPLACE(${expr}, '\\\\s+', ' ')`;
@@ -101,6 +105,7 @@ export class NormalizeStatement implements mariadb.QueryOptions {
               ];
               break;
 
+            case graphql.GraphQLID:
             case scalars.GraphQLEmailAddress:
             case scalars.GraphQLNonEmptyTrimmedString:
             case scalars.GraphQLURL:

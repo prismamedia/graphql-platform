@@ -106,4 +106,18 @@ OkPacket {
 }
 `;
 
-exports[`Normalize statement generates "normalize" statement for "UserProfile" 1`] = `"No normalization to perform on "user_profiles""`;
+exports[`Normalize statement generates "normalize" statement for "UserProfile" 1`] = `
+"UPDATE \`user_profiles\`
+SET
+  \`facebook_id\` = NULLIF(REGEXP_REPLACE(\`facebook_id\`, '^\\\\s+|\\\\s+$', ''), ''),
+  \`google_id\` = NULLIF(REGEXP_REPLACE(\`google_id\`, '^\\\\s+|\\\\s+$', ''), ''),
+  \`twitter_handle\` = NULLIF(REGEXP_REPLACE(\`twitter_handle\`, '^\\\\s+|\\\\s+$', ''), '')"
+`;
+
+exports[`Normalize statement generates "normalize" statement for "UserProfile" 2`] = `
+OkPacket {
+  "affectedRows": 1,
+  "insertId": 0n,
+  "warningStatus": 0,
+}
+`;
