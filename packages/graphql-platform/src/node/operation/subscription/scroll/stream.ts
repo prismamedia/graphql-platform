@@ -7,6 +7,7 @@ import assert from 'node:assert/strict';
 import { inspect } from 'node:util';
 import PQueue, { Options as PQueueOptions } from 'p-queue';
 import PRetry, { Options as PRetryOptions } from 'p-retry';
+import * as R from 'remeda';
 import type { Except, Promisable } from 'type-fest';
 import type { Node } from '../../../../node.js';
 import type {
@@ -290,6 +291,12 @@ export class ScrollSubscriptionStream<
 
     let progressBar: ProgressBar | undefined;
     if (progressBarOptions) {
+      const total = await this.size();
+      const etaBuffer: ProgressBarOptions['etaBuffer'] = R.clamp(
+        Math.round(total / 100),
+        { min: 10, max: 1000 },
+      );
+
       if (
         typeof progressBarOptions === 'object' &&
         'container' in progressBarOptions &&
@@ -305,21 +312,18 @@ export class ScrollSubscriptionStream<
           `The "name" has to be a string`,
         );
 
-        progressBar = progressBarOptions.container.create(
-          await this.size(),
-          currentIndex,
-          {
-            name: progressBarOptions.name,
-            [averageFormattedKey]: '-/s',
-          },
-        );
+        progressBar = progressBarOptions.container.create(total, currentIndex, {
+          name: progressBarOptions.name,
+          etaBuffer,
+          [averageFormattedKey]: '-/s',
+        });
       } else {
         progressBar =
           progressBarOptions instanceof ProgressBar
             ? progressBarOptions
-            : new ProgressBar({ format: defaultProgressBarFormat });
+            : new ProgressBar({ etaBuffer, format: defaultProgressBarFormat });
 
-        progressBar.start(await this.size(), currentIndex, {
+        progressBar.start(total, currentIndex, {
           [averageFormattedKey]: '-/s',
         });
       }
