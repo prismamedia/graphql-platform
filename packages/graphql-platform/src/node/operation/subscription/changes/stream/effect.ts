@@ -174,7 +174,7 @@ export class ChangesSubscriptionEffect<
               const affectedGraph =
                 affectedFilterGraph && affectedSelectionGraph
                   ? affectedFilterGraph.or(affectedSelectionGraph)
-                  : affectedFilterGraph ?? affectedSelectionGraph;
+                  : (affectedFilterGraph ?? affectedSelectionGraph);
 
               if (affectedGraph && !affectedGraph.isFalse()) {
                 initiatorSet.add(change.requestContext);

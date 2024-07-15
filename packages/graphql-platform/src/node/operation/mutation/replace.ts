@@ -89,7 +89,7 @@ export class ReplaceMutation<
                   : MultipleReverseEdgeUpdateInputAction.DELETE_ALL]: true,
                 ...args.data[field.name],
               }
-            : args.data[field.name] ?? null,
+            : (args.data[field.name] ?? null),
         ]),
         create: args.data,
         selection: args.selection.mergeWith(this.node.selection),

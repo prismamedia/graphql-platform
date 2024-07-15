@@ -32,7 +32,7 @@
     "@swc/core": "1.6.13",
     "@swc/jest": "0.2.36",
     "@tsconfig/node20": "20.1.4",
-    "@types/node": "20.14.10",
+    "@types/node": "20.14.11",
     "@types/semver": "7.5.8",
     "graphql": "16.9.0",
     "jest": "30.0.0-alpha.5",
@@ -47,9 +47,9 @@
     "@prismamedia/memoize": "^5.0.2",
     "inflection": "^3.0.0",
     "mariadb": "^3.3.1",
-    "remeda": "^2.5.0",
-    "semver": "^7.6.2",
-    "type-fest": "^4.21.0"
+    "remeda": "^2.6.0",
+    "semver": "^7.6.3",
+    "type-fest": "^4.22.0"
   },
   "peerDependencies": {
     "graphql": "^16.9.0"
