@@ -191,7 +191,6 @@ export class Schema {
 
   public async diagnose(
     options?: SchemaDiagnosisOptions,
-    maybeConnection?: mariadb.Connection,
   ): Promise<SchemaDiagnosis> {
     const [
       schemaInformations,
@@ -203,27 +202,21 @@ export class Schema {
     ] = await Promise.all([
       this.connector.executeStatement<SchemaInformation[]>(
         new GetSchemaInformationStatement(this),
-        maybeConnection,
       ),
       this.connector.executeStatement<TableInformation[]>(
         new GetTableInformationStatement(this),
-        maybeConnection,
       ),
       this.connector.executeStatement<ColumnInformation[]>(
         new GetColumnInformationStatement(this),
-        maybeConnection,
       ),
       this.connector.executeStatement<ConstraintInformation[]>(
         new GetConstraintInformationStatement(this),
-        maybeConnection,
       ),
       this.connector.executeStatement<IndexInformation[]>(
         new GetIndexInformationStatement(this),
-        maybeConnection,
       ),
       this.connector.executeStatement<ForeignKeyInformation[]>(
         new GetForeignKeyInformationStatement(this),
-        maybeConnection,
       ),
     ]);
 
@@ -362,5 +355,10 @@ export class Schema {
       },
       { ...this.config?.diagnosis, ...options },
     );
+  }
+
+  public async fix(options?: SchemaDiagnosisOptions): Promise<void> {
+    const diagnosis = await this.diagnose(options);
+    await diagnosis.fix();
   }
 }
