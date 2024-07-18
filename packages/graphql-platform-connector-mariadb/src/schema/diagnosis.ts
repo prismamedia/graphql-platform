@@ -1,5 +1,4 @@
 import * as utils from '@prismamedia/graphql-platform-utils';
-import type { Connection } from 'mariadb';
 import assert from 'node:assert/strict';
 import { inspect } from 'node:util';
 import * as R from 'remeda';
@@ -8,7 +7,6 @@ import type { ForeignKey, Schema, TableDiagnosisFixConfig } from '../schema.js';
 import {
   FixSchemaStatement,
   SchemaInformation,
-  StatementKind,
   TableInformation,
 } from '../statement.js';
 import {
@@ -326,14 +324,10 @@ export class SchemaDiagnosis {
     );
   }
 
-  protected async doFixWithConnection(
-    config: SchemaDiagnosisFixConfig | undefined,
-    connection: Connection,
-  ): Promise<void> {
+  public async fix(config?: SchemaDiagnosisFixConfig): Promise<void> {
     if (FixSchemaStatement.fixes(this, config)) {
       await this.schema.connector.executeStatement(
         new FixSchemaStatement(this, config),
-        connection,
       );
     }
 
@@ -343,7 +337,7 @@ export class SchemaDiagnosis {
       this.extraTables.map(async (tableName) => {
         const config = configsByTable[tableName];
         if (config) {
-          await connection.query(
+          await this.schema.connector.executeQuery(
             `DROP TABLE IF EXISTS ${escapeIdentifier(
               `${this.schema.name}.${tableName}`,
             )}`,
@@ -356,7 +350,7 @@ export class SchemaDiagnosis {
       this.missingTables.map(async (table) => {
         const config = configsByTable[table.name];
         if (config) {
-          await table.create({ withoutForeignKeys: true }, connection);
+          await table.create({ withoutForeignKeys: true });
         }
       }),
     );
@@ -423,10 +417,7 @@ export class SchemaDiagnosis {
               )
             : [];
 
-        return table.dropForeignKeys(
-          [...foreignKeys, ...extraForeignKeys],
-          connection,
-        );
+        return table.dropForeignKeys([...foreignKeys, ...extraForeignKeys]);
       }),
     );
 
@@ -434,7 +425,7 @@ export class SchemaDiagnosis {
       this.invalidTables.map(async (tableDiagnosis) => {
         const config = configsByTable[tableDiagnosis.table.name];
         if (config) {
-          await tableDiagnosis.fix(config, connection);
+          await tableDiagnosis.fix(config);
         }
       }),
     );
@@ -465,20 +456,8 @@ export class SchemaDiagnosis {
           }
         }
 
-        return table.addForeignKeys([...foreignKeySet], connection);
+        return table.addForeignKeys([...foreignKeySet]);
       }),
     );
-  }
-
-  public async fix(
-    config?: SchemaDiagnosisFixConfig,
-    maybeConnection?: Connection,
-  ): Promise<void> {
-    return maybeConnection
-      ? this.doFixWithConnection(config, maybeConnection)
-      : this.schema.connector.withConnection(
-          (connection) => this.doFixWithConnection(config, connection),
-          StatementKind.DATA_DEFINITION,
-        );
   }
 }

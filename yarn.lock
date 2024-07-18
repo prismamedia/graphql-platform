@@ -1095,7 +1095,7 @@ __metadata:
     publint: "npm:0.2.9"
     remeda: "npm:^2.6.0"
     semver: "npm:^7.6.3"
-    type-fest: "npm:^4.22.0"
+    type-fest: "npm:^4.22.1"
     typescript: "npm:5.5.3"
   peerDependencies:
     graphql: ^16.9.0
@@ -1147,7 +1147,7 @@ __metadata:
     graphql: "npm:16.9.0"
     jest: "npm:30.0.0-alpha.5"
     publint: "npm:0.2.9"
-    type-fest: "npm:^4.22.0"
+    type-fest: "npm:^4.22.1"
     typescript: "npm:5.5.3"
   peerDependencies:
     graphql: ^16.9.0
@@ -1170,7 +1170,7 @@ __metadata:
     jest: "npm:30.0.0-alpha.5"
     publint: "npm:0.2.9"
     remeda: "npm:^2.6.0"
-    type-fest: "npm:^4.22.0"
+    type-fest: "npm:^4.22.1"
     typescript: "npm:5.5.3"
   peerDependencies:
     graphql: ^16.9.0
@@ -1202,7 +1202,7 @@ __metadata:
     p-retry: "npm:^6.2.0"
     publint: "npm:0.2.9"
     remeda: "npm:^2.6.0"
-    type-fest: "npm:^4.22.0"
+    type-fest: "npm:^4.22.1"
     typescript: "npm:5.5.3"
   peerDependencies:
     graphql: ^16.9.0
@@ -5098,10 +5098,17 @@ __metadata:
   languageName: node
   linkType: hard
 
-"type-fest@npm:^4.21.0, type-fest@npm:^4.22.0":
+"type-fest@npm:^4.21.0":
   version: 4.22.0
   resolution: "type-fest@npm:4.22.0"
   checksum: 10/f5e1471829166641cc52dd826839f40c43525a66c3fcd76bba8635bc2c42c339c7198b0f17395d23a91205da913be8294c58ab8d52cc03ef227386d24099f525
+  languageName: node
+  linkType: hard
+
+"type-fest@npm:^4.22.1":
+  version: 4.22.1
+  resolution: "type-fest@npm:4.22.1"
+  checksum: 10/f0cef35c98c34577d94dd36b4baa6544cd6977bdee47d95fad1d970ca3b61c1bb0ab8aac66bab6e1e387b1f2821727675743282f1a8680da54adc1a5625f3d66
   languageName: node
   linkType: hard
 

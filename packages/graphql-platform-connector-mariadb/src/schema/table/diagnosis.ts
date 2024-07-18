@@ -1,5 +1,4 @@
 import * as utils from '@prismamedia/graphql-platform-utils';
-import type { Connection } from 'mariadb';
 import assert from 'node:assert/strict';
 import { inspect } from 'node:util';
 import * as R from 'remeda';
@@ -567,14 +566,10 @@ export class TableDiagnosis {
         );
   }
 
-  public async fix(
-    config: TableDiagnosisFixConfig | undefined,
-    connection: Connection,
-  ): Promise<void> {
+  public async fix(config?: TableDiagnosisFixConfig): Promise<void> {
     if (FixTableStatement.fixes(this, config)) {
       await this.table.schema.connector.executeStatement(
         new FixTableStatement(this, config),
-        connection,
       );
     }
   }

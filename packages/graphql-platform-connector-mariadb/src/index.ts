@@ -188,15 +188,7 @@ export class MariaDBConnector
                 ...({ bitOneIsBoolean: false } as any),
                 logger,
               }
-            : {
-                ...this.poolConfig,
-                sessionVariables: {
-                  ...this.poolConfig.sessionVariables,
-                  max_statement_time: 60 * 60 * 12,
-                },
-                connectionLimit: 1,
-                logger,
-              },
+            : { ...this.poolConfig, logger },
         )),
       );
     }
