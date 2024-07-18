@@ -28,13 +28,13 @@
   },
   "devDependencies": {
     "@jest/globals": "30.0.0-alpha.5",
-    "@swc/core": "1.6.13",
+    "@swc/core": "1.7.0",
     "@swc/jest": "0.2.36",
     "@tsconfig/node20": "20.1.4",
     "@types/node": "20.14.11",
     "graphql": "16.9.0",
     "jest": "30.0.0-alpha.5",
-    "publint": "0.2.8",
+    "publint": "0.2.9",
     "typescript": "5.5.3"
   },
   "dependencies": {

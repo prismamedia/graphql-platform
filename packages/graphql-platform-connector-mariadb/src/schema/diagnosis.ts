@@ -84,14 +84,15 @@ export type SchemaDiagnosisSummary = {
 };
 
 export type SchemaDiagnosisFixConfig = {
+  ignore?: boolean;
   charset?: boolean;
   collation?: boolean;
-  columns?: boolean;
   comment?: boolean;
   engine?: boolean;
+  nullable?: boolean;
   foreignKeys?: boolean;
   indexes?: boolean;
-  nullable?: boolean;
+  columns?: boolean;
 
   tables?:
     | boolean
@@ -296,13 +297,14 @@ export class SchemaDiagnosis {
     config?: SchemaDiagnosisFixConfig,
   ): Record<Table['name'], TableDiagnosisFixConfig> {
     const defaults: TableDiagnosisFixConfig = {
+      ignore: config?.ignore,
       collation: config?.collation,
-      columns: config?.columns,
       comment: config?.comment,
       engine: config?.engine,
+      nullable: config?.nullable,
       foreignKeys: config?.foreignKeys,
       indexes: config?.indexes,
-      nullable: config?.nullable,
+      columns: config?.columns,
     };
 
     return Object.fromEntries<TableDiagnosisFixConfig>(

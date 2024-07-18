@@ -115,13 +115,14 @@ export type TableDiagnosisSummary = {
 };
 
 export type TableDiagnosisFixConfig = {
+  ignore?: boolean;
   collation?: boolean;
-  columns?: boolean | ReadonlyArray<Column['name']>;
   comment?: boolean;
   engine?: boolean;
+  nullable?: boolean;
   foreignKeys?: boolean | ReadonlyArray<ForeignKey['name']>;
   indexes?: boolean | ReadonlyArray<Index['name']>;
-  nullable?: boolean;
+  columns?: boolean | ReadonlyArray<Column['name']>;
 };
 
 export class TableDiagnosis {
