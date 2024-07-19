@@ -258,6 +258,50 @@ export class MariaDBConnector
     return await connection.query(query, values);
   }
 
+  /**
+   * Returns the first row, if any
+   */
+  public async findRow<TRow extends utils.PlainObject>(
+    query: string | mariadb.QueryOptions,
+    values?: any,
+    kind?: StatementKind,
+  ): Promise<TRow | undefined> {
+    const rows = await this.executeQuery<[TRow]>(query, values, kind);
+    assert(Array.isArray(rows), `Expects a result-set`);
+    assert(rows.length <= 1, `Expects a single row`);
+
+    return rows[0];
+  }
+
+  /**
+   * Returns the first row
+   */
+  public async getRow<TRow extends utils.PlainObject>(
+    query: string | mariadb.QueryOptions,
+    values?: any,
+    kind?: StatementKind,
+  ): Promise<TRow> {
+    const row = await this.findRow<TRow>(query, values, kind);
+    assert(row, `Not found`);
+
+    return row;
+  }
+
+  /**
+   * Returns the first column of the first row
+   */
+  public async getColumn<TValue>(
+    query: string | mariadb.QueryOptions,
+    values?: any,
+    kind?: StatementKind,
+  ): Promise<TValue> {
+    const row = await this.getRow(query, values, kind);
+    const columns = Object.values(row);
+    assert(columns.length, `Expects a column`);
+
+    return columns[0];
+  }
+
   public async executeStatement<TResult extends OkPacket | utils.PlainObject[]>(
     statement: Statement,
     maybeConnection?: mariadb.Connection,
