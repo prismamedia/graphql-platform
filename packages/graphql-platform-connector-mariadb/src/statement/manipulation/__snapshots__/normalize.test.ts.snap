@@ -3,9 +3,10 @@
 exports[`Normalize statement generates "normalize" statement for "Article" 1`] = `
 "UPDATE \`articles\`
 SET
-  \`title\` = REGEXP_REPLACE(\`title\`, '^\\\\s+|\\\\s+$', ''),
+  \`title\` = TRIM(\`title\`),
   \`slug\` = REGEXP_REPLACE(\`slug\`, '^\\\\s+|\\\\s+$', ''),
   \`body\` = IF(JSON_VALID(\`body\`) AND JSON_EXISTS(\`body\`, '$.blocks') AND JSON_TYPE(JSON_EXTRACT(\`body\`, '$.blocks')) != 'NULL' AND JSON_LENGTH(\`body\`, '$.blocks') > 0, JSON_COMPACT(\`body\`), NULL),
+  \`updated_at\` = \`updated_at\`,
   \`metas\` = IF(JSON_VALID(\`metas\`) AND JSON_TYPE(\`metas\`) = 'OBJECT' AND JSON_LENGTH(\`metas\`) > 0, JSON_COMPACT(\`metas\`), NULL),
   \`machine_tags\` = IF(JSON_VALID(\`machine_tags\`) AND JSON_TYPE(\`machine_tags\`) = 'ARRAY' AND JSON_LENGTH(\`machine_tags\`) > 0, JSON_COMPACT(\`machine_tags\`), NULL)"
 `;
@@ -81,7 +82,8 @@ exports[`Normalize statement generates "normalize" statement for "Tag" 1`] = `
 "UPDATE \`tags\`
 SET
   \`title\` = REGEXP_REPLACE(\`title\`, '^\\\\s+|\\\\s+$', ''),
-  \`slug\` = REGEXP_REPLACE(\`slug\`, '^\\\\s+|\\\\s+$', '')"
+  \`slug\` = REGEXP_REPLACE(\`slug\`, '^\\\\s+|\\\\s+$', ''),
+  \`updated_at\` = \`updated_at\`"
 `;
 
 exports[`Normalize statement generates "normalize" statement for "Tag" 2`] = `

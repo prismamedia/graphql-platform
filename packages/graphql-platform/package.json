@@ -35,7 +35,7 @@
     "graphql": "16.9.0",
     "jest": "30.0.0-alpha.5",
     "publint": "0.2.9",
-    "typescript": "5.5.3"
+    "typescript": "5.5.4"
   },
   "dependencies": {
     "@prismamedia/async-event-emitter": "^5.5.0",
@@ -51,7 +51,7 @@
     "p-queue": "^8.0.1",
     "p-retry": "^6.2.0",
     "remeda": "^2.6.0",
-    "type-fest": "^4.22.1"
+    "type-fest": "^4.23.0"
   },
   "peerDependencies": {
     "graphql": "^16.9.0"

@@ -3,6 +3,7 @@ import * as graphql from 'graphql';
 import type * as mariadb from 'mariadb';
 import assert from 'node:assert/strict';
 import { EOL } from 'node:os';
+import * as R from 'remeda';
 import { escapeIdentifier, escapeStringValue } from '../../escaping.js';
 import type { LeafColumn, Table } from '../../schema.js';
 import { StatementKind } from '../kind.js';
@@ -63,7 +64,11 @@ export interface NormalizeStatementConfig {
    */
   ignore?: boolean;
 
-  customize?: (column: LeafColumn, expr: string) => string | undefined;
+  customize?: (args: {
+    column: LeafColumn;
+    columnIdentifier: string;
+    defaultNormalization: string | undefined;
+  }) => string | undefined;
 }
 
 /**
@@ -77,75 +82,87 @@ export class NormalizeStatement implements mariadb.QueryOptions {
     table: Table,
     config?: NormalizeStatementConfig,
   ): Map<LeafColumn, string> {
-    return new Map<LeafColumn, string>(
-      Array.from(
-        table.columnsByLeaf.values(),
-        (column): [LeafColumn, string] | undefined => {
-          let normalizers: Array<LeafColumnNormalizer | undefined> = [];
+    const exprsByColumn = R.pipe(
+      Array.from(table.columnsByLeaf.values()),
+      R.map((column): [LeafColumn, string] | undefined => {
+        let expr: string | undefined;
 
-          switch (column.leaf.type) {
-            case scalars.GraphQLUUID:
-            case scalars.GraphQLUUIDv1:
-            case scalars.GraphQLUUIDv2:
-            case scalars.GraphQLUUIDv3:
-            case scalars.GraphQLUUIDv4:
-            case scalars.GraphQLUUIDv5:
-              normalizers =
-                column.dataType.kind === 'UUID'
-                  ? []
-                  : [
-                      trimWhitespaces,
-                      column.isNullable() ? nullIfEmptyString : undefined,
-                    ];
-              break;
+        let normalizers: Array<LeafColumnNormalizer | undefined> | undefined;
 
-            case scalars.GraphQLNonEmptyString:
-              normalizers = [
-                column.isNullable() ? nullIfEmptyString : undefined,
-              ];
-              break;
-
-            case graphql.GraphQLID:
-            case scalars.GraphQLEmailAddress:
-            case scalars.GraphQLNonEmptyTrimmedString:
-            case scalars.GraphQLURL:
+        switch (column.leaf.type) {
+          case scalars.GraphQLUUID:
+          case scalars.GraphQLUUIDv1:
+          case scalars.GraphQLUUIDv2:
+          case scalars.GraphQLUUIDv3:
+          case scalars.GraphQLUUIDv4:
+          case scalars.GraphQLUUIDv5:
+            if (column.dataType.kind !== 'UUID') {
               normalizers = [
                 trimWhitespaces,
                 column.isNullable() ? nullIfEmptyString : undefined,
               ];
-              break;
+            }
+            break;
 
-            case scalars.GraphQLJSONArray:
-              normalizers = [
-                (expr) => normalizeJSONArray(expr, column.isNullable()),
-              ];
-              break;
+          case scalars.GraphQLNonEmptyString:
+            normalizers = [column.isNullable() ? nullIfEmptyString : undefined];
+            break;
 
-            case scalars.GraphQLJSONObject:
-              normalizers = [
-                (expr) => normalizeJSONObject(expr, column.isNullable()),
-              ];
-              break;
+          case graphql.GraphQLID:
+          case scalars.GraphQLEmailAddress:
+          case scalars.GraphQLNonEmptyTrimmedString:
+          case scalars.GraphQLURL:
+            normalizers = [
+              trimWhitespaces,
+              column.isNullable() ? nullIfEmptyString : undefined,
+            ];
+            break;
 
-            case scalars.GraphQLDraftJS:
-              normalizers = [
-                (expr) => normalizeDraftJS(expr, column.isNullable()),
-              ];
-              break;
-          }
+          case scalars.GraphQLJSONArray:
+            normalizers = [
+              (expr) => normalizeJSONArray(expr, column.isNullable()),
+            ];
+            break;
 
-          const initialValue = escapeIdentifier(column.name);
+          case scalars.GraphQLJSONObject:
+            normalizers = [
+              (expr) => normalizeJSONObject(expr, column.isNullable()),
+            ];
+            break;
 
-          let expr: string | undefined = normalizers.reduce(
+          case scalars.GraphQLDraftJS:
+            normalizers = [
+              (expr) => normalizeDraftJS(expr, column.isNullable()),
+            ];
+            break;
+        }
+
+        if (normalizers?.length) {
+          expr = normalizers.reduce(
             (expr, normalizer) => normalizer?.(expr) ?? expr,
-            initialValue,
+            escapeIdentifier(column.name),
           );
+        }
 
-          config?.customize && (expr = config.customize(column, expr!));
+        if (config?.customize) {
+          expr = config.customize({
+            column,
+            columnIdentifier: escapeIdentifier(column.name),
+            defaultNormalization: expr,
+          });
+        }
 
-          return expr && expr !== initialValue ? [column, expr] : undefined;
-        },
-      ).filter<[LeafColumn, string]>(Boolean as any),
+        return expr ? [column, expr] : undefined;
+      }),
+      R.filter(R.isDefined),
+    );
+
+    return new Map<LeafColumn, string>(
+      exprsByColumn.some(
+        ([{ name }, expr]) => name !== expr && escapeIdentifier(name) !== expr,
+      )
+        ? exprsByColumn
+        : undefined,
     );
   }
 
