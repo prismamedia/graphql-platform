@@ -57,7 +57,10 @@ export interface MariaDBConnectorConfig {
   collation?: string;
   version?: string;
   schema?: SchemaConfig;
-  pool?: Except<mariadb.PoolConfig, 'logger'>;
+  pool?: utils.Thunkable<
+    Except<mariadb.PoolConfig, 'logger'>,
+    [kind: StatementKind]
+  >;
   on?: EventConfigByName<MariaDBConnectorEventDataByName>;
 }
 
@@ -100,7 +103,10 @@ export class MariaDBConnector
     };
   };
 
-  public readonly poolConfig?: Except<mariadb.PoolConfig, 'logger'>;
+  public readonly poolConfig?: utils.Thunkable<
+    Except<mariadb.PoolConfig, 'logger'>,
+    [kind: StatementKind]
+  >;
   public readonly poolConfigPath: utils.Path;
 
   public readonly charset: string;
@@ -164,14 +170,16 @@ export class MariaDBConnector
         },
       };
 
+      const poolConfig = utils.resolveThunkable(this.poolConfig, kind);
+
       this.#poolsByStatementKind.set(
         kind,
         (pool = mariadb.createPool(
           kind === StatementKind.DATA_MANIPULATION
             ? {
-                ...this.poolConfig,
+                ...poolConfig,
                 sessionVariables: {
-                  ...this.poolConfig.sessionVariables,
+                  ...poolConfig.sessionVariables,
                   // For "JSON_ARRAYAGG" & "JSON_OBJECTAGG", 100M instead of the default 1M
                   group_concat_max_len: 104857600,
                 },
@@ -188,7 +196,7 @@ export class MariaDBConnector
                 ...({ bitOneIsBoolean: false } as any),
                 logger,
               }
-            : { ...this.poolConfig, logger },
+            : { ...poolConfig, logger },
         )),
       );
     }
