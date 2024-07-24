@@ -16,7 +16,10 @@ export class CreateSchemaStatement implements mariadb.QueryOptions {
   public readonly kind = StatementKind.DATA_DEFINITION;
   public readonly sql: string;
 
-  public constructor(schema: Schema, config?: CreateSchemaStatementConfig) {
+  public constructor(
+    public readonly schema: Schema,
+    config?: CreateSchemaStatementConfig,
+  ) {
     this.sql = [
       [
         'CREATE',

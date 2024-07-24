@@ -27,7 +27,7 @@ export class FixSchemaStatement implements mariadb.QueryOptions {
   }
 
   public constructor(
-    diagnosis: SchemaDiagnosis,
+    public readonly diagnosis: SchemaDiagnosis,
     config?: SchemaDiagnosisFixConfig,
   ) {
     assert(

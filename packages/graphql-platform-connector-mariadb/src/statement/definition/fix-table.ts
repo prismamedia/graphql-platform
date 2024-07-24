@@ -27,7 +27,7 @@ export class FixTableStatement implements mariadb.QueryOptions {
   }
 
   public constructor(
-    diagnosis: TableDiagnosis,
+    public readonly diagnosis: TableDiagnosis,
     config?: TableDiagnosisFixConfig,
   ) {
     assert(

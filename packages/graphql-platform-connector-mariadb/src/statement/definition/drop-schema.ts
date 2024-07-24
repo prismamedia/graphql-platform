@@ -14,7 +14,10 @@ export class DropSchemaStatement implements mariadb.QueryOptions {
   public readonly kind = StatementKind.DATA_DEFINITION;
   public readonly sql: string;
 
-  public constructor(schema: Schema, config?: DropSchemaStatementConfig) {
+  public constructor(
+    public readonly schema: Schema,
+    config?: DropSchemaStatementConfig,
+  ) {
     this.sql = [
       'DROP SCHEMA',
       config?.ifExists && 'IF EXISTS',
