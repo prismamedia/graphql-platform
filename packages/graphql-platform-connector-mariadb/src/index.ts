@@ -104,7 +104,7 @@ export class MariaDBConnector
   };
 
   public readonly poolConfig?: utils.Thunkable<
-    Except<mariadb.PoolConfig, 'logger'>,
+    Except<mariadb.PoolConfig, 'logger'> | undefined,
     [kind: StatementKind]
   >;
   public readonly poolConfigPath: utils.Path;
@@ -179,7 +179,7 @@ export class MariaDBConnector
             ? {
                 ...poolConfig,
                 sessionVariables: {
-                  ...poolConfig.sessionVariables,
+                  ...poolConfig?.sessionVariables,
                   // For "JSON_ARRAYAGG" & "JSON_OBJECTAGG", 100M instead of the default 1M
                   group_concat_max_len: 104857600,
                 },

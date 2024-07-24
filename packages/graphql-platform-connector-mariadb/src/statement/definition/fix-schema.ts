@@ -3,6 +3,7 @@ import assert from 'node:assert';
 import { EOL } from 'node:os';
 import { escapeIdentifier, escapeStringValue } from '../../escaping.js';
 import type {
+  Schema,
   SchemaDiagnosis,
   SchemaDiagnosisFixConfig,
 } from '../../schema.js';
@@ -12,6 +13,7 @@ import { StatementKind } from '../kind.js';
  * @see https://mariadb.com/kb/en/alter-database/
  */
 export class FixSchemaStatement implements mariadb.QueryOptions {
+  public readonly schema: Schema;
   public readonly kind = StatementKind.DATA_DEFINITION;
   public readonly sql: string;
 
@@ -30,6 +32,8 @@ export class FixSchemaStatement implements mariadb.QueryOptions {
     public readonly diagnosis: SchemaDiagnosis,
     config?: SchemaDiagnosisFixConfig,
   ) {
+    this.schema = diagnosis.schema;
+
     assert(
       (this.constructor as typeof FixSchemaStatement).fixes(diagnosis, config),
     );

@@ -3,13 +3,18 @@ import type * as mariadb from 'mariadb';
 import assert from 'node:assert';
 import { EOL } from 'node:os';
 import { escapeIdentifier, escapeStringValue } from '../../escaping.js';
-import type { TableDiagnosis, TableDiagnosisFixConfig } from '../../schema.js';
+import type {
+  Table,
+  TableDiagnosis,
+  TableDiagnosisFixConfig,
+} from '../../schema.js';
 import { StatementKind } from '../kind.js';
 
 /**
  * @see https://mariadb.com/kb/en/alter-table/
  */
 export class FixTableStatement implements mariadb.QueryOptions {
+  public readonly table: Table;
   public readonly kind = StatementKind.DATA_DEFINITION;
   public readonly sql: string;
 
@@ -30,6 +35,8 @@ export class FixTableStatement implements mariadb.QueryOptions {
     public readonly diagnosis: TableDiagnosis,
     config?: TableDiagnosisFixConfig,
   ) {
+    this.table = diagnosis.table;
+
     assert(
       (this.constructor as typeof FixTableStatement).fixes(diagnosis, config),
     );
