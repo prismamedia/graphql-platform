@@ -421,43 +421,37 @@ export class SchemaDiagnosis {
       }),
     );
 
-    await Promise.all(
-      this.invalidTables.map(async (tableDiagnosis) => {
-        const config = configsByTable[tableDiagnosis.table.name];
-        if (config) {
-          await tableDiagnosis.fix(config);
-        }
-      }),
-    );
+    for (const tableDiagnosis of this.invalidTables) {
+      const config = configsByTable[tableDiagnosis.table.name];
+      if (config) {
+        await tableDiagnosis.fix(config);
+      }
+    }
 
-    await Promise.all(
-      Array.from(invalidForeignKeysByTable, ([table, foreignKeys]) => {
-        const foreignKeySet = new Set(foreignKeys);
+    for (const [table, foreignKeys] of invalidForeignKeysByTable) {
+      const foreignKeySet = new Set(foreignKeys);
 
-        const config = configsByTable[table.name];
-        if (config && config.foreignKeys !== false) {
-          if (
-            this.missingTables.find((missingTable) => missingTable === table)
-          ) {
-            table.foreignKeys.forEach((foreignKey) =>
-              foreignKeySet.add(foreignKey),
-            );
-          }
-
-          const tableDiagnosis = this.diagnosesByTable.get(table);
-          if (tableDiagnosis) {
-            const fixableForeignKeys = tableDiagnosis.fixesForeignKeys(config);
-
-            tableDiagnosis.missingForeignKeys.forEach((foreignKey) => {
-              if (fixableForeignKeys.includes(foreignKey.name)) {
-                foreignKeySet.add(foreignKey);
-              }
-            });
-          }
+      const config = configsByTable[table.name];
+      if (config && config.foreignKeys !== false) {
+        if (this.missingTables.find((missingTable) => missingTable === table)) {
+          table.foreignKeys.forEach((foreignKey) =>
+            foreignKeySet.add(foreignKey),
+          );
         }
 
-        return table.addForeignKeys([...foreignKeySet]);
-      }),
-    );
+        const tableDiagnosis = this.diagnosesByTable.get(table);
+        if (tableDiagnosis) {
+          const fixableForeignKeys = tableDiagnosis.fixesForeignKeys(config);
+
+          tableDiagnosis.missingForeignKeys.forEach((foreignKey) => {
+            if (fixableForeignKeys.includes(foreignKey.name)) {
+              foreignKeySet.add(foreignKey);
+            }
+          });
+        }
+      }
+
+      await table.addForeignKeys([...foreignKeySet]);
+    }
   }
 }
