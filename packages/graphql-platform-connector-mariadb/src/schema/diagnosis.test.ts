@@ -19,7 +19,8 @@ describe('SchemaDiagnosis', () => {
       console.error(statement.sql, error.message),
     );
 
-    const schema = gp.connector.schema;
+    const connector = gp.connector;
+    const schema = connector.schema;
 
     await expect(schema.diagnose()).rejects.toThrow(
       `The schema "${schema}" is missing`,
@@ -27,12 +28,15 @@ describe('SchemaDiagnosis', () => {
 
     const extraTableQualifiedName = `${schema.name}.extra_table`;
 
-    await gp.connector.withConnection(async (connection) => {
+    const CategoryNode = gp.getNodeByName('Category');
+    const CategoryTable = schema.getTableByNode(CategoryNode);
+
+    await connector.withConnection(async (connection) => {
       // await schema.create(undefined, connection);
       await connection.query(
         `CREATE SCHEMA ${escapeIdentifier(
           schema.name,
-        )} COMMENT = 'Wrong comment'`,
+        )} COMMENT = 'Wrong schema comment'`,
       );
 
       // Create an extra table
@@ -42,6 +46,23 @@ describe('SchemaDiagnosis', () => {
           title VARCHAR(255) NOT NULL,
           PRIMARY KEY (id)
         )
+      `);
+
+      // Create an invalid table
+      await connection.query(`
+        CREATE TABLE ${escapeIdentifier(CategoryTable.qualifiedName)} (${[
+          `private_id INT NOT NULL AUTO_INCREMENT PRIMARY KEY`,
+          `parent_private_id INT NULL`,
+          `FOREIGN KEY fk_categories_parent_private_id (parent_private_id) REFERENCES categories (private_id) ON UPDATE RESTRICT ON DELETE RESTRICT`,
+          `id UUID NOT NULL`,
+          `UNIQUE unq_id (id)`,
+          `slug VARCHAR(50) NULL`,
+          `INDEX extra_idx_slug (slug)`,
+          `extra_column VARCHAR(255) NOT NULL`,
+        ].join(`,${EOL}`)})
+        COMMENT = ${escapeStringValue('Wrong table comment')}
+        DEFAULT CHARSET ${escapeStringValue(CategoryTable.defaultCharset)}
+        DEFAULT COLLATE ${escapeStringValue(CategoryTable.defaultCollation)}
       `);
     }, StatementKind.DATA_DEFINITION);
 
@@ -57,7 +78,7 @@ describe('SchemaDiagnosis', () => {
         expected: 'utf8mb4_unicode_520_ci',
       },
       comment: {
-        actual: 'Wrong comment',
+        actual: 'Wrong schema comment',
         expected: undefined,
       },
       tables: {
@@ -65,7 +86,6 @@ describe('SchemaDiagnosis', () => {
         missing: [
           'articles',
           'article_extensions',
-          'categories',
           'tags',
           'article_tags',
           'article_tag_moderations',
@@ -73,6 +93,55 @@ describe('SchemaDiagnosis', () => {
           'user_profiles',
           'logs',
         ],
+        invalid: {
+          categories: {
+            comment: { actual: 'Wrong table comment', expected: undefined },
+            indexes: {
+              extra: ['extra_idx_slug'],
+              missing: [
+                'unq_parent_private_id_slug',
+                'unq_parent_private_id_order',
+              ],
+            },
+            columns: {
+              extra: ['extra_column'],
+              missing: ['title', 'order'],
+              invalid: {
+                private_id: {
+                  dataType: {
+                    actual: {
+                      DATA_TYPE: 'int',
+                      NUMERIC_PRECISION: 10n,
+                      NUMERIC_SCALE: 0n,
+                    },
+                    expected: 'INT UNSIGNED',
+                  },
+                },
+                parent_private_id: {
+                  dataType: {
+                    actual: {
+                      DATA_TYPE: 'int',
+                      NUMERIC_PRECISION: 10n,
+                      NUMERIC_SCALE: 0n,
+                    },
+                    expected: 'INT UNSIGNED',
+                  },
+                },
+                slug: {
+                  dataType: {
+                    actual: {
+                      CHARACTER_MAXIMUM_LENGTH: 50n,
+                      CHARACTER_OCTET_LENGTH: 200n,
+                      DATA_TYPE: 'varchar',
+                    },
+                    expected: 'VARCHAR(255)',
+                  },
+                  nullable: { actual: 'YES', expected: false },
+                },
+              },
+            },
+          },
+        },
       },
     });
 
@@ -84,12 +153,12 @@ describe('SchemaDiagnosis', () => {
     expect(diagnosis.isValid()).toBeFalsy();
     expect(diagnosis.summarize()).toEqual({
       errors: 82,
+
       tables: {
         extra: ['extra_table'],
         missing: [
           'articles',
           'article_extensions',
-          'categories',
           'tags',
           'article_tags',
           'article_tag_moderations',
@@ -97,12 +166,59 @@ describe('SchemaDiagnosis', () => {
           'user_profiles',
           'logs',
         ],
+        invalid: {
+          categories: {
+            comment: { actual: 'Wrong table comment', expected: undefined },
+            indexes: {
+              extra: ['extra_idx_slug'],
+              missing: [
+                'unq_parent_private_id_slug',
+                'unq_parent_private_id_order',
+              ],
+            },
+            columns: {
+              extra: ['extra_column'],
+              missing: ['title', 'order'],
+              invalid: {
+                private_id: {
+                  dataType: {
+                    actual: {
+                      DATA_TYPE: 'int',
+                      NUMERIC_PRECISION: 10n,
+                      NUMERIC_SCALE: 0n,
+                    },
+                    expected: 'INT UNSIGNED',
+                  },
+                },
+                parent_private_id: {
+                  dataType: {
+                    actual: {
+                      DATA_TYPE: 'int',
+                      NUMERIC_PRECISION: 10n,
+                      NUMERIC_SCALE: 0n,
+                    },
+                    expected: 'INT UNSIGNED',
+                  },
+                },
+                slug: {
+                  dataType: {
+                    actual: {
+                      CHARACTER_MAXIMUM_LENGTH: 50n,
+                      CHARACTER_OCTET_LENGTH: 200n,
+                      DATA_TYPE: 'varchar',
+                    },
+                    expected: 'VARCHAR(255)',
+                  },
+                  nullable: { actual: 'YES', expected: false },
+                },
+              },
+            },
+          },
+        },
       },
     });
 
     await diagnosis.fix({
-      foreignKeys: false,
-
       tables: ['extra_table', 'articles', 'article_extensions', 'categories'],
     });
 
@@ -111,7 +227,7 @@ describe('SchemaDiagnosis', () => {
     expect(diagnosis).toBeInstanceOf(SchemaDiagnosis);
     expect(diagnosis.isValid()).toBeFalsy();
     expect(diagnosis.summarize()).toEqual({
-      errors: 44,
+      errors: 41,
 
       tables: {
         missing: [
@@ -126,52 +242,21 @@ describe('SchemaDiagnosis', () => {
           articles: {
             foreignKeys: {
               missing: [
-                'fk_articles_category_private_id',
                 'fk_articles_created_by_id',
                 'fk_articles_updated_by_username',
               ],
-            },
-          },
-          article_extensions: {
-            foreignKeys: {
-              missing: ['fk_article_extensions_article_private_id'],
-            },
-          },
-          categories: {
-            foreignKeys: {
-              missing: ['fk_categories_parent_private_id'],
             },
           },
         },
       },
     });
 
-    const CategoryNode = gp.getNodeByName('Category');
-    const CategoryTable = schema.getTableByNode(CategoryNode);
-
-    await gp.connector.executeQuery(
-      [
-        `ALTER TABLE ${escapeIdentifier(CategoryTable.qualifiedName)}`,
-        [
-          `COMMENT = ${escapeStringValue('Wrong comment')}`,
-          `DROP COLUMN title`,
-          `MODIFY COLUMN slug VARCHAR(50) NULL`,
-          `ADD COLUMN extra_column VARCHAR(255) NOT NULL`,
-          `ADD INDEX extra_idx_slug (slug)`,
-          `ADD FOREIGN KEY extra_fk_categories_parent_private_id (parent_private_id) REFERENCES categories (private_id) ON DELETE RESTRICT ON UPDATE RESTRICT`,
-          `ADD FOREIGN KEY fk_categories_parent_private_id (parent_private_id) REFERENCES categories (private_id) ON DELETE CASCADE ON UPDATE CASCADE`,
-        ].join(`,${EOL}`),
-      ].join(EOL),
-      undefined,
-      StatementKind.DATA_DEFINITION,
-    );
-
     diagnosis = await schema.diagnose();
 
     expect(diagnosis).toBeInstanceOf(SchemaDiagnosis);
     expect(diagnosis.isValid()).toBeFalsy();
     expect(diagnosis.summarize()).toEqual({
-      errors: 52,
+      errors: 41,
 
       tables: {
         missing: [
@@ -186,129 +271,9 @@ describe('SchemaDiagnosis', () => {
           articles: {
             foreignKeys: {
               missing: [
-                'fk_articles_category_private_id',
                 'fk_articles_created_by_id',
                 'fk_articles_updated_by_username',
               ],
-            },
-          },
-          article_extensions: {
-            foreignKeys: {
-              missing: ['fk_article_extensions_article_private_id'],
-            },
-          },
-          categories: {
-            comment: {
-              actual: 'Wrong comment',
-              expected: undefined,
-            },
-
-            columns: {
-              extra: ['extra_column'],
-              missing: ['title'],
-              invalid: {
-                slug: {
-                  dataType: {
-                    expected: 'VARCHAR(255)',
-                    actual: {
-                      DATA_TYPE: 'varchar',
-                      CHARACTER_MAXIMUM_LENGTH: 50n,
-                      CHARACTER_OCTET_LENGTH: 200n,
-                    },
-                  },
-                  nullable: {
-                    actual: 'YES',
-                    expected: false,
-                  },
-                },
-              },
-            },
-
-            indexes: {
-              extra: ['extra_idx_slug'],
-            },
-
-            foreignKeys: {
-              extra: ['extra_fk_categories_parent_private_id'],
-              invalid: {
-                fk_categories_parent_private_id: {
-                  onDelete: {
-                    actual: 'CASCADE',
-                    expected: 'RESTRICT',
-                  },
-                  onUpdate: {
-                    actual: 'CASCADE',
-                    expected: 'RESTRICT',
-                  },
-                },
-              },
-            },
-          },
-        },
-      },
-    });
-
-    await diagnosis.fix({ foreignKeys: false });
-
-    diagnosis = await schema.diagnose();
-
-    expect(diagnosis).toBeInstanceOf(SchemaDiagnosis);
-    expect(diagnosis.isValid()).toBeFalsy();
-    expect(diagnosis.summarize()).toEqual({
-      errors: 12,
-
-      tables: {
-        invalid: {
-          articles: {
-            foreignKeys: {
-              missing: [
-                'fk_articles_category_private_id',
-                'fk_articles_created_by_id',
-                'fk_articles_updated_by_username',
-              ],
-            },
-          },
-          article_extensions: {
-            foreignKeys: {
-              missing: ['fk_article_extensions_article_private_id'],
-            },
-          },
-          article_tag_moderations: {
-            foreignKeys: {
-              missing: [
-                'my_custom_fk_name',
-                'fk_article_tag_moderations_moderator_id',
-              ],
-            },
-          },
-          article_tags: {
-            foreignKeys: {
-              missing: [
-                'fk_article_tags_article_private_id',
-                'fk_article_tags_tag_id',
-              ],
-            },
-          },
-          categories: {
-            foreignKeys: {
-              extra: ['extra_fk_categories_parent_private_id'],
-              invalid: {
-                fk_categories_parent_private_id: {
-                  onDelete: {
-                    actual: 'CASCADE',
-                    expected: 'RESTRICT',
-                  },
-                  onUpdate: {
-                    actual: 'CASCADE',
-                    expected: 'RESTRICT',
-                  },
-                },
-              },
-            },
-          },
-          user_profiles: {
-            foreignKeys: {
-              missing: ['fk_user_profiles_theUserId'],
             },
           },
         },

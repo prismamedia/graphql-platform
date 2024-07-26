@@ -29,7 +29,7 @@
   "devDependencies": {
     "@jest/globals": "30.0.0-alpha.5",
     "@sqltools/formatter": "1.2.5",
-    "@swc/core": "1.7.1",
+    "@swc/core": "1.7.2",
     "@swc/jest": "0.2.36",
     "@tsconfig/node20": "20.1.4",
     "@types/node": "20.14.12",
@@ -45,6 +45,7 @@
     "@prismamedia/graphql-platform-scalars": "workspace:packages/graphql-platform-scalars",
     "@prismamedia/graphql-platform-utils": "workspace:packages/graphql-platform-utils",
     "@prismamedia/memoize": "^5.0.2",
+    "dependency-graph": "^1.0.0",
     "inflection": "^3.0.0",
     "mariadb": "^3.3.1",
     "remeda": "^2.6.0",

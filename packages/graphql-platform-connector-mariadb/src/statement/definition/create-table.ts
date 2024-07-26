@@ -1,14 +1,15 @@
 import * as utils from '@prismamedia/graphql-platform-utils';
 import type * as mariadb from 'mariadb';
 import { EOL } from 'node:os';
+import * as R from 'remeda';
 import { escapeIdentifier, escapeStringValue } from '../../escaping.js';
-import { Table } from '../../schema/table.js';
+import { ForeignKey, Table } from '../../schema/table.js';
 import { StatementKind } from '../kind.js';
 
 export interface CreateTableStatementConfig {
   orReplace?: utils.OptionalFlag;
   ifNotExists?: utils.OptionalFlag;
-  withoutForeignKeys?: utils.OptionalFlag;
+  withForeignKeys?: boolean | ReadonlyArray<ForeignKey['name'] | ForeignKey>;
 }
 
 /**
@@ -22,6 +23,21 @@ export class CreateTableStatement implements mariadb.QueryOptions {
     public readonly table: Table,
     config?: CreateTableStatementConfig,
   ) {
+    const actualForeignKeys = R.filter(
+      config?.withForeignKeys == null || config.withForeignKeys === true
+        ? table.foreignKeys
+        : config.withForeignKeys === false
+          ? []
+          : config.withForeignKeys.map((foreignKeyOrName) =>
+              foreignKeyOrName instanceof ForeignKey
+                ? foreignKeyOrName
+                : table.foreignKeys.find(
+                    ({ name }) => name === foreignKeyOrName,
+                  ),
+            ),
+      R.isDefined,
+    );
+
     this.sql = [
       [
         'CREATE',
@@ -33,10 +49,8 @@ export class CreateTableStatement implements mariadb.QueryOptions {
           ...table.columns.map(
             ({ name, definition }) => `${escapeIdentifier(name)} ${definition}`,
           ),
-          ...table.indexes.map((idx) => idx.definition),
-          ...(utils.getOptionalFlag(config?.withoutForeignKeys, false)
-            ? []
-            : table.foreignKeys.map((fk) => fk.definition)),
+          ...table.indexes.map(({ definition }) => definition),
+          ...actualForeignKeys.map(({ definition }) => definition),
         ]
           .map((line) => `  ${line}`)
           .join(`,${EOL}`)}${EOL})`,

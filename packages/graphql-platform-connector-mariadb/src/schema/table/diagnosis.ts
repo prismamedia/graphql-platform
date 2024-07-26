@@ -3,7 +3,6 @@ import assert from 'node:assert/strict';
 import { inspect } from 'node:util';
 import * as R from 'remeda';
 import {
-  FixTableStatement,
   type ColumnInformation,
   type ConstraintInformation,
   type ForeignKeyInformation,
@@ -28,11 +27,12 @@ import {
   LeafColumnDiagnosis,
   ReferenceColumnDiagnosis,
 } from './column.js';
+import type { InvalidTableFixOptions } from './diagnosis/fix.js';
 import {
-  ForeignKey,
+  type ForeignKey,
   ForeignKeyDiagnosis,
-  ForeignKeyDiagnosisOptions,
-  ForeignKeyDiagnosisSummary,
+  type ForeignKeyDiagnosisOptions,
+  type ForeignKeyDiagnosisSummary,
 } from './foreign-key.js';
 import {
   FullTextIndex,
@@ -45,6 +45,8 @@ import {
   PrimaryKeyDiagnosis,
   UniqueIndexDiagnosis,
 } from './index.js';
+
+export * from './diagnosis/fix.js';
 
 export type ColumnInformationsByColumnName = Map<
   Column['name'],
@@ -111,17 +113,6 @@ export type TableDiagnosisSummary = {
     missing?: ReadonlyArray<ForeignKey['name']>;
     invalid?: Record<ForeignKey['name'], ForeignKeyDiagnosisSummary>;
   };
-};
-
-export type TableDiagnosisFixConfig = {
-  ignore?: boolean;
-  collation?: boolean;
-  comment?: boolean;
-  engine?: boolean;
-  nullable?: boolean;
-  foreignKeys?: boolean | ReadonlyArray<ForeignKey['name']>;
-  indexes?: boolean | ReadonlyArray<Index['name']>;
-  columns?: boolean | ReadonlyArray<Column['name']>;
 };
 
 export class TableDiagnosis {
@@ -506,45 +497,7 @@ export class TableDiagnosis {
     return inspect(this.summarize(), undefined, 10);
   }
 
-  public fixesComment(config?: TableDiagnosisFixConfig): boolean {
-    return Boolean(
-      this.commentError && utils.getOptionalFlag(config?.comment, true),
-    );
-  }
-
-  public fixesEngine(config?: TableDiagnosisFixConfig): boolean {
-    return Boolean(
-      this.engineError && utils.getOptionalFlag(config?.engine, true),
-    );
-  }
-
-  public fixesCollation(config?: TableDiagnosisFixConfig): boolean {
-    return Boolean(
-      (this.collationError ||
-        this.invalidColumns.some(({ collationError }) => collationError)) &&
-        utils.getOptionalFlag(config?.collation, true),
-    );
-  }
-
-  public fixesForeignKeys(
-    config?: TableDiagnosisFixConfig,
-  ): Array<ForeignKey['name']> {
-    return config?.foreignKeys == null || config.foreignKeys === true
-      ? [...this.fixableForeignKeyNames]
-      : config.foreignKeys === false
-        ? []
-        : R.intersection(this.fixableForeignKeyNames, config.foreignKeys);
-  }
-
-  public fixesIndexes(config?: TableDiagnosisFixConfig): Array<Index['name']> {
-    return config?.indexes == null || config.indexes === true
-      ? [...this.fixableIndexNames]
-      : config.indexes === false
-        ? []
-        : R.intersection(this.fixableIndexNames, config.indexes);
-  }
-
-  public fixesColumns(config?: TableDiagnosisFixConfig): Array<Column['name']> {
+  public fixesColumns(config?: InvalidTableFixOptions): Array<Column['name']> {
     const fixableColumnNames =
       config?.columns == null || config.columns === true
         ? [...this.fixableColumnNames]
@@ -564,13 +517,5 @@ export class TableDiagnosis {
                 nullableError,
             ),
         );
-  }
-
-  public async fix(config?: TableDiagnosisFixConfig): Promise<void> {
-    if (FixTableStatement.fixes(this, config)) {
-      await this.table.schema.connector.executeStatement(
-        new FixTableStatement(this, config),
-      );
-    }
   }
 }

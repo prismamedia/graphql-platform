@@ -2,13 +2,9 @@ import * as utils from '@prismamedia/graphql-platform-utils';
 import assert from 'node:assert/strict';
 import { inspect } from 'node:util';
 import * as R from 'remeda';
-import { escapeIdentifier } from '../escaping.js';
-import type { ForeignKey, Schema, TableDiagnosisFixConfig } from '../schema.js';
-import {
-  FixSchemaStatement,
-  SchemaInformation,
-  TableInformation,
-} from '../statement.js';
+import type { Schema } from '../schema.js';
+import type { SchemaInformation, TableInformation } from '../statement.js';
+import { SchemaFix, type SchemaFixOptions } from './diagnosis/fix.js';
 import {
   TableDiagnosis,
   type ColumnInformationsByColumnName,
@@ -19,6 +15,8 @@ import {
   type TableDiagnosisOptions,
   type TableDiagnosisSummary,
 } from './table.js';
+
+export * from './diagnosis/fix.js';
 
 export type DiagnosisError = {
   message?: string;
@@ -79,23 +77,6 @@ export type SchemaDiagnosisSummary = {
     missing?: ReadonlyArray<Table['name']>;
     invalid?: Record<Table['name'], TableDiagnosisSummary>;
   };
-};
-
-export type SchemaDiagnosisFixConfig = {
-  ignore?: boolean;
-  charset?: boolean;
-  collation?: boolean;
-  comment?: boolean;
-  engine?: boolean;
-  nullable?: boolean;
-  foreignKeys?: boolean;
-  indexes?: boolean;
-  columns?: boolean;
-
-  tables?:
-    | boolean
-    | ReadonlyArray<Table['name']>
-    | Record<Table['name'], boolean | TableDiagnosisFixConfig>;
 };
 
 export class SchemaDiagnosis {
@@ -273,185 +254,7 @@ export class SchemaDiagnosis {
     return inspect(this.summarize(), undefined, 10);
   }
 
-  public fixesComment(config?: SchemaDiagnosisFixConfig): boolean {
-    return Boolean(
-      this.commentError && utils.getOptionalFlag(config?.comment, true),
-    );
-  }
-
-  public fixesCharset(config?: SchemaDiagnosisFixConfig): boolean {
-    return Boolean(
-      this.charsetError && utils.getOptionalFlag(config?.charset, true),
-    );
-  }
-
-  public fixesCollation(config?: SchemaDiagnosisFixConfig): boolean {
-    return Boolean(
-      this.collationError && utils.getOptionalFlag(config?.collation, true),
-    );
-  }
-
-  public fixesTables(
-    config?: SchemaDiagnosisFixConfig,
-  ): Record<Table['name'], TableDiagnosisFixConfig> {
-    const defaults: TableDiagnosisFixConfig = {
-      ignore: config?.ignore,
-      collation: config?.collation,
-      comment: config?.comment,
-      engine: config?.engine,
-      nullable: config?.nullable,
-      foreignKeys: config?.foreignKeys,
-      indexes: config?.indexes,
-      columns: config?.columns,
-    };
-
-    return Object.fromEntries<TableDiagnosisFixConfig>(
-      config?.tables == null || config.tables === true
-        ? this.fixableTableNames.map((name) => [name, defaults])
-        : config.tables === false
-          ? []
-          : Array.isArray(config.tables)
-            ? config.tables.map((name) => [name, defaults])
-            : Object.entries(config.tables)
-                .filter(
-                  (entry): entry is [string, true | TableDiagnosisFixConfig] =>
-                    entry[1] !== false,
-                )
-                .map(([name, config]) => [
-                  name,
-                  config === true ? defaults : { ...defaults, ...config },
-                ]),
-    );
-  }
-
-  public async fix(config?: SchemaDiagnosisFixConfig): Promise<void> {
-    if (FixSchemaStatement.fixes(this, config)) {
-      await this.schema.connector.executeStatement(
-        new FixSchemaStatement(this, config),
-      );
-    }
-
-    const configsByTable = this.fixesTables(config);
-
-    await Promise.all(
-      this.extraTables.map(async (tableName) => {
-        const config = configsByTable[tableName];
-        if (config) {
-          await this.schema.connector.executeQuery(
-            `DROP TABLE IF EXISTS ${escapeIdentifier(
-              `${this.schema.name}.${tableName}`,
-            )}`,
-          );
-        }
-      }),
-    );
-
-    await Promise.all(
-      this.missingTables.map(async (table) => {
-        const config = configsByTable[table.name];
-        if (config) {
-          await table.create({ withoutForeignKeys: true });
-        }
-      }),
-    );
-
-    const invalidColumns = this.invalidTables.flatMap((tableDiagnosis) => {
-      const config = configsByTable[tableDiagnosis.table.name];
-
-      return config
-        ? R.pipe(
-            tableDiagnosis.invalidColumns,
-            R.map(({ column }) => column),
-            R.intersectionWith(
-              tableDiagnosis.fixesColumns(config),
-              (a, b) => a.name === b,
-            ),
-          )
-        : [];
-    });
-
-    const invalidForeignKeysByTable = new Map<Table, ForeignKey[]>(
-      this.schema.tables.map((table) => {
-        const tableDiagnosis = this.diagnosesByTable.get(table);
-        const config = configsByTable[table.name];
-
-        const invalidForeignKeys: ForeignKey[] =
-          tableDiagnosis && config
-            ? R.pipe(
-                tableDiagnosis.invalidForeignKeys,
-                R.map(({ foreignKey }) => foreignKey),
-                R.intersectionWith(
-                  tableDiagnosis.fixesForeignKeys(config),
-                  (a, b) => a.name === b,
-                ),
-              )
-            : [];
-
-        return [
-          table,
-          table.foreignKeys.filter(
-            (foreignKey) =>
-              invalidForeignKeys.includes(foreignKey) ||
-              (foreignKey.columns.some(
-                (column) =>
-                  invalidColumns.includes(column) ||
-                  invalidColumns.includes(column.referencedColumn),
-              ) &&
-                !this.missingTables.includes(table) &&
-                !tableDiagnosis?.missingForeignKeys.includes(foreignKey)),
-          ),
-        ];
-      }),
-    );
-
-    await Promise.all(
-      Array.from(invalidForeignKeysByTable, ([table, foreignKeys]) => {
-        const tableDiagnosis = this.diagnosesByTable.get(table);
-        const config = configsByTable[table.name];
-
-        const extraForeignKeys: ForeignKey['name'][] =
-          tableDiagnosis && config
-            ? R.intersection(
-                tableDiagnosis.extraForeignKeys,
-                tableDiagnosis.fixesForeignKeys(config),
-              )
-            : [];
-
-        return table.dropForeignKeys([...foreignKeys, ...extraForeignKeys]);
-      }),
-    );
-
-    for (const tableDiagnosis of this.invalidTables) {
-      const config = configsByTable[tableDiagnosis.table.name];
-      if (config) {
-        await tableDiagnosis.fix(config);
-      }
-    }
-
-    for (const [table, foreignKeys] of invalidForeignKeysByTable) {
-      const foreignKeySet = new Set(foreignKeys);
-
-      const config = configsByTable[table.name];
-      if (config && config.foreignKeys !== false) {
-        if (this.missingTables.find((missingTable) => missingTable === table)) {
-          table.foreignKeys.forEach((foreignKey) =>
-            foreignKeySet.add(foreignKey),
-          );
-        }
-
-        const tableDiagnosis = this.diagnosesByTable.get(table);
-        if (tableDiagnosis) {
-          const fixableForeignKeys = tableDiagnosis.fixesForeignKeys(config);
-
-          tableDiagnosis.missingForeignKeys.forEach((foreignKey) => {
-            if (fixableForeignKeys.includes(foreignKey.name)) {
-              foreignKeySet.add(foreignKey);
-            }
-          });
-        }
-      }
-
-      await table.addForeignKeys([...foreignKeySet]);
-    }
+  public async fix(options?: SchemaFixOptions): Promise<void> {
+    return new SchemaFix(this, options).execute();
   }
 }

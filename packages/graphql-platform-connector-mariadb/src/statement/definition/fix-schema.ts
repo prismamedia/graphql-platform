@@ -1,12 +1,7 @@
 import type * as mariadb from 'mariadb';
-import assert from 'node:assert';
 import { EOL } from 'node:os';
 import { escapeIdentifier, escapeStringValue } from '../../escaping.js';
-import type {
-  Schema,
-  SchemaDiagnosis,
-  SchemaDiagnosisFixConfig,
-} from '../../schema.js';
+import type { Schema, SchemaFix } from '../../schema.js';
 import { StatementKind } from '../kind.js';
 
 /**
@@ -17,39 +12,23 @@ export class FixSchemaStatement implements mariadb.QueryOptions {
   public readonly kind = StatementKind.DATA_DEFINITION;
   public readonly sql: string;
 
-  public static fixes(
-    diagnosis: SchemaDiagnosis,
-    config?: SchemaDiagnosisFixConfig,
-  ): boolean {
-    return (
-      diagnosis.fixesComment(config) ||
-      diagnosis.fixesCharset(config) ||
-      diagnosis.fixesCollation(config)
-    );
+  public static supports(fix: SchemaFix): boolean {
+    return fix.comment || fix.charset || fix.collation;
   }
 
-  public constructor(
-    public readonly diagnosis: SchemaDiagnosis,
-    config?: SchemaDiagnosisFixConfig,
-  ) {
-    this.schema = diagnosis.schema;
-
-    assert(
-      (this.constructor as typeof FixSchemaStatement).fixes(diagnosis, config),
-    );
+  public constructor(public readonly fix: SchemaFix) {
+    this.schema = fix.schema;
 
     this.sql = [
-      `ALTER SCHEMA ${escapeIdentifier(diagnosis.schema.name)}`,
-      diagnosis.fixesComment(config) &&
-        `COMMENT = ${escapeStringValue(diagnosis.schema.comment ?? '')}`,
-      diagnosis.fixesCharset(config) &&
-        `DEFAULT CHARSET = ${escapeStringValue(
-          diagnosis.schema.defaultCharset,
-        )}`,
-      diagnosis.fixesCollation(config) &&
-        `DEFAULT COLLATE = ${escapeStringValue(
-          diagnosis.schema.defaultCollation,
-        )}`,
+      `ALTER SCHEMA ${escapeIdentifier(fix.schema.name)}`,
+
+      fix.comment && `COMMENT = ${escapeStringValue(fix.schema.comment ?? '')}`,
+
+      fix.charset &&
+        `DEFAULT CHARSET = ${escapeStringValue(fix.schema.defaultCharset)}`,
+
+      fix.collation &&
+        `DEFAULT COLLATE = ${escapeStringValue(fix.schema.defaultCollation)}`,
     ]
       .filter(Boolean)
       .join(EOL);

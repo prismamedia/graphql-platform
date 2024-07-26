@@ -1,8 +1,9 @@
 import type * as mariadb from 'mariadb';
 import assert from 'node:assert/strict';
 import { EOL } from 'node:os';
+import * as R from 'remeda';
 import { escapeIdentifier } from '../../escaping.js';
-import type { ForeignKey, Table } from '../../schema/table.js';
+import { ForeignKey, Table } from '../../schema/table.js';
 import { StatementKind } from '../kind.js';
 
 /**
@@ -14,13 +15,26 @@ export class AddTableForeignKeysStatement implements mariadb.QueryOptions {
 
   public constructor(
     public readonly table: Table,
-    foreignKeys: ReadonlyArray<ForeignKey>,
+    foreignKeys?: true | ReadonlyArray<ForeignKey['name'] | ForeignKey>,
   ) {
-    assert(foreignKeys.length > 0);
+    const actualForeignKeys = R.filter(
+      foreignKeys == null || foreignKeys === true
+        ? table.foreignKeys
+        : foreignKeys.map((foreignKeyOrName) =>
+            foreignKeyOrName instanceof ForeignKey
+              ? foreignKeyOrName
+              : table.foreignKeys.find(({ name }) => name === foreignKeyOrName),
+          ),
+      R.isDefined,
+    );
+
+    assert(actualForeignKeys.length > 0);
 
     this.sql = [
       `ALTER TABLE ${escapeIdentifier(table.qualifiedName)}`,
-      foreignKeys.map(({ definition }) => `ADD ${definition}`).join(`,${EOL}`),
+      actualForeignKeys
+        .map(({ definition }) => `ADD ${definition}`)
+        .join(`,${EOL}`),
     ].join(EOL);
   }
 }

@@ -1,13 +1,7 @@
-import * as utils from '@prismamedia/graphql-platform-utils';
 import type * as mariadb from 'mariadb';
-import assert from 'node:assert';
 import { EOL } from 'node:os';
 import { escapeIdentifier, escapeStringValue } from '../../escaping.js';
-import type {
-  Table,
-  TableDiagnosis,
-  TableDiagnosisFixConfig,
-} from '../../schema.js';
+import type { InvalidTableFix, Table } from '../../schema.js';
 import { StatementKind } from '../kind.js';
 
 /**
@@ -18,108 +12,91 @@ export class FixTableStatement implements mariadb.QueryOptions {
   public readonly kind = StatementKind.DATA_DEFINITION;
   public readonly sql: string;
 
-  public static fixes(
-    diagnosis: TableDiagnosis,
-    config?: TableDiagnosisFixConfig,
-  ): boolean {
-    return (
-      diagnosis.fixesComment(config) ||
-      diagnosis.fixesEngine(config) ||
-      diagnosis.fixesCollation(config) ||
-      diagnosis.fixesIndexes(config).length > 0 ||
-      diagnosis.fixesColumns(config).length > 0
+  public static supports(fix: InvalidTableFix): boolean {
+    return Boolean(
+      fix.comment ||
+        fix.engine ||
+        fix.collation ||
+        fix.extraForeignKeys.length ||
+        fix.missingForeignKeys.length ||
+        fix.invalidForeignKeys.length ||
+        fix.extraIndexes.length ||
+        fix.missingIndexes.length ||
+        fix.invalidIndexes.length ||
+        fix.extraColumns.length ||
+        fix.missingColumns.length ||
+        fix.invalidColumns.length,
     );
   }
 
-  public constructor(
-    public readonly diagnosis: TableDiagnosis,
-    config?: TableDiagnosisFixConfig,
-  ) {
-    this.table = diagnosis.table;
-
-    assert(
-      (this.constructor as typeof FixTableStatement).fixes(diagnosis, config),
-    );
-
-    const fixableIndexes = diagnosis.fixesIndexes(config);
-    const fixableColumns = diagnosis.fixesColumns(config);
+  public constructor(public readonly fix: InvalidTableFix) {
+    this.table = fix.table;
 
     this.sql = [
       [
         'ALTER',
-        utils.getOptionalFlag(config?.ignore, false) && 'IGNORE',
+        fix.ignore && 'IGNORE',
         'TABLE',
-        escapeIdentifier(diagnosis.table.qualifiedName),
+        escapeIdentifier(fix.table.qualifiedName),
       ]
         .filter(Boolean)
         .join(' '),
       [
-        diagnosis.fixesComment(config) &&
-          `COMMENT = ${escapeStringValue(diagnosis.table.comment ?? '')}`,
+        fix.comment &&
+          `COMMENT = ${escapeStringValue(fix.table.comment ?? '')}`,
 
-        diagnosis.fixesEngine(config) &&
-          `ENGINE = ${escapeStringValue(diagnosis.table.engine)}`,
+        fix.engine && `ENGINE = ${escapeStringValue(fix.table.engine)}`,
 
-        ...(diagnosis.fixesCollation(config)
+        ...(fix.collation
           ? [
-              `CONVERT TO CHARACTER SET ${escapeStringValue(
-                diagnosis.table.defaultCharset,
-              )} COLLATE ${escapeStringValue(
-                diagnosis.table.defaultCollation,
-              )}`,
-              `DEFAULT CHARSET = ${escapeStringValue(
-                diagnosis.table.defaultCharset,
-              )}`,
-              `DEFAULT COLLATE = ${escapeStringValue(
-                diagnosis.table.defaultCollation,
-              )}`,
+              `CONVERT TO CHARACTER SET ${escapeStringValue(fix.table.defaultCharset)} COLLATE ${escapeStringValue(fix.table.defaultCollation)}`,
+              `DEFAULT CHARSET = ${escapeStringValue(fix.table.defaultCharset)}`,
+              `DEFAULT COLLATE = ${escapeStringValue(fix.table.defaultCollation)}`,
             ]
           : []),
 
-        ...diagnosis.extraIndexes
-          .filter((name) => fixableIndexes.includes(name))
-          .map((name) => `DROP INDEX ${escapeIdentifier(name)}`),
+        ...fix.extraForeignKeys.map(
+          (name) => `DROP FOREIGN KEY ${escapeIdentifier(name)}`,
+        ),
 
-        ...diagnosis.invalidIndexes
-          .filter(({ index: { name } }) => fixableIndexes.includes(name))
-          .map(({ index: { name } }) => `DROP INDEX ${escapeIdentifier(name)}`),
+        ...fix.invalidForeignKeys.map(
+          ({ foreignKey: { name } }) =>
+            `DROP FOREIGN KEY ${escapeIdentifier(name)}`,
+        ),
 
-        ...diagnosis.extraColumns
-          .filter((name) => fixableColumns.includes(name))
-          .map((name) => `DROP COLUMN ${escapeIdentifier(name)}`),
+        ...fix.extraIndexes.map(
+          (name) => `DROP INDEX ${escapeIdentifier(name)}`,
+        ),
 
-        ...diagnosis.invalidColumns
-          .filter(({ column: { name } }) => fixableColumns.includes(name))
-          .map(
-            ({ column, nullableError }) =>
-              `MODIFY COLUMN ${escapeIdentifier(column.name)} ${
-                nullableError &&
-                !utils.getOptionalFlag(config?.nullable, true) &&
-                !column.isNullable()
-                  ? column.getDefinition(true)
-                  : column.definition
-              }`,
-          ),
+        ...fix.invalidIndexes.map(
+          ({ index: { name } }) => `DROP INDEX ${escapeIdentifier(name)}`,
+        ),
 
-        ...diagnosis.missingColumns
-          .filter(({ name }) => fixableColumns.includes(name))
-          .map(
-            (column) =>
-              `ADD COLUMN ${escapeIdentifier(column.name)} ${
-                !utils.getOptionalFlag(config?.nullable, true) &&
-                !column.isNullable()
-                  ? column.getDefinition(true)
-                  : column.definition
-              }`,
-          ),
+        ...fix.extraColumns.map(
+          (name) => `DROP COLUMN ${escapeIdentifier(name)}`,
+        ),
 
-        ...diagnosis.invalidIndexes
-          .filter(({ index: { name } }) => fixableIndexes.includes(name))
-          .map(({ index: { definition } }) => `ADD ${definition}`),
+        ...fix.invalidColumns.map(
+          ({ column, nullableError }) =>
+            `MODIFY COLUMN ${escapeIdentifier(column.name)} ${nullableError && !fix.nullable && !column.isNullable() ? column.getDefinition(true) : column.definition}`,
+        ),
 
-        ...diagnosis.missingIndexes
-          .filter(({ name }) => fixableIndexes.includes(name))
-          .map(({ definition }) => `ADD ${definition}`),
+        ...fix.missingColumns.map(
+          (column) =>
+            `ADD COLUMN ${escapeIdentifier(column.name)} ${!fix.nullable && !column.isNullable() ? column.getDefinition(true) : column.definition}`,
+        ),
+
+        ...fix.invalidIndexes.map(
+          ({ index: { definition } }) => `ADD ${definition}`,
+        ),
+
+        ...fix.missingIndexes.map(({ definition }) => `ADD ${definition}`),
+
+        ...fix.invalidForeignKeys.map(
+          ({ foreignKey: { definition } }) => `ADD ${definition}`,
+        ),
+
+        ...fix.missingForeignKeys.map(({ definition }) => `ADD ${definition}`),
       ]
         .filter(Boolean)
         .join(`,${EOL}`),

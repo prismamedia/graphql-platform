@@ -395,7 +395,7 @@ export class MariaDBConnector
       // Create the tables without their foreign-keys
       await Promise.all(
         Array.from(this.schema.tablesByNode.values(), (table) =>
-          table.create({ withoutForeignKeys: true }, connection),
+          table.create({ withForeignKeys: false }, connection),
         ),
       );
 
