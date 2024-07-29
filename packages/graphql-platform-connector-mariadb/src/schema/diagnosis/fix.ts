@@ -3,14 +3,14 @@ import { DepGraph } from 'dependency-graph';
 import * as R from 'remeda';
 import { escapeIdentifier } from '../../escaping.js';
 import type { OkPacket } from '../../index.js';
-import type { ForeignKey, Schema, SchemaDiagnosis } from '../../schema.js';
+import type { Schema, SchemaDiagnosis, Table } from '../../schema.js';
 import { FixSchemaStatement } from '../../statement.js';
 import {
   InvalidTableFix,
   MissingTableFix,
-  Table,
-  TableDiagnosis,
+  ValidOrUntouchedInvalidTableFix,
   type InvalidTableFixOptions,
+  type TableDiagnosis,
   type TableFix,
 } from '../table.js';
 
@@ -50,12 +50,9 @@ export class SchemaFix {
   public readonly invalidTableFixes: ReadonlyArray<InvalidTableFix>;
   public readonly untouchedInvalidTables: ReadonlyArray<TableDiagnosis>;
 
-  public readonly tableFixes: ReadonlyArray<TableFix>;
+  public readonly validOrUntouchedInvalidTableFixes: ReadonlyArray<ValidOrUntouchedInvalidTableFix>;
 
-  public readonly validForeignKeysReferencingInvalidColumnsByTable: ReadonlyMap<
-    Table,
-    ReadonlyArray<ForeignKey>
-  >;
+  public readonly tableFixes: ReadonlyArray<TableFix>;
 
   public readonly tableFixGraph: DepGraph<TableFix>;
 
@@ -157,39 +154,28 @@ export class SchemaFix {
         this.invalidTableFixes.map(({ diagnosis }) => diagnosis),
       );
 
-      this.tableFixes = [...this.missingTableFixes, ...this.invalidTableFixes];
-    }
-
-    this.validForeignKeysReferencingInvalidColumnsByTable = new Map(
-      R.pipe(
+      this.validOrUntouchedInvalidTableFixes = R.pipe(
         this.schema.tables,
-        // Don't care about the missing tables
         R.difference(diagnosis.missingTables),
-        R.map((table): [Table, ForeignKey[]] => [
-          table,
-          R.pipe(
-            table.foreignKeys,
-            // Don't care about the missing foreign-keys
-            R.difference(
+        R.differenceWith(this.invalidTableFixes, (a, b) => a === b.table),
+        R.map(
+          (table) =>
+            new ValidOrUntouchedInvalidTableFix(
+              this,
+              table,
               diagnosis.invalidTables.find(
                 (invalidTable) => invalidTable.table === table,
-              )?.missingForeignKeys ?? [],
+              ),
             ),
-            R.intersectionWith(
-              this.invalidTableFixes,
-              (a, b) =>
-                a.referencedIndex.table === b.table &&
-                R.intersectionWith(
-                  a.referencedIndex.columns,
-                  b.invalidColumns,
-                  (a, b) => a === b.column,
-                ).length > 0,
-            ),
-          ),
-        ]),
-        R.filter(([, foreignKeys]) => foreignKeys.length > 0),
-      ),
-    );
+        ),
+      );
+
+      this.tableFixes = [
+        ...this.missingTableFixes,
+        ...this.invalidTableFixes,
+        ...this.validOrUntouchedInvalidTableFixes,
+      ];
+    }
 
     // table-fix-graph
     {
@@ -200,7 +186,7 @@ export class SchemaFix {
       );
 
       this.tableFixes.forEach((fix) =>
-        fix.missingForeignKeyDependencies.forEach((dependency) =>
+        fix.dependencies.forEach((dependency) =>
           this.tableFixGraph.addDependency(
             fix.table.name,
             dependency.table.name,
@@ -213,55 +199,45 @@ export class SchemaFix {
   public async execute(): Promise<void> {
     const connector = this.schema.connector;
 
+    await Promise.all(
+      this.extraTables.map((tableName) =>
+        connector.executeQuery<OkPacket>(
+          `DROP TABLE ${escapeIdentifier(`${this.schema}.${tableName}`)}`,
+        ),
+      ),
+    );
+
     if (FixSchemaStatement.supports(this)) {
       await connector.executeStatement(new FixSchemaStatement(this));
     }
 
-    await Promise.all(
-      Array.from(
-        this.validForeignKeysReferencingInvalidColumnsByTable,
-        ([table, foreignKeys]) => table.dropForeignKeys(foreignKeys),
-      ),
-    );
+    await Promise.all(this.tableFixes.map((fix) => fix.prepare()));
 
-    const fixes: Record<
-      Table['name'],
-      Promise<OkPacket | void>
-    > = Object.fromEntries(
-      this.extraTables.map((tableName) => [
-        tableName,
-        connector.executeQuery<OkPacket>(
-          `DROP TABLE ${escapeIdentifier(`${this.schema}.${tableName}`)}`,
-        ),
-      ]),
-    );
+    {
+      const fixes: Record<Table['name'], Promise<OkPacket | void>> = {};
 
-    this.tableFixGraph.overallOrder().forEach(
-      (tableName) =>
-        (fixes[tableName] = new Promise(async (resolve, reject) => {
-          try {
-            await Promise.all(
-              this.tableFixGraph
-                .dependenciesOf(tableName)
-                .map((dependency) => fixes[dependency]),
-            );
+      this.tableFixGraph.overallOrder().forEach(
+        (tableName) =>
+          (fixes[tableName] = new Promise(async (resolve, reject) => {
+            try {
+              await Promise.all(
+                this.tableFixGraph
+                  .dependenciesOf(tableName)
+                  .map((dependency) => fixes[dependency]),
+              );
 
-            await this.tableFixGraph.getNodeData(tableName).execute();
+              await this.tableFixGraph.getNodeData(tableName).execute();
 
-            resolve();
-          } catch (error) {
-            reject(error);
-          }
-        })),
-    );
+              resolve();
+            } catch (error) {
+              reject(error);
+            }
+          })),
+      );
 
-    await Promise.all(Object.values(fixes));
+      await Promise.all(Object.values(fixes));
+    }
 
-    await Promise.all(
-      Array.from(
-        this.validForeignKeysReferencingInvalidColumnsByTable,
-        ([table, foreignKeys]) => table.addForeignKeys(foreignKeys),
-      ),
-    );
+    await Promise.all(this.tableFixes.map((fix) => fix.finalize()));
   }
 }

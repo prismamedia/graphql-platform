@@ -1,6 +1,9 @@
 import * as utils from '@prismamedia/graphql-platform-utils';
 import * as R from 'remeda';
-import { FixTableStatement } from '../../../statement.js';
+import {
+  FixTableStatement,
+  FixTableStatementStep,
+} from '../../../statement.js';
 import type { SchemaFix } from '../../diagnosis.js';
 import type { Table } from '../../table.js';
 import type { Column, ColumnDiagnosis } from '../column.js';
@@ -10,41 +13,36 @@ import type { Index, IndexDiagnosis } from '../index.js';
 
 abstract class AbstractTableFix {
   public abstract readonly missingForeignKeys: ReadonlyArray<ForeignKey>;
+  public abstract readonly validForeignKeysReferencingInvalidColumns: ReadonlyArray<ForeignKey>;
 
   public constructor(
     public readonly parent: SchemaFix,
     public readonly table: Table,
   ) {}
 
-  public get missingForeignKeyDependencies(): ReadonlyArray<TableFix> {
-    return Array.from(
-      new Set(
-        R.pipe(
-          this.missingForeignKeys,
-          R.map((foreignKey) => {
-            if (foreignKey.referencedTable !== this.table) {
-              return (
-                this.parent.missingTableFixes.find(
-                  ({ table }) => foreignKey.referencedTable === table,
-                ) ||
-                this.parent.invalidTableFixes.find(
-                  ({ table, missingColumns, invalidColumns }) =>
-                    foreignKey.referencedTable === table &&
-                    R.intersection(foreignKey.referencedTable.columns, [
-                      ...missingColumns,
-                      ...invalidColumns.map(({ column }) => column),
-                    ]).length > 0,
-                )
-              );
-            }
-          }),
-          R.filter(R.isDefined),
-        ),
-      ),
+  public get dependencies(): ReadonlyArray<TableFix> {
+    return this.parent.tableFixes.filter(
+      (fix) =>
+        fix !== this &&
+        (this.missingForeignKeys.some(
+          (foreignKey) =>
+            foreignKey.referencedTable === fix.table &&
+            (fix instanceof MissingTableFix ||
+              (fix instanceof InvalidTableFix &&
+                R.intersection(foreignKey.referencedTable.columns, [
+                  ...fix.missingColumns,
+                  ...fix.invalidColumns.map(({ column }) => column),
+                ]).length > 0)),
+        ) ||
+          this.validForeignKeysReferencingInvalidColumns.some(
+            (foreignKey) => foreignKey.referencedTable === fix.table,
+          )),
     );
   }
 
-  public abstract execute(): Promise<void>;
+  public async prepare(): Promise<void> {}
+  public async execute(): Promise<void> {}
+  public async finalize(): Promise<void> {}
 }
 
 export class MissingTableFix extends AbstractTableFix {
@@ -72,8 +70,41 @@ export class MissingTableFix extends AbstractTableFix {
     );
   }
 
+  public readonly validForeignKeysReferencingInvalidColumns: ReadonlyArray<ForeignKey> =
+    [];
+
   public override async execute(): Promise<void> {
     await this.table.create({ withForeignKeys: this.missingForeignKeys });
+  }
+}
+
+abstract class AbstractExistingTableFix extends AbstractTableFix {
+  public constructor(
+    parent: SchemaFix,
+    table: Table,
+    public readonly diagnosis?: TableDiagnosis,
+  ) {
+    super(parent, table);
+  }
+
+  /**
+   * These foreign-keys will be DROP in order to fix the columns they're referencing, then re-ADD.
+   */
+  public get validForeignKeysReferencingInvalidColumns(): ReadonlyArray<ForeignKey> {
+    return R.pipe(
+      this.table.foreignKeys,
+      R.difference(this.diagnosis?.missingForeignKeys ?? []),
+      R.filter((foreignKey) =>
+        this.parent.invalidTableFixes.some(
+          (fix) =>
+            foreignKey.referencedTable === fix.table &&
+            R.intersection(
+              foreignKey.referencedIndex.columns,
+              fix.invalidColumns.map(({ column }) => column),
+            ).length > 0,
+        ),
+      ),
+    );
   }
 }
 
@@ -91,7 +122,7 @@ export type InvalidTableFixOptions = {
   columns?: boolean | ReadonlyArray<Column['name']>;
 };
 
-export class InvalidTableFix extends AbstractTableFix {
+export class InvalidTableFix extends AbstractExistingTableFix {
   public readonly ignore: boolean;
 
   public readonly comment: boolean;
@@ -120,7 +151,7 @@ export class InvalidTableFix extends AbstractTableFix {
     public readonly diagnosis: TableDiagnosis,
     options?: InvalidTableFixOptions,
   ) {
-    super(parent, diagnosis.table);
+    super(parent, diagnosis.table, diagnosis);
 
     this.ignore = utils.getOptionalFlag(options?.ignore, false);
 
@@ -247,13 +278,101 @@ export class InvalidTableFix extends AbstractTableFix {
     );
   }
 
+  protected get missingForeignKeysReferencingThisTableInvalidColumns(): ReadonlyArray<ForeignKey> {
+    return this.missingForeignKeys.filter(
+      (foreignKey) =>
+        foreignKey.referencedTable === this.table &&
+        R.intersection(
+          foreignKey.referencedIndex.columns,
+          this.invalidColumns.map(({ column }) => column),
+        ).length > 0,
+    );
+  }
+
+  protected get missingForeignKeysNotReferencingThisTableInvalidColumns(): ReadonlyArray<ForeignKey> {
+    return R.difference(
+      this.missingForeignKeys,
+      this.missingForeignKeysReferencingThisTableInvalidColumns,
+    );
+  }
+
+  protected get validForeignKeysReferencingThisTableInvalidColumns(): ReadonlyArray<ForeignKey> {
+    return super.validForeignKeysReferencingInvalidColumns.filter(
+      (foreignKey) => foreignKey.referencedTable === this.table,
+    );
+  }
+
+  protected get validForeignKeysNotReferencingThisTableInvalidColumns(): ReadonlyArray<ForeignKey> {
+    return R.difference(
+      super.validForeignKeysReferencingInvalidColumns,
+      this.validForeignKeysReferencingThisTableInvalidColumns,
+    );
+  }
+
+  public get foreignKeysReferencingThisTableInvalidColumns(): ReadonlyArray<ForeignKey> {
+    return [
+      ...this.missingForeignKeysReferencingThisTableInvalidColumns,
+      ...this.validForeignKeysReferencingThisTableInvalidColumns,
+    ];
+  }
+
+  public get foreignKeysNotReferencingThisTableInvalidColumns(): ReadonlyArray<ForeignKey> {
+    return [
+      ...this.missingForeignKeysNotReferencingThisTableInvalidColumns,
+      ...this.validForeignKeysNotReferencingThisTableInvalidColumns,
+    ];
+  }
+
+  public override async prepare(): Promise<void> {
+    const connector = this.table.schema.connector;
+
+    if (FixTableStatement.supports(this, FixTableStatementStep.PREPARATION)) {
+      await connector.executeStatement(
+        new FixTableStatement(this, FixTableStatementStep.PREPARATION),
+      );
+    }
+  }
+
   public override async execute(): Promise<void> {
     const connector = this.table.schema.connector;
 
-    if (FixTableStatement.supports(this)) {
-      await connector.executeStatement(new FixTableStatement(this));
+    if (FixTableStatement.supports(this, FixTableStatementStep.EXECUTION)) {
+      await connector.executeStatement(
+        new FixTableStatement(this, FixTableStatementStep.EXECUTION),
+      );
+    }
+  }
+
+  public override async finalize(): Promise<void> {
+    if (this.foreignKeysReferencingThisTableInvalidColumns.length) {
+      await this.table.addForeignKeys(
+        this.foreignKeysReferencingThisTableInvalidColumns,
+      );
     }
   }
 }
 
-export type TableFix = MissingTableFix | InvalidTableFix;
+export class ValidOrUntouchedInvalidTableFix extends AbstractExistingTableFix {
+  public readonly missingForeignKeys: ReadonlyArray<ForeignKey> = [];
+
+  public override async prepare(): Promise<void> {
+    if (this.validForeignKeysReferencingInvalidColumns.length) {
+      await this.table.dropForeignKeys(
+        this.validForeignKeysReferencingInvalidColumns,
+      );
+    }
+  }
+
+  public override async execute(): Promise<void> {
+    if (this.validForeignKeysReferencingInvalidColumns.length) {
+      await this.table.addForeignKeys(
+        this.validForeignKeysReferencingInvalidColumns,
+      );
+    }
+  }
+}
+
+export type TableFix =
+  | MissingTableFix
+  | InvalidTableFix
+  | ValidOrUntouchedInvalidTableFix;

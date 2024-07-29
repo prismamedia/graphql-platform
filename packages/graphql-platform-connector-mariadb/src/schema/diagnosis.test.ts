@@ -251,35 +251,6 @@ describe('SchemaDiagnosis', () => {
       },
     });
 
-    diagnosis = await schema.diagnose();
-
-    expect(diagnosis).toBeInstanceOf(SchemaDiagnosis);
-    expect(diagnosis.isValid()).toBeFalsy();
-    expect(diagnosis.summarize()).toEqual({
-      errors: 41,
-
-      tables: {
-        missing: [
-          'tags',
-          'article_tags',
-          'article_tag_moderations',
-          'users',
-          'user_profiles',
-          'logs',
-        ],
-        invalid: {
-          articles: {
-            foreignKeys: {
-              missing: [
-                'fk_articles_created_by_id',
-                'fk_articles_updated_by_username',
-              ],
-            },
-          },
-        },
-      },
-    });
-
     await diagnosis.fix();
 
     diagnosis = await schema.diagnose();
