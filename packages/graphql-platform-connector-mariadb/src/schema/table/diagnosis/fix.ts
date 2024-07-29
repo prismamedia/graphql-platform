@@ -1,4 +1,5 @@
 import * as utils from '@prismamedia/graphql-platform-utils';
+import type * as mariadb from 'mariadb';
 import * as R from 'remeda';
 import {
   FixTableStatement,
@@ -23,11 +24,11 @@ abstract class AbstractTableFix {
 
   public abstract get dependencies(): ReadonlyArray<TableFix>;
 
-  public async prepare(): Promise<void> {}
+  public async prepare(_maybeConnection?: mariadb.Connection): Promise<void> {}
 
-  public async execute(): Promise<void> {}
+  public async execute(_maybeConnection?: mariadb.Connection): Promise<void> {}
 
-  public async finalize(): Promise<void> {}
+  public async finalize(_maybeConnection?: mariadb.Connection): Promise<void> {}
 }
 
 export class MissingTableFix extends AbstractTableFix {
@@ -65,12 +66,16 @@ export class MissingTableFix extends AbstractTableFix {
     );
   }
 
-  public override async prepare(): Promise<void> {
-    await this.table.create({ withForeignKeys: false });
+  public override async prepare(
+    maybeConnection?: mariadb.Connection,
+  ): Promise<void> {
+    await this.table.create({ withForeignKeys: false }, maybeConnection);
   }
 
-  public override async finalize(): Promise<void> {
-    await this.table.addForeignKeys(this.creatableForeignKeys);
+  public override async finalize(
+    maybeConnection?: mariadb.Connection,
+  ): Promise<void> {
+    await this.table.addForeignKeys(this.creatableForeignKeys, maybeConnection);
   }
 }
 
@@ -342,25 +347,34 @@ export class InvalidTableFix extends AbstractExistingTableFix {
     );
   }
 
-  public override async prepare(): Promise<void> {
+  public override async prepare(
+    maybeConnection?: mariadb.Connection,
+  ): Promise<void> {
     if (FixTableStatement.supports(this, FixTableStatementStep.PREPARATION)) {
       await this.connector.executeStatement(
         new FixTableStatement(this, FixTableStatementStep.PREPARATION),
+        maybeConnection,
       );
     }
   }
 
-  public override async execute(): Promise<void> {
+  public override async execute(
+    maybeConnection?: mariadb.Connection,
+  ): Promise<void> {
     if (FixTableStatement.supports(this, FixTableStatementStep.EXECUTION)) {
       await this.connector.executeStatement(
         new FixTableStatement(this, FixTableStatementStep.EXECUTION),
+        maybeConnection,
       );
     }
   }
 
-  public override async finalize(): Promise<void> {
+  public override async finalize(
+    maybeConnection?: mariadb.Connection,
+  ): Promise<void> {
     await this.table.addForeignKeys(
       this.existingAndCreatableForeignKeysReferencingThisTableFixableColumns,
+      maybeConnection,
     );
   }
 }
@@ -376,15 +390,21 @@ export class ValidOrUntouchedInvalidTableFix extends AbstractExistingTableFix {
     );
   }
 
-  public override async prepare(): Promise<void> {
+  public override async prepare(
+    maybeConnection?: mariadb.Connection,
+  ): Promise<void> {
     await this.table.dropForeignKeys(
       this.existingForeignKeysReferencingInvalidColumns,
+      maybeConnection,
     );
   }
 
-  public override async execute(): Promise<void> {
+  public override async execute(
+    maybeConnection?: mariadb.Connection,
+  ): Promise<void> {
     await this.table.addForeignKeys(
       this.existingForeignKeysReferencingInvalidColumns,
+      maybeConnection,
     );
   }
 }

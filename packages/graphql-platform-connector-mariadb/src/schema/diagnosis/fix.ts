@@ -4,7 +4,7 @@ import * as R from 'remeda';
 import { escapeIdentifier } from '../../escaping.js';
 import type { OkPacket } from '../../index.js';
 import type { Schema, SchemaDiagnosis, Table } from '../../schema.js';
-import { FixSchemaStatement } from '../../statement.js';
+import { FixSchemaStatement, StatementKind } from '../../statement.js';
 import {
   InvalidTableFix,
   MissingTableFix,
@@ -199,26 +199,33 @@ export class SchemaFix {
   public async execute(): Promise<void> {
     const connector = this.schema.connector;
 
+    await using connection = await connector.getConnection(
+      StatementKind.DATA_DEFINITION,
+    );
+
     for (const tableName of this.extraTables) {
-      await connector.executeQuery<OkPacket>(
+      await connection.query<OkPacket>(
         `DROP TABLE ${escapeIdentifier(`${this.schema}.${tableName}`)}`,
       );
     }
 
     if (FixSchemaStatement.supports(this)) {
-      await connector.executeStatement(new FixSchemaStatement(this));
+      await connector.executeStatement(
+        new FixSchemaStatement(this),
+        connection,
+      );
     }
 
     for (const fix of this.tableFixes) {
-      await fix.prepare();
+      await fix.prepare(connection);
     }
 
     for (const tableName of this.tableFixGraph.overallOrder()) {
-      await this.tableFixGraph.getNodeData(tableName).execute();
+      await this.tableFixGraph.getNodeData(tableName).execute(connection);
     }
 
     for (const fix of this.tableFixes) {
-      await fix.finalize();
+      await fix.finalize(connection);
     }
   }
 }
