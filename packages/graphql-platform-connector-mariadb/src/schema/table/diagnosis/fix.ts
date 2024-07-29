@@ -44,15 +44,23 @@ export class MissingTableFix extends AbstractTableFix {
         this.parent.untouchedInvalidTables,
         (a, b) =>
           a.referencedTable === b.table &&
-          R.intersection(a.referencedIndex.columns, b.missingColumns).length >
-            0,
+          R.intersection(a.referencedIndex.columns, [
+            ...b.missingColumns,
+            ...b.invalidColumns
+              .filter(({ dataTypeError }) => !!dataTypeError)
+              .map(({ column }) => column),
+          ]).length > 0,
       ),
       R.differenceWith(
         this.parent.invalidTableFixes,
         (a, b) =>
           a.referencedTable === b.table &&
-          R.intersection(a.referencedIndex.columns, b.untouchedMissingColumns)
-            .length > 0,
+          R.intersection(a.referencedIndex.columns, [
+            ...b.untouchedMissingColumns,
+            ...b.untouchedInvalidColumns
+              .filter(({ dataTypeError }) => !!dataTypeError)
+              .map(({ column }) => column),
+          ]).length > 0,
       ),
     );
   }
@@ -133,6 +141,7 @@ export class InvalidTableFix extends AbstractExistingTableFix {
   public readonly missingColumns: ReadonlyArray<Column>;
   public readonly untouchedMissingColumns: ReadonlyArray<Column>;
   public readonly invalidColumns: ReadonlyArray<ColumnDiagnosis>;
+  public readonly untouchedInvalidColumns: ReadonlyArray<ColumnDiagnosis>;
 
   public constructor(
     parent: SchemaFix,
@@ -238,6 +247,11 @@ export class InvalidTableFix extends AbstractExistingTableFix {
         this.#columns,
         (a, b) => a.column.name === b,
       );
+
+      this.untouchedInvalidColumns = R.difference(
+        diagnosis.invalidColumns,
+        this.invalidColumns,
+      );
     }
   }
 
@@ -245,6 +259,15 @@ export class InvalidTableFix extends AbstractExistingTableFix {
     return R.pipe(
       this.diagnosis.missingForeignKeys,
       R.intersectionWith(this.#foreignKeys, (a, b) => a.name === b),
+      R.filter(
+        (foreignKey) =>
+          !R.intersection(foreignKey.columns, [
+            ...this.untouchedMissingColumns,
+            ...this.untouchedInvalidColumns
+              .filter(({ dataTypeError }) => !!dataTypeError)
+              .map(({ column }) => column),
+          ]).length,
+      ),
       R.differenceWith(
         this.parent.untouchedMissingTables,
         (a, b) => a.referencedTable === b,
@@ -253,15 +276,23 @@ export class InvalidTableFix extends AbstractExistingTableFix {
         this.parent.untouchedInvalidTables,
         (a, b) =>
           a.referencedTable === b.table &&
-          R.intersection(a.referencedIndex.columns, b.missingColumns).length >
-            0,
+          R.intersection(a.referencedIndex.columns, [
+            ...b.missingColumns,
+            ...b.invalidColumns
+              .filter(({ dataTypeError }) => !!dataTypeError)
+              .map(({ column }) => column),
+          ]).length > 0,
       ),
       R.differenceWith(
         this.parent.invalidTableFixes,
         (a, b) =>
           a.referencedTable === b.table &&
-          R.intersection(a.referencedIndex.columns, b.untouchedMissingColumns)
-            .length > 0,
+          R.intersection(a.referencedIndex.columns, [
+            ...b.untouchedMissingColumns,
+            ...b.untouchedInvalidColumns
+              .filter(({ dataTypeError }) => !!dataTypeError)
+              .map(({ column }) => column),
+          ]).length > 0,
       ),
     );
   }
