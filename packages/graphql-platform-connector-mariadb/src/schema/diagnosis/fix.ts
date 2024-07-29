@@ -199,44 +199,26 @@ export class SchemaFix {
   public async execute(): Promise<void> {
     const connector = this.schema.connector;
 
-    await Promise.all(
-      this.extraTables.map((tableName) =>
-        connector.executeQuery<OkPacket>(
-          `DROP TABLE ${escapeIdentifier(`${this.schema}.${tableName}`)}`,
-        ),
-      ),
-    );
+    for (const tableName of this.extraTables) {
+      await connector.executeQuery<OkPacket>(
+        `DROP TABLE ${escapeIdentifier(`${this.schema}.${tableName}`)}`,
+      );
+    }
 
     if (FixSchemaStatement.supports(this)) {
       await connector.executeStatement(new FixSchemaStatement(this));
     }
 
-    await Promise.all(this.tableFixes.map((fix) => fix.prepare()));
-
-    {
-      const fixes: Record<Table['name'], Promise<OkPacket | void>> = {};
-
-      for (const tableName of this.tableFixGraph.overallOrder()) {
-        fixes[tableName] = new Promise(async (resolve, reject) => {
-          try {
-            await Promise.all(
-              this.tableFixGraph
-                .dependenciesOf(tableName)
-                .map((dependency) => fixes[dependency]),
-            );
-
-            await this.tableFixGraph.getNodeData(tableName).execute();
-
-            resolve();
-          } catch (error) {
-            reject(error);
-          }
-        });
-      }
-
-      await Promise.all(Object.values(fixes));
+    for (const fix of this.tableFixes) {
+      await fix.prepare();
     }
 
-    await Promise.all(this.tableFixes.map((fix) => fix.finalize()));
+    for (const tableName of this.tableFixGraph.overallOrder()) {
+      await this.tableFixGraph.getNodeData(tableName).execute();
+    }
+
+    for (const fix of this.tableFixes) {
+      await fix.finalize();
+    }
   }
 }
