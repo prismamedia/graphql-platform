@@ -45,23 +45,29 @@ export class MissingTableFix extends AbstractTableFix {
         this.parent.untouchedInvalidTables,
         (a, b) =>
           a.referencedTable === b.table &&
-          R.intersection(a.referencedIndex.columns, [
+          (R.intersection(a.referencedIndex.columns, [
             ...b.missingColumns,
             ...b.invalidColumns
               .filter(({ dataTypeError }) => !!dataTypeError)
               .map(({ column }) => column),
-          ]).length > 0,
+          ]).length > 0 ||
+            b.missingIndexes.includes(a.referencedIndex) ||
+            b.invalidIndexes.some(({ index }) => index === a.referencedIndex)),
       ),
       R.differenceWith(
         this.parent.invalidTableFixes,
         (a, b) =>
           a.referencedTable === b.table &&
-          R.intersection(a.referencedIndex.columns, [
+          (R.intersection(a.referencedIndex.columns, [
             ...b.untouchedMissingColumns,
             ...b.untouchedInvalidColumns
               .filter(({ dataTypeError }) => !!dataTypeError)
               .map(({ column }) => column),
-          ]).length > 0,
+          ]).length > 0 ||
+            b.untouchedMissingIndexes.includes(a.referencedIndex) ||
+            b.untouchedInvalidIndexes.some(
+              ({ index }) => index === a.referencedIndex,
+            )),
       ),
     );
   }
@@ -91,7 +97,7 @@ abstract class AbstractExistingTableFix extends AbstractTableFix {
   /**
    * These foreign-keys will be DROP in order to fix the columns they're referencing, then re-ADD.
    */
-  public get existingForeignKeysReferencingInvalidColumns(): ReadonlyArray<ForeignKey> {
+  public get existingForeignKeysReferencingInvalidColumnsOrIndexes(): ReadonlyArray<ForeignKey> {
     return R.pipe(
       this.table.foreignKeys,
       R.difference(this.diagnosis?.missingForeignKeys ?? []),
@@ -99,10 +105,13 @@ abstract class AbstractExistingTableFix extends AbstractTableFix {
         this.parent.invalidTableFixes.some(
           (fix) =>
             foreignKey.referencedTable === fix.table &&
-            R.intersection(
+            (R.intersection(
               foreignKey.referencedIndex.columns,
               fix.invalidColumns.map(({ column }) => column),
-            ).length > 0,
+            ).length ||
+              fix.invalidIndexes.some(
+                ({ index }) => index === foreignKey.referencedIndex,
+              )),
         ),
       ),
     );
@@ -139,7 +148,9 @@ export class InvalidTableFix extends AbstractExistingTableFix {
 
   public readonly extraIndexes: ReadonlyArray<Index['name']>;
   public readonly missingIndexes: ReadonlyArray<Index>;
+  public readonly untouchedMissingIndexes: ReadonlyArray<Index>;
   public readonly invalidIndexes: ReadonlyArray<IndexDiagnosis>;
+  public readonly untouchedInvalidIndexes: ReadonlyArray<IndexDiagnosis>;
 
   public readonly nullable: boolean;
   public readonly extraColumns: ReadonlyArray<Column['name']>;
@@ -216,10 +227,19 @@ export class InvalidTableFix extends AbstractExistingTableFix {
         (a, b) => a.name === b,
       );
 
-      this.invalidIndexes = R.intersectionWith(
+      this.untouchedMissingIndexes = R.difference(
+        diagnosis.missingIndexes,
+        this.missingIndexes,
+      );
+
+      this.invalidIndexes = R.pipe(
         diagnosis.invalidIndexes,
-        this.#indexes,
-        (a, b) => a.index.name === b,
+        R.intersectionWith(this.#indexes, (a, b) => a.index.name === b),
+      );
+
+      this.untouchedInvalidIndexes = R.difference(
+        diagnosis.invalidIndexes,
+        this.invalidIndexes,
       );
     }
 
@@ -260,7 +280,15 @@ export class InvalidTableFix extends AbstractExistingTableFix {
     }
   }
 
-  public get creatableForeignKeys(): ReadonlyArray<ForeignKey> {
+  public override get existingForeignKeysReferencingInvalidColumnsOrIndexes(): ReadonlyArray<ForeignKey> {
+    return R.differenceWith(
+      super.existingForeignKeysReferencingInvalidColumnsOrIndexes,
+      this.invalidForeignKeys,
+      (a, b) => a === b.foreignKey,
+    );
+  }
+
+  public get creatableMissingForeignKeys(): ReadonlyArray<ForeignKey> {
     return R.pipe(
       this.diagnosis.missingForeignKeys,
       R.intersectionWith(this.#foreignKeys, (a, b) => a.name === b),
@@ -281,49 +309,59 @@ export class InvalidTableFix extends AbstractExistingTableFix {
         this.parent.untouchedInvalidTables,
         (a, b) =>
           a.referencedTable === b.table &&
-          R.intersection(a.referencedIndex.columns, [
+          (R.intersection(a.referencedIndex.columns, [
             ...b.missingColumns,
             ...b.invalidColumns
               .filter(({ dataTypeError }) => !!dataTypeError)
               .map(({ column }) => column),
-          ]).length > 0,
+          ]).length > 0 ||
+            b.missingIndexes.includes(a.referencedIndex) ||
+            b.invalidIndexes.some(({ index }) => index === a.referencedIndex)),
       ),
       R.differenceWith(
         this.parent.invalidTableFixes,
         (a, b) =>
           a.referencedTable === b.table &&
-          R.intersection(a.referencedIndex.columns, [
+          (R.intersection(a.referencedIndex.columns, [
             ...b.untouchedMissingColumns,
             ...b.untouchedInvalidColumns
               .filter(({ dataTypeError }) => !!dataTypeError)
               .map(({ column }) => column),
-          ]).length > 0,
+          ]).length > 0 ||
+            b.untouchedMissingIndexes.includes(a.referencedIndex) ||
+            b.untouchedInvalidIndexes.some(
+              ({ index }) => index === a.referencedIndex,
+            )),
       ),
     );
   }
 
-  public get existingAndCreatableForeignKeys(): ReadonlyArray<ForeignKey> {
+  protected get creatableForeignKeys(): ReadonlyArray<ForeignKey> {
     return [
-      ...this.existingForeignKeysReferencingInvalidColumns,
-      ...this.creatableForeignKeys,
+      ...this.existingForeignKeysReferencingInvalidColumnsOrIndexes,
+      ...this.creatableMissingForeignKeys,
+      ...this.invalidForeignKeys.map(({ foreignKey }) => foreignKey),
     ];
   }
 
-  public get existingAndCreatableForeignKeysNotReferencingThisTableFixableColumns(): ReadonlyArray<ForeignKey> {
-    return this.existingAndCreatableForeignKeys.filter(
+  public get creatableForeignKeysNotReferencingThisFixableResources(): ReadonlyArray<ForeignKey> {
+    return this.creatableForeignKeys.filter(
       (foreignKey) =>
         foreignKey.referencedTable !== this.table ||
-        !R.intersection(foreignKey.referencedIndex.columns, [
+        (!R.intersection(foreignKey.referencedIndex.columns, [
           ...this.missingColumns,
           ...this.invalidColumns.map(({ column }) => column),
-        ]).length,
+        ]).length &&
+          !this.invalidIndexes.some(
+            ({ index }) => index === foreignKey.referencedIndex,
+          )),
     );
   }
 
-  public get existingAndCreatableForeignKeysReferencingThisTableFixableColumns(): ReadonlyArray<ForeignKey> {
+  public get creatableForeignKeysReferencingThisFixableResources(): ReadonlyArray<ForeignKey> {
     return R.difference(
-      this.existingAndCreatableForeignKeys,
-      this.existingAndCreatableForeignKeysNotReferencingThisTableFixableColumns,
+      this.creatableForeignKeys,
+      this.creatableForeignKeysNotReferencingThisFixableResources,
     );
   }
 
@@ -331,17 +369,20 @@ export class InvalidTableFix extends AbstractExistingTableFix {
     return this.parent.tableFixes.filter(
       (fix) =>
         fix !== this &&
-        (this.creatableForeignKeys.some(
+        (this.creatableMissingForeignKeys.some(
           (foreignKey) =>
             foreignKey.referencedTable === fix.table &&
             (fix instanceof MissingTableFix ||
               (fix instanceof InvalidTableFix &&
-                R.intersection(foreignKey.referencedTable.columns, [
+                (R.intersection(foreignKey.referencedTable.columns, [
                   ...fix.missingColumns,
                   ...fix.invalidColumns.map(({ column }) => column),
-                ]).length > 0)),
+                ]).length ||
+                  fix.invalidIndexes.some(
+                    ({ index }) => index === foreignKey.referencedIndex,
+                  )))),
         ) ||
-          this.existingForeignKeysReferencingInvalidColumns.some(
+          this.existingForeignKeysReferencingInvalidColumnsOrIndexes.some(
             (foreignKey) => foreignKey.referencedTable === fix.table,
           )),
     );
@@ -373,7 +414,7 @@ export class InvalidTableFix extends AbstractExistingTableFix {
     maybeConnection?: mariadb.Connection,
   ): Promise<void> {
     await this.table.addForeignKeys(
-      this.existingAndCreatableForeignKeysReferencingThisTableFixableColumns,
+      this.creatableForeignKeysReferencingThisFixableResources,
       maybeConnection,
     );
   }
@@ -384,7 +425,7 @@ export class ValidOrUntouchedInvalidTableFix extends AbstractExistingTableFix {
     return this.parent.tableFixes.filter(
       (fix) =>
         fix !== this &&
-        this.existingForeignKeysReferencingInvalidColumns.some(
+        this.existingForeignKeysReferencingInvalidColumnsOrIndexes.some(
           (foreignKey) => foreignKey.referencedTable === fix.table,
         ),
     );
@@ -394,7 +435,7 @@ export class ValidOrUntouchedInvalidTableFix extends AbstractExistingTableFix {
     maybeConnection?: mariadb.Connection,
   ): Promise<void> {
     await this.table.dropForeignKeys(
-      this.existingForeignKeysReferencingInvalidColumns,
+      this.existingForeignKeysReferencingInvalidColumnsOrIndexes,
       maybeConnection,
     );
   }
@@ -403,7 +444,7 @@ export class ValidOrUntouchedInvalidTableFix extends AbstractExistingTableFix {
     maybeConnection?: mariadb.Connection,
   ): Promise<void> {
     await this.table.addForeignKeys(
-      this.existingForeignKeysReferencingInvalidColumns,
+      this.existingForeignKeysReferencingInvalidColumnsOrIndexes,
       maybeConnection,
     );
   }

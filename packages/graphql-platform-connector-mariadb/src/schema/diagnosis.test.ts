@@ -26,7 +26,7 @@ describe('SchemaDiagnosis', () => {
       `The schema "${schema}" is missing`,
     );
 
-    const extraTableQualifiedName = `${schema.name}.extra_table`;
+    const extraTableQualifiedName = `${schema}.extra_table`;
 
     const CategoryNode = gp.getNodeByName('Category');
     const CategoryTable = schema.getTableByNode(CategoryNode);
@@ -51,14 +51,16 @@ describe('SchemaDiagnosis', () => {
       // Create an invalid table
       await connection.query(`
         CREATE TABLE ${escapeIdentifier(CategoryTable.qualifiedName)} (${[
-          `private_id INT NOT NULL AUTO_INCREMENT PRIMARY KEY`,
+          `extra_id INT UNSIGNED AUTO_INCREMENT NOT NULL PRIMARY KEY`,
+          `private_id INT NOT NULL`,
           `parent_private_id INT NULL`,
-          `FOREIGN KEY fk_categories_parent_private_id (parent_private_id) REFERENCES categories (private_id) ON UPDATE RESTRICT ON DELETE RESTRICT`,
           `id UUID NOT NULL`,
           `UNIQUE unq_id (id)`,
           `slug VARCHAR(50) NULL`,
           `INDEX extra_idx_slug (slug)`,
+          `INDEX idx_private_id (private_id)`,
           `extra_column VARCHAR(255) NOT NULL`,
+          `FOREIGN KEY fk_categories_parent_private_id (parent_private_id) REFERENCES categories (private_id) ON UPDATE RESTRICT ON DELETE RESTRICT`,
         ].join(`,${EOL}`)})
         COMMENT = ${escapeStringValue('Wrong table comment')}
         DEFAULT CHARSET ${escapeStringValue(CategoryTable.defaultCharset)}
@@ -71,7 +73,7 @@ describe('SchemaDiagnosis', () => {
     expect(diagnosis).toBeInstanceOf(SchemaDiagnosis);
     expect(diagnosis.isValid()).toBeFalsy();
     expect(diagnosis.summarize()).toEqual({
-      errors: 84,
+      errors: 89,
 
       collation: {
         actual: 'utf8mb4_general_ci',
@@ -96,18 +98,40 @@ describe('SchemaDiagnosis', () => {
         invalid: {
           categories: {
             comment: { actual: 'Wrong table comment', expected: undefined },
+            foreignKeys: {
+              invalid: {
+                fk_categories_parent_private_id: {
+                  referencedUniqueIndex: {
+                    actual: 'idx_private_id',
+                    expected: 'PRIMARY',
+                  },
+                },
+              },
+            },
             indexes: {
-              extra: ['extra_idx_slug'],
+              extra: ['extra_idx_slug', 'idx_private_id'],
+              invalid: {
+                PRIMARY: {
+                  columns: {
+                    actual: ['extra_id'],
+                    expected: ['private_id'],
+                  },
+                },
+              },
               missing: [
                 'unq_parent_private_id_slug',
                 'unq_parent_private_id_order',
               ],
             },
             columns: {
-              extra: ['extra_column'],
+              extra: ['extra_id', 'extra_column'],
               missing: ['title', 'order'],
               invalid: {
                 private_id: {
+                  autoIncrement: {
+                    actual: '',
+                    expected: true,
+                  },
                   dataType: {
                     actual: {
                       DATA_TYPE: 'int',
@@ -152,7 +176,7 @@ describe('SchemaDiagnosis', () => {
     expect(diagnosis).toBeInstanceOf(SchemaDiagnosis);
     expect(diagnosis.isValid()).toBeFalsy();
     expect(diagnosis.summarize()).toEqual({
-      errors: 82,
+      errors: 87,
 
       tables: {
         extra: ['extra_table'],
@@ -169,18 +193,40 @@ describe('SchemaDiagnosis', () => {
         invalid: {
           categories: {
             comment: { actual: 'Wrong table comment', expected: undefined },
+            foreignKeys: {
+              invalid: {
+                fk_categories_parent_private_id: {
+                  referencedUniqueIndex: {
+                    actual: 'idx_private_id',
+                    expected: 'PRIMARY',
+                  },
+                },
+              },
+            },
             indexes: {
-              extra: ['extra_idx_slug'],
+              extra: ['extra_idx_slug', 'idx_private_id'],
+              invalid: {
+                PRIMARY: {
+                  columns: {
+                    actual: ['extra_id'],
+                    expected: ['private_id'],
+                  },
+                },
+              },
               missing: [
                 'unq_parent_private_id_slug',
                 'unq_parent_private_id_order',
               ],
             },
             columns: {
-              extra: ['extra_column'],
+              extra: ['extra_id', 'extra_column'],
               missing: ['title', 'order'],
               invalid: {
                 private_id: {
+                  autoIncrement: {
+                    actual: '',
+                    expected: true,
+                  },
                   dataType: {
                     actual: {
                       DATA_TYPE: 'int',

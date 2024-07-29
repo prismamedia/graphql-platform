@@ -23,16 +23,14 @@ export class FixTableStatement implements mariadb.QueryOptions {
   ): boolean {
     return Boolean(
       step === FixTableStatementStep.PREPARATION
-        ? fix.existingForeignKeysReferencingInvalidColumns.length ||
-            fix.invalidForeignKeys.length ||
-            fix.invalidIndexes.length
+        ? fix.existingForeignKeysReferencingInvalidColumnsOrIndexes.length ||
+            fix.invalidForeignKeys.length
         : fix.engine ||
             fix.collation ||
             fix.extraForeignKeys.length ||
-            fix
-              .existingAndCreatableForeignKeysNotReferencingThisTableFixableColumns
-              .length ||
+            fix.creatableForeignKeysNotReferencingThisFixableResources.length ||
             fix.extraIndexes.length ||
+            fix.invalidIndexes.length ||
             fix.missingIndexes.length ||
             fix.extraColumns.length ||
             fix.missingColumns.length ||
@@ -57,17 +55,13 @@ export class FixTableStatement implements mariadb.QueryOptions {
         .join(' '),
       (step === FixTableStatementStep.PREPARATION
         ? [
-            ...fix.existingForeignKeysReferencingInvalidColumns.map(
+            ...fix.existingForeignKeysReferencingInvalidColumnsOrIndexes.map(
               ({ name }) => `DROP FOREIGN KEY ${escapeIdentifier(name)}`,
             ),
 
             ...fix.invalidForeignKeys.map(
               ({ foreignKey: { name } }) =>
                 `DROP FOREIGN KEY ${escapeIdentifier(name)}`,
-            ),
-
-            ...fix.invalidIndexes.map(
-              ({ index: { name } }) => `DROP INDEX ${escapeIdentifier(name)}`,
             ),
           ]
         : [
@@ -92,6 +86,10 @@ export class FixTableStatement implements mariadb.QueryOptions {
               (name) => `DROP INDEX ${escapeIdentifier(name)}`,
             ),
 
+            ...fix.invalidIndexes.map(
+              ({ index: { name } }) => `DROP INDEX ${escapeIdentifier(name)}`,
+            ),
+
             ...fix.extraColumns.map(
               (name) => `DROP COLUMN ${escapeIdentifier(name)}`,
             ),
@@ -112,11 +110,7 @@ export class FixTableStatement implements mariadb.QueryOptions {
 
             ...fix.missingIndexes.map(({ definition }) => `ADD ${definition}`),
 
-            ...fix.invalidForeignKeys.map(
-              ({ foreignKey: { definition } }) => `ADD ${definition}`,
-            ),
-
-            ...fix.existingAndCreatableForeignKeysNotReferencingThisTableFixableColumns.map(
+            ...fix.creatableForeignKeysNotReferencingThisFixableResources.map(
               ({ definition }) => `ADD ${definition}`,
             ),
           ]

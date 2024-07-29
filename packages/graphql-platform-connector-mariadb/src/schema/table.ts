@@ -123,7 +123,7 @@ export class Table {
 
     // qualified-name
     {
-      this.qualifiedName = `${this.schema.name}.${this.name}`;
+      this.qualifiedName = `${this.schema}.${this.name}`;
     }
 
     // comment
