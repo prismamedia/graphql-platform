@@ -23,13 +23,15 @@ export class FixTableStatement implements mariadb.QueryOptions {
   ): boolean {
     return Boolean(
       step === FixTableStatementStep.PREPARATION
-        ? fix.validForeignKeysReferencingInvalidColumns.length ||
+        ? fix.existingForeignKeysReferencingInvalidColumns.length ||
             fix.invalidForeignKeys.length ||
             fix.invalidIndexes.length
         : fix.engine ||
             fix.collation ||
             fix.extraForeignKeys.length ||
-            fix.foreignKeysNotReferencingThisTableInvalidColumns.length ||
+            fix
+              .existingAndCreatableForeignKeysNotReferencingThisTableFixableColumns
+              .length ||
             fix.extraIndexes.length ||
             fix.missingIndexes.length ||
             fix.extraColumns.length ||
@@ -55,7 +57,7 @@ export class FixTableStatement implements mariadb.QueryOptions {
         .join(' '),
       (step === FixTableStatementStep.PREPARATION
         ? [
-            ...fix.validForeignKeysReferencingInvalidColumns.map(
+            ...fix.existingForeignKeysReferencingInvalidColumns.map(
               ({ name }) => `DROP FOREIGN KEY ${escapeIdentifier(name)}`,
             ),
 
@@ -114,7 +116,7 @@ export class FixTableStatement implements mariadb.QueryOptions {
               ({ foreignKey: { definition } }) => `ADD ${definition}`,
             ),
 
-            ...fix.foreignKeysNotReferencingThisTableInvalidColumns.map(
+            ...fix.existingAndCreatableForeignKeysNotReferencingThisTableFixableColumns.map(
               ({ definition }) => `ADD ${definition}`,
             ),
           ]

@@ -12,41 +12,28 @@ import type { ForeignKey, ForeignKeyDiagnosis } from '../foreign-key.js';
 import type { Index, IndexDiagnosis } from '../index.js';
 
 abstract class AbstractTableFix {
-  public abstract readonly missingForeignKeys: ReadonlyArray<ForeignKey>;
-  public abstract readonly validForeignKeysReferencingInvalidColumns: ReadonlyArray<ForeignKey>;
+  public readonly connector;
 
   public constructor(
     public readonly parent: SchemaFix,
     public readonly table: Table,
-  ) {}
-
-  public get dependencies(): ReadonlyArray<TableFix> {
-    return this.parent.tableFixes.filter(
-      (fix) =>
-        fix !== this &&
-        (this.missingForeignKeys.some(
-          (foreignKey) =>
-            foreignKey.referencedTable === fix.table &&
-            (fix instanceof MissingTableFix ||
-              (fix instanceof InvalidTableFix &&
-                R.intersection(foreignKey.referencedTable.columns, [
-                  ...fix.missingColumns,
-                  ...fix.invalidColumns.map(({ column }) => column),
-                ]).length > 0)),
-        ) ||
-          this.validForeignKeysReferencingInvalidColumns.some(
-            (foreignKey) => foreignKey.referencedTable === fix.table,
-          )),
-    );
+  ) {
+    this.connector = table.schema.connector;
   }
 
+  public abstract get dependencies(): ReadonlyArray<TableFix>;
+
   public async prepare(): Promise<void> {}
+
   public async execute(): Promise<void> {}
+
   public async finalize(): Promise<void> {}
 }
 
 export class MissingTableFix extends AbstractTableFix {
-  public get missingForeignKeys(): ReadonlyArray<ForeignKey> {
+  public readonly dependencies: ReadonlyArray<TableFix> = [];
+
+  public get creatableForeignKeys(): ReadonlyArray<ForeignKey> {
     return R.pipe(
       this.table.foreignKeys,
       R.differenceWith(
@@ -70,11 +57,12 @@ export class MissingTableFix extends AbstractTableFix {
     );
   }
 
-  public readonly validForeignKeysReferencingInvalidColumns: ReadonlyArray<ForeignKey> =
-    [];
+  public override async prepare(): Promise<void> {
+    await this.table.create({ withForeignKeys: false });
+  }
 
-  public override async execute(): Promise<void> {
-    await this.table.create({ withForeignKeys: this.missingForeignKeys });
+  public override async finalize(): Promise<void> {
+    await this.table.addForeignKeys(this.creatableForeignKeys);
   }
 }
 
@@ -90,7 +78,7 @@ abstract class AbstractExistingTableFix extends AbstractTableFix {
   /**
    * These foreign-keys will be DROP in order to fix the columns they're referencing, then re-ADD.
    */
-  public get validForeignKeysReferencingInvalidColumns(): ReadonlyArray<ForeignKey> {
+  public get existingForeignKeysReferencingInvalidColumns(): ReadonlyArray<ForeignKey> {
     return R.pipe(
       this.table.foreignKeys,
       R.difference(this.diagnosis?.missingForeignKeys ?? []),
@@ -253,7 +241,7 @@ export class InvalidTableFix extends AbstractExistingTableFix {
     }
   }
 
-  public get missingForeignKeys(): ReadonlyArray<ForeignKey> {
+  public get creatableForeignKeys(): ReadonlyArray<ForeignKey> {
     return R.pipe(
       this.diagnosis.missingForeignKeys,
       R.intersectionWith(this.#foreignKeys, (a, b) => a.name === b),
@@ -278,97 +266,95 @@ export class InvalidTableFix extends AbstractExistingTableFix {
     );
   }
 
-  protected get missingForeignKeysReferencingThisTableInvalidColumns(): ReadonlyArray<ForeignKey> {
-    return this.missingForeignKeys.filter(
+  public get existingAndCreatableForeignKeys(): ReadonlyArray<ForeignKey> {
+    return [
+      ...this.existingForeignKeysReferencingInvalidColumns,
+      ...this.creatableForeignKeys,
+    ];
+  }
+
+  public get existingAndCreatableForeignKeysNotReferencingThisTableFixableColumns(): ReadonlyArray<ForeignKey> {
+    return this.existingAndCreatableForeignKeys.filter(
       (foreignKey) =>
-        foreignKey.referencedTable === this.table &&
-        R.intersection(
-          foreignKey.referencedIndex.columns,
-          this.invalidColumns.map(({ column }) => column),
-        ).length > 0,
+        foreignKey.referencedTable !== this.table ||
+        !R.intersection(foreignKey.referencedIndex.columns, [
+          ...this.missingColumns,
+          ...this.invalidColumns.map(({ column }) => column),
+        ]).length,
     );
   }
 
-  protected get missingForeignKeysNotReferencingThisTableInvalidColumns(): ReadonlyArray<ForeignKey> {
+  public get existingAndCreatableForeignKeysReferencingThisTableFixableColumns(): ReadonlyArray<ForeignKey> {
     return R.difference(
-      this.missingForeignKeys,
-      this.missingForeignKeysReferencingThisTableInvalidColumns,
+      this.existingAndCreatableForeignKeys,
+      this.existingAndCreatableForeignKeysNotReferencingThisTableFixableColumns,
     );
   }
 
-  protected get validForeignKeysReferencingThisTableInvalidColumns(): ReadonlyArray<ForeignKey> {
-    return super.validForeignKeysReferencingInvalidColumns.filter(
-      (foreignKey) => foreignKey.referencedTable === this.table,
+  public get dependencies(): ReadonlyArray<TableFix> {
+    return this.parent.tableFixes.filter(
+      (fix) =>
+        fix !== this &&
+        (this.creatableForeignKeys.some(
+          (foreignKey) =>
+            foreignKey.referencedTable === fix.table &&
+            (fix instanceof MissingTableFix ||
+              (fix instanceof InvalidTableFix &&
+                R.intersection(foreignKey.referencedTable.columns, [
+                  ...fix.missingColumns,
+                  ...fix.invalidColumns.map(({ column }) => column),
+                ]).length > 0)),
+        ) ||
+          this.existingForeignKeysReferencingInvalidColumns.some(
+            (foreignKey) => foreignKey.referencedTable === fix.table,
+          )),
     );
-  }
-
-  protected get validForeignKeysNotReferencingThisTableInvalidColumns(): ReadonlyArray<ForeignKey> {
-    return R.difference(
-      super.validForeignKeysReferencingInvalidColumns,
-      this.validForeignKeysReferencingThisTableInvalidColumns,
-    );
-  }
-
-  public get foreignKeysReferencingThisTableInvalidColumns(): ReadonlyArray<ForeignKey> {
-    return [
-      ...this.missingForeignKeysReferencingThisTableInvalidColumns,
-      ...this.validForeignKeysReferencingThisTableInvalidColumns,
-    ];
-  }
-
-  public get foreignKeysNotReferencingThisTableInvalidColumns(): ReadonlyArray<ForeignKey> {
-    return [
-      ...this.missingForeignKeysNotReferencingThisTableInvalidColumns,
-      ...this.validForeignKeysNotReferencingThisTableInvalidColumns,
-    ];
   }
 
   public override async prepare(): Promise<void> {
-    const connector = this.table.schema.connector;
-
     if (FixTableStatement.supports(this, FixTableStatementStep.PREPARATION)) {
-      await connector.executeStatement(
+      await this.connector.executeStatement(
         new FixTableStatement(this, FixTableStatementStep.PREPARATION),
       );
     }
   }
 
   public override async execute(): Promise<void> {
-    const connector = this.table.schema.connector;
-
     if (FixTableStatement.supports(this, FixTableStatementStep.EXECUTION)) {
-      await connector.executeStatement(
+      await this.connector.executeStatement(
         new FixTableStatement(this, FixTableStatementStep.EXECUTION),
       );
     }
   }
 
   public override async finalize(): Promise<void> {
-    if (this.foreignKeysReferencingThisTableInvalidColumns.length) {
-      await this.table.addForeignKeys(
-        this.foreignKeysReferencingThisTableInvalidColumns,
-      );
-    }
+    await this.table.addForeignKeys(
+      this.existingAndCreatableForeignKeysReferencingThisTableFixableColumns,
+    );
   }
 }
 
 export class ValidOrUntouchedInvalidTableFix extends AbstractExistingTableFix {
-  public readonly missingForeignKeys: ReadonlyArray<ForeignKey> = [];
+  public override get dependencies(): ReadonlyArray<TableFix> {
+    return this.parent.tableFixes.filter(
+      (fix) =>
+        fix !== this &&
+        this.existingForeignKeysReferencingInvalidColumns.some(
+          (foreignKey) => foreignKey.referencedTable === fix.table,
+        ),
+    );
+  }
 
   public override async prepare(): Promise<void> {
-    if (this.validForeignKeysReferencingInvalidColumns.length) {
-      await this.table.dropForeignKeys(
-        this.validForeignKeysReferencingInvalidColumns,
-      );
-    }
+    await this.table.dropForeignKeys(
+      this.existingForeignKeysReferencingInvalidColumns,
+    );
   }
 
   public override async execute(): Promise<void> {
-    if (this.validForeignKeysReferencingInvalidColumns.length) {
-      await this.table.addForeignKeys(
-        this.validForeignKeysReferencingInvalidColumns,
-      );
-    }
+    await this.table.addForeignKeys(
+      this.existingForeignKeysReferencingInvalidColumns,
+    );
   }
 }
 

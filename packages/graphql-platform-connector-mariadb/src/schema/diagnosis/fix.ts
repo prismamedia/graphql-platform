@@ -216,24 +216,23 @@ export class SchemaFix {
     {
       const fixes: Record<Table['name'], Promise<OkPacket | void>> = {};
 
-      this.tableFixGraph.overallOrder().forEach(
-        (tableName) =>
-          (fixes[tableName] = new Promise(async (resolve, reject) => {
-            try {
-              await Promise.all(
-                this.tableFixGraph
-                  .dependenciesOf(tableName)
-                  .map((dependency) => fixes[dependency]),
-              );
+      for (const tableName of this.tableFixGraph.overallOrder()) {
+        fixes[tableName] = new Promise(async (resolve, reject) => {
+          try {
+            await Promise.all(
+              this.tableFixGraph
+                .dependenciesOf(tableName)
+                .map((dependency) => fixes[dependency]),
+            );
 
-              await this.tableFixGraph.getNodeData(tableName).execute();
+            await this.tableFixGraph.getNodeData(tableName).execute();
 
-              resolve();
-            } catch (error) {
-              reject(error);
-            }
-          })),
-      );
+            resolve();
+          } catch (error) {
+            reject(error);
+          }
+        });
+      }
 
       await Promise.all(Object.values(fixes));
     }
