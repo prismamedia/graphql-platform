@@ -28,7 +28,6 @@ import {
   GetIndexInformationStatement,
   GetSchemaInformationStatement,
   GetTableInformationStatement,
-  StatementKind,
   type ColumnInformation,
   type ConstraintInformation,
   type CreateSchemaStatementConfig,
@@ -99,10 +98,7 @@ export class Schema {
 
     // name
     {
-      const databasePoolConfig = utils.resolveThunkable(
-        connector.poolConfig,
-        StatementKind.DATA_MANIPULATION,
-      )?.database;
+      const databasePoolConfig = connector.poolConfig?.database;
       const databasePoolConfigPath = utils.addPath(
         connector.poolConfigPath,
         'database',
