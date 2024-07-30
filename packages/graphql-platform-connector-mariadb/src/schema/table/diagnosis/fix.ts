@@ -95,7 +95,7 @@ abstract class AbstractExistingTableFix extends AbstractTableFix {
   }
 
   /**
-   * These foreign-keys will be DROP in order to fix the columns they're referencing, then re-ADD.
+   * These foreign-keys will be DROP in order to fix the columns and indexes they're referencing, then re-ADD.
    */
   public get existingForeignKeysReferencingInvalidColumnsOrIndexes(): ReadonlyArray<ForeignKey> {
     return R.pipe(
