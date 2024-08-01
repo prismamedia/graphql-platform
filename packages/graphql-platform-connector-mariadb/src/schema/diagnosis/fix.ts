@@ -203,6 +203,8 @@ export class SchemaFix {
       StatementKind.DATA_DEFINITION,
     );
 
+    await connection.query(`SET max_statement_time=${60 * 60 * 24};`);
+
     for (const tableName of this.extraTables) {
       await connection.query<OkPacket>(
         `DROP TABLE ${escapeIdentifier(`${this.schema}.${tableName}`)}`,
