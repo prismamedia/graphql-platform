@@ -28,10 +28,10 @@
   },
   "devDependencies": {
     "@jest/globals": "30.0.0-alpha.5",
-    "@swc/core": "1.7.4",
+    "@swc/core": "1.7.6",
     "@swc/jest": "0.2.36",
     "@tsconfig/node20": "20.1.4",
-    "@types/node": "20.14.13",
+    "@types/node": "20.14.14",
     "graphql": "16.9.0",
     "jest": "30.0.0-alpha.5",
     "publint": "0.2.9",
@@ -50,7 +50,7 @@
     "inflection": "^3.0.0",
     "p-queue": "^8.0.1",
     "p-retry": "^6.2.0",
-    "remeda": "^2.6.0",
+    "remeda": "^2.7.1",
     "type-fest": "^4.23.0"
   },
   "peerDependencies": {

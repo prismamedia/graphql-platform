@@ -29,10 +29,10 @@
   "devDependencies": {
     "@jest/globals": "30.0.0-alpha.5",
     "@sqltools/formatter": "1.2.5",
-    "@swc/core": "1.7.4",
+    "@swc/core": "1.7.6",
     "@swc/jest": "0.2.36",
     "@tsconfig/node20": "20.1.4",
-    "@types/node": "20.14.13",
+    "@types/node": "20.14.14",
     "@types/semver": "7.5.8",
     "graphql": "16.9.0",
     "jest": "30.0.0-alpha.5",
@@ -48,7 +48,7 @@
     "dependency-graph": "^1.0.0",
     "inflection": "^3.0.0",
     "mariadb": "^3.3.1",
-    "remeda": "^2.6.0",
+    "remeda": "^2.7.1",
     "semver": "^7.6.3",
     "type-fest": "^4.23.0"
   },

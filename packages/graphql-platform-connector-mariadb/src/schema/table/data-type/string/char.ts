@@ -70,6 +70,11 @@ export class CharType<
 
   protected override doSerialize(value: string): string {
     assert.equal(typeof value, 'string');
+    this.length &&
+      assert(
+        value.length <= this.length,
+        `Expects at most ${this.length} characters, got: ${value.length}`,
+      );
 
     return escapeStringValue(value);
   }

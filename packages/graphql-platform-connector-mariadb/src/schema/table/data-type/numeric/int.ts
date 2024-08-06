@@ -80,7 +80,7 @@ export class IntType<
 
   protected override doSerialize(value: number): string {
     assert.equal(typeof value, 'number');
-    assert(Number.isInteger(value));
+    assert(Number.isInteger(value), `Expects an integer, got: ${value}`);
 
     return value.toString(10);
   }

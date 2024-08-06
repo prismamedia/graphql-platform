@@ -73,6 +73,10 @@ export class VarCharType<
 
   protected override doSerialize(value: string): string {
     assert.equal(typeof value, 'string');
+    assert(
+      value.length <= this.length,
+      `Expects at most ${this.length} characters, got: ${value.length}`,
+    );
 
     return escapeStringValue(value);
   }
