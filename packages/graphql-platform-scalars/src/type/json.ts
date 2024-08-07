@@ -1,5 +1,6 @@
 import * as utils from '@prismamedia/graphql-platform-utils';
 import * as graphql from 'graphql';
+import * as R from 'remeda';
 import type { JsonObject, JsonPrimitive, JsonValue } from 'type-fest';
 
 export function parseJsonObject(value: unknown, path?: utils.Path): JsonObject {
@@ -186,4 +187,6 @@ export const jsonTypesByName = {
   JSONValue: GraphQLJSONValue,
 } satisfies Record<string, graphql.GraphQLScalarType>;
 
-export const jsonTypes = Object.values(jsonTypesByName);
+export const jsonTypeNames = R.keys(jsonTypesByName);
+
+export const jsonTypes = R.values(jsonTypesByName);

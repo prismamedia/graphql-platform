@@ -69,6 +69,11 @@ export interface NormalizeStatementConfig {
     columnIdentifier: string;
     defaultNormalization: string | undefined;
   }) => string | undefined;
+
+  /**
+   * Update only a subset of the table
+   */
+  where?: string;
 }
 
 /**
@@ -192,6 +197,7 @@ export class NormalizeStatement implements mariadb.QueryOptions {
         normalizationsByColumn,
         ([column, expr]) => `  ${escapeIdentifier(column.name)} = ${expr}`,
       ).join(`,${EOL}`),
+      config?.where && `WHERE ${config.where}`,
     ]
       .filter(Boolean)
       .join(EOL);

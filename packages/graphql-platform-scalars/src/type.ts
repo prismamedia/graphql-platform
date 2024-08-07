@@ -1,5 +1,6 @@
 import * as utils from '@prismamedia/graphql-platform-utils';
 import * as graphql from 'graphql';
+import * as R from 'remeda';
 import type { ValueOf } from 'type-fest';
 import { GraphQLBigInt } from './type/big-int.js';
 import { GraphQLDateTime } from './type/date-time.js';
@@ -140,9 +141,11 @@ export const idTypes = [
   ...uuidTypes,
 ] as const satisfies ReadonlyArray<Type>;
 
-export const stringTypes = [
-  typesByName.EmailAddress,
-  typesByName.NonEmptyString,
-  typesByName.NonEmptyTrimmedString,
-  typesByName.String,
-] as const satisfies ReadonlyArray<Type>;
+export const stringTypeNames = [
+  'EmailAddress',
+  'NonEmptyString',
+  'NonEmptyTrimmedString',
+  'String',
+] as const satisfies ReadonlyArray<TypeName>;
+
+export const stringTypes = R.map(stringTypeNames, (name) => typesByName[name]);
