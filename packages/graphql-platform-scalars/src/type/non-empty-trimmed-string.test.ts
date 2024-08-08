@@ -5,12 +5,14 @@ import {
 } from './non-empty-trimmed-string.js';
 
 describe('NonEmptyTrimmedString', () => {
-  it.each([['test '], [' test'], [' test test ']])(
-    'isNonEmptyTrimmedString(%p) returns false',
-    (value) => {
-      expect(isNonEmptyTrimmedString(value)).toBeTruthy();
-    },
-  );
+  it.each([
+    ['test ', 'test'],
+    [' test', 'test'],
+    [' test\n \n \ntest\r \r \rtest\t \t \ttest ', 'test test test test'],
+  ])('isNonEmptyTrimmedString(%p) returns false', (input, expected) => {
+    expect(isNonEmptyTrimmedString(input)).toBeTruthy();
+    expect(parseNonEmptyTrimmedString(input)).toBe(expected);
+  });
 
   it.each([[''], [' '], [' \n \t ']])(
     'parseValue(%p) throws the following Error: %s',

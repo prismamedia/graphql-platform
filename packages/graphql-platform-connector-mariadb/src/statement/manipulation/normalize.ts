@@ -18,8 +18,11 @@ export const trimWhitespaces = (expr: string) =>
 export const nullIfEmptyTrimmedString = (expr: string) =>
   nullIfEmptyString(trimWhitespaces(expr));
 
-export const normalizeDoubleSpaces = (expr: string) =>
-  `REGEXP_REPLACE(${expr}, '\\\\s+', ' ')`;
+export const normalizeWhitespaces = (expr: string) =>
+  trimWhitespaces(`REGEXP_REPLACE(${expr}, '\\\\s+', ' ')`);
+
+export const nullIfEmptyNormalizedString = (expr: string) =>
+  nullIfEmptyString(normalizeWhitespaces(expr));
 
 const normalizeJSON = (
   expr: string,
@@ -113,9 +116,15 @@ export class NormalizeStatement implements mariadb.QueryOptions {
             normalizers = [column.isNullable() ? nullIfEmptyString : undefined];
             break;
 
+          case scalars.GraphQLNonEmptyTrimmedString:
+            normalizers = [
+              normalizeWhitespaces,
+              column.isNullable() ? nullIfEmptyString : undefined,
+            ];
+            break;
+
           case graphql.GraphQLID:
           case scalars.GraphQLEmailAddress:
-          case scalars.GraphQLNonEmptyTrimmedString:
           case scalars.GraphQLURL:
             normalizers = [
               trimWhitespaces,

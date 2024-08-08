@@ -6,11 +6,11 @@ export function isNonEmptyString(value: unknown): value is string {
 }
 
 export function parseNonEmptyString(value: unknown, path?: utils.Path): string {
-  if (typeof value !== 'string' || !value) {
-    throw new utils.UnexpectedValueError('a non-empty string', value, { path });
+  if (typeof value === 'string' && value) {
+    return value;
   }
 
-  return value;
+  throw new utils.UnexpectedValueError('a non-empty string', value, { path });
 }
 
 export const GraphQLNonEmptyString = new graphql.GraphQLScalarType({

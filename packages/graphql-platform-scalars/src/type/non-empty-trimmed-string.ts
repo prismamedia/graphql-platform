@@ -12,7 +12,7 @@ export function parseNonEmptyTrimmedString(
   if (typeof value === 'string') {
     const trimmedValue = value.trim();
     if (trimmedValue) {
-      return trimmedValue;
+      return trimmedValue.replace(/\s+/g, ' ');
     }
   }
 
