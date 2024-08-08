@@ -208,7 +208,7 @@ export const Article = {
     },
     title: {
       kind: 'Leaf',
-      type: 'NonEmptyTrimmedString',
+      type: 'NonEmptyNormalizedString',
       nullable: false,
     },
     slug: {

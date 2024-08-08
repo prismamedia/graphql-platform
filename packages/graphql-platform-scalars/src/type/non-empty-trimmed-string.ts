@@ -1,9 +1,8 @@
 import * as utils from '@prismamedia/graphql-platform-utils';
 import * as graphql from 'graphql';
 
-export function isNonEmptyTrimmedString(value: unknown): value is string {
-  return typeof value === 'string' && value.trim().length > 0;
-}
+export const isNonEmptyTrimmedString = (value: unknown): value is string =>
+  typeof value === 'string' && value.trim().length > 0;
 
 export function parseNonEmptyTrimmedString(
   value: unknown,
@@ -11,8 +10,8 @@ export function parseNonEmptyTrimmedString(
 ): string {
   if (typeof value === 'string') {
     const trimmedValue = value.trim();
-    if (trimmedValue) {
-      return trimmedValue.replace(/\s+/g, ' ');
+    if (trimmedValue.length > 0) {
+      return trimmedValue;
     }
   }
 
@@ -24,7 +23,7 @@ export function parseNonEmptyTrimmedString(
 export const GraphQLNonEmptyTrimmedString = new graphql.GraphQLScalarType({
   name: 'NonEmptyTrimmedString',
   description:
-    'A string in which the leading and trailing whitespace characters are removed and cannot be empty afterwards.',
+    'Represents a non-empty trimmed string. Leading and trailing whitespaces are removed.',
   parseValue(value: unknown) {
     return parseNonEmptyTrimmedString(value);
   },

@@ -59,7 +59,7 @@ describe('NodeCreationInputType', () => {
         [
           'Article',
           {},
-          '/title - Expects a non-undefined "NonEmptyTrimmedString"',
+          '/title - Expects a non-undefined "NonEmptyNormalizedString"',
         ],
         [
           'Article',

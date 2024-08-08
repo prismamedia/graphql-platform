@@ -8,14 +8,14 @@ describe('NonEmptyTrimmedString', () => {
   it.each([
     ['test ', 'test'],
     [' test', 'test'],
-    [' test\n \n \ntest\r \r \rtest\t \t \ttest ', 'test test test test'],
-  ])('isNonEmptyTrimmedString(%p) returns false', (input, expected) => {
+    ['\t \n \r  a bb ccc dddd \t \n \r ', 'a bb ccc dddd'],
+  ])('parseNonEmptyTrimmedString(%p) returns %p', (input, expected) => {
     expect(isNonEmptyTrimmedString(input)).toBeTruthy();
     expect(parseNonEmptyTrimmedString(input)).toBe(expected);
   });
 
   it.each([[''], [' '], [' \n \t ']])(
-    'parseValue(%p) throws the following Error: %s',
+    'parseNonEmptyTrimmedString(%p) throws the error: %s',
     (value) => {
       expect(isNonEmptyTrimmedString(value)).toBeFalsy();
       expect(() => parseNonEmptyTrimmedString(value)).toThrow(

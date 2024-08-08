@@ -6,7 +6,7 @@ input ArticleCreationInput {
   """You can either provide an UUID or let one be generated for you"""
   id: UUIDv4
   status: ArticleStatus! = DRAFT
-  title: NonEmptyTrimmedString!
+  title: NonEmptyNormalizedString!
 
   """You can either provide a slug or let the title be "slugified" for you"""
   slug: NonEmptyTrimmedString
@@ -38,7 +38,7 @@ input ArticleCreationWithoutCategoryInput {
   """You can either provide an UUID or let one be generated for you"""
   id: UUIDv4
   status: ArticleStatus! = DRAFT
-  title: NonEmptyTrimmedString!
+  title: NonEmptyNormalizedString!
 
   """You can either provide a slug or let the title be "slugified" for you"""
   slug: NonEmptyTrimmedString
@@ -69,7 +69,7 @@ input ArticleCreationWithoutCreatedByInput {
   """You can either provide an UUID or let one be generated for you"""
   id: UUIDv4
   status: ArticleStatus! = DRAFT
-  title: NonEmptyTrimmedString!
+  title: NonEmptyNormalizedString!
 
   """You can either provide a slug or let the title be "slugified" for you"""
   slug: NonEmptyTrimmedString
@@ -101,7 +101,7 @@ input ArticleCreationWithoutUpdatedByInput {
   """You can either provide an UUID or let one be generated for you"""
   id: UUIDv4
   status: ArticleStatus! = DRAFT
-  title: NonEmptyTrimmedString!
+  title: NonEmptyNormalizedString!
 
   """You can either provide a slug or let the title be "slugified" for you"""
   slug: NonEmptyTrimmedString

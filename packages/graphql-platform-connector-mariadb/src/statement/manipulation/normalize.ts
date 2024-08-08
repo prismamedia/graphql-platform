@@ -116,7 +116,7 @@ export class NormalizeStatement implements mariadb.QueryOptions {
             normalizers = [column.isNullable() ? nullIfEmptyString : undefined];
             break;
 
-          case scalars.GraphQLNonEmptyTrimmedString:
+          case scalars.GraphQLNonEmptyNormalizedString:
             normalizers = [
               normalizeWhitespaces,
               column.isNullable() ? nullIfEmptyString : undefined,
@@ -125,6 +125,7 @@ export class NormalizeStatement implements mariadb.QueryOptions {
 
           case graphql.GraphQLID:
           case scalars.GraphQLEmailAddress:
+          case scalars.GraphQLNonEmptyTrimmedString:
           case scalars.GraphQLURL:
             normalizers = [
               trimWhitespaces,
