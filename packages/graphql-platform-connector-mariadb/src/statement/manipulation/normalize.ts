@@ -25,12 +25,28 @@ export const sanitizeString = (expr: string) =>
     `<[^>]*>`,
   ].join('|')})', '')`;
 
+const sourcesByDest: ReadonlyArray<[string, ReadonlyArray<string>]> = [
+  ['a', ['à', 'á', 'â', 'ã', 'ä', 'ǎ', 'å']],
+  ['c', ['ç']],
+  ['e', ['è', 'é', 'ê', 'ẽ', 'ë', 'ě']],
+  ['i', ['ì', 'í', 'î', 'ĩ', 'ï', 'ǐ']],
+  ['o', ['ò', 'ó', 'ô', 'õ', 'ö', 'ǒ', 'ø']],
+  ['u', ['ù', 'ú', 'û', 'ũ', 'ü', 'ǔ', 'ǔ']],
+  ['y', ['ý', 'ŷ', 'ÿ']],
+];
+
 export const slugify = (expr: string) =>
   normalize(expr, [
     (expr) => `LOWER(${expr})`,
+    ...sourcesByDest.flatMap(([dest, sources]) =>
+      sources.map(
+        (source) => (expr: string) =>
+          `REPLACE(${expr}, '${source}', '${dest}')`,
+      ),
+    ),
     (expr) => `REGEXP_REPLACE(${expr}, '[^a-z0-9-_]+', '-')`,
-    (expr) => `REGEXP_REPLACE(${expr}, '(^[-_]+|[-_]+$)', '')`,
     (expr) => `REGEXP_REPLACE(${expr}, '([-_])[-_]+', '\\\\1')`,
+    (expr) => `REGEXP_REPLACE(${expr}, '(^[-_]|[-_]$)', '')`,
   ]);
 
 const normalizeJSON = (
@@ -159,7 +175,6 @@ export class NormalizeStatement implements mariadb.QueryOptions {
 
           case scalars.GraphQLSlug:
             normalizers = [
-              sanitizeString,
               slugify,
               column.isNullable() ? nullIfEmptyString : undefined,
             ];
