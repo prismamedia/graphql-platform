@@ -19,7 +19,7 @@
     "test:watch": "yarn run test --watchAll"
   },
   "devDependencies": {
-    "jest": "30.0.0-alpha.5",
+    "jest": "30.0.0-alpha.6",
     "prettier": "3.3.3",
     "typescript": "5.5.4"
   },

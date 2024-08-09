@@ -6,7 +6,7 @@ type Article implements PublicNodeInterface {
   """This UUID identifies an Article publicly"""
   id: UUIDv4!
   status: ArticleStatus!
-  title: NonEmptyNormalizedString!
+  title: NonEmptySanitizedString!
   slug: NonEmptyTrimmedString!
 
   """The article's body"""
@@ -43,7 +43,7 @@ type Article implements PublicNodeInterface {
   ): NonEmptyTrimmedString!
 
   """A custom field with a dependency"""
-  upperCasedTitle: NonEmptyNormalizedString!
+  upperCasedTitle: NonEmptySanitizedString!
   similars(
     """The number of similar articles to return"""
     first: UnsignedInt!

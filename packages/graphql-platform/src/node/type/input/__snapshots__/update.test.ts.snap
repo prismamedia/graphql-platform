@@ -4,7 +4,7 @@ exports[`NodeUpdateInputType Definition Article may have an update input type: A
 """"The "Article" node's update"""
 input ArticleUpdateInput {
   status: ArticleStatus
-  title: NonEmptyNormalizedString
+  title: NonEmptySanitizedString
   slug: NonEmptyTrimmedString
 
   """The article's body"""
@@ -35,7 +35,7 @@ exports[`NodeUpdateInputType Definition Article may have an update input type: A
 """"The "Article" node's update"""
 input ArticleUpdateWithoutCategoryInput {
   status: ArticleStatus
-  title: NonEmptyNormalizedString
+  title: NonEmptySanitizedString
   slug: NonEmptyTrimmedString
 
   """The article's body"""
@@ -65,7 +65,7 @@ exports[`NodeUpdateInputType Definition Article may have an update input type: A
 """"The "Article" node's update"""
 input ArticleUpdateWithoutCreatedByInput {
   status: ArticleStatus
-  title: NonEmptyNormalizedString
+  title: NonEmptySanitizedString
   slug: NonEmptyTrimmedString
 
   """The article's body"""
@@ -96,7 +96,7 @@ exports[`NodeUpdateInputType Definition Article may have an update input type: A
 """"The "Article" node's update"""
 input ArticleUpdateWithoutUpdatedByInput {
   status: ArticleStatus
-  title: NonEmptyNormalizedString
+  title: NonEmptySanitizedString
   slug: NonEmptyTrimmedString
 
   """The article's body"""

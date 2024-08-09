@@ -27,7 +27,7 @@
     "test:watch": "yarn run test --watchAll"
   },
   "devDependencies": {
-    "@jest/globals": "30.0.0-alpha.5",
+    "@jest/globals": "30.0.0-alpha.6",
     "@sqltools/formatter": "1.2.5",
     "@swc/core": "1.7.6",
     "@swc/jest": "0.2.36",
@@ -35,7 +35,7 @@
     "@types/node": "20.14.14",
     "@types/semver": "7.5.8",
     "graphql": "16.9.0",
-    "jest": "30.0.0-alpha.5",
+    "jest": "30.0.0-alpha.6",
     "publint": "0.2.9",
     "typescript": "5.5.4"
   },

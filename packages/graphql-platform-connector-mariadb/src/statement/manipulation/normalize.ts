@@ -15,14 +15,15 @@ export const nullIfEmptyString = (expr: string) => `NULLIF(${expr}, '')`;
 export const trimWhitespaces = (expr: string) =>
   `REGEXP_REPLACE(${expr}, '^\\\\s+|\\\\s+$', '')`;
 
-export const nullIfEmptyTrimmedString = (expr: string) =>
-  nullIfEmptyString(trimWhitespaces(expr));
-
 export const normalizeWhitespaces = (expr: string) =>
-  trimWhitespaces(`REGEXP_REPLACE(${expr}, '\\\\s+', ' ')`);
+  `REGEXP_REPLACE(${expr}, '\\\\s+', ' ')`;
 
-export const nullIfEmptyNormalizedString = (expr: string) =>
-  nullIfEmptyString(normalizeWhitespaces(expr));
+export const sanitizeString = (expr: string) =>
+  `REGEXP_REPLACE(${expr}, '(?s)(${[
+    `<!--.*?-->`,
+    `<script\\\\b[^<]*(?:(?!</script>)<[^<]*)*(?:</script>|/>)`,
+    `<[^>]*>`,
+  ].join('|')})', '')`;
 
 const normalizeJSON = (
   expr: string,
@@ -60,6 +61,11 @@ export const normalizeDraftJS = (expr: string, isNullable: boolean) =>
       ? 'NULL'
       : escapeStringValue(JSON.stringify({ entityMap: {}, blocks: [] }))
   })`;
+
+export const normalize = (
+  expr: string,
+  normalizers: ReadonlyArray<LeafColumnNormalizer>,
+) => normalizers.reduce((expr, normalizer) => normalizer(expr), expr);
 
 export interface NormalizeStatementConfig {
   /**
@@ -116,19 +122,29 @@ export class NormalizeStatement implements mariadb.QueryOptions {
             normalizers = [column.isNullable() ? nullIfEmptyString : undefined];
             break;
 
-          case scalars.GraphQLNonEmptyNormalizedString:
-            normalizers = [
-              normalizeWhitespaces,
-              column.isNullable() ? nullIfEmptyString : undefined,
-            ];
-            break;
-
           case graphql.GraphQLID:
           case scalars.GraphQLEmailAddress:
           case scalars.GraphQLNonEmptyTrimmedString:
           case scalars.GraphQLURL:
             normalizers = [
               trimWhitespaces,
+              column.isNullable() ? nullIfEmptyString : undefined,
+            ];
+            break;
+
+          case scalars.GraphQLNonEmptyNormalizedString:
+            normalizers = [
+              trimWhitespaces,
+              normalizeWhitespaces,
+              column.isNullable() ? nullIfEmptyString : undefined,
+            ];
+            break;
+
+          case scalars.GraphQLNonEmptySanitizedString:
+            normalizers = [
+              sanitizeString,
+              trimWhitespaces,
+              normalizeWhitespaces,
               column.isNullable() ? nullIfEmptyString : undefined,
             ];
             break;
@@ -153,10 +169,10 @@ export class NormalizeStatement implements mariadb.QueryOptions {
         }
 
         if (normalizers?.length) {
-          expr = normalizers.reduce(
-            (expr, normalizer) => normalizer?.(expr) ?? expr,
-            escapeIdentifier(column.name),
-          );
+          const actualNormalizers = normalizers.filter(R.isNonNullish);
+          if (actualNormalizers.length) {
+            expr = normalize(escapeIdentifier(column.name), actualNormalizers);
+          }
         }
 
         if (config?.customize) {

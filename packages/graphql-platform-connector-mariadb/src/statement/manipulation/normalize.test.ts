@@ -28,7 +28,7 @@ describe('Normalize statement', () => {
       const table = gp.connector.schema.getTableByNode(nodeName);
       const config: NormalizeStatementConfig = {
         customize: ({ column, columnIdentifier, defaultNormalization }) =>
-          column.table.name === 'articles' && column.name === 'title'
+          column.table.name === 'articles' && column.name === 'slug'
             ? `TRIM(${columnIdentifier})`
             : column.name === 'updated_at'
               ? columnIdentifier

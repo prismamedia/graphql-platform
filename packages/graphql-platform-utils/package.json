@@ -26,14 +26,14 @@
     "test:watch": "yarn run test --watchAll"
   },
   "devDependencies": {
-    "@jest/globals": "30.0.0-alpha.5",
+    "@jest/globals": "30.0.0-alpha.6",
     "@swc/core": "1.7.6",
     "@swc/jest": "0.2.36",
     "@tsconfig/node20": "20.1.4",
     "@types/indefinite": "2.3.4",
     "@types/node": "20.14.14",
     "graphql": "16.9.0",
-    "jest": "30.0.0-alpha.5",
+    "jest": "30.0.0-alpha.6",
     "publint": "0.2.9",
     "typescript": "5.5.4"
   },

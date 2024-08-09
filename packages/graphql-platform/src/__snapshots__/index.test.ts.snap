@@ -376,10 +376,10 @@ input ArticleFilterInput {
   status_not: ArticleStatus
   status_in: [ArticleStatus!]
   status_not_in: [ArticleStatus!]
-  title: NonEmptyNormalizedString
-  title_not: NonEmptyNormalizedString
-  title_in: [NonEmptyNormalizedString!]
-  title_not_in: [NonEmptyNormalizedString!]
+  title: NonEmptySanitizedString
+  title_not: NonEmptySanitizedString
+  title_in: [NonEmptySanitizedString!]
+  title_not_in: [NonEmptySanitizedString!]
   title_contains: NonEmptyString
   title_not_contains: NonEmptyString
   title_starts_with: NonEmptyString
@@ -483,9 +483,9 @@ enum ArticleStatus {
 }
 
 """
-Represents a non-empty normalized string. Sequences of whitespace and control characters are replaced with a single space. Leading whitespaces, trailing whitespaces and control characters are removed.
+Represents a non-empty sanitized string. Cannot contain HTML element(s). Sequences of whitespace(s) and control character(s) are replaced with a single space. Leading whitespace(s), trailing whitespace(s) and control character(s) are removed.
 """
-scalar NonEmptyNormalizedString
+scalar NonEmptySanitizedString
 
 """A non-empty string."""
 scalar NonEmptyString
@@ -820,7 +820,7 @@ type Article implements PublicNodeInterface {
   """This UUID identifies an Article publicly"""
   id: UUIDv4!
   status: ArticleStatus!
-  title: NonEmptyNormalizedString!
+  title: NonEmptySanitizedString!
   slug: NonEmptyTrimmedString!
 
   """The article's body"""
@@ -857,7 +857,7 @@ type Article implements PublicNodeInterface {
   ): NonEmptyTrimmedString!
 
   """A custom field with a dependency"""
-  upperCasedTitle: NonEmptyNormalizedString!
+  upperCasedTitle: NonEmptySanitizedString!
   similars(
     """The number of similar articles to return"""
     first: UnsignedInt!
@@ -1433,7 +1433,7 @@ input ArticleCreationInput {
   """You can either provide an UUID or let one be generated for you"""
   id: UUIDv4
   status: ArticleStatus! = DRAFT
-  title: NonEmptyNormalizedString!
+  title: NonEmptySanitizedString!
 
   """You can either provide a slug or let the title be "slugified" for you"""
   slug: NonEmptyTrimmedString
@@ -1561,7 +1561,7 @@ input ArticleCreationWithoutCategoryInput {
   """You can either provide an UUID or let one be generated for you"""
   id: UUIDv4
   status: ArticleStatus! = DRAFT
-  title: NonEmptyNormalizedString!
+  title: NonEmptySanitizedString!
 
   """You can either provide a slug or let the title be "slugified" for you"""
   slug: NonEmptyTrimmedString
@@ -1700,7 +1700,7 @@ input ArticleCreationCategoryCreateIfNotExistsInput {
 """The "Article" node's update"""
 input ArticleUpdateInput {
   status: ArticleStatus
-  title: NonEmptyNormalizedString
+  title: NonEmptySanitizedString
   slug: NonEmptyTrimmedString
 
   """The article's body"""
@@ -1884,7 +1884,7 @@ input CategoryUpdateArticlesCreateIfNotExistsInput {
 """The "Article" node's update"""
 input ArticleUpdateWithoutCategoryInput {
   status: ArticleStatus
-  title: NonEmptyNormalizedString
+  title: NonEmptySanitizedString
   slug: NonEmptyTrimmedString
 
   """The article's body"""
@@ -2301,7 +2301,7 @@ type ArticleDeletion {
   """This UUID identifies an Article publicly"""
   id: UUIDv4!
   status: ArticleStatus!
-  title: NonEmptyNormalizedString!
+  title: NonEmptySanitizedString!
   slug: NonEmptyTrimmedString!
 
   """The article's body"""
