@@ -156,11 +156,12 @@ export class LeafColumn extends AbstractColumn {
 
           case 'EmailAddress':
           case 'ID':
+          case 'String':
           case 'NonEmptyString':
           case 'NonEmptyTrimmedString':
           case 'NonEmptyNormalizedString':
           case 'NonEmptySanitizedString':
-          case 'String':
+          case 'Slug':
             this.dataType = new VarCharType<string>({ length: 255 });
             break;
 

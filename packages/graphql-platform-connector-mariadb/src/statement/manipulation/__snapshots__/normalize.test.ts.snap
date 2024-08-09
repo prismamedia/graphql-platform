@@ -4,7 +4,7 @@ exports[`Normalize statement generates "normalize" statement for "Article" 1`] =
 "UPDATE \`articles\`
 SET
   \`title\` = REGEXP_REPLACE(REGEXP_REPLACE(REGEXP_REPLACE(\`title\`, '(?s)(<!--.*?-->|<script\\\\b[^<]*(?:(?!</script>)<[^<]*)*(?:</script>|/>)|<[^>]*>)', ''), '^\\\\s+|\\\\s+$', ''), '\\\\s+', ' '),
-  \`slug\` = TRIM(\`slug\`),
+  \`slug\` = REGEXP_REPLACE(REGEXP_REPLACE(REGEXP_REPLACE(LOWER(REGEXP_REPLACE(\`slug\`, '(?s)(<!--.*?-->|<script\\\\b[^<]*(?:(?!</script>)<[^<]*)*(?:</script>|/>)|<[^>]*>)', '')), '[^a-z0-9-_]+', '-'), '(^[-_]+|[-_]+$)', ''), '([-_])[-_]+', '\\\\1'),
   \`body\` = IF(JSON_VALID(\`body\`) AND JSON_EXISTS(\`body\`, '$.blocks') AND JSON_TYPE(JSON_EXTRACT(\`body\`, '$.blocks')) != 'NULL' AND JSON_LENGTH(\`body\`, '$.blocks') > 0, JSON_COMPACT(\`body\`), NULL),
   \`updated_at\` = \`updated_at\`,
   \`metas\` = IF(JSON_VALID(\`metas\`) AND JSON_TYPE(\`metas\`) = 'OBJECT' AND JSON_LENGTH(\`metas\`) > 0, JSON_COMPACT(\`metas\`), NULL),

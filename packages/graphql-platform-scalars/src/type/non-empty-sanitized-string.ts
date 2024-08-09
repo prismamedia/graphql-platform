@@ -5,7 +5,7 @@ import {
   parseNonEmptyNormalizedString,
 } from './non-empty-normalized-string.js';
 
-export const forbiddenElementRegExp = new RegExp(
+const forbiddenElementsRegExp = new RegExp(
   `(${[
     // Comment
     '<!--.*?-->',
@@ -17,7 +17,7 @@ export const forbiddenElementRegExp = new RegExp(
 
 export const isNonEmptySanitizedString = (value: unknown): value is string =>
   typeof value === 'string' &&
-  !forbiddenElementRegExp.test(value) &&
+  !forbiddenElementsRegExp.test(value) &&
   isNonEmptyNormalizedString(value);
 
 export function parseNonEmptySanitizedString(
@@ -25,7 +25,7 @@ export function parseNonEmptySanitizedString(
   path?: utils.Path,
 ): string {
   if (typeof value === 'string') {
-    const forbiddenElements = value.match(forbiddenElementRegExp);
+    const forbiddenElements = value.match(forbiddenElementsRegExp);
     if (forbiddenElements?.length) {
       throw forbiddenElements.length === 1
         ? new utils.UnexpectedValueError(
@@ -53,7 +53,7 @@ export function parseNonEmptySanitizedString(
 export const GraphQLNonEmptySanitizedString = new graphql.GraphQLScalarType({
   name: 'NonEmptySanitizedString',
   description:
-    'Represents a non-empty sanitized string. Cannot contain HTML element(s). Sequences of whitespace(s) and control character(s) are replaced with a single space. Leading whitespace(s), trailing whitespace(s) and control character(s) are removed.',
+    'Represents a non-empty sanitized string. Cannot contain HTML. Sequences of whitespaces and control characters are replaced with a single space. Leading whitespaces, trailing whitespaces and control characters are removed.',
   parseValue(value: unknown) {
     return parseNonEmptySanitizedString(value);
   },

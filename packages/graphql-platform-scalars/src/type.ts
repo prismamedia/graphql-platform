@@ -12,6 +12,7 @@ import { GraphQLNonEmptyNormalizedString } from './type/non-empty-normalized-str
 import { GraphQLNonEmptySanitizedString } from './type/non-empty-sanitized-string.js';
 import { GraphQLNonEmptyString } from './type/non-empty-string.js';
 import { GraphQLNonEmptyTrimmedString } from './type/non-empty-trimmed-string.js';
+import { GraphQLSlug } from './type/slug.js';
 import { GraphQLUnsignedBigInt } from './type/unsigned-bigint.js';
 import { GraphQLUnsignedFloat } from './type/unsigned-float.js';
 import { GraphQLUnsignedInt } from './type/unsigned-int.js';
@@ -28,6 +29,7 @@ export * from './type/non-empty-normalized-string.js';
 export * from './type/non-empty-sanitized-string.js';
 export * from './type/non-empty-string.js';
 export * from './type/non-empty-trimmed-string.js';
+export * from './type/slug.js';
 export * from './type/unsigned-bigint.js';
 export * from './type/unsigned-float.js';
 export * from './type/unsigned-int.js';
@@ -59,6 +61,7 @@ export const typesByName = {
   NonEmptyTrimmedString: GraphQLNonEmptyTrimmedString,
   NonEmptyNormalizedString: GraphQLNonEmptyNormalizedString,
   NonEmptySanitizedString: GraphQLNonEmptySanitizedString,
+  Slug: GraphQLSlug,
   UnsignedBigInt: GraphQLUnsignedBigInt,
   UnsignedFloat: GraphQLUnsignedFloat,
   UnsignedInt: GraphQLUnsignedInt,
@@ -149,11 +152,12 @@ export const idTypes = [
 
 export const stringTypeNames = [
   'EmailAddress',
+  'String',
   'NonEmptyString',
   'NonEmptyTrimmedString',
   'NonEmptyNormalizedString',
   'NonEmptySanitizedString',
-  'String',
+  'Slug',
 ] as const satisfies ReadonlyArray<TypeName>;
 
 export const stringTypes = R.map(stringTypeNames, (name) => typesByName[name]);

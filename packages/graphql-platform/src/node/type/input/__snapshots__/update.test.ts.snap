@@ -5,7 +5,7 @@ exports[`NodeUpdateInputType Definition Article may have an update input type: A
 input ArticleUpdateInput {
   status: ArticleStatus
   title: NonEmptySanitizedString
-  slug: NonEmptyTrimmedString
+  slug: Slug
 
   """The article's body"""
   body: DraftJS
@@ -36,7 +36,7 @@ exports[`NodeUpdateInputType Definition Article may have an update input type: A
 input ArticleUpdateWithoutCategoryInput {
   status: ArticleStatus
   title: NonEmptySanitizedString
-  slug: NonEmptyTrimmedString
+  slug: Slug
 
   """The article's body"""
   body: DraftJS
@@ -66,7 +66,7 @@ exports[`NodeUpdateInputType Definition Article may have an update input type: A
 input ArticleUpdateWithoutCreatedByInput {
   status: ArticleStatus
   title: NonEmptySanitizedString
-  slug: NonEmptyTrimmedString
+  slug: Slug
 
   """The article's body"""
   body: DraftJS
@@ -97,7 +97,7 @@ exports[`NodeUpdateInputType Definition Article may have an update input type: A
 input ArticleUpdateWithoutUpdatedByInput {
   status: ArticleStatus
   title: NonEmptySanitizedString
-  slug: NonEmptyTrimmedString
+  slug: Slug
 
   """The article's body"""
   body: DraftJS

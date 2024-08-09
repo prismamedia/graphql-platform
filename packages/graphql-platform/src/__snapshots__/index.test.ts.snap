@@ -376,10 +376,10 @@ input ArticleFilterInput {
   status_not: ArticleStatus
   status_in: [ArticleStatus!]
   status_not_in: [ArticleStatus!]
-  title: NonEmptySanitizedString
-  title_not: NonEmptySanitizedString
-  title_in: [NonEmptySanitizedString!]
-  title_not_in: [NonEmptySanitizedString!]
+  title: NonEmptyTrimmedString
+  title_not: NonEmptyTrimmedString
+  title_in: [NonEmptyTrimmedString!]
+  title_not_in: [NonEmptyTrimmedString!]
   title_contains: NonEmptyString
   title_not_contains: NonEmptyString
   title_starts_with: NonEmptyString
@@ -483,17 +483,12 @@ enum ArticleStatus {
 }
 
 """
-Represents a non-empty sanitized string. Cannot contain HTML element(s). Sequences of whitespace(s) and control character(s) are replaced with a single space. Leading whitespace(s), trailing whitespace(s) and control character(s) are removed.
-"""
-scalar NonEmptySanitizedString
-
-"""A non-empty string."""
-scalar NonEmptyString
-
-"""
 Represents a non-empty trimmed string. Leading and trailing whitespaces are removed.
 """
 scalar NonEmptyTrimmedString
+
+"""A non-empty string."""
+scalar NonEmptyString
 
 """The "Category" nodes' filter"""
 input CategoryFilterInput {
@@ -799,7 +794,7 @@ input ArticleUniqueFilterInput {
   """This UUID identifies an Article publicly"""
   id: UUIDv4
   category: CategoryUniqueFilterInput
-  slug: NonEmptyTrimmedString
+  slug: Slug
 }
 
 """
@@ -815,13 +810,18 @@ input CategoryUniqueFilterInput {
   order: UnsignedInt
 }
 
+"""
+Represents a slug: a string containing only lowercase letters, digits, hyphens and underscores. It cannot contain consecutive hyphens or underscores.
+"""
+scalar Slug
+
 """The article is the main resource, written by the journalists"""
 type Article implements PublicNodeInterface {
   """This UUID identifies an Article publicly"""
   id: UUIDv4!
   status: ArticleStatus!
   title: NonEmptySanitizedString!
-  slug: NonEmptyTrimmedString!
+  slug: Slug!
 
   """The article's body"""
   body: DraftJS
@@ -869,6 +869,11 @@ interface PublicNodeInterface {
   """Every public node have a public id"""
   id: UUIDv4!
 }
+
+"""
+Represents a non-empty sanitized string. Cannot contain HTML. Sequences of whitespaces and control characters are replaced with a single space. Leading whitespaces, trailing whitespaces and control characters are removed.
+"""
+scalar NonEmptySanitizedString
 
 """
 The DraftJS raw state contains a list of content blocks, as well as a map of all relevant entity objects.
@@ -1436,7 +1441,7 @@ input ArticleCreationInput {
   title: NonEmptySanitizedString!
 
   """You can either provide a slug or let the title be "slugified" for you"""
-  slug: NonEmptyTrimmedString
+  slug: Slug
 
   """The article's body"""
   body: DraftJS
@@ -1564,7 +1569,7 @@ input ArticleCreationWithoutCategoryInput {
   title: NonEmptySanitizedString!
 
   """You can either provide a slug or let the title be "slugified" for you"""
-  slug: NonEmptyTrimmedString
+  slug: Slug
 
   """The article's body"""
   body: DraftJS
@@ -1701,7 +1706,7 @@ input ArticleCreationCategoryCreateIfNotExistsInput {
 input ArticleUpdateInput {
   status: ArticleStatus
   title: NonEmptySanitizedString
-  slug: NonEmptyTrimmedString
+  slug: Slug
 
   """The article's body"""
   body: DraftJS
@@ -1873,7 +1878,7 @@ Given a "category", identifies exactly one "Article" with one of the following c
 - (category) / slug
 """
 input ArticleUniqueFilterWithoutCategoryInput {
-  slug: NonEmptyTrimmedString!
+  slug: Slug!
 }
 
 input CategoryUpdateArticlesCreateIfNotExistsInput {
@@ -1885,7 +1890,7 @@ input CategoryUpdateArticlesCreateIfNotExistsInput {
 input ArticleUpdateWithoutCategoryInput {
   status: ArticleStatus
   title: NonEmptySanitizedString
-  slug: NonEmptyTrimmedString
+  slug: Slug
 
   """The article's body"""
   body: DraftJS
@@ -2302,7 +2307,7 @@ type ArticleDeletion {
   id: UUIDv4!
   status: ArticleStatus!
   title: NonEmptySanitizedString!
-  slug: NonEmptyTrimmedString!
+  slug: Slug!
 
   """The article's body"""
   body: DraftJS

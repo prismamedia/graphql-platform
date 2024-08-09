@@ -213,7 +213,7 @@ export const Article = {
     },
     slug: {
       kind: 'Leaf',
-      type: 'NonEmptyTrimmedString',
+      type: 'Slug',
       nullable: false,
 
       creation: {

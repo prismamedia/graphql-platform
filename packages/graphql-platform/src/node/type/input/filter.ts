@@ -44,13 +44,17 @@ export class NodeFilterInputType extends utils.ObjectInputType<FieldFilterInputI
   public static createLeafComparisonFields(leaf: Leaf): LeafFilterInput[] {
     const fields: LeafFilterInput[] = [];
 
+    const inputType = scalars.stringTypes.includes(leaf.type as any)
+      ? scalars.typesByName.NonEmptyTrimmedString
+      : leaf.type;
+
     if (leaf.isComparable()) {
       // eq, not
       for (const operator of ['eq', 'not'] as const) {
         fields.push(
           new LeafFilterInput<LeafValue>(leaf, operator, {
             type: utils.nonNullableInputTypeDecorator(
-              leaf.type,
+              inputType,
               !leaf.isNullable(),
             ),
             filter: (value, _context, _path) =>
@@ -67,7 +71,7 @@ export class NodeFilterInputType extends utils.ObjectInputType<FieldFilterInputI
               new utils.ListableInputType(
                 new utils.NonOptionalInputType(
                   utils.nonNullableInputTypeDecorator(
-                    leaf.type,
+                    inputType,
                     !leaf.isNullable(),
                   ),
                 ),
@@ -81,7 +85,7 @@ export class NodeFilterInputType extends utils.ObjectInputType<FieldFilterInputI
               new utils.ListableInputType(
                 new utils.NonOptionalInputType(
                   utils.nonNullableInputTypeDecorator(
-                    leaf.type,
+                    inputType,
                     !leaf.isNullable(),
                   ),
                 ),
@@ -98,7 +102,7 @@ export class NodeFilterInputType extends utils.ObjectInputType<FieldFilterInputI
         for (const operator of sortableLeafComparisonOperatorSet) {
           fields.push(
             new LeafFilterInput<NonNullable<LeafValue>>(leaf, operator, {
-              type: new utils.NonNullableInputType(leaf.type),
+              type: new utils.NonNullableInputType(inputType),
               filter: (value, _context, _path) =>
                 new LeafComparisonFilter(leaf, operator, value),
             }),

@@ -25,6 +25,14 @@ export const sanitizeString = (expr: string) =>
     `<[^>]*>`,
   ].join('|')})', '')`;
 
+export const slugify = (expr: string) =>
+  normalize(expr, [
+    (expr) => `LOWER(${expr})`,
+    (expr) => `REGEXP_REPLACE(${expr}, '[^a-z0-9-_]+', '-')`,
+    (expr) => `REGEXP_REPLACE(${expr}, '(^[-_]+|[-_]+$)', '')`,
+    (expr) => `REGEXP_REPLACE(${expr}, '([-_])[-_]+', '\\\\1')`,
+  ]);
+
 const normalizeJSON = (
   expr: string,
   type: 'ARRAY' | 'OBJECT',
@@ -145,6 +153,14 @@ export class NormalizeStatement implements mariadb.QueryOptions {
               sanitizeString,
               trimWhitespaces,
               normalizeWhitespaces,
+              column.isNullable() ? nullIfEmptyString : undefined,
+            ];
+            break;
+
+          case scalars.GraphQLSlug:
+            normalizers = [
+              sanitizeString,
+              slugify,
               column.isNullable() ? nullIfEmptyString : undefined,
             ];
             break;

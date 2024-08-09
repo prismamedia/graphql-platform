@@ -4,9 +4,9 @@ import * as graphql from 'graphql';
 export const normalizeString = (value: string): string =>
   value
     .normalize()
-    // Replace sequence(s) of whitespace(s) and control character(s) with a single space
+    // Replace sequences of whitespaces and control characters with a single space
     .replace(/[\p{Separator}\p{Other}]*\s[\p{Separator}\p{Other}]*/gu, ' ')
-    // Remove leading whitespace(s), trailing whitespace(s) and control character(s)
+    // Remove leading whitespaces, trailing whitespaces and control characters
     .replace(/^ | $|\p{Other}/gu, '');
 
 export const isNonEmptyNormalizedString = (value: unknown): value is string =>
@@ -31,7 +31,7 @@ export function parseNonEmptyNormalizedString(
 export const GraphQLNonEmptyNormalizedString = new graphql.GraphQLScalarType({
   name: 'NonEmptyNormalizedString',
   description:
-    'Represents a non-empty normalized string. Sequences of whitespace(s) and control character(s) are replaced with a single space. Leading whitespace(s), trailing whitespace(s) and control character(s) are removed.',
+    'Represents a non-empty normalized string. Sequences of whitespaces and control characters are replaced with a single space. Leading whitespaces, trailing whitespaces and control characters are removed.',
   parseValue(value: unknown) {
     return parseNonEmptyNormalizedString(value);
   },

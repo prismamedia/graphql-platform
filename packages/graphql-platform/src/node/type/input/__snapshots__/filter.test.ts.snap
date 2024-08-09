@@ -11,10 +11,10 @@ input ArticleFilterInput {
   status_not: ArticleStatus
   status_in: [ArticleStatus!]
   status_not_in: [ArticleStatus!]
-  title: NonEmptySanitizedString
-  title_not: NonEmptySanitizedString
-  title_in: [NonEmptySanitizedString!]
-  title_not_in: [NonEmptySanitizedString!]
+  title: NonEmptyTrimmedString
+  title_not: NonEmptyTrimmedString
+  title_in: [NonEmptyTrimmedString!]
+  title_not_in: [NonEmptyTrimmedString!]
   title_contains: NonEmptyString
   title_not_contains: NonEmptyString
   title_starts_with: NonEmptyString

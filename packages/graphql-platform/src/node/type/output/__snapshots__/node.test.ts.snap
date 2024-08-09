@@ -7,7 +7,7 @@ type Article implements PublicNodeInterface {
   id: UUIDv4!
   status: ArticleStatus!
   title: NonEmptySanitizedString!
-  slug: NonEmptyTrimmedString!
+  slug: Slug!
 
   """The article's body"""
   body: DraftJS

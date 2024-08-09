@@ -10,7 +10,7 @@ input ArticleUniqueFilterInput {
   """This UUID identifies an Article publicly"""
   id: UUIDv4
   category: CategoryUniqueFilterInput
-  slug: NonEmptyTrimmedString
+  slug: Slug
 }"
 `;
 
@@ -20,7 +20,7 @@ Given a "category", identifies exactly one "Article" with one of the following c
 - (category) / slug
 """
 input ArticleUniqueFilterWithoutCategoryInput {
-  slug: NonEmptyTrimmedString!
+  slug: Slug!
 }"
 `;
 
