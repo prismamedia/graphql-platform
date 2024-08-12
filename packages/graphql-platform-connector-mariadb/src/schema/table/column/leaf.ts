@@ -159,7 +159,6 @@ export class LeafColumn extends AbstractColumn {
           case 'String':
           case 'NonEmptyString':
           case 'NonEmptyTrimmedString':
-          case 'NonEmptyNormalizedString':
           case 'NonEmptySanitizedString':
           case 'Slug':
             this.dataType = new VarCharType<string>({ length: 255 });

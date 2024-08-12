@@ -23,7 +23,7 @@ export function parseNonEmptyTrimmedString(
 export const GraphQLNonEmptyTrimmedString = new graphql.GraphQLScalarType({
   name: 'NonEmptyTrimmedString',
   description:
-    'Represents a non-empty trimmed string. Leading and trailing whitespaces are removed.',
+    'A string in which the leading and trailing whitespaces are removed.',
   parseValue(value: unknown) {
     return parseNonEmptyTrimmedString(value);
   },

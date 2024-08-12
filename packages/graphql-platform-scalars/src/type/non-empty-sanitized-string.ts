@@ -1,9 +1,5 @@
 import * as utils from '@prismamedia/graphql-platform-utils';
 import * as graphql from 'graphql';
-import {
-  isNonEmptyNormalizedString,
-  parseNonEmptyNormalizedString,
-} from './non-empty-normalized-string.js';
 
 const forbiddenElementsRegExp = new RegExp(
   `(${[
@@ -15,10 +11,25 @@ const forbiddenElementsRegExp = new RegExp(
   'g',
 );
 
+/**
+ *
+ * @see https://www.unicode.org/reports/tr44/#General_Category_Values
+ */
+export const normalizeString = (value: string): string =>
+  value
+    .normalize()
+    // Replace sequences of whitespaces and control characters with a single space
+    .replace(/[\p{Separator}\p{Other}]*\s[\p{Separator}\p{Other}]*/gu, ' ')
+    // Remove leading and trailing whitespaces & control characters and control characters
+    .replace(
+      /^[\p{Separator}\p{Other}]+|[\p{Separator}\p{Other}]+$|\p{Other}/gu,
+      '',
+    );
+
 export const isNonEmptySanitizedString = (value: unknown): value is string =>
   typeof value === 'string' &&
   !forbiddenElementsRegExp.test(value) &&
-  isNonEmptyNormalizedString(value);
+  normalizeString(value).length > 0;
 
 export function parseNonEmptySanitizedString(
   value: unknown,
@@ -45,15 +56,22 @@ export function parseNonEmptySanitizedString(
             { message: 'not to contain forbidden elements', path },
           );
     }
+
+    const normalizedValue = normalizeString(value);
+    if (normalizedValue.length > 0) {
+      return normalizedValue;
+    }
   }
 
-  return parseNonEmptyNormalizedString(value, path);
+  throw new utils.UnexpectedValueError('a non-empty sanitized string', value, {
+    path,
+  });
 }
 
 export const GraphQLNonEmptySanitizedString = new graphql.GraphQLScalarType({
   name: 'NonEmptySanitizedString',
   description:
-    'Represents a non-empty sanitized string. Cannot contain HTML. Sequences of whitespaces and control characters are replaced with a single space. Leading whitespaces, trailing whitespaces and control characters are removed.',
+    'A string in which the sequences of whitespaces and control characters are replaced with a single space - the leading whitespaces, trailing whitespaces and control characters are removed. It cannot contain HTML.',
   parseValue(value: unknown) {
     return parseNonEmptySanitizedString(value);
   },

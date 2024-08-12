@@ -17,7 +17,7 @@ export function parseSlug(value: unknown, path?: utils.Path): string {
 export const GraphQLSlug = new graphql.GraphQLScalarType({
   name: 'Slug',
   description:
-    'Represents a slug: a string containing only lowercase letters, digits, hyphens and underscores. It cannot contain consecutive hyphens or underscores.',
+    'Represents a slug: a string containing only lowercase letters, digits, hyphens and underscores. It cannot start or end with a hyphen or underscore, nor contain consecutive hyphens or underscores.',
   parseValue(value: unknown) {
     return parseSlug(value);
   },

@@ -8,7 +8,6 @@ import { GraphQLDate } from './type/date.js';
 import { GraphQLDraftJS } from './type/draft-js.js';
 import { GraphQLEmailAddress } from './type/email-address.js';
 import { jsonTypesByName } from './type/json.js';
-import { GraphQLNonEmptyNormalizedString } from './type/non-empty-normalized-string.js';
 import { GraphQLNonEmptySanitizedString } from './type/non-empty-sanitized-string.js';
 import { GraphQLNonEmptyString } from './type/non-empty-string.js';
 import { GraphQLNonEmptyTrimmedString } from './type/non-empty-trimmed-string.js';
@@ -25,7 +24,6 @@ export * from './type/date.js';
 export * from './type/draft-js.js';
 export * from './type/email-address.js';
 export * from './type/json.js';
-export * from './type/non-empty-normalized-string.js';
 export * from './type/non-empty-sanitized-string.js';
 export * from './type/non-empty-string.js';
 export * from './type/non-empty-trimmed-string.js';
@@ -59,7 +57,6 @@ export const typesByName = {
   EmailAddress: GraphQLEmailAddress,
   NonEmptyString: GraphQLNonEmptyString,
   NonEmptyTrimmedString: GraphQLNonEmptyTrimmedString,
-  NonEmptyNormalizedString: GraphQLNonEmptyNormalizedString,
   NonEmptySanitizedString: GraphQLNonEmptySanitizedString,
   Slug: GraphQLSlug,
   UnsignedBigInt: GraphQLUnsignedBigInt,
@@ -155,7 +152,6 @@ export const stringTypeNames = [
   'String',
   'NonEmptyString',
   'NonEmptyTrimmedString',
-  'NonEmptyNormalizedString',
   'NonEmptySanitizedString',
   'Slug',
 ] as const satisfies ReadonlyArray<TypeName>;

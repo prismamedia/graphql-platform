@@ -473,7 +473,7 @@ input ArticleFilterInput {
   NOT: ArticleFilterInput
 }
 
-"""A field whose value is a generic Universally Unique Identifier."""
+"""A field whose value is a Universally Unique Identifier."""
 scalar UUIDv4 @specifiedBy(url: "https://en.wikipedia.org/wiki/Universally_unique_identifier")
 
 enum ArticleStatus {
@@ -482,9 +482,7 @@ enum ArticleStatus {
   DELETED
 }
 
-"""
-Represents a non-empty trimmed string. Leading and trailing whitespaces are removed.
-"""
+"""A string in which the leading and trailing whitespaces are removed."""
 scalar NonEmptyTrimmedString
 
 """A non-empty string."""
@@ -811,7 +809,7 @@ input CategoryUniqueFilterInput {
 }
 
 """
-Represents a slug: a string containing only lowercase letters, digits, hyphens and underscores. It cannot contain consecutive hyphens or underscores.
+Represents a slug: a string containing only lowercase letters, digits, hyphens and underscores. It cannot start or end with a hyphen or underscore, nor contain consecutive hyphens or underscores.
 """
 scalar Slug
 
@@ -871,7 +869,7 @@ interface PublicNodeInterface {
 }
 
 """
-Represents a non-empty sanitized string. Cannot contain HTML. Sequences of whitespaces and control characters are replaced with a single space. Leading whitespaces, trailing whitespaces and control characters are removed.
+A string in which the sequences of whitespaces and control characters are replaced with a single space - the leading whitespaces, trailing whitespaces and control characters are removed. It cannot contain HTML.
 """
 scalar NonEmptySanitizedString
 

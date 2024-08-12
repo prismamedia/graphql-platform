@@ -35,7 +35,7 @@ export function parseUUID(
 const buildGraphQLUUIDScalarType = (version?: UUIDVersion) =>
   new graphql.GraphQLScalarType({
     name: `UUID${version ? `v${version}` : ''}`,
-    description: `A field whose value is a generic Universally Unique Identifier.`,
+    description: `A field whose value is a Universally Unique Identifier.`,
     specifiedByURL:
       'https://en.wikipedia.org/wiki/Universally_unique_identifier',
     parseValue(value: unknown) {
