@@ -18,19 +18,26 @@ export const trimWhitespaces = (expr: string) =>
 export const normalizeWhitespaces = (expr: string) =>
   `REGEXP_REPLACE(${expr}, '\\\\s+', ' ')`;
 
-export const sanitizeString = (expr: string) =>
+export const sanitize = (expr: string) =>
   `REGEXP_REPLACE(${expr}, '(?s)(${[
     `<!--.*?-->`,
     `<script\\\\b[^<]*(?:(?!</script>)<[^<]*)*(?:</script>|/>)`,
     `<[^>]*>`,
   ].join('|')})', '')`;
 
+/**
+ * @see https://egov.ice.gov/sevishelp/schooluser/transliteration_guide.htm
+ */
 const sourcesByDest: ReadonlyArray<[string, ReadonlyArray<string>]> = [
-  ['a', ['à', 'á', 'â', 'ã', 'ä', 'ǎ', 'å']],
-  ['c', ['ç']],
-  ['e', ['è', 'é', 'ê', 'ẽ', 'ë', 'ě']],
-  ['i', ['ì', 'í', 'î', 'ĩ', 'ï', 'ǐ']],
+  ['a', ['à', 'á', 'â', 'ã', 'ǎ', 'ā']],
+  ['aa', ['å']],
+  ['ae', ['ä', 'æ']],
+  ['c', ['ç', 'ć', 'č', 'ċ']],
+  ['e', ['è', 'é', 'ê', 'ẽ', 'ë', 'ě', 'ė', 'ē', 'ę']],
+  ['i', ['ì', 'í', 'î', 'ĩ', 'ï', 'ǐ', 'ī', 'į']],
   ['o', ['ò', 'ó', 'ô', 'õ', 'ö', 'ǒ', 'ø']],
+  ['oe', ['œ']],
+  ['ss', ['ß']],
   ['u', ['ù', 'ú', 'û', 'ũ', 'ü', 'ǔ', 'ǔ']],
   ['y', ['ý', 'ŷ', 'ÿ']],
 ];
@@ -39,10 +46,13 @@ export const slugify = (expr: string) =>
   normalize(expr, [
     (expr) => `LOWER(${expr})`,
     ...sourcesByDest.flatMap(([dest, sources]) =>
-      sources.map(
-        (source) => (expr: string) =>
-          `REPLACE(${expr}, '${source}', '${dest}')`,
-      ),
+      sources.length > 1
+        ? (expr: string) =>
+            `REGEXP_REPLACE(${expr}, '[${sources.join('')}]', '${dest}')`
+        : sources.map(
+            (source) => (expr: string) =>
+              `REPLACE(${expr}, '${source}', '${dest}')`,
+          ),
     ),
     (expr) => `REGEXP_REPLACE(${expr}, '[^a-z0-9-_]+', '-')`,
     (expr) => `REGEXP_REPLACE(${expr}, '([-_])[-_]+', '\\\\1')`,
@@ -158,7 +168,7 @@ export class NormalizeStatement implements mariadb.QueryOptions {
 
           case scalars.GraphQLNonEmptySanitizedString:
             normalizers = [
-              sanitizeString,
+              sanitize,
               trimWhitespaces,
               normalizeWhitespaces,
               column.isNullable() ? nullIfEmptyString : undefined,
