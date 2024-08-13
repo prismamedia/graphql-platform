@@ -18,11 +18,12 @@ export const trimWhitespaces = (expr: string) =>
 export const normalizeWhitespaces = (expr: string) =>
   `REGEXP_REPLACE(${expr}, '\\\\s+', ' ')`;
 
-export const sanitize = (expr: string) =>
+export const sanitize = (expr: string, extras: ReadonlyArray<string> = []) =>
   `REGEXP_REPLACE(${expr}, '(?s)(${[
     `<!--.*?-->`,
     `<script\\\\b[^<]*(?:(?!</script>)<[^<]*)*(?:</script>|/>)`,
     `<[^>]*>`,
+    ...extras,
   ].join('|')})', '')`;
 
 /**
