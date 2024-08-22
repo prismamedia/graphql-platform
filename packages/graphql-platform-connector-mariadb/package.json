@@ -29,14 +29,14 @@
   "devDependencies": {
     "@jest/globals": "30.0.0-alpha.6",
     "@sqltools/formatter": "1.2.5",
-    "@swc/core": "1.7.10",
+    "@swc/core": "1.7.14",
     "@swc/jest": "0.2.36",
     "@tsconfig/node20": "20.1.4",
-    "@types/node": "20.14.15",
+    "@types/node": "20.16.1",
     "@types/semver": "7.5.8",
     "graphql": "16.9.0",
     "jest": "30.0.0-alpha.6",
-    "publint": "0.2.9",
+    "publint": "0.2.10",
     "typescript": "5.5.4"
   },
   "dependencies": {
@@ -50,7 +50,7 @@
     "mariadb": "^3.3.1",
     "remeda": "^2.11.0",
     "semver": "^7.6.3",
-    "type-fest": "^4.24.0"
+    "type-fest": "^4.25.0"
   },
   "peerDependencies": {
     "graphql": "^16.9.0"

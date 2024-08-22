@@ -238,6 +238,10 @@ export class ScrollSubscriptionStream<
     return this.#api.count({ where: this.filter?.inputValue });
   }
 
+  /**
+   * @deprecated Use `Array.fromAsync()` instead
+   * @see https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Array/fromAsync
+   */
   public async toArray(): Promise<TValue[]> {
     const values: TValue[] = [];
 
