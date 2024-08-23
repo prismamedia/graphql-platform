@@ -1038,8 +1038,8 @@ __metadata:
     "@sqltools/formatter": "npm:1.2.5"
     "@swc/core": "npm:1.7.23"
     "@swc/jest": "npm:0.2.36"
-    "@tsconfig/node20": "npm:20.1.4"
-    "@types/node": "npm:20.16.5"
+    "@tsconfig/node22": "npm:22.0.0"
+    "@types/node": "npm:22.5.4"
     "@types/semver": "npm:7.5.8"
     dependency-graph: "npm:^1.0.0"
     graphql: "npm:16.9.0"
@@ -1066,11 +1066,11 @@ __metadata:
     "@prismamedia/graphql-platform-connector-mariadb": "workspace:packages/graphql-platform-connector-mariadb"
     "@swc/core": "npm:1.7.23"
     "@swc/jest": "npm:0.2.36"
-    "@tsconfig/node20": "npm:20.1.4"
+    "@tsconfig/node22": "npm:22.0.0"
     "@types/body-parser": "npm:^1.19.5"
     "@types/cors": "npm:^2.8.17"
     "@types/express": "npm:^4.17.21"
-    "@types/node": "npm:20.16.5"
+    "@types/node": "npm:22.5.4"
     "@types/ws": "npm:^8.5.12"
     body-parser: "npm:1.20.2"
     cors: "npm:2.8.5"
@@ -1095,9 +1095,9 @@ __metadata:
     "@prismamedia/graphql-platform-utils": "workspace:packages/graphql-platform-utils"
     "@swc/core": "npm:1.7.23"
     "@swc/jest": "npm:0.2.36"
-    "@tsconfig/node20": "npm:20.1.4"
+    "@tsconfig/node22": "npm:22.0.0"
     "@types/draft-js": "npm:^0.11.18"
-    "@types/node": "npm:20.16.5"
+    "@types/node": "npm:22.5.4"
     graphql: "npm:16.9.0"
     jest: "npm:30.0.0-alpha.6"
     publint: "npm:0.2.10"
@@ -1117,9 +1117,9 @@ __metadata:
     "@prismamedia/memoize": "npm:^5.0.2"
     "@swc/core": "npm:1.7.23"
     "@swc/jest": "npm:0.2.36"
-    "@tsconfig/node20": "npm:20.1.4"
+    "@tsconfig/node22": "npm:22.0.0"
     "@types/indefinite": "npm:2.3.4"
-    "@types/node": "npm:20.16.5"
+    "@types/node": "npm:22.5.4"
     graphql: "npm:16.9.0"
     indefinite: "npm:^2.5.1"
     jest: "npm:30.0.0-alpha.6"
@@ -1143,9 +1143,9 @@ __metadata:
     "@prismamedia/memoize": "npm:^5.0.2"
     "@swc/core": "npm:1.7.23"
     "@swc/jest": "npm:0.2.36"
-    "@tsconfig/node20": "npm:20.1.4"
+    "@tsconfig/node22": "npm:22.0.0"
     "@types/cli-progress": "npm:^3.11.6"
-    "@types/node": "npm:20.16.5"
+    "@types/node": "npm:22.5.4"
     cli-progress: "npm:^3.12.0"
     dataloader: "npm:^2.2.2"
     denque: "npm:^2.1.0"
@@ -1428,10 +1428,10 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@tsconfig/node20@npm:20.1.4":
-  version: 20.1.4
-  resolution: "@tsconfig/node20@npm:20.1.4"
-  checksum: 10/345dba8074647f6c11b8d78afa76d9c16e3436cb56a8e78fe2060014d33a09f3f4fd6ed81dc90e955d3509f926cd7fd61c6ddfd3d5a1d80758d7844f7cc3a99e
+"@tsconfig/node22@npm:22.0.0":
+  version: 22.0.0
+  resolution: "@tsconfig/node22@npm:22.0.0"
+  checksum: 10/9fc45789304640e1e37e1f1e04c02dca593c290d4f1cb55af7e9cab799fb2c6356e1cc15ee9f140185591a81f491a4c7f2d6c08c1e5a3d758658ba69f1afee6d
   languageName: node
   linkType: hard
 
@@ -1626,12 +1626,12 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@types/node@npm:20.16.5":
-  version: 20.16.5
-  resolution: "@types/node@npm:20.16.5"
+"@types/node@npm:22.5.4":
+  version: 22.5.4
+  resolution: "@types/node@npm:22.5.4"
   dependencies:
     undici-types: "npm:~6.19.2"
-  checksum: 10/39a8457149dc17cdea57afc90d4da53182fdb8b958d5bb065a15d123d81d4efa6b51a0de92428d05ead2e63ce07195586f71083401b99cdbcd04662344fbf7a1
+  checksum: 10/d46e0abf437b36bdf89011287aa43873d68ea6f2521a11b5c9a033056fd0d07af36daf51439010e8d41c62c55d0b00e9b5e09ed00bb2617723f73f28a873903a
   languageName: node
   linkType: hard
 

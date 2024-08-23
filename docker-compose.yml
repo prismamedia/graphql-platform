@@ -11,7 +11,7 @@ services:
     restart: 'unless-stopped'
 
   project:
-    image: node:20
+    image: node:22
     command: sleep infinity
     environment:
       MARIADB_HOST: mariadb

@@ -5,7 +5,7 @@
     "Yvann Boucher <yvann.boucher@gmail.com>"
   ],
   "engines": {
-    "node": ">=20.10"
+    "node": ">=22.8"
   },
   "type": "module",
   "workspaces": [
