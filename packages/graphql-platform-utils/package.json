@@ -27,11 +27,11 @@
   },
   "devDependencies": {
     "@jest/globals": "30.0.0-alpha.6",
-    "@swc/core": "1.7.14",
+    "@swc/core": "1.7.22",
     "@swc/jest": "0.2.36",
     "@tsconfig/node20": "20.1.4",
     "@types/indefinite": "2.3.4",
-    "@types/node": "20.16.1",
+    "@types/node": "20.16.3",
     "graphql": "16.9.0",
     "jest": "30.0.0-alpha.6",
     "publint": "0.2.10",
@@ -41,7 +41,7 @@
     "@prismamedia/memoize": "^5.0.2",
     "indefinite": "^2.5.1",
     "remeda": "^2.11.0",
-    "type-fest": "^4.25.0"
+    "type-fest": "^4.26.0"
   },
   "peerDependencies": {
     "graphql": "^16.9.0"

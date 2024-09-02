@@ -1036,10 +1036,10 @@ __metadata:
     "@prismamedia/graphql-platform-utils": "workspace:packages/graphql-platform-utils"
     "@prismamedia/memoize": "npm:^5.0.2"
     "@sqltools/formatter": "npm:1.2.5"
-    "@swc/core": "npm:1.7.14"
+    "@swc/core": "npm:1.7.22"
     "@swc/jest": "npm:0.2.36"
     "@tsconfig/node20": "npm:20.1.4"
-    "@types/node": "npm:20.16.1"
+    "@types/node": "npm:20.16.3"
     "@types/semver": "npm:7.5.8"
     dependency-graph: "npm:^1.0.0"
     graphql: "npm:16.9.0"
@@ -1049,7 +1049,7 @@ __metadata:
     publint: "npm:0.2.10"
     remeda: "npm:^2.11.0"
     semver: "npm:^7.6.3"
-    type-fest: "npm:^4.25.0"
+    type-fest: "npm:^4.26.0"
     typescript: "npm:5.5.4"
   peerDependencies:
     graphql: ^16.9.0
@@ -1064,13 +1064,13 @@ __metadata:
     "@jest/globals": "npm:30.0.0-alpha.6"
     "@prismamedia/graphql-platform": "workspace:packages/graphql-platform"
     "@prismamedia/graphql-platform-connector-mariadb": "workspace:packages/graphql-platform-connector-mariadb"
-    "@swc/core": "npm:1.7.14"
+    "@swc/core": "npm:1.7.22"
     "@swc/jest": "npm:0.2.36"
     "@tsconfig/node20": "npm:20.1.4"
     "@types/body-parser": "npm:^1.19.5"
     "@types/cors": "npm:^2.8.17"
     "@types/express": "npm:^4.17.21"
-    "@types/node": "npm:20.16.1"
+    "@types/node": "npm:20.16.3"
     "@types/ws": "npm:^8.5.12"
     body-parser: "npm:1.20.2"
     cors: "npm:2.8.5"
@@ -1093,16 +1093,16 @@ __metadata:
   dependencies:
     "@jest/globals": "npm:30.0.0-alpha.6"
     "@prismamedia/graphql-platform-utils": "workspace:packages/graphql-platform-utils"
-    "@swc/core": "npm:1.7.14"
+    "@swc/core": "npm:1.7.22"
     "@swc/jest": "npm:0.2.36"
     "@tsconfig/node20": "npm:20.1.4"
     "@types/draft-js": "npm:^0.11.18"
-    "@types/node": "npm:20.16.1"
+    "@types/node": "npm:20.16.3"
     graphql: "npm:16.9.0"
     jest: "npm:30.0.0-alpha.6"
     publint: "npm:0.2.10"
     remeda: "npm:^2.11.0"
-    type-fest: "npm:^4.25.0"
+    type-fest: "npm:^4.26.0"
     typescript: "npm:5.5.4"
   peerDependencies:
     graphql: ^16.9.0
@@ -1115,17 +1115,17 @@ __metadata:
   dependencies:
     "@jest/globals": "npm:30.0.0-alpha.6"
     "@prismamedia/memoize": "npm:^5.0.2"
-    "@swc/core": "npm:1.7.14"
+    "@swc/core": "npm:1.7.22"
     "@swc/jest": "npm:0.2.36"
     "@tsconfig/node20": "npm:20.1.4"
     "@types/indefinite": "npm:2.3.4"
-    "@types/node": "npm:20.16.1"
+    "@types/node": "npm:20.16.3"
     graphql: "npm:16.9.0"
     indefinite: "npm:^2.5.1"
     jest: "npm:30.0.0-alpha.6"
     publint: "npm:0.2.10"
     remeda: "npm:^2.11.0"
-    type-fest: "npm:^4.25.0"
+    type-fest: "npm:^4.26.0"
     typescript: "npm:5.5.4"
   peerDependencies:
     graphql: ^16.9.0
@@ -1141,11 +1141,11 @@ __metadata:
     "@prismamedia/graphql-platform-scalars": "workspace:packages/graphql-platform-scalars"
     "@prismamedia/graphql-platform-utils": "workspace:packages/graphql-platform-utils"
     "@prismamedia/memoize": "npm:^5.0.2"
-    "@swc/core": "npm:1.7.14"
+    "@swc/core": "npm:1.7.22"
     "@swc/jest": "npm:0.2.36"
     "@tsconfig/node20": "npm:20.1.4"
     "@types/cli-progress": "npm:^3.11.6"
-    "@types/node": "npm:20.16.1"
+    "@types/node": "npm:20.16.3"
     cli-progress: "npm:^3.12.0"
     dataloader: "npm:^2.2.2"
     denque: "npm:^2.1.0"
@@ -1157,7 +1157,7 @@ __metadata:
     p-retry: "npm:^6.2.0"
     publint: "npm:0.2.10"
     remeda: "npm:^2.11.0"
-    type-fest: "npm:^4.25.0"
+    type-fest: "npm:^4.26.0"
     typescript: "npm:5.5.4"
   peerDependencies:
     graphql: ^16.9.0
@@ -1283,90 +1283,90 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@swc/core-darwin-arm64@npm:1.7.14":
-  version: 1.7.14
-  resolution: "@swc/core-darwin-arm64@npm:1.7.14"
+"@swc/core-darwin-arm64@npm:1.7.22":
+  version: 1.7.22
+  resolution: "@swc/core-darwin-arm64@npm:1.7.22"
   conditions: os=darwin & cpu=arm64
   languageName: node
   linkType: hard
 
-"@swc/core-darwin-x64@npm:1.7.14":
-  version: 1.7.14
-  resolution: "@swc/core-darwin-x64@npm:1.7.14"
+"@swc/core-darwin-x64@npm:1.7.22":
+  version: 1.7.22
+  resolution: "@swc/core-darwin-x64@npm:1.7.22"
   conditions: os=darwin & cpu=x64
   languageName: node
   linkType: hard
 
-"@swc/core-linux-arm-gnueabihf@npm:1.7.14":
-  version: 1.7.14
-  resolution: "@swc/core-linux-arm-gnueabihf@npm:1.7.14"
+"@swc/core-linux-arm-gnueabihf@npm:1.7.22":
+  version: 1.7.22
+  resolution: "@swc/core-linux-arm-gnueabihf@npm:1.7.22"
   conditions: os=linux & cpu=arm
   languageName: node
   linkType: hard
 
-"@swc/core-linux-arm64-gnu@npm:1.7.14":
-  version: 1.7.14
-  resolution: "@swc/core-linux-arm64-gnu@npm:1.7.14"
+"@swc/core-linux-arm64-gnu@npm:1.7.22":
+  version: 1.7.22
+  resolution: "@swc/core-linux-arm64-gnu@npm:1.7.22"
   conditions: os=linux & cpu=arm64 & libc=glibc
   languageName: node
   linkType: hard
 
-"@swc/core-linux-arm64-musl@npm:1.7.14":
-  version: 1.7.14
-  resolution: "@swc/core-linux-arm64-musl@npm:1.7.14"
+"@swc/core-linux-arm64-musl@npm:1.7.22":
+  version: 1.7.22
+  resolution: "@swc/core-linux-arm64-musl@npm:1.7.22"
   conditions: os=linux & cpu=arm64 & libc=musl
   languageName: node
   linkType: hard
 
-"@swc/core-linux-x64-gnu@npm:1.7.14":
-  version: 1.7.14
-  resolution: "@swc/core-linux-x64-gnu@npm:1.7.14"
+"@swc/core-linux-x64-gnu@npm:1.7.22":
+  version: 1.7.22
+  resolution: "@swc/core-linux-x64-gnu@npm:1.7.22"
   conditions: os=linux & cpu=x64 & libc=glibc
   languageName: node
   linkType: hard
 
-"@swc/core-linux-x64-musl@npm:1.7.14":
-  version: 1.7.14
-  resolution: "@swc/core-linux-x64-musl@npm:1.7.14"
+"@swc/core-linux-x64-musl@npm:1.7.22":
+  version: 1.7.22
+  resolution: "@swc/core-linux-x64-musl@npm:1.7.22"
   conditions: os=linux & cpu=x64 & libc=musl
   languageName: node
   linkType: hard
 
-"@swc/core-win32-arm64-msvc@npm:1.7.14":
-  version: 1.7.14
-  resolution: "@swc/core-win32-arm64-msvc@npm:1.7.14"
+"@swc/core-win32-arm64-msvc@npm:1.7.22":
+  version: 1.7.22
+  resolution: "@swc/core-win32-arm64-msvc@npm:1.7.22"
   conditions: os=win32 & cpu=arm64
   languageName: node
   linkType: hard
 
-"@swc/core-win32-ia32-msvc@npm:1.7.14":
-  version: 1.7.14
-  resolution: "@swc/core-win32-ia32-msvc@npm:1.7.14"
+"@swc/core-win32-ia32-msvc@npm:1.7.22":
+  version: 1.7.22
+  resolution: "@swc/core-win32-ia32-msvc@npm:1.7.22"
   conditions: os=win32 & cpu=ia32
   languageName: node
   linkType: hard
 
-"@swc/core-win32-x64-msvc@npm:1.7.14":
-  version: 1.7.14
-  resolution: "@swc/core-win32-x64-msvc@npm:1.7.14"
+"@swc/core-win32-x64-msvc@npm:1.7.22":
+  version: 1.7.22
+  resolution: "@swc/core-win32-x64-msvc@npm:1.7.22"
   conditions: os=win32 & cpu=x64
   languageName: node
   linkType: hard
 
-"@swc/core@npm:1.7.14":
-  version: 1.7.14
-  resolution: "@swc/core@npm:1.7.14"
+"@swc/core@npm:1.7.22":
+  version: 1.7.22
+  resolution: "@swc/core@npm:1.7.22"
   dependencies:
-    "@swc/core-darwin-arm64": "npm:1.7.14"
-    "@swc/core-darwin-x64": "npm:1.7.14"
-    "@swc/core-linux-arm-gnueabihf": "npm:1.7.14"
-    "@swc/core-linux-arm64-gnu": "npm:1.7.14"
-    "@swc/core-linux-arm64-musl": "npm:1.7.14"
-    "@swc/core-linux-x64-gnu": "npm:1.7.14"
-    "@swc/core-linux-x64-musl": "npm:1.7.14"
-    "@swc/core-win32-arm64-msvc": "npm:1.7.14"
-    "@swc/core-win32-ia32-msvc": "npm:1.7.14"
-    "@swc/core-win32-x64-msvc": "npm:1.7.14"
+    "@swc/core-darwin-arm64": "npm:1.7.22"
+    "@swc/core-darwin-x64": "npm:1.7.22"
+    "@swc/core-linux-arm-gnueabihf": "npm:1.7.22"
+    "@swc/core-linux-arm64-gnu": "npm:1.7.22"
+    "@swc/core-linux-arm64-musl": "npm:1.7.22"
+    "@swc/core-linux-x64-gnu": "npm:1.7.22"
+    "@swc/core-linux-x64-musl": "npm:1.7.22"
+    "@swc/core-win32-arm64-msvc": "npm:1.7.22"
+    "@swc/core-win32-ia32-msvc": "npm:1.7.22"
+    "@swc/core-win32-x64-msvc": "npm:1.7.22"
     "@swc/counter": "npm:^0.1.3"
     "@swc/types": "npm:^0.1.12"
   peerDependencies:
@@ -1395,7 +1395,7 @@ __metadata:
   peerDependenciesMeta:
     "@swc/helpers":
       optional: true
-  checksum: 10/75cc386a7538da58fd2c8e141503b6efc9d1fddda4fa87c0e54e32422b5e5276eac259fc6a6a83d5f6758480f739d178a5c36d1209127c0459ca006f7075b0a6
+  checksum: 10/9b1a1323fa67e12edb933fa8f526f90bf59ed3a44fa2322cbc7888d57d8cbd1f31c06cf4c794b9236d9dbda26c05793ea3a5f6d2d059442c465e86f56317d97e
   languageName: node
   linkType: hard
 
@@ -1626,12 +1626,12 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@types/node@npm:20.16.1":
-  version: 20.16.1
-  resolution: "@types/node@npm:20.16.1"
+"@types/node@npm:20.16.3":
+  version: 20.16.3
+  resolution: "@types/node@npm:20.16.3"
   dependencies:
     undici-types: "npm:~6.19.2"
-  checksum: 10/9bae1dffd2094694147a91ebec51dc89a60a607d16d47a0d770320f1a75d3ba58663708fd93c37954a63acb701a4e0fd64245139c57ae810d3ad524e75481d4e
+  checksum: 10/3b14b8b3cb92adc7db69f8cf351e7b6b5001e5c7cdb07470943215afeafc2952ae588c918543784e8f8e975d43d609ce0c7bced91f1b8745f1669d6137adaabc
   languageName: node
   linkType: hard
 
@@ -5077,10 +5077,10 @@ __metadata:
   languageName: node
   linkType: hard
 
-"type-fest@npm:^4.25.0":
-  version: 4.25.0
-  resolution: "type-fest@npm:4.25.0"
-  checksum: 10/16ddf51dbfeef45e6f0a139c16f06d6cd05b61be76b048c41e79997f150a66422219d7ec10a2717ab926505402d59b1ddc8560f5f6c245e1b8a35971c2f1b754
+"type-fest@npm:^4.26.0":
+  version: 4.26.0
+  resolution: "type-fest@npm:4.26.0"
+  checksum: 10/f5fe86d2c3db693f7154c8ab0d228a89394e4c446f2ed30ea3b61afaea9757c87c4e79475ef8d6f5fafbd7a4efd302e3b0237d9657dd425228f20a27feee3aef
   languageName: node
   linkType: hard
 
