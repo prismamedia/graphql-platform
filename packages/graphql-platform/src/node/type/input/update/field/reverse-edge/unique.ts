@@ -27,6 +27,10 @@ export enum UniqueReverseEdgeUpdateInputAction {
   UPSERT = 'upsert',
 }
 
+const uniqueReverseEdgeUpdateInputActions = utils.getEnumValues(
+  UniqueReverseEdgeUpdateInputAction,
+);
+
 export type UniqueReverseEdgeUpdateInputValue = utils.Optional<
   Partial<{
     // Destructive actions
@@ -220,6 +224,14 @@ export class UniqueReverseEdgeUpdateInput extends AbstractReverseEdgeUpdateInput
         return inputValue;
       },
     });
+  }
+
+  public override hasActions(
+    inputValue: Readonly<NonNullable<UniqueReverseEdgeUpdateInputValue>>,
+  ): boolean {
+    return uniqueReverseEdgeUpdateInputActions.some(
+      (action) => inputValue[action] != null,
+    );
   }
 
   public override async applyActions(

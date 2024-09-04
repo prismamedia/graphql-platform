@@ -205,7 +205,9 @@ export class NodeUpdateInputType extends utils.ObjectInputType<FieldUpdateInput>
   ): boolean {
     return this.reverseEdgeFields.some(
       (field) =>
-        data[field.name] != null && reverseEdges.includes(field.reverseEdge),
+        data[field.name] != null &&
+        field.hasActions(data[field.name]) &&
+        reverseEdges.includes(field.reverseEdge),
     );
   }
 
@@ -218,7 +220,7 @@ export class NodeUpdateInputType extends utils.ObjectInputType<FieldUpdateInput>
     for (const field of this.reverseEdgeFields) {
       const fieldData = data[field.name];
 
-      if (fieldData != null) {
+      if (fieldData != null && field.hasActions(fieldData)) {
         await field.applyActions(
           nodeValues,
           fieldData,

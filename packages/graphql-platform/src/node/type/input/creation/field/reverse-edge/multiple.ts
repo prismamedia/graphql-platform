@@ -12,6 +12,10 @@ export enum MultipleReverseEdgeCreationInputAction {
   CREATE_SOME = 'create',
 }
 
+const multipleReverseEdgeCreationInputActions = utils.getEnumValues(
+  MultipleReverseEdgeCreationInputAction,
+);
+
 export type MultipleReverseEdgeCreationInputValue = utils.Optional<
   Partial<{
     [MultipleReverseEdgeCreationInputAction.CREATE_SOME]: ReadonlyArray<
@@ -63,6 +67,24 @@ export class MultipleReverseEdgeCreationInput extends AbstractReverseEdgeCreatio
           return fields;
         },
       }),
+    });
+  }
+
+  public override hasActions(
+    inputValue: Readonly<NonNullable<MultipleReverseEdgeCreationInputValue>>,
+  ): boolean {
+    return multipleReverseEdgeCreationInputActions.some((action) => {
+      if (inputValue[action] != null) {
+        switch (action) {
+          case MultipleReverseEdgeCreationInputAction.CREATE_SOME:
+            return inputValue[action].length > 0;
+
+          default:
+            throw new utils.UnreachableValueError(action);
+        }
+      }
+
+      return false;
     });
   }
 

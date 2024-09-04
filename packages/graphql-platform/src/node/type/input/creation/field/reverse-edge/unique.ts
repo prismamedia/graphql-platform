@@ -13,6 +13,10 @@ export enum UniqueReverseEdgeCreationInputAction {
   CREATE = 'create',
 }
 
+const uniqueReverseEdgeCreationInputActions = utils.getEnumValues(
+  UniqueReverseEdgeCreationInputAction,
+);
+
 export type UniqueReverseEdgeCreationInputValue = utils.Optional<
   RequireExactlyOne<{
     [UniqueReverseEdgeCreationInputAction.CREATE]: NonNullable<NodeCreationInputValue>;
@@ -68,6 +72,14 @@ export class UniqueReverseEdgeCreationInput extends AbstractReverseEdgeCreationI
         return inputValue;
       },
     });
+  }
+
+  public override hasActions(
+    inputValue: Readonly<NonNullable<UniqueReverseEdgeCreationInputValue>>,
+  ): boolean {
+    return uniqueReverseEdgeCreationInputActions.some(
+      (action) => inputValue[action] != null,
+    );
   }
 
   public override async applyActions(

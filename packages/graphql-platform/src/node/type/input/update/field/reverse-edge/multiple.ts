@@ -31,6 +31,10 @@ export enum MultipleReverseEdgeUpdateInputAction {
   UPSERT_SOME = 'upsert',
 }
 
+const multipleReverseEdgeUpdateInputActions = utils.getEnumValues(
+  MultipleReverseEdgeUpdateInputAction,
+);
+
 export type MultipleReverseEdgeUpdateInputValue = utils.Optional<
   Partial<{
     // Destructive actions
@@ -448,6 +452,36 @@ export class MultipleReverseEdgeUpdateInput extends AbstractReverseEdgeUpdateInp
           return fields;
         },
       }),
+    });
+  }
+
+  public override hasActions(
+    inputValue: Readonly<NonNullable<MultipleReverseEdgeUpdateInputValue>>,
+  ): boolean {
+    return multipleReverseEdgeUpdateInputActions.some((action) => {
+      if (inputValue[action] != null) {
+        switch (action) {
+          case MultipleReverseEdgeUpdateInputAction.UPDATE_ALL:
+          case MultipleReverseEdgeUpdateInputAction.UPDATE_MANY:
+          case MultipleReverseEdgeUpdateInputAction.DELETE_ALL:
+          case MultipleReverseEdgeUpdateInputAction.DELETE_MANY:
+            return true;
+
+          case MultipleReverseEdgeUpdateInputAction.CREATE_SOME:
+          case MultipleReverseEdgeUpdateInputAction.CREATE_SOME_IF_NOT_EXISTS:
+          case MultipleReverseEdgeUpdateInputAction.UPDATE_SOME:
+          case MultipleReverseEdgeUpdateInputAction.UPDATE_SOME_IF_EXISTS:
+          case MultipleReverseEdgeUpdateInputAction.UPSERT_SOME:
+          case MultipleReverseEdgeUpdateInputAction.DELETE_SOME:
+          case MultipleReverseEdgeUpdateInputAction.DELETE_SOME_IF_EXISTS:
+            return inputValue[action].length > 0;
+
+          default:
+            throw new utils.UnreachableValueError(action);
+        }
+      }
+
+      return false;
     });
   }
 

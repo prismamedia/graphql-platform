@@ -24,6 +24,10 @@ export abstract class AbstractReverseEdgeCreationInput<
     });
   }
 
+  public abstract hasActions(
+    inputValue: Readonly<NonNullable<TInputValue>>,
+  ): boolean;
+
   public abstract applyActions(
     nodeValue: Readonly<NodeValue>,
     inputValue: Readonly<NonNullable<TInputValue>>,
