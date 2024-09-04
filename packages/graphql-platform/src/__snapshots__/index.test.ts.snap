@@ -1825,7 +1825,7 @@ input CategoryUpdateChildrenInput {
   create: [CategoryCreationWithoutParentInput!]
   createIfNotExists: [CategoryUpdateChildrenCreateIfNotExistsInput!]
   updateAll: CategoryUpdateWithoutParentInput
-  updateMany: CategoryUpdateChildrenUpdateManyInput
+  updateMany: [CategoryUpdateChildrenUpdateManyInput!]
   update: [CategoryUpdateChildrenUpdateInput!]
   updateIfExists: [CategoryUpdateChildrenUpdateIfExistsInput!]
   upsert: [CategoryUpdateChildrenUpsertInput!]
@@ -1865,7 +1865,7 @@ input CategoryUpdateArticlesInput {
   create: [ArticleCreationWithoutCategoryInput!]
   createIfNotExists: [CategoryUpdateArticlesCreateIfNotExistsInput!]
   updateAll: ArticleUpdateWithoutCategoryInput
-  updateMany: CategoryUpdateArticlesUpdateManyInput
+  updateMany: [CategoryUpdateArticlesUpdateManyInput!]
   update: [CategoryUpdateArticlesUpdateInput!]
   updateIfExists: [CategoryUpdateArticlesUpdateIfExistsInput!]
   upsert: [CategoryUpdateArticlesUpsertInput!]
@@ -1934,7 +1934,7 @@ input ArticleUpdateTagsInput {
   create: [ArticleTagCreationWithoutArticleInput!]
   createIfNotExists: [ArticleUpdateTagsCreateIfNotExistsInput!]
   updateAll: ArticleTagUpdateWithoutArticleInput
-  updateMany: ArticleUpdateTagsUpdateManyInput
+  updateMany: [ArticleUpdateTagsUpdateManyInput!]
   update: [ArticleUpdateTagsUpdateInput!]
   updateIfExists: [ArticleUpdateTagsUpdateIfExistsInput!]
   upsert: [ArticleUpdateTagsUpsertInput!]
@@ -1969,7 +1969,7 @@ input ArticleTagUpdateModerationsInput {
   create: [ArticleTagModerationCreationWithoutArticleTagInput!]
   createIfNotExists: [ArticleTagUpdateModerationsCreateIfNotExistsInput!]
   updateAll: ArticleTagModerationUpdateWithoutArticleTagInput
-  updateMany: ArticleTagUpdateModerationsUpdateManyInput
+  updateMany: [ArticleTagUpdateModerationsUpdateManyInput!]
   update: [ArticleTagUpdateModerationsUpdateInput!]
   updateIfExists: [ArticleTagUpdateModerationsUpdateIfExistsInput!]
   upsert: [ArticleTagUpdateModerationsUpsertInput!]
@@ -2149,7 +2149,7 @@ input TagUpdateArticlesInput {
   create: [ArticleTagCreationWithoutTagInput!]
   createIfNotExists: [TagUpdateArticlesCreateIfNotExistsInput!]
   updateAll: ArticleTagUpdateWithoutTagInput
-  updateMany: TagUpdateArticlesUpdateManyInput
+  updateMany: [TagUpdateArticlesUpdateManyInput!]
   update: [TagUpdateArticlesUpdateInput!]
   updateIfExists: [TagUpdateArticlesUpdateIfExistsInput!]
   upsert: [TagUpdateArticlesUpsertInput!]

@@ -59,7 +59,7 @@ export type MultipleReverseEdgeUpdateInputValue = utils.Optional<
     [MultipleReverseEdgeUpdateInputAction.UPDATE_MANY]: NonNullable<{
       where?: NodeFilterInputValue;
       data?: NodeUpdateInputValue;
-    }>;
+    }>[];
     [MultipleReverseEdgeUpdateInputAction.UPDATE_SOME]: NonNullable<{
       where: NonNullable<NodeUniqueFilterInputValue>;
       data?: NodeUpdateInputValue;
@@ -251,29 +251,33 @@ export class MultipleReverseEdgeUpdateInput extends AbstractReverseEdgeUpdateInp
               }),
               new utils.Input({
                 name: MultipleReverseEdgeUpdateInputAction.UPDATE_MANY,
-                type: new utils.ObjectInputType({
-                  name: [
-                    reverseEdge.tail.name,
-                    inflection.camelize(utils.MutationType.UPDATE),
-                    reverseEdge.pascalCasedName,
-                    inflection.camelize(
-                      MultipleReverseEdgeUpdateInputAction.UPDATE_MANY,
-                    ),
-                    'Input',
-                  ].join(''),
-                  fields: () => [
-                    new utils.Input({
-                      name: 'where',
-                      type: reverseEdge.head.filterInputType,
+                type: new utils.ListableInputType(
+                  utils.nonNillableInputType(
+                    new utils.ObjectInputType({
+                      name: [
+                        reverseEdge.tail.name,
+                        inflection.camelize(utils.MutationType.UPDATE),
+                        reverseEdge.pascalCasedName,
+                        inflection.camelize(
+                          MultipleReverseEdgeUpdateInputAction.UPDATE_MANY,
+                        ),
+                        'Input',
+                      ].join(''),
+                      fields: () => [
+                        new utils.Input({
+                          name: 'where',
+                          type: reverseEdge.head.filterInputType,
+                        }),
+                        new utils.Input({
+                          name: 'data',
+                          type: reverseEdge.head.getUpdateWithoutEdgeInputType(
+                            reverseEdge.originalEdge,
+                          ),
+                        }),
+                      ],
                     }),
-                    new utils.Input({
-                      name: 'data',
-                      type: reverseEdge.head.getUpdateWithoutEdgeInputType(
-                        reverseEdge.originalEdge,
-                      ),
-                    }),
-                  ],
-                }),
+                  ),
+                ),
                 nullable: false,
                 // We explicitly define the visibility as we don't want to expose this operation if the head it not publicly updatable, and it would as "update" is not required
                 public: reverseEdge.head
@@ -462,13 +466,13 @@ export class MultipleReverseEdgeUpdateInput extends AbstractReverseEdgeUpdateInp
       if (inputValue[action] != null) {
         switch (action) {
           case MultipleReverseEdgeUpdateInputAction.UPDATE_ALL:
-          case MultipleReverseEdgeUpdateInputAction.UPDATE_MANY:
           case MultipleReverseEdgeUpdateInputAction.DELETE_ALL:
           case MultipleReverseEdgeUpdateInputAction.DELETE_MANY:
             return true;
 
           case MultipleReverseEdgeUpdateInputAction.CREATE_SOME:
           case MultipleReverseEdgeUpdateInputAction.CREATE_SOME_IF_NOT_EXISTS:
+          case MultipleReverseEdgeUpdateInputAction.UPDATE_MANY:
           case MultipleReverseEdgeUpdateInputAction.UPDATE_SOME:
           case MultipleReverseEdgeUpdateInputAction.UPDATE_SOME_IF_EXISTS:
           case MultipleReverseEdgeUpdateInputAction.UPSERT_SOME:
@@ -657,22 +661,24 @@ export class MultipleReverseEdgeUpdateInput extends AbstractReverseEdgeUpdateInp
         }
 
         case MultipleReverseEdgeUpdateInputAction.UPDATE_MANY: {
-          const { where, data } = inputValue[actionName]!;
-
-          await headAPI.updateMany(
-            {
-              where: {
-                AND: [
-                  { [originalEdgeName]: { OR: originalEdgeValues } },
-                  where,
-                ],
+          for (const [index, { where, data }] of inputValue[
+            actionName
+          ]!.entries()) {
+            await headAPI.updateMany(
+              {
+                where: {
+                  AND: [
+                    { [originalEdgeName]: { OR: originalEdgeValues } },
+                    where,
+                  ],
+                },
+                first: scalars.GRAPHQL_MAX_UNSIGNED_INT,
+                data,
+                selection,
               },
-              first: scalars.GRAPHQL_MAX_UNSIGNED_INT,
-              data,
-              selection,
-            },
-            actionPath,
-          );
+              utils.addPath(actionPath, index),
+            );
+          }
           break;
         }
 
