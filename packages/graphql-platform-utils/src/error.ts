@@ -55,8 +55,13 @@ export class GraphError extends Error {
   ) {
     super(undefined, {
       ...options,
-      cause:
-        options?.cause && path && setGraphErrorAncestor(options.cause, path),
+      ...(options?.cause
+        ? {
+            cause: path
+              ? setGraphErrorAncestor(options.cause, path)
+              : options.cause,
+          }
+        : undefined),
     });
 
     this.name = new.target.name;
