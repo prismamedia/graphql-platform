@@ -6,7 +6,7 @@
   ],
   "repository": {
     "type": "git",
-    "url": "https://github.com/prismamedia/graphql-platform"
+    "url": "https://github.com/prismamedia/graphql-platform.git"
   },
   "engines": {
     "node": ">=20.10"
@@ -29,15 +29,15 @@
   "devDependencies": {
     "@jest/globals": "30.0.0-alpha.6",
     "@sqltools/formatter": "1.2.5",
-    "@swc/core": "1.7.23",
+    "@swc/core": "1.7.24",
     "@swc/jest": "0.2.36",
     "@tsconfig/node20": "20.1.4",
-    "@types/node": "20.16.4",
+    "@types/node": "20.16.5",
     "@types/semver": "7.5.8",
     "graphql": "16.9.0",
     "jest": "30.0.0-alpha.6",
     "publint": "0.2.10",
-    "typescript": "5.5.4"
+    "typescript": "5.6.2"
   },
   "dependencies": {
     "@prismamedia/async-event-emitter": "^5.5.0",
@@ -50,7 +50,7 @@
     "mariadb": "^3.3.1",
     "remeda": "^2.12.0",
     "semver": "^7.6.3",
-    "type-fest": "^4.26.0"
+    "type-fest": "^4.26.1"
   },
   "peerDependencies": {
     "graphql": "^16.9.0"

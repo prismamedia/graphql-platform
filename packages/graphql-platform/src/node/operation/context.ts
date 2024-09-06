@@ -14,6 +14,11 @@ export class OperationContext<
   TBroker extends BrokerInterface = any,
   TContainer extends object = any,
 > {
+  /**
+   * Stores arbitrary data for the duration of the operation
+   */
+  public readonly userData: Map<any, any>;
+
   public constructor(
     /**
      * The GraphQL-Platform itself is provided for convenience
@@ -31,7 +36,9 @@ export class OperationContext<
      * Unlike the "operation" context, it is shared among all the operations of the "request"'s document
      */
     public readonly request: TRequestContext,
-  ) {}
+  ) {
+    this.userData = new Map();
+  }
 
   /**
    * Returns a "context"-bound version of the API, so the developer only has to provide the operations' args

@@ -4,5 +4,10 @@
   "service": "project",
   "overrideCommand": true,
   "workspaceFolder": "/workspace",
-  "postStartCommand": "yarn"
+  "postStartCommand": "yarn",
+  "customizations": {
+    "vscode": {
+      "extensions": ["esbenp.prettier-vscode"]
+    }
+  }
 }

@@ -96,12 +96,20 @@ export class FixTableStatement implements mariadb.QueryOptions {
 
             ...fix.invalidColumns.map(
               ({ column, nullableError }) =>
-                `MODIFY COLUMN ${escapeIdentifier(column.name)} ${nullableError && !fix.nullable && !column.isNullable() ? column.getDefinition(true) : column.definition}`,
+                `MODIFY COLUMN ${escapeIdentifier(column.name)} ${
+                  column.isNullable()
+                    ? column.definition
+                    : column.getDefinition(!!nullableError && !fix.nullable)
+                }`,
             ),
 
             ...fix.missingColumns.map(
               (column) =>
-                `ADD COLUMN ${escapeIdentifier(column.name)} ${!fix.nullable && !column.isNullable() ? column.getDefinition(true) : column.definition}`,
+                `ADD COLUMN ${escapeIdentifier(column.name)} ${
+                  column.isNullable()
+                    ? column.definition
+                    : column.getDefinition(!fix.nullable)
+                }`,
             ),
 
             ...fix.invalidIndexes.map(
