@@ -64,12 +64,12 @@ export interface VirtualOutputConfig<
    * Example: '{ id title }'
    */
   dependsOn?:
-    | RawNodeSelection<TSource>
+    | utils.Nillable<RawNodeSelection<TSource>>
     | ((
         this: Node<TRequestContext, TConnector, TBroker, TContainer>,
         args: TArgs,
         info: PartialGraphQLResolveInfo,
-      ) => RawNodeSelection<TSource>);
+      ) => utils.Nillable<RawNodeSelection<TSource>>);
 
   /**
    * Required, using the source, arguments, and request context, the resolver produces a value that is valid against the type defined above
@@ -221,7 +221,7 @@ export class VirtualOutputType<
     selectionContext: GraphQLSelectionContext | undefined,
     path: utils.Path,
   ): VirtualSelection {
-    const args: TArgs = this.parseGraphQLArgumentNodes(
+    const args = this.parseGraphQLArgumentNodes(
       ast.arguments,
       selectionContext,
       path,
@@ -243,20 +243,25 @@ export class VirtualOutputType<
       const configPath = utils.addPath(this.configPath, 'dependsOn');
 
       if (config) {
-        dependencies = this.parent.select(
+        const maybeDependencies =
           typeof config === 'function'
             ? config.call(this.parent.node, args, info)
-            : config,
-          operationContext,
-          selectionContext,
-          configPath,
-        );
+            : config;
 
-        if (dependencies.hasVirtualSelection) {
-          throw new utils.GraphError(
-            `Expects not to depends on virtual-fields`,
-            { path: configPath },
+        if (maybeDependencies) {
+          dependencies = this.parent.select(
+            maybeDependencies,
+            operationContext,
+            selectionContext,
+            configPath,
           );
+
+          if (dependencies.hasVirtualSelection) {
+            throw new utils.GraphError(
+              `Expects not to depends on virtual-fields`,
+              { path: configPath },
+            );
+          }
         }
       }
     }

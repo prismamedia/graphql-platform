@@ -290,6 +290,142 @@ describe(`NodeOutputType`, () => {
   createdArticleCount(where: {status: PUBLISHED})
 }`,
         ],
+        [
+          'User',
+          `{
+            username
+            profile @skip(if: $skipProfile) {
+              birthday
+              twitterHandle
+            }
+          }`,
+          undefined,
+          { variableValues: { skipProfile: true } },
+          `{
+  username
+}`,
+        ],
+        [
+          'User',
+          `{
+            username
+            profile @skip(if: true) {
+              birthday
+              twitterHandle
+            }
+          }`,
+          undefined,
+          undefined,
+          `{
+  username
+}`,
+        ],
+        [
+          'User',
+          `{
+            username
+            profile @skip(if: $skipProfile) {
+              birthday
+              twitterHandle
+            }
+          }`,
+          undefined,
+          { variableValues: { skipProfile: false } },
+          `{
+  username
+  profile {
+    birthday
+    twitterHandle
+  }
+}`,
+        ],
+        [
+          'User',
+          `{
+            username
+            profile @skip(if: false) {
+              birthday
+              twitterHandle
+            }
+          }`,
+          undefined,
+          undefined,
+          `{
+  username
+  profile {
+    birthday
+    twitterHandle
+  }
+}`,
+        ],
+        [
+          'User',
+          `{
+            username
+            profile @include(if: $includeProfile) {
+              birthday
+              twitterHandle
+            }
+          }`,
+          undefined,
+          { variableValues: { includeProfile: true } },
+          `{
+  username
+  profile {
+    birthday
+    twitterHandle
+  }
+}`,
+        ],
+        [
+          'User',
+          `{
+            username
+            profile @include(if: true) {
+              birthday
+              twitterHandle
+            }
+          }`,
+          undefined,
+          undefined,
+          `{
+  username
+  profile {
+    birthday
+    twitterHandle
+  }
+}`,
+        ],
+        [
+          'User',
+          `{
+            username
+            profile @include(if: $includeProfile) {
+              birthday
+              twitterHandle
+            }
+          }`,
+          undefined,
+          { variableValues: { includeProfile: false } },
+          `{
+  username
+}`,
+        ],
+        [
+          'User',
+          `{
+            username
+            profile @include(if: false) {
+              birthday
+              twitterHandle
+            }
+          }`,
+          undefined,
+          undefined,
+          `{
+  username
+}`,
+        ],
       ])(
         '%p.select(%p) = %p',
         (nodeName, fragment, requestContext, selectionContext, expected) => {
