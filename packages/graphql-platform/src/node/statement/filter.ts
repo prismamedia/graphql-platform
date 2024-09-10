@@ -33,13 +33,20 @@ export class NodeFilter {
     return new NodeFilter(this.node, NotOperation.create(this.filter));
   }
 
-  public and(...others: ReadonlyArray<NodeFilter>): NodeFilter | this {
+  public and(
+    ...others: ReadonlyArray<NodeFilter | NodeFilterInputValue>
+  ): NodeFilter | this {
     return others.length
       ? new NodeFilter(
           this.node,
           AndOperation.create([
             this.filter,
-            ...others.map((other) => {
+            ...others.map((rawOther) => {
+              const other =
+                rawOther instanceof NodeFilter
+                  ? rawOther
+                  : this.node.filterInputType.parseAndFilter(rawOther);
+
               assert.equal(other.node, this.node);
 
               return other.filter;
@@ -49,13 +56,20 @@ export class NodeFilter {
       : this;
   }
 
-  public or(...others: ReadonlyArray<NodeFilter>): NodeFilter | this {
+  public or(
+    ...others: ReadonlyArray<NodeFilter | NodeFilterInputValue>
+  ): NodeFilter | this {
     return others.length
       ? new NodeFilter(
           this.node,
           OrOperation.create([
             this.filter,
-            ...others.map((other) => {
+            ...others.map((rawOther) => {
+              const other =
+                rawOther instanceof NodeFilter
+                  ? rawOther
+                  : this.node.filterInputType.parseAndFilter(rawOther);
+
               assert.equal(other.node, this.node);
 
               return other.filter;
