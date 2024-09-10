@@ -181,7 +181,7 @@ describe(`NodeOutputType`, () => {
           'Article',
           `{
             id
-            lowerCasedTitle
+            lowerCasedTitle(prefix: "test_")
             category { id _a: parent { _id } }
             similars(first: 5) { 
               title
@@ -194,7 +194,7 @@ describe(`NodeOutputType`, () => {
           undefined,
           `{
   id
-  lowerCasedTitle
+  lowerCasedTitle(prefix: "test_")
   category {
     id
     _a: parent {

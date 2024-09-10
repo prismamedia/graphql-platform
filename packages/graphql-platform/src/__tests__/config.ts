@@ -443,13 +443,6 @@ export const Article = {
   output: {
     virtualFields: (node) => ({
       lowerCasedTitle: {
-        dependsOn: (_field) => `{
-          status
-          title
-          category {
-            title
-          }
-        }`,
         args: {
           prefix: {
             description: 'Optional, a prefix',
@@ -460,6 +453,14 @@ export const Article = {
           scalars.typesByName.NonEmptyTrimmedString,
         ),
         description: `A custom field with a dependency`,
+        dependsOn: ({ prefix }) => `{
+          status
+          title
+          @include(if: ${prefix ? 'false' : 'true'})
+          category {
+            title
+          }
+        }`,
         resolve: (
           {
             status,

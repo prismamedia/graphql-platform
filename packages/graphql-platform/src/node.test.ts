@@ -380,26 +380,27 @@ describe('Node', () => {
 
     describe('Invalid output', () => {
       it("throws an Error on invalid virtual-field's dependsOn", () => {
-        expect(
-          () =>
-            new GraphQLPlatform({
-              nodes: {
-                ...nodes,
-                Article: {
-                  ...nodes.Article,
-                  output: {
-                    ...nodes.Article.output,
-                    virtualFields: {
-                      myInvalidField: {
-                        dependsOn: '{ unknownField }',
-                        type: graphql.GraphQLString,
-                        resolve: () => 'Hello World!',
-                      },
+        expect(() =>
+          new GraphQLPlatform({
+            nodes: {
+              ...nodes,
+              Article: {
+                ...nodes.Article,
+                output: {
+                  ...nodes.Article.output,
+                  virtualFields: {
+                    myInvalidField: {
+                      type: graphql.GraphQLString,
+                      dependsOn: '{ unknownField }',
+                      resolve: () => 'Hello World!',
                     },
                   },
                 },
               },
-            }),
+            },
+          })
+            .getNodeByName('Article')
+            .outputType.select(`{ myInvalidField }`),
         ).toThrow(
           `/GraphQLPlatformConfig/nodes/Article/output/virtualFields/myInvalidField/dependsOn - Expects an \"Article\"'s field among`,
         );

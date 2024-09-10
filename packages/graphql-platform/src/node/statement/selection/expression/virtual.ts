@@ -2,7 +2,11 @@ import * as utils from '@prismamedia/graphql-platform-utils';
 import * as graphql from 'graphql';
 import assert from 'node:assert/strict';
 import { isDeepStrictEqual } from 'node:util';
-import type { NodeSelectedValue, NodeValue } from '../../../../node.js';
+import type {
+  NodeSelectedValue,
+  NodeSelection,
+  NodeValue,
+} from '../../../../node.js';
 import type { NodeChange, NodeUpdate } from '../../../change.js';
 import type { OperationContext } from '../../../operation.js';
 import type {
@@ -29,6 +33,7 @@ export class VirtualSelection<
     public readonly alias: string | undefined,
     public readonly args: TArgs,
     public readonly info: PartialGraphQLResolveInfo,
+    public readonly dependencies: NodeSelection | undefined,
   ) {
     this.name = type.name;
     this.key = alias ?? this.name;
@@ -78,7 +83,7 @@ export class VirtualSelection<
   }
 
   public isAffectedByNodeUpdate(update: NodeUpdate): boolean {
-    return this.type.dependencies?.isAffectedByNodeUpdate(update) ?? false;
+    return this.dependencies?.isAffectedByNodeUpdate(update) ?? false;
   }
 
   public getAffectedGraphByNodeChange(
@@ -86,15 +91,13 @@ export class VirtualSelection<
     visitedRootNodes?: NodeValue[],
   ): BooleanFilter | null {
     return (
-      this.type.dependencies?.getAffectedGraphByNodeChange(
-        change,
-        visitedRootNodes,
-      )?.filter ?? null
+      this.dependencies?.getAffectedGraphByNodeChange(change, visitedRootNodes)
+        ?.filter ?? null
     );
   }
 
   public parseSource(maybeSource: unknown, path?: utils.Path): TSource {
-    return this.type.dependencies?.parseSource(maybeSource, path);
+    return this.dependencies?.parseSource(maybeSource, path);
   }
 
   public async resolveValue(

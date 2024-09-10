@@ -63,10 +63,13 @@ export interface VirtualOutputConfig<
    *
    * Example: '{ id title }'
    */
-  dependsOn?: utils.Thunkable<
-    RawNodeSelection<TSource>,
-    [field: VirtualOutputType]
-  >;
+  dependsOn?:
+    | RawNodeSelection<TSource>
+    | ((
+        this: Node<TRequestContext, TConnector, TBroker, TContainer>,
+        args: TArgs,
+        info: PartialGraphQLResolveInfo,
+      ) => RawNodeSelection<TSource>);
 
   /**
    * Required, using the source, arguments, and request context, the resolver produces a value that is valid against the type defined above
@@ -212,55 +215,59 @@ export class VirtualOutputType<
     return isPublic;
   }
 
-  @Memoize()
-  public get dependencies(): NodeSelection | undefined {
-    const config = this.config.dependsOn;
-    const configPath = utils.addPath(this.configPath, 'dependsOn');
-
-    if (config) {
-      const selection = this.parent.select(
-        utils.resolveThunkable(config, this),
-        undefined,
-        undefined,
-        configPath,
-      );
-
-      if (selection.hasVirtualSelection) {
-        throw new utils.GraphError(`Expects not to depends on virtual-fields`, {
-          path: configPath,
-        });
-      }
-
-      return selection;
-    }
-  }
-
-  @Memoize()
-  public override validate(): void {
-    super.validate();
-
-    this.dependencies;
-  }
-
   public selectGraphQLFieldNode(
     ast: graphql.FieldNode,
-    _operationContext: OperationContext | undefined,
+    operationContext: OperationContext | undefined,
     selectionContext: GraphQLSelectionContext | undefined,
     path: utils.Path,
   ): VirtualSelection {
-    const args = this.parseGraphQLArgumentNodes(
+    const args: TArgs = this.parseGraphQLArgumentNodes(
       ast.arguments,
       selectionContext,
       path,
     );
 
-    return new VirtualSelection(this, ast.alias?.value, args, {
+    const info: PartialGraphQLResolveInfo = {
       fieldNodes: [ast],
       returnType: this.type,
       path,
       fragments: selectionContext?.fragments ?? {},
       variableValues: selectionContext?.variableValues ?? {},
-    });
+    };
+
+    let dependencies: NodeSelection | undefined;
+
+    // dependencies
+    {
+      const config = this.config.dependsOn;
+      const configPath = utils.addPath(this.configPath, 'dependsOn');
+
+      if (config) {
+        dependencies = this.parent.select(
+          typeof config === 'function'
+            ? config.call(this.parent.node, args, info)
+            : config,
+          operationContext,
+          selectionContext,
+          configPath,
+        );
+
+        if (dependencies.hasVirtualSelection) {
+          throw new utils.GraphError(
+            `Expects not to depends on virtual-fields`,
+            { path: configPath },
+          );
+        }
+      }
+    }
+
+    return new VirtualSelection(
+      this,
+      ast.alias?.value,
+      args,
+      info,
+      dependencies,
+    );
   }
 
   public selectShape(
