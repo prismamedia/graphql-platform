@@ -1,50 +1,43 @@
-import * as utils from '@prismamedia/graphql-platform-utils';
+import type * as utils from '@prismamedia/graphql-platform-utils';
 import DataLoader from 'dataloader';
 import type { Node } from '../node.js';
 import type { OperationContext } from './operation/context.js';
 import { NotFoundError } from './operation/error.js';
-import type {
-  NodeSelectedValue,
-  NodeSelection,
-} from './statement/selection.js';
+import type { NodeSelectedValue } from './statement/selection.js';
 import type { NodeFilterInputValue } from './type/input/filter.js';
 import type { NodeUniqueFilterInputValue } from './type/input/unique-filter.js';
-
-export type NodeLoaderKey = NonNullable<NodeUniqueFilterInputValue>;
-
-export type NodeLoaderValue = NodeSelectedValue;
-
-export type NodeLoader = DataLoader<NodeLoaderKey, NodeLoaderValue>;
+import type { RawNodeSelection } from './type/output.js';
 
 export function createNodeLoader<
   TRequestContext extends object,
-  TCacheKey = NodeLoaderKey,
+  TValue extends NodeSelectedValue,
 >(
   node: Node<TRequestContext>,
   context: utils.Thunkable<TRequestContext> | OperationContext<TRequestContext>,
-  selection: NodeSelection,
+  rawSelection: RawNodeSelection<TValue>,
   {
     subset,
     ...options
   }: {
     subset?: NodeFilterInputValue;
-  } & DataLoader.Options<NodeLoaderKey, NodeLoaderValue, TCacheKey> = {},
-): NodeLoader {
+  } & DataLoader.Options<NonNullable<NodeUniqueFilterInputValue>, TValue> = {},
+) {
   const api = node.createContextBoundAPI(context);
+  const selection = node.outputType.select(rawSelection);
 
-  return new DataLoader(async (keys) => {
-    const maybeValues = await api.getSomeInOrderIfExists({
-      where: keys,
-      subset,
-      selection,
-    });
+  return new DataLoader<NonNullable<NodeUniqueFilterInputValue>, TValue>(
+    async (keys) => {
+      const maybeValues = (await api.getSomeInOrderIfExists({
+        where: keys,
+        subset,
+        selection,
+      })) as (TValue | null)[];
 
-    return maybeValues.map(
-      (maybeValue, index): NodeSelectedValue | Error =>
-        maybeValue ??
-        new NotFoundError(node, keys[index], {
-          path: utils.addPath(undefined, index),
-        }),
-    );
-  }, options);
+      return maybeValues.map(
+        (maybeValue, index) =>
+          maybeValue ?? new NotFoundError(node, keys[index]),
+      );
+    },
+    options,
+  );
 }

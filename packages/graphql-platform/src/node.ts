@@ -1,5 +1,6 @@
 import * as utils from '@prismamedia/graphql-platform-utils';
 import { Memoize } from '@prismamedia/memoize';
+import type DataLoader from 'dataloader';
 import * as graphql from 'graphql';
 import inflection from 'inflection';
 import * as R from 'remeda';
@@ -29,6 +30,7 @@ import {
   type UniqueConstraintValue,
 } from './node/definition.js';
 import { NodeFeature, type NodeFeatureConfig } from './node/feature.js';
+import { createNodeLoader } from './node/loader.js';
 import { assertNodeName, type NodeName } from './node/name.js';
 import {
   constructCustomOperation,
@@ -70,6 +72,8 @@ import {
   NodeUpdateInputType,
   type NodeFilterInputValue,
   type NodeOutputTypeConfig,
+  type NodeUniqueFilterInputValue,
+  type RawNodeSelection,
 } from './node/type.js';
 
 export * from './node/change.js';
@@ -1892,5 +1896,17 @@ export class Node<
       | OperationContext<TRequestContext>,
   ): ContextBoundNodeAPI {
     return createContextBoundNodeAPI(this, context);
+  }
+
+  public createLoader<TValue extends NodeSelectedValue>(
+    context:
+      | utils.Thunkable<TRequestContext>
+      | OperationContext<TRequestContext>,
+    rawSelection: RawNodeSelection<TValue>,
+    options?: {
+      subset?: NodeFilterInputValue;
+    } & DataLoader.Options<NonNullable<NodeUniqueFilterInputValue>, TValue>,
+  ): DataLoader<NonNullable<NodeUniqueFilterInputValue>, TValue> {
+    return createNodeLoader(this, context, rawSelection, options);
   }
 }

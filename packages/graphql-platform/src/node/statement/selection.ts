@@ -261,19 +261,22 @@ export class NodeSelection<
     path: utils.Path = utils.addPath(undefined, this.node.toString()),
   ): Promise<TValue> {
     return this.hasVirtualSelection
-      ? Object.fromEntries(
-          await Promise.all(
-            this.expressions.map(async (expression) => [
-              expression.key,
-              expression instanceof VirtualSelection ||
-              expression.hasVirtualSelection
-                ? await expression.resolveValue(
-                    source[expression.key],
-                    context,
-                    utils.addPath(path, expression.key),
-                  )
-                : source[expression.key],
-            ]),
+      ? Object.assign(
+          Object.create(null),
+          Object.fromEntries(
+            await Promise.all(
+              this.expressions.map(async (expression) => [
+                expression.key,
+                expression instanceof VirtualSelection ||
+                expression.hasVirtualSelection
+                  ? await expression.resolveValue(
+                      source[expression.key],
+                      context,
+                      utils.addPath(path, expression.key),
+                    )
+                  : source[expression.key],
+              ]),
+            ),
           ),
         )
       : source;
