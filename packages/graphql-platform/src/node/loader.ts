@@ -8,6 +8,11 @@ import type { NodeFilterInputValue } from './type/input/filter.js';
 import type { NodeUniqueFilterInputValue } from './type/input/unique-filter.js';
 import type { RawNodeSelection } from './type/output.js';
 
+export type NodeLoader<TValue extends NodeSelectedValue> = DataLoader<
+  NonNullable<NodeUniqueFilterInputValue>,
+  TValue
+>;
+
 export function createNodeLoader<
   TRequestContext extends object,
   TValue extends NodeSelectedValue,
@@ -21,7 +26,7 @@ export function createNodeLoader<
   }: {
     subset?: NodeFilterInputValue;
   } & DataLoader.Options<NonNullable<NodeUniqueFilterInputValue>, TValue> = {},
-) {
+): NodeLoader<TValue> {
   const api = node.createContextBoundAPI(context);
   const selection = node.outputType.select(rawSelection);
 
