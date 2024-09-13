@@ -550,35 +550,32 @@ export class MultipleReverseEdgeUpdateInput extends AbstractReverseEdgeUpdateInp
         case MultipleReverseEdgeUpdateInputAction.DELETE_SOME: {
           const actionData = inputValue[actionName]!;
 
-          for (const originalEdgeValue of originalEdgeValues) {
-            for (const [index, where] of actionData.entries()) {
-              await headAPI.deleteOne(
-                {
-                  where: {
-                    ...where,
-                    [originalEdgeName]: originalEdgeValue,
-                  },
-                  selection,
-                },
-                utils.addPath(actionPath, index),
-              );
-            }
-          }
+          await headAPI.deleteSomeInOrder(
+            {
+              where: originalEdgeValues.flatMap((originalEdgeValue) =>
+                actionData.map((where) => ({
+                  ...where,
+                  [originalEdgeName]: originalEdgeValue,
+                })),
+              ),
+              selection,
+            },
+            actionPath,
+          );
           break;
         }
 
         case MultipleReverseEdgeUpdateInputAction.DELETE_SOME_IF_EXISTS: {
           const actionData = inputValue[actionName]!;
 
-          await headAPI.deleteMany(
+          await headAPI.deleteSomeInOrderIfExists(
             {
-              where: {
-                AND: [
-                  { [originalEdgeName]: { OR: originalEdgeValues } },
-                  { OR: actionData },
-                ],
-              },
-              first: scalars.GRAPHQL_MAX_UNSIGNED_INT,
+              where: originalEdgeValues.flatMap((originalEdgeValue) =>
+                actionData.map((where) => ({
+                  ...where,
+                  [originalEdgeName]: originalEdgeValue,
+                })),
+              ),
               selection,
             },
             actionPath,
@@ -685,20 +682,18 @@ export class MultipleReverseEdgeUpdateInput extends AbstractReverseEdgeUpdateInp
         case MultipleReverseEdgeUpdateInputAction.UPDATE_SOME: {
           const actionData = inputValue[actionName]!;
 
-          for (const originalEdgeValue of originalEdgeValues) {
-            for (const [index, { where, data }] of actionData.entries()) {
-              await headAPI.updateOne(
-                {
-                  where: {
-                    ...where,
-                    [originalEdgeName]: originalEdgeValue,
-                  },
-                  data,
-                  selection,
-                },
-                utils.addPath(actionPath, index),
-              );
-            }
+          for (const [index, { data, where }] of actionData.entries()) {
+            await headAPI.updateSomeInOrder(
+              {
+                data,
+                where: originalEdgeValues.map((originalEdgeValue) => ({
+                  ...where,
+                  [originalEdgeName]: originalEdgeValue,
+                })),
+                selection,
+              },
+              utils.addPath(actionPath, index),
+            );
           }
           break;
         }
@@ -706,17 +701,14 @@ export class MultipleReverseEdgeUpdateInput extends AbstractReverseEdgeUpdateInp
         case MultipleReverseEdgeUpdateInputAction.UPDATE_SOME_IF_EXISTS: {
           const actionData = inputValue[actionName]!;
 
-          for (const [index, { where, data }] of actionData.entries()) {
-            await headAPI.updateMany(
+          for (const [index, { data, where }] of actionData.entries()) {
+            await headAPI.updateSomeInOrderIfExists(
               {
-                where: {
-                  AND: [
-                    { [originalEdgeName]: { OR: originalEdgeValues } },
-                    where,
-                  ],
-                },
-                first: originalEdgeValues.length,
                 data,
+                where: originalEdgeValues.map((originalEdgeValue) => ({
+                  ...where,
+                  [originalEdgeName]: originalEdgeValue,
+                })),
                 selection,
               },
               utils.addPath(actionPath, index),

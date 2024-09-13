@@ -57,7 +57,7 @@ export class GetSomeInOrderIfExistsQuery<
       new utils.Input({
         name: 'subset',
         description:
-          'It is possible to provide a filter in order to perform this query in a subset of the documents',
+          'It is possible to provide a filter in order to perform this operation in a subset of the documents',
         type: this.node.filterInputType,
       }),
     ];
@@ -115,10 +115,10 @@ export class GetSomeInOrderIfExistsQuery<
       path,
     );
 
-    return args.where.map((key) => {
-      const keyFilter = this.node.filterInputType.filter(key);
+    return args.where.map((id) => {
+      const filter = this.node.filterInputType.filter(id);
       const maybeValue = unorderedValues.find((value) =>
-        keyFilter.execute(value, false),
+        filter.execute(value, false),
       );
 
       return maybeValue ? args.selection.pickValue(maybeValue) : null;

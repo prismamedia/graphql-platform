@@ -34,7 +34,7 @@ type query {
     where: [ArticleUniqueFilterInput!]!
 
     """
-    It is possible to provide a filter in order to perform this query in a subset of the documents
+    It is possible to provide a filter in order to perform this operation in a subset of the documents
     """
     subset: ArticleFilterInput
   ): [Article!]!
@@ -46,7 +46,7 @@ type query {
     where: [ArticleUniqueFilterInput!]!
 
     """
-    It is possible to provide a filter in order to perform this query in a subset of the documents
+    It is possible to provide a filter in order to perform this operation in a subset of the documents
     """
     subset: ArticleFilterInput
   ): [Article]!
@@ -80,7 +80,7 @@ type query {
     where: [ArticleExtensionUniqueFilterInput!]!
 
     """
-    It is possible to provide a filter in order to perform this query in a subset of the documents
+    It is possible to provide a filter in order to perform this operation in a subset of the documents
     """
     subset: ArticleExtensionFilterInput
   ): [ArticleExtension!]!
@@ -92,7 +92,7 @@ type query {
     where: [ArticleExtensionUniqueFilterInput!]!
 
     """
-    It is possible to provide a filter in order to perform this query in a subset of the documents
+    It is possible to provide a filter in order to perform this operation in a subset of the documents
     """
     subset: ArticleExtensionFilterInput
   ): [ArticleExtension]!
@@ -123,7 +123,7 @@ type query {
     where: [CategoryUniqueFilterInput!]!
 
     """
-    It is possible to provide a filter in order to perform this query in a subset of the documents
+    It is possible to provide a filter in order to perform this operation in a subset of the documents
     """
     subset: CategoryFilterInput
   ): [Category!]!
@@ -135,7 +135,7 @@ type query {
     where: [CategoryUniqueFilterInput!]!
 
     """
-    It is possible to provide a filter in order to perform this query in a subset of the documents
+    It is possible to provide a filter in order to perform this operation in a subset of the documents
     """
     subset: CategoryFilterInput
   ): [Category]!
@@ -166,7 +166,7 @@ type query {
     where: [TagUniqueFilterInput!]!
 
     """
-    It is possible to provide a filter in order to perform this query in a subset of the documents
+    It is possible to provide a filter in order to perform this operation in a subset of the documents
     """
     subset: TagFilterInput
   ): [Tag!]!
@@ -178,7 +178,7 @@ type query {
     where: [TagUniqueFilterInput!]!
 
     """
-    It is possible to provide a filter in order to perform this query in a subset of the documents
+    It is possible to provide a filter in order to perform this operation in a subset of the documents
     """
     subset: TagFilterInput
   ): [Tag]!
@@ -209,7 +209,7 @@ type query {
     where: [ArticleTagUniqueFilterInput!]!
 
     """
-    It is possible to provide a filter in order to perform this query in a subset of the documents
+    It is possible to provide a filter in order to perform this operation in a subset of the documents
     """
     subset: ArticleTagFilterInput
   ): [ArticleTag!]!
@@ -221,7 +221,7 @@ type query {
     where: [ArticleTagUniqueFilterInput!]!
 
     """
-    It is possible to provide a filter in order to perform this query in a subset of the documents
+    It is possible to provide a filter in order to perform this operation in a subset of the documents
     """
     subset: ArticleTagFilterInput
   ): [ArticleTag]!
@@ -256,7 +256,7 @@ type query {
     where: [ArticleTagModerationUniqueFilterInput!]!
 
     """
-    It is possible to provide a filter in order to perform this query in a subset of the documents
+    It is possible to provide a filter in order to perform this operation in a subset of the documents
     """
     subset: ArticleTagModerationFilterInput
   ): [ArticleTagModeration!]!
@@ -268,7 +268,7 @@ type query {
     where: [ArticleTagModerationUniqueFilterInput!]!
 
     """
-    It is possible to provide a filter in order to perform this query in a subset of the documents
+    It is possible to provide a filter in order to perform this operation in a subset of the documents
     """
     subset: ArticleTagModerationFilterInput
   ): [ArticleTagModeration]!
@@ -299,7 +299,7 @@ type query {
     where: [UserUniqueFilterInput!]!
 
     """
-    It is possible to provide a filter in order to perform this query in a subset of the documents
+    It is possible to provide a filter in order to perform this operation in a subset of the documents
     """
     subset: UserFilterInput
   ): [User!]!
@@ -311,7 +311,7 @@ type query {
     where: [UserUniqueFilterInput!]!
 
     """
-    It is possible to provide a filter in order to perform this query in a subset of the documents
+    It is possible to provide a filter in order to perform this operation in a subset of the documents
     """
     subset: UserFilterInput
   ): [User]!
@@ -342,7 +342,7 @@ type query {
     where: [UserProfileUniqueFilterInput!]!
 
     """
-    It is possible to provide a filter in order to perform this query in a subset of the documents
+    It is possible to provide a filter in order to perform this operation in a subset of the documents
     """
     subset: UserProfileFilterInput
   ): [UserProfile!]!
@@ -354,7 +354,7 @@ type query {
     where: [UserProfileUniqueFilterInput!]!
 
     """
-    It is possible to provide a filter in order to perform this query in a subset of the documents
+    It is possible to provide a filter in order to perform this operation in a subset of the documents
     """
     subset: UserProfileFilterInput
   ): [UserProfile]!
@@ -1179,24 +1179,74 @@ type mutation {
   """
   Updates many "Articles"
   """
-  updateArticles(where: ArticleFilterInput, orderBy: [ArticleOrderingInput!], first: UnsignedInt!, data: ArticleUpdateInput): [Article!]!
-
-  """Updates one "Article", throws an error if it does not exists"""
-  updateArticle(where: ArticleUniqueFilterInput!, data: ArticleUpdateInput): Article!
+  updateArticles(data: ArticleUpdateInput, where: ArticleFilterInput, orderBy: [ArticleOrderingInput!], first: UnsignedInt!): [Article!]!
 
   """Updates one "Article" if it exists, returns null otherwise"""
-  updateArticleIfExists(where: ArticleUniqueFilterInput!, data: ArticleUpdateInput): Article
+  updateArticleIfExists(data: ArticleUpdateInput, where: ArticleUniqueFilterInput!): Article
+
+  """Updates one "Article", throws an error if it does not exists"""
+  updateArticle(data: ArticleUpdateInput, where: ArticleUniqueFilterInput!): Article!
+
+  """
+  Given a list of unique-filter's value, updates the corresponding "Articles" then returns their new values, or null, in the same order
+  """
+  updateSomeArticlesInOrderIfExists(
+    data: ArticleUpdateInput
+    where: [ArticleUniqueFilterInput!]!
+
+    """
+    It is possible to provide a filter in order to perform this operation in a subset of the documents
+    """
+    subset: ArticleFilterInput
+  ): [Article]!
+
+  """
+  Given a list of unique-filter's value, updates the corresponding "Articles" then returns their new values in the same order, throws an error if one does not exist
+  """
+  updateSomeArticlesInOrder(
+    data: ArticleUpdateInput
+    where: [ArticleUniqueFilterInput!]!
+
+    """
+    It is possible to provide a filter in order to perform this operation in a subset of the documents
+    """
+    subset: ArticleFilterInput
+  ): [Article!]!
 
   """
   Deletes many "Articles"
   """
   deleteArticles(where: ArticleFilterInput, orderBy: [ArticleOrderingInput!], first: UnsignedInt!): [Article!]!
 
+  """Deletes one "Article" if it exists, returns null otherwise"""
+  deleteArticleIfExists(where: ArticleUniqueFilterInput!): Article
+
   """Deletes one "Article", throws an error if it does not exists"""
   deleteArticle(where: ArticleUniqueFilterInput!): Article!
 
-  """Deletes one "Article" if it exists, returns null otherwise"""
-  deleteArticleIfExists(where: ArticleUniqueFilterInput!): Article
+  """
+  Given a list of unique-filter's value, deletes the corresponding "Articles" then returns their old values, or null, in the same order
+  """
+  deleteSomeArticlesInOrderIfExists(
+    where: [ArticleUniqueFilterInput!]!
+
+    """
+    It is possible to provide a filter in order to perform this operation in a subset of the documents
+    """
+    subset: ArticleFilterInput
+  ): [Article]!
+
+  """
+  Given a list of unique-filter's value, deletes the corresponding "Articles" then returns their old values in the same order, throws an error if one does not exist
+  """
+  deleteSomeArticlesInOrder(
+    where: [ArticleUniqueFilterInput!]!
+
+    """
+    It is possible to provide a filter in order to perform this operation in a subset of the documents
+    """
+    subset: ArticleFilterInput
+  ): [Article!]!
 
   """Updates an existing "Article" or creates a new one"""
   upsertArticle(where: ArticleUniqueFilterInput!, create: ArticleCreationInput!, update: ArticleUpdateInput): Article!
@@ -1218,24 +1268,74 @@ type mutation {
   """
   Updates many "ArticleExtensions"
   """
-  updateArticleExtensions(where: ArticleExtensionFilterInput, first: UnsignedInt!, data: ArticleExtensionUpdateInput): [ArticleExtension!]!
-
-  """Updates one "ArticleExtension", throws an error if it does not exists"""
-  updateArticleExtension(where: ArticleExtensionUniqueFilterInput!, data: ArticleExtensionUpdateInput): ArticleExtension!
+  updateArticleExtensions(data: ArticleExtensionUpdateInput, where: ArticleExtensionFilterInput, first: UnsignedInt!): [ArticleExtension!]!
 
   """Updates one "ArticleExtension" if it exists, returns null otherwise"""
-  updateArticleExtensionIfExists(where: ArticleExtensionUniqueFilterInput!, data: ArticleExtensionUpdateInput): ArticleExtension
+  updateArticleExtensionIfExists(data: ArticleExtensionUpdateInput, where: ArticleExtensionUniqueFilterInput!): ArticleExtension
+
+  """Updates one "ArticleExtension", throws an error if it does not exists"""
+  updateArticleExtension(data: ArticleExtensionUpdateInput, where: ArticleExtensionUniqueFilterInput!): ArticleExtension!
+
+  """
+  Given a list of unique-filter's value, updates the corresponding "ArticleExtensions" then returns their new values, or null, in the same order
+  """
+  updateSomeArticleExtensionsInOrderIfExists(
+    data: ArticleExtensionUpdateInput
+    where: [ArticleExtensionUniqueFilterInput!]!
+
+    """
+    It is possible to provide a filter in order to perform this operation in a subset of the documents
+    """
+    subset: ArticleExtensionFilterInput
+  ): [ArticleExtension]!
+
+  """
+  Given a list of unique-filter's value, updates the corresponding "ArticleExtensions" then returns their new values in the same order, throws an error if one does not exist
+  """
+  updateSomeArticleExtensionsInOrder(
+    data: ArticleExtensionUpdateInput
+    where: [ArticleExtensionUniqueFilterInput!]!
+
+    """
+    It is possible to provide a filter in order to perform this operation in a subset of the documents
+    """
+    subset: ArticleExtensionFilterInput
+  ): [ArticleExtension!]!
 
   """
   Deletes many "ArticleExtensions"
   """
   deleteArticleExtensions(where: ArticleExtensionFilterInput, first: UnsignedInt!): [ArticleExtension!]!
 
+  """Deletes one "ArticleExtension" if it exists, returns null otherwise"""
+  deleteArticleExtensionIfExists(where: ArticleExtensionUniqueFilterInput!): ArticleExtension
+
   """Deletes one "ArticleExtension", throws an error if it does not exists"""
   deleteArticleExtension(where: ArticleExtensionUniqueFilterInput!): ArticleExtension!
 
-  """Deletes one "ArticleExtension" if it exists, returns null otherwise"""
-  deleteArticleExtensionIfExists(where: ArticleExtensionUniqueFilterInput!): ArticleExtension
+  """
+  Given a list of unique-filter's value, deletes the corresponding "ArticleExtensions" then returns their old values, or null, in the same order
+  """
+  deleteSomeArticleExtensionsInOrderIfExists(
+    where: [ArticleExtensionUniqueFilterInput!]!
+
+    """
+    It is possible to provide a filter in order to perform this operation in a subset of the documents
+    """
+    subset: ArticleExtensionFilterInput
+  ): [ArticleExtension]!
+
+  """
+  Given a list of unique-filter's value, deletes the corresponding "ArticleExtensions" then returns their old values in the same order, throws an error if one does not exist
+  """
+  deleteSomeArticleExtensionsInOrder(
+    where: [ArticleExtensionUniqueFilterInput!]!
+
+    """
+    It is possible to provide a filter in order to perform this operation in a subset of the documents
+    """
+    subset: ArticleExtensionFilterInput
+  ): [ArticleExtension!]!
 
   """Updates an existing "ArticleExtension" or creates a new one"""
   upsertArticleExtension(where: ArticleExtensionUniqueFilterInput!, create: ArticleExtensionCreationInput!, update: ArticleExtensionUpdateInput): ArticleExtension!
@@ -1254,24 +1354,74 @@ type mutation {
   """
   Updates many "Categories"
   """
-  updateCategories(where: CategoryFilterInput, orderBy: [CategoryOrderingInput!], first: UnsignedInt!, data: CategoryUpdateInput): [Category!]!
-
-  """Updates one "Category", throws an error if it does not exists"""
-  updateCategory(where: CategoryUniqueFilterInput!, data: CategoryUpdateInput): Category!
+  updateCategories(data: CategoryUpdateInput, where: CategoryFilterInput, orderBy: [CategoryOrderingInput!], first: UnsignedInt!): [Category!]!
 
   """Updates one "Category" if it exists, returns null otherwise"""
-  updateCategoryIfExists(where: CategoryUniqueFilterInput!, data: CategoryUpdateInput): Category
+  updateCategoryIfExists(data: CategoryUpdateInput, where: CategoryUniqueFilterInput!): Category
+
+  """Updates one "Category", throws an error if it does not exists"""
+  updateCategory(data: CategoryUpdateInput, where: CategoryUniqueFilterInput!): Category!
+
+  """
+  Given a list of unique-filter's value, updates the corresponding "Categories" then returns their new values, or null, in the same order
+  """
+  updateSomeCategoriesInOrderIfExists(
+    data: CategoryUpdateInput
+    where: [CategoryUniqueFilterInput!]!
+
+    """
+    It is possible to provide a filter in order to perform this operation in a subset of the documents
+    """
+    subset: CategoryFilterInput
+  ): [Category]!
+
+  """
+  Given a list of unique-filter's value, updates the corresponding "Categories" then returns their new values in the same order, throws an error if one does not exist
+  """
+  updateSomeCategoriesInOrder(
+    data: CategoryUpdateInput
+    where: [CategoryUniqueFilterInput!]!
+
+    """
+    It is possible to provide a filter in order to perform this operation in a subset of the documents
+    """
+    subset: CategoryFilterInput
+  ): [Category!]!
 
   """
   Deletes many "Categories"
   """
   deleteCategories(where: CategoryFilterInput, orderBy: [CategoryOrderingInput!], first: UnsignedInt!): [Category!]!
 
+  """Deletes one "Category" if it exists, returns null otherwise"""
+  deleteCategoryIfExists(where: CategoryUniqueFilterInput!): Category
+
   """Deletes one "Category", throws an error if it does not exists"""
   deleteCategory(where: CategoryUniqueFilterInput!): Category!
 
-  """Deletes one "Category" if it exists, returns null otherwise"""
-  deleteCategoryIfExists(where: CategoryUniqueFilterInput!): Category
+  """
+  Given a list of unique-filter's value, deletes the corresponding "Categories" then returns their old values, or null, in the same order
+  """
+  deleteSomeCategoriesInOrderIfExists(
+    where: [CategoryUniqueFilterInput!]!
+
+    """
+    It is possible to provide a filter in order to perform this operation in a subset of the documents
+    """
+    subset: CategoryFilterInput
+  ): [Category]!
+
+  """
+  Given a list of unique-filter's value, deletes the corresponding "Categories" then returns their old values in the same order, throws an error if one does not exist
+  """
+  deleteSomeCategoriesInOrder(
+    where: [CategoryUniqueFilterInput!]!
+
+    """
+    It is possible to provide a filter in order to perform this operation in a subset of the documents
+    """
+    subset: CategoryFilterInput
+  ): [Category!]!
 
   """Updates an existing "Category" or creates a new one"""
   upsertCategory(where: CategoryUniqueFilterInput!, create: CategoryCreationInput!, update: CategoryUpdateInput): Category!
@@ -1288,24 +1438,74 @@ type mutation {
   """
   Updates many "Tags"
   """
-  updateTags(where: TagFilterInput, orderBy: [TagOrderingInput!], first: UnsignedInt!, data: TagUpdateInput): [Tag!]!
-
-  """Updates one "Tag", throws an error if it does not exists"""
-  updateTag(where: TagUniqueFilterInput!, data: TagUpdateInput): Tag!
+  updateTags(data: TagUpdateInput, where: TagFilterInput, orderBy: [TagOrderingInput!], first: UnsignedInt!): [Tag!]!
 
   """Updates one "Tag" if it exists, returns null otherwise"""
-  updateTagIfExists(where: TagUniqueFilterInput!, data: TagUpdateInput): Tag
+  updateTagIfExists(data: TagUpdateInput, where: TagUniqueFilterInput!): Tag
+
+  """Updates one "Tag", throws an error if it does not exists"""
+  updateTag(data: TagUpdateInput, where: TagUniqueFilterInput!): Tag!
+
+  """
+  Given a list of unique-filter's value, updates the corresponding "Tags" then returns their new values, or null, in the same order
+  """
+  updateSomeTagsInOrderIfExists(
+    data: TagUpdateInput
+    where: [TagUniqueFilterInput!]!
+
+    """
+    It is possible to provide a filter in order to perform this operation in a subset of the documents
+    """
+    subset: TagFilterInput
+  ): [Tag]!
+
+  """
+  Given a list of unique-filter's value, updates the corresponding "Tags" then returns their new values in the same order, throws an error if one does not exist
+  """
+  updateSomeTagsInOrder(
+    data: TagUpdateInput
+    where: [TagUniqueFilterInput!]!
+
+    """
+    It is possible to provide a filter in order to perform this operation in a subset of the documents
+    """
+    subset: TagFilterInput
+  ): [Tag!]!
 
   """
   Deletes many "Tags"
   """
   deleteTags(where: TagFilterInput, orderBy: [TagOrderingInput!], first: UnsignedInt!): [Tag!]!
 
+  """Deletes one "Tag" if it exists, returns null otherwise"""
+  deleteTagIfExists(where: TagUniqueFilterInput!): Tag
+
   """Deletes one "Tag", throws an error if it does not exists"""
   deleteTag(where: TagUniqueFilterInput!): Tag!
 
-  """Deletes one "Tag" if it exists, returns null otherwise"""
-  deleteTagIfExists(where: TagUniqueFilterInput!): Tag
+  """
+  Given a list of unique-filter's value, deletes the corresponding "Tags" then returns their old values, or null, in the same order
+  """
+  deleteSomeTagsInOrderIfExists(
+    where: [TagUniqueFilterInput!]!
+
+    """
+    It is possible to provide a filter in order to perform this operation in a subset of the documents
+    """
+    subset: TagFilterInput
+  ): [Tag]!
+
+  """
+  Given a list of unique-filter's value, deletes the corresponding "Tags" then returns their old values in the same order, throws an error if one does not exist
+  """
+  deleteSomeTagsInOrder(
+    where: [TagUniqueFilterInput!]!
+
+    """
+    It is possible to provide a filter in order to perform this operation in a subset of the documents
+    """
+    subset: TagFilterInput
+  ): [Tag!]!
 
   """Updates an existing "Tag" or creates a new one"""
   upsertTag(where: TagUniqueFilterInput!, create: TagCreationInput!, update: TagUpdateInput): Tag!
@@ -1324,24 +1524,74 @@ type mutation {
   """
   Updates many "ArticleTags"
   """
-  updateArticleTags(where: ArticleTagFilterInput, orderBy: [ArticleTagOrderingInput!], first: UnsignedInt!, data: ArticleTagUpdateInput): [ArticleTag!]!
-
-  """Updates one "ArticleTag", throws an error if it does not exists"""
-  updateArticleTag(where: ArticleTagUniqueFilterInput!, data: ArticleTagUpdateInput): ArticleTag!
+  updateArticleTags(data: ArticleTagUpdateInput, where: ArticleTagFilterInput, orderBy: [ArticleTagOrderingInput!], first: UnsignedInt!): [ArticleTag!]!
 
   """Updates one "ArticleTag" if it exists, returns null otherwise"""
-  updateArticleTagIfExists(where: ArticleTagUniqueFilterInput!, data: ArticleTagUpdateInput): ArticleTag
+  updateArticleTagIfExists(data: ArticleTagUpdateInput, where: ArticleTagUniqueFilterInput!): ArticleTag
+
+  """Updates one "ArticleTag", throws an error if it does not exists"""
+  updateArticleTag(data: ArticleTagUpdateInput, where: ArticleTagUniqueFilterInput!): ArticleTag!
+
+  """
+  Given a list of unique-filter's value, updates the corresponding "ArticleTags" then returns their new values, or null, in the same order
+  """
+  updateSomeArticleTagsInOrderIfExists(
+    data: ArticleTagUpdateInput
+    where: [ArticleTagUniqueFilterInput!]!
+
+    """
+    It is possible to provide a filter in order to perform this operation in a subset of the documents
+    """
+    subset: ArticleTagFilterInput
+  ): [ArticleTag]!
+
+  """
+  Given a list of unique-filter's value, updates the corresponding "ArticleTags" then returns their new values in the same order, throws an error if one does not exist
+  """
+  updateSomeArticleTagsInOrder(
+    data: ArticleTagUpdateInput
+    where: [ArticleTagUniqueFilterInput!]!
+
+    """
+    It is possible to provide a filter in order to perform this operation in a subset of the documents
+    """
+    subset: ArticleTagFilterInput
+  ): [ArticleTag!]!
 
   """
   Deletes many "ArticleTags"
   """
   deleteArticleTags(where: ArticleTagFilterInput, orderBy: [ArticleTagOrderingInput!], first: UnsignedInt!): [ArticleTag!]!
 
+  """Deletes one "ArticleTag" if it exists, returns null otherwise"""
+  deleteArticleTagIfExists(where: ArticleTagUniqueFilterInput!): ArticleTag
+
   """Deletes one "ArticleTag", throws an error if it does not exists"""
   deleteArticleTag(where: ArticleTagUniqueFilterInput!): ArticleTag!
 
-  """Deletes one "ArticleTag" if it exists, returns null otherwise"""
-  deleteArticleTagIfExists(where: ArticleTagUniqueFilterInput!): ArticleTag
+  """
+  Given a list of unique-filter's value, deletes the corresponding "ArticleTags" then returns their old values, or null, in the same order
+  """
+  deleteSomeArticleTagsInOrderIfExists(
+    where: [ArticleTagUniqueFilterInput!]!
+
+    """
+    It is possible to provide a filter in order to perform this operation in a subset of the documents
+    """
+    subset: ArticleTagFilterInput
+  ): [ArticleTag]!
+
+  """
+  Given a list of unique-filter's value, deletes the corresponding "ArticleTags" then returns their old values in the same order, throws an error if one does not exist
+  """
+  deleteSomeArticleTagsInOrder(
+    where: [ArticleTagUniqueFilterInput!]!
+
+    """
+    It is possible to provide a filter in order to perform this operation in a subset of the documents
+    """
+    subset: ArticleTagFilterInput
+  ): [ArticleTag!]!
 
   """Updates an existing "ArticleTag" or creates a new one"""
   upsertArticleTag(where: ArticleTagUniqueFilterInput!, create: ArticleTagCreationInput!, update: ArticleTagUpdateInput): ArticleTag!
@@ -1364,17 +1614,43 @@ type mutation {
   """
   Updates many "ArticleTagModerations"
   """
-  updateArticleTagModerations(where: ArticleTagModerationFilterInput, first: UnsignedInt!, data: ArticleTagModerationUpdateInput): [ArticleTagModeration!]!
-
-  """
-  Updates one "ArticleTagModeration", throws an error if it does not exists
-  """
-  updateArticleTagModeration(where: ArticleTagModerationUniqueFilterInput!, data: ArticleTagModerationUpdateInput): ArticleTagModeration!
+  updateArticleTagModerations(data: ArticleTagModerationUpdateInput, where: ArticleTagModerationFilterInput, first: UnsignedInt!): [ArticleTagModeration!]!
 
   """
   Updates one "ArticleTagModeration" if it exists, returns null otherwise
   """
-  updateArticleTagModerationIfExists(where: ArticleTagModerationUniqueFilterInput!, data: ArticleTagModerationUpdateInput): ArticleTagModeration
+  updateArticleTagModerationIfExists(data: ArticleTagModerationUpdateInput, where: ArticleTagModerationUniqueFilterInput!): ArticleTagModeration
+
+  """
+  Updates one "ArticleTagModeration", throws an error if it does not exists
+  """
+  updateArticleTagModeration(data: ArticleTagModerationUpdateInput, where: ArticleTagModerationUniqueFilterInput!): ArticleTagModeration!
+
+  """
+  Given a list of unique-filter's value, updates the corresponding "ArticleTagModerations" then returns their new values, or null, in the same order
+  """
+  updateSomeArticleTagModerationsInOrderIfExists(
+    data: ArticleTagModerationUpdateInput
+    where: [ArticleTagModerationUniqueFilterInput!]!
+
+    """
+    It is possible to provide a filter in order to perform this operation in a subset of the documents
+    """
+    subset: ArticleTagModerationFilterInput
+  ): [ArticleTagModeration]!
+
+  """
+  Given a list of unique-filter's value, updates the corresponding "ArticleTagModerations" then returns their new values in the same order, throws an error if one does not exist
+  """
+  updateSomeArticleTagModerationsInOrder(
+    data: ArticleTagModerationUpdateInput
+    where: [ArticleTagModerationUniqueFilterInput!]!
+
+    """
+    It is possible to provide a filter in order to perform this operation in a subset of the documents
+    """
+    subset: ArticleTagModerationFilterInput
+  ): [ArticleTagModeration!]!
 
   """
   Deletes many "ArticleTagModerations"
@@ -1382,14 +1658,38 @@ type mutation {
   deleteArticleTagModerations(where: ArticleTagModerationFilterInput, first: UnsignedInt!): [ArticleTagModeration!]!
 
   """
+  Deletes one "ArticleTagModeration" if it exists, returns null otherwise
+  """
+  deleteArticleTagModerationIfExists(where: ArticleTagModerationUniqueFilterInput!): ArticleTagModeration
+
+  """
   Deletes one "ArticleTagModeration", throws an error if it does not exists
   """
   deleteArticleTagModeration(where: ArticleTagModerationUniqueFilterInput!): ArticleTagModeration!
 
   """
-  Deletes one "ArticleTagModeration" if it exists, returns null otherwise
+  Given a list of unique-filter's value, deletes the corresponding "ArticleTagModerations" then returns their old values, or null, in the same order
   """
-  deleteArticleTagModerationIfExists(where: ArticleTagModerationUniqueFilterInput!): ArticleTagModeration
+  deleteSomeArticleTagModerationsInOrderIfExists(
+    where: [ArticleTagModerationUniqueFilterInput!]!
+
+    """
+    It is possible to provide a filter in order to perform this operation in a subset of the documents
+    """
+    subset: ArticleTagModerationFilterInput
+  ): [ArticleTagModeration]!
+
+  """
+  Given a list of unique-filter's value, deletes the corresponding "ArticleTagModerations" then returns their old values in the same order, throws an error if one does not exist
+  """
+  deleteSomeArticleTagModerationsInOrder(
+    where: [ArticleTagModerationUniqueFilterInput!]!
+
+    """
+    It is possible to provide a filter in order to perform this operation in a subset of the documents
+    """
+    subset: ArticleTagModerationFilterInput
+  ): [ArticleTagModeration!]!
 
   """Updates an existing "ArticleTagModeration" or creates a new one"""
   upsertArticleTagModeration(where: ArticleTagModerationUniqueFilterInput!, create: ArticleTagModerationCreationInput!, update: ArticleTagModerationUpdateInput): ArticleTagModeration!
@@ -1408,24 +1708,74 @@ type mutation {
   """
   Updates many "UserProfiles"
   """
-  updateUserProfiles(where: UserProfileFilterInput, orderBy: [UserProfileOrderingInput!], first: UnsignedInt!, data: UserProfileUpdateInput): [UserProfile!]!
-
-  """Updates one "UserProfile", throws an error if it does not exists"""
-  updateUserProfile(where: UserProfileUniqueFilterInput!, data: UserProfileUpdateInput): UserProfile!
+  updateUserProfiles(data: UserProfileUpdateInput, where: UserProfileFilterInput, orderBy: [UserProfileOrderingInput!], first: UnsignedInt!): [UserProfile!]!
 
   """Updates one "UserProfile" if it exists, returns null otherwise"""
-  updateUserProfileIfExists(where: UserProfileUniqueFilterInput!, data: UserProfileUpdateInput): UserProfile
+  updateUserProfileIfExists(data: UserProfileUpdateInput, where: UserProfileUniqueFilterInput!): UserProfile
+
+  """Updates one "UserProfile", throws an error if it does not exists"""
+  updateUserProfile(data: UserProfileUpdateInput, where: UserProfileUniqueFilterInput!): UserProfile!
+
+  """
+  Given a list of unique-filter's value, updates the corresponding "UserProfiles" then returns their new values, or null, in the same order
+  """
+  updateSomeUserProfilesInOrderIfExists(
+    data: UserProfileUpdateInput
+    where: [UserProfileUniqueFilterInput!]!
+
+    """
+    It is possible to provide a filter in order to perform this operation in a subset of the documents
+    """
+    subset: UserProfileFilterInput
+  ): [UserProfile]!
+
+  """
+  Given a list of unique-filter's value, updates the corresponding "UserProfiles" then returns their new values in the same order, throws an error if one does not exist
+  """
+  updateSomeUserProfilesInOrder(
+    data: UserProfileUpdateInput
+    where: [UserProfileUniqueFilterInput!]!
+
+    """
+    It is possible to provide a filter in order to perform this operation in a subset of the documents
+    """
+    subset: UserProfileFilterInput
+  ): [UserProfile!]!
 
   """
   Deletes many "UserProfiles"
   """
   deleteUserProfiles(where: UserProfileFilterInput, orderBy: [UserProfileOrderingInput!], first: UnsignedInt!): [UserProfile!]!
 
+  """Deletes one "UserProfile" if it exists, returns null otherwise"""
+  deleteUserProfileIfExists(where: UserProfileUniqueFilterInput!): UserProfile
+
   """Deletes one "UserProfile", throws an error if it does not exists"""
   deleteUserProfile(where: UserProfileUniqueFilterInput!): UserProfile!
 
-  """Deletes one "UserProfile" if it exists, returns null otherwise"""
-  deleteUserProfileIfExists(where: UserProfileUniqueFilterInput!): UserProfile
+  """
+  Given a list of unique-filter's value, deletes the corresponding "UserProfiles" then returns their old values, or null, in the same order
+  """
+  deleteSomeUserProfilesInOrderIfExists(
+    where: [UserProfileUniqueFilterInput!]!
+
+    """
+    It is possible to provide a filter in order to perform this operation in a subset of the documents
+    """
+    subset: UserProfileFilterInput
+  ): [UserProfile]!
+
+  """
+  Given a list of unique-filter's value, deletes the corresponding "UserProfiles" then returns their old values in the same order, throws an error if one does not exist
+  """
+  deleteSomeUserProfilesInOrder(
+    where: [UserProfileUniqueFilterInput!]!
+
+    """
+    It is possible to provide a filter in order to perform this operation in a subset of the documents
+    """
+    subset: UserProfileFilterInput
+  ): [UserProfile!]!
 
   """Updates an existing "UserProfile" or creates a new one"""
   upsertUserProfile(where: UserProfileUniqueFilterInput!, create: UserProfileCreationInput!, update: UserProfileUpdateInput): UserProfile!

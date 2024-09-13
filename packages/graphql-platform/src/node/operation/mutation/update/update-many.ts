@@ -34,10 +34,10 @@ import { AbstractUpdate } from '../abstract-update.js';
 import type { MutationContext } from '../context.js';
 
 export type UpdateManyMutationArgs = RawNodeSelectionAwareArgs<{
+  data?: NodeUpdateInputValue;
   where?: NodeFilterInputValue;
   orderBy?: OrderByInputValue;
   first: number;
-  data?: NodeUpdateInputValue;
 }>;
 
 export type UpdateManyMutationResult = NodeSelectedValue[];
@@ -62,6 +62,10 @@ export class UpdateManyMutation<
   public override get arguments() {
     return [
       new utils.Input({
+        name: 'data',
+        type: this.node.updateInputType,
+      }),
+      new utils.Input({
         name: 'where',
         type: this.node.filterInputType,
       }),
@@ -74,10 +78,6 @@ export class UpdateManyMutation<
       new utils.Input({
         name: 'first',
         type: utils.nonNillableInputType(scalars.typesByName.UnsignedInt),
-      }),
-      new utils.Input({
-        name: 'data',
-        type: this.node.updateInputType,
       }),
     ];
   }

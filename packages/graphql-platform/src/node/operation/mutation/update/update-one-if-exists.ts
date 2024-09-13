@@ -35,12 +35,12 @@ export class UpdateOneIfExistsMutation<
   public override get arguments() {
     return [
       new utils.Input({
-        name: 'where',
-        type: utils.nonNillableInputType(this.node.uniqueFilterInputType),
-      }),
-      new utils.Input({
         name: 'data',
         type: this.node.updateInputType,
+      }),
+      new utils.Input({
+        name: 'where',
+        type: utils.nonNillableInputType(this.node.uniqueFilterInputType),
       }),
     ];
   }

@@ -72,7 +72,7 @@ describe('GraphQL-Platform', () => {
       [operationType: OperationType, enabledCount: number, publicCount: number]
     >([
       [graphql.OperationTypeNode.QUERY, 65, 57],
-      [graphql.OperationTypeNode.MUTATION, 84, 71],
+      [graphql.OperationTypeNode.MUTATION, 116, 99],
       [graphql.OperationTypeNode.SUBSCRIPTION, 12, 7],
     ])(
       `generates %s: %d enabled / %d public`,
