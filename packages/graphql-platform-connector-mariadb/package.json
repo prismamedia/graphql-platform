@@ -36,7 +36,7 @@
     "@types/semver": "7.5.8",
     "graphql": "16.9.0",
     "jest": "30.0.0-alpha.6",
-    "publint": "0.2.10",
+    "publint": "0.2.11",
     "typescript": "5.6.2"
   },
   "dependencies": {
@@ -48,7 +48,7 @@
     "dependency-graph": "^1.0.0",
     "inflection": "^3.0.0",
     "mariadb": "^3.3.1",
-    "remeda": "^2.12.0",
+    "remeda": "^2.12.1",
     "semver": "^7.6.3",
     "type-fest": "^4.26.1"
   },

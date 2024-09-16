@@ -5,7 +5,10 @@ import type { ConnectorInterface } from '../../../connector-interface.js';
 import type { NodeValue } from '../../../node.js';
 import type { NodeUpdate } from '../../change.js';
 import type { UniqueConstraintValue } from '../../definition.js';
-import type { NodeUpdateValue } from '../../statement/update.js';
+import type {
+  NodeUpdateStatement,
+  NodeUpdateValue,
+} from '../../statement/update.js';
 import type { NodeUpdateInputValue } from '../../type/input/update.js';
 import {
   AbstractMutation,
@@ -60,6 +63,11 @@ export interface PreUpdateArgs<
    * The node's value as it would be if we apply the update: current + update = target
    */
   readonly target: NodeValue;
+
+  /**
+   * The full update-statement, with convenient methods
+   */
+  readonly statement: NodeUpdateStatement;
 }
 
 export interface PostUpdateArgs<

@@ -241,7 +241,9 @@ export class UniqueConstraint<TConnector extends ConnectorInterface = any> {
         ),
       ].join(''),
       fields: () =>
-        Array.from(this.componentSet).reduce((fields, component) => {
+        Array.from(this.componentSet).reduce<
+          graphql.GraphQLFieldConfigMap<any, any>
+        >((fields, component) => {
           if (component.isPublic()) {
             const type =
               component instanceof Leaf
@@ -266,7 +268,7 @@ export class UniqueConstraint<TConnector extends ConnectorInterface = any> {
           }
 
           return fields;
-        }, Object.create(null)),
+        }, {}),
     });
   }
 

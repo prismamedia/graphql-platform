@@ -60,20 +60,21 @@ const proxyHandler: ProxyHandler<NodeCreationStatement> = {
 };
 
 export class NodeCreationStatement {
+  public readonly valuesByComponent: Map<
+    Component,
+    utils.NonOptional<ComponentCreationValue>
+  >;
+
   /**
    * A convenient proxy to use this as a mutable plain-object
    */
   public readonly proxy: NodeCreationValue;
 
-  public readonly valuesByComponent = new Map<
-    Component,
-    utils.NonOptional<ComponentCreationValue>
-  >();
-
   public constructor(
     public readonly node: Node,
     value?: Readonly<NodeCreationValue>,
   ) {
+    this.valuesByComponent = new Map();
     value != null && this.setValue(value);
 
     this.proxy = new Proxy(this, proxyHandler) as any;
@@ -118,11 +119,14 @@ export class NodeCreationStatement {
   }
 
   public get value(): NodeCreationValue {
-    return Object.fromEntries(
-      Array.from(this.valuesByComponent, ([component, value]) => [
-        component.name,
-        value,
-      ]),
+    return Object.assign(
+      Object.create(null),
+      Object.fromEntries(
+        Array.from(this.valuesByComponent, ([component, value]) => [
+          component.name,
+          value,
+        ]),
+      ),
     );
   }
 }

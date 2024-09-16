@@ -103,6 +103,7 @@ export class CreateSomeMutation<
           context,
           data,
           creation: statement.proxy,
+          statement,
         });
       } catch (cause) {
         throw new LifecycleHookError(this.node, LifecycleHookKind.PRE_CREATE, {

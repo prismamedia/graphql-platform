@@ -187,7 +187,7 @@ export class UpdateManyMutation<
       // Create a statement for it
       const statement = new NodeUpdateStatement(this.node, oldSource, update);
 
-      if (!statement.isEmpty()) {
+      if (statement.hasActualComponentUpdate()) {
         // Apply the "preUpdate"-hook, if any
         try {
           await this.node.preUpdate({
@@ -197,6 +197,7 @@ export class UpdateManyMutation<
             current: Object.freeze(oldSource),
             update: statement.updateProxy,
             target: statement.targetProxy,
+            statement,
           });
         } catch (cause) {
           throw new LifecycleHookError(
@@ -206,7 +207,7 @@ export class UpdateManyMutation<
           );
         }
 
-        if (!statement.isEmpty()) {
+        if (statement.hasActualComponentUpdate()) {
           // Actually update the node
           await catchConnectorOperationError(
             () =>

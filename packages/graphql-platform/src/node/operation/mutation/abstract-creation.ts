@@ -3,7 +3,10 @@ import type { Except, Promisable } from 'type-fest';
 import type { BrokerInterface } from '../../../broker-interface.js';
 import type { ConnectorInterface } from '../../../connector-interface.js';
 import type { NodeCreation } from '../../change.js';
-import type { NodeCreationValue } from '../../statement/creation.js';
+import type {
+  NodeCreationStatement,
+  NodeCreationValue,
+} from '../../statement/creation.js';
 import type { NodeCreationInputValue } from '../../type/input/creation.js';
 import {
   AbstractMutation,
@@ -43,6 +46,11 @@ export interface PreCreateArgs<
    * The creation statement, as a mutable plain-object
    */
   readonly creation: NodeCreationValue;
+
+  /**
+   * The full creation-statement, with convenient methods
+   */
+  readonly statement: NodeCreationStatement;
 }
 
 export interface PostCreateArgs<

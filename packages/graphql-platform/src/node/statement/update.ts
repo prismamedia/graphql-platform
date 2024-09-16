@@ -1,4 +1,5 @@
 import * as utils from '@prismamedia/graphql-platform-utils';
+import * as R from 'remeda';
 import type {
   Component,
   ComponentValue,
@@ -9,6 +10,11 @@ import type {
   NodeValue,
   ReferenceValue,
 } from '../../node.js';
+
+export interface ComponentFilterOptions {
+  include?: ReadonlyArray<Component | Component['name']>;
+  exclude?: ReadonlyArray<Component | Component['name']>;
+}
 
 export type LeafUpdateValue = LeafValue | undefined;
 
@@ -89,10 +95,10 @@ const targetProxyHandler: ProxyHandler<NodeUpdateStatement> = {
 export class NodeUpdateStatement {
   readonly #currentValue: Readonly<NodeValue>;
 
-  public readonly updatesByComponent = new Map<
+  public readonly updatesByComponent: Map<
     Component,
     utils.NonOptional<ComponentUpdateValue>
-  >();
+  >;
 
   /**
    * A convenient way to access the updates of this node, as a mutable plain-object
@@ -110,6 +116,7 @@ export class NodeUpdateStatement {
     update?: Readonly<NodeUpdateValue>,
   ) {
     this.#currentValue = currentValue;
+    this.updatesByComponent = new Map();
     update != null && this.setUpdate(update);
 
     this.updateProxy = new Proxy(this, updateProxyHandler) as any;
@@ -122,22 +129,12 @@ export class NodeUpdateStatement {
   ): void {
     const component = this.node.ensureComponent(componentOrName);
 
-    if (update === undefined) {
-      this.updatesByComponent.delete(component);
-    } else {
-      const value = component.selection.parseSource(update);
-
-      if (
-        component.selection.areValuesEqual(
-          this.#currentValue[component.name] as any,
-          value as any,
-        )
-      ) {
-        this.updatesByComponent.delete(component);
-      } else {
-        this.updatesByComponent.set(component, value);
-      }
-    }
+    update === undefined
+      ? this.updatesByComponent.delete(component)
+      : this.updatesByComponent.set(
+          component,
+          component.selection.parseSource(update),
+        );
   }
 
   public setUpdate(value: Readonly<NodeUpdateValue>): void {
@@ -165,16 +162,64 @@ export class NodeUpdateStatement {
   }
 
   public get update(): NodeUpdateValue {
-    return Object.fromEntries(
-      Array.from(this.updatesByComponent, ([component, update]) => [
-        component.name,
-        update,
-      ]),
+    return Object.assign(
+      Object.create(null),
+      Object.fromEntries(
+        Array.from(this.updatesByComponent, ([component, update]) => [
+          component.name,
+          update,
+        ]),
+      ),
     );
   }
 
-  public isEmpty(): boolean {
-    return this.updatesByComponent.size === 0;
+  public getActualUpdatesByComponent(
+    options?: ComponentFilterOptions,
+  ): Map<Component, ComponentUpdateValue> {
+    return new Map(
+      R.pipe(
+        Array.from(this.updatesByComponent),
+        options?.include == null
+          ? R.identity()
+          : R.intersectionWith(
+              options.include.map((componentOrName) =>
+                this.node.ensureComponent(componentOrName),
+              ),
+              ([a], b) => a === b,
+            ),
+        options?.exclude == null
+          ? R.identity()
+          : R.differenceWith(
+              options.exclude.map((componentOrName) =>
+                this.node.ensureComponent(componentOrName),
+              ),
+              ([a], b) => a === b,
+            ),
+        R.filter(
+          ([component, update]) =>
+            !component.selection.areValuesEqual(
+              this.#currentValue[component.name] as any,
+              update as any,
+            ),
+        ),
+      ),
+    );
+  }
+
+  public getActualUpdate(options?: ComponentFilterOptions): NodeUpdateValue {
+    return Object.assign(
+      Object.create(null),
+      Object.fromEntries(
+        Array.from(
+          this.getActualUpdatesByComponent(options),
+          ([component, update]) => [component.name, update],
+        ),
+      ),
+    );
+  }
+
+  public hasActualComponentUpdate(options?: ComponentFilterOptions): boolean {
+    return this.getActualUpdatesByComponent(options).size > 0;
   }
 
   public getComponentTarget(
@@ -197,11 +242,14 @@ export class NodeUpdateStatement {
   }
 
   public get target(): NodeValue {
-    return Object.fromEntries(
-      Array.from(this.node.componentsByName.values(), (component) => [
-        component.name,
-        this.getComponentTarget(component),
-      ]),
+    return Object.assign(
+      Object.create(null),
+      Object.fromEntries(
+        Array.from(this.node.componentSet, (component) => [
+          component.name,
+          this.getComponentTarget(component),
+        ]),
+      ),
     );
   }
 }

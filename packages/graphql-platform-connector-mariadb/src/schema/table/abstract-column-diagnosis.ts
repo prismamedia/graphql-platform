@@ -20,6 +20,7 @@ export type ColumnDiagnosisOptions = {
   dataType?: utils.OptionalFlag;
   constraint?: utils.OptionalFlag;
   nullable?: utils.OptionalFlag;
+  default?: utils.OptionalFlag;
 };
 
 export type ColumnDiagnosisSummary = {
@@ -29,6 +30,7 @@ export type ColumnDiagnosisSummary = {
   dataType?: DiagnosisError;
   constraint?: DiagnosisError;
   nullable?: DiagnosisError;
+  default?: DiagnosisError;
 };
 
 export abstract class AbstractColumnDiagnosis<
@@ -40,6 +42,7 @@ export abstract class AbstractColumnDiagnosis<
   public readonly dataTypeError?: DiagnosisError;
   public readonly constraintError?: DiagnosisError;
   public readonly nullableError?: DiagnosisError;
+  public readonly defaultError?: DiagnosisError;
 
   public readonly errorCount: number;
 
@@ -144,13 +147,26 @@ export abstract class AbstractColumnDiagnosis<
       };
     }
 
+    if (
+      column.dataType.kind === 'TIMESTAMP' &&
+      informations.column.EXTRA.toLowerCase().includes(
+        'on update current_timestamp()'.toLowerCase(),
+      )
+    ) {
+      this.defaultError = {
+        expected: 'no default value',
+        actual: informations.column.EXTRA,
+      };
+    }
+
     this.errorCount =
       (this.commentError ? 1 : 0) +
       (this.autoIncrementError ? 1 : 0) +
       (this.collationError ? 1 : 0) +
       (this.dataTypeError ? 1 : 0) +
       (this.constraintError ? 1 : 0) +
-      (this.nullableError ? 1 : 0);
+      (this.nullableError ? 1 : 0) +
+      (this.defaultError ? 1 : 0);
   }
 
   public isValid(): boolean {
@@ -176,6 +192,9 @@ export abstract class AbstractColumnDiagnosis<
       }),
       ...(this.nullableError && {
         nullable: this.nullableError,
+      }),
+      ...(this.defaultError && {
+        default: this.defaultError,
       }),
     };
   }
