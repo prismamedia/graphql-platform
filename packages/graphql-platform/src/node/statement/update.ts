@@ -1,5 +1,4 @@
 import * as utils from '@prismamedia/graphql-platform-utils';
-import * as R from 'remeda';
 import type {
   Component,
   ComponentValue,
@@ -10,11 +9,6 @@ import type {
   NodeValue,
   ReferenceValue,
 } from '../../node.js';
-
-export interface ComponentFilterOptions {
-  include?: ReadonlyArray<Component | Component['name']>;
-  exclude?: ReadonlyArray<Component | Component['name']>;
-}
 
 export type LeafUpdateValue = LeafValue | undefined;
 
@@ -125,16 +119,26 @@ export class NodeUpdateStatement {
 
   public setComponentUpdate(
     componentOrName: Component | Component['name'],
-    update?: ComponentUpdateValue,
+    rawUpdate?: ComponentUpdateValue,
   ): void {
     const component = this.node.ensureComponent(componentOrName);
 
-    update === undefined
-      ? this.updatesByComponent.delete(component)
-      : this.updatesByComponent.set(
-          component,
-          component.selection.parseSource(update),
-        );
+    if (rawUpdate === undefined) {
+      this.updatesByComponent.delete(component);
+    } else {
+      const update = component.selection.parseSource(rawUpdate);
+
+      if (
+        component.selection.areValuesEqual(
+          this.#currentValue[component.name] as any,
+          update as any,
+        )
+      ) {
+        this.updatesByComponent.delete(component);
+      } else {
+        this.updatesByComponent.set(component, update);
+      }
+    }
   }
 
   public setUpdate(value: Readonly<NodeUpdateValue>): void {
@@ -173,53 +177,8 @@ export class NodeUpdateStatement {
     );
   }
 
-  public getActualUpdatesByComponent(
-    options?: ComponentFilterOptions,
-  ): Map<Component, ComponentUpdateValue> {
-    return new Map(
-      R.pipe(
-        Array.from(this.updatesByComponent),
-        options?.include == null
-          ? R.identity()
-          : R.intersectionWith(
-              options.include.map((componentOrName) =>
-                this.node.ensureComponent(componentOrName),
-              ),
-              ([a], b) => a === b,
-            ),
-        options?.exclude == null
-          ? R.identity()
-          : R.differenceWith(
-              options.exclude.map((componentOrName) =>
-                this.node.ensureComponent(componentOrName),
-              ),
-              ([a], b) => a === b,
-            ),
-        R.filter(
-          ([component, update]) =>
-            !component.selection.areValuesEqual(
-              this.#currentValue[component.name] as any,
-              update as any,
-            ),
-        ),
-      ),
-    );
-  }
-
-  public getActualUpdate(options?: ComponentFilterOptions): NodeUpdateValue {
-    return Object.assign(
-      Object.create(null),
-      Object.fromEntries(
-        Array.from(
-          this.getActualUpdatesByComponent(options),
-          ([component, update]) => [component.name, update],
-        ),
-      ),
-    );
-  }
-
-  public hasActualComponentUpdate(options?: ComponentFilterOptions): boolean {
-    return this.getActualUpdatesByComponent(options).size > 0;
+  public isEmpty(): boolean {
+    return this.updatesByComponent.size === 0;
   }
 
   public getComponentTarget(

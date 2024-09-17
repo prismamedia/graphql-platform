@@ -29,10 +29,7 @@ export class UpdateStatement implements mariadb.QueryOptions {
     statement: SetOptional<core.ConnectorUpdateStatement, 'node'>,
     config?: UpdateStatementConfig,
   ) {
-    assert(
-      statement.update.hasActualComponentUpdate(),
-      'Update statement has no actual updates',
-    );
+    assert(!statement.update.isEmpty(), 'Update statement is empty');
 
     const tableReference = new TableFactor(table, context);
 

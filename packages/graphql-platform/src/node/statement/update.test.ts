@@ -31,10 +31,6 @@ describe('Update', () => {
       {
         title: "My new article's  title ",
       },
-      {
-        title: "My new article's title",
-      },
-      {},
       {},
       {
         id: '6a1dd2e7-7496-47aa-8575-282f45566d44',
@@ -72,16 +68,8 @@ describe('Update', () => {
         updatedAt: new Date('1987-04-28T12:00:00.000Z'),
       },
       {
-        title: "My new article's title",
         category: { _id: 5 },
         updatedAt: new Date('1987-04-28T12:00:00.000Z'),
-      },
-      {
-        category: { _id: 5 },
-        updatedAt: new Date('1987-04-28T12:00:00.000Z'),
-      },
-      {
-        category: { _id: 5 },
       },
       {
         id: '6a1dd2e7-7496-47aa-8575-282f45566d44',
@@ -96,30 +84,14 @@ describe('Update', () => {
         score: 0.5,
       },
     ],
-  ])(
-    'works',
-    (
-      nodeName,
-      current,
-      rawUpdate,
-      update,
-      actualUpdate,
-      actualUpdateButUpdatedAt,
-      target,
-    ) => {
-      const node = gp.getNodeByName(nodeName);
-      const statement = new NodeUpdateStatement(node, current, rawUpdate);
+  ])('works', (nodeName, current, rawUpdate, update, target) => {
+    const node = gp.getNodeByName(nodeName);
+    const statement = new NodeUpdateStatement(node, current, rawUpdate);
 
-      expect(statement.update).toEqual(update);
-      expect({ ...statement.updateProxy }).toEqual(update);
+    expect(statement.update).toEqual(update);
+    expect({ ...statement.updateProxy }).toEqual(update);
 
-      expect(statement.getActualUpdate()).toEqual(actualUpdate);
-      expect(statement.getActualUpdate({ exclude: ['updatedAt'] })).toEqual(
-        actualUpdateButUpdatedAt,
-      );
-
-      expect(statement.target).toEqual(target);
-      expect({ ...statement.targetProxy }).toEqual(target);
-    },
-  );
+    expect(statement.target).toEqual(target);
+    expect({ ...statement.targetProxy }).toEqual(target);
+  });
 });

@@ -187,7 +187,7 @@ export class UpdateManyMutation<
       // Create a statement for it
       const statement = new NodeUpdateStatement(this.node, oldSource, update);
 
-      if (statement.hasActualComponentUpdate()) {
+      if (!statement.isEmpty()) {
         // Apply the "preUpdate"-hook, if any
         try {
           await this.node.preUpdate({
@@ -207,7 +207,7 @@ export class UpdateManyMutation<
           );
         }
 
-        if (statement.hasActualComponentUpdate()) {
+        if (!statement.isEmpty()) {
           // Actually update the node
           await catchConnectorOperationError(
             () =>
