@@ -82,7 +82,7 @@ describe(`NodeOutputType`, () => {
           'Article',
           `{ unknownField }`,
           myAdminContext,
-          'Expects an "Article"\'s field among "_id, id, status, title, slug, body, category, createdBy, createdAt, updatedBy, updatedAt, metas, highlighted, sponsored, views, score, machineTags, tags, tagCount, extension, lowerCasedTitle, upperCasedTitle, similars", got: \'unknownField\'',
+          'Expects an "Article"\'s field among "_id, id, status, title, slug, body, category, createdBy, createdAt, updatedBy, updatedAt, metas, highlighted, sponsored, views, score, machineTags, tags, tagCount, extension, lowerCasedTitle, upperCasedTitle, mixedCasedTitle, similars", got: \'unknownField\'',
         ],
         [
           'Article',

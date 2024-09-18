@@ -1067,7 +1067,7 @@ __metadata:
     "@prismamedia/graphql-platform": "workspace:packages/graphql-platform"
     "@prismamedia/graphql-platform-scalars": "workspace:packages/graphql-platform-scalars"
     "@prismamedia/graphql-platform-utils": "workspace:packages/graphql-platform-utils"
-    "@prismamedia/memoize": "npm:^5.0.2"
+    "@prismamedia/memoize": "npm:^5.0.3"
     "@sqltools/formatter": "npm:1.2.5"
     "@swc/core": "npm:1.7.26"
     "@swc/jest": "npm:0.2.36"
@@ -1078,9 +1078,9 @@ __metadata:
     graphql: "npm:16.9.0"
     inflection: "npm:^3.0.0"
     jest: "npm:30.0.0-alpha.6"
-    mariadb: "npm:^3.3.1"
+    mariadb: "npm:^3.3.2"
     publint: "npm:0.2.11"
-    remeda: "npm:^2.12.1"
+    remeda: "npm:^2.14.0"
     semver: "npm:^7.6.3"
     type-fest: "npm:^4.26.1"
     typescript: "npm:5.6.2"
@@ -1134,7 +1134,7 @@ __metadata:
     graphql: "npm:16.9.0"
     jest: "npm:30.0.0-alpha.6"
     publint: "npm:0.2.11"
-    remeda: "npm:^2.12.1"
+    remeda: "npm:^2.14.0"
     type-fest: "npm:^4.26.1"
     typescript: "npm:5.6.2"
   peerDependencies:
@@ -1147,7 +1147,7 @@ __metadata:
   resolution: "@prismamedia/graphql-platform-utils@workspace:packages/graphql-platform-utils"
   dependencies:
     "@jest/globals": "npm:30.0.0-alpha.6"
-    "@prismamedia/memoize": "npm:^5.0.2"
+    "@prismamedia/memoize": "npm:^5.0.3"
     "@swc/core": "npm:1.7.26"
     "@swc/jest": "npm:0.2.36"
     "@tsconfig/node20": "npm:20.1.4"
@@ -1157,7 +1157,7 @@ __metadata:
     indefinite: "npm:^2.5.1"
     jest: "npm:30.0.0-alpha.6"
     publint: "npm:0.2.11"
-    remeda: "npm:^2.12.1"
+    remeda: "npm:^2.14.0"
     type-fest: "npm:^4.26.1"
     typescript: "npm:5.6.2"
   peerDependencies:
@@ -1173,7 +1173,7 @@ __metadata:
     "@prismamedia/async-event-emitter": "npm:^5.5.0"
     "@prismamedia/graphql-platform-scalars": "workspace:packages/graphql-platform-scalars"
     "@prismamedia/graphql-platform-utils": "workspace:packages/graphql-platform-utils"
-    "@prismamedia/memoize": "npm:^5.0.2"
+    "@prismamedia/memoize": "npm:^5.0.3"
     "@swc/core": "npm:1.7.26"
     "@swc/jest": "npm:0.2.36"
     "@tsconfig/node20": "npm:20.1.4"
@@ -1189,7 +1189,7 @@ __metadata:
     p-queue: "npm:^8.0.1"
     p-retry: "npm:^6.2.0"
     publint: "npm:0.2.11"
-    remeda: "npm:^2.12.1"
+    remeda: "npm:^2.14.0"
     type-fest: "npm:^4.26.1"
     typescript: "npm:5.6.2"
   peerDependencies:
@@ -1197,10 +1197,10 @@ __metadata:
   languageName: unknown
   linkType: soft
 
-"@prismamedia/memoize@npm:^5.0.2":
-  version: 5.0.2
-  resolution: "@prismamedia/memoize@npm:5.0.2"
-  checksum: 10/9273b95301708b78ff85c4ceed8d12215c92884d125003363c1f5533bc8a4406d180a51ecd23cb8b42df16291a8061fc354b777ebf0e7ad77a4f3aa146a3c1d8
+"@prismamedia/memoize@npm:^5.0.3":
+  version: 5.0.3
+  resolution: "@prismamedia/memoize@npm:5.0.3"
+  checksum: 10/ffc18f97ec69133a6cfc892bf6cfb8952f2db871e7afa08ea2cd832db0aea95eb1f69c051f472bae52877320389eccab3e540d25611bd74e927ffd9ea7df89ca
   languageName: node
   linkType: hard
 
@@ -1650,7 +1650,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@types/node@npm:*":
+"@types/node@npm:*, @types/node@npm:^22.5.4":
   version: 22.5.5
   resolution: "@types/node@npm:22.5.5"
   dependencies:
@@ -1659,7 +1659,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@types/node@npm:20.16.5, @types/node@npm:^20.11.17":
+"@types/node@npm:20.16.5":
   version: 20.16.5
   resolution: "@types/node@npm:20.16.5"
   dependencies:
@@ -1669,9 +1669,9 @@ __metadata:
   linkType: hard
 
 "@types/prop-types@npm:*":
-  version: 15.7.12
-  resolution: "@types/prop-types@npm:15.7.12"
-  checksum: 10/ac16cc3d0a84431ffa5cfdf89579ad1e2269549f32ce0c769321fdd078f84db4fbe1b461ed5a1a496caf09e637c0e367d600c541435716a55b1d9713f5035dfe
+  version: 15.7.13
+  resolution: "@types/prop-types@npm:15.7.13"
+  checksum: 10/8935cad87c683c665d09a055919d617fe951cb3b2d5c00544e3a913f861a2bd8d2145b51c9aa6d2457d19f3107ab40784c40205e757232f6a80cc8b1c815513c
   languageName: node
   linkType: hard
 
@@ -1690,12 +1690,12 @@ __metadata:
   linkType: hard
 
 "@types/react@npm:*":
-  version: 18.3.5
-  resolution: "@types/react@npm:18.3.5"
+  version: 18.3.7
+  resolution: "@types/react@npm:18.3.7"
   dependencies:
     "@types/prop-types": "npm:*"
     csstype: "npm:^3.0.2"
-  checksum: 10/ba0477c5ad4a762157c6262a199af6ccf9e24576877a26a7f516d5a9ba35374a6ac7f8686a10e5e8030513214f02bcb66e8363e43905afb7cd313deaf673de05
+  checksum: 10/30cfbe33c82e8033df5f70a4f54068f4344a691cff3f2b3901dd678e89ce5477dc8faada4a45d333ea570e1992ca8fda5b096d9deddfafb8c373acababc40c70
   languageName: node
   linkType: hard
 
@@ -2462,9 +2462,9 @@ __metadata:
   linkType: hard
 
 "electron-to-chromium@npm:^1.5.4":
-  version: 1.5.23
-  resolution: "electron-to-chromium@npm:1.5.23"
-  checksum: 10/01118e662fb57245cbfaff44bb77c31ae3070f4a89ac032a7ae9f6cba1626ce4d3f16b30184a5149a8efa905badc2b6681beb4b12ce3d94f47d6f5e8493410e9
+  version: 1.5.25
+  resolution: "electron-to-chromium@npm:1.5.25"
+  checksum: 10/831d1fb98b5f9bf07f90902310d79e235c672b4ceb157bdf0b74d0f3b947ef35b5ad6f623282495a12470cbaee8e2143e8b14cc74f681ee5d388e6dac60a3c36
   languageName: node
   linkType: hard
 
@@ -3837,7 +3837,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"lru-cache@npm:^10.0.1, lru-cache@npm:^10.2.0":
+"lru-cache@npm:^10.0.1, lru-cache@npm:^10.2.0, lru-cache@npm:^10.3.0":
   version: 10.4.3
   resolution: "lru-cache@npm:10.4.3"
   checksum: 10/e6e90267360476720fa8e83cc168aa2bf0311f3f2eea20a6ba78b90a885ae72071d9db132f40fda4129c803e7dcec3a6b6a6fbb44ca90b081630b810b5d6a41a
@@ -3898,16 +3898,16 @@ __metadata:
   languageName: node
   linkType: hard
 
-"mariadb@npm:^3.3.1":
-  version: 3.3.1
-  resolution: "mariadb@npm:3.3.1"
+"mariadb@npm:^3.3.2":
+  version: 3.3.2
+  resolution: "mariadb@npm:3.3.2"
   dependencies:
     "@types/geojson": "npm:^7946.0.14"
-    "@types/node": "npm:^20.11.17"
+    "@types/node": "npm:^22.5.4"
     denque: "npm:^2.1.0"
     iconv-lite: "npm:^0.6.3"
-    lru-cache: "npm:^10.2.0"
-  checksum: 10/3335133b122c797c2f8fc3a08b147890a3ca49d976b41394b642308015c8a9afadd6dbb4ff97b5588d9cec0ddec5c3e025270019990fbffecd237741a87dc710
+    lru-cache: "npm:^10.3.0"
+  checksum: 10/c521a5e88eedb174416776d8d2c1037dd119e91e92336462ba34b09d7d4bfafe843fa0e81aa7437c03730fc8a6625e962ca865707d44e445f43a14ad76ee4bf7
   languageName: node
   linkType: hard
 
@@ -4570,12 +4570,12 @@ __metadata:
   languageName: node
   linkType: hard
 
-"remeda@npm:^2.12.1":
-  version: 2.12.1
-  resolution: "remeda@npm:2.12.1"
+"remeda@npm:^2.14.0":
+  version: 2.14.0
+  resolution: "remeda@npm:2.14.0"
   dependencies:
     type-fest: "npm:^4.26.1"
-  checksum: 10/31b717b40d5fef0851a0a695265a40c8e1beac65830544b7e15c4cf124f0b4ff4489ff752f423df927bc0283ba59cf1c90eccdce7bd256b3d043907d62200afa
+  checksum: 10/75a322c4f21a651b37d81cebda8a92a72c4c2d87148aa79e489d8662e48dfbc263cca0fc65ef74aec8217ff119711dde361a9313412d6eb2b3ee4f953fd2fb96
   languageName: node
   linkType: hard
 

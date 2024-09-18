@@ -44,6 +44,9 @@ type Article implements PublicNodeInterface {
 
   """A custom field with a dependency"""
   upperCasedTitle: NonEmptySanitizedString!
+
+  """A virtual-field depending on other virtual-fields"""
+  mixedCasedTitle: NonEmptySanitizedString!
   similars(
     """The number of similar articles to return"""
     first: UnsignedInt!

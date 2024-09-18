@@ -33,7 +33,7 @@ export class VirtualSelection<
     public readonly alias: string | undefined,
     public readonly args: TArgs,
     public readonly info: PartialGraphQLResolveInfo,
-    public readonly dependencies: NodeSelection | undefined,
+    public readonly dependency: NodeSelection | undefined,
   ) {
     this.name = type.name;
     this.key = alias ?? this.name;
@@ -83,7 +83,7 @@ export class VirtualSelection<
   }
 
   public isAffectedByNodeUpdate(update: NodeUpdate): boolean {
-    return this.dependencies?.isAffectedByNodeUpdate(update) ?? false;
+    return this.dependency?.isAffectedByNodeUpdate(update) ?? false;
   }
 
   public getAffectedGraphByNodeChange(
@@ -91,13 +91,13 @@ export class VirtualSelection<
     visitedRootNodes?: NodeValue[],
   ): BooleanFilter | null {
     return (
-      this.dependencies?.getAffectedGraphByNodeChange(change, visitedRootNodes)
+      this.dependency?.getAffectedGraphByNodeChange(change, visitedRootNodes)
         ?.filter ?? null
     );
   }
 
   public parseSource(maybeSource: unknown, path?: utils.Path): TSource {
-    return this.dependencies?.parseSource(maybeSource, path);
+    return this.dependency?.parseSource(maybeSource, path);
   }
 
   public async resolveValue(
@@ -106,7 +106,12 @@ export class VirtualSelection<
     path: utils.Path,
   ): Promise<TValue> {
     try {
-      return await this.type.resolve(source, this.args, context, this.info);
+      return await this.type.resolve(
+        await this.dependency?.resolveValue(source, context, path),
+        this.args,
+        context,
+        this.info,
+      );
     } catch (error) {
       throw utils.isGraphErrorWithPathEqualOrDescendantOf(error, path)
         ? error

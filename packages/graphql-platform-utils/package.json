@@ -38,9 +38,9 @@
     "typescript": "5.6.2"
   },
   "dependencies": {
-    "@prismamedia/memoize": "^5.0.2",
+    "@prismamedia/memoize": "^5.0.3",
     "indefinite": "^2.5.1",
-    "remeda": "^2.12.1",
+    "remeda": "^2.14.0",
     "type-fest": "^4.26.1"
   },
   "peerDependencies": {

@@ -235,7 +235,7 @@ export class VirtualOutputType<
       variableValues: selectionContext?.variableValues ?? {},
     };
 
-    let dependencies: NodeSelection | undefined;
+    let dependency: NodeSelection | undefined;
 
     // dependencies
     {
@@ -243,36 +243,23 @@ export class VirtualOutputType<
       const configPath = utils.addPath(this.configPath, 'dependsOn');
 
       if (config) {
-        const maybeDependencies =
+        const maybeDependency =
           typeof config === 'function'
             ? config.call(this.parent.node, args, info)
             : config;
 
-        if (maybeDependencies) {
-          dependencies = this.parent.select(
-            maybeDependencies,
+        if (maybeDependency) {
+          dependency = this.parent.select(
+            maybeDependency,
             operationContext,
             selectionContext,
             configPath,
           );
-
-          if (dependencies.hasVirtualSelection) {
-            throw new utils.GraphError(
-              `Expects not to depends on virtual-fields`,
-              { path: configPath },
-            );
-          }
         }
       }
     }
 
-    return new VirtualSelection(
-      this,
-      ast.alias?.value,
-      args,
-      info,
-      dependencies,
-    );
+    return new VirtualSelection(this, ast.alias?.value, args, info, dependency);
   }
 
   public selectShape(

@@ -43,6 +43,7 @@ describe('Find statement', () => {
           createdAt
           lowerCasedTitle
           upperCasedTitle
+          mixedCasedTitle
         }`,
       },
       [
@@ -59,6 +60,8 @@ describe('Find statement', () => {
           lowerCasedTitle: 'published-my first published article-news',
           upperCasedTitle:
             'PUBLISHED-MY FIRST PUBLISHED ARTICLE-NEWS-TV-HIGH-TECH',
+          mixedCasedTitle:
+            'published-my first published article-news / PUBLISHED-MY FIRST PUBLISHED ARTICLE-NEWS-TV-HIGH-TECH',
         },
         {
           body: {
@@ -77,6 +80,8 @@ describe('Find statement', () => {
           views: 1234567890n,
           lowerCasedTitle: 'published-my second published article-home',
           upperCasedTitle: 'PUBLISHED-MY SECOND PUBLISHED ARTICLE-HOME-FASHION',
+          mixedCasedTitle:
+            'published-my second published article-home / PUBLISHED-MY SECOND PUBLISHED ARTICLE-HOME-FASHION',
         },
         {
           body: null,
@@ -92,6 +97,8 @@ describe('Find statement', () => {
             'published-my first published article in root category-root',
           upperCasedTitle:
             'PUBLISHED-MY FIRST PUBLISHED ARTICLE IN ROOT CATEGORY-ROOT-TV-HIGH-TECH',
+          mixedCasedTitle:
+            'published-my first published article in root category-root / PUBLISHED-MY FIRST PUBLISHED ARTICLE IN ROOT CATEGORY-ROOT-TV-HIGH-TECH',
         },
         {
           body: null,
@@ -107,21 +114,25 @@ describe('Find statement', () => {
             'published-my second published article in root category-root',
           upperCasedTitle:
             'PUBLISHED-MY SECOND PUBLISHED ARTICLE IN ROOT CATEGORY-ROOT-TV-FASHION',
+          mixedCasedTitle:
+            'published-my second published article in root category-root / PUBLISHED-MY SECOND PUBLISHED ARTICLE IN ROOT CATEGORY-ROOT-TV-FASHION',
         },
         {
           body: null,
           createdAt: new Date('2022-07-01T00:00:00.000Z'),
-          lowerCasedTitle:
-            'published-my third published article in root category-root',
           machineTags: null,
           metas: null,
           score: 0.5,
           status: 'published',
           tagCount: 0,
           title: 'My third published article in root category',
+          views: 0n,
           upperCasedTitle:
             'PUBLISHED-MY THIRD PUBLISHED ARTICLE IN ROOT CATEGORY-ROOT',
-          views: 0n,
+          lowerCasedTitle:
+            'published-my third published article in root category-root',
+          mixedCasedTitle:
+            'published-my third published article in root category-root / PUBLISHED-MY THIRD PUBLISHED ARTICLE IN ROOT CATEGORY-ROOT',
         },
       ],
     ],

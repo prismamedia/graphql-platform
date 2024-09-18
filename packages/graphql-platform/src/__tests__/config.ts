@@ -520,6 +520,16 @@ export const Article = {
             .join('-')
             .toUpperCase(),
       },
+      mixedCasedTitle: {
+        description: `A virtual-field depending on other virtual-fields`,
+        dependsOn: `{
+          lowerCasedTitle
+          upperCasedTitle
+        }`,
+        type: new graphql.GraphQLNonNull(node.getLeafByName('title').type),
+        resolve: ({ lowerCasedTitle, upperCasedTitle }) =>
+          [lowerCasedTitle, upperCasedTitle].join(' / '),
+      },
       similars: {
         args: {
           first: {

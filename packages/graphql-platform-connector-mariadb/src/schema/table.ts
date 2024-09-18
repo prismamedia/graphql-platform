@@ -375,10 +375,10 @@ export class Table {
             )
           : null;
       } else if (expression instanceof core.VirtualSelection) {
-        result[expression.key] = expression.dependencies
+        result[expression.key] = expression.dependency
           ? this.parseJsonDocument(
               jsonValue,
-              expression.dependencies,
+              expression.dependency,
               expressionPath,
             )
           : undefined;

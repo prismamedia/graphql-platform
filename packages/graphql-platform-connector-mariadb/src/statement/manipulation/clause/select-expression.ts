@@ -162,8 +162,8 @@ function parseSelectionExpression(
   } else if (core.isMultipleReverseEdgeSelection(selection)) {
     return parseMultipleReverseEdgeSelection(tableReference, selection);
   } else if (selection instanceof core.VirtualSelection) {
-    return selection.dependencies
-      ? selectNode(tableReference, selection.dependencies, referenceColumnTree)
+    return selection.dependency
+      ? selectNode(tableReference, selection.dependency, referenceColumnTree)
       : 'NULL';
   } else {
     throw new utils.UnreachableValueError(selection);

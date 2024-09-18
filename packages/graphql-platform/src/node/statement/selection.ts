@@ -64,9 +64,8 @@ export class NodeSelection<
           this.expressions.flatMap((expression) =>
             isComponentSelection(expression)
               ? [expression.component]
-              : expression instanceof VirtualSelection &&
-                  expression.dependencies
-                ? expression.dependencies.components
+              : expression instanceof VirtualSelection && expression.dependency
+                ? expression.dependency.components
                 : [],
           ),
         ),
@@ -85,9 +84,8 @@ export class NodeSelection<
           this.expressions.flatMap((expression) =>
             isReverseEdgeSelection(expression)
               ? [expression.reverseEdge]
-              : expression instanceof VirtualSelection &&
-                  expression.dependencies
-                ? expression.dependencies.reverseEdges
+              : expression instanceof VirtualSelection && expression.dependency
+                ? expression.dependency.reverseEdges
                 : [],
           ),
         ),
