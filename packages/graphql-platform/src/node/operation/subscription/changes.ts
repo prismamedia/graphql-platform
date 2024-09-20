@@ -10,13 +10,13 @@ import { argsPathKey } from '../../abstract-operation.js';
 import { NodeFilter, NodeSelection } from '../../statement.js';
 import type { NodeFilterInputValue, RawNodeSelection } from '../../type.js';
 import { AbstractSubscription } from '../abstract-subscription.js';
+import type { OperationContext } from '../context.js';
 import { InvalidArgumentsError, InvalidSelectionError } from '../error.js';
 import {
   ChangesSubscriptionDeletion,
   ChangesSubscriptionStream,
   type ChangesSubscriptionChange,
 } from './changes/stream.js';
-import type { SubscriptionContext } from './context.js';
 
 export * from './changes/stream.js';
 
@@ -96,7 +96,7 @@ export class ChangesSubscription<
   }
 
   protected override parseArguments(
-    context: SubscriptionContext,
+    context: OperationContext,
     args: ChangesSubscriptionArgs,
     path: utils.Path,
   ): ParsedChangesSubscriptionArgs {
@@ -214,7 +214,7 @@ export class ChangesSubscription<
   }
 
   protected async executeWithValidArgumentsAndContext(
-    context: SubscriptionContext,
+    context: OperationContext,
     authorization: NodeFilter | undefined,
     args: ParsedChangesSubscriptionArgs,
     path: utils.Path,

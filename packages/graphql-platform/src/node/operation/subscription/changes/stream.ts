@@ -12,7 +12,7 @@ import type {
 import type { Node, NodeValue } from '../../../../node.js';
 import type {
   ContextBoundNodeAPI,
-  SubscriptionContext,
+  OperationContext,
 } from '../../../operation.js';
 import {
   NodeFilter,
@@ -125,7 +125,7 @@ export class ChangesSubscriptionStream<
 
   public constructor(
     public readonly node: Node<TRequestContext>,
-    public readonly context: SubscriptionContext<TRequestContext>,
+    context: OperationContext<TRequestContext>,
     config: Readonly<ChangesSubscriptionStreamConfig<TUpsert, TDeletion>>,
   ) {
     super();
@@ -171,7 +171,6 @@ export class ChangesSubscriptionStream<
 
   @Memoize()
   public async dispose(): Promise<void> {
-    using _context = this.context;
     await using _nodeChangeSubscription = await this.subscribeToNodeChanges();
 
     this.#ac.abort();

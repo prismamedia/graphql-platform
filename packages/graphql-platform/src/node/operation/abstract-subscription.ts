@@ -6,7 +6,7 @@ import type { IterableElement, Promisable } from 'type-fest';
 import type { BrokerInterface } from '../../broker-interface.js';
 import type { ConnectorInterface } from '../../connector-interface.js';
 import { AbstractOperation } from '../abstract-operation.js';
-import { SubscriptionContext } from './subscription/context.js';
+import { OperationContext } from './context.js';
 
 export interface SubscriptionConfig<
   TRequestContext extends object,
@@ -35,14 +35,13 @@ export abstract class AbstractSubscription<
   TBroker extends BrokerInterface = any,
   TContainer extends object = any,
   TArgs extends utils.Nillable<utils.PlainObject> = any,
-  TResult extends Promisable<
-    AsyncIterable<any> & (Disposable | AsyncDisposable)
-  > = any,
+  TResult extends Promisable<AsyncIterable<any>> = any,
 > extends AbstractOperation<
   TRequestContext,
   TConnector,
   TBroker,
   TContainer,
+  OperationContext<TRequestContext, TConnector, TBroker, TContainer>,
   TArgs,
   TResult
 > {
@@ -59,20 +58,20 @@ export abstract class AbstractSubscription<
   }
 
   public override execute(
-    requestOrOperationContext: TRequestContext | SubscriptionContext,
+    requestOrOperationContext: TRequestContext | OperationContext,
     args: TArgs,
     path?: utils.Path,
   ): TResult {
-    let context: SubscriptionContext;
+    let context: OperationContext;
 
-    if (requestOrOperationContext instanceof SubscriptionContext) {
+    if (requestOrOperationContext instanceof OperationContext) {
       assert.equal(requestOrOperationContext.gp, this.gp);
 
       context = requestOrOperationContext;
     } else {
       this.gp.assertRequestContext(requestOrOperationContext, path);
 
-      context = new SubscriptionContext(this.gp, requestOrOperationContext);
+      context = new OperationContext(this.gp, requestOrOperationContext);
     }
 
     return super.execute(context, args, path);

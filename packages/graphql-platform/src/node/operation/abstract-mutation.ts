@@ -73,6 +73,7 @@ export abstract class AbstractMutation<
   TConnector,
   TBroker,
   TContainer,
+  MutationContext<TRequestContext, TConnector, TBroker, TContainer>,
   TArgs,
   Promise<TResult>
 > {

@@ -8,7 +8,7 @@ import type { BrokerInterface } from '../broker-interface.js';
 import type { ConnectorInterface } from '../connector-interface.js';
 import type { GraphQLPlatform } from '../index.js';
 import type { Node } from '../node.js';
-import { OperationContext } from './operation/context.js';
+import type { OperationContext } from './operation/context.js';
 import {
   InvalidArgumentsError,
   InvalidSelectionError,
@@ -39,6 +39,12 @@ export abstract class AbstractOperation<
   TConnector extends ConnectorInterface = any,
   TBroker extends BrokerInterface = any,
   TContainer extends object = any,
+  TOperationContext extends OperationContext<
+    TRequestContext,
+    TConnector,
+    TBroker,
+    TContainer
+  > = any,
   TArgs extends utils.Nillable<utils.PlainObject> = any,
   TResult = any,
 > {
@@ -153,7 +159,7 @@ export abstract class AbstractOperation<
   }
 
   protected ensureAuthorization(
-    context: OperationContext,
+    context: TOperationContext,
     path: utils.Path,
   ): NodeFilter | undefined {
     return context.ensureAuthorization(this.node, path);
@@ -167,7 +173,7 @@ export abstract class AbstractOperation<
   }
 
   protected parseArguments(
-    context: OperationContext,
+    context: TOperationContext,
     args: TArgs,
     path: utils.Path,
   ): NodeSelectionAwareArgs<TArgs> {
@@ -207,14 +213,14 @@ export abstract class AbstractOperation<
    * The actual implementation with authorization, parsed arguments and context
    */
   protected abstract executeWithValidArgumentsAndContext(
-    context: OperationContext,
+    context: TOperationContext,
     authorization: NodeFilter | undefined,
     args: NodeSelectionAwareArgs<TArgs>,
     path: utils.Path,
   ): TResult;
 
   public internal(
-    context: OperationContext,
+    context: TOperationContext,
     authorization: NodeFilter | undefined,
     args: TArgs,
     path: utils.Path,
@@ -232,15 +238,13 @@ export abstract class AbstractOperation<
   }
 
   public execute(
-    context: unknown,
+    context: TOperationContext,
     args: TArgs,
     path: utils.Path = utils.addPath(
       utils.addPath(undefined, this.operationType),
       this.name,
     ),
   ): TResult {
-    assert(context instanceof OperationContext);
-
     this.assertIsEnabled(path);
 
     const authorization = this.ensureAuthorization(context, path);

@@ -77,7 +77,7 @@ describe('ScrollSubscription', () => {
       );
 
       it('scrolls articles', async () => {
-        using cursor = Article.api.scroll(myAdminContext, {
+        const cursor = Article.api.scroll(myAdminContext, {
           selection: '{ _id id }',
         });
 
@@ -86,7 +86,7 @@ describe('ScrollSubscription', () => {
       });
 
       it('scrolls articles, 2 by 2', async () => {
-        using cursor = Article.api.scroll(myAdminContext, {
+        const cursor = Article.api.scroll(myAdminContext, {
           selection: '{ _id id }',
           chunkSize: 2,
         });
@@ -96,7 +96,7 @@ describe('ScrollSubscription', () => {
       });
 
       it('stops a cursor through for-await-of', async () => {
-        using cursor = Article.api.scroll(myAdminContext, {
+        const cursor = Article.api.scroll(myAdminContext, {
           selection: '{ _id id }',
           chunkSize: 2,
         });

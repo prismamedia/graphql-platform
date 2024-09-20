@@ -19,6 +19,7 @@ export abstract class AbstractQuery<
   TConnector,
   TBroker,
   TContainer,
+  OperationContext<TRequestContext, TConnector, TBroker, TContainer>,
   TArgs,
   Promise<TResult>
 > {

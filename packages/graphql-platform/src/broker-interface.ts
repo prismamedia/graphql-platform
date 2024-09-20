@@ -20,9 +20,4 @@ export interface BrokerInterface {
   subscribe(
     subscription: ChangesSubscriptionStream,
   ): Promisable<NodeChangeAggregationSubscriptionInterface>;
-
-  /**
-   * Dispose the resources used by the given subscription
-   */
-  unsubscribe?(subscription: ChangesSubscriptionStream): Promisable<void>;
 }

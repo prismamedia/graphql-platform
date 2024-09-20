@@ -12,7 +12,7 @@ import type { Except, Promisable } from 'type-fest';
 import type { Node } from '../../../../node.js';
 import type {
   ContextBoundNodeAPI,
-  SubscriptionContext,
+  OperationContext,
 } from '../../../operation.js';
 import {
   LeafOrdering,
@@ -155,10 +155,9 @@ export type ScrollSubscriptionStreamConfig<
  * }
  */
 export class ScrollSubscriptionStream<
-    TValue extends NodeSelectedValue = any,
-    TRequestContext extends object = any,
-  >
-  implements AsyncIterable<TValue>, Disposable
+  TValue extends NodeSelectedValue = any,
+  TRequestContext extends object = any,
+> implements AsyncIterable<TValue>
 {
   public readonly filter?: NodeFilter;
   public readonly ordering: LeafOrdering;
@@ -171,7 +170,7 @@ export class ScrollSubscriptionStream<
 
   public constructor(
     public readonly node: Node<TRequestContext>,
-    public readonly context: SubscriptionContext<TRequestContext>,
+    context: OperationContext<TRequestContext>,
     config: Readonly<ScrollSubscriptionStreamConfig<TValue>>,
   ) {
     assert(config.filter === undefined || config.filter instanceof NodeFilter);
@@ -209,10 +208,6 @@ export class ScrollSubscriptionStream<
     this.#chunkSize = Math.max(1, config.chunkSize);
 
     this.#api = node.createContextBoundAPI(context);
-  }
-
-  public [Symbol.dispose](): void {
-    using _context = this.context;
   }
 
   public async *[Symbol.asyncIterator](): AsyncIterator<TValue> {
