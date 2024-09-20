@@ -13,7 +13,8 @@ export class OperationContext<
   TConnector extends ConnectorInterface = any,
   TBroker extends BrokerInterface = any,
   TContainer extends object = any,
-> {
+> implements Disposable
+{
   /**
    * Stores arbitrary data for the duration of the operation
    */
@@ -38,6 +39,10 @@ export class OperationContext<
     public readonly request: TRequestContext,
   ) {
     this.userData = new Map();
+  }
+
+  public [Symbol.dispose]() {
+    this.userData.clear();
   }
 
   /**

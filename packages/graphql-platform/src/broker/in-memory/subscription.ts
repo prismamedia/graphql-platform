@@ -33,6 +33,11 @@ export class InMemorySubscription
     this.#signal = subscription.signal;
   }
 
+  public async [Symbol.asyncDispose](): Promise<void> {
+    this.#queue.clear();
+    this.broker.unsubscribe(this.subscription);
+  }
+
   public enqueue(changes: NodeChangeAggregation): void {
     this.#queue.push(changes);
     this.emit('enqueued', changes);
@@ -48,10 +53,10 @@ export class InMemorySubscription
         yield changes;
 
         this.#queue.shift();
-        this.emit('dequeued', changes);
+        await this.emit('dequeued', changes);
       }
 
-      this.emit('idle', undefined);
+      await this.emit('idle', undefined);
     } while (await this.wait('enqueued', this.#signal).catch(() => false));
   }
 
@@ -65,9 +70,5 @@ export class InMemorySubscription
     if (this.#queue.size()) {
       await this.wait('idle', this.#signal);
     }
-  }
-
-  public async [Symbol.asyncDispose](): Promise<void> {
-    this.broker.unsubscribe(this.subscription);
   }
 }

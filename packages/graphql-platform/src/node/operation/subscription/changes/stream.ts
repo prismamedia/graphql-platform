@@ -1,5 +1,4 @@
 import { AsyncEventEmitter } from '@prismamedia/async-event-emitter';
-import * as utils from '@prismamedia/graphql-platform-utils';
 import { Memoize } from '@prismamedia/memoize';
 import assert from 'node:assert/strict';
 import { inspect } from 'node:util';
@@ -11,10 +10,9 @@ import type {
   NodeChangeAggregationSubscriptionInterface,
 } from '../../../../broker-interface.js';
 import type { Node, NodeValue } from '../../../../node.js';
-import { NodeChangeAggregation, type NodeChange } from '../../../change.js';
 import type {
   ContextBoundNodeAPI,
-  OperationContext,
+  SubscriptionContext,
 } from '../../../operation.js';
 import {
   NodeFilter,
@@ -127,7 +125,7 @@ export class ChangesSubscriptionStream<
 
   public constructor(
     public readonly node: Node<TRequestContext>,
-    context: OperationContext<TRequestContext>,
+    public readonly context: SubscriptionContext<TRequestContext>,
     config: Readonly<ChangesSubscriptionStreamConfig<TUpsert, TDeletion>>,
   ) {
     super();
@@ -173,26 +171,14 @@ export class ChangesSubscriptionStream<
 
   @Memoize()
   public async dispose(): Promise<void> {
-    this.#ac.abort();
+    using _context = this.context;
+    await using _nodeChangeSubscription = await this.subscribeToNodeChanges();
 
-    await this.#broker.unsubscribe?.(this);
+    this.#ac.abort();
   }
 
   public async [Symbol.asyncDispose](): Promise<void> {
-    await this.dispose();
-  }
-
-  public getNodeChangesEffect(
-    changes:
-      | NodeChangeAggregation<TRequestContext>
-      | utils.Arrayable<NodeChange<TRequestContext>>,
-  ): ChangesSubscriptionEffect<TUpsert, TDeletion, TRequestContext> {
-    return ChangesSubscriptionEffect.createFromNodeChangeAggregation(
-      this,
-      changes instanceof NodeChangeAggregation
-        ? changes
-        : new NodeChangeAggregation(utils.resolveArrayable(changes)),
-    );
+    return this.dispose();
   }
 
   @Memoize()
@@ -203,7 +189,11 @@ export class ChangesSubscriptionStream<
     const nodeChangeSubscription = await this.subscribeToNodeChanges();
 
     for await (const nodeChanges of nodeChangeSubscription) {
-      const effect = this.getNodeChangesEffect(nodeChanges);
+      using effect = ChangesSubscriptionEffect.createFromNodeChangeAggregation(
+        this,
+        nodeChanges,
+      );
+
       if (!effect.isEmpty()) {
         for await (const change of effect) {
           yield change;

@@ -23,6 +23,7 @@ import { NodeCreation, NodeDeletion, NodeUpdate } from '../../change.js';
 import { UnauthorizedError } from '../error.js';
 import {
   ChangesSubscriptionArgs,
+  ChangesSubscriptionEffect,
   ChangesSubscriptionStream,
 } from './changes.js';
 
@@ -151,13 +152,17 @@ describe('ChangesSubscription', () => {
             { slug: 'my-updated-article' },
           ),
         ])('should discard filtered-out "change', (change) => {
-          const effect = subscription.getNodeChangesEffect(change);
+          const effect = ChangesSubscriptionEffect.createFromNodeChanges(
+            subscription,
+            change,
+          );
 
           expect(effect.isEmpty()).toBeTruthy();
         });
 
         it('should handle filtered-in "deletion"', () => {
-          const effect = subscription.getNodeChangesEffect(
+          const effect = ChangesSubscriptionEffect.createFromNodeChanges(
+            subscription,
             NodeDeletion.createFromNonNullableComponents(
               Article,
               {},
@@ -179,7 +184,8 @@ describe('ChangesSubscription', () => {
         });
 
         it('should handle filtered-in "creation"', () => {
-          const effect = subscription.getNodeChangesEffect(
+          const effect = ChangesSubscriptionEffect.createFromNodeChanges(
+            subscription,
             NodeCreation.createFromNonNullableComponents(
               Article,
               {},
@@ -232,7 +238,8 @@ describe('ChangesSubscription', () => {
         afterAll(() => subscription.dispose());
 
         it('the "creation" is an incomplete "upsert"', () => {
-          const effect = subscription.getNodeChangesEffect(
+          const effect = ChangesSubscriptionEffect.createFromNodeChanges(
+            subscription,
             NodeCreation.createFromNonNullableComponents(
               Article,
               {},
@@ -254,7 +261,8 @@ describe('ChangesSubscription', () => {
         });
 
         it('the "creation" might be an "upsert"', () => {
-          const effect = subscription.getNodeChangesEffect(
+          const effect = ChangesSubscriptionEffect.createFromNodeChanges(
+            subscription,
             NodeCreation.createFromNonNullableComponents(
               Article,
               {},
@@ -324,42 +332,41 @@ describe('ChangesSubscription', () => {
 
         it('should skip this User "creation"', () =>
           expect(
-            subscription
-              .getNodeChangesEffect(
-                NodeCreation.createFromNonNullableComponents(
-                  User,
-                  {},
-                  {
-                    id: '20c816d1-d390-45a1-9711-83697bc97766',
-                    username: 'test00',
-                    createdAt: new Date(),
-                    lastLoggedInAt: new Date(),
-                  },
-                ),
-              )
-              .isEmpty(),
+            ChangesSubscriptionEffect.createFromNodeChanges(
+              subscription,
+              NodeCreation.createFromNonNullableComponents(
+                User,
+                {},
+                {
+                  id: '20c816d1-d390-45a1-9711-83697bc97766',
+                  username: 'test00',
+                  createdAt: new Date(),
+                  lastLoggedInAt: new Date(),
+                },
+              ),
+            ).isEmpty(),
           ).toBeTruthy());
 
         it('should skip this User "deletion"', () =>
           expect(
-            subscription
-              .getNodeChangesEffect(
-                NodeDeletion.createFromNonNullableComponents(
-                  User,
-                  {},
-                  {
-                    id: '1a04ef91-104e-457e-829c-f4561f77f1e3',
-                    username: 'test01',
-                    createdAt: new Date(),
-                    lastLoggedInAt: new Date(),
-                  },
-                ),
-              )
-              .isEmpty(),
+            ChangesSubscriptionEffect.createFromNodeChanges(
+              subscription,
+              NodeDeletion.createFromNonNullableComponents(
+                User,
+                {},
+                {
+                  id: '1a04ef91-104e-457e-829c-f4561f77f1e3',
+                  username: 'test01',
+                  createdAt: new Date(),
+                  lastLoggedInAt: new Date(),
+                },
+              ),
+            ).isEmpty(),
           ).toBeTruthy());
 
         it('should handle this User "update"', () => {
-          const effect = subscription.getNodeChangesEffect(
+          const effect = ChangesSubscriptionEffect.createFromNodeChanges(
+            subscription,
             NodeUpdate.createFromNonNullableComponents(
               User,
               {},
@@ -386,7 +393,8 @@ describe('ChangesSubscription', () => {
         });
 
         it("should handle only the root-creation if a reverse-edge's head filtered-in creation is heading to it", () => {
-          const effect = subscription.getNodeChangesEffect([
+          const effect = ChangesSubscriptionEffect.createFromNodeChanges(
+            subscription,
             NodeCreation.createFromNonNullableComponents(
               ArticleTag,
               {},
@@ -411,14 +419,15 @@ describe('ChangesSubscription', () => {
                 score: 1,
               },
             ),
-          ]);
+          );
 
           expect(effect.maybeUpserts).toHaveLength(1);
           expect(effect.maybeGraphChanges).toBeUndefined();
         });
 
         it("should handle only the root-creation if a reverse-edge's head filtered-out creation is heading to it", () => {
-          const effect = subscription.getNodeChangesEffect([
+          const effect = ChangesSubscriptionEffect.createFromNodeChanges(
+            subscription,
             NodeCreation.createFromNonNullableComponents(
               ArticleTag,
               {},
@@ -443,13 +452,14 @@ describe('ChangesSubscription', () => {
                 score: 1,
               },
             ),
-          ]);
+          );
 
           expect(effect.isEmpty()).toBeTruthy();
         });
 
         it('should handle only the root-update if a reverse-edge is heading to it', () => {
-          const effect = subscription.getNodeChangesEffect([
+          const effect = ChangesSubscriptionEffect.createFromNodeChanges(
+            subscription,
             NodeCreation.createFromNonNullableComponents(
               ArticleTag,
               {},
@@ -477,13 +487,14 @@ describe('ChangesSubscription', () => {
                 status: ArticleStatus.DELETED,
               },
             ),
-          ]);
+          );
 
           expect(effect.isEmpty()).toBeTruthy();
         });
 
         it('should handle only the root-deletion if a reverse-edge is heading to it', () => {
-          const effect = subscription.getNodeChangesEffect([
+          const effect = ChangesSubscriptionEffect.createFromNodeChanges(
+            subscription,
             NodeDeletion.createFromNonNullableComponents(
               ArticleTag,
               {},
@@ -508,14 +519,15 @@ describe('ChangesSubscription', () => {
                 score: 1,
               },
             ),
-          ]);
+          );
 
           expect(effect.deletions).toHaveLength(1);
           expect(effect.maybeGraphChanges).toBeUndefined();
         });
 
         it('should handle this ArticleTag "creation"', () => {
-          const effect = subscription.getNodeChangesEffect(
+          const effect = ChangesSubscriptionEffect.createFromNodeChanges(
+            subscription,
             NodeCreation.createFromNonNullableComponents(
               ArticleTag,
               {},
@@ -536,7 +548,8 @@ describe('ChangesSubscription', () => {
         });
 
         it('should handle this ArticleTag "deletion"', () => {
-          const effect = subscription.getNodeChangesEffect(
+          const effect = ChangesSubscriptionEffect.createFromNodeChanges(
+            subscription,
             NodeDeletion.createFromNonNullableComponents(
               ArticleTag,
               {},
@@ -557,7 +570,8 @@ describe('ChangesSubscription', () => {
         });
 
         it('should handle this ArticleTag "update"', () => {
-          const effect = subscription.getNodeChangesEffect(
+          const effect = ChangesSubscriptionEffect.createFromNodeChanges(
+            subscription,
             NodeUpdate.createFromNonNullableComponents(
               ArticleTag,
               {},
@@ -579,7 +593,8 @@ describe('ChangesSubscription', () => {
         });
 
         it('should handle this UserProfile "creation"', () => {
-          const effect = subscription.getNodeChangesEffect(
+          const effect = ChangesSubscriptionEffect.createFromNodeChanges(
+            subscription,
             NodeCreation.createFromNonNullableComponents(
               UserProfile,
               {},
@@ -604,7 +619,8 @@ describe('ChangesSubscription', () => {
         });
 
         it('should handle this UserProfile "deletion"', () => {
-          const effect = subscription.getNodeChangesEffect(
+          const effect = ChangesSubscriptionEffect.createFromNodeChanges(
+            subscription,
             NodeDeletion.createFromNonNullableComponents(
               UserProfile,
               {},
@@ -629,7 +645,8 @@ describe('ChangesSubscription', () => {
         });
 
         it('should skip this UserProfile "update"', () => {
-          const effect = subscription.getNodeChangesEffect(
+          const effect = ChangesSubscriptionEffect.createFromNodeChanges(
+            subscription,
             NodeUpdate.createFromNonNullableComponents(
               UserProfile,
               {},
@@ -648,7 +665,8 @@ describe('ChangesSubscription', () => {
         });
 
         it('should handle this UserProfile "update"', () => {
-          const effect = subscription.getNodeChangesEffect(
+          const effect = ChangesSubscriptionEffect.createFromNodeChanges(
+            subscription,
             NodeUpdate.createFromNonNullableComponents(
               UserProfile,
               {},
@@ -674,7 +692,8 @@ describe('ChangesSubscription', () => {
         });
 
         it('should skip the ArticleTag "creation" as an Article "creation" already handle it', () => {
-          const effect = subscription.getNodeChangesEffect([
+          const effect = ChangesSubscriptionEffect.createFromNodeChanges(
+            subscription,
             NodeCreation.createFromNonNullableComponents(
               ArticleTag,
               {},
@@ -708,7 +727,7 @@ describe('ChangesSubscription', () => {
                 score: 1,
               },
             ),
-          ]);
+          );
 
           expect(effect.maybeUpserts).toHaveLength(1);
           expect(effect.maybeGraphChanges).toBeUndefined();

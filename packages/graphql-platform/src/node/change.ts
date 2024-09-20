@@ -12,10 +12,6 @@ export type NodeChange<TRequestContext extends object = any> =
   | NodeUpdate<TRequestContext>
   | NodeDeletion<TRequestContext>;
 
-export const filterNodeChange = (change: NodeChange): boolean =>
-  !(change instanceof NodeUpdate && change.isEmpty()) &&
-  change.node.filterChange(change);
-
 export const isNodeChange = (maybeChange: unknown): maybeChange is NodeChange =>
   maybeChange instanceof NodeCreation ||
   maybeChange instanceof NodeUpdate ||

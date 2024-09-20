@@ -31,18 +31,18 @@ export function createNodeLoader<
   const selection = node.outputType.select(rawSelection);
 
   return new DataLoader<NonNullable<NodeUniqueFilterInputValue>, TValue>(
-    async (keys) => {
+    async (ids) => {
       const maybeValues = (await api.getSomeInOrderIfExists({
-        where: keys,
+        where: ids,
         subset,
         selection,
       })) as (TValue | null)[];
 
       return maybeValues.map(
         (maybeValue, index) =>
-          maybeValue ?? new NotFoundError(node, keys[index]),
+          maybeValue ?? new NotFoundError(node, ids[index]),
       );
     },
-    options,
+    { cache: false, ...options },
   );
 }

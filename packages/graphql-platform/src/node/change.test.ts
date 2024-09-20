@@ -90,7 +90,7 @@ describe('Change', () => {
     const Tag = gp.getNodeByName('Tag');
     const ArticleTag = gp.getNodeByName('ArticleTag');
 
-    const aggregate = new NodeChangeAggregation([
+    using aggregate = NodeChangeAggregation.createFromIterable([
       // These 2 changes are aggregated
       new NodeCreation(Article, myContext, {
         id: '2e9b5020-b9fe-4dab-bb59-59c986fffc12',

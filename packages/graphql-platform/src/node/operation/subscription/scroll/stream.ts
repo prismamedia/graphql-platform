@@ -12,7 +12,7 @@ import type { Except, Promisable } from 'type-fest';
 import type { Node } from '../../../../node.js';
 import type {
   ContextBoundNodeAPI,
-  OperationContext,
+  SubscriptionContext,
 } from '../../../operation.js';
 import {
   LeafOrdering,
@@ -155,9 +155,10 @@ export type ScrollSubscriptionStreamConfig<
  * }
  */
 export class ScrollSubscriptionStream<
-  TValue extends NodeSelectedValue = any,
-  TRequestContext extends object = any,
-> implements AsyncIterable<TValue>
+    TValue extends NodeSelectedValue = any,
+    TRequestContext extends object = any,
+  >
+  implements AsyncIterable<TValue>, Disposable
 {
   public readonly filter?: NodeFilter;
   public readonly ordering: LeafOrdering;
@@ -170,7 +171,7 @@ export class ScrollSubscriptionStream<
 
   public constructor(
     public readonly node: Node<TRequestContext>,
-    context: OperationContext<TRequestContext>,
+    public readonly context: SubscriptionContext<TRequestContext>,
     config: Readonly<ScrollSubscriptionStreamConfig<TValue>>,
   ) {
     assert(config.filter === undefined || config.filter instanceof NodeFilter);
@@ -210,6 +211,10 @@ export class ScrollSubscriptionStream<
     this.#api = node.createContextBoundAPI(context);
   }
 
+  public [Symbol.dispose](): void {
+    using _context = this.context;
+  }
+
   public async *[Symbol.asyncIterator](): AsyncIterator<TValue> {
     let next: NodeFilterInputValue;
     while (next !== null) {
@@ -228,7 +233,8 @@ export class ScrollSubscriptionStream<
             }
           : null;
 
-      for (const value of values) {
+      let value: NodeSelectedValue | undefined;
+      while ((value = values.shift())) {
         yield this.selection.pickValue(value as any);
       }
     }
@@ -486,41 +492,39 @@ export class ScrollSubscriptionStream<
     let batch: TValue[] = [];
 
     const enqueueBatch = () => {
-      if (batch.length) {
-        const values = Object.freeze(batch);
-        batch = [];
+      const values = batch;
+      batch = [];
 
-        const boundTask = task.bind(undefined, values, this);
+      const boundTask = task.bind(undefined, values, this);
 
-        const retryTaskWrapper = normalizedRetryOptions
-          ? () => PRetry(boundTask, normalizedRetryOptions)
-          : boundTask;
+      const retryTaskWrapper = normalizedRetryOptions
+        ? () => PRetry(boundTask, normalizedRetryOptions)
+        : boundTask;
 
-        const continueOnErrorTaskWrapper =
-          maxErrorCount > 0
-            ? async () => {
-                try {
-                  await retryTaskWrapper();
-                } catch (error) {
-                  if (errors.push(error) >= maxErrorCount) {
-                    throw errors.length > 1
-                      ? new AggregateError(errors)
-                      : errors[0];
-                  }
+      const continueOnErrorTaskWrapper =
+        maxErrorCount > 0
+          ? async () => {
+              try {
+                await retryTaskWrapper();
+              } catch (error) {
+                if (errors.push(error) >= maxErrorCount) {
+                  throw errors.length > 1
+                    ? new AggregateError(errors)
+                    : errors[0];
                 }
               }
-            : retryTaskWrapper;
-
-        const progressBarTaskWrapper = progressBar
-          ? async () => {
-              await continueOnErrorTaskWrapper();
-
-              incrementProgressBar(progressBar, values.length);
             }
-          : continueOnErrorTaskWrapper;
+          : retryTaskWrapper;
 
-        tasks.add(progressBarTaskWrapper);
-      }
+      const progressBarTaskWrapper = progressBar
+        ? async () => {
+            await continueOnErrorTaskWrapper();
+
+            incrementProgressBar(progressBar, values.length);
+          }
+        : continueOnErrorTaskWrapper;
+
+      tasks.add(progressBarTaskWrapper);
     };
 
     await new Promise<void>(async (resolve, reject) => {
@@ -535,7 +539,9 @@ export class ScrollSubscriptionStream<
           }
         }
 
-        enqueueBatch();
+        if (batch.length) {
+          enqueueBatch();
+        }
 
         await tasks.onIdle();
 

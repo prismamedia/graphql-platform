@@ -232,30 +232,20 @@ export abstract class AbstractOperation<
   }
 
   public execute(
-    context: TRequestContext | OperationContext,
+    context: unknown,
     args: TArgs,
     path: utils.Path = utils.addPath(
       utils.addPath(undefined, this.operationType),
       this.name,
     ),
   ): TResult {
+    assert(context instanceof OperationContext);
+
     this.assertIsEnabled(path);
 
-    let operationContext: OperationContext;
+    const authorization = this.ensureAuthorization(context, path);
 
-    if (context instanceof OperationContext) {
-      assert.equal(context.gp, this.gp);
-
-      operationContext = context;
-    } else {
-      this.gp.assertRequestContext(context, path);
-
-      operationContext = new OperationContext(this.gp, context) as any;
-    }
-
-    const authorization = this.ensureAuthorization(operationContext, path);
-
-    return this.internal(operationContext, authorization, args, path);
+    return this.internal(context, authorization, args, path);
   }
 
   public abstract getGraphQLFieldConfigType(): graphql.GraphQLOutputType;

@@ -19,17 +19,16 @@ import {
   MutationContext,
   Node,
   NodeChangeAggregation,
+  OperationContext,
   catchConnectorWorkflowError,
   createAPI,
   createContextBoundAPI,
   type API,
   type ContextBoundAPI,
-  type NodeChange,
   type NodeConfig,
   type NodeName,
   type Operation,
   type OperationByType,
-  type OperationContext,
   type OperationType,
   type SubscriptionConfig,
 } from './node.js';
@@ -63,8 +62,7 @@ export type RequestContextAssertion<
 ) => asserts maybeRequestContext is TRequestContext;
 
 export type EventDataByName<TRequestContext extends object = any> = {
-  'node-change-aggregation': NodeChangeAggregation<TRequestContext>;
-  'node-change': NodeChange<TRequestContext>;
+  'node-changes': NodeChangeAggregation<TRequestContext>;
 };
 
 export type ConnectorConfig<
@@ -621,6 +619,36 @@ export class GraphQLPlatform<
   }
 
   /**
+   * Given a request-context, will execute the task in an operation-context
+   */
+  public async withOperationContext<TResult>(
+    requestContext: TRequestContext,
+    task: (
+      operationContext: OperationContext<
+        TRequestContext,
+        TConnector,
+        TBroker,
+        TContainer
+      >,
+    ) => Promisable<TResult>,
+    path?: utils.Path,
+  ): Promise<TResult> {
+    this.assertRequestContext(requestContext, path);
+
+    using operationContext = new OperationContext(this, requestContext);
+
+    let result: TResult;
+
+    try {
+      result = await task(operationContext);
+    } catch (rawError) {
+      throw utils.castToError(rawError);
+    }
+
+    return result;
+  }
+
+  /**
    * Given a request-context, will execute the task in a mutation-context then handle the node-changes at the end in case of success
    */
   public async withMutationContext<TResult>(
@@ -637,7 +665,7 @@ export class GraphQLPlatform<
   ): Promise<TResult> {
     this.assertRequestContext(requestContext, path);
 
-    const mutationContext = new MutationContext(this, requestContext);
+    using mutationContext = new MutationContext(this, requestContext);
 
     await catchConnectorWorkflowError(
       () => this.connector.preMutation?.(mutationContext),
@@ -681,19 +709,14 @@ export class GraphQLPlatform<
         change.committedAt = now;
       }
 
-      const aggregation = new NodeChangeAggregation(mutationContext.changes);
+      using aggregation = NodeChangeAggregation.createFromIterable(
+        mutationContext.changes,
+      );
 
       if (aggregation.size) {
         await Promise.all([
+          this.emit('node-changes', aggregation),
           this.broker?.publish(aggregation),
-          this.emit('node-change-aggregation', aggregation),
-          this.eventListenerCount('node-change')
-            ? Promise.all(
-                Array.from(aggregation, (change) =>
-                  this.emit('node-change', change),
-                ),
-              )
-            : undefined,
         ]);
       }
     }

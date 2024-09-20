@@ -1,12 +1,10 @@
 import * as utils from '@prismamedia/graphql-platform-utils';
-import type { Component, Node } from '../../node.js';
-import {
-  NodeCreation,
-  NodeDeletion,
-  NodeUpdate,
-  filterNodeChange,
-  type NodeChange,
-} from '../change.js';
+import { Memoize } from '@prismamedia/memoize';
+import type { Node } from '../../node.js';
+import { NodeCreation, NodeUpdate, type NodeChange } from '../change.js';
+import { NodeChangeAggregationSummary } from './aggregation/summary.js';
+
+export * from './aggregation/summary.js';
 
 type NodeChangeAggregatorMatrix = {
   [TPreviousChangeKind in utils.MutationType]: {
@@ -73,30 +71,18 @@ const aggregatorMatrix: NodeChangeAggregatorMatrix = {
 };
 
 export class NodeChangeAggregation<TRequestContext extends object = any>
-  implements Iterable<NodeChange<TRequestContext>>
+  implements Iterable<NodeChange<TRequestContext>>, Disposable
 {
-  public readonly changesByNode: ReadonlyMap<
-    Node<TRequestContext>,
-    ReadonlyArray<NodeChange<TRequestContext>>
-  >;
-
-  public readonly summary: {
-    readonly creations?: ReadonlySet<Node>;
-    readonly deletions?: ReadonlySet<Node>;
-    readonly updatesByNode?: ReadonlyMap<Node, ReadonlySet<Component>>;
-    readonly changes: ReadonlySet<Node>;
-  };
-
-  public readonly size: number;
-
-  public constructor(changes: ReadonlyArray<NodeChange<TRequestContext>>) {
+  public static createFromIterable<TRequestContext extends object = any>(
+    changes: Iterable<NodeChange<TRequestContext>>,
+  ): NodeChangeAggregation<TRequestContext> {
     const changesByIdByNode = new Map<
       Node,
       Map<NodeChange['stringifiedId'], NodeChange>
     >();
 
     for (const change of changes) {
-      if (!filterNodeChange(change)) {
+      if (change instanceof NodeUpdate && change.isEmpty()) {
         continue;
       }
 
@@ -115,7 +101,10 @@ export class NodeChangeAggregation<TRequestContext extends object = any>
           change as any,
         );
 
-        if (aggregate && filterNodeChange(aggregate)) {
+        if (
+          aggregate &&
+          !(aggregate instanceof NodeUpdate && aggregate.isEmpty())
+        ) {
           changesById.delete(previousChange.stringifiedId);
           changesById.set(aggregate.stringifiedId, aggregate);
         } else {
@@ -129,49 +118,38 @@ export class NodeChangeAggregation<TRequestContext extends object = any>
       }
     }
 
-    this.changesByNode = new Map(
-      Array.from(changesByIdByNode, ([node, changesByFlattenedId]) => [
-        node,
-        Array.from(changesByFlattenedId.values()),
-      ]),
+    return new NodeChangeAggregation(
+      new Map(
+        Array.from(changesByIdByNode, ([node, changesByFlattenedId]) => [
+          node,
+          Array.from(changesByFlattenedId.values()),
+        ]),
+      ),
     );
+  }
 
-    // changes-summary
-    {
-      const creations = new Set<Node>();
-      const deletions = new Set<Node>();
-      const updatesByNode = new Map<Node, Set<Component>>();
+  public readonly size: number;
 
-      changesByIdByNode.forEach((changesByFlattenedId, node) => {
-        const updates = new Set<Component>();
-
-        changesByFlattenedId.forEach((change) => {
-          if (change instanceof NodeCreation) {
-            creations.add(node);
-          } else if (change instanceof NodeDeletion) {
-            deletions.add(node);
-          } else {
-            change.updatesByComponent.forEach((_, component) =>
-              updates.add(component),
-            );
-          }
-        });
-
-        updates.size && updatesByNode.set(node, updates);
-      });
-
-      this.summary = {
-        ...(creations.size && { creations }),
-        ...(deletions.size && { deletions }),
-        ...(updatesByNode.size && { updatesByNode }),
-        changes: new Set([...creations, ...deletions, ...updatesByNode.keys()]),
-      };
-    }
-
+  public constructor(
+    public readonly changesByNode: Map<
+      Node<TRequestContext>,
+      Array<NodeChange<TRequestContext>>
+    >,
+  ) {
     this.size = Array.from(
-      this.changesByNode.values(),
+      changesByNode.values(),
       (changes) => changes.length,
     ).reduce((sum, length) => sum + length, 0);
+  }
+
+  public [Symbol.dispose](): void {
+    this.changesByNode.forEach((changes) => (changes.length = 0));
+    this.changesByNode.clear();
+  }
+
+  @Memoize()
+  public get summary(): NodeChangeAggregationSummary {
+    return new NodeChangeAggregationSummary(this);
   }
 
   public *[Symbol.iterator](): IterableIterator<NodeChange<TRequestContext>> {
@@ -180,11 +158,22 @@ export class NodeChangeAggregation<TRequestContext extends object = any>
     }
   }
 
+  public clone(): NodeChangeAggregation<TRequestContext> {
+    return new NodeChangeAggregation(
+      new Map(
+        Array.from(this.changesByNode, ([node, changes]) => [
+          node,
+          Array.from(changes),
+        ]),
+      ),
+    );
+  }
+
   public mergeWith(
     ...aggregations: ReadonlyArray<NodeChangeAggregation<TRequestContext>>
   ): NodeChangeAggregation<TRequestContext> | this {
     return aggregations.length
-      ? new NodeChangeAggregation(
+      ? NodeChangeAggregation.createFromIterable(
           [this, ...aggregations].reduce<NodeChange[]>(
             (changes, aggregation) => {
               changes.push(...aggregation);

@@ -38,7 +38,7 @@
     "typescript": "5.6.2"
   },
   "dependencies": {
-    "@prismamedia/async-event-emitter": "^5.5.0",
+    "@prismamedia/async-event-emitter": "^5.5.1",
     "@prismamedia/graphql-platform-scalars": "workspace:packages/graphql-platform-scalars",
     "@prismamedia/graphql-platform-utils": "workspace:packages/graphql-platform-utils",
     "@prismamedia/memoize": "^5.0.3",

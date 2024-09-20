@@ -21,9 +21,7 @@ describe('Delete statement', () => {
 
   beforeAll(async () => {
     gp = createMyGP(`connector_mariadb_delete_statement`);
-    gp.on('node-change-aggregation', (aggregation) =>
-      changes.push(...aggregation),
-    );
+    gp.on('node-changes', (aggregation) => changes.push(...aggregation));
 
     await gp.connector.setup();
     await gp.seed(myAdminContext, fixtures.constant);

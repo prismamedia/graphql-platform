@@ -13,7 +13,7 @@ import {
 import { NodeFilter, type NodeSelectedValue } from '../../statement.js';
 import type { NodeFilterInputValue } from '../../type.js';
 import { AbstractSubscription } from '../abstract-subscription.js';
-import type { OperationContext } from '../context.js';
+import type { SubscriptionContext } from './context.js';
 import {
   ScrollSubscriptionOrderingInputType,
   type ScrollSubscriptionOrderingInputValue,
@@ -87,7 +87,7 @@ export class ScrollSubscription<
   }
 
   protected executeWithValidArgumentsAndContext(
-    context: OperationContext,
+    context: SubscriptionContext,
     authorization: NodeFilter | undefined,
     args: NodeSelectionAwareArgs<ScrollSubscriptionArgs>,
     path: utils.Path,

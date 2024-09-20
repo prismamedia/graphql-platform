@@ -5,6 +5,7 @@ import {
   NodeCreation,
   NodeDeletion,
   NodeUpdate,
+  type NodeChange,
 } from '../../../../change.js';
 import {
   FalseValue,
@@ -24,13 +25,15 @@ import {
  * Group all the effect that an aggregation of changes can have on a subscription
  */
 export class ChangesSubscriptionEffect<
-  TUpsert extends NodeSelectedValue = any,
-  TDeletion extends NodeValue = any,
-  TRequestContext extends object = any,
-> implements
+    TUpsert extends NodeSelectedValue = any,
+    TDeletion extends NodeValue = any,
+    TRequestContext extends object = any,
+  >
+  implements
     AsyncIterable<
       ChangesSubscriptionChange<TUpsert, TDeletion, TRequestContext>
-    >
+    >,
+    Disposable
 {
   public static createFromNodeChangeAggregation<
     TUpsert extends NodeSelectedValue,
@@ -199,45 +202,63 @@ export class ChangesSubscriptionEffect<
     return new ChangesSubscriptionEffect(subscription, effect);
   }
 
+  public static createFromNodeChanges<
+    TUpsert extends NodeSelectedValue,
+    TDeletion extends NodeValue,
+    TRequestContext extends object,
+  >(
+    subscription: ChangesSubscriptionStream<
+      TUpsert,
+      TDeletion,
+      TRequestContext
+    >,
+    ...changes: ReadonlyArray<NodeChange<TRequestContext>>
+  ): ChangesSubscriptionEffect<TUpsert, TDeletion, TRequestContext> {
+    return this.createFromNodeChangeAggregation(
+      subscription,
+      NodeChangeAggregation.createFromIterable(changes),
+    );
+  }
+
   /**
    * Pass-through deletions, we had everything we need in the NodeChange
    */
-  public readonly deletions: ReadonlyArray<
+  public readonly deletions: Array<
     ChangesSubscriptionDeletion<TDeletion, TRequestContext>
   >;
 
   /**
    * Pass-through upserts, we had everything we need in the NodeChange
    */
-  public readonly upserts: ReadonlyArray<
+  public readonly upserts: Array<
     ChangesSubscriptionUpsert<TUpsert, TRequestContext>
   >;
 
   /**
    * Filtered-in, but incomplete value
    */
-  public readonly incompleteUpserts: ReadonlyArray<
+  public readonly incompleteUpserts: Array<
     NodeCreation<TRequestContext> | NodeUpdate<TRequestContext>
   >;
 
   /**
    * Not filtered, but cannot be deletion
    */
-  public readonly maybeUpserts: ReadonlyArray<
+  public readonly maybeUpserts: Array<
     NodeCreation<TRequestContext> | NodeUpdate<TRequestContext>
   >;
 
   /**
    * Not filtered, can be anything
    */
-  public readonly maybeChanges: ReadonlyArray<NodeUpdate<TRequestContext>>;
+  public readonly maybeChanges: Array<NodeUpdate<TRequestContext>>;
 
   /**
    * Graph changes
    */
   public readonly maybeGraphChanges?: {
-    initiators: ReadonlyArray<TRequestContext>;
-    filter: NodeFilter;
+    readonly initiators: Array<TRequestContext>;
+    readonly filter: NodeFilter;
   };
 
   public constructor(
@@ -247,21 +268,19 @@ export class ChangesSubscriptionEffect<
       TRequestContext
     >,
     maybeEffect?: {
-      deletions?: ReadonlyArray<
+      deletions?: Array<
         ChangesSubscriptionDeletion<TDeletion, TRequestContext>
       >;
-      upserts?: ReadonlyArray<
-        ChangesSubscriptionUpsert<TUpsert, TRequestContext>
-      >;
-      incompleteUpserts?: ReadonlyArray<
+      upserts?: Array<ChangesSubscriptionUpsert<TUpsert, TRequestContext>>;
+      incompleteUpserts?: Array<
         NodeCreation<TRequestContext> | NodeUpdate<TRequestContext>
       >;
-      maybeUpserts?: ReadonlyArray<
+      maybeUpserts?: Array<
         NodeCreation<TRequestContext> | NodeUpdate<TRequestContext>
       >;
-      maybeChanges?: ReadonlyArray<NodeUpdate<TRequestContext>>;
+      maybeChanges?: Array<NodeUpdate<TRequestContext>>;
       maybeGraphChanges?: {
-        initiators: ReadonlyArray<TRequestContext>;
+        initiators: Array<TRequestContext>;
         filter: NodeFilter;
       };
     },
@@ -274,6 +293,17 @@ export class ChangesSubscriptionEffect<
     this.maybeGraphChanges = !maybeEffect?.maybeGraphChanges?.filter.isFalse()
       ? maybeEffect?.maybeGraphChanges
       : undefined;
+  }
+
+  public [Symbol.dispose]() {
+    this.deletions.length = 0;
+    this.upserts.length = 0;
+    this.incompleteUpserts.length = 0;
+    this.maybeUpserts.length = 0;
+    this.maybeChanges.length = 0;
+    if (this.maybeGraphChanges?.initiators.length) {
+      this.maybeGraphChanges.initiators.length = 0;
+    }
   }
 
   public isEmpty(): boolean {

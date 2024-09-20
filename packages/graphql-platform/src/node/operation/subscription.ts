@@ -6,6 +6,7 @@ import { ScrollSubscription } from './subscription/scroll.js';
 export * from './abstract-subscription.js';
 export type { SubscriptionConfig } from './abstract-subscription.js';
 export * from './subscription/changes.js';
+export * from './subscription/context.js';
 export * from './subscription/scroll.js';
 
 export type Subscription<TRequestContext extends object = any> =

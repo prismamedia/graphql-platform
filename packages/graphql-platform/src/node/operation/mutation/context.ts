@@ -17,7 +17,12 @@ export class MutationContext<
   /**
    * Contains the nodes' changes that will be fired after the success of the whole mutation, including all the nested actions
    */
-  public readonly changes: NodeChange[] = [];
+  public readonly changes: Array<NodeChange> = [];
+
+  public override [Symbol.dispose]() {
+    super[Symbol.dispose]();
+    this.changes.length = 0;
+  }
 
   public track(...changes: ReadonlyArray<NodeChange>): void {
     this.changesTracking && this.changes.push(...changes);

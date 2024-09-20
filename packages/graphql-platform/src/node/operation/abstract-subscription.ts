@@ -1,10 +1,12 @@
 import * as utils from '@prismamedia/graphql-platform-utils';
 import { Memoize } from '@prismamedia/memoize';
 import * as graphql from 'graphql';
+import assert from 'node:assert/strict';
 import type { IterableElement, Promisable } from 'type-fest';
 import type { BrokerInterface } from '../../broker-interface.js';
 import type { ConnectorInterface } from '../../connector-interface.js';
 import { AbstractOperation } from '../abstract-operation.js';
+import { SubscriptionContext } from './subscription/context.js';
 
 export interface SubscriptionConfig<
   TRequestContext extends object,
@@ -33,7 +35,9 @@ export abstract class AbstractSubscription<
   TBroker extends BrokerInterface = any,
   TContainer extends object = any,
   TArgs extends utils.Nillable<utils.PlainObject> = any,
-  TResult extends Promisable<AsyncIterable<any>> = any,
+  TResult extends Promisable<
+    AsyncIterable<any> & (Disposable | AsyncDisposable)
+  > = any,
 > extends AbstractOperation<
   TRequestContext,
   TConnector,
@@ -52,6 +56,26 @@ export abstract class AbstractSubscription<
   @Memoize()
   public override isPublic(): boolean {
     return super.isPublic() && this.gp.subscriptionConfig.public;
+  }
+
+  public override execute(
+    requestOrOperationContext: TRequestContext | SubscriptionContext,
+    args: TArgs,
+    path?: utils.Path,
+  ): TResult {
+    let context: SubscriptionContext;
+
+    if (requestOrOperationContext instanceof SubscriptionContext) {
+      assert.equal(requestOrOperationContext.gp, this.gp);
+
+      context = requestOrOperationContext;
+    } else {
+      this.gp.assertRequestContext(requestOrOperationContext, path);
+
+      context = new SubscriptionContext(this.gp, requestOrOperationContext);
+    }
+
+    return super.execute(context, args, path);
   }
 
   protected getGraphQLFieldConfigSubscriber(): NonNullable<

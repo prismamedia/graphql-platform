@@ -121,17 +121,14 @@ export abstract class AbstractMutation<
   }
 
   public override async execute(
-    context: TRequestContext | MutationContext,
+    requestOrMutationContext: TRequestContext | MutationContext,
     args: TArgs,
-    path: utils.Path = utils.addPath(
-      utils.addPath(undefined, this.operationType),
-      this.name,
-    ),
+    path?: utils.Path,
   ): Promise<TResult> {
-    return context instanceof MutationContext
-      ? super.execute(context, args, path)
+    return requestOrMutationContext instanceof MutationContext
+      ? super.execute(requestOrMutationContext, args, path)
       : this.gp.withMutationContext(
-          context,
+          requestOrMutationContext,
           (context) => super.execute(context, args, path),
           path,
         );

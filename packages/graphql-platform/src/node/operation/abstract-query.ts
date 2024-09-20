@@ -5,6 +5,7 @@ import type { CamelCase } from 'type-fest';
 import type { BrokerInterface } from '../../broker-interface.js';
 import type { ConnectorInterface } from '../../connector-interface.js';
 import { AbstractOperation } from '../abstract-operation.js';
+import { OperationContext } from './context.js';
 
 export abstract class AbstractQuery<
   TRequestContext extends object = any,
@@ -28,6 +29,20 @@ export abstract class AbstractQuery<
     return this.key.replaceAll(/((?:-).)/g, ([_match, letter]) =>
       letter.toUpperCase(),
     ) as any;
+  }
+
+  public override async execute(
+    requestOrOperationContext: TRequestContext | OperationContext,
+    args: TArgs,
+    path?: utils.Path,
+  ): Promise<TResult> {
+    return requestOrOperationContext instanceof OperationContext
+      ? super.execute(requestOrOperationContext, args, path)
+      : this.gp.withOperationContext(
+          requestOrOperationContext,
+          (context) => super.execute(context, args, path),
+          path,
+        );
   }
 
   protected getGraphQLFieldConfigSubscriber(): graphql.GraphQLFieldConfig<

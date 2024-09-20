@@ -550,28 +550,6 @@ export const Article = {
       interfaces: [PublicNodeInterfaceType],
     },
   },
-
-  onChange(change) {
-    // if (change.kind === utils.MutationType.CREATION) {
-    //   console.debug(
-    //     `The article "${
-    //       change.newValue.id
-    //     }" has been created at "${change.at.toISOString()}"`,
-    //   );
-    // } else if (change.kind === utils.MutationType.UPDATE) {
-    //   console.debug(
-    //     `The article "${
-    //       change.newValue.id
-    //     }" has been updated at "${change.at.toISOString()}"`,
-    //   );
-    // } else {
-    //   console.debug(
-    //     `The article "${
-    //       change.oldValue.id
-    //     }" has been deleted at "${change.at.toISOString()}"`,
-    //   );
-    // }
-  },
 } satisfies NodeConfig<MyContext>;
 
 export const ArticleExtension = {
