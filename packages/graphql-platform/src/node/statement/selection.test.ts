@@ -39,7 +39,12 @@ describe('Selection', () => {
         {
           id: '37da4d42-bc8d-4a01-98de-4d2109e09130',
           status: ArticleStatus.DRAFT,
-          lowerCasedTitle: {
+          a: {
+            status: ArticleStatus.DRAFT,
+            title: 'My title',
+            category: null,
+          },
+          b: {
             status: ArticleStatus.DRAFT,
             title: 'My title',
             category: null,
@@ -48,14 +53,20 @@ describe('Selection', () => {
         {
           id: '37da4d42-bc8d-4a01-98de-4d2109e09130',
           status: ArticleStatus.DRAFT,
-          lowerCasedTitle: 'draft-my title',
+          a: 'draft-my title',
+          b: 'draft-my title',
         },
       ],
       [
         {
           id: '37da4d42-bc8d-4a01-98de-4d2109e09130',
           status: ArticleStatus.DRAFT,
-          lowerCasedTitle: {
+          a: {
+            status: ArticleStatus.DRAFT,
+            title: 'My title',
+            category: { title: 'My category' },
+          },
+          b: {
             status: ArticleStatus.DRAFT,
             title: 'My title',
             category: { title: 'My category' },
@@ -64,14 +75,16 @@ describe('Selection', () => {
         {
           id: '37da4d42-bc8d-4a01-98de-4d2109e09130',
           status: ArticleStatus.DRAFT,
-          lowerCasedTitle: 'draft-my title-my category',
+          a: 'draft-my title-my category',
+          b: 'draft-my title-my category',
         },
       ],
     ])('Parses & resolves', async (source, value) => {
       const selection = Article.outputType.select(`{
         id
         status
-        lowerCasedTitle
+        a: lowerCasedTitle
+        b: lowerCasedTitle
       }`);
 
       expect(selection.parseSource(source)).toEqual(source);

@@ -41,9 +41,11 @@ describe('Find statement', () => {
           metas
           tagCount
           createdAt
-          lowerCasedTitle
+          a: lowerCasedTitle
+          b: lowerCasedTitle
           upperCasedTitle
-          mixedCasedTitle
+          c: mixedCasedTitle
+          d: mixedCasedTitle
         }`,
       },
       [
@@ -57,11 +59,12 @@ describe('Find statement', () => {
           tagCount: 2,
           title: 'My first published article',
           views: 0n,
-          lowerCasedTitle: 'published-my first published article-news',
+          a: 'published-my first published article-news',
+          b: 'published-my first published article-news',
           upperCasedTitle:
             'PUBLISHED-MY FIRST PUBLISHED ARTICLE-NEWS-TV-HIGH-TECH',
-          mixedCasedTitle:
-            'published-my first published article-news / PUBLISHED-MY FIRST PUBLISHED ARTICLE-NEWS-TV-HIGH-TECH',
+          c: 'published-my first published article-news / PUBLISHED-MY FIRST PUBLISHED ARTICLE-NEWS-TV-HIGH-TECH',
+          d: 'published-my first published article-news / PUBLISHED-MY FIRST PUBLISHED ARTICLE-NEWS-TV-HIGH-TECH',
         },
         {
           body: {
@@ -78,10 +81,11 @@ describe('Find statement', () => {
           tagCount: 1,
           title: 'My second published article',
           views: 1234567890n,
-          lowerCasedTitle: 'published-my second published article-home',
+          a: 'published-my second published article-home',
+          b: 'published-my second published article-home',
           upperCasedTitle: 'PUBLISHED-MY SECOND PUBLISHED ARTICLE-HOME-FASHION',
-          mixedCasedTitle:
-            'published-my second published article-home / PUBLISHED-MY SECOND PUBLISHED ARTICLE-HOME-FASHION',
+          c: 'published-my second published article-home / PUBLISHED-MY SECOND PUBLISHED ARTICLE-HOME-FASHION',
+          d: 'published-my second published article-home / PUBLISHED-MY SECOND PUBLISHED ARTICLE-HOME-FASHION',
         },
         {
           body: null,
@@ -93,12 +97,12 @@ describe('Find statement', () => {
           tagCount: 3,
           title: 'My first published article in root category',
           views: 0n,
-          lowerCasedTitle:
-            'published-my first published article in root category-root',
+          a: 'published-my first published article in root category-root',
+          b: 'published-my first published article in root category-root',
           upperCasedTitle:
             'PUBLISHED-MY FIRST PUBLISHED ARTICLE IN ROOT CATEGORY-ROOT-TV-HIGH-TECH',
-          mixedCasedTitle:
-            'published-my first published article in root category-root / PUBLISHED-MY FIRST PUBLISHED ARTICLE IN ROOT CATEGORY-ROOT-TV-HIGH-TECH',
+          c: 'published-my first published article in root category-root / PUBLISHED-MY FIRST PUBLISHED ARTICLE IN ROOT CATEGORY-ROOT-TV-HIGH-TECH',
+          d: 'published-my first published article in root category-root / PUBLISHED-MY FIRST PUBLISHED ARTICLE IN ROOT CATEGORY-ROOT-TV-HIGH-TECH',
         },
         {
           body: null,
@@ -110,12 +114,12 @@ describe('Find statement', () => {
           tagCount: 2,
           title: 'My second published article in root category',
           views: 0n,
-          lowerCasedTitle:
-            'published-my second published article in root category-root',
+          a: 'published-my second published article in root category-root',
+          b: 'published-my second published article in root category-root',
           upperCasedTitle:
             'PUBLISHED-MY SECOND PUBLISHED ARTICLE IN ROOT CATEGORY-ROOT-TV-FASHION',
-          mixedCasedTitle:
-            'published-my second published article in root category-root / PUBLISHED-MY SECOND PUBLISHED ARTICLE IN ROOT CATEGORY-ROOT-TV-FASHION',
+          c: 'published-my second published article in root category-root / PUBLISHED-MY SECOND PUBLISHED ARTICLE IN ROOT CATEGORY-ROOT-TV-FASHION',
+          d: 'published-my second published article in root category-root / PUBLISHED-MY SECOND PUBLISHED ARTICLE IN ROOT CATEGORY-ROOT-TV-FASHION',
         },
         {
           body: null,
@@ -127,12 +131,12 @@ describe('Find statement', () => {
           tagCount: 0,
           title: 'My third published article in root category',
           views: 0n,
+          a: 'published-my third published article in root category-root',
+          b: 'published-my third published article in root category-root',
           upperCasedTitle:
             'PUBLISHED-MY THIRD PUBLISHED ARTICLE IN ROOT CATEGORY-ROOT',
-          lowerCasedTitle:
-            'published-my third published article in root category-root',
-          mixedCasedTitle:
-            'published-my third published article in root category-root / PUBLISHED-MY THIRD PUBLISHED ARTICLE IN ROOT CATEGORY-ROOT',
+          c: 'published-my third published article in root category-root / PUBLISHED-MY THIRD PUBLISHED ARTICLE IN ROOT CATEGORY-ROOT',
+          d: 'published-my third published article in root category-root / PUBLISHED-MY THIRD PUBLISHED ARTICLE IN ROOT CATEGORY-ROOT',
         },
       ],
     ],

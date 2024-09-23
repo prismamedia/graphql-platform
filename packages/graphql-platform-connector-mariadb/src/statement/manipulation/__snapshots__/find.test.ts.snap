@@ -25,7 +25,24 @@ exports[`Find statement 0 - generates statements 1`] = `
     ),
     "createdAt",
     \`articles\`.\`created_at\`,
-    "lowerCasedTitle",
+    "a",
+    JSON_OBJECT(
+      "status",
+      \`articles\`.\`status\`,
+      "title",
+      \`articles\`.\`title\`,
+      "category",
+      IF(
+        \`articles\`.\`category_private_id\` IS NOT NULL,
+        (
+          SELECT JSON_OBJECT("title", \`articles>category\`.\`title\`)
+          FROM \`categories\` AS \`articles>category\`
+          WHERE \`articles\`.\`category_private_id\` = \`articles>category\`.\`private_id\`
+          LIMIT 1
+        ), NULL
+      )
+    ),
+    "b",
     JSON_OBJECT(
       "status",
       \`articles\`.\`status\`,
@@ -77,7 +94,62 @@ exports[`Find statement 0 - generates statements 1`] = `
         WHERE \`articles>tags\`.\`article_private_id\` = \`articles\`.\`private_id\`
       )
     ),
-    "mixedCasedTitle",
+    "c",
+    JSON_OBJECT(
+      "lowerCasedTitle",
+      JSON_OBJECT(
+        "status",
+        \`articles\`.\`status\`,
+        "title",
+        \`articles\`.\`title\`,
+        "category",
+        IF(
+          \`articles\`.\`category_private_id\` IS NOT NULL,
+          (
+            SELECT JSON_OBJECT("title", \`articles>category\`.\`title\`)
+            FROM \`categories\` AS \`articles>category\`
+            WHERE \`articles\`.\`category_private_id\` = \`articles>category\`.\`private_id\`
+            LIMIT 1
+          ), NULL
+        )
+      ),
+      "upperCasedTitle",
+      JSON_OBJECT(
+        "status",
+        \`articles\`.\`status\`,
+        "title",
+        \`articles\`.\`title\`,
+        "category",
+        IF(
+          \`articles\`.\`category_private_id\` IS NOT NULL,
+          (
+            SELECT JSON_OBJECT("title", \`articles>category\`.\`title\`)
+            FROM \`categories\` AS \`articles>category\`
+            WHERE \`articles\`.\`category_private_id\` = \`articles>category\`.\`private_id\`
+            LIMIT 1
+          ), NULL
+        ),
+        "tags",
+        (
+          SELECT JSON_ARRAYAGG(
+              JSON_OBJECT(
+                "tag",
+                (
+                  SELECT JSON_OBJECT("title", \`articles>tags>tag\`.\`title\`)
+                  FROM \`tags\` AS \`articles>tags>tag\`
+                  WHERE \`articles>tags\`.\`tag_id\` = \`articles>tags>tag\`.\`id\`
+                  LIMIT 1
+                )
+              )
+              ORDER BY \`articles>tags\`.\`order\` ASC
+              LIMIT 2
+            )
+          FROM \`article_tags\` AS \`articles>tags\`
+          WHERE \`articles>tags\`.\`article_private_id\` = \`articles\`.\`private_id\`
+        )
+      )
+    ),
+    "d",
     JSON_OBJECT(
       "lowerCasedTitle",
       JSON_OBJECT(

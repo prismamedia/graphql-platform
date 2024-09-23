@@ -135,6 +135,17 @@ export class NodeSelection<
     );
   }
 
+  /**
+   * Returns the selected virtual-selections
+   */
+  @Memoize()
+  public get virtualSelections(): ReadonlyArray<VirtualSelection> {
+    return this.expressions.filter(
+      (expression): expression is VirtualSelection =>
+        expression instanceof VirtualSelection,
+    );
+  }
+
   @Memoize()
   public get hasVirtualSelection(): boolean {
     return this.expressions.some(
