@@ -709,7 +709,7 @@ export class GraphQLPlatform<
         change.committedAt = now;
       }
 
-      using aggregation = NodeChangeAggregation.createFromIterable(
+      const aggregation = NodeChangeAggregation.createFromIterable(
         mutationContext.changes,
       );
 

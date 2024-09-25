@@ -20,7 +20,7 @@ export class InMemoryBroker implements BrokerInterface {
   }
 
   public publish(changes: NodeChangeAggregation): void {
-    this.#subscriptions.forEach((queue) => queue.enqueue(changes.clone()));
+    this.#subscriptions.forEach((queue) => queue.enqueue(changes));
   }
 
   public subscribe(

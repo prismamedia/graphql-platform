@@ -29,10 +29,10 @@
   "devDependencies": {
     "@jest/globals": "30.0.0-alpha.6",
     "@sqltools/formatter": "1.2.5",
-    "@swc/core": "1.7.26",
+    "@swc/core": "1.7.28",
     "@swc/jest": "0.2.36",
     "@tsconfig/node20": "20.1.4",
-    "@types/node": "20.16.5",
+    "@types/node": "20.16.7",
     "@types/semver": "7.5.8",
     "graphql": "16.9.0",
     "jest": "30.0.0-alpha.6",
