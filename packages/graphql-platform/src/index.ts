@@ -213,8 +213,6 @@ export class GraphQLPlatform<
     Node<TRequestContext, TConnector, TBroker, TContainer>
   >;
 
-  public readonly nodeOperationsByNameByType: OperationsByNameByType<TRequestContext>;
-
   readonly #requestContextAssertion?: (
     maybeRequestContext: object,
   ) => asserts maybeRequestContext is TRequestContext;
@@ -305,49 +303,59 @@ export class GraphQLPlatform<
 
       this.nodeSet = new Set(this.nodesByName.values());
 
-      /**
-       * In order to fail as soon as possible, we validate/build everything right away.
-       * It is done step by step in order to have meaningful errors.
-       */
-      {
-        utils.aggregateGraphError<Node, void>(
-          this.nodeSet,
-          (_, node) => node.validateDefinition(),
-          undefined,
-          { path: configPath },
-        );
+      // Validate the nodes' definition
+      utils.aggregateGraphError<Node, void>(
+        this.nodeSet,
+        (_, node) => node.validateDefinition(),
+        undefined,
+        { path: configPath },
+      );
+    }
 
-        utils.aggregateGraphError<Node, void>(
-          this.nodeSet,
-          (_, node) => node.validateTypes(),
-          undefined,
-          { path: configPath },
-        );
+    // container (has access to the nodes' definition)
+    {
+      const containerConfig = config.container;
+      const containerConfigPath = utils.addPath(configPath, 'container');
 
-        utils.aggregateGraphError<Node, void>(
-          this.nodeSet,
-          (_, node) => node.validateOperations(),
-          undefined,
-          { path: configPath },
-        );
+      const container = utils.resolveThunkable(
+        containerConfig,
+        this,
+        containerConfigPath,
+      );
+
+      if (container != null) {
+        if (typeof container !== 'object') {
+          throw new utils.UnexpectedValueError('an object', container, {
+            path: containerConfigPath,
+          });
+        }
+
+        this.container = Object.freeze(container);
+      } else {
+        this.container = Object.freeze(Object.create(null) as TContainer);
       }
     }
 
-    // node-operations
+    /**
+     * In order to fail as soon as possible, we validate/build everything right away.
+     * It is done step by step in order to have meaningful errors.
+     */
     {
-      this.nodeOperationsByNameByType = Object.fromEntries(
-        utils.operationTypes.map((type): any => [
-          type,
-          new Map(
-            Array.from(this.nodesByName.values()).flatMap((node) =>
-              node.operationsByType[type].map((operation) => [
-                operation.name,
-                operation,
-              ]),
-            ),
-          ),
-        ]),
-      ) as OperationsByNameByType;
+      // Validate the nodes' types
+      utils.aggregateGraphError<Node, void>(
+        this.nodeSet,
+        (_, node) => node.validateTypes(),
+        undefined,
+        { path: configPath },
+      );
+
+      // Validate the nodes' operations
+      utils.aggregateGraphError<Node, void>(
+        this.nodeSet,
+        (_, node) => node.validateOperations(),
+        undefined,
+        { path: configPath },
+      );
     }
 
     // request-context-assertion
@@ -395,30 +403,6 @@ export class GraphQLPlatform<
         this,
         utils.addPath(configPath, 'broker'),
       ) || new InMemoryBroker(this)) as any;
-    }
-
-    // container
-    {
-      const containerConfig = config.container;
-      const containerConfigPath = utils.addPath(configPath, 'container');
-
-      const container = utils.resolveThunkable(
-        containerConfig,
-        this,
-        containerConfigPath,
-      );
-
-      if (container != null) {
-        if (typeof container !== 'object') {
-          throw new utils.UnexpectedValueError('an object', container, {
-            path: containerConfigPath,
-          });
-        }
-
-        this.container = Object.freeze(container);
-      } else {
-        this.container = Object.freeze({} as TContainer);
-      }
     }
 
     // on
@@ -475,34 +459,6 @@ export class GraphQLPlatform<
     );
   }
 
-  public getOperationByTypeAndName(
-    type: graphql.OperationTypeNode,
-    name: string,
-    path?: utils.Path,
-  ): Operation<TRequestContext> {
-    const operationsByName = this.nodeOperationsByNameByType[type];
-    if (!operationsByName) {
-      throw new utils.UnexpectedValueError(
-        `a type among "${Object.keys(this.nodeOperationsByNameByType).join(
-          ', ',
-        )}"`,
-        type,
-        { path },
-      );
-    }
-
-    const operation = operationsByName.get(name);
-    if (!operation) {
-      throw new utils.UnexpectedValueError(
-        `a name among "${[...operationsByName.keys()].join(', ')}"`,
-        name,
-        { path },
-      );
-    }
-
-    return operation;
-  }
-
   public assertRequestContext(
     maybeRequestContext: unknown,
     path?: utils.Path,
@@ -535,11 +491,54 @@ export class GraphQLPlatform<
   }
 
   public async seed(
-    context: TRequestContext | MutationContext<TRequestContext>,
+    context: TRequestContext,
     fixtures: NodeFixtureDataByReferenceByNodeName,
   ): Promise<void> {
     const seeding = new Seeding(this, fixtures);
     await seeding.load(context);
+  }
+
+  @Memoize()
+  public get nodeOperationsByNameByType(): OperationsByNameByType<TRequestContext> {
+    return Object.fromEntries(
+      utils.operationTypes.map((type): any => [
+        type,
+        new Map(
+          Array.from(this.nodesByName.values()).flatMap((node) =>
+            node.operationsByType[type].map((operation) => [
+              operation.name,
+              operation,
+            ]),
+          ),
+        ),
+      ]),
+    ) as any;
+  }
+
+  public getOperationByTypeAndName(
+    type: graphql.OperationTypeNode,
+    name: string,
+    path?: utils.Path,
+  ): Operation<TRequestContext> {
+    const operationsByName = this.nodeOperationsByNameByType[type];
+    if (!operationsByName) {
+      throw new utils.UnexpectedValueError(
+        `a type among "${Object.keys(this.nodeOperationsByNameByType).join(', ')}"`,
+        type,
+        { path },
+      );
+    }
+
+    const operation = operationsByName.get(name);
+    if (!operation) {
+      throw new utils.UnexpectedValueError(
+        `a name among "${[...operationsByName.keys()].join(', ')}"`,
+        name,
+        { path },
+      );
+    }
+
+    return operation;
   }
 
   @Memoize()

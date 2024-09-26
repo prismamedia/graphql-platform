@@ -88,7 +88,7 @@ async function extractFieldValue<TRequestContext extends object>(
   dependencyGraph: DepGraph<NodeFixture>,
   field: FieldCreationInput,
   value: any,
-  context: TRequestContext | MutationContext<TRequestContext>,
+  context: MutationContext<TRequestContext>,
   path: utils.Path,
 ): Promise<any> {
   return value == null || field instanceof LeafCreationInput
@@ -136,7 +136,7 @@ async function extractData<TRequestContext extends object>(
   dependencyGraph: DepGraph<NodeFixture>,
   node: Node,
   data: NodeFixtureData,
-  context: TRequestContext | MutationContext<TRequestContext>,
+  context: MutationContext<TRequestContext>,
   path: utils.Path,
 ): Promise<NonNullable<NodeCreationInputValue>> {
   utils.assertPlainObject(data, path);
@@ -223,9 +223,9 @@ export class NodeFixture<TRequestContext extends object = any> {
     );
   }
 
-  @Memoize(() => true)
+  @Memoize()
   public async load(
-    context: TRequestContext | MutationContext<TRequestContext>,
+    context: MutationContext<TRequestContext>,
   ): Promise<NodeValue> {
     const data = await extractData<TRequestContext>(
       this.seeding.dependencyGraph,
@@ -241,7 +241,7 @@ export class NodeFixture<TRequestContext extends object = any> {
   }
 
   public async getUniqueConstraintValue(
-    context: TRequestContext,
+    context: MutationContext<TRequestContext>,
     uniqueConstraint: UniqueConstraint = this.node.mainIdentifier,
   ): Promise<UniqueConstraintValue> {
     const nodeValue = await this.load(context);

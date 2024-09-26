@@ -1,7 +1,7 @@
 import * as utils from '@prismamedia/graphql-platform-utils';
 import { DepGraph } from 'dependency-graph';
 import type { GraphQLPlatform } from './index.js';
-import type { MutationContext, Node } from './node.js';
+import type { Node } from './node.js';
 import {
   NodeFixture,
   type NodeFixtureData,
@@ -72,9 +72,9 @@ export class Seeding<TRequestContext extends object = any> {
       .map((reference) => this.dependencyGraph.getNodeData(reference));
   }
 
-  public async load(
-    context: TRequestContext | MutationContext<TRequestContext>,
-  ): Promise<void> {
-    await Promise.all(this.fixtures.map((fixture) => fixture.load(context)));
+  public load(context: TRequestContext) {
+    return this.gp.withMutationContext(context, (context) =>
+      Promise.all(this.fixtures.map((fixture) => fixture.load(context))),
+    );
   }
 }
