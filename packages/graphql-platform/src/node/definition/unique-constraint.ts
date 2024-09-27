@@ -158,6 +158,21 @@ export class UniqueConstraint<TConnector extends ConnectorInterface = any> {
   }
 
   @Memoize()
+  public isPureLeaf(): boolean {
+    return this.componentSet.size === 1 && this.leafSet.size === 1;
+  }
+
+  @Memoize()
+  public getPureLeaf(): Leaf<TConnector> {
+    assert(
+      this.isPureLeaf(),
+      `The "${this}" unique-constraint is not pure-leaf`,
+    );
+
+    return [...this.leafSet][0]!;
+  }
+
+  @Memoize()
   public isMutable(): boolean {
     return Array.from(this.componentSet).some((component) =>
       component.isMutable(),
@@ -196,15 +211,13 @@ export class UniqueConstraint<TConnector extends ConnectorInterface = any> {
 
   @Memoize()
   public isScrollable(): boolean {
-    return (
-      this.componentSet.size === 1 &&
-      Array.from(this.componentSet).every(
-        (component) =>
-          component instanceof Leaf &&
-          component.isSortable() &&
-          !component.isNullable(),
-      )
-    );
+    if (!this.isPureLeaf()) {
+      return false;
+    }
+
+    const leaf = this.getPureLeaf();
+
+    return leaf.isSortable() && !leaf.isNullable();
   }
 
   @Memoize()
