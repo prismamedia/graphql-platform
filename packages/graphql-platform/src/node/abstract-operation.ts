@@ -4,9 +4,11 @@ import * as graphql from 'graphql';
 import assert from 'node:assert/strict';
 import * as R from 'remeda';
 import type { Merge } from 'type-fest';
-import type { BrokerInterface } from '../broker-interface.js';
-import type { ConnectorInterface } from '../connector-interface.js';
-import type { GraphQLPlatform } from '../index.js';
+import type {
+  BrokerInterface,
+  ConnectorInterface,
+  GraphQLPlatform,
+} from '../index.js';
 import type { Node } from '../node.js';
 import type { OperationContext } from './operation/context.js';
 import {
@@ -36,24 +38,11 @@ export type NodeSelectionAwareArgs<
 
 export abstract class AbstractOperation<
   TRequestContext extends object = any,
-  TConnector extends ConnectorInterface = any,
-  TBroker extends BrokerInterface = any,
-  TContainer extends object = any,
-  TOperationContext extends OperationContext<
-    TRequestContext,
-    TConnector,
-    TBroker,
-    TContainer
-  > = any,
+  TOperationContext extends OperationContext<TRequestContext> = any,
   TArgs extends utils.Nillable<utils.PlainObject> = any,
   TResult = any,
 > {
-  protected readonly gp: GraphQLPlatform<
-    TRequestContext,
-    TConnector,
-    TBroker,
-    TContainer
-  >;
+  protected readonly gp: GraphQLPlatform<TRequestContext>;
 
   protected abstract readonly selectionAware: TArgs extends {
     selection: unknown;
@@ -89,26 +78,19 @@ export abstract class AbstractOperation<
    */
   public readonly description?: string;
 
-  public constructor(
-    public readonly node: Node<
-      TRequestContext,
-      TConnector,
-      TBroker,
-      TContainer
-    >,
-  ) {
+  public constructor(public readonly node: Node<TRequestContext>) {
     this.gp = node.gp;
   }
 
-  protected get connector(): TConnector {
+  protected get connector(): ConnectorInterface {
     return this.gp.connector;
   }
 
-  protected get broker(): TBroker {
+  protected get broker(): BrokerInterface {
     return this.gp.broker;
   }
 
-  protected get container(): TContainer {
+  protected get container(): object {
     return this.gp.container;
   }
 

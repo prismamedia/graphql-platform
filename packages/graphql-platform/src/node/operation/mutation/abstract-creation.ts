@@ -113,18 +113,8 @@ export interface CreationConfig<
 
 export abstract class AbstractCreation<
   TRequestContext extends object = any,
-  TConnector extends ConnectorInterface = any,
-  TBroker extends BrokerInterface = any,
-  TContainer extends object = any,
   TArgs extends utils.Nillable<utils.PlainObject> = any,
   TResult = any,
-> extends AbstractMutation<
-  TRequestContext,
-  TConnector,
-  TBroker,
-  TContainer,
-  TArgs,
-  TResult
-> {
+> extends AbstractMutation<TRequestContext, TArgs, TResult> {
   public readonly mutationTypes = [utils.MutationType.CREATION];
 }

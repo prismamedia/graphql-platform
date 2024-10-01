@@ -1,6 +1,4 @@
 import * as utils from '@prismamedia/graphql-platform-utils';
-import type { BrokerInterface } from '../../../../broker-interface.js';
-import type { ConnectorInterface } from '../../../../connector-interface.js';
 import {
   argsPathKey,
   type NodeSelectionAwareArgs,
@@ -23,9 +21,6 @@ export class DeleteSomeInOrderIfExistsMutation<
   TRequestContext extends object,
 > extends AbstractDeletion<
   TRequestContext,
-  ConnectorInterface,
-  BrokerInterface,
-  object,
   DeleteSomeInOrderIfExistsMutationArgs,
   DeleteSomeInOrderIfExistsMutationResult
 > {

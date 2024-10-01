@@ -3,8 +3,6 @@ import * as utils from '@prismamedia/graphql-platform-utils';
 import { Memoize } from '@prismamedia/memoize';
 import * as graphql from 'graphql';
 import * as R from 'remeda';
-import type { BrokerInterface } from '../../../../broker-interface.js';
-import type { ConnectorInterface } from '../../../../connector-interface.js';
 import type { NodeValue } from '../../../../node.js';
 import {
   argsPathKey,
@@ -46,9 +44,6 @@ export class UpdateManyMutation<
   TRequestContext extends object,
 > extends AbstractUpdate<
   TRequestContext,
-  ConnectorInterface,
-  BrokerInterface,
-  object,
   UpdateManyMutationArgs,
   UpdateManyMutationResult
 > {

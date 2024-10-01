@@ -1,6 +1,4 @@
 import * as utils from '@prismamedia/graphql-platform-utils';
-import type { BrokerInterface } from '../../../../broker-interface.js';
-import type { ConnectorInterface } from '../../../../connector-interface.js';
 import type { NodeSelectionAwareArgs } from '../../../abstract-operation.js';
 import type { NodeFilter, NodeSelectedValue } from '../../../statement.js';
 import { NotFoundError } from '../../error.js';
@@ -17,9 +15,6 @@ export class UpdateSomeInOrderMutation<
   TRequestContext extends object,
 > extends AbstractUpdate<
   TRequestContext,
-  ConnectorInterface,
-  BrokerInterface,
-  object,
   UpdateSomeInOrderMutationArgs,
   UpdateSomeInOrderMutationResult
 > {

@@ -2,24 +2,16 @@ import * as utils from '@prismamedia/graphql-platform-utils';
 import { Memoize } from '@prismamedia/memoize';
 import * as graphql from 'graphql';
 import type { CamelCase } from 'type-fest';
-import type { BrokerInterface } from '../../broker-interface.js';
-import type { ConnectorInterface } from '../../connector-interface.js';
 import { AbstractOperation } from '../abstract-operation.js';
 import { OperationContext } from './context.js';
 
 export abstract class AbstractQuery<
   TRequestContext extends object = any,
-  TConnector extends ConnectorInterface = any,
-  TBroker extends BrokerInterface = any,
-  TContainer extends object = any,
   TArgs extends utils.Nillable<utils.PlainObject> = any,
   TResult = any,
 > extends AbstractOperation<
   TRequestContext,
-  TConnector,
-  TBroker,
-  TContainer,
-  OperationContext<TRequestContext, TConnector, TBroker, TContainer>,
+  OperationContext<TRequestContext>,
   TArgs,
   Promise<TResult>
 > {
@@ -33,7 +25,9 @@ export abstract class AbstractQuery<
   }
 
   public override async execute(
-    requestOrOperationContext: TRequestContext | OperationContext,
+    requestOrOperationContext:
+      | TRequestContext
+      | OperationContext<TRequestContext>,
     args: TArgs,
     path?: utils.Path,
   ): Promise<TResult> {

@@ -1,7 +1,5 @@
 import type * as utils from '@prismamedia/graphql-platform-utils';
 import * as graphql from 'graphql';
-import type { BrokerInterface } from '../../../../broker-interface.js';
-import type { ConnectorInterface } from '../../../../connector-interface.js';
 import type {
   NodeSelectionAwareArgs,
   RawNodeSelectionAwareArgs,
@@ -22,9 +20,6 @@ export class DeleteOneMutation<
   TRequestContext extends object,
 > extends AbstractDeletion<
   TRequestContext,
-  ConnectorInterface,
-  BrokerInterface,
-  object,
   DeleteOneMutationArgs,
   DeleteOneMutationResult
 > {

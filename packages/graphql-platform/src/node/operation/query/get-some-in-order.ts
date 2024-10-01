@@ -1,8 +1,6 @@
 import * as utils from '@prismamedia/graphql-platform-utils';
 import * as graphql from 'graphql';
 import inflection from 'inflection';
-import type { BrokerInterface } from '../../../broker-interface.js';
-import type { ConnectorInterface } from '../../../connector-interface.js';
 import type { NodeSelectionAwareArgs } from '../../abstract-operation.js';
 import type { NodeFilter, NodeSelectedValue } from '../../statement.js';
 import { AbstractQuery } from '../abstract-query.js';
@@ -18,9 +16,6 @@ export class GetSomeInOrderQuery<
   TRequestContext extends object,
 > extends AbstractQuery<
   TRequestContext,
-  ConnectorInterface,
-  BrokerInterface,
-  object,
   GetSomeInOrderQueryArgs,
   GetSomeInOrderQueryResult
 > {

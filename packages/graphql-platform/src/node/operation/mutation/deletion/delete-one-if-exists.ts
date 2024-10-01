@@ -1,7 +1,5 @@
 import * as utils from '@prismamedia/graphql-platform-utils';
 import { Memoize } from '@prismamedia/memoize';
-import type { BrokerInterface } from '../../../../broker-interface.js';
-import type { ConnectorInterface } from '../../../../connector-interface.js';
 import type { NodeSelectionAwareArgs } from '../../../abstract-operation.js';
 import type { NodeFilter } from '../../../statement.js';
 import { AbstractDeletion } from '../abstract-deletion.js';
@@ -19,9 +17,6 @@ export class DeleteOneIfExistsMutation<
   TRequestContext extends object,
 > extends AbstractDeletion<
   TRequestContext,
-  ConnectorInterface,
-  BrokerInterface,
-  object,
   DeleteOneIfExistsMutationArgs,
   DeleteOneIfExistsMutationResult
 > {

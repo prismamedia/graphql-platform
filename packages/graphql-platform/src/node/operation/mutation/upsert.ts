@@ -1,8 +1,6 @@
 import * as utils from '@prismamedia/graphql-platform-utils';
 import { Memoize } from '@prismamedia/memoize';
 import * as graphql from 'graphql';
-import type { BrokerInterface } from '../../../broker-interface.js';
-import type { ConnectorInterface } from '../../../connector-interface.js';
 import type {
   NodeSelectionAwareArgs,
   RawNodeSelectionAwareArgs,
@@ -28,9 +26,6 @@ export class UpsertMutation<
   TRequestContext extends object,
 > extends AbstractMutation<
   TRequestContext,
-  ConnectorInterface,
-  BrokerInterface,
-  object,
   UpsertMutationArgs,
   UpsertMutationResult
 > {

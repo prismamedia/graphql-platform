@@ -2,8 +2,6 @@ import * as utils from '@prismamedia/graphql-platform-utils';
 import { Memoize } from '@prismamedia/memoize';
 import * as graphql from 'graphql';
 import * as R from 'remeda';
-import type { BrokerInterface } from '../../../broker-interface.js';
-import type { ConnectorInterface } from '../../../connector-interface.js';
 import {
   type NodeSelectionAwareArgs,
   type RawNodeSelectionAwareArgs,
@@ -31,9 +29,6 @@ export class ReplaceMutation<
   TRequestContext extends object,
 > extends AbstractMutation<
   TRequestContext,
-  ConnectorInterface,
-  BrokerInterface,
-  object,
   ReplaceMutationArgs,
   ReplaceMutationResult
 > {

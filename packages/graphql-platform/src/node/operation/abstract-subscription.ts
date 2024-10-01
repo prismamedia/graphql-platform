@@ -31,17 +31,11 @@ export interface SubscriptionConfig<
 
 export abstract class AbstractSubscription<
   TRequestContext extends object = any,
-  TConnector extends ConnectorInterface = any,
-  TBroker extends BrokerInterface = any,
-  TContainer extends object = any,
   TArgs extends utils.Nillable<utils.PlainObject> = any,
   TResult extends Promisable<AsyncIterable<any>> = any,
 > extends AbstractOperation<
   TRequestContext,
-  TConnector,
-  TBroker,
-  TContainer,
-  OperationContext<TRequestContext, TConnector, TBroker, TContainer>,
+  OperationContext<TRequestContext>,
   TArgs,
   TResult
 > {
@@ -58,7 +52,9 @@ export abstract class AbstractSubscription<
   }
 
   public override execute(
-    requestOrOperationContext: TRequestContext | OperationContext,
+    requestOrOperationContext:
+      | TRequestContext
+      | OperationContext<TRequestContext>,
     args: TArgs,
     path?: utils.Path,
   ): TResult {

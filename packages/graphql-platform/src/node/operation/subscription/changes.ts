@@ -4,8 +4,6 @@ import * as graphql from 'graphql';
 import inflection from 'inflection';
 import * as R from 'remeda';
 import type { Merge } from 'type-fest';
-import type { BrokerInterface } from '../../../broker-interface.js';
-import type { ConnectorInterface } from '../../../connector-interface.js';
 import { argsPathKey } from '../../abstract-operation.js';
 import { NodeFilter, NodeSelection } from '../../statement.js';
 import type { NodeFilterInputValue, RawNodeSelection } from '../../type.js';
@@ -51,9 +49,6 @@ export class ChangesSubscription<
   TRequestContext extends object,
 > extends AbstractSubscription<
   TRequestContext,
-  ConnectorInterface,
-  BrokerInterface,
-  object,
   ChangesSubscriptionArgs,
   Promise<ChangesSubscriptionStream<any, any, TRequestContext>>
 > {
