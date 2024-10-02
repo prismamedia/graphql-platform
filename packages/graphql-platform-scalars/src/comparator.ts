@@ -11,9 +11,9 @@ import {
   type Type,
 } from './type.js';
 
-export type Comparator<TScalarType extends Type> = (
-  a: GetInternalValueByType<TScalarType>,
-  b: GetInternalValueByType<TScalarType>,
+export type Comparator<TType extends Type> = (
+  a: GetInternalValueByType<TType>,
+  b: GetInternalValueByType<TType>,
 ) => boolean;
 
 /**
@@ -37,3 +37,9 @@ export const getComparatorByType = <TType extends Type>(
   type: TType,
 ): Comparator<TType> =>
   getNonStrictEqualityComparatorByType(type) ?? ((a: any, b: any) => a === b);
+
+export const areScalarsEqual = <TType extends Type>(
+  type: TType,
+  a: GetInternalValueByType<TType>,
+  b: GetInternalValueByType<TType>,
+) => getComparatorByType(type)(a, b);
