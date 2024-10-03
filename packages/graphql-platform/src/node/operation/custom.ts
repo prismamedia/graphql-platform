@@ -20,7 +20,8 @@ export type CustomOperationConstructor<
         TRequestContext,
         TConnector,
         TBroker,
-        TContainer
+        TContainer,
+        any
       >,
       [node: Node<TRequestContext, TConnector, TBroker, TContainer>]
     >
@@ -32,7 +33,8 @@ export type CustomOperationConstructor<
       TRequestContext,
       TConnector,
       TBroker,
-      TContainer
+      TContainer,
+      any
     >);
 
 export function constructCustomOperation<
