@@ -1,4 +1,8 @@
-import { addPath as baseAddPath, type Path } from 'graphql/jsutils/Path.js';
+import {
+  addPath as baseAddPath,
+  type Path,
+  pathToArray,
+} from 'graphql/jsutils/Path.js';
 import assert from 'node:assert/strict';
 import type { InputType } from './input/type.js';
 import { isPlainObject } from './plain-object.js';
@@ -15,6 +19,12 @@ export const addPath = (
   key: string | number,
   type?: string | InputType,
 ): Path => baseAddPath(prev, key, type != null ? String(type) : undefined);
+
+export const prependPath = (key: string | number, next?: Path): Path =>
+  pathToArray(next).reduce(
+    (prev, key) => addPath(prev, key),
+    addPath(undefined, key),
+  );
 
 export function isPathDescendantOf(path: Path, maybeAncestor: Path): boolean {
   assert.notEqual(

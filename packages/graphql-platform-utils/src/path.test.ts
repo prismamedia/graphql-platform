@@ -3,6 +3,7 @@ import {
   addPath,
   getRelativePath,
   isPathDescendantOf,
+  prependPath,
   printPath,
 } from './path.js';
 
@@ -73,5 +74,13 @@ describe('Path', () => {
     [thirdLevel, root, './FirstLevel/0/SecondLevel/5/ThirdLevel'],
   ])('.printPath()', (path, ancestor, expected) =>
     expect(printPath(path, ancestor)).toBe(expected),
+  );
+
+  it.each([
+    [root, '/BEFORE/Root'],
+    [firstLevel, '/BEFORE/Root/FirstLevel'],
+    [undefined, '/BEFORE'],
+  ])('.prependPath()', (path, expected) =>
+    expect(printPath(prependPath('BEFORE', path))).toBe(expected),
   );
 });
