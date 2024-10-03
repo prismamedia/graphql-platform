@@ -29,9 +29,9 @@ export type FindManyQueryResult = NodeSelectedValue[];
 export class FindManyQuery<
   TRequestContext extends object,
 > extends AbstractQuery<
-  TRequestContext,
   FindManyQueryArgs,
-  FindManyQueryResult
+  FindManyQueryResult,
+  TRequestContext
 > {
   protected readonly selectionAware = true;
 

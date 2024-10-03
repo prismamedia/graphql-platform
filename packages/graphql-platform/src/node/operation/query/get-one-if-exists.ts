@@ -19,9 +19,9 @@ export type GetOneIfExistsQueryResult = NodeSelectedValue | null;
 export class GetOneIfExistsQuery<
   TRequestContext extends object,
 > extends AbstractQuery<
-  TRequestContext,
   GetOneIfExistsQueryArgs,
-  GetOneIfExistsQueryResult
+  GetOneIfExistsQueryResult,
+  TRequestContext
 > {
   protected readonly selectionAware = true;
 

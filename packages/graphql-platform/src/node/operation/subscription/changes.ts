@@ -48,9 +48,9 @@ export type ParsedChangesSubscriptionArgs = Merge<
 export class ChangesSubscription<
   TRequestContext extends object,
 > extends AbstractSubscription<
-  TRequestContext,
   ChangesSubscriptionArgs,
-  Promise<ChangesSubscriptionStream<any, any, TRequestContext>>
+  Promise<ChangesSubscriptionStream<any, any, TRequestContext>>,
+  TRequestContext
 > {
   protected readonly selectionAware = true;
 

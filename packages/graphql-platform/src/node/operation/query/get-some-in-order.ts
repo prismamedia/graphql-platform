@@ -15,9 +15,9 @@ export type GetSomeInOrderQueryResult = NodeSelectedValue[];
 export class GetSomeInOrderQuery<
   TRequestContext extends object,
 > extends AbstractQuery<
-  TRequestContext,
   GetSomeInOrderQueryArgs,
-  GetSomeInOrderQueryResult
+  GetSomeInOrderQueryResult,
+  TRequestContext
 > {
   protected readonly selectionAware = true;
 

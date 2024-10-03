@@ -16,9 +16,9 @@ export type DeleteOneIfExistsMutationResult = DeleteOneMutationResult | null;
 export class DeleteOneIfExistsMutation<
   TRequestContext extends object,
 > extends AbstractDeletion<
-  TRequestContext,
   DeleteOneIfExistsMutationArgs,
-  DeleteOneIfExistsMutationResult
+  DeleteOneIfExistsMutationResult,
+  TRequestContext
 > {
   protected readonly selectionAware = true;
 

@@ -25,9 +25,9 @@ export type GetSomeInOrderIfExistsQueryResult = Array<NodeSelectedValue | null>;
 export class GetSomeInOrderIfExistsQuery<
   TRequestContext extends object,
 > extends AbstractQuery<
-  TRequestContext,
   GetSomeInOrderIfExistsQueryArgs,
-  GetSomeInOrderIfExistsQueryResult
+  GetSomeInOrderIfExistsQueryResult,
+  TRequestContext
 > {
   protected readonly selectionAware = true;
 

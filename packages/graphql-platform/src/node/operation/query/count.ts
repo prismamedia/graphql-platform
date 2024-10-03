@@ -23,9 +23,9 @@ export type CountQueryArgs = utils.Nillable<{
 export type CountQueryResult = number;
 
 export class CountQuery<TRequestContext extends object> extends AbstractQuery<
-  TRequestContext,
   CountQueryArgs,
-  CountQueryResult
+  CountQueryResult,
+  TRequestContext
 > {
   protected readonly selectionAware = false;
 

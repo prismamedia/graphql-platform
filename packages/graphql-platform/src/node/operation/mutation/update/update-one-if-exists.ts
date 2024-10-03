@@ -16,9 +16,9 @@ export type UpdateOneIfExistsMutationResult = UpdateOneMutationResult | null;
 export class UpdateOneIfExistsMutation<
   TRequestContext extends object,
 > extends AbstractUpdate<
-  TRequestContext,
   UpdateOneIfExistsMutationArgs,
-  UpdateOneIfExistsMutationResult
+  UpdateOneIfExistsMutationResult,
+  TRequestContext
 > {
   protected readonly selectionAware = true;
 

@@ -28,7 +28,7 @@ describe('Insert statement', () => {
     executedStatements.length = 0;
 
     await expect(
-      gp.api.mutation.createUser(myAdminContext, {
+      gp.api.User.createOne(myAdminContext, {
         data: {
           id: '484ae4db-a944-421d-828c-3b514a438146',
           username: 'myTestUser',
@@ -36,11 +36,11 @@ describe('Insert statement', () => {
           lastLoggedInAt: null,
         },
         selection: `{ 
-            id
-            username
-            createdAt
-            lastLoggedInAt
-          }`,
+          id
+          username
+          createdAt
+          lastLoggedInAt
+        }`,
       }),
     ).resolves.toEqual({
       id: '484ae4db-a944-421d-828c-3b514a438146',
@@ -65,7 +65,7 @@ RETURNING
     const now = new Date();
 
     await expect(
-      gp.api.mutation.createArticles(myJournalistContext, {
+      gp.api.Article.createSome(myJournalistContext, {
         data: [
           {
             id: '484ae4db-a944-421d-828c-3b514a438146',
@@ -90,17 +90,17 @@ RETURNING
           },
         ],
         selection: `{ 
-            id
-            title
-            body
-            createdAt
-            updatedAt
-            sponsored
-            views
-            score
-            machineTags
-            metas
-          }`,
+          id
+          title
+          body
+          createdAt
+          updatedAt
+          sponsored
+          views
+          score
+          machineTags
+          metas
+        }`,
       }),
     ).resolves.toEqual([
       {
@@ -155,7 +155,7 @@ RETURNING
     executedStatements.length = 0;
 
     await expect(
-      gp.api.mutation.createArticle(myAdminContext, {
+      gp.api.Article.createOne(myAdminContext, {
         data: {
           id: '484ae4db-a944-421d-828c-3b514a438146',
           title: 'My title',

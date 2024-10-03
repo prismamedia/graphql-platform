@@ -30,9 +30,9 @@ export type ScrollSubscriptionArgs = RawNodeSelectionAwareArgs<{
 export class ScrollSubscription<
   TRequestContext extends object,
 > extends AbstractSubscription<
-  TRequestContext,
   ScrollSubscriptionArgs,
-  ScrollSubscriptionStream<any, TRequestContext>
+  ScrollSubscriptionStream<any, TRequestContext>,
+  TRequestContext
 > {
   protected readonly selectionAware = true;
 

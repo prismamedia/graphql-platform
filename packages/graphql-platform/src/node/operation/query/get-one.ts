@@ -16,9 +16,9 @@ export type GetOneQueryArgs = GetOneIfExistsQueryArgs;
 export type GetOneQueryResult = NonNullable<GetOneIfExistsQueryResult>;
 
 export class GetOneQuery<TRequestContext extends object> extends AbstractQuery<
-  TRequestContext,
   GetOneQueryArgs,
-  GetOneQueryResult
+  GetOneQueryResult,
+  TRequestContext
 > {
   protected readonly selectionAware = true;
 

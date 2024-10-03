@@ -14,9 +14,9 @@ export type UpdateSomeInOrderMutationResult = NodeSelectedValue[];
 export class UpdateSomeInOrderMutation<
   TRequestContext extends object,
 > extends AbstractUpdate<
-  TRequestContext,
   UpdateSomeInOrderMutationArgs,
-  UpdateSomeInOrderMutationResult
+  UpdateSomeInOrderMutationResult,
+  TRequestContext
 > {
   protected readonly selectionAware = true;
 

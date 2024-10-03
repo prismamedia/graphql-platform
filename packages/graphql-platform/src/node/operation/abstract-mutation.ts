@@ -62,14 +62,20 @@ export interface AbstractMutationConfig<
 }
 
 export abstract class AbstractMutation<
-  TRequestContext extends object = any,
   TArgs extends utils.Nillable<utils.PlainObject> = any,
   TResult = any,
+  TRequestContext extends object = object,
+  TConnector extends ConnectorInterface = ConnectorInterface,
+  TBroker extends BrokerInterface = BrokerInterface,
+  TContainer extends object = object,
 > extends AbstractOperation<
-  TRequestContext,
-  MutationContext<TRequestContext>,
   TArgs,
-  Promise<TResult>
+  Promise<TResult>,
+  TRequestContext,
+  TConnector,
+  TBroker,
+  TContainer,
+  MutationContext<TRequestContext, TConnector, TBroker, TContainer>
 > {
   public readonly operationType = graphql.OperationTypeNode.MUTATION;
   public abstract readonly mutationTypes: ReadonlyArray<utils.MutationType>;

@@ -28,17 +28,7 @@ describe('API', () => {
     });
 
     it('is callable', async () => {
-      await expect(api.query.articleCount(myAdminContext, {})).resolves.toEqual(
-        5,
-      );
       await expect(api.Article.count(myAdminContext, {})).resolves.toEqual(5);
-
-      await expect(
-        api.query.articles(myAdminContext, {
-          first: 5,
-          selection: `{ id }`,
-        }),
-      ).resolves.toEqual([]);
 
       await expect(
         api.Article.findMany(myAdminContext, { first: 5, selection: `{ id }` }),
@@ -67,12 +57,7 @@ describe('API', () => {
     });
 
     it('is callable', async () => {
-      await expect(api.query.articleCount({})).resolves.toEqual(5);
       await expect(api.Article.count({})).resolves.toEqual(5);
-
-      await expect(
-        api.query.articles({ first: 5, selection: `{ id }` }),
-      ).resolves.toEqual([]);
 
       await expect(
         api.Article.findMany({ first: 5, selection: `{ id }` }),

@@ -19,9 +19,9 @@ export type CreateOneMutationResult = NodeSelectedValue;
 export class CreateOneMutation<
   TRequestContext extends object,
 > extends AbstractCreation<
-  TRequestContext,
   CreateOneMutationArgs,
-  CreateOneMutationResult
+  CreateOneMutationResult,
+  TRequestContext
 > {
   protected readonly selectionAware = true;
 

@@ -1,7 +1,7 @@
 import * as utils from '@prismamedia/graphql-platform-utils';
 import type { GraphQLPlatform } from '../../index.js';
 import type { Node } from '../../node.js';
-import type { Operation, OperationType } from '../operation.js';
+import type { Operation } from '../operation.js';
 import { OperationContext } from './context.js';
 
 export type NodeAPI<TRequestContext extends object> = {
@@ -43,67 +43,25 @@ export const createContextBoundNodeAPI = <TRequestContext extends object>(
     },
   });
 
-export type API<TRequestContext extends object> = {
-  [TType in OperationType]: Record<
-    Operation['name'],
-    Operation<TRequestContext>['execute']
-  >;
-} & {
-  [TNode: Node['name']]: NodeAPI<TRequestContext>;
-};
+export type API<TRequestContext extends object> = Record<
+  Node['name'],
+  NodeAPI<TRequestContext>
+>;
 
 export const createAPI = <TRequestContext extends object>(
   gp: GraphQLPlatform<TRequestContext>,
 ): API<TRequestContext> =>
   new Proxy<any>(Object.create(null), {
-    get: (_, operationTypeOrNodeName: OperationType | Node['name']) =>
-      utils.operationTypeSet.has(operationTypeOrNodeName as any)
-        ? new Proxy<any>(Object.create(null), {
-            get: (_, name: Operation['name']) => {
-              const operation = gp.getOperationByTypeAndName(
-                operationTypeOrNodeName as any,
-                name as any,
-              );
-
-              return operation.execute.bind(operation);
-            },
-          })
-        : gp.getNodeByName(operationTypeOrNodeName).api,
+    get: (_, nodeName: Node['name']) => gp.getNodeByName(nodeName).api,
   });
 
-export type ContextBoundAPI = {
-  [TType in OperationType]: Record<
-    Operation['name'],
-    (
-      args: Parameters<Operation['execute']>[1],
-      path?: Parameters<Operation['execute']>[2],
-    ) => ReturnType<Operation['execute']>
-  >;
-} & {
-  [TNode: Node['name']]: ContextBoundNodeAPI;
-};
+export type ContextBoundAPI = Record<Node['name'], ContextBoundNodeAPI>;
 
 export const createContextBoundAPI = <TRequestContext extends object>(
   gp: GraphQLPlatform<TRequestContext>,
   context: utils.Thunkable<TRequestContext> | OperationContext<TRequestContext>,
 ): ContextBoundAPI =>
   new Proxy<any>(Object.create(null), {
-    get: (_, operationTypeOrNodeName: OperationType | Node['name']) =>
-      utils.operationTypeSet.has(operationTypeOrNodeName as any)
-        ? new Proxy<any>(Object.create(null), {
-            get: (_, name: Operation['name']) => {
-              const operation = gp.getOperationByTypeAndName(
-                operationTypeOrNodeName as any,
-                name as any,
-              );
-
-              return (operation.execute as any).bind(
-                operation,
-                utils.resolveThunkable(context),
-              );
-            },
-          })
-        : gp
-            .getNodeByName(operationTypeOrNodeName)
-            .createContextBoundAPI(context),
+    get: (_, nodeName: Node['name']) =>
+      gp.getNodeByName(nodeName).createContextBoundAPI(context),
   });

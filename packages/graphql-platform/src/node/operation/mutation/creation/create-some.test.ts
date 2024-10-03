@@ -44,7 +44,7 @@ describe('CreateSomeMutation', () => {
         ],
       ])('throws an UnauthorizedError', async (context, args) => {
         await expect(() =>
-          gp.api.mutation.createArticles(context, args),
+          gp.api.Article.createSome(context, args),
         ).rejects.toThrow(UnauthorizedError);
 
         expect(gp.connector.create).toHaveBeenCalledTimes(0);
@@ -61,7 +61,7 @@ describe('CreateSomeMutation', () => {
         });
 
         await expect(
-          gp.api.mutation.createArticles(myAdminContext, {
+          gp.api.Article.createSome(myAdminContext, {
             data: [
               {
                 title: "My first article's title",
@@ -86,7 +86,7 @@ describe('CreateSomeMutation', () => {
         });
 
         await expect(
-          gp.api.mutation.createTags(myAdminContext, {
+          gp.api.Tag.createSome(myAdminContext, {
             data: [
               {
                 title: "My first tag's title",
@@ -102,7 +102,7 @@ describe('CreateSomeMutation', () => {
 
       it('throws a LifecycleHookError', async () => {
         await expect(
-          gp.api.mutation.createArticles(myAdminContext, {
+          gp.api.Article.createSome(myAdminContext, {
             data: [
               {
                 title: "My first article's title",
@@ -128,7 +128,7 @@ describe('CreateSomeMutation', () => {
         'does no call the connector when it is not needed',
         async (context, args) => {
           await expect(
-            gp.api.mutation.createArticles(context, args),
+            gp.api.Article.createSome(context, args),
           ).resolves.toEqual([]);
 
           expect(gp.connector.create).toHaveBeenCalledTimes(0);

@@ -36,7 +36,7 @@ describe('DeleteManyMutation', () => {
         [myUserContext, { first: 5, selection: '{ id }' }],
       ])('throws an UnauthorizedError', async (context, args) => {
         await expect(() =>
-          gp.api.mutation.deleteArticles(context, args),
+          gp.api.Article.deleteMany(context, args),
         ).rejects.toThrow(UnauthorizedError);
 
         expect(gp.connector.find).toHaveBeenCalledTimes(0);
@@ -52,7 +52,7 @@ describe('DeleteManyMutation', () => {
         'does no call the connector when it is not needed',
         async (context, args) => {
           await expect(
-            gp.api.mutation.deleteArticles(context, args),
+            gp.api.Article.deleteMany(context, args),
           ).resolves.toEqual([]);
 
           expect(gp.connector.find).toHaveBeenCalledTimes(0);

@@ -23,9 +23,9 @@ export type UpdateSomeInOrderIfExistsMutationResult =
 export class UpdateSomeInOrderIfExistsMutation<
   TRequestContext extends object,
 > extends AbstractUpdate<
-  TRequestContext,
   UpdateSomeInOrderIfExistsMutationArgs,
-  UpdateSomeInOrderIfExistsMutationResult
+  UpdateSomeInOrderIfExistsMutationResult,
+  TRequestContext
 > {
   protected readonly selectionAware = true;
 

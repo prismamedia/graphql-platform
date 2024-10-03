@@ -119,7 +119,7 @@ class MyCustomPrivateQuery extends AbstractQuery {
   }
 
   getGraphQLFieldConfigType() {
-    return new graphql.GraphQLNonNull(scalars.typesByName.UnsignedInt);
+    return scalars.typesByName.UnsignedInt;
   }
 }
 
@@ -134,7 +134,7 @@ class MyCustomDeletion extends AbstractDeletion {
   }
 
   getGraphQLFieldConfigType() {
-    return new graphql.GraphQLNonNull(scalars.typesByName.UnsignedInt);
+    return scalars.typesByName.UnsignedInt;
   }
 }
 

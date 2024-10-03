@@ -30,14 +30,20 @@ export interface SubscriptionConfig<
 }
 
 export abstract class AbstractSubscription<
-  TRequestContext extends object = any,
   TArgs extends utils.Nillable<utils.PlainObject> = any,
   TResult extends Promisable<AsyncIterable<any>> = any,
+  TRequestContext extends object = object,
+  TConnector extends ConnectorInterface = ConnectorInterface,
+  TBroker extends BrokerInterface = BrokerInterface,
+  TContainer extends object = object,
 > extends AbstractOperation<
-  TRequestContext,
-  OperationContext<TRequestContext>,
   TArgs,
-  TResult
+  TResult,
+  TRequestContext,
+  TConnector,
+  TBroker,
+  TContainer,
+  OperationContext<TRequestContext, TConnector, TBroker, TContainer>
 > {
   public readonly operationType = graphql.OperationTypeNode.SUBSCRIPTION;
 

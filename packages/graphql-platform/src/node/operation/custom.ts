@@ -1,4 +1,4 @@
-import * as graphql from 'graphql';
+import type * as graphql from 'graphql';
 import assert from 'node:assert/strict';
 import type { Constructor } from 'type-fest';
 import type { BrokerInterface } from '../../broker-interface.js';
@@ -14,12 +14,26 @@ export type CustomOperationConstructor<
   TContainer extends object,
 > =
   | Constructor<
-      AbstractOperation,
+      AbstractOperation<
+        any,
+        any,
+        TRequestContext,
+        TConnector,
+        TBroker,
+        TContainer
+      >,
       [node: Node<TRequestContext, TConnector, TBroker, TContainer>]
     >
   | ((
       node: Node<TRequestContext, TConnector, TBroker, TContainer>,
-    ) => AbstractOperation);
+    ) => AbstractOperation<
+      any,
+      any,
+      TRequestContext,
+      TConnector,
+      TBroker,
+      TContainer
+    >);
 
 export function constructCustomOperation<
   TRequestContext extends object,

@@ -37,9 +37,9 @@ describe('CountQuery', () => {
       it.each<[MyContext, CountQueryArgs]>([[myVisitorContext, undefined]])(
         'throws an UnauthorizedError',
         async (context, args) => {
-          await expect(
-            gp.api.query.articleCount(context, args),
-          ).rejects.toThrow(UnauthorizedError);
+          await expect(gp.api.Article.count(context, args)).rejects.toThrow(
+            UnauthorizedError,
+          );
 
           expect(gp.connector.count).toHaveBeenCalledTimes(0);
         },
@@ -50,18 +50,16 @@ describe('CountQuery', () => {
       it.each<[MyContext, CountQueryArgs]>([[myAdminContext, { where: null }]])(
         'does no call the connector when it is not needed',
         async (context, args) => {
-          await expect(
-            gp.api.query.articleCount(context, args),
-          ).resolves.toEqual(0);
+          await expect(gp.api.Article.count(context, args)).resolves.toEqual(0);
 
           expect(gp.connector.count).toHaveBeenCalledTimes(0);
         },
       );
 
       it('calls the connector properly', async () => {
-        await expect(
-          gp.api.query.articleCount(myAdminContext, {}),
-        ).resolves.toEqual(5);
+        await expect(gp.api.Article.count(myAdminContext, {})).resolves.toEqual(
+          5,
+        );
 
         expect(gp.connector.count).toHaveBeenCalledTimes(1);
         expect(gp.connector.count).toHaveBeenLastCalledWith(
@@ -72,7 +70,7 @@ describe('CountQuery', () => {
 
       it('calls the connector properly', async () => {
         await expect(
-          gp.api.query.articleCount(myAdminContext, {
+          gp.api.Article.count(myAdminContext, {
             where: { tagCount_gt: 0 },
           }),
         ).resolves.toEqual(5);

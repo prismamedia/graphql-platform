@@ -34,7 +34,7 @@ describe('UpdateManyMutation', () => {
         [myVisitorContext, { data: {}, first: 5, selection: '{ id }' }],
       ])('throws an UnauthorizedError', async (context, args) => {
         await expect(() =>
-          gp.api.mutation.updateArticles(context, args),
+          gp.api.Article.updateMany(context, args),
         ).rejects.toThrow(UnauthorizedError);
 
         expect(gp.connector.find).toHaveBeenCalledTimes(0);
@@ -53,7 +53,7 @@ describe('UpdateManyMutation', () => {
         'does no call the connector when it is not needed',
         async (context, args) => {
           await expect(
-            gp.api.mutation.updateArticles(context, args),
+            gp.api.Article.updateMany(context, args),
           ).resolves.toEqual([]);
 
           expect(gp.connector.find).toHaveBeenCalledTimes(0);

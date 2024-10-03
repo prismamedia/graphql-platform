@@ -20,9 +20,9 @@ export type DeleteSomeInOrderIfExistsMutationResult =
 export class DeleteSomeInOrderIfExistsMutation<
   TRequestContext extends object,
 > extends AbstractDeletion<
-  TRequestContext,
   DeleteSomeInOrderIfExistsMutationArgs,
-  DeleteSomeInOrderIfExistsMutationResult
+  DeleteSomeInOrderIfExistsMutationResult,
+  TRequestContext
 > {
   protected readonly selectionAware = true;
 

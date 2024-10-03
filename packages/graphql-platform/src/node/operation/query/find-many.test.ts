@@ -39,7 +39,7 @@ describe('FindManyQuery', () => {
         [myVisitorContext, { first: 5, selection: ['id'] }],
       ])('throws an UnauthorizedError', async (context, args) => {
         await expect(() =>
-          gp.api.query.articles(context, args),
+          gp.api.Article.findMany(context, args),
         ).rejects.toThrow(UnauthorizedError);
 
         expect(gp.connector.find).toHaveBeenCalledTimes(0);
@@ -53,7 +53,7 @@ describe('FindManyQuery', () => {
       ])(
         'does no call the connector when it is not needed',
         async (context, args) => {
-          await expect(gp.api.query.articles(context, args)).resolves.toEqual(
+          await expect(gp.api.Article.findMany(context, args)).resolves.toEqual(
             [],
           );
 
@@ -63,7 +63,7 @@ describe('FindManyQuery', () => {
 
       it('calls the connector properly', async () => {
         await expect(
-          gp.api.query.articles(myAdminContext, {
+          gp.api.Article.findMany(myAdminContext, {
             first: 10,
             selection: '{ id }',
           }),
@@ -82,7 +82,7 @@ describe('FindManyQuery', () => {
 
       it('calls the connector properly', async () => {
         await expect(
-          gp.api.query.articles(myAdminContext, {
+          gp.api.Article.findMany(myAdminContext, {
             where: { tagCount_gt: 0 },
             orderBy: ['_id_DESC'],
             skip: 5,

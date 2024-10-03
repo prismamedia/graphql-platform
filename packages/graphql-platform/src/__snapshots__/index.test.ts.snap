@@ -1255,7 +1255,7 @@ type mutation {
   upsertArticle(where: ArticleUniqueFilterInput!, create: ArticleCreationInput!, update: ArticleUpdateInput): Article!
 
   """Custom deletion"""
-  customDeletionArticles: UnsignedInt!
+  customDeletionArticles: UnsignedInt
 
   """Creates one "ArticleExtension", throws an error if it already exists"""
   createArticleExtension(data: ArticleExtensionCreationInput!): ArticleExtension!

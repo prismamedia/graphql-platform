@@ -14,9 +14,9 @@ export type ExistsQueryArgs = { where: NodeUniqueFilterInputValue };
 export type ExistsQueryResult = boolean;
 
 export class ExistsQuery<TRequestContext extends object> extends AbstractQuery<
-  TRequestContext,
   ExistsQueryArgs,
-  ExistsQueryResult
+  ExistsQueryResult,
+  TRequestContext
 > {
   protected readonly selectionAware = false;
 

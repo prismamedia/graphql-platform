@@ -13,9 +13,9 @@ export type DeleteSomeInOrderMutationResult = NodeSelectedValue[];
 export class DeleteSomeInOrderMutation<
   TRequestContext extends object,
 > extends AbstractDeletion<
-  TRequestContext,
   DeleteSomeInOrderMutationArgs,
-  DeleteSomeInOrderMutationResult
+  DeleteSomeInOrderMutationResult,
+  TRequestContext
 > {
   protected readonly selectionAware = true;
 

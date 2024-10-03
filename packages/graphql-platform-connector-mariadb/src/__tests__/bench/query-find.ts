@@ -3,8 +3,8 @@ import { myAdminContext } from '@prismamedia/graphql-platform/__tests__/config.j
 import type { MyGP } from '../config.js';
 
 export default async function (gp: MyGP, iteration: number) {
-  const articles = await gp.api.query.articles(myAdminContext, {
-    orderBy: '_id_ASC',
+  const articles = await gp.api.Article.findMany(myAdminContext, {
+    orderBy: ['_id_ASC'],
     first: scalars.GRAPHQL_MAX_UNSIGNED_INT,
     selection: `{
       id

@@ -26,9 +26,9 @@ export type CreateOneIfNotExistsMutationResult = NodeSelectedValue;
 export class CreateOneIfNotExistsMutation<
   TRequestContext extends object,
 > extends AbstractCreation<
-  TRequestContext,
   CreateOneIfNotExistsMutationArgs,
-  CreateOneIfNotExistsMutationResult
+  CreateOneIfNotExistsMutationResult,
+  TRequestContext
 > {
   protected readonly selectionAware = true;
 

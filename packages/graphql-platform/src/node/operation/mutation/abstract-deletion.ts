@@ -96,9 +96,19 @@ export interface DeletionConfig<
 }
 
 export abstract class AbstractDeletion<
-  TRequestContext extends object = any,
   TArgs extends utils.Nillable<utils.PlainObject> = any,
   TResult = any,
-> extends AbstractMutation<TRequestContext, TArgs, TResult> {
+  TRequestContext extends object = any,
+  TConnector extends ConnectorInterface = ConnectorInterface,
+  TBroker extends BrokerInterface = BrokerInterface,
+  TContainer extends object = object,
+> extends AbstractMutation<
+  TArgs,
+  TResult,
+  TRequestContext,
+  TConnector,
+  TBroker,
+  TContainer
+> {
   public readonly mutationTypes = [utils.MutationType.DELETION];
 }

@@ -31,9 +31,9 @@ export type DeleteManyMutationResult = NodeSelectedValue[];
 export class DeleteManyMutation<
   TRequestContext extends object,
 > extends AbstractDeletion<
-  TRequestContext,
   DeleteManyMutationArgs,
-  DeleteManyMutationResult
+  DeleteManyMutationResult,
+  TRequestContext
 > {
   protected readonly selectionAware = true;
 
