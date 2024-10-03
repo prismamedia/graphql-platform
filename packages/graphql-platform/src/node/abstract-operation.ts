@@ -35,18 +35,18 @@ export type NodeSelectionAwareArgs<
 >;
 
 export abstract class AbstractOperation<
-  TArgs extends utils.Nillable<utils.PlainObject> = any,
-  TResult = any,
-  TRequestContext extends object = object,
-  TConnector extends ConnectorInterface = ConnectorInterface,
-  TBroker extends BrokerInterface = BrokerInterface,
-  TContainer extends object = object,
+  TArgs extends utils.Nillable<utils.PlainObject>,
+  TResult,
+  TRequestContext extends object,
+  TConnector extends ConnectorInterface,
+  TBroker extends BrokerInterface,
+  TContainer extends object,
   TOperationContext extends OperationContext<
     TRequestContext,
     TConnector,
     TBroker,
     TContainer
-  > = OperationContext<TRequestContext, TConnector, TBroker, TContainer>,
+  >,
 > {
   protected readonly gp: GraphQLPlatform<
     TRequestContext,
@@ -100,15 +100,15 @@ export abstract class AbstractOperation<
     this.gp = node.gp;
   }
 
-  protected get connector(): TConnector {
+  protected get connector(): utils.IfAny<TConnector, ConnectorInterface> {
     return this.gp.connector;
   }
 
-  protected get broker(): TBroker {
+  protected get broker(): utils.IfAny<TBroker, BrokerInterface> {
     return this.gp.broker;
   }
 
-  protected get container(): TContainer {
+  protected get container(): utils.IfAny<TContainer, TContainer> {
     return this.gp.container;
   }
 

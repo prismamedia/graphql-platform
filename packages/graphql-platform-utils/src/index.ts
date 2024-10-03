@@ -15,3 +15,4 @@ export * from './path.js';
 export * from './plain-object.js';
 export * from './stringifiable.js';
 export * from './thunkable.js';
+export * from './typing.js';

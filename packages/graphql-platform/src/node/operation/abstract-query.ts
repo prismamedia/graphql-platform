@@ -10,10 +10,10 @@ import { OperationContext } from './context.js';
 export abstract class AbstractQuery<
   TArgs extends utils.Nillable<utils.PlainObject> = any,
   TResult = any,
-  TRequestContext extends object = object,
-  TConnector extends ConnectorInterface = ConnectorInterface,
-  TBroker extends BrokerInterface = BrokerInterface,
-  TContainer extends object = object,
+  TRequestContext extends object = any,
+  TConnector extends ConnectorInterface = any,
+  TBroker extends BrokerInterface = any,
+  TContainer extends object = any,
 > extends AbstractOperation<
   TArgs,
   Promise<TResult>,
@@ -33,9 +33,7 @@ export abstract class AbstractQuery<
   }
 
   public override async execute(
-    requestOrOperationContext:
-      | TRequestContext
-      | OperationContext<TRequestContext>,
+    requestOrOperationContext: TRequestContext | OperationContext,
     args: TArgs,
     path?: utils.Path,
   ): Promise<TResult> {

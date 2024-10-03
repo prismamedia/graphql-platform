@@ -64,10 +64,10 @@ export interface AbstractMutationConfig<
 export abstract class AbstractMutation<
   TArgs extends utils.Nillable<utils.PlainObject> = any,
   TResult = any,
-  TRequestContext extends object = object,
-  TConnector extends ConnectorInterface = ConnectorInterface,
-  TBroker extends BrokerInterface = BrokerInterface,
-  TContainer extends object = object,
+  TRequestContext extends object = any,
+  TConnector extends ConnectorInterface = any,
+  TBroker extends BrokerInterface = any,
+  TContainer extends object = any,
 > extends AbstractOperation<
   TArgs,
   Promise<TResult>,
@@ -122,9 +122,7 @@ export abstract class AbstractMutation<
   }
 
   public override async execute(
-    requestOrMutationContext:
-      | TRequestContext
-      | MutationContext<TRequestContext>,
+    requestOrMutationContext: TRequestContext | MutationContext,
     args: TArgs,
     path?: utils.Path,
   ): Promise<TResult> {
