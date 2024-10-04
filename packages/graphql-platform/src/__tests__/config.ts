@@ -89,14 +89,14 @@ export const ArticleStatusType = utils.createGraphQLEnumType(
   ArticleStatus,
 );
 
-class MyCustomQuery extends AbstractQuery {
-  key = 'custom';
-  name = 'customArticles';
-  description = 'Custom query to get articles';
-  selectionAware = false;
+class MyCustomQuery extends AbstractQuery<undefined, number> {
+  readonly key = 'custom';
+  readonly name = 'customArticles';
+  readonly description = 'Custom query to get articles';
+  readonly selectionAware = false;
 
   async executeWithValidArgumentsAndContext() {
-    return null;
+    return 0;
   }
 
   getGraphQLFieldConfigType() {
@@ -104,18 +104,18 @@ class MyCustomQuery extends AbstractQuery {
   }
 }
 
-class MyCustomPrivateQuery extends AbstractQuery {
-  key = 'customPrivate';
-  name = 'customPrivateArticles';
-  description = 'Custom query, private, to get articles';
-  selectionAware = false;
+class MyCustomPrivateQuery extends AbstractQuery<undefined, number> {
+  readonly key = 'customPrivate';
+  readonly name = 'customPrivateArticles';
+  readonly description = 'Custom query, private, to get articles';
+  readonly selectionAware = false;
 
   isPublic() {
     return false;
   }
 
   async executeWithValidArgumentsAndContext() {
-    return null;
+    return 0;
   }
 
   getGraphQLFieldConfigType() {
@@ -123,14 +123,14 @@ class MyCustomPrivateQuery extends AbstractQuery {
   }
 }
 
-class MyCustomDeletion extends AbstractDeletion {
-  key = 'customDeletion';
-  name = 'customDeletionArticles';
-  description = 'Custom deletion';
-  selectionAware = false;
+class MyCustomDeletion extends AbstractDeletion<undefined, number> {
+  readonly key = 'customDeletion';
+  readonly name = 'customDeletionArticles';
+  readonly description = 'Custom deletion';
+  readonly selectionAware = false;
 
   async executeWithValidArgumentsAndContext() {
-    return null;
+    return 0;
   }
 
   getGraphQLFieldConfigType() {

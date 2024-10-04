@@ -223,7 +223,7 @@ export class GraphQLPlatform<
 
   public readonly broker: TBroker;
 
-  public readonly container: Readonly<TContainer>;
+  public readonly container: TContainer;
 
   public constructor(
     public readonly config: GraphQLPlatformConfig<

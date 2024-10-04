@@ -115,9 +115,9 @@ export abstract class AbstractCreation<
   TArgs extends utils.Nillable<utils.PlainObject> = any,
   TResult = any,
   TRequestContext extends object = any,
-  TConnector extends ConnectorInterface = ConnectorInterface,
-  TBroker extends BrokerInterface = BrokerInterface,
-  TContainer extends object = object,
+  TConnector extends ConnectorInterface = any,
+  TBroker extends BrokerInterface = any,
+  TContainer extends object = any,
 > extends AbstractMutation<
   TArgs,
   TResult,

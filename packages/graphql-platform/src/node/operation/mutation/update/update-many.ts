@@ -3,6 +3,7 @@ import * as utils from '@prismamedia/graphql-platform-utils';
 import { Memoize } from '@prismamedia/memoize';
 import * as graphql from 'graphql';
 import * as R from 'remeda';
+import type { ConnectorInterface } from '../../../../connector-interface.js';
 import type { NodeValue } from '../../../../node.js';
 import {
   argsPathKey,
@@ -45,7 +46,8 @@ export class UpdateManyMutation<
 > extends AbstractUpdate<
   UpdateManyMutationArgs,
   UpdateManyMutationResult,
-  TRequestContext
+  TRequestContext,
+  ConnectorInterface
 > {
   protected readonly selectionAware = true;
 

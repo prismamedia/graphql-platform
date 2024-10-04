@@ -41,12 +41,7 @@ export abstract class AbstractOperation<
   TConnector extends ConnectorInterface,
   TBroker extends BrokerInterface,
   TContainer extends object,
-  TOperationContext extends OperationContext<
-    TRequestContext,
-    TConnector,
-    TBroker,
-    TContainer
-  >,
+  TOperationContext extends OperationContext,
 > {
   protected readonly gp: GraphQLPlatform<
     TRequestContext,
@@ -100,15 +95,15 @@ export abstract class AbstractOperation<
     this.gp = node.gp;
   }
 
-  protected get connector(): utils.IfAny<TConnector, ConnectorInterface> {
+  protected get connector(): TConnector {
     return this.gp.connector;
   }
 
-  protected get broker(): utils.IfAny<TBroker, BrokerInterface> {
+  protected get broker(): TBroker {
     return this.gp.broker;
   }
 
-  protected get container(): utils.IfAny<TContainer, TContainer> {
+  protected get container(): TContainer {
     return this.gp.container;
   }
 

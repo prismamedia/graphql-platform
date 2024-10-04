@@ -2,6 +2,7 @@ import * as scalars from '@prismamedia/graphql-platform-scalars';
 import * as utils from '@prismamedia/graphql-platform-utils';
 import { Memoize } from '@prismamedia/memoize';
 import * as graphql from 'graphql';
+import type { ConnectorInterface } from '../../../../connector-interface.js';
 import {
   argsPathKey,
   type NodeSelectionAwareArgs,
@@ -33,7 +34,8 @@ export class DeleteManyMutation<
 > extends AbstractDeletion<
   DeleteManyMutationArgs,
   DeleteManyMutationResult,
-  TRequestContext
+  TRequestContext,
+  ConnectorInterface
 > {
   protected readonly selectionAware = true;
 

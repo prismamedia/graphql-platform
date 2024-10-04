@@ -1,6 +1,7 @@
 import * as utils from '@prismamedia/graphql-platform-utils';
 import { Memoize } from '@prismamedia/memoize';
 import * as graphql from 'graphql';
+import type { ConnectorInterface } from '../../../../connector-interface.js';
 import type {
   NodeSelectionAwareArgs,
   RawNodeSelectionAwareArgs,
@@ -29,7 +30,8 @@ export class CreateSomeMutation<
 > extends AbstractCreation<
   CreateSomeMutationArgs,
   CreateSomeMutationResult,
-  TRequestContext
+  TRequestContext,
+  ConnectorInterface
 > {
   protected readonly selectionAware = true;
 
