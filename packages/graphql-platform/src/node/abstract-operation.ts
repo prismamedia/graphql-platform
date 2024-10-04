@@ -167,7 +167,7 @@ export abstract class AbstractOperation<
     return;
   }
 
-  protected parseArguments(
+  public parseArguments(
     context: TOperationContext,
     args: TArgs,
     path: utils.Path,

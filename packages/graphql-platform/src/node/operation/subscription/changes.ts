@@ -90,7 +90,7 @@ export class ChangesSubscription<
     ];
   }
 
-  protected override parseArguments(
+  public override parseArguments(
     context: OperationContext,
     args: ChangesSubscriptionArgs,
     path: utils.Path,
