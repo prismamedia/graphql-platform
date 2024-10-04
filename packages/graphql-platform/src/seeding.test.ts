@@ -358,6 +358,6 @@ describe('Seeding', () => {
 
     const seeding = new Seeding(gp, fixtures.constant);
 
-    await expect(seeding.load(myAdminContext)).resolves.toHaveLength(15);
+    await expect(seeding.load(myAdminContext)).resolves.toBeUndefined();
   });
 });

@@ -72,9 +72,11 @@ export class Seeding<TRequestContext extends object = any> {
       .map((reference) => this.dependencyGraph.getNodeData(reference));
   }
 
-  public load(context: TRequestContext) {
-    return this.gp.withMutationContext(context, (context) =>
-      Promise.all(this.fixtures.map((fixture) => fixture.load(context))),
-    );
+  public async load(context: TRequestContext): Promise<void> {
+    await this.gp.withMutationContext(context, async (context) => {
+      for (const fixture of this.fixtures) {
+        await fixture.load(context);
+      }
+    });
   }
 }
