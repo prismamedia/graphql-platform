@@ -26,7 +26,7 @@ export type Query<TRequestContext extends object = any> =
   | GetOneIfExistsQuery<TRequestContext>
   | GetSomeInOrderQuery<TRequestContext>
   | GetSomeInOrderIfExistsQuery<TRequestContext>
-  | AbstractQuery<TRequestContext>;
+  | AbstractQuery<any, any, TRequestContext>;
 
 export const queryConstructors = [
   CountQuery,

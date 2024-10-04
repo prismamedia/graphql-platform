@@ -20,7 +20,7 @@ export type Mutation<TRequestContext extends object = any> =
   | Deletion<TRequestContext>
   // | ReplaceMutation<TRequestContext>
   | UpsertMutation<TRequestContext>
-  | AbstractMutation<TRequestContext>;
+  | AbstractMutation<any, any, TRequestContext>;
 
 export const mutationConstructors = [
   ...creationConstructors,

@@ -589,10 +589,7 @@ export class GraphQLPlatform<
   /**
    * Make it easy to call the operations, either through the "GraphAPI" or the "NodeAPI":
    *
-   * @example <caption>GraphAPI</caption>
-   * const articles = await api.query.articles(myRequestContext, { where: { status: ArticleStatus.Published }, first: 5, selection: `{ id title }` });
-   *
-   * @example <caption>NodeAPI</caption>
+   * @example
    * const articles = await api.Article.findMany(myRequestContext, { where: { status: ArticleStatus.Published }, first: 5, selection: `{ id title }` });
    */
   @Memoize()
@@ -603,10 +600,7 @@ export class GraphQLPlatform<
   /**
    * Returns a "context"-bound API, so you only have to provide the operations' args:
    *
-   * @example <caption>GraphAPI</caption>
-   * const articles = await api.query.articles({ where: { status: ArticleStatus.Published }, first: 5, selection: `{ id title }` });
-   *
-   * @example <caption>NodeAPI</caption>
+   * @example
    * const articles = await api.Article.findMany({ where: { status: ArticleStatus.Published }, first: 5, selection: `{ id title }` });
    */
   public createContextBoundAPI(

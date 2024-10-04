@@ -14,7 +14,7 @@ export type Creation<TRequestContext extends object = any> =
   | CreateOneMutation<TRequestContext>
   | CreateOneIfNotExistsMutation<TRequestContext>
   | CreateSomeMutation<TRequestContext>
-  | AbstractCreation<TRequestContext>;
+  | AbstractCreation<any, any, TRequestContext>;
 
 export const creationConstructors = [
   CreateOneMutation,

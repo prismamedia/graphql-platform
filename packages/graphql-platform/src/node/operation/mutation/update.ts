@@ -20,7 +20,7 @@ export type Update<TRequestContext extends object = any> =
   | UpdateOneMutation<TRequestContext>
   | UpdateSomeInOrderIfExistsMutation<TRequestContext>
   | UpdateSomeInOrderMutation<TRequestContext>
-  | AbstractUpdate<TRequestContext>;
+  | AbstractUpdate<any, any, TRequestContext>;
 
 export const updateConstructors = [
   UpdateManyMutation,

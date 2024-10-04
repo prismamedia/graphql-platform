@@ -20,7 +20,7 @@ export type Deletion<TRequestContext extends object = any> =
   | DeleteOneMutation<TRequestContext>
   | DeleteSomeInOrderIfExistsMutation<TRequestContext>
   | DeleteSomeInOrderMutation<TRequestContext>
-  | AbstractDeletion<TRequestContext>;
+  | AbstractDeletion<any, any, TRequestContext>;
 
 export const deletionConstructors = [
   DeleteManyMutation,
