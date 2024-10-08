@@ -102,9 +102,6 @@ export class UpdateManyMutation<
         .internal(context, authorization, args, path);
     }
 
-    // As the "data" will be provided to the hooks, we freeze it
-    Object.freeze(data);
-
     const argsPath = utils.addPath(path, argsPathKey);
 
     const where = this.node.filterInputType.filter(
@@ -190,8 +187,8 @@ export class UpdateManyMutation<
           await this.node.preUpdate({
             context,
             data,
-            id: Object.freeze(ids[index]),
-            current: Object.freeze(oldSource),
+            id: ids[index],
+            current: oldSource,
             update: statement.updateProxy,
             target: statement.targetProxy,
             statement,
@@ -281,35 +278,32 @@ export class UpdateManyMutation<
 
     // Apply the "postUpdate"-hook
     if (this.node.postUpdateHooksByPriority.size) {
-      await Promise.all(
-        changes.map(async (change) => {
-          try {
-            await this.node.postUpdate({
-              context,
-              data,
-              change,
-            });
-          } catch (cause) {
-            throw new LifecycleHookError(
-              this.node,
-              LifecycleHookKind.POST_UPDATE,
-              { cause, path },
-            );
-          }
-        }),
-      );
+      for (const change of changes) {
+        try {
+          await this.node.postUpdate({
+            context,
+            data,
+            change,
+          });
+        } catch (cause) {
+          throw new LifecycleHookError(
+            this.node,
+            LifecycleHookKind.POST_UPDATE,
+            { cause, path },
+          );
+        }
+      }
     }
 
     return willEventuallyRefetch
-      ? this.node.getQueryByKey('get-some-in-order').internal(
-          context,
-          undefined,
-          {
-            where: ids,
-            selection: args.selection,
-          },
-          path,
-        )
+      ? this.node
+          .getQueryByKey('get-some-in-order')
+          .internal(
+            context,
+            undefined,
+            { where: ids, selection: args.selection },
+            path,
+          )
       : newValues.map((newValue) => args.selection.pickValue(newValue));
   }
 }

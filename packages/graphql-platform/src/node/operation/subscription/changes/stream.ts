@@ -9,7 +9,11 @@ import type {
   BrokerInterface,
   NodeChangeAggregationSubscriptionInterface,
 } from '../../../../broker-interface.js';
-import type { Node, NodeValue } from '../../../../node.js';
+import type {
+  Node,
+  NodeChangeAggregation,
+  NodeValue,
+} from '../../../../node.js';
 import type {
   ContextBoundNodeAPI,
   OperationContext,
@@ -123,6 +127,8 @@ export class ChangesSubscriptionStream<
   readonly #ac: AbortController = new AbortController();
   public readonly signal: AbortSignal = this.#ac.signal;
 
+  public consumingNodeChanges: boolean = false;
+
   public constructor(
     public readonly node: Node<TRequestContext>,
     context: OperationContext<TRequestContext>,
@@ -173,6 +179,7 @@ export class ChangesSubscriptionStream<
   public async dispose(): Promise<void> {
     await using _nodeChangeSubscription = await this.subscribeToNodeChanges();
 
+    this.consumingNodeChanges = false;
     this.#ac.abort();
   }
 
@@ -180,14 +187,24 @@ export class ChangesSubscriptionStream<
     return this.dispose();
   }
 
+  public isAffectedBy(nodeChanges: NodeChangeAggregation): boolean {
+    using effect = ChangesSubscriptionEffect.createFromNodeChangeAggregation(
+      this,
+      nodeChanges,
+    );
+
+    return !effect.isEmpty();
+  }
+
   @Memoize()
   protected async *changes(): AsyncIterator<
     ChangesSubscriptionChange<TUpsert, TDeletion, TRequestContext>,
     undefined
   > {
-    const nodeChangeSubscription = await this.subscribeToNodeChanges();
+    const nodeChangesSubscription = await this.subscribeToNodeChanges();
 
-    for await (const nodeChanges of nodeChangeSubscription) {
+    this.consumingNodeChanges = true;
+    for await (const nodeChanges of nodeChangesSubscription) {
       using effect = ChangesSubscriptionEffect.createFromNodeChangeAggregation(
         this,
         nodeChanges,

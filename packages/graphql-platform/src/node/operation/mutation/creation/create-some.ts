@@ -71,18 +71,12 @@ export class CreateSomeMutation<
       return [];
     }
 
-    // As the "data" will be provided to the hooks, we freeze it
-    Object.freeze(args.data);
-
     // Build the "creation" statements based on the provided "data" argument
     const creations: NodeCreationStatement[] = [];
 
     for (const [index, data] of args.data.entries()) {
       const indexedPath =
         args.data.length > 1 ? utils.addPath(path, index) : path;
-
-      // As the "data" will be provided to the hooks, we freeze it
-      Object.freeze(data);
 
       // Resolve the edges' nested-actions into their value
       const value = await this.node.creationInputType.resolveValue(
@@ -120,58 +114,48 @@ export class CreateSomeMutation<
       { path },
     );
 
-    const newSources = await Promise.all(
-      rawNewSources.map(async (rawNewSource, index) => {
-        const indexedPath =
-          rawNewSources.length > 1 ? utils.addPath(path, index) : path;
+    const changes: NodeCreation[] = [];
 
-        const change = new NodeCreation(
-          this.node,
-          context.request,
-          rawNewSource,
-        );
+    for (const [index, rawNewSource] of rawNewSources.entries()) {
+      const change = new NodeCreation(this.node, context.request, rawNewSource);
+      changes.push(change);
 
-        // Let's everybody know about this created node
-        context.track(change);
+      // Let's everybody know about this created node
+      context.track(change);
 
-        // The "data" has been frozen above
-        const data = args.data[index];
+      const data = args.data[index];
 
-        // Apply the reverse-edges' actions
-        await this.node.creationInputType.applyReverseEdgeActions(
-          change.newValue,
-          data,
-          context,
-          indexedPath,
-        );
+      const indexedPath =
+        rawNewSources.length > 1 ? utils.addPath(path, index) : path;
 
-        // Apply the "postCreate"-hook, if any
-        try {
-          await this.node.postCreate({ context, data, change });
-        } catch (cause) {
-          throw new LifecycleHookError(
-            this.node,
-            LifecycleHookKind.POST_CREATE,
-            { cause, path: indexedPath },
-          );
-        }
+      // Apply the reverse-edges' actions
+      await this.node.creationInputType.applyReverseEdgeActions(
+        change.newValue,
+        data,
+        context,
+        indexedPath,
+      );
 
-        return change.newValue;
-      }),
-    );
+      // Apply the "postCreate"-hook, if any
+      try {
+        await this.node.postCreate({ context, data, change });
+      } catch (cause) {
+        throw new LifecycleHookError(this.node, LifecycleHookKind.POST_CREATE, {
+          cause,
+          path: indexedPath,
+        });
+      }
+    }
 
     return args.selection.isPure()
-      ? newSources.map((newSource) => args.selection.pickValue(newSource))
-      : this.node.getQueryByKey('get-some-in-order').internal(
-          context,
-          authorization,
-          {
-            where: newSources.map((newSource) =>
-              this.node.mainIdentifier.selection.pickValue(newSource),
-            ),
-            selection: args.selection,
-          },
-          path,
-        );
+      ? changes.map((change) => args.selection.pickValue(change.newValue))
+      : this.node
+          .getQueryByKey('get-some-in-order')
+          .internal(
+            context,
+            authorization,
+            { where: changes.map(({ id }) => id), selection: args.selection },
+            path,
+          );
   }
 }

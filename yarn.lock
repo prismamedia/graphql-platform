@@ -1051,10 +1051,10 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@prismamedia/async-event-emitter@npm:^5.5.1":
-  version: 5.5.1
-  resolution: "@prismamedia/async-event-emitter@npm:5.5.1"
-  checksum: 10/fc98b57491392e136849f2c7687fef64390a8e3f55bc5ce299dceddd185a0e6b621d3d919aa6e8a0715f0dbeaa5cbce4fdf8886f30f094490e79661e13f65961
+"@prismamedia/async-event-emitter@npm:^6.0.0":
+  version: 6.0.0
+  resolution: "@prismamedia/async-event-emitter@npm:6.0.0"
+  checksum: 10/ed571d9b3cb6e945e28bd7eb39fef24528ce2eaccbdf43a2238c993fb4ac858d075dcf2c0080cfa3215c50188cf418f553aee42f5bba43ac446e2c94e5cab91b
   languageName: node
   linkType: hard
 
@@ -1063,7 +1063,7 @@ __metadata:
   resolution: "@prismamedia/graphql-platform-connector-mariadb@workspace:packages/graphql-platform-connector-mariadb"
   dependencies:
     "@jest/globals": "npm:30.0.0-alpha.6"
-    "@prismamedia/async-event-emitter": "npm:^5.5.1"
+    "@prismamedia/async-event-emitter": "npm:^6.0.0"
     "@prismamedia/graphql-platform": "workspace:packages/graphql-platform"
     "@prismamedia/graphql-platform-scalars": "workspace:packages/graphql-platform-scalars"
     "@prismamedia/graphql-platform-utils": "workspace:packages/graphql-platform-utils"
@@ -1072,7 +1072,7 @@ __metadata:
     "@swc/core": "npm:1.7.28"
     "@swc/jest": "npm:0.2.36"
     "@tsconfig/node20": "npm:20.1.4"
-    "@types/node": "npm:20.16.10"
+    "@types/node": "npm:20.16.11"
     "@types/semver": "npm:7.5.8"
     dependency-graph: "npm:^1.0.0"
     graphql: "npm:16.9.0"
@@ -1080,10 +1080,10 @@ __metadata:
     jest: "npm:30.0.0-alpha.6"
     mariadb: "npm:^3.3.2"
     publint: "npm:0.2.11"
-    remeda: "npm:^2.14.0"
+    remeda: "npm:^2.15.0"
     semver: "npm:^7.6.3"
     type-fest: "npm:^4.26.1"
-    typescript: "npm:5.6.2"
+    typescript: "npm:5.6.3"
   peerDependencies:
     graphql: ^16.9.0
   languageName: unknown
@@ -1103,16 +1103,16 @@ __metadata:
     "@types/body-parser": "npm:^1.19.5"
     "@types/cors": "npm:^2.8.17"
     "@types/express": "npm:^4.17.21"
-    "@types/node": "npm:20.16.10"
+    "@types/node": "npm:20.16.11"
     "@types/ws": "npm:^8.5.12"
     body-parser: "npm:1.20.3"
     cors: "npm:2.8.5"
-    express: "npm:4.21.0"
+    express: "npm:4.21.1"
     graphql: "npm:16.9.0"
     graphql-ws: "npm:5.16.0"
     jest: "npm:30.0.0-alpha.6"
     publint: "npm:0.2.11"
-    typescript: "npm:5.6.2"
+    typescript: "npm:5.6.3"
     ws: "npm:8.18.0"
   peerDependencies:
     "@apollo/server": ^4.7.1
@@ -1130,13 +1130,13 @@ __metadata:
     "@swc/jest": "npm:0.2.36"
     "@tsconfig/node20": "npm:20.1.4"
     "@types/draft-js": "npm:^0.11.18"
-    "@types/node": "npm:20.16.10"
+    "@types/node": "npm:20.16.11"
     graphql: "npm:16.9.0"
     jest: "npm:30.0.0-alpha.6"
     publint: "npm:0.2.11"
-    remeda: "npm:^2.14.0"
+    remeda: "npm:^2.15.0"
     type-fest: "npm:^4.26.1"
-    typescript: "npm:5.6.2"
+    typescript: "npm:5.6.3"
   peerDependencies:
     graphql: ^16.9.0
   languageName: unknown
@@ -1152,14 +1152,14 @@ __metadata:
     "@swc/jest": "npm:0.2.36"
     "@tsconfig/node20": "npm:20.1.4"
     "@types/indefinite": "npm:2.3.4"
-    "@types/node": "npm:20.16.10"
+    "@types/node": "npm:20.16.11"
     graphql: "npm:16.9.0"
     indefinite: "npm:^2.5.1"
     jest: "npm:30.0.0-alpha.6"
     publint: "npm:0.2.11"
-    remeda: "npm:^2.14.0"
+    remeda: "npm:^2.15.0"
     type-fest: "npm:^4.26.1"
-    typescript: "npm:5.6.2"
+    typescript: "npm:5.6.3"
   peerDependencies:
     graphql: ^16.9.0
   languageName: unknown
@@ -1170,7 +1170,7 @@ __metadata:
   resolution: "@prismamedia/graphql-platform@workspace:packages/graphql-platform"
   dependencies:
     "@jest/globals": "npm:30.0.0-alpha.6"
-    "@prismamedia/async-event-emitter": "npm:^5.5.1"
+    "@prismamedia/async-event-emitter": "npm:^6.0.0"
     "@prismamedia/graphql-platform-scalars": "workspace:packages/graphql-platform-scalars"
     "@prismamedia/graphql-platform-utils": "workspace:packages/graphql-platform-utils"
     "@prismamedia/memoize": "npm:^5.0.3"
@@ -1178,7 +1178,7 @@ __metadata:
     "@swc/jest": "npm:0.2.36"
     "@tsconfig/node20": "npm:20.1.4"
     "@types/cli-progress": "npm:^3.11.6"
-    "@types/node": "npm:20.16.10"
+    "@types/node": "npm:20.16.11"
     cli-progress: "npm:^3.12.0"
     dataloader: "npm:^2.2.2"
     denque: "npm:^2.1.0"
@@ -1189,9 +1189,9 @@ __metadata:
     p-queue: "npm:^8.0.1"
     p-retry: "npm:^6.2.0"
     publint: "npm:0.2.11"
-    remeda: "npm:^2.14.0"
+    remeda: "npm:^2.15.0"
     type-fest: "npm:^4.26.1"
-    typescript: "npm:5.6.2"
+    typescript: "npm:5.6.3"
   peerDependencies:
     graphql: ^16.9.0
   languageName: unknown
@@ -1659,12 +1659,12 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@types/node@npm:20.16.10":
-  version: 20.16.10
-  resolution: "@types/node@npm:20.16.10"
+"@types/node@npm:20.16.11":
+  version: 20.16.11
+  resolution: "@types/node@npm:20.16.11"
   dependencies:
     undici-types: "npm:~6.19.2"
-  checksum: 10/f0832d16fed07737c2c3edd6cb6414a22e8379173e56e701ab8890b8798c8f9bc37337332631818f813ff7f8c0e168e9900e8f44cdfd2406d15150289c813acc
+  checksum: 10/6d2f92b7b320c32ba0c2bc54d21651bd21690998a2e27f00d15019d4db3e0ec30fce85332efed5e37d4cda078ff93ea86ee3e92b76b7a25a9b92a52a039b60b2
   languageName: node
   linkType: hard
 
@@ -2312,6 +2312,13 @@ __metadata:
   languageName: node
   linkType: hard
 
+"cookie@npm:0.7.1":
+  version: 0.7.1
+  resolution: "cookie@npm:0.7.1"
+  checksum: 10/aec6a6aa0781761bf55d60447d6be08861d381136a0fe94aa084fddd4f0300faa2b064df490c6798adfa1ebaef9e0af9b08a189c823e0811b8b313b3d9a03380
+  languageName: node
+  linkType: hard
+
 "cors@npm:2.8.5, cors@npm:^2.8.5":
   version: 2.8.5
   resolution: "cors@npm:2.8.5"
@@ -2648,7 +2655,46 @@ __metadata:
   languageName: node
   linkType: hard
 
-"express@npm:4.21.0, express@npm:^4.17.1":
+"express@npm:4.21.1":
+  version: 4.21.1
+  resolution: "express@npm:4.21.1"
+  dependencies:
+    accepts: "npm:~1.3.8"
+    array-flatten: "npm:1.1.1"
+    body-parser: "npm:1.20.3"
+    content-disposition: "npm:0.5.4"
+    content-type: "npm:~1.0.4"
+    cookie: "npm:0.7.1"
+    cookie-signature: "npm:1.0.6"
+    debug: "npm:2.6.9"
+    depd: "npm:2.0.0"
+    encodeurl: "npm:~2.0.0"
+    escape-html: "npm:~1.0.3"
+    etag: "npm:~1.8.1"
+    finalhandler: "npm:1.3.1"
+    fresh: "npm:0.5.2"
+    http-errors: "npm:2.0.0"
+    merge-descriptors: "npm:1.0.3"
+    methods: "npm:~1.1.2"
+    on-finished: "npm:2.4.1"
+    parseurl: "npm:~1.3.3"
+    path-to-regexp: "npm:0.1.10"
+    proxy-addr: "npm:~2.0.7"
+    qs: "npm:6.13.0"
+    range-parser: "npm:~1.2.1"
+    safe-buffer: "npm:5.2.1"
+    send: "npm:0.19.0"
+    serve-static: "npm:1.16.2"
+    setprototypeof: "npm:1.2.0"
+    statuses: "npm:2.0.1"
+    type-is: "npm:~1.6.18"
+    utils-merge: "npm:1.0.1"
+    vary: "npm:~1.1.2"
+  checksum: 10/5d4a36dd03c1d1cce93172e9b185b5cd13a978d29ee03adc51cd278be7b4a514ae2b63e2fdaec0c00fdc95c6cfb396d9dd1da147917ffd337d6cd0778e08c9bc
+  languageName: node
+  linkType: hard
+
+"express@npm:^4.17.1":
   version: 4.21.0
   resolution: "express@npm:4.21.0"
   dependencies:
@@ -4570,12 +4616,12 @@ __metadata:
   languageName: node
   linkType: hard
 
-"remeda@npm:^2.14.0":
-  version: 2.14.0
-  resolution: "remeda@npm:2.14.0"
+"remeda@npm:^2.15.0":
+  version: 2.15.0
+  resolution: "remeda@npm:2.15.0"
   dependencies:
     type-fest: "npm:^4.26.1"
-  checksum: 10/75a322c4f21a651b37d81cebda8a92a72c4c2d87148aa79e489d8662e48dfbc263cca0fc65ef74aec8217ff119711dde361a9313412d6eb2b3ee4f953fd2fb96
+  checksum: 10/a2b63cc4293c728abd59caec5590a268fcf5c2693699640018aa2dddc25da9fcb9760e9fb1a6befddf04bc742d8516ad698d16a27911cc4c2e2ed2b26ae55d77
   languageName: node
   linkType: hard
 
@@ -4655,7 +4701,7 @@ __metadata:
   dependencies:
     jest: "npm:30.0.0-alpha.6"
     prettier: "npm:3.3.3"
-    typescript: "npm:5.6.2"
+    typescript: "npm:5.6.3"
   languageName: unknown
   linkType: soft
 
@@ -5114,23 +5160,23 @@ __metadata:
   languageName: node
   linkType: hard
 
-"typescript@npm:5.6.2":
-  version: 5.6.2
-  resolution: "typescript@npm:5.6.2"
+"typescript@npm:5.6.3":
+  version: 5.6.3
+  resolution: "typescript@npm:5.6.3"
   bin:
     tsc: bin/tsc
     tsserver: bin/tsserver
-  checksum: 10/f95365d4898f357823e93d334ecda9fcade54f009b397c7d05b7621cd9e865981033cf89ccde0f3e3a7b73b1fdbae18e92bc77db237b43e912f053fef0f9a53b
+  checksum: 10/c328e418e124b500908781d9f7b9b93cf08b66bf5936d94332b463822eea2f4e62973bfb3b8a745fdc038785cb66cf59d1092bac3ec2ac6a3e5854687f7833f1
   languageName: node
   linkType: hard
 
-"typescript@patch:typescript@npm%3A5.6.2#optional!builtin<compat/typescript>":
-  version: 5.6.2
-  resolution: "typescript@patch:typescript@npm%3A5.6.2#optional!builtin<compat/typescript>::version=5.6.2&hash=8c6c40"
+"typescript@patch:typescript@npm%3A5.6.3#optional!builtin<compat/typescript>":
+  version: 5.6.3
+  resolution: "typescript@patch:typescript@npm%3A5.6.3#optional!builtin<compat/typescript>::version=5.6.3&hash=8c6c40"
   bin:
     tsc: bin/tsc
     tsserver: bin/tsserver
-  checksum: 10/8bfc7ca0d9feca4c3fcbd6c70741abfcd714197d6448e68225ae71e462447d904d3bfba49759a8fbe4956d87f054e2d346833c8349c222daa594a2626d4e1be8
+  checksum: 10/00504c01ee42d470c23495426af07512e25e6546bce7e24572e72a9ca2e6b2e9bea63de4286c3cfea644874da1467dcfca23f4f98f7caf20f8b03c0213bb6837
   languageName: node
   linkType: hard
 

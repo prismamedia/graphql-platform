@@ -146,8 +146,8 @@ export class DeleteManyMutation<
         try {
           await this.node.preDelete({
             context,
-            id: Object.freeze(ids[index]),
-            current: Object.freeze(this.node.selection.pickValue(oldValue)),
+            id: ids[index],
+            current: this.node.selection.pickValue(oldValue),
           });
         } catch (cause) {
           throw new LifecycleHookError(
@@ -241,26 +241,23 @@ export class DeleteManyMutation<
       { path },
     );
 
-    return Promise.all(
-      oldValues.map(async (oldValue) => {
-        const change = new NodeDeletion(this.node, context.request, oldValue);
+    for (const oldValue of oldValues) {
+      const change = new NodeDeletion(this.node, context.request, oldValue);
 
-        // Let's everybody know about this deleted node
-        context.track(change);
+      // Let's everybody know about this deleted node
+      context.track(change);
 
-        // Apply the "postDelete"-hook, if any
-        try {
-          await this.node.postDelete({ context, change });
-        } catch (cause) {
-          throw new LifecycleHookError(
-            this.node,
-            LifecycleHookKind.POST_DELETE,
-            { cause, path },
-          );
-        }
+      // Apply the "postDelete"-hook, if any
+      try {
+        await this.node.postDelete({ context, change });
+      } catch (cause) {
+        throw new LifecycleHookError(this.node, LifecycleHookKind.POST_DELETE, {
+          cause,
+          path,
+        });
+      }
+    }
 
-        return args.selection.pickValue(oldValue);
-      }),
-    );
+    return oldValues.map((oldValue) => args.selection.pickValue(oldValue));
   }
 }

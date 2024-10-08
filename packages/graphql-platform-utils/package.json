@@ -31,16 +31,16 @@
     "@swc/jest": "0.2.36",
     "@tsconfig/node20": "20.1.4",
     "@types/indefinite": "2.3.4",
-    "@types/node": "20.16.10",
+    "@types/node": "20.16.11",
     "graphql": "16.9.0",
     "jest": "30.0.0-alpha.6",
     "publint": "0.2.11",
-    "typescript": "5.6.2"
+    "typescript": "5.6.3"
   },
   "dependencies": {
     "@prismamedia/memoize": "^5.0.3",
     "indefinite": "^2.5.1",
-    "remeda": "^2.14.0",
+    "remeda": "^2.15.0",
     "type-fest": "^4.26.1"
   },
   "peerDependencies": {

@@ -34,13 +34,39 @@ export class InMemorySubscription
   }
 
   public async [Symbol.asyncDispose](): Promise<void> {
+    this.off();
     this.#queue.clear();
     this.broker.unsubscribe(this.subscription);
   }
 
-  public enqueue(changes: NodeChangeAggregation): void {
-    this.#queue.push(changes);
-    this.emit('enqueued', changes);
+  public async enqueue(
+    nodeChanges: NodeChangeAggregation,
+    waitUntilProcessed: boolean = this.subscription.consumingNodeChanges,
+  ): Promise<void> {
+    if (!this.subscription.isAffectedBy(nodeChanges)) {
+      return;
+    }
+
+    const processing = waitUntilProcessed
+      ? new Promise<void>((resolve) => {
+          const off = this.on(
+            'dequeued',
+            (dequeued) => {
+              if (nodeChanges === dequeued) {
+                off();
+                resolve();
+              }
+            },
+            this.subscription.signal,
+            () => resolve(),
+          );
+        })
+      : undefined;
+
+    this.#queue.push(nodeChanges);
+    await this.emit('enqueued', nodeChanges);
+
+    return processing;
   }
 
   public async *[Symbol.asyncIterator](): AsyncIterator<

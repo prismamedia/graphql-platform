@@ -709,7 +709,7 @@ export class GraphQLPlatform<
       if (aggregation.size) {
         await Promise.all([
           this.emit('node-changes', aggregation),
-          this.broker?.publish(aggregation),
+          this.broker.publish(aggregation),
         ]);
       }
     }
