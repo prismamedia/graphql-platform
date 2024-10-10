@@ -77,6 +77,7 @@ export type ChangesSubscriptionStreamConfig<
     onDeletion?: NodeSelection<TDeletion>;
     onUpsert: NodeSelection<TUpsert>;
   };
+  onAbort?: () => void;
 };
 
 /**
@@ -124,10 +125,10 @@ export class ChangesSubscriptionStream<
 
   readonly #broker: BrokerInterface;
 
-  readonly #ac: AbortController = new AbortController();
-  public readonly signal: AbortSignal = this.#ac.signal;
+  readonly #ac: AbortController;
+  public readonly signal: AbortSignal;
 
-  public consumingNodeChanges: boolean = false;
+  #consumingNodeChanges?: boolean;
 
   public constructor(
     public readonly node: Node<TRequestContext>,
@@ -166,6 +167,16 @@ export class ChangesSubscriptionStream<
     this.scrollable = node.getSubscriptionByKey('scroll').isEnabled();
 
     this.#broker = node.gp.broker;
+
+    this.#ac = new AbortController();
+    this.signal = this.#ac.signal;
+
+    config.onAbort &&
+      this.signal.addEventListener('abort', config.onAbort, { once: true });
+  }
+
+  public isConsumingNodeChanges(): boolean {
+    return this.#consumingNodeChanges === true;
   }
 
   @Memoize()
@@ -177,9 +188,8 @@ export class ChangesSubscriptionStream<
 
   @Memoize()
   public async dispose(): Promise<void> {
-    await using _nodeChangeSubscription = await this.subscribeToNodeChanges();
-
-    this.consumingNodeChanges = false;
+    await using _nodeChangesSubscription = await this.subscribeToNodeChanges();
+    this.#consumingNodeChanges = false;
     this.#ac.abort();
   }
 
@@ -203,7 +213,8 @@ export class ChangesSubscriptionStream<
   > {
     const nodeChangesSubscription = await this.subscribeToNodeChanges();
 
-    this.consumingNodeChanges = true;
+    this.#consumingNodeChanges = true;
+
     for await (const nodeChanges of nodeChangesSubscription) {
       using effect = ChangesSubscriptionEffect.createFromNodeChangeAggregation(
         this,

@@ -41,7 +41,7 @@ export class InMemorySubscription
 
   public async enqueue(
     nodeChanges: NodeChangeAggregation,
-    waitUntilProcessed: boolean = this.subscription.consumingNodeChanges,
+    waitUntilProcessed: boolean = this.subscription.isConsumingNodeChanges(),
   ): Promise<void> {
     if (!this.subscription.isAffectedBy(nodeChanges)) {
       return;
