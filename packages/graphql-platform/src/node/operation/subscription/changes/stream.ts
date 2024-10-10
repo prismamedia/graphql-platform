@@ -77,7 +77,6 @@ export type ChangesSubscriptionStreamConfig<
     onDeletion?: NodeSelection<TDeletion>;
     onUpsert: NodeSelection<TUpsert>;
   };
-  onAbort?: () => void;
 };
 
 /**
@@ -170,9 +169,6 @@ export class ChangesSubscriptionStream<
 
     this.#ac = new AbortController();
     this.signal = this.#ac.signal;
-
-    config.onAbort &&
-      this.signal.addEventListener('abort', config.onAbort, { once: true });
   }
 
   public isConsumingNodeChanges(): boolean {
