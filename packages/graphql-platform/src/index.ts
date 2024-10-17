@@ -180,9 +180,10 @@ export interface GraphQLPlatformConfig<
    *
    * @default undefined (= Infinity)
    */
-  maxNodeChanges?:
-    | NodeChangeAggregationConfig
-    | NodeChangeAggregationConfig['maxSize'];
+  maxNodeChanges?: utils.Thunkable<
+    NodeChangeAggregationConfig | NodeChangeAggregationConfig['maxSize'],
+    [TRequestContext]
+  >;
 
   /**
    * Optional, register some event-listeners, all at once
@@ -220,7 +221,10 @@ export class GraphQLPlatform<
     maybeRequestContext: object,
   ) => asserts maybeRequestContext is TRequestContext;
 
-  public readonly maxNodeChanges?: NodeChangeAggregationConfig;
+  public readonly maxNodeChanges?: utils.Thunkable<
+    NodeChangeAggregationConfig | NodeChangeAggregationConfig['maxSize'],
+    [TRequestContext]
+  >;
 
   readonly #connector?: TConnector;
 
@@ -382,13 +386,7 @@ export class GraphQLPlatform<
 
     // max-node-changes
     {
-      this.maxNodeChanges =
-        typeof config.maxNodeChanges === 'number'
-          ? { maxSize: config.maxNodeChanges }
-          : (utils.ensureNillablePlainObject(
-              config.maxNodeChanges,
-              utils.addPath(configPath, 'maxNodeChanges'),
-            ) ?? undefined);
+      this.maxNodeChanges = config.maxNodeChanges ?? undefined;
     }
 
     // connector

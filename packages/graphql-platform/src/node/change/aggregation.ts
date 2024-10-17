@@ -93,6 +93,8 @@ export interface NodeChangeAggregationConfig {
 export class NodeChangeAggregation<TRequestContext extends object = any>
   implements Iterable<NodeChange<TRequestContext>>, Disposable
 {
+  public readonly config?: NodeChangeAggregationConfig;
+
   readonly #maxSize?: number;
   readonly #onMaxSizeReached: 'error' | 'ignore';
 
@@ -101,9 +103,18 @@ export class NodeChangeAggregation<TRequestContext extends object = any>
     Map<NodeChange['stringifiedId'], NodeChange>
   >;
 
-  public constructor(private readonly config?: NodeChangeAggregationConfig) {
-    this.#maxSize = config?.maxSize ?? undefined;
-    this.#onMaxSizeReached = config?.onMaxSizeReached ?? 'error';
+  public constructor(
+    configOrMaxSize?:
+      | NodeChangeAggregationConfig
+      | NodeChangeAggregationConfig['maxSize'],
+  ) {
+    this.config =
+      typeof configOrMaxSize === 'number'
+        ? { maxSize: configOrMaxSize }
+        : configOrMaxSize;
+
+    this.#maxSize = this.config?.maxSize ?? undefined;
+    this.#onMaxSizeReached = this.config?.onMaxSizeReached ?? 'error';
 
     this.changesByNode = new Map();
   }

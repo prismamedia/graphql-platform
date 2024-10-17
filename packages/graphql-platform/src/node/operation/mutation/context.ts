@@ -1,3 +1,4 @@
+import * as utils from '@prismamedia/graphql-platform-utils';
 import type { BrokerInterface } from '../../../broker-interface.js';
 import type { ConnectorInterface } from '../../../connector-interface.js';
 import { NodeChangeAggregation } from '../../change.js';
@@ -13,7 +14,9 @@ export class MutationContext<
    * Contains the nodes' changes that will be fired after the success of the whole mutation, including all the nested actions
    */
   public readonly changes: NodeChangeAggregation<TRequestContext> =
-    new NodeChangeAggregation(this.gp.maxNodeChanges);
+    new NodeChangeAggregation(
+      utils.resolveThunkable(this.gp.maxNodeChanges, this.request),
+    );
 
   public override [Symbol.dispose]() {
     super[Symbol.dispose]();
