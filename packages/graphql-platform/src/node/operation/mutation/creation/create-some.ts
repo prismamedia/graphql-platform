@@ -121,7 +121,7 @@ export class CreateSomeMutation<
       changes.push(change);
 
       // Let's everybody know about this created node
-      context.track(change);
+      context.changes.append(change);
 
       const data = args.data[index];
 

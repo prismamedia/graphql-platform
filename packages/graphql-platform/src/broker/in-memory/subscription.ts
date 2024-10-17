@@ -47,24 +47,31 @@ export class InMemorySubscription
       return;
     }
 
-    const processing = waitUntilProcessed
-      ? new Promise<void>((resolve) => {
-          const off = this.on(
-            'dequeued',
-            (dequeued) => {
-              if (nodeChanges === dequeued) {
-                off();
-                resolve();
-              }
-            },
-            this.subscription.signal,
-            () => resolve(),
-          );
-        })
-      : undefined;
+    const [processing, enqueued] = waitUntilProcessed
+      ? [
+          new Promise<void>((resolve) => {
+            const off = this.on(
+              'dequeued',
+              (dequeued) => {
+                if (enqueued === dequeued) {
+                  off();
+                  resolve();
+                }
+              },
+              this.subscription.signal,
+              () => resolve(),
+            );
+          }),
+          nodeChanges,
+        ]
+      : [
+          undefined,
+          // As the original changes will get disposed of, we need to keep a copy of them here
+          nodeChanges.clone(),
+        ];
 
-    this.#queue.push(nodeChanges);
-    await this.emit('enqueued', nodeChanges);
+    this.#queue.push(enqueued);
+    await this.emit('enqueued', enqueued);
 
     return processing;
   }

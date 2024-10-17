@@ -1,7 +1,11 @@
 import * as utils from '@prismamedia/graphql-platform-utils';
-import { Memoize } from '@prismamedia/memoize';
 import type { Node } from '../../node.js';
-import { NodeCreation, NodeUpdate, type NodeChange } from '../change.js';
+import {
+  isActualNodeChange,
+  NodeCreation,
+  NodeUpdate,
+  type NodeChange,
+} from '../change.js';
 import { NodeChangeAggregationSummary } from './aggregation/summary.js';
 
 export * from './aggregation/summary.js';
@@ -70,119 +74,125 @@ const aggregatorMatrix: NodeChangeAggregatorMatrix = {
   },
 };
 
+export interface NodeChangeAggregationConfig {
+  /**
+   * Optional, limit the number of changes in the aggregation
+   *
+   * @default undefined (= Infinity)
+   */
+  maxSize?: number;
+
+  /**
+   * Optional, what to do when the max size is reached
+   *
+   * @default 'error'
+   */
+  onMaxSizeReached?: 'error' | 'ignore';
+}
+
 export class NodeChangeAggregation<TRequestContext extends object = any>
   implements Iterable<NodeChange<TRequestContext>>, Disposable
 {
-  public static createFromIterable<TRequestContext extends object = any>(
-    changes: Iterable<NodeChange<TRequestContext>>,
-  ): NodeChangeAggregation<TRequestContext> {
-    const changesByIdByNode = new Map<
-      Node,
-      Map<NodeChange['stringifiedId'], NodeChange>
-    >();
+  readonly #maxSize?: number;
+  readonly #onMaxSizeReached: 'error' | 'ignore';
+
+  public readonly changesByNode: Map<
+    Node,
+    Map<NodeChange['stringifiedId'], NodeChange>
+  >;
+
+  public constructor(private readonly config?: NodeChangeAggregationConfig) {
+    this.#maxSize = config?.maxSize ?? undefined;
+    this.#onMaxSizeReached = config?.onMaxSizeReached ?? 'error';
+
+    this.changesByNode = new Map();
+  }
+
+  public [Symbol.dispose](): void {
+    this.changesByNode.forEach((changes) => changes.clear());
+    this.changesByNode.clear();
+  }
+
+  public *[Symbol.iterator](): IterableIterator<NodeChange<TRequestContext>> {
+    for (const changesByStringifiedId of this.changesByNode.values()) {
+      yield* changesByStringifiedId.values();
+    }
+  }
+
+  public append(...changes: ReadonlyArray<NodeChange<TRequestContext>>): this {
+    let currentSize = this.size;
 
     for (const change of changes) {
-      if (change instanceof NodeUpdate && change.isEmpty()) {
+      if (!isActualNodeChange(change)) {
         continue;
       }
 
-      let changesById = changesByIdByNode.get(change.node);
-      if (!changesById) {
-        changesByIdByNode.set(change.node, (changesById = new Map()));
+      let changes = this.changesByNode.get(change.node);
+      if (!changes) {
+        this.changesByNode.set(change.node, (changes = new Map()));
       }
 
-      const previousChange = changesById.get(change.stringifiedId);
-
+      const previousChange = changes.get(change.stringifiedId);
       if (!previousChange) {
-        changesById.set(change.stringifiedId, change);
+        if (this.#maxSize !== undefined && currentSize >= this.#maxSize) {
+          if (this.#onMaxSizeReached === 'error') {
+            throw new Error(
+              `The maximum number of changes, ${this.#maxSize}, has been reached`,
+            );
+          }
+
+          break;
+        }
+
+        changes.set(change.stringifiedId, change);
+        currentSize++;
       } else if (previousChange.at <= change.at) {
         const aggregate = aggregatorMatrix[previousChange.kind][change.kind](
           previousChange as any,
           change as any,
         );
 
-        if (
-          aggregate &&
-          !(aggregate instanceof NodeUpdate && aggregate.isEmpty())
-        ) {
-          changesById.delete(previousChange.stringifiedId);
-          changesById.set(aggregate.stringifiedId, aggregate);
+        if (aggregate && isActualNodeChange(aggregate)) {
+          changes.delete(previousChange.stringifiedId);
+          changes.set(aggregate.stringifiedId, aggregate);
         } else {
           if (
-            changesById.delete(previousChange.stringifiedId) &&
-            changesById.size === 0
+            changes.delete(previousChange.stringifiedId) &&
+            changes.size === 0
           ) {
-            changesByIdByNode.delete(previousChange.node);
+            this.changesByNode.delete(previousChange.node);
           }
+          currentSize--;
         }
       }
     }
 
-    return new NodeChangeAggregation(
-      new Map(
-        Array.from(changesByIdByNode, ([node, changesByFlattenedId]) => [
-          node,
-          Array.from(changesByFlattenedId.values()),
-        ]),
-      ),
-    );
+    return this;
   }
 
-  public readonly size: number;
-
-  public constructor(
-    public readonly changesByNode: Map<
-      Node<TRequestContext>,
-      Array<NodeChange<TRequestContext>>
-    >,
-  ) {
-    this.size = Array.from(
-      changesByNode.values(),
-      (changes) => changes.length,
-    ).reduce((sum, length) => sum + length, 0);
+  public commit(at: Date = new Date()): void {
+    for (const change of this) {
+      change.committedAt = at;
+    }
   }
 
-  public [Symbol.dispose](): void {
-    this.changesByNode.forEach((changes) => (changes.length = 0));
-    this.changesByNode.clear();
-  }
-
-  @Memoize()
   public get summary(): NodeChangeAggregationSummary {
     return new NodeChangeAggregationSummary(this);
   }
 
-  public *[Symbol.iterator](): IterableIterator<NodeChange<TRequestContext>> {
-    for (const changes of this.changesByNode.values()) {
-      yield* changes;
-    }
+  public get size(): number {
+    return Array.from(
+      this.changesByNode.values(),
+      (changesByStringifiedId) => changesByStringifiedId.size,
+    ).reduce((sum, size) => sum + size, 0);
   }
 
-  public clone(): NodeChangeAggregation<TRequestContext> {
-    return new NodeChangeAggregation(
-      new Map(
-        Array.from(this.changesByNode, ([node, changes]) => [
-          node,
-          Array.from(changes),
-        ]),
-      ),
-    );
-  }
-
-  public mergeWith(
-    ...aggregations: ReadonlyArray<NodeChangeAggregation<TRequestContext>>
-  ): NodeChangeAggregation<TRequestContext> | this {
-    return aggregations.length
-      ? NodeChangeAggregation.createFromIterable(
-          [this, ...aggregations].reduce<NodeChange[]>(
-            (changes, aggregation) => {
-              changes.push(...aggregation);
-
-              return changes;
-            },
-            [],
-          ),
-        )
-      : this;
+  /**
+   * Creates a shallow copy
+   */
+  public clone(
+    config: NodeChangeAggregationConfig | undefined = this.config,
+  ): NodeChangeAggregation<TRequestContext> {
+    return new NodeChangeAggregation(config).append(...this);
   }
 }

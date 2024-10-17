@@ -24,10 +24,10 @@ import type {
   OrderByInputValue,
 } from '../../../type.js';
 import {
+  catchConnectorOperationError,
   ConnectorOperationKind,
   LifecycleHookError,
   LifecycleHookKind,
-  catchConnectorOperationError,
 } from '../../error.js';
 import { AbstractUpdate } from '../abstract-update.js';
 import type { MutationContext } from '../context.js';
@@ -251,7 +251,7 @@ export class UpdateManyMutation<
       );
 
       // Let's everybody know about the update, if any
-      context.track(...changes);
+      context.changes.append(...changes);
     } else {
       newValues = willEventuallyRefetch
         ? oldSources

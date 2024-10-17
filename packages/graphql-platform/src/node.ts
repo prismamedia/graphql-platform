@@ -347,8 +347,8 @@ export class Node<
 
         gp.on('node-changes', ({ changesByNode }) => {
           const changes = changesByNode.get(this);
-          if (changes?.length) {
-            return onChanges.call(this, changes);
+          if (changes?.size) {
+            return onChanges.call(this, Array.from(changes.values()));
           }
         });
       }

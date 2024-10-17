@@ -25,6 +25,7 @@ import {
   createContextBoundAPI,
   type API,
   type ContextBoundAPI,
+  type NodeChangeAggregationConfig,
   type NodeConfig,
   type NodeName,
   type Operation,
@@ -175,11 +176,13 @@ export interface GraphQLPlatformConfig<
   >;
 
   /**
-   * Optional, enable or disable the nodes' changes tracking instance-wide
+   * Optional, limit the maximum number of nodes' changes made by a mutation
    *
-   * @default true
+   * @default undefined (= Infinity)
    */
-  nodeChangesTracking?: utils.OptionalFlag;
+  maxNodeChanges?:
+    | NodeChangeAggregationConfig
+    | NodeChangeAggregationConfig['maxSize'];
 
   /**
    * Optional, register some event-listeners, all at once
@@ -217,7 +220,7 @@ export class GraphQLPlatform<
     maybeRequestContext: object,
   ) => asserts maybeRequestContext is TRequestContext;
 
-  public nodeChangesTracking: boolean;
+  public readonly maxNodeChanges?: NodeChangeAggregationConfig;
 
   readonly #connector?: TConnector;
 
@@ -377,13 +380,15 @@ export class GraphQLPlatform<
       }
     }
 
-    // node-changes-tracking
+    // max-node-changes
     {
-      this.nodeChangesTracking = utils.getOptionalFlag(
-        config.nodeChangesTracking,
-        true,
-        utils.addPath(configPath, 'nodeChangesTracking'),
-      );
+      this.maxNodeChanges =
+        typeof config.maxNodeChanges === 'number'
+          ? { maxSize: config.maxNodeChanges }
+          : (utils.ensureNillablePlainObject(
+              config.maxNodeChanges,
+              utils.addPath(configPath, 'maxNodeChanges'),
+            ) ?? undefined);
     }
 
     // connector
@@ -694,24 +699,13 @@ export class GraphQLPlatform<
       );
     }
 
-    // changes
-    if (mutationContext.changes.length) {
-      const now = new Date();
+    if (mutationContext.changes.size) {
+      mutationContext.changes.commit();
 
-      for (const change of mutationContext.changes) {
-        change.committedAt = now;
-      }
-
-      const aggregation = NodeChangeAggregation.createFromIterable(
-        mutationContext.changes,
-      );
-
-      if (aggregation.size) {
-        await Promise.all([
-          this.emit('node-changes', aggregation),
-          this.broker.publish(aggregation),
-        ]);
-      }
+      await Promise.all([
+        this.emit('node-changes', mutationContext.changes),
+        this.broker.publish(mutationContext.changes),
+      ]);
     }
 
     return result;

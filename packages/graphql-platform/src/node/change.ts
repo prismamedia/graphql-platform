@@ -16,3 +16,6 @@ export const isNodeChange = (maybeChange: unknown): maybeChange is NodeChange =>
   maybeChange instanceof NodeCreation ||
   maybeChange instanceof NodeUpdate ||
   maybeChange instanceof NodeDeletion;
+
+export const isActualNodeChange = (change: NodeChange): boolean =>
+  !(change instanceof NodeUpdate && change.isEmpty());

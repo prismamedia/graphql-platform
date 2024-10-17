@@ -216,7 +216,7 @@ export class ChangesSubscriptionEffect<
   ): ChangesSubscriptionEffect<TUpsert, TDeletion, TRequestContext> {
     return this.createFromNodeChangeAggregation(
       subscription,
-      NodeChangeAggregation.createFromIterable(changes),
+      new NodeChangeAggregation().append(...changes),
     );
   }
 
