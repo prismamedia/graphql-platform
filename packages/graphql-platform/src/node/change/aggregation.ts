@@ -133,8 +133,6 @@ export class NodeChangeAggregation<TRequestContext extends object = any>
   }
 
   public add(...changes: ReadonlyArray<NodeChange<TRequestContext>>): this {
-    let currentSize = this.size;
-
     for (const change of changes) {
       if (!isActualNodeChange(change)) {
         continue;
@@ -147,7 +145,7 @@ export class NodeChangeAggregation<TRequestContext extends object = any>
 
       const previousChange = changes.get(change.stringifiedId);
       if (!previousChange) {
-        if (this.#maxSize !== undefined && currentSize >= this.#maxSize) {
+        if (this.#maxSize !== undefined && this.size >= this.#maxSize) {
           if (this.#onMaxSizeReached === 'error') {
             throw new Error(
               `The maximum number of changes, ${this.#maxSize}, has been reached`,
@@ -158,7 +156,6 @@ export class NodeChangeAggregation<TRequestContext extends object = any>
         }
 
         changes.set(change.stringifiedId, change);
-        currentSize++;
       } else if (previousChange.at <= change.at) {
         const aggregate = aggregatorMatrix[previousChange.kind][change.kind](
           previousChange as any,
@@ -175,7 +172,6 @@ export class NodeChangeAggregation<TRequestContext extends object = any>
           ) {
             this.changesByNode.delete(previousChange.node);
           }
-          currentSize--;
         }
       }
     }
@@ -194,10 +190,10 @@ export class NodeChangeAggregation<TRequestContext extends object = any>
   }
 
   public get size(): number {
-    return Array.from(
-      this.changesByNode.values(),
-      (changesByStringifiedId) => changesByStringifiedId.size,
-    ).reduce((sum, size) => sum + size, 0);
+    return Array.from(this.changesByNode.values(), ({ size }) => size).reduce(
+      (sum, size) => sum + size,
+      0,
+    );
   }
 
   /**

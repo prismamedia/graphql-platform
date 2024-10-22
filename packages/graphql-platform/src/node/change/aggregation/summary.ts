@@ -4,11 +4,11 @@ import { NodeCreation } from '../creation.js';
 import { NodeDeletion } from '../deletion.js';
 
 export class NodeChangeAggregationSummary {
-  public readonly creations?: Set<Node>;
-  public readonly deletions?: Set<Node>;
-  public readonly updatesByNode?: Map<Node, ReadonlySet<Component>>;
+  public readonly creations?: ReadonlySet<Node>;
+  public readonly deletions?: ReadonlySet<Node>;
+  public readonly updatesByNode?: ReadonlyMap<Node, ReadonlySet<Component>>;
 
-  public readonly changes: Set<Node>;
+  public readonly changes: ReadonlySet<Node>;
 
   public constructor(aggregation: NodeChangeAggregation) {
     const creations = new Set<Node>();

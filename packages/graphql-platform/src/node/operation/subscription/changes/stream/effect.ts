@@ -265,7 +265,7 @@ export class ChangesSubscriptionEffect<
             this.subscription,
             value,
             new Set([change.requestContext]),
-          ) as any;
+          );
         } else if (
           index < this.maybeChanges.length &&
           this.subscription.onDeletionSelection
@@ -274,7 +274,7 @@ export class ChangesSubscriptionEffect<
             this.subscription,
             change.newValue,
             new Set([change.requestContext]),
-          ) as any;
+          );
         }
       }
     }
@@ -299,7 +299,7 @@ export class ChangesSubscriptionEffect<
               this.subscription,
               deletion,
               this.maybeGraphChanges.initiators,
-            ) as any;
+            );
           }
         } else {
           const deletions = await this.subscription.api.findMany({
@@ -312,7 +312,7 @@ export class ChangesSubscriptionEffect<
               this.subscription,
               deletion,
               this.maybeGraphChanges.initiators,
-            ) as any;
+            );
           }
         }
       }
@@ -335,7 +335,7 @@ export class ChangesSubscriptionEffect<
               this.subscription,
               upsert,
               this.maybeGraphChanges.initiators,
-            ) as any;
+            );
           }
         } else {
           const upserts = await this.subscription.api.findMany({
@@ -348,7 +348,7 @@ export class ChangesSubscriptionEffect<
               this.subscription,
               upsert,
               this.maybeGraphChanges.initiators,
-            ) as any;
+            );
           }
         }
       }
