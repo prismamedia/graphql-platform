@@ -82,17 +82,17 @@ export class VirtualSelection<
     return this;
   }
 
-  public isAffectedByNodeUpdate(update: NodeUpdate): boolean {
-    return this.dependency?.isAffectedByNodeUpdate(update) ?? false;
+  public isAffectedByRootUpdate(update: NodeUpdate): boolean {
+    return this.dependency?.isAffectedByRootUpdate(update) ?? false;
   }
 
-  public getAffectedGraphByNodeChange(
+  public getAffectedGraph(
     change: NodeChange,
-    visitedRootNodes?: NodeValue[],
+    visitedRootNodes?: ReadonlyArray<NodeValue>,
   ): BooleanFilter | null {
     return (
-      this.dependency?.getAffectedGraphByNodeChange(change, visitedRootNodes)
-        ?.filter ?? null
+      this.dependency?.getAffectedGraph(change, visitedRootNodes)?.filter ??
+      null
     );
   }
 

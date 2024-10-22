@@ -28,13 +28,13 @@ export class MultipleReverseEdgeCountOrdering
     );
   }
 
-  public isAffectedByNodeUpdate(_update: NodeUpdate): boolean {
+  public isAffectedByRootUpdate(_update: NodeUpdate): boolean {
     return false;
   }
 
-  public getAffectedGraphByNodeChange(
+  public getAffectedGraph(
     change: NodeChange,
-    visitedRootNodes?: NodeValue[],
+    visitedRootNodes?: ReadonlyArray<NodeValue>,
   ): BooleanFilter | null {
     const operands: BooleanFilter[] = [];
 

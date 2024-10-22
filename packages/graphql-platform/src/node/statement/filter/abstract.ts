@@ -89,13 +89,13 @@ export abstract class AbstractBooleanFilter {
   /**
    * Is the provided node-update affecting this filter's expression?
    */
-  public isAffectedByNodeUpdate(_update: NodeUpdate): boolean {
+  public isAffectedByRootUpdate(_update: NodeUpdate): boolean {
     return false;
   }
 
-  public getAffectedGraphByNodeChange(
+  public getAffectedGraph(
     _change: NodeChange,
-    _visitedRootNodes?: NodeValue[],
+    _visitedRootNodes?: ReadonlyArray<NodeValue>,
   ): BooleanFilter | null {
     return null;
   }

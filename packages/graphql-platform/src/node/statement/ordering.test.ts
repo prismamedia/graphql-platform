@@ -34,7 +34,7 @@ describe('Ordering', () => {
 
       describe('Article', () => {
         it('The updated "slug" does not change any document', () => {
-          const update = NodeUpdate.createFromNonNullableComponents(
+          const update = NodeUpdate.createFromPartial(
             Article,
             {},
             {
@@ -53,14 +53,14 @@ describe('Ordering', () => {
             },
           );
 
-          expect(ordering.isAffectedByNodeUpdate(update)).toBe(false);
-          expect(ordering.getAffectedGraphByNodeChange(update)).toBeNull();
+          expect(ordering.isAffectedByRootUpdate(update)).toBe(false);
+          expect(ordering.getAffectedGraph(update)).toBeNull();
         });
       });
 
       describe('ArticleTag', () => {
         it('The creation may change some document(s)', () => {
-          const creation = NodeCreation.createFromNonNullableComponents(
+          const creation = NodeCreation.createFromPartial(
             ArticleTag,
             {},
             {
@@ -70,13 +70,13 @@ describe('Ordering', () => {
             },
           );
 
-          expect(
-            ordering.getAffectedGraphByNodeChange(creation)?.inputValue,
-          ).toEqual({ _id: 2 });
+          expect(ordering.getAffectedGraph(creation)?.inputValue).toEqual({
+            _id: 2,
+          });
         });
 
         it('The deletion may change some document(s)', () => {
-          const deletion = NodeDeletion.createFromNonNullableComponents(
+          const deletion = NodeDeletion.createFromPartial(
             ArticleTag,
             {},
             {
@@ -86,13 +86,13 @@ describe('Ordering', () => {
             },
           );
 
-          expect(
-            ordering.getAffectedGraphByNodeChange(deletion)?.inputValue,
-          ).toEqual({ _id: 3 });
+          expect(ordering.getAffectedGraph(deletion)?.inputValue).toEqual({
+            _id: 3,
+          });
         });
 
         it('The updated "order" does not change any document', () => {
-          const update = NodeUpdate.createFromNonNullableComponents(
+          const update = NodeUpdate.createFromPartial(
             ArticleTag,
             {},
             {
@@ -105,7 +105,7 @@ describe('Ordering', () => {
             },
           );
 
-          expect(ordering.getAffectedGraphByNodeChange(update)).toBeNull();
+          expect(ordering.getAffectedGraph(update)).toBeNull();
         });
       });
     });

@@ -134,20 +134,17 @@ export class NodeFilter {
   /**
    * Is the provided node-update affecting this filter?
    */
-  public isAffectedByNodeUpdate(update: NodeUpdate): boolean {
+  public isAffectedByRootUpdate(update: NodeUpdate): boolean {
     assert.equal(update.node, this.node);
 
-    return this.filter.isAffectedByNodeUpdate(update);
+    return this.filter.isAffectedByRootUpdate(update);
   }
 
-  public getAffectedGraphByNodeChange(
+  public getAffectedGraph(
     change: NodeChange,
-    visitedRootNodes?: NodeValue[],
+    visitedRootNodes?: ReadonlyArray<NodeValue>,
   ): NodeFilter | null {
-    const filter = this.filter.getAffectedGraphByNodeChange(
-      change,
-      visitedRootNodes,
-    );
+    const filter = this.filter.getAffectedGraph(change, visitedRootNodes);
 
     return filter && !filter.equals(FalseValue)
       ? new NodeFilter(this.node, filter)

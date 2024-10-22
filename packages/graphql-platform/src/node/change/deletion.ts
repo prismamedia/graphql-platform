@@ -5,7 +5,7 @@ import { AbstractNodeChange } from '../abstract-change.js';
 export class NodeDeletion<
   TRequestContext extends object = any,
 > extends AbstractNodeChange<TRequestContext> {
-  public static createFromNonNullableComponents<TRequestContext extends object>(
+  public static createFromPartial<TRequestContext extends object>(
     node: Node<TRequestContext>,
     requestContext: TRequestContext,
     partialOldValue: Record<Component['name'], ComponentValue>,

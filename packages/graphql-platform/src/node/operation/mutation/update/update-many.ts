@@ -251,7 +251,7 @@ export class UpdateManyMutation<
       );
 
       // Let's everybody know about the update, if any
-      context.changes.append(...changes);
+      context.changes.add(...changes);
     } else {
       newValues = willEventuallyRefetch
         ? oldSources

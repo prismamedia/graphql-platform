@@ -8,9 +8,9 @@ export class ChangesSubscriptionDeletion<
   TRequestContext extends object = any,
 > extends AbstractChangesSubscriptionChange<TValue, TRequestContext> {
   public constructor(
-    subscription: ChangesSubscriptionStream,
-    value: Readonly<TValue>,
-    initiators: ReadonlyArray<TRequestContext>,
+    subscription: ChangesSubscriptionStream<any, TValue, TRequestContext>,
+    value: Readonly<any>,
+    initiators: ReadonlySet<TRequestContext>,
   ) {
     assert(subscription.onDeletionSelection);
 

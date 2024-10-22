@@ -1072,7 +1072,7 @@ __metadata:
     "@swc/core": "npm:1.7.36"
     "@swc/jest": "npm:0.2.36"
     "@tsconfig/node20": "npm:20.1.4"
-    "@types/node": "npm:20.16.12"
+    "@types/node": "npm:20.16.14"
     "@types/semver": "npm:7.5.8"
     dependency-graph: "npm:^1.0.0"
     graphql: "npm:16.9.0"
@@ -1080,7 +1080,7 @@ __metadata:
     jest: "npm:30.0.0-alpha.6"
     mariadb: "npm:^3.3.2"
     publint: "npm:0.2.11"
-    remeda: "npm:^2.15.2"
+    remeda: "npm:^2.16.0"
     semver: "npm:^7.6.3"
     type-fest: "npm:^4.26.1"
     typescript: "npm:5.6.3"
@@ -1103,7 +1103,7 @@ __metadata:
     "@types/body-parser": "npm:^1.19.5"
     "@types/cors": "npm:^2.8.17"
     "@types/express": "npm:^4.17.21"
-    "@types/node": "npm:20.16.12"
+    "@types/node": "npm:20.16.14"
     "@types/ws": "npm:^8.5.12"
     body-parser: "npm:1.20.3"
     cors: "npm:2.8.5"
@@ -1130,11 +1130,11 @@ __metadata:
     "@swc/jest": "npm:0.2.36"
     "@tsconfig/node20": "npm:20.1.4"
     "@types/draft-js": "npm:^0.11.18"
-    "@types/node": "npm:20.16.12"
+    "@types/node": "npm:20.16.14"
     graphql: "npm:16.9.0"
     jest: "npm:30.0.0-alpha.6"
     publint: "npm:0.2.11"
-    remeda: "npm:^2.15.2"
+    remeda: "npm:^2.16.0"
     type-fest: "npm:^4.26.1"
     typescript: "npm:5.6.3"
   peerDependencies:
@@ -1152,12 +1152,12 @@ __metadata:
     "@swc/jest": "npm:0.2.36"
     "@tsconfig/node20": "npm:20.1.4"
     "@types/indefinite": "npm:2.3.4"
-    "@types/node": "npm:20.16.12"
+    "@types/node": "npm:20.16.14"
     graphql: "npm:16.9.0"
     indefinite: "npm:^2.5.1"
     jest: "npm:30.0.0-alpha.6"
     publint: "npm:0.2.11"
-    remeda: "npm:^2.15.2"
+    remeda: "npm:^2.16.0"
     type-fest: "npm:^4.26.1"
     typescript: "npm:5.6.3"
   peerDependencies:
@@ -1178,7 +1178,7 @@ __metadata:
     "@swc/jest": "npm:0.2.36"
     "@tsconfig/node20": "npm:20.1.4"
     "@types/cli-progress": "npm:^3.11.6"
-    "@types/node": "npm:20.16.12"
+    "@types/node": "npm:20.16.14"
     cli-progress: "npm:^3.12.0"
     dataloader: "npm:^2.2.2"
     denque: "npm:^2.1.0"
@@ -1189,7 +1189,7 @@ __metadata:
     p-queue: "npm:^8.0.1"
     p-retry: "npm:^6.2.0"
     publint: "npm:0.2.11"
-    remeda: "npm:^2.15.2"
+    remeda: "npm:^2.16.0"
     type-fest: "npm:^4.26.1"
     typescript: "npm:5.6.3"
   peerDependencies:
@@ -1659,12 +1659,12 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@types/node@npm:20.16.12":
-  version: 20.16.12
-  resolution: "@types/node@npm:20.16.12"
+"@types/node@npm:20.16.14":
+  version: 20.16.14
+  resolution: "@types/node@npm:20.16.14"
   dependencies:
     undici-types: "npm:~6.19.2"
-  checksum: 10/689badb5af2a1a03553a6d21880fa4aabb8cf028b7db1a03be889c0026047a780ac37c83df5dca036f02f5dc3cc4000254fa40d2cadd5df0e9bd6f43dae6eac6
+  checksum: 10/1a63dd3ef3ec7a6da768c88e3664ca335e09005716aab07890646ca89b5b664df69bf9f0c1b82776d483e49c10e269c5c90d56f38d17945a88587e51d62f0139
   languageName: node
   linkType: hard
 
@@ -4616,12 +4616,12 @@ __metadata:
   languageName: node
   linkType: hard
 
-"remeda@npm:^2.15.2":
-  version: 2.15.2
-  resolution: "remeda@npm:2.15.2"
+"remeda@npm:^2.16.0":
+  version: 2.16.0
+  resolution: "remeda@npm:2.16.0"
   dependencies:
     type-fest: "npm:^4.26.1"
-  checksum: 10/d030ccff8f7c17d29b4e861c1592450e481a2f3ff84da4232a23994b4d5f0109330815b02acebec197d746cd5af6277a0f8d32288e74dc56da732e3bd3a217c5
+  checksum: 10/75b51338e2ca1272d6eb27dc9d460c29dd92d6ded25f7d8fd82bbd29e63d5cf5b9eaefec6e59b8eda886cb5a0c373b56c60b65bc15ec663f64b6e9c72268460d
   languageName: node
   linkType: hard
 

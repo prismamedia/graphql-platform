@@ -139,7 +139,7 @@ describe('Filter', () => {
 
       describe('Article', () => {
         it('The updated "slug" does not change any document', () => {
-          const update = NodeUpdate.createFromNonNullableComponents(
+          const update = NodeUpdate.createFromPartial(
             Article,
             {},
             {
@@ -158,13 +158,13 @@ describe('Filter', () => {
             },
           );
 
-          expect(filter.isAffectedByNodeUpdate(update)).toBe(false);
-          expect(filter.getAffectedGraphByNodeChange(update)).toBeNull();
+          expect(filter.isAffectedByRootUpdate(update)).toBe(false);
+          expect(filter.getAffectedGraph(update)).toBeNull();
         });
 
         it('The updated "title" may change some document(s)', () => {
           {
-            const update = NodeUpdate.createFromNonNullableComponents(
+            const update = NodeUpdate.createFromPartial(
               Article,
               {},
               {
@@ -183,12 +183,12 @@ describe('Filter', () => {
               },
             );
 
-            expect(filter.isAffectedByNodeUpdate(update)).toBe(false);
-            expect(filter.getAffectedGraphByNodeChange(update)).toBeNull();
+            expect(filter.isAffectedByRootUpdate(update)).toBe(false);
+            expect(filter.getAffectedGraph(update)).toBeNull();
           }
 
           {
-            const update = NodeUpdate.createFromNonNullableComponents(
+            const update = NodeUpdate.createFromPartial(
               Article,
               {},
               {
@@ -207,12 +207,12 @@ describe('Filter', () => {
               },
             );
 
-            expect(filter.isAffectedByNodeUpdate(update)).toBe(true);
-            expect(filter.getAffectedGraphByNodeChange(update)).toBeNull();
+            expect(filter.isAffectedByRootUpdate(update)).toBe(true);
+            expect(filter.getAffectedGraph(update)).toBeNull();
           }
 
           {
-            const update = NodeUpdate.createFromNonNullableComponents(
+            const update = NodeUpdate.createFromPartial(
               Article,
               {},
               {
@@ -231,13 +231,13 @@ describe('Filter', () => {
               },
             );
 
-            expect(filter.isAffectedByNodeUpdate(update)).toBe(false);
-            expect(filter.getAffectedGraphByNodeChange(update)).toBeNull();
+            expect(filter.isAffectedByRootUpdate(update)).toBe(false);
+            expect(filter.getAffectedGraph(update)).toBeNull();
           }
         });
 
         it('The updated "title" does not change any document if there is no "createdBy"', () => {
-          const update = NodeUpdate.createFromNonNullableComponents(
+          const update = NodeUpdate.createFromPartial(
             Article,
             {},
             {
@@ -256,12 +256,12 @@ describe('Filter', () => {
             },
           );
 
-          expect(filter.isAffectedByNodeUpdate(update)).toBe(false);
-          expect(filter.getAffectedGraphByNodeChange(update)).toBeNull();
+          expect(filter.isAffectedByRootUpdate(update)).toBe(false);
+          expect(filter.getAffectedGraph(update)).toBeNull();
         });
 
         it('The updated "title" may change some document(s) if there is a "createdBy"', () => {
-          const update = NodeUpdate.createFromNonNullableComponents(
+          const update = NodeUpdate.createFromPartial(
             Article,
             {},
             {
@@ -282,16 +282,14 @@ describe('Filter', () => {
             },
           );
 
-          expect(filter.isAffectedByNodeUpdate(update)).toBe(false);
-          expect(
-            filter.getAffectedGraphByNodeChange(update)?.inputValue,
-          ).toEqual({
+          expect(filter.isAffectedByRootUpdate(update)).toBe(false);
+          expect(filter.getAffectedGraph(update)?.inputValue).toEqual({
             createdBy: { id: '9121c47b-87b6-4334-ae1d-4c9777e87576' },
           });
         });
 
         it('The updated "title" does not change any document if there is no "updatedBy"', () => {
-          const update = NodeUpdate.createFromNonNullableComponents(
+          const update = NodeUpdate.createFromPartial(
             Article,
             {},
             {
@@ -310,12 +308,12 @@ describe('Filter', () => {
             },
           );
 
-          expect(filter.isAffectedByNodeUpdate(update)).toBe(false);
-          expect(filter.getAffectedGraphByNodeChange(update)).toBeNull();
+          expect(filter.isAffectedByRootUpdate(update)).toBe(false);
+          expect(filter.getAffectedGraph(update)).toBeNull();
         });
 
         it('The updated "title" may change some document(s) if there is an "updatedBy"', () => {
-          const update = NodeUpdate.createFromNonNullableComponents(
+          const update = NodeUpdate.createFromPartial(
             Article,
             {},
             {
@@ -336,16 +334,16 @@ describe('Filter', () => {
             },
           );
 
-          expect(filter.isAffectedByNodeUpdate(update)).toBe(false);
-          expect(
-            filter.getAffectedGraphByNodeChange(update)?.inputValue,
-          ).toEqual({ updatedBy: { username: 'yvann' } });
+          expect(filter.isAffectedByRootUpdate(update)).toBe(false);
+          expect(filter.getAffectedGraph(update)?.inputValue).toEqual({
+            updatedBy: { username: 'yvann' },
+          });
         });
       });
 
       describe('ArticleExtension', () => {
         it('The creation may change some document(s)', () => {
-          const creation = NodeCreation.createFromNonNullableComponents(
+          const creation = NodeCreation.createFromPartial(
             ArticleExtension,
             {},
             {
@@ -354,13 +352,13 @@ describe('Filter', () => {
             },
           );
 
-          expect(
-            filter.getAffectedGraphByNodeChange(creation)?.inputValue,
-          ).toEqual({ _id: 4 });
+          expect(filter.getAffectedGraph(creation)?.inputValue).toEqual({
+            _id: 4,
+          });
         });
 
         it('The deletion may change some document(s)', () => {
-          const deletion = NodeDeletion.createFromNonNullableComponents(
+          const deletion = NodeDeletion.createFromPartial(
             ArticleExtension,
             {},
             {
@@ -369,13 +367,13 @@ describe('Filter', () => {
             },
           );
 
-          expect(
-            filter.getAffectedGraphByNodeChange(deletion)?.inputValue,
-          ).toEqual({ _id: 5 });
+          expect(filter.getAffectedGraph(deletion)?.inputValue).toEqual({
+            _id: 5,
+          });
         });
 
         it('The updated "source" does not change any document', () => {
-          const update = NodeUpdate.createFromNonNullableComponents(
+          const update = NodeUpdate.createFromPartial(
             ArticleExtension,
             {},
             {
@@ -387,13 +385,13 @@ describe('Filter', () => {
             },
           );
 
-          expect(filter.getAffectedGraphByNodeChange(update)).toBeNull();
+          expect(filter.getAffectedGraph(update)).toBeNull();
         });
       });
 
       describe('UserProfile', () => {
         it('The creation may change some document(s)', () => {
-          const creation = NodeCreation.createFromNonNullableComponents(
+          const creation = NodeCreation.createFromPartial(
             UserProfile,
             {},
             {
@@ -402,15 +400,13 @@ describe('Filter', () => {
             },
           );
 
-          expect(
-            filter.getAffectedGraphByNodeChange(creation)?.inputValue,
-          ).toEqual({
+          expect(filter.getAffectedGraph(creation)?.inputValue).toEqual({
             createdBy: { id: '16050880-dabc-4348-bd3b-d41efe1b6057' },
           });
         });
 
         it('The deletion may change some document(s)', () => {
-          const deletion = NodeDeletion.createFromNonNullableComponents(
+          const deletion = NodeDeletion.createFromPartial(
             UserProfile,
             {},
             {
@@ -419,15 +415,13 @@ describe('Filter', () => {
             },
           );
 
-          expect(
-            filter.getAffectedGraphByNodeChange(deletion)?.inputValue,
-          ).toEqual({
+          expect(filter.getAffectedGraph(deletion)?.inputValue).toEqual({
             createdBy: { id: '7caf940a-058a-4ef2-a8bf-ac2d6cae3485' },
           });
         });
 
         it('The updated "birthday" does not change any document', () => {
-          const update = NodeUpdate.createFromNonNullableComponents(
+          const update = NodeUpdate.createFromPartial(
             UserProfile,
             {},
             {
@@ -438,11 +432,11 @@ describe('Filter', () => {
             },
           );
 
-          expect(filter.getAffectedGraphByNodeChange(update)).toBeNull();
+          expect(filter.getAffectedGraph(update)).toBeNull();
         });
 
         it('The updated "facebookId" may change some document(s)', () => {
-          const update = NodeUpdate.createFromNonNullableComponents(
+          const update = NodeUpdate.createFromPartial(
             UserProfile,
             {},
             {
@@ -454,9 +448,7 @@ describe('Filter', () => {
             },
           );
 
-          expect(
-            filter.getAffectedGraphByNodeChange(update)?.inputValue,
-          ).toEqual({
+          expect(filter.getAffectedGraph(update)?.inputValue).toEqual({
             createdBy: { id: '8e3587e8-2e4e-46a4-a6e0-27f08aebb215' },
           });
         });

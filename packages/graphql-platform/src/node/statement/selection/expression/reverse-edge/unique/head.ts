@@ -85,13 +85,13 @@ export class UniqueReverseEdgeHeadSelection<
     );
   }
 
-  public isAffectedByNodeUpdate(_update: NodeUpdate): boolean {
+  public isAffectedByRootUpdate(_update: NodeUpdate): boolean {
     return false;
   }
 
-  public getAffectedGraphByNodeChange(
+  public getAffectedGraph(
     change: NodeChange,
-    visitedRootNodes?: NodeValue[],
+    visitedRootNodes?: ReadonlyArray<NodeValue>,
   ): BooleanFilter | null {
     const operands: BooleanFilter[] = [];
 
@@ -124,7 +124,7 @@ export class UniqueReverseEdgeHeadSelection<
         }
       } else if (
         change.hasComponentUpdate(this.reverseEdge.originalEdge) ||
-        this.headSelection.isAffectedByNodeUpdate(change)
+        this.headSelection.isAffectedByRootUpdate(change)
       ) {
         const newTailFilter = this.reverseEdge.tail.filterInputType.filter(
           change.newValue[this.reverseEdge.originalEdge.name],
@@ -155,8 +155,7 @@ export class UniqueReverseEdgeHeadSelection<
     }
 
     {
-      const affectedHeadSelection =
-        this.headSelection.getAffectedGraphByNodeChange(change);
+      const affectedHeadSelection = this.headSelection.getAffectedGraph(change);
 
       if (affectedHeadSelection) {
         operands.push(

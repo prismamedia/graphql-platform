@@ -59,15 +59,15 @@ export class NotOperation extends AbstractBooleanFilter {
     return this.operand.isExecutableWithinUniqueConstraint(unique);
   }
 
-  public override isAffectedByNodeUpdate(update: NodeUpdate): boolean {
-    return this.operand.isAffectedByNodeUpdate(update);
+  public override isAffectedByRootUpdate(update: NodeUpdate): boolean {
+    return this.operand.isAffectedByRootUpdate(update);
   }
 
-  public override getAffectedGraphByNodeChange(
+  public override getAffectedGraph(
     change: NodeChange,
-    visitedRootNodes?: NodeValue[],
+    visitedRootNodes?: ReadonlyArray<NodeValue>,
   ): BooleanFilter | null {
-    return this.operand.getAffectedGraphByNodeChange(change, visitedRootNodes);
+    return this.operand.getAffectedGraph(change, visitedRootNodes);
   }
 
   public get ast(): graphql.ConstObjectValueNode {

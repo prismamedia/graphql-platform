@@ -40,10 +40,10 @@ export class InMemorySubscription
   }
 
   public async enqueue(
-    nodeChanges: NodeChangeAggregation,
+    changes: NodeChangeAggregation,
     waitUntilProcessed: boolean = this.subscription.isConsumingNodeChanges(),
   ): Promise<void> {
-    if (!this.subscription.isAffectedBy(nodeChanges)) {
+    if (!this.subscription.isAffectedBy(changes)) {
       return;
     }
 
@@ -62,12 +62,12 @@ export class InMemorySubscription
               () => resolve(),
             );
           }),
-          nodeChanges,
+          changes,
         ]
       : [
           undefined,
           // As the original changes will get disposed of, we need to keep a copy of them here
-          nodeChanges.clone(),
+          changes.clone(),
         ];
 
     this.#queue.push(enqueued);

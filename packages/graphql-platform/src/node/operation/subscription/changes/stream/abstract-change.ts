@@ -8,6 +8,6 @@ export abstract class AbstractChangesSubscriptionChange<
   public constructor(
     public readonly subscription: ChangesSubscriptionStream,
     public readonly value: Readonly<TValue>,
-    public readonly initiators: ReadonlyArray<TRequestContext>,
+    public readonly initiators: ReadonlySet<TRequestContext>,
   ) {}
 }

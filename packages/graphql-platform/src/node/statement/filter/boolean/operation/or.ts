@@ -232,22 +232,20 @@ export class OrOperation extends AbstractBooleanFilter {
     );
   }
 
-  public override isAffectedByNodeUpdate(update: NodeUpdate): boolean {
+  public override isAffectedByRootUpdate(update: NodeUpdate): boolean {
     return this.operands.some((operand) =>
-      operand.isAffectedByNodeUpdate(update),
+      operand.isAffectedByRootUpdate(update),
     );
   }
 
-  public override getAffectedGraphByNodeChange(
+  public override getAffectedGraph(
     change: NodeChange,
-    visitedRootNodes?: NodeValue[],
+    visitedRootNodes?: ReadonlyArray<NodeValue>,
   ): BooleanFilter | null {
     const filter = OrOperation.create(
       R.pipe(
         this.operands,
-        R.map((operand) =>
-          operand.getAffectedGraphByNodeChange(change, visitedRootNodes),
-        ),
+        R.map((operand) => operand.getAffectedGraph(change, visitedRootNodes)),
         R.filter(R.isNonNull),
       ),
     );

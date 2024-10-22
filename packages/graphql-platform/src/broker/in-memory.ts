@@ -20,10 +20,10 @@ export class InMemoryBroker implements BrokerInterface {
     this.#subscriptions = new Map();
   }
 
-  public async publish(nodeChanges: NodeChangeAggregation): Promise<void> {
+  public async publish(changes: NodeChangeAggregation): Promise<void> {
     await Promise.all(
       Array.from(this.#subscriptions.values()).map((queue) =>
-        queue.enqueue(nodeChanges),
+        queue.enqueue(changes),
       ),
     );
   }

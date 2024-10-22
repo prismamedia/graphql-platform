@@ -12,7 +12,7 @@ export interface BrokerInterface {
   /**
    * Notify the broker about the given, local, node-changes
    */
-  publish(nodeChanges: NodeChangeAggregation): Promisable<void>;
+  publish(changes: NodeChangeAggregation): Promisable<void>;
 
   /**
    * Do whatever is needed to initialize the subscription and to subscribe to the node-changes

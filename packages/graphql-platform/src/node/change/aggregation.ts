@@ -104,6 +104,7 @@ export class NodeChangeAggregation<TRequestContext extends object = any>
   >;
 
   public constructor(
+    changes?: Iterable<NodeChange<TRequestContext>>,
     configOrMaxSize?:
       | NodeChangeAggregationConfig
       | NodeChangeAggregationConfig['maxSize'],
@@ -117,6 +118,7 @@ export class NodeChangeAggregation<TRequestContext extends object = any>
     this.#onMaxSizeReached = this.config?.onMaxSizeReached ?? 'error';
 
     this.changesByNode = new Map();
+    changes && this.add(...changes);
   }
 
   public [Symbol.dispose](): void {
@@ -130,7 +132,7 @@ export class NodeChangeAggregation<TRequestContext extends object = any>
     }
   }
 
-  public append(...changes: ReadonlyArray<NodeChange<TRequestContext>>): this {
+  public add(...changes: ReadonlyArray<NodeChange<TRequestContext>>): this {
     let currentSize = this.size;
 
     for (const change of changes) {
@@ -204,6 +206,6 @@ export class NodeChangeAggregation<TRequestContext extends object = any>
   public clone(
     config: NodeChangeAggregationConfig | undefined = this.config,
   ): NodeChangeAggregation<TRequestContext> {
-    return new NodeChangeAggregation(config).append(...this);
+    return new NodeChangeAggregation(this, config);
   }
 }

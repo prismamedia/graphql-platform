@@ -9,11 +9,8 @@ import type {
   BrokerInterface,
   NodeChangeAggregationSubscriptionInterface,
 } from '../../../../broker-interface.js';
-import type {
-  Node,
-  NodeChangeAggregation,
-  NodeValue,
-} from '../../../../node.js';
+import type { Node, NodeValue } from '../../../../node.js';
+import type { NodeChangeAggregation } from '../../../change.js';
 import type {
   ContextBoundNodeAPI,
   OperationContext,
@@ -23,11 +20,10 @@ import {
   NodeSelection,
   type NodeSelectedValue,
 } from '../../../statement.js';
-import type { ChangesSubscriptionChange } from './stream/change.js';
+import { type ChangesSubscriptionChange } from './stream/change.js';
 import { ChangesSubscriptionEffect } from './stream/effect.js';
 
 export * from './stream/change.js';
-export * from './stream/effect.js';
 
 export type ChangesSubscriptionStreamForEachTask<
   TUpsert extends NodeSelectedValue = any,
@@ -193,11 +189,14 @@ export class ChangesSubscriptionStream<
     return this.dispose();
   }
 
-  public isAffectedBy(nodeChanges: NodeChangeAggregation): boolean {
-    using effect = ChangesSubscriptionEffect.createFromNodeChangeAggregation(
-      this,
-      nodeChanges,
-    );
+  public getEffectOf(
+    changes: NodeChangeAggregation,
+  ): ChangesSubscriptionEffect {
+    return new ChangesSubscriptionEffect(this, changes);
+  }
+
+  public isAffectedBy(changes: NodeChangeAggregation): boolean {
+    using effect = this.getEffectOf(changes);
 
     return !effect.isEmpty();
   }
@@ -207,16 +206,12 @@ export class ChangesSubscriptionStream<
     ChangesSubscriptionChange<TUpsert, TDeletion, TRequestContext>,
     undefined
   > {
-    const nodeChangesSubscription = await this.subscribeToNodeChanges();
+    const changesSubscription = await this.subscribeToNodeChanges();
 
     this.#consumingNodeChanges = true;
 
-    for await (const nodeChanges of nodeChangesSubscription) {
-      using effect = ChangesSubscriptionEffect.createFromNodeChangeAggregation(
-        this,
-        nodeChanges,
-      );
-
+    for await (const changes of changesSubscription) {
+      using effect = this.getEffectOf(changes);
       if (!effect.isEmpty()) {
         for await (const change of effect) {
           yield change;

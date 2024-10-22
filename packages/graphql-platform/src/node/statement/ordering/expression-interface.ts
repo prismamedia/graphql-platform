@@ -23,10 +23,10 @@ export interface OrderingExpressionInterface {
   /**
    * Is the provided update affecting this expression?
    */
-  isAffectedByNodeUpdate(update: NodeUpdate): boolean;
+  isAffectedByRootUpdate(update: NodeUpdate): boolean;
 
-  getAffectedGraphByNodeChange(
+  getAffectedGraph(
     change: NodeChange,
-    visitedRootNodes?: NodeValue[],
+    visitedRootNodes?: ReadonlyArray<NodeValue>,
   ): BooleanFilter | null;
 }

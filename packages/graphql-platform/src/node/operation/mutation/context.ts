@@ -15,6 +15,7 @@ export class MutationContext<
    */
   public readonly changes: NodeChangeAggregation<TRequestContext> =
     new NodeChangeAggregation(
+      undefined,
       utils.resolveThunkable(this.gp.maxNodeChanges, this.request),
     );
 

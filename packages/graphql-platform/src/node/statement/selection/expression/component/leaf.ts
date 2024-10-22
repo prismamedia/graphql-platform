@@ -50,13 +50,13 @@ export class LeafSelection<TSource extends LeafValue = any, TValue = TSource>
     return this;
   }
 
-  public isAffectedByNodeUpdate(update: NodeUpdate): boolean {
+  public isAffectedByRootUpdate(update: NodeUpdate): boolean {
     return update.hasComponentUpdate(this.leaf);
   }
 
-  public getAffectedGraphByNodeChange(
+  public getAffectedGraph(
     _change: NodeChange,
-    _visitedRootNodes?: NodeValue[],
+    _visitedRootNodes?: ReadonlyArray<NodeValue>,
   ): BooleanFilter | null {
     return null;
   }

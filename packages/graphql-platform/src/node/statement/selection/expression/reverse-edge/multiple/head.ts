@@ -132,13 +132,13 @@ export class MultipleReverseEdgeHeadSelection<
     );
   }
 
-  public isAffectedByNodeUpdate(_update: NodeUpdate): boolean {
+  public isAffectedByRootUpdate(_update: NodeUpdate): boolean {
     return false;
   }
 
-  public getAffectedGraphByNodeChange(
+  public getAffectedGraph(
     change: NodeChange,
-    visitedRootNodes?: NodeValue[],
+    visitedRootNodes?: ReadonlyArray<NodeValue>,
   ): BooleanFilter | null {
     const operands: BooleanFilter[] = [];
 
@@ -175,9 +175,9 @@ export class MultipleReverseEdgeHeadSelection<
         }
       } else if (
         change.hasComponentUpdate(this.reverseEdge.originalEdge) ||
-        this.headFilter?.isAffectedByNodeUpdate(change) ||
-        this.headOrdering?.isAffectedByNodeUpdate(change) ||
-        this.headSelection.isAffectedByNodeUpdate(change)
+        this.headFilter?.isAffectedByRootUpdate(change) ||
+        this.headOrdering?.isAffectedByRootUpdate(change) ||
+        this.headSelection.isAffectedByRootUpdate(change)
       ) {
         if (this.headFilter?.execute(change.newValue, true) !== false) {
           const newTailFilter = this.reverseEdge.tail.filterInputType.filter(
@@ -212,14 +212,11 @@ export class MultipleReverseEdgeHeadSelection<
     }
 
     {
-      const affectedHeadFilter =
-        this.headFilter?.getAffectedGraphByNodeChange(change);
+      const affectedHeadFilter = this.headFilter?.getAffectedGraph(change);
 
-      const affectedHeadOrdering =
-        this.headOrdering?.getAffectedGraphByNodeChange(change);
+      const affectedHeadOrdering = this.headOrdering?.getAffectedGraph(change);
 
-      const affectedHeadSelection =
-        this.headSelection.getAffectedGraphByNodeChange(change);
+      const affectedHeadSelection = this.headSelection.getAffectedGraph(change);
 
       if (affectedHeadFilter || affectedHeadOrdering || affectedHeadSelection) {
         operands.push(

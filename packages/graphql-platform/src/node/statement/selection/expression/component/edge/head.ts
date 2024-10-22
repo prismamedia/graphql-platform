@@ -79,20 +79,20 @@ export class EdgeHeadSelection<
     );
   }
 
-  public isAffectedByNodeUpdate(update: NodeUpdate): boolean {
+  public isAffectedByRootUpdate(update: NodeUpdate): boolean {
     return update.hasComponentUpdate(this.edge);
   }
 
-  public getAffectedGraphByNodeChange(
+  public getAffectedGraph(
     change: NodeChange,
-    _visitedRootNodes?: NodeValue[],
+    _visitedRootNodes?: ReadonlyArray<NodeValue>,
   ): BooleanFilter | null {
     const operands: BooleanFilter[] = [];
 
     if (
       change.node === this.edge.head &&
       change instanceof NodeUpdate &&
-      this.headSelection.isAffectedByNodeUpdate(change)
+      this.headSelection.isAffectedByRootUpdate(change)
     ) {
       operands.push(
         this.edge.head.filterInputType.filter(
@@ -102,8 +102,7 @@ export class EdgeHeadSelection<
     }
 
     {
-      const affectedHeadSelection =
-        this.headSelection.getAffectedGraphByNodeChange(change);
+      const affectedHeadSelection = this.headSelection.getAffectedGraph(change);
 
       if (affectedHeadSelection) {
         operands.push(affectedHeadSelection.filter);

@@ -23,11 +23,11 @@ export interface SelectionExpressionInterface<TSource = any, TValue = TSource> {
   /**
    * Is the provided update affecting this expression?
    */
-  isAffectedByNodeUpdate(update: NodeUpdate): boolean;
+  isAffectedByRootUpdate(update: NodeUpdate): boolean;
 
-  getAffectedGraphByNodeChange(
+  getAffectedGraph(
     change: NodeChange,
-    visitedRootNodes?: NodeValue[],
+    visitedRootNodes?: ReadonlyArray<NodeValue>,
   ): BooleanFilter | null;
 
   parseSource(maybeSource: unknown, path?: utils.Path): TSource;

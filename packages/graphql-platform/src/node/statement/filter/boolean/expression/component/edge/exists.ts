@@ -127,16 +127,16 @@ export class EdgeExistsFilter extends AbstractComponentFilter {
     );
   }
 
-  public override isAffectedByNodeUpdate(update: NodeUpdate): boolean {
+  public override isAffectedByRootUpdate(update: NodeUpdate): boolean {
     return (
       update.hasComponentUpdate(this.edge) &&
       this.execute(update.oldValue) !== this.execute(update.newValue)
     );
   }
 
-  public override getAffectedGraphByNodeChange(
+  public override getAffectedGraph(
     change: NodeChange,
-    _visitedRootNodes?: NodeValue[],
+    _visitedRootNodes?: ReadonlyArray<NodeValue>,
   ): BooleanFilter | null {
     if (this.headFilter) {
       const operands: BooleanFilter[] = [];
@@ -144,7 +144,7 @@ export class EdgeExistsFilter extends AbstractComponentFilter {
       if (
         change.node === this.edge.head &&
         change instanceof NodeUpdate &&
-        this.headFilter.isAffectedByNodeUpdate(change)
+        this.headFilter.isAffectedByRootUpdate(change)
       ) {
         operands.push(
           this.edge.head.filterInputType.filter(
@@ -154,8 +154,7 @@ export class EdgeExistsFilter extends AbstractComponentFilter {
       }
 
       {
-        const affectedHeadFilter =
-          this.headFilter.getAffectedGraphByNodeChange(change);
+        const affectedHeadFilter = this.headFilter.getAffectedGraph(change);
 
         if (affectedHeadFilter) {
           operands.push(affectedHeadFilter.filter);

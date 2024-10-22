@@ -81,7 +81,7 @@ export class LeafFullTextFilter extends AbstractLeafFilter {
     return unique.leafSet.has(this.leaf);
   }
 
-  public override isAffectedByNodeUpdate(update: NodeUpdate): boolean {
+  public override isAffectedByRootUpdate(update: NodeUpdate): boolean {
     return (
       update.hasComponentUpdate(this.leaf) &&
       this.execute(update.oldValue) !== this.execute(update.newValue)

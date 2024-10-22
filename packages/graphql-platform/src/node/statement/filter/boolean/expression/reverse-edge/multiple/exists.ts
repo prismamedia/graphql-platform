@@ -132,9 +132,9 @@ export class MultipleReverseEdgeExistsFilter extends AbstractReverseEdgeFilter {
       : true;
   }
 
-  public override getAffectedGraphByNodeChange(
+  public override getAffectedGraph(
     change: NodeChange,
-    visitedRootNodes?: NodeValue[],
+    visitedRootNodes?: ReadonlyArray<NodeValue>,
   ): BooleanFilter | null {
     const operands: BooleanFilter[] = [];
 
@@ -171,7 +171,7 @@ export class MultipleReverseEdgeExistsFilter extends AbstractReverseEdgeFilter {
         }
       } else if (
         change.hasComponentUpdate(this.reverseEdge.originalEdge) ||
-        this.headFilter?.isAffectedByNodeUpdate(change)
+        this.headFilter?.isAffectedByRootUpdate(change)
       ) {
         if (this.headFilter?.execute(change.newValue, true) !== false) {
           const newTailFilter = this.reverseEdge.tail.filterInputType.filter(
@@ -206,8 +206,7 @@ export class MultipleReverseEdgeExistsFilter extends AbstractReverseEdgeFilter {
     }
 
     {
-      const affectedHeadFilter =
-        this.headFilter?.getAffectedGraphByNodeChange(change);
+      const affectedHeadFilter = this.headFilter?.getAffectedGraph(change);
 
       if (affectedHeadFilter) {
         operands.push(

@@ -90,13 +90,13 @@ export class MultipleReverseEdgeCountSelection<
     return this;
   }
 
-  public isAffectedByNodeUpdate(_update: NodeUpdate): boolean {
+  public isAffectedByRootUpdate(_update: NodeUpdate): boolean {
     return false;
   }
 
-  public getAffectedGraphByNodeChange(
+  public getAffectedGraph(
     change: NodeChange,
-    visitedRootNodes?: NodeValue[],
+    visitedRootNodes?: ReadonlyArray<NodeValue>,
   ): BooleanFilter | null {
     const operands: BooleanFilter[] = [];
 
@@ -133,7 +133,7 @@ export class MultipleReverseEdgeCountSelection<
         }
       } else if (
         change.hasComponentUpdate(this.reverseEdge.originalEdge) ||
-        this.headFilter?.isAffectedByNodeUpdate(change)
+        this.headFilter?.isAffectedByRootUpdate(change)
       ) {
         if (this.headFilter?.execute(change.newValue, true) !== false) {
           const newTailFilter = this.reverseEdge.tail.filterInputType.filter(
@@ -168,8 +168,7 @@ export class MultipleReverseEdgeCountSelection<
     }
 
     {
-      const affectedHeadFilter =
-        this.headFilter?.getAffectedGraphByNodeChange(change);
+      const affectedHeadFilter = this.headFilter?.getAffectedGraph(change);
 
       if (affectedHeadFilter) {
         operands.push(

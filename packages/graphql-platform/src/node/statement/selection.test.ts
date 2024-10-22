@@ -136,7 +136,7 @@ describe('Selection', () => {
 
       describe('Article', () => {
         it('The updated "slug" does not change any document', () => {
-          const update = NodeUpdate.createFromNonNullableComponents(
+          const update = NodeUpdate.createFromPartial(
             Article,
             {},
             {
@@ -155,12 +155,12 @@ describe('Selection', () => {
             },
           );
 
-          expect(selection.isAffectedByNodeUpdate(update)).toBe(false);
-          expect(selection.getAffectedGraphByNodeChange(update)).toBeNull();
+          expect(selection.isAffectedByRootUpdate(update)).toBe(false);
+          expect(selection.getAffectedGraph(update)).toBeNull();
         });
 
         it('The updated "title" does not change any document if there is no "createdBy" or "updatedBy"', () => {
-          const update = NodeUpdate.createFromNonNullableComponents(
+          const update = NodeUpdate.createFromPartial(
             Article,
             {},
             {
@@ -179,12 +179,12 @@ describe('Selection', () => {
             },
           );
 
-          expect(selection.isAffectedByNodeUpdate(update)).toBe(true);
-          expect(selection.getAffectedGraphByNodeChange(update)).toBeNull();
+          expect(selection.isAffectedByRootUpdate(update)).toBe(true);
+          expect(selection.getAffectedGraph(update)).toBeNull();
         });
 
         it('The updated "title" may change some document(s) if there is a "createdBy" or an "updatedBy"', () => {
-          const update = NodeUpdate.createFromNonNullableComponents(
+          const update = NodeUpdate.createFromPartial(
             Article,
             {},
             {
@@ -205,10 +205,8 @@ describe('Selection', () => {
             },
           );
 
-          expect(selection.isAffectedByNodeUpdate(update)).toBe(true);
-          expect(
-            selection.getAffectedGraphByNodeChange(update)?.inputValue,
-          ).toEqual({
+          expect(selection.isAffectedByRootUpdate(update)).toBe(true);
+          expect(selection.getAffectedGraph(update)?.inputValue).toEqual({
             OR: [
               { createdBy: { id: '9121c47b-87b6-4334-ae1d-4c9777e87576' } },
               { updatedBy: { username: 'yvann' } },
@@ -217,7 +215,7 @@ describe('Selection', () => {
         });
 
         it('The updated "updatedAt" may change some document(s) if there is an "updatedBy"', () => {
-          const update = NodeUpdate.createFromNonNullableComponents(
+          const update = NodeUpdate.createFromPartial(
             Article,
             {},
             {
@@ -237,15 +235,15 @@ describe('Selection', () => {
             },
           );
 
-          expect(
-            selection.getAffectedGraphByNodeChange(update)?.inputValue,
-          ).toEqual({ updatedBy: { username: 'yvann' } });
+          expect(selection.getAffectedGraph(update)?.inputValue).toEqual({
+            updatedBy: { username: 'yvann' },
+          });
         });
       });
 
       describe('Category', () => {
         it('The updated "order" does not change any document', () => {
-          const update = NodeUpdate.createFromNonNullableComponents(
+          const update = NodeUpdate.createFromPartial(
             Category,
             {},
             {
@@ -260,11 +258,11 @@ describe('Selection', () => {
             },
           );
 
-          expect(selection.getAffectedGraphByNodeChange(update)).toBeNull();
+          expect(selection.getAffectedGraph(update)).toBeNull();
         });
 
         it('The updated "parent" may change some document(s)', () => {
-          const update = NodeUpdate.createFromNonNullableComponents(
+          const update = NodeUpdate.createFromPartial(
             Category,
             {},
             {
@@ -279,9 +277,7 @@ describe('Selection', () => {
             },
           );
 
-          expect(
-            selection.getAffectedGraphByNodeChange(update)?.inputValue,
-          ).toEqual({
+          expect(selection.getAffectedGraph(update)?.inputValue).toEqual({
             category: { _id: 10 },
           });
         });
@@ -289,7 +285,7 @@ describe('Selection', () => {
 
       describe('User', () => {
         it('The updated "lastLoggedInAt" does not change any document', () => {
-          const update = NodeUpdate.createFromNonNullableComponents(
+          const update = NodeUpdate.createFromPartial(
             User,
             {},
             {
@@ -302,21 +298,19 @@ describe('Selection', () => {
             },
           );
 
-          expect(selection.getAffectedGraphByNodeChange(update)).toBeNull();
+          expect(selection.getAffectedGraph(update)).toBeNull();
         });
       });
 
       describe('UserProfile', () => {
         it('The creation may change some document(s)', () => {
-          const creation = NodeCreation.createFromNonNullableComponents(
+          const creation = NodeCreation.createFromPartial(
             UserProfile,
             {},
             { user: { id: '16050880-dabc-4348-bd3b-d41efe1b6057' } },
           );
 
-          expect(
-            selection.getAffectedGraphByNodeChange(creation)?.inputValue,
-          ).toEqual({
+          expect(selection.getAffectedGraph(creation)?.inputValue).toEqual({
             OR: [
               { createdBy: { id: '16050880-dabc-4348-bd3b-d41efe1b6057' } },
               { updatedBy: { id: '16050880-dabc-4348-bd3b-d41efe1b6057' } },
@@ -325,15 +319,13 @@ describe('Selection', () => {
         });
 
         it('The deletion may change some document(s)', () => {
-          const deletion = NodeDeletion.createFromNonNullableComponents(
+          const deletion = NodeDeletion.createFromPartial(
             UserProfile,
             {},
             { user: { id: '7caf940a-058a-4ef2-a8bf-ac2d6cae3485' } },
           );
 
-          expect(
-            selection.getAffectedGraphByNodeChange(deletion)?.inputValue,
-          ).toEqual({
+          expect(selection.getAffectedGraph(deletion)?.inputValue).toEqual({
             OR: [
               { createdBy: { id: '7caf940a-058a-4ef2-a8bf-ac2d6cae3485' } },
               { updatedBy: { id: '7caf940a-058a-4ef2-a8bf-ac2d6cae3485' } },
@@ -342,7 +334,7 @@ describe('Selection', () => {
         });
 
         it('The updated "birthday" does not change any document', () => {
-          const update = NodeUpdate.createFromNonNullableComponents(
+          const update = NodeUpdate.createFromPartial(
             UserProfile,
             {},
             {
@@ -353,11 +345,11 @@ describe('Selection', () => {
             },
           );
 
-          expect(selection.getAffectedGraphByNodeChange(update)).toBeNull();
+          expect(selection.getAffectedGraph(update)).toBeNull();
         });
 
         it('The updated "facebookId" may change some document(s)', () => {
-          const update = NodeUpdate.createFromNonNullableComponents(
+          const update = NodeUpdate.createFromPartial(
             UserProfile,
             {},
             {
@@ -368,9 +360,7 @@ describe('Selection', () => {
             },
           );
 
-          expect(
-            selection.getAffectedGraphByNodeChange(update)?.inputValue,
-          ).toEqual({
+          expect(selection.getAffectedGraph(update)?.inputValue).toEqual({
             OR: [
               { createdBy: { id: '8e3587e8-2e4e-46a4-a6e0-27f08aebb215' } },
               { updatedBy: { id: '8e3587e8-2e4e-46a4-a6e0-27f08aebb215' } },
@@ -381,7 +371,7 @@ describe('Selection', () => {
 
       describe('ArticleTag', () => {
         it('The creation may change some document(s)', () => {
-          const creation = NodeCreation.createFromNonNullableComponents(
+          const creation = NodeCreation.createFromPartial(
             ArticleTag,
             {},
             {
@@ -391,13 +381,13 @@ describe('Selection', () => {
             },
           );
 
-          expect(
-            selection.getAffectedGraphByNodeChange(creation)?.inputValue,
-          ).toEqual({ _id: 2 });
+          expect(selection.getAffectedGraph(creation)?.inputValue).toEqual({
+            _id: 2,
+          });
         });
 
         it('The deletion may change some document(s)', () => {
-          const deletion = NodeDeletion.createFromNonNullableComponents(
+          const deletion = NodeDeletion.createFromPartial(
             ArticleTag,
             {},
             {
@@ -407,13 +397,13 @@ describe('Selection', () => {
             },
           );
 
-          expect(
-            selection.getAffectedGraphByNodeChange(deletion)?.inputValue,
-          ).toEqual({ _id: 3 });
+          expect(selection.getAffectedGraph(deletion)?.inputValue).toEqual({
+            _id: 3,
+          });
         });
 
         it('The updated "order", from 4 to 0, may change some document(s)', () => {
-          const update = NodeUpdate.createFromNonNullableComponents(
+          const update = NodeUpdate.createFromPartial(
             ArticleTag,
             {},
             {
@@ -426,13 +416,13 @@ describe('Selection', () => {
             },
           );
 
-          expect(
-            selection.getAffectedGraphByNodeChange(update)?.inputValue,
-          ).toEqual({ _id: 4 });
+          expect(selection.getAffectedGraph(update)?.inputValue).toEqual({
+            _id: 4,
+          });
         });
 
         it('The updated "order", from 4 to 5, does not change any document', () => {
-          const update = NodeUpdate.createFromNonNullableComponents(
+          const update = NodeUpdate.createFromPartial(
             ArticleTag,
             {},
             {
@@ -445,13 +435,13 @@ describe('Selection', () => {
             },
           );
 
-          expect(selection.getAffectedGraphByNodeChange(update)).toBeNull();
+          expect(selection.getAffectedGraph(update)).toBeNull();
         });
       });
 
       describe('Tag', () => {
         it('The updated "deprecated", from NULL to TRUE, may change some document(s)', () => {
-          const update = NodeUpdate.createFromNonNullableComponents(
+          const update = NodeUpdate.createFromPartial(
             Tag,
             {},
             {
@@ -466,15 +456,13 @@ describe('Selection', () => {
             },
           );
 
-          expect(
-            selection.getAffectedGraphByNodeChange(update)?.inputValue,
-          ).toEqual({
+          expect(selection.getAffectedGraph(update)?.inputValue).toEqual({
             tags_some: { tag: { id: '68f3d88d-1308-4019-8118-fc20042e8c20' } },
           });
         });
 
         it('The updated "deprecated", from NULL to FALSE, does not change any document', () => {
-          const update = NodeUpdate.createFromNonNullableComponents(
+          const update = NodeUpdate.createFromPartial(
             Tag,
             {},
             {
@@ -489,7 +477,7 @@ describe('Selection', () => {
             },
           );
 
-          expect(selection.getAffectedGraphByNodeChange(update)).toBeNull();
+          expect(selection.getAffectedGraph(update)).toBeNull();
         });
       });
     });

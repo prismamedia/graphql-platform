@@ -7,9 +7,9 @@ export class ChangesSubscriptionUpsert<
   TRequestContext extends object = any,
 > extends AbstractChangesSubscriptionChange<TValue, TRequestContext> {
   public constructor(
-    subscription: ChangesSubscriptionStream,
-    value: Readonly<TValue>,
-    initiators: ReadonlyArray<TRequestContext>,
+    subscription: ChangesSubscriptionStream<TValue, any, TRequestContext>,
+    value: Readonly<any>,
+    initiators: ReadonlySet<TRequestContext>,
   ) {
     super(
       subscription,

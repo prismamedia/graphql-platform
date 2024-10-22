@@ -38,23 +38,23 @@ export class NodeOrdering {
     );
   }
 
-  public isAffectedByNodeUpdate(update: NodeUpdate): boolean {
+  public isAffectedByRootUpdate(update: NodeUpdate): boolean {
     assert.equal(update.node, this.node);
 
     return this.expressions.some((expression) =>
-      expression.isAffectedByNodeUpdate(update),
+      expression.isAffectedByRootUpdate(update),
     );
   }
 
-  public getAffectedGraphByNodeChange(
+  public getAffectedGraph(
     change: NodeChange,
-    visitedRootNodes?: NodeValue[],
+    visitedRootNodes?: ReadonlyArray<NodeValue>,
   ): NodeFilter | null {
     const filter = OrOperation.create(
       R.pipe(
         this.expressions,
         R.map((expression) =>
-          expression.getAffectedGraphByNodeChange(change, visitedRootNodes),
+          expression.getAffectedGraph(change, visitedRootNodes),
         ),
         R.filter(R.isNonNull),
       ),
