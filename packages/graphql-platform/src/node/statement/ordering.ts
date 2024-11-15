@@ -1,11 +1,9 @@
 import { Memoize } from '@prismamedia/memoize';
 import * as graphql from 'graphql';
-import assert from 'node:assert/strict';
 import * as R from 'remeda';
-import type { Node, NodeValue } from '../../node.js';
-import type { NodeChange, NodeUpdate } from '../change.js';
+import type { Node } from '../../node.js';
+import { DependencyGraph } from '../change/dependency.js';
 import type { OrderByInputValue } from '../type.js';
-import { FalseValue, NodeFilter, OrOperation } from './filter.js';
 import type { OrderingExpression } from './ordering/expression.js';
 
 export * from './ordering/direction.js';
@@ -14,7 +12,7 @@ export * from './ordering/expression.js';
 
 export class NodeOrdering {
   public readonly expressions: ReadonlyArray<OrderingExpression>;
-  public readonly normalized: NodeOrdering | undefined;
+  public readonly normalized: this | undefined;
 
   public constructor(
     public readonly node: Node,
@@ -24,7 +22,7 @@ export class NodeOrdering {
       R.uniqueWith(expressions, (a, b) => a.equals(b)),
     );
 
-    this.normalized = this.expressions.length === 0 ? undefined : this;
+    this.normalized = this.expressions.length ? this : undefined;
   }
 
   public equals(ordering: unknown): boolean {
@@ -38,31 +36,12 @@ export class NodeOrdering {
     );
   }
 
-  public isAffectedByRootUpdate(update: NodeUpdate): boolean {
-    assert.equal(update.node, this.node);
-
-    return this.expressions.some((expression) =>
-      expression.isAffectedByRootUpdate(update),
+  @Memoize()
+  public get dependencyGraph(): DependencyGraph {
+    return new DependencyGraph(
+      this.node,
+      ...this.expressions.map(({ dependency }) => dependency),
     );
-  }
-
-  public getAffectedGraph(
-    change: NodeChange,
-    visitedRootNodes?: ReadonlyArray<NodeValue>,
-  ): NodeFilter | null {
-    const filter = OrOperation.create(
-      R.pipe(
-        this.expressions,
-        R.map((expression) =>
-          expression.getAffectedGraph(change, visitedRootNodes),
-        ),
-        R.filter(R.isNonNull),
-      ),
-    );
-
-    return !filter.equals(FalseValue)
-      ? new NodeFilter(this.node, filter)
-      : null;
   }
 
   @Memoize()

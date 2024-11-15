@@ -21,15 +21,15 @@ import {
   LeafOutputType,
   MultipleReverseEdgeCountOutputType,
   MultipleReverseEdgeHeadOutputType,
-  NodeFieldOutputType,
-  ThunkableNillableVirtualOutputConfig,
-  ThunkableNillableVirtualOutputConfigsByName,
   UniqueReverseEdgeHeadOutputType,
   VirtualOutputType,
   isMultipleReverseEdgeOutputType,
   type ComponentOutputType,
   type MultipleReverseEdgeOutputType,
+  type NodeFieldOutputType,
   type ReverseEdgeOutputType,
+  type ThunkableNillableVirtualOutputConfig,
+  type ThunkableNillableVirtualOutputConfigsByName,
 } from './node/field.js';
 
 export * from './node/field.js';
@@ -152,10 +152,12 @@ export class NodeOutputType {
     LeafOutputType
   > {
     return new Map(
-      Array.from(this.componentFieldsByName).filter(
-        (entry): entry is [string, LeafOutputType] =>
-          entry[1] instanceof LeafOutputType,
-      ),
+      this.componentFieldsByName
+        .entries()
+        .filter(
+          (entry): entry is [string, LeafOutputType] =>
+            entry[1] instanceof LeafOutputType,
+        ),
     );
   }
 
@@ -165,10 +167,12 @@ export class NodeOutputType {
     EdgeHeadOutputType
   > {
     return new Map(
-      Array.from(this.componentFieldsByName).filter(
-        (entry): entry is [string, EdgeHeadOutputType] =>
-          entry[1] instanceof EdgeHeadOutputType,
-      ),
+      this.componentFieldsByName
+        .entries()
+        .filter(
+          (entry): entry is [string, EdgeHeadOutputType] =>
+            entry[1] instanceof EdgeHeadOutputType,
+        ),
     );
   }
 
@@ -178,7 +182,7 @@ export class NodeOutputType {
     ReverseEdgeOutputType
   > {
     return new Map(
-      Array.from(this.node.reverseEdgeSet).flatMap((reverseEdge) => {
+      this.node.reverseEdgeSet.values().flatMap((reverseEdge) => {
         const fields: ReverseEdgeOutputType[] = [];
 
         if (reverseEdge instanceof UniqueReverseEdge) {
@@ -201,10 +205,12 @@ export class NodeOutputType {
     UniqueReverseEdgeHeadOutputType
   > {
     return new Map(
-      Array.from(this.reverseEdgeFieldsByName).filter(
-        (entry): entry is [string, UniqueReverseEdgeHeadOutputType] =>
-          entry[1] instanceof UniqueReverseEdgeHeadOutputType,
-      ),
+      this.reverseEdgeFieldsByName
+        .entries()
+        .filter(
+          (entry): entry is [string, UniqueReverseEdgeHeadOutputType] =>
+            entry[1] instanceof UniqueReverseEdgeHeadOutputType,
+        ),
     );
   }
 
@@ -214,10 +220,11 @@ export class NodeOutputType {
     MultipleReverseEdgeOutputType
   > {
     return new Map(
-      Array.from(this.reverseEdgeFieldsByName).filter(
-        (entry): entry is [string, MultipleReverseEdgeOutputType] =>
+      this.reverseEdgeFieldsByName
+        .entries()
+        .filter((entry): entry is [string, MultipleReverseEdgeOutputType] =>
           isMultipleReverseEdgeOutputType(entry[1]),
-      ),
+        ),
     );
   }
 

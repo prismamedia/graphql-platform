@@ -416,19 +416,20 @@ export class NodeFilterInputType extends utils.ObjectInputType<FieldFilterInputI
     const constructor = this.constructor as typeof NodeFilterInputType;
 
     return [
-      ...Array.from(this.node.componentSet).flatMap<FieldFilterInputInterface>(
-        (component) =>
+      ...this.node.componentSet
+        .values()
+        .flatMap<FieldFilterInputInterface>((component) =>
           component instanceof Leaf
             ? constructor.createLeafFields(component)
             : constructor.createEdgeFields(component),
-      ),
-      ...Array.from(
-        this.node.reverseEdgeSet,
-      ).flatMap<FieldFilterInputInterface>((reverseEdge) =>
-        reverseEdge instanceof UniqueReverseEdge
-          ? constructor.createUniqueReverseEdgeFields(reverseEdge)
-          : constructor.createMultipleReverseEdgeFields(reverseEdge),
-      ),
+        ),
+      ...this.node.reverseEdgeSet
+        .values()
+        .flatMap<FieldFilterInputInterface>((reverseEdge) =>
+          reverseEdge instanceof UniqueReverseEdge
+            ? constructor.createUniqueReverseEdgeFields(reverseEdge)
+            : constructor.createMultipleReverseEdgeFields(reverseEdge),
+        ),
       ...this.createBooleanOperationFields(),
     ];
   }

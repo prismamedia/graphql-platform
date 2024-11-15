@@ -507,12 +507,14 @@ export class GraphQLPlatform<
       utils.operationTypes.map((type): any => [
         type,
         new Map(
-          Array.from(this.nodesByName.values()).flatMap((node) =>
-            node.operationsByType[type].map((operation) => [
-              operation.name,
-              operation,
-            ]),
-          ),
+          this.nodesByName
+            .values()
+            .flatMap((node) =>
+              node.operationsByType[type].map((operation) => [
+                operation.name,
+                operation,
+              ]),
+            ),
         ),
       ]),
     ) as any;

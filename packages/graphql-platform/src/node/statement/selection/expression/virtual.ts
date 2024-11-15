@@ -2,18 +2,12 @@ import * as utils from '@prismamedia/graphql-platform-utils';
 import * as graphql from 'graphql';
 import assert from 'node:assert/strict';
 import { isDeepStrictEqual } from 'node:util';
-import type {
-  NodeSelectedValue,
-  NodeSelection,
-  NodeValue,
-} from '../../../../node.js';
-import type { NodeChange, NodeUpdate } from '../../../change.js';
+import type { NodeSelectedValue, NodeSelection } from '../../../../node.js';
 import type { OperationContext } from '../../../operation.js';
 import type {
   PartialGraphQLResolveInfo,
   VirtualOutputType,
 } from '../../../type.js';
-import { type BooleanFilter } from '../../filter.js';
 import type { SelectionExpressionInterface } from '../expression-interface.js';
 
 export type VirtualSelectionInfo = {};
@@ -33,7 +27,7 @@ export class VirtualSelection<
     public readonly alias: string | undefined,
     public readonly args: TArgs,
     public readonly info: PartialGraphQLResolveInfo,
-    public readonly dependency: NodeSelection | undefined,
+    public readonly sourceSelection: NodeSelection | undefined,
   ) {
     this.name = type.name;
     this.key = alias ?? this.name;
@@ -82,22 +76,12 @@ export class VirtualSelection<
     return this;
   }
 
-  public isAffectedByRootUpdate(update: NodeUpdate): boolean {
-    return this.dependency?.isAffectedByRootUpdate(update) ?? false;
-  }
-
-  public getAffectedGraph(
-    change: NodeChange,
-    visitedRootNodes?: ReadonlyArray<NodeValue>,
-  ): BooleanFilter | null {
-    return (
-      this.dependency?.getAffectedGraph(change, visitedRootNodes)?.filter ??
-      null
-    );
+  public get dependency() {
+    return this.sourceSelection?.dependencyGraph;
   }
 
   public parseSource(maybeSource: unknown, path?: utils.Path): TSource {
-    return this.dependency?.parseSource(maybeSource, path);
+    return this.sourceSelection?.parseSource(maybeSource, path);
   }
 
   public async resolveValue(
@@ -107,7 +91,7 @@ export class VirtualSelection<
   ): Promise<TValue> {
     try {
       return await this.type.resolve(
-        await this.dependency?.resolveValue(source, context, path),
+        await this.sourceSelection?.resolveValue(source, context, path),
         this.args,
         context,
         this.info,

@@ -52,7 +52,7 @@ export class NodeUniqueFilterInputType extends utils.ObjectInputType {
     }
 
     const publicCandidates = candidates.filter(({ componentSet }) =>
-      Array.from(componentSet).every((component) => component.isPublic()),
+      componentSet.values().every((component) => component.isPublic()),
     );
 
     super({

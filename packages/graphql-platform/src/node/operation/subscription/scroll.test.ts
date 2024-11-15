@@ -68,10 +68,10 @@ describe('ScrollSubscription', () => {
       ])(
         'does no call the connector when it is not needed',
         async (context, args) => {
-          const scroll = Article.api.scroll(context, args);
-          expect(scroll).toBeInstanceOf(ScrollSubscriptionStream);
+          const cursor = Article.api.scroll(context, args);
+          expect(cursor).toBeInstanceOf(ScrollSubscriptionStream);
 
-          await expect(scroll.toArray()).resolves.toEqual([]);
+          await expect(Array.fromAsync(cursor)).resolves.toEqual([]);
           expect(gp.connector.find).toHaveBeenCalledTimes(0);
         },
       );
@@ -81,7 +81,7 @@ describe('ScrollSubscription', () => {
           selection: '{ _id id }',
         });
 
-        await expect(cursor.toArray()).resolves.toEqual(articles);
+        await expect(Array.fromAsync(cursor)).resolves.toEqual(articles);
         expect(gp.connector.find).toHaveBeenCalledTimes(1);
       });
 
@@ -91,7 +91,7 @@ describe('ScrollSubscription', () => {
           chunkSize: 2,
         });
 
-        await expect(cursor.toArray()).resolves.toEqual(articles);
+        await expect(Array.fromAsync(cursor)).resolves.toEqual(articles);
         expect(gp.connector.find).toHaveBeenCalledTimes(3);
       });
 

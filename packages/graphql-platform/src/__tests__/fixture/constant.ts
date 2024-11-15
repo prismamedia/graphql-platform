@@ -15,6 +15,7 @@ export const Category = {
     title: 'Home',
   },
   category_news: {
+    id: '26348235-ffe8-4ed1-985f-94e58961578f',
     parent: 'category_root',
     order: 1,
     title: 'News',

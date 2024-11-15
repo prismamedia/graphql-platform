@@ -185,9 +185,9 @@ export class Edge<
     }
 
     if (
-      Array.from(referencedUniqueConstraint.componentsByName.values()).some(
-        (component) => component instanceof Edge && component === this,
-      )
+      referencedUniqueConstraint.componentsByName
+        .values()
+        .some((component) => component instanceof Edge && component === this)
     ) {
       throw new utils.UnexpectedValueError(
         `a unique-constraint not refering itself`,
@@ -260,9 +260,9 @@ export class Edge<
 
   @Memoize()
   public get reverseEdge(): ReverseEdge<TConnector> {
-    const reverseEdge = Array.from(this.head.reverseEdgesByName.values()).find(
-      (reverseEdge) => reverseEdge.originalEdge === this,
-    );
+    const reverseEdge = this.head.reverseEdgesByName
+      .values()
+      .find((reverseEdge) => reverseEdge.originalEdge === this);
 
     assert(reverseEdge, `The edge "${this}" does not have its "reverse-edge"`);
 

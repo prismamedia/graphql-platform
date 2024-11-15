@@ -235,7 +235,7 @@ export class VirtualOutputType<
       variableValues: selectionContext?.variableValues ?? {},
     };
 
-    let dependency: NodeSelection | undefined;
+    let sourceSelection: NodeSelection | undefined;
 
     // dependencies
     {
@@ -249,7 +249,7 @@ export class VirtualOutputType<
             : config;
 
         if (maybeDependency) {
-          dependency = this.parent.select(
+          sourceSelection = this.parent.select(
             maybeDependency,
             operationContext,
             selectionContext,
@@ -259,7 +259,13 @@ export class VirtualOutputType<
       }
     }
 
-    return new VirtualSelection(this, ast.alias?.value, args, info, dependency);
+    return new VirtualSelection(
+      this,
+      ast.alias?.value,
+      args,
+      info,
+      sourceSelection,
+    );
   }
 
   public selectShape(

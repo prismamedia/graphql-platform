@@ -166,7 +166,8 @@ export class Table {
     // unique-indexes-by-unique-constraint
     {
       this.uniqueIndexesByUniqueConstraint = new Map(
-        Array.from(node.uniqueConstraintsByName.values())
+        node.uniqueConstraintsByName
+          .values()
           .filter((uniqueConstraint) => !uniqueConstraint.isMainIdentifier())
           .map((uniqueConstraint) => [
             uniqueConstraint,
@@ -375,10 +376,10 @@ export class Table {
             )
           : null;
       } else if (expression instanceof core.VirtualSelection) {
-        result[expression.key] = expression.dependency
+        result[expression.key] = expression.sourceSelection
           ? this.parseJsonDocument(
               jsonValue,
-              expression.dependency,
+              expression.sourceSelection,
               expressionPath,
             )
           : undefined;

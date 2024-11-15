@@ -46,28 +46,28 @@ export class NodeCreationInputType extends utils.ObjectInputType<FieldCreationIn
 
   @Memoize()
   protected get componentFields(): ReadonlyArray<ComponentCreationInput> {
-    return Array.from(this.node.componentsByName.values()).reduce<
-      ComponentCreationInput[]
-    >((fields, component) => {
-      if (component !== this.#excludedEdge) {
-        fields.push(component.creationInput);
-      }
+    return this.node.componentsByName
+      .values()
+      .reduce<ComponentCreationInput[]>((fields, component) => {
+        if (component !== this.#excludedEdge) {
+          fields.push(component.creationInput);
+        }
 
-      return fields;
-    }, []);
+        return fields;
+      }, []);
   }
 
   @Memoize()
   protected get reverseEdgeFields(): ReadonlyArray<ReverseEdgeCreationInput> {
-    return Array.from(this.node.reverseEdgesByName.values()).reduce<
-      ReverseEdgeCreationInput[]
-    >((fields, reverseEdge) => {
-      if (reverseEdge.creationInput) {
-        fields.push(reverseEdge.creationInput);
-      }
+    return this.node.reverseEdgesByName
+      .values()
+      .reduce<ReverseEdgeCreationInput[]>((fields, reverseEdge) => {
+        if (reverseEdge.creationInput) {
+          fields.push(reverseEdge.creationInput);
+        }
 
-      return fields;
-    }, []);
+        return fields;
+      }, []);
   }
 
   @Memoize()

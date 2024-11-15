@@ -92,11 +92,15 @@ export abstract class AbstractComponent<TConnector extends ConnectorInterface> {
   @Memoize()
   public get referrerSet(): ReadonlySet<Edge<TConnector>> {
     return new Set(
-      Array.from(this.node.gp.nodesByName.values()).flatMap((node) =>
-        Array.from(node.edgesByName.values()).filter((edge) =>
-          edge.referencedUniqueConstraint.componentSet.has(this as any),
+      this.node.gp.nodesByName
+        .values()
+        .flatMap((node) =>
+          node.edgesByName
+            .values()
+            .filter((edge) =>
+              edge.referencedUniqueConstraint.componentSet.has(this as any),
+            ),
         ),
-      ),
     );
   }
 
@@ -142,10 +146,12 @@ export abstract class AbstractComponent<TConnector extends ConnectorInterface> {
 
   @Memoize()
   public isUnique(): boolean {
-    return Array.from(this.node.uniqueConstraintsByName.values()).some(
-      ({ componentSet }) =>
-        componentSet.size === 1 && componentSet.has(this as any),
-    );
+    return this.node.uniqueConstraintsByName
+      .values()
+      .some(
+        ({ componentSet }) =>
+          componentSet.size === 1 && componentSet.has(this as any),
+      );
   }
 
   @Memoize()

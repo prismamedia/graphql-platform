@@ -5,7 +5,14 @@ import {
   type MyGP,
 } from '../../__tests__/config.js';
 import type { Node, UniqueConstraint } from '../../node.js';
-import { NodeCreation, NodeDeletion, NodeUpdate } from '../change.js';
+import {
+  NodeCreation,
+  NodeDeletion,
+  NodeSetDependencyGraph,
+  NodeUpdate,
+  type DependencySummaryJSON,
+  type NodeDependencyGraph,
+} from '../change.js';
 import type { NodeFilterInputValue } from '../type/input/filter.js';
 import type { NodeFilter } from './filter.js';
 
@@ -34,7 +41,6 @@ describe('Filter', () => {
       ]
     >([
       ['Article', { title_contains: 'newss' }, '_id', false],
-
       ['Article', { _id: 5 }, '_id', true],
       ['Article', { OR: [{ _id: 5 }, { _id_gt: 6 }] }, '_id', true],
     ])(
@@ -66,6 +72,41 @@ describe('Filter', () => {
 
       expect(String(filter)).toEqual(expected);
     });
+
+    it.each<
+      [
+        nodeName: string,
+        input: NodeFilterInputValue,
+        expected: DependencySummaryJSON,
+      ]
+    >([
+      ['Article', { _id_gt: 4, _id_lt: 8 }, { changes: [] }],
+      [
+        'Article',
+        { category: {} },
+        {
+          componentsByNode: { Article: ['category'] },
+          changes: ['Article'],
+        },
+      ],
+      [
+        'Article',
+        { tags_some: { tag: { deprecated_not: true } } },
+        {
+          creations: ['ArticleTag'],
+          deletions: ['ArticleTag'],
+          componentsByNode: { Tag: ['deprecated'] },
+          changes: ['ArticleTag', 'Tag'],
+        },
+      ],
+    ])('%p.dependency = %p', (nodeName, input, expected) =>
+      expect(
+        gp
+          .getNodeByName(nodeName)
+          .filterInputType.parseAndFilter(input)
+          .dependencyGraph.summary.toJSON(),
+      ).toEqual(expected),
+    );
   });
 
   describe('Execution', () => {
@@ -108,6 +149,7 @@ describe('Filter', () => {
 
     describe("Node-changes' effect", () => {
       let filter: NodeFilter;
+      let dependency: NodeDependencyGraph;
 
       beforeAll(() => {
         filter = Article.filterInputType.parseAndFilter({
@@ -135,10 +177,12 @@ describe('Filter', () => {
             },
           },
         });
+
+        dependency = new NodeSetDependencyGraph(Article, filter);
       });
 
       describe('Article', () => {
-        it('The updated "slug" does not change any document', () => {
+        it('The updated "slug" changes nothing', () => {
           const update = NodeUpdate.createFromPartial(
             Article,
             {},
@@ -158,11 +202,12 @@ describe('Filter', () => {
             },
           );
 
-          expect(filter.isAffectedByRootUpdate(update)).toBe(false);
-          expect(filter.getAffectedGraph(update)).toBeNull();
+          const dependentGraph = dependency.createDependentGraph(update);
+
+          expect(dependentGraph.isEmpty()).toBeTruthy();
         });
 
-        it('The updated "title" may change some document(s)', () => {
+        it('The updated "title" changes the root', () => {
           {
             const update = NodeUpdate.createFromPartial(
               Article,
@@ -183,8 +228,9 @@ describe('Filter', () => {
               },
             );
 
-            expect(filter.isAffectedByRootUpdate(update)).toBe(false);
-            expect(filter.getAffectedGraph(update)).toBeNull();
+            const dependentGraph = dependency.createDependentGraph(update);
+
+            expect(dependentGraph.isEmpty()).toBeTruthy();
           }
 
           {
@@ -204,39 +250,21 @@ describe('Filter', () => {
               },
               {
                 title: 'My title',
+                category: { _id: 5 },
+                createdBy: { id: '9604da92-1542-4443-bd67-0cfd26a90e5d' },
+                updatedBy: { username: 'yvann' },
               },
             );
 
-            expect(filter.isAffectedByRootUpdate(update)).toBe(true);
-            expect(filter.getAffectedGraph(update)).toBeNull();
-          }
+            const dependentGraph = dependency.createDependentGraph(update);
 
-          {
-            const update = NodeUpdate.createFromPartial(
-              Article,
-              {},
-              {
-                _id: 5,
-                id: 'aeb49c83-ee71-4662-bf5e-4ea53a6ae150',
-                status: ArticleStatus.DRAFT,
-                title: 'My test article',
-                slug: 'my-test-article',
-                createdAt: new Date('2021-01-01T00:00:00.000Z'),
-                updatedAt: new Date('2021-01-01T00:00:00.000Z'),
-                views: 0,
-                score: 0,
-              },
-              {
-                title: "My created article's title",
-              },
-            );
-
-            expect(filter.isAffectedByRootUpdate(update)).toBe(false);
-            expect(filter.getAffectedGraph(update)).toBeNull();
+            expect(dependentGraph.isEmpty()).toBeFalsy();
+            expect(dependentGraph.changes.size).toBe(1);
+            expect(dependentGraph.target.isFalse()).toBeTruthy();
           }
         });
 
-        it('The updated "title" does not change any document if there is no "createdBy"', () => {
+        it('The updated "title" changes nothing if there is no "createdBy"', () => {
           const update = NodeUpdate.createFromPartial(
             Article,
             {},
@@ -256,11 +284,12 @@ describe('Filter', () => {
             },
           );
 
-          expect(filter.isAffectedByRootUpdate(update)).toBe(false);
-          expect(filter.getAffectedGraph(update)).toBeNull();
+          const dependentGraph = dependency.createDependentGraph(update);
+
+          expect(dependentGraph.isEmpty()).toBeTruthy();
         });
 
-        it('The updated "title" may change some document(s) if there is a "createdBy"', () => {
+        it('The updated "title" changes the graph if there is a "createdBy"', () => {
           const update = NodeUpdate.createFromPartial(
             Article,
             {},
@@ -282,13 +311,19 @@ describe('Filter', () => {
             },
           );
 
-          expect(filter.isAffectedByRootUpdate(update)).toBe(false);
-          expect(filter.getAffectedGraph(update)?.inputValue).toEqual({
-            createdBy: { id: '9121c47b-87b6-4334-ae1d-4c9777e87576' },
-          });
+          const dependentGraph = dependency.createDependentGraph(update);
+
+          expect(dependentGraph.isEmpty()).toBeFalsy();
+          expect(dependentGraph.target.inputValue).toMatchInlineSnapshot(`
+           {
+             "createdBy": {
+               "id": "9121c47b-87b6-4334-ae1d-4c9777e87576",
+             },
+           }
+          `);
         });
 
-        it('The updated "title" does not change any document if there is no "updatedBy"', () => {
+        it('The updated "title" changes nothing if there is no "updatedBy"', () => {
           const update = NodeUpdate.createFromPartial(
             Article,
             {},
@@ -308,11 +343,12 @@ describe('Filter', () => {
             },
           );
 
-          expect(filter.isAffectedByRootUpdate(update)).toBe(false);
-          expect(filter.getAffectedGraph(update)).toBeNull();
+          const dependentGraph = dependency.createDependentGraph(update);
+
+          expect(dependentGraph.isEmpty()).toBeTruthy();
         });
 
-        it('The updated "title" may change some document(s) if there is an "updatedBy"', () => {
+        it('The updated "title" changes the graph if there is an "updatedBy"', () => {
           const update = NodeUpdate.createFromPartial(
             Article,
             {},
@@ -334,10 +370,16 @@ describe('Filter', () => {
             },
           );
 
-          expect(filter.isAffectedByRootUpdate(update)).toBe(false);
-          expect(filter.getAffectedGraph(update)?.inputValue).toEqual({
-            updatedBy: { username: 'yvann' },
-          });
+          const dependentGraph = dependency.createDependentGraph(update);
+
+          expect(dependentGraph.isEmpty()).toBeFalsy();
+          expect(dependentGraph.target.inputValue).toMatchInlineSnapshot(`
+           {
+             "updatedBy": {
+               "username": "yvann",
+             },
+           }
+          `);
         });
       });
 
@@ -352,9 +394,14 @@ describe('Filter', () => {
             },
           );
 
-          expect(filter.getAffectedGraph(creation)?.inputValue).toEqual({
-            _id: 4,
-          });
+          const dependentGraph = dependency.createDependentGraph(creation);
+
+          expect(dependentGraph.isEmpty()).toBeFalsy();
+          expect(dependentGraph.target.inputValue).toMatchInlineSnapshot(`
+           {
+             "_id": 4,
+           }
+          `);
         });
 
         it('The deletion may change some document(s)', () => {
@@ -367,9 +414,14 @@ describe('Filter', () => {
             },
           );
 
-          expect(filter.getAffectedGraph(deletion)?.inputValue).toEqual({
-            _id: 5,
-          });
+          const dependentGraph = dependency.createDependentGraph(deletion);
+
+          expect(dependentGraph.isEmpty()).toBeFalsy();
+          expect(dependentGraph.target.inputValue).toMatchInlineSnapshot(`
+           {
+             "_id": 5,
+           }
+          `);
         });
 
         it('The updated "source" does not change any document', () => {
@@ -385,7 +437,9 @@ describe('Filter', () => {
             },
           );
 
-          expect(filter.getAffectedGraph(update)).toBeNull();
+          const dependentGraph = dependency.createDependentGraph(update);
+
+          expect(dependentGraph.isEmpty()).toBeTruthy();
         });
       });
 
@@ -400,9 +454,16 @@ describe('Filter', () => {
             },
           );
 
-          expect(filter.getAffectedGraph(creation)?.inputValue).toEqual({
-            createdBy: { id: '16050880-dabc-4348-bd3b-d41efe1b6057' },
-          });
+          const dependentGraph = dependency.createDependentGraph(creation);
+
+          expect(dependentGraph.isEmpty()).toBeFalsy();
+          expect(dependentGraph.target.inputValue).toMatchInlineSnapshot(`
+           {
+             "createdBy": {
+               "id": "16050880-dabc-4348-bd3b-d41efe1b6057",
+             },
+           }
+          `);
         });
 
         it('The deletion may change some document(s)', () => {
@@ -415,9 +476,16 @@ describe('Filter', () => {
             },
           );
 
-          expect(filter.getAffectedGraph(deletion)?.inputValue).toEqual({
-            createdBy: { id: '7caf940a-058a-4ef2-a8bf-ac2d6cae3485' },
-          });
+          const dependentGraph = dependency.createDependentGraph(deletion);
+
+          expect(dependentGraph.isEmpty()).toBeFalsy();
+          expect(dependentGraph.target.inputValue).toMatchInlineSnapshot(`
+           {
+             "createdBy": {
+               "id": "7caf940a-058a-4ef2-a8bf-ac2d6cae3485",
+             },
+           }
+          `);
         });
 
         it('The updated "birthday" does not change any document', () => {
@@ -432,7 +500,9 @@ describe('Filter', () => {
             },
           );
 
-          expect(filter.getAffectedGraph(update)).toBeNull();
+          const dependentGraph = dependency.createDependentGraph(update);
+
+          expect(dependentGraph.isEmpty()).toBeTruthy();
         });
 
         it('The updated "facebookId" may change some document(s)', () => {
@@ -448,9 +518,16 @@ describe('Filter', () => {
             },
           );
 
-          expect(filter.getAffectedGraph(update)?.inputValue).toEqual({
-            createdBy: { id: '8e3587e8-2e4e-46a4-a6e0-27f08aebb215' },
-          });
+          const dependentGraph = dependency.createDependentGraph(update);
+
+          expect(dependentGraph.isEmpty()).toBeFalsy();
+          expect(dependentGraph.target.inputValue).toMatchInlineSnapshot(`
+           {
+             "createdBy": {
+               "id": "8e3587e8-2e4e-46a4-a6e0-27f08aebb215",
+             },
+           }
+          `);
         });
       });
     });

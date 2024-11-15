@@ -1,4 +1,4 @@
-import { AbstractBooleanExpression } from './expression/abstract.js';
+import { AbstractBooleanExpression } from './abstract-expression.js';
 import {
   isComponentFilter,
   type ComponentFilter,
@@ -8,7 +8,7 @@ import {
   type ReverseEdgeFilter,
 } from './expression/reverse-edge.js';
 
-export * from './expression/abstract.js';
+export * from './abstract-expression.js';
 export * from './expression/component.js';
 export * from './expression/reverse-edge.js';
 

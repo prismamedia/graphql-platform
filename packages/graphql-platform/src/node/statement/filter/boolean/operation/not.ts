@@ -1,10 +1,8 @@
 import * as graphql from 'graphql';
 import type {
   NodeSelectedValue,
-  NodeValue,
   UniqueConstraint,
 } from '../../../../../node.js';
-import type { NodeChange, NodeUpdate } from '../../../../change.js';
 import type { NodeFilterInputValue } from '../../../../type.js';
 import { AbstractBooleanFilter } from '../../abstract.js';
 import type { BooleanFilter } from '../../boolean.js';
@@ -59,15 +57,8 @@ export class NotOperation extends AbstractBooleanFilter {
     return this.operand.isExecutableWithinUniqueConstraint(unique);
   }
 
-  public override isAffectedByRootUpdate(update: NodeUpdate): boolean {
-    return this.operand.isAffectedByRootUpdate(update);
-  }
-
-  public override getAffectedGraph(
-    change: NodeChange,
-    visitedRootNodes?: ReadonlyArray<NodeValue>,
-  ): BooleanFilter | null {
-    return this.operand.getAffectedGraph(change, visitedRootNodes);
+  public get dependency() {
+    return this.operand.dependency;
   }
 
   public get ast(): graphql.ConstObjectValueNode {

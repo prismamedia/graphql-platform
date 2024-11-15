@@ -1,10 +1,8 @@
 import type * as utils from '@prismamedia/graphql-platform-utils';
 import type * as graphql from 'graphql';
 import type { Promisable } from 'type-fest';
-import type { NodeValue } from '../../../node.js';
-import type { NodeChange, NodeUpdate } from '../../change.js';
+import type { Dependency } from '../../change.js';
 import type { OperationContext } from '../../operation.js';
-import type { BooleanFilter } from '../filter.js';
 
 export interface SelectionExpressionInterface<TSource = any, TValue = TSource> {
   readonly alias?: utils.Name;
@@ -20,15 +18,7 @@ export interface SelectionExpressionInterface<TSource = any, TValue = TSource> {
 
   isSupersetOf(expression: unknown): boolean;
 
-  /**
-   * Is the provided update affecting this expression?
-   */
-  isAffectedByRootUpdate(update: NodeUpdate): boolean;
-
-  getAffectedGraph(
-    change: NodeChange,
-    visitedRootNodes?: ReadonlyArray<NodeValue>,
-  ): BooleanFilter | null;
+  dependency?: Dependency;
 
   parseSource(maybeSource: unknown, path?: utils.Path): TSource;
 

@@ -1,10 +1,8 @@
 import * as graphql from 'graphql';
-import type {
-  NodeSelectedValue,
-  NodeValue,
-  UniqueConstraint,
-} from '../../../node.js';
-import type { NodeChange, NodeUpdate } from '../../change.js';
+import type { NodeSelectedValue, UniqueConstraint } from '../../../node.js';
+import type { Dependency } from '../../change.js';
+
+import type { Arrayable } from 'type-fest';
 import type { NodeFilterInputValue } from '../../type.js';
 import {
   type AndOperand,
@@ -86,17 +84,5 @@ export abstract class AbstractBooleanFilter {
     return false;
   }
 
-  /**
-   * Is the provided node-update affecting this filter's expression?
-   */
-  public isAffectedByRootUpdate(_update: NodeUpdate): boolean {
-    return false;
-  }
-
-  public getAffectedGraph(
-    _change: NodeChange,
-    _visitedRootNodes?: ReadonlyArray<NodeValue>,
-  ): BooleanFilter | null {
-    return null;
-  }
+  public abstract get dependency(): Arrayable<Dependency | undefined>;
 }

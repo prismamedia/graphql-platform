@@ -54,28 +54,28 @@ export class NodeUpdateInputType extends utils.ObjectInputType<FieldUpdateInput>
 
   @Memoize()
   protected get componentFields(): ReadonlyArray<ComponentUpdateInput> {
-    return Array.from(this.node.componentsByName.values()).reduce<
-      ComponentUpdateInput[]
-    >((fields, component) => {
-      if (component !== this.#excludedEdge && component.updateInput) {
-        fields.push(component.updateInput);
-      }
+    return this.node.componentsByName
+      .values()
+      .reduce<ComponentUpdateInput[]>((fields, component) => {
+        if (component !== this.#excludedEdge && component.updateInput) {
+          fields.push(component.updateInput);
+        }
 
-      return fields;
-    }, []);
+        return fields;
+      }, []);
   }
 
   @Memoize()
   protected get reverseEdgeFields(): ReadonlyArray<ReverseEdgeUpdateInput> {
-    return Array.from(this.node.reverseEdgesByName.values()).reduce<
-      ReverseEdgeUpdateInput[]
-    >((fields, reverseEdge) => {
-      if (reverseEdge.updateInput) {
-        fields.push(reverseEdge.updateInput);
-      }
+    return this.node.reverseEdgesByName
+      .values()
+      .reduce<ReverseEdgeUpdateInput[]>((fields, reverseEdge) => {
+        if (reverseEdge.updateInput) {
+          fields.push(reverseEdge.updateInput);
+        }
 
-      return fields;
-    }, []);
+        return fields;
+      }, []);
   }
 
   @Memoize()

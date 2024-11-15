@@ -172,26 +172,14 @@ describe('Change', () => {
       }),
     ]);
 
+    expect(aggregate.summary.toJSON()).toEqual({
+      creations: ['Article', 'Tag', 'ArticleTag'],
+      deletions: ['Tag'],
+      updatesByNode: { Tag: ['title'] },
+      changes: ['Article', 'Tag', 'ArticleTag'],
+    });
+
     expect(aggregate.size).toBe(5);
-
-    expect(
-      Array.from(aggregate.changesByNode.keys(), ({ name }) => name),
-    ).toEqual(['Article', 'Tag', 'ArticleTag']);
-
-    expect(aggregate.summary.creations?.size).toBe(3);
-    expect(
-      Array.from(aggregate.summary.creations!, ({ name }) => name),
-    ).toEqual(['Article', 'Tag', 'ArticleTag']);
-
-    expect(aggregate.summary.deletions?.size).toBe(1);
-    expect(
-      Array.from(aggregate.summary.deletions!, ({ name }) => name),
-    ).toEqual(['Tag']);
-
-    expect(aggregate.summary.updatesByNode?.size).toBe(1);
-    expect(
-      Array.from(aggregate.summary.updatesByNode!.keys(), ({ name }) => name),
-    ).toEqual(['Tag']);
 
     expect(Array.from(aggregate, String)).toMatchInlineSnapshot(`
       [

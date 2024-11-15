@@ -5,8 +5,14 @@ import {
   myAdminContext,
   type MyGP,
 } from '../../__tests__/config.js';
-import type { Node } from '../../node.js';
-import { NodeCreation, NodeDeletion, NodeUpdate } from '../change.js';
+import type { Node, RawNodeSelection } from '../../node.js';
+import {
+  NodeCreation,
+  NodeDeletion,
+  NodeSetDependencyGraph,
+  NodeUpdate,
+  type DependencySummaryJSON,
+} from '../change.js';
 import { OperationContext } from '../operation.js';
 import { NodeSelection } from './selection.js';
 
@@ -31,6 +37,49 @@ describe('Selection', () => {
     Tag = gp.getNodeByName('Tag');
     User = gp.getNodeByName('User');
     UserProfile = gp.getNodeByName('UserProfile');
+  });
+
+  describe('Definition', () => {
+    it.each<[RawNodeSelection, DependencySummaryJSON]>([
+      [
+        `{ title }`,
+        {
+          componentsByNode: { Article: ['title'] },
+          changes: ['Article'],
+        },
+      ],
+      [
+        `{ title category { title order } }`,
+        {
+          componentsByNode: {
+            Article: ['title', 'category'],
+            Category: ['order'],
+          },
+          changes: ['Article', 'Category'],
+        },
+      ],
+      [
+        `{ tagCount }`,
+        {
+          creations: ['ArticleTag'],
+          deletions: ['ArticleTag'],
+          changes: ['ArticleTag'],
+        },
+      ],
+      [
+        `{ tags(where: { tag: { deprecated_not: true }}, orderBy: [order_ASC], first: 10) { tag { slug }}}`,
+        {
+          creations: ['ArticleTag'],
+          deletions: ['ArticleTag'],
+          componentsByNode: { ArticleTag: ['order'], Tag: ['deprecated'] },
+          changes: ['ArticleTag', 'Tag'],
+        },
+      ],
+    ])('%p.dependency = %p', (input, expected) =>
+      expect(
+        Article.outputType.select(input).dependencyGraph?.summary.toJSON(),
+      ).toEqual(expected),
+    );
   });
 
   describe('Execution', () => {
@@ -99,6 +148,7 @@ describe('Selection', () => {
 
     describe("Node-changes' effect", () => {
       let selection: NodeSelection;
+      let dependency: NodeSetDependencyGraph;
 
       beforeAll(() => {
         selection = Article.outputType.select(`{
@@ -108,7 +158,10 @@ describe('Selection', () => {
             source
           }
           category {
+            order
+            title
             parent {
+              order
               title
             }
           }
@@ -132,10 +185,17 @@ describe('Selection', () => {
           }
           tagCount(where: { order_gt: 0, tag: { deprecated_not: true }})
         }`);
+
+        dependency = new NodeSetDependencyGraph(
+          Article,
+          undefined,
+          undefined,
+          selection,
+        );
       });
 
       describe('Article', () => {
-        it('The updated "slug" does not change any document', () => {
+        it('The updated "slug" changes nothing', () => {
           const update = NodeUpdate.createFromPartial(
             Article,
             {},
@@ -155,11 +215,12 @@ describe('Selection', () => {
             },
           );
 
-          expect(selection.isAffectedByRootUpdate(update)).toBe(false);
-          expect(selection.getAffectedGraph(update)).toBeNull();
+          const dependentGraph = dependency.createDependentGraph(update);
+
+          expect(dependentGraph.isEmpty()).toBeTruthy();
         });
 
-        it('The updated "title" does not change any document if there is no "createdBy" or "updatedBy"', () => {
+        it('The updated "title" changes the root', () => {
           const update = NodeUpdate.createFromPartial(
             Article,
             {},
@@ -179,11 +240,14 @@ describe('Selection', () => {
             },
           );
 
-          expect(selection.isAffectedByRootUpdate(update)).toBe(true);
-          expect(selection.getAffectedGraph(update)).toBeNull();
+          const dependentGraph = dependency.createDependentGraph(update);
+
+          expect(dependentGraph.isEmpty()).toBeFalsy();
+          expect(dependentGraph.changes.size).toBe(1);
+          expect(dependentGraph.target.isFalse()).toBeTruthy();
         });
 
-        it('The updated "title" may change some document(s) if there is a "createdBy" or an "updatedBy"', () => {
+        it('The updated "title" changes the root and the graph', () => {
           const update = NodeUpdate.createFromPartial(
             Article,
             {},
@@ -205,16 +269,29 @@ describe('Selection', () => {
             },
           );
 
-          expect(selection.isAffectedByRootUpdate(update)).toBe(true);
-          expect(selection.getAffectedGraph(update)?.inputValue).toEqual({
-            OR: [
-              { createdBy: { id: '9121c47b-87b6-4334-ae1d-4c9777e87576' } },
-              { updatedBy: { username: 'yvann' } },
-            ],
-          });
+          const dependentGraph = dependency.createDependentGraph(update);
+
+          expect(dependentGraph.isEmpty()).toBeFalsy();
+          expect(dependentGraph.changes.size).toBe(1);
+          expect(dependentGraph.target.inputValue).toMatchInlineSnapshot(`
+           {
+             "OR": [
+               {
+                 "createdBy": {
+                   "id": "9121c47b-87b6-4334-ae1d-4c9777e87576",
+                 },
+               },
+               {
+                 "updatedBy": {
+                   "username": "yvann",
+                 },
+               },
+             ],
+           }
+          `);
         });
 
-        it('The updated "updatedAt" may change some document(s) if there is an "updatedBy"', () => {
+        it('The updated "updatedAt" changes the graph', () => {
           const update = NodeUpdate.createFromPartial(
             Article,
             {},
@@ -235,14 +312,22 @@ describe('Selection', () => {
             },
           );
 
-          expect(selection.getAffectedGraph(update)?.inputValue).toEqual({
-            updatedBy: { username: 'yvann' },
-          });
+          const dependentGraph = dependency.createDependentGraph(update);
+
+          expect(dependentGraph.isEmpty()).toBeFalsy();
+          expect(dependentGraph.changes.size).toBe(0);
+          expect(dependentGraph.target.inputValue).toMatchInlineSnapshot(`
+           {
+             "updatedBy": {
+               "username": "yvann",
+             },
+           }
+          `);
         });
       });
 
       describe('Category', () => {
-        it('The updated "order" does not change any document', () => {
+        it('The updated "order" changes the graph', () => {
           const update = NodeUpdate.createFromPartial(
             Category,
             {},
@@ -258,10 +343,29 @@ describe('Selection', () => {
             },
           );
 
-          expect(selection.getAffectedGraph(update)).toBeNull();
+          const dependentGraph = dependency.createDependentGraph(update);
+
+          expect(dependentGraph.isEmpty()).toBeFalsy();
+          expect(dependentGraph.changes.size).toBe(0);
+          expect(dependentGraph.target.inputValue).toMatchInlineSnapshot(`
+           {
+             "category": {
+               "OR": [
+                 {
+                   "_id": 10,
+                 },
+                 {
+                   "parent": {
+                     "_id": 10,
+                   },
+                 },
+               ],
+             },
+           }
+          `);
         });
 
-        it('The updated "parent" may change some document(s)', () => {
+        it('The updated "parent" changes the graph', () => {
           const update = NodeUpdate.createFromPartial(
             Category,
             {},
@@ -277,14 +381,22 @@ describe('Selection', () => {
             },
           );
 
-          expect(selection.getAffectedGraph(update)?.inputValue).toEqual({
-            category: { _id: 10 },
-          });
+          const dependentGraph = dependency.createDependentGraph(update);
+
+          expect(dependentGraph.isEmpty()).toBeFalsy();
+          expect(dependentGraph.changes.size).toBe(0);
+          expect(dependentGraph.target.inputValue).toMatchInlineSnapshot(`
+           {
+             "category": {
+               "_id": 10,
+             },
+           }
+          `);
         });
       });
 
       describe('User', () => {
-        it('The updated "lastLoggedInAt" does not change any document', () => {
+        it('The updated "lastLoggedInAt" changes nothing', () => {
           const update = NodeUpdate.createFromPartial(
             User,
             {},
@@ -298,42 +410,72 @@ describe('Selection', () => {
             },
           );
 
-          expect(selection.getAffectedGraph(update)).toBeNull();
+          const dependentGraph = dependency.createDependentGraph(update);
+
+          expect(dependentGraph.isEmpty()).toBeTruthy();
         });
       });
 
       describe('UserProfile', () => {
-        it('The creation may change some document(s)', () => {
+        it('The creation changes the graph', () => {
           const creation = NodeCreation.createFromPartial(
             UserProfile,
             {},
             { user: { id: '16050880-dabc-4348-bd3b-d41efe1b6057' } },
           );
 
-          expect(selection.getAffectedGraph(creation)?.inputValue).toEqual({
-            OR: [
-              { createdBy: { id: '16050880-dabc-4348-bd3b-d41efe1b6057' } },
-              { updatedBy: { id: '16050880-dabc-4348-bd3b-d41efe1b6057' } },
-            ],
-          });
+          const dependentGraph = dependency.createDependentGraph(creation);
+
+          expect(dependentGraph.isEmpty()).toBeFalsy();
+          expect(dependentGraph.changes.size).toBe(0);
+          expect(dependentGraph.target.inputValue).toMatchInlineSnapshot(`
+           {
+             "OR": [
+               {
+                 "createdBy": {
+                   "id": "16050880-dabc-4348-bd3b-d41efe1b6057",
+                 },
+               },
+               {
+                 "updatedBy": {
+                   "id": "16050880-dabc-4348-bd3b-d41efe1b6057",
+                 },
+               },
+             ],
+           }
+          `);
         });
 
-        it('The deletion may change some document(s)', () => {
+        it('The deletion changes nothing', () => {
           const deletion = NodeDeletion.createFromPartial(
             UserProfile,
             {},
             { user: { id: '7caf940a-058a-4ef2-a8bf-ac2d6cae3485' } },
           );
 
-          expect(selection.getAffectedGraph(deletion)?.inputValue).toEqual({
-            OR: [
-              { createdBy: { id: '7caf940a-058a-4ef2-a8bf-ac2d6cae3485' } },
-              { updatedBy: { id: '7caf940a-058a-4ef2-a8bf-ac2d6cae3485' } },
-            ],
-          });
+          const dependentGraph = dependency.createDependentGraph(deletion);
+
+          expect(dependentGraph.isEmpty()).toBeFalsy();
+          expect(dependentGraph.changes.size).toBe(0);
+          expect(dependentGraph.target.inputValue).toMatchInlineSnapshot(`
+           {
+             "OR": [
+               {
+                 "createdBy": {
+                   "id": "7caf940a-058a-4ef2-a8bf-ac2d6cae3485",
+                 },
+               },
+               {
+                 "updatedBy": {
+                   "id": "7caf940a-058a-4ef2-a8bf-ac2d6cae3485",
+                 },
+               },
+             ],
+           }
+          `);
         });
 
-        it('The updated "birthday" does not change any document', () => {
+        it('The updated "birthday" changes nothing', () => {
           const update = NodeUpdate.createFromPartial(
             UserProfile,
             {},
@@ -345,10 +487,12 @@ describe('Selection', () => {
             },
           );
 
-          expect(selection.getAffectedGraph(update)).toBeNull();
+          const dependentGraph = dependency.createDependentGraph(update);
+
+          expect(dependentGraph.isEmpty()).toBeTruthy();
         });
 
-        it('The updated "facebookId" may change some document(s)', () => {
+        it('The updated "facebookId" changes the graph', () => {
           const update = NodeUpdate.createFromPartial(
             UserProfile,
             {},
@@ -360,17 +504,31 @@ describe('Selection', () => {
             },
           );
 
-          expect(selection.getAffectedGraph(update)?.inputValue).toEqual({
-            OR: [
-              { createdBy: { id: '8e3587e8-2e4e-46a4-a6e0-27f08aebb215' } },
-              { updatedBy: { id: '8e3587e8-2e4e-46a4-a6e0-27f08aebb215' } },
-            ],
-          });
+          const dependentGraph = dependency.createDependentGraph(update);
+
+          expect(dependentGraph.isEmpty()).toBeFalsy();
+          expect(dependentGraph.changes.size).toBe(0);
+          expect(dependentGraph.target.inputValue).toMatchInlineSnapshot(`
+           {
+             "OR": [
+               {
+                 "createdBy": {
+                   "id": "8e3587e8-2e4e-46a4-a6e0-27f08aebb215",
+                 },
+               },
+               {
+                 "updatedBy": {
+                   "id": "8e3587e8-2e4e-46a4-a6e0-27f08aebb215",
+                 },
+               },
+             ],
+           }
+          `);
         });
       });
 
       describe('ArticleTag', () => {
-        it('The creation may change some document(s)', () => {
+        it('The creation changes the graph', () => {
           const creation = NodeCreation.createFromPartial(
             ArticleTag,
             {},
@@ -381,12 +539,18 @@ describe('Selection', () => {
             },
           );
 
-          expect(selection.getAffectedGraph(creation)?.inputValue).toEqual({
-            _id: 2,
-          });
+          const dependentGraph = dependency.createDependentGraph(creation);
+
+          expect(dependentGraph.isEmpty()).toBeFalsy();
+          expect(dependentGraph.changes.size).toBe(0);
+          expect(dependentGraph.target.inputValue).toMatchInlineSnapshot(`
+           {
+             "_id": 2,
+           }
+          `);
         });
 
-        it('The deletion may change some document(s)', () => {
+        it('The deletion changes the graph', () => {
           const deletion = NodeDeletion.createFromPartial(
             ArticleTag,
             {},
@@ -397,12 +561,18 @@ describe('Selection', () => {
             },
           );
 
-          expect(selection.getAffectedGraph(deletion)?.inputValue).toEqual({
-            _id: 3,
-          });
+          const dependentGraph = dependency.createDependentGraph(deletion);
+
+          expect(dependentGraph.isEmpty()).toBeFalsy();
+          expect(dependentGraph.changes.size).toBe(0);
+          expect(dependentGraph.target.inputValue).toMatchInlineSnapshot(`
+           {
+             "_id": 3,
+           }
+          `);
         });
 
-        it('The updated "order", from 4 to 0, may change some document(s)', () => {
+        it('The updated "order", from 4 to 0, changes the graph', () => {
           const update = NodeUpdate.createFromPartial(
             ArticleTag,
             {},
@@ -416,12 +586,18 @@ describe('Selection', () => {
             },
           );
 
-          expect(selection.getAffectedGraph(update)?.inputValue).toEqual({
-            _id: 4,
-          });
+          const dependentGraph = dependency.createDependentGraph(update);
+
+          expect(dependentGraph.isEmpty()).toBeFalsy();
+          expect(dependentGraph.changes.size).toBe(0);
+          expect(dependentGraph.target.inputValue).toMatchInlineSnapshot(`
+           {
+             "_id": 4,
+           }
+          `);
         });
 
-        it('The updated "order", from 4 to 5, does not change any document', () => {
+        it('The updated "order", from 4 to 5, changes nothing', () => {
           const update = NodeUpdate.createFromPartial(
             ArticleTag,
             {},
@@ -435,12 +611,20 @@ describe('Selection', () => {
             },
           );
 
-          expect(selection.getAffectedGraph(update)).toBeNull();
+          const dependentGraph = dependency.createDependentGraph(update);
+
+          expect(dependentGraph.isEmpty()).toBeFalsy();
+          expect(dependentGraph.changes.size).toBe(0);
+          expect(dependentGraph.target.inputValue).toMatchInlineSnapshot(`
+           {
+             "_id": 5,
+           }
+          `);
         });
       });
 
       describe('Tag', () => {
-        it('The updated "deprecated", from NULL to TRUE, may change some document(s)', () => {
+        it('The updated "deprecated", from NULL to TRUE, changes the graph', () => {
           const update = NodeUpdate.createFromPartial(
             Tag,
             {},
@@ -456,12 +640,22 @@ describe('Selection', () => {
             },
           );
 
-          expect(selection.getAffectedGraph(update)?.inputValue).toEqual({
-            tags_some: { tag: { id: '68f3d88d-1308-4019-8118-fc20042e8c20' } },
-          });
+          const dependentGraph = dependency.createDependentGraph(update);
+
+          expect(dependentGraph.isEmpty()).toBeFalsy();
+          expect(dependentGraph.changes.size).toBe(0);
+          expect(dependentGraph.target.inputValue).toMatchInlineSnapshot(`
+           {
+             "tags_some": {
+               "tag": {
+                 "id": "68f3d88d-1308-4019-8118-fc20042e8c20",
+               },
+             },
+           }
+          `);
         });
 
-        it('The updated "deprecated", from NULL to FALSE, does not change any document', () => {
+        it('The updated "deprecated", from NULL to FALSE, changes nothing', () => {
           const update = NodeUpdate.createFromPartial(
             Tag,
             {},
@@ -477,7 +671,19 @@ describe('Selection', () => {
             },
           );
 
-          expect(selection.getAffectedGraph(update)).toBeNull();
+          const dependentGraph = dependency.createDependentGraph(update);
+
+          expect(dependentGraph.isEmpty()).toBeFalsy();
+          expect(dependentGraph.changes.size).toBe(0);
+          expect(dependentGraph.target.inputValue).toMatchInlineSnapshot(`
+           {
+             "tags_some": {
+               "tag": {
+                 "id": "68f3d88d-1308-4019-8118-fc20042e8c20",
+               },
+             },
+           }
+          `);
         });
       });
     });

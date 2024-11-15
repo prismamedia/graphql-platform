@@ -2,16 +2,14 @@ import * as utils from '@prismamedia/graphql-platform-utils';
 import { Memoize } from '@prismamedia/memoize';
 import * as graphql from 'graphql';
 import assert from 'node:assert/strict';
-import * as R from 'remeda';
-import type { Node, NodeValue } from '../../node.js';
-import { NodeChange, NodeUpdate } from '../change.js';
+import type { Node } from '../../node.js';
+import { DependencyGraph } from '../change/dependency.js';
 import type {
   Component,
   ReverseEdge,
   UniqueConstraint,
 } from '../definition.js';
 import type { OperationContext } from '../operation.js';
-import { FalseValue, NodeFilter, OrOperation } from './filter.js';
 import {
   VirtualSelection,
   isComponentSelection,
@@ -64,8 +62,9 @@ export class NodeSelection<
           this.expressions.flatMap((expression) =>
             isComponentSelection(expression)
               ? [expression.component]
-              : expression instanceof VirtualSelection && expression.dependency
-                ? expression.dependency.components
+              : expression instanceof VirtualSelection &&
+                  expression.sourceSelection
+                ? expression.sourceSelection.components
                 : [],
           ),
         ),
@@ -84,8 +83,9 @@ export class NodeSelection<
           this.expressions.flatMap((expression) =>
             isReverseEdgeSelection(expression)
               ? [expression.reverseEdge]
-              : expression instanceof VirtualSelection && expression.dependency
-                ? expression.dependency.reverseEdges
+              : expression instanceof VirtualSelection &&
+                  expression.sourceSelection
+                ? expression.sourceSelection.reverseEdges
                 : [],
           ),
         ),
@@ -155,34 +155,12 @@ export class NodeSelection<
     );
   }
 
-  /**
-   * Is the provided node-update affecting this selection?
-   */
-  public isAffectedByRootUpdate(update: NodeUpdate): boolean {
-    assert.equal(update.node, this.node);
-
-    return this.expressions.some((expression) =>
-      expression.isAffectedByRootUpdate(update),
+  @Memoize()
+  public get dependencyGraph(): DependencyGraph {
+    return new DependencyGraph(
+      this.node,
+      ...this.expressions.map(({ dependency }) => dependency),
     );
-  }
-
-  public getAffectedGraph(
-    change: NodeChange,
-    visitedRootNodes?: ReadonlyArray<NodeValue>,
-  ): NodeFilter | null {
-    const filter = OrOperation.create(
-      R.pipe(
-        this.expressions,
-        R.map((expression) =>
-          expression.getAffectedGraph(change, visitedRootNodes),
-        ),
-        R.filter(R.isNonNull),
-      ),
-    );
-
-    return !filter.equals(FalseValue)
-      ? new NodeFilter(this.node, filter)
-      : null;
   }
 
   public isAkinTo(maybeSelection: unknown): maybeSelection is NodeSelection {

@@ -3,24 +3,25 @@ import {
   type EventListener,
 } from '@prismamedia/async-event-emitter';
 import Denque from 'denque';
-import type { NodeChangeAggregationSubscriptionInterface } from '../../broker-interface.js';
+import type { NodeChangeSubscriptionInterface } from '../../broker-interface.js';
 import type {
   ChangesSubscriptionStream,
+  DependentGraph,
   NodeChangeAggregation,
 } from '../../node.js';
 import type { InMemoryBroker } from '../in-memory.js';
 
 export type InMemorySubscriptionEvents = {
-  enqueued: NodeChangeAggregation;
-  dequeued: NodeChangeAggregation;
+  enqueued: DependentGraph;
+  dequeued: DependentGraph;
   idle: undefined;
 };
 
 export class InMemorySubscription
   extends AsyncEventEmitter<InMemorySubscriptionEvents>
-  implements NodeChangeAggregationSubscriptionInterface
+  implements NodeChangeSubscriptionInterface
 {
-  readonly #queue: Denque<NodeChangeAggregation>;
+  readonly #queue: Denque<DependentGraph>;
   readonly #signal: AbortSignal;
 
   public constructor(
@@ -43,50 +44,46 @@ export class InMemorySubscription
     changes: NodeChangeAggregation,
     waitUntilProcessed: boolean = this.subscription.isConsumingNodeChanges(),
   ): Promise<void> {
-    if (!this.subscription.isAffectedBy(changes)) {
+    const dependentGraph =
+      this.subscription.dependencyGraph.createDependentGraph(changes);
+
+    if (dependentGraph.isEmpty()) {
       return;
     }
 
-    const [processing, enqueued] = waitUntilProcessed
-      ? [
-          new Promise<void>((resolve) => {
-            const off = this.on(
-              'dequeued',
-              (dequeued) => {
-                if (enqueued === dequeued) {
-                  off();
-                  resolve();
-                }
-              },
-              this.subscription.signal,
-              () => resolve(),
-            );
-          }),
-          changes,
-        ]
-      : [
-          undefined,
-          // As the original changes will get disposed of, we need to keep a copy of them here
-          changes.clone(),
-        ];
+    const processing = waitUntilProcessed
+      ? new Promise<void>((resolve) => {
+          const off = this.on(
+            'dequeued',
+            (dequeued) => {
+              if (dependentGraph === dequeued) {
+                off();
+                resolve();
+              }
+            },
+            this.subscription.signal,
+            () => resolve(),
+          );
+        })
+      : undefined;
 
-    this.#queue.push(enqueued);
-    await this.emit('enqueued', enqueued);
+    this.#queue.push(dependentGraph);
+    await this.emit('enqueued', dependentGraph);
 
     return processing;
   }
 
   public async *[Symbol.asyncIterator](): AsyncIterator<
-    NodeChangeAggregation,
+    DependentGraph,
     undefined
   > {
-    let changes: NodeChangeAggregation | undefined;
+    let dependentGraph: DependentGraph | undefined;
     do {
-      while ((changes = this.#queue.peekFront())) {
-        yield changes;
+      while ((dependentGraph = this.#queue.peekFront())) {
+        yield dependentGraph;
 
         this.#queue.shift();
-        await this.emit('dequeued', changes);
+        await this.emit('dequeued', dependentGraph);
       }
 
       await this.emit('idle', undefined);

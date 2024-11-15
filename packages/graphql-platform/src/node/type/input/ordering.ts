@@ -35,21 +35,22 @@ export class NodeOrderingInputType extends utils.EnumInputType<OrderingExpressio
   @Memoize()
   public override get enumValues(): ReadonlyArray<OrderingExpressionInput> {
     return [
-      ...Array.from(this.node.componentSet).flatMap<OrderingExpressionInput>(
-        (component) =>
+      ...this.node.componentSet
+        .values()
+        .flatMap<OrderingExpressionInput>((component) =>
           component instanceof Leaf && component.isSortable()
             ? [
                 component.getOrderingInput(OrderingDirection.ASCENDING),
                 component.getOrderingInput(OrderingDirection.DESCENDING),
               ]
             : [],
-      ),
-      ...Array.from(
-        this.node.multipleReverseEdgeSet,
-      ).flatMap<OrderingExpressionInput>((reverseEdge) => [
-        reverseEdge.getOrderingInput(OrderingDirection.ASCENDING),
-        reverseEdge.getOrderingInput(OrderingDirection.DESCENDING),
-      ]),
+        ),
+      ...this.node.multipleReverseEdgeSet
+        .values()
+        .flatMap<OrderingExpressionInput>((reverseEdge) => [
+          reverseEdge.getOrderingInput(OrderingDirection.ASCENDING),
+          reverseEdge.getOrderingInput(OrderingDirection.DESCENDING),
+        ]),
     ];
   }
 

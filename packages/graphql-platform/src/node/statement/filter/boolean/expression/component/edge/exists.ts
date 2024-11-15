@@ -1,8 +1,7 @@
 import { Memoize } from '@prismamedia/memoize';
 import * as graphql from 'graphql';
 import assert from 'node:assert/strict';
-import { NodeValue } from '../../../../../../../node.js';
-import { NodeChange, NodeUpdate } from '../../../../../../change.js';
+import { EdgeDependencyGraph } from '../../../../../../change/dependency.js';
 import type { Edge, UniqueConstraint } from '../../../../../../definition.js';
 import type { NodeFilterInputValue } from '../../../../../../type.js';
 import { NodeFilter, areFiltersEqual } from '../../../../../filter.js';
@@ -11,7 +10,7 @@ import type { BooleanFilter } from '../../../../boolean.js';
 import type { AndOperand, OrOperand } from '../../../operation.js';
 import { AndOperation, NotOperation, OrOperation } from '../../../operation.js';
 import { FalseValue, TrueValue } from '../../../value.js';
-import { AbstractComponentFilter } from '../abstract.js';
+import { AbstractComponentFilter } from '../../abstract-component.js';
 
 export class EdgeExistsFilter extends AbstractComponentFilter {
   public static create(edge: Edge, headFilter?: NodeFilter): BooleanFilter {
@@ -127,49 +126,8 @@ export class EdgeExistsFilter extends AbstractComponentFilter {
     );
   }
 
-  public override isAffectedByRootUpdate(update: NodeUpdate): boolean {
-    return (
-      update.hasComponentUpdate(this.edge) &&
-      this.execute(update.oldValue) !== this.execute(update.newValue)
-    );
-  }
-
-  public override getAffectedGraph(
-    change: NodeChange,
-    _visitedRootNodes?: ReadonlyArray<NodeValue>,
-  ): BooleanFilter | null {
-    if (this.headFilter) {
-      const operands: BooleanFilter[] = [];
-
-      if (
-        change.node === this.edge.head &&
-        change instanceof NodeUpdate &&
-        this.headFilter.isAffectedByRootUpdate(change)
-      ) {
-        operands.push(
-          this.edge.head.filterInputType.filter(
-            this.edge.referencedUniqueConstraint.parseValue(change.newValue),
-          ).filter,
-        );
-      }
-
-      {
-        const affectedHeadFilter = this.headFilter.getAffectedGraph(change);
-
-        if (affectedHeadFilter) {
-          operands.push(affectedHeadFilter.filter);
-        }
-      }
-
-      if (operands.length) {
-        return EdgeExistsFilter.create(
-          this.edge,
-          new NodeFilter(this.edge.head, OrOperation.create(operands)),
-        );
-      }
-    }
-
-    return null;
+  public get dependency() {
+    return new EdgeDependencyGraph(this.edge, this.headFilter);
   }
 
   public get ast(): graphql.ConstObjectValueNode {

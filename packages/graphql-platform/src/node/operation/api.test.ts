@@ -35,7 +35,9 @@ describe('API', () => {
       ).resolves.toEqual([]);
 
       await expect(
-        api.Article.scroll(myAdminContext, { selection: `{ id }` }).toArray(),
+        Array.fromAsync(
+          api.Article.scroll(myAdminContext, { selection: `{ id }` }),
+        ),
       ).resolves.toEqual([]);
 
       {
@@ -64,7 +66,7 @@ describe('API', () => {
       ).resolves.toEqual([]);
 
       await expect(
-        api.Article.scroll({ selection: `{ id title }` }).toArray(),
+        Array.fromAsync(api.Article.scroll({ selection: `{ id title }` })),
       ).resolves.toEqual([]);
 
       {

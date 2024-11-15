@@ -13,9 +13,9 @@ export type ScrollSubscriptionOrderingInputValue = utils.Nillable<
 export class ScrollSubscriptionOrderingInputType extends utils.EnumInputType<LeafOrderingInput> {
   public constructor(public readonly node: Node) {
     assert(
-      Array.from(node.uniqueConstraintSet).some((uniqueConstraint) =>
-        uniqueConstraint.isScrollable(),
-      ),
+      node.uniqueConstraintSet
+        .values()
+        .some((uniqueConstraint) => uniqueConstraint.isScrollable()),
     );
 
     super({
@@ -26,18 +26,22 @@ export class ScrollSubscriptionOrderingInputType extends utils.EnumInputType<Lea
 
   @Memoize()
   public override get enumValues(): ReadonlyArray<LeafOrderingInput> {
-    return Array.from(this.node.uniqueConstraintSet).flatMap<LeafOrderingInput>(
-      (uniqueConstraint) =>
+    return this.node.uniqueConstraintSet
+      .values()
+      .flatMap<LeafOrderingInput>((uniqueConstraint) =>
         uniqueConstraint.isScrollable()
-          ? Array.from(uniqueConstraint.componentSet).flatMap((component) =>
-              component instanceof Leaf && component.isSortable()
-                ? [
-                    component.getOrderingInput(OrderingDirection.ASCENDING),
-                    component.getOrderingInput(OrderingDirection.DESCENDING),
-                  ]
-                : [],
-            )
+          ? uniqueConstraint.componentSet
+              .values()
+              .flatMap((component) =>
+                component instanceof Leaf && component.isSortable()
+                  ? [
+                      component.getOrderingInput(OrderingDirection.ASCENDING),
+                      component.getOrderingInput(OrderingDirection.DESCENDING),
+                    ]
+                  : [],
+              )
           : [],
-    );
+      )
+      .toArray();
   }
 }

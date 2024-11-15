@@ -1,11 +1,9 @@
 import type { EventListener } from '@prismamedia/async-event-emitter';
 import assert from 'node:assert/strict';
 import type { BrokerInterface } from '../broker-interface.js';
-import type { GraphQLPlatform } from '../index.js';
-import type {
-  ChangesSubscriptionStream,
-  NodeChangeAggregation,
-} from '../node.js';
+import type { GraphQLPlatform, NodeChange } from '../index.js';
+import type { ChangesSubscriptionStream } from '../node.js';
+import { NodeChangeAggregation } from '../node/change/aggregation.js';
 import {
   InMemorySubscription,
   type InMemorySubscriptionEvents,
@@ -20,10 +18,15 @@ export class InMemoryBroker implements BrokerInterface {
     this.#subscriptions = new Map();
   }
 
-  public async publish(changes: NodeChangeAggregation): Promise<void> {
+  public async publish(changes: Iterable<NodeChange>): Promise<void> {
+    const aggregation =
+      changes instanceof NodeChangeAggregation
+        ? changes
+        : new NodeChangeAggregation(changes);
+
     await Promise.all(
-      Array.from(this.#subscriptions.values()).map((queue) =>
-        queue.enqueue(changes),
+      Array.from(this.#subscriptions.values(), (queue) =>
+        queue.enqueue(aggregation),
       ),
     );
   }

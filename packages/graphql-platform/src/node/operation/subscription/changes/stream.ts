@@ -7,10 +7,10 @@ import PQueue from 'p-queue';
 import type { Except, Promisable } from 'type-fest';
 import type {
   BrokerInterface,
-  NodeChangeAggregationSubscriptionInterface,
+  NodeChangeSubscriptionInterface,
 } from '../../../../broker-interface.js';
 import type { Node, NodeValue } from '../../../../node.js';
-import type { NodeChangeAggregation } from '../../../change.js';
+import { DependentGraph, NodeSetDependencyGraph } from '../../../change.js';
 import type {
   ContextBoundNodeAPI,
   OperationContext,
@@ -20,7 +20,7 @@ import {
   NodeSelection,
   type NodeSelectedValue,
 } from '../../../statement.js';
-import { type ChangesSubscriptionChange } from './stream/change.js';
+import type { ChangesSubscriptionChange } from './stream/change.js';
 import { ChangesSubscriptionEffect } from './stream/effect.js';
 
 export * from './stream/change.js';
@@ -30,7 +30,7 @@ export type ChangesSubscriptionStreamForEachTask<
   TDeletion extends NodeValue = any,
   TRequestContext extends object = any,
 > = (
-  change: ChangesSubscriptionChange<TUpsert, TDeletion, TRequestContext>,
+  change: ChangesSubscriptionChange<TUpsert, TDeletion>,
   stream: ChangesSubscriptionStream<TUpsert, TDeletion, TRequestContext>,
 ) => Promisable<any>;
 
@@ -44,9 +44,7 @@ export type ChangesSubscriptionStreamByBatchTask<
   TDeletion extends NodeValue = any,
   TRequestContext extends object = any,
 > = (
-  changes: ReadonlyArray<
-    ChangesSubscriptionChange<TUpsert, TDeletion, TRequestContext>
-  >,
+  changes: ReadonlyArray<ChangesSubscriptionChange<TUpsert, TDeletion>>,
   stream: ChangesSubscriptionStream<TUpsert, TDeletion, TRequestContext>,
 ) => Promisable<any>;
 
@@ -106,14 +104,13 @@ export class ChangesSubscriptionStream<
   >
   extends AsyncEventEmitter<ChangesSubscriptionStreamEvents>
   implements
-    AsyncIterable<
-      ChangesSubscriptionChange<TUpsert, TDeletion, TRequestContext>
-    >,
+    AsyncIterable<ChangesSubscriptionChange<TUpsert, TDeletion>>,
     AsyncDisposable
 {
   public readonly filter?: NodeFilter;
   public readonly onUpsertSelection: NodeSelection<TUpsert>;
   public readonly onDeletionSelection?: NodeSelection<TDeletion>;
+  public readonly dependencyGraph: NodeSetDependencyGraph;
 
   public readonly api: ContextBoundNodeAPI;
   public readonly scrollable: boolean;
@@ -158,6 +155,13 @@ export class ChangesSubscriptionStream<
       this.onDeletionSelection = config.selection.onDeletion;
     }
 
+    this.dependencyGraph = new NodeSetDependencyGraph(
+      this.node,
+      this.filter,
+      undefined,
+      this.onUpsertSelection,
+    );
+
     this.api = node.createContextBoundAPI(context);
     this.scrollable = node.getSubscriptionByKey('scroll').isEnabled();
 
@@ -172,7 +176,7 @@ export class ChangesSubscriptionStream<
   }
 
   @Memoize()
-  public async subscribeToNodeChanges(): Promise<NodeChangeAggregationSubscriptionInterface> {
+  public async subscribeToNodeChanges(): Promise<NodeChangeSubscriptionInterface> {
     this.signal.throwIfAborted();
 
     return this.#broker.subscribe(this);
@@ -189,21 +193,9 @@ export class ChangesSubscriptionStream<
     return this.dispose();
   }
 
-  public getEffectOf(
-    changes: NodeChangeAggregation,
-  ): ChangesSubscriptionEffect {
-    return new ChangesSubscriptionEffect(this, changes);
-  }
-
-  public isAffectedBy(changes: NodeChangeAggregation): boolean {
-    using effect = this.getEffectOf(changes);
-
-    return !effect.isEmpty();
-  }
-
   @Memoize()
   protected async *changes(): AsyncIterator<
-    ChangesSubscriptionChange<TUpsert, TDeletion, TRequestContext>,
+    ChangesSubscriptionChange<TUpsert, TDeletion>,
     undefined
   > {
     const changesSubscription = await this.subscribeToNodeChanges();
@@ -211,8 +203,14 @@ export class ChangesSubscriptionStream<
     this.#consumingNodeChanges = true;
 
     for await (const changes of changesSubscription) {
-      using effect = this.getEffectOf(changes);
-      if (!effect.isEmpty()) {
+      const dependentGraph =
+        changes instanceof DependentGraph
+          ? changes
+          : this.dependencyGraph.createDependentGraph(changes);
+
+      if (!dependentGraph.isEmpty()) {
+        const effect = new ChangesSubscriptionEffect(this, dependentGraph);
+
         for await (const change of effect) {
           yield change;
 
@@ -227,7 +225,7 @@ export class ChangesSubscriptionStream<
   }
 
   public [Symbol.asyncIterator](): AsyncIterator<
-    ChangesSubscriptionChange<TUpsert, TDeletion, TRequestContext>,
+    ChangesSubscriptionChange<TUpsert, TDeletion>,
     undefined
   > {
     return {

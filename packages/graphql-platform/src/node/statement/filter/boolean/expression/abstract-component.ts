@@ -1,5 +1,5 @@
-import type { Component } from '../../../../../../node.js';
-import { AbstractBooleanExpression } from '../abstract.js';
+import type { Component } from '../../../../definition.js';
+import { AbstractBooleanExpression } from '../abstract-expression.js';
 
 export abstract class AbstractComponentFilter extends AbstractBooleanExpression {
   public constructor(public readonly component: Component) {

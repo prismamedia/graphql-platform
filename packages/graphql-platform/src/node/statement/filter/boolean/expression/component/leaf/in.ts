@@ -2,7 +2,6 @@ import { Memoize } from '@prismamedia/memoize';
 import * as graphql from 'graphql';
 import assert from 'node:assert/strict';
 import * as R from 'remeda';
-import type { NodeUpdate } from '../../../../../../change.js';
 import type {
   Leaf,
   LeafValue,
@@ -14,7 +13,7 @@ import type { BooleanFilter } from '../../../../boolean.js';
 import type { AndOperand } from '../../../operation/and.js';
 import { OrOperation, type OrOperand } from '../../../operation/or.js';
 import { FalseValue, TrueValue } from '../../../value.js';
-import { AbstractLeafFilter } from './abstract.js';
+import { AbstractLeafFilter } from '../abstract-leaf.js';
 import {
   LeafComparisonFilter,
   sortableLeafComparisonOperatorSet,
@@ -193,13 +192,6 @@ export class LeafInFilter extends AbstractLeafFilter {
     unique: UniqueConstraint,
   ): boolean {
     return unique.leafSet.has(this.leaf);
-  }
-
-  public override isAffectedByRootUpdate(update: NodeUpdate): boolean {
-    return (
-      update.hasComponentUpdate(this.leaf) &&
-      this.execute(update.oldValue) !== this.execute(update.newValue)
-    );
   }
 
   public get ast(): graphql.ConstObjectValueNode {

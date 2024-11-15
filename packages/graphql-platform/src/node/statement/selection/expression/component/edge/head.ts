@@ -1,16 +1,9 @@
 import * as utils from '@prismamedia/graphql-platform-utils';
 import * as graphql from 'graphql';
 import assert from 'node:assert/strict';
-import type { NodeValue } from '../../../../../../node.js';
-import { NodeUpdate, type NodeChange } from '../../../../../change.js';
+import { EdgeDependencyGraph } from '../../../../../change/dependency.js';
 import type { Component, Edge } from '../../../../../definition.js';
 import type { OperationContext } from '../../../../../operation.js';
-import {
-  EdgeExistsFilter,
-  NodeFilter,
-  OrOperation,
-  type BooleanFilter,
-} from '../../../../filter.js';
 import type {
   NodeSelectedValue,
   NodeSelection,
@@ -79,42 +72,8 @@ export class EdgeHeadSelection<
     );
   }
 
-  public isAffectedByRootUpdate(update: NodeUpdate): boolean {
-    return update.hasComponentUpdate(this.edge);
-  }
-
-  public getAffectedGraph(
-    change: NodeChange,
-    _visitedRootNodes?: ReadonlyArray<NodeValue>,
-  ): BooleanFilter | null {
-    const operands: BooleanFilter[] = [];
-
-    if (
-      change.node === this.edge.head &&
-      change instanceof NodeUpdate &&
-      this.headSelection.isAffectedByRootUpdate(change)
-    ) {
-      operands.push(
-        this.edge.head.filterInputType.filter(
-          this.edge.referencedUniqueConstraint.parseValue(change.newValue),
-        ).filter,
-      );
-    }
-
-    {
-      const affectedHeadSelection = this.headSelection.getAffectedGraph(change);
-
-      if (affectedHeadSelection) {
-        operands.push(affectedHeadSelection.filter);
-      }
-    }
-
-    return operands.length
-      ? EdgeExistsFilter.create(
-          this.edge,
-          new NodeFilter(this.edge.head, OrOperation.create(operands)),
-        )
-      : null;
+  public get dependency() {
+    return new EdgeDependencyGraph(this.edge, undefined, this.headSelection);
   }
 
   public get ast(): graphql.FieldNode {

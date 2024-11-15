@@ -31,6 +31,7 @@ describe('Subscription', () => {
     await gp.connector.setup();
 
     const Article = gp.getNodeByName('Article');
+    const Category = gp.getNodeByName('Category');
     const Tag = gp.getNodeByName('Tag');
 
     subscription = await Article.api.subscribeToChanges(myAdminContext, {
@@ -42,12 +43,22 @@ describe('Subscription', () => {
         onUpsert: `{
           id
           title
+          category {
+            order
+            title
+          }
         }`,
         onDeletion: `{ id }`,
       },
     });
 
     await gp.seed(myAdminContext, fixtures.constant);
+
+    await Category.api.updateOne(myAdminContext, {
+      data: { order: 2 },
+      where: { id: '26348235-ffe8-4ed1-985f-94e58961578f' },
+      selection: `{ id }`,
+    });
 
     await Tag.api.updateOne(myAdminContext, {
       data: { deprecated: true },
@@ -63,6 +74,19 @@ describe('Subscription', () => {
     await gp.connector.teardown();
   });
 
+  it('has a dependency-graph', () => {
+    expect(subscription.dependencyGraph.summary.toJSON()).toEqual({
+      componentsByNode: {
+        Article: ['status', 'title', 'category'],
+        Category: ['order'],
+        Tag: ['deprecated'],
+      },
+      creations: ['Article', 'ArticleTag'],
+      deletions: ['Article', 'ArticleTag'],
+      changes: ['Article', 'ArticleTag', 'Category', 'Tag'],
+    });
+  });
+
   it('is iterable', async () => {
     const changes: ChangesSubscriptionChange[] = [];
 
@@ -74,7 +98,7 @@ describe('Subscription', () => {
       changes.map((change) =>
         change instanceof ChangesSubscriptionDeletion ? 'deletion' : 'upsert',
       ),
-    ).toEqual(['upsert', 'upsert', 'deletion']);
+    ).toEqual(['upsert', 'upsert', 'upsert', 'deletion']);
   });
 
   it('is forEach-able', async () => {
@@ -86,7 +110,7 @@ describe('Subscription', () => {
       changes.map((change) =>
         change instanceof ChangesSubscriptionDeletion ? 'deletion' : 'upsert',
       ),
-    ).toEqual(['upsert', 'upsert', 'deletion']);
+    ).toEqual(['upsert', 'upsert', 'upsert', 'deletion']);
   });
 
   it('is byBatch-able', async () => {
@@ -100,6 +124,6 @@ describe('Subscription', () => {
       changes.map((change) =>
         change instanceof ChangesSubscriptionDeletion ? 'deletion' : 'upsert',
       ),
-    ).toEqual(['upsert', 'upsert', 'deletion']);
+    ).toEqual(['upsert', 'upsert', 'upsert', 'deletion']);
   });
 });

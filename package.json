@@ -5,7 +5,7 @@
     "Yvann Boucher <yvann.boucher@gmail.com>"
   ],
   "engines": {
-    "node": ">=20.10"
+    "node": ">=22.11"
   },
   "type": "module",
   "workspaces": [
@@ -20,8 +20,8 @@
   },
   "devDependencies": {
     "jest": "30.0.0-alpha.6",
-    "prettier": "3.3.3",
-    "typescript": "5.6.3"
+    "prettier": "3.4.2",
+    "typescript": "5.7.2"
   },
-  "packageManager": "yarn@4.5.1"
+  "packageManager": "yarn@4.5.3"
 }

@@ -210,16 +210,15 @@ export class NodeFixture<TRequestContext extends object = any> {
   @Memoize()
   public get dependents(): ReadonlySet<NodeFixtureReference> {
     return new Set(
-      Array.from(this.seeding.fixtures.values()).reduce<NodeFixtureReference[]>(
-        (dependents, fixture) => {
+      this.seeding.fixtures
+        .values()
+        .reduce<NodeFixtureReference[]>((dependents, fixture) => {
           if (fixture.dependencies.has(this.reference)) {
             dependents.push(fixture.reference);
           }
 
           return dependents;
-        },
-        [],
-      ),
+        }, []),
     );
   }
 

@@ -1,13 +1,20 @@
+import type { JsonObject } from 'type-fest';
 import type { Component, Node } from '../../../node.js';
 import type { NodeChangeAggregation } from '../aggregation.js';
 import { NodeCreation } from '../creation.js';
 import { NodeDeletion } from '../deletion.js';
 
-export class NodeChangeAggregationSummary {
-  public readonly creations?: ReadonlySet<Node>;
-  public readonly deletions?: ReadonlySet<Node>;
-  public readonly updatesByNode?: ReadonlyMap<Node, ReadonlySet<Component>>;
+export type NodeChangeAggregationSummaryJSON = JsonObject & {
+  creations?: Node['name'][];
+  deletions?: Node['name'][];
+  updatesByNode?: Record<Node['name'], Component['name'][]>;
+  changes: Node['name'][];
+};
 
+export class NodeChangeAggregationSummary {
+  public readonly creations: ReadonlySet<Node>;
+  public readonly deletions: ReadonlySet<Node>;
+  public readonly updatesByNode: ReadonlyMap<Node, ReadonlySet<Component>>;
   public readonly changes: ReadonlySet<Node>;
 
   public constructor(aggregation: NodeChangeAggregation) {
@@ -33,14 +40,33 @@ export class NodeChangeAggregationSummary {
       updates.size && updatesByNode.set(node, updates);
     });
 
-    creations.size && (this.creations = creations);
-    deletions.size && (this.deletions = deletions);
-    updatesByNode.size && (this.updatesByNode = updatesByNode);
-
+    this.creations = creations;
+    this.deletions = deletions;
+    this.updatesByNode = updatesByNode;
     this.changes = new Set([
       ...creations,
       ...deletions,
       ...updatesByNode.keys(),
     ]);
+  }
+
+  public toJSON(): NodeChangeAggregationSummaryJSON {
+    return {
+      ...(this.creations.size && {
+        creations: Array.from(this.creations, ({ name }) => name),
+      }),
+      ...(this.deletions.size && {
+        deletions: Array.from(this.deletions, ({ name }) => name),
+      }),
+      ...(this.updatesByNode.size && {
+        updatesByNode: Object.fromEntries(
+          Array.from(this.updatesByNode, ([node, components]) => [
+            node.name,
+            Array.from(components, ({ name }) => name),
+          ]),
+        ),
+      }),
+      changes: Array.from(this.changes, ({ name }) => name),
+    };
   }
 }

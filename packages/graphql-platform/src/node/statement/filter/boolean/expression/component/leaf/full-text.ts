@@ -5,10 +5,9 @@ import type {
   NodeSelectedValue,
   UniqueConstraint,
 } from '../../../../../../../node.js';
-import type { NodeUpdate } from '../../../../../../change.js';
 import type { Leaf } from '../../../../../../definition/component.js';
 import type { NodeFilterInputValue } from '../../../../../../type.js';
-import { AbstractLeafFilter } from './abstract.js';
+import { AbstractLeafFilter } from '../abstract-leaf.js';
 
 export class LeafFullTextFilter extends AbstractLeafFilter {
   public readonly key: string;
@@ -79,13 +78,6 @@ export class LeafFullTextFilter extends AbstractLeafFilter {
     unique: UniqueConstraint,
   ): boolean {
     return unique.leafSet.has(this.leaf);
-  }
-
-  public override isAffectedByRootUpdate(update: NodeUpdate): boolean {
-    return (
-      update.hasComponentUpdate(this.leaf) &&
-      this.execute(update.oldValue) !== this.execute(update.newValue)
-    );
   }
 
   public get ast(): graphql.ConstObjectValueNode {

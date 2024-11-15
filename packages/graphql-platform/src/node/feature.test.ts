@@ -5,7 +5,7 @@ import { GraphQLPlatform, Node } from '../index.js';
 
 describe('Feature', () => {
   it('can define components', () => {
-    const gp = new GraphQLPlatform({
+    const gp = new GraphQLPlatform<any>({
       nodes: {
         Article: {
           features: [
@@ -67,16 +67,14 @@ describe('Feature', () => {
           },
 
           output: {
-            virtualFields(node) {
-              return {
-                [`virtual${node.name}Output`]: {
-                  type: GraphQLString,
-                  resolve(source, args, context) {
-                    return 'Hello World!';
-                  },
+            virtualFields: (node) => ({
+              [`virtual${node}Output`]: {
+                type: GraphQLString,
+                resolve(source, args, context) {
+                  return 'Hello World!';
                 },
-              };
-            },
+              },
+            }),
           },
         },
       },

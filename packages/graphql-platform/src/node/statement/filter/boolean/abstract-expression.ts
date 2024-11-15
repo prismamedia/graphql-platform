@@ -1,6 +1,6 @@
 import * as graphql from 'graphql';
-import type { NodeFilterInputValue } from '../../../../type/input/filter.js';
-import { AbstractBooleanFilter } from '../../abstract.js';
+import type { NodeFilterInputValue } from '../../../type/input/filter.js';
+import { AbstractBooleanFilter } from '../abstract.js';
 
 export abstract class AbstractBooleanExpression extends AbstractBooleanFilter {
   public abstract readonly key: string;

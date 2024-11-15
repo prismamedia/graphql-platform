@@ -74,9 +74,9 @@ export class ChangesSubscription<
     return (
       super.isPublic() &&
       (!this.node.isDeletable() ||
-        Array.from(this.node.identifierSet).some((identifier) =>
-          identifier.isPublic(),
-        ))
+        this.node.identifierSet
+          .values()
+          .some((identifier) => identifier.isPublic()))
     );
   }
 

@@ -45,9 +45,9 @@ export class ScrollSubscription<
   public override isEnabled(): boolean {
     return (
       super.isEnabled() &&
-      Array.from(this.node.uniqueConstraintSet).some((uniqueConstraint) =>
-        uniqueConstraint.isScrollable(),
-      )
+      this.node.uniqueConstraintSet
+        .values()
+        .some((uniqueConstraint) => uniqueConstraint.isScrollable())
     );
   }
 

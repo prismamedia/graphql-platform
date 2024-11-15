@@ -9,7 +9,7 @@
     "url": "https://github.com/prismamedia/graphql-platform.git"
   },
   "engines": {
-    "node": ">=20.10"
+    "node": ">=22.11"
   },
   "type": "module",
   "exports": {
@@ -28,14 +28,15 @@
   },
   "devDependencies": {
     "@jest/globals": "30.0.0-alpha.6",
-    "@swc/core": "1.8.0",
+    "@swc-node/register": "1.10.9",
+    "@swc/core": "1.10.0",
     "@swc/jest": "0.2.37",
-    "@tsconfig/node20": "20.1.4",
-    "@types/node": "20.17.6",
+    "@tsconfig/node22": "22.0.0",
+    "@types/node": "22.10.1",
     "graphql": "16.9.0",
     "jest": "30.0.0-alpha.6",
     "publint": "0.2.12",
-    "typescript": "5.6.3"
+    "typescript": "5.7.2"
   },
   "dependencies": {
     "@prismamedia/async-event-emitter": "^6.1.0",
@@ -44,14 +45,14 @@
     "@prismamedia/memoize": "^5.0.3",
     "@types/cli-progress": "^3.11.6",
     "cli-progress": "^3.12.0",
-    "dataloader": "^2.2.2",
+    "dataloader": "^2.2.3",
     "denque": "^2.1.0",
     "dependency-graph": "^1.0.0",
     "inflection": "^3.0.0",
     "p-queue": "^8.0.1",
-    "p-retry": "^6.2.0",
-    "remeda": "^2.16.0",
-    "type-fest": "^4.26.1"
+    "p-retry": "^6.2.1",
+    "remeda": "^2.17.4",
+    "type-fest": "^4.30.0"
   },
   "peerDependencies": {
     "graphql": "^16.9.0"

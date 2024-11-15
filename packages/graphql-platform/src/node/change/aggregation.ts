@@ -1,12 +1,9 @@
 import * as utils from '@prismamedia/graphql-platform-utils';
 import type { Node } from '../../node.js';
-import {
-  isActualNodeChange,
-  NodeCreation,
-  NodeUpdate,
-  type NodeChange,
-} from '../change.js';
+import { isActualNodeChange, type NodeChange } from '../change.js';
 import { NodeChangeAggregationSummary } from './aggregation/summary.js';
+import { NodeCreation } from './creation.js';
+import { NodeUpdate } from './update.js';
 
 export * from './aggregation/summary.js';
 
@@ -93,8 +90,6 @@ export interface NodeChangeAggregationConfig {
 export class NodeChangeAggregation<TRequestContext extends object = any>
   implements Iterable<NodeChange<TRequestContext>>, Disposable
 {
-  public readonly config?: NodeChangeAggregationConfig;
-
   readonly #maxSize?: number;
   readonly #onMaxSizeReached: 'error' | 'ignore';
 
@@ -109,27 +104,27 @@ export class NodeChangeAggregation<TRequestContext extends object = any>
       | NodeChangeAggregationConfig
       | NodeChangeAggregationConfig['maxSize'],
   ) {
-    this.config =
+    const config =
       typeof configOrMaxSize === 'number'
         ? { maxSize: configOrMaxSize }
         : configOrMaxSize;
 
-    this.#maxSize = this.config?.maxSize ?? undefined;
-    this.#onMaxSizeReached = this.config?.onMaxSizeReached ?? 'error';
+    this.#maxSize = config?.maxSize ?? undefined;
+    this.#onMaxSizeReached = config?.onMaxSizeReached ?? 'error';
 
     this.changesByNode = new Map();
     changes && this.add(...changes);
-  }
-
-  public [Symbol.dispose](): void {
-    this.changesByNode.forEach((changes) => changes.clear());
-    this.changesByNode.clear();
   }
 
   public *[Symbol.iterator](): IterableIterator<NodeChange<TRequestContext>> {
     for (const changesByStringifiedId of this.changesByNode.values()) {
       yield* changesByStringifiedId.values();
     }
+  }
+
+  public [Symbol.dispose](): void {
+    this.changesByNode.forEach((changes) => changes.clear());
+    this.changesByNode.clear();
   }
 
   public add(...changes: ReadonlyArray<NodeChange<TRequestContext>>): this {
@@ -190,18 +185,6 @@ export class NodeChangeAggregation<TRequestContext extends object = any>
   }
 
   public get size(): number {
-    return Array.from(this.changesByNode.values(), ({ size }) => size).reduce(
-      (sum, size) => sum + size,
-      0,
-    );
-  }
-
-  /**
-   * Creates a shallow copy
-   */
-  public clone(
-    config: NodeChangeAggregationConfig | undefined = this.config,
-  ): NodeChangeAggregation<TRequestContext> {
-    return new NodeChangeAggregation(this, config);
+    return this.changesByNode.values().reduce((sum, { size }) => sum + size, 0);
   }
 }

@@ -527,9 +527,11 @@ export class Node<
       // leaves
       {
         this.leavesByName = new Map(
-          Array.from(this.componentsByName).filter(
-            (entry): entry is [string, Leaf] => entry[1] instanceof Leaf,
-          ),
+          this.componentsByName
+            .entries()
+            .filter(
+              (entry): entry is [string, Leaf] => entry[1] instanceof Leaf,
+            ),
         );
 
         this.leafSet = new Set(this.leavesByName.values());
@@ -538,9 +540,11 @@ export class Node<
       // edges
       {
         this.edgesByName = new Map(
-          Array.from(this.componentsByName).filter(
-            (entry): entry is [string, Edge] => entry[1] instanceof Edge,
-          ),
+          this.componentsByName
+            .entries()
+            .filter(
+              (entry): entry is [string, Edge] => entry[1] instanceof Edge,
+            ),
         );
 
         this.edgeSet = new Set(this.edgesByName.values());
@@ -597,9 +601,9 @@ export class Node<
       // identifiers (= non-nullable and immutable unique-constraints)
       {
         this.identifierSet = new Set(
-          Array.from(this.uniqueConstraintSet).filter((uniqueConstraint) =>
-            uniqueConstraint.isIdentifier(),
-          ),
+          this.uniqueConstraintSet
+            .values()
+            .filter((uniqueConstraint) => uniqueConstraint.isIdentifier()),
         );
 
         if (!this.identifierSet.size) {
@@ -745,9 +749,11 @@ export class Node<
     return (
       this.isMutable(utils.MutationType.UPDATE) &&
       (!excludedEdge ||
-        Array.from(this.componentSet).some(
-          (component) => component !== excludedEdge && component.updateInput,
-        ))
+        this.componentSet
+          .values()
+          .some(
+            (component) => component !== excludedEdge && component.updateInput,
+          ))
     );
   }
 
@@ -807,19 +813,22 @@ export class Node<
     ReadonlyArray<NonNullable<CreationConfig['preCreate']>>
   > {
     return new Map(
-      Array.from(
-        this.featuresByPriority,
-        ([priority, nodeOrFeatures]): [number, Array<any>] => [
-          priority,
-          nodeOrFeatures
-            .map(
-              (featureOrNode) =>
-                featureOrNode.getMutationConfig(utils.MutationType.CREATION)
-                  .config?.preCreate,
-            )
-            .filter(R.isFunction),
-        ],
-      ).filter(([, hooks]) => hooks.length),
+      this.featuresByPriority
+        .entries()
+        .map(
+          ([priority, nodeOrFeatures]) =>
+            [
+              priority,
+              nodeOrFeatures
+                .map(
+                  (featureOrNode) =>
+                    featureOrNode.getMutationConfig(utils.MutationType.CREATION)
+                      .config?.preCreate,
+                )
+                .filter(R.isFunction),
+            ] as const,
+        )
+        .filter(([, hooks]) => hooks.length),
     );
   }
 
@@ -846,19 +855,22 @@ export class Node<
     ReadonlyArray<NonNullable<CreationConfig['postCreate']>>
   > {
     return new Map(
-      Array.from(
-        this.featuresByPriority,
-        ([priority, nodeOrFeatures]): [number, Array<any>] => [
-          priority,
-          nodeOrFeatures
-            .map(
-              (featureOrNode) =>
-                featureOrNode.getMutationConfig(utils.MutationType.CREATION)
-                  .config?.postCreate,
-            )
-            .filter(R.isFunction),
-        ],
-      ).filter(([, hooks]) => hooks.length),
+      this.featuresByPriority
+        .entries()
+        .map(
+          ([priority, nodeOrFeatures]): [number, Array<any>] =>
+            [
+              priority,
+              nodeOrFeatures
+                .map(
+                  (featureOrNode) =>
+                    featureOrNode.getMutationConfig(utils.MutationType.CREATION)
+                      .config?.postCreate,
+                )
+                .filter(R.isFunction),
+            ] as const,
+        )
+        .filter(([, hooks]) => hooks.length),
     );
   }
 
@@ -885,9 +897,9 @@ export class Node<
     ReadonlyArray<NonNullable<UpdateConfig['preUpdate']>>
   > {
     return new Map(
-      Array.from(
-        this.featuresByPriority,
-        ([priority, nodeOrFeatures]): [number, Array<any>] => [
+      this.featuresByPriority
+        .entries()
+        .map(([priority, nodeOrFeatures]): [number, Array<any>] => [
           priority,
           nodeOrFeatures
             .map(
@@ -896,8 +908,8 @@ export class Node<
                   .config?.preUpdate,
             )
             .filter(R.isFunction),
-        ],
-      ).filter(([, hooks]) => hooks.length),
+        ])
+        .filter(([, hooks]) => hooks.length),
     );
   }
 
@@ -924,9 +936,9 @@ export class Node<
     ReadonlyArray<NonNullable<UpdateConfig['postUpdate']>>
   > {
     return new Map(
-      Array.from(
-        this.featuresByPriority,
-        ([priority, nodeOrFeatures]): [number, Array<any>] => [
+      this.featuresByPriority
+        .entries()
+        .map(([priority, nodeOrFeatures]): [number, Array<any>] => [
           priority,
           nodeOrFeatures
             .map(
@@ -935,8 +947,8 @@ export class Node<
                   .config?.postUpdate,
             )
             .filter(R.isFunction),
-        ],
-      ).filter(([, hooks]) => hooks.length),
+        ])
+        .filter(([, hooks]) => hooks.length),
     );
   }
 
@@ -963,9 +975,9 @@ export class Node<
     ReadonlyArray<NonNullable<DeletionConfig['preDelete']>>
   > {
     return new Map(
-      Array.from(
-        this.featuresByPriority,
-        ([priority, nodeOrFeatures]): [number, Array<any>] => [
+      this.featuresByPriority
+        .entries()
+        .map(([priority, nodeOrFeatures]): [number, Array<any>] => [
           priority,
           nodeOrFeatures
             .map(
@@ -974,8 +986,8 @@ export class Node<
                   .config?.preDelete,
             )
             .filter(R.isFunction),
-        ],
-      ).filter(([, hooks]) => hooks.length),
+        ])
+        .filter(([, hooks]) => hooks.length),
     );
   }
 
@@ -1002,9 +1014,9 @@ export class Node<
     ReadonlyArray<NonNullable<DeletionConfig['postDelete']>>
   > {
     return new Map(
-      Array.from(
-        this.featuresByPriority,
-        ([priority, nodeOrFeatures]): [number, Array<any>] => [
+      this.featuresByPriority
+        .entries()
+        .map(([priority, nodeOrFeatures]): [number, Array<any>] => [
           priority,
           nodeOrFeatures
             .map(
@@ -1013,8 +1025,8 @@ export class Node<
                   .config?.postDelete,
             )
             .filter(R.isFunction),
-        ],
-      ).filter(([, hooks]) => hooks.length),
+        ])
+        .filter(([, hooks]) => hooks.length),
     );
   }
 
@@ -1171,11 +1183,13 @@ export class Node<
   public isPartiallyIdentifiableWithEdge(edge: Edge): boolean {
     this.ensureEdge(edge);
 
-    return Array.from(this.uniqueConstraintSet).some(
-      (uniqueConstraint) =>
-        uniqueConstraint.componentSet.has(edge) &&
-        uniqueConstraint.componentSet.size > 1,
-    );
+    return this.uniqueConstraintSet
+      .values()
+      .some(
+        (uniqueConstraint) =>
+          uniqueConstraint.componentSet.has(edge) &&
+          uniqueConstraint.componentSet.size > 1,
+      );
   }
 
   @Memoize()
@@ -1183,7 +1197,7 @@ export class Node<
     return new NodeSelection(
       this,
       mergeSelectionExpressions(
-        Array.from(this.componentSet, ({ selection }) => selection),
+        this.componentSet.values().map(({ selection }) => selection),
       ),
     );
   }
@@ -1203,9 +1217,11 @@ export class Node<
 
     // Let's find all the edges heading to this node
     const referrers = new Set(
-      Array.from(this.gp.nodeSet).flatMap((node) =>
-        Array.from(node.edgeSet).filter((edge) => edge.head === this),
-      ),
+      this.gp.nodeSet
+        .values()
+        .flatMap(({ edgeSet }) =>
+          edgeSet.values().filter(({ head }) => head === this),
+        ),
     );
 
     if (
@@ -1264,11 +1280,13 @@ export class Node<
 
               const [nodeName, edgeName] = originalEdgeConfig.split('.');
 
-              const originalEdge = Array.from(referrers).find(
-                (referrer) =>
-                  referrer.tail.name === nodeName &&
-                  (!edgeName || referrer.name === edgeName),
-              );
+              const originalEdge = referrers
+                .values()
+                .find(
+                  (referrer) =>
+                    referrer.tail.name === nodeName &&
+                    (!edgeName || referrer.name === edgeName),
+                );
 
               if (!originalEdge) {
                 throw new utils.UnexpectedValueError(
@@ -1372,10 +1390,12 @@ export class Node<
     UniqueReverseEdge<TConnector>
   > {
     return new Map(
-      Array.from(this.reverseEdgesByName).filter(
-        (entry): entry is [string, UniqueReverseEdge] =>
-          entry[1] instanceof UniqueReverseEdge,
-      ),
+      this.reverseEdgesByName
+        .entries()
+        .filter(
+          (entry): entry is [string, UniqueReverseEdge] =>
+            entry[1] instanceof UniqueReverseEdge,
+        ),
     );
   }
 
@@ -1410,10 +1430,12 @@ export class Node<
     MultipleReverseEdge<TConnector>
   > {
     return new Map(
-      Array.from(this.reverseEdgesByName).filter(
-        (entry): entry is [string, MultipleReverseEdge] =>
-          entry[1] instanceof MultipleReverseEdge,
-      ),
+      this.reverseEdgesByName
+        .entries()
+        .filter(
+          (entry): entry is [string, MultipleReverseEdge] =>
+            entry[1] instanceof MultipleReverseEdge,
+        ),
     );
   }
 
@@ -1446,10 +1468,13 @@ export class Node<
   public getReverseEdgesByActionOnOriginalEdgeDeletion(
     onHeadDeletion: OnEdgeHeadDeletion,
   ): ReadonlyArray<ReverseEdge<TConnector>> {
-    return Array.from(this.reverseEdgeSet).filter(
-      (reverseEdge) =>
-        reverseEdge.originalEdge.onHeadDeletion === onHeadDeletion,
-    );
+    return this.reverseEdgeSet
+      .values()
+      .filter(
+        (reverseEdge) =>
+          reverseEdge.originalEdge.onHeadDeletion === onHeadDeletion,
+      )
+      .toArray();
   }
 
   @Memoize((onHeadDeletion: OnEdgeHeadDeletion) => onHeadDeletion)
@@ -1696,9 +1721,7 @@ export class Node<
 
     if (this.isUpdatable()) {
       if (
-        !Array.from(this.componentSet).some((component) =>
-          component.isMutable(),
-        )
+        !this.componentSet.values().some((component) => component.isMutable())
       ) {
         throw new utils.GraphError(
           `Expects at least one mutable component as it is mutable`,
@@ -1709,7 +1732,7 @@ export class Node<
 
     if (this.isPublic()) {
       if (
-        !Array.from(this.componentSet).some((component) => component.isPublic())
+        !this.componentSet.values().some((component) => component.isPublic())
       ) {
         throw new utils.GraphError(
           `Expects at least one public component as it is public`,
@@ -1719,9 +1742,9 @@ export class Node<
 
       if (this.isPubliclyCreatable()) {
         if (
-          !Array.from(this.componentSet).some((component) =>
-            component.creationInput.isPublic(),
-          )
+          !this.componentSet
+            .values()
+            .some((component) => component.creationInput.isPublic())
         ) {
           throw new utils.GraphError(
             `Expects at least one public component as it is publicly creatable`,
@@ -1732,9 +1755,9 @@ export class Node<
 
       if (this.isPubliclyUpdatable()) {
         if (
-          !Array.from(this.componentSet).some((component) =>
-            component.updateInput?.isPublic(),
-          )
+          !this.componentSet
+            .values()
+            .some((component) => component.updateInput?.isPublic())
         ) {
           throw new utils.GraphError(
             `Expects at least one publicly mutable component as it is publicly updatable`,

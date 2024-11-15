@@ -35,6 +35,10 @@ export class BooleanValue extends AbstractBooleanFilter {
     return true;
   }
 
+  public get dependency() {
+    return undefined;
+  }
+
   public get ast(): graphql.ConstObjectValueNode | graphql.NullValueNode {
     return this.value
       ? { kind: graphql.Kind.OBJECT, fields: [] }

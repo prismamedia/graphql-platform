@@ -5,19 +5,13 @@ import { AbstractChangesSubscriptionChange } from '../abstract-change.js';
 
 export class ChangesSubscriptionDeletion<
   TValue extends NodeValue = any,
-  TRequestContext extends object = any,
-> extends AbstractChangesSubscriptionChange<TValue, TRequestContext> {
+> extends AbstractChangesSubscriptionChange<TValue> {
   public constructor(
-    subscription: ChangesSubscriptionStream<any, TValue, TRequestContext>,
+    subscription: ChangesSubscriptionStream<any, TValue>,
     value: Readonly<any>,
-    initiators: ReadonlySet<TRequestContext>,
   ) {
     assert(subscription.onDeletionSelection);
 
-    super(
-      subscription,
-      subscription.onDeletionSelection.pickValue(value),
-      initiators,
-    );
+    super(subscription, subscription.onDeletionSelection.pickValue(value));
   }
 }

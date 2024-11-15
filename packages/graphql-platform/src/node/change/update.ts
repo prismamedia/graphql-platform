@@ -71,31 +71,31 @@ export class NodeUpdate<
     this.newValue = newValue;
 
     this.updatesByComponent = new Map(
-      Array.from(node.componentsByName.values()).reduce<
-        [Component, ComponentUpdate][]
-      >((entries, component) => {
-        if (component.isMutable()) {
-          const oldComponentValue: any = oldValue[component.name];
-          const newComponentValue: any = newValue[component.name];
+      node.componentsByName
+        .values()
+        .reduce<[Component, ComponentUpdate][]>((entries, component) => {
+          if (component.isMutable()) {
+            const oldComponentValue: any = oldValue[component.name];
+            const newComponentValue: any = newValue[component.name];
 
-          if (
-            !component.selection.areValuesEqual(
-              oldComponentValue,
-              newComponentValue,
-            )
-          ) {
-            entries.push([
-              component,
-              Object.freeze({
-                oldValue: oldComponentValue,
-                newValue: newComponentValue,
-              }),
-            ]);
+            if (
+              !component.selection.areValuesEqual(
+                oldComponentValue,
+                newComponentValue,
+              )
+            ) {
+              entries.push([
+                component,
+                Object.freeze({
+                  oldValue: oldComponentValue,
+                  newValue: newComponentValue,
+                }),
+              ]);
+            }
           }
-        }
 
-        return entries;
-      }, []),
+          return entries;
+        }, []),
     );
   }
 

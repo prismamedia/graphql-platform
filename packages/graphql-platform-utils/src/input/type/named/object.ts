@@ -75,7 +75,7 @@ export class ObjectInputType<
   @Memoize()
   public get requiredFieldsByName(): ReadonlyMap<TField['name'], TField> {
     return new Map(
-      Array.from(this.fieldsByName).filter(([, field]) => field.isRequired()),
+      this.fieldsByName.entries().filter(([, field]) => field.isRequired()),
     );
   }
 
@@ -100,7 +100,7 @@ export class ObjectInputType<
   @Memoize()
   public get publicFieldsByName(): ReadonlyMap<TField['name'], TField> {
     return new Map(
-      Array.from(this.fieldsByName).filter(([, field]) => field.isPublic()),
+      this.fieldsByName.entries().filter(([, field]) => field.isPublic()),
     );
   }
 

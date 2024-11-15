@@ -1,9 +1,12 @@
 {
-  "extends": "@tsconfig/node20",
+  "extends": "@tsconfig/node22",
 
   "include": ["${configDir}/src/**/*.ts"],
 
   "compilerOptions": {
+    "lib": ["ESNext"],
+    "target": "ES2024",
+
     "experimentalDecorators": true,
 
     "composite": true,

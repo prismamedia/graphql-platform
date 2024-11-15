@@ -8,7 +8,7 @@ import type {
   ConnectorConfigOverrideKind,
   ConnectorInterface,
 } from '../../connector-interface.js';
-import type { Node } from '../../node.js';
+import type { Node, NodeFilter } from '../../node.js';
 import {
   NodeSelection,
   mergeSelectionExpressions,
@@ -109,18 +109,22 @@ export class UniqueConstraint<TConnector extends ConnectorInterface = any> {
       // leaves
       {
         this.leafSet = new Set(
-          Array.from(this.componentSet).filter(
-            (component): component is Leaf => component instanceof Leaf,
-          ),
+          this.componentSet
+            .values()
+            .filter(
+              (component): component is Leaf => component instanceof Leaf,
+            ),
         );
       }
 
       // edges
       {
         this.edgeSet = new Set(
-          Array.from(this.componentSet).filter(
-            (component): component is Edge => component instanceof Edge,
-          ),
+          this.componentSet
+            .values()
+            .filter(
+              (component): component is Edge => component instanceof Edge,
+            ),
         );
       }
     }
@@ -144,11 +148,13 @@ export class UniqueConstraint<TConnector extends ConnectorInterface = any> {
   @Memoize()
   public get referrerSet(): ReadonlySet<Edge<TConnector>> {
     return new Set(
-      Array.from(this.node.gp.nodesByName.values()).flatMap((node) =>
-        Array.from(node.edgesByName.values()).filter(
-          (edge) => edge.referencedUniqueConstraint === this,
+      this.node.gp.nodesByName
+        .values()
+        .flatMap((node) =>
+          node.edgesByName
+            .values()
+            .filter((edge) => edge.referencedUniqueConstraint === this),
         ),
-      ),
     );
   }
 
@@ -174,16 +180,16 @@ export class UniqueConstraint<TConnector extends ConnectorInterface = any> {
 
   @Memoize()
   public isMutable(): boolean {
-    return Array.from(this.componentSet).some((component) =>
-      component.isMutable(),
-    );
+    return this.componentSet
+      .values()
+      .some((component) => component.isMutable());
   }
 
   @Memoize()
   public isNullable(): boolean {
-    return Array.from(this.componentSet).every((component) =>
-      component.isNullable(),
-    );
+    return this.componentSet
+      .values()
+      .every((component) => component.isNullable());
   }
 
   /**
@@ -201,12 +207,14 @@ export class UniqueConstraint<TConnector extends ConnectorInterface = any> {
 
   @Memoize()
   public isPublic(): boolean {
-    return Array.from(this.componentSet).every(
-      (component) =>
-        component.isPublic() &&
-        (component instanceof Leaf ||
-          component.referencedUniqueConstraint.isPublic()),
-    );
+    return this.componentSet
+      .values()
+      .every(
+        (component) =>
+          component.isPublic() &&
+          (component instanceof Leaf ||
+            component.referencedUniqueConstraint.isPublic()),
+      );
   }
 
   @Memoize()
@@ -254,34 +262,36 @@ export class UniqueConstraint<TConnector extends ConnectorInterface = any> {
         ),
       ].join(''),
       fields: () =>
-        Array.from(this.componentSet).reduce<
-          graphql.GraphQLFieldConfigMap<any, any>
-        >((fields, component) => {
-          if (component.isPublic()) {
-            const type =
-              component instanceof Leaf
-                ? component.type
-                : component.referencedUniqueConstraint.isPublic()
-                  ? component.referencedUniqueConstraint.getGraphQLObjectType()
-                  : undefined;
+        this.componentSet
+          .values()
+          .reduce<
+            graphql.GraphQLFieldConfigMap<any, any>
+          >((fields, component) => {
+            if (component.isPublic()) {
+              const type =
+                component instanceof Leaf
+                  ? component.type
+                  : component.referencedUniqueConstraint.isPublic()
+                    ? component.referencedUniqueConstraint.getGraphQLObjectType()
+                    : undefined;
 
-            if (type) {
-              fields[component.name] = {
-                ...(component.description && {
-                  description: component.description,
-                }),
-                ...(component.deprecationReason && {
-                  deprecationReason: component.deprecationReason,
-                }),
-                type: component.isNullable()
-                  ? type
-                  : new graphql.GraphQLNonNull(type),
-              };
+              if (type) {
+                fields[component.name] = {
+                  ...(component.description && {
+                    description: component.description,
+                  }),
+                  ...(component.deprecationReason && {
+                    deprecationReason: component.deprecationReason,
+                  }),
+                  type: component.isNullable()
+                    ? type
+                    : new graphql.GraphQLNonNull(type),
+                };
+              }
             }
-          }
 
-          return fields;
-        }, {}),
+            return fields;
+          }, {}),
     });
   }
 
@@ -336,6 +346,10 @@ export class UniqueConstraint<TConnector extends ConnectorInterface = any> {
     }
 
     return value;
+  }
+
+  public createFilterFromValue(maybeValue: unknown): NodeFilter {
+    return this.node.filterInputType.filter(this.parseValue(maybeValue));
   }
 
   public stringify(value: UniqueConstraintValue): string {

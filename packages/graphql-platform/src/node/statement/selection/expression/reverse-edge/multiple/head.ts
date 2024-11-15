@@ -1,27 +1,14 @@
 import * as utils from '@prismamedia/graphql-platform-utils';
 import * as graphql from 'graphql';
 import assert from 'node:assert/strict';
-import type { NodeValue } from '../../../../../../node.js';
-import {
-  NodeChange,
-  NodeCreation,
-  NodeDeletion,
-  NodeUpdate,
-} from '../../../../../change.js';
+import { ReverseEdgeDependencyGraph } from '../../../../../change/dependency.js';
 import type { MultipleReverseEdge } from '../../../../../definition.js';
 import type { OperationContext } from '../../../../../operation.js';
 import type {
   NodeFilterInputValue,
   OrderByInputValue,
 } from '../../../../../type.js';
-import {
-  FalseValue,
-  MultipleReverseEdgeExistsFilter,
-  NodeFilter,
-  OrOperation,
-  areFiltersEqual,
-  type BooleanFilter,
-} from '../../../../filter.js';
+import { NodeFilter, areFiltersEqual } from '../../../../filter.js';
 import { NodeOrdering, areOrderingsEqual } from '../../../../ordering.js';
 import type {
   NodeSelectedValue,
@@ -132,110 +119,13 @@ export class MultipleReverseEdgeHeadSelection<
     );
   }
 
-  public isAffectedByRootUpdate(_update: NodeUpdate): boolean {
-    return false;
-  }
-
-  public getAffectedGraph(
-    change: NodeChange,
-    visitedRootNodes?: ReadonlyArray<NodeValue>,
-  ): BooleanFilter | null {
-    const operands: BooleanFilter[] = [];
-
-    if (change.node === this.reverseEdge.head) {
-      if (change instanceof NodeCreation) {
-        if (this.headFilter?.execute(change.newValue, true) !== false) {
-          const tailFilter = this.reverseEdge.tail.filterInputType.filter(
-            change.newValue[this.reverseEdge.originalEdge.name],
-          );
-
-          if (
-            !tailFilter.isFalse() &&
-            !visitedRootNodes?.some((visitedRootNode) =>
-              tailFilter.execute(visitedRootNode, false),
-            )
-          ) {
-            operands.push(tailFilter.filter);
-          }
-        }
-      } else if (change instanceof NodeDeletion) {
-        if (this.headFilter?.execute(change.oldValue, true) !== false) {
-          const tailFilter = this.reverseEdge.tail.filterInputType.filter(
-            change.oldValue[this.reverseEdge.originalEdge.name],
-          );
-
-          if (
-            !tailFilter.isFalse() &&
-            !visitedRootNodes?.some((visitedRootNode) =>
-              tailFilter.execute(visitedRootNode, false),
-            )
-          ) {
-            operands.push(tailFilter.filter);
-          }
-        }
-      } else if (
-        change.hasComponentUpdate(this.reverseEdge.originalEdge) ||
-        this.headFilter?.isAffectedByRootUpdate(change) ||
-        this.headOrdering?.isAffectedByRootUpdate(change) ||
-        this.headSelection.isAffectedByRootUpdate(change)
-      ) {
-        if (this.headFilter?.execute(change.newValue, true) !== false) {
-          const newTailFilter = this.reverseEdge.tail.filterInputType.filter(
-            change.newValue[this.reverseEdge.originalEdge.name],
-          );
-
-          if (
-            !newTailFilter.isFalse() &&
-            !visitedRootNodes?.some((visitedRootNode) =>
-              newTailFilter.execute(visitedRootNode, false),
-            )
-          ) {
-            operands.push(newTailFilter.filter);
-          }
-        }
-
-        if (this.headFilter?.execute(change.oldValue, true) !== false) {
-          const oldTailFilter = this.reverseEdge.tail.filterInputType.filter(
-            change.oldValue[this.reverseEdge.originalEdge.name],
-          );
-
-          if (
-            !oldTailFilter.isFalse() &&
-            !visitedRootNodes?.some((visitedRootNode) =>
-              oldTailFilter.execute(visitedRootNode, false),
-            )
-          ) {
-            operands.push(oldTailFilter.filter);
-          }
-        }
-      }
-    }
-
-    {
-      const affectedHeadFilter = this.headFilter?.getAffectedGraph(change);
-
-      const affectedHeadOrdering = this.headOrdering?.getAffectedGraph(change);
-
-      const affectedHeadSelection = this.headSelection.getAffectedGraph(change);
-
-      if (affectedHeadFilter || affectedHeadOrdering || affectedHeadSelection) {
-        operands.push(
-          MultipleReverseEdgeExistsFilter.create(
-            this.reverseEdge,
-            new NodeFilter(
-              this.reverseEdge.head,
-              OrOperation.create([
-                affectedHeadFilter?.filter ?? FalseValue,
-                affectedHeadOrdering?.filter ?? FalseValue,
-                affectedHeadSelection?.filter ?? FalseValue,
-              ]),
-            ),
-          ),
-        );
-      }
-    }
-
-    return operands.length ? OrOperation.create(operands) : null;
+  public get dependency() {
+    return new ReverseEdgeDependencyGraph(
+      this.reverseEdge,
+      this.headFilter,
+      this.headOrdering,
+      this.headSelection,
+    );
   }
 
   public get ast(): graphql.FieldNode {

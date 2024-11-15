@@ -1,14 +1,7 @@
 import * as graphql from 'graphql';
 import assert from 'node:assert/strict';
-import {
-  NodeValue,
-  type NodeSelectedValue,
-} from '../../../../../../../node.js';
-import {
-  NodeCreation,
-  NodeDeletion,
-  type NodeChange,
-} from '../../../../../../change.js';
+import { type NodeSelectedValue } from '../../../../../../../node.js';
+import { ReverseEdgeDependencyGraph } from '../../../../../../change/dependency.js';
 import type { MultipleReverseEdge } from '../../../../../../definition.js';
 import type { NodeFilterInputValue } from '../../../../../../type.js';
 import { NodeFilter, areFiltersEqual } from '../../../../../filter.js';
@@ -20,7 +13,7 @@ import {
   type OrOperand,
 } from '../../../operation.js';
 import { FalseValue, TrueValue } from '../../../value.js';
-import { AbstractReverseEdgeFilter } from '../abstract.js';
+import { AbstractReverseEdgeFilter } from '../../abstract-reverse-edge.js';
 
 export class MultipleReverseEdgeExistsFilter extends AbstractReverseEdgeFilter {
   public static create(
@@ -132,93 +125,8 @@ export class MultipleReverseEdgeExistsFilter extends AbstractReverseEdgeFilter {
       : true;
   }
 
-  public override getAffectedGraph(
-    change: NodeChange,
-    visitedRootNodes?: ReadonlyArray<NodeValue>,
-  ): BooleanFilter | null {
-    const operands: BooleanFilter[] = [];
-
-    if (change.node === this.reverseEdge.head) {
-      if (change instanceof NodeCreation) {
-        if (this.headFilter?.execute(change.newValue, true) !== false) {
-          const tailFilter = this.reverseEdge.tail.filterInputType.filter(
-            change.newValue[this.reverseEdge.originalEdge.name],
-          );
-
-          if (
-            !tailFilter.isFalse() &&
-            !visitedRootNodes?.some((visitedRootNode) =>
-              tailFilter.execute(visitedRootNode, false),
-            )
-          ) {
-            operands.push(tailFilter.filter);
-          }
-        }
-      } else if (change instanceof NodeDeletion) {
-        if (this.headFilter?.execute(change.oldValue, true) !== false) {
-          const tailFilter = this.reverseEdge.tail.filterInputType.filter(
-            change.oldValue[this.reverseEdge.originalEdge.name],
-          );
-
-          if (
-            !tailFilter.isFalse() &&
-            !visitedRootNodes?.some((visitedRootNode) =>
-              tailFilter.execute(visitedRootNode, false),
-            )
-          ) {
-            operands.push(tailFilter.filter);
-          }
-        }
-      } else if (
-        change.hasComponentUpdate(this.reverseEdge.originalEdge) ||
-        this.headFilter?.isAffectedByRootUpdate(change)
-      ) {
-        if (this.headFilter?.execute(change.newValue, true) !== false) {
-          const newTailFilter = this.reverseEdge.tail.filterInputType.filter(
-            change.newValue[this.reverseEdge.originalEdge.name],
-          );
-
-          if (
-            !newTailFilter.isFalse() &&
-            !visitedRootNodes?.some((visitedRootNode) =>
-              newTailFilter.execute(visitedRootNode, false),
-            )
-          ) {
-            operands.push(newTailFilter.filter);
-          }
-        }
-
-        if (this.headFilter?.execute(change.oldValue, true) !== false) {
-          const oldTailFilter = this.reverseEdge.tail.filterInputType.filter(
-            change.oldValue[this.reverseEdge.originalEdge.name],
-          );
-
-          if (
-            !oldTailFilter.isFalse() &&
-            !visitedRootNodes?.some((visitedRootNode) =>
-              oldTailFilter.execute(visitedRootNode, false),
-            )
-          ) {
-            operands.push(oldTailFilter.filter);
-          }
-        }
-      }
-    }
-
-    {
-      const affectedHeadFilter = this.headFilter?.getAffectedGraph(change);
-
-      if (affectedHeadFilter) {
-        operands.push(
-          MultipleReverseEdgeExistsFilter.create(
-            this.reverseEdge,
-            affectedHeadFilter,
-          ),
-        );
-      }
-    }
-
-    return operands.length ? OrOperation.create(operands) : null;
+  public get dependency() {
+    return new ReverseEdgeDependencyGraph(this.reverseEdge, this.headFilter);
   }
 
   public get ast(): graphql.ConstObjectValueNode {

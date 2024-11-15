@@ -1,13 +1,11 @@
 import Denque from 'denque';
 import * as graphql from 'graphql';
 import assert from 'node:assert/strict';
-import * as R from 'remeda';
 import type {
   NodeSelectedValue,
-  NodeValue,
   UniqueConstraint,
 } from '../../../../../node.js';
-import type { NodeChange, NodeUpdate } from '../../../../change.js';
+import type { Dependency } from '../../../../change.js';
 import type { NodeFilterInputValue } from '../../../../type.js';
 import { AbstractBooleanFilter } from '../../abstract.js';
 import type { BooleanFilter } from '../../boolean.js';
@@ -232,25 +230,8 @@ export class AndOperation extends AbstractBooleanFilter {
     );
   }
 
-  public override isAffectedByRootUpdate(update: NodeUpdate): boolean {
-    return this.operands.some((operand) =>
-      operand.isAffectedByRootUpdate(update),
-    );
-  }
-
-  public override getAffectedGraph(
-    change: NodeChange,
-    visitedRootNodes?: ReadonlyArray<NodeValue>,
-  ): BooleanFilter | null {
-    const filter = OrOperation.create(
-      R.pipe(
-        this.operands,
-        R.map((operand) => operand.getAffectedGraph(change, visitedRootNodes)),
-        R.filter(R.isNonNull),
-      ),
-    );
-
-    return filter.equals(FalseValue) ? null : filter;
+  public get dependency(): ReadonlyArray<Dependency | undefined> {
+    return this.operands.flatMap(({ dependency }) => dependency);
   }
 
   public get ast(): graphql.ConstObjectValueNode {
@@ -303,14 +284,16 @@ export class AndOperation extends AbstractBooleanFilter {
       }
     }
 
-    return {
-      ...Array.from(firstOperandsByKey.values()).reduce(
-        (output, { inputValue }) => Object.assign(output, inputValue),
-        {},
-      ),
-      ...(rest.length && {
-        [this.key]: rest.map(({ inputValue }) => inputValue),
-      }),
-    };
+    return Object.assign(
+      firstOperandsByKey
+        .values()
+        .reduce(
+          (output, { inputValue }) => Object.assign(output, inputValue),
+          Object.create(null),
+        ),
+      rest.length
+        ? { [this.key]: rest.map(({ inputValue }) => inputValue) }
+        : undefined,
+    );
   }
 }

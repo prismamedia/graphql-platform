@@ -1,8 +1,14 @@
 import { Memoize } from '@prismamedia/memoize';
 import * as graphql from 'graphql';
 import assert from 'node:assert/strict';
-import type { Node, NodeValue, UniqueConstraint } from '../../node.js';
-import type { NodeChange, NodeUpdate } from '../change.js';
+import type { Node, UniqueConstraint } from '../../node.js';
+import {
+  DependencyGraph,
+  NodeCreation,
+  NodeDeletion,
+  NodeUpdate,
+  type NodeChange,
+} from '../change.js';
 import type { NodeFilterInputValue } from '../type.js';
 import type { BooleanFilter } from './filter/boolean.js';
 import {
@@ -98,7 +104,7 @@ export class NodeFilter {
   }
 
   @Memoize()
-  public get normalized(): NodeFilter | undefined {
+  public get normalized(): this | undefined {
     return this.isTrue() ? undefined : this;
   }
 
@@ -131,24 +137,34 @@ export class NodeFilter {
     return this.filter.isExecutableWithinUniqueConstraint(unique);
   }
 
-  /**
-   * Is the provided node-update affecting this filter?
-   */
-  public isAffectedByRootUpdate(update: NodeUpdate): boolean {
-    assert.equal(update.node, this.node);
-
-    return this.filter.isAffectedByRootUpdate(update);
+  public isCreationFilteredOut(creation: NodeCreation): boolean {
+    return this.execute(creation.newValue, true) === false;
   }
 
-  public getAffectedGraph(
-    change: NodeChange,
-    visitedRootNodes?: ReadonlyArray<NodeValue>,
-  ): NodeFilter | null {
-    const filter = this.filter.getAffectedGraph(change, visitedRootNodes);
+  public isUpdateFilteredOut(update: NodeUpdate): boolean {
+    return (
+      this.execute(update.newValue, true) === false &&
+      this.execute(update.oldValue, true) === false
+    );
+  }
 
-    return filter && !filter.equals(FalseValue)
-      ? new NodeFilter(this.node, filter)
-      : null;
+  public isDeletionFilteredOut(deletion: NodeDeletion): boolean {
+    return this.execute(deletion.oldValue, true) === false;
+  }
+
+  public isChangeFilteredOut(change: NodeChange): boolean {
+    assert.equal(change.node, this.node);
+
+    return change instanceof NodeCreation
+      ? this.isCreationFilteredOut(change)
+      : change instanceof NodeDeletion
+        ? this.isDeletionFilteredOut(change)
+        : this.isUpdateFilteredOut(change);
+  }
+
+  @Memoize()
+  public get dependencyGraph(): DependencyGraph {
+    return new DependencyGraph(this.node, this.filter.dependency);
   }
 
   @Memoize()

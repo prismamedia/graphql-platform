@@ -24,7 +24,7 @@ export class DeletionOutputType {
       name: this.name,
       description: `A single "${this.node}" deletion`,
       fields: () =>
-        Array.from(this.node.componentSet).reduce((fields, component) => {
+        this.node.componentSet.values().reduce((fields, component) => {
           if (component.isPublic()) {
             const type =
               component instanceof Leaf

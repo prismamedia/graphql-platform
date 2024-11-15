@@ -4,8 +4,14 @@ import {
   createMyGP,
   type MyGP,
 } from '../../__tests__/config.js';
-import type { Node } from '../../node.js';
-import { NodeCreation, NodeDeletion, NodeUpdate } from '../change.js';
+import type { Node, OrderByInputValue } from '../../node.js';
+import {
+  NodeCreation,
+  NodeDeletion,
+  NodeSetDependencyGraph,
+  NodeUpdate,
+  type DependencySummaryJSON,
+} from '../change.js';
 import type { NodeOrdering } from './ordering.js';
 
 describe('Ordering', () => {
@@ -21,19 +27,59 @@ describe('Ordering', () => {
     ArticleTag = gp.getNodeByName('ArticleTag');
   });
 
+  describe('Definition', () => {
+    it.each<[OrderByInputValue, DependencySummaryJSON]>([
+      [
+        ['createdAt_DESC'],
+        {
+          creations: ['Article'],
+          deletions: ['Article'],
+          changes: ['Article'],
+        },
+      ],
+      [
+        ['tagCount_DESC'],
+        {
+          creations: ['Article', 'ArticleTag'],
+          deletions: ['Article', 'ArticleTag'],
+          changes: ['Article', 'ArticleTag'],
+        },
+      ],
+      [
+        ['createdAt_DESC', 'tagCount_DESC'],
+        {
+          creations: ['Article', 'ArticleTag'],
+          deletions: ['Article', 'ArticleTag'],
+          changes: ['Article', 'ArticleTag'],
+        },
+      ],
+    ])('%p.dependency = %p', (input, expected) => {
+      const dependency = new NodeSetDependencyGraph(
+        Article,
+        undefined,
+        Article.orderingInputType.sort(input),
+      );
+
+      expect(dependency.summary.toJSON()).toEqual(expected);
+    });
+  });
+
   describe('Execution', () => {
     describe("Node-changes' effect", () => {
       let ordering: NodeOrdering;
+      let dependency: NodeSetDependencyGraph;
 
       beforeAll(() => {
         ordering = Article.orderingInputType.sort([
           'createdAt_DESC',
           'tagCount_DESC',
         ]);
+
+        dependency = new NodeSetDependencyGraph(Article, undefined, ordering);
       });
 
       describe('Article', () => {
-        it('The updated "slug" does not change any document', () => {
+        it('The updated "slug" changes nothing', () => {
           const update = NodeUpdate.createFromPartial(
             Article,
             {},
@@ -53,13 +99,14 @@ describe('Ordering', () => {
             },
           );
 
-          expect(ordering.isAffectedByRootUpdate(update)).toBe(false);
-          expect(ordering.getAffectedGraph(update)).toBeNull();
+          const dependentGraph = dependency.createDependentGraph(update);
+
+          expect(dependentGraph.isEmpty()).toBeTruthy();
         });
       });
 
       describe('ArticleTag', () => {
-        it('The creation may change some document(s)', () => {
+        it('The creation changes the root', () => {
           const creation = NodeCreation.createFromPartial(
             ArticleTag,
             {},
@@ -70,12 +117,17 @@ describe('Ordering', () => {
             },
           );
 
-          expect(ordering.getAffectedGraph(creation)?.inputValue).toEqual({
-            _id: 2,
-          });
+          const dependentGraph = dependency.createDependentGraph(creation);
+
+          expect(dependentGraph.isEmpty()).toBeFalsy();
+          expect(dependentGraph.target.inputValue).toMatchInlineSnapshot(`
+           {
+             "_id": 2,
+           }
+          `);
         });
 
-        it('The deletion may change some document(s)', () => {
+        it('The deletion changes the root', () => {
           const deletion = NodeDeletion.createFromPartial(
             ArticleTag,
             {},
@@ -86,12 +138,12 @@ describe('Ordering', () => {
             },
           );
 
-          expect(ordering.getAffectedGraph(deletion)?.inputValue).toEqual({
-            _id: 3,
-          });
+          const dependentGraph = dependency.createDependentGraph(deletion);
+
+          expect(dependentGraph.isEmpty()).toBeFalsy();
         });
 
-        it('The updated "order" does not change any document', () => {
+        it('The updated "order" changes nothing', () => {
           const update = NodeUpdate.createFromPartial(
             ArticleTag,
             {},
@@ -105,7 +157,9 @@ describe('Ordering', () => {
             },
           );
 
-          expect(ordering.getAffectedGraph(update)).toBeNull();
+          const dependentGraph = dependency.createDependentGraph(update);
+
+          expect(dependentGraph.isEmpty()).toBeTruthy();
         });
       });
     });

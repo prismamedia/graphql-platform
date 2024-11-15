@@ -1,8 +1,6 @@
 import type * as graphql from 'graphql';
-import type { NodeValue } from '../../../node.js';
-import type { NodeChange, NodeUpdate } from '../../change.js';
+import type { Dependency } from '../../change.js';
 import type { NodeOrderingInputValue } from '../../type.js';
-import type { BooleanFilter } from '../filter.js';
 import type { OrderingDirection } from './direction.js';
 
 export interface OrderingExpressionInterface {
@@ -20,13 +18,5 @@ export interface OrderingExpressionInterface {
 
   equals(expression: unknown): boolean;
 
-  /**
-   * Is the provided update affecting this expression?
-   */
-  isAffectedByRootUpdate(update: NodeUpdate): boolean;
-
-  getAffectedGraph(
-    change: NodeChange,
-    visitedRootNodes?: ReadonlyArray<NodeValue>,
-  ): BooleanFilter | null;
+  dependency?: Dependency;
 }

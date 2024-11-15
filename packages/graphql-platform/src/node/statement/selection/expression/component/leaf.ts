@@ -1,11 +1,8 @@
 import * as utils from '@prismamedia/graphql-platform-utils';
 import * as graphql from 'graphql';
 import assert from 'node:assert/strict';
-import type { NodeValue } from '../../../../../node.js';
-import type { NodeChange, NodeUpdate } from '../../../../change.js';
 import type { Component, Leaf, LeafValue } from '../../../../definition.js';
 import type { OperationContext } from '../../../../operation.js';
-import { type BooleanFilter } from '../../../filter.js';
 import type { SelectionExpressionInterface } from '../../expression-interface.js';
 
 export class LeafSelection<TSource extends LeafValue = any, TValue = TSource>
@@ -50,15 +47,8 @@ export class LeafSelection<TSource extends LeafValue = any, TValue = TSource>
     return this;
   }
 
-  public isAffectedByRootUpdate(update: NodeUpdate): boolean {
-    return update.hasComponentUpdate(this.leaf);
-  }
-
-  public getAffectedGraph(
-    _change: NodeChange,
-    _visitedRootNodes?: ReadonlyArray<NodeValue>,
-  ): BooleanFilter | null {
-    return null;
+  public get dependency() {
+    return this.leaf;
   }
 
   public get ast(): graphql.FieldNode {
