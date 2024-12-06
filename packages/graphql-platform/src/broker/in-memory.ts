@@ -1,4 +1,8 @@
 import type { EventListener } from '@prismamedia/async-event-emitter';
+import {
+  getOptionalFlag,
+  OptionalFlag,
+} from '@prismamedia/graphql-platform-utils';
 import assert from 'node:assert/strict';
 import type { BrokerInterface } from '../broker-interface.js';
 import type { GraphQLPlatform, NodeChange } from '../index.js';
@@ -11,11 +15,26 @@ import {
 
 export * from './in-memory/subscription.js';
 
+export type InMemoryBrokerOptions = {
+  /**
+   * By setting `true`, the mutations won't wait for the changes to be processed by the subscriptions.
+   * Be careful when using this option as it may lead to congestion and high memory usage
+   *
+   * @default false
+   */
+  async?: OptionalFlag;
+};
+
 export class InMemoryBroker implements BrokerInterface {
   readonly #subscriptions: Map<ChangesSubscriptionStream, InMemorySubscription>;
+  readonly #async: boolean;
 
-  public constructor(public readonly gp: GraphQLPlatform) {
+  public constructor(
+    public readonly gp: GraphQLPlatform,
+    options?: InMemoryBrokerOptions,
+  ) {
     this.#subscriptions = new Map();
+    this.#async = getOptionalFlag(options?.async, false);
   }
 
   public async publish(changes: Iterable<NodeChange>): Promise<void> {
@@ -26,7 +45,7 @@ export class InMemoryBroker implements BrokerInterface {
 
     await Promise.all(
       Array.from(this.#subscriptions.values(), (queue) =>
-        queue.enqueue(aggregation),
+        queue.enqueue(aggregation, this.#async ? false : undefined),
       ),
     );
   }
