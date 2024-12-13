@@ -1,6 +1,6 @@
 import * as utils from '@prismamedia/graphql-platform-utils';
 import * as graphql from 'graphql';
-import assert from 'node:assert/strict';
+import assert from 'node:assert';
 import { ReverseEdgeDependencyGraph } from '../../../../../change/dependency.js';
 import type { MultipleReverseEdge } from '../../../../../definition.js';
 import type { OperationContext } from '../../../../../operation.js';
@@ -43,7 +43,7 @@ export class MultipleReverseEdgeHeadSelection<
 
     if (headFilter) {
       if (headFilter instanceof NodeFilter) {
-        assert.equal(reverseEdge.head, headFilter.node);
+        assert.strictEqual(reverseEdge.head, headFilter.node);
 
         this.headFilter = headFilter.normalized;
       } else {
@@ -54,7 +54,7 @@ export class MultipleReverseEdgeHeadSelection<
 
     if (headOrdering) {
       if (headOrdering instanceof NodeOrdering) {
-        assert.equal(reverseEdge.head, headOrdering.node);
+        assert.strictEqual(reverseEdge.head, headOrdering.node);
 
         this.headOrdering = headOrdering.normalized;
       } else {
@@ -65,7 +65,7 @@ export class MultipleReverseEdgeHeadSelection<
 
     this.offset = offset || undefined;
 
-    assert.equal(reverseEdge.head, headSelection.node);
+    assert.strictEqual(reverseEdge.head, headSelection.node);
   }
 
   public get hasVirtualSelection(): boolean {

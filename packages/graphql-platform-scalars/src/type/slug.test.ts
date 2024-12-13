@@ -1,20 +1,26 @@
-import { describe, expect, it } from '@jest/globals';
-import { isSlug, parseSlug } from './slug.js';
+import assert from 'node:assert';
+import { describe, it } from 'node:test';
+import { inspect } from 'node:util';
+import { GraphQLSlug, isSlug } from './slug.js';
 
 describe('NonEmptySlug', () => {
-  it.each(['a', 'a0', '0a', 'a-a', 'a0-0a', 'a_a', 'a0_0a'])(
-    'parseNonEmptySlug(%p)',
-    (input) => {
-      expect(isSlug(input)).toBeTruthy();
-      expect(parseSlug(input)).toBe(input);
-    },
-  );
+  describe('invalids', () => {
+    [' ', ' \n \t ', '-a', 'a-', 'a-_-a', 'a0-_-0a'].forEach((input) => {
+      it(`parseNonEmptySlug(${inspect(input, undefined, 5)}) throws an error`, () => {
+        assert.ok(!isSlug(input));
+        assert.throws(() => GraphQLSlug.parseValue(input), {
+          message: new RegExp(`^Expects a slug, got:`),
+        });
+      });
+    });
+  });
 
-  it.each([' ', ' \n \t ', '-a', 'a-', 'a-_-a', 'a0-_-0a'])(
-    'parseNonEmptySlug(%p) throws an error',
-    (input) => {
-      expect(isSlug(input)).toBeFalsy();
-      expect(() => parseSlug(input)).toThrow(`Expects a slug, got:`);
-    },
-  );
+  describe('valids', () => {
+    ['a', 'a0', '0a', 'a-a', 'a0-0a', 'a_a', 'a0_0a'].forEach((input) => {
+      it(`parseNonEmptySlug(${inspect(input, undefined, 5)})`, () => {
+        assert.ok(isSlug(input));
+        assert.strictEqual(GraphQLSlug.parseValue(input), input);
+      });
+    });
+  });
 });

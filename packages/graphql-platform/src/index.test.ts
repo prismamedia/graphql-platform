@@ -1,5 +1,6 @@
-import { beforeAll, describe, expect, it } from '@jest/globals';
 import * as graphql from 'graphql';
+import assert from 'node:assert';
+import { before, describe, it } from 'node:test';
 import { customOperations, nodes } from './__tests__/config.js';
 import {
   GraphQLPlatform,
@@ -9,44 +10,58 @@ import {
 
 describe('GraphQL-Platform', () => {
   describe('Fails', () => {
-    it.each([
-      [
-        undefined,
-        `/GraphQLPlatformConfig - Expects a plain-object, got: undefined`,
-      ],
-      [null, `/GraphQLPlatformConfig - Expects a plain-object, got: null`],
-    ])('throws an Error on invalid config: %p', (config, expectedError) => {
-      // @ts-expect-error
-      expect(() => new GraphQLPlatform(config)).toThrow(expectedError);
+    it('throws an error on invalid config', async (t) => {
+      const cases = [
+        [
+          undefined,
+          `/GraphQLPlatformConfig - Expects a plain-object, got: undefined`,
+        ],
+        [null, `/GraphQLPlatformConfig - Expects a plain-object, got: null`],
+      ] as const;
+
+      for (const [config, expectedError] of cases) {
+        assert.throws(
+          // @ts-expect-error
+          () => new GraphQLPlatform(config),
+          { message: expectedError },
+        );
+      }
     });
 
-    it.each([
-      [
-        {},
-        `/GraphQLPlatformConfig/nodes - Expects a plain-object, got: undefined`,
-      ],
-      [
-        { nodes: undefined },
-        `/GraphQLPlatformConfig/nodes - Expects a plain-object, got: undefined`,
-      ],
-      [
-        { nodes: null },
-        `/GraphQLPlatformConfig/nodes - Expects a plain-object, got: null`,
-      ],
-      [
-        { nodes: {} },
-        `/GraphQLPlatformConfig/nodes - Expects at least one node, got: {}`,
-      ],
-    ])('throws an Error on invalid nodes: %p', (config, expectedError) => {
-      // @ts-expect-error
-      expect(() => new GraphQLPlatform(config)).toThrow(expectedError);
+    it('throws an error on invalid nodes', async (t) => {
+      const cases = [
+        [
+          {},
+          `/GraphQLPlatformConfig/nodes - Expects a plain-object, got: undefined`,
+        ],
+        [
+          { nodes: undefined },
+          `/GraphQLPlatformConfig/nodes - Expects a plain-object, got: undefined`,
+        ],
+        [
+          { nodes: null },
+          `/GraphQLPlatformConfig/nodes - Expects a plain-object, got: null`,
+        ],
+        [
+          { nodes: {} },
+          `/GraphQLPlatformConfig/nodes - Expects at least one node, got: {}`,
+        ],
+      ] as const;
+
+      for (const [config, expectedError] of cases) {
+        assert.throws(
+          // @ts-expect-error
+          () => new GraphQLPlatform(config),
+          { message: expectedError },
+        );
+      }
     });
   });
 
   describe('Works', () => {
     let gp: GraphQLPlatform;
 
-    beforeAll(() => {
+    before(() => {
       gp = new GraphQLPlatform({
         subscription: { public: true },
         nodes,
@@ -55,7 +70,7 @@ describe('GraphQL-Platform', () => {
     });
 
     it(`has nodes' definition`, () => {
-      expect(Array.from(gp.nodesByName.keys())).toEqual([
+      assert.deepStrictEqual(Array.from(gp.nodesByName.keys()), [
         'Article',
         'ArticleExtension',
         'Category',
@@ -68,31 +83,36 @@ describe('GraphQL-Platform', () => {
       ]);
     });
 
-    it.each<
-      [operationType: OperationType, enabledCount: number, publicCount: number]
-    >([
-      [graphql.OperationTypeNode.QUERY, 65, 57],
-      [graphql.OperationTypeNode.MUTATION, 116, 99],
-      [graphql.OperationTypeNode.SUBSCRIPTION, 12, 7],
-    ])(
-      `generates %s: %d enabled / %d public`,
-      (operationType, enabledCount, publicCount) => {
-        expect(
+    it('generates operations with correct counts', () => {
+      const cases = [
+        [graphql.OperationTypeNode.QUERY, 65, 57],
+        [graphql.OperationTypeNode.MUTATION, 116, 99],
+        [graphql.OperationTypeNode.SUBSCRIPTION, 12, 7],
+      ] satisfies [
+        operationType: OperationType,
+        enabledCount: number,
+        publicCount: number,
+      ][];
+
+      for (const [operationType, enabledCount, publicCount] of cases) {
+        assert.strictEqual(
           Array.from<Operation>(
             gp.nodeOperationsByNameByType[operationType].values(),
           ).filter((operation) => operation.isEnabled()).length,
-        ).toBe(enabledCount);
+          enabledCount,
+        );
 
-        expect(
+        assert.strictEqual(
           Array.from<Operation>(
             gp.nodeOperationsByNameByType[operationType].values(),
           ).filter((operation) => operation.isPublic()).length,
-        ).toBe(publicCount);
-      },
-    );
+          publicCount,
+        );
+      }
+    });
 
-    it('generates a valid GraphQL Schema', () => {
-      expect(graphql.printSchema(gp.schema)).toMatchSnapshot();
+    it('generates a valid GraphQL Schema', ({ assert: { snapshot } }) => {
+      snapshot(graphql.printSchema(gp.schema));
     });
   });
 });

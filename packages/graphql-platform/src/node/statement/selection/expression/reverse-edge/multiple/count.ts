@@ -1,7 +1,7 @@
 import * as scalars from '@prismamedia/graphql-platform-scalars';
 import * as utils from '@prismamedia/graphql-platform-utils';
 import * as graphql from 'graphql';
-import assert from 'node:assert/strict';
+import assert from 'node:assert';
 import { ReverseEdgeDependencyGraph } from '../../../../../change/dependency.js';
 import type { MultipleReverseEdge } from '../../../../../definition.js';
 import type { OperationContext } from '../../../../../operation.js';
@@ -34,7 +34,7 @@ export class MultipleReverseEdgeCountSelection<
 
     if (headFilter) {
       if (headFilter instanceof NodeFilter) {
-        assert.equal(reverseEdge.head, headFilter.node);
+        assert.strictEqual(reverseEdge.head, headFilter.node);
 
         this.headFilter = headFilter.normalized;
       } else {

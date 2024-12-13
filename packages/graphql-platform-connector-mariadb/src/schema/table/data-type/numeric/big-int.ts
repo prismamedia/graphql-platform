@@ -1,6 +1,6 @@
 import type * as core from '@prismamedia/graphql-platform';
 import * as utils from '@prismamedia/graphql-platform-utils';
-import assert from 'node:assert/strict';
+import assert from 'node:assert';
 import type { SetOptional } from 'type-fest';
 import type { ColumnInformation } from '../../../../statement.js';
 import {
@@ -62,7 +62,7 @@ export class BigIntType<
   }
 
   protected override doParseColumnValue(columnValue: bigint): bigint {
-    assert.equal(
+    assert.strictEqual(
       typeof columnValue,
       'bigint',
       `"${this.kind}" column expects a "bigint", got: ${typeof columnValue}`,
@@ -72,7 +72,7 @@ export class BigIntType<
   }
 
   protected override doParseJsonValue(jsonValue: number): bigint {
-    assert.equal(
+    assert.strictEqual(
       typeof jsonValue,
       'number',
       `"${this.kind}" column expects a "number", got: ${typeof jsonValue}`,
@@ -82,7 +82,7 @@ export class BigIntType<
   }
 
   protected override doSerialize(value: bigint): string {
-    assert.equal(typeof value, 'bigint');
+    assert.strictEqual(typeof value, 'bigint');
 
     return value.toString(10);
   }

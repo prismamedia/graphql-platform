@@ -1,6 +1,6 @@
 import { Memoize } from '@prismamedia/memoize';
 import * as graphql from 'graphql';
-import assert from 'node:assert/strict';
+import assert from 'node:assert';
 import * as R from 'remeda';
 import type {
   Leaf,

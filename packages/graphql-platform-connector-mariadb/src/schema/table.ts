@@ -3,7 +3,7 @@ import * as utils from '@prismamedia/graphql-platform-utils';
 import { UnreachableValueError } from '@prismamedia/graphql-platform-utils';
 import { Memoize } from '@prismamedia/memoize';
 import type * as mariadb from 'mariadb';
-import assert from 'node:assert/strict';
+import assert from 'node:assert';
 import type { SetOptional } from 'type-fest';
 import type { MariaDBConnector, OkPacket } from '../index.js';
 import type { Schema } from '../schema.js';

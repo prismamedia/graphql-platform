@@ -4,7 +4,7 @@ import {
   type MyGP as BaseMyGP,
   type MyGPConfig as BaseMyGPConfig,
 } from '@prismamedia/graphql-platform/__tests__/config.js';
-import assert from 'node:assert/strict';
+import assert from 'node:assert';
 import type { Except } from 'type-fest';
 import { MariaDBConnector } from '../index.js';
 

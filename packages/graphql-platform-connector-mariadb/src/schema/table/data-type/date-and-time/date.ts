@@ -1,7 +1,7 @@
 import type * as core from '@prismamedia/graphql-platform';
 import * as scalars from '@prismamedia/graphql-platform-scalars';
 import * as utils from '@prismamedia/graphql-platform-utils';
-import assert from 'node:assert/strict';
+import assert from 'node:assert';
 import type { SetOptional } from 'type-fest';
 import { escapeStringValue } from '../../../../escaping.js';
 import {
@@ -33,7 +33,7 @@ export class DateType<
     // As the connection is configured with "dateStrings: true"
     columnValue: string,
   ): Date | null {
-    assert.equal(typeof columnValue, 'string');
+    assert.strictEqual(typeof columnValue, 'string');
 
     return columnValue === '0000-00-00' ? null : scalars.parseDate(columnValue);
   }

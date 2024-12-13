@@ -1,4 +1,5 @@
-import { beforeAll, beforeEach, describe, expect, it } from '@jest/globals';
+import assert from 'node:assert';
+import { beforeEach, describe, it } from 'node:test';
 import {
   MyContext,
   MyGP,
@@ -7,85 +8,59 @@ import {
   nodes,
 } from '../../../../__tests__/config.js';
 import {
-  clearAllConnectorMocks,
+  clearConnectorMockCalls,
   mockConnector,
+  type MockedConnector,
 } from '../../../../__tests__/connector-mock.js';
 import { GraphQLPlatform } from '../../../../index.js';
 import { UnauthorizedError } from '../../error.js';
 import { UpdateManyMutationArgs } from './update-many.js';
 
 describe('UpdateManyMutation', () => {
-  let gp: MyGP;
+  const gp: MyGP<MockedConnector> = new GraphQLPlatform({
+    nodes,
+    connector: mockConnector({ update: async () => 0 }),
+  });
 
-  beforeAll(() => {
-    gp = new GraphQLPlatform({
-      nodes,
-      connector: mockConnector({ update: async () => 0 }),
+  beforeEach(() => clearConnectorMockCalls(gp.connector));
+
+  describe('Fails', () => {
+    (
+      [
+        [myVisitorContext, { data: {}, first: 5, selection: '{ id }' }],
+      ] satisfies ReadonlyArray<[MyContext, UpdateManyMutationArgs]>
+    ).forEach(([context, args]) => {
+      it('throws an UnauthorizedError', async () => {
+        await assert.rejects(
+          () => gp.api.Article.updateMany(context, args),
+          UnauthorizedError,
+        );
+
+        assert.strictEqual(gp.connector.find.mock.callCount(), 0);
+        assert.strictEqual(gp.connector.update.mock.callCount(), 0);
+      });
     });
   });
 
-  describe.skip('Definition', () => {});
-
-  describe('Runtime', () => {
-    beforeEach(() => clearAllConnectorMocks(gp.connector));
-
-    describe('Fails', () => {
-      it.each<[MyContext, UpdateManyMutationArgs]>([
-        [myVisitorContext, { data: {}, first: 5, selection: '{ id }' }],
-      ])('throws an UnauthorizedError', async (context, args) => {
-        await expect(() =>
-          gp.api.Article.updateMany(context, args),
-        ).rejects.toThrow(UnauthorizedError);
-
-        expect(gp.connector.find).toHaveBeenCalledTimes(0);
-        expect(gp.connector.update).toHaveBeenCalledTimes(0);
-      });
-    });
-
-    describe('Works', () => {
-      it.each<[MyContext, UpdateManyMutationArgs]>([
+  describe('Works', () => {
+    (
+      [
         [myAdminContext, { data: {}, first: 0, selection: '{ id }' }],
         [
           myAdminContext,
           { data: {}, where: null, first: 5, selection: '{ id }' },
         ],
-      ])(
-        'does no call the connector when it is not needed',
-        async (context, args) => {
-          await expect(
-            gp.api.Article.updateMany(context, args),
-          ).resolves.toEqual([]);
+      ] satisfies ReadonlyArray<[MyContext, UpdateManyMutationArgs]>
+    ).forEach(([context, args]) => {
+      it('does no call the connector when it is not needed', async () => {
+        assert.deepStrictEqual(
+          await gp.api.Article.updateMany(context, args),
+          [],
+        );
 
-          expect(gp.connector.find).toHaveBeenCalledTimes(0);
-          expect(gp.connector.update).toHaveBeenCalledTimes(0);
-        },
-      );
-
-      // it('calls the connector properly', async () => {
-      //   await expect(
-      //     gp.api.query.articleCount({}, myAdminContext),
-      //   ).resolves.toEqual(0);
-      //   expect(gp.connector.count).toHaveBeenCalledTimes(1);
-      //   expect(gp.connector.count).toHaveBeenLastCalledWith(
-      //     gp.getNode('Article'),
-      //     {},
-      //     expect.any(OperationContext),
-      //   );
-      // });
-      // it('calls the connector properly', async () => {
-      //   await expect(
-      //     gp.api.query.articleCount(
-      //       { where: { tagCount_gt: 0 } },
-      //       myAdminContext,
-      //     ),
-      //   ).resolves.toEqual(0);
-      //   expect(gp.connector.count).toHaveBeenCalledTimes(1);
-      //   expect(gp.connector.count).toHaveBeenLastCalledWith(
-      //     gp.getNode('Article'),
-      //     { where: expect.any(NodeFilter) },
-      //     expect.any(OperationContext),
-      //   );
-      // });
+        assert.strictEqual(gp.connector.find.mock.callCount(), 0);
+        assert.strictEqual(gp.connector.update.mock.callCount(), 0);
+      });
     });
   });
 });

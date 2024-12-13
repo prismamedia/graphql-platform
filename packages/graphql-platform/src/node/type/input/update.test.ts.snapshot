@@ -1,0 +1,67 @@
+exports[`NodeUpdateInputType > Definition > Article may have an update input type 1`] = `
+"\\"\\"\\"The \\"Article\\" node's update\\"\\"\\"\\ninput ArticleUpdateInput {\\n  status: ArticleStatus\\n  title: NonEmptySanitizedString\\n  slug: Slug\\n\\n  \\"\\"\\"The article's body\\"\\"\\"\\n  body: DraftJS\\n  category: ArticleUpdateCategoryInput\\n  updatedBy: ArticleUpdateUpdatedByInput\\n\\n  \\"\\"\\"Contains any arbitrary data you want to store alongside the article\\"\\"\\"\\n  metas: JSONObject\\n\\n  \\"\\"\\"Is the article highlighted?\\"\\"\\"\\n  highlighted: Boolean\\n\\n  \\"\\"\\"Is the article a partnership?\\"\\"\\"\\n  sponsored: Boolean\\n  views: UnsignedBigInt\\n  score: UnsignedFloat\\n  machineTags: JSONArray\\n  tags: ArticleUpdateTagsInput\\n  extension: ArticleUpdateExtensionInput\\n\\n  \\"\\"\\"It is possible to provide the article's body as raw HTML\\"\\"\\"\\n  htmlBody: String\\n}"
+`;
+
+exports[`NodeUpdateInputType > Definition > Article may have an update input type 2`] = `
+"\\"\\"\\"The \\"Article\\" node's update\\"\\"\\"\\ninput ArticleUpdateWithoutCategoryInput {\\n  status: ArticleStatus\\n  title: NonEmptySanitizedString\\n  slug: Slug\\n\\n  \\"\\"\\"The article's body\\"\\"\\"\\n  body: DraftJS\\n  updatedBy: ArticleUpdateUpdatedByInput\\n\\n  \\"\\"\\"Contains any arbitrary data you want to store alongside the article\\"\\"\\"\\n  metas: JSONObject\\n\\n  \\"\\"\\"Is the article highlighted?\\"\\"\\"\\n  highlighted: Boolean\\n\\n  \\"\\"\\"Is the article a partnership?\\"\\"\\"\\n  sponsored: Boolean\\n  views: UnsignedBigInt\\n  score: UnsignedFloat\\n  machineTags: JSONArray\\n  tags: ArticleUpdateTagsInput\\n  extension: ArticleUpdateExtensionInput\\n\\n  \\"\\"\\"It is possible to provide the article's body as raw HTML\\"\\"\\"\\n  htmlBody: String\\n}"
+`;
+
+exports[`NodeUpdateInputType > Definition > Article may have an update input type 3`] = `
+"\\"\\"\\"The \\"Article\\" node's update\\"\\"\\"\\ninput ArticleUpdateWithoutCreatedByInput {\\n  status: ArticleStatus\\n  title: NonEmptySanitizedString\\n  slug: Slug\\n\\n  \\"\\"\\"The article's body\\"\\"\\"\\n  body: DraftJS\\n  category: ArticleUpdateCategoryInput\\n  updatedBy: ArticleUpdateUpdatedByInput\\n\\n  \\"\\"\\"Contains any arbitrary data you want to store alongside the article\\"\\"\\"\\n  metas: JSONObject\\n\\n  \\"\\"\\"Is the article highlighted?\\"\\"\\"\\n  highlighted: Boolean\\n\\n  \\"\\"\\"Is the article a partnership?\\"\\"\\"\\n  sponsored: Boolean\\n  views: UnsignedBigInt\\n  score: UnsignedFloat\\n  machineTags: JSONArray\\n  tags: ArticleUpdateTagsInput\\n  extension: ArticleUpdateExtensionInput\\n\\n  \\"\\"\\"It is possible to provide the article's body as raw HTML\\"\\"\\"\\n  htmlBody: String\\n}"
+`;
+
+exports[`NodeUpdateInputType > Definition > Article may have an update input type 4`] = `
+"\\"\\"\\"The \\"Article\\" node's update\\"\\"\\"\\ninput ArticleUpdateWithoutUpdatedByInput {\\n  status: ArticleStatus\\n  title: NonEmptySanitizedString\\n  slug: Slug\\n\\n  \\"\\"\\"The article's body\\"\\"\\"\\n  body: DraftJS\\n  category: ArticleUpdateCategoryInput\\n\\n  \\"\\"\\"Contains any arbitrary data you want to store alongside the article\\"\\"\\"\\n  metas: JSONObject\\n\\n  \\"\\"\\"Is the article highlighted?\\"\\"\\"\\n  highlighted: Boolean\\n\\n  \\"\\"\\"Is the article a partnership?\\"\\"\\"\\n  sponsored: Boolean\\n  views: UnsignedBigInt\\n  score: UnsignedFloat\\n  machineTags: JSONArray\\n  tags: ArticleUpdateTagsInput\\n  extension: ArticleUpdateExtensionInput\\n\\n  \\"\\"\\"It is possible to provide the article's body as raw HTML\\"\\"\\"\\n  htmlBody: String\\n}"
+`;
+
+exports[`NodeUpdateInputType > Definition > ArticleExtension may have an update input type 1`] = `
+"\\"\\"\\"The \\"ArticleExtension\\" node's update\\"\\"\\"\\ninput ArticleExtensionUpdateInput {\\n  \\"\\"\\"The source of the article\\"\\"\\"\\n  source: NonEmptyTrimmedString\\n}"
+`;
+
+exports[`NodeUpdateInputType > Definition > ArticleExtension may have an update input type 2`] = `
+"\\"\\"\\"The \\"ArticleExtension\\" node's update\\"\\"\\"\\ninput ArticleExtensionUpdateWithoutArticleInput {\\n  \\"\\"\\"The source of the article\\"\\"\\"\\n  source: NonEmptyTrimmedString\\n}"
+`;
+
+exports[`NodeUpdateInputType > Definition > ArticleTag may have an update input type 1`] = `
+"\\"\\"\\"The \\"ArticleTag\\" node's update\\"\\"\\"\\ninput ArticleTagUpdateInput {\\n  order: UnsignedInt\\n  moderations: ArticleTagUpdateModerationsInput\\n}"
+`;
+
+exports[`NodeUpdateInputType > Definition > ArticleTag may have an update input type 2`] = `
+"\\"\\"\\"The \\"ArticleTag\\" node's update\\"\\"\\"\\ninput ArticleTagUpdateWithoutArticleInput {\\n  order: UnsignedInt\\n  moderations: ArticleTagUpdateModerationsInput\\n}"
+`;
+
+exports[`NodeUpdateInputType > Definition > ArticleTag may have an update input type 3`] = `
+"\\"\\"\\"The \\"ArticleTag\\" node's update\\"\\"\\"\\ninput ArticleTagUpdateWithoutTagInput {\\n  order: UnsignedInt\\n  moderations: ArticleTagUpdateModerationsInput\\n}"
+`;
+
+exports[`NodeUpdateInputType > Definition > ArticleTagModeration may have an update input type 1`] = `
+"\\"\\"\\"The \\"ArticleTagModeration\\" node's update\\"\\"\\"\\ninput ArticleTagModerationUpdateInput {\\n  moderation: NonEmptyTrimmedString\\n}"
+`;
+
+exports[`NodeUpdateInputType > Definition > ArticleTagModeration may have an update input type 2`] = `
+"\\"\\"\\"The \\"ArticleTagModeration\\" node's update\\"\\"\\"\\ninput ArticleTagModerationUpdateWithoutArticleTagInput {\\n  moderation: NonEmptyTrimmedString\\n}"
+`;
+
+exports[`NodeUpdateInputType > Definition > ArticleTagModeration may have an update input type 3`] = `
+"\\"\\"\\"The \\"ArticleTagModeration\\" node's update\\"\\"\\"\\ninput ArticleTagModerationUpdateWithoutModeratorInput {\\n  moderation: NonEmptyTrimmedString\\n}"
+`;
+
+exports[`NodeUpdateInputType > Definition > Category may have an update input type 1`] = `
+"\\"\\"\\"The \\"Category\\" node's update\\"\\"\\"\\ninput CategoryUpdateInput {\\n  parent: CategoryUpdateParentInput\\n  order: UnsignedInt\\n\\n  \\"\\"\\"This category's children\\"\\"\\"\\n  children: CategoryUpdateChildrenInput\\n\\n  \\"\\"\\"The articles attached to this category\\"\\"\\"\\n  articles: CategoryUpdateArticlesInput\\n}"
+`;
+
+exports[`NodeUpdateInputType > Definition > Category may have an update input type 2`] = `
+"\\"\\"\\"The \\"Category\\" node's update\\"\\"\\"\\ninput CategoryUpdateWithoutParentInput {\\n  order: UnsignedInt\\n\\n  \\"\\"\\"This category's children\\"\\"\\"\\n  children: CategoryUpdateChildrenInput\\n\\n  \\"\\"\\"The articles attached to this category\\"\\"\\"\\n  articles: CategoryUpdateArticlesInput\\n}"
+`;
+
+exports[`NodeUpdateInputType > Definition > Tag may have an update input type 1`] = `
+"\\"\\"\\"The \\"Tag\\" node's update\\"\\"\\"\\ninput TagUpdateInput {\\n  \\"\\"\\"A tag can be deprecated\\"\\"\\"\\n  deprecated: Boolean\\n  articles: TagUpdateArticlesInput\\n}"
+`;
+
+exports[`NodeUpdateInputType > Definition > UserProfile may have an update input type 1`] = `
+"\\"\\"\\"The \\"UserProfile\\" node's update\\"\\"\\"\\ninput UserProfileUpdateInput {\\n  birthday: Date\\n  facebookId: ID\\n  googleId: ID\\n  twitterHandle: ID\\n}"
+`;
+
+exports[`NodeUpdateInputType > Definition > UserProfile may have an update input type 2`] = `
+"\\"\\"\\"The \\"UserProfile\\" node's update\\"\\"\\"\\ninput UserProfileUpdateWithoutUserInput {\\n  birthday: Date\\n  facebookId: ID\\n  googleId: ID\\n  twitterHandle: ID\\n}"
+`;

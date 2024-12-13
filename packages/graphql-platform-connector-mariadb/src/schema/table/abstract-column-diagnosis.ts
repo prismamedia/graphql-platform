@@ -1,5 +1,5 @@
 import * as utils from '@prismamedia/graphql-platform-utils';
-import assert from 'node:assert/strict';
+import assert from 'node:assert';
 import * as R from 'remeda';
 import type {
   ColumnInformation,
@@ -51,17 +51,20 @@ export abstract class AbstractColumnDiagnosis<
     informations: ColumnDiagnosisInformations,
     options?: ColumnDiagnosisOptions,
   ) {
-    assert.equal(informations.column.TABLE_SCHEMA, column.table.schema.name);
-    assert.equal(informations.column.TABLE_NAME, column.table.name);
-    assert.equal(informations.column.COLUMN_NAME, column.name);
+    assert.strictEqual(
+      informations.column.TABLE_SCHEMA,
+      column.table.schema.name,
+    );
+    assert.strictEqual(informations.column.TABLE_NAME, column.table.name);
+    assert.strictEqual(informations.column.COLUMN_NAME, column.name);
 
     if (informations.constraint) {
-      assert.equal(
+      assert.strictEqual(
         informations.constraint.CONSTRAINT_SCHEMA,
         column.table.schema.name,
       );
-      assert.equal(informations.constraint.TABLE_NAME, column.table.name);
-      assert.equal(informations.constraint.CONSTRAINT_NAME, column.name);
+      assert.strictEqual(informations.constraint.TABLE_NAME, column.table.name);
+      assert.strictEqual(informations.constraint.CONSTRAINT_NAME, column.name);
     }
 
     if (

@@ -1,15 +1,21 @@
-import { describe, expect, it } from '@jest/globals';
+import assert from 'node:assert';
+import { describe, it } from 'node:test';
 import { ensureNodeName } from './name.js';
 
-describe('NodeName', () => {
-  it.each(['invalidName', 'Invalid_name', '_InvalidName'])(
-    '"%s" is not valid',
-    (input) => {
-      expect(() => ensureNodeName(input)).toThrow();
-    },
-  );
+describe('Name', () => {
+  describe('invalids', () => {
+    ['invalidName', 'Invalid_name', '_InvalidName'].forEach((input) => {
+      it(`"${input}" is not valid`, () => {
+        assert.throws(() => ensureNodeName(input));
+      });
+    });
+  });
 
-  it.each(['Validname', 'ValidName'])('"%s" is valid', (input) =>
-    expect(ensureNodeName(input)).toBe(input),
-  );
+  describe('valids', () => {
+    ['Validname', 'ValidName'].forEach((input) => {
+      it(`"${input}" is valid`, () => {
+        assert.strictEqual(ensureNodeName(input), input);
+      });
+    });
+  });
 });

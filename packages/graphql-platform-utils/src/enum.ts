@@ -1,4 +1,4 @@
-import assert from 'node:assert/strict';
+import assert from 'node:assert';
 import type { PlainObject } from './plain-object.js';
 
 export type EnumKey<TEnumerable extends PlainObject> = Extract<

@@ -1,6 +1,6 @@
 import type * as core from '@prismamedia/graphql-platform';
 import * as utils from '@prismamedia/graphql-platform-utils';
-import assert from 'node:assert/strict';
+import assert from 'node:assert';
 import type { SetOptional } from 'type-fest';
 import type { ColumnInformation } from '../../../../statement.js';
 import {
@@ -79,7 +79,7 @@ export class IntType<
   }
 
   protected override doSerialize(value: number): string {
-    assert.equal(typeof value, 'number');
+    assert.strictEqual(typeof value, 'number');
     assert(Number.isInteger(value), `Expects an integer, got: ${value}`);
 
     return value.toString(10);

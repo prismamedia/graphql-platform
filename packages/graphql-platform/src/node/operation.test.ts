@@ -1,4 +1,5 @@
-import { beforeAll, describe, expect, it } from '@jest/globals';
+import assert from 'node:assert';
+import { before, describe, it } from 'node:test';
 import { MyGP, nodes } from '../__tests__/config.js';
 import {
   AbstractDeletion,
@@ -11,28 +12,28 @@ import {
 describe('Operation', () => {
   let gp: MyGP;
 
-  beforeAll(() => {
+  before(() => {
     gp = new GraphQLPlatform({ nodes });
   });
 
   it('instanciates core-operations', () => {
     for (const node of gp.nodesByName.values()) {
       for (const mutation of node.operationsByType.mutation) {
-        expect(mutation).toBeInstanceOf(AbstractMutation);
-        expect(typeof mutation.isEnabled()).toBe('boolean');
-        expect(typeof mutation.isPublic()).toBe('boolean');
+        assert(mutation instanceof AbstractMutation);
+        assert.strictEqual(typeof mutation.isEnabled(), 'boolean');
+        assert.strictEqual(typeof mutation.isPublic(), 'boolean');
       }
 
       for (const query of node.operationsByType.query) {
-        expect(query).toBeInstanceOf(AbstractQuery);
-        expect(query.isEnabled()).toBeTruthy();
-        expect(typeof query.isPublic()).toBe('boolean');
+        assert(query instanceof AbstractQuery);
+        assert.strictEqual(query.isEnabled(), true);
+        assert.strictEqual(typeof query.isPublic(), 'boolean');
       }
 
       for (const subscription of node.operationsByType.subscription) {
-        expect(subscription).toBeInstanceOf(AbstractSubscription);
-        expect(typeof subscription.isEnabled()).toBe('boolean');
-        expect(typeof subscription.isPublic()).toBe('boolean');
+        assert(subscription instanceof AbstractSubscription);
+        assert.strictEqual(typeof subscription.isEnabled(), 'boolean');
+        assert.strictEqual(typeof subscription.isPublic(), 'boolean');
       }
     }
   });
@@ -42,23 +43,23 @@ describe('Operation', () => {
 
     {
       const query = Article.getQueryByKey('custom');
-      expect(query).toBeInstanceOf(AbstractQuery);
-      expect(query.name).toEqual('customArticles');
-      expect(query.isPublic()).toBeTruthy();
+      assert(query instanceof AbstractQuery);
+      assert.strictEqual(query.name, 'customArticles');
+      assert.strictEqual(query.isPublic(), true);
     }
 
     {
       const query = Article.getQueryByKey('customPrivate');
-      expect(query).toBeInstanceOf(AbstractQuery);
-      expect(query.name).toEqual('customPrivateArticles');
-      expect(query.isPublic()).toBeFalsy();
+      assert(query instanceof AbstractQuery);
+      assert.strictEqual(query.name, 'customPrivateArticles');
+      assert.strictEqual(query.isPublic(), false);
     }
 
     {
       const mutation = Article.getMutationByKey('customDeletion');
-      expect(mutation).toBeInstanceOf(AbstractDeletion);
-      expect(mutation.name).toEqual('customDeletionArticles');
-      expect(mutation.isPublic()).toBeTruthy();
+      assert(mutation instanceof AbstractDeletion);
+      assert.strictEqual(mutation.name, 'customDeletionArticles');
+      assert.strictEqual(mutation.isPublic(), true);
     }
   });
 });

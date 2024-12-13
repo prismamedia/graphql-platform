@@ -1,51 +1,57 @@
-import { afterAll, beforeAll, describe, expect, it } from '@jest/globals';
 import { OperationContext } from '@prismamedia/graphql-platform';
 import {
   myAdminContext,
   myJournalistContext,
   myUserContext,
   myVisitorContext,
+  type MyContext,
 } from '@prismamedia/graphql-platform/__tests__/config.js';
 import { format } from '@sqltools/formatter';
+import assert from 'node:assert';
+import { after, before, describe, it } from 'node:test';
 import { createMyGP, type MyGP } from '../../../__tests__/config.js';
 import { TableFactor } from './table-reference.js';
 
 describe('Table reference', () => {
   let gp: MyGP;
 
-  beforeAll(async () => {
+  before(async () => {
     gp = createMyGP('connector_mariadb_table_reference_clause');
 
     await gp.connector.setup();
   });
 
-  afterAll(() => gp.connector.teardown());
+  after(() => gp.connector.teardown());
 
-  it.each([
-    myVisitorContext,
-    myUserContext,
-    myJournalistContext,
-    myAdminContext,
-  ])('generates valid SQL with authorization', (requestContext) => {
-    const ArticleNode = gp.getNodeByName('Article');
+  (
+    [
+      myVisitorContext,
+      myUserContext,
+      myJournalistContext,
+      myAdminContext,
+    ] satisfies ReadonlyArray<MyContext>
+  ).forEach((requestContext) => {
+    it(`generates valid SQL with authorization`, ({ assert: { snapshot } }) => {
+      const ArticleNode = gp.getNodeByName('Article');
 
-    const ArticleCategoryEdge = ArticleNode.getEdgeByName('category');
+      const ArticleCategoryEdge = ArticleNode.getEdgeByName('category');
 
-    const ArticleCreatedByEdge = ArticleNode.getEdgeByName('createdBy');
+      const ArticleCreatedByEdge = ArticleNode.getEdgeByName('createdBy');
 
-    const UserNode = ArticleCreatedByEdge.head;
-    const UserProfileReverseEdge =
-      UserNode.getUniqueReverseEdgeByName('profile');
+      const UserNode = ArticleCreatedByEdge.head;
+      const UserProfileReverseEdge =
+        UserNode.getUniqueReverseEdgeByName('profile');
 
-    const from = new TableFactor(
-      gp.connector.schema.getTableByNode(ArticleNode),
-      new OperationContext(gp, requestContext),
-    );
+      const from = new TableFactor(
+        gp.connector.schema.getTableByNode(ArticleNode),
+        new OperationContext(gp, requestContext),
+      );
 
-    from.join(ArticleCategoryEdge);
-    from.join(ArticleCreatedByEdge).join(UserProfileReverseEdge);
+      from.join(ArticleCategoryEdge);
+      from.join(ArticleCreatedByEdge).join(UserProfileReverseEdge);
 
-    expect(format(`SELECT * FROM ${from}`)).toMatchSnapshot();
+      snapshot(format(`SELECT * FROM ${from}`));
+    });
   });
 
   it('generates valid SQL', () => {
@@ -72,15 +78,16 @@ describe('Table reference', () => {
 
     from.join(ArticleCreatedByEdge).join(UserProfileReverseEdge);
 
-    expect(format(`SELECT * FROM ${from}`)).toMatchInlineSnapshot(`
-      "SELECT *
-      FROM \`articles\`
-        LEFT JOIN \`categories\` AS \`articles>category\` ON \`articles\`.\`category_private_id\` = \`articles>category\`.\`private_id\`
-        LEFT JOIN \`categories\` AS \`articles>category>parent\` ON \`articles>category\`.\`parent_private_id\` = \`articles>category>parent\`.\`private_id\`
-        LEFT JOIN \`categories\` AS \`articles>category>parent>parent\` ON \`articles>category>parent\`.\`parent_private_id\` = \`articles>category>parent>parent\`.\`private_id\`
-        LEFT JOIN \`categories\` AS \`articles>category>parent>parent>parent\` ON \`articles>category>parent>parent\`.\`parent_private_id\` = \`articles>category>parent>parent>parent\`.\`private_id\`
-        LEFT JOIN \`users\` AS \`articles>createdBy\` ON \`articles\`.\`created_by_id\` = \`articles>createdBy\`.\`id\`
-        LEFT JOIN \`user_profiles\` AS \`articles>createdBy>profile\` ON \`articles>createdBy>profile\`.\`theUserId\` = \`articles>createdBy\`.\`id\`"
-    `);
+    assert.strictEqual(
+      format(`SELECT * FROM ${from}`),
+      `SELECT *
+FROM \`articles\`
+  LEFT JOIN \`categories\` AS \`articles>category\` ON \`articles\`.\`category_private_id\` = \`articles>category\`.\`private_id\`
+  LEFT JOIN \`categories\` AS \`articles>category>parent\` ON \`articles>category\`.\`parent_private_id\` = \`articles>category>parent\`.\`private_id\`
+  LEFT JOIN \`categories\` AS \`articles>category>parent>parent\` ON \`articles>category>parent\`.\`parent_private_id\` = \`articles>category>parent>parent\`.\`private_id\`
+  LEFT JOIN \`categories\` AS \`articles>category>parent>parent>parent\` ON \`articles>category>parent>parent\`.\`parent_private_id\` = \`articles>category>parent>parent>parent\`.\`private_id\`
+  LEFT JOIN \`users\` AS \`articles>createdBy\` ON \`articles\`.\`created_by_id\` = \`articles>createdBy\`.\`id\`
+  LEFT JOIN \`user_profiles\` AS \`articles>createdBy>profile\` ON \`articles>createdBy>profile\`.\`theUserId\` = \`articles>createdBy\`.\`id\``,
+    );
   });
 });

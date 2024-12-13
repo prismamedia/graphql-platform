@@ -119,14 +119,12 @@ export class NodeCreationStatement {
   }
 
   public get value(): NodeCreationValue {
-    return Object.assign(
-      Object.create(null),
-      Object.fromEntries(
-        Array.from(this.valuesByComponent, ([component, value]) => [
-          component.name,
-          value,
-        ]),
-      ),
-    );
+    return this.valuesByComponent
+      .entries()
+      .reduce<NodeCreationValue>(
+        (value, [component, componentValue]) =>
+          Object.assign(value, { [component.name]: componentValue }),
+        Object.create(null),
+      );
   }
 }

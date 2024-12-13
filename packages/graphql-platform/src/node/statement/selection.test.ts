@@ -1,4 +1,5 @@
-import { beforeAll, describe, expect, it } from '@jest/globals';
+import assert from 'node:assert';
+import { before, describe, it } from 'node:test';
 import {
   ArticleStatus,
   createMyGP,
@@ -27,7 +28,7 @@ describe('Selection', () => {
   let User: Node;
   let UserProfile: Node;
 
-  beforeAll(() => {
+  before(() => {
     gp = createMyGP();
 
     Article = gp.getNodeByName('Article');
@@ -40,117 +41,127 @@ describe('Selection', () => {
   });
 
   describe('Definition', () => {
-    it.each<[RawNodeSelection, DependencySummaryJSON]>([
+    (
       [
-        `{ title }`,
-        {
-          componentsByNode: { Article: ['title'] },
-          changes: ['Article'],
-        },
-      ],
-      [
-        `{ title category { title order } }`,
-        {
-          componentsByNode: {
-            Article: ['title', 'category'],
-            Category: ['order'],
+        [
+          `{ title }`,
+          {
+            componentsByNode: { Article: ['title'] },
+            changes: ['Article'],
           },
-          changes: ['Article', 'Category'],
-        },
-      ],
-      [
-        `{ tagCount }`,
-        {
-          creations: ['ArticleTag'],
-          deletions: ['ArticleTag'],
-          changes: ['ArticleTag'],
-        },
-      ],
-      [
-        `{ tags(where: { tag: { deprecated_not: true }}, orderBy: [order_ASC], first: 10) { tag { slug }}}`,
-        {
-          creations: ['ArticleTag'],
-          deletions: ['ArticleTag'],
-          componentsByNode: { ArticleTag: ['order'], Tag: ['deprecated'] },
-          changes: ['ArticleTag', 'Tag'],
-        },
-      ],
-    ])('%p.dependency = %p', (input, expected) =>
-      expect(
-        Article.outputType.select(input).dependencyGraph?.summary.toJSON(),
-      ).toEqual(expected),
-    );
+        ],
+        [
+          `{ title category { title order } }`,
+          {
+            componentsByNode: {
+              Article: ['title', 'category'],
+              Category: ['order'],
+            },
+            changes: ['Article', 'Category'],
+          },
+        ],
+        [
+          `{ tagCount }`,
+          {
+            creations: ['ArticleTag'],
+            deletions: ['ArticleTag'],
+            changes: ['ArticleTag'],
+          },
+        ],
+        [
+          `{ tags(where: { tag: { deprecated_not: true }}, orderBy: [order_ASC], first: 10) { tag { slug }}}`,
+          {
+            creations: ['ArticleTag'],
+            deletions: ['ArticleTag'],
+            componentsByNode: { ArticleTag: ['order'], Tag: ['deprecated'] },
+            changes: ['ArticleTag', 'Tag'],
+          },
+        ],
+      ] satisfies [RawNodeSelection, DependencySummaryJSON][]
+    ).forEach(([input, expected]) => {
+      it(`${input}.dependency = ${expected}`, () => {
+        assert.deepEqual(
+          Article.outputType.select(input).dependencyGraph?.summary.toJSON(),
+          expected,
+        );
+      });
+    });
   });
 
   describe('Execution', () => {
-    it.each([
+    (
       [
-        {
-          id: '37da4d42-bc8d-4a01-98de-4d2109e09130',
-          status: ArticleStatus.DRAFT,
-          a: {
+        [
+          {
+            id: '37da4d42-bc8d-4a01-98de-4d2109e09130',
             status: ArticleStatus.DRAFT,
-            title: 'My title',
-            category: null,
+            a: {
+              status: ArticleStatus.DRAFT,
+              title: 'My title',
+              category: null,
+            },
+            b: {
+              status: ArticleStatus.DRAFT,
+              title: 'My title',
+              category: null,
+            },
           },
-          b: {
+          {
+            id: '37da4d42-bc8d-4a01-98de-4d2109e09130',
             status: ArticleStatus.DRAFT,
-            title: 'My title',
-            category: null,
+            a: 'draft-my title',
+            b: 'draft-my title',
           },
-        },
-        {
-          id: '37da4d42-bc8d-4a01-98de-4d2109e09130',
-          status: ArticleStatus.DRAFT,
-          a: 'draft-my title',
-          b: 'draft-my title',
-        },
-      ],
-      [
-        {
-          id: '37da4d42-bc8d-4a01-98de-4d2109e09130',
-          status: ArticleStatus.DRAFT,
-          a: {
+        ],
+        [
+          {
+            id: '37da4d42-bc8d-4a01-98de-4d2109e09130',
             status: ArticleStatus.DRAFT,
-            title: 'My title',
-            category: { title: 'My category' },
+            a: {
+              status: ArticleStatus.DRAFT,
+              title: 'My title',
+              category: { title: 'My category' },
+            },
+            b: {
+              status: ArticleStatus.DRAFT,
+              title: 'My title',
+              category: { title: 'My category' },
+            },
           },
-          b: {
+          {
+            id: '37da4d42-bc8d-4a01-98de-4d2109e09130',
             status: ArticleStatus.DRAFT,
-            title: 'My title',
-            category: { title: 'My category' },
+            a: 'draft-my title-my category',
+            b: 'draft-my title-my category',
           },
-        },
-        {
-          id: '37da4d42-bc8d-4a01-98de-4d2109e09130',
-          status: ArticleStatus.DRAFT,
-          a: 'draft-my title-my category',
-          b: 'draft-my title-my category',
-        },
-      ],
-    ])('Parses & resolves', async (source, value) => {
-      const selection = Article.outputType.select(`{
-        id
-        status
-        a: lowerCasedTitle
-        b: lowerCasedTitle
-      }`);
+        ],
+      ] as const
+    ).forEach(([source, value]) => {
+      it(`Parses & resolves`, async () => {
+        const selection = Article.outputType.select(`{
+          id
+          status
+          a: lowerCasedTitle
+          b: lowerCasedTitle
+        }`);
 
-      expect(selection.parseSource(source)).toEqual(source);
+        assert.deepEqual(selection.parseSource(source), source);
 
-      await expect(
-        selection.resolveValue(
-          source,
-          new OperationContext(gp, myAdminContext),
-        ),
-      ).resolves.toEqual(value);
+        assert.deepEqual(
+          await selection.resolveValue(
+            source,
+            new OperationContext(gp, myAdminContext),
+          ),
+          value,
+        );
+      });
     });
 
     describe("Node-changes' effect", () => {
       let selection: NodeSelection;
       let dependency: NodeSetDependencyGraph;
 
-      beforeAll(() => {
+      before(() => {
         selection = Article.outputType.select(`{
           id
           title
@@ -217,7 +228,7 @@ describe('Selection', () => {
 
           const dependentGraph = dependency.createDependentGraph(update);
 
-          expect(dependentGraph.isEmpty()).toBeTruthy();
+          assert(dependentGraph.isEmpty());
         });
 
         it('The updated "title" changes the root', () => {
@@ -242,9 +253,9 @@ describe('Selection', () => {
 
           const dependentGraph = dependency.createDependentGraph(update);
 
-          expect(dependentGraph.isEmpty()).toBeFalsy();
-          expect(dependentGraph.changes.size).toBe(1);
-          expect(dependentGraph.target.isFalse()).toBeTruthy();
+          assert(!dependentGraph.isEmpty());
+          assert.strictEqual(dependentGraph.changes.size, 1);
+          assert(dependentGraph.target.isFalse());
         });
 
         it('The updated "title" changes the root and the graph', () => {
@@ -271,24 +282,22 @@ describe('Selection', () => {
 
           const dependentGraph = dependency.createDependentGraph(update);
 
-          expect(dependentGraph.isEmpty()).toBeFalsy();
-          expect(dependentGraph.changes.size).toBe(1);
-          expect(dependentGraph.target.inputValue).toMatchInlineSnapshot(`
-           {
-             "OR": [
-               {
-                 "createdBy": {
-                   "id": "9121c47b-87b6-4334-ae1d-4c9777e87576",
-                 },
-               },
-               {
-                 "updatedBy": {
-                   "username": "yvann",
-                 },
-               },
-             ],
-           }
-          `);
+          assert(!dependentGraph.isEmpty());
+          assert.strictEqual(dependentGraph.changes.size, 1);
+          assert.deepEqual(dependentGraph.target.inputValue, {
+            OR: [
+              {
+                createdBy: {
+                  id: '9121c47b-87b6-4334-ae1d-4c9777e87576',
+                },
+              },
+              {
+                updatedBy: {
+                  username: 'yvann',
+                },
+              },
+            ],
+          });
         });
 
         it('The updated "updatedAt" changes the graph', () => {
@@ -314,15 +323,13 @@ describe('Selection', () => {
 
           const dependentGraph = dependency.createDependentGraph(update);
 
-          expect(dependentGraph.isEmpty()).toBeFalsy();
-          expect(dependentGraph.changes.size).toBe(0);
-          expect(dependentGraph.target.inputValue).toMatchInlineSnapshot(`
-           {
-             "updatedBy": {
-               "username": "yvann",
-             },
-           }
-          `);
+          assert(!dependentGraph.isEmpty());
+          assert.strictEqual(dependentGraph.changes.size, 0);
+          assert.deepEqual(dependentGraph.target.inputValue, {
+            updatedBy: {
+              username: 'yvann',
+            },
+          });
         });
       });
 
@@ -345,24 +352,22 @@ describe('Selection', () => {
 
           const dependentGraph = dependency.createDependentGraph(update);
 
-          expect(dependentGraph.isEmpty()).toBeFalsy();
-          expect(dependentGraph.changes.size).toBe(0);
-          expect(dependentGraph.target.inputValue).toMatchInlineSnapshot(`
-           {
-             "category": {
-               "OR": [
-                 {
-                   "_id": 10,
-                 },
-                 {
-                   "parent": {
-                     "_id": 10,
-                   },
-                 },
-               ],
-             },
-           }
-          `);
+          assert(!dependentGraph.isEmpty());
+          assert.strictEqual(dependentGraph.changes.size, 0);
+          assert.deepEqual(dependentGraph.target.inputValue, {
+            category: {
+              OR: [
+                {
+                  _id: 10,
+                },
+                {
+                  parent: {
+                    _id: 10,
+                  },
+                },
+              ],
+            },
+          });
         });
 
         it('The updated "parent" changes the graph', () => {
@@ -383,15 +388,13 @@ describe('Selection', () => {
 
           const dependentGraph = dependency.createDependentGraph(update);
 
-          expect(dependentGraph.isEmpty()).toBeFalsy();
-          expect(dependentGraph.changes.size).toBe(0);
-          expect(dependentGraph.target.inputValue).toMatchInlineSnapshot(`
-           {
-             "category": {
-               "_id": 10,
-             },
-           }
-          `);
+          assert(!dependentGraph.isEmpty());
+          assert.strictEqual(dependentGraph.changes.size, 0);
+          assert.deepEqual(dependentGraph.target.inputValue, {
+            category: {
+              _id: 10,
+            },
+          });
         });
       });
 
@@ -412,7 +415,7 @@ describe('Selection', () => {
 
           const dependentGraph = dependency.createDependentGraph(update);
 
-          expect(dependentGraph.isEmpty()).toBeTruthy();
+          assert(dependentGraph.isEmpty());
         });
       });
 
@@ -426,24 +429,22 @@ describe('Selection', () => {
 
           const dependentGraph = dependency.createDependentGraph(creation);
 
-          expect(dependentGraph.isEmpty()).toBeFalsy();
-          expect(dependentGraph.changes.size).toBe(0);
-          expect(dependentGraph.target.inputValue).toMatchInlineSnapshot(`
-           {
-             "OR": [
-               {
-                 "createdBy": {
-                   "id": "16050880-dabc-4348-bd3b-d41efe1b6057",
-                 },
-               },
-               {
-                 "updatedBy": {
-                   "id": "16050880-dabc-4348-bd3b-d41efe1b6057",
-                 },
-               },
-             ],
-           }
-          `);
+          assert(!dependentGraph.isEmpty());
+          assert.strictEqual(dependentGraph.changes.size, 0);
+          assert.deepEqual(dependentGraph.target.inputValue, {
+            OR: [
+              {
+                createdBy: {
+                  id: '16050880-dabc-4348-bd3b-d41efe1b6057',
+                },
+              },
+              {
+                updatedBy: {
+                  id: '16050880-dabc-4348-bd3b-d41efe1b6057',
+                },
+              },
+            ],
+          });
         });
 
         it('The deletion changes nothing', () => {
@@ -455,24 +456,22 @@ describe('Selection', () => {
 
           const dependentGraph = dependency.createDependentGraph(deletion);
 
-          expect(dependentGraph.isEmpty()).toBeFalsy();
-          expect(dependentGraph.changes.size).toBe(0);
-          expect(dependentGraph.target.inputValue).toMatchInlineSnapshot(`
-           {
-             "OR": [
-               {
-                 "createdBy": {
-                   "id": "7caf940a-058a-4ef2-a8bf-ac2d6cae3485",
-                 },
-               },
-               {
-                 "updatedBy": {
-                   "id": "7caf940a-058a-4ef2-a8bf-ac2d6cae3485",
-                 },
-               },
-             ],
-           }
-          `);
+          assert(!dependentGraph.isEmpty());
+          assert.strictEqual(dependentGraph.changes.size, 0);
+          assert.deepEqual(dependentGraph.target.inputValue, {
+            OR: [
+              {
+                createdBy: {
+                  id: '7caf940a-058a-4ef2-a8bf-ac2d6cae3485',
+                },
+              },
+              {
+                updatedBy: {
+                  id: '7caf940a-058a-4ef2-a8bf-ac2d6cae3485',
+                },
+              },
+            ],
+          });
         });
 
         it('The updated "birthday" changes nothing', () => {
@@ -489,7 +488,7 @@ describe('Selection', () => {
 
           const dependentGraph = dependency.createDependentGraph(update);
 
-          expect(dependentGraph.isEmpty()).toBeTruthy();
+          assert(dependentGraph.isEmpty());
         });
 
         it('The updated "facebookId" changes the graph', () => {
@@ -506,24 +505,22 @@ describe('Selection', () => {
 
           const dependentGraph = dependency.createDependentGraph(update);
 
-          expect(dependentGraph.isEmpty()).toBeFalsy();
-          expect(dependentGraph.changes.size).toBe(0);
-          expect(dependentGraph.target.inputValue).toMatchInlineSnapshot(`
-           {
-             "OR": [
-               {
-                 "createdBy": {
-                   "id": "8e3587e8-2e4e-46a4-a6e0-27f08aebb215",
-                 },
-               },
-               {
-                 "updatedBy": {
-                   "id": "8e3587e8-2e4e-46a4-a6e0-27f08aebb215",
-                 },
-               },
-             ],
-           }
-          `);
+          assert(!dependentGraph.isEmpty());
+          assert.strictEqual(dependentGraph.changes.size, 0);
+          assert.deepEqual(dependentGraph.target.inputValue, {
+            OR: [
+              {
+                createdBy: {
+                  id: '8e3587e8-2e4e-46a4-a6e0-27f08aebb215',
+                },
+              },
+              {
+                updatedBy: {
+                  id: '8e3587e8-2e4e-46a4-a6e0-27f08aebb215',
+                },
+              },
+            ],
+          });
         });
       });
 
@@ -541,13 +538,11 @@ describe('Selection', () => {
 
           const dependentGraph = dependency.createDependentGraph(creation);
 
-          expect(dependentGraph.isEmpty()).toBeFalsy();
-          expect(dependentGraph.changes.size).toBe(0);
-          expect(dependentGraph.target.inputValue).toMatchInlineSnapshot(`
-           {
-             "_id": 2,
-           }
-          `);
+          assert(!dependentGraph.isEmpty());
+          assert.strictEqual(dependentGraph.changes.size, 0);
+          assert.deepEqual(dependentGraph.target.inputValue, {
+            _id: 2,
+          });
         });
 
         it('The deletion changes the graph', () => {
@@ -563,13 +558,11 @@ describe('Selection', () => {
 
           const dependentGraph = dependency.createDependentGraph(deletion);
 
-          expect(dependentGraph.isEmpty()).toBeFalsy();
-          expect(dependentGraph.changes.size).toBe(0);
-          expect(dependentGraph.target.inputValue).toMatchInlineSnapshot(`
-           {
-             "_id": 3,
-           }
-          `);
+          assert(!dependentGraph.isEmpty());
+          assert.strictEqual(dependentGraph.changes.size, 0);
+          assert.deepEqual(dependentGraph.target.inputValue, {
+            _id: 3,
+          });
         });
 
         it('The updated "order", from 4 to 0, changes the graph', () => {
@@ -588,13 +581,11 @@ describe('Selection', () => {
 
           const dependentGraph = dependency.createDependentGraph(update);
 
-          expect(dependentGraph.isEmpty()).toBeFalsy();
-          expect(dependentGraph.changes.size).toBe(0);
-          expect(dependentGraph.target.inputValue).toMatchInlineSnapshot(`
-           {
-             "_id": 4,
-           }
-          `);
+          assert(!dependentGraph.isEmpty());
+          assert.strictEqual(dependentGraph.changes.size, 0);
+          assert.deepEqual(dependentGraph.target.inputValue, {
+            _id: 4,
+          });
         });
 
         it('The updated "order", from 4 to 5, changes nothing', () => {
@@ -613,13 +604,11 @@ describe('Selection', () => {
 
           const dependentGraph = dependency.createDependentGraph(update);
 
-          expect(dependentGraph.isEmpty()).toBeFalsy();
-          expect(dependentGraph.changes.size).toBe(0);
-          expect(dependentGraph.target.inputValue).toMatchInlineSnapshot(`
-           {
-             "_id": 5,
-           }
-          `);
+          assert(!dependentGraph.isEmpty());
+          assert.strictEqual(dependentGraph.changes.size, 0);
+          assert.deepEqual(dependentGraph.target.inputValue, {
+            _id: 5,
+          });
         });
       });
 
@@ -642,17 +631,15 @@ describe('Selection', () => {
 
           const dependentGraph = dependency.createDependentGraph(update);
 
-          expect(dependentGraph.isEmpty()).toBeFalsy();
-          expect(dependentGraph.changes.size).toBe(0);
-          expect(dependentGraph.target.inputValue).toMatchInlineSnapshot(`
-           {
-             "tags_some": {
-               "tag": {
-                 "id": "68f3d88d-1308-4019-8118-fc20042e8c20",
-               },
-             },
-           }
-          `);
+          assert(!dependentGraph.isEmpty());
+          assert.strictEqual(dependentGraph.changes.size, 0);
+          assert.deepEqual(dependentGraph.target.inputValue, {
+            tags_some: {
+              tag: {
+                id: '68f3d88d-1308-4019-8118-fc20042e8c20',
+              },
+            },
+          });
         });
 
         it('The updated "deprecated", from NULL to FALSE, changes nothing', () => {
@@ -673,17 +660,15 @@ describe('Selection', () => {
 
           const dependentGraph = dependency.createDependentGraph(update);
 
-          expect(dependentGraph.isEmpty()).toBeFalsy();
-          expect(dependentGraph.changes.size).toBe(0);
-          expect(dependentGraph.target.inputValue).toMatchInlineSnapshot(`
-           {
-             "tags_some": {
-               "tag": {
-                 "id": "68f3d88d-1308-4019-8118-fc20042e8c20",
-               },
-             },
-           }
-          `);
+          assert(!dependentGraph.isEmpty());
+          assert.strictEqual(dependentGraph.changes.size, 0);
+          assert.deepEqual(dependentGraph.target.inputValue, {
+            tags_some: {
+              tag: {
+                id: '68f3d88d-1308-4019-8118-fc20042e8c20',
+              },
+            },
+          });
         });
       });
     });

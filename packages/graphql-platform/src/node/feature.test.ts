@@ -1,6 +1,7 @@
-import { describe, expect, it } from '@jest/globals';
 import { GraphQLString } from 'graphql';
+import assert from 'node:assert';
 import { randomUUID } from 'node:crypto';
+import { describe, it } from 'node:test';
 import { GraphQLPlatform, Node } from '../index.js';
 
 describe('Feature', () => {
@@ -81,30 +82,33 @@ describe('Feature', () => {
     });
 
     const Article = gp.getNodeByName('Article');
-    expect(Article).toBeInstanceOf(Node);
+    assert(Article instanceof Node);
 
-    expect(Array.from(Article.componentsByName.keys())).toEqual([
+    assert.deepStrictEqual(Array.from(Article.componentsByName.keys()), [
       '_id',
       'id',
       'title',
       'body',
     ]);
 
-    expect(Array.from(Article.uniqueConstraintsByName.keys())).toEqual([
+    assert.deepStrictEqual(Array.from(Article.uniqueConstraintsByName.keys()), [
       '_id',
       'id',
       'title',
     ]);
 
-    expect(Article.creationInputType.fieldsByName.has('virtualCreation')).toBe(
+    assert.strictEqual(
+      Article.creationInputType.fieldsByName.has('virtualCreation'),
       true,
     );
 
-    expect(Article.updateInputType.fieldsByName.has('virtualUpdate')).toBe(
+    assert.strictEqual(
+      Article.updateInputType.fieldsByName.has('virtualUpdate'),
       true,
     );
 
-    expect(Article.outputType.fieldsByName.has('virtualArticleOutput')).toBe(
+    assert.strictEqual(
+      Article.outputType.fieldsByName.has('virtualArticleOutput'),
       true,
     );
   });

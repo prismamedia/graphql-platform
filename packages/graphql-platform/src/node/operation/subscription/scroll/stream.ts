@@ -3,7 +3,7 @@ import {
   SingleBar as ProgressBar,
   type Options as ProgressBarOptions,
 } from 'cli-progress';
-import assert from 'node:assert/strict';
+import assert from 'node:assert';
 import { inspect } from 'node:util';
 import PQueue, { Options as PQueueOptions } from 'p-queue';
 import PRetry, { Options as PRetryOptions } from 'p-retry';
@@ -297,7 +297,7 @@ export class ScrollSubscriptionStream<
           progressBarOptions.container instanceof MultiProgressBar,
           `The "container" has to be a multi-progress-bar instance`,
         );
-        assert.equal(
+        assert.strictEqual(
           typeof progressBarOptions.name,
           'string',
           `The "name" has to be a string`,
@@ -437,7 +437,7 @@ export class ScrollSubscriptionStream<
           progressBarOptions.container instanceof MultiProgressBar,
           `The "container" has to be a multi-progress-bar instance`,
         );
-        assert.equal(
+        assert.strictEqual(
           typeof progressBarOptions.name,
           'string',
           `The "name" has to be a string`,

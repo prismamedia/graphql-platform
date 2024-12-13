@@ -1,7 +1,7 @@
 import * as core from '@prismamedia/graphql-platform';
 import * as utils from '@prismamedia/graphql-platform-utils';
 import { Memoize } from '@prismamedia/memoize';
-import assert from 'node:assert/strict';
+import assert from 'node:assert';
 import { escapeIdentifier } from '../../escaping.js';
 import type { MariaDBConnector } from '../../index.js';
 import type { TableReference } from '../../statement/manipulation/clause/table-reference.js';
@@ -116,8 +116,8 @@ export class ForeignKey {
     tail: TableReference,
     head: TableReference,
   ): Array<WhereCondition> {
-    assert.equal(tail.table.node, this.edge.tail);
-    assert.equal(head.table.node, this.edge.head);
+    assert.strictEqual(tail.table.node, this.edge.tail);
+    assert.strictEqual(head.table.node, this.edge.head);
 
     return this.columns.map(
       (column) =>

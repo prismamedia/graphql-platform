@@ -1,5 +1,5 @@
 import * as graphql from 'graphql';
-import assert from 'node:assert/strict';
+import assert from 'node:assert';
 import { type NodeSelectedValue } from '../../../../../../../node.js';
 import { ReverseEdgeDependencyGraph } from '../../../../../../change/dependency.js';
 import type { MultipleReverseEdge } from '../../../../../../definition.js';
@@ -21,7 +21,7 @@ export class MultipleReverseEdgeExistsFilter extends AbstractReverseEdgeFilter {
     headFilter?: NodeFilter,
   ): BooleanFilter {
     if (headFilter) {
-      assert.equal(reverseEdge.head, headFilter.node);
+      assert.strictEqual(reverseEdge.head, headFilter.node);
 
       if (!headFilter.normalized) {
         return MultipleReverseEdgeExistsFilter.create(reverseEdge);

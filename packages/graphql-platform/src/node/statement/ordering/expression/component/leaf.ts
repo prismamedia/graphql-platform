@@ -1,5 +1,5 @@
 import type * as graphql from 'graphql';
-import assert from 'node:assert/strict';
+import assert from 'node:assert';
 import type { Leaf } from '../../../../definition.js';
 import type { NodeOrderingInputValue } from '../../../../type.js';
 import type { OrderingDirection } from '../../direction.js';

@@ -1,6 +1,6 @@
 import * as utils from '@prismamedia/graphql-platform-utils';
 import * as graphql from 'graphql';
-import assert from 'node:assert/strict';
+import assert from 'node:assert';
 import { EdgeDependencyGraph } from '../../../../../change/dependency.js';
 import type { Component, Edge } from '../../../../../definition.js';
 import type { OperationContext } from '../../../../../operation.js';
@@ -30,7 +30,7 @@ export class EdgeHeadSelection<
     this.name = edge.name;
     this.key = this.alias ?? this.name;
 
-    assert.equal(edge.head, headSelection.node);
+    assert.strictEqual(edge.head, headSelection.node);
   }
 
   public get hasVirtualSelection(): boolean {

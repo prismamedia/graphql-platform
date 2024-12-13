@@ -1,6 +1,6 @@
 import * as utils from '@prismamedia/graphql-platform-utils';
 import { Memoize } from '@prismamedia/memoize';
-import assert from 'node:assert/strict';
+import assert from 'node:assert';
 import type { Node } from '../../../../node.js';
 import { Leaf } from '../../../definition.js';
 import { OrderingDirection } from '../../../statement.js';

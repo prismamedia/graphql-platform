@@ -1,6 +1,6 @@
 import { isIterableObject } from '@prismamedia/graphql-platform-utils';
 import { Memoize } from '@prismamedia/memoize';
-import assert from 'node:assert/strict';
+import assert from 'node:assert';
 import type { Arrayable, JsonObject } from 'type-fest';
 import { Node, NodeValue } from '../../node.js';
 import {
@@ -90,7 +90,7 @@ export class DependencyGraph {
     for (const dependency of dependencies.flat()) {
       if (dependency instanceof EdgeDependencyGraph) {
         const edge = dependency.edge;
-        assert.equal(edge.tail, this.node);
+        assert.strictEqual(edge.tail, this.node);
         edge.isMutable() && components.add(edge);
 
         let dependencies = dependenciesByEdge.get(edge);
@@ -101,7 +101,7 @@ export class DependencyGraph {
         dependencies.push(dependency);
       } else if (dependency instanceof ReverseEdgeDependencyGraph) {
         const reverseEdge = dependency.reverseEdge;
-        assert.equal(reverseEdge.tail, this.node);
+        assert.strictEqual(reverseEdge.tail, this.node);
 
         let dependencies = dependenciesByReverseEdge.get(reverseEdge);
         if (!dependencies) {
@@ -110,7 +110,7 @@ export class DependencyGraph {
 
         dependencies.push(dependency);
       } else if (dependency instanceof DependencyGraph) {
-        assert.equal(dependency.node, this.node);
+        assert.strictEqual(dependency.node, this.node);
 
         dependency.components.forEach((component) => components.add(component));
 
@@ -159,7 +159,7 @@ export class DependencyGraph {
     creation: NodeCreation,
     _visitedParents?: ReadonlyArray<NodeValue>,
   ): DependentKind.UPSERT | DependentKind.UPSERT_IF_FOUND | false {
-    assert.equal(creation.node, this.node);
+    assert.strictEqual(creation.node, this.node);
 
     if (!this.creation) {
       return false;
@@ -181,7 +181,7 @@ export class DependencyGraph {
     update: NodeUpdate,
     _visitedParents?: ReadonlyArray<NodeValue>,
   ): DependentKind | false {
-    assert.equal(update.node, this.node);
+    assert.strictEqual(update.node, this.node);
 
     if (
       !this.components.size ||
@@ -236,7 +236,7 @@ export class DependencyGraph {
     deletion: NodeDeletion,
     _visitedParents?: ReadonlyArray<NodeValue>,
   ): DependentKind.DELETION | false {
-    assert.equal(deletion.node, this.node);
+    assert.strictEqual(deletion.node, this.node);
 
     if (!this.deletion) {
       return false;
@@ -256,7 +256,7 @@ export class DependencyGraph {
     change: NodeChange,
     visitedParents?: ReadonlyArray<NodeValue>,
   ): DependentKind | false {
-    assert.equal(change.node, this.node);
+    assert.strictEqual(change.node, this.node);
 
     return change instanceof NodeCreation
       ? this.nodeDependsOnCreation(change, visitedParents)
@@ -422,9 +422,9 @@ export class NodeDependencyGraph extends DependencyGraph {
     public override readonly selection?: NodeSelection,
     ...dependencies: ReadonlyArray<Dependency | undefined>
   ) {
-    filter && assert.equal(filter.node, node);
-    ordering && assert.equal(ordering.node, node);
-    selection && assert.equal(selection.node, node);
+    filter && assert.strictEqual(filter.node, node);
+    ordering && assert.strictEqual(ordering.node, node);
+    selection && assert.strictEqual(selection.node, node);
 
     super(
       node,
@@ -491,7 +491,7 @@ export class ReverseEdgeDependencyGraph extends NodeSetDependencyGraph {
     creation: NodeCreation,
     visitedParents?: ReadonlyArray<NodeValue>,
   ): DependentKind.UPSERT | DependentKind.UPSERT_IF_FOUND | false {
-    assert.equal(creation.node, this.node);
+    assert.strictEqual(creation.node, this.node);
 
     /**
      * If the creation has no "original-edge" value, it cannot affect any document
@@ -524,7 +524,7 @@ export class ReverseEdgeDependencyGraph extends NodeSetDependencyGraph {
     update: NodeUpdate,
     visitedParents?: ReadonlyArray<NodeValue>,
   ): DependentKind | false {
-    assert.equal(update.node, this.node);
+    assert.strictEqual(update.node, this.node);
 
     /**
      * If the update has no "original-edge" value, it cannot affect any document
@@ -563,7 +563,7 @@ export class ReverseEdgeDependencyGraph extends NodeSetDependencyGraph {
     deletion: NodeDeletion,
     visitedParents?: ReadonlyArray<NodeValue>,
   ): DependentKind.DELETION | false {
-    assert.equal(deletion.node, this.node);
+    assert.strictEqual(deletion.node, this.node);
 
     /**
      * If the deletion has no "original-edge" value, it cannot affect any document
@@ -665,7 +665,7 @@ export class DependentGraph<TRequestContext extends object = any> {
 
     this.dependentsByEdge = new Map(
       dependentsByEdge?.filter(([edge, dependents]) => {
-        assert.equal(edge.tail, this.node);
+        assert.strictEqual(edge.tail, this.node);
 
         return !dependents.isEmpty();
       }),
@@ -673,7 +673,7 @@ export class DependentGraph<TRequestContext extends object = any> {
 
     this.dependentsByReverseEdge = new Map(
       dependentsByReverseEdge?.filter(([reverseEdge, dependents]) => {
-        assert.equal(reverseEdge.tail, this.node);
+        assert.strictEqual(reverseEdge.tail, this.node);
 
         return !dependents.isEmpty();
       }),
@@ -694,8 +694,8 @@ export class DependentGraph<TRequestContext extends object = any> {
     const dependenciesByReverseEdge = new Map(this.dependentsByReverseEdge);
 
     for (const other of others) {
-      assert.equal(other.path, this.path);
-      assert.equal(other.node, this.node);
+      assert.strictEqual(other.path, this.path);
+      assert.strictEqual(other.node, this.node);
 
       other.deletions.forEach((deletion) => deletions.add(deletion));
       other.upserts.forEach((upsert) => upserts.add(upsert));

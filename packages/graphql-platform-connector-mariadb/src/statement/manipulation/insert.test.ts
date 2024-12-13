@@ -1,9 +1,10 @@
-import { afterAll, beforeAll, describe, expect, it } from '@jest/globals';
 import * as core from '@prismamedia/graphql-platform';
 import {
   myAdminContext,
   myJournalistContext,
 } from '@prismamedia/graphql-platform/__tests__/config.js';
+import assert from 'node:assert';
+import { after, before, describe, it } from 'node:test';
 import { createMyGP, type MyGP } from '../../__tests__/config.js';
 import { InsertStatement } from './insert.js';
 
@@ -11,7 +12,7 @@ describe('Insert statement', () => {
   let gp: MyGP;
   const executedStatements: string[] = [];
 
-  beforeAll(async () => {
+  before(async () => {
     gp = createMyGP(`connector_mariadb_insert_statement`);
     gp.connector.on('executed-statement', ({ statement }) => {
       if (statement instanceof InsertStatement) {
@@ -22,13 +23,13 @@ describe('Insert statement', () => {
     await gp.connector.setup();
   });
 
-  afterAll(() => gp.connector.teardown());
+  after(() => gp.connector.teardown());
 
   it('generates a single creation', async () => {
     executedStatements.length = 0;
 
-    await expect(
-      gp.api.User.createOne(myAdminContext, {
+    assert.deepEqual(
+      await gp.api.User.createOne(myAdminContext, {
         data: {
           id: '484ae4db-a944-421d-828c-3b514a438146',
           username: 'myTestUser',
@@ -42,14 +43,15 @@ describe('Insert statement', () => {
           lastLoggedInAt
         }`,
       }),
-    ).resolves.toEqual({
-      id: '484ae4db-a944-421d-828c-3b514a438146',
-      username: 'myTestUser',
-      createdAt: new Date('2022-02-01T12:00:00Z'),
-      lastLoggedInAt: null,
-    });
+      {
+        id: '484ae4db-a944-421d-828c-3b514a438146',
+        username: 'myTestUser',
+        createdAt: new Date('2022-02-01T12:00:00Z'),
+        lastLoggedInAt: null,
+      },
+    );
 
-    expect(executedStatements).toEqual([
+    assert.deepEqual(executedStatements, [
       `INSERT INTO \`users\`
   (\`id\`,\`username\`,\`created_at\`,\`last_logged_in_at\`)
 VALUES
@@ -64,8 +66,8 @@ RETURNING
 
     const now = new Date();
 
-    await expect(
-      gp.api.Article.createSome(myJournalistContext, {
+    assert.deepEqual(
+      await gp.api.Article.createSome(myJournalistContext, {
         data: [
           {
             id: '484ae4db-a944-421d-828c-3b514a438146',
@@ -102,45 +104,46 @@ RETURNING
           metas
         }`,
       }),
-    ).resolves.toEqual([
-      {
-        id: '484ae4db-a944-421d-828c-3b514a438146',
-        title: 'My first title',
-        body: null,
-        createdAt: now,
-        updatedAt: new Date(
-          now.toISOString().replace(/^([^.]+).+$/, '$1.000Z'),
-        ),
-        sponsored: null,
-        views: 0n,
-        score: 0.5,
-        machineTags: null,
-        metas: null,
-      },
-      {
-        id: 'f96e220e-ae7b-487e-b62a-09dc446f0c7d',
-        title: 'My second title',
-        body: {
-          blocks: [],
-          entityMap: {},
+      [
+        {
+          id: '484ae4db-a944-421d-828c-3b514a438146',
+          title: 'My first title',
+          body: null,
+          createdAt: now,
+          updatedAt: new Date(
+            now.toISOString().replace(/^([^.]+).+$/, '$1.000Z'),
+          ),
+          sponsored: null,
+          views: 0n,
+          score: 0.5,
+          machineTags: null,
+          metas: null,
         },
-        createdAt: now,
-        updatedAt: new Date(
-          now.toISOString().replace(/^([^.]+).+$/, '$1.000Z'),
-        ),
-        sponsored: true,
-        views: 12n,
-        score: 0.75,
-        machineTags: ['namespace:key=a_value', 'namespace:key=other_value'],
-        metas: { aKey: 'withAnyValue' },
-      },
-    ]);
+        {
+          id: 'f96e220e-ae7b-487e-b62a-09dc446f0c7d',
+          title: 'My second title',
+          body: {
+            blocks: [],
+            entityMap: {},
+          },
+          createdAt: now,
+          updatedAt: new Date(
+            now.toISOString().replace(/^([^.]+).+$/, '$1.000Z'),
+          ),
+          sponsored: true,
+          views: 12n,
+          score: 0.75,
+          machineTags: ['namespace:key=a_value', 'namespace:key=other_value'],
+          metas: { aKey: 'withAnyValue' },
+        },
+      ],
+    );
 
     const serializedNow = now
       .toISOString()
       .replace(/^(?<date>[^T]+)T(?<time>[^Z]+)Z$/, '$<date> $<time>');
 
-    expect(executedStatements).toEqual([
+    assert.deepEqual(executedStatements, [
       `INSERT INTO \`articles\`
   (\`private_id\`,\`id\`,\`status\`,\`title\`,\`slug\`,\`body\`,\`category_private_id\`,\`created_by_id\`,\`created_at\`,\`updated_by_username\`,\`updated_at\`,\`metas\`,\`highlighted\`,\`sponsored\`,\`views\`,\`score\`,\`machine_tags\`)
 VALUES
@@ -154,14 +157,16 @@ RETURNING
   it('throws a duplicate error', async () => {
     executedStatements.length = 0;
 
-    await expect(
-      gp.api.Article.createOne(myAdminContext, {
-        data: {
-          id: '484ae4db-a944-421d-828c-3b514a438146',
-          title: 'My title',
-        },
-        selection: `{ id }`,
-      }),
-    ).rejects.toThrow(core.DuplicateError);
+    await assert.rejects(
+      () =>
+        gp.api.Article.createOne(myAdminContext, {
+          data: {
+            id: '484ae4db-a944-421d-828c-3b514a438146',
+            title: 'My title',
+          },
+          selection: `{ id }`,
+        }),
+      core.DuplicateError,
+    );
   });
 });

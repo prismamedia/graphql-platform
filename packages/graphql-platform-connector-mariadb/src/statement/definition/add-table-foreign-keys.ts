@@ -1,5 +1,5 @@
 import type * as mariadb from 'mariadb';
-import assert from 'node:assert/strict';
+import assert from 'node:assert';
 import { EOL } from 'node:os';
 import * as R from 'remeda';
 import { escapeIdentifier } from '../../escaping.js';

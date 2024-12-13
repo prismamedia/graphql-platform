@@ -1,6 +1,6 @@
 import * as utils from '@prismamedia/graphql-platform-utils';
 import inflection from 'inflection';
-import assert from 'node:assert/strict';
+import assert from 'node:assert';
 import type { RequireExactlyOne } from 'type-fest';
 import type { NodeValue } from '../../../../../../node.js';
 import type { UniqueReverseEdge } from '../../../../../definition/reverse-edge/unique.js';

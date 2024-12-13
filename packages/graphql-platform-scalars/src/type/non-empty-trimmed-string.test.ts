@@ -1,26 +1,36 @@
-import { describe, expect, it } from '@jest/globals';
+import assert from 'node:assert';
+import { describe, it } from 'node:test';
+import { inspect } from 'node:util';
 import {
+  GraphQLNonEmptyTrimmedString,
   isNonEmptyTrimmedString,
-  parseNonEmptyTrimmedString,
 } from './non-empty-trimmed-string.js';
 
 describe('NonEmptyTrimmedString', () => {
-  it.each([
-    ['test ', 'test'],
-    [' test', 'test'],
-    ['\t \n \r  a bb ccc dddd \t \n \r ', 'a bb ccc dddd'],
-  ])('parseNonEmptyTrimmedString(%p) returns %p', (input, expected) => {
-    expect(isNonEmptyTrimmedString(input)).toBeTruthy();
-    expect(parseNonEmptyTrimmedString(input)).toBe(expected);
+  describe('invalids', () => {
+    [[''], [' '], [' \n \t ']].forEach(([value]) => {
+      it(`parseNonEmptyTrimmedString(${value}) throws an error`, () => {
+        assert.ok(!isNonEmptyTrimmedString(value));
+        assert.throws(() => GraphQLNonEmptyTrimmedString.parseValue(value), {
+          message: new RegExp(`^Expects a non-empty trimmed string, got:`),
+        });
+      });
+    });
   });
 
-  it.each([[''], [' '], [' \n \t ']])(
-    'parseNonEmptyTrimmedString(%p) throws the error: %s',
-    (value) => {
-      expect(isNonEmptyTrimmedString(value)).toBeFalsy();
-      expect(() => parseNonEmptyTrimmedString(value)).toThrow(
-        `Expects a non-empty trimmed string, got:`,
-      );
-    },
-  );
+  describe('valids', () => {
+    [
+      ['test ', 'test'],
+      [' test', 'test'],
+      ['\t \n \r  a bb ccc dddd \t \n \r ', 'a bb ccc dddd'],
+    ].forEach(([input, expected]) => {
+      it(`parseNonEmptyTrimmedString(${inspect(input, undefined, 5)}) = ${inspect(expected, undefined, 5)}`, () => {
+        assert.ok(isNonEmptyTrimmedString(input));
+        assert.strictEqual(
+          GraphQLNonEmptyTrimmedString.parseValue(input),
+          expected,
+        );
+      });
+    });
+  });
 });

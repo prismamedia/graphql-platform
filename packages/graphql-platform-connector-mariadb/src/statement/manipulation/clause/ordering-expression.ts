@@ -1,6 +1,6 @@
 import * as core from '@prismamedia/graphql-platform';
 import * as utils from '@prismamedia/graphql-platform-utils';
-import assert from 'node:assert/strict';
+import assert from 'node:assert';
 import type { TableReference } from './table-reference.js';
 
 /**
@@ -10,7 +10,7 @@ export function orderNode(
   tableReference: TableReference,
   nodeOrdering: core.NodeOrdering,
 ): string {
-  assert.equal(tableReference.table.node, nodeOrdering.node);
+  assert.strictEqual(tableReference.table.node, nodeOrdering.node);
 
   return nodeOrdering.expressions
     .map((expression) => {

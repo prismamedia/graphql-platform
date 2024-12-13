@@ -1,7 +1,8 @@
-import { beforeAll, describe, expect, it } from '@jest/globals';
 import { createMyGP as baseCreateMyGP } from '@prismamedia/graphql-platform/__tests__/config.js';
 import * as mariadb from 'mariadb';
+import assert from 'node:assert';
 import { EOL } from 'node:os';
+import { before, describe, it } from 'node:test';
 import { createMyGP, type MyGP } from './__tests__/config.js';
 import {
   AddTableForeignKeysStatement,
@@ -14,27 +15,27 @@ import {
 describe('GraphQL-Platform Connector MariaDB', () => {
   let gp: MyGP;
 
-  beforeAll(async () => {
+  before(async () => {
     gp = createMyGP('connector_mariadb');
   });
 
-  it('generates valid and stable schema', async () => {
-    expect(
+  it('generates a consistent schema', async ({ assert: { snapshot } }) => {
+    snapshot(
       new DropSchemaStatement(gp.connector.schema, { ifExists: true }).sql,
-    ).toMatchSnapshot();
+    );
 
-    expect(
+    snapshot(
       new CreateSchemaStatement(gp.connector.schema, { orReplace: true }).sql,
-    ).toMatchSnapshot();
+    );
 
-    expect(
+    snapshot(
       Array.from(
         gp.connector.schema.tablesByNode.values(),
         (table) => new CreateTableStatement(table).sql,
       ).join(EOL.repeat(2)),
-    ).toMatchSnapshot();
+    );
 
-    expect(
+    snapshot(
       Array.from(gp.connector.schema.tablesByNode.values(), (table) =>
         table.foreignKeysByEdge.size
           ? new AddTableForeignKeysStatement(table, table.foreignKeys).sql
@@ -42,7 +43,7 @@ describe('GraphQL-Platform Connector MariaDB', () => {
       )
         .filter(Boolean)
         .join(EOL.repeat(2)),
-    ).toMatchSnapshot();
+    );
   });
 
   it('throws error on fatal pool error', async () => {
@@ -58,8 +59,9 @@ describe('GraphQL-Platform Connector MariaDB', () => {
         }),
     });
 
-    await expect(
-      gp.connector.withConnection((connection) => connection.ping()),
-    ).rejects.toThrow(mariadb.SqlError);
+    await assert.rejects(
+      () => gp.connector.withConnection((connection) => connection.ping()),
+      mariadb.SqlError,
+    );
   });
 });

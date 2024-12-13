@@ -1,6 +1,6 @@
 import type * as core from '@prismamedia/graphql-platform';
 import * as utils from '@prismamedia/graphql-platform-utils';
-import assert from 'node:assert/strict';
+import assert from 'node:assert';
 import type { JsonObject, SetOptional } from 'type-fest';
 import { escapeStringValue } from '../../../../escaping.js';
 import { ColumnInformation } from '../../../../statement.js';
@@ -33,7 +33,7 @@ export class JsonType<
     // As the connection is configured with "autoJsonMap: false"
     columnValue: string,
   ): JsonObject {
-    assert.equal(
+    assert.strictEqual(
       typeof columnValue,
       'string',
       `"${this.kind}" column expects a "string", got: ${typeof columnValue}`,
@@ -46,7 +46,7 @@ export class JsonType<
     // MariaDB automatically parses the JSON column, so we do not do it twice
     jsonValue: JsonObject,
   ): JsonObject {
-    assert.equal(
+    assert.strictEqual(
       typeof jsonValue,
       'object',
       `"${this.kind}" column expects an "object", got: ${typeof jsonValue}`,
@@ -56,7 +56,7 @@ export class JsonType<
   }
 
   protected override doSerialize(value: JsonObject): string {
-    assert.equal(typeof value, 'object');
+    assert.strictEqual(typeof value, 'object');
 
     return escapeStringValue(JSON.stringify(value));
   }

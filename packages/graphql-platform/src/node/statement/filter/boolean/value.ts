@@ -1,6 +1,6 @@
 import { Memoize } from '@prismamedia/memoize';
 import * as graphql from 'graphql';
-import assert from 'node:assert/strict';
+import assert from 'node:assert';
 import type { NodeSelectedValue, UniqueConstraint } from '../../../../node.js';
 import { AbstractBooleanFilter } from '../abstract.js';
 
@@ -8,7 +8,7 @@ export class BooleanValue extends AbstractBooleanFilter {
   public readonly score: number;
 
   public constructor(public readonly value: boolean) {
-    assert.equal(typeof value, 'boolean');
+    assert.strictEqual(typeof value, 'boolean');
     super();
 
     this.score = 0;

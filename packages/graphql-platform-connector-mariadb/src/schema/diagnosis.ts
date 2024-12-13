@@ -1,5 +1,5 @@
 import * as utils from '@prismamedia/graphql-platform-utils';
-import assert from 'node:assert/strict';
+import assert from 'node:assert';
 import { inspect } from 'node:util';
 import * as R from 'remeda';
 import type { Schema } from '../schema.js';
@@ -99,7 +99,7 @@ export class SchemaDiagnosis {
   ) {
     // schema
     {
-      assert.equal(informations.schema.SCHEMA_NAME, schema.name);
+      assert.strictEqual(informations.schema.SCHEMA_NAME, schema.name);
 
       if (
         utils.getOptionalFlag(options?.charset, true) &&

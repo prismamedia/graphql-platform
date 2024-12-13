@@ -1,7 +1,7 @@
 import * as utils from '@prismamedia/graphql-platform-utils';
 import { Memoize } from '@prismamedia/memoize';
 import inflection from 'inflection';
-import assert from 'node:assert/strict';
+import assert from 'node:assert';
 import type { ConnectorInterface } from '../../../connector-interface.js';
 import type { OrderingDirection } from '../../statement/ordering/direction.js';
 import { MultipleReverseEdgeCreationInput } from '../../type/input/creation/field/reverse-edge/multiple.js';

@@ -1,6 +1,6 @@
 import type * as core from '@prismamedia/graphql-platform';
 import * as utils from '@prismamedia/graphql-platform-utils';
-import assert from 'node:assert/strict';
+import assert from 'node:assert';
 import type { SetOptional } from 'type-fest';
 import { escapeStringValue } from '../../../../escaping.js';
 import type { ColumnInformation } from '../../../../statement.js';
@@ -65,7 +65,7 @@ export class EnumType<
   }
 
   protected override doSerialize(value: string): string {
-    assert.equal(typeof value, 'string');
+    assert.strictEqual(typeof value, 'string');
     assert(this.values.includes(value as any));
 
     return escapeStringValue(value);

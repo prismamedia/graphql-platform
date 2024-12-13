@@ -1,4 +1,4 @@
-import assert from 'node:assert/strict';
+import assert from 'node:assert';
 import type { ForeignKeyInformation } from '../../../statement.js';
 import { DiagnosisError } from '../../diagnosis.js';
 import type { ForeignKey } from '../foreign-key.js';
@@ -25,10 +25,13 @@ export class ForeignKeyDiagnosis {
     information: ForeignKeyInformation,
     options?: ForeignKeyDiagnosisOptions,
   ) {
-    assert.equal(information.CONSTRAINT_SCHEMA, foreignKey.table.schema.name);
-    assert.equal(information.TABLE_NAME, foreignKey.table.name);
-    assert.equal(information.CONSTRAINT_NAME, foreignKey.name);
-    assert.equal(
+    assert.strictEqual(
+      information.CONSTRAINT_SCHEMA,
+      foreignKey.table.schema.name,
+    );
+    assert.strictEqual(information.TABLE_NAME, foreignKey.table.name);
+    assert.strictEqual(information.CONSTRAINT_NAME, foreignKey.name);
+    assert.strictEqual(
       information.UNIQUE_CONSTRAINT_SCHEMA,
       foreignKey.table.schema.name,
     );

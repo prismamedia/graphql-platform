@@ -1,0 +1,3 @@
+exports[`InputEnumType > has values 1`] = `
+"\\"\\"\\"My status\\"\\"\\"\\nenum Status {\\n  DRAFT\\n  FROZEN @deprecated(reason: \\"\\\\\\"FROZEN\\\\\\" is deprecated\\")\\n\\n  \\"\\"\\"The item is published\\"\\"\\"\\n  UsedToBePublished\\n}"
+`;

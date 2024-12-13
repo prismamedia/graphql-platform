@@ -1,6 +1,6 @@
 import * as core from '@prismamedia/graphql-platform';
 import * as utils from '@prismamedia/graphql-platform-utils';
-import assert from 'node:assert/strict';
+import assert from 'node:assert';
 import type { ReferenceColumnTree } from '../../../schema.js';
 import { orderNode } from './ordering-expression.js';
 import type { TableReference } from './table-reference.js';
@@ -183,8 +183,11 @@ export function selectNode(
   referenceColumnTree?: ReferenceColumnTree,
 ): SelectExpression {
   referenceColumnTree
-    ? assert.equal(referenceColumnTree.currentEdge.head, nodeSelection.node)
-    : assert.equal(tableReference.table.node, nodeSelection.node);
+    ? assert.strictEqual(
+        referenceColumnTree.currentEdge.head,
+        nodeSelection.node,
+      )
+    : assert.strictEqual(tableReference.table.node, nodeSelection.node);
 
   return `JSON_OBJECT(${nodeSelection.expressions
     .flatMap((expression) => [

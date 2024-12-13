@@ -19,6 +19,8 @@ services:
       MARIADB_ROOT_PASSWORD: my_root_password_for_local
 
       TZ: Europe/Paris
+
+      NODE_NO_WARNINGS: 1
     ports:
       - 3000:3000
     working_dir: /workspace

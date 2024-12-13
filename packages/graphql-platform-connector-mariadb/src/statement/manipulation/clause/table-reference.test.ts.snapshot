@@ -1,0 +1,15 @@
+exports[`Table reference > generates valid SQL with authorization 1`] = `
+"SELECT *\\nFROM \`articles\`\\n  LEFT JOIN \`categories\` AS \`articles>category\` ON \`articles\`.\`category_private_id\` = \`articles>category\`.\`private_id\`\\n  LEFT JOIN \`users\` AS \`articles>createdBy\` ON \`articles\`.\`created_by_id\` = \`articles>createdBy\`.\`id\`\\n  AND FALSE\\n  LEFT JOIN \`user_profiles\` AS \`articles>createdBy>profile\` ON \`articles>createdBy>profile\`.\`theUserId\` = \`articles>createdBy\`.\`id\`"
+`;
+
+exports[`Table reference > generates valid SQL with authorization 2`] = `
+"SELECT *\\nFROM \`articles\`\\n  LEFT JOIN \`categories\` AS \`articles>category\` ON \`articles\`.\`category_private_id\` = \`articles>category\`.\`private_id\`\\n  LEFT JOIN \`users\` AS \`articles>createdBy\` ON \`articles\`.\`created_by_id\` = \`articles>createdBy\`.\`id\`\\n  LEFT JOIN \`user_profiles\` AS \`articles>createdBy>profile\` ON \`articles>createdBy>profile\`.\`theUserId\` = \`articles>createdBy\`.\`id\`"
+`;
+
+exports[`Table reference > generates valid SQL with authorization 3`] = `
+"SELECT *\\nFROM \`articles\`\\n  LEFT JOIN \`categories\` AS \`articles>category\` ON \`articles\`.\`category_private_id\` = \`articles>category\`.\`private_id\`\\n  LEFT JOIN \`users\` AS \`articles>createdBy\` ON \`articles\`.\`created_by_id\` = \`articles>createdBy\`.\`id\`\\n  LEFT JOIN \`user_profiles\` AS \`articles>createdBy>profile\` ON \`articles>createdBy>profile\`.\`theUserId\` = \`articles>createdBy\`.\`id\`"
+`;
+
+exports[`Table reference > generates valid SQL with authorization 4`] = `
+"SELECT *\\nFROM \`articles\`\\n  LEFT JOIN \`categories\` AS \`articles>category\` ON \`articles\`.\`category_private_id\` = \`articles>category\`.\`private_id\`\\n  LEFT JOIN \`users\` AS \`articles>createdBy\` ON \`articles\`.\`created_by_id\` = \`articles>createdBy\`.\`id\`\\n  LEFT JOIN \`user_profiles\` AS \`articles>createdBy>profile\` ON \`articles>createdBy>profile\`.\`theUserId\` = \`articles>createdBy\`.\`id\`"
+`;

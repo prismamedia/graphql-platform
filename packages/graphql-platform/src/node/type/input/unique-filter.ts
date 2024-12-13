@@ -1,9 +1,9 @@
 import * as utils from '@prismamedia/graphql-platform-utils';
 import { Memoize } from '@prismamedia/memoize';
 import inflection from 'inflection';
-import assert from 'node:assert/strict';
+import assert from 'node:assert';
 import * as R from 'remeda';
-import type { Component, Edge, Node, UniqueConstraint } from '../../../node.js';
+import type { Component, ComponentValue, Edge, Node } from '../../../node.js';
 import { Leaf, type LeafValue } from '../../definition/component/leaf.js';
 
 export class NodeUniqueFilterNotFoundError extends utils.UnexpectedValueError {
@@ -25,34 +25,49 @@ export type NodeUniqueFilterInputValue = utils.Nillable<{
 export class NodeUniqueFilterInputType extends utils.ObjectInputType {
   readonly #forcedEdge?: Edge;
 
-  readonly #candidates: ReadonlyArray<UniqueConstraint>;
-  readonly #components: ReadonlyArray<Component>;
+  readonly #candidates: ReadonlyArray<ReadonlySet<Component>>;
+  readonly #publicCandidates: ReadonlyArray<ReadonlySet<Component>>;
 
-  readonly #publicCandidates: ReadonlyArray<UniqueConstraint>;
-  readonly #publicComponents: ReadonlyArray<Component>;
+  readonly #components: ReadonlyArray<Component>;
 
   public constructor(
     public readonly node: Node,
     forcedEdge?: Edge,
   ) {
-    let candidates: UniqueConstraint[];
+    let candidates: ReadonlyArray<ReadonlySet<Component>>;
+    let publicCandidates: ReadonlyArray<ReadonlySet<Component>>;
+
     if (forcedEdge) {
       node.ensureEdge(forcedEdge);
       assert(
-        node.isPartiallyIdentifiableWithEdge(forcedEdge),
-        `The "${node}" node is not partially identifiable with the "${forcedEdge}" edge`,
+        node.isPartiallyIdentifiableByEdge(forcedEdge),
+        `The "${node}" node is not partially identifiable by its "${forcedEdge.name}" edge`,
       );
 
-      candidates = Array.from(node.uniqueConstraintSet).filter(
-        ({ componentSet }) =>
-          componentSet.has(forcedEdge) && componentSet.size > 1,
-      );
+      candidates = node.uniqueConstraintSet
+        .values()
+        .filter(
+          ({ componentSet }) =>
+            componentSet.has(forcedEdge) && componentSet.size > 1,
+        )
+        .map(
+          ({ componentSet }) =>
+            new Set(
+              componentSet
+                .values()
+                .filter((component) => component !== forcedEdge),
+            ),
+        )
+        .toArray();
     } else {
-      candidates = Array.from(node.uniqueConstraintSet);
+      candidates = Array.from(
+        node.uniqueConstraintSet,
+        ({ componentSet }) => componentSet,
+      );
     }
 
-    const publicCandidates = candidates.filter(({ componentSet }) =>
-      componentSet.values().every((component) => component.isPublic()),
+    publicCandidates = candidates.filter((components) =>
+      components.values().every((component) => component.isPublic()),
     );
 
     super({
@@ -66,39 +81,28 @@ export class NodeUniqueFilterInputType extends utils.ObjectInputType {
       ]
         .filter(Boolean)
         .join(''),
-      description: [
-        `${
-          forcedEdge ? `Given ${utils.indefinite(forcedEdge.name)}, i` : `I`
-        }dentifies exactly one "${node}" with one of the following combination of components' value:`,
-        publicCandidates
-          .map(({ componentSet }) =>
-            Array.from(componentSet, (component) =>
-              component === forcedEdge ? `(${component.name})` : component.name,
-            ).join(' / '),
-          )
-          .map((line) => `- ${line}`)
-          .join('\n'),
-      ].join('\n'),
+      description: `${forcedEdge ? `Given ${utils.indefinite(forcedEdge.name)}, i` : `I`}dentifies exactly one "${node}" by ${publicCandidates
+        .map((components) =>
+          Array.from(components, ({ name }) => name).join('-'),
+        )
+        .reduce<string>(
+          (output, combination, index, array) =>
+            output
+              ? index < array.length - 1
+                ? `${output}, "${combination}"`
+                : `${output} or "${combination}"`
+              : `"${combination}"`,
+          '',
+        )}`,
     });
 
     this.#forcedEdge = forcedEdge;
 
     this.#candidates = candidates;
-    this.#components = Array.from(
-      new Set(
-        candidates
-          .flatMap(({ componentSet }) => Array.from(componentSet))
-          .filter((component) => component !== this.#forcedEdge),
-      ),
-    );
-
     this.#publicCandidates = publicCandidates;
-    this.#publicComponents = Array.from(
-      new Set(
-        publicCandidates
-          .flatMap(({ componentSet }) => Array.from(componentSet))
-          .filter((component) => component !== this.#forcedEdge),
-      ),
+
+    this.#components = Array.from(
+      new Set(candidates.values().flatMap((componentSet) => componentSet)),
     );
   }
 
@@ -118,17 +122,15 @@ export class NodeUniqueFilterInputType extends utils.ObjectInputType {
         deprecated: component.deprecationReason,
         type: utils.nonOptionalInputTypeDecorator(
           type,
-          this.#candidates.every(({ componentSet }) =>
-            componentSet.has(component),
-          ),
+          this.#candidates.every((components) => components.has(component)),
         ),
-        public: this.#publicCandidates.some(({ componentSet }) =>
-          componentSet.has(component),
+        public: this.#publicCandidates.some((components) =>
+          components.has(component),
         ),
         publicType: utils.nonOptionalInputTypeDecorator(
           type,
-          this.#publicCandidates.every(({ componentSet }) =>
-            componentSet.has(component),
+          this.#publicCandidates.every((components) =>
+            components.has(component),
           ),
         ),
       });
@@ -144,23 +146,14 @@ export class NodeUniqueFilterInputType extends utils.ObjectInputType {
       return parsedValue;
     }
 
-    for (const uniqueConstraint of this.#candidates) {
-      const result: NonNullable<NodeUniqueFilterInputValue> =
-        Object.create(null);
-
-      const components = this.#forcedEdge
-        ? Array.from(uniqueConstraint.componentSet).filter(
-            (component) => this.#forcedEdge !== component,
-          )
-        : Array.from(uniqueConstraint.componentSet);
+    for (const components of this.#candidates) {
+      const valuesByComponent = new Map<Component, ComponentValue>();
 
       if (
-        components.every((component) => {
+        components.values().every((component) => {
           const componentValue = parsedValue[component.name];
           if (componentValue !== undefined) {
-            Object.assign(result, {
-              [component.name]: componentValue,
-            });
+            valuesByComponent.set(component, componentValue);
 
             return true;
           }
@@ -168,9 +161,17 @@ export class NodeUniqueFilterInputType extends utils.ObjectInputType {
           return false;
         }) &&
         (this.#forcedEdge ||
-          components.some((component) => parsedValue[component.name] !== null))
+          valuesByComponent
+            .values()
+            .some((componentValue) => componentValue !== null))
       ) {
-        return result;
+        return valuesByComponent.entries().reduce(
+          (uniqueConstraintValue, [component, componentValue]) =>
+            Object.assign(uniqueConstraintValue, {
+              [component.name]: componentValue,
+            }),
+          Object.create(null),
+        );
       }
     }
 
@@ -210,14 +211,10 @@ export class NodeUniqueFilterInputType extends utils.ObjectInputType {
     utils.assertPlainObject(maybeValue, path);
 
     return this.parseValue(
-      R.pipe(
-        this.#components,
-        R.filter((component) => maybeValue[component.name] !== undefined),
-        R.mapToObj((component) => {
-          const componentValue = maybeValue[component.name];
-
-          return [
-            component.name,
+      this.#components.reduce((uniqueConstraintValue, component) => {
+        const componentValue = maybeValue[component.name];
+        if (componentValue !== undefined) {
+          uniqueConstraintValue[component.name] =
             componentValue === null
               ? null
               : component instanceof Leaf
@@ -225,10 +222,11 @@ export class NodeUniqueFilterInputType extends utils.ObjectInputType {
                 : component.head.uniqueFilterInputType.pickValue(
                     componentValue,
                     utils.addPath(path, component.name),
-                  ),
-          ];
-        }),
-      ),
+                  );
+        }
+
+        return uniqueConstraintValue;
+      }, Object.create(null)),
       path,
     ) as NonNullable<NodeUniqueFilterInputValue>;
   }

@@ -1,4 +1,6 @@
-import { beforeAll, describe, expect, it } from '@jest/globals';
+import assert from 'node:assert';
+import { before, describe, it } from 'node:test';
+import { inspect } from 'node:util';
 import {
   ArticleStatus,
   createMyGP,
@@ -23,7 +25,7 @@ describe('Filter', () => {
   let ArticleExtension: Node;
   let UserProfile: Node;
 
-  beforeAll(() => {
+  before(() => {
     gp = createMyGP();
 
     Article = gp.getNodeByName('Article');
@@ -32,126 +34,139 @@ describe('Filter', () => {
   });
 
   describe('Definition', () => {
-    it.each<
+    (
       [
+        ['Article', { title_contains: 'newss' }, '_id', false],
+        ['Article', { _id: 5 }, '_id', true],
+        ['Article', { OR: [{ _id: 5 }, { _id_gt: 6 }] }, '_id', true],
+      ] satisfies [
         nodeName: string,
         filter: NodeFilterInputValue,
         uniqueName: UniqueConstraint['name'],
         expected: boolean,
-      ]
-    >([
-      ['Article', { title_contains: 'newss' }, '_id', false],
-      ['Article', { _id: 5 }, '_id', true],
-      ['Article', { OR: [{ _id: 5 }, { _id_gt: 6 }] }, '_id', true],
-    ])(
-      '%# - %s.filter(%o).isExecutableWithinUniqueConstraint(%p) = %p',
-      (nodeName, filter, uniqueName, expected) => {
+      ][]
+    ).forEach(([nodeName, filter, uniqueName, expected], index) => {
+      it(`${index} - ${nodeName}.filter(${inspect(filter, undefined, 5)}).isExecutableWithinUniqueConstraint(${uniqueName})`, () => {
         const node = gp.getNodeByName(nodeName);
         const unique = node.getUniqueConstraintByName(uniqueName);
 
-        expect(
+        assert.strictEqual(
           node.filterInputType
             .parseAndFilter(filter)
             .isExecutableWithinUniqueConstraint(unique),
-        ).toEqual(expected);
-      },
-    );
-
-    it.each<[nodeName: string, input: NodeFilterInputValue, expected: string]>([
-      ['Article', undefined, '{}'],
-      ['Article', null, 'null'],
-      ['Article', { _id_gt: 4, _id_lt: 8 }, '{_id_gt: 4, _id_lt: 8}'],
-      ['Article', { status: ArticleStatus.PUBLISHED }, '{status: PUBLISHED}'],
-      ['Article', { views_gt: BigInt(123456) }, '{views_gt: "123456"}'],
-      ['Article', { score_gte: 0.5 }, '{score_gte: 0.5}'],
-      ['Article', { category: {} }, '{category: {}}'],
-    ])('%# - %s.filter(%o) = %p', (nodeName, input, expected) => {
-      const node = gp.getNodeByName(nodeName);
-      const filterInputType = node.filterInputType;
-      const filter = filterInputType.parseAndFilter(input);
-
-      expect(String(filter)).toEqual(expected);
+          expected,
+        );
+      });
     });
 
-    it.each<
+    (
       [
+        ['Article', undefined, '{}'],
+        ['Article', null, 'null'],
+        ['Article', { _id_gt: 4, _id_lt: 8 }, '{_id_gt: 4, _id_lt: 8}'],
+        ['Article', { status: ArticleStatus.PUBLISHED }, '{status: PUBLISHED}'],
+        ['Article', { views_gt: BigInt(123456) }, '{views_gt: "123456"}'],
+        ['Article', { score_gte: 0.5 }, '{score_gte: 0.5}'],
+        ['Article', { category: {} }, '{category: {}}'],
+      ] satisfies [
+        nodeName: string,
+        input: NodeFilterInputValue,
+        expected: string,
+      ][]
+    ).forEach(([nodeName, input, expected], index) => {
+      it(`${index} - ${nodeName}.filter(${inspect(input, undefined, 5)})`, () => {
+        const node = gp.getNodeByName(nodeName);
+        const filterInputType = node.filterInputType;
+        const filter = filterInputType.parseAndFilter(input);
+
+        assert.strictEqual(String(filter), expected);
+      });
+    });
+
+    (
+      [
+        ['Article', { _id_gt: 4, _id_lt: 8 }, { changes: [] }],
+        [
+          'Article',
+          { category: {} },
+          {
+            componentsByNode: { Article: ['category'] },
+            changes: ['Article'],
+          },
+        ],
+        [
+          'Article',
+          { tags_some: { tag: { deprecated_not: true } } },
+          {
+            creations: ['ArticleTag'],
+            deletions: ['ArticleTag'],
+            componentsByNode: { Tag: ['deprecated'] },
+            changes: ['ArticleTag', 'Tag'],
+          },
+        ],
+      ] satisfies [
         nodeName: string,
         input: NodeFilterInputValue,
         expected: DependencySummaryJSON,
-      ]
-    >([
-      ['Article', { _id_gt: 4, _id_lt: 8 }, { changes: [] }],
-      [
-        'Article',
-        { category: {} },
-        {
-          componentsByNode: { Article: ['category'] },
-          changes: ['Article'],
-        },
-      ],
-      [
-        'Article',
-        { tags_some: { tag: { deprecated_not: true } } },
-        {
-          creations: ['ArticleTag'],
-          deletions: ['ArticleTag'],
-          componentsByNode: { Tag: ['deprecated'] },
-          changes: ['ArticleTag', 'Tag'],
-        },
-      ],
-    ])('%p.dependency = %p', (nodeName, input, expected) =>
-      expect(
-        gp
-          .getNodeByName(nodeName)
-          .filterInputType.parseAndFilter(input)
-          .dependencyGraph.summary.toJSON(),
-      ).toEqual(expected),
-    );
+      ][]
+    ).forEach(([nodeName, input, expected], index) => {
+      it(`${index} - ${nodeName}.dependency`, () => {
+        const node = gp.getNodeByName(nodeName);
+        const filter = node.filterInputType.parseAndFilter(input);
+
+        assert.deepEqual(filter.dependencyGraph.summary.toJSON(), expected);
+      });
+    });
   });
 
   describe('Execution', () => {
-    it.each<
+    (
       [
+        ['ArticleTag', { order_gt: 2 }, {}, undefined],
+        ['ArticleTag', { order_gt: 2 }, { order: 2 }, false],
+        ['ArticleTag', { order_gte: 2 }, { order: 2 }, true],
+
+        ['Article', { title_contains: 'newss' }, { title: 'The news' }, false],
+        ['Article', { title_contains: 'news' }, { title: 'The news' }, true],
+
+        [
+          'Article',
+          { title_starts_with: 'Thes' },
+          { title: 'The news' },
+          false,
+        ],
+        ['Article', { title_starts_with: 'The' }, { title: 'The news' }, true],
+
+        ['Article', { title_ends_with: 'newss' }, { title: 'The news' }, false],
+        ['Article', { title_ends_with: 'news' }, { title: 'The news' }, true],
+        [
+          'Article',
+          { AND: [{ title_starts_with: 'The' }, { title_ends_with: 'news' }] },
+          { title: 'The news' },
+          true,
+        ],
+      ] satisfies [
         nodeName: string,
         filter: NodeFilterInputValue,
         value: any,
         expected: boolean | undefined,
-      ]
-    >([
-      ['ArticleTag', { order_gt: 2 }, {}, undefined],
-      ['ArticleTag', { order_gt: 2 }, { order: 2 }, false],
-      ['ArticleTag', { order_gte: 2 }, { order: 2 }, true],
+      ][]
+    ).forEach(([nodeName, filter, value, expected], index) => {
+      it(`${index} - ${nodeName}.filter(${inspect(filter, undefined, 5)}).execute(${inspect(value, undefined, 5)}, true) = ${expected}`, () => {
+        const node = gp.getNodeByName(nodeName);
 
-      ['Article', { title_contains: 'newss' }, { title: 'The news' }, false],
-      ['Article', { title_contains: 'news' }, { title: 'The news' }, true],
-
-      ['Article', { title_starts_with: 'Thes' }, { title: 'The news' }, false],
-      ['Article', { title_starts_with: 'The' }, { title: 'The news' }, true],
-
-      ['Article', { title_ends_with: 'newss' }, { title: 'The news' }, false],
-      ['Article', { title_ends_with: 'news' }, { title: 'The news' }, true],
-      [
-        'Article',
-        { AND: [{ title_starts_with: 'The' }, { title_ends_with: 'news' }] },
-        { title: 'The news' },
-        true,
-      ],
-    ])(
-      '%# - %s.filter(%p).execute(%p, true) = %p',
-      (nodeName, filter, value, expected) =>
-        expect(
-          gp
-            .getNodeByName(nodeName)
-            .filterInputType.parseAndFilter(filter)
-            .execute(value, true),
-        ).toEqual(expected),
-    );
+        assert.strictEqual(
+          node.filterInputType.parseAndFilter(filter).execute(value, true),
+          expected,
+        );
+      });
+    });
 
     describe("Node-changes' effect", () => {
       let filter: NodeFilter;
       let dependency: NodeDependencyGraph;
 
-      beforeAll(() => {
+      before(() => {
         filter = Article.filterInputType.parseAndFilter({
           title: 'My title',
           extension_is_null: false,
@@ -204,7 +219,7 @@ describe('Filter', () => {
 
           const dependentGraph = dependency.createDependentGraph(update);
 
-          expect(dependentGraph.isEmpty()).toBeTruthy();
+          assert(dependentGraph.isEmpty());
         });
 
         it('The updated "title" changes the root', () => {
@@ -230,7 +245,7 @@ describe('Filter', () => {
 
             const dependentGraph = dependency.createDependentGraph(update);
 
-            expect(dependentGraph.isEmpty()).toBeTruthy();
+            assert(dependentGraph.isEmpty());
           }
 
           {
@@ -258,9 +273,9 @@ describe('Filter', () => {
 
             const dependentGraph = dependency.createDependentGraph(update);
 
-            expect(dependentGraph.isEmpty()).toBeFalsy();
-            expect(dependentGraph.changes.size).toBe(1);
-            expect(dependentGraph.target.isFalse()).toBeTruthy();
+            assert(!dependentGraph.isEmpty());
+            assert.strictEqual(dependentGraph.changes.size, 1);
+            assert(dependentGraph.target.isFalse());
           }
         });
 
@@ -286,7 +301,7 @@ describe('Filter', () => {
 
           const dependentGraph = dependency.createDependentGraph(update);
 
-          expect(dependentGraph.isEmpty()).toBeTruthy();
+          assert(dependentGraph.isEmpty());
         });
 
         it('The updated "title" changes the graph if there is a "createdBy"', () => {
@@ -313,14 +328,12 @@ describe('Filter', () => {
 
           const dependentGraph = dependency.createDependentGraph(update);
 
-          expect(dependentGraph.isEmpty()).toBeFalsy();
-          expect(dependentGraph.target.inputValue).toMatchInlineSnapshot(`
-           {
-             "createdBy": {
-               "id": "9121c47b-87b6-4334-ae1d-4c9777e87576",
-             },
-           }
-          `);
+          assert(!dependentGraph.isEmpty());
+          assert.deepEqual(dependentGraph.target.inputValue, {
+            createdBy: {
+              id: '9121c47b-87b6-4334-ae1d-4c9777e87576',
+            },
+          });
         });
 
         it('The updated "title" changes nothing if there is no "updatedBy"', () => {
@@ -345,7 +358,7 @@ describe('Filter', () => {
 
           const dependentGraph = dependency.createDependentGraph(update);
 
-          expect(dependentGraph.isEmpty()).toBeTruthy();
+          assert(dependentGraph.isEmpty());
         });
 
         it('The updated "title" changes the graph if there is an "updatedBy"', () => {
@@ -372,14 +385,12 @@ describe('Filter', () => {
 
           const dependentGraph = dependency.createDependentGraph(update);
 
-          expect(dependentGraph.isEmpty()).toBeFalsy();
-          expect(dependentGraph.target.inputValue).toMatchInlineSnapshot(`
-           {
-             "updatedBy": {
-               "username": "yvann",
-             },
-           }
-          `);
+          assert(!dependentGraph.isEmpty());
+          assert.deepEqual(dependentGraph.target.inputValue, {
+            updatedBy: {
+              username: 'yvann',
+            },
+          });
         });
       });
 
@@ -396,12 +407,10 @@ describe('Filter', () => {
 
           const dependentGraph = dependency.createDependentGraph(creation);
 
-          expect(dependentGraph.isEmpty()).toBeFalsy();
-          expect(dependentGraph.target.inputValue).toMatchInlineSnapshot(`
-           {
-             "_id": 4,
-           }
-          `);
+          assert(!dependentGraph.isEmpty());
+          assert.deepEqual(dependentGraph.target.inputValue, {
+            _id: 4,
+          });
         });
 
         it('The deletion may change some document(s)', () => {
@@ -416,12 +425,10 @@ describe('Filter', () => {
 
           const dependentGraph = dependency.createDependentGraph(deletion);
 
-          expect(dependentGraph.isEmpty()).toBeFalsy();
-          expect(dependentGraph.target.inputValue).toMatchInlineSnapshot(`
-           {
-             "_id": 5,
-           }
-          `);
+          assert(!dependentGraph.isEmpty());
+          assert.deepEqual(dependentGraph.target.inputValue, {
+            _id: 5,
+          });
         });
 
         it('The updated "source" does not change any document', () => {
@@ -439,7 +446,7 @@ describe('Filter', () => {
 
           const dependentGraph = dependency.createDependentGraph(update);
 
-          expect(dependentGraph.isEmpty()).toBeTruthy();
+          assert(dependentGraph.isEmpty());
         });
       });
 
@@ -456,14 +463,12 @@ describe('Filter', () => {
 
           const dependentGraph = dependency.createDependentGraph(creation);
 
-          expect(dependentGraph.isEmpty()).toBeFalsy();
-          expect(dependentGraph.target.inputValue).toMatchInlineSnapshot(`
-           {
-             "createdBy": {
-               "id": "16050880-dabc-4348-bd3b-d41efe1b6057",
-             },
-           }
-          `);
+          assert(!dependentGraph.isEmpty());
+          assert.deepEqual(dependentGraph.target.inputValue, {
+            createdBy: {
+              id: '16050880-dabc-4348-bd3b-d41efe1b6057',
+            },
+          });
         });
 
         it('The deletion may change some document(s)', () => {
@@ -478,14 +483,12 @@ describe('Filter', () => {
 
           const dependentGraph = dependency.createDependentGraph(deletion);
 
-          expect(dependentGraph.isEmpty()).toBeFalsy();
-          expect(dependentGraph.target.inputValue).toMatchInlineSnapshot(`
-           {
-             "createdBy": {
-               "id": "7caf940a-058a-4ef2-a8bf-ac2d6cae3485",
-             },
-           }
-          `);
+          assert(!dependentGraph.isEmpty());
+          assert.deepEqual(dependentGraph.target.inputValue, {
+            createdBy: {
+              id: '7caf940a-058a-4ef2-a8bf-ac2d6cae3485',
+            },
+          });
         });
 
         it('The updated "birthday" does not change any document', () => {
@@ -502,7 +505,7 @@ describe('Filter', () => {
 
           const dependentGraph = dependency.createDependentGraph(update);
 
-          expect(dependentGraph.isEmpty()).toBeTruthy();
+          assert(dependentGraph.isEmpty());
         });
 
         it('The updated "facebookId" may change some document(s)', () => {
@@ -520,14 +523,12 @@ describe('Filter', () => {
 
           const dependentGraph = dependency.createDependentGraph(update);
 
-          expect(dependentGraph.isEmpty()).toBeFalsy();
-          expect(dependentGraph.target.inputValue).toMatchInlineSnapshot(`
-           {
-             "createdBy": {
-               "id": "8e3587e8-2e4e-46a4-a6e0-27f08aebb215",
-             },
-           }
-          `);
+          assert(!dependentGraph.isEmpty());
+          assert.deepEqual(dependentGraph.target.inputValue, {
+            createdBy: {
+              id: '8e3587e8-2e4e-46a4-a6e0-27f08aebb215',
+            },
+          });
         });
       });
     });

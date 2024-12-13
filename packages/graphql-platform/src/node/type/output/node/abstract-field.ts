@@ -1,7 +1,7 @@
 import * as utils from '@prismamedia/graphql-platform-utils';
 import { Memoize } from '@prismamedia/memoize';
 import * as graphql from 'graphql';
-import assert from 'node:assert/strict';
+import assert from 'node:assert';
 import { argsPathKey } from '../../../abstract-operation.js';
 import type { OperationContext } from '../../../operation.js';
 import type {

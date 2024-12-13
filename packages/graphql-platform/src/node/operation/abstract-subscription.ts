@@ -1,7 +1,7 @@
 import * as utils from '@prismamedia/graphql-platform-utils';
 import { Memoize } from '@prismamedia/memoize';
 import * as graphql from 'graphql';
-import assert from 'node:assert/strict';
+import assert from 'node:assert';
 import type { IterableElement, Promisable } from 'type-fest';
 import type { BrokerInterface } from '../../broker-interface.js';
 import type { ConnectorInterface } from '../../connector-interface.js';
@@ -65,7 +65,7 @@ export abstract class AbstractSubscription<
     let context: OperationContext;
 
     if (requestOrOperationContext instanceof OperationContext) {
-      assert.equal(requestOrOperationContext.gp, this.gp);
+      assert.strictEqual(requestOrOperationContext.gp, this.gp);
 
       context = requestOrOperationContext;
     } else {

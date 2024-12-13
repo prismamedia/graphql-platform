@@ -1,7 +1,7 @@
 import * as utils from '@prismamedia/graphql-platform-utils';
 import { Memoize } from '@prismamedia/memoize';
 import * as graphql from 'graphql';
-import assert from 'node:assert/strict';
+import assert from 'node:assert';
 import type { NodeSelectedValue } from '../../../../../../../node.js';
 import type {
   Leaf,
@@ -36,11 +36,11 @@ export class LeafComparisonFilter extends AbstractLeafFilter {
     public readonly operator: 'eq' | 'not' | 'gt' | 'gte' | 'lt' | 'lte',
     public readonly value: LeafValue,
   ) {
-    assert.notEqual(value, undefined);
-    leaf.isNullable() || assert.notEqual(value, null);
+    assert.notStrictEqual(value, undefined);
+    leaf.isNullable() || assert.notStrictEqual(value, null);
 
     if (sortableLeafComparisonOperatorSet.has(operator as any)) {
-      leaf.isNullable() && assert.notEqual(value, null);
+      leaf.isNullable() && assert.notStrictEqual(value, null);
       assert(leaf.isSortable(), `The "${leaf}" leaf is not sortable`);
     }
 

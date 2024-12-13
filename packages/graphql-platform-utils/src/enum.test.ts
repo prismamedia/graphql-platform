@@ -1,4 +1,5 @@
-import { describe, expect, it } from '@jest/globals';
+import assert from 'node:assert';
+import { describe, it } from 'node:test';
 import { createEnumUtils, type EnumKey, type EnumValue } from './enum.js';
 
 enum MyNumericEnum {
@@ -29,60 +30,64 @@ type MyMixedEnumKey = EnumKey<typeof MyMixedEnum>;
 type MyMixedEnumValue = EnumValue<typeof MyMixedEnum>;
 
 describe('Enum', () => {
-  describe.each([
+  const cases = [
     ['numeric', MyNumericEnum, { ONE: 0, TWO: 1, THREE: 2 }],
     ['string', MyStringEnum, { ONE: 'one', TWO: 'two', THREE: 'three' }],
     ['mixed', MyMixedEnum, { ONE: 0, TWO: 'two', THREE: 2 }],
-  ])('works for "%s"', (_label, enumerable, object) => {
-    const {
-      keys,
-      values,
-      isKey,
-      ensureKey,
-      isValue,
-      ensureValue,
-      getKeyByValue,
-      getValueByKey,
-    } = createEnumUtils(enumerable);
+  ] as const;
 
-    it('gets keys', () => {
-      expect(keys).toEqual(Object.keys(object));
+  cases.forEach(([label, enumerable, object]) =>
+    describe(`works for "${label}"`, () => {
+      const {
+        keys,
+        values,
+        isKey,
+        ensureKey,
+        isValue,
+        ensureValue,
+        getKeyByValue,
+        getValueByKey,
+      } = createEnumUtils(enumerable);
 
-      Object.keys(object).forEach((key) => {
-        expect(isKey(key)).toBe(true);
-        expect(ensureKey(key)).toBe(key);
+      it('gets keys', () => {
+        assert.deepStrictEqual(keys, Object.keys(object));
+
+        Object.keys(object).forEach((key) => {
+          assert.strictEqual(isKey(key), true);
+          assert.strictEqual(ensureKey(key), key);
+        });
+
+        ['FOUR', 0].forEach((key) => {
+          assert.strictEqual(isKey(key), false);
+          assert.throws(() => ensureKey(key));
+        });
       });
 
-      ['FOUR', 0].forEach((key) => {
-        expect(isKey(key)).toBe(false);
-        expect(() => ensureKey(key)).toThrow();
+      it('gets values', () => {
+        assert.deepStrictEqual(values, Object.values(object));
+
+        Object.values(object).forEach((value) => {
+          assert.strictEqual(isValue(value), true);
+          assert.strictEqual(ensureValue(value), value);
+        });
+
+        [-1, '1', 'ONE'].forEach((value) => {
+          assert.strictEqual(isValue(value), false);
+          assert.throws(() => ensureValue(value));
+        });
       });
-    });
 
-    it('gets values', () => {
-      expect(values).toEqual(Object.values(object));
-
-      Object.values(object).forEach((value) => {
-        expect(isValue(value)).toBe(true);
-        expect(ensureValue(value)).toBe(value);
+      it('gets key by value', () => {
+        Object.entries(object).map(([key, value]) =>
+          assert.strictEqual(getKeyByValue(ensureValue(value)), key),
+        );
       });
 
-      [-1, '1', 'ONE'].forEach((value) => {
-        expect(isValue(value)).toBe(false);
-        expect(() => ensureValue(value)).toThrow();
+      it('gets value by key', () => {
+        Object.entries(object).map(([key, value]) =>
+          assert.strictEqual(getValueByKey(ensureKey(key)), value),
+        );
       });
-    });
-
-    it('gets key by value', () => {
-      Object.entries(object).map(([key, value]) =>
-        expect(getKeyByValue(ensureValue(value))).toBe(key),
-      );
-    });
-
-    it('gets value by key', () => {
-      Object.entries(object).map(([key, value]) =>
-        expect(getValueByKey(ensureKey(key))).toBe(value),
-      );
-    });
-  });
+    }),
+  );
 });

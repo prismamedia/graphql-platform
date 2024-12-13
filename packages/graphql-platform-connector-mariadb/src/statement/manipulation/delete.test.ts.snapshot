@@ -1,0 +1,38 @@
+exports[`Delete statement > generates statements 1`] = `
+[
+  {
+    "title": "My first published article"
+  },
+  {
+    "title": "My second published article"
+  },
+  {
+    "title": "My first published article in root category"
+  },
+  {
+    "title": "My second published article in root category"
+  },
+  {
+    "title": "My third published article in root category"
+  }
+]
+`;
+
+exports[`Delete statement > generates statements 2`] = `
+{}
+`;
+
+exports[`Delete statement > generates statements 3`] = `
+[
+  {
+    "title": "My first draft article"
+  },
+  {
+    "title": "My second draft article"
+  }
+]
+`;
+
+exports[`Delete statement > generates statements 4`] = `
+{}
+`;

@@ -1,4 +1,5 @@
-import { beforeAll, describe, expect, it } from '@jest/globals';
+import assert from 'node:assert';
+import { before, describe, it } from 'node:test';
 import {
   ArticleStatus,
   createMyGP,
@@ -20,7 +21,7 @@ describe('Ordering', () => {
   let Article: Node;
   let ArticleTag: Node;
 
-  beforeAll(() => {
+  before(() => {
     gp = createMyGP();
 
     Article = gp.getNodeByName('Article');
@@ -28,39 +29,43 @@ describe('Ordering', () => {
   });
 
   describe('Definition', () => {
-    it.each<[OrderByInputValue, DependencySummaryJSON]>([
+    (
       [
-        ['createdAt_DESC'],
-        {
-          creations: ['Article'],
-          deletions: ['Article'],
-          changes: ['Article'],
-        },
-      ],
-      [
-        ['tagCount_DESC'],
-        {
-          creations: ['Article', 'ArticleTag'],
-          deletions: ['Article', 'ArticleTag'],
-          changes: ['Article', 'ArticleTag'],
-        },
-      ],
-      [
-        ['createdAt_DESC', 'tagCount_DESC'],
-        {
-          creations: ['Article', 'ArticleTag'],
-          deletions: ['Article', 'ArticleTag'],
-          changes: ['Article', 'ArticleTag'],
-        },
-      ],
-    ])('%p.dependency = %p', (input, expected) => {
-      const dependency = new NodeSetDependencyGraph(
-        Article,
-        undefined,
-        Article.orderingInputType.sort(input),
-      );
+        [
+          ['createdAt_DESC'],
+          {
+            creations: ['Article'],
+            deletions: ['Article'],
+            changes: ['Article'],
+          },
+        ],
+        [
+          ['tagCount_DESC'],
+          {
+            creations: ['Article', 'ArticleTag'],
+            deletions: ['Article', 'ArticleTag'],
+            changes: ['Article', 'ArticleTag'],
+          },
+        ],
+        [
+          ['createdAt_DESC', 'tagCount_DESC'],
+          {
+            creations: ['Article', 'ArticleTag'],
+            deletions: ['Article', 'ArticleTag'],
+            changes: ['Article', 'ArticleTag'],
+          },
+        ],
+      ] satisfies [OrderByInputValue, DependencySummaryJSON][]
+    ).forEach(([input, expected]) => {
+      it(`${input}.dependency`, () => {
+        const dependency = new NodeSetDependencyGraph(
+          Article,
+          undefined,
+          Article.orderingInputType.sort(input),
+        );
 
-      expect(dependency.summary.toJSON()).toEqual(expected);
+        assert.deepEqual(dependency.summary.toJSON(), expected);
+      });
     });
   });
 
@@ -69,7 +74,7 @@ describe('Ordering', () => {
       let ordering: NodeOrdering;
       let dependency: NodeSetDependencyGraph;
 
-      beforeAll(() => {
+      before(() => {
         ordering = Article.orderingInputType.sort([
           'createdAt_DESC',
           'tagCount_DESC',
@@ -101,7 +106,7 @@ describe('Ordering', () => {
 
           const dependentGraph = dependency.createDependentGraph(update);
 
-          expect(dependentGraph.isEmpty()).toBeTruthy();
+          assert(dependentGraph.isEmpty());
         });
       });
 
@@ -119,12 +124,10 @@ describe('Ordering', () => {
 
           const dependentGraph = dependency.createDependentGraph(creation);
 
-          expect(dependentGraph.isEmpty()).toBeFalsy();
-          expect(dependentGraph.target.inputValue).toMatchInlineSnapshot(`
-           {
-             "_id": 2,
-           }
-          `);
+          assert(!dependentGraph.isEmpty());
+          assert.deepEqual(dependentGraph.target.inputValue, {
+            _id: 2,
+          });
         });
 
         it('The deletion changes the root', () => {
@@ -140,7 +143,7 @@ describe('Ordering', () => {
 
           const dependentGraph = dependency.createDependentGraph(deletion);
 
-          expect(dependentGraph.isEmpty()).toBeFalsy();
+          assert(!dependentGraph.isEmpty());
         });
 
         it('The updated "order" changes nothing', () => {
@@ -159,7 +162,7 @@ describe('Ordering', () => {
 
           const dependentGraph = dependency.createDependentGraph(update);
 
-          expect(dependentGraph.isEmpty()).toBeTruthy();
+          assert(dependentGraph.isEmpty());
         });
       });
     });

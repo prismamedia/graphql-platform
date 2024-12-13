@@ -1,8 +1,8 @@
 import * as utils from '@prismamedia/graphql-platform-utils';
-import assert from 'node:assert/strict';
+import assert from 'node:assert';
 
 export function escapeIdentifier(identifier: string): string {
-  assert.equal(typeof identifier, 'string');
+  assert.strictEqual(typeof identifier, 'string');
 
   if (!identifier) {
     throw new utils.UnexpectedValueError('a non-empty string', identifier);
@@ -39,7 +39,7 @@ const escapedSequencesRegexp = new RegExp(
 );
 
 export function escapeStringValue(value: string): string {
-  assert.equal(typeof value, 'string');
+  assert.strictEqual(typeof value, 'string');
 
   return `'${value.replaceAll(
     escapedSequencesRegexp,

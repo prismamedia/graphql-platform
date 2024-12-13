@@ -5,7 +5,7 @@ import {
 import * as core from '@prismamedia/graphql-platform';
 import * as utils from '@prismamedia/graphql-platform-utils';
 import * as mariadb from 'mariadb';
-import assert from 'node:assert/strict';
+import assert from 'node:assert';
 import { hrtime } from 'node:process';
 import * as semver from 'semver';
 import type { Except } from 'type-fest';

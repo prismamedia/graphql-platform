@@ -1,0 +1,7 @@
+exports[`ObjectInputType > Public type > SimpleInput has GraphQL 1`] = `
+"input SimpleInput {\\n  longitude: Float\\n  latitude: Float\\n}"
+`;
+
+exports[`ObjectInputType > Public type with circular reference > ProfileInput has GraphQL 1`] = `
+"\\"\\"\\"My profile\\"\\"\\"\\ninput ProfileInput {\\n  username: String!\\n  age: Int @deprecated(reason: \\"\\\\\\"age\\\\\\" is deprecated\\")\\n  friends: [ProfileInput!]! = []\\n}"
+`;

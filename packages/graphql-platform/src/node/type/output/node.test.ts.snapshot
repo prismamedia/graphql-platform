@@ -1,0 +1,31 @@
+exports[`NodeOutputType > Definition > Article has an output type 1`] = `
+"\\"\\"\\"The article is the main resource, written by the journalists\\"\\"\\"\\ntype Article implements PublicNodeInterface {\\n  \\"\\"\\"This UUID identifies an Article publicly\\"\\"\\"\\n  id: UUIDv4!\\n  status: ArticleStatus!\\n  title: NonEmptySanitizedString!\\n  slug: Slug!\\n\\n  \\"\\"\\"The article's body\\"\\"\\"\\n  body: DraftJS\\n  category: Category\\n  createdBy: User\\n  createdAt: DateTime!\\n  updatedBy: User\\n  updatedAt: DateTime!\\n\\n  \\"\\"\\"Contains any arbitrary data you want to store alongside the article\\"\\"\\"\\n  metas: JSONObject\\n\\n  \\"\\"\\"Is the article highlighted?\\"\\"\\"\\n  highlighted: Boolean\\n\\n  \\"\\"\\"Is the article a partnership?\\"\\"\\"\\n  sponsored: Boolean\\n  views: UnsignedBigInt!\\n  score: UnsignedFloat!\\n  machineTags: JSONArray\\n  tags(where: ArticleTagFilterInput, orderBy: [ArticleTagOrderingInput!] = [order_ASC], skip: UnsignedInt, first: UnsignedInt!): [ArticleTag!]!\\n\\n  \\"\\"\\"\\n  Number of \\"tags\\"\\n  \\"\\"\\"\\n  tagCount(where: ArticleTagFilterInput): UnsignedInt!\\n  extension: ArticleExtension\\n\\n  \\"\\"\\"A custom field with a dependency\\"\\"\\"\\n  lowerCasedTitle(\\n    \\"\\"\\"Optional, a prefix\\"\\"\\"\\n    prefix: String\\n  ): NonEmptyTrimmedString!\\n\\n  \\"\\"\\"A custom field with a dependency\\"\\"\\"\\n  upperCasedTitle: NonEmptySanitizedString!\\n\\n  \\"\\"\\"A virtual-field depending on other virtual-fields\\"\\"\\"\\n  mixedCasedTitle: NonEmptySanitizedString!\\n  similars(\\n    \\"\\"\\"The number of similar articles to return\\"\\"\\"\\n    first: UnsignedInt!\\n  ): [Article!]!\\n}"
+`;
+
+exports[`NodeOutputType > Definition > ArticleExtension has an output type 1`] = `
+"type ArticleExtension {\\n  article: Article!\\n\\n  \\"\\"\\"The source of the article\\"\\"\\"\\n  source: NonEmptyTrimmedString\\n}"
+`;
+
+exports[`NodeOutputType > Definition > ArticleTag has an output type 1`] = `
+"type ArticleTag {\\n  article: Article!\\n  tag: Tag!\\n  order: UnsignedInt!\\n  moderations(where: ArticleTagModerationFilterInput, skip: UnsignedInt, first: UnsignedInt!): [ArticleTagModeration!]!\\n\\n  \\"\\"\\"\\n  Number of \\"moderations\\"\\n  \\"\\"\\"\\n  moderationCount(where: ArticleTagModerationFilterInput): UnsignedInt!\\n}"
+`;
+
+exports[`NodeOutputType > Definition > ArticleTagModeration has an output type 1`] = `
+"type ArticleTagModeration {\\n  articleTag: ArticleTag!\\n  moderator: User!\\n  moderation: NonEmptyTrimmedString\\n}"
+`;
+
+exports[`NodeOutputType > Definition > Category has an output type 1`] = `
+"type Category implements PublicNodeInterface {\\n  id: UUIDv4!\\n  title: NonEmptyTrimmedString!\\n  slug: NonEmptyTrimmedString!\\n  parent: Category\\n  order: UnsignedInt!\\n\\n  \\"\\"\\"This category's children\\"\\"\\"\\n  children(where: CategoryFilterInput, orderBy: [CategoryOrderingInput!], skip: UnsignedInt, first: UnsignedInt!): [Category!]!\\n\\n  \\"\\"\\"\\n  Number of \\"children\\"\\n  \\"\\"\\"\\n  childCount(where: CategoryFilterInput): UnsignedInt!\\n\\n  \\"\\"\\"The articles attached to this category\\"\\"\\"\\n  articles(where: ArticleFilterInput, orderBy: [ArticleOrderingInput!], skip: UnsignedInt, first: UnsignedInt!): [Article!]!\\n\\n  \\"\\"\\"\\n  Number of \\"articles\\"\\n  \\"\\"\\"\\n  articleCount(where: ArticleFilterInput): UnsignedInt!\\n}"
+`;
+
+exports[`NodeOutputType > Definition > Tag has an output type 1`] = `
+"type Tag implements PublicNodeInterface {\\n  id: UUIDv4!\\n\\n  \\"\\"\\"A tag can be deprecated\\"\\"\\"\\n  deprecated: Boolean\\n  title: NonEmptyTrimmedString!\\n  slug: NonEmptyTrimmedString!\\n  createdAt: DateTime!\\n  updatedAt: DateTime!\\n  articles(where: ArticleTagFilterInput, orderBy: [ArticleTagOrderingInput!], skip: UnsignedInt, first: UnsignedInt!): [ArticleTag!]!\\n\\n  \\"\\"\\"\\n  Number of \\"articles\\"\\n  \\"\\"\\"\\n  articleCount(where: ArticleTagFilterInput): UnsignedInt!\\n}"
+`;
+
+exports[`NodeOutputType > Definition > User has an output type 1`] = `
+"type User implements PublicNodeInterface {\\n  id: UUIDv4!\\n  username: NonEmptyTrimmedString!\\n\\n  \\"\\"\\"All the articles this user has created\\"\\"\\"\\n  createdArticles(where: ArticleFilterInput, orderBy: [ArticleOrderingInput!], skip: UnsignedInt, first: UnsignedInt!): [Article!]!\\n\\n  \\"\\"\\"\\n  Number of \\"createdArticles\\"\\n  \\"\\"\\"\\n  createdArticleCount(where: ArticleFilterInput): UnsignedInt!\\n\\n  \\"\\"\\"All the articles this user has updated\\"\\"\\"\\n  updatedArticles(where: ArticleFilterInput, orderBy: [ArticleOrderingInput!], skip: UnsignedInt, first: UnsignedInt!): [Article!]!\\n\\n  \\"\\"\\"\\n  Number of \\"updatedArticles\\"\\n  \\"\\"\\"\\n  updatedArticleCount(where: ArticleFilterInput): UnsignedInt!\\n\\n  \\"\\"\\"This user's profile, only the optional informations\\"\\"\\"\\n  profile: UserProfile\\n  articleTagModerations(where: ArticleTagModerationFilterInput, skip: UnsignedInt, first: UnsignedInt!): [ArticleTagModeration!]!\\n\\n  \\"\\"\\"\\n  Number of \\"articleTagModerations\\"\\n  \\"\\"\\"\\n  articleTagModerationCount(where: ArticleTagModerationFilterInput): UnsignedInt!\\n}"
+`;
+
+exports[`NodeOutputType > Definition > UserProfile has an output type 1`] = `
+"type UserProfile {\\n  user: User!\\n  birthday: Date\\n  facebookId: ID\\n  googleId: ID\\n  twitterHandle: ID\\n}"
+`;

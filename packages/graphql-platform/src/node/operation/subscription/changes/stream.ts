@@ -1,6 +1,6 @@
 import { AsyncEventEmitter } from '@prismamedia/async-event-emitter';
 import { Memoize } from '@prismamedia/memoize';
-import assert from 'node:assert/strict';
+import assert from 'node:assert';
 import { inspect } from 'node:util';
 import type { Options as PQueueOptions } from 'p-queue';
 import PQueue from 'p-queue';
@@ -131,18 +131,18 @@ export class ChangesSubscriptionStream<
 
     if (config.filter) {
       assert(config.filter instanceof NodeFilter);
-      assert.equal(config.filter.node, node);
+      assert.strictEqual(config.filter.node, node);
 
       this.filter = config.filter?.normalized;
     }
 
     assert(config.selection.onUpsert instanceof NodeSelection);
-    assert.equal(config.selection.onUpsert.node, node);
+    assert.strictEqual(config.selection.onUpsert.node, node);
     this.onUpsertSelection = config.selection.onUpsert;
 
     if (config.selection.onDeletion) {
       assert(config.selection.onDeletion instanceof NodeSelection);
-      assert.equal(config.selection.onDeletion.node, node);
+      assert.strictEqual(config.selection.onDeletion.node, node);
       assert(
         config.selection.onDeletion.isPure(),
         `Expects the "onDeletion" selection to be a subset of the "${this.node}"'s selection`,

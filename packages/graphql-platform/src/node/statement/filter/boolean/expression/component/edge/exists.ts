@@ -1,6 +1,6 @@
 import { Memoize } from '@prismamedia/memoize';
 import * as graphql from 'graphql';
-import assert from 'node:assert/strict';
+import assert from 'node:assert';
 import { EdgeDependencyGraph } from '../../../../../../change/dependency.js';
 import type { Edge, UniqueConstraint } from '../../../../../../definition.js';
 import type { NodeFilterInputValue } from '../../../../../../type.js';
@@ -15,7 +15,7 @@ import { AbstractComponentFilter } from '../../abstract-component.js';
 export class EdgeExistsFilter extends AbstractComponentFilter {
   public static create(edge: Edge, headFilter?: NodeFilter): BooleanFilter {
     if (headFilter) {
-      assert.equal(edge.head, headFilter.node);
+      assert.strictEqual(edge.head, headFilter.node);
 
       if (!headFilter.normalized) {
         return EdgeExistsFilter.create(edge);

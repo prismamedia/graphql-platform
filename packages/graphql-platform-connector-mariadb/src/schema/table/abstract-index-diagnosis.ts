@@ -1,4 +1,4 @@
-import assert from 'node:assert/strict';
+import assert from 'node:assert';
 import { IndexInformation } from '../../statement.js';
 import { DiagnosisError } from '../diagnosis.js';
 import type { AbstractIndex } from './abstract-index.js';
@@ -28,9 +28,12 @@ export abstract class AbstractIndexDiagnosis<
     options?: IndexDiagnosisOptions,
   ) {
     indexInformationsByColumnName.forEach((indexInformation) => {
-      assert.equal(indexInformation.TABLE_SCHEMA, index.table.schema.name);
-      assert.equal(indexInformation.TABLE_NAME, index.table.name);
-      assert.equal(indexInformation.INDEX_NAME, index.name);
+      assert.strictEqual(
+        indexInformation.TABLE_SCHEMA,
+        index.table.schema.name,
+      );
+      assert.strictEqual(indexInformation.TABLE_NAME, index.table.name);
+      assert.strictEqual(indexInformation.INDEX_NAME, index.name);
     });
 
     const actualColumnNames = Array.from(indexInformationsByColumnName.keys());

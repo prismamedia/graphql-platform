@@ -1,4 +1,5 @@
-import { beforeAll, describe, expect, it } from '@jest/globals';
+import assert from 'node:assert';
+import { before, describe, it } from 'node:test';
 import {
   GraphQLPlatform,
   NodeChangeAggregation,
@@ -13,7 +14,7 @@ describe('Change', () => {
 
   let gp: GraphQLPlatform<MyTestRequestContext>;
 
-  beforeAll(() => {
+  before(() => {
     gp = new GraphQLPlatform({
       nodes: {
         Article: {
@@ -74,15 +75,15 @@ describe('Change', () => {
     const Tag = gp.getNodeByName('Tag');
     const ArticleTag = gp.getNodeByName('ArticleTag');
 
-    expect(() => new NodeCreation(Article, myContext, {})).toThrow(
-      '/Article - 2 errors:',
-    );
-    expect(() => new NodeCreation(Tag, myContext, {})).toThrow(
-      '/Tag - 2 errors:',
-    );
-    expect(() => new NodeCreation(ArticleTag, myContext, {})).toThrow(
-      '/ArticleTag - 3 errors:',
-    );
+    assert.throws(() => new NodeCreation(Article, myContext, {}), {
+      message: /^\/Article - 2 errors:/,
+    });
+    assert.throws(() => new NodeCreation(Tag, myContext, {}), {
+      message: /^\/Tag - 2 errors:/,
+    });
+    assert.throws(() => new NodeCreation(ArticleTag, myContext, {}), {
+      message: /^\/ArticleTag - 3 errors:/,
+    });
   });
 
   it('aggregates changes', () => {
@@ -172,23 +173,21 @@ describe('Change', () => {
       }),
     ]);
 
-    expect(aggregate.summary.toJSON()).toEqual({
+    assert.deepStrictEqual(aggregate.summary.toJSON(), {
       creations: ['Article', 'Tag', 'ArticleTag'],
       deletions: ['Tag'],
       updatesByNode: { Tag: ['title'] },
       changes: ['Article', 'Tag', 'ArticleTag'],
     });
 
-    expect(aggregate.size).toBe(5);
+    assert.strictEqual(aggregate.size, 5);
 
-    expect(Array.from(aggregate, String)).toMatchInlineSnapshot(`
-      [
-        "Article/"2e9b5020-b9fe-4dab-bb59-59c986fffc12"/creation",
-        "Tag/1/creation",
-        "Tag/5/update",
-        "Tag/10/deletion",
-        "ArticleTag/{"article":{"id":"2e9b5020-b9fe-4dab-bb59-59c986fffc12"},"tag":{"id":1}}/creation",
-      ]
-    `);
+    assert.deepStrictEqual(Array.from(aggregate, String), [
+      'Article/"2e9b5020-b9fe-4dab-bb59-59c986fffc12"/creation',
+      'Tag/1/creation',
+      'Tag/5/update',
+      'Tag/10/deletion',
+      'ArticleTag/{"article":{"id":"2e9b5020-b9fe-4dab-bb59-59c986fffc12"},"tag":{"id":1}}/creation',
+    ]);
   });
 });

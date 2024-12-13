@@ -1,5 +1,5 @@
 import type { EventListener } from '@prismamedia/async-event-emitter';
-import assert from 'node:assert/strict';
+import assert from 'node:assert';
 import type { BrokerInterface } from '../broker-interface.js';
 import type { GraphQLPlatform, NodeChange } from '../index.js';
 import type { ChangesSubscriptionStream } from '../node.js';

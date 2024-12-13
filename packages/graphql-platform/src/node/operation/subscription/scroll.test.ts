@@ -1,4 +1,5 @@
-import { beforeEach, describe, expect, it } from '@jest/globals';
+import assert from 'node:assert';
+import { beforeEach, describe, it } from 'node:test';
 import {
   MyContext,
   MyGP,
@@ -7,15 +8,15 @@ import {
   nodes,
 } from '../../../__tests__/config.js';
 import {
-  clearAllConnectorMocks,
   mockConnector,
+  type MockedConnector,
 } from '../../../__tests__/connector-mock.js';
 import { GraphQLPlatform, Node } from '../../../index.js';
 import { UnauthorizedError } from '../error.js';
 import { ScrollSubscriptionArgs, ScrollSubscriptionStream } from './scroll.js';
 
 describe('ScrollSubscription', () => {
-  let gp: MyGP;
+  let gp: MyGP<MockedConnector>;
   let Article: Node;
   const articles = [
     { _id: 1, id: 'ca001c1c-2e90-461f-96c8-658afa089728' },
@@ -47,68 +48,70 @@ describe('ScrollSubscription', () => {
     Article = gp.getNodeByName('Article');
   });
 
-  describe('Runtime', () => {
-    beforeEach(() => clearAllConnectorMocks(gp.connector));
-
-    describe('Fails', () => {
-      it.each<[MyContext, ScrollSubscriptionArgs]>([
-        [myVisitorContext, { selection: `{ id }` }],
-      ])('throws an UnauthorizedError', (context, args) => {
-        expect(() => Article.api.scroll(context, args)).toThrow(
+  describe('Fails', () => {
+    (
+      [[myVisitorContext, { selection: `{ id }` }]] satisfies ReadonlyArray<
+        [MyContext, ScrollSubscriptionArgs]
+      >
+    ).forEach(([context, args]) => {
+      it('throws an UnauthorizedError', () => {
+        assert.throws(
+          () => gp.api.Article.scroll(context, args),
           UnauthorizedError,
         );
 
-        expect(gp.connector.find).toHaveBeenCalledTimes(0);
+        assert.strictEqual(gp.connector.find.mock.callCount(), 0);
+      });
+    });
+  });
+
+  describe('Works', () => {
+    (
+      [
+        [myAdminContext, { where: null, selection: `{ id }` }],
+      ] satisfies ReadonlyArray<[MyContext, ScrollSubscriptionArgs]>
+    ).forEach(([context, args]) => {
+      it('does no call the connector when it is not needed', async () => {
+        const cursor = Article.api.scroll(context, args);
+        assert(cursor instanceof ScrollSubscriptionStream);
+
+        assert.deepEqual(await Array.fromAsync(cursor), []);
+        assert.strictEqual(gp.connector.find.mock.callCount(), 0);
       });
     });
 
-    describe('Works', () => {
-      it.each<[MyContext, ScrollSubscriptionArgs]>([
-        [myAdminContext, { where: null, selection: `{ id }` }],
-      ])(
-        'does no call the connector when it is not needed',
-        async (context, args) => {
-          const cursor = Article.api.scroll(context, args);
-          expect(cursor).toBeInstanceOf(ScrollSubscriptionStream);
-
-          await expect(Array.fromAsync(cursor)).resolves.toEqual([]);
-          expect(gp.connector.find).toHaveBeenCalledTimes(0);
-        },
-      );
-
-      it('scrolls articles', async () => {
-        const cursor = Article.api.scroll(myAdminContext, {
-          selection: '{ _id id }',
-        });
-
-        await expect(Array.fromAsync(cursor)).resolves.toEqual(articles);
-        expect(gp.connector.find).toHaveBeenCalledTimes(1);
+    it('scrolls articles', async () => {
+      const cursor = Article.api.scroll(myAdminContext, {
+        selection: '{ _id id }',
       });
 
-      it('scrolls articles, 2 by 2', async () => {
-        const cursor = Article.api.scroll(myAdminContext, {
-          selection: '{ _id id }',
-          chunkSize: 2,
-        });
+      assert.deepEqual(await Array.fromAsync(cursor), articles);
+      assert.strictEqual(gp.connector.find.mock.callCount(), 1);
+    });
 
-        await expect(Array.fromAsync(cursor)).resolves.toEqual(articles);
-        expect(gp.connector.find).toHaveBeenCalledTimes(3);
+    it('scrolls articles, 2 by 2', async () => {
+      const cursor = Article.api.scroll(myAdminContext, {
+        selection: '{ _id id }',
+        chunkSize: 2,
       });
 
-      it('stops a cursor through for-await-of', async () => {
-        const cursor = Article.api.scroll(myAdminContext, {
-          selection: '{ _id id }',
-          chunkSize: 2,
-        });
+      assert.deepEqual(await Array.fromAsync(cursor), articles);
+      assert.strictEqual(gp.connector.find.mock.callCount(), 3);
+    });
 
-        for await (const value of cursor) {
-          if (value._id >= 3) {
-            break;
-          }
+    it('stops a cursor through for-await-of', async () => {
+      const cursor = Article.api.scroll(myAdminContext, {
+        selection: '{ _id id }',
+        chunkSize: 2,
+      });
+
+      for await (const value of cursor) {
+        if (value._id >= 3) {
+          break;
         }
+      }
 
-        expect(gp.connector.find).toHaveBeenCalledTimes(1);
-      });
+      assert.strictEqual(gp.connector.find.mock.callCount(), 1);
     });
   });
 });

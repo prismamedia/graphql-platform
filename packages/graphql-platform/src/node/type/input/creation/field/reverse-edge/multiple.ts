@@ -1,6 +1,6 @@
 import * as utils from '@prismamedia/graphql-platform-utils';
 import inflection from 'inflection';
-import assert from 'node:assert/strict';
+import assert from 'node:assert';
 import type { NodeValue } from '../../../../../../node.js';
 import type { MultipleReverseEdge } from '../../../../../definition/reverse-edge/multiple.js';
 import type { MutationContext } from '../../../../../operation/mutation/context.js';

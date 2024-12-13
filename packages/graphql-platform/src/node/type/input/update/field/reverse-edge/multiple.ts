@@ -1,7 +1,7 @@
 import * as scalars from '@prismamedia/graphql-platform-scalars';
 import * as utils from '@prismamedia/graphql-platform-utils';
 import inflection from 'inflection';
-import assert from 'node:assert/strict';
+import assert from 'node:assert';
 import * as R from 'remeda';
 import type { IterableElement } from 'type-fest';
 import type { NodeValue } from '../../../../../../node.js';
@@ -145,7 +145,7 @@ export class MultipleReverseEdgeUpdateInput extends AbstractReverseEdgeUpdateInp
             );
 
             if (
-              reverseEdge.head.isPartiallyIdentifiableWithEdge(
+              reverseEdge.head.isPartiallyIdentifiableByEdge(
                 reverseEdge.originalEdge,
               )
             ) {
@@ -194,7 +194,7 @@ export class MultipleReverseEdgeUpdateInput extends AbstractReverseEdgeUpdateInp
             );
 
             if (
-              reverseEdge.head.isPartiallyIdentifiableWithEdge(
+              reverseEdge.head.isPartiallyIdentifiableByEdge(
                 reverseEdge.originalEdge,
               )
             ) {
@@ -287,7 +287,7 @@ export class MultipleReverseEdgeUpdateInput extends AbstractReverseEdgeUpdateInp
             );
 
             if (
-              reverseEdge.head.isPartiallyIdentifiableWithEdge(
+              reverseEdge.head.isPartiallyIdentifiableByEdge(
                 reverseEdge.originalEdge,
               )
             ) {
@@ -387,7 +387,7 @@ export class MultipleReverseEdgeUpdateInput extends AbstractReverseEdgeUpdateInp
           }
 
           if (
-            reverseEdge.head.isPartiallyIdentifiableWithEdge(
+            reverseEdge.head.isPartiallyIdentifiableByEdge(
               reverseEdge.originalEdge,
             ) &&
             reverseEdge.head.isCreatable() &&

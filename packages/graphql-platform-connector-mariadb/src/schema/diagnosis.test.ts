@@ -1,5 +1,6 @@
-import { afterAll, beforeAll, describe, expect, it } from '@jest/globals';
+import assert from 'node:assert';
 import { EOL } from 'node:os';
+import { after, before, describe, it } from 'node:test';
 import { createMyGP, type MyGP } from '../__tests__/config.js';
 import { escapeIdentifier, escapeStringValue } from '../escaping.js';
 import { SchemaDiagnosis } from '../schema.js';
@@ -8,11 +9,11 @@ import { StatementKind } from '../statement.js';
 describe('SchemaDiagnosis', () => {
   let gp: MyGP;
 
-  beforeAll(() => {
+  before(() => {
     gp = createMyGP(`connector_mariadb_schema_diagnosis`);
   });
 
-  afterAll(() => gp.connector.teardown());
+  after(() => gp.connector.teardown());
 
   it('diagnosis', async () => {
     gp.connector.on('failed-statement', ({ statement, error }) =>
@@ -22,9 +23,9 @@ describe('SchemaDiagnosis', () => {
     const connector = gp.connector;
     const schema = connector.schema;
 
-    await expect(schema.diagnose()).rejects.toThrow(
-      `The schema "${schema}" is missing`,
-    );
+    await assert.rejects(() => schema.diagnose(), {
+      message: `The schema "${schema}" is missing`,
+    });
 
     const extraTableQualifiedName = `${schema}.extra_table`;
 
@@ -70,9 +71,9 @@ describe('SchemaDiagnosis', () => {
 
     let diagnosis = await schema.diagnose();
 
-    expect(diagnosis).toBeInstanceOf(SchemaDiagnosis);
-    expect(diagnosis.isValid()).toBeFalsy();
-    expect(diagnosis.summarize()).toEqual({
+    assert(diagnosis instanceof SchemaDiagnosis);
+    assert(!diagnosis.isValid());
+    assert.deepEqual(diagnosis.summarize(), {
       errors: 89,
 
       collation: {
@@ -173,9 +174,9 @@ describe('SchemaDiagnosis', () => {
 
     diagnosis = await schema.diagnose();
 
-    expect(diagnosis).toBeInstanceOf(SchemaDiagnosis);
-    expect(diagnosis.isValid()).toBeFalsy();
-    expect(diagnosis.summarize()).toEqual({
+    assert(diagnosis instanceof SchemaDiagnosis);
+    assert(!diagnosis.isValid());
+    assert.deepEqual(diagnosis.summarize(), {
       errors: 87,
 
       tables: {
@@ -270,9 +271,9 @@ describe('SchemaDiagnosis', () => {
 
     diagnosis = await schema.diagnose();
 
-    expect(diagnosis).toBeInstanceOf(SchemaDiagnosis);
-    expect(diagnosis.isValid()).toBeFalsy();
-    expect(diagnosis.summarize()).toEqual({
+    assert(diagnosis instanceof SchemaDiagnosis);
+    assert(!diagnosis.isValid());
+    assert.deepEqual(diagnosis.summarize(), {
       errors: 41,
 
       tables: {
@@ -301,7 +302,7 @@ describe('SchemaDiagnosis', () => {
 
     diagnosis = await schema.diagnose();
 
-    expect(diagnosis).toBeInstanceOf(SchemaDiagnosis);
-    expect(diagnosis.isValid()).toBeTruthy();
+    assert(diagnosis instanceof SchemaDiagnosis);
+    assert(diagnosis.isValid());
   });
 });

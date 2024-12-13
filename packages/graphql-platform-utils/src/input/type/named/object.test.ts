@@ -1,4 +1,3 @@
-import { describe, expect, it } from '@jest/globals';
 import {
   GraphQLBoolean,
   GraphQLFloat,
@@ -6,6 +5,9 @@ import {
   GraphQLString,
   printType,
 } from 'graphql';
+import assert from 'node:assert';
+import { describe, it } from 'node:test';
+import { inspect } from 'node:util';
 import { Input } from '../../../input.js';
 import {
   ListableInputType,
@@ -31,8 +33,8 @@ describe('ObjectInputType', () => {
       ],
     });
 
-    expect(test0.validate()).toBeUndefined();
-    expect(test0.isPublic()).toBeTruthy();
+    assert.strictEqual(test0.validate(), undefined);
+    assert.strictEqual(test0.isPublic(), true);
   });
 
   it('supports circular dependencies', () => {
@@ -75,10 +77,10 @@ describe('ObjectInputType', () => {
       ],
     });
 
-    expect(test0.validate()).toBeUndefined();
-    expect(test1.validate()).toBeUndefined();
-    expect(test0.isPublic()).toBeTruthy();
-    expect(test1.isPublic()).toBeTruthy();
+    assert.strictEqual(test0.validate(), undefined);
+    assert.strictEqual(test1.validate(), undefined);
+    assert.strictEqual(test0.isPublic(), true);
+    assert.strictEqual(test1.isPublic(), true);
   });
 
   describe('Public type', () => {
@@ -97,32 +99,30 @@ describe('ObjectInputType', () => {
     });
 
     it(`${type} is public`, () => {
-      expect(type.isPublic()).toBeTruthy();
+      assert.strictEqual(type.isPublic(), true);
     });
 
-    it(`${type} has GraphQL`, () => {
-      expect(printType(type.getGraphQLInputType())).toMatchInlineSnapshot(`
-        "input SimpleInput {
-          longitude: Float
-          latitude: Float
-        }"
-      `);
+    it(`${type} has GraphQL`, ({ assert: { snapshot } }) => {
+      snapshot(printType(type.getGraphQLInputType()));
     });
 
-    it.each([
-      [undefined, undefined],
-      [null, null],
-      [{}, {}],
-      [{ longitude: undefined }, {}],
-    ])(`${type}.parseValue(%p) = %p`, (input, output) =>
-      expect(type.parseValue(input)).toEqual(output),
-    );
+    {
+      const cases = [
+        [undefined, undefined],
+        [null, null],
+        [{}, {}],
+        [{ longitude: undefined }, {}],
+      ] as const;
+
+      cases.forEach(([input, output]) =>
+        it(`${type}.parseValue(${inspect(input, undefined, 5)}) = ${inspect(output, undefined, 5)}`, () =>
+          assert.deepEqual(type.parseValue(input), output)),
+      );
+    }
   });
 
   describe('Public type with circular reference', () => {
-    let type: ObjectInputType;
-
-    type = new ObjectInputType({
+    const type: ObjectInputType = new ObjectInputType({
       name: 'ProfileInput',
       description: 'My profile',
       fields: () => [
@@ -167,34 +167,32 @@ describe('ObjectInputType', () => {
     });
 
     it(`${type} is valid`, () => {
-      expect(type.validate()).toBeUndefined();
+      assert.strictEqual(type.validate(), undefined);
     });
 
     it(`${type} is public`, () => {
-      expect(type.isPublic()).toBeTruthy();
+      assert.strictEqual(type.isPublic(), true);
     });
 
-    it(`${type} has GraphQL`, () => {
-      expect(printType(type.getGraphQLInputType())).toMatchInlineSnapshot(`
-        """"My profile"""
-        input ProfileInput {
-          username: String!
-          age: Int @deprecated(reason: "\\"age\\" is deprecated")
-          friends: [ProfileInput!]! = []
-        }"
-      `);
+    it(`${type} has GraphQL`, ({ assert: { snapshot } }) => {
+      snapshot(printType(type.getGraphQLInputType()));
     });
 
-    it.each([
-      [undefined, undefined],
-      [null, null],
-      [{ username: 'yvann' }, { username: 'yvann', friends: [] }],
-      [
-        { username: 'yvann', friends: [{ username: 'marine' }] },
-        { username: 'yvann', friends: [{ username: 'marine', friends: [] }] },
-      ],
-    ])(`${type}.parseValue(%p) = %p`, (input, output) =>
-      expect(type.parseValue(input)).toEqual(output),
-    );
+    {
+      const cases = [
+        [undefined, undefined],
+        [null, null],
+        [{ username: 'yvann' }, { username: 'yvann', friends: [] }],
+        [
+          { username: 'yvann', friends: [{ username: 'marine' }] },
+          { username: 'yvann', friends: [{ username: 'marine', friends: [] }] },
+        ],
+      ] as const;
+
+      cases.forEach(([input, output]) =>
+        it(`${type}.parseValue(${inspect(input, undefined, 5)}) = ${inspect(output, undefined, 5)}`, () =>
+          assert.deepEqual(type.parseValue(input), output)),
+      );
+    }
   });
 });

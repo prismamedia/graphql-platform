@@ -1,6 +1,6 @@
 import type * as core from '@prismamedia/graphql-platform';
 import * as utils from '@prismamedia/graphql-platform-utils';
-import assert from 'node:assert/strict';
+import assert from 'node:assert';
 import type { SetOptional } from 'type-fest';
 import { ColumnInformation } from '../../../../statement.js';
 import {
@@ -37,7 +37,7 @@ export class BooleanType<
   }
 
   protected override doSerialize(value: boolean): string {
-    assert.equal(typeof value, 'boolean');
+    assert.strictEqual(typeof value, 'boolean');
 
     return value ? '1' : '0';
   }

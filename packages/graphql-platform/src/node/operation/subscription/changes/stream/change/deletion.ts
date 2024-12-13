@@ -1,4 +1,4 @@
-import assert from 'node:assert/strict';
+import assert from 'node:assert';
 import type { NodeValue } from '../../../../../../node.js';
 import type { ChangesSubscriptionStream } from '../../stream.js';
 import { AbstractChangesSubscriptionChange } from '../abstract-change.js';

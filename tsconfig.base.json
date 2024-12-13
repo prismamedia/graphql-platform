@@ -10,9 +10,7 @@
     "experimentalDecorators": true,
 
     "composite": true,
-    "sourceMap": true,
-    "declaration": true,
-    "declarationMap": true,
+    "inlineSourceMap": true,
 
     "rootDir": "${configDir}/src",
     "outDir": "${configDir}/dist"

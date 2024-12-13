@@ -1,4 +1,5 @@
-import { beforeAll, describe, expect, it } from '@jest/globals';
+import assert from 'node:assert';
+import { before, describe, it } from 'node:test';
 import {
   MyContext,
   MyGP,
@@ -13,7 +14,7 @@ import { ChangesSubscriptionStream } from './subscription.js';
 describe('API', () => {
   let gp: MyGP;
 
-  beforeAll(() => {
+  before(() => {
     gp = new GraphQLPlatform({
       nodes,
       connector: mockConnector({ count: async () => 5, find: async () => [] }),
@@ -23,22 +24,27 @@ describe('API', () => {
   describe('API', () => {
     let api: API<MyContext>;
 
-    beforeAll(() => {
+    before(() => {
       api = gp.api;
     });
 
     it('is callable', async () => {
-      await expect(api.Article.count(myAdminContext, {})).resolves.toEqual(5);
+      assert.strictEqual(await api.Article.count(myAdminContext, {}), 5);
 
-      await expect(
-        api.Article.findMany(myAdminContext, { first: 5, selection: `{ id }` }),
-      ).resolves.toEqual([]);
+      assert.deepEqual(
+        await api.Article.findMany(myAdminContext, {
+          first: 5,
+          selection: `{ id }`,
+        }),
+        [],
+      );
 
-      await expect(
-        Array.fromAsync(
+      assert.deepEqual(
+        await Array.fromAsync(
           api.Article.scroll(myAdminContext, { selection: `{ id }` }),
         ),
-      ).resolves.toEqual([]);
+        [],
+      );
 
       {
         await using subscription = await api.Article.subscribeToChanges(
@@ -46,7 +52,7 @@ describe('API', () => {
           { selection: { onUpsert: `{ id }` } },
         );
 
-        expect(subscription).toBeInstanceOf(ChangesSubscriptionStream);
+        assert(subscription instanceof ChangesSubscriptionStream);
       }
     });
   });
@@ -54,27 +60,31 @@ describe('API', () => {
   describe('Context-bound API', () => {
     let api: ContextBoundAPI;
 
-    beforeAll(() => {
+    before(() => {
       api = gp.createContextBoundAPI(myAdminContext);
     });
 
     it('is callable', async () => {
-      await expect(api.Article.count({})).resolves.toEqual(5);
+      assert.strictEqual(await api.Article.count({}), 5);
 
-      await expect(
-        api.Article.findMany({ first: 5, selection: `{ id }` }),
-      ).resolves.toEqual([]);
+      assert.deepEqual(
+        await api.Article.findMany({ first: 5, selection: `{ id }` }),
+        [],
+      );
 
-      await expect(
-        Array.fromAsync(api.Article.scroll({ selection: `{ id title }` })),
-      ).resolves.toEqual([]);
+      assert.deepEqual(
+        await Array.fromAsync(
+          api.Article.scroll({ selection: `{ id title }` }),
+        ),
+        [],
+      );
 
       {
         await using subscription = await api.Article.subscribeToChanges({
           selection: { onUpsert: `{ id }` },
         });
 
-        expect(subscription).toBeInstanceOf(ChangesSubscriptionStream);
+        assert(subscription instanceof ChangesSubscriptionStream);
       }
     });
   });

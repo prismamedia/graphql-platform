@@ -1,25 +1,37 @@
-import { describe, expect, it } from '@jest/globals';
+import assert from 'node:assert';
+import { describe, it } from 'node:test';
+import { inspect } from 'node:util';
 import { GraphQLUnsignedBigInt } from './unsigned-bigint.js';
 
 describe('UnsignedBigInt', () => {
-  it.each([
-    [-0, 0n],
-    [-0n, 0n],
-    [0, 0n],
-    [0n, 0n],
-    [12, 12n],
-    [34n, 34n],
-    [BigInt('56'), 56n],
-    ['78', 78n],
-  ])('parseValue(%p) = %p', (input, output) => {
-    expect(GraphQLUnsignedBigInt.parseValue(input)).toBe(output);
+  describe('invalids', () => {
+    [
+      [-12, 'Expects an unsigned BigInt, got: -12'],
+      [-34n, 'Expects an unsigned BigInt, got: -34n'],
+      ['-56', "Expects an unsigned BigInt, got: '-56'"],
+    ].forEach(([input, error]) => {
+      it(`parseValue(${inspect(input, undefined, 5)}) throws an error`, () => {
+        assert.throws(() => GraphQLUnsignedBigInt.parseValue(input), {
+          message: error,
+        });
+      });
+    });
   });
 
-  it.each([
-    [-12, 'Expects an unsigned BigInt, got: -12'],
-    [-34n, 'Expects an unsigned BigInt, got: -34n'],
-    ['-56', "Expects an unsigned BigInt, got: '-56'"],
-  ])('parseValue(%p) throws the following Error: %s', (input, error) => {
-    expect(() => GraphQLUnsignedBigInt.parseValue(input)).toThrow(error);
+  describe('valids', () => {
+    [
+      [-0, 0n],
+      [-0n, 0n],
+      [0, 0n],
+      [0n, 0n],
+      [12, 12n],
+      [34n, 34n],
+      [BigInt('56'), 56n],
+      ['78', 78n],
+    ].forEach(([input, output]) => {
+      it(`parseValue(${inspect(input, undefined, 5)}) = ${inspect(output, undefined, 5)}`, () => {
+        assert.strictEqual(GraphQLUnsignedBigInt.parseValue(input), output);
+      });
+    });
   });
 });

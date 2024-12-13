@@ -1,0 +1,63 @@
+exports[`Normalize statement > generates "normalize" statement for "Article" 1`] = `
+"UPDATE \`articles\`\\nSET\\n  \`title\` = REGEXP_REPLACE(REGEXP_REPLACE(REGEXP_REPLACE(\`title\`, '(?s)(<!--.*?-->|<script\\\\\\\\b[^<]*(?:(?!</script>)<[^<]*)*(?:</script>|/>)|<[^>]*>)', ''), '^\\\\\\\\s+|\\\\\\\\s+$', ''), '\\\\\\\\s+', ' '),\\n  \`slug\` = REGEXP_REPLACE(REGEXP_REPLACE(REGEXP_REPLACE(REGEXP_REPLACE(REGEXP_REPLACE(REPLACE(REPLACE(REGEXP_REPLACE(REGEXP_REPLACE(REGEXP_REPLACE(REGEXP_REPLACE(REGEXP_REPLACE(REPLACE(REGEXP_REPLACE(LOWER(\`slug\`), '[àáâãǎā]', 'a'), 'å', 'aa'), '[äæ]', 'ae'), '[çćčċ]', 'c'), '[èéêẽëěėēę]', 'e'), '[ìíîĩïǐīį]', 'i'), '[òóôõöǒø]', 'o'), 'œ', 'oe'), 'ß', 'ss'), '[ùúûũüǔǔ]', 'u'), '[ýŷÿ]', 'y'), '[^a-z0-9-_]+', '-'), '([-_])[-_]+', '\\\\\\\\1'), '(^[-_]+|[-_]+$)', ''),\\n  \`body\` = IF(JSON_VALID(\`body\`) AND JSON_EXISTS(\`body\`, '$.blocks') AND JSON_TYPE(JSON_EXTRACT(\`body\`, '$.blocks')) != 'NULL' AND JSON_LENGTH(\`body\`, '$.blocks') > 0, JSON_COMPACT(\`body\`), NULL),\\n  \`updated_at\` = \`updated_at\`,\\n  \`metas\` = IF(JSON_VALID(\`metas\`) AND JSON_TYPE(\`metas\`) = 'OBJECT' AND JSON_LENGTH(\`metas\`) > 0, JSON_COMPACT(\`metas\`), NULL),\\n  \`machine_tags\` = IF(JSON_VALID(\`machine_tags\`) AND JSON_TYPE(\`machine_tags\`) = 'ARRAY' AND JSON_LENGTH(\`machine_tags\`) > 0, JSON_COMPACT(\`machine_tags\`), NULL)"
+`;
+
+exports[`Normalize statement > generates "normalize" statement for "Article" 2`] = `
+OkPacket { affectedRows: 7, insertId: 0n, warningStatus: 0 }
+`;
+
+exports[`Normalize statement > generates "normalize" statement for "ArticleExtension" 1`] = `
+"UPDATE \`article_extensions\`\\nSET\\n  \`source\` = NULLIF(REGEXP_REPLACE(\`source\`, '^\\\\\\\\s+|\\\\\\\\s+$', ''), '')"
+`;
+
+exports[`Normalize statement > generates "normalize" statement for "ArticleExtension" 2`] = `
+OkPacket { affectedRows: 1, insertId: 0n, warningStatus: 0 }
+`;
+
+exports[`Normalize statement > generates "normalize" statement for "ArticleTagModeration" 1`] = `
+"UPDATE \`article_tag_moderations\`\\nSET\\n  \`moderation\` = NULLIF(REGEXP_REPLACE(\`moderation\`, '^\\\\\\\\s+|\\\\\\\\s+$', ''), '')"
+`;
+
+exports[`Normalize statement > generates "normalize" statement for "ArticleTagModeration" 2`] = `
+OkPacket { affectedRows: 3, insertId: 0n, warningStatus: 0 }
+`;
+
+exports[`Normalize statement > generates "normalize" statement for "Category" 1`] = `
+"UPDATE \`categories\`\\nSET\\n  \`title\` = REGEXP_REPLACE(\`title\`, '^\\\\\\\\s+|\\\\\\\\s+$', ''),\\n  \`slug\` = REGEXP_REPLACE(\`slug\`, '^\\\\\\\\s+|\\\\\\\\s+$', '')"
+`;
+
+exports[`Normalize statement > generates "normalize" statement for "Category" 2`] = `
+OkPacket { affectedRows: 3, insertId: 0n, warningStatus: 0 }
+`;
+
+exports[`Normalize statement > generates "normalize" statement for "Log" 1`] = `
+"UPDATE \`logs\`\\nSET\\n  \`message\` = REGEXP_REPLACE(\`message\`, '^\\\\\\\\s+|\\\\\\\\s+$', '')"
+`;
+
+exports[`Normalize statement > generates "normalize" statement for "Log" 2`] = `
+OkPacket { affectedRows: 0, insertId: 0n, warningStatus: 0 }
+`;
+
+exports[`Normalize statement > generates "normalize" statement for "Tag" 1`] = `
+"UPDATE \`tags\`\\nSET\\n  \`title\` = REGEXP_REPLACE(\`title\`, '^\\\\\\\\s+|\\\\\\\\s+$', ''),\\n  \`slug\` = REGEXP_REPLACE(\`slug\`, '^\\\\\\\\s+|\\\\\\\\s+$', ''),\\n  \`updated_at\` = \`updated_at\`"
+`;
+
+exports[`Normalize statement > generates "normalize" statement for "Tag" 2`] = `
+OkPacket { affectedRows: 3, insertId: 0n, warningStatus: 0 }
+`;
+
+exports[`Normalize statement > generates "normalize" statement for "User" 1`] = `
+"UPDATE \`users\`\\nSET\\n  \`username\` = REGEXP_REPLACE(\`username\`, '^\\\\\\\\s+|\\\\\\\\s+$', '')"
+`;
+
+exports[`Normalize statement > generates "normalize" statement for "User" 2`] = `
+OkPacket { affectedRows: 2, insertId: 0n, warningStatus: 0 }
+`;
+
+exports[`Normalize statement > generates "normalize" statement for "UserProfile" 1`] = `
+"UPDATE \`user_profiles\`\\nSET\\n  \`facebook_id\` = NULLIF(REGEXP_REPLACE(\`facebook_id\`, '^\\\\\\\\s+|\\\\\\\\s+$', ''), ''),\\n  \`google_id\` = NULLIF(REGEXP_REPLACE(\`google_id\`, '^\\\\\\\\s+|\\\\\\\\s+$', ''), ''),\\n  \`twitter_handle\` = NULLIF(REGEXP_REPLACE(\`twitter_handle\`, '^\\\\\\\\s+|\\\\\\\\s+$', ''), '')"
+`;
+
+exports[`Normalize statement > generates "normalize" statement for "UserProfile" 2`] = `
+OkPacket { affectedRows: 1, insertId: 0n, warningStatus: 0 }
+`;

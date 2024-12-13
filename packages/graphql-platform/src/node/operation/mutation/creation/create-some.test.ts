@@ -1,4 +1,5 @@
-import { beforeAll, beforeEach, describe, expect, it } from '@jest/globals';
+import assert from 'node:assert';
+import { beforeEach, describe, it } from 'node:test';
 import {
   MyContext,
   MyGP,
@@ -7,8 +8,9 @@ import {
   nodes,
 } from '../../../../__tests__/config.js';
 import {
-  clearAllConnectorMocks,
+  clearConnectorMockCalls,
   mockConnector,
+  type MockedConnector,
 } from '../../../../__tests__/connector-mock.js';
 import { GraphQLPlatform } from '../../../../index.js';
 import {
@@ -20,147 +22,151 @@ import {
 import { CreateSomeMutationArgs } from './create-some.js';
 
 describe('CreateSomeMutation', () => {
-  let gp: MyGP;
-
-  beforeAll(() => {
-    gp = new GraphQLPlatform({
-      nodes,
-      connector: mockConnector({
-        find: async () => [],
-      }),
-    });
+  const gp: MyGP<MockedConnector> = new GraphQLPlatform({
+    nodes,
+    connector: mockConnector({ find: async () => [] }),
   });
 
-  describe.skip('Definition', () => {});
+  beforeEach(() => clearConnectorMockCalls(gp.connector));
 
-  describe('Runtime', () => {
-    beforeEach(() => clearAllConnectorMocks(gp.connector));
-
-    describe('Fails', () => {
-      it.each<[MyContext, CreateSomeMutationArgs]>([
+  describe('Fails', () => {
+    (
+      [
         [
           myVisitorContext,
           { data: [{ title: 'A title' }], selection: '{ id }' },
         ],
-      ])('throws an UnauthorizedError', async (context, args) => {
-        await expect(() =>
-          gp.api.Article.createSome(context, args),
-        ).rejects.toThrow(UnauthorizedError);
+      ] satisfies ReadonlyArray<[MyContext, CreateSomeMutationArgs]>
+    ).forEach(([context, args]) => {
+      it('throws an UnauthorizedError', async () => {
+        await assert.rejects(
+          () => gp.api.Article.createSome(context, args),
+          UnauthorizedError,
+        );
 
-        expect(gp.connector.create).toHaveBeenCalledTimes(0);
-      });
-
-      it('throws a ConnectorFlowError', async () => {
-        const gp = new GraphQLPlatform({
-          nodes,
-          connector: mockConnector({
-            preMutation: async () => {
-              throw new Error('No connection available');
-            },
-          }),
-        });
-
-        await expect(
-          gp.api.Article.createSome(myAdminContext, {
-            data: [
-              {
-                title: "My first article's title",
-              },
-              {
-                title: "My second article's title",
-              },
-            ],
-            selection: '{ id }',
-          }),
-        ).rejects.toThrow(ConnectorWorkflowError);
-      });
-
-      it('throws a ConnectorOperationError', async () => {
-        const gp = new GraphQLPlatform({
-          nodes,
-          connector: mockConnector({
-            create: async () => {
-              throw new Error('Failed to create');
-            },
-          }),
-        });
-
-        await expect(
-          gp.api.Tag.createSome(myAdminContext, {
-            data: [
-              {
-                title: "My first tag's title",
-              },
-              {
-                title: "My second tag's title",
-              },
-            ],
-            selection: '{ id }',
-          }),
-        ).rejects.toThrow(ConnectorOperationError);
-      });
-
-      it('throws a LifecycleHookError', async () => {
-        await expect(
-          gp.api.Article.createSome(myAdminContext, {
-            data: [
-              {
-                title: "My first article's title",
-                htmlBody: '<p>body</p>',
-                body: { blocks: [] },
-              },
-              {
-                title: "My second article's title",
-                htmlBody: '<p>body</p>',
-                body: { blocks: [] },
-              },
-            ],
-            selection: '{ id }',
-          }),
-        ).rejects.toThrow(LifecycleHookError);
+        assert.strictEqual(gp.connector.create.mock.callCount(), 0);
       });
     });
 
-    describe('Works', () => {
-      it.each<[MyContext, CreateSomeMutationArgs]>([
-        [myAdminContext, { data: [], selection: '{ id }' }],
-      ])(
-        'does no call the connector when it is not needed',
-        async (context, args) => {
-          await expect(
-            gp.api.Article.createSome(context, args),
-          ).resolves.toEqual([]);
+    it('throws a ConnectorFlowError', async () => {
+      const gp = new GraphQLPlatform({
+        nodes,
+        connector: mockConnector({
+          preMutation: async () => {
+            throw new Error('No connection available');
+          },
+        }),
+      });
 
-          expect(gp.connector.create).toHaveBeenCalledTimes(0);
-        },
+      await assert.rejects(
+        gp.api.Article.createSome(myAdminContext, {
+          data: [
+            {
+              title: "My first article's title",
+            },
+            {
+              title: "My second article's title",
+            },
+          ],
+          selection: '{ id }',
+        }),
+        ConnectorWorkflowError,
       );
 
-      // it('calls the connector properly', async () => {
-      //   await expect(
-      //     gp.api.query.articleCount({}, myAdminContext),
-      //   ).resolves.toEqual(0);
-      //   expect(gp.connector.count).toHaveBeenCalledTimes(1);
-      //   expect(gp.connector.count).toHaveBeenLastCalledWith(
-      //     gp.getNode('Article'),
-      //     {},
-      //     expect.any(OperationContext),
-      //   );
-      // });
-      //
-      // it('calls the connector properly', async () => {
-      //   await expect(
-      //     gp.api.query.articleCount(
-      //       { where: { tagCount_gt: 0 } },
-      //       myAdminContext,
-      //     ),
-      //   ).resolves.toEqual(0);
-      //   expect(gp.connector.count).toHaveBeenCalledTimes(1);
-      //   expect(gp.connector.count).toHaveBeenLastCalledWith(
-      //     gp.getNode('Article'),
-      //     { where: expect.any(NodeFilter) },
-      //     expect.any(OperationContext),
-      //   );
-      // });
+      assert.strictEqual(gp.connector.create.mock.callCount(), 0);
     });
+
+    it('throws a ConnectorOperationError', async () => {
+      const gp = new GraphQLPlatform({
+        nodes,
+        connector: mockConnector({
+          create: async () => {
+            throw new Error('Failed to create');
+          },
+        }),
+      });
+
+      await assert.rejects(
+        gp.api.Tag.createSome(myAdminContext, {
+          data: [
+            {
+              title: "My first tag's title",
+            },
+            {
+              title: "My second tag's title",
+            },
+          ],
+          selection: '{ id }',
+        }),
+        ConnectorOperationError,
+      );
+
+      assert.strictEqual(gp.connector.create.mock.callCount(), 1);
+    });
+
+    it('throws a LifecycleHookError', async () => {
+      await assert.rejects(
+        gp.api.Article.createSome(myAdminContext, {
+          data: [
+            {
+              title: "My first article's title",
+              htmlBody: '<p>body</p>',
+              body: { blocks: [] },
+            },
+            {
+              title: "My second article's title",
+              htmlBody: '<p>body</p>',
+              body: { blocks: [] },
+            },
+          ],
+          selection: '{ id }',
+        }),
+        LifecycleHookError,
+      );
+    });
+  });
+
+  describe('Works', () => {
+    (
+      [
+        [myAdminContext, { data: [], selection: '{ id }' }],
+      ] satisfies ReadonlyArray<[MyContext, CreateSomeMutationArgs]>
+    ).forEach(([context, args]) => {
+      it('does no call the connector when it is not needed', async () => {
+        assert.deepStrictEqual(
+          await gp.api.Article.createSome(context, args),
+          [],
+        );
+
+        assert.strictEqual(gp.connector.create.mock.callCount(), 0);
+      });
+    });
+
+    // it('calls the connector properly', async () => {
+    //   await expect(
+    //     gp.api.query.articleCount({}, myAdminContext),
+    //   ).resolves.toEqual(0);
+    //   expect(gp.connector.count).toHaveBeenCalledTimes(1);
+    //   expect(gp.connector.count).toHaveBeenLastCalledWith(
+    //     gp.getNode('Article'),
+    //     {},
+    //     expect.any(OperationContext),
+    //   );
+    // });
+    //
+    // it('calls the connector properly', async () => {
+    //   await expect(
+    //     gp.api.query.articleCount(
+    //       { where: { tagCount_gt: 0 } },
+    //       myAdminContext,
+    //     ),
+    //   ).resolves.toEqual(0);
+    //   expect(gp.connector.count).toHaveBeenCalledTimes(1);
+    //   expect(gp.connector.count).toHaveBeenLastCalledWith(
+    //     gp.getNode('Article'),
+    //     { where: expect.any(NodeFilter) },
+    //     expect.any(OperationContext),
+    //   );
+    // });
   });
 });

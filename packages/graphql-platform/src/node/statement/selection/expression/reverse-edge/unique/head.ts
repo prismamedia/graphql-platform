@@ -1,6 +1,6 @@
 import * as utils from '@prismamedia/graphql-platform-utils';
 import * as graphql from 'graphql';
-import assert from 'node:assert/strict';
+import assert from 'node:assert';
 import { ReverseEdgeDependencyGraph } from '../../../../../change/dependency.js';
 import type { UniqueReverseEdge } from '../../../../../definition.js';
 import type { OperationContext } from '../../../../../operation.js';
@@ -28,7 +28,7 @@ export class UniqueReverseEdgeHeadSelection<
     this.name = reverseEdge.name;
     this.key = this.alias ?? this.name;
 
-    assert.equal(reverseEdge.head, headSelection.node);
+    assert.strictEqual(reverseEdge.head, headSelection.node);
   }
 
   public get hasVirtualSelection(): boolean {

@@ -1,7 +1,7 @@
 import * as core from '@prismamedia/graphql-platform';
 import * as utils from '@prismamedia/graphql-platform-utils';
 import { Memoize } from '@prismamedia/memoize';
-import assert from 'node:assert/strict';
+import assert from 'node:assert';
 import type { MariaDBConnector } from '../../../index.js';
 import type { Column, Schema, Table } from '../../../schema.js';
 import { ensureIdentifierName } from '../../naming-strategy.js';

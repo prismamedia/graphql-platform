@@ -1,4 +1,5 @@
-import { beforeAll, beforeEach, describe, expect, it } from '@jest/globals';
+import assert from 'node:assert';
+import { beforeEach, describe, it } from 'node:test';
 import {
   MyContext,
   MyGP,
@@ -7,8 +8,9 @@ import {
   nodes,
 } from '../../../__tests__/config.js';
 import {
-  clearAllConnectorMocks,
+  clearConnectorMockCalls,
   mockConnector,
+  type MockedConnector,
 } from '../../../__tests__/connector-mock.js';
 import {
   GraphQLPlatform,
@@ -19,68 +21,74 @@ import { UnauthorizedError } from '../error.js';
 import { CountQueryArgs } from './count.js';
 
 describe('CountQuery', () => {
-  let gp: MyGP;
+  const gp: MyGP<MockedConnector> = new GraphQLPlatform({
+    nodes,
+    connector: mockConnector({ count: async () => 5 }),
+  });
 
-  beforeAll(() => {
-    gp = new GraphQLPlatform({
-      nodes,
-      connector: mockConnector({ count: async () => 5 }),
+  beforeEach(() => clearConnectorMockCalls(gp.connector));
+
+  describe('Fails', () => {
+    (
+      [[myVisitorContext, undefined]] satisfies ReadonlyArray<
+        [MyContext, CountQueryArgs]
+      >
+    ).forEach(([context, args]) => {
+      it('throws an UnauthorizedError', async () => {
+        await assert.rejects(
+          () => gp.api.Article.count(context, args),
+          UnauthorizedError,
+        );
+
+        assert.strictEqual(gp.connector.count.mock.callCount(), 0);
+      });
     });
   });
 
-  describe.skip('Definition', () => {});
+  describe('Works', () => {
+    (
+      [[myAdminContext, { where: null }]] satisfies ReadonlyArray<
+        [MyContext, CountQueryArgs]
+      >
+    ).forEach(([context, args]) => {
+      it('does no call the connector when it is not needed', async () => {
+        assert.strictEqual(await gp.api.Article.count(context, args), 0);
 
-  describe('Runtime', () => {
-    beforeEach(() => clearAllConnectorMocks(gp.connector));
-
-    describe('Fails', () => {
-      it.each<[MyContext, CountQueryArgs]>([[myVisitorContext, undefined]])(
-        'throws an UnauthorizedError',
-        async (context, args) => {
-          await expect(gp.api.Article.count(context, args)).rejects.toThrow(
-            UnauthorizedError,
-          );
-
-          expect(gp.connector.count).toHaveBeenCalledTimes(0);
-        },
-      );
+        assert.strictEqual(gp.connector.count.mock.callCount(), 0);
+      });
     });
 
-    describe('Works', () => {
-      it.each<[MyContext, CountQueryArgs]>([[myAdminContext, { where: null }]])(
-        'does no call the connector when it is not needed',
-        async (context, args) => {
-          await expect(gp.api.Article.count(context, args)).resolves.toEqual(0);
+    it('calls the connector properly', async () => {
+      assert.strictEqual(await gp.api.Article.count(myAdminContext, {}), 5);
 
-          expect(gp.connector.count).toHaveBeenCalledTimes(0);
-        },
+      assert.strictEqual(gp.connector.count.mock.callCount(), 1);
+      assert.strictEqual(gp.connector.count.mock.calls[0].arguments.length, 2);
+
+      const [context, { node, filter }] =
+        gp.connector.count.mock.calls[0].arguments;
+
+      assert(context instanceof OperationContext);
+      assert.strictEqual(node, gp.getNodeByName('Article'));
+      assert.strictEqual(filter, undefined);
+    });
+
+    it('calls the connector properly', async () => {
+      assert.strictEqual(
+        await gp.api.Article.count(myAdminContext, {
+          where: { tagCount_gt: 0 },
+        }),
+        5,
       );
 
-      it('calls the connector properly', async () => {
-        await expect(gp.api.Article.count(myAdminContext, {})).resolves.toEqual(
-          5,
-        );
+      assert.strictEqual(gp.connector.count.mock.callCount(), 1);
+      assert.strictEqual(gp.connector.count.mock.calls[0].arguments.length, 2);
 
-        expect(gp.connector.count).toHaveBeenCalledTimes(1);
-        expect(gp.connector.count).toHaveBeenLastCalledWith(
-          expect.any(OperationContext),
-          { node: gp.getNodeByName('Article') },
-        );
-      });
+      const [context, { node, filter }] =
+        gp.connector.count.mock.calls[0].arguments;
 
-      it('calls the connector properly', async () => {
-        await expect(
-          gp.api.Article.count(myAdminContext, {
-            where: { tagCount_gt: 0 },
-          }),
-        ).resolves.toEqual(5);
-
-        expect(gp.connector.count).toHaveBeenCalledTimes(1);
-        expect(gp.connector.count).toHaveBeenLastCalledWith(
-          expect.any(OperationContext),
-          { node: gp.getNodeByName('Article'), filter: expect.any(NodeFilter) },
-        );
-      });
+      assert(context instanceof OperationContext);
+      assert.strictEqual(node, gp.getNodeByName('Article'));
+      assert(filter instanceof NodeFilter);
     });
   });
 });

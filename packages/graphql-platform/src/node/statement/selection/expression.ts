@@ -1,5 +1,5 @@
 import * as utils from '@prismamedia/graphql-platform-utils';
-import assert from 'node:assert/strict';
+import assert from 'node:assert';
 import {
   isComponentSelection,
   type ComponentSelection,

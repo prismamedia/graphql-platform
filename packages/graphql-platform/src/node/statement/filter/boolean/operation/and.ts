@@ -1,6 +1,6 @@
 import Denque from 'denque';
 import * as graphql from 'graphql';
-import assert from 'node:assert/strict';
+import assert from 'node:assert';
 import type {
   NodeSelectedValue,
   UniqueConstraint,
@@ -230,7 +230,7 @@ export class AndOperation extends AbstractBooleanFilter {
     );
   }
 
-  public get dependency(): ReadonlyArray<Dependency | undefined> {
+  public get dependency(): Array<Dependency | undefined> {
     return this.operands.flatMap(({ dependency }) => dependency);
   }
 

@@ -1,7 +1,7 @@
 import * as utils from '@prismamedia/graphql-platform-utils';
 import { Memoize } from '@prismamedia/memoize';
 import * as graphql from 'graphql';
-import assert from 'node:assert/strict';
+import assert from 'node:assert';
 import * as R from 'remeda';
 import type { Merge } from 'type-fest';
 import type { BrokerInterface } from '../broker-interface.js';

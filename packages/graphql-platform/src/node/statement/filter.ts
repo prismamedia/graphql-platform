@@ -1,6 +1,6 @@
 import { Memoize } from '@prismamedia/memoize';
 import * as graphql from 'graphql';
-import assert from 'node:assert/strict';
+import assert from 'node:assert';
 import type { Node, UniqueConstraint } from '../../node.js';
 import {
   DependencyGraph,
@@ -53,7 +53,7 @@ export class NodeFilter {
                   ? rawOther
                   : this.node.filterInputType.parseAndFilter(rawOther);
 
-              assert.equal(other.node, this.node);
+              assert.strictEqual(other.node, this.node);
 
               return other.filter;
             }),
@@ -76,7 +76,7 @@ export class NodeFilter {
                   ? rawOther
                   : this.node.filterInputType.parseAndFilter(rawOther);
 
-              assert.equal(other.node, this.node);
+              assert.strictEqual(other.node, this.node);
 
               return other.filter;
             }),
@@ -118,7 +118,7 @@ export class NodeFilter {
     const result = this.filter.execute(value);
 
     if (partial === false) {
-      assert.notEqual(
+      assert.notStrictEqual(
         result,
         undefined,
         'The filter is not applicable to this value',
@@ -132,7 +132,7 @@ export class NodeFilter {
    * Is the provided unique-constraint's value enough to execute this filter?
    */
   public isExecutableWithinUniqueConstraint(unique: UniqueConstraint): boolean {
-    assert.equal(unique.node, this.node);
+    assert.strictEqual(unique.node, this.node);
 
     return this.filter.isExecutableWithinUniqueConstraint(unique);
   }
@@ -153,7 +153,7 @@ export class NodeFilter {
   }
 
   public isChangeFilteredOut(change: NodeChange): boolean {
-    assert.equal(change.node, this.node);
+    assert.strictEqual(change.node, this.node);
 
     return change instanceof NodeCreation
       ? this.isCreationFilteredOut(change)

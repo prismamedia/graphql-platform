@@ -3,7 +3,7 @@ import {
   type Path,
   pathToArray,
 } from 'graphql/jsutils/Path.js';
-import assert from 'node:assert/strict';
+import assert from 'node:assert';
 import type { InputType } from './input/type.js';
 import { isPlainObject } from './plain-object.js';
 
@@ -27,7 +27,7 @@ export const prependPath = (key: string | number, next?: Path): Path =>
   );
 
 export function isPathDescendantOf(path: Path, maybeAncestor: Path): boolean {
-  assert.notEqual(
+  assert.notStrictEqual(
     path,
     maybeAncestor,
     `Expects the "path" to be different of the "maybeAncestor"`,
@@ -55,7 +55,7 @@ export function isPathEqualOrDescendantOf(
 }
 
 export function isPathAncestorOf(path: Path, maybeDescendant: Path): boolean {
-  assert.notEqual(
+  assert.notStrictEqual(
     path,
     maybeDescendant,
     `Expects the "path" to be different of the "maybeDescendant"`,

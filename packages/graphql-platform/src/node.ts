@@ -1180,15 +1180,13 @@ export class Node<
   }
 
   @Memoize((edge: Edge) => edge)
-  public isPartiallyIdentifiableWithEdge(edge: Edge): boolean {
+  public isPartiallyIdentifiableByEdge(edge: Edge): boolean {
     this.ensureEdge(edge);
 
     return this.uniqueConstraintSet
       .values()
       .some(
-        (uniqueConstraint) =>
-          uniqueConstraint.componentSet.has(edge) &&
-          uniqueConstraint.componentSet.size > 1,
+        ({ componentSet }) => componentSet.has(edge) && componentSet.size > 1,
       );
   }
 

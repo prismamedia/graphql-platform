@@ -1,4 +1,5 @@
-import { describe, expect, it } from '@jest/globals';
+import assert from 'node:assert';
+import { describe, it } from 'node:test';
 import { AggregateGraphError, GraphError } from './error.js';
 import { addPath } from './path.js';
 
@@ -8,7 +9,7 @@ describe('Error', () => {
     const nodesConfigPath = addPath(configPath, 'nodes');
     const node2ConfigPath = addPath(nodesConfigPath, 2);
 
-    it.each<[error: Error, expectation: string]>([
+    const cases = [
       [
         new GraphError('My error', { path: configPath }),
         '/GraphQLPlatformConfig - My error',
@@ -59,10 +60,17 @@ describe('Error', () => {
         ),
         `/GraphQLPlatformConfig - 3 errors:`,
       ],
-    ])('displays useful informations', (error, expectation) => {
-      expect(() => {
-        throw error;
-      }).toThrow(expectation);
-    });
+    ] as const;
+
+    cases.forEach(([error, expectation]) =>
+      it(`displays useful informations`, () => {
+        assert.throws(
+          () => {
+            throw error;
+          },
+          { message: new RegExp(expectation) },
+        );
+      }),
+    );
   });
 });

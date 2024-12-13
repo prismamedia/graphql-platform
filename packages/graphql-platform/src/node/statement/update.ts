@@ -166,15 +166,13 @@ export class NodeUpdateStatement {
   }
 
   public get update(): NodeUpdateValue {
-    return Object.assign(
-      Object.create(null),
-      Object.fromEntries(
-        Array.from(this.updatesByComponent, ([component, update]) => [
-          component.name,
-          update,
-        ]),
-      ),
-    );
+    return this.updatesByComponent
+      .entries()
+      .reduce<NodeUpdateValue>(
+        (update, [component, componentUpdate]) =>
+          Object.assign(update, { [component.name]: componentUpdate }),
+        Object.create(null),
+      );
   }
 
   public isEmpty(): boolean {
@@ -201,14 +199,12 @@ export class NodeUpdateStatement {
   }
 
   public get target(): NodeValue {
-    return Object.assign(
+    return this.node.componentSet.values().reduce<NodeValue>(
+      (target, component) =>
+        Object.assign(target, {
+          [component.name]: this.getComponentTarget(component),
+        }),
       Object.create(null),
-      Object.fromEntries(
-        Array.from(this.node.componentSet, (component) => [
-          component.name,
-          this.getComponentTarget(component),
-        ]),
-      ),
     );
   }
 }

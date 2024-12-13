@@ -43,14 +43,16 @@ jobs:
         run: yarn prettier --check .
 
       - name: Compile the code
-        run: yarn run compile
+        run: node --run compile
 
       - name: Test
-        run: yarn run test
+        run: node --run test
         env:
           MARIADB_HOST: mariadb
           MARIADB_PORT: 3306
           MARIADB_ROOT_PASSWORD: my_root_password_for_tests
+
+          NODE_NO_WARNINGS: 1
 
       - name: Lint package.json
         run: yarn workspaces foreach --all --no-private run publint --strict

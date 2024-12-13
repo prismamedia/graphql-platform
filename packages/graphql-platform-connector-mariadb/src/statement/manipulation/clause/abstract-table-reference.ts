@@ -1,6 +1,6 @@
 import * as core from '@prismamedia/graphql-platform';
 import * as utils from '@prismamedia/graphql-platform-utils';
-import assert from 'node:assert/strict';
+import assert from 'node:assert';
 import { escapeIdentifier } from '../../../escaping.js';
 import type { Column, Table } from '../../../schema.js';
 import { orderNode } from './ordering-expression.js';
@@ -47,8 +47,8 @@ export abstract class AbstractTableReference {
     edgeOrReverseEdge: core.Edge | core.ReverseEdge,
     head: TableReference,
   ): Array<WhereCondition> {
-    assert.equal(edgeOrReverseEdge.tail, this.table.node);
-    assert.equal(edgeOrReverseEdge.head, head.table.node);
+    assert.strictEqual(edgeOrReverseEdge.tail, this.table.node);
+    assert.strictEqual(edgeOrReverseEdge.head, head.table.node);
 
     return edgeOrReverseEdge instanceof core.Edge
       ? this.table
@@ -66,7 +66,7 @@ export abstract class AbstractTableReference {
       edgeOrUniqueReverseEdge instanceof core.Edge ||
         edgeOrUniqueReverseEdge instanceof core.UniqueReverseEdge,
     );
-    assert.equal(edgeOrUniqueReverseEdge.tail, this.table.node);
+    assert.strictEqual(edgeOrUniqueReverseEdge.tail, this.table.node);
 
     const joinTable = new JoinTable(this, edgeOrUniqueReverseEdge);
 
@@ -93,7 +93,7 @@ export abstract class AbstractTableReference {
     offset?: number | null,
     limit?: number | null,
   ): string {
-    assert.equal(edgeOrReverseEdge.tail, this.table.node);
+    assert.strictEqual(edgeOrReverseEdge.tail, this.table.node);
 
     const headAuthorization = this.context.getAuthorization(
       edgeOrReverseEdge.head,

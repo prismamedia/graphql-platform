@@ -1,12 +1,4 @@
 import {
-  afterEach,
-  beforeAll,
-  beforeEach,
-  describe,
-  expect,
-  it,
-} from '@jest/globals';
-import {
   ChangesSubscriptionDeletion,
   type ChangesSubscriptionChange,
   type ChangesSubscriptionStream,
@@ -17,13 +9,15 @@ import {
   myAdminContext,
 } from '@prismamedia/graphql-platform/__tests__/config.js';
 import * as fixtures from '@prismamedia/graphql-platform/__tests__/fixture.js';
+import assert from 'node:assert';
+import { afterEach, before, beforeEach, describe, it } from 'node:test';
 import { createMyGP, type MyGP } from './__tests__/config.js';
 
 describe('Subscription', () => {
   let gp: MyGP<InMemoryBroker>;
   let subscription: ChangesSubscriptionStream;
 
-  beforeAll(() => {
+  before(() => {
     gp = createMyGP(`connector_mariadb_subscription`);
   });
 
@@ -75,7 +69,7 @@ describe('Subscription', () => {
   });
 
   it('has a dependency-graph', () => {
-    expect(subscription.dependencyGraph.summary.toJSON()).toEqual({
+    assert.deepEqual(subscription.dependencyGraph.summary.toJSON(), {
       componentsByNode: {
         Article: ['status', 'title', 'category'],
         Category: ['order'],
@@ -87,18 +81,28 @@ describe('Subscription', () => {
     });
   });
 
-  it('is iterable', async () => {
+  it('is iterable through "Array.fromAsync"', async () => {
+    assert.deepEqual(
+      await Array.fromAsync(subscription, (change) =>
+        change instanceof ChangesSubscriptionDeletion ? 'deletion' : 'upsert',
+      ),
+      ['upsert', 'upsert', 'upsert', 'deletion'],
+    );
+  });
+
+  it('is iterable through "for await"', async () => {
     const changes: ChangesSubscriptionChange[] = [];
 
     for await (const change of subscription) {
       changes.push(change);
     }
 
-    expect(
+    assert.deepEqual(
       changes.map((change) =>
         change instanceof ChangesSubscriptionDeletion ? 'deletion' : 'upsert',
       ),
-    ).toEqual(['upsert', 'upsert', 'upsert', 'deletion']);
+      ['upsert', 'upsert', 'upsert', 'deletion'],
+    );
   });
 
   it('is forEach-able', async () => {
@@ -106,11 +110,12 @@ describe('Subscription', () => {
 
     await subscription.forEach((change) => changes.push(change));
 
-    expect(
+    assert.deepEqual(
       changes.map((change) =>
         change instanceof ChangesSubscriptionDeletion ? 'deletion' : 'upsert',
       ),
-    ).toEqual(['upsert', 'upsert', 'upsert', 'deletion']);
+      ['upsert', 'upsert', 'upsert', 'deletion'],
+    );
   });
 
   it('is byBatch-able', async () => {
@@ -120,10 +125,11 @@ describe('Subscription', () => {
       batchSize: 2,
     });
 
-    expect(
+    assert.deepEqual(
       changes.map((change) =>
         change instanceof ChangesSubscriptionDeletion ? 'deletion' : 'upsert',
       ),
-    ).toEqual(['upsert', 'upsert', 'upsert', 'deletion']);
+      ['upsert', 'upsert', 'upsert', 'deletion'],
+    );
   });
 });

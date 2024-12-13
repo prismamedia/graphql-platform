@@ -1,0 +1,23 @@
+exports[`NodeOrderingInputType > Definition > Article has an ordering input type 1`] = `
+"\\"\\"\\"Order the \\"Article\\" nodes\\"\\"\\"\\nenum ArticleOrderingInput {\\n  \\"\\"\\"from the lowest \\"createdAt\\" to the highest\\"\\"\\"\\n  createdAt_ASC\\n\\n  \\"\\"\\"from the highest \\"createdAt\\" to the lowest\\"\\"\\"\\n  createdAt_DESC\\n\\n  \\"\\"\\"from the lowest \\"updatedAt\\" to the highest\\"\\"\\"\\n  updatedAt_ASC\\n\\n  \\"\\"\\"from the highest \\"updatedAt\\" to the lowest\\"\\"\\"\\n  updatedAt_DESC\\n\\n  \\"\\"\\"from the lowest \\"views\\" to the highest\\"\\"\\"\\n  views_ASC\\n\\n  \\"\\"\\"from the highest \\"views\\" to the lowest\\"\\"\\"\\n  views_DESC\\n\\n  \\"\\"\\"from the lowest \\"score\\" to the highest\\"\\"\\"\\n  score_ASC\\n\\n  \\"\\"\\"from the highest \\"score\\" to the lowest\\"\\"\\"\\n  score_DESC\\n\\n  \\"\\"\\"from the lowest number of \\"tags\\" to the highest\\"\\"\\"\\n  tagCount_ASC\\n\\n  \\"\\"\\"from the highest number of \\"tags\\" to the lowest\\"\\"\\"\\n  tagCount_DESC\\n}"
+`;
+
+exports[`NodeOrderingInputType > Definition > ArticleTag has an ordering input type 1`] = `
+"\\"\\"\\"Order the \\"ArticleTag\\" nodes\\"\\"\\"\\nenum ArticleTagOrderingInput {\\n  \\"\\"\\"from the lowest \\"order\\" to the highest\\"\\"\\"\\n  order_ASC\\n\\n  \\"\\"\\"from the highest \\"order\\" to the lowest\\"\\"\\"\\n  order_DESC\\n\\n  \\"\\"\\"from the lowest number of \\"moderations\\" to the highest\\"\\"\\"\\n  moderationCount_ASC\\n\\n  \\"\\"\\"from the highest number of \\"moderations\\" to the lowest\\"\\"\\"\\n  moderationCount_DESC\\n}"
+`;
+
+exports[`NodeOrderingInputType > Definition > Category has an ordering input type 1`] = `
+"\\"\\"\\"Order the \\"Category\\" nodes\\"\\"\\"\\nenum CategoryOrderingInput {\\n  \\"\\"\\"from the lowest \\"order\\" to the highest\\"\\"\\"\\n  order_ASC\\n\\n  \\"\\"\\"from the highest \\"order\\" to the lowest\\"\\"\\"\\n  order_DESC\\n\\n  \\"\\"\\"from the lowest number of \\"children\\" to the highest\\"\\"\\"\\n  childCount_ASC\\n\\n  \\"\\"\\"from the highest number of \\"children\\" to the lowest\\"\\"\\"\\n  childCount_DESC\\n\\n  \\"\\"\\"from the lowest number of \\"articles\\" to the highest\\"\\"\\"\\n  articleCount_ASC\\n\\n  \\"\\"\\"from the highest number of \\"articles\\" to the lowest\\"\\"\\"\\n  articleCount_DESC\\n}"
+`;
+
+exports[`NodeOrderingInputType > Definition > Tag has an ordering input type 1`] = `
+"\\"\\"\\"Order the \\"Tag\\" nodes\\"\\"\\"\\nenum TagOrderingInput {\\n  \\"\\"\\"from the lowest \\"createdAt\\" to the highest\\"\\"\\"\\n  createdAt_ASC\\n\\n  \\"\\"\\"from the highest \\"createdAt\\" to the lowest\\"\\"\\"\\n  createdAt_DESC\\n\\n  \\"\\"\\"from the lowest \\"updatedAt\\" to the highest\\"\\"\\"\\n  updatedAt_ASC\\n\\n  \\"\\"\\"from the highest \\"updatedAt\\" to the lowest\\"\\"\\"\\n  updatedAt_DESC\\n\\n  \\"\\"\\"from the lowest number of \\"articles\\" to the highest\\"\\"\\"\\n  articleCount_ASC\\n\\n  \\"\\"\\"from the highest number of \\"articles\\" to the lowest\\"\\"\\"\\n  articleCount_DESC\\n}"
+`;
+
+exports[`NodeOrderingInputType > Definition > User has an ordering input type 1`] = `
+"\\"\\"\\"Order the \\"User\\" nodes\\"\\"\\"\\nenum UserOrderingInput {\\n  \\"\\"\\"from the lowest number of \\"createdArticles\\" to the highest\\"\\"\\"\\n  createdArticleCount_ASC\\n\\n  \\"\\"\\"from the highest number of \\"createdArticles\\" to the lowest\\"\\"\\"\\n  createdArticleCount_DESC\\n\\n  \\"\\"\\"from the lowest number of \\"updatedArticles\\" to the highest\\"\\"\\"\\n  updatedArticleCount_ASC\\n\\n  \\"\\"\\"from the highest number of \\"updatedArticles\\" to the lowest\\"\\"\\"\\n  updatedArticleCount_DESC\\n\\n  \\"\\"\\"from the lowest number of \\"articleTagModerations\\" to the highest\\"\\"\\"\\n  articleTagModerationCount_ASC\\n\\n  \\"\\"\\"from the highest number of \\"articleTagModerations\\" to the lowest\\"\\"\\"\\n  articleTagModerationCount_DESC\\n}"
+`;
+
+exports[`NodeOrderingInputType > Definition > UserProfile has an ordering input type 1`] = `
+"\\"\\"\\"Order the \\"UserProfile\\" nodes\\"\\"\\"\\nenum UserProfileOrderingInput {\\n  \\"\\"\\"from the lowest \\"birthday\\" to the highest\\"\\"\\"\\n  birthday_ASC\\n\\n  \\"\\"\\"from the highest \\"birthday\\" to the lowest\\"\\"\\"\\n  birthday_DESC\\n}"
+`;

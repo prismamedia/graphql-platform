@@ -1,6 +1,6 @@
 import { Memoize } from '@prismamedia/memoize';
 import * as graphql from 'graphql';
-import assert from 'node:assert/strict';
+import assert from 'node:assert';
 import type { NodeSelectedValue } from '../../../../../../../node.js';
 import { ReverseEdgeDependencyGraph } from '../../../../../../change/dependency.js';
 import type { UniqueReverseEdge } from '../../../../../../definition.js';
@@ -18,7 +18,7 @@ export class UniqueReverseEdgeExistsFilter extends AbstractReverseEdgeFilter {
     headFilter?: NodeFilter,
   ): BooleanFilter {
     if (headFilter) {
-      assert.equal(reverseEdge.head, headFilter.node);
+      assert.strictEqual(reverseEdge.head, headFilter.node);
 
       if (!headFilter.normalized) {
         return UniqueReverseEdgeExistsFilter.create(reverseEdge);

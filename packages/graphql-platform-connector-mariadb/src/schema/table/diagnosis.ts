@@ -1,5 +1,5 @@
 import * as utils from '@prismamedia/graphql-platform-utils';
-import assert from 'node:assert/strict';
+import assert from 'node:assert';
 import { inspect } from 'node:util';
 import * as R from 'remeda';
 import {
@@ -150,8 +150,8 @@ export class TableDiagnosis {
   ) {
     // table
     {
-      assert.equal(informations.table.TABLE_SCHEMA, table.schema.name);
-      assert.equal(informations.table.TABLE_NAME, table.name);
+      assert.strictEqual(informations.table.TABLE_SCHEMA, table.schema.name);
+      assert.strictEqual(informations.table.TABLE_NAME, table.name);
 
       if (
         utils.getOptionalFlag(options?.comment, true) &&

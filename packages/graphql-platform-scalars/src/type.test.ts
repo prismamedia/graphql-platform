@@ -1,32 +1,33 @@
-import { describe, expect, it } from '@jest/globals';
-import * as graphql from 'graphql';
+import assert from 'node:assert';
+import { describe, it } from 'node:test';
 import { types } from './type.js';
 
 describe('Type', () => {
-  it.each(
-    types.flatMap((scalarType): [graphql.GraphQLScalarType, any][] => [
-      [scalarType, undefined],
-      [scalarType, null],
-    ]),
-  )('throws an Error on %s.parseValue(%s)', (scalarType, value) => {
-    expect(() => scalarType.parseValue(value)).toThrow();
-  });
+  types.forEach((scalarType) => {
+    describe(scalarType.name, () => {
+      it(`parseValue(undefined) throws an error`, () => {
+        assert.throws(() => scalarType.parseValue(undefined));
+      });
 
-  it.each(
-    types.flatMap((scalarType): [graphql.GraphQLScalarType, any][] => [
-      [scalarType, undefined],
-      [scalarType, null],
-    ]),
-  )('throws an Error on %s.parseLiteral(%s)', (scalarType, value) => {
-    expect(() => scalarType.parseLiteral(value)).toThrow();
-  });
+      it(`parseValue(null) throws an error`, () => {
+        assert.throws(() => scalarType.parseValue(null));
+      });
 
-  it.each(
-    types.flatMap((scalarType): [graphql.GraphQLScalarType, any][] => [
-      [scalarType, undefined],
-      [scalarType, null],
-    ]),
-  )('throws an Error on %s.serialize(%s)', (scalarType, value) => {
-    expect(() => scalarType.serialize(value)).toThrow();
+      it(`parseLiteral(undefined) throws an error`, () => {
+        assert.throws(() => scalarType.parseLiteral(undefined as any));
+      });
+
+      it(`parseLiteral(null) throws an error`, () => {
+        assert.throws(() => scalarType.parseLiteral(null as any));
+      });
+
+      it(`serialize(undefined) throws an error`, () => {
+        assert.throws(() => scalarType.serialize(undefined as any));
+      });
+
+      it(`serialize(null) throws an error`, () => {
+        assert.throws(() => scalarType.serialize(null as any));
+      });
+    });
   });
 });

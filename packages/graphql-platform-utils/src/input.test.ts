@@ -1,15 +1,16 @@
-import { describe, expect, it } from '@jest/globals';
 import * as graphql from 'graphql';
+import assert from 'node:assert';
+import { describe, it } from 'node:test';
 import {
   EnumInputType,
   EnumInputValue,
   Input,
-  InputConfig,
   ListableInputType,
   NonNullableInputType,
   NonOptionalInputType,
   ObjectInputType,
   nonNillableInputType,
+  type InputConfig,
 } from './input.js';
 import type { Nillable } from './nil.js';
 import { addPath } from './path.js';
@@ -17,172 +18,192 @@ import { addPath } from './path.js';
 describe('Input', () => {
   const testPath = addPath(undefined, 'test');
 
-  it.each<[config: InputConfig, error: string]>([
-    [
+  it('cannot have an invalid defaultValue', () => {
+    const cases: { config: InputConfig; error: string }[] = [
       {
-        name: 'InputWithInvalidStaticDefaultValue',
-        type: graphql.GraphQLInt,
-        defaultValue: 'a string',
-      },
-      `/InputWithInvalidStaticDefaultValue/defaultValue - Expects to be valid against the type "Int", got: 'a string'`,
-    ],
-    [
-      {
-        name: 'InputWithInvalidThunkedDefaultValue',
-        type: graphql.GraphQLInt,
-        defaultValue: () => 'a string',
-      },
-      `/InputWithInvalidThunkedDefaultValue/defaultValue - Expects to be valid against the type "Int", got: 'a string'`,
-    ],
-    [
-      {
-        name: 'InputWithCustomValidationAndInvalidThunkedDefaultValue',
-        type: graphql.GraphQLInt,
-        parser: (value) => {
-          if (value < 18) {
-            throw new Error('Must be greater than 18');
-          }
-
-          return value;
+        config: {
+          name: 'InputWithInvalidStaticDefaultValue',
+          type: graphql.GraphQLInt,
+          defaultValue: 'a string',
         },
-        defaultValue: () => 16,
+        error: `/InputWithInvalidStaticDefaultValue/defaultValue - Expects to be valid against the type "Int", got: 'a string'`,
       },
-      `/InputWithCustomValidationAndInvalidThunkedDefaultValue/defaultValue - Expects to be valid against the type "Int" and the custom-parser, got: 16`,
-    ],
-  ])('cannot have an invalid defaultValue', (config, error) => {
-    expect(() => new Input(config)).toThrow(error);
+      {
+        config: {
+          name: 'InputWithInvalidThunkedDefaultValue',
+          type: graphql.GraphQLInt,
+          defaultValue: () => 'a string',
+        },
+        error: `/InputWithInvalidThunkedDefaultValue/defaultValue - Expects to be valid against the type "Int", got: 'a string'`,
+      },
+      {
+        config: {
+          name: 'InputWithCustomValidationAndInvalidThunkedDefaultValue',
+          type: graphql.GraphQLInt,
+          parser: (value) => {
+            if (value < 18) {
+              throw new Error('Must be greater than 18');
+            }
+            return value;
+          },
+          defaultValue: () => 16,
+        },
+        error: `/InputWithCustomValidationAndInvalidThunkedDefaultValue/defaultValue - Expects to be valid against the type "Int" and the custom-parser, got: 16`,
+      },
+    ] as const;
+
+    cases.forEach(({ config, error }) => {
+      assert.throws(() => new Input(config), { message: error });
+    });
   });
 
-  it.each<
-    [
-      input: Input,
-      required: boolean,
-      success?: [input: any, result?: any][],
-      errors?: [input: any, error: any][],
-    ]
-  >([
-    [
-      new Input({ name: 'integer', type: graphql.GraphQLInt }),
-      false,
-      [
-        [undefined, undefined],
-        [null, null],
-        [10, 10],
-      ],
-      [
-        [{}, 'Expects an "Int", got: {}'],
-        [true, 'Expects an "Int", got: true'],
-        ['0', 'Expects an "Int", got: \'0\''],
-      ],
-    ],
-    [
-      new Input({ name: 'string', type: graphql.GraphQLString }),
-      false,
-      [
-        [undefined, undefined],
-        [null, null],
-        ['my string', 'my string'],
-      ],
-      [
-        [{}, 'Expects a "String", got: {}'],
-        [true, 'Expects a "String", got: true'],
-        [0, 'Expects a "String", got: 0'],
-      ],
-    ],
-    [
-      new Input({
-        name: 'nonNillableString',
-        type: nonNillableInputType(graphql.GraphQLString),
-      }),
-      true,
-      undefined,
-      [
-        [undefined, 'Expects a non-undefined "String"'],
-        [null, 'Expects a non-null "String"'],
-      ],
-    ],
-    [
-      new Input({
-        name: 'nonNillableStringWithDefaultValue',
-        type: nonNillableInputType(graphql.GraphQLString),
-        defaultValue: 'My default value',
-      }),
-      false,
-      [[undefined, 'My default value']],
-      [[null, 'Expects a non-null "String"']],
-    ],
-    [
-      new Input({
-        name: 'nonNullableString',
-        type: new NonNullableInputType(graphql.GraphQLString),
-      }),
-      false,
-      [
-        [undefined, undefined],
-        ['my string', 'my string'],
-      ],
-      [[null, 'Expects a non-null "String"']],
-    ],
-    [
-      new Input({
-        name: 'nonOptionalString',
-        type: new NonOptionalInputType(graphql.GraphQLString),
-      }),
-      true,
-      [
-        [null, null],
-        ['my string', 'my string'],
-      ],
-      [[undefined, 'Expects a non-undefined "String"']],
-    ],
-    [
-      new Input({
-        name: 'nonOptionalObject',
+  it('works with various input configurations', () => {
+    const cases: {
+      input: Input;
+      required: boolean;
+      success: any[];
+      errors: [input: any, error: string][];
+    }[] = [
+      {
+        input: new Input({ name: 'integer', type: graphql.GraphQLInt }),
+        required: false,
+        success: [
+          [undefined, undefined],
+          [null, null],
+          [10, 10],
+        ],
+        errors: [
+          [{}, '/integer - Expects an "Int", got: {}'],
+          [true, '/integer - Expects an "Int", got: true'],
+          ['0', '/integer - Expects an "Int", got: \'0\''],
+        ],
+      },
+      {
+        input: new Input({ name: 'string', type: graphql.GraphQLString }),
+        required: false,
+        success: [
+          [undefined, undefined],
+          [null, null],
+          ['my string', 'my string'],
+        ],
+        errors: [
+          [{}, '/string - Expects a "String", got: {}'],
+          [true, '/string - Expects a "String", got: true'],
+          [0, '/string - Expects a "String", got: 0'],
+        ],
+      },
+      {
+        input: new Input({
+          name: 'nonNillableString',
+          type: nonNillableInputType(graphql.GraphQLString),
+        }),
+        required: true,
+        success: [['a string', 'a string']],
+        errors: [
+          [
+            undefined,
+            '/nonNillableString - Expects a non-undefined "String", got: undefined',
+          ],
+          [null, '/nonNillableString - Expects a non-null "String", got: null'],
+        ],
+      },
+      {
+        input: new Input({
+          name: 'nonNillableStringWithDefaultValue',
+          type: nonNillableInputType(graphql.GraphQLString),
+          defaultValue: 'My default value',
+        }),
+        required: false,
+        success: [[undefined, 'My default value']],
+        errors: [
+          [
+            null,
+            '/nonNillableStringWithDefaultValue - Expects a non-null "String", got: null',
+          ],
+        ],
+      },
+      {
+        input: new Input({
+          name: 'nonNullableString',
+          type: new NonNullableInputType(graphql.GraphQLString),
+        }),
+        required: false,
+        success: [
+          [undefined, undefined],
+          ['my string', 'my string'],
+        ],
+        errors: [
+          [null, '/nonNullableString - Expects a non-null "String", got: null'],
+        ],
+      },
+      {
+        input: new Input({
+          name: 'nonOptionalString',
+          type: new NonOptionalInputType(graphql.GraphQLString),
+        }),
+        required: true,
+        success: [
+          [null, null],
+          ['my string', 'my string'],
+        ],
+        errors: [
+          [
+            undefined,
+            '/nonOptionalString - Expects a non-undefined "String", got: undefined',
+          ],
+        ],
+      },
+      {
+        input: new Input({
+          name: 'nonOptionalObject',
+          type: new NonOptionalInputType(
+            new ObjectInputType({
+              name: 'MyObject',
+              fields: () => [
+                new Input({
+                  name: 'username',
+                  type: graphql.GraphQLString,
+                }),
+              ],
+            }),
+          ),
+        }),
+        required: true,
+        success: [
+          [null, null],
+          [{}, {}],
+          [{ username: undefined }, {}],
+          [{ username: null }, { username: null }],
+          [{ username: 'yvann' }, { username: 'yvann' }],
+        ],
+        errors: [
+          [
+            undefined,
+            '/nonOptionalObject - Expects a non-undefined "MyObject", got: undefined',
+          ],
+        ],
+      },
+    ] as const;
 
-        type: new NonOptionalInputType(
-          new ObjectInputType({
-            name: 'MyObject',
-            fields: () => [
-              new Input({
-                name: 'username',
-                type: graphql.GraphQLString,
-              }),
-            ],
-          }),
-        ),
-      }),
-      true,
-      [
-        [null, null],
-        [{}, {}],
-        [{ username: undefined }, {}],
-        [{ username: null }, { username: null }],
-        [{ username: 'yvann' }, { username: 'yvann' }],
-      ],
-      [[undefined, 'Expects a non-undefined "MyObject"']],
-    ],
-  ])('"%s" works', (input, required, success = [], errors = []) => {
-    expect(input.isRequired()).toBe(required);
+    cases.forEach(({ input, required, success = [], errors = [] }) => {
+      assert.strictEqual(input.isRequired(), required);
 
-    if (input.isPublic()) {
-      expect(input.getGraphQLConfig()).toBeDefined();
-    }
+      if (input.isPublic()) {
+        assert(input.getGraphQLConfig());
+      }
 
-    success.forEach(([value, result]) =>
-      expect(input.parseValue(value)).toEqual(result),
-    );
+      success.forEach(([value, result]) =>
+        assert.deepEqual(input.parseValue(value), result),
+      );
 
-    errors.forEach(([value, error]) =>
-      expect(() => input.parseValue(value)).toThrow(error),
-    );
-
-    expect(input.getGraphQLConfig()).toMatchSnapshot(input.name);
+      errors.forEach(([value, error]) =>
+        assert.throws(() => input.parseValue(value), { message: error }),
+      );
+    });
   });
 
-  it('throws an Error on invalid value', () => {
-    let objectInputType: ObjectInputType;
-
-    objectInputType = new ObjectInputType({
+  it('throws an error on invalid value', () => {
+    let objectInputType: ObjectInputType = new ObjectInputType({
       name: 'User',
       fields: () => [
         new Input({
@@ -200,7 +221,6 @@ describe('Input', () => {
             if (value < 18) {
               throw new Error('Must be greater than 18');
             }
-
             return value;
           },
         }),
@@ -257,43 +277,44 @@ describe('Input', () => {
       ],
     };
 
-    expect(objectInputType.validate()).toBeUndefined();
+    assert.strictEqual(objectInputType.validate(), undefined);
 
-    expect(() => objectInputType.parseValue(invalidObject, testPath))
-      .toThrowErrorMatchingInlineSnapshot(`
-      "/test - 2 errors:
+    assert.throws(() => objectInputType.parseValue(invalidObject, testPath), {
+      message: `/test - 2 errors:
+└ ./firstname - Expects a non-undefined "String", got: undefined
+└ ./friends - 3 errors:
+  └ ./0/friends - Expects a non-null "[User!]", got: null
+  └ ./1 - 2 errors:
+    └ ./firstname - Expects a non-undefined "String", got: undefined
+    └ ./age - Must be greater than 18
+  └ ./2/friends - 4 errors:
+    └ ./0/friends - Expects a non-null "[User!]", got: null
+    └ ./1/friends - Expects a plain-object, got: 5
+    └ ./2 - Expects a non-null "User", got: null
+    └ ./3 - 2 errors:
       └ ./firstname - Expects a non-undefined "String", got: undefined
-      └ ./friends - 3 errors:
-        └ ./0/friends - Expects a non-null "[User!]", got: null
-        └ ./1 - 2 errors:
-          └ ./firstname - Expects a non-undefined "String", got: undefined
-          └ ./age - Must be greater than 18
-        └ ./2/friends - 4 errors:
-          └ ./0/friends - Expects a non-null "[User!]", got: null
-          └ ./1/friends - Expects a plain-object, got: 5
-          └ ./2 - Expects a non-null "User", got: null
-          └ ./3 - 2 errors:
-            └ ./firstname - Expects a non-undefined "String", got: undefined
-            └ ./age - Must be greater than 18"
-    `);
+      └ ./age - Must be greater than 18`,
+    });
 
-    expect(() =>
-      objectInputType.parseValue(invalidObject, addPath(testPath, 'MyUser')),
-    ).toThrowErrorMatchingInlineSnapshot(`
-      "/test/MyUser - 2 errors:
+    assert.throws(
+      () =>
+        objectInputType.parseValue(invalidObject, addPath(testPath, 'MyUser')),
+      {
+        message: `/test/MyUser - 2 errors:
+└ ./firstname - Expects a non-undefined "String", got: undefined
+└ ./friends - 3 errors:
+  └ ./0/friends - Expects a non-null "[User!]", got: null
+  └ ./1 - 2 errors:
+    └ ./firstname - Expects a non-undefined "String", got: undefined
+    └ ./age - Must be greater than 18
+  └ ./2/friends - 4 errors:
+    └ ./0/friends - Expects a non-null "[User!]", got: null
+    └ ./1/friends - Expects a plain-object, got: 5
+    └ ./2 - Expects a non-null "User", got: null
+    └ ./3 - 2 errors:
       └ ./firstname - Expects a non-undefined "String", got: undefined
-      └ ./friends - 3 errors:
-        └ ./0/friends - Expects a non-null "[User!]", got: null
-        └ ./1 - 2 errors:
-          └ ./firstname - Expects a non-undefined "String", got: undefined
-          └ ./age - Must be greater than 18
-        └ ./2/friends - 4 errors:
-          └ ./0/friends - Expects a non-null "[User!]", got: null
-          └ ./1/friends - Expects a plain-object, got: 5
-          └ ./2 - Expects a non-null "User", got: null
-          └ ./3 - 2 errors:
-            └ ./firstname - Expects a non-undefined "String", got: undefined
-            └ ./age - Must be greater than 18"
-    `);
+      └ ./age - Must be greater than 18`,
+      },
+    );
   });
 });

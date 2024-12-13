@@ -1,4 +1,5 @@
-import { describe, expect, it } from '@jest/globals';
+import assert from 'node:assert';
+import { describe, it } from 'node:test';
 import {
   addPath,
   getRelativePath,
@@ -13,74 +14,87 @@ describe('Path', () => {
   const secondLevel = addPath(addPath(firstLevel, 0), 'SecondLevel');
   const thirdLevel = addPath(addPath(secondLevel, 5), 'ThirdLevel');
 
-  it.each([
-    [firstLevel, root],
+  it('checks if a path is a descendant of another', () => {
+    const cases = [
+      [firstLevel, root],
+      [secondLevel, firstLevel],
+      [secondLevel, root],
+      [thirdLevel, secondLevel],
+      [thirdLevel, firstLevel],
+      [thirdLevel, root],
+    ] as const;
 
-    [secondLevel, firstLevel],
-    [secondLevel, root],
+    cases.forEach(([a, b]) => {
+      assert.strictEqual(isPathDescendantOf(a, b), true);
+    });
+  });
 
-    [thirdLevel, secondLevel],
-    [thirdLevel, firstLevel],
-    [thirdLevel, root],
-  ])('.isPathDescendantOf()', (a, b) =>
-    expect(isPathDescendantOf(a, b)).toBeTruthy(),
-  );
-
-  it.each([
-    [firstLevel, root, addPath(undefined, 'FirstLevel')],
-
-    [secondLevel, firstLevel, addPath(addPath(undefined, 0), 'SecondLevel')],
-    [
-      secondLevel,
-      root,
-      addPath(addPath(addPath(undefined, 'FirstLevel'), 0), 'SecondLevel'),
-    ],
-
-    [thirdLevel, secondLevel, addPath(addPath(undefined, 5), 'ThirdLevel')],
-    [
-      thirdLevel,
-      firstLevel,
-      addPath(
-        addPath(addPath(addPath(undefined, 0), 'SecondLevel'), 5),
-        'ThirdLevel',
-      ),
-    ],
-    [
-      thirdLevel,
-      root,
-      addPath(
+  it('gets the relative path', () => {
+    const cases = [
+      [firstLevel, root, addPath(undefined, 'FirstLevel')],
+      [secondLevel, firstLevel, addPath(addPath(undefined, 0), 'SecondLevel')],
+      [
+        secondLevel,
+        root,
+        addPath(addPath(addPath(undefined, 'FirstLevel'), 0), 'SecondLevel'),
+      ],
+      [thirdLevel, secondLevel, addPath(addPath(undefined, 5), 'ThirdLevel')],
+      [
+        thirdLevel,
+        firstLevel,
         addPath(
-          addPath(addPath(addPath(undefined, 'FirstLevel'), 0), 'SecondLevel'),
-          5,
+          addPath(addPath(addPath(undefined, 0), 'SecondLevel'), 5),
+          'ThirdLevel',
         ),
-        'ThirdLevel',
-      ),
-    ],
-  ])('.getRelativePath()', (path, ancestor, expected) =>
-    expect(getRelativePath(path, ancestor)).toEqual(expected),
-  );
+      ],
+      [
+        thirdLevel,
+        root,
+        addPath(
+          addPath(
+            addPath(
+              addPath(addPath(undefined, 'FirstLevel'), 0),
+              'SecondLevel',
+            ),
+            5,
+          ),
+          'ThirdLevel',
+        ),
+      ],
+    ] as const;
 
-  it.each([
-    [firstLevel, undefined, '/Root/FirstLevel'],
-    [firstLevel, root, './FirstLevel'],
+    cases.forEach(([path, ancestor, expected]) => {
+      assert.deepStrictEqual(getRelativePath(path, ancestor), expected);
+    });
+  });
 
-    [secondLevel, undefined, '/Root/FirstLevel/0/SecondLevel'],
-    [secondLevel, firstLevel, './0/SecondLevel'],
-    [secondLevel, root, './FirstLevel/0/SecondLevel'],
+  it('prints the path', () => {
+    const cases = [
+      [firstLevel, undefined, '/Root/FirstLevel'],
+      [firstLevel, root, './FirstLevel'],
+      [secondLevel, undefined, '/Root/FirstLevel/0/SecondLevel'],
+      [secondLevel, firstLevel, './0/SecondLevel'],
+      [secondLevel, root, './FirstLevel/0/SecondLevel'],
+      [thirdLevel, undefined, '/Root/FirstLevel/0/SecondLevel/5/ThirdLevel'],
+      [thirdLevel, secondLevel, './5/ThirdLevel'],
+      [thirdLevel, firstLevel, './0/SecondLevel/5/ThirdLevel'],
+      [thirdLevel, root, './FirstLevel/0/SecondLevel/5/ThirdLevel'],
+    ] as const;
 
-    [thirdLevel, undefined, '/Root/FirstLevel/0/SecondLevel/5/ThirdLevel'],
-    [thirdLevel, secondLevel, './5/ThirdLevel'],
-    [thirdLevel, firstLevel, './0/SecondLevel/5/ThirdLevel'],
-    [thirdLevel, root, './FirstLevel/0/SecondLevel/5/ThirdLevel'],
-  ])('.printPath()', (path, ancestor, expected) =>
-    expect(printPath(path, ancestor)).toBe(expected),
-  );
+    cases.forEach(([path, ancestor, expected]) => {
+      assert.strictEqual(printPath(path, ancestor), expected);
+    });
+  });
 
-  it.each([
-    [root, '/BEFORE/Root'],
-    [firstLevel, '/BEFORE/Root/FirstLevel'],
-    [undefined, '/BEFORE'],
-  ])('.prependPath()', (path, expected) =>
-    expect(printPath(prependPath('BEFORE', path))).toBe(expected),
-  );
+  it('prepends a path', () => {
+    const cases = [
+      [root, '/BEFORE/Root'],
+      [firstLevel, '/BEFORE/Root/FirstLevel'],
+      [undefined, '/BEFORE'],
+    ] as const;
+
+    cases.forEach(([path, expected]) => {
+      assert.strictEqual(printPath(prependPath('BEFORE', path)), expected);
+    });
+  });
 });

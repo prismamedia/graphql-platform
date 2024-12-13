@@ -1,40 +1,51 @@
-import { describe, expect, it } from '@jest/globals';
 import * as graphql from 'graphql';
+import assert from 'node:assert';
+import { describe, it } from 'node:test';
 import { createGraphQLEnumType, parseGraphQLLeafValue } from './graphql.js';
 
 describe('GraphQL', () => {
-  it.each([
-    [graphql.GraphQLBoolean, undefined],
-    [graphql.GraphQLBoolean, null],
-    [graphql.GraphQLBoolean, true],
-    [graphql.GraphQLString, 'A string'],
-    [
-      new graphql.GraphQLEnumType({
-        name: 'AnEnumTest',
-        values: { first: { value: 'FIRST' }, two: { value: 'TWO' } },
-      }),
-      'TWO',
-    ],
-  ])('%p.parseValue(%p) = %p', (type, value) => {
-    expect(parseGraphQLLeafValue(type, value)).toEqual(value);
+  it('parses valid values', () => {
+    const cases = [
+      [graphql.GraphQLBoolean, undefined],
+      [graphql.GraphQLBoolean, null],
+      [graphql.GraphQLBoolean, true],
+      [graphql.GraphQLString, 'A string'],
+      [
+        new graphql.GraphQLEnumType({
+          name: 'AnEnumTest',
+          values: { first: { value: 'FIRST' }, two: { value: 'TWO' } },
+        }),
+        'TWO',
+      ],
+    ] as const;
+
+    cases.forEach(([type, value]) => {
+      assert.strictEqual(parseGraphQLLeafValue(type, value), value);
+    });
   });
 
-  it.each([
-    [
-      graphql.GraphQLBoolean,
-      'A string',
-      'Expects a "Boolean", got: \'A string\'',
-    ],
-    [
-      new graphql.GraphQLEnumType({
-        name: 'MyEnum',
-        values: { first: { value: 'FIRST' }, two: { value: 'TWO' } },
-      }),
-      'THIRD',
-      'Expects a "MyEnum" (= a value among "FIRST, TWO"), got: \'THIRD\'',
-    ],
-  ])('%p.parseValue(%p) throws an Error', (type, value, error) => {
-    expect(() => parseGraphQLLeafValue(type, value)).toThrow(error);
+  it('throws error for invalid values', () => {
+    const cases = [
+      [
+        graphql.GraphQLBoolean,
+        'A string',
+        'Expects a "Boolean", got: \'A string\'',
+      ],
+      [
+        new graphql.GraphQLEnumType({
+          name: 'MyEnum',
+          values: { first: { value: 'FIRST' }, two: { value: 'TWO' } },
+        }),
+        'THIRD',
+        'Expects a "MyEnum" (= a value among "FIRST, TWO"), got: \'THIRD\'',
+      ],
+    ] as const;
+
+    cases.forEach(([type, value, error]) => {
+      assert.throws(() => parseGraphQLLeafValue(type, value), {
+        message: error,
+      });
+    });
   });
 
   it('creates GraphQLEnumType from numeric enum', () => {
@@ -48,22 +59,19 @@ describe('GraphQL', () => {
       description: 'My numeric enum',
     });
 
-    expect(graphql.printType(type)).toMatchInlineSnapshot(`
-      """"My numeric enum"""
-      enum MyNumericEnum {
-        ONE
-        TWO
-        THREE
-      }"
-    `);
+    assert.strictEqual(
+      graphql.printType(type),
+      '"""My numeric enum"""\nenum MyNumericEnum {\n  ONE\n  TWO\n  THREE\n}',
+    );
 
-    expect(
+    assert.deepStrictEqual(
       type.getValues().map(({ name, value }) => ({ name, value })),
-    ).toEqual([
-      { name: 'ONE', value: 0 },
-      { name: 'TWO', value: 1 },
-      { name: 'THREE', value: 2 },
-    ]);
+      [
+        { name: 'ONE', value: 0 },
+        { name: 'TWO', value: 1 },
+        { name: 'THREE', value: 2 },
+      ],
+    );
   });
 
   it('creates GraphQLEnumType from string enum', () => {
@@ -75,21 +83,19 @@ describe('GraphQL', () => {
 
     const type = createGraphQLEnumType('MyStringEnum', MyStringEnum);
 
-    expect(graphql.printType(type)).toMatchInlineSnapshot(`
-      "enum MyStringEnum {
-        ONE
-        TWO
-        THREE
-      }"
-    `);
+    assert.match(
+      graphql.printType(type),
+      /enum MyStringEnum {\n  ONE\n  TWO\n  THREE\n}/,
+    );
 
-    expect(
+    assert.deepStrictEqual(
       type.getValues().map(({ name, value }) => ({ name, value })),
-    ).toEqual([
-      { name: 'ONE', value: 'one' },
-      { name: 'TWO', value: 'two' },
-      { name: 'THREE', value: 'three' },
-    ]);
+      [
+        { name: 'ONE', value: 'one' },
+        { name: 'TWO', value: 'two' },
+        { name: 'THREE', value: 'three' },
+      ],
+    );
   });
 
   it('creates GraphQLEnumType from mixed enum', () => {
@@ -101,20 +107,18 @@ describe('GraphQL', () => {
 
     const type = createGraphQLEnumType('MyMixedEnum', MyMixedEnum);
 
-    expect(graphql.printType(type)).toMatchInlineSnapshot(`
-      "enum MyMixedEnum {
-        ONE
-        TWO
-        THREE
-      }"
-    `);
+    assert.match(
+      graphql.printType(type),
+      /enum MyMixedEnum {\n  ONE\n  TWO\n  THREE\n}/,
+    );
 
-    expect(
+    assert.deepStrictEqual(
       type.getValues().map(({ name, value }) => ({ name, value })),
-    ).toEqual([
-      { name: 'ONE', value: 0 },
-      { name: 'TWO', value: 'two' },
-      { name: 'THREE', value: 2 },
-    ]);
+      [
+        { name: 'ONE', value: 0 },
+        { name: 'TWO', value: 'two' },
+        { name: 'THREE', value: 2 },
+      ],
+    );
   });
 });

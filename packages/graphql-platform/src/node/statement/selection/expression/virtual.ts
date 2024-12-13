@@ -1,6 +1,6 @@
 import * as utils from '@prismamedia/graphql-platform-utils';
 import * as graphql from 'graphql';
-import assert from 'node:assert/strict';
+import assert from 'node:assert';
 import { isDeepStrictEqual } from 'node:util';
 import type { NodeSelectedValue, NodeSelection } from '../../../../node.js';
 import type { OperationContext } from '../../../operation.js';
@@ -55,8 +55,8 @@ export class VirtualSelection<
 
   public isSupersetOf(expression: unknown): boolean {
     if (this.isAkinTo(expression)) {
-      assert.equal(expression.info, undefined, 'Not implemented yet');
-      assert.equal(this.info, undefined, 'Not implemented yet');
+      assert.strictEqual(expression.info, undefined, 'Not implemented yet');
+      assert.strictEqual(this.info, undefined, 'Not implemented yet');
 
       return true;
     }
@@ -67,7 +67,7 @@ export class VirtualSelection<
   public mergeWith(expression: VirtualSelection, _path?: utils.Path): this {
     assert(this.isAkinTo(expression));
 
-    assert.deepEqual(
+    assert.deepStrictEqual(
       expression.info,
       this.info,
       `Cannot merge two different selection-sets, yet`,

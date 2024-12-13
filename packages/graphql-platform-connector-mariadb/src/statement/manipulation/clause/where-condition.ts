@@ -1,7 +1,7 @@
 import * as core from '@prismamedia/graphql-platform';
 import * as scalars from '@prismamedia/graphql-platform-scalars';
 import * as utils from '@prismamedia/graphql-platform-utils';
-import assert from 'node:assert/strict';
+import assert from 'node:assert';
 import { escapeStringValue } from '../../../escaping.js';
 import { LeafColumn, type ReferenceColumnTree } from '../../../schema.js';
 import type { TableReference } from './table-reference.js';
@@ -334,8 +334,8 @@ export function filterNode(
   referenceColumnTree?: ReferenceColumnTree,
 ): WhereCondition {
   referenceColumnTree
-    ? assert.equal(referenceColumnTree.currentEdge.head, nodeFilter.node)
-    : assert.equal(tableReference.table.node, nodeFilter.node);
+    ? assert.strictEqual(referenceColumnTree.currentEdge.head, nodeFilter.node)
+    : assert.strictEqual(tableReference.table.node, nodeFilter.node);
 
   return parseBooleanFilter(
     tableReference,

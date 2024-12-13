@@ -1,6 +1,6 @@
 import * as utils from '@prismamedia/graphql-platform-utils';
 import * as graphql from 'graphql';
-import assert from 'node:assert/strict';
+import assert from 'node:assert';
 import type { Component, Leaf, LeafValue } from '../../../../definition.js';
 import type { OperationContext } from '../../../../operation.js';
 import type { SelectionExpressionInterface } from '../../expression-interface.js';

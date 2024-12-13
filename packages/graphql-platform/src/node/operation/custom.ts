@@ -1,5 +1,5 @@
 import type * as graphql from 'graphql';
-import assert from 'node:assert/strict';
+import assert from 'node:assert';
 import type { Constructor } from 'type-fest';
 import type { BrokerInterface } from '../../broker-interface.js';
 import type { ConnectorInterface } from '../../connector-interface.js';
@@ -52,14 +52,14 @@ export function constructCustomOperation<
   node: Node<TRequestContext, TConnector, TBroker, TContainer>,
   operationType?: graphql.OperationTypeNode,
 ): Operation {
-  assert.equal(typeof constructor, 'function');
+  assert.strictEqual(typeof constructor, 'function');
 
   const operation: Operation =
     constructor.prototype instanceof AbstractOperation
       ? new (constructor as any)(node)
       : (constructor as any)(node);
 
-  !operationType || assert.equal(operation.operationType, operationType);
+  !operationType || assert.strictEqual(operation.operationType, operationType);
 
   return operation;
 }

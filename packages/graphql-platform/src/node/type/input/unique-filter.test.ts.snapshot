@@ -1,0 +1,55 @@
+exports[`NodeUniqueFilterInputType > Definition > Article has a unique filter input type 1`] = `
+"\\"\\"\\"\\nIdentifies exactly one \\"Article\\" by \\"id\\" or \\"category-slug\\"\\n\\"\\"\\"\\ninput ArticleUniqueFilterInput {\\n  \\"\\"\\"This UUID identifies an Article publicly\\"\\"\\"\\n  id: UUIDv4\\n  category: CategoryUniqueFilterInput\\n  slug: Slug\\n}"
+`;
+
+exports[`NodeUniqueFilterInputType > Definition > Article has a unique filter input type 2`] = `
+"\\"\\"\\"\\nGiven a \\"category\\", identifies exactly one \\"Article\\" by \\"slug\\"\\n\\"\\"\\"\\ninput ArticleUniqueFilterWithoutCategoryInput {\\n  slug: Slug!\\n}"
+`;
+
+exports[`NodeUniqueFilterInputType > Definition > ArticleExtension has a unique filter input type 1`] = `
+"\\"\\"\\"\\nIdentifies exactly one \\"ArticleExtension\\" by \\"article\\"\\n\\"\\"\\"\\ninput ArticleExtensionUniqueFilterInput {\\n  article: ArticleUniqueFilterInput!\\n}"
+`;
+
+exports[`NodeUniqueFilterInputType > Definition > ArticleTag has a unique filter input type 1`] = `
+"\\"\\"\\"\\nIdentifies exactly one \\"ArticleTag\\" by \\"article-tag\\" or \\"article-order\\"\\n\\"\\"\\"\\ninput ArticleTagUniqueFilterInput {\\n  article: ArticleUniqueFilterInput!\\n  tag: TagUniqueFilterInput\\n  order: UnsignedInt\\n}"
+`;
+
+exports[`NodeUniqueFilterInputType > Definition > ArticleTag has a unique filter input type 2`] = `
+"\\"\\"\\"\\nGiven an \\"article\\", identifies exactly one \\"ArticleTag\\" by \\"tag\\" or \\"order\\"\\n\\"\\"\\"\\ninput ArticleTagUniqueFilterWithoutArticleInput {\\n  tag: TagUniqueFilterInput\\n  order: UnsignedInt\\n}"
+`;
+
+exports[`NodeUniqueFilterInputType > Definition > ArticleTag has a unique filter input type 3`] = `
+"\\"\\"\\"\\nGiven a \\"tag\\", identifies exactly one \\"ArticleTag\\" by \\"article\\"\\n\\"\\"\\"\\ninput ArticleTagUniqueFilterWithoutTagInput {\\n  article: ArticleUniqueFilterInput!\\n}"
+`;
+
+exports[`NodeUniqueFilterInputType > Definition > ArticleTagModeration has a unique filter input type 1`] = `
+"\\"\\"\\"\\nIdentifies exactly one \\"ArticleTagModeration\\" by \\"articleTag-moderator\\"\\n\\"\\"\\"\\ninput ArticleTagModerationUniqueFilterInput {\\n  articleTag: ArticleTagUniqueFilterInput!\\n  moderator: UserUniqueFilterInput!\\n}"
+`;
+
+exports[`NodeUniqueFilterInputType > Definition > ArticleTagModeration has a unique filter input type 2`] = `
+"\\"\\"\\"\\nGiven an \\"articleTag\\", identifies exactly one \\"ArticleTagModeration\\" by \\"moderator\\"\\n\\"\\"\\"\\ninput ArticleTagModerationUniqueFilterWithoutArticleTagInput {\\n  moderator: UserUniqueFilterInput!\\n}"
+`;
+
+exports[`NodeUniqueFilterInputType > Definition > ArticleTagModeration has a unique filter input type 3`] = `
+"\\"\\"\\"\\nGiven a \\"moderator\\", identifies exactly one \\"ArticleTagModeration\\" by \\"articleTag\\"\\n\\"\\"\\"\\ninput ArticleTagModerationUniqueFilterWithoutModeratorInput {\\n  articleTag: ArticleTagUniqueFilterInput!\\n}"
+`;
+
+exports[`NodeUniqueFilterInputType > Definition > Category has a unique filter input type 1`] = `
+"\\"\\"\\"\\nIdentifies exactly one \\"Category\\" by \\"id\\", \\"parent-slug\\" or \\"parent-order\\"\\n\\"\\"\\"\\ninput CategoryUniqueFilterInput {\\n  id: UUIDv4\\n  parent: CategoryUniqueFilterInput\\n  slug: NonEmptyTrimmedString\\n  order: UnsignedInt\\n}"
+`;
+
+exports[`NodeUniqueFilterInputType > Definition > Category has a unique filter input type 2`] = `
+"\\"\\"\\"\\nGiven a \\"parent\\", identifies exactly one \\"Category\\" by \\"slug\\" or \\"order\\"\\n\\"\\"\\"\\ninput CategoryUniqueFilterWithoutParentInput {\\n  slug: NonEmptyTrimmedString\\n  order: UnsignedInt\\n}"
+`;
+
+exports[`NodeUniqueFilterInputType > Definition > Tag has a unique filter input type 1`] = `
+"\\"\\"\\"\\nIdentifies exactly one \\"Tag\\" by \\"id\\" or \\"slug\\"\\n\\"\\"\\"\\ninput TagUniqueFilterInput {\\n  id: UUIDv4\\n  slug: NonEmptyTrimmedString\\n}"
+`;
+
+exports[`NodeUniqueFilterInputType > Definition > User has a unique filter input type 1`] = `
+"\\"\\"\\"\\nIdentifies exactly one \\"User\\" by \\"id\\" or \\"username\\"\\n\\"\\"\\"\\ninput UserUniqueFilterInput {\\n  id: UUIDv4\\n  username: NonEmptyTrimmedString\\n}"
+`;
+
+exports[`NodeUniqueFilterInputType > Definition > UserProfile has a unique filter input type 1`] = `
+"\\"\\"\\"\\nIdentifies exactly one \\"UserProfile\\" by \\"user\\"\\n\\"\\"\\"\\ninput UserProfileUniqueFilterInput {\\n  user: UserUniqueFilterInput!\\n}"
+`;

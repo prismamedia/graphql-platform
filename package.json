@@ -14,12 +14,11 @@
   "scripts": {
     "format": "prettier --cache --write .",
     "compile": "tsc --build",
-    "compile:watch": "yarn run compile --watch",
-    "test": "node --no-warnings --experimental-vm-modules $(yarn bin jest) --detectOpenHandles",
-    "test:watch": "yarn run test --watchAll"
+    "compile:watch": "tsc --build --watch",
+    "test": "yarn workspaces foreach --all --no-private --parallel run test",
+    "test:update": "yarn workspaces foreach --all --no-private --parallel run test:update"
   },
   "devDependencies": {
-    "jest": "30.0.0-alpha.6",
     "prettier": "3.4.2",
     "typescript": "5.7.2"
   },

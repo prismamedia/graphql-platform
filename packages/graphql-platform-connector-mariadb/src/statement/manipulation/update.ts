@@ -1,7 +1,7 @@
 import * as core from '@prismamedia/graphql-platform';
 import * as utils from '@prismamedia/graphql-platform-utils';
 import type * as mariadb from 'mariadb';
-import assert from 'node:assert/strict';
+import assert from 'node:assert';
 import { EOL } from 'node:os';
 import type { SetOptional } from 'type-fest';
 import type { Table } from '../../schema.js';
