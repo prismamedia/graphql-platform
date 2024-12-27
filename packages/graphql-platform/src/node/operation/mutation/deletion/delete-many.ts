@@ -14,8 +14,6 @@ import { NodeFilter, type NodeSelectedValue } from '../../../statement.js';
 import type { NodeFilterInputValue, OrderByInputValue } from '../../../type.js';
 import {
   ConnectorOperationKind,
-  LifecycleHookError,
-  LifecycleHookKind,
   catchConnectorOperationError,
 } from '../../error.js';
 import { AbstractDeletion } from '../abstract-deletion.js';
@@ -140,22 +138,17 @@ export class DeleteManyMutation<
       this.node.mainIdentifier.selection.pickValue(oldValue),
     );
 
-    // Apply the "preDelete"-hook, if any
-    if (this.node.preDeleteHooksByPriority.size) {
+    // Apply the "preDelete"-hooks, if any
+    if (this.node.hasPreDeleteHooks) {
       for (const [index, oldValue] of oldValues.entries()) {
-        try {
-          await this.node.preDelete({
+        await this.node.preDelete(
+          {
             context,
             id: ids[index],
             current: this.node.selection.pickValue(oldValue),
-          });
-        } catch (cause) {
-          throw new LifecycleHookError(
-            this.node,
-            LifecycleHookKind.PRE_DELETE,
-            { cause, path },
-          );
-        }
+          },
+          path,
+        );
       }
     }
 
@@ -247,15 +240,8 @@ export class DeleteManyMutation<
       // Let's everybody know about this deleted node
       context.changes.add(change);
 
-      // Apply the "postDelete"-hook, if any
-      try {
-        await this.node.postDelete({ context, change });
-      } catch (cause) {
-        throw new LifecycleHookError(this.node, LifecycleHookKind.POST_DELETE, {
-          cause,
-          path,
-        });
-      }
+      // Apply the "postDelete"-hooks, if any
+      await this.node.postDelete({ context, change }, path);
     }
 
     return oldValues.map((oldValue) => args.selection.pickValue(oldValue));

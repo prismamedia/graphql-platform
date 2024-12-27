@@ -1,7 +1,7 @@
 import * as utils from '@prismamedia/graphql-platform-utils';
 import { inspect } from 'node:util';
 import type { Except, Promisable } from 'type-fest';
-import type { Node, UniqueConstraint } from '../../node.js';
+import type { Node, NodeFeature, UniqueConstraint } from '../../node.js';
 import type { NodeUniqueFilterInputValue } from '../type/input/unique-filter.js';
 
 export enum OperationErrorCode {
@@ -111,12 +111,12 @@ export enum LifecycleHookKind {
 
 export class LifecycleHookError extends AbstractOperationError {
   public constructor(
-    node: Node,
+    nodeOrFeature: Node | NodeFeature,
     kind: LifecycleHookKind,
     options?: OperationErrorOptions,
   ) {
     super(
-      `The "${node}"'s "${LifecycleHookKind[kind]}" lifecycle-hook failed`,
+      `The "${nodeOrFeature}"'s "${LifecycleHookKind[kind]}" lifecycle-hook failed`,
       {
         ...options,
         code: OperationErrorCode.LIFECYCLE_HOOK_ERROR,

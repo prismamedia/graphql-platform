@@ -19,7 +19,10 @@ export type NodeFeatureConfig<
   TBroker extends BrokerInterface = any,
   TContainer extends object = any,
 > = {
-  name?: string;
+  /**
+   * Optional, identifies the feature in case of errors
+   */
+  name?: utils.Name;
 
   /**
    * Optional, define the priority of this feature, against the others features and the main configuration (having the priority 0)
@@ -70,6 +73,8 @@ export class NodeFeature<
   TBroker extends BrokerInterface = any,
   TContainer extends object = any,
 > {
+  public readonly name?: utils.Name;
+
   public readonly configPath: utils.Path;
 
   public readonly priority: number;
@@ -86,12 +91,19 @@ export class NodeFeature<
   ) {
     utils.assertPlainObject(config, configPath);
 
-    this.configPath =
-      typeof config.name === 'string' && config.name
-        ? utils.addPath(configPath, config.name)
-        : configPath;
+    this.name = config.name
+      ? utils.ensureName(config.name, utils.addPath(configPath, 'name'))
+      : undefined;
+
+    this.configPath = this.name
+      ? utils.addPath(configPath, this.name)
+      : configPath;
 
     this.priority = config.priority ?? node.priority;
+  }
+
+  public toString(): string {
+    return `${this.node.name}.${this.name ?? 'unnamed_feature'}`;
   }
 
   @Memoize((mutationType: utils.MutationType) => mutationType)

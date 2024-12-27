@@ -26,8 +26,6 @@ import type {
 import {
   catchConnectorOperationError,
   ConnectorOperationKind,
-  LifecycleHookError,
-  LifecycleHookKind,
 } from '../../error.js';
 import { AbstractUpdate } from '../abstract-update.js';
 import type { MutationContext } from '../context.js';
@@ -159,8 +157,8 @@ export class UpdateManyMutation<
 
     const willEventuallyRefetch =
       args.selection.reverseEdges.length &&
-      // We assume that the "postUpdate"-hook can change the reverse-edges
-      (this.node.postUpdateHooksByPriority.size ||
+      // We assume that the "postUpdate"-hooks can change the reverse-edges
+      (this.node.hasPostUpdateHooks ||
         this.node.updateInputType.hasReverseEdgeActions(
           data,
           args.selection.reverseEdges,
@@ -182,9 +180,9 @@ export class UpdateManyMutation<
       const statement = new NodeUpdateStatement(this.node, oldSource, update);
 
       if (!statement.isEmpty()) {
-        // Apply the "preUpdate"-hook, if any
-        try {
-          await this.node.preUpdate({
+        // Apply the "preUpdate"-hooks, if any
+        await this.node.preUpdate(
+          {
             context,
             data,
             id: ids[index],
@@ -192,14 +190,9 @@ export class UpdateManyMutation<
             update: statement.updateProxy,
             target: statement.targetProxy,
             statement,
-          });
-        } catch (cause) {
-          throw new LifecycleHookError(
-            this.node,
-            LifecycleHookKind.PRE_UPDATE,
-            { cause, path },
-          );
-        }
+          },
+          path,
+        );
 
         if (!statement.isEmpty()) {
           // Actually update the node
@@ -276,22 +269,14 @@ export class UpdateManyMutation<
       path,
     );
 
-    // Apply the "postUpdate"-hook
-    if (this.node.postUpdateHooksByPriority.size) {
+    // Apply the "postUpdate"-hooks, if any
+    if (this.node.hasPostUpdateHooks) {
       for (const change of changes) {
-        try {
-          await this.node.postUpdate({
-            context,
-            data,
-            change,
-          });
-        } catch (cause) {
-          throw new LifecycleHookError(
-            this.node,
-            LifecycleHookKind.POST_UPDATE,
-            { cause, path },
-          );
-        }
+        await this.node.postUpdate({
+          context,
+          data,
+          change,
+        });
       }
     }
 

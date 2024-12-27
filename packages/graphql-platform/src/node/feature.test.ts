@@ -5,6 +5,66 @@ import { describe, it } from 'node:test';
 import { GraphQLPlatform, Node } from '../index.js';
 
 describe('Feature', () => {
+  it('are sorted by priority', () => {
+    const gp = new GraphQLPlatform<any>({
+      nodes: {
+        Article: {
+          features: [
+            {
+              name: 'feature1',
+              priority: -1,
+            },
+            {
+              name: 'feature2',
+              priority: 1,
+            },
+            {
+              name: 'feature3',
+              priority: 0,
+            },
+            {
+              name: 'feature4',
+              priority: 2,
+            },
+            {
+              name: 'feature5',
+              priority: -2,
+            },
+          ],
+          components: {
+            id: { type: 'UUIDv4', nullable: false, mutable: false },
+          },
+          uniques: [['id']],
+          mutation: false,
+        },
+      },
+    });
+
+    const Article = gp.getNodeByName('Article');
+
+    assert.deepStrictEqual(
+      Article.features.map(({ name }) => name),
+      ['feature4', 'feature2', 'feature3', 'Article', 'feature1', 'feature5'],
+    );
+
+    assert.deepStrictEqual(
+      Array.from(Article.featuresByPriority, ([priority, features]) => [
+        priority,
+        features.map(({ name }) => name),
+      ]),
+      [
+        [2, ['feature4']],
+        [1, ['feature2']],
+        [0, ['feature3', 'Article']],
+        [-1, ['feature1']],
+        [-2, ['feature5']],
+      ],
+    );
+
+    const feature4 = Article.features.find(({ name }) => name === 'feature4');
+    assert.strictEqual(feature4?.toString(), 'Article.feature4');
+  });
+
   it('can define components', () => {
     const gp = new GraphQLPlatform<any>({
       nodes: {

@@ -12,8 +12,6 @@ import { NodeCreationStatement } from '../../../statement.js';
 import type { NodeCreationInputValue } from '../../../type.js';
 import {
   ConnectorOperationKind,
-  LifecycleHookError,
-  LifecycleHookKind,
   catchConnectorOperationError,
 } from '../../error.js';
 import { AbstractCreation } from '../abstract-creation.js';
@@ -88,20 +86,11 @@ export class CreateSomeMutation<
       // Create a statement with it
       const statement = new NodeCreationStatement(this.node, value);
 
-      // Apply the "preCreate"-hook, if any
-      try {
-        await this.node.preCreate({
-          context,
-          data,
-          creation: statement.proxy,
-          statement,
-        });
-      } catch (cause) {
-        throw new LifecycleHookError(this.node, LifecycleHookKind.PRE_CREATE, {
-          cause,
-          path: indexedPath,
-        });
-      }
+      // Apply the "preCreate"-hooks, if any
+      await this.node.preCreate(
+        { context, data, creation: statement.proxy, statement },
+        indexedPath,
+      );
 
       creations.push(statement);
     }
@@ -136,15 +125,8 @@ export class CreateSomeMutation<
         indexedPath,
       );
 
-      // Apply the "postCreate"-hook, if any
-      try {
-        await this.node.postCreate({ context, data, change });
-      } catch (cause) {
-        throw new LifecycleHookError(this.node, LifecycleHookKind.POST_CREATE, {
-          cause,
-          path: indexedPath,
-        });
-      }
+      // Apply the "postCreate"-hooks, if any
+      await this.node.postCreate({ context, data, change }, indexedPath);
     }
 
     return args.selection.isPure()

@@ -28,7 +28,7 @@
   },
   "devDependencies": {
     "@swc-node/register": "1.10.9",
-    "@swc/core": "1.10.1",
+    "@swc/core": "1.10.2",
     "@tsconfig/node22": "22.0.0",
     "@types/node": "22.10.2",
     "graphql": "16.10.0",
@@ -38,8 +38,8 @@
   "dependencies": {
     "@prismamedia/graphql-platform-utils": "workspace:packages/graphql-platform-utils",
     "@types/draft-js": "^0.11.18",
-    "remeda": "^2.18.0",
-    "type-fest": "^4.30.2"
+    "remeda": "^2.19.0",
+    "type-fest": "^4.31.0"
   },
   "peerDependencies": {
     "graphql": "^16.10.0"

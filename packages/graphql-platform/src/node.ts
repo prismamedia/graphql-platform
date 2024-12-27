@@ -33,14 +33,14 @@ import { NodeFeature, type NodeFeatureConfig } from './node/feature.js';
 import { createNodeLoader } from './node/loader.js';
 import { assertNodeName, type NodeName } from './node/name.js';
 import {
+  LifecycleHookError,
+  LifecycleHookKind,
   constructCustomOperation,
   createContextBoundNodeAPI,
   createNodeAPI,
   operationConstructorsByType,
   type ContextBoundNodeAPI,
-  type CreationConfig,
   type CustomOperationConstructor,
-  type DeletionConfig,
   type MutationConfig,
   type NodeAPI,
   type Operation,
@@ -54,7 +54,6 @@ import {
   type PreCreateArgs,
   type PreDeleteArgs,
   type PreUpdateArgs,
-  type UpdateConfig,
 } from './node/operation.js';
 import {
   NodeSelection,
@@ -435,16 +434,9 @@ export class Node<
         ? R.sortBy([...features, this], [({ priority }) => priority, 'desc'])
         : [this];
 
-      this.featuresByPriority = new Map(
-        R.pipe(
-          this.features,
-          R.groupBy(({ priority }) => priority),
-          R.values(),
-          R.map(
-            (nodeOrFeatures) =>
-              [nodeOrFeatures[0].priority, nodeOrFeatures] as const,
-          ),
-        ),
+      this.featuresByPriority = Map.groupBy(
+        this.features,
+        ({ priority }) => priority,
       );
     }
 
@@ -808,241 +800,223 @@ export class Node<
   }
 
   @Memoize()
-  public get preCreateHooksByPriority(): ReadonlyMap<
-    number,
-    ReadonlyArray<NonNullable<CreationConfig['preCreate']>>
-  > {
-    return new Map(
-      this.featuresByPriority
-        .entries()
-        .map(
-          ([priority, nodeOrFeatures]) =>
-            [
-              priority,
-              nodeOrFeatures
-                .map(
-                  (featureOrNode) =>
-                    featureOrNode.getMutationConfig(utils.MutationType.CREATION)
-                      .config?.preCreate,
-                )
-                .filter(R.isFunction),
-            ] as const,
-        )
-        .filter(([, hooks]) => hooks.length),
+  public get hasPreCreateHooks(): boolean {
+    return this.features.some(
+      (nodeOrFeature) =>
+        nodeOrFeature.getMutationConfig(utils.MutationType.CREATION).config
+          ?.preCreate != null,
     );
   }
 
   public async preCreate(
     args: Except<PreCreateArgs<any, any, any, any>, 'gp' | 'node' | 'api'>,
+    path?: utils.Path,
   ): Promise<void> {
-    for (const [_priority, hooks] of this.preCreateHooksByPriority) {
+    for (const [_priority, nodeOrFeatures] of this.featuresByPriority) {
       await Promise.all(
-        hooks.map((hook) =>
-          hook({
-            api: args.context.api,
-            gp: this.gp,
-            node: this,
-            ...args,
-          }),
-        ),
+        nodeOrFeatures.map(async (nodeOrFeature) => {
+          try {
+            await nodeOrFeature
+              .getMutationConfig(utils.MutationType.CREATION)
+              .config?.preCreate?.({
+                api: args.context.api,
+                gp: this.gp,
+                node: this,
+                ...args,
+              });
+          } catch (cause) {
+            throw new LifecycleHookError(
+              nodeOrFeature,
+              LifecycleHookKind.PRE_CREATE,
+              { cause, path },
+            );
+          }
+        }),
       );
     }
   }
 
   @Memoize()
-  public get postCreateHooksByPriority(): ReadonlyMap<
-    number,
-    ReadonlyArray<NonNullable<CreationConfig['postCreate']>>
-  > {
-    return new Map(
-      this.featuresByPriority
-        .entries()
-        .map(
-          ([priority, nodeOrFeatures]): [number, Array<any>] =>
-            [
-              priority,
-              nodeOrFeatures
-                .map(
-                  (featureOrNode) =>
-                    featureOrNode.getMutationConfig(utils.MutationType.CREATION)
-                      .config?.postCreate,
-                )
-                .filter(R.isFunction),
-            ] as const,
-        )
-        .filter(([, hooks]) => hooks.length),
+  public get hasPostCreateHooks(): boolean {
+    return this.features.some(
+      (nodeOrFeature) =>
+        nodeOrFeature.getMutationConfig(utils.MutationType.CREATION).config
+          ?.postCreate != null,
     );
   }
 
   public async postCreate(
     args: Except<PostCreateArgs<any, any, any, any>, 'gp' | 'node' | 'api'>,
+    path?: utils.Path,
   ): Promise<void> {
-    for (const [_priority, hooks] of this.postCreateHooksByPriority) {
+    for (const [_priority, nodeOrFeatures] of this.featuresByPriority) {
       await Promise.all(
-        hooks.map((hook) =>
-          hook({
-            api: args.context.api,
-            gp: this.gp,
-            node: this,
-            ...args,
-          }),
-        ),
+        nodeOrFeatures.map(async (nodeOrFeature) => {
+          try {
+            await nodeOrFeature
+              .getMutationConfig(utils.MutationType.CREATION)
+              .config?.postCreate?.({
+                api: args.context.api,
+                gp: this.gp,
+                node: this,
+                ...args,
+              });
+          } catch (cause) {
+            throw new LifecycleHookError(
+              nodeOrFeature,
+              LifecycleHookKind.POST_CREATE,
+              { cause, path },
+            );
+          }
+        }),
       );
     }
   }
 
   @Memoize()
-  public get preUpdateHooksByPriority(): ReadonlyMap<
-    number,
-    ReadonlyArray<NonNullable<UpdateConfig['preUpdate']>>
-  > {
-    return new Map(
-      this.featuresByPriority
-        .entries()
-        .map(([priority, nodeOrFeatures]): [number, Array<any>] => [
-          priority,
-          nodeOrFeatures
-            .map(
-              (featureOrNode) =>
-                featureOrNode.getMutationConfig(utils.MutationType.UPDATE)
-                  .config?.preUpdate,
-            )
-            .filter(R.isFunction),
-        ])
-        .filter(([, hooks]) => hooks.length),
+  public get hasPreUpdateHooks(): boolean {
+    return this.features.some(
+      (nodeOrFeature) =>
+        nodeOrFeature.getMutationConfig(utils.MutationType.UPDATE).config
+          ?.preUpdate != null,
     );
   }
 
   public async preUpdate(
     args: Except<PreUpdateArgs<any, any, any, any>, 'gp' | 'node' | 'api'>,
+    path?: utils.Path,
   ): Promise<void> {
-    for (const [_priority, hooks] of this.preUpdateHooksByPriority) {
+    for (const [_priority, nodeOrFeatures] of this.featuresByPriority) {
       await Promise.all(
-        hooks.map((hook) =>
-          hook({
-            api: args.context.api,
-            gp: this.gp,
-            node: this,
-            ...args,
-          }),
-        ),
+        nodeOrFeatures.map(async (nodeOrFeature) => {
+          try {
+            await nodeOrFeature
+              .getMutationConfig(utils.MutationType.UPDATE)
+              .config?.preUpdate?.({
+                api: args.context.api,
+                gp: this.gp,
+                node: this,
+                ...args,
+              });
+          } catch (cause) {
+            throw new LifecycleHookError(
+              nodeOrFeature,
+              LifecycleHookKind.PRE_UPDATE,
+              { cause, path },
+            );
+          }
+        }),
       );
     }
   }
 
   @Memoize()
-  public get postUpdateHooksByPriority(): ReadonlyMap<
-    number,
-    ReadonlyArray<NonNullable<UpdateConfig['postUpdate']>>
-  > {
-    return new Map(
-      this.featuresByPriority
-        .entries()
-        .map(([priority, nodeOrFeatures]): [number, Array<any>] => [
-          priority,
-          nodeOrFeatures
-            .map(
-              (featureOrNode) =>
-                featureOrNode.getMutationConfig(utils.MutationType.UPDATE)
-                  .config?.postUpdate,
-            )
-            .filter(R.isFunction),
-        ])
-        .filter(([, hooks]) => hooks.length),
+  public get hasPostUpdateHooks(): boolean {
+    return this.features.some(
+      (nodeOrFeature) =>
+        nodeOrFeature.getMutationConfig(utils.MutationType.UPDATE).config
+          ?.postUpdate != null,
     );
   }
 
   public async postUpdate(
     args: Except<PostUpdateArgs<any, any, any, any>, 'gp' | 'node' | 'api'>,
+    path?: utils.Path,
   ): Promise<void> {
-    for (const [_priority, hooks] of this.postUpdateHooksByPriority) {
+    for (const [_priority, nodeOrFeatures] of this.featuresByPriority) {
       await Promise.all(
-        hooks.map((hook) =>
-          hook({
-            api: args.context.api,
-            gp: this.gp,
-            node: this,
-            ...args,
-          }),
-        ),
+        nodeOrFeatures.map(async (nodeOrFeature) => {
+          try {
+            await nodeOrFeature
+              .getMutationConfig(utils.MutationType.UPDATE)
+              .config?.postUpdate?.({
+                api: args.context.api,
+                gp: this.gp,
+                node: this,
+                ...args,
+              });
+          } catch (cause) {
+            throw new LifecycleHookError(
+              nodeOrFeature,
+              LifecycleHookKind.POST_UPDATE,
+              { cause, path },
+            );
+          }
+        }),
       );
     }
   }
 
   @Memoize()
-  public get preDeleteHooksByPriority(): ReadonlyMap<
-    number,
-    ReadonlyArray<NonNullable<DeletionConfig['preDelete']>>
-  > {
-    return new Map(
-      this.featuresByPriority
-        .entries()
-        .map(([priority, nodeOrFeatures]): [number, Array<any>] => [
-          priority,
-          nodeOrFeatures
-            .map(
-              (featureOrNode) =>
-                featureOrNode.getMutationConfig(utils.MutationType.DELETION)
-                  .config?.preDelete,
-            )
-            .filter(R.isFunction),
-        ])
-        .filter(([, hooks]) => hooks.length),
+  public get hasPreDeleteHooks(): boolean {
+    return this.features.some(
+      (nodeOrFeature) =>
+        nodeOrFeature.getMutationConfig(utils.MutationType.DELETION).config
+          ?.preDelete != null,
     );
   }
 
   public async preDelete(
     args: Except<PreDeleteArgs<any, any, any, any>, 'gp' | 'node' | 'api'>,
+    path?: utils.Path,
   ): Promise<void> {
-    for (const [_priority, hooks] of this.preDeleteHooksByPriority) {
+    for (const [_priority, nodeOrFeatures] of this.featuresByPriority) {
       await Promise.all(
-        hooks.map((hook) =>
-          hook({
-            api: args.context.api,
-            gp: this.gp,
-            node: this,
-            ...args,
-          }),
-        ),
+        nodeOrFeatures.map(async (nodeOrFeature) => {
+          try {
+            await nodeOrFeature
+              .getMutationConfig(utils.MutationType.DELETION)
+              .config?.preDelete?.({
+                api: args.context.api,
+                gp: this.gp,
+                node: this,
+                ...args,
+              });
+          } catch (cause) {
+            throw new LifecycleHookError(
+              nodeOrFeature,
+              LifecycleHookKind.PRE_DELETE,
+              { cause, path },
+            );
+          }
+        }),
       );
     }
   }
 
   @Memoize()
-  public get postDeleteHooksByPriority(): ReadonlyMap<
-    number,
-    ReadonlyArray<NonNullable<DeletionConfig['postDelete']>>
-  > {
-    return new Map(
-      this.featuresByPriority
-        .entries()
-        .map(([priority, nodeOrFeatures]): [number, Array<any>] => [
-          priority,
-          nodeOrFeatures
-            .map(
-              (featureOrNode) =>
-                featureOrNode.getMutationConfig(utils.MutationType.DELETION)
-                  .config?.postDelete,
-            )
-            .filter(R.isFunction),
-        ])
-        .filter(([, hooks]) => hooks.length),
+  public get hasPostDeleteHooks(): boolean {
+    return this.features.some(
+      (nodeOrFeature) =>
+        nodeOrFeature.getMutationConfig(utils.MutationType.DELETION).config
+          ?.postDelete != null,
     );
   }
 
   public async postDelete(
     args: Except<PostDeleteArgs<any, any, any, any>, 'gp' | 'node' | 'api'>,
+    path?: utils.Path,
   ): Promise<void> {
-    for (const [_priority, hooks] of this.postDeleteHooksByPriority) {
+    for (const [_priority, nodeOrFeatures] of this.featuresByPriority) {
       await Promise.all(
-        hooks.map((hook) =>
-          hook({
-            gp: this.gp,
-            node: this,
-            api: args.context.api,
-            ...args,
-          }),
-        ),
+        nodeOrFeatures.map(async (nodeOrFeature) => {
+          try {
+            await nodeOrFeature
+              .getMutationConfig(utils.MutationType.DELETION)
+              .config?.postDelete?.({
+                api: args.context.api,
+                gp: this.gp,
+                node: this,
+                ...args,
+              });
+          } catch (cause) {
+            throw new LifecycleHookError(
+              nodeOrFeature,
+              LifecycleHookKind.POST_DELETE,
+              { cause, path },
+            );
+          }
+        }),
       );
     }
   }
@@ -1771,13 +1745,6 @@ export class Node<
       undefined,
       { path: this.configPath },
     );
-
-    this.preCreateHooksByPriority;
-    this.postCreateHooksByPriority;
-    this.preUpdateHooksByPriority;
-    this.postUpdateHooksByPriority;
-    this.preDeleteHooksByPriority;
-    this.postDeleteHooksByPriority;
   }
 
   @Memoize()
