@@ -142,7 +142,7 @@ export class UniqueConstraint<TConnector extends ConnectorInterface = any> {
 
   @Memoize()
   public toString(): string {
-    return `${this.node.name}#${this.name}`;
+    return `${this.node.name}.${this.name}`;
   }
 
   @Memoize()

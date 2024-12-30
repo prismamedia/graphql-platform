@@ -62,7 +62,7 @@ describe('Feature', () => {
     );
 
     const feature4 = Article.features.find(({ name }) => name === 'feature4');
-    assert.strictEqual(feature4?.toString(), 'Article.feature4');
+    assert.strictEqual(feature4?.toString(), 'Article.feature.feature4');
   });
 
   it('can define components', () => {

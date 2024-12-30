@@ -102,8 +102,9 @@ export class NodeFeature<
     this.priority = config.priority ?? node.priority;
   }
 
+  @Memoize()
   public toString(): string {
-    return `${this.node.name}.${this.name ?? 'unnamed_feature'}`;
+    return `${this.node.name}.feature${this.name ? `.${this.name}` : ''}`;
   }
 
   @Memoize((mutationType: utils.MutationType) => mutationType)
