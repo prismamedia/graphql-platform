@@ -5,6 +5,7 @@ import { isIterableObject } from '../../../is-iterable-object.js';
 import { isNil, type Nillable } from '../../../nil.js';
 import { addPath, type Path } from '../../../path.js';
 import {
+  areInputValuesEqual,
   getGraphQLInputType,
   parseInputLiteral,
   parseInputValue,
@@ -68,6 +69,17 @@ export class ListableInputType extends AbstractWrappingInputType {
           { path },
         )
       : [parseInputLiteral(this.ofType, value, variableValues, path)];
+  }
+
+  public areValuesEqual(a: unknown, b: unknown): boolean {
+    return a == null || b == null
+      ? a === b
+      : Array.isArray(a) &&
+          Array.isArray(b) &&
+          a.length === b.length &&
+          a.every((value, index) =>
+            areInputValuesEqual(this.ofType, value, b[index]),
+          );
   }
 }
 

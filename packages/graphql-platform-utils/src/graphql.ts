@@ -1,4 +1,5 @@
 import * as graphql from 'graphql';
+import { isDeepStrictEqual } from 'node:util';
 import { getOptionalFlag, OptionalFlag } from './config.js';
 import { getEnumKeys } from './enum.js';
 import { UnexpectedValueError } from './error.js';
@@ -106,6 +107,19 @@ export const parseGraphQLLeafValue = (
     ? parseGraphQLScalarValue(type, maybeLeafValue, path)
     : parseGraphQLEnumValue(type, maybeLeafValue, path);
 };
+
+export const areGraphQLLeafValuesEqual = (
+  _type: graphql.GraphQLLeafType,
+  a: unknown,
+  b: unknown,
+): boolean =>
+  a == null || b == null
+    ? a === b
+    : a instanceof Date && b instanceof Date
+      ? a.getTime() === b.getTime()
+      : a instanceof URL && b instanceof URL
+        ? a.toString() === b.toString()
+        : isDeepStrictEqual(a, b);
 
 export type CreateGraphQLEnumTypeOptions = {
   description?: Nillable<string>;

@@ -1,6 +1,10 @@
 import * as graphql from 'graphql';
 import { GraphError, UnexpectedValueError } from '../../error.js';
-import { parseGraphQLEnumValue, parseGraphQLLeafValue } from '../../graphql.js';
+import {
+  areGraphQLLeafValuesEqual,
+  parseGraphQLEnumValue,
+  parseGraphQLLeafValue,
+} from '../../graphql.js';
 import { indefinite } from '../../indefinite.js';
 import type { Path } from '../../path.js';
 import type { NonNullNonVariableGraphQLValueNode } from '../type.js';
@@ -81,6 +85,18 @@ export function parseNamedInputValue(
   return graphql.isLeafType(type)
     ? parseGraphQLLeafValue(type, value, path)
     : type.parseValue(value, path);
+}
+
+export function areNamedInputValuesEqual(
+  type: NamedInputType,
+  a: unknown,
+  b: unknown,
+): boolean {
+  return a == null || b == null
+    ? a === b
+    : graphql.isLeafType(type)
+      ? areGraphQLLeafValuesEqual(type, a, b)
+      : type.areValuesEqual(a, b);
 }
 
 export function parseNamedInputLiteral(

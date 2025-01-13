@@ -1,6 +1,7 @@
 import { Memoize } from '@prismamedia/memoize';
 import * as graphql from 'graphql';
 import assert from 'node:assert';
+import { isDeepStrictEqual } from 'node:util';
 import {
   getOptionalDeprecation,
   getOptionalDescription,
@@ -338,5 +339,9 @@ export class EnumInputType<
         path,
       });
     }
+  }
+
+  public areValuesEqual(a: unknown, b: unknown): boolean {
+    return a == null || b == null ? a === b : isDeepStrictEqual(a, b);
   }
 }

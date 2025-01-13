@@ -3,6 +3,7 @@ import * as graphql from 'graphql';
 import { UnexpectedNullError } from '../../../error.js';
 import type { Path } from '../../../path.js';
 import {
+  areInputValuesEqual,
   getGraphQLInputType,
   parseInputLiteral,
   parseInputValue,
@@ -68,6 +69,12 @@ export class NonNullableInputType extends AbstractWrappingInputType {
     }
 
     return wrappedValue;
+  }
+
+  public areValuesEqual(a: unknown, b: unknown): boolean {
+    return a == null || b == null
+      ? a === b
+      : areInputValuesEqual(this.ofType, a, b);
   }
 }
 

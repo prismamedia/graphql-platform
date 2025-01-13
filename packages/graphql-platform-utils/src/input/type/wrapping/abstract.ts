@@ -19,4 +19,6 @@ export abstract class AbstractWrappingInputType {
     variableValues?: graphql.GraphQLResolveInfo['variableValues'],
     path?: Path,
   ): any;
+
+  public abstract areValuesEqual(a: unknown, b: unknown): boolean;
 }

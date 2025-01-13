@@ -2,6 +2,7 @@ import * as graphql from 'graphql';
 import { UnexpectedValueError } from '../error.js';
 import type { Path } from '../path.js';
 import {
+  areNamedInputValuesEqual,
   getGraphQLNamedInputType,
   isNamedInputType,
   isNamedInputTypePublic,
@@ -69,6 +70,16 @@ export function parseInputValue(
   return isNamedInputType(type)
     ? parseNamedInputValue(type, value, path)
     : type.parseValue(value, path);
+}
+
+export function areInputValuesEqual(
+  type: InputType,
+  a: unknown,
+  b: unknown,
+): boolean {
+  return isNamedInputType(type)
+    ? areNamedInputValuesEqual(type, a, b)
+    : type.areValuesEqual(a, b);
 }
 
 export type NonNullNonVariableGraphQLValueNode = Exclude<

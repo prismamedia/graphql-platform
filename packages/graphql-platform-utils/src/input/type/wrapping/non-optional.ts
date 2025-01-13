@@ -4,6 +4,7 @@ import { UnexpectedUndefinedError } from '../../../error.js';
 import type { Path } from '../../../path.js';
 import {
   NonNullNonVariableGraphQLValueNode,
+  areInputValuesEqual,
   getGraphQLInputType,
   parseInputLiteral,
   parseInputValue,
@@ -72,6 +73,12 @@ export class NonOptionalInputType extends AbstractWrappingInputType {
     }
 
     return wrappedValue;
+  }
+
+  public areValuesEqual(a: unknown, b: unknown): boolean {
+    return a == null || b == null
+      ? a === b
+      : areInputValuesEqual(this.ofType, a, b);
   }
 }
 

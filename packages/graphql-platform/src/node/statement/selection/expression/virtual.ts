@@ -43,7 +43,8 @@ export class VirtualSelection<
       expression instanceof VirtualSelection &&
       expression.type === this.type &&
       expression.alias === this.alias &&
-      isDeepStrictEqual(expression.args, this.args)
+      (!this.type.args?.length ||
+        utils.areInputsEqual(this.type.args, expression.args, this.args))
     );
   }
 

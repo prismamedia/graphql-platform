@@ -252,28 +252,6 @@ export class NodeUniqueFilterInputType extends utils.ObjectInputType {
     }
   }
 
-  public areValuesEqual(
-    a: NodeUniqueFilterInputValue,
-    b: NodeUniqueFilterInputValue,
-  ): boolean {
-    return a == null || b == null
-      ? a === b
-      : Object.entries(a).length === Object.entries(b).length &&
-          Object.entries(a).every(([componentName, componentValue]) => {
-            const component = this.node.getComponentByName(componentName);
-
-            return component instanceof Leaf
-              ? component.areValuesEqual(
-                  componentValue as any,
-                  b[componentName] as any,
-                )
-              : component.head.uniqueFilterInputType.areValuesEqual(
-                  componentValue as any,
-                  b[componentName] as any,
-                );
-          });
-  }
-
   public uniqValues<T extends NodeUniqueFilterInputValue>(
     values: ReadonlyArray<T>,
   ): Array<T> {

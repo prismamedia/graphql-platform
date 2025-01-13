@@ -254,6 +254,9 @@ describe('NodeUniqueFilterInputType', () => {
             const node = gp.getNodeByName(nodeName);
             const uniqueFilterInputType = node.uniqueFilterInputType;
 
+            assert.doesNotThrow(() => uniqueFilterInputType.parseValue(a));
+            assert.doesNotThrow(() => uniqueFilterInputType.parseValue(b));
+
             assert.strictEqual(
               uniqueFilterInputType.areValuesEqual(a, b),
               result,

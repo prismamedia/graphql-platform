@@ -69,4 +69,6 @@ export abstract class AbstractNamedInputType<TValue = any> {
     variableValues?: graphql.GraphQLResolveInfo['variableValues'],
     path?: Path,
   ): Nillable<TValue>;
+
+  public abstract areValuesEqual(a: unknown, b: unknown): boolean;
 }

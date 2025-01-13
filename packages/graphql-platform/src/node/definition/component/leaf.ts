@@ -88,7 +88,6 @@ export class Leaf<
   public readonly type: LeafType;
   public readonly customParser?: LeafCustomParser;
   public override readonly selection: LeafSelection;
-  readonly #comparator: (a: any, b: any) => boolean;
 
   public constructor(
     node: Node<any, TConnector>,
@@ -158,14 +157,6 @@ export class Leaf<
     // selection
     {
       this.selection = new LeafSelection(this, undefined);
-    }
-
-    // comparator
-    {
-      this.#comparator =
-        this.type instanceof graphql.GraphQLEnumType
-          ? (a: string, b: string) => a === b
-          : scalars.getComparatorByType(this.type);
     }
   }
 
@@ -297,7 +288,7 @@ export class Leaf<
   }
 
   public areValuesEqual(a: LeafValue, b: LeafValue): boolean {
-    return a === null || b === null ? a === b : this.#comparator(a, b);
+    return utils.areGraphQLLeafValuesEqual(this.type, a, b);
   }
 
   public uniqValues<T extends LeafValue>(values: ReadonlyArray<T>): Array<T> {

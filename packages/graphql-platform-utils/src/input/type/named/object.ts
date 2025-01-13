@@ -9,8 +9,15 @@ import {
 import { Input, parseInputLiterals, parseInputValues } from '../../../input.js';
 import { isNil, type Nillable } from '../../../nil.js';
 import { addPath, type Path } from '../../../path.js';
-import { assertPlainObject, type PlainObject } from '../../../plain-object.js';
-import type { NonNullNonVariableGraphQLValueNode } from '../../type.js';
+import {
+  assertPlainObject,
+  isPlainObject,
+  type PlainObject,
+} from '../../../plain-object.js';
+import {
+  areInputValuesEqual,
+  type NonNullNonVariableGraphQLValueNode,
+} from '../../type.js';
 import {
   AbstractNamedInputType,
   AbstractNamedInputTypeConfig,
@@ -198,5 +205,15 @@ export class ObjectInputType<
     throw new GraphError(`Cannot parse literal: ${graphql.print(value)}`, {
       path,
     });
+  }
+
+  public areValuesEqual(a: unknown, b: unknown): boolean {
+    return a == null || b == null
+      ? a === b
+      : isPlainObject(a) &&
+          isPlainObject(b) &&
+          this.fields.every(({ type, name }) =>
+            areInputValuesEqual(type, a[name], b[name]),
+          );
   }
 }

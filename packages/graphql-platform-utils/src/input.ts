@@ -21,6 +21,7 @@ import {
 } from './error.js';
 import { assertFunction } from './function.js';
 import {
+  areInputValuesEqual,
   ensureInputType,
   getGraphQLInputType,
   getOptionalInputType,
@@ -34,7 +35,11 @@ import {
   validateInputType,
 } from './input/type.js';
 import { addPath, type Path } from './path.js';
-import { assertNillablePlainObject, type PlainObject } from './plain-object.js';
+import {
+  assertNillablePlainObject,
+  isPlainObject,
+  type PlainObject,
+} from './plain-object.js';
 import { resolveThunkable, type Thunkable } from './thunkable.js';
 
 export * from './input/type.js';
@@ -456,4 +461,18 @@ export function parseInputLiterals(
   }
 
   return result;
+}
+
+export function areInputsEqual(
+  inputs: ReadonlyArray<Input>,
+  a: unknown,
+  b: unknown,
+): boolean {
+  return a == null || b == null
+    ? a === b
+    : isPlainObject(a) &&
+        isPlainObject(b) &&
+        inputs.every((input) =>
+          areInputValuesEqual(input.type, a[input.name], b[input.name]),
+        );
 }
