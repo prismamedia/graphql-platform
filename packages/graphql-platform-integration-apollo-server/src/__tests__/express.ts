@@ -6,7 +6,7 @@ import * as fixtures from '@prismamedia/graphql-platform/__tests__/fixture.js';
 import bodyParser from 'body-parser';
 import cors from 'cors';
 import express from 'express';
-import { useServer } from 'graphql-ws/lib/use/ws';
+import { useServer } from 'graphql-ws/use/ws';
 import { createServer } from 'node:http';
 import { WebSocketServer } from 'ws';
 import { ApolloServerIntegration } from '../index.js';
