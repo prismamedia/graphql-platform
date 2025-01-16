@@ -1,6 +1,6 @@
 services:
   mariadb:
-    image: mariadb:10.11
+    image: mariadb:11.4
     command: --skip-bind-address
     environment:
       MARIADB_ROOT_PASSWORD: my_root_password_for_local
