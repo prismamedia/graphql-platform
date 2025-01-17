@@ -49,7 +49,7 @@ export class ChangesSubscription<
   TRequestContext extends object,
 > extends AbstractSubscription<
   ChangesSubscriptionArgs,
-  Promise<ChangesSubscriptionStream<any, any, TRequestContext>>,
+  Promise<ChangesSubscriptionStream<TRequestContext>>,
   TRequestContext
 > {
   protected readonly selectionAware = true;

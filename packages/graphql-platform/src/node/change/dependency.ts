@@ -774,7 +774,34 @@ export class DependentGraph<TRequestContext extends object = any> {
   }
 
   @Memoize()
-  public get target(): NodeFilter {
+  public get graphInitiators(): ReadonlySet<TRequestContext> {
+    return new Set<TRequestContext>(
+      this.path
+        ? this.changes.values().map(({ requestContext }) => requestContext)
+        : [],
+    )
+      .union(
+        this.dependentsByEdge
+          .values()
+          .reduce(
+            (initiators, { graphInitiators }) =>
+              initiators.union(graphInitiators),
+            new Set<TRequestContext>(),
+          ),
+      )
+      .union(
+        this.dependentsByReverseEdge
+          .values()
+          .reduce(
+            (initiators, { graphInitiators }) =>
+              initiators.union(graphInitiators),
+            new Set<TRequestContext>(),
+          ),
+      );
+  }
+
+  @Memoize()
+  public get graphFilter(): NodeFilter {
     if (this.path) {
       const tail = this.path.tail;
       const head = this.path.head;
@@ -815,10 +842,10 @@ export class DependentGraph<TRequestContext extends object = any> {
                   ),
                 ...this.dependentsByEdge
                   .values()
-                  .map(({ target: { filter } }) => filter),
+                  .map(({ graphFilter: { filter } }) => filter),
                 ...this.dependentsByReverseEdge
                   .values()
-                  .map(({ target: { filter } }) => filter),
+                  .map(({ graphFilter: { filter } }) => filter),
               ]),
             ),
           ),
@@ -832,10 +859,10 @@ export class DependentGraph<TRequestContext extends object = any> {
           OrOperation.create([
             ...this.dependentsByEdge
               .values()
-              .map(({ target: { filter } }) => filter),
+              .map(({ graphFilter: { filter } }) => filter),
             ...this.dependentsByReverseEdge
               .values()
-              .map(({ target: { filter } }) => filter),
+              .map(({ graphFilter: { filter } }) => filter),
           ]),
         );
 
@@ -879,10 +906,10 @@ export class DependentGraph<TRequestContext extends object = any> {
       OrOperation.create([
         ...this.dependentsByEdge
           .values()
-          .map(({ target: { filter } }) => filter),
+          .map(({ graphFilter: { filter } }) => filter),
         ...this.dependentsByReverseEdge
           .values()
-          .map(({ target: { filter } }) => filter),
+          .map(({ graphFilter: { filter } }) => filter),
       ]),
     );
   }

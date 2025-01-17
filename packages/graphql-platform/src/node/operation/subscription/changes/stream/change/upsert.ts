@@ -3,12 +3,18 @@ import type { ChangesSubscriptionStream } from '../../stream.js';
 import { AbstractChangesSubscriptionChange } from '../abstract-change.js';
 
 export class ChangesSubscriptionUpsert<
+  TRequestContext extends object = any,
   TValue extends NodeSelectedValue = any,
-> extends AbstractChangesSubscriptionChange<TValue> {
+> extends AbstractChangesSubscriptionChange<TRequestContext> {
+  public readonly value: Readonly<TValue>;
+
   public constructor(
-    subscription: ChangesSubscriptionStream<TValue, any>,
+    subscription: ChangesSubscriptionStream<TRequestContext, TValue, any>,
+    initiators: ReadonlySet<TRequestContext> | TRequestContext,
     value: Readonly<any>,
   ) {
-    super(subscription, subscription.onUpsertSelection.pickValue(value));
+    super(subscription, initiators);
+
+    this.value = subscription.onUpsertSelection.pickValue(value);
   }
 }

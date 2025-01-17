@@ -7,6 +7,9 @@ export * from './change/deletion.js';
 export * from './change/upsert.js';
 
 export type ChangesSubscriptionChange<
+  TRequestContext extends object = any,
   TUpsert extends NodeSelectedValue = any,
   TDeletion extends NodeValue = any,
-> = ChangesSubscriptionUpsert<TUpsert> | ChangesSubscriptionDeletion<TDeletion>;
+> =
+  | ChangesSubscriptionUpsert<TRequestContext, TUpsert>
+  | ChangesSubscriptionDeletion<TRequestContext, TDeletion>;

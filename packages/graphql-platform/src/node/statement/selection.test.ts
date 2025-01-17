@@ -255,7 +255,7 @@ describe('Selection', () => {
 
           assert(!dependentGraph.isEmpty());
           assert.strictEqual(dependentGraph.changes.size, 1);
-          assert(dependentGraph.target.isFalse());
+          assert(dependentGraph.graphFilter.isFalse());
         });
 
         it('The updated "title" changes the root and the graph', () => {
@@ -284,7 +284,7 @@ describe('Selection', () => {
 
           assert(!dependentGraph.isEmpty());
           assert.strictEqual(dependentGraph.changes.size, 1);
-          assert.deepEqual(dependentGraph.target.inputValue, {
+          assert.deepEqual(dependentGraph.graphFilter.inputValue, {
             OR: [
               {
                 createdBy: {
@@ -325,7 +325,7 @@ describe('Selection', () => {
 
           assert(!dependentGraph.isEmpty());
           assert.strictEqual(dependentGraph.changes.size, 0);
-          assert.deepEqual(dependentGraph.target.inputValue, {
+          assert.deepEqual(dependentGraph.graphFilter.inputValue, {
             updatedBy: {
               username: 'yvann',
             },
@@ -354,7 +354,7 @@ describe('Selection', () => {
 
           assert(!dependentGraph.isEmpty());
           assert.strictEqual(dependentGraph.changes.size, 0);
-          assert.deepEqual(dependentGraph.target.inputValue, {
+          assert.deepEqual(dependentGraph.graphFilter.inputValue, {
             category: {
               OR: [
                 {
@@ -390,7 +390,7 @@ describe('Selection', () => {
 
           assert(!dependentGraph.isEmpty());
           assert.strictEqual(dependentGraph.changes.size, 0);
-          assert.deepEqual(dependentGraph.target.inputValue, {
+          assert.deepEqual(dependentGraph.graphFilter.inputValue, {
             category: {
               _id: 10,
             },
@@ -431,7 +431,7 @@ describe('Selection', () => {
 
           assert(!dependentGraph.isEmpty());
           assert.strictEqual(dependentGraph.changes.size, 0);
-          assert.deepEqual(dependentGraph.target.inputValue, {
+          assert.deepEqual(dependentGraph.graphFilter.inputValue, {
             OR: [
               {
                 createdBy: {
@@ -458,7 +458,7 @@ describe('Selection', () => {
 
           assert(!dependentGraph.isEmpty());
           assert.strictEqual(dependentGraph.changes.size, 0);
-          assert.deepEqual(dependentGraph.target.inputValue, {
+          assert.deepEqual(dependentGraph.graphFilter.inputValue, {
             OR: [
               {
                 createdBy: {
@@ -507,7 +507,7 @@ describe('Selection', () => {
 
           assert(!dependentGraph.isEmpty());
           assert.strictEqual(dependentGraph.changes.size, 0);
-          assert.deepEqual(dependentGraph.target.inputValue, {
+          assert.deepEqual(dependentGraph.graphFilter.inputValue, {
             OR: [
               {
                 createdBy: {
@@ -540,7 +540,7 @@ describe('Selection', () => {
 
           assert(!dependentGraph.isEmpty());
           assert.strictEqual(dependentGraph.changes.size, 0);
-          assert.deepEqual(dependentGraph.target.inputValue, {
+          assert.deepEqual(dependentGraph.graphFilter.inputValue, {
             _id: 2,
           });
         });
@@ -560,7 +560,7 @@ describe('Selection', () => {
 
           assert(!dependentGraph.isEmpty());
           assert.strictEqual(dependentGraph.changes.size, 0);
-          assert.deepEqual(dependentGraph.target.inputValue, {
+          assert.deepEqual(dependentGraph.graphFilter.inputValue, {
             _id: 3,
           });
         });
@@ -583,7 +583,7 @@ describe('Selection', () => {
 
           assert(!dependentGraph.isEmpty());
           assert.strictEqual(dependentGraph.changes.size, 0);
-          assert.deepEqual(dependentGraph.target.inputValue, {
+          assert.deepEqual(dependentGraph.graphFilter.inputValue, {
             _id: 4,
           });
         });
@@ -606,7 +606,7 @@ describe('Selection', () => {
 
           assert(!dependentGraph.isEmpty());
           assert.strictEqual(dependentGraph.changes.size, 0);
-          assert.deepEqual(dependentGraph.target.inputValue, {
+          assert.deepEqual(dependentGraph.graphFilter.inputValue, {
             _id: 5,
           });
         });
@@ -633,7 +633,7 @@ describe('Selection', () => {
 
           assert(!dependentGraph.isEmpty());
           assert.strictEqual(dependentGraph.changes.size, 0);
-          assert.deepEqual(dependentGraph.target.inputValue, {
+          assert.deepEqual(dependentGraph.graphFilter.inputValue, {
             tags_some: {
               tag: {
                 id: '68f3d88d-1308-4019-8118-fc20042e8c20',
@@ -662,7 +662,7 @@ describe('Selection', () => {
 
           assert(!dependentGraph.isEmpty());
           assert.strictEqual(dependentGraph.changes.size, 0);
-          assert.deepEqual(dependentGraph.target.inputValue, {
+          assert.deepEqual(dependentGraph.graphFilter.inputValue, {
             tags_some: {
               tag: {
                 id: '68f3d88d-1308-4019-8118-fc20042e8c20',

@@ -275,7 +275,7 @@ describe('Filter', () => {
 
             assert(!dependentGraph.isEmpty());
             assert.strictEqual(dependentGraph.changes.size, 1);
-            assert(dependentGraph.target.isFalse());
+            assert(dependentGraph.graphFilter.isFalse());
           }
         });
 
@@ -329,7 +329,7 @@ describe('Filter', () => {
           const dependentGraph = dependency.createDependentGraph(update);
 
           assert(!dependentGraph.isEmpty());
-          assert.deepEqual(dependentGraph.target.inputValue, {
+          assert.deepEqual(dependentGraph.graphFilter.inputValue, {
             createdBy: {
               id: '9121c47b-87b6-4334-ae1d-4c9777e87576',
             },
@@ -386,7 +386,7 @@ describe('Filter', () => {
           const dependentGraph = dependency.createDependentGraph(update);
 
           assert(!dependentGraph.isEmpty());
-          assert.deepEqual(dependentGraph.target.inputValue, {
+          assert.deepEqual(dependentGraph.graphFilter.inputValue, {
             updatedBy: {
               username: 'yvann',
             },
@@ -408,7 +408,7 @@ describe('Filter', () => {
           const dependentGraph = dependency.createDependentGraph(creation);
 
           assert(!dependentGraph.isEmpty());
-          assert.deepEqual(dependentGraph.target.inputValue, {
+          assert.deepEqual(dependentGraph.graphFilter.inputValue, {
             _id: 4,
           });
         });
@@ -426,7 +426,7 @@ describe('Filter', () => {
           const dependentGraph = dependency.createDependentGraph(deletion);
 
           assert(!dependentGraph.isEmpty());
-          assert.deepEqual(dependentGraph.target.inputValue, {
+          assert.deepEqual(dependentGraph.graphFilter.inputValue, {
             _id: 5,
           });
         });
@@ -464,7 +464,7 @@ describe('Filter', () => {
           const dependentGraph = dependency.createDependentGraph(creation);
 
           assert(!dependentGraph.isEmpty());
-          assert.deepEqual(dependentGraph.target.inputValue, {
+          assert.deepEqual(dependentGraph.graphFilter.inputValue, {
             createdBy: {
               id: '16050880-dabc-4348-bd3b-d41efe1b6057',
             },
@@ -484,7 +484,7 @@ describe('Filter', () => {
           const dependentGraph = dependency.createDependentGraph(deletion);
 
           assert(!dependentGraph.isEmpty());
-          assert.deepEqual(dependentGraph.target.inputValue, {
+          assert.deepEqual(dependentGraph.graphFilter.inputValue, {
             createdBy: {
               id: '7caf940a-058a-4ef2-a8bf-ac2d6cae3485',
             },
@@ -524,7 +524,7 @@ describe('Filter', () => {
           const dependentGraph = dependency.createDependentGraph(update);
 
           assert(!dependentGraph.isEmpty());
-          assert.deepEqual(dependentGraph.target.inputValue, {
+          assert.deepEqual(dependentGraph.graphFilter.inputValue, {
             createdBy: {
               id: '8e3587e8-2e4e-46a4-a6e0-27f08aebb215',
             },

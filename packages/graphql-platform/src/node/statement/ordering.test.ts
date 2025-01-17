@@ -125,7 +125,7 @@ describe('Ordering', () => {
           const dependentGraph = dependency.createDependentGraph(creation);
 
           assert(!dependentGraph.isEmpty());
-          assert.deepEqual(dependentGraph.target.inputValue, {
+          assert.deepEqual(dependentGraph.graphFilter.inputValue, {
             _id: 2,
           });
         });
