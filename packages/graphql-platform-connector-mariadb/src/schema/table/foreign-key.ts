@@ -1,6 +1,6 @@
 import * as core from '@prismamedia/graphql-platform';
 import * as utils from '@prismamedia/graphql-platform-utils';
-import { Memoize } from '@prismamedia/memoize';
+import { MGetter, MMethod } from '@prismamedia/memoize';
 import assert from 'node:assert';
 import { escapeIdentifier } from '../../escaping.js';
 import type { MariaDBConnector } from '../../index.js';
@@ -40,12 +40,12 @@ export class ForeignKey {
     }
   }
 
-  @Memoize()
+  @MGetter
   public get referencedTable(): Table {
     return this.table.schema.getTableByNode(this.edge.head);
   }
 
-  @Memoize()
+  @MGetter
   public get referencedIndex(): PrimaryKey | UniqueIndex {
     return this.referencedTable.primaryKey.uniqueConstraint ===
       this.edge.referencedUniqueConstraint
@@ -55,12 +55,12 @@ export class ForeignKey {
         );
   }
 
-  @Memoize()
+  @MGetter
   public get columns(): ReadonlyArray<ReferenceColumn> {
     return this.table.getColumnTreeByEdge(this.edge).columns;
   }
 
-  @Memoize()
+  @MGetter
   public get name(): string {
     const nameConfig = this.config?.name;
     const nameConfigPath = utils.addPath(this.configPath, 'name');
@@ -73,7 +73,7 @@ export class ForeignKey {
   /**
    * @see https://mariadb.com/kb/en/identifier-qualifiers/
    */
-  @Memoize()
+  @MGetter
   public get qualifiedName(): string {
     return `${this.table.name}.${this.name}`;
   }
@@ -81,12 +81,12 @@ export class ForeignKey {
   /**
    * @see https://mariadb.com/kb/en/identifier-qualifiers/
    */
-  @Memoize()
+  @MGetter
   public get fullyQualifiedName(): string {
     return `${this.table.qualifiedName}.${this.name}`;
   }
 
-  @Memoize()
+  @MMethod()
   public toString(): string {
     return this.fullyQualifiedName;
   }
@@ -94,7 +94,7 @@ export class ForeignKey {
   /**
    * @see https://mariadb.com/kb/en/create-table/#foreign-key
    */
-  @Memoize()
+  @MGetter
   public get definition(): string {
     return [
       'FOREIGN KEY',

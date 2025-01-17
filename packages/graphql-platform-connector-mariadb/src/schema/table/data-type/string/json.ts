@@ -3,7 +3,7 @@ import * as utils from '@prismamedia/graphql-platform-utils';
 import assert from 'node:assert';
 import type { JsonObject, SetOptional } from 'type-fest';
 import { escapeStringValue } from '../../../../escaping.js';
-import { ColumnInformation } from '../../../../statement.js';
+import type { ColumnInformation } from '../../../../statement.js';
 import {
   AbstractDataType,
   type AbstractDataTypeConfig,

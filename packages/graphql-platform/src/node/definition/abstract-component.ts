@@ -1,5 +1,5 @@
 import * as utils from '@prismamedia/graphql-platform-utils';
-import { Memoize } from '@prismamedia/memoize';
+import { MGetter, MMethod } from '@prismamedia/memoize';
 import type { ConnectorInterface } from '../../connector-interface.js';
 import type { Node } from '../../node.js';
 import type { AbstractComponentCreationInput } from '../type/input/creation/field/abstract-component.js';
@@ -84,12 +84,12 @@ export abstract class AbstractComponent<TConnector extends ConnectorInterface> {
     }
   }
 
-  @Memoize()
+  @MMethod()
   public toString(): string {
     return `${this.node.name}.${this.name}`;
   }
 
-  @Memoize()
+  @MGetter
   public get referrerSet(): ReadonlySet<Edge<TConnector>> {
     return new Set(
       this.node.gp.nodesByName
@@ -104,7 +104,7 @@ export abstract class AbstractComponent<TConnector extends ConnectorInterface> {
     );
   }
 
-  @Memoize()
+  @MMethod()
   public isMutable(): boolean {
     const mutableConfig = this.config.mutable;
     const mutableConfigPath = utils.addPath(this.configPath, 'mutable');
@@ -126,7 +126,7 @@ export abstract class AbstractComponent<TConnector extends ConnectorInterface> {
     return isMutable;
   }
 
-  @Memoize()
+  @MMethod()
   public isNullable(): boolean {
     const nullableConfig = this.config.nullable;
     const nullableConfigPath = utils.addPath(this.configPath, 'nullable');
@@ -136,7 +136,7 @@ export abstract class AbstractComponent<TConnector extends ConnectorInterface> {
 
   public abstract isPublic(): boolean;
 
-  @Memoize()
+  @MMethod()
   public isMainIdentifier(): boolean {
     return (
       this.node.mainIdentifier.componentSet.size === 1 &&
@@ -144,7 +144,7 @@ export abstract class AbstractComponent<TConnector extends ConnectorInterface> {
     );
   }
 
-  @Memoize()
+  @MMethod()
   public isUnique(): boolean {
     return this.node.uniqueConstraintsByName
       .values()
@@ -154,7 +154,7 @@ export abstract class AbstractComponent<TConnector extends ConnectorInterface> {
       );
   }
 
-  @Memoize()
+  @MMethod()
   public validateDefinition(): void {
     this.referrerSet;
     this.isMutable();
@@ -165,7 +165,7 @@ export abstract class AbstractComponent<TConnector extends ConnectorInterface> {
     this.selection;
   }
 
-  @Memoize()
+  @MMethod()
   public validateTypes(): void {
     this.creationInput.validate();
     this.updateInput?.validate();

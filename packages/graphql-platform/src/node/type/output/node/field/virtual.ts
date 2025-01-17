@@ -1,5 +1,5 @@
 import * as utils from '@prismamedia/graphql-platform-utils';
-import { Memoize } from '@prismamedia/memoize';
+import { MMethod } from '@prismamedia/memoize';
 import * as graphql from 'graphql';
 import type { Except, Promisable } from 'type-fest';
 import type { BrokerInterface } from '../../../../../broker-interface.js';
@@ -193,7 +193,7 @@ export class VirtualOutputType<
       .bind(parent.node);
   }
 
-  @Memoize()
+  @MMethod()
   public override isPublic(): boolean {
     const config = this.config.public;
     const configPath = utils.addPath(this.configPath, 'public');

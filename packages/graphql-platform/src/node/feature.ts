@@ -1,5 +1,5 @@
 import * as utils from '@prismamedia/graphql-platform-utils';
-import { Memoize } from '@prismamedia/memoize';
+import { MMethod } from '@prismamedia/memoize';
 import type { BrokerInterface } from '../broker-interface.js';
 import type { ConnectorInterface } from '../connector-interface.js';
 import type { Node } from '../node.js';
@@ -102,12 +102,12 @@ export class NodeFeature<
     this.priority = config.priority ?? node.priority;
   }
 
-  @Memoize()
+  @MMethod()
   public toString(): string {
     return `${this.node.name}.feature${this.name ? `.${this.name}` : ''}`;
   }
 
-  @Memoize((mutationType: utils.MutationType) => mutationType)
+  @MMethod((mutationType) => mutationType)
   public getMutationConfig<TType extends utils.MutationType>(
     mutationType: TType,
   ): {

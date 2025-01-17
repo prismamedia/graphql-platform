@@ -5,21 +5,20 @@ import {
 } from '@prismamedia/graphql-platform/__tests__/config.js';
 import assert from 'node:assert';
 import { after, before, describe, it } from 'node:test';
-import { createMyGP, type MyGP } from '../../__tests__/config.js';
+import { createMyGP } from '../../__tests__/config.js';
 import { InsertStatement } from './insert.js';
 
 describe('Insert statement', () => {
-  let gp: MyGP;
+  const gp = createMyGP(`connector_mariadb_insert_statement`);
+  gp.connector.on('executed-statement', ({ statement }) => {
+    if (statement instanceof InsertStatement) {
+      executedStatements.push(statement.sql);
+    }
+  });
+
   const executedStatements: string[] = [];
 
   before(async () => {
-    gp = createMyGP(`connector_mariadb_insert_statement`);
-    gp.connector.on('executed-statement', ({ statement }) => {
-      if (statement instanceof InsertStatement) {
-        executedStatements.push(statement.sql);
-      }
-    });
-
     await gp.connector.setup();
   });
 

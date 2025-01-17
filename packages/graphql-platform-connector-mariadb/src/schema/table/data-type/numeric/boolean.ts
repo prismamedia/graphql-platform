@@ -2,7 +2,7 @@ import type * as core from '@prismamedia/graphql-platform';
 import * as utils from '@prismamedia/graphql-platform-utils';
 import assert from 'node:assert';
 import type { SetOptional } from 'type-fest';
-import { ColumnInformation } from '../../../../statement.js';
+import type { ColumnInformation } from '../../../../statement.js';
 import {
   AbstractDataType,
   type AbstractDataTypeConfig,

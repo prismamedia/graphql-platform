@@ -7,7 +7,7 @@ import {
   EdgeExistsFilter,
   GraphQLPlatform,
   LeafComparisonFilter,
-  NodeValue,
+  type NodeValue,
   NotOperation,
 } from './index.js';
 import { Seeding } from './seeding.js';

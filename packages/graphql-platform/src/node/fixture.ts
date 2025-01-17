@@ -1,5 +1,5 @@
 import * as utils from '@prismamedia/graphql-platform-utils';
-import { Memoize } from '@prismamedia/memoize';
+import { MGetter, MMethod } from '@prismamedia/memoize';
 import type { DepGraph } from 'dependency-graph';
 import type {
   Node,
@@ -197,7 +197,7 @@ export class NodeFixture<TRequestContext extends object = any> {
     this.#path = path;
   }
 
-  @Memoize()
+  @MGetter
   public get dependencies(): ReadonlySet<NodeFixtureReference> {
     return extractDependencies(
       this.seeding.dependencyGraph,
@@ -207,7 +207,7 @@ export class NodeFixture<TRequestContext extends object = any> {
     );
   }
 
-  @Memoize()
+  @MGetter
   public get dependents(): ReadonlySet<NodeFixtureReference> {
     return new Set(
       this.seeding.fixtures
@@ -222,7 +222,7 @@ export class NodeFixture<TRequestContext extends object = any> {
     );
   }
 
-  @Memoize()
+  @MMethod()
   public async load(
     context: MutationContext<TRequestContext>,
   ): Promise<NodeValue> {

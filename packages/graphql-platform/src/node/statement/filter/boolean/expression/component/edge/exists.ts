@@ -1,4 +1,4 @@
-import { Memoize } from '@prismamedia/memoize';
+import { MGetter } from '@prismamedia/memoize';
 import * as graphql from 'graphql';
 import assert from 'node:assert';
 import { EdgeDependencyGraph } from '../../../../../../change/dependency.js';
@@ -50,7 +50,7 @@ export class EdgeExistsFilter extends AbstractComponentFilter {
     );
   }
 
-  @Memoize()
+  @MGetter
   public override get complement(): BooleanFilter | undefined {
     return this.headFilter
       ? new OrOperation([

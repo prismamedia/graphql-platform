@@ -161,7 +161,7 @@ export class InvalidTableFix extends AbstractExistingTableFix {
 
   public constructor(
     parent: SchemaFix,
-    public readonly diagnosis: TableDiagnosis,
+    public override readonly diagnosis: TableDiagnosis,
     options?: InvalidTableFixOptions,
   ) {
     super(parent, diagnosis.table, diagnosis);

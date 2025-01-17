@@ -1,14 +1,14 @@
-import { Memoize } from '@prismamedia/memoize';
+import { MMethod } from '@prismamedia/memoize';
 import * as graphql from 'graphql';
 import { UnexpectedUndefinedError } from '../../../error.js';
 import type { Path } from '../../../path.js';
 import {
-  NonNullNonVariableGraphQLValueNode,
   areInputValuesEqual,
   getGraphQLInputType,
   parseInputLiteral,
   parseInputValue,
   type InputType,
+  type NonNullNonVariableGraphQLValueNode,
 } from '../../type.js';
 import { AbstractWrappingInputType } from './abstract.js';
 import { NonNullableInputType } from './non-nullable.js';
@@ -27,7 +27,7 @@ export class NonOptionalInputType extends AbstractWrappingInputType {
     }
   }
 
-  @Memoize()
+  @MMethod()
   public toString(): string {
     return this.ofType instanceof NonNullableInputType
       ? // NonOptional & NonNullable = GraphQLNonNull

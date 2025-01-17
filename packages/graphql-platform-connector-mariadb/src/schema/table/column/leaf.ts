@@ -1,7 +1,7 @@
 import type * as core from '@prismamedia/graphql-platform';
 import * as scalars from '@prismamedia/graphql-platform-scalars';
 import * as utils from '@prismamedia/graphql-platform-utils';
-import { Memoize } from '@prismamedia/memoize';
+import { MMethod } from '@prismamedia/memoize';
 import * as graphql from 'graphql';
 import type { URL } from 'node:url';
 import * as semver from 'semver';
@@ -264,7 +264,7 @@ export class LeafColumn extends AbstractColumn {
     }
   }
 
-  @Memoize()
+  @MMethod()
   public override isAutoIncrement(): boolean {
     const autoIncrementConfig = this.config?.autoIncrement;
     const autoIncrementConfigPath = utils.addPath(
@@ -289,7 +289,7 @@ export class LeafColumn extends AbstractColumn {
     return isAutoIncrement;
   }
 
-  @Memoize()
+  @MMethod()
   public override isNullable(): boolean {
     return this.leaf.isNullable();
   }

@@ -1,4 +1,4 @@
-import { Memoize } from '@prismamedia/memoize';
+import { MGetter, MMethod } from '@prismamedia/memoize';
 import * as graphql from 'graphql';
 import * as R from 'remeda';
 import type { Node } from '../../node.js';
@@ -36,7 +36,7 @@ export class NodeOrdering {
     );
   }
 
-  @Memoize()
+  @MGetter
   public get dependencyGraph(): DependencyGraph {
     return new DependencyGraph(
       this.node,
@@ -44,7 +44,7 @@ export class NodeOrdering {
     );
   }
 
-  @Memoize()
+  @MGetter
   public get ast(): graphql.ConstListValueNode {
     return {
       kind: graphql.Kind.LIST,
@@ -52,12 +52,12 @@ export class NodeOrdering {
     };
   }
 
-  @Memoize()
+  @MMethod()
   public toString(): string {
     return graphql.print(this.ast);
   }
 
-  @Memoize()
+  @MGetter
   public get inputValue(): NonNullable<OrderByInputValue> {
     return this.expressions.map(({ inputValue }) => inputValue);
   }

@@ -1,4 +1,4 @@
-import { Memoize } from '@prismamedia/memoize';
+import { MGetter, MMethod } from '@prismamedia/memoize';
 import * as graphql from 'graphql';
 import assert from 'node:assert';
 import {
@@ -20,7 +20,7 @@ import {
 } from '../../type.js';
 import {
   AbstractNamedInputType,
-  AbstractNamedInputTypeConfig,
+  type AbstractNamedInputTypeConfig,
 } from './abstract.js';
 
 export interface ObjectInputTypeConfig<TField extends Input>
@@ -49,7 +49,7 @@ export class ObjectInputType<
     this.#fieldsConfigPath = addPath(configPath, 'fields');
   }
 
-  @Memoize()
+  @MGetter
   public get fields(): ReadonlyArray<TField> {
     const fields =
       typeof this.#fieldsConfig === 'function'
@@ -74,19 +74,19 @@ export class ObjectInputType<
       : [];
   }
 
-  @Memoize()
+  @MGetter
   public get fieldsByName(): ReadonlyMap<TField['name'], TField> {
     return new Map(this.fields.map((field) => [field.name, field]));
   }
 
-  @Memoize()
+  @MGetter
   public get requiredFieldsByName(): ReadonlyMap<TField['name'], TField> {
     return new Map(
       this.fieldsByName.entries().filter(([, field]) => field.isRequired()),
     );
   }
 
-  @Memoize()
+  @MGetter
   public get requiredFields(): ReadonlyArray<TField> {
     return Array.from(this.requiredFieldsByName.values());
   }
@@ -104,19 +104,19 @@ export class ObjectInputType<
       this.requiredFields.every((field) => field.isPublic()));
   }
 
-  @Memoize()
+  @MGetter
   public get publicFieldsByName(): ReadonlyMap<TField['name'], TField> {
     return new Map(
       this.fieldsByName.entries().filter(([, field]) => field.isPublic()),
     );
   }
 
-  @Memoize()
+  @MGetter
   public get publicFields(): ReadonlyArray<TField> {
     return Array.from(this.publicFieldsByName.values());
   }
 
-  @Memoize()
+  @MMethod()
   public override getGraphQLInputType(): graphql.GraphQLInputObjectType {
     assert(this.isPublic(), `The "${this}" input type is private`);
 

@@ -1,6 +1,6 @@
 import assert from 'node:assert';
 import type { ForeignKeyInformation } from '../../../statement.js';
-import { DiagnosisError } from '../../diagnosis.js';
+import type { DiagnosisError } from '../../diagnosis.js';
 import type { ForeignKey } from '../foreign-key.js';
 
 export type ForeignKeyDiagnosisOptions = {};

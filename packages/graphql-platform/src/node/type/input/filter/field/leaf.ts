@@ -2,7 +2,7 @@ import type { Except, SetOptional } from 'type-fest';
 import type { Leaf } from '../../../../definition/component/leaf.js';
 import {
   AbstractFieldFilterInput,
-  AbstractFieldFilterInputConfig,
+  type AbstractFieldFilterInputConfig,
 } from '../abstract-field.js';
 
 export type LeafFilterInputConfig<TValue> = Except<

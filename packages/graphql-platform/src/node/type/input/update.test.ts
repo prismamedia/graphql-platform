@@ -2,8 +2,12 @@ import * as graphql from 'graphql';
 import assert from 'node:assert';
 import { before, describe, it } from 'node:test';
 import { inspect } from 'node:util';
-import { MyGP, nodeNames, nodes } from '../../../__tests__/config.js';
-import { GraphQLPlatform, Node, NodeUpdateInputValue } from '../../../index.js';
+import { type MyGP, nodeNames, nodes } from '../../../__tests__/config.js';
+import {
+  GraphQLPlatform,
+  Node,
+  type NodeUpdateInputValue,
+} from '../../../index.js';
 import { NodeUpdateInputType } from './update.js';
 
 describe('NodeUpdateInputType', () => {

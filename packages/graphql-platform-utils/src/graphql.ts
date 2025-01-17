@@ -1,6 +1,6 @@
 import * as graphql from 'graphql';
 import { isDeepStrictEqual } from 'node:util';
-import { getOptionalFlag, OptionalFlag } from './config.js';
+import { getOptionalFlag, type OptionalFlag } from './config.js';
 import { getEnumKeys } from './enum.js';
 import { UnexpectedValueError } from './error.js';
 import { indefinite } from './indefinite.js';

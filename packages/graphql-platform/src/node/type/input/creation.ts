@@ -1,5 +1,5 @@
 import * as utils from '@prismamedia/graphql-platform-utils';
-import { Memoize } from '@prismamedia/memoize';
+import { MGetter, MMethod } from '@prismamedia/memoize';
 import inflection from 'inflection';
 import assert from 'node:assert';
 import type { Except } from 'type-fest';
@@ -7,10 +7,10 @@ import type { Edge, Node, NodeValue, ReverseEdge } from '../../../node.js';
 import type { MutationContext } from '../../operation.js';
 import type { NodeCreationValue } from '../../statement/creation.js';
 import {
-  ComponentCreationInput,
-  FieldCreationInput,
+  type ComponentCreationInput,
+  type FieldCreationInput,
   LeafCreationInput,
-  ReverseEdgeCreationInput,
+  type ReverseEdgeCreationInput,
 } from './creation/field.js';
 
 export * from './creation/field.js';
@@ -44,7 +44,7 @@ export class NodeCreationInputType extends utils.ObjectInputType<FieldCreationIn
     this.#excludedEdge = excludedEdge;
   }
 
-  @Memoize()
+  @MGetter
   protected get componentFields(): ReadonlyArray<ComponentCreationInput> {
     return this.node.componentsByName
       .values()
@@ -57,7 +57,7 @@ export class NodeCreationInputType extends utils.ObjectInputType<FieldCreationIn
       }, []);
   }
 
-  @Memoize()
+  @MGetter
   protected get reverseEdgeFields(): ReadonlyArray<ReverseEdgeCreationInput> {
     return this.node.reverseEdgesByName
       .values()
@@ -70,7 +70,7 @@ export class NodeCreationInputType extends utils.ObjectInputType<FieldCreationIn
       }, []);
   }
 
-  @Memoize()
+  @MGetter
   protected get virtualFields(): ReadonlyArray<utils.Input> {
     return this.node.features.flatMap((feature) => {
       const { config, configPath } = feature.getMutationConfig(
@@ -132,7 +132,7 @@ export class NodeCreationInputType extends utils.ObjectInputType<FieldCreationIn
     });
   }
 
-  @Memoize()
+  @MGetter
   public override get fields(): ReadonlyArray<FieldCreationInput> {
     return [
       ...this.componentFields,
@@ -141,7 +141,7 @@ export class NodeCreationInputType extends utils.ObjectInputType<FieldCreationIn
     ];
   }
 
-  @Memoize()
+  @MMethod()
   public override isPublic(): boolean {
     return (
       this.node.isPubliclyMutable(utils.MutationType.CREATION) &&

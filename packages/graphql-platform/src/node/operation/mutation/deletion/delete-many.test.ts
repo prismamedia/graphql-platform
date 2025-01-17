@@ -1,12 +1,12 @@
 import assert from 'node:assert';
 import { beforeEach, describe, it } from 'node:test';
 import {
-  MyContext,
-  MyGP,
   myAdminContext,
   myUserContext,
   myVisitorContext,
   nodes,
+  type MyContext,
+  type MyGP,
 } from '../../../../__tests__/config.js';
 import {
   clearConnectorMockCalls,
@@ -15,7 +15,7 @@ import {
 } from '../../../../__tests__/connector-mock.js';
 import { GraphQLPlatform } from '../../../../index.js';
 import { UnauthorizedError } from '../../error.js';
-import { DeleteManyMutationArgs } from './delete-many.js';
+import type { DeleteManyMutationArgs } from './delete-many.js';
 
 describe('DeleteManyMutation', () => {
   const gp: MyGP<MockedConnector> = new GraphQLPlatform({

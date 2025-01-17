@@ -1,5 +1,5 @@
 import * as utils from '@prismamedia/graphql-platform-utils';
-import { Memoize } from '@prismamedia/memoize';
+import { MGetter } from '@prismamedia/memoize';
 import assert from 'node:assert';
 import type { Node } from '../../../../node.js';
 import { Leaf } from '../../../definition.js';
@@ -24,7 +24,7 @@ export class ScrollSubscriptionOrderingInputType extends utils.EnumInputType<Lea
     });
   }
 
-  @Memoize()
+  @MGetter
   public override get enumValues(): ReadonlyArray<LeafOrderingInput> {
     return this.node.uniqueConstraintSet
       .values()

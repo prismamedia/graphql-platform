@@ -22,25 +22,22 @@
   "scripts": {
     "compile": "tsc --build",
     "compile:watch": "tsc --build --watch",
-    "test": "node --import @swc-node/register/esm-register --test --experimental-test-snapshots \"./src/**/*.test.ts\"",
-    "test:update": "node --import @swc-node/register/esm-register --test --experimental-test-snapshots --test-update-snapshots \"./src/**/*.test.ts\"",
-    "test:watch": "node --import @swc-node/register/esm-register --test --watch --experimental-test-snapshots \"./src/**/*.test.ts\""
+    "test": "node --import tsx --test --experimental-test-snapshots \"./src/**/*.test.ts\"",
+    "test:update": "node --import tsx --test --experimental-test-snapshots --test-update-snapshots \"./src/**/*.test.ts\"",
+    "test:watch": "node --import tsx --test --watch --experimental-test-snapshots \"./src/**/*.test.ts\""
   },
   "devDependencies": {
-    "@swc-node/register": "1.10.9",
-    "@swc/core": "1.10.7",
-    "@tsconfig/node22": "22.0.0",
     "@types/indefinite": "2.3.4",
-    "@types/node": "22.10.7",
     "graphql": "16.10.0",
     "publint": "0.3.2",
+    "tsx": "4.19.2",
     "typescript": "5.7.3"
   },
   "dependencies": {
-    "@prismamedia/memoize": "^5.0.3",
+    "@prismamedia/memoize": "^6.1.0",
     "indefinite": "^2.5.1",
-    "remeda": "^2.19.1",
-    "type-fest": "^4.32.0"
+    "remeda": "^2.19.2",
+    "type-fest": "^4.33.0"
   },
   "peerDependencies": {
     "graphql": "^16.10.0"

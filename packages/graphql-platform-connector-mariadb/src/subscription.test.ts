@@ -10,16 +10,12 @@ import {
 } from '@prismamedia/graphql-platform/__tests__/config.js';
 import * as fixtures from '@prismamedia/graphql-platform/__tests__/fixture.js';
 import assert from 'node:assert';
-import { afterEach, before, beforeEach, describe, it } from 'node:test';
-import { createMyGP, type MyGP } from './__tests__/config.js';
+import { afterEach, beforeEach, describe, it } from 'node:test';
+import { createMyGP } from './__tests__/config.js';
 
 describe('Subscription', () => {
-  let gp: MyGP<InMemoryBroker>;
+  const gp = createMyGP<InMemoryBroker, any>(`connector_mariadb_subscription`);
   let subscription: ChangesSubscriptionStream;
-
-  before(() => {
-    gp = createMyGP(`connector_mariadb_subscription`);
-  });
 
   beforeEach(async () => {
     await gp.connector.setup();

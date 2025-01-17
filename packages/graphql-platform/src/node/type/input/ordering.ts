@@ -1,10 +1,10 @@
 import * as utils from '@prismamedia/graphql-platform-utils';
-import { Memoize } from '@prismamedia/memoize';
+import { MGetter } from '@prismamedia/memoize';
 import type { Node } from '../../../node.js';
 import { Leaf } from '../../definition.js';
 import type { OperationContext } from '../../operation/context.js';
 import { NodeOrdering, OrderingDirection } from '../../statement/ordering.js';
-import { OrderingExpressionInput } from './ordering/expression.js';
+import type { OrderingExpressionInput } from './ordering/expression.js';
 
 export * from './ordering/expression.js';
 
@@ -32,7 +32,7 @@ export class NodeOrderingInputType extends utils.EnumInputType<OrderingExpressio
     });
   }
 
-  @Memoize()
+  @MGetter
   public override get enumValues(): ReadonlyArray<OrderingExpressionInput> {
     return [
       ...this.node.componentSet

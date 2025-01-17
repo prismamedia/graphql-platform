@@ -1,4 +1,4 @@
-import { Memoize } from '@prismamedia/memoize';
+import { MGetter } from '@prismamedia/memoize';
 import { escapeIdentifier } from '../../../escaping.js';
 import type { Table } from '../../table.js';
 import { AbstractIndex } from '../abstract-index.js';
@@ -24,7 +24,7 @@ export class FullTextIndex extends AbstractIndex {
   /**
    * @see https://mariadb.com/kb/en/create-table/#fulltext
    */
-  @Memoize()
+  @MGetter
   public override get definition(): string {
     return `FULLTEXT ${escapeIdentifier(this.name)} (${this.columns
       .map(({ name }) => escapeIdentifier(name))

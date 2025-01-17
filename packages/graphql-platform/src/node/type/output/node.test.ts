@@ -3,15 +3,15 @@ import assert from 'node:assert';
 import { before, describe, it } from 'node:test';
 import {
   ArticleStatus,
-  MyContext,
-  MyGP,
+  type MyContext,
+  type MyGP,
   myAdminContext,
   nodeNames,
   nodes,
 } from '../../../__tests__/config.js';
 import { GraphQLPlatform } from '../../../index.js';
 import { OperationContext } from '../../operation/context.js';
-import { GraphQLSelectionContext, NodeOutputType } from './node.js';
+import { type GraphQLSelectionContext, NodeOutputType } from './node.js';
 
 describe(`NodeOutputType`, () => {
   let gp: MyGP;

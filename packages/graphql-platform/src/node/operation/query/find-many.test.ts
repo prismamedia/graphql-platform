@@ -1,11 +1,11 @@
 import assert from 'node:assert';
 import { beforeEach, describe, it } from 'node:test';
 import {
-  MyContext,
-  MyGP,
   myAdminContext,
   myVisitorContext,
   nodes,
+  type MyContext,
+  type MyGP,
 } from '../../../__tests__/config.js';
 import {
   clearConnectorMockCalls,
@@ -16,7 +16,7 @@ import { GraphQLPlatform } from '../../../index.js';
 import { OperationContext } from '../../operation.js';
 import { NodeFilter, NodeOrdering, NodeSelection } from '../../statement.js';
 import { UnauthorizedError } from '../error.js';
-import { FindManyQueryArgs } from './find-many.js';
+import type { FindManyQueryArgs } from './find-many.js';
 
 describe('FindManyQuery', () => {
   const gp: MyGP<MockedConnector> = new GraphQLPlatform({

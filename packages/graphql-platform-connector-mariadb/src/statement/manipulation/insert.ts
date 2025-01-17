@@ -1,7 +1,7 @@
 import type * as core from '@prismamedia/graphql-platform';
 import type * as mariadb from 'mariadb';
 import { EOL } from 'node:os';
-import { SetOptional } from 'type-fest';
+import type { SetOptional } from 'type-fest';
 import { escapeIdentifier } from '../../escaping.js';
 import { LeafColumn, type Table } from '../../schema.js';
 import { StatementKind } from '../kind.js';

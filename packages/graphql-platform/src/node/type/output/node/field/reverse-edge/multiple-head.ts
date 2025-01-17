@@ -1,6 +1,6 @@
 import * as scalars from '@prismamedia/graphql-platform-scalars';
 import * as utils from '@prismamedia/graphql-platform-utils';
-import { Memoize } from '@prismamedia/memoize';
+import { MGetter } from '@prismamedia/memoize';
 import * as graphql from 'graphql';
 import { argsPathKey } from '../../../../../abstract-operation.js';
 import type { MultipleReverseEdge } from '../../../../../definition/reverse-edge/multiple.js';
@@ -36,7 +36,7 @@ export class MultipleReverseEdgeHeadOutputType extends AbstractReverseEdgeOutput
     this.deprecationReason = reverseEdge.deprecationReason;
   }
 
-  @Memoize()
+  @MGetter
   public get args(): ReadonlyArray<utils.Input> {
     const defaults = this.reverseEdge.config.output?.defaultArgs;
 

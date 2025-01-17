@@ -1,18 +1,10 @@
 import assert from 'node:assert';
-import { before, describe, it } from 'node:test';
-import {
-  ArticleStatus,
-  createMyGP,
-  type MyGP,
-} from '../../__tests__/config.js';
+import { describe, it } from 'node:test';
+import { ArticleStatus, createMyGP } from '../../__tests__/config.js';
 import { NodeUpdateStatement } from './update.js';
 
 describe('Update', () => {
-  let gp: MyGP;
-
-  before(() => {
-    gp = createMyGP();
-  });
+  const gp = createMyGP();
 
   (
     [

@@ -1,5 +1,5 @@
 import { UnexpectedValueError } from '../error.js';
-import { isNil, Nillable } from '../nil.js';
+import { isNil, type Nillable } from '../nil.js';
 import type { Path } from '../path.js';
 
 export type OptionalFlag = Nillable<boolean>;

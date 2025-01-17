@@ -1,6 +1,6 @@
 import * as scalars from '@prismamedia/graphql-platform-scalars';
 import * as utils from '@prismamedia/graphql-platform-utils';
-import { Memoize } from '@prismamedia/memoize';
+import { MGetter } from '@prismamedia/memoize';
 import type { Edge, Node } from '../../../node.js';
 import { Leaf, type LeafValue } from '../../definition/component/leaf.js';
 import type { MultipleReverseEdge } from '../../definition/reverse-edge/multiple.js';
@@ -8,7 +8,6 @@ import { UniqueReverseEdge } from '../../definition/reverse-edge/unique.js';
 import type { OperationContext } from '../../operation/context.js';
 import {
   AndOperation,
-  BooleanFilter,
   EdgeExistsFilter,
   FalseValue,
   LeafComparisonFilter,
@@ -22,6 +21,7 @@ import {
   TrueValue,
   UniqueReverseEdgeExistsFilter,
   sortableLeafComparisonOperatorSet,
+  type BooleanFilter,
 } from '../../statement/filter.js';
 import {
   BooleanOperationFilterInput,
@@ -411,7 +411,7 @@ export class NodeFilterInputType extends utils.ObjectInputType<FieldFilterInputI
     ];
   }
 
-  @Memoize()
+  @MGetter
   public override get fields(): ReadonlyArray<FieldFilterInputInterface> {
     const constructor = this.constructor as typeof NodeFilterInputType;
 

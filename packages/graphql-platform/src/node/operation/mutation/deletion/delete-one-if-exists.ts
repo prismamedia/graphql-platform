@@ -1,5 +1,5 @@
 import * as utils from '@prismamedia/graphql-platform-utils';
-import { Memoize } from '@prismamedia/memoize';
+import { MGetter } from '@prismamedia/memoize';
 import type { NodeSelectionAwareArgs } from '../../../abstract-operation.js';
 import type { NodeFilter } from '../../../statement.js';
 import { AbstractDeletion } from '../abstract-deletion.js';
@@ -26,7 +26,7 @@ export class DeleteOneIfExistsMutation<
   public readonly name = `delete${this.node}IfExists`;
   public override readonly description = `Deletes one "${this.node}" if it exists, returns null otherwise`;
 
-  @Memoize()
+  @MGetter
   public override get arguments() {
     return [
       new utils.Input({

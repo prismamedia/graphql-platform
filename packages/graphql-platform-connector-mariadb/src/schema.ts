@@ -2,7 +2,7 @@ import type * as core from '@prismamedia/graphql-platform';
 import * as utils from '@prismamedia/graphql-platform-utils';
 import type * as mariadb from 'mariadb';
 import assert from 'node:assert';
-import { MariaDBConnector, OkPacket } from './index.js';
+import type { MariaDBConnector, OkPacket } from './index.js';
 import {
   SchemaDiagnosis,
   type SchemaDiagnosisOptions,

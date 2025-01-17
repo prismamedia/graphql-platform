@@ -1,9 +1,9 @@
 import assert from 'node:assert';
 import { beforeEach, describe, it } from 'node:test';
 import {
-  MyContext,
-  MyGP,
   myAdminContext,
+  type MyContext,
+  type MyGP,
   myVisitorContext,
   nodes,
 } from '../../../__tests__/config.js';
@@ -13,7 +13,10 @@ import {
 } from '../../../__tests__/connector-mock.js';
 import { GraphQLPlatform, Node } from '../../../index.js';
 import { UnauthorizedError } from '../error.js';
-import { ScrollSubscriptionArgs, ScrollSubscriptionStream } from './scroll.js';
+import {
+  type ScrollSubscriptionArgs,
+  ScrollSubscriptionStream,
+} from './scroll.js';
 
 describe('ScrollSubscription', () => {
   let gp: MyGP<MockedConnector>;

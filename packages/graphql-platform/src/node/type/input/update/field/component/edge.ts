@@ -7,7 +7,7 @@ import type {
   Edge,
   ReferenceValue,
 } from '../../../../../definition/component/edge.js';
-import { UniqueConstraintValue } from '../../../../../definition/unique-constraint.js';
+import type { UniqueConstraintValue } from '../../../../../definition/unique-constraint.js';
 import type { MutationContext } from '../../../../../operation/mutation/context.js';
 import type { EdgeUpdateValue } from '../../../../../statement/update.js';
 import type { NodeCreationInputValue } from '../../../creation.js';

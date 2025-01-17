@@ -1,5 +1,5 @@
 import * as utils from '@prismamedia/graphql-platform-utils';
-import { Memoize } from '@prismamedia/memoize';
+import { MGetter, MMethod } from '@prismamedia/memoize';
 import * as graphql from 'graphql';
 import assert from 'node:assert';
 import type { Node } from '../../node.js';
@@ -54,7 +54,7 @@ export class NodeSelection<
   /**
    * Returns the selected components
    */
-  @Memoize()
+  @MGetter
   public get components(): ReadonlyArray<Component> {
     return Object.freeze(
       Array.from(
@@ -75,7 +75,7 @@ export class NodeSelection<
   /**
    * Returns the selected reverse-edges
    */
-  @Memoize()
+  @MGetter
   public get reverseEdges(): ReadonlyArray<ReverseEdge> {
     return Object.freeze(
       Array.from(
@@ -96,7 +96,7 @@ export class NodeSelection<
   /**
    * Returns the selected unique-constraints
    */
-  @Memoize()
+  @MGetter
   public get uniqueConstraints(): ReadonlyArray<UniqueConstraint> {
     return Object.freeze(
       Array.from(this.node.uniqueConstraintSet)
@@ -126,7 +126,7 @@ export class NodeSelection<
   /**
    * Returns the selected identifiers
    */
-  @Memoize()
+  @MGetter
   public get identifiers(): ReadonlyArray<UniqueConstraint> {
     return Object.freeze(
       this.uniqueConstraints.filter((uniqueConstraint) =>
@@ -138,7 +138,7 @@ export class NodeSelection<
   /**
    * Returns the selected virtual-selections
    */
-  @Memoize()
+  @MGetter
   public get virtualSelections(): ReadonlyArray<VirtualSelection> {
     return this.expressions.filter(
       (expression): expression is VirtualSelection =>
@@ -146,7 +146,7 @@ export class NodeSelection<
     );
   }
 
-  @Memoize()
+  @MGetter
   public get hasVirtualSelection(): boolean {
     return this.expressions.some(
       (expression) =>
@@ -155,7 +155,7 @@ export class NodeSelection<
     );
   }
 
-  @Memoize()
+  @MGetter
   public get dependencyGraph(): DependencyGraph {
     return new DependencyGraph(
       this.node,
@@ -188,7 +188,7 @@ export class NodeSelection<
     );
   }
 
-  @Memoize()
+  @MMethod()
   public isPure(): boolean {
     return this.node.selection.isSupersetOf(this);
   }
@@ -208,7 +208,7 @@ export class NodeSelection<
     );
   }
 
-  @Memoize()
+  @MGetter
   public get ast(): graphql.SelectionSetNode {
     return {
       kind: graphql.Kind.SELECTION_SET,
@@ -216,7 +216,7 @@ export class NodeSelection<
     };
   }
 
-  @Memoize()
+  @MMethod()
   public toString(): string {
     return graphql.print(this.ast);
   }

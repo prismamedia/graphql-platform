@@ -1,5 +1,5 @@
 import * as utils from '@prismamedia/graphql-platform-utils';
-import { Memoize } from '@prismamedia/memoize';
+import { MGetter, MMethod } from '@prismamedia/memoize';
 import * as graphql from 'graphql';
 import type { CamelCase } from 'type-fest';
 import type { BrokerInterface } from '../../broker-interface.js';
@@ -80,21 +80,21 @@ export abstract class AbstractMutation<
   public readonly operationType = graphql.OperationTypeNode.MUTATION;
   public abstract readonly mutationTypes: ReadonlyArray<utils.MutationType>;
 
-  @Memoize()
+  @MGetter
   public get method(): CamelCase<this['key']> {
     return this.key.replaceAll(/((?:-).)/g, ([_match, letter]) =>
       letter.toUpperCase(),
     ) as any;
   }
 
-  @Memoize()
+  @MMethod()
   public override isEnabled(): boolean {
     return this.mutationTypes.every((mutationType) =>
       this.node.isMutable(mutationType),
     );
   }
 
-  @Memoize()
+  @MMethod()
   public override isPublic(): boolean {
     return (
       this.isEnabled() &&

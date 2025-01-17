@@ -1,5 +1,5 @@
 import * as utils from '@prismamedia/graphql-platform-utils';
-import { Memoize } from '@prismamedia/memoize';
+import { MGetter, MMethod } from '@prismamedia/memoize';
 import type DataLoader from 'dataloader';
 import * as graphql from 'graphql';
 import inflection from 'inflection';
@@ -655,7 +655,7 @@ export class Node<
     return this.name;
   }
 
-  @Memoize()
+  @MMethod()
   public isPublic(): boolean {
     const publicConfig = this.config.public;
     const publicConfigPath = utils.addPath(this.configPath, 'public');
@@ -663,7 +663,7 @@ export class Node<
     return utils.getOptionalFlag(publicConfig, true, publicConfigPath);
   }
 
-  @Memoize((mutationType: utils.MutationType) => mutationType)
+  @MMethod((mutationType) => mutationType)
   public getMutationConfig<TType extends utils.MutationType>(
     mutationType: TType,
   ): {
@@ -720,7 +720,7 @@ export class Node<
     };
   }
 
-  @Memoize((mutationType: utils.MutationType) => mutationType)
+  @MMethod((mutationType) => mutationType)
   public isMutable(mutationType: utils.MutationType): boolean {
     const { config, configPath } = this.getMutationConfig(mutationType);
 
@@ -753,7 +753,7 @@ export class Node<
     return this.isMutable(utils.MutationType.DELETION);
   }
 
-  @Memoize((mutationType: utils.MutationType) => mutationType)
+  @MMethod((mutationType) => mutationType)
   public isPubliclyMutable(mutationType: utils.MutationType): boolean {
     const { config, configPath } = this.getMutationConfig(mutationType);
 
@@ -799,7 +799,7 @@ export class Node<
     return this.isPubliclyMutable(utils.MutationType.DELETION);
   }
 
-  @Memoize()
+  @MGetter
   public get hasPreCreateHooks(): boolean {
     return this.features.some(
       (nodeOrFeature) =>
@@ -836,7 +836,7 @@ export class Node<
     }
   }
 
-  @Memoize()
+  @MGetter
   public get hasPostCreateHooks(): boolean {
     return this.features.some(
       (nodeOrFeature) =>
@@ -873,7 +873,7 @@ export class Node<
     }
   }
 
-  @Memoize()
+  @MGetter
   public get hasPreUpdateHooks(): boolean {
     return this.features.some(
       (nodeOrFeature) =>
@@ -910,7 +910,7 @@ export class Node<
     }
   }
 
-  @Memoize()
+  @MGetter
   public get hasPostUpdateHooks(): boolean {
     return this.features.some(
       (nodeOrFeature) =>
@@ -947,7 +947,7 @@ export class Node<
     }
   }
 
-  @Memoize()
+  @MGetter
   public get hasPreDeleteHooks(): boolean {
     return this.features.some(
       (nodeOrFeature) =>
@@ -984,7 +984,7 @@ export class Node<
     }
   }
 
-  @Memoize()
+  @MGetter
   public get hasPostDeleteHooks(): boolean {
     return this.features.some(
       (nodeOrFeature) =>
@@ -1153,7 +1153,7 @@ export class Node<
     return uniqueConstraint;
   }
 
-  @Memoize((edge: Edge) => edge)
+  @MMethod((edge) => edge)
   public isPartiallyIdentifiableByEdge(edge: Edge): boolean {
     this.ensureEdge(edge);
 
@@ -1164,7 +1164,7 @@ export class Node<
       );
   }
 
-  @Memoize()
+  @MGetter
   public get selection(): NodeSelection<NodeValue> {
     return new NodeSelection(
       this,
@@ -1174,7 +1174,7 @@ export class Node<
     );
   }
 
-  @Memoize()
+  @MGetter
   public get reverseEdgesByName(): ReadonlyMap<
     ReverseEdge['name'],
     ReverseEdge<TConnector>
@@ -1333,7 +1333,7 @@ export class Node<
     return reverseEdges;
   }
 
-  @Memoize()
+  @MGetter
   public get reverseEdgeSet(): ReadonlySet<ReverseEdge<TConnector>> {
     return new Set(this.reverseEdgesByName.values());
   }
@@ -1356,7 +1356,7 @@ export class Node<
     return reverseEdge;
   }
 
-  @Memoize()
+  @MGetter
   public get uniqueReverseEdgesByName(): ReadonlyMap<
     UniqueReverseEdge['name'],
     UniqueReverseEdge<TConnector>
@@ -1371,7 +1371,7 @@ export class Node<
     );
   }
 
-  @Memoize()
+  @MGetter
   public get uniqueReverseEdgeSet(): ReadonlySet<
     UniqueReverseEdge<TConnector>
   > {
@@ -1396,7 +1396,7 @@ export class Node<
     return reverseEdge;
   }
 
-  @Memoize()
+  @MGetter
   public get multipleReverseEdgesByName(): ReadonlyMap<
     MultipleReverseEdge['name'],
     MultipleReverseEdge<TConnector>
@@ -1411,7 +1411,7 @@ export class Node<
     );
   }
 
-  @Memoize()
+  @MGetter
   public get multipleReverseEdgeSet(): ReadonlySet<
     MultipleReverseEdge<TConnector>
   > {
@@ -1436,7 +1436,7 @@ export class Node<
     return reverseEdge;
   }
 
-  @Memoize((onHeadDeletion: OnEdgeHeadDeletion) => onHeadDeletion)
+  @MMethod((onHeadDeletion) => onHeadDeletion)
   public getReverseEdgesByActionOnOriginalEdgeDeletion(
     onHeadDeletion: OnEdgeHeadDeletion,
   ): ReadonlyArray<ReverseEdge<TConnector>> {
@@ -1449,7 +1449,7 @@ export class Node<
       .toArray();
   }
 
-  @Memoize((onHeadDeletion: OnEdgeHeadDeletion) => onHeadDeletion)
+  @MMethod((onHeadDeletion) => onHeadDeletion)
   public getReverseEdgesByHeadByActionOnOriginalEdgeDeletion(
     onHeadDeletion: OnEdgeHeadDeletion,
   ): ReadonlyMap<
@@ -1472,59 +1472,59 @@ export class Node<
     return reverseEdgesByHead;
   }
 
-  @Memoize()
+  @MGetter
   public get outputType(): NodeOutputType {
     return new NodeOutputType(this);
   }
 
-  @Memoize()
+  @MGetter
   public get deletionOutputType(): DeletionOutputType {
     return new DeletionOutputType(this);
   }
 
-  @Memoize()
+  @MGetter
   public get uniqueFilterInputType(): NodeUniqueFilterInputType {
     return new NodeUniqueFilterInputType(this);
   }
 
-  @Memoize((edge: Edge) => edge)
+  @MMethod((edge) => edge)
   public getUniqueFilterWithoutEdgeInputType(
     edge: Edge,
   ): NodeUniqueFilterInputType {
     return new NodeUniqueFilterInputType(this, edge);
   }
 
-  @Memoize()
+  @MGetter
   public get filterInputType(): NodeFilterInputType {
     return new NodeFilterInputType(this);
   }
 
-  @Memoize()
+  @MGetter
   public get orderingInputType(): NodeOrderingInputType {
     return new NodeOrderingInputType(this);
   }
 
-  @Memoize()
+  @MGetter
   public get creationInputType(): NodeCreationInputType {
     return new NodeCreationInputType(this);
   }
 
-  @Memoize((edge: Edge) => edge)
+  @MMethod((edge) => edge)
   public getCreationWithoutEdgeInputType(edge: Edge): NodeCreationInputType {
     return new NodeCreationInputType(this, edge);
   }
 
-  @Memoize()
+  @MGetter
   public get updateInputType(): NodeUpdateInputType {
     return new NodeUpdateInputType(this);
   }
 
-  @Memoize((edge: Edge) => edge)
+  @MMethod((edge) => edge)
   public getUpdateWithoutEdgeInputType(edge: Edge): NodeUpdateInputType {
     return new NodeUpdateInputType(this, edge);
   }
 
-  @Memoize()
+  @MGetter
   public get operationsByType(): Readonly<OperationsByType<TRequestContext>> {
     return Object.fromEntries(
       utils.operationTypes.map((type) => {
@@ -1562,7 +1562,7 @@ export class Node<
     ) as any;
   }
 
-  @Memoize()
+  @MGetter
   public get operationsByKeyByType(): Readonly<
     OperationsByKeyByType<TRequestContext>
   > {
@@ -1646,7 +1646,7 @@ export class Node<
     );
   }
 
-  @Memoize()
+  @MGetter
   protected get operationsByMethod(): Readonly<
     OperationsByMethod<TRequestContext>
   > {
@@ -1673,7 +1673,7 @@ export class Node<
     return operation;
   }
 
-  @Memoize()
+  @MMethod()
   public validateDefinition(): void {
     utils.aggregateGraphError<Component, void>(
       this.componentSet,
@@ -1747,7 +1747,7 @@ export class Node<
     );
   }
 
-  @Memoize()
+  @MMethod()
   public validateTypes(): void {
     utils.aggregateGraphError<Component, void>(
       this.componentSet,
@@ -1779,7 +1779,7 @@ export class Node<
     }
   }
 
-  @Memoize()
+  @MMethod()
   public validateOperations(): void {
     utils.aggregateGraphError<Operation, void>(
       Object.values(this.operationsByType).flat(),
@@ -1814,7 +1814,7 @@ export class Node<
    * @example
    * const articles = await api.findMany(myRequestContext, { where: { status: ArticleStatus.Published }, first: 5, selection: `{ id title }` });
    */
-  @Memoize()
+  @MGetter
   public get api(): NodeAPI<TRequestContext> {
     return createNodeAPI(this);
   }

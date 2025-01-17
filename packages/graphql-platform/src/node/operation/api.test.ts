@@ -1,32 +1,23 @@
 import assert from 'node:assert';
 import { before, describe, it } from 'node:test';
 import {
-  MyContext,
-  MyGP,
+  type MyContext,
   myAdminContext,
   nodes,
 } from '../../__tests__/config.js';
 import { mockConnector } from '../../__tests__/connector-mock.js';
 import { GraphQLPlatform } from '../../index.js';
-import { API, ContextBoundAPI } from './api.js';
+import type { API, ContextBoundAPI } from './api.js';
 import { ChangesSubscriptionStream } from './subscription.js';
 
 describe('API', () => {
-  let gp: MyGP;
-
-  before(() => {
-    gp = new GraphQLPlatform({
-      nodes,
-      connector: mockConnector({ count: async () => 5, find: async () => [] }),
-    });
+  const gp = new GraphQLPlatform({
+    nodes,
+    connector: mockConnector({ count: async () => 5, find: async () => [] }),
   });
 
   describe('API', () => {
-    let api: API<MyContext>;
-
-    before(() => {
-      api = gp.api;
-    });
+    const api: API<MyContext> = gp.api;
 
     it('is callable', async () => {
       assert.strictEqual(await api.Article.count(myAdminContext, {}), 5);

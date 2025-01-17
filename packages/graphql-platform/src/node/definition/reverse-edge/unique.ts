@@ -1,5 +1,5 @@
 import * as utils from '@prismamedia/graphql-platform-utils';
-import { Memoize } from '@prismamedia/memoize';
+import { MGetter } from '@prismamedia/memoize';
 import inflection from 'inflection';
 import assert from 'node:assert';
 import type { ConnectorInterface } from '../../../connector-interface.js';
@@ -7,7 +7,7 @@ import { UniqueReverseEdgeCreationInput } from '../../type/input/creation/field/
 import { UniqueReverseEdgeUpdateInput } from '../../type/input/update/field/reverse-edge/unique.js';
 import {
   AbstractReverseEdge,
-  AbstractReverseEdgeConfig,
+  type AbstractReverseEdgeConfig,
 } from '../abstract-reverse-edge.js';
 import type { Edge } from '../component/edge.js';
 
@@ -61,7 +61,7 @@ export class UniqueReverseEdge<
     }
   }
 
-  @Memoize()
+  @MGetter
   public override get creationInput():
     | UniqueReverseEdgeCreationInput
     | undefined {
@@ -70,7 +70,7 @@ export class UniqueReverseEdge<
       : undefined;
   }
 
-  @Memoize()
+  @MGetter
   public override get updateInput(): UniqueReverseEdgeUpdateInput | undefined {
     return UniqueReverseEdgeUpdateInput.supports(this)
       ? new UniqueReverseEdgeUpdateInput(this)

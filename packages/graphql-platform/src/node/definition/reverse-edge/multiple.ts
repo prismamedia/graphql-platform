@@ -1,5 +1,5 @@
 import * as utils from '@prismamedia/graphql-platform-utils';
-import { Memoize } from '@prismamedia/memoize';
+import { MGetter, MMethod } from '@prismamedia/memoize';
 import inflection from 'inflection';
 import assert from 'node:assert';
 import type { ConnectorInterface } from '../../../connector-interface.js';
@@ -10,7 +10,7 @@ import { MultipleReverseEdgeUpdateInput } from '../../type/input/update/field/re
 import type { MultipleReverseEdgeHeadOutputArgs } from '../../type/output/node/field/reverse-edge/multiple-head.js';
 import {
   AbstractReverseEdge,
-  AbstractReverseEdgeConfig,
+  type AbstractReverseEdgeConfig,
 } from '../abstract-reverse-edge.js';
 import type { Edge } from '../component/edge.js';
 
@@ -79,14 +79,14 @@ export class MultipleReverseEdge<
     this.countFieldName = `${inflection.singularize(name)}Count`;
   }
 
-  @Memoize((direction: OrderingDirection) => direction)
+  @MMethod((direction) => direction)
   public getOrderingInput(
     direction: OrderingDirection,
   ): MultipleReverseEdgeCountOrderingInput {
     return new MultipleReverseEdgeCountOrderingInput(this, direction);
   }
 
-  @Memoize()
+  @MGetter
   public override get creationInput():
     | MultipleReverseEdgeCreationInput
     | undefined {
@@ -95,7 +95,7 @@ export class MultipleReverseEdge<
       : undefined;
   }
 
-  @Memoize()
+  @MGetter
   public override get updateInput():
     | MultipleReverseEdgeUpdateInput
     | undefined {

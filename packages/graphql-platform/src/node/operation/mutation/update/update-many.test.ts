@@ -1,11 +1,11 @@
 import assert from 'node:assert';
 import { beforeEach, describe, it } from 'node:test';
 import {
-  MyContext,
-  MyGP,
   myAdminContext,
   myVisitorContext,
   nodes,
+  type MyContext,
+  type MyGP,
 } from '../../../../__tests__/config.js';
 import {
   clearConnectorMockCalls,
@@ -14,7 +14,7 @@ import {
 } from '../../../../__tests__/connector-mock.js';
 import { GraphQLPlatform } from '../../../../index.js';
 import { UnauthorizedError } from '../../error.js';
-import { UpdateManyMutationArgs } from './update-many.js';
+import type { UpdateManyMutationArgs } from './update-many.js';
 
 describe('UpdateManyMutation', () => {
   const gp: MyGP<MockedConnector> = new GraphQLPlatform({

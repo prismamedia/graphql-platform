@@ -1,5 +1,5 @@
 import type * as utils from '@prismamedia/graphql-platform-utils';
-import { Memoize } from '@prismamedia/memoize';
+import { MMethod } from '@prismamedia/memoize';
 import type { Component } from '../../../../definition/component.js';
 import { NodeOutputType } from '../../node.js';
 import { AbstractFieldOutputType } from '../abstract-field.js';
@@ -14,7 +14,7 @@ export abstract class AbstractComponentOutputType<
     super();
   }
 
-  @Memoize()
+  @MMethod()
   public override isPublic(): boolean {
     return this.component.isPublic();
   }

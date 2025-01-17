@@ -21,8 +21,8 @@ import type {
   IndexInformationsByColumnName,
 } from './abstract-index-diagnosis.js';
 import {
-  Column,
-  ColumnDiagnosis,
+  type Column,
+  type ColumnDiagnosis,
   LeafColumn,
   LeafColumnDiagnosis,
   ReferenceColumnDiagnosis,
@@ -37,8 +37,8 @@ import {
 import {
   FullTextIndex,
   FullTextIndexDiagnosis,
-  Index,
-  IndexDiagnosis,
+  type Index,
+  type IndexDiagnosis,
   PlainIndex,
   PlainIndexDiagnosis,
   PrimaryKey,

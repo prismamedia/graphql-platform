@@ -2,11 +2,11 @@ import * as graphql from 'graphql';
 import assert from 'node:assert';
 import { before, describe, it } from 'node:test';
 import { inspect } from 'node:util';
-import { MyGP, nodeNames, nodes } from '../../../__tests__/config.js';
+import { type MyGP, nodeNames, nodes } from '../../../__tests__/config.js';
 import { Edge, GraphQLPlatform, Node } from '../../../index.js';
 import {
   NodeUniqueFilterInputType,
-  NodeUniqueFilterInputValue,
+  type NodeUniqueFilterInputValue,
 } from './unique-filter.js';
 
 describe('NodeUniqueFilterInputType', () => {

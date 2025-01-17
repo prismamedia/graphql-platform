@@ -1,6 +1,6 @@
 import assert from 'node:assert';
-import { IndexInformation } from '../../statement.js';
-import { DiagnosisError } from '../diagnosis.js';
+import type { IndexInformation } from '../../statement.js';
+import type { DiagnosisError } from '../diagnosis.js';
 import type { AbstractIndex } from './abstract-index.js';
 import type { Column } from './column.js';
 

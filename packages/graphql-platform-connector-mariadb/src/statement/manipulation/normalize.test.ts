@@ -6,18 +6,16 @@ import * as fixtures from '@prismamedia/graphql-platform/__tests__/fixture.js';
 import assert from 'node:assert';
 import { after, before, describe, it } from 'node:test';
 import { inspect } from 'node:util';
-import { createMyGP, type MyGP } from '../../__tests__/config.js';
+import { createMyGP } from '../../__tests__/config.js';
 import {
   NormalizeStatement,
   type NormalizeStatementConfig,
 } from './normalize.js';
 
 describe('Normalize statement', () => {
-  let gp: MyGP;
+  const gp = createMyGP(`connector_mariadb_normalize_statement`);
 
   before(async () => {
-    gp = createMyGP(`connector_mariadb_normalize_statement`);
-
     await gp.connector.setup();
     await gp.seed(myAdminContext, fixtures.constant);
   });

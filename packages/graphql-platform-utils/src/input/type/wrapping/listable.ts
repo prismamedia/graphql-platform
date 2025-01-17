@@ -1,4 +1,4 @@
-import { Memoize } from '@prismamedia/memoize';
+import { MMethod } from '@prismamedia/memoize';
 import * as graphql from 'graphql';
 import { aggregateGraphError } from '../../../error.js';
 import { isIterableObject } from '../../../is-iterable-object.js';
@@ -15,7 +15,7 @@ import {
 import { AbstractWrappingInputType } from './abstract.js';
 
 export class ListableInputType extends AbstractWrappingInputType {
-  @Memoize()
+  @MMethod()
   public toString(): string {
     return `[${this.ofType}]`;
   }

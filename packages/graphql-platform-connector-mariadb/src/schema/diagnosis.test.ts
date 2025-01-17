@@ -1,22 +1,18 @@
 import assert from 'node:assert';
 import { EOL } from 'node:os';
-import { after, before, describe, it } from 'node:test';
-import { createMyGP, type MyGP } from '../__tests__/config.js';
+import { after, describe, it } from 'node:test';
+import { createMyGP } from '../__tests__/config.js';
 import { escapeIdentifier, escapeStringValue } from '../escaping.js';
 import { SchemaDiagnosis } from '../schema.js';
 import { StatementKind } from '../statement.js';
 
 describe('SchemaDiagnosis', () => {
-  let gp: MyGP;
-
-  before(() => {
-    gp = createMyGP(`connector_mariadb_schema_diagnosis`);
-  });
+  const gp = createMyGP(`connector_mariadb_schema_diagnosis`);
 
   after(() => gp.connector.teardown());
 
   it('diagnosis', async () => {
-    gp.connector.on('failed-statement', ({ statement, error }) =>
+    using _ = gp.connector.on('failed-statement', ({ statement, error }) =>
       console.error(statement.sql, error.message),
     );
 
@@ -77,7 +73,7 @@ describe('SchemaDiagnosis', () => {
       errors: 89,
 
       collation: {
-        actual: 'utf8mb4_general_ci',
+        actual: 'utf8mb4_uca1400_ai_ci',
         expected: 'utf8mb4_unicode_520_ci',
       },
       comment: {

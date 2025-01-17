@@ -1,11 +1,7 @@
 import assert from 'node:assert';
 import { before, describe, it } from 'node:test';
-import {
-  ArticleStatus,
-  createMyGP,
-  type MyGP,
-} from '../../__tests__/config.js';
-import type { Node, OrderByInputValue } from '../../node.js';
+import { ArticleStatus, createMyGP } from '../../__tests__/config.js';
+import type { OrderByInputValue } from '../../node.js';
 import {
   NodeCreation,
   NodeDeletion,
@@ -16,17 +12,10 @@ import {
 import type { NodeOrdering } from './ordering.js';
 
 describe('Ordering', () => {
-  let gp: MyGP;
+  const gp = createMyGP();
 
-  let Article: Node;
-  let ArticleTag: Node;
-
-  before(() => {
-    gp = createMyGP();
-
-    Article = gp.getNodeByName('Article');
-    ArticleTag = gp.getNodeByName('ArticleTag');
-  });
+  const Article = gp.getNodeByName('Article');
+  const ArticleTag = gp.getNodeByName('ArticleTag');
 
   describe('Definition', () => {
     (
@@ -125,7 +114,7 @@ describe('Ordering', () => {
           const dependentGraph = dependency.createDependentGraph(creation);
 
           assert(!dependentGraph.isEmpty());
-          assert.deepEqual(dependentGraph.target.inputValue, {
+          assert.deepEqual(dependentGraph.graphFilter.inputValue, {
             _id: 2,
           });
         });

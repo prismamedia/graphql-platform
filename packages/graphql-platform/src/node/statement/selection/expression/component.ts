@@ -1,4 +1,4 @@
-import { EdgeSelection, isEdgeSelection } from './component/edge.js';
+import { type EdgeSelection, isEdgeSelection } from './component/edge.js';
 import { LeafSelection } from './component/leaf.js';
 
 export * from './component/edge.js';

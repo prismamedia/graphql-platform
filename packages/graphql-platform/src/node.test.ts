@@ -7,11 +7,11 @@ import * as R from 'remeda';
 import { Article, Category, nodes } from './__tests__/config.js';
 import { GraphQLPlatform } from './index.js';
 import {
-  ComponentConfig,
+  type ComponentConfig,
   Edge,
   MultipleReverseEdge,
-  NodeConfig,
-  NodeName,
+  type NodeConfig,
+  type NodeName,
   NodeSelection,
   OnEdgeHeadDeletion,
 } from './node.js';

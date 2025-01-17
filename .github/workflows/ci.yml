@@ -8,11 +8,15 @@ jobs:
 
     services:
       mariadb:
-        image: bitnami/mariadb:11.4
+        image: mariadb:11.4
+        options: >-
+          --health-cmd="mariadb-admin ping"
+          --health-interval=10s
+          --health-timeout=5s
+          --health-retries=3
         env:
           MARIADB_ROOT_PASSWORD: my_root_password_for_tests
         ports: ['3306:3306']
-        options: --health-cmd="mysqladmin ping" --health-interval=10s --health-timeout=5s --health-retries=3
 
     strategy:
       fail-fast: false
@@ -30,7 +34,7 @@ jobs:
     continue-on-error: ${{ matrix.continue-on-error == true }}
 
     container:
-      image: node:${{ matrix.node }}-alpine
+      image: node:${{ matrix.node }}
 
     steps:
       - name: Checkout the code

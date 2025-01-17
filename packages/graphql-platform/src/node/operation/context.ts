@@ -1,5 +1,5 @@
 import * as utils from '@prismamedia/graphql-platform-utils';
-import { Memoize } from '@prismamedia/memoize';
+import { MGetter, MMethod } from '@prismamedia/memoize';
 import type { BrokerInterface } from '../../broker-interface.js';
 import type { ConnectorInterface } from '../../connector-interface.js';
 import type { GraphQLPlatform } from '../../index.js';
@@ -48,12 +48,12 @@ export class OperationContext<
   /**
    * Returns a "context"-bound version of the API, so the developer only has to provide the operations' args
    */
-  @Memoize()
+  @MGetter
   public get api(): ContextBoundAPI {
     return this.gp.createContextBoundAPI(this);
   }
 
-  @Memoize(
+  @MMethod(
     (node: Node, mutationType?: utils.MutationType) =>
       `${node}#${mutationType ?? ''}`,
   )

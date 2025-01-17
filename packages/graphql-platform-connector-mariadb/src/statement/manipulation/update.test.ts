@@ -10,14 +10,12 @@ import {
 import * as fixtures from '@prismamedia/graphql-platform/__tests__/fixture.js';
 import { after, before, describe, it } from 'node:test';
 import * as R from 'remeda';
-import { createMyGP, type MyGP } from '../../__tests__/config.js';
+import { createMyGP } from '../../__tests__/config.js';
 
 describe('Update statement', () => {
-  let gp: MyGP;
+  const gp = createMyGP(`connector_mariadb_update_statement`);
 
   before(async () => {
-    gp = createMyGP(`connector_mariadb_update_statement`);
-
     await gp.connector.setup();
     await gp.seed(myAdminContext, fixtures.constant);
   });

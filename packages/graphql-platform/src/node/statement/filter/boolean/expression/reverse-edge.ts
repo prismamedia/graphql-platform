@@ -1,10 +1,10 @@
 import {
   isMultipleReverseEdgeFilter,
-  MultipleReverseEdgeFilter,
+  type MultipleReverseEdgeFilter,
 } from './reverse-edge/multiple.js';
 import {
   isUniqueReverseEdgeFilter,
-  UniqueReverseEdgeFilter,
+  type UniqueReverseEdgeFilter,
 } from './reverse-edge/unique.js';
 
 export * from './reverse-edge/multiple.js';

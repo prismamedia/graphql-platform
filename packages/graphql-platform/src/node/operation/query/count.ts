@@ -1,6 +1,6 @@
 import * as scalars from '@prismamedia/graphql-platform-scalars';
 import * as utils from '@prismamedia/graphql-platform-utils';
-import { Memoize } from '@prismamedia/memoize';
+import { MGetter } from '@prismamedia/memoize';
 import * as graphql from 'graphql';
 import inflection from 'inflection';
 import type { ConnectorInterface } from '../../../connector-interface.js';
@@ -35,7 +35,7 @@ export class CountQuery<TRequestContext extends object> extends AbstractQuery<
   public readonly name = `${inflection.camelize(this.node.name, true)}Count`;
   public override readonly description = `Gets the number of "${this.node.plural}"`;
 
-  @Memoize()
+  @MGetter
   public override get arguments() {
     return [
       new utils.Input({

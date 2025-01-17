@@ -1,24 +1,15 @@
 import * as utils from '@prismamedia/graphql-platform-utils';
 import * as graphql from 'graphql';
 import assert from 'node:assert';
-import { before, describe, it } from 'node:test';
+import { describe, it } from 'node:test';
 import { inspect } from 'node:util';
 import * as R from 'remeda';
-import {
-  ArticleStatus,
-  MyGP,
-  nodeNames,
-  nodes,
-} from '../../../__tests__/config.js';
+import { ArticleStatus, nodeNames, nodes } from '../../../__tests__/config.js';
 import { GraphQLPlatform } from '../../../index.js';
 import { NodeFilterInputType, type NodeFilterInputValue } from './filter.js';
 
 describe('NodeFilterInputType', () => {
-  let gp: MyGP;
-
-  before(() => {
-    gp = new GraphQLPlatform({ nodes });
-  });
+  const gp = new GraphQLPlatform({ nodes });
 
   describe('Definition', () => {
     nodeNames.forEach((nodeName) => {

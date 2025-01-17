@@ -1,17 +1,13 @@
 import * as graphql from 'graphql';
 import assert from 'node:assert';
-import { before, describe, it } from 'node:test';
+import { describe, it } from 'node:test';
 import { inspect } from 'node:util';
-import { MyGP, nodeNames, nodes } from '../../../__tests__/config.js';
+import { nodeNames, nodes } from '../../../__tests__/config.js';
 import { GraphQLPlatform } from '../../../index.js';
 import { NodeCreationInputType } from './creation.js';
 
 describe('NodeCreationInputType', () => {
-  let gp: MyGP;
-
-  before(() => {
-    gp = new GraphQLPlatform({ nodes });
-  });
+  const gp = new GraphQLPlatform({ nodes });
 
   describe('Definition', () => {
     nodeNames.forEach((nodeName) => {

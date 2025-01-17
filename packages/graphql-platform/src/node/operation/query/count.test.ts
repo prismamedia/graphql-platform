@@ -1,11 +1,11 @@
 import assert from 'node:assert';
 import { beforeEach, describe, it } from 'node:test';
 import {
-  MyContext,
-  MyGP,
   myAdminContext,
   myVisitorContext,
   nodes,
+  type MyContext,
+  type MyGP,
 } from '../../../__tests__/config.js';
 import {
   clearConnectorMockCalls,
@@ -18,7 +18,7 @@ import {
   OperationContext,
 } from '../../../index.js';
 import { UnauthorizedError } from '../error.js';
-import { CountQueryArgs } from './count.js';
+import type { CountQueryArgs } from './count.js';
 
 describe('CountQuery', () => {
   const gp: MyGP<MockedConnector> = new GraphQLPlatform({

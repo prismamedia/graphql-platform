@@ -1,6 +1,6 @@
 import * as core from '@prismamedia/graphql-platform';
 import * as utils from '@prismamedia/graphql-platform-utils';
-import { Memoize } from '@prismamedia/memoize';
+import { MGetter, MMethod } from '@prismamedia/memoize';
 import assert from 'node:assert';
 import type { MariaDBConnector } from '../../../index.js';
 import type { Column, Schema, Table } from '../../../schema.js';
@@ -41,7 +41,7 @@ export class ReferenceColumn extends AbstractColumn {
     return false;
   }
 
-  @Memoize()
+  @MMethod()
   public override isNullable(): boolean {
     return this.edge.isNullable() || this.referencedColumn.isNullable();
   }
@@ -193,7 +193,7 @@ export class ReferenceColumnTree {
     return columnTree;
   }
 
-  @Memoize()
+  @MGetter
   public get columns(): ReadonlyArray<ReferenceColumn> {
     return Object.freeze(
       Array.from(

@@ -1,4 +1,4 @@
-import { Memoize } from '@prismamedia/memoize';
+import { MGetter, MMethod } from '@prismamedia/memoize';
 import * as graphql from 'graphql';
 import assert from 'node:assert';
 import { isDeepStrictEqual } from 'node:util';
@@ -23,7 +23,7 @@ import { resolveThunkable, type Thunkable } from '../../../thunkable.js';
 import type { NonNullNonVariableGraphQLValueNode } from '../../type.js';
 import {
   AbstractNamedInputType,
-  AbstractNamedInputTypeConfig,
+  type AbstractNamedInputTypeConfig,
 } from './abstract.js';
 
 export type EnumInputValueConfig = {
@@ -156,7 +156,7 @@ export class EnumInputValue {
     return this.name;
   }
 
-  @Memoize()
+  @MMethod()
   public isPublic(): boolean {
     const publicConfig = this.config.public;
     const publicConfigPath = addPath(this.configPath, 'public');
@@ -178,7 +178,7 @@ export class EnumInputValue {
     };
   }
 
-  @Memoize()
+  @MMethod()
   public validate(): void {
     if (this.isPublic()) {
       this.getGraphQLEnumValueConfig();
@@ -208,7 +208,7 @@ export class EnumInputType<
     this.#valuesConfigPath = addPath(configPath, 'values');
   }
 
-  @Memoize()
+  @MGetter
   public get enumValues(): ReadonlyArray<TValue> {
     const values = resolveThunkable(this.#valuesConfig);
 
@@ -230,14 +230,14 @@ export class EnumInputType<
       : [];
   }
 
-  @Memoize()
+  @MGetter
   public get enumValuesByValue(): ReadonlyMap<TValue['value'], TValue> {
     return new Map(
       this.enumValues.map((enumValue) => [enumValue.value, enumValue]),
     );
   }
 
-  @Memoize()
+  @MGetter
   public get publicEnumValuesByValue(): ReadonlyMap<TValue['value'], TValue> {
     return new Map(
       aggregateGraphError<TValue, [TValue['value'], TValue][]>(
@@ -250,12 +250,12 @@ export class EnumInputType<
     );
   }
 
-  @Memoize()
+  @MMethod()
   public override isPublic(): boolean {
     return this.publicEnumValuesByValue.size > 0;
   }
 
-  @Memoize()
+  @MMethod()
   public override getGraphQLInputType(): graphql.GraphQLEnumType {
     assert(this.isPublic(), `The "${this}" input type is private`);
 
@@ -271,7 +271,7 @@ export class EnumInputType<
     });
   }
 
-  @Memoize()
+  @MMethod()
   public override validate(): void {
     aggregateGraphError<TValue, void>(
       this.enumValuesByValue.values(),

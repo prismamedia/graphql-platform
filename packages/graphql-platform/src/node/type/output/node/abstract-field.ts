@@ -1,5 +1,5 @@
 import * as utils from '@prismamedia/graphql-platform-utils';
-import { Memoize } from '@prismamedia/memoize';
+import { MMethod } from '@prismamedia/memoize';
 import * as graphql from 'graphql';
 import assert from 'node:assert';
 import { argsPathKey } from '../../../abstract-operation.js';
@@ -50,7 +50,7 @@ export abstract class AbstractFieldOutputType<
     };
   }
 
-  @Memoize()
+  @MMethod()
   public validate(): void {
     this.args?.forEach((arg) => arg.validate());
 

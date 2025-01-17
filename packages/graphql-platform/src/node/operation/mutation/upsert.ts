@@ -1,5 +1,5 @@
 import * as utils from '@prismamedia/graphql-platform-utils';
-import { Memoize } from '@prismamedia/memoize';
+import { MGetter, MMethod } from '@prismamedia/memoize';
 import * as graphql from 'graphql';
 import type {
   NodeSelectionAwareArgs,
@@ -40,7 +40,7 @@ export class UpsertMutation<
   public readonly name = `upsert${this.node}`;
   public override readonly description = `Updates an existing "${this.node}" or creates a new one`;
 
-  @Memoize()
+  @MGetter
   public override get arguments() {
     return [
       new utils.Input({
@@ -58,7 +58,7 @@ export class UpsertMutation<
     ];
   }
 
-  @Memoize()
+  @MMethod()
   public getGraphQLFieldConfigType() {
     return new graphql.GraphQLNonNull(
       this.node.outputType.getGraphQLObjectType(),

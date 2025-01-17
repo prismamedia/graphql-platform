@@ -1,6 +1,5 @@
 import * as core from '@prismamedia/graphql-platform';
-import { Memoize } from '@prismamedia/memoize';
-
+import { MGetter } from '@prismamedia/memoize';
 import assert from 'node:assert';
 import { escapeIdentifier } from '../../../escaping.js';
 import type { MariaDBConnector } from '../../../index.js';
@@ -33,7 +32,7 @@ export class PrimaryKey extends AbstractIndex {
     }
   }
 
-  @Memoize()
+  @MGetter
   public override get columns(): ReadonlyArray<Column> {
     return Object.freeze(
       this.table.getColumnsByComponents(
@@ -45,7 +44,7 @@ export class PrimaryKey extends AbstractIndex {
   /**
    * @see https://mariadb.com/kb/en/create-table/#primary-key
    */
-  @Memoize()
+  @MGetter
   public override get definition(): string {
     return `PRIMARY KEY (${this.columns
       .map(({ name }) => escapeIdentifier(name))

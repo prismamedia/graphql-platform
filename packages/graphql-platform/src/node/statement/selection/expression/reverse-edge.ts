@@ -1,10 +1,10 @@
 import {
   isMultipleReverseEdgeSelection,
-  MultipleReverseEdgeSelection,
+  type MultipleReverseEdgeSelection,
 } from './reverse-edge/multiple.js';
 import {
   isUniqueReverseEdgeSelection,
-  UniqueReverseEdgeSelection,
+  type UniqueReverseEdgeSelection,
 } from './reverse-edge/unique.js';
 
 export * from './reverse-edge/multiple.js';

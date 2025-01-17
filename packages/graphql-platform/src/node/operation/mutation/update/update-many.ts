@@ -1,6 +1,6 @@
 import * as scalars from '@prismamedia/graphql-platform-scalars';
 import * as utils from '@prismamedia/graphql-platform-utils';
-import { Memoize } from '@prismamedia/memoize';
+import { MGetter } from '@prismamedia/memoize';
 import * as graphql from 'graphql';
 import * as R from 'remeda';
 import type { ConnectorInterface } from '../../../../connector-interface.js';
@@ -15,8 +15,8 @@ import type { UniqueConstraintValue } from '../../../definition.js';
 import {
   NodeFilter,
   NodeUpdateStatement,
-  NodeUpdateValue,
   type NodeSelectedValue,
+  type NodeUpdateValue,
 } from '../../../statement.js';
 import type {
   NodeFilterInputValue,
@@ -53,7 +53,7 @@ export class UpdateManyMutation<
   public readonly name = `update${this.node.plural}`;
   public override readonly description = `Updates many "${this.node.plural}"`;
 
-  @Memoize()
+  @MGetter
   public override get arguments() {
     return [
       new utils.Input({

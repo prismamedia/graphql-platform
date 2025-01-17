@@ -1,11 +1,11 @@
 import * as utils from '@prismamedia/graphql-platform-utils';
-import { Memoize } from '@prismamedia/memoize';
+import { MGetter } from '@prismamedia/memoize';
 import * as graphql from 'graphql';
 import inflection from 'inflection';
 import {
   argsPathKey,
-  NodeSelectionAwareArgs,
-  RawNodeSelectionAwareArgs,
+  type NodeSelectionAwareArgs,
+  type RawNodeSelectionAwareArgs,
 } from '../../abstract-operation.js';
 import type { NodeFilter, NodeSelectedValue } from '../../statement.js';
 import type {
@@ -38,7 +38,7 @@ export class GetSomeInOrderIfExistsQuery<
   )}InOrderIfExists`;
   public override readonly description = `Given a list of unique-filter's value, retrieves the corresponding "${this.node.plural}", or null, in the same order`;
 
-  @Memoize()
+  @MGetter
   public override get arguments() {
     return [
       new utils.Input({

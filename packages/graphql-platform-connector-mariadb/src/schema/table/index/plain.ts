@@ -1,6 +1,6 @@
 import type * as core from '@prismamedia/graphql-platform';
 import * as utils from '@prismamedia/graphql-platform-utils';
-import { Memoize } from '@prismamedia/memoize';
+import { MGetter } from '@prismamedia/memoize';
 import { escapeIdentifier } from '../../../escaping.js';
 import { ensureIdentifierName } from '../../naming-strategy.js';
 import type { Table } from '../../table.js';
@@ -35,7 +35,7 @@ export class PlainIndex extends AbstractIndex {
     super(table);
   }
 
-  @Memoize()
+  @MGetter
   public override get columns(): ReadonlyArray<Column> {
     const config = this.config.components;
     const configPath = utils.addPath(this.configPath, 'components');
@@ -52,7 +52,7 @@ export class PlainIndex extends AbstractIndex {
     );
   }
 
-  @Memoize()
+  @MGetter
   public get name(): string {
     const nameConfig = this.config?.name;
     const nameConfigPath = utils.addPath(this.configPath, 'name');
@@ -65,7 +65,7 @@ export class PlainIndex extends AbstractIndex {
   /**
    * @see https://mariadb.com/kb/en/create-table/#plain-indexes
    */
-  @Memoize()
+  @MGetter
   public override get definition(): string {
     return `INDEX ${escapeIdentifier(this.name)} (${this.columns
       .map(({ name }) => escapeIdentifier(name))

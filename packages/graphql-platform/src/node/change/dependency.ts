@@ -1,8 +1,8 @@
 import { isIterableObject } from '@prismamedia/graphql-platform-utils';
-import { Memoize } from '@prismamedia/memoize';
+import { MGetter, MMethod } from '@prismamedia/memoize';
 import assert from 'node:assert';
 import type { Arrayable, JsonObject } from 'type-fest';
-import { Node, NodeValue } from '../../node.js';
+import { Node, type NodeValue } from '../../node.js';
 import {
   NodeChangeAggregation,
   NodeCreation,
@@ -150,7 +150,7 @@ export class DependencyGraph {
     ];
   }
 
-  @Memoize()
+  @MGetter
   public get summary(): DependencyTreeSummary {
     return new DependencyTreeSummary(this);
   }
@@ -437,8 +437,8 @@ export class NodeDependencyGraph extends DependencyGraph {
 }
 
 export class NodeSetDependencyGraph extends NodeDependencyGraph {
-  public readonly creation: boolean;
-  public readonly deletion: boolean;
+  public override readonly creation: boolean;
+  public override readonly deletion: boolean;
 
   public constructor(
     node: Node,
@@ -729,7 +729,7 @@ export class DependentGraph<TRequestContext extends object = any> {
     );
   }
 
-  @Memoize()
+  @MMethod()
   public isEmpty(): boolean {
     return (
       !this.changes.size &&
@@ -738,7 +738,7 @@ export class DependentGraph<TRequestContext extends object = any> {
     );
   }
 
-  @Memoize()
+  @MMethod()
   public toJSON(): DependentGraphJSON {
     return {
       ...(this.upserts.size && {
@@ -773,8 +773,35 @@ export class DependentGraph<TRequestContext extends object = any> {
     };
   }
 
-  @Memoize()
-  public get target(): NodeFilter {
+  @MGetter
+  public get graphInitiators(): ReadonlySet<TRequestContext> {
+    return new Set<TRequestContext>(
+      this.path
+        ? this.changes.values().map(({ requestContext }) => requestContext)
+        : [],
+    )
+      .union(
+        this.dependentsByEdge
+          .values()
+          .reduce(
+            (initiators, { graphInitiators }) =>
+              initiators.union(graphInitiators),
+            new Set<TRequestContext>(),
+          ),
+      )
+      .union(
+        this.dependentsByReverseEdge
+          .values()
+          .reduce(
+            (initiators, { graphInitiators }) =>
+              initiators.union(graphInitiators),
+            new Set<TRequestContext>(),
+          ),
+      );
+  }
+
+  @MGetter
+  public get graphFilter(): NodeFilter {
     if (this.path) {
       const tail = this.path.tail;
       const head = this.path.head;
@@ -815,10 +842,10 @@ export class DependentGraph<TRequestContext extends object = any> {
                   ),
                 ...this.dependentsByEdge
                   .values()
-                  .map(({ target: { filter } }) => filter),
+                  .map(({ graphFilter: { filter } }) => filter),
                 ...this.dependentsByReverseEdge
                   .values()
-                  .map(({ target: { filter } }) => filter),
+                  .map(({ graphFilter: { filter } }) => filter),
               ]),
             ),
           ),
@@ -832,10 +859,10 @@ export class DependentGraph<TRequestContext extends object = any> {
           OrOperation.create([
             ...this.dependentsByEdge
               .values()
-              .map(({ target: { filter } }) => filter),
+              .map(({ graphFilter: { filter } }) => filter),
             ...this.dependentsByReverseEdge
               .values()
-              .map(({ target: { filter } }) => filter),
+              .map(({ graphFilter: { filter } }) => filter),
           ]),
         );
 
@@ -879,10 +906,10 @@ export class DependentGraph<TRequestContext extends object = any> {
       OrOperation.create([
         ...this.dependentsByEdge
           .values()
-          .map(({ target: { filter } }) => filter),
+          .map(({ graphFilter: { filter } }) => filter),
         ...this.dependentsByReverseEdge
           .values()
-          .map(({ target: { filter } }) => filter),
+          .map(({ graphFilter: { filter } }) => filter),
       ]),
     );
   }

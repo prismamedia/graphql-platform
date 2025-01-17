@@ -1,5 +1,5 @@
 import type { PartialDeep } from 'type-fest';
-import { NodeFixtureData } from '../../node/fixture.js';
+import type { NodeFixtureData } from '../../node/fixture.js';
 import type { NodeFixtureDataByReferenceByNodeName } from '../../seeding.js';
 import { ArticleStatus, ArticleStatusUtils } from '../config.js';
 

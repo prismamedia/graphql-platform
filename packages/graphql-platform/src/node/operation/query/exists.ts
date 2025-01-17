@@ -1,6 +1,6 @@
 import * as scalars from '@prismamedia/graphql-platform-scalars';
 import * as utils from '@prismamedia/graphql-platform-utils';
-import { Memoize } from '@prismamedia/memoize';
+import { MGetter } from '@prismamedia/memoize';
 import * as graphql from 'graphql';
 import inflection from 'inflection';
 import type { NodeSelectionAwareArgs } from '../../abstract-operation.js';
@@ -24,7 +24,7 @@ export class ExistsQuery<TRequestContext extends object> extends AbstractQuery<
   public readonly name = `${inflection.camelize(this.node.name, true)}Exists`;
   public override readonly description = `Either the "${this.node}" exists or not?`;
 
-  @Memoize()
+  @MGetter
   public override get arguments() {
     return [
       new utils.Input({

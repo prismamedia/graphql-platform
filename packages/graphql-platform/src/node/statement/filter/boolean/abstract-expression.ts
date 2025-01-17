@@ -1,4 +1,4 @@
-import * as graphql from 'graphql';
+import type * as graphql from 'graphql';
 import type { NodeFilterInputValue } from '../../../type/input/filter.js';
 import { AbstractBooleanFilter } from '../abstract.js';
 

@@ -1,5 +1,5 @@
 import * as utils from '@prismamedia/graphql-platform-utils';
-import { Memoize } from '@prismamedia/memoize';
+import { MGetter } from '@prismamedia/memoize';
 import * as graphql from 'graphql';
 import type { CamelCase } from 'type-fest';
 import type { BrokerInterface } from '../../broker-interface.js';
@@ -25,7 +25,7 @@ export abstract class AbstractQuery<
 > {
   public readonly operationType = graphql.OperationTypeNode.QUERY;
 
-  @Memoize()
+  @MGetter
   public get method(): CamelCase<this['key']> {
     return this.key.replaceAll(/((?:-).)/g, ([_match, letter]) =>
       letter.toUpperCase(),

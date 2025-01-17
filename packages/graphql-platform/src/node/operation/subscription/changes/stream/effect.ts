@@ -1,7 +1,10 @@
 import * as scalars from '@prismamedia/graphql-platform-scalars';
 import type { NodeValue } from '../../../../../node.js';
-import type { NodeCreation, NodeUpdate } from '../../../../change.js';
-import type { DependentGraph } from '../../../../change/dependency.js';
+import type {
+  DependentGraph,
+  NodeCreation,
+  NodeUpdate,
+} from '../../../../change.js';
 import type { NodeSelectedValue } from '../../../../statement.js';
 import type { ScrollSubscriptionArgs } from '../../scroll.js';
 import type { ChangesSubscriptionStream } from '../stream.js';
@@ -12,20 +15,28 @@ import {
 } from './change.js';
 
 /**
- * Group all the effect that an aggregation of changes can have on a subscription
+ * Group all the effects that some changes can have on a subscription
  */
 export class ChangesSubscriptionEffect<
+  TRequestContext extends object = any,
   TUpsert extends NodeSelectedValue = any,
   TDeletion extends NodeValue = any,
-> implements AsyncIterable<ChangesSubscriptionChange<TUpsert, TDeletion>>
+> implements
+    AsyncIterable<
+      ChangesSubscriptionChange<TRequestContext, TUpsert, TDeletion>
+    >
 {
   public constructor(
-    public readonly subscription: ChangesSubscriptionStream<TUpsert, TDeletion>,
+    public readonly subscription: ChangesSubscriptionStream<
+      TRequestContext,
+      TUpsert,
+      TDeletion
+    >,
     public readonly dependentGraph: DependentGraph,
   ) {}
 
   public async *[Symbol.asyncIterator](): AsyncIterator<
-    ChangesSubscriptionChange<TUpsert, TDeletion>
+    ChangesSubscriptionChange<TRequestContext, TUpsert, TDeletion>
   > {
     // First, the deletions:
     if (this.subscription.onDeletionSelection) {
@@ -33,16 +44,36 @@ export class ChangesSubscriptionEffect<
       yield* this.dependentGraph.deletions
         .values()
         .map(
-          ({ oldValue }) =>
-            new ChangesSubscriptionDeletion(this.subscription, oldValue),
+          ({ requestContext, oldValue }) =>
+            new ChangesSubscriptionDeletion(
+              this.subscription,
+              requestContext,
+              oldValue,
+            ),
         );
 
-      if (this.subscription.filter) {
+      /**
+       * articles(
+       *   where: {
+       *     status: PUBLISHED,
+       *     tags_some: { tag: { slug: "my-tag-slug" }}
+       *   }
+       * ) {
+       *   id
+       *   tags { tag { title }}
+       *   categories { category { title }}
+       * }
+       *
+       * TagUpdate {
+       *   slug: my-tag-slug -> my-new-tag-slug
+       * }
+       */
+      if (this.subscription.filter && this.dependentGraph.filter) {
         const args = {
           where: {
             AND: [
               this.subscription.filter.complement.inputValue,
-              this.dependentGraph.filter?.target.inputValue,
+              this.dependentGraph.filter.graphFilter.inputValue,
             ],
           },
           selection: this.subscription.onDeletionSelection,
@@ -50,7 +81,11 @@ export class ChangesSubscriptionEffect<
 
         if (this.subscription.scrollable) {
           for await (const deletion of this.subscription.api.scroll(args)) {
-            yield new ChangesSubscriptionDeletion(this.subscription, deletion);
+            yield new ChangesSubscriptionDeletion(
+              this.subscription,
+              this.dependentGraph.filter.graphInitiators,
+              deletion,
+            );
           }
         } else {
           const deletions = await this.subscription.api.findMany({
@@ -59,7 +94,11 @@ export class ChangesSubscriptionEffect<
           });
 
           for (const deletion of deletions) {
-            yield new ChangesSubscriptionDeletion(this.subscription, deletion);
+            yield new ChangesSubscriptionDeletion(
+              this.subscription,
+              this.dependentGraph.filter.graphInitiators,
+              deletion,
+            );
           }
         }
       }
@@ -75,8 +114,12 @@ export class ChangesSubscriptionEffect<
           yield* this.dependentGraph.upserts
             .values()
             .map(
-              ({ newValue }) =>
-                new ChangesSubscriptionUpsert(this.subscription, newValue),
+              ({ requestContext, newValue }) =>
+                new ChangesSubscriptionUpsert(
+                  this.subscription,
+                  requestContext,
+                  newValue,
+                ),
             );
         } else {
           incompleteUpserts = this.dependentGraph.upserts;
@@ -86,11 +129,11 @@ export class ChangesSubscriptionEffect<
       const args = {
         where: {
           AND: [
-            !this.dependentGraph.target.isFalse() ||
+            !this.dependentGraph.graphFilter.isFalse() ||
             this.dependentGraph.upsertIfFounds.size
               ? this.subscription.filter?.inputValue
               : undefined,
-            this.dependentGraph.target
+            this.dependentGraph.graphFilter
               .or(
                 ...this.dependentGraph.upsertIfFounds
                   .values()
@@ -107,9 +150,29 @@ export class ChangesSubscriptionEffect<
         selection: this.subscription.onUpsertSelection,
       } satisfies ScrollSubscriptionArgs;
 
+      const initiators = this.dependentGraph.graphInitiators
+        .union(
+          new Set(
+            this.dependentGraph.upsertIfFounds
+              .values()
+              .map(({ requestContext }) => requestContext),
+          ),
+        )
+        .union(
+          new Set(
+            incompleteUpserts
+              ?.values()
+              .map(({ requestContext }) => requestContext),
+          ),
+        );
+
       if (this.subscription.scrollable) {
         for await (const upsert of this.subscription.api.scroll(args)) {
-          yield new ChangesSubscriptionUpsert(this.subscription, upsert);
+          yield new ChangesSubscriptionUpsert(
+            this.subscription,
+            initiators,
+            upsert,
+          );
         }
       } else {
         const upserts = await this.subscription.api.findMany({
@@ -118,7 +181,11 @@ export class ChangesSubscriptionEffect<
         });
 
         for (const upsert of upserts) {
-          yield new ChangesSubscriptionUpsert(this.subscription, upsert);
+          yield new ChangesSubscriptionUpsert(
+            this.subscription,
+            initiators,
+            upsert,
+          );
         }
       }
     }

@@ -1,12 +1,8 @@
 import assert from 'node:assert';
 import { before, describe, it } from 'node:test';
 import { inspect } from 'node:util';
-import {
-  ArticleStatus,
-  createMyGP,
-  type MyGP,
-} from '../../__tests__/config.js';
-import type { Node, UniqueConstraint } from '../../node.js';
+import { ArticleStatus, createMyGP } from '../../__tests__/config.js';
+import type { UniqueConstraint } from '../../node.js';
 import {
   NodeCreation,
   NodeDeletion,
@@ -19,19 +15,11 @@ import type { NodeFilterInputValue } from '../type/input/filter.js';
 import type { NodeFilter } from './filter.js';
 
 describe('Filter', () => {
-  let gp: MyGP;
+  const gp = createMyGP();
 
-  let Article: Node;
-  let ArticleExtension: Node;
-  let UserProfile: Node;
-
-  before(() => {
-    gp = createMyGP();
-
-    Article = gp.getNodeByName('Article');
-    ArticleExtension = gp.getNodeByName('ArticleExtension');
-    UserProfile = gp.getNodeByName('UserProfile');
-  });
+  const Article = gp.getNodeByName('Article');
+  const ArticleExtension = gp.getNodeByName('ArticleExtension');
+  const UserProfile = gp.getNodeByName('UserProfile');
 
   describe('Definition', () => {
     (
@@ -275,7 +263,7 @@ describe('Filter', () => {
 
             assert(!dependentGraph.isEmpty());
             assert.strictEqual(dependentGraph.changes.size, 1);
-            assert(dependentGraph.target.isFalse());
+            assert(dependentGraph.graphFilter.isFalse());
           }
         });
 
@@ -329,7 +317,7 @@ describe('Filter', () => {
           const dependentGraph = dependency.createDependentGraph(update);
 
           assert(!dependentGraph.isEmpty());
-          assert.deepEqual(dependentGraph.target.inputValue, {
+          assert.deepEqual(dependentGraph.graphFilter.inputValue, {
             createdBy: {
               id: '9121c47b-87b6-4334-ae1d-4c9777e87576',
             },
@@ -386,7 +374,7 @@ describe('Filter', () => {
           const dependentGraph = dependency.createDependentGraph(update);
 
           assert(!dependentGraph.isEmpty());
-          assert.deepEqual(dependentGraph.target.inputValue, {
+          assert.deepEqual(dependentGraph.graphFilter.inputValue, {
             updatedBy: {
               username: 'yvann',
             },
@@ -408,7 +396,7 @@ describe('Filter', () => {
           const dependentGraph = dependency.createDependentGraph(creation);
 
           assert(!dependentGraph.isEmpty());
-          assert.deepEqual(dependentGraph.target.inputValue, {
+          assert.deepEqual(dependentGraph.graphFilter.inputValue, {
             _id: 4,
           });
         });
@@ -426,7 +414,7 @@ describe('Filter', () => {
           const dependentGraph = dependency.createDependentGraph(deletion);
 
           assert(!dependentGraph.isEmpty());
-          assert.deepEqual(dependentGraph.target.inputValue, {
+          assert.deepEqual(dependentGraph.graphFilter.inputValue, {
             _id: 5,
           });
         });
@@ -464,7 +452,7 @@ describe('Filter', () => {
           const dependentGraph = dependency.createDependentGraph(creation);
 
           assert(!dependentGraph.isEmpty());
-          assert.deepEqual(dependentGraph.target.inputValue, {
+          assert.deepEqual(dependentGraph.graphFilter.inputValue, {
             createdBy: {
               id: '16050880-dabc-4348-bd3b-d41efe1b6057',
             },
@@ -484,7 +472,7 @@ describe('Filter', () => {
           const dependentGraph = dependency.createDependentGraph(deletion);
 
           assert(!dependentGraph.isEmpty());
-          assert.deepEqual(dependentGraph.target.inputValue, {
+          assert.deepEqual(dependentGraph.graphFilter.inputValue, {
             createdBy: {
               id: '7caf940a-058a-4ef2-a8bf-ac2d6cae3485',
             },
@@ -524,7 +512,7 @@ describe('Filter', () => {
           const dependentGraph = dependency.createDependentGraph(update);
 
           assert(!dependentGraph.isEmpty());
-          assert.deepEqual(dependentGraph.target.inputValue, {
+          assert.deepEqual(dependentGraph.graphFilter.inputValue, {
             createdBy: {
               id: '8e3587e8-2e4e-46a4-a6e0-27f08aebb215',
             },

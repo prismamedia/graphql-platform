@@ -1,5 +1,5 @@
 import * as utils from '@prismamedia/graphql-platform-utils';
-import { Memoize } from '@prismamedia/memoize';
+import { MGetter } from '@prismamedia/memoize';
 import {
   argsPathKey,
   type NodeSelectionAwareArgs,
@@ -33,7 +33,7 @@ export class UpdateSomeInOrderIfExistsMutation<
   public readonly name = `updateSome${this.node.plural}InOrderIfExists`;
   public override readonly description = `Given a list of unique-filter's value, updates the corresponding "${this.node.plural}" then returns their new values, or null, in the same order`;
 
-  @Memoize()
+  @MGetter
   public override get arguments() {
     return [
       new utils.Input({

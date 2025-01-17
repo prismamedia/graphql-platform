@@ -1,5 +1,5 @@
 import type { Name } from '@prismamedia/graphql-platform-utils';
-import { Memoize } from '@prismamedia/memoize';
+import { MMethod } from '@prismamedia/memoize';
 import * as graphql from 'graphql';
 import assert from 'node:assert';
 import type { Node } from '../../../node.js';
@@ -16,7 +16,7 @@ export class DeletionOutputType {
     return this.name;
   }
 
-  @Memoize()
+  @MMethod()
   public getGraphQLObjectType(): graphql.GraphQLObjectType {
     assert(this.node.isPublic(), `The "${this.node}" node is private`);
 

@@ -92,7 +92,7 @@ export const ArticleStatusType = utils.createGraphQLEnumType(
 class MyCustomQuery extends AbstractQuery<undefined, number> {
   readonly key = 'custom';
   readonly name = 'customArticles';
-  readonly description = 'Custom query to get articles';
+  override readonly description = 'Custom query to get articles';
   readonly selectionAware = false;
 
   async executeWithValidArgumentsAndContext() {
@@ -107,10 +107,10 @@ class MyCustomQuery extends AbstractQuery<undefined, number> {
 class MyCustomPrivateQuery extends AbstractQuery<undefined, number> {
   readonly key = 'customPrivate';
   readonly name = 'customPrivateArticles';
-  readonly description = 'Custom query, private, to get articles';
+  override readonly description = 'Custom query, private, to get articles';
   readonly selectionAware = false;
 
-  isPublic() {
+  override isPublic() {
     return false;
   }
 
@@ -126,7 +126,7 @@ class MyCustomPrivateQuery extends AbstractQuery<undefined, number> {
 class MyCustomDeletion extends AbstractDeletion<undefined, number> {
   readonly key = 'customDeletion';
   readonly name = 'customDeletionArticles';
-  readonly description = 'Custom deletion';
+  override readonly description = 'Custom deletion';
   readonly selectionAware = false;
 
   async executeWithValidArgumentsAndContext() {

@@ -1,7 +1,7 @@
 import {
   Node,
-  NodeChange,
   type DeleteManyMutationArgs,
+  type NodeChange,
 } from '@prismamedia/graphql-platform';
 import { MutationType } from '@prismamedia/graphql-platform-utils';
 import {
@@ -11,16 +11,15 @@ import {
 } from '@prismamedia/graphql-platform/__tests__/config.js';
 import * as fixtures from '@prismamedia/graphql-platform/__tests__/fixture.js';
 import { after, before, beforeEach, describe, it } from 'node:test';
-import { createMyGP, type MyGP } from '../../__tests__/config.js';
+import { createMyGP } from '../../__tests__/config.js';
 
 describe('Delete statement', () => {
-  let gp: MyGP;
+  const gp = createMyGP(`connector_mariadb_delete_statement`);
+  gp.on('node-changes', (aggregation) => changes.push(...aggregation));
+
   const changes: NodeChange[] = [];
 
   before(async () => {
-    gp = createMyGP(`connector_mariadb_delete_statement`);
-    gp.on('node-changes', (aggregation) => changes.push(...aggregation));
-
     await gp.connector.setup();
     await gp.seed(myAdminContext, fixtures.constant);
   });

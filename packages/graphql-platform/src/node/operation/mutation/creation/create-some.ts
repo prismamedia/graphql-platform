@@ -1,5 +1,5 @@
 import * as utils from '@prismamedia/graphql-platform-utils';
-import { Memoize } from '@prismamedia/memoize';
+import { MGetter } from '@prismamedia/memoize';
 import * as graphql from 'graphql';
 import type { ConnectorInterface } from '../../../../connector-interface.js';
 import type {
@@ -37,7 +37,7 @@ export class CreateSomeMutation<
   public readonly name = `create${this.node.plural}`;
   public override readonly description = `Creates some "${this.node}", throws an error if they already exist`;
 
-  @Memoize()
+  @MGetter
   public override get arguments() {
     return [
       new utils.Input({

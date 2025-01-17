@@ -1,19 +1,26 @@
 {
-  "extends": "@tsconfig/node22",
-
   "include": ["${configDir}/src/**/*.ts"],
 
   "compilerOptions": {
+    "rootDir": "${configDir}/src",
+    "outDir": "${configDir}/dist",
+
     "lib": ["ESNext"],
     "target": "ES2024",
-
-    "experimentalDecorators": true,
+    "module": "NodeNext",
 
     "composite": true,
+    "sourceMap": true,
     "declaration": true,
-    "inlineSourceMap": true,
+    "declarationMap": true,
 
-    "rootDir": "${configDir}/src",
-    "outDir": "${configDir}/dist"
+    "allowJs": true,
+    "esModuleInterop": true,
+    "isolatedModules": true,
+    "noImplicitOverride": true,
+    "resolveJsonModule": true,
+    "skipLibCheck": true,
+    "strict": true,
+    "verbatimModuleSyntax": true
   }
 }

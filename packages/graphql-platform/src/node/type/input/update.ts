@@ -1,5 +1,5 @@
 import * as utils from '@prismamedia/graphql-platform-utils';
-import { Memoize } from '@prismamedia/memoize';
+import { MGetter, MMethod } from '@prismamedia/memoize';
 import inflection from 'inflection';
 import assert from 'node:assert';
 import type { Except } from 'type-fest';
@@ -13,10 +13,10 @@ import type {
 import type { MutationContext } from '../../operation.js';
 import type { NodeUpdateValue } from '../../statement/update.js';
 import {
-  ComponentUpdateInput,
-  FieldUpdateInput,
+  type ComponentUpdateInput,
+  type FieldUpdateInput,
   LeafUpdateInput,
-  ReverseEdgeUpdateInput,
+  type ReverseEdgeUpdateInput,
 } from './update/field.js';
 
 export * from './update/field.js';
@@ -52,7 +52,7 @@ export class NodeUpdateInputType extends utils.ObjectInputType<FieldUpdateInput>
     this.#excludedEdge = excludedEdge;
   }
 
-  @Memoize()
+  @MGetter
   protected get componentFields(): ReadonlyArray<ComponentUpdateInput> {
     return this.node.componentsByName
       .values()
@@ -65,7 +65,7 @@ export class NodeUpdateInputType extends utils.ObjectInputType<FieldUpdateInput>
       }, []);
   }
 
-  @Memoize()
+  @MGetter
   protected get reverseEdgeFields(): ReadonlyArray<ReverseEdgeUpdateInput> {
     return this.node.reverseEdgesByName
       .values()
@@ -78,7 +78,7 @@ export class NodeUpdateInputType extends utils.ObjectInputType<FieldUpdateInput>
       }, []);
   }
 
-  @Memoize()
+  @MGetter
   protected get virtualFields(): ReadonlyArray<utils.Input> {
     return this.node.features.flatMap((feature) => {
       const { config, configPath } = feature.getMutationConfig(
@@ -140,7 +140,7 @@ export class NodeUpdateInputType extends utils.ObjectInputType<FieldUpdateInput>
     });
   }
 
-  @Memoize()
+  @MGetter
   public override get fields(): ReadonlyArray<FieldUpdateInput> {
     return [
       ...this.componentFields,
@@ -149,7 +149,7 @@ export class NodeUpdateInputType extends utils.ObjectInputType<FieldUpdateInput>
     ];
   }
 
-  @Memoize()
+  @MMethod()
   public override isPublic(): boolean {
     return (
       this.node.isPubliclyMutable(utils.MutationType.UPDATE) &&

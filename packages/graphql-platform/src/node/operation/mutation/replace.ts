@@ -1,5 +1,5 @@
 import * as utils from '@prismamedia/graphql-platform-utils';
-import { Memoize } from '@prismamedia/memoize';
+import { MGetter, MMethod } from '@prismamedia/memoize';
 import * as graphql from 'graphql';
 import * as R from 'remeda';
 import {
@@ -43,7 +43,7 @@ export class ReplaceMutation<
   public readonly name = `replace${this.node}`;
   public override readonly description = `Replaces an existing "${this.node}" or creates a new one`;
 
-  @Memoize()
+  @MGetter
   public override get arguments() {
     return [
       new utils.Input({
@@ -57,7 +57,7 @@ export class ReplaceMutation<
     ];
   }
 
-  @Memoize()
+  @MMethod()
   public getGraphQLFieldConfigType() {
     return new graphql.GraphQLNonNull(
       this.node.outputType.getGraphQLObjectType(),

@@ -1,5 +1,5 @@
 import * as utils from '@prismamedia/graphql-platform-utils';
-import { Memoize } from '@prismamedia/memoize';
+import { MGetter } from '@prismamedia/memoize';
 import inflection from 'inflection';
 import assert from 'node:assert';
 import * as R from 'remeda';
@@ -106,7 +106,7 @@ export class NodeUniqueFilterInputType extends utils.ObjectInputType {
     );
   }
 
-  @Memoize()
+  @MGetter
   public override get fields(): ReadonlyArray<utils.Input> {
     return this.#components.map((component) => {
       const type = utils.nonNullableInputTypeDecorator(

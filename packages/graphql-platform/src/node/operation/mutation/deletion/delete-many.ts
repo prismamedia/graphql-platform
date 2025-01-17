@@ -1,6 +1,6 @@
 import * as scalars from '@prismamedia/graphql-platform-scalars';
 import * as utils from '@prismamedia/graphql-platform-utils';
-import { Memoize } from '@prismamedia/memoize';
+import { MGetter, MMethod } from '@prismamedia/memoize';
 import * as graphql from 'graphql';
 import type { ConnectorInterface } from '../../../../connector-interface.js';
 import {
@@ -41,7 +41,7 @@ export class DeleteManyMutation<
   public readonly name = `delete${this.node.plural}`;
   public override readonly description = `Deletes many "${this.node.plural}"`;
 
-  @Memoize()
+  @MGetter
   public override get arguments() {
     return [
       new utils.Input({
@@ -61,7 +61,7 @@ export class DeleteManyMutation<
     ];
   }
 
-  @Memoize()
+  @MMethod()
   public getGraphQLFieldConfigType() {
     return new graphql.GraphQLNonNull(
       new graphql.GraphQLList(

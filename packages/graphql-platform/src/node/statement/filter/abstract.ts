@@ -1,14 +1,9 @@
-import * as graphql from 'graphql';
+import type * as graphql from 'graphql';
+import type { Arrayable } from 'type-fest';
 import type { NodeSelectedValue, UniqueConstraint } from '../../../node.js';
 import type { Dependency } from '../../change.js';
-
-import type { Arrayable } from 'type-fest';
 import type { NodeFilterInputValue } from '../../type.js';
-import {
-  type AndOperand,
-  type BooleanFilter,
-  type OrOperand,
-} from './boolean.js';
+import type { AndOperand, BooleanFilter, OrOperand } from './boolean.js';
 
 export abstract class AbstractBooleanFilter {
   /**

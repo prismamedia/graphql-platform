@@ -1,4 +1,4 @@
-import { Memoize } from '@prismamedia/memoize';
+import { MGetter } from '@prismamedia/memoize';
 import * as graphql from 'graphql';
 import assert from 'node:assert';
 import type { NodeSelectedValue, UniqueConstraint } from '../../../../node.js';
@@ -20,7 +20,7 @@ export class BooleanValue extends AbstractBooleanFilter {
     );
   }
 
-  @Memoize()
+  @MGetter
   public override get complement(): BooleanValue {
     return new BooleanValue(!this.value);
   }

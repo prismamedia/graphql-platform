@@ -1,7 +1,7 @@
 import * as core from '@prismamedia/graphql-platform';
 import * as utils from '@prismamedia/graphql-platform-utils';
 import { UnreachableValueError } from '@prismamedia/graphql-platform-utils';
-import { Memoize } from '@prismamedia/memoize';
+import { MGetter } from '@prismamedia/memoize';
 import type * as mariadb from 'mariadb';
 import assert from 'node:assert';
 import type { SetOptional } from 'type-fest';
@@ -253,7 +253,7 @@ export class Table {
     return column;
   }
 
-  @Memoize()
+  @MGetter
   public get columnTreesByEdge(): ReadonlyMap<core.Edge, ReferenceColumnTree> {
     return new Map(
       Array.from(this.node.edgesByName.values(), (edge) => [
@@ -280,7 +280,7 @@ export class Table {
     );
   }
 
-  @Memoize()
+  @MGetter
   public get columns(): ReadonlyArray<Column> {
     return Object.freeze(
       this.getColumnsByComponents(...this.node.componentsByName.values()),

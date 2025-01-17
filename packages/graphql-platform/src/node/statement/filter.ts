@@ -1,4 +1,4 @@
-import { Memoize } from '@prismamedia/memoize';
+import { MGetter, MMethod } from '@prismamedia/memoize';
 import * as graphql from 'graphql';
 import assert from 'node:assert';
 import type { Node, UniqueConstraint } from '../../node.js';
@@ -34,7 +34,7 @@ export class NodeFilter {
     this.score = filter.score;
   }
 
-  @Memoize()
+  @MGetter
   public get complement(): NodeFilter {
     return new NodeFilter(this.node, NotOperation.create(this.filter));
   }
@@ -93,17 +93,17 @@ export class NodeFilter {
     );
   }
 
-  @Memoize()
+  @MMethod()
   public isTrue(): boolean {
     return this.filter.equals(TrueValue);
   }
 
-  @Memoize()
+  @MMethod()
   public isFalse(): boolean {
     return this.filter.equals(FalseValue);
   }
 
-  @Memoize()
+  @MGetter
   public get normalized(): this | undefined {
     return this.isTrue() ? undefined : this;
   }
@@ -162,27 +162,27 @@ export class NodeFilter {
         : this.isUpdateFilteredOut(change);
   }
 
-  @Memoize()
+  @MGetter
   public get dependencyGraph(): DependencyGraph {
     return new DependencyGraph(this.node, this.filter.dependency);
   }
 
-  @Memoize()
+  @MMethod()
   public isUnique(): boolean {
     return this.node.uniqueFilterInputType.isValid(this.inputValue);
   }
 
-  @Memoize()
+  @MGetter
   public get ast(): graphql.ConstObjectValueNode | graphql.NullValueNode {
     return this.filter.ast;
   }
 
-  @Memoize()
+  @MMethod()
   public toString(): string {
     return graphql.print(this.ast);
   }
 
-  @Memoize()
+  @MGetter
   public get inputValue(): Exclude<NodeFilterInputValue, undefined> {
     return this.filter.inputValue;
   }

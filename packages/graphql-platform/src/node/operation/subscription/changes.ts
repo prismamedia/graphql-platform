@@ -1,5 +1,5 @@
 import * as utils from '@prismamedia/graphql-platform-utils';
-import { Memoize } from '@prismamedia/memoize';
+import { MGetter, MMethod } from '@prismamedia/memoize';
 import * as graphql from 'graphql';
 import inflection from 'inflection';
 import * as R from 'remeda';
@@ -49,7 +49,7 @@ export class ChangesSubscription<
   TRequestContext extends object,
 > extends AbstractSubscription<
   ChangesSubscriptionArgs,
-  Promise<ChangesSubscriptionStream<any, any, TRequestContext>>,
+  Promise<ChangesSubscriptionStream<TRequestContext>>,
   TRequestContext
 > {
   protected readonly selectionAware = true;
@@ -59,7 +59,7 @@ export class ChangesSubscription<
   public readonly name = `${inflection.camelize(this.node.name, true)}Changes`;
   public override readonly description = `Subscribe to the "${this.node.plural}"' changes`;
 
-  @Memoize()
+  @MMethod()
   public override isEnabled(): boolean {
     return (
       super.isEnabled() &&
@@ -69,7 +69,7 @@ export class ChangesSubscription<
     );
   }
 
-  @Memoize()
+  @MMethod()
   public override isPublic(): boolean {
     return (
       super.isPublic() &&
@@ -80,7 +80,7 @@ export class ChangesSubscription<
     );
   }
 
-  @Memoize()
+  @MGetter
   public override get arguments() {
     return [
       new utils.Input({

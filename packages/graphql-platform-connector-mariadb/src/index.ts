@@ -20,9 +20,9 @@ import {
 } from './schema.js';
 import {
   InsertStatement,
-  Statement,
   StatementKind,
   UpdateStatement,
+  type Statement,
 } from './statement.js';
 
 export * as mariadb from 'mariadb';

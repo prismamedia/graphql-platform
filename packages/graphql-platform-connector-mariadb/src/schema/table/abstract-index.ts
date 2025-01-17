@@ -1,4 +1,4 @@
-import { Memoize } from '@prismamedia/memoize';
+import { MGetter, MMethod } from '@prismamedia/memoize';
 import type { Table } from '../table.js';
 import type { Column } from './column.js';
 
@@ -12,7 +12,7 @@ export abstract class AbstractIndex {
   /**
    * @see https://mariadb.com/kb/en/identifier-qualifiers/
    */
-  @Memoize()
+  @MGetter
   public get qualifiedName(): string {
     return `${this.table.name}.${this.name}`;
   }
@@ -20,12 +20,12 @@ export abstract class AbstractIndex {
   /**
    * @see https://mariadb.com/kb/en/identifier-qualifiers/
    */
-  @Memoize()
+  @MGetter
   public get fullyQualifiedName(): string {
     return `${this.table.qualifiedName}.${this.name}`;
   }
 
-  @Memoize()
+  @MMethod()
   public toString(): string {
     return this.fullyQualifiedName;
   }

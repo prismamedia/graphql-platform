@@ -2,7 +2,7 @@ import type { Except, SetOptional } from 'type-fest';
 import type { Edge } from '../../../../definition/component/edge.js';
 import {
   AbstractFieldFilterInput,
-  AbstractFieldFilterInputConfig,
+  type AbstractFieldFilterInputConfig,
 } from '../abstract-field.js';
 
 export type EdgeFilterInputConfig<TValue> = Except<

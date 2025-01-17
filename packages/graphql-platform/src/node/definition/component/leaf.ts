@@ -1,6 +1,6 @@
 import * as scalars from '@prismamedia/graphql-platform-scalars';
 import * as utils from '@prismamedia/graphql-platform-utils';
-import { Memoize } from '@prismamedia/memoize';
+import { MGetter, MMethod } from '@prismamedia/memoize';
 import * as graphql from 'graphql';
 import assert from 'node:assert';
 import * as R from 'remeda';
@@ -160,7 +160,7 @@ export class Leaf<
     }
   }
 
-  @Memoize()
+  @MMethod()
   public override isPublic(): boolean {
     const publicConfig = this.config.public;
     const publicConfigPath = utils.addPath(this.configPath, 'public');
@@ -182,7 +182,7 @@ export class Leaf<
     return isPublic;
   }
 
-  @Memoize()
+  @MMethod()
   public isComparable(): boolean {
     const comparableConfig = this.config.comparable;
     const comparableConfigPath = utils.addPath(this.configPath, 'comparable');
@@ -198,7 +198,7 @@ export class Leaf<
     return comparable;
   }
 
-  @Memoize()
+  @MMethod()
   public isSortable(): boolean {
     const sortableConfig = this.config.sortable;
     const sortableConfigPath = utils.addPath(this.configPath, 'sortable');
@@ -225,7 +225,7 @@ export class Leaf<
     return sortable;
   }
 
-  @Memoize()
+  @MMethod()
   public override validateDefinition(): void {
     super.validateDefinition();
 
@@ -233,19 +233,19 @@ export class Leaf<
     this.isSortable();
   }
 
-  @Memoize((direction: OrderingDirection) => direction)
+  @MMethod((direction) => direction)
   public getOrderingInput(direction: OrderingDirection): LeafOrderingInput {
     assert(this.isSortable(), `The "${this}" leaf is not sortable`);
 
     return new LeafOrderingInput(this, direction);
   }
 
-  @Memoize()
+  @MGetter
   public override get creationInput(): LeafCreationInput {
     return new LeafCreationInput(this);
   }
 
-  @Memoize()
+  @MGetter
   public override get updateInput(): LeafUpdateInput | undefined {
     return this.isMutable() ? new LeafUpdateInput(this) : undefined;
   }

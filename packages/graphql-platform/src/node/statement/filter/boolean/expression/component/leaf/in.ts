@@ -1,4 +1,4 @@
-import { Memoize } from '@prismamedia/memoize';
+import { MGetter } from '@prismamedia/memoize';
 import * as graphql from 'graphql';
 import assert from 'node:assert';
 import * as R from 'remeda';
@@ -65,7 +65,7 @@ export class LeafInFilter extends AbstractLeafFilter {
     );
   }
 
-  @Memoize()
+  @MGetter
   public get operands(): ReadonlyArray<LeafComparisonFilter> {
     return this.values.map(
       (value) => new LeafComparisonFilter(this.leaf, 'eq', value),

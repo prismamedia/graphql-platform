@@ -1,5 +1,5 @@
 import * as utils from '@prismamedia/graphql-platform-utils';
-import { Memoize } from '@prismamedia/memoize';
+import { MGetter } from '@prismamedia/memoize';
 import * as graphql from 'graphql';
 import assert from 'node:assert';
 import type { NodeSelectedValue } from '../../../../../../../node.js';
@@ -59,7 +59,7 @@ export class LeafComparisonFilter extends AbstractLeafFilter {
     );
   }
 
-  @Memoize()
+  @MGetter
   public get operands():
     | [LeafComparisonFilter, LeafComparisonFilter]
     | undefined {
@@ -75,7 +75,7 @@ export class LeafComparisonFilter extends AbstractLeafFilter {
       : undefined;
   }
 
-  @Memoize()
+  @MGetter
   public override get complement(): LeafComparisonFilter {
     return this.operator === 'eq'
       ? new LeafComparisonFilter(this.leaf, 'not', this.value)

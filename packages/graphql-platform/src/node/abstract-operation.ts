@@ -1,5 +1,5 @@
 import * as utils from '@prismamedia/graphql-platform-utils';
-import { Memoize } from '@prismamedia/memoize';
+import { MMethod } from '@prismamedia/memoize';
 import * as graphql from 'graphql';
 import assert from 'node:assert';
 import * as R from 'remeda';
@@ -115,12 +115,12 @@ export abstract class AbstractOperation<
     return true;
   }
 
-  @Memoize()
+  @MMethod()
   public isPublic(): boolean {
     return this.isEnabled() && this.node.isPublic();
   }
 
-  @Memoize()
+  @MMethod()
   public validate(): void {
     if (!this.isEnabled()) {
       return;

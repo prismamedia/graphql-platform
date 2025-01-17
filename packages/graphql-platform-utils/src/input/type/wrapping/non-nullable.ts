@@ -1,4 +1,4 @@
-import { Memoize } from '@prismamedia/memoize';
+import { MMethod } from '@prismamedia/memoize';
 import * as graphql from 'graphql';
 import { UnexpectedNullError } from '../../../error.js';
 import type { Path } from '../../../path.js';
@@ -27,7 +27,7 @@ export class NonNullableInputType extends AbstractWrappingInputType {
     }
   }
 
-  @Memoize()
+  @MMethod()
   public toString(): string {
     return this.ofType instanceof NonOptionalInputType
       ? // NonNullable & NonOptional = GraphQLNonNull

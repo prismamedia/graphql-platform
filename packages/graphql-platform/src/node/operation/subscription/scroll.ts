@@ -1,6 +1,6 @@
 import * as scalars from '@prismamedia/graphql-platform-scalars';
 import * as utils from '@prismamedia/graphql-platform-utils';
-import { Memoize } from '@prismamedia/memoize';
+import { MGetter, MMethod } from '@prismamedia/memoize';
 import * as graphql from 'graphql';
 import inflection from 'inflection';
 import {
@@ -41,7 +41,7 @@ export class ScrollSubscription<
   public readonly name = inflection.camelize(this.node.plural, true);
   public override readonly description = `Scroll the "${this.node.plural}"`;
 
-  @Memoize()
+  @MMethod()
   public override isEnabled(): boolean {
     return (
       super.isEnabled() &&
@@ -51,12 +51,12 @@ export class ScrollSubscription<
     );
   }
 
-  @Memoize()
+  @MGetter
   public get orderingInputType() {
     return new ScrollSubscriptionOrderingInputType(this.node);
   }
 
-  @Memoize()
+  @MGetter
   public override get arguments() {
     const firstOrderingInputValue = this.orderingInputType.enumValues[0];
 

@@ -1,5 +1,5 @@
 import * as utils from '@prismamedia/graphql-platform-utils';
-import { Memoize } from '@prismamedia/memoize';
+import { MMethod } from '@prismamedia/memoize';
 import inflection from 'inflection';
 import type { ConnectorInterface } from '../../connector-interface.js';
 import type { Node } from '../../node.js';
@@ -89,12 +89,12 @@ export abstract class AbstractReverseEdge<
     }
   }
 
-  @Memoize()
+  @MMethod()
   public toString(): string {
     return `${this.tail.name}.${this.name}`;
   }
 
-  @Memoize()
+  @MMethod()
   public isMutable(): boolean {
     return (
       this.head.isCreatable() ||
@@ -103,12 +103,12 @@ export abstract class AbstractReverseEdge<
     );
   }
 
-  @Memoize()
+  @MMethod()
   public isUnique(): boolean {
     return this.originalEdge.isUnique();
   }
 
-  @Memoize()
+  @MMethod()
   public isPublic(): boolean {
     const publicConfig = this.config.public;
     const publicConfigPath = utils.addPath(this.configPath, 'public');
@@ -134,7 +134,7 @@ export abstract class AbstractReverseEdge<
     return true;
   }
 
-  @Memoize()
+  @MMethod()
   public validateDefinition(): void {
     this.isMutable();
     this.isUnique();
@@ -145,7 +145,7 @@ export abstract class AbstractReverseEdge<
     this.originalEdge.reverseEdge;
   }
 
-  @Memoize()
+  @MMethod()
   public validateTypes(): void {
     this.creationInput?.validate();
     this.updateInput?.validate();

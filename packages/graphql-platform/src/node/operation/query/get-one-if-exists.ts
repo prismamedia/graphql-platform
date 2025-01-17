@@ -1,7 +1,7 @@
 import * as utils from '@prismamedia/graphql-platform-utils';
-import { Memoize } from '@prismamedia/memoize';
+import { MGetter } from '@prismamedia/memoize';
 import inflection from 'inflection';
-import {
+import type {
   NodeSelectionAwareArgs,
   RawNodeSelectionAwareArgs,
 } from '../../abstract-operation.js';
@@ -29,7 +29,7 @@ export class GetOneIfExistsQuery<
   public readonly name = `${inflection.camelize(this.node.name, true)}IfExists`;
   public override readonly description = `Retrieves one "${this.node}" if it exists, returns null otherwise`;
 
-  @Memoize()
+  @MGetter
   public override get arguments() {
     return [
       new utils.Input({

@@ -1,4 +1,4 @@
-import { Memoize } from '@prismamedia/memoize';
+import { MMethod } from '@prismamedia/memoize';
 import type * as graphql from 'graphql';
 import assert from 'node:assert';
 import {
@@ -25,7 +25,7 @@ import {
   ensureInputType,
   getGraphQLInputType,
   getOptionalInputType,
-  InputType,
+  type InputType,
   isInputTypePublic,
   isNonOptionalInputType,
   nonNullableInputTypeDecorator,
@@ -230,7 +230,7 @@ export class Input<TValue = any> {
     return this.name;
   }
 
-  @Memoize()
+  @MMethod()
   public isRequired(): boolean {
     return (
       this.#defaultValue === undefined && isNonOptionalInputType(this.type)
@@ -267,7 +267,7 @@ export class Input<TValue = any> {
     return this.#isPublic;
   }
 
-  @Memoize()
+  @MMethod()
   public getGraphQLConfig(): Omit<
     graphql.GraphQLArgumentConfig | graphql.GraphQLInputFieldConfig,
     'extensions'

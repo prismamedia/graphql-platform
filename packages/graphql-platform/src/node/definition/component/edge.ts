@@ -1,5 +1,5 @@
 import * as utils from '@prismamedia/graphql-platform-utils';
-import { Memoize } from '@prismamedia/memoize';
+import { MGetter, MMethod } from '@prismamedia/memoize';
 import inflection from 'inflection';
 import assert from 'node:assert';
 import type {
@@ -21,7 +21,7 @@ import {
   AbstractComponent,
   type AbstractComponentConfig,
 } from '../abstract-component.js';
-import { ReverseEdge } from '../reverse-edge.js';
+import type { ReverseEdge } from '../reverse-edge.js';
 import type {
   UniqueConstraint,
   UniqueConstraintValue,
@@ -161,7 +161,7 @@ export class Edge<
     }
   }
 
-  @Memoize()
+  @MGetter
   public get head(): Node<any, TConnector> {
     return this.node.gp.getNodeByName(
       this.#nodeHeadConfig,
@@ -169,7 +169,7 @@ export class Edge<
     );
   }
 
-  @Memoize()
+  @MGetter
   public get referencedUniqueConstraint(): UniqueConstraint<TConnector> {
     let referencedUniqueConstraint: UniqueConstraint;
 
@@ -217,7 +217,7 @@ export class Edge<
     return referencedUniqueConstraint;
   }
 
-  @Memoize()
+  @MGetter
   public override get selection(): EdgeHeadSelection<ReferenceValue> {
     return new EdgeHeadSelection(
       this,
@@ -226,7 +226,7 @@ export class Edge<
     );
   }
 
-  @Memoize()
+  @MMethod()
   public override isPublic(): boolean {
     const publicConfig = this.config.public;
     const publicConfigPath = utils.addPath(this.configPath, 'public');
@@ -258,7 +258,7 @@ export class Edge<
     return isPublic;
   }
 
-  @Memoize()
+  @MGetter
   public get reverseEdge(): ReverseEdge<TConnector> {
     const reverseEdge = this.head.reverseEdgesByName
       .values()
@@ -269,12 +269,12 @@ export class Edge<
     return reverseEdge;
   }
 
-  @Memoize()
+  @MGetter
   public override get creationInput(): EdgeCreationInput {
     return new EdgeCreationInput(this);
   }
 
-  @Memoize()
+  @MGetter
   public override get updateInput(): EdgeUpdateInput | undefined {
     return this.isMutable() ? new EdgeUpdateInput(this) : undefined;
   }

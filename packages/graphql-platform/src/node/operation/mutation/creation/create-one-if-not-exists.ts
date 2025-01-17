@@ -1,5 +1,5 @@
 import * as utils from '@prismamedia/graphql-platform-utils';
-import { Memoize } from '@prismamedia/memoize';
+import { MGetter } from '@prismamedia/memoize';
 import * as graphql from 'graphql';
 import type {
   NodeSelectionAwareArgs,
@@ -36,7 +36,7 @@ export class CreateOneIfNotExistsMutation<
   public readonly name = `create${this.node}IfNotExists`;
   public override readonly description = `Creates one "${this.node}" if it does not exist, returns the existing otherwise`;
 
-  @Memoize()
+  @MGetter
   public override get arguments() {
     return [
       new utils.Input({

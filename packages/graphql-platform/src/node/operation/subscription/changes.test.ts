@@ -2,7 +2,7 @@ import assert from 'node:assert';
 import { after, before, beforeEach, describe, it } from 'node:test';
 import {
   ArticleStatus,
-  MyContext,
+  type MyContext,
   myAdminContext,
   myVisitorContext,
   nodes,
@@ -13,14 +13,14 @@ import {
 } from '../../../__tests__/connector-mock.js';
 import { GraphQLPlatform } from '../../../index.js';
 import {
+  type NodeChange,
   NodeCreation,
   NodeDeletion,
   NodeUpdate,
-  type NodeChange,
 } from '../../change.js';
 import { UnauthorizedError } from '../error.js';
 import {
-  ChangesSubscriptionArgs,
+  type ChangesSubscriptionArgs,
   ChangesSubscriptionStream,
 } from './changes.js';
 
@@ -561,8 +561,10 @@ describe('ChangesSubscription', () => {
             },
           },
         });
-        assert.deepStrictEqual(dependentGraph.target.inputValue, { _id: 10 });
-        assert.deepStrictEqual(dependentGraph.filter?.target.inputValue, {
+        assert.deepStrictEqual(dependentGraph.graphFilter.inputValue, {
+          _id: 10,
+        });
+        assert.deepStrictEqual(dependentGraph.filter?.graphFilter.inputValue, {
           _id: 10,
         });
       });
@@ -592,10 +594,10 @@ describe('ChangesSubscription', () => {
             },
           },
         });
-        assert.deepStrictEqual(dependentGraph.target.inputValue, {
+        assert.deepStrictEqual(dependentGraph.graphFilter.inputValue, {
           category: { _id: 5 },
         });
-        assert.strictEqual(dependentGraph.filter?.target.inputValue, null);
+        assert.strictEqual(dependentGraph.filter?.graphFilter.inputValue, null);
       });
 
       it('handles this User "update"', () => {
@@ -625,13 +627,13 @@ describe('ChangesSubscription', () => {
             },
           },
         });
-        assert.deepStrictEqual(dependentGraph.target.inputValue, {
+        assert.deepStrictEqual(dependentGraph.graphFilter.inputValue, {
           OR: [
             { createdBy: { id: '284f48b1-da52-44d6-956b-4e085d7ab0f1' } },
             { updatedBy: { username: 'yvann' } },
           ],
         });
-        assert.deepStrictEqual(dependentGraph.filter?.target.inputValue, {
+        assert.deepStrictEqual(dependentGraph.filter?.graphFilter.inputValue, {
           OR: [
             { createdBy: { id: '284f48b1-da52-44d6-956b-4e085d7ab0f1' } },
             { updatedBy: { username: 'yvann' } },
@@ -663,10 +665,10 @@ describe('ChangesSubscription', () => {
             },
           },
         });
-        assert.deepStrictEqual(dependentGraph.target.inputValue, {
+        assert.deepStrictEqual(dependentGraph.graphFilter.inputValue, {
           createdBy: { id: '1a04ef91-104e-457e-829c-f4561f77f1e3' },
         });
-        assert.deepStrictEqual(dependentGraph.filter?.target.inputValue, {
+        assert.deepStrictEqual(dependentGraph.filter?.graphFilter.inputValue, {
           createdBy: { id: '1a04ef91-104e-457e-829c-f4561f77f1e3' },
         });
       });
@@ -695,8 +697,10 @@ describe('ChangesSubscription', () => {
             },
           },
         });
-        assert.deepStrictEqual(dependentGraph.target.inputValue, { _id: 4 });
-        assert.deepStrictEqual(dependentGraph.filter?.target.inputValue, {
+        assert.deepStrictEqual(dependentGraph.graphFilter.inputValue, {
+          _id: 4,
+        });
+        assert.deepStrictEqual(dependentGraph.filter?.graphFilter.inputValue, {
           _id: 4,
         });
       });
@@ -725,8 +729,10 @@ describe('ChangesSubscription', () => {
             },
           },
         });
-        assert.deepStrictEqual(dependentGraph.target.inputValue, { _id: 5 });
-        assert.deepStrictEqual(dependentGraph.filter?.target.inputValue, {
+        assert.deepStrictEqual(dependentGraph.graphFilter.inputValue, {
+          _id: 5,
+        });
+        assert.deepStrictEqual(dependentGraph.filter?.graphFilter.inputValue, {
           _id: 5,
         });
       });
@@ -756,8 +762,10 @@ describe('ChangesSubscription', () => {
             },
           },
         });
-        assert.deepStrictEqual(dependentGraph.target.inputValue, { _id: 6 });
-        assert.strictEqual(dependentGraph.filter?.target.inputValue, null);
+        assert.deepStrictEqual(dependentGraph.graphFilter.inputValue, {
+          _id: 6,
+        });
+        assert.strictEqual(dependentGraph.filter?.graphFilter.inputValue, null);
       });
 
       it('handles this UserProfile "creation"', () => {
@@ -790,10 +798,10 @@ describe('ChangesSubscription', () => {
             },
           },
         });
-        assert.deepStrictEqual(dependentGraph.target.inputValue, {
+        assert.deepStrictEqual(dependentGraph.graphFilter.inputValue, {
           updatedBy: { id: '5da4ac5b-1620-4bfc-aacb-acf4011e7300' },
         });
-        assert.deepStrictEqual(dependentGraph.filter?.target.inputValue, {
+        assert.deepStrictEqual(dependentGraph.filter?.graphFilter.inputValue, {
           updatedBy: { id: '5da4ac5b-1620-4bfc-aacb-acf4011e7300' },
         });
       });
@@ -828,10 +836,10 @@ describe('ChangesSubscription', () => {
             },
           },
         });
-        assert.deepStrictEqual(dependentGraph.target.inputValue, {
+        assert.deepStrictEqual(dependentGraph.graphFilter.inputValue, {
           updatedBy: { id: '16f4dbff-b1e6-4c0b-b192-a0f4a4d51ec2' },
         });
-        assert.deepStrictEqual(dependentGraph.filter?.target.inputValue, {
+        assert.deepStrictEqual(dependentGraph.filter?.graphFilter.inputValue, {
           updatedBy: { id: '16f4dbff-b1e6-4c0b-b192-a0f4a4d51ec2' },
         });
       });
@@ -867,10 +875,10 @@ describe('ChangesSubscription', () => {
             },
           },
         });
-        assert.deepStrictEqual(dependentGraph.target.inputValue, {
+        assert.deepStrictEqual(dependentGraph.graphFilter.inputValue, {
           createdBy: { id: '1fc3ca20-8ac3-47e7-83e7-60b3ed7f87c5' },
         });
-        assert.deepStrictEqual(dependentGraph.filter?.target.inputValue, {
+        assert.deepStrictEqual(dependentGraph.filter?.graphFilter.inputValue, {
           createdBy: { id: '1fc3ca20-8ac3-47e7-83e7-60b3ed7f87c5' },
         });
       });

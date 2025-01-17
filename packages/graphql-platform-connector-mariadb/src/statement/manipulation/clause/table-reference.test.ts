@@ -9,15 +9,13 @@ import {
 import { format } from '@sqltools/formatter';
 import assert from 'node:assert';
 import { after, before, describe, it } from 'node:test';
-import { createMyGP, type MyGP } from '../../../__tests__/config.js';
+import { createMyGP } from '../../../__tests__/config.js';
 import { TableFactor } from './table-reference.js';
 
 describe('Table reference', () => {
-  let gp: MyGP;
+  const gp = createMyGP('connector_mariadb_table_reference_clause');
 
   before(async () => {
-    gp = createMyGP('connector_mariadb_table_reference_clause');
-
     await gp.connector.setup();
   });
 

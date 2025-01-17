@@ -1,5 +1,5 @@
 import * as utils from '@prismamedia/graphql-platform-utils';
-import { Memoize } from '@prismamedia/memoize';
+import { MMethod } from '@prismamedia/memoize';
 import * as graphql from 'graphql';
 import assert from 'node:assert';
 import type { IterableElement, Promisable } from 'type-fest';
@@ -47,12 +47,12 @@ export abstract class AbstractSubscription<
 > {
   public readonly operationType = graphql.OperationTypeNode.SUBSCRIPTION;
 
-  @Memoize()
+  @MMethod()
   public override isEnabled(): boolean {
     return super.isEnabled() && this.gp.subscriptionConfig.enabled;
   }
 
-  @Memoize()
+  @MMethod()
   public override isPublic(): boolean {
     return super.isPublic() && this.gp.subscriptionConfig.public;
   }

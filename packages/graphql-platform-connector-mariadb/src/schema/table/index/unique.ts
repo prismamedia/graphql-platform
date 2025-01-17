@@ -1,7 +1,6 @@
 import * as core from '@prismamedia/graphql-platform';
 import * as utils from '@prismamedia/graphql-platform-utils';
-import { Memoize } from '@prismamedia/memoize';
-
+import { MGetter } from '@prismamedia/memoize';
 import assert from 'node:assert';
 import { escapeIdentifier } from '../../../escaping.js';
 import type { MariaDBConnector } from '../../../index.js';
@@ -45,7 +44,7 @@ export class UniqueIndex extends AbstractIndex {
     }
   }
 
-  @Memoize()
+  @MGetter
   public override get columns(): ReadonlyArray<Column> {
     return Object.freeze(
       this.table.getColumnsByComponents(
@@ -54,7 +53,7 @@ export class UniqueIndex extends AbstractIndex {
     );
   }
 
-  @Memoize()
+  @MGetter
   public override get name(): string {
     const nameConfig = this.config?.name;
     const nameConfigPath = utils.addPath(this.configPath, 'name');
@@ -67,7 +66,7 @@ export class UniqueIndex extends AbstractIndex {
   /**
    * @see https://mariadb.com/kb/en/create-table/#unique
    */
-  @Memoize()
+  @MGetter
   public override get definition(): string {
     return `UNIQUE INDEX ${escapeIdentifier(this.name)} (${this.columns
       .map(({ name }) => escapeIdentifier(name))

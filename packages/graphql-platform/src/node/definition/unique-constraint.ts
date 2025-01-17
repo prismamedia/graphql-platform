@@ -1,5 +1,5 @@
 import * as utils from '@prismamedia/graphql-platform-utils';
-import { Memoize } from '@prismamedia/memoize';
+import { MGetter, MMethod } from '@prismamedia/memoize';
 import * as graphql from 'graphql';
 import inflection from 'inflection';
 import assert from 'node:assert';
@@ -140,12 +140,12 @@ export class UniqueConstraint<TConnector extends ConnectorInterface = any> {
     }
   }
 
-  @Memoize()
+  @MMethod()
   public toString(): string {
     return `${this.node.name}.${this.name}`;
   }
 
-  @Memoize()
+  @MGetter
   public get referrerSet(): ReadonlySet<Edge<TConnector>> {
     return new Set(
       this.node.gp.nodesByName
@@ -158,17 +158,17 @@ export class UniqueConstraint<TConnector extends ConnectorInterface = any> {
     );
   }
 
-  @Memoize()
+  @MMethod()
   public isComposite(): boolean {
     return this.componentSet.size > 1;
   }
 
-  @Memoize()
+  @MMethod()
   public isPureLeaf(): boolean {
     return this.componentSet.size === 1 && this.leafSet.size === 1;
   }
 
-  @Memoize()
+  @MMethod()
   public getPureLeaf(): Leaf<TConnector> {
     assert(
       this.isPureLeaf(),
@@ -178,14 +178,14 @@ export class UniqueConstraint<TConnector extends ConnectorInterface = any> {
     return [...this.leafSet][0]!;
   }
 
-  @Memoize()
+  @MMethod()
   public isMutable(): boolean {
     return this.componentSet
       .values()
       .some((component) => component.isMutable());
   }
 
-  @Memoize()
+  @MMethod()
   public isNullable(): boolean {
     return this.componentSet
       .values()
@@ -195,17 +195,17 @@ export class UniqueConstraint<TConnector extends ConnectorInterface = any> {
   /**
    * Is an identifier if it's non-nullable and immutable
    */
-  @Memoize()
+  @MMethod()
   public isIdentifier(): boolean {
     return !this.isNullable() && !this.isMutable();
   }
 
-  @Memoize()
+  @MMethod()
   public isMainIdentifier(): boolean {
     return this.node.mainIdentifier === this;
   }
 
-  @Memoize()
+  @MMethod()
   public isPublic(): boolean {
     return this.componentSet
       .values()
@@ -217,7 +217,7 @@ export class UniqueConstraint<TConnector extends ConnectorInterface = any> {
       );
   }
 
-  @Memoize()
+  @MMethod()
   public isScrollable(): boolean {
     if (!this.isPureLeaf()) {
       return false;
@@ -228,7 +228,7 @@ export class UniqueConstraint<TConnector extends ConnectorInterface = any> {
     return leaf.isSortable() && !leaf.isNullable();
   }
 
-  @Memoize()
+  @MGetter
   public get selection(): NodeSelection<UniqueConstraintValue> {
     return new NodeSelection(
       this.node,
@@ -250,7 +250,7 @@ export class UniqueConstraint<TConnector extends ConnectorInterface = any> {
     this.selection;
   }
 
-  @Memoize()
+  @MMethod()
   public getGraphQLObjectType(): graphql.GraphQLObjectType {
     assert(this.isPublic(), `The "${this}" unique-constraint is private`);
 

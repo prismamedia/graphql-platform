@@ -1,4 +1,4 @@
-import { Memoize } from '@prismamedia/memoize';
+import { MGetter } from '@prismamedia/memoize';
 import * as graphql from 'graphql';
 import assert from 'node:assert';
 import type { NodeSelectedValue } from '../../../../../../../node.js';
@@ -53,7 +53,7 @@ export class UniqueReverseEdgeExistsFilter extends AbstractReverseEdgeFilter {
     );
   }
 
-  @Memoize()
+  @MGetter
   public override get complement(): BooleanFilter | undefined {
     return this.headFilter
       ? new OrOperation([

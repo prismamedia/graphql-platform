@@ -13,18 +13,17 @@ import * as fixtures from '@prismamedia/graphql-platform/__tests__/fixture.js';
 import { format } from '@sqltools/formatter';
 import assert from 'node:assert';
 import { after, before, describe, it } from 'node:test';
-import { createMyGP, type MyGP } from '../../__tests__/config.js';
+import { createMyGP } from '../../__tests__/config.js';
 
 describe('Find statement', () => {
-  let gp: MyGP;
+  const gp = createMyGP(`connector_mariadb_find_statement`);
+  gp.connector.on('executed-statement', ({ statement }) =>
+    executedStatements.push(format(statement.sql).replaceAll('<= >', '<=>')),
+  );
+
   const executedStatements: string[] = [];
 
   before(async () => {
-    gp = createMyGP(`connector_mariadb_find_statement`);
-    gp.connector.on('executed-statement', ({ statement }) =>
-      executedStatements.push(format(statement.sql).replaceAll('<= >', '<=>')),
-    );
-
     await gp.connector.setup();
     await gp.seed(myAdminContext, fixtures.constant);
   });

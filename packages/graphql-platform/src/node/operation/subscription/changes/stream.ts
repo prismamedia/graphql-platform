@@ -1,5 +1,5 @@
 import { AsyncEventEmitter } from '@prismamedia/async-event-emitter';
-import { Memoize } from '@prismamedia/memoize';
+import { MMethod } from '@prismamedia/memoize';
 import assert from 'node:assert';
 import { inspect } from 'node:util';
 import type { Options as PQueueOptions } from 'p-queue';
@@ -26,12 +26,12 @@ import { ChangesSubscriptionEffect } from './stream/effect.js';
 export * from './stream/change.js';
 
 export type ChangesSubscriptionStreamForEachTask<
+  TRequestContext extends object = any,
   TUpsert extends NodeSelectedValue = any,
   TDeletion extends NodeValue = any,
-  TRequestContext extends object = any,
 > = (
-  change: ChangesSubscriptionChange<TUpsert, TDeletion>,
-  stream: ChangesSubscriptionStream<TUpsert, TDeletion, TRequestContext>,
+  change: ChangesSubscriptionChange<TRequestContext, TUpsert, TDeletion>,
+  stream: ChangesSubscriptionStream<TRequestContext, TUpsert, TDeletion>,
 ) => Promisable<any>;
 
 export type ChangesSubscriptionStreamForEachOptions = Except<
@@ -40,12 +40,14 @@ export type ChangesSubscriptionStreamForEachOptions = Except<
 >;
 
 export type ChangesSubscriptionStreamByBatchTask<
+  TRequestContext extends object = any,
   TUpsert extends NodeSelectedValue = any,
   TDeletion extends NodeValue = any,
-  TRequestContext extends object = any,
 > = (
-  changes: ReadonlyArray<ChangesSubscriptionChange<TUpsert, TDeletion>>,
-  stream: ChangesSubscriptionStream<TUpsert, TDeletion, TRequestContext>,
+  changes: ReadonlyArray<
+    ChangesSubscriptionChange<TRequestContext, TUpsert, TDeletion>
+  >,
+  stream: ChangesSubscriptionStream<TRequestContext, TUpsert, TDeletion>,
 ) => Promisable<any>;
 
 export type ChangesSubscriptionStreamByBatchOptions =
@@ -98,13 +100,15 @@ export type ChangesSubscriptionStreamConfig<
  * }
  */
 export class ChangesSubscriptionStream<
+    TRequestContext extends object = any,
     TUpsert extends NodeSelectedValue = any,
     TDeletion extends NodeValue = any,
-    TRequestContext extends object = any,
   >
   extends AsyncEventEmitter<ChangesSubscriptionStreamEvents>
   implements
-    AsyncIterable<ChangesSubscriptionChange<TUpsert, TDeletion>>,
+    AsyncIterable<
+      ChangesSubscriptionChange<TRequestContext, TUpsert, TDeletion>
+    >,
     AsyncDisposable
 {
   public readonly filter?: NodeFilter;
@@ -175,14 +179,14 @@ export class ChangesSubscriptionStream<
     return this.#consumingNodeChanges === true;
   }
 
-  @Memoize()
+  @MMethod()
   public async subscribeToNodeChanges(): Promise<NodeChangeSubscriptionInterface> {
     this.signal.throwIfAborted();
 
     return this.#broker.subscribe(this);
   }
 
-  @Memoize()
+  @MMethod()
   public async dispose(): Promise<void> {
     await using _nodeChangesSubscription = await this.subscribeToNodeChanges();
     this.#consumingNodeChanges = false;
@@ -193,9 +197,9 @@ export class ChangesSubscriptionStream<
     return this.dispose();
   }
 
-  @Memoize()
+  @MMethod()
   protected async *changes(): AsyncIterator<
-    ChangesSubscriptionChange<TUpsert, TDeletion>,
+    ChangesSubscriptionChange<TRequestContext, TUpsert, TDeletion>,
     undefined
   > {
     const changesSubscription = await this.subscribeToNodeChanges();
@@ -225,7 +229,7 @@ export class ChangesSubscriptionStream<
   }
 
   public [Symbol.asyncIterator](): AsyncIterator<
-    ChangesSubscriptionChange<TUpsert, TDeletion>,
+    ChangesSubscriptionChange<TRequestContext, TUpsert, TDeletion>,
     undefined
   > {
     return {
@@ -240,9 +244,9 @@ export class ChangesSubscriptionStream<
 
   public async forEach(
     task: ChangesSubscriptionStreamForEachTask<
+      TRequestContext,
       TUpsert,
-      TDeletion,
-      TRequestContext
+      TDeletion
     >,
     queueOptions?: ChangesSubscriptionStreamForEachOptions,
   ): Promise<void> {
@@ -280,9 +284,9 @@ export class ChangesSubscriptionStream<
 
   public async byBatch(
     task: ChangesSubscriptionStreamByBatchTask<
+      TRequestContext,
       TUpsert,
-      TDeletion,
-      TRequestContext
+      TDeletion
     >,
     {
       batchSize: batchSize = 100,

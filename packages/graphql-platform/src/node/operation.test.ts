@@ -1,6 +1,6 @@
 import assert from 'node:assert';
-import { before, describe, it } from 'node:test';
-import { MyGP, nodes } from '../__tests__/config.js';
+import { describe, it } from 'node:test';
+import { nodes } from '../__tests__/config.js';
 import {
   AbstractDeletion,
   AbstractMutation,
@@ -10,11 +10,7 @@ import {
 } from '../index.js';
 
 describe('Operation', () => {
-  let gp: MyGP;
-
-  before(() => {
-    gp = new GraphQLPlatform({ nodes });
-  });
+  const gp = new GraphQLPlatform({ nodes });
 
   it('instanciates core-operations', () => {
     for (const node of gp.nodesByName.values()) {

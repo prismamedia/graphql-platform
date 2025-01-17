@@ -1,5 +1,5 @@
-import { EdgeFilter, isEdgeFilter } from './component/edge.js';
-import { LeafFilter, isLeafFilter } from './component/leaf.js';
+import { type EdgeFilter, isEdgeFilter } from './component/edge.js';
+import { type LeafFilter, isLeafFilter } from './component/leaf.js';
 
 export * from './component/edge.js';
 export * from './component/leaf.js';

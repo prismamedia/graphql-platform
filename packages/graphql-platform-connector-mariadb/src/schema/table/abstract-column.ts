@@ -1,6 +1,6 @@
 import type * as core from '@prismamedia/graphql-platform';
 import type * as utils from '@prismamedia/graphql-platform-utils';
-import { Memoize } from '@prismamedia/memoize';
+import { MGetter } from '@prismamedia/memoize';
 import { escapeIdentifier, escapeStringValue } from '../../escaping.js';
 import type { Table } from '../table.js';
 import type { DataType } from './data-type.js';
@@ -18,7 +18,7 @@ export abstract class AbstractColumn {
   /**
    * @see https://mariadb.com/kb/en/identifier-qualifiers/
    */
-  @Memoize()
+  @MGetter
   public get qualifiedName(): string {
     return `${this.table.name}.${this.name}`;
   }
@@ -26,7 +26,7 @@ export abstract class AbstractColumn {
   /**
    * @see https://mariadb.com/kb/en/identifier-qualifiers/
    */
-  @Memoize()
+  @MGetter
   public get fullyQualifiedName(): string {
     return `${this.table.qualifiedName}.${this.name}`;
   }
@@ -39,7 +39,7 @@ export abstract class AbstractColumn {
 
   public abstract isNullable(): boolean;
 
-  @Memoize()
+  @MGetter
   public get constraint(): string | undefined {
     return this.dataType.kind === 'JSON'
       ? `JSON_VALID(${escapeIdentifier(this.name)})`
@@ -63,7 +63,7 @@ export abstract class AbstractColumn {
   /**
    * @see https://mariadb.com/kb/en/create-table/#column-definitions
    */
-  @Memoize()
+  @MGetter
   public get definition(): string {
     return this.getDefinition(this.isNullable());
   }

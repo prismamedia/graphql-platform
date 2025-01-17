@@ -6,12 +6,15 @@ import {
   getGraphQLNamedInputType,
   isNamedInputType,
   isNamedInputTypePublic,
-  NamedInputType,
+  type NamedInputType,
   parseNamedInputLiteral,
   parseNamedInputValue,
   validateNamedInputType,
 } from './type/named.js';
-import { isWrappingInputType, WrappingInputType } from './type/wrapping.js';
+import {
+  isWrappingInputType,
+  type WrappingInputType,
+} from './type/wrapping.js';
 
 export * from './type/named.js';
 export * from './type/wrapping.js';

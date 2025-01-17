@@ -1,6 +1,6 @@
 import type { Name } from '@prismamedia/graphql-platform-utils';
 import * as utils from '@prismamedia/graphql-platform-utils';
-import { Memoize } from '@prismamedia/memoize';
+import { MGetter, MMethod } from '@prismamedia/memoize';
 import * as graphql from 'graphql';
 import assert from 'node:assert';
 import type { Except } from 'type-fest';
@@ -11,10 +11,10 @@ import { Leaf, UniqueReverseEdge, type Component } from '../../definition.js';
 import type { OperationContext } from '../../operation/context.js';
 import {
   NodeSelection,
-  SelectionExpression,
   mergeSelectionExpressions,
   type NodeSelectedSource,
   type NodeSelectedValue,
+  type SelectionExpression,
 } from '../../statement/selection.js';
 import {
   EdgeHeadOutputType,
@@ -129,7 +129,7 @@ export class NodeOutputType {
     return this.name;
   }
 
-  @Memoize()
+  @MGetter
   public get componentFieldsByName(): ReadonlyMap<
     ComponentOutputType['name'],
     ComponentOutputType
@@ -146,7 +146,7 @@ export class NodeOutputType {
     );
   }
 
-  @Memoize()
+  @MGetter
   public get leafFieldsByName(): ReadonlyMap<
     LeafOutputType['name'],
     LeafOutputType
@@ -161,7 +161,7 @@ export class NodeOutputType {
     );
   }
 
-  @Memoize()
+  @MGetter
   public get edgeFieldsByName(): ReadonlyMap<
     EdgeHeadOutputType['name'],
     EdgeHeadOutputType
@@ -176,7 +176,7 @@ export class NodeOutputType {
     );
   }
 
-  @Memoize()
+  @MGetter
   public get reverseEdgeFieldsByName(): ReadonlyMap<
     ReverseEdgeOutputType['name'],
     ReverseEdgeOutputType
@@ -199,7 +199,7 @@ export class NodeOutputType {
     );
   }
 
-  @Memoize()
+  @MGetter
   public get uniqueReverseEdgeFieldsByName(): ReadonlyMap<
     UniqueReverseEdgeHeadOutputType['name'],
     UniqueReverseEdgeHeadOutputType
@@ -214,7 +214,7 @@ export class NodeOutputType {
     );
   }
 
-  @Memoize()
+  @MGetter
   public get multipleReverseEdgeFieldsByName(): ReadonlyMap<
     MultipleReverseEdgeOutputType['name'],
     MultipleReverseEdgeOutputType
@@ -228,7 +228,7 @@ export class NodeOutputType {
     );
   }
 
-  @Memoize()
+  @MGetter
   public get virtualFieldsByName(): ReadonlyMap<
     VirtualOutputType['name'],
     VirtualOutputType
@@ -318,7 +318,7 @@ export class NodeOutputType {
     return new Map(fields.map((field) => [field.name, field]));
   }
 
-  @Memoize()
+  @MGetter
   public get fieldsByName(): ReadonlyMap<
     NodeFieldOutputType['name'],
     NodeFieldOutputType
@@ -330,7 +330,7 @@ export class NodeOutputType {
     ]);
   }
 
-  @Memoize()
+  @MMethod()
   public getGraphQLObjectType(): graphql.GraphQLObjectType {
     assert(this.node.isPublic(), `The "${this.node}" node is private`);
 
@@ -356,7 +356,7 @@ export class NodeOutputType {
     });
   }
 
-  @Memoize()
+  @MMethod()
   public validate(): void {
     utils.aggregateGraphError<NodeFieldOutputType, void>(
       this.fieldsByName.values(),
@@ -453,7 +453,7 @@ export class NodeOutputType {
     );
   }
 
-  @Memoize()
+  @MGetter
   protected get typeNames(): ReadonlySet<graphql.GraphQLObjectType['name']> {
     return new Set([this.name, this.node.deletionOutputType.name]);
   }

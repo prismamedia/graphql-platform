@@ -1,9 +1,9 @@
 import * as core from '@prismamedia/graphql-platform';
-import { Memoize } from '@prismamedia/memoize';
+import { MGetter } from '@prismamedia/memoize';
 import { escapeIdentifier } from '../../../../escaping.js';
 import { AbstractTableReference } from '../abstract-table-reference.js';
 import type { TableReference } from '../table-reference.js';
-import { WhereCondition, filterNode } from '../where-condition.js';
+import { type WhereCondition, filterNode } from '../where-condition.js';
 
 export enum JoinTableKind {
   LEFT,
@@ -44,7 +44,7 @@ export class JoinTable extends AbstractTableReference {
       : JoinTableKind.INNER;
   }
 
-  @Memoize()
+  @MGetter
   public get condition(): WhereCondition {
     return [
       ...this.parent.getJoinConditions(this.edgeOrUniqueReverseEdge, this),

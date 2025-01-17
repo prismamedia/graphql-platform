@@ -1,4 +1,4 @@
-import { Memoize } from '@prismamedia/memoize';
+import { MGetter } from '@prismamedia/memoize';
 import * as graphql from 'graphql';
 import { ReverseEdgeDependencyGraph } from '../../../../../../change/dependency.js';
 import type { MultipleReverseEdge } from '../../../../../../definition.js';
@@ -71,7 +71,7 @@ export class MultipleReverseEdgeCountFilter extends AbstractReverseEdgeFilter {
     );
   }
 
-  @Memoize()
+  @MGetter
   public override get complement(): BooleanFilter | undefined {
     return this.operator === 'gt'
       ? MultipleReverseEdgeCountFilter.create(

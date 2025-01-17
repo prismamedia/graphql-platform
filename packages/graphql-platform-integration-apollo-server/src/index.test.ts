@@ -11,13 +11,11 @@ import { after, before, describe, it } from 'node:test';
 import { ApolloServerIntegration } from './index.js';
 
 describe('GraphQL-Platform Integration Apollo Server', () => {
-  let gp: MyGP<InMemoryBroker>;
+  const gp: MyGP<InMemoryBroker> = createMyGP('integration_apollo_server', {
+    subscription: { public: true },
+  });
 
   before(async () => {
-    gp = createMyGP('integration_apollo_server', {
-      subscription: { public: true },
-    });
-
     await gp.connector.setup();
     await gp.seed(myAdminContext, fixtures.constant);
   });

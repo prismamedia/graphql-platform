@@ -3,7 +3,7 @@ import {
   type EventConfigByName,
 } from '@prismamedia/async-event-emitter';
 import * as utils from '@prismamedia/graphql-platform-utils';
-import { Memoize } from '@prismamedia/memoize';
+import { MGetter } from '@prismamedia/memoize';
 import * as graphql from 'graphql';
 import type { Except, Promisable } from 'type-fest';
 import type { BrokerInterface } from './broker-interface.js';
@@ -482,7 +482,7 @@ export class GraphQLPlatform<
     }
   }
 
-  @Memoize()
+  @MGetter
   public get connector(): TConnector {
     if (!this.#connector) {
       throw new utils.GraphError(`No connector has been provided`, {
@@ -501,7 +501,7 @@ export class GraphQLPlatform<
     await seeding.load(context);
   }
 
-  @Memoize()
+  @MGetter
   public get nodeOperationsByNameByType(): OperationsByNameByType<TRequestContext> {
     return Object.fromEntries(
       utils.operationTypes.map((type): any => [
@@ -546,7 +546,7 @@ export class GraphQLPlatform<
     return operation;
   }
 
-  @Memoize()
+  @MGetter
   public get schema(): graphql.GraphQLSchema {
     const schema = new graphql.GraphQLSchema({
       ...this.config.schema,
@@ -597,7 +597,7 @@ export class GraphQLPlatform<
    * @example
    * const articles = await api.Article.findMany(myRequestContext, { where: { status: ArticleStatus.Published }, first: 5, selection: `{ id title }` });
    */
-  @Memoize()
+  @MGetter
   public get api(): API<TRequestContext> {
     return createAPI(this);
   }

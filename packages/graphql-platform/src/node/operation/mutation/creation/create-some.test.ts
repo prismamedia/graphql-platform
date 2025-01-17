@@ -1,11 +1,11 @@
 import assert from 'node:assert';
 import { beforeEach, describe, it } from 'node:test';
 import {
-  MyContext,
-  MyGP,
   myAdminContext,
   myVisitorContext,
   nodes,
+  type MyContext,
+  type MyGP,
 } from '../../../../__tests__/config.js';
 import {
   clearConnectorMockCalls,
@@ -19,7 +19,7 @@ import {
   LifecycleHookError,
   UnauthorizedError,
 } from '../../error.js';
-import { CreateSomeMutationArgs } from './create-some.js';
+import type { CreateSomeMutationArgs } from './create-some.js';
 
 describe('CreateSomeMutation', () => {
   const gp: MyGP<MockedConnector> = new GraphQLPlatform({

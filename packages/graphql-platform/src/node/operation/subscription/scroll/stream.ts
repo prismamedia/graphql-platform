@@ -5,8 +5,8 @@ import {
 } from 'cli-progress';
 import assert from 'node:assert';
 import { inspect } from 'node:util';
-import PQueue, { Options as PQueueOptions } from 'p-queue';
-import PRetry, { Options as PRetryOptions } from 'p-retry';
+import PQueue, { type Options as PQueueOptions } from 'p-queue';
+import PRetry, { type Options as PRetryOptions } from 'p-retry';
 import * as R from 'remeda';
 import type { Except, Promisable } from 'type-fest';
 import type { Node } from '../../../../node.js';
@@ -21,7 +21,7 @@ import {
   OrderingDirection,
   type NodeSelectedValue,
 } from '../../../statement.js';
-import { LeafFilterInput, NodeFilterInputValue } from '../../../type.js';
+import { LeafFilterInput, type NodeFilterInputValue } from '../../../type.js';
 
 const averageFormattedKey = 'average_formatted';
 
