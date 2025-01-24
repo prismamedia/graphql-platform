@@ -2,23 +2,21 @@ import type * as graphql from 'graphql';
 import assert from 'node:assert';
 import type { Leaf } from '../../../../definition.js';
 import type { NodeOrderingInputValue } from '../../../../type.js';
+import { AbstractOrderingExpression } from '../../abstract-expression.js';
 import type { OrderingDirection } from '../../direction.js';
-import type { OrderingExpressionInterface } from '../../expression-interface.js';
 
-export class LeafOrdering implements OrderingExpressionInterface {
+export class LeafOrdering extends AbstractOrderingExpression {
   public constructor(
     public readonly leaf: Leaf,
-    public readonly direction: OrderingDirection,
+    direction: OrderingDirection,
   ) {
     assert(leaf.isSortable(), `The "${leaf}" leaf is not sortable`);
+
+    super(direction);
   }
 
-  public equals(expression: unknown): boolean {
-    return (
-      expression instanceof LeafOrdering &&
-      expression.leaf === this.leaf &&
-      expression.direction === this.direction
-    );
+  public override equals(expression: unknown): expression is this {
+    return super.equals(expression) && expression.leaf === this.leaf;
   }
 
   public get dependency() {

@@ -6,8 +6,9 @@ import {
   LeafOrdering,
   OrderingDirection,
 } from '../../../../statement/ordering.js';
+import { AbstractOrderingExpressionInput } from '../abstract-expression.js';
 
-export class LeafOrderingInput extends utils.EnumInputValue {
+export class LeafOrderingInput extends AbstractOrderingExpressionInput {
   readonly #expression: LeafOrdering;
 
   public constructor(
@@ -31,10 +32,7 @@ export class LeafOrderingInput extends utils.EnumInputValue {
     this.#expression = new LeafOrdering(this.leaf, this.direction);
   }
 
-  public sort<TRequestContext extends object>(
-    _context?: OperationContext<TRequestContext> | undefined,
-    _path?: utils.Path,
-  ): LeafOrdering {
+  public sort(_context?: OperationContext, _path?: utils.Path): LeafOrdering {
     return this.#expression;
   }
 }

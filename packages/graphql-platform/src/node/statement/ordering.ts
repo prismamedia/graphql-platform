@@ -7,7 +7,6 @@ import type { OrderByInputValue } from '../type.js';
 import type { OrderingExpression } from './ordering/expression.js';
 
 export * from './ordering/direction.js';
-export * from './ordering/expression-interface.js';
 export * from './ordering/expression.js';
 
 export class NodeOrdering {

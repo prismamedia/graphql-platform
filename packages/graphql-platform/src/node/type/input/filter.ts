@@ -28,7 +28,7 @@ import {
   EdgeFilterInput,
   LeafFilterInput,
   ReverseEdgeFilterInput,
-  type FieldFilterInputInterface,
+  type AbstractFieldFilterInput,
 } from './filter/field.js';
 
 export * from './filter/field.js';
@@ -40,7 +40,7 @@ export type NodeFilterInputTypeOverride = {
   description?: string;
 };
 
-export class NodeFilterInputType extends utils.ObjectInputType<FieldFilterInputInterface> {
+export class NodeFilterInputType extends utils.ObjectInputType<AbstractFieldFilterInput> {
   public static createLeafComparisonFields(leaf: Leaf): LeafFilterInput[] {
     const fields: LeafFilterInput[] = [];
 
@@ -412,20 +412,20 @@ export class NodeFilterInputType extends utils.ObjectInputType<FieldFilterInputI
   }
 
   @MGetter
-  public override get fields(): ReadonlyArray<FieldFilterInputInterface> {
+  public override get fields(): ReadonlyArray<AbstractFieldFilterInput> {
     const constructor = this.constructor as typeof NodeFilterInputType;
 
     return [
       ...this.node.componentSet
         .values()
-        .flatMap<FieldFilterInputInterface>((component) =>
+        .flatMap<AbstractFieldFilterInput>((component) =>
           component instanceof Leaf
             ? constructor.createLeafFields(component)
             : constructor.createEdgeFields(component),
         ),
       ...this.node.reverseEdgeSet
         .values()
-        .flatMap<FieldFilterInputInterface>((reverseEdge) =>
+        .flatMap<AbstractFieldFilterInput>((reverseEdge) =>
           reverseEdge instanceof UniqueReverseEdge
             ? constructor.createUniqueReverseEdgeFields(reverseEdge)
             : constructor.createMultipleReverseEdgeFields(reverseEdge),

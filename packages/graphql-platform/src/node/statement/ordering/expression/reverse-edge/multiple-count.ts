@@ -2,22 +2,20 @@ import type * as graphql from 'graphql';
 import { ReverseEdgeDependencyGraph } from '../../../../change/dependency.js';
 import type { MultipleReverseEdge } from '../../../../definition.js';
 import type { NodeOrderingInputValue } from '../../../../type.js';
+import { AbstractOrderingExpression } from '../../abstract-expression.js';
 import type { OrderingDirection } from '../../direction.js';
-import type { OrderingExpressionInterface } from '../../expression-interface.js';
 
-export class MultipleReverseEdgeCountOrdering
-  implements OrderingExpressionInterface
-{
+export class MultipleReverseEdgeCountOrdering extends AbstractOrderingExpression {
   public constructor(
     public readonly reverseEdge: MultipleReverseEdge,
-    public readonly direction: OrderingDirection,
-  ) {}
+    direction: OrderingDirection,
+  ) {
+    super(direction);
+  }
 
-  public equals(expression: unknown): boolean {
+  public override equals(expression: unknown): expression is this {
     return (
-      expression instanceof MultipleReverseEdgeCountOrdering &&
-      expression.reverseEdge === this.reverseEdge &&
-      expression.direction === this.direction
+      super.equals(expression) && expression.reverseEdge === this.reverseEdge
     );
   }
 

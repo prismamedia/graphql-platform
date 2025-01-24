@@ -4,12 +4,12 @@ import type { Node } from '../../../node.js';
 import { Leaf } from '../../definition.js';
 import type { OperationContext } from '../../operation/context.js';
 import { NodeOrdering, OrderingDirection } from '../../statement/ordering.js';
-import type { OrderingExpressionInput } from './ordering/expression.js';
+import { AbstractOrderingExpressionInput } from './ordering/expression.js';
 
 export * from './ordering/expression.js';
 
 export type NodeOrderingInputValue = utils.Nillable<
-  OrderingExpressionInput['value']
+  AbstractOrderingExpressionInput['value']
 >;
 
 export type OrderByInputValue = utils.Nillable<
@@ -21,7 +21,7 @@ export type NodeOrderingInputTypeOverride = {
   description?: string;
 };
 
-export class NodeOrderingInputType extends utils.EnumInputType<OrderingExpressionInput> {
+export class NodeOrderingInputType extends utils.EnumInputType<AbstractOrderingExpressionInput> {
   public constructor(
     public readonly node: Node,
     override?: Partial<NodeOrderingInputTypeOverride>,
@@ -33,11 +33,11 @@ export class NodeOrderingInputType extends utils.EnumInputType<OrderingExpressio
   }
 
   @MGetter
-  public override get enumValues(): ReadonlyArray<OrderingExpressionInput> {
+  public override get enumValues(): ReadonlyArray<AbstractOrderingExpressionInput> {
     return [
       ...this.node.componentSet
         .values()
-        .flatMap<OrderingExpressionInput>((component) =>
+        .flatMap<AbstractOrderingExpressionInput>((component) =>
           component instanceof Leaf && component.isSortable()
             ? [
                 component.getOrderingInput(OrderingDirection.ASCENDING),
@@ -47,7 +47,7 @@ export class NodeOrderingInputType extends utils.EnumInputType<OrderingExpressio
         ),
       ...this.node.multipleReverseEdgeSet
         .values()
-        .flatMap<OrderingExpressionInput>((reverseEdge) => [
+        .flatMap<AbstractOrderingExpressionInput>((reverseEdge) => [
           reverseEdge.getOrderingInput(OrderingDirection.ASCENDING),
           reverseEdge.getOrderingInput(OrderingDirection.DESCENDING),
         ]),

@@ -5,8 +5,9 @@ import {
   MultipleReverseEdgeCountOrdering,
   OrderingDirection,
 } from '../../../../statement/ordering.js';
+import { AbstractOrderingExpressionInput } from '../abstract-expression.js';
 
-export class MultipleReverseEdgeCountOrderingInput extends utils.EnumInputValue {
+export class MultipleReverseEdgeCountOrderingInput extends AbstractOrderingExpressionInput {
   readonly #expression: MultipleReverseEdgeCountOrdering;
 
   public constructor(
@@ -31,8 +32,8 @@ export class MultipleReverseEdgeCountOrderingInput extends utils.EnumInputValue 
     );
   }
 
-  public sort<TRequestContext extends object>(
-    _context?: OperationContext<TRequestContext> | undefined,
+  public sort(
+    _context?: OperationContext,
     _path?: utils.Path,
   ): MultipleReverseEdgeCountOrdering {
     return this.#expression;

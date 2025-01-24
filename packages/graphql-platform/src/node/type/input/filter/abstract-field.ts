@@ -2,7 +2,6 @@ import * as utils from '@prismamedia/graphql-platform-utils';
 import type { Except } from 'type-fest';
 import type { OperationContext } from '../../../operation/context.js';
 import type { BooleanFilter } from '../../../statement/filter/boolean.js';
-import type { FieldFilterInputInterface } from './field-interface.js';
 
 export type AbstractFieldFilterInputConfig<TValue> = Except<
   utils.InputConfig<TValue>,
@@ -15,10 +14,9 @@ export type AbstractFieldFilterInputConfig<TValue> = Except<
   ): BooleanFilter;
 };
 
-export abstract class AbstractFieldFilterInput<TValue>
-  extends utils.Input<TValue>
-  implements FieldFilterInputInterface<TValue>
-{
+export abstract class AbstractFieldFilterInput<
+  TValue = any,
+> extends utils.Input<TValue> {
   public readonly filter: AbstractFieldFilterInputConfig<TValue>['filter'];
 
   public constructor({

@@ -28,6 +28,12 @@ export function orderNode(
           expression.reverseEdge,
           'COUNT(*)',
         )} ${direction}`;
+      } else if (expression instanceof core.AbstractOrderingExpression) {
+        // TODO: Allow the handling of custom expressions
+        throw new utils.UnexpectedValueError(
+          `a supported-expression`,
+          expression,
+        );
       } else {
         throw new utils.UnreachableValueError(expression);
       }
