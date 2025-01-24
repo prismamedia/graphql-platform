@@ -1,30 +1,22 @@
-import type { Except, SetOptional } from 'type-fest';
-import type { Edge } from '../../../../definition/component/edge.js';
-import {
-  AbstractFieldFilterInput,
-  type AbstractFieldFilterInputConfig,
-} from '../abstract-field.js';
+import type { Except } from 'type-fest';
+import type { Edge } from '../../../../definition.js';
+import { FieldFilterInput, type FieldFilterInputConfig } from '../field.js';
 
 export type EdgeFilterInputConfig<TValue> = Except<
-  SetOptional<AbstractFieldFilterInputConfig<TValue>, 'name'>,
-  'public'
+  FieldFilterInputConfig<TValue>,
+  'name' | 'public'
 >;
 
-export class EdgeFilterInput<
-  TValue = any,
-> extends AbstractFieldFilterInput<TValue> {
+export class EdgeFilterInput<TValue = any> extends FieldFilterInput<TValue> {
   public constructor(
     public readonly edge: Edge,
     public readonly id: string,
-    {
-      name = id === 'eq' ? edge.name : `${edge.name}_${id}`,
-      ...config
-    }: EdgeFilterInputConfig<TValue>,
+    config: EdgeFilterInputConfig<TValue>,
   ) {
     super({
       deprecated: edge.deprecationReason,
       ...config,
-      name,
+      name: id === 'eq' ? edge.name : `${edge.name}_${id}`,
       public: edge.isPublic(),
     });
   }

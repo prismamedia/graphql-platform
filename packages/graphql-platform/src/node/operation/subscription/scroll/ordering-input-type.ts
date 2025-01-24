@@ -3,8 +3,8 @@ import { MGetter } from '@prismamedia/memoize';
 import assert from 'node:assert';
 import type { Node } from '../../../../node.js';
 import { Leaf } from '../../../definition.js';
-import { OrderingDirection } from '../../../statement.js';
-import type { LeafOrderingInput } from '../../../type.js';
+import { OrderingDirection } from '../../../statement/ordering/direction.js';
+import type { LeafOrderingInput } from '../../../type/input/ordering/expression/leaf.js';
 
 export type ScrollSubscriptionOrderingInputValue = utils.Nillable<
   LeafOrderingInput['value']

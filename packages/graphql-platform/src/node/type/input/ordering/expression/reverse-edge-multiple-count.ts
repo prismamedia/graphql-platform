@@ -1,19 +1,20 @@
-import * as utils from '@prismamedia/graphql-platform-utils';
 import type { MultipleReverseEdge } from '../../../../definition/reverse-edge/multiple.js';
-import type { OperationContext } from '../../../../operation/context.js';
 import {
   MultipleReverseEdgeCountOrdering,
   OrderingDirection,
 } from '../../../../statement/ordering.js';
-import { AbstractOrderingExpressionInput } from '../abstract-expression.js';
+import { OrderingExpressionInput } from '../expression.js';
 
-export class MultipleReverseEdgeCountOrderingInput extends AbstractOrderingExpressionInput {
-  readonly #expression: MultipleReverseEdgeCountOrdering;
-
+export class MultipleReverseEdgeCountOrderingInput extends OrderingExpressionInput<MultipleReverseEdgeCountOrdering> {
   public constructor(
     public readonly reverseEdge: MultipleReverseEdge,
-    public readonly direction: OrderingDirection,
+    direction: OrderingDirection,
   ) {
+    const expression = new MultipleReverseEdgeCountOrdering(
+      reverseEdge,
+      direction,
+    );
+
     super({
       value: `${reverseEdge.countFieldName}_${
         direction === OrderingDirection.ASCENDING ? 'ASC' : 'DESC'
@@ -24,18 +25,8 @@ export class MultipleReverseEdgeCountOrderingInput extends AbstractOrderingExpre
           ? `from the lowest number of "${reverseEdge.name}" to the highest`
           : `from the highest number of "${reverseEdge.name}" to the lowest`,
       deprecated: reverseEdge.deprecationReason,
+      direction,
+      sort: () => expression,
     });
-
-    this.#expression = new MultipleReverseEdgeCountOrdering(
-      this.reverseEdge,
-      this.direction,
-    );
-  }
-
-  public sort(
-    _context?: OperationContext,
-    _path?: utils.Path,
-  ): MultipleReverseEdgeCountOrdering {
-    return this.#expression;
   }
 }

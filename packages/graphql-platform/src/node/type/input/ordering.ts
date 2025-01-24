@@ -4,12 +4,14 @@ import type { Node } from '../../../node.js';
 import { Leaf } from '../../definition.js';
 import type { OperationContext } from '../../operation/context.js';
 import { NodeOrdering, OrderingDirection } from '../../statement/ordering.js';
-import { AbstractOrderingExpressionInput } from './ordering/expression.js';
+import { OrderingExpressionInput } from './ordering/expression.js';
 
 export * from './ordering/expression.js';
+export * from './ordering/expression/leaf.js';
+export * from './ordering/expression/reverse-edge-multiple-count.js';
 
 export type NodeOrderingInputValue = utils.Nillable<
-  AbstractOrderingExpressionInput['value']
+  OrderingExpressionInput['value']
 >;
 
 export type OrderByInputValue = utils.Nillable<
@@ -21,7 +23,7 @@ export type NodeOrderingInputTypeOverride = {
   description?: string;
 };
 
-export class NodeOrderingInputType extends utils.EnumInputType<AbstractOrderingExpressionInput> {
+export class NodeOrderingInputType extends utils.EnumInputType<OrderingExpressionInput> {
   public constructor(
     public readonly node: Node,
     override?: Partial<NodeOrderingInputTypeOverride>,
@@ -33,11 +35,11 @@ export class NodeOrderingInputType extends utils.EnumInputType<AbstractOrderingE
   }
 
   @MGetter
-  public override get enumValues(): ReadonlyArray<AbstractOrderingExpressionInput> {
+  public override get enumValues(): ReadonlyArray<OrderingExpressionInput> {
     return [
       ...this.node.componentSet
         .values()
-        .flatMap<AbstractOrderingExpressionInput>((component) =>
+        .flatMap<OrderingExpressionInput>((component) =>
           component instanceof Leaf && component.isSortable()
             ? [
                 component.getOrderingInput(OrderingDirection.ASCENDING),
@@ -47,7 +49,7 @@ export class NodeOrderingInputType extends utils.EnumInputType<AbstractOrderingE
         ),
       ...this.node.multipleReverseEdgeSet
         .values()
-        .flatMap<AbstractOrderingExpressionInput>((reverseEdge) => [
+        .flatMap<OrderingExpressionInput>((reverseEdge) => [
           reverseEdge.getOrderingInput(OrderingDirection.ASCENDING),
           reverseEdge.getOrderingInput(OrderingDirection.DESCENDING),
         ]),

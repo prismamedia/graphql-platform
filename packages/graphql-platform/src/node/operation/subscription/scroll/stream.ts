@@ -21,7 +21,8 @@ import {
   OrderingDirection,
   type NodeSelectedValue,
 } from '../../../statement.js';
-import { LeafFilterInput, type NodeFilterInputValue } from '../../../type.js';
+import type { NodeFilterInputValue } from '../../../type/input/filter.js';
+import { LeafFilterInput } from '../../../type/input/filter/field/leaf.js';
 
 const averageFormattedKey = 'average_formatted';
 

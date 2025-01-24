@@ -1,21 +1,19 @@
-import * as utils from '@prismamedia/graphql-platform-utils';
 import assert from 'node:assert';
 import type { Leaf } from '../../../../definition/component/leaf.js';
-import type { OperationContext } from '../../../../operation/context.js';
 import {
   LeafOrdering,
   OrderingDirection,
 } from '../../../../statement/ordering.js';
-import { AbstractOrderingExpressionInput } from '../abstract-expression.js';
+import { OrderingExpressionInput } from '../expression.js';
 
-export class LeafOrderingInput extends AbstractOrderingExpressionInput {
-  readonly #expression: LeafOrdering;
-
+export class LeafOrderingInput extends OrderingExpressionInput<LeafOrdering> {
   public constructor(
     public readonly leaf: Leaf,
-    public readonly direction: OrderingDirection,
+    direction: OrderingDirection,
   ) {
     assert(leaf.isSortable(), `The "${leaf}" leaf is not sortable`);
+
+    const expression = new LeafOrdering(leaf, direction);
 
     super({
       value: `${leaf.name}_${
@@ -27,12 +25,8 @@ export class LeafOrderingInput extends AbstractOrderingExpressionInput {
           ? `from the lowest "${leaf.name}" to the highest`
           : `from the highest "${leaf.name}" to the lowest`,
       deprecated: leaf.deprecationReason,
+      direction,
+      sort: () => expression,
     });
-
-    this.#expression = new LeafOrdering(this.leaf, this.direction);
-  }
-
-  public sort(_context?: OperationContext, _path?: utils.Path): LeafOrdering {
-    return this.#expression;
   }
 }
