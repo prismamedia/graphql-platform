@@ -44,9 +44,9 @@
     "denque": "^2.1.0",
     "dependency-graph": "^1.0.0",
     "inflection": "^3.0.2",
-    "p-queue": "^8.0.1",
+    "p-queue": "^8.1.0",
     "p-retry": "^6.2.1",
-    "remeda": "^2.19.2",
+    "remeda": "^2.20.0",
     "type-fest": "^4.33.0"
   },
   "peerDependencies": {

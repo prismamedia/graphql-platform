@@ -36,7 +36,7 @@
   "dependencies": {
     "@prismamedia/memoize": "^6.1.0",
     "indefinite": "^2.5.1",
-    "remeda": "^2.19.2",
+    "remeda": "^2.20.0",
     "type-fest": "^4.33.0"
   },
   "peerDependencies": {

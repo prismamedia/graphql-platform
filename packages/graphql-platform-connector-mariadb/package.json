@@ -44,7 +44,7 @@
     "dependency-graph": "^1.0.0",
     "inflection": "^3.0.2",
     "mariadb": "^3.4.0",
-    "remeda": "^2.19.2",
+    "remeda": "^2.20.0",
     "semver": "^7.6.3",
     "type-fest": "^4.33.0"
   },
