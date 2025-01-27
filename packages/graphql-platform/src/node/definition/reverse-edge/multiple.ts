@@ -3,7 +3,7 @@ import { MGetter, MMethod } from '@prismamedia/memoize';
 import inflection from 'inflection';
 import assert from 'node:assert';
 import type { ConnectorInterface } from '../../../connector-interface.js';
-import type { OrderingDirection } from '../../statement/ordering/direction.js';
+import { OrderingDirection } from '../../statement/ordering/direction.js';
 import { MultipleReverseEdgeCreationInput } from '../../type/input/creation/field/reverse-edge/multiple.js';
 import { MultipleReverseEdgeCountOrderingInput } from '../../type/input/ordering/expression/reverse-edge-multiple-count.js';
 import { MultipleReverseEdgeUpdateInput } from '../../type/input/update/field/reverse-edge/multiple.js';
@@ -84,6 +84,14 @@ export class MultipleReverseEdge<
     direction: OrderingDirection,
   ): MultipleReverseEdgeCountOrderingInput {
     return new MultipleReverseEdgeCountOrderingInput(this, direction);
+  }
+
+  @MGetter
+  public get orderingInputs(): ReadonlyArray<MultipleReverseEdgeCountOrderingInput> {
+    return [
+      this.getOrderingInput(OrderingDirection.ASCENDING),
+      this.getOrderingInput(OrderingDirection.DESCENDING),
+    ];
   }
 
   @MGetter

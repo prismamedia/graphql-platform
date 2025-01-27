@@ -1,9 +1,8 @@
 import * as utils from '@prismamedia/graphql-platform-utils';
 import { MGetter } from '@prismamedia/memoize';
 import type { Node } from '../../../node.js';
-import { Leaf } from '../../definition.js';
 import type { OperationContext } from '../../operation/context.js';
-import { NodeOrdering, OrderingDirection } from '../../statement/ordering.js';
+import { NodeOrdering } from '../../statement/ordering.js';
 import { OrderingExpressionInput } from './ordering/expression.js';
 
 export * from './ordering/expression.js';
@@ -37,22 +36,16 @@ export class NodeOrderingInputType extends utils.EnumInputType<OrderingExpressio
   @MGetter
   public override get enumValues(): ReadonlyArray<OrderingExpressionInput> {
     return [
-      ...this.node.componentSet
+      ...this.node.leafSet
         .values()
-        .flatMap<OrderingExpressionInput>((component) =>
-          component instanceof Leaf && component.isSortable()
-            ? [
-                component.getOrderingInput(OrderingDirection.ASCENDING),
-                component.getOrderingInput(OrderingDirection.DESCENDING),
-              ]
-            : [],
+        .flatMap<OrderingExpressionInput>((leaf) =>
+          leaf.isSortable() ? leaf.orderingInputs : [],
         ),
       ...this.node.multipleReverseEdgeSet
         .values()
-        .flatMap<OrderingExpressionInput>((reverseEdge) => [
-          reverseEdge.getOrderingInput(OrderingDirection.ASCENDING),
-          reverseEdge.getOrderingInput(OrderingDirection.DESCENDING),
-        ]),
+        .flatMap<OrderingExpressionInput>(
+          (reverseEdge) => reverseEdge.orderingInputs,
+        ),
     ];
   }
 

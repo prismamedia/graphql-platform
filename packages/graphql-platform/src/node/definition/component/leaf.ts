@@ -11,7 +11,7 @@ import type {
   ConnectorInterface,
 } from '../../../connector-interface.js';
 import type { Node } from '../../../node.js';
-import type { OrderingDirection } from '../../statement/ordering/direction.js';
+import { OrderingDirection } from '../../statement/ordering/direction.js';
 import { LeafSelection } from '../../statement/selection/expression/component/leaf.js';
 import {
   LeafCreationInput,
@@ -238,6 +238,14 @@ export class Leaf<
     assert(this.isSortable(), `The "${this}" leaf is not sortable`);
 
     return new LeafOrderingInput(this, direction);
+  }
+
+  @MGetter
+  public get orderingInputs(): ReadonlyArray<LeafOrderingInput> {
+    return [
+      this.getOrderingInput(OrderingDirection.ASCENDING),
+      this.getOrderingInput(OrderingDirection.DESCENDING),
+    ];
   }
 
   @MGetter
