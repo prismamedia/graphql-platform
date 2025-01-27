@@ -13,8 +13,6 @@ export class LeafOrderingInput extends OrderingExpressionInput<LeafOrdering> {
   ) {
     assert(leaf.isSortable(), `The "${leaf}" leaf is not sortable`);
 
-    const expression = new LeafOrdering(leaf, direction);
-
     super({
       value: `${leaf.name}_${
         direction === OrderingDirection.ASCENDING ? 'ASC' : 'DESC'
@@ -26,7 +24,7 @@ export class LeafOrderingInput extends OrderingExpressionInput<LeafOrdering> {
           : `from the highest "${leaf.name}" to the lowest`,
       deprecated: leaf.deprecationReason,
       direction,
-      sort: () => expression,
+      sort: () => new LeafOrdering(leaf, direction, this.ast),
     });
   }
 }

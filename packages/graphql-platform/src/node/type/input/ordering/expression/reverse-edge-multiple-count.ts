@@ -10,11 +10,6 @@ export class MultipleReverseEdgeCountOrderingInput extends OrderingExpressionInp
     public readonly reverseEdge: MultipleReverseEdge,
     direction: OrderingDirection,
   ) {
-    const expression = new MultipleReverseEdgeCountOrdering(
-      reverseEdge,
-      direction,
-    );
-
     super({
       value: `${reverseEdge.countFieldName}_${
         direction === OrderingDirection.ASCENDING ? 'ASC' : 'DESC'
@@ -26,7 +21,8 @@ export class MultipleReverseEdgeCountOrderingInput extends OrderingExpressionInp
           : `from the highest number of "${reverseEdge.name}" to the lowest`,
       deprecated: reverseEdge.deprecationReason,
       direction,
-      sort: () => expression,
+      sort: () =>
+        new MultipleReverseEdgeCountOrdering(reverseEdge, direction, this.ast),
     });
   }
 }
