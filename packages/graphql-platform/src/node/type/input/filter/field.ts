@@ -10,7 +10,7 @@ export type FieldFilterInputConfig<TValue> = Except<
   filter(
     value: Exclude<TValue, undefined>,
     context: OperationContext | undefined,
-    path: utils.Path,
+    path?: utils.Path,
   ): BooleanFilter;
 };
 

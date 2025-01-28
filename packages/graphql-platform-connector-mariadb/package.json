@@ -23,9 +23,9 @@
   "scripts": {
     "compile": "tsc --build",
     "compile:watch": "tsc --build --watch",
-    "test": "node --import tsx --test --experimental-test-snapshots \"./src/**/*.test.ts\"",
-    "test:update": "node --import tsx --test --experimental-test-snapshots --test-update-snapshots \"./src/**/*.test.ts\"",
-    "test:watch": "node --import tsx --test --watch --experimental-test-snapshots \"./src/**/*.test.ts\""
+    "test": "NODE_ENV=test tsx --test --experimental-test-snapshots \"./src/**/*.test.ts\"",
+    "test:update": "NODE_ENV=test tsx --test --experimental-test-snapshots --test-update-snapshots \"./src/**/*.test.ts\"",
+    "test:watch": "NODE_ENV=test tsx --test --watch --experimental-test-snapshots \"./src/**/*.test.ts\""
   },
   "devDependencies": {
     "@sqltools/formatter": "1.2.5",

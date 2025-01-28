@@ -8,7 +8,7 @@ import type {
 export type OrderingExpressionInputConfig<T extends OrderingExpression = any> =
   utils.EnumInputValueConfig & {
     direction: OrderingDirection;
-    sort(context?: OperationContext, path?: utils.Path): T;
+    sort(context: OperationContext | undefined, path?: utils.Path): T;
   };
 
 export class OrderingExpressionInput<

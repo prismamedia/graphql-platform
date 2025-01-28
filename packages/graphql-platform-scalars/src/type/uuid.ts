@@ -10,7 +10,7 @@ export function isUUID(value: unknown, version?: UUIDVersion): value is UUID {
     new RegExp(
       `^[0-9a-f]{8}-[0-9a-f]{4}-${
         version ?? '[0-9]'
-      }[0-9a-f]{3}-[89AB][0-9a-f]{3}-[0-9a-f]{12}$`,
+      }[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$`,
       'i',
     ).test(value)
   );

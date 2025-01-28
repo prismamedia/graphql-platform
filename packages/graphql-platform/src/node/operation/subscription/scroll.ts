@@ -89,17 +89,21 @@ export class ScrollSubscription<
   ): ScrollSubscriptionStream {
     const argsPath = utils.addPath(path, argsPathKey);
 
+    const wherePath = utils.addPath(argsPath, 'where');
     const where = this.node.filterInputType.filter(
       args.where,
       context,
-      utils.addPath(argsPath, 'where'),
+      wherePath,
     ).normalized;
 
     const filter = (
       authorization && where ? authorization.and(where) : authorization || where
     )?.normalized;
 
-    const ordering = this.orderingInputType.getEnumValue(args.orderBy).sort();
+    const orderByPath = utils.addPath(argsPath, 'orderBy');
+    const ordering = this.orderingInputType
+      .getEnumValue(args.orderBy, orderByPath)
+      .sort(context, orderByPath);
 
     return new ScrollSubscriptionStream(this.node, context, {
       filter,
