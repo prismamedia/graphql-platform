@@ -47,10 +47,12 @@ export interface VirtualOutputConfig<
   /**
    * Optional, the definition of the arguments this virtual-field accepts
    */
-  args?: Record<
-    utils.InputConfig['name'],
-    utils.Nillable<Except<utils.InputConfig, 'name'>>
-  >;
+  args?:
+    | ReadonlyArray<utils.Input>
+    | Record<
+        utils.InputConfig['name'],
+        utils.Nillable<Except<utils.InputConfig, 'name'>>
+      >;
 
   /**
    * Required, the output type of this virtual-field
@@ -170,19 +172,23 @@ export class VirtualOutputType<
 
       utils.assertNillablePlainObject(argsConfig, argsConfigPath);
 
-      const inputs: utils.Input[] = [];
-
       if (argsConfig) {
-        for (const [name, config] of Object.entries(argsConfig)) {
-          if (config) {
-            const configPath = utils.addPath(argsConfigPath, name);
+        const inputs: utils.Input[] = [];
 
-            inputs.push(new utils.Input({ name, ...config }, configPath));
+        if (Array.isArray(argsConfig)) {
+          inputs.push(...argsConfig);
+        } else {
+          for (const [name, config] of Object.entries(argsConfig)) {
+            if (config) {
+              const configPath = utils.addPath(argsConfigPath, name);
+
+              inputs.push(new utils.Input({ name, ...config }, configPath));
+            }
           }
         }
-      }
 
-      this.args = inputs.length ? inputs : undefined;
+        this.args = inputs.length ? inputs : undefined;
+      }
     }
 
     this.type = config.type;
