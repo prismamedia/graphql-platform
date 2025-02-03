@@ -28,8 +28,8 @@ import {
   type MultipleReverseEdgeOutputType,
   type NodeFieldOutputType,
   type ReverseEdgeOutputType,
-  type ThunkableNillableVirtualOutputConfig,
-  type ThunkableNillableVirtualOutputConfigsByName,
+  type ThunkableVirtualOutputConfig,
+  type ThunkableVirtualOutputConfigsByName,
 } from './node/field.js';
 
 export * from './node/field.js';
@@ -88,7 +88,7 @@ export interface NodeOutputTypeConfig<
    *
    * They are called "virtual" because they are not persisted
    */
-  virtualFields?: ThunkableNillableVirtualOutputConfigsByName<
+  virtualFields?: ThunkableVirtualOutputConfigsByName<
     TRequestContext,
     TConnector,
     TBroker,
@@ -247,7 +247,7 @@ export class NodeOutputType {
 
       utils.assertNillablePlainObject(outputConfig, outputConfigPath);
 
-      if (!outputConfig) {
+      if (!outputConfig?.virtualFields) {
         return;
       }
 
@@ -260,55 +260,43 @@ export class NodeOutputType {
         'virtualFields',
       );
 
-      utils.assertNillablePlainObject(
+      utils.assertPlainObject(
         virtualFieldConfigsByName,
         virtualFieldConfigsByNamePath,
       );
 
-      if (!virtualFieldConfigsByName) {
-        return;
-      }
-
       utils.aggregateGraphError<
-        [utils.Name, ThunkableNillableVirtualOutputConfig],
+        [utils.Name, ThunkableVirtualOutputConfig],
         void
       >(
         Object.entries(virtualFieldConfigsByName),
-        (_, [virtualFieldName, thunkableNillableVirtualFieldConfig]) => {
+        (_, [virtualFieldName, thunkableVirtualFieldConfig]) => {
           const virtualFieldConfig = utils.resolveThunkable(
-            thunkableNillableVirtualFieldConfig,
+            thunkableVirtualFieldConfig,
             this.node,
           );
-
           const virtualFieldConfigPath = utils.addPath(
             virtualFieldConfigsByNamePath,
             virtualFieldName,
           );
 
-          utils.assertNillablePlainObject(
+          const virtualField = new VirtualOutputType(
+            this,
+            virtualFieldName,
             virtualFieldConfig,
             virtualFieldConfigPath,
           );
 
-          if (virtualFieldConfig) {
-            const virtualField = new VirtualOutputType(
-              this,
-              virtualFieldName,
-              virtualFieldConfig,
-              virtualFieldConfigPath,
+          if (currentFieldNameSet.has(virtualField.name)) {
+            throw new utils.GraphError(
+              `At least 1 field already have this name`,
+              { path: virtualFieldConfigPath },
             );
-
-            if (currentFieldNameSet.has(virtualField.name)) {
-              throw new utils.GraphError(
-                `At least 1 field already have this name`,
-                { path: virtualFieldConfigPath },
-              );
-            } else {
-              currentFieldNameSet.add(virtualField.name);
-            }
-
-            fields.push(virtualField);
+          } else {
+            currentFieldNameSet.add(virtualField.name);
           }
+
+          fields.push(virtualField);
         },
         undefined,
         { path: virtualFieldConfigsByNamePath },
