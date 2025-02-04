@@ -142,27 +142,26 @@ export class VirtualOutputType<
   TArgs extends utils.Nillable<utils.PlainObject> = any,
   TResult = unknown,
 > extends AbstractFieldOutputType<TArgs> {
-  public readonly resolve: (
-    source: TSource,
-    args: TArgs,
-    context: OperationContext,
-    info: PartialGraphQLResolveInfo,
-  ) => Promisable<TResult>;
+  readonly #config: ThunkableVirtualOutputConfig;
 
   public constructor(
     public readonly parent: NodeOutputType,
     public readonly name: utils.Name,
-    public readonly config: VirtualOutputConfig,
+    config: ThunkableVirtualOutputConfig,
     public readonly configPath?: utils.Path,
   ) {
     utils.assertName(name, configPath);
-    utils.assertPlainObject(config, configPath);
-
     super();
 
-    this.resolve = utils
-      .ensureFunction(config.resolve, utils.addPath(configPath, 'resolve'))
-      .bind(parent.node);
+    this.#config = config;
+  }
+
+  @MGetter
+  public get config(): VirtualOutputConfig {
+    const config = utils.resolveThunkable(this.#config, this.parent.node);
+    utils.assertPlainObject(config, this.configPath);
+
+    return config;
   }
 
   @MMethod()
@@ -237,6 +236,21 @@ export class VirtualOutputType<
   @MGetter
   public get namedType(): graphql.GraphQLNamedOutputType {
     return graphql.getNamedType(this.type);
+  }
+
+  @MGetter
+  public get resolve(): (
+    source: TSource,
+    args: TArgs,
+    context: OperationContext,
+    info: PartialGraphQLResolveInfo,
+  ) => Promisable<TResult> {
+    return utils
+      .ensureFunction(
+        this.config.resolve,
+        utils.addPath(this.configPath, 'resolve'),
+      )
+      .bind(this.parent.node);
   }
 
   public selectGraphQLFieldNode(

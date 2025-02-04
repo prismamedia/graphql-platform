@@ -271,10 +271,7 @@ export class NodeOutputType {
       >(
         Object.entries(virtualFieldConfigsByName),
         (_, [virtualFieldName, thunkableVirtualFieldConfig]) => {
-          const virtualFieldConfig = utils.resolveThunkable(
-            thunkableVirtualFieldConfig,
-            this.node,
-          );
+          const virtualFieldConfig = thunkableVirtualFieldConfig;
           const virtualFieldConfigPath = utils.addPath(
             virtualFieldConfigsByNamePath,
             virtualFieldName,
