@@ -212,22 +212,18 @@ export class VirtualOutputType<
     );
     const argsConfigPath = utils.addPath(this.configPath, 'args');
 
-    utils.assertNillablePlainObject(argsConfig, argsConfigPath);
-
     if (argsConfig) {
-      const inputs: utils.Input[] = [];
-
-      if (Array.isArray(argsConfig)) {
-        inputs.push(...argsConfig);
-      } else {
-        for (const [name, config] of Object.entries(argsConfig)) {
-          if (config) {
-            const configPath = utils.addPath(argsConfigPath, name);
-
-            inputs.push(new utils.Input({ name, ...config }, configPath));
-          }
-        }
-      }
+      const inputs: utils.Input[] = Array.isArray(argsConfig)
+        ? argsConfig
+        : Object.entries(utils.ensurePlainObject(argsConfig, argsConfigPath))
+            .filter(([, config]) => config)
+            .map(
+              ([name, config]) =>
+                new utils.Input(
+                  { name, ...config },
+                  utils.addPath(argsConfigPath, name),
+                ),
+            );
 
       return inputs.length ? inputs : undefined;
     }
