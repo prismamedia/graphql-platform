@@ -165,7 +165,7 @@ export class VirtualOutputType<
   }
 
   @MMethod()
-  public override isPublic(): boolean {
+  public isPublic(): boolean {
     const config = this.config.public;
     const configPath = utils.addPath(this.configPath, 'public');
 

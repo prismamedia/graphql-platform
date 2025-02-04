@@ -21,14 +21,13 @@ export abstract class AbstractFieldOutputType<
   TArgs extends utils.Nillable<utils.PlainObject>,
 > {
   public abstract readonly parent: NodeOutputType;
+
   public abstract readonly name: utils.Name;
+  public abstract isPublic(): boolean;
   public abstract readonly description?: string;
   public abstract readonly deprecationReason?: string;
-
   public abstract readonly args?: ReadonlyArray<utils.Input>;
   public abstract readonly type: graphql.GraphQLOutputType;
-
-  public abstract isPublic(): boolean;
 
   public getGraphQLFieldConfig(): graphql.GraphQLFieldConfig<
     NodeSelectedValue,
