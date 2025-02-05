@@ -24,8 +24,8 @@ import {
   areInputValuesEqual,
   ensureInputType,
   getGraphQLInputType,
+  getNamedInputType,
   getOptionalInputType,
-  type InputType,
   isInputTypePublic,
   isNonOptionalInputType,
   nonNullableInputTypeDecorator,
@@ -33,6 +33,8 @@ import {
   parseInputLiteral,
   parseInputValue,
   validateInputType,
+  type InputType,
+  type NamedInputType,
 } from './input/type.js';
 import { addPath, type Path } from './path.js';
 import {
@@ -114,6 +116,7 @@ export class Input<TValue = any> {
   public readonly description?: string;
   public readonly deprecationReason?: string;
   public readonly type: InputType;
+  public readonly namedType: NamedInputType;
 
   readonly #defaultValue?: Thunkable<TValue>;
   readonly #customParser?: InputCustomParser<TValue>;
@@ -156,7 +159,7 @@ export class Input<TValue = any> {
       );
     }
 
-    // type
+    // type & named-type
     {
       const optionalConfig = config.optional;
       const optionalConfigPath = addPath(configPath, 'optional');
@@ -184,6 +187,7 @@ export class Input<TValue = any> {
           : nonNullableInputTypeDecorator(type, !nullableConfig);
 
       this.type = type;
+      this.namedType = getNamedInputType(type);
     }
 
     // parser
