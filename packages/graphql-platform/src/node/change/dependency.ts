@@ -300,55 +300,59 @@ export class DependencyGraph {
     const deletions = new Set<NodeDeletion | NodeUpdate>();
     const filteredOuts: NodeValue[] = [];
 
-    aggregation.changesByNode.get(this.node)?.forEach((change) => {
-      if (change instanceof NodeCreation) {
-        switch (this.nodeDependsOnCreation(change, visitedParents)) {
-          case DependentKind.UPSERT:
-            upserts.add(change);
-            break;
+    const changesByNode = aggregation.changesByNode.get(this.node);
 
-          case DependentKind.UPSERT_IF_FOUND:
-            upsertIfFounds.add(change);
-            break;
+    changesByNode?.creation.forEach((creation) => {
+      switch (this.nodeDependsOnCreation(creation, visitedParents)) {
+        case DependentKind.UPSERT:
+          upserts.add(creation);
+          break;
 
-          case false:
-            hasReverseEdgeHeadChanges &&
-              this.filter?.isCreationFilteredOut(change) &&
-              filteredOuts.push(change.newValue);
-            break;
-        }
-      } else if (change instanceof NodeUpdate) {
-        switch (this.nodeDependsOnUpdate(change, visitedParents)) {
-          case DependentKind.UPSERT:
-            upserts.add(change);
-            break;
+        case DependentKind.UPSERT_IF_FOUND:
+          upsertIfFounds.add(creation);
+          break;
 
-          case DependentKind.UPSERT_IF_FOUND:
-            upsertIfFounds.add(change);
-            break;
+        case false:
+          hasReverseEdgeHeadChanges &&
+            this.filter?.isCreationFilteredOut(creation) &&
+            filteredOuts.push(creation.newValue);
+          break;
+      }
+    });
 
-          case DependentKind.DELETION:
-            deletions.add(change);
-            break;
+    changesByNode?.update.forEach((update) => {
+      switch (this.nodeDependsOnUpdate(update, visitedParents)) {
+        case DependentKind.UPSERT:
+          upserts.add(update);
+          break;
 
-          case false:
-            hasReverseEdgeHeadChanges &&
-              this.filter?.isUpdateFilteredOut(change) &&
-              filteredOuts.push(change.oldValue, change.newValue);
-            break;
-        }
-      } else {
-        switch (this.nodeDependsOnDeletion(change, visitedParents)) {
-          case DependentKind.DELETION:
-            deletions.add(change);
-            break;
+        case DependentKind.UPSERT_IF_FOUND:
+          upsertIfFounds.add(update);
+          break;
 
-          case false:
-            hasReverseEdgeHeadChanges &&
-              this.filter?.isDeletionFilteredOut(change) &&
-              filteredOuts.push(change.oldValue);
-            break;
-        }
+        case DependentKind.DELETION:
+          deletions.add(update);
+          break;
+
+        case false:
+          hasReverseEdgeHeadChanges &&
+            this.filter?.isUpdateFilteredOut(update) &&
+            filteredOuts.push(update.oldValue, update.newValue);
+          break;
+      }
+    });
+
+    changesByNode?.deletion.forEach((deletion) => {
+      switch (this.nodeDependsOnDeletion(deletion, visitedParents)) {
+        case DependentKind.DELETION:
+          deletions.add(deletion);
+          break;
+
+        case false:
+          hasReverseEdgeHeadChanges &&
+            this.filter?.isDeletionFilteredOut(deletion) &&
+            filteredOuts.push(deletion.oldValue);
+          break;
       }
     });
 

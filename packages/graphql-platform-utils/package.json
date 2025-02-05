@@ -34,9 +34,10 @@
     "typescript": "5.7.3"
   },
   "dependencies": {
+    "@opentelemetry/api": "^1.9.0",
     "@prismamedia/memoize": "^6.1.0",
     "indefinite": "^2.5.1",
-    "remeda": "^2.20.0",
+    "remeda": "^2.20.1",
     "type-fest": "^4.33.0"
   },
   "peerDependencies": {

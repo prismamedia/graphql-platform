@@ -1,3 +1,4 @@
+import * as opentelemetry from '@opentelemetry/api';
 import {
   AsyncEventEmitter,
   type EventConfigByName,
@@ -635,15 +636,11 @@ export class GraphQLPlatform<
 
     using operationContext = new OperationContext(this, requestContext);
 
-    let result: TResult;
-
     try {
-      result = await task(operationContext);
+      return await task(operationContext);
     } catch (rawError) {
       throw utils.castToError(rawError);
     }
-
-    return result;
   }
 
   /**
@@ -701,6 +698,23 @@ export class GraphQLPlatform<
 
     if (mutationContext.changes.size) {
       mutationContext.changes.commit();
+
+      opentelemetry.trace.getActiveSpan()?.addEvent(
+        'Commited changes',
+        Object.fromEntries(
+          mutationContext.changes.changesByNode
+            .entries()
+            .flatMap(([node, { creation, update, deletion }]) =>
+              (
+                [
+                  [`changes.${node}.creations`, creation.size],
+                  [`changes.${node}.updates`, update.size],
+                  [`changes.${node}.deletions`, deletion.size],
+                ] as const
+              ).filter(([_, value]) => value > 0),
+            ),
+        ),
+      );
 
       await Promise.all([
         this.emit('node-changes', mutationContext.changes),

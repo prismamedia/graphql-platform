@@ -1,3 +1,4 @@
+import * as opentelemetry from '@opentelemetry/api';
 import * as utils from '@prismamedia/graphql-platform-utils';
 import { MGetter, MMethod } from '@prismamedia/memoize';
 import * as graphql from 'graphql';
@@ -5,6 +6,7 @@ import type { CamelCase } from 'type-fest';
 import type { BrokerInterface } from '../../broker-interface.js';
 import type { ConnectorInterface } from '../../connector-interface.js';
 import type { GraphQLPlatform } from '../../index.js';
+import { trace } from '../../instrumentation.js';
 import type { Node } from '../../node.js';
 import { AbstractOperation } from '../abstract-operation.js';
 import { AndOperation, NodeFilter, TrueValue } from '../statement/filter.js';
@@ -122,16 +124,29 @@ export abstract class AbstractMutation<
   }
 
   public override async execute(
-    requestOrMutationContext: TRequestContext | MutationContext,
+    context: TRequestContext | MutationContext,
     args: TArgs,
     path?: utils.Path,
   ): Promise<TResult> {
-    return requestOrMutationContext instanceof MutationContext
-      ? super.execute(requestOrMutationContext, args, path)
-      : this.gp.withMutationContext(
-          requestOrMutationContext,
-          (context) => super.execute(context, args, path),
-          path,
+    const name: string = `operation.${this.node}.${this.operationType}.${this.key}`;
+    const attributes: opentelemetry.Attributes = {
+      'operation.node': this.node.name,
+      'operation.type': this.operationType,
+      'operation.key': this.key,
+      'mutation.types': [...this.mutationTypes],
+    };
+
+    return context instanceof MutationContext
+      ? trace(name, () => super.execute(context, args, path), { attributes })
+      : trace(
+          name,
+          () =>
+            this.gp.withMutationContext(
+              context,
+              (context) => super.execute(context, args, path),
+              path,
+            ),
+          { kind: opentelemetry.SpanKind.SERVER, attributes },
         );
   }
 

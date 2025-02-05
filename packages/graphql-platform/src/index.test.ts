@@ -1,6 +1,6 @@
 import * as graphql from 'graphql';
 import assert from 'node:assert';
-import { before, describe, it } from 'node:test';
+import { describe, it } from 'node:test';
 import { customOperations, nodes } from './__tests__/config.js';
 import {
   GraphQLPlatform,
@@ -59,14 +59,10 @@ describe('GraphQL-Platform', () => {
   });
 
   describe('Works', () => {
-    let gp: GraphQLPlatform;
-
-    before(() => {
-      gp = new GraphQLPlatform({
-        subscription: { public: true },
-        nodes,
-        customOperations,
-      });
+    const gp = new GraphQLPlatform({
+      subscription: { public: true },
+      nodes,
+      customOperations,
     });
 
     it(`has nodes' definition`, () => {

@@ -345,9 +345,9 @@ export class Node<
         utils.assertFunction(onChanges, onChangesPath);
 
         gp.on('node-changes', ({ changesByNode }) => {
-          const changes = changesByNode.get(this);
-          if (changes?.size) {
-            return onChanges.call(this, Array.from(changes.values()));
+          const aggregation = changesByNode.get(this);
+          if (aggregation?.size) {
+            return onChanges.call(this, Array.from(aggregation));
           }
         });
       }

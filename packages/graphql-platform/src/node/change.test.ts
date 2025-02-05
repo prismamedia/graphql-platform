@@ -173,20 +173,21 @@ describe('Change', () => {
       }),
     ]);
 
-    assert.deepStrictEqual(aggregate.summary.toJSON(), {
-      creations: ['Article', 'Tag', 'ArticleTag'],
-      deletions: ['Tag'],
-      updatesByNode: { Tag: ['title'] },
-      changes: ['Article', 'Tag', 'ArticleTag'],
+    assert.deepStrictEqual(aggregate.toJSON(), {
+      Article: { creation: 1 },
+      Tag: { creation: 1, update: 1, deletion: 1 },
+      ArticleTag: { creation: 1 },
     });
 
     assert.strictEqual(aggregate.size, 5);
 
+    aggregate.commit();
+
     assert.deepStrictEqual(Array.from(aggregate, String), [
       'Article/"2e9b5020-b9fe-4dab-bb59-59c986fffc12"/creation',
       'Tag/1/creation',
-      'Tag/5/update',
       'Tag/10/deletion',
+      'Tag/5/update',
       'ArticleTag/{"article":{"id":"2e9b5020-b9fe-4dab-bb59-59c986fffc12"},"tag":{"id":1}}/creation',
     ]);
   });

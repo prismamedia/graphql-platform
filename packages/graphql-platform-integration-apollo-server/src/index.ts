@@ -1,12 +1,8 @@
-import {
-  ApolloServer,
-  type ApolloServerOptions,
-  type BaseContext,
-} from '@apollo/server';
+import { ApolloServer, type ApolloServerOptions } from '@apollo/server';
 import type * as core from '@prismamedia/graphql-platform';
 
 export type ApolloServerIntegrationOptions<
-  TRequestContext extends BaseContext = any,
+  TRequestContext extends object = any,
 > = Omit<
   ApolloServerOptions<TRequestContext>,
   | 'schema'
@@ -17,7 +13,7 @@ export type ApolloServerIntegrationOptions<
 >;
 
 export class ApolloServerIntegration<
-  TRequestContext extends BaseContext,
+  TRequestContext extends object,
   TConnector extends core.ConnectorInterface,
   TBroker extends core.BrokerInterface,
   TContainer extends object,

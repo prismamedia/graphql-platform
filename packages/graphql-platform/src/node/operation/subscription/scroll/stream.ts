@@ -207,7 +207,6 @@ export class ScrollSubscriptionStream<
     );
 
     this.#chunkSize = Math.max(1, config.chunkSize);
-
     this.#api = node.createContextBoundAPI(context);
   }
 

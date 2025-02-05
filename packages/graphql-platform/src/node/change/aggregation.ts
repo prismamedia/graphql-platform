@@ -1,75 +1,8 @@
 import * as utils from '@prismamedia/graphql-platform-utils';
+import * as R from 'remeda';
 import type { Node } from '../../node.js';
-import { isActualNodeChange, type NodeChange } from '../change.js';
-import { NodeChangeAggregationSummary } from './aggregation/summary.js';
-import { NodeCreation } from './creation.js';
-import { NodeUpdate } from './update.js';
-
-export * from './aggregation/summary.js';
-
-type NodeChangeAggregatorMatrix = {
-  [TPreviousChangeKind in utils.MutationType]: {
-    [TChangeKind in utils.MutationType]: (
-      previousChange: Extract<NodeChange, { kind: TPreviousChangeKind }>,
-      change: Extract<NodeChange, { kind: TChangeKind }>,
-    ) => NodeChange | void;
-  };
-};
-
-/**
- * A case that should not happen, we missed something.
- * We could throw an error, but let's keep the new change instead.
- */
-const invalidAggregator = (_previousChange: NodeChange, change: NodeChange) =>
-  change;
-
-const aggregatorMatrix: NodeChangeAggregatorMatrix = {
-  [utils.MutationType.CREATION]: {
-    [utils.MutationType.CREATION]: invalidAggregator,
-
-    [utils.MutationType.UPDATE]: (_previousCreation, update) =>
-      new NodeCreation(
-        update.node,
-        update.requestContext,
-        update.newValue,
-        update.executedAt,
-        update.committedAt,
-      ),
-
-    [utils.MutationType.DELETION]: (_previousCreation, _deletion) =>
-      // This "deletion" cancels the previous "creation" => no change
-      undefined,
-  },
-  [utils.MutationType.UPDATE]: {
-    [utils.MutationType.CREATION]: invalidAggregator,
-
-    [utils.MutationType.UPDATE]: (previousUpdate, update) =>
-      new NodeUpdate(
-        update.node,
-        update.requestContext,
-        previousUpdate.oldValue,
-        update.newValue,
-        update.executedAt,
-        update.committedAt,
-      ),
-
-    [utils.MutationType.DELETION]: (_previousUpdate, deletion) => deletion,
-  },
-  [utils.MutationType.DELETION]: {
-    [utils.MutationType.CREATION]: (previousDeletion, creation) =>
-      new NodeUpdate(
-        creation.node,
-        creation.requestContext,
-        previousDeletion.oldValue,
-        creation.newValue,
-        creation.executedAt,
-        creation.committedAt,
-      ),
-
-    [utils.MutationType.UPDATE]: invalidAggregator,
-    [utils.MutationType.DELETION]: invalidAggregator,
-  },
-};
+import type { NodeChange } from '../change.js';
+import { NodeChangeAggregationByNode } from './aggregation/by-node.js';
 
 export interface NodeChangeAggregationConfig {
   /**
@@ -90,12 +23,11 @@ export interface NodeChangeAggregationConfig {
 export class NodeChangeAggregation<TRequestContext extends object = any>
   implements Iterable<NodeChange<TRequestContext>>, Disposable
 {
-  readonly #maxSize?: number;
-  readonly #onMaxSizeReached: 'error' | 'ignore';
-
+  public readonly maxSize?: number;
+  public readonly onMaxSizeReached: 'error' | 'ignore';
   public readonly changesByNode: Map<
     Node,
-    Map<NodeChange['stringifiedId'], NodeChange>
+    NodeChangeAggregationByNode<TRequestContext>
   >;
 
   public constructor(
@@ -109,82 +41,76 @@ export class NodeChangeAggregation<TRequestContext extends object = any>
         ? { maxSize: configOrMaxSize }
         : configOrMaxSize;
 
-    this.#maxSize = config?.maxSize ?? undefined;
-    this.#onMaxSizeReached = config?.onMaxSizeReached ?? 'error';
-
+    this.maxSize = config?.maxSize ?? undefined;
+    this.onMaxSizeReached = config?.onMaxSizeReached ?? 'error';
     this.changesByNode = new Map();
+
     changes && this.add(...changes);
   }
 
-  public *[Symbol.iterator](): IterableIterator<NodeChange<TRequestContext>> {
-    for (const changesByStringifiedId of this.changesByNode.values()) {
-      yield* changesByStringifiedId.values();
-    }
-  }
-
-  public [Symbol.dispose](): void {
-    this.changesByNode.forEach((changes) => changes.clear());
-    this.changesByNode.clear();
-  }
-
   public add(...changes: ReadonlyArray<NodeChange<TRequestContext>>): this {
-    for (const change of changes) {
-      if (!isActualNodeChange(change)) {
-        continue;
-      }
-
-      let changes = this.changesByNode.get(change.node);
-      if (!changes) {
-        this.changesByNode.set(change.node, (changes = new Map()));
-      }
-
-      const previousChange = changes.get(change.stringifiedId);
-      if (!previousChange) {
-        if (this.#maxSize !== undefined && this.size >= this.#maxSize) {
-          if (this.#onMaxSizeReached === 'error') {
-            throw new Error(
-              `The maximum number of changes, ${this.#maxSize}, has been reached`,
-            );
-          }
-
-          break;
+    if (changes.length) {
+      for (const change of changes) {
+        let aggregation = this.changesByNode.get(change.node);
+        if (!aggregation) {
+          this.changesByNode.set(
+            change.node,
+            (aggregation = new NodeChangeAggregationByNode(this, change.node)),
+          );
         }
 
-        changes.set(change.stringifiedId, change);
-      } else if (previousChange.at <= change.at) {
-        const aggregate = aggregatorMatrix[previousChange.kind][change.kind](
-          previousChange as any,
-          change as any,
-        );
-
-        if (aggregate && isActualNodeChange(aggregate)) {
-          changes.delete(previousChange.stringifiedId);
-          changes.set(aggregate.stringifiedId, aggregate);
-        } else {
-          if (
-            changes.delete(previousChange.stringifiedId) &&
-            changes.size === 0
-          ) {
-            this.changesByNode.delete(previousChange.node);
-          }
-        }
+        aggregation.add(change);
       }
+
+      this.changesByNode.forEach(
+        (aggregation) =>
+          aggregation.isEmpty() && this.changesByNode.delete(aggregation.node),
+      );
     }
 
     return this;
   }
 
-  public commit(at: Date = new Date()): void {
-    for (const change of this) {
-      change.committedAt = at;
+  public *[Symbol.iterator](): IterableIterator<NodeChange<TRequestContext>> {
+    for (const aggregation of this.changesByNode.values()) {
+      yield* aggregation;
     }
   }
 
-  public get summary(): NodeChangeAggregationSummary {
-    return new NodeChangeAggregationSummary(this);
+  public [Symbol.dispose](): void {
+    this.changesByNode.forEach((aggregation) => aggregation[Symbol.dispose]());
+    this.changesByNode.clear();
+  }
+
+  public commit(at: Date = new Date()): void {
+    this.changesByNode
+      .values()
+      .forEach((aggregation) => aggregation.commit(at));
   }
 
   public get size(): number {
     return this.changesByNode.values().reduce((sum, { size }) => sum + size, 0);
+  }
+
+  public isEmpty(): boolean {
+    return this.changesByNode
+      .values()
+      .every((aggregation) => aggregation.isEmpty());
+  }
+
+  public toJSON(): Record<
+    Node['name'],
+    Partial<Record<utils.MutationType, number>>
+  > {
+    return Object.fromEntries(
+      this.changesByNode.values().map((aggregation) => [
+        aggregation.node.name,
+        R.pipe(
+          utils.mutationTypes,
+          R.filter((type) => aggregation[type].size > 0),
+          R.mapToObj((type) => [type, aggregation[type].size]),
+        ),
+      ]),
+    );
   }
 }

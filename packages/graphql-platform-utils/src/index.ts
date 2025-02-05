@@ -8,6 +8,7 @@ export * from './function.js';
 export * from './graphql.js';
 export * from './indefinite.js';
 export * from './input.js';
+export * from './instrumentation.js';
 export * from './is-iterable-object.js';
 export * from './nil.js';
 export * from './operation-types.js';

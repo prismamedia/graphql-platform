@@ -1,9 +1,11 @@
+import * as opentelemetry from '@opentelemetry/api';
 import * as utils from '@prismamedia/graphql-platform-utils';
 import { MGetter } from '@prismamedia/memoize';
 import * as graphql from 'graphql';
 import type { CamelCase } from 'type-fest';
 import type { BrokerInterface } from '../../broker-interface.js';
 import type { ConnectorInterface } from '../../connector-interface.js';
+import { trace } from '../../instrumentation.js';
 import { AbstractOperation } from '../abstract-operation.js';
 import { OperationContext } from './context.js';
 
@@ -33,16 +35,28 @@ export abstract class AbstractQuery<
   }
 
   public override async execute(
-    requestOrOperationContext: TRequestContext | OperationContext,
+    context: TRequestContext | OperationContext,
     args: TArgs,
     path?: utils.Path,
   ): Promise<TResult> {
-    return requestOrOperationContext instanceof OperationContext
-      ? super.execute(requestOrOperationContext, args, path)
-      : this.gp.withOperationContext(
-          requestOrOperationContext,
-          (context) => super.execute(context, args, path),
-          path,
+    const name: string = `operation.${this.node}.${this.operationType}.${this.key}`;
+    const attributes: opentelemetry.Attributes = {
+      'operation.node': this.node.name,
+      'operation.type': this.operationType,
+      'operation.key': this.key,
+    };
+
+    return context instanceof OperationContext
+      ? trace(name, () => super.execute(context, args, path), { attributes })
+      : trace(
+          name,
+          () =>
+            this.gp.withOperationContext(
+              context,
+              (context) => super.execute(context, args, path),
+              path,
+            ),
+          { kind: opentelemetry.SpanKind.SERVER, attributes },
         );
   }
 

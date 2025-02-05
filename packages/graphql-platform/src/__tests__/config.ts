@@ -36,9 +36,9 @@ export type MyUser = {
   role?: 'ADMIN' | 'JOURNALIST';
 };
 
-export type MyContext = {
+export interface MyContext {
   user?: MyUser;
-};
+}
 
 export const myAdminContext = Object.freeze<MyContext>({
   user: Object.freeze<MyUser>({
@@ -530,20 +530,20 @@ export const Article = {
         resolve: ({ lowerCasedTitle, upperCasedTitle }) =>
           [lowerCasedTitle, upperCasedTitle].join(' / '),
       },
-      similars: {
-        args: {
+      similars: () => ({
+        args: () => ({
           first: {
             description: 'The number of similar articles to return',
             type: utils.nonNillableInputType(scalars.GraphQLUnsignedInt),
           },
-        },
+        }),
         type: new graphql.GraphQLNonNull(
           new graphql.GraphQLList(
             new graphql.GraphQLNonNull(node.outputType.getGraphQLObjectType()),
           ),
         ),
         resolve: (_source, _args, _context, _info) => [],
-      },
+      }),
     }),
 
     graphql: {

@@ -9,6 +9,7 @@ import assert from 'node:assert';
 import { hrtime } from 'node:process';
 import * as semver from 'semver';
 import type { Except } from 'type-fest';
+import { trace } from './instrumentation.js';
 import {
   Schema,
   type ForeignKeyIndexConfig,
@@ -110,7 +111,7 @@ export class MariaDBConnector
 
   readonly #poolsByStatementKind = new Map<StatementKind, mariadb.Pool>();
 
-  readonly #connectionsByMutation = new Map<
+  readonly #connectionsByMutation = new WeakMap<
     core.MutationContext,
     mariadb.PoolConnection
   >();
@@ -308,69 +309,87 @@ export class MariaDBConnector
     statement: Statement,
     maybeConnection?: mariadb.Connection,
   ): Promise<TResult> {
-    const startedAt = hrtime.bigint();
+    return trace(
+      'statement.execution',
+      async () => {
+        const startedAt = hrtime.bigint();
 
-    let result: any;
+        let result: any;
 
-    try {
-      result = await (maybeConnection
-        ? maybeConnection.query(statement)
-        : this.executeQuery(statement, undefined, statement.kind));
+        try {
+          result = (await (maybeConnection
+            ? maybeConnection.query(statement)
+            : this.executeQuery(statement, undefined, statement.kind))) as any;
 
-      await this.emit('executed-statement', {
-        statement,
-        result,
-        durationInSeconds:
-          Math.round(Number(hrtime.bigint() - startedAt) / 10 ** 6) / 10 ** 3,
-      });
-    } catch (error) {
-      if (error instanceof mariadb.SqlError) {
-        const durationInSeconds =
-          Math.round(Number(hrtime.bigint() - startedAt) / 10 ** 6) / 10 ** 3;
+          await this.emit('executed-statement', {
+            statement,
+            result,
+            durationInSeconds:
+              Math.round(Number(hrtime.bigint() - startedAt) / 10 ** 6) /
+              10 ** 3,
+          });
+        } catch (error) {
+          if (error instanceof mariadb.SqlError) {
+            const durationInSeconds =
+              Math.round(Number(hrtime.bigint() - startedAt) / 10 ** 6) /
+              10 ** 3;
 
-        Object.assign(error, { sql: statement.sql, durationInSeconds });
+            Object.assign(error, { sql: statement.sql, durationInSeconds });
 
-        await this.emit('failed-statement', {
-          statement,
-          error,
-          durationInSeconds,
-        });
+            await this.emit('failed-statement', {
+              statement,
+              error,
+              durationInSeconds,
+            });
 
-        if (
-          error.errno === 1062 &&
-          (statement instanceof InsertStatement ||
-            statement instanceof UpdateStatement)
-        ) {
-          const match = error.sqlMessage?.match(
-            /Duplicate entry '(?<value>.+)' for key '(?<unique>.+)'/,
-          );
+            if (
+              error.errno === 1062 &&
+              (statement instanceof InsertStatement ||
+                statement instanceof UpdateStatement)
+            ) {
+              const match = error.sqlMessage?.match(
+                /Duplicate entry '(?<value>.+)' for key '(?<unique>.+)'/,
+              );
 
-          const uniqueIndex = match?.groups?.unique
-            ? match?.groups?.unique === 'PRIMARY'
-              ? statement.table.primaryKey
-              : statement.table.uniqueIndexes.find(
-                  (uniqueIndex) => uniqueIndex.name === match?.groups?.unique,
-                )
-            : undefined;
+              const uniqueIndex = match?.groups?.unique
+                ? match?.groups?.unique === 'PRIMARY'
+                  ? statement.table.primaryKey
+                  : statement.table.uniqueIndexes.find(
+                      (uniqueIndex) =>
+                        uniqueIndex.name === match?.groups?.unique,
+                    )
+                : undefined;
 
-          throw new core.DuplicateError(
-            statement.table.node,
-            statement instanceof InsertStatement
-              ? core.ConnectorOperationKind.CREATE
-              : core.ConnectorOperationKind.UPDATE,
-            {
-              uniqueConstraint: uniqueIndex?.uniqueConstraint,
-              hint: match?.groups?.value,
-              cause: error,
-            },
-          );
+              throw new core.DuplicateError(
+                statement.table.node,
+                statement instanceof InsertStatement
+                  ? core.ConnectorOperationKind.CREATE
+                  : core.ConnectorOperationKind.UPDATE,
+                {
+                  uniqueConstraint: uniqueIndex?.uniqueConstraint,
+                  hint: match?.groups?.value,
+                  cause: error,
+                },
+              );
+            }
+          }
+
+          throw error;
         }
-      }
 
-      throw error;
-    }
-
-    return result;
+        return result;
+      },
+      {
+        attributes: {
+          'statement.kind': StatementKind[statement.kind],
+          'statement.sql':
+            statement instanceof InsertStatement ||
+            statement instanceof UpdateStatement
+              ? undefined
+              : statement.sql,
+        },
+      },
+    );
   }
 
   /**
