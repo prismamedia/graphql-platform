@@ -1,4 +1,5 @@
 import type * as utils from '@prismamedia/graphql-platform-utils';
+import type { BrokerInterface } from './broker-interface.js';
 import type {
   MutationContext,
   Node,
@@ -131,4 +132,9 @@ export interface ConnectorInterface {
     context: MutationContext,
     statement: ConnectorDeleteStatement,
   ): Promise<number>;
+
+  /**
+   * Some connectors provide a broker implementation
+   */
+  broker?: BrokerInterface;
 }

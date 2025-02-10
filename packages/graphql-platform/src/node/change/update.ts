@@ -1,6 +1,9 @@
 import * as utils from '@prismamedia/graphql-platform-utils';
+import assert from 'node:assert';
 import type { Component, ComponentValue, Node, NodeValue } from '../../node.js';
 import { AbstractNodeChange } from '../abstract-change.js';
+import type { NodeChange } from '../change.js';
+import { NodeDeletion } from './deletion.js';
 
 export type ComponentUpdate<TValue extends ComponentValue = any> = {
   oldValue: TValue;
@@ -15,8 +18,7 @@ export class NodeUpdate<
     requestContext: TRequestContext,
     partialOldValue: Record<Component['name'], ComponentValue>,
     partialNewValue: Record<Component['name'], ComponentValue>,
-    createdAt?: Date,
-    committedAt?: Date,
+    at?: Date,
   ) {
     const oldValue = {
       ...Object.fromEntries(
@@ -33,8 +35,7 @@ export class NodeUpdate<
       requestContext,
       oldValue,
       { ...oldValue, ...partialNewValue },
-      createdAt,
-      committedAt,
+      at,
     );
   }
 
@@ -53,19 +54,12 @@ export class NodeUpdate<
     requestContext: TRequestContext,
     maybeOldValue: unknown,
     maybeNewValue: unknown,
-    createdAt?: Date,
-    committedAt?: Date,
+    at?: Date,
   ) {
     const oldValue = Object.freeze(node.selection.parseSource(maybeOldValue));
     const newValue = Object.freeze(node.selection.parseSource(maybeNewValue));
 
-    super(
-      node,
-      node.mainIdentifier.parseValue(newValue),
-      requestContext,
-      createdAt,
-      committedAt,
-    );
+    super(node, node.mainIdentifier.parseValue(newValue), requestContext, at);
 
     this.oldValue = oldValue;
     this.newValue = newValue;
@@ -117,5 +111,36 @@ export class NodeUpdate<
     const component = this.node.ensureComponent(componentOrName);
 
     return this.updatesByComponent.get(component);
+  }
+
+  public mergeWith(
+    other: NodeChange<TRequestContext>,
+  ): NodeChange<TRequestContext> | undefined {
+    assert(this.isMergeableWith(other));
+
+    switch (other.kind) {
+      case utils.MutationType.CREATION:
+        // Should not happen, we missed something
+        return other;
+
+      case utils.MutationType.UPDATE:
+        const aggregate = new NodeUpdate(
+          other.node,
+          other.requestContext,
+          this.oldValue,
+          other.newValue,
+          other.at,
+        );
+
+        return aggregate.isEmpty() ? undefined : aggregate;
+
+      case utils.MutationType.DELETION:
+        return new NodeDeletion(
+          other.node,
+          other.requestContext,
+          this.oldValue,
+          other.at,
+        );
+    }
   }
 }

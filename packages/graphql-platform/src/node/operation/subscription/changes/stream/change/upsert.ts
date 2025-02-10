@@ -10,10 +10,10 @@ export class ChangesSubscriptionUpsert<
 
   public constructor(
     subscription: ChangesSubscriptionStream<TRequestContext, TValue, any>,
-    initiators: ReadonlySet<TRequestContext> | TRequestContext,
+    initiator: TRequestContext,
     value: Readonly<any>,
   ) {
-    super(subscription, initiators);
+    super(subscription, initiator);
 
     this.value = subscription.onUpsertSelection.pickValue(value);
   }

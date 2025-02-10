@@ -4,7 +4,11 @@ exports[`Count statement > generates statements 1`] = `
 
 exports[`Count statement > generates statements 2`] = `
 [
-  "SELECT COUNT(*) AS COUNT\\nFROM \`articles\`\\nWHERE \`articles\`.\`status\` = 'published'"
+  [
+    "SELECT COUNT(*) AS COUNT",
+    "FROM \`articles\`",
+    "WHERE \`articles\`.\`status\` = 'published'"
+  ]
 ]
 `;
 
@@ -14,7 +18,10 @@ exports[`Count statement > generates statements 3`] = `
 
 exports[`Count statement > generates statements 4`] = `
 [
-  "SELECT COUNT(*) AS COUNT\\nFROM \`articles\`"
+  [
+    "SELECT COUNT(*) AS COUNT",
+    "FROM \`articles\`"
+  ]
 ]
 `;
 
@@ -24,7 +31,25 @@ exports[`Count statement > generates statements 5`] = `
 
 exports[`Count statement > generates statements 6`] = `
 [
-  "SELECT COUNT(*) AS COUNT\\nFROM \`articles\`\\nWHERE (\\n    \`articles\`.\`status\` = 'published'\\n    AND JSON_SEARCH(\\n      \`articles\`.\`body\`,\\n      'one',\\n      '%my searched content%',\\n      NULL,\\n      '$.blocks[*].text'\\n    ) IS NOT NULL\\n    AND (\\n      SELECT COUNT(*)\\n      FROM \`article_tags\` AS \`articles>tags\`\\n      WHERE \`articles>tags\`.\`article_private_id\` = \`articles\`.\`private_id\`\\n    ) > 4\\n  )"
+  [
+    "SELECT COUNT(*) AS COUNT",
+    "FROM \`articles\`",
+    "WHERE (",
+    "    \`articles\`.\`status\` = 'published'",
+    "    AND JSON_SEARCH(",
+    "      \`articles\`.\`body\`,",
+    "      'one',",
+    "      '%my searched content%',",
+    "      NULL,",
+    "      '$.blocks[*].text'",
+    "    ) IS NOT NULL",
+    "    AND (",
+    "      SELECT COUNT(*)",
+    "      FROM \`article_tags\` AS \`articles>tags\`",
+    "      WHERE \`articles>tags\`.\`article_private_id\` = \`articles\`.\`private_id\`",
+    "    ) > 4",
+    "  )"
+  ]
 ]
 `;
 
@@ -34,6 +59,16 @@ exports[`Count statement > generates statements 7`] = `
 
 exports[`Count statement > generates statements 8`] = `
 [
-  "SELECT COUNT(*) AS COUNT\\nFROM \`articles\`\\nWHERE (\\n    \`articles\`.\`status\` = 'published'\\n    AND (\\n      \`articles\`.\`category_private_id\` IS NOT NULL\\n      AND \`articles\`.\`category_private_id\` = 10\\n    )\\n  )"
+  [
+    "SELECT COUNT(*) AS COUNT",
+    "FROM \`articles\`",
+    "WHERE (",
+    "    \`articles\`.\`status\` = 'published'",
+    "    AND (",
+    "      \`articles\`.\`category_private_id\` IS NOT NULL",
+    "      AND \`articles\`.\`category_private_id\` = 10",
+    "    )",
+    "  )"
+  ]
 ]
 `;

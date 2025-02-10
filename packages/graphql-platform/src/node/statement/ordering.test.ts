@@ -88,9 +88,7 @@ describe('Ordering', () => {
               views: 0,
               score: 0,
             },
-            {
-              slug: 'my-new-test-article',
-            },
+            { slug: 'my-new-test-article' },
           );
 
           const dependentGraph = dependency.createDependentGraph(update);
@@ -114,9 +112,7 @@ describe('Ordering', () => {
           const dependentGraph = dependency.createDependentGraph(creation);
 
           assert(!dependentGraph.isEmpty());
-          assert.deepEqual(dependentGraph.graphFilter.inputValue, {
-            _id: 2,
-          });
+          assert.deepEqual(dependentGraph.graphFilter.inputValue, { _id: 2 });
         });
 
         it('The deletion changes the root', () => {
@@ -144,9 +140,7 @@ describe('Ordering', () => {
               tag: { id: '3152ee02-2e8e-4734-9b30-5f92e2673839' },
               order: 4,
             },
-            {
-              order: 5,
-            },
+            { order: 5 },
           );
 
           const dependentGraph = dependency.createDependentGraph(update);

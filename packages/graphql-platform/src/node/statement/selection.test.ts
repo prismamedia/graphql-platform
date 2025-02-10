@@ -31,10 +31,7 @@ describe('Selection', () => {
       [
         [
           `{ title }`,
-          {
-            componentsByNode: { Article: ['title'] },
-            changes: ['Article'],
-          },
+          { componentsByNode: { Article: ['title'] }, changes: ['Article'] },
         ],
         [
           `{ title category { title order } }`,
@@ -207,9 +204,7 @@ describe('Selection', () => {
               views: 0,
               score: 0,
             },
-            {
-              slug: 'my-new-test-article',
-            },
+            { slug: 'my-new-test-article' },
           );
 
           const dependentGraph = dependency.createDependentGraph(update);
@@ -232,9 +227,7 @@ describe('Selection', () => {
               views: 0,
               score: 0,
             },
-            {
-              title: 'My new test article',
-            },
+            { title: 'My new test article' },
           );
 
           const dependentGraph = dependency.createDependentGraph(update);
@@ -261,9 +254,7 @@ describe('Selection', () => {
               views: 0,
               score: 0,
             },
-            {
-              title: 'My new test article',
-            },
+            { title: 'My new test article' },
           );
 
           const dependentGraph = dependency.createDependentGraph(update);
@@ -272,16 +263,8 @@ describe('Selection', () => {
           assert.strictEqual(dependentGraph.changes.size, 1);
           assert.deepEqual(dependentGraph.graphFilter.inputValue, {
             OR: [
-              {
-                createdBy: {
-                  id: '9121c47b-87b6-4334-ae1d-4c9777e87576',
-                },
-              },
-              {
-                updatedBy: {
-                  username: 'yvann',
-                },
-              },
+              { createdBy: { id: '9121c47b-87b6-4334-ae1d-4c9777e87576' } },
+              { updatedBy: { username: 'yvann' } },
             ],
           });
         });
@@ -302,9 +285,7 @@ describe('Selection', () => {
               views: 0,
               score: 0,
             },
-            {
-              updatedAt: new Date('2021-06-01T00:00:00.000Z'),
-            },
+            { updatedAt: new Date('2021-06-01T00:00:00.000Z') },
           );
 
           const dependentGraph = dependency.createDependentGraph(update);
@@ -312,9 +293,7 @@ describe('Selection', () => {
           assert(!dependentGraph.isEmpty());
           assert.strictEqual(dependentGraph.changes.size, 0);
           assert.deepEqual(dependentGraph.graphFilter.inputValue, {
-            updatedBy: {
-              username: 'yvann',
-            },
+            updatedBy: { username: 'yvann' },
           });
         });
       });
@@ -331,9 +310,7 @@ describe('Selection', () => {
               title: 'My test category',
               slug: 'my-test-category',
             },
-            {
-              order: 1,
-            },
+            { order: 1 },
           );
 
           const dependentGraph = dependency.createDependentGraph(update);
@@ -341,18 +318,7 @@ describe('Selection', () => {
           assert(!dependentGraph.isEmpty());
           assert.strictEqual(dependentGraph.changes.size, 0);
           assert.deepEqual(dependentGraph.graphFilter.inputValue, {
-            category: {
-              OR: [
-                {
-                  _id: 10,
-                },
-                {
-                  parent: {
-                    _id: 10,
-                  },
-                },
-              ],
-            },
+            category: { OR: [{ _id: 10 }, { parent: { _id: 10 } }] },
           });
         });
 
@@ -367,9 +333,7 @@ describe('Selection', () => {
               title: 'My test category',
               slug: 'my-test-category',
             },
-            {
-              parent: { _id: 20 },
-            },
+            { parent: { _id: 20 } },
           );
 
           const dependentGraph = dependency.createDependentGraph(update);
@@ -377,9 +341,7 @@ describe('Selection', () => {
           assert(!dependentGraph.isEmpty());
           assert.strictEqual(dependentGraph.changes.size, 0);
           assert.deepEqual(dependentGraph.graphFilter.inputValue, {
-            category: {
-              _id: 10,
-            },
+            category: { _id: 10 },
           });
         });
       });
@@ -394,9 +356,7 @@ describe('Selection', () => {
               username: 'yvann',
               createdAt: new Date('2021-01-01T00:00:00.000Z'),
             },
-            {
-              lastLoggedInAt: new Date(),
-            },
+            { lastLoggedInAt: new Date() },
           );
 
           const dependentGraph = dependency.createDependentGraph(update);
@@ -419,16 +379,8 @@ describe('Selection', () => {
           assert.strictEqual(dependentGraph.changes.size, 0);
           assert.deepEqual(dependentGraph.graphFilter.inputValue, {
             OR: [
-              {
-                createdBy: {
-                  id: '16050880-dabc-4348-bd3b-d41efe1b6057',
-                },
-              },
-              {
-                updatedBy: {
-                  id: '16050880-dabc-4348-bd3b-d41efe1b6057',
-                },
-              },
+              { createdBy: { id: '16050880-dabc-4348-bd3b-d41efe1b6057' } },
+              { updatedBy: { id: '16050880-dabc-4348-bd3b-d41efe1b6057' } },
             ],
           });
         });
@@ -446,16 +398,8 @@ describe('Selection', () => {
           assert.strictEqual(dependentGraph.changes.size, 0);
           assert.deepEqual(dependentGraph.graphFilter.inputValue, {
             OR: [
-              {
-                createdBy: {
-                  id: '7caf940a-058a-4ef2-a8bf-ac2d6cae3485',
-                },
-              },
-              {
-                updatedBy: {
-                  id: '7caf940a-058a-4ef2-a8bf-ac2d6cae3485',
-                },
-              },
+              { createdBy: { id: '7caf940a-058a-4ef2-a8bf-ac2d6cae3485' } },
+              { updatedBy: { id: '7caf940a-058a-4ef2-a8bf-ac2d6cae3485' } },
             ],
           });
         });
@@ -464,12 +408,8 @@ describe('Selection', () => {
           const update = NodeUpdate.createFromPartial(
             UserProfile,
             {},
-            {
-              user: { id: '8e3587e8-2e4e-46a4-a6e0-27f08aebb215' },
-            },
-            {
-              birthday: '1987-04-28',
-            },
+            { user: { id: '8e3587e8-2e4e-46a4-a6e0-27f08aebb215' } },
+            { birthday: '1987-04-28' },
           );
 
           const dependentGraph = dependency.createDependentGraph(update);
@@ -481,12 +421,8 @@ describe('Selection', () => {
           const update = NodeUpdate.createFromPartial(
             UserProfile,
             {},
-            {
-              user: { id: '8e3587e8-2e4e-46a4-a6e0-27f08aebb215' },
-            },
-            {
-              facebookId: 'a-facebook-id',
-            },
+            { user: { id: '8e3587e8-2e4e-46a4-a6e0-27f08aebb215' } },
+            { facebookId: 'a-facebook-id' },
           );
 
           const dependentGraph = dependency.createDependentGraph(update);
@@ -495,16 +431,8 @@ describe('Selection', () => {
           assert.strictEqual(dependentGraph.changes.size, 0);
           assert.deepEqual(dependentGraph.graphFilter.inputValue, {
             OR: [
-              {
-                createdBy: {
-                  id: '8e3587e8-2e4e-46a4-a6e0-27f08aebb215',
-                },
-              },
-              {
-                updatedBy: {
-                  id: '8e3587e8-2e4e-46a4-a6e0-27f08aebb215',
-                },
-              },
+              { createdBy: { id: '8e3587e8-2e4e-46a4-a6e0-27f08aebb215' } },
+              { updatedBy: { id: '8e3587e8-2e4e-46a4-a6e0-27f08aebb215' } },
             ],
           });
         });
@@ -526,9 +454,7 @@ describe('Selection', () => {
 
           assert(!dependentGraph.isEmpty());
           assert.strictEqual(dependentGraph.changes.size, 0);
-          assert.deepEqual(dependentGraph.graphFilter.inputValue, {
-            _id: 2,
-          });
+          assert.deepEqual(dependentGraph.graphFilter.inputValue, { _id: 2 });
         });
 
         it('The deletion changes the graph', () => {
@@ -546,9 +472,7 @@ describe('Selection', () => {
 
           assert(!dependentGraph.isEmpty());
           assert.strictEqual(dependentGraph.changes.size, 0);
-          assert.deepEqual(dependentGraph.graphFilter.inputValue, {
-            _id: 3,
-          });
+          assert.deepEqual(dependentGraph.graphFilter.inputValue, { _id: 3 });
         });
 
         it('The updated "order", from 4 to 0, changes the graph', () => {
@@ -560,18 +484,14 @@ describe('Selection', () => {
               tag: { id: '764d2d19-c1da-41f4-8c31-f0fd0aa911df' },
               order: 4,
             },
-            {
-              order: 0,
-            },
+            { order: 0 },
           );
 
           const dependentGraph = dependency.createDependentGraph(update);
 
           assert(!dependentGraph.isEmpty());
           assert.strictEqual(dependentGraph.changes.size, 0);
-          assert.deepEqual(dependentGraph.graphFilter.inputValue, {
-            _id: 4,
-          });
+          assert.deepEqual(dependentGraph.graphFilter.inputValue, { _id: 4 });
         });
 
         it('The updated "order", from 4 to 5, changes nothing', () => {
@@ -583,18 +503,14 @@ describe('Selection', () => {
               tag: { id: '3152ee02-2e8e-4734-9b30-5f92e2673839' },
               order: 4,
             },
-            {
-              order: 5,
-            },
+            { order: 5 },
           );
 
           const dependentGraph = dependency.createDependentGraph(update);
 
           assert(!dependentGraph.isEmpty());
           assert.strictEqual(dependentGraph.changes.size, 0);
-          assert.deepEqual(dependentGraph.graphFilter.inputValue, {
-            _id: 5,
-          });
+          assert.deepEqual(dependentGraph.graphFilter.inputValue, { _id: 5 });
         });
       });
 
@@ -610,9 +526,7 @@ describe('Selection', () => {
               createdAt: new Date('2021-01-01T00:00:00.000Z'),
               updatedAt: new Date('2021-01-01T00:00:00.000Z'),
             },
-            {
-              deprecated: true,
-            },
+            { deprecated: true },
           );
 
           const dependentGraph = dependency.createDependentGraph(update);
@@ -620,11 +534,7 @@ describe('Selection', () => {
           assert(!dependentGraph.isEmpty());
           assert.strictEqual(dependentGraph.changes.size, 0);
           assert.deepEqual(dependentGraph.graphFilter.inputValue, {
-            tags_some: {
-              tag: {
-                id: '68f3d88d-1308-4019-8118-fc20042e8c20',
-              },
-            },
+            tags_some: { tag: { id: '68f3d88d-1308-4019-8118-fc20042e8c20' } },
           });
         });
 
@@ -639,9 +549,7 @@ describe('Selection', () => {
               createdAt: new Date('2021-01-01T00:00:00.000Z'),
               updatedAt: new Date('2021-01-01T00:00:00.000Z'),
             },
-            {
-              deprecated: false,
-            },
+            { deprecated: false },
           );
 
           const dependentGraph = dependency.createDependentGraph(update);
@@ -649,11 +557,7 @@ describe('Selection', () => {
           assert(!dependentGraph.isEmpty());
           assert.strictEqual(dependentGraph.changes.size, 0);
           assert.deepEqual(dependentGraph.graphFilter.inputValue, {
-            tags_some: {
-              tag: {
-                id: '68f3d88d-1308-4019-8118-fc20042e8c20',
-              },
-            },
+            tags_some: { tag: { id: '68f3d88d-1308-4019-8118-fc20042e8c20' } },
           });
         });
       });

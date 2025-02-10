@@ -77,10 +77,7 @@ describe('Filter', () => {
         [
           'Article',
           { category: {} },
-          {
-            componentsByNode: { Article: ['category'] },
-            changes: ['Article'],
-          },
+          { componentsByNode: { Article: ['category'] }, changes: ['Article'] },
         ],
         [
           'Article',
@@ -158,26 +155,14 @@ describe('Filter', () => {
         filter = Article.filterInputType.parseAndFilter({
           title: 'My title',
           extension_is_null: false,
-          category: {
-            parent: {
-              title: "My category's title",
-            },
-          },
+          category: { parent: { title: "My category's title" } },
           createdBy: {
-            profile: {
-              facebookId: 'my-facebook-id',
-            },
-            createdArticles_some: {
-              title: "My created article's title",
-            },
+            profile: { facebookId: 'my-facebook-id' },
+            createdArticles_some: { title: "My created article's title" },
           },
           updatedBy: {
-            profile: {
-              twitterHandle: 'my-twitter-handle',
-            },
-            updatedArticles_some: {
-              title: "My updated article's title",
-            },
+            profile: { twitterHandle: 'my-twitter-handle' },
+            updatedArticles_some: { title: "My updated article's title" },
           },
         });
 
@@ -200,9 +185,7 @@ describe('Filter', () => {
               views: 0,
               score: 0,
             },
-            {
-              slug: 'my-new-test-article',
-            },
+            { slug: 'my-new-test-article' },
           );
 
           const dependentGraph = dependency.createDependentGraph(update);
@@ -226,9 +209,7 @@ describe('Filter', () => {
                 views: 0,
                 score: 0,
               },
-              {
-                title: 'My other title',
-              },
+              { title: 'My other title' },
             );
 
             const dependentGraph = dependency.createDependentGraph(update);
@@ -282,9 +263,7 @@ describe('Filter', () => {
               views: 0,
               score: 0,
             },
-            {
-              title: "My created article's title",
-            },
+            { title: "My created article's title" },
           );
 
           const dependentGraph = dependency.createDependentGraph(update);
@@ -309,18 +288,14 @@ describe('Filter', () => {
               views: 0,
               score: 0,
             },
-            {
-              title: "My created article's title",
-            },
+            { title: "My created article's title" },
           );
 
           const dependentGraph = dependency.createDependentGraph(update);
 
           assert(!dependentGraph.isEmpty());
           assert.deepEqual(dependentGraph.graphFilter.inputValue, {
-            createdBy: {
-              id: '9121c47b-87b6-4334-ae1d-4c9777e87576',
-            },
+            createdBy: { id: '9121c47b-87b6-4334-ae1d-4c9777e87576' },
           });
         });
 
@@ -339,9 +314,7 @@ describe('Filter', () => {
               views: 0,
               score: 0,
             },
-            {
-              title: "My updated article's title",
-            },
+            { title: "My updated article's title" },
           );
 
           const dependentGraph = dependency.createDependentGraph(update);
@@ -366,18 +339,14 @@ describe('Filter', () => {
               views: 0,
               score: 0,
             },
-            {
-              title: "My updated article's title",
-            },
+            { title: "My updated article's title" },
           );
 
           const dependentGraph = dependency.createDependentGraph(update);
 
           assert(!dependentGraph.isEmpty());
           assert.deepEqual(dependentGraph.graphFilter.inputValue, {
-            updatedBy: {
-              username: 'yvann',
-            },
+            updatedBy: { username: 'yvann' },
           });
         });
       });
@@ -387,49 +356,34 @@ describe('Filter', () => {
           const creation = NodeCreation.createFromPartial(
             ArticleExtension,
             {},
-            {
-              article: { _id: 4 },
-              source: null,
-            },
+            { article: { _id: 4 }, source: null },
           );
 
           const dependentGraph = dependency.createDependentGraph(creation);
 
           assert(!dependentGraph.isEmpty());
-          assert.deepEqual(dependentGraph.graphFilter.inputValue, {
-            _id: 4,
-          });
+          assert.deepEqual(dependentGraph.graphFilter.inputValue, { _id: 4 });
         });
 
         it('The deletion may change some document(s)', () => {
           const deletion = NodeDeletion.createFromPartial(
             ArticleExtension,
             {},
-            {
-              article: { _id: 5 },
-              source: null,
-            },
+            { article: { _id: 5 }, source: null },
           );
 
           const dependentGraph = dependency.createDependentGraph(deletion);
 
           assert(!dependentGraph.isEmpty());
-          assert.deepEqual(dependentGraph.graphFilter.inputValue, {
-            _id: 5,
-          });
+          assert.deepEqual(dependentGraph.graphFilter.inputValue, { _id: 5 });
         });
 
         it('The updated "source" does not change any document', () => {
           const update = NodeUpdate.createFromPartial(
             ArticleExtension,
             {},
-            {
-              article: { _id: 6 },
-              source: null,
-            },
-            {
-              source: 'A source',
-            },
+            { article: { _id: 6 }, source: null },
+            { source: 'A source' },
           );
 
           const dependentGraph = dependency.createDependentGraph(update);
@@ -453,9 +407,7 @@ describe('Filter', () => {
 
           assert(!dependentGraph.isEmpty());
           assert.deepEqual(dependentGraph.graphFilter.inputValue, {
-            createdBy: {
-              id: '16050880-dabc-4348-bd3b-d41efe1b6057',
-            },
+            createdBy: { id: '16050880-dabc-4348-bd3b-d41efe1b6057' },
           });
         });
 
@@ -473,9 +425,7 @@ describe('Filter', () => {
 
           assert(!dependentGraph.isEmpty());
           assert.deepEqual(dependentGraph.graphFilter.inputValue, {
-            createdBy: {
-              id: '7caf940a-058a-4ef2-a8bf-ac2d6cae3485',
-            },
+            createdBy: { id: '7caf940a-058a-4ef2-a8bf-ac2d6cae3485' },
           });
         });
 
@@ -483,12 +433,8 @@ describe('Filter', () => {
           const update = NodeUpdate.createFromPartial(
             UserProfile,
             {},
-            {
-              user: { id: '8e3587e8-2e4e-46a4-a6e0-27f08aebb215' },
-            },
-            {
-              birthday: '1987-04-28',
-            },
+            { user: { id: '8e3587e8-2e4e-46a4-a6e0-27f08aebb215' } },
+            { birthday: '1987-04-28' },
           );
 
           const dependentGraph = dependency.createDependentGraph(update);
@@ -504,18 +450,14 @@ describe('Filter', () => {
               user: { id: '8e3587e8-2e4e-46a4-a6e0-27f08aebb215' },
               facebookId: 'my-facebook-id',
             },
-            {
-              facebookId: 'another-facebook-id',
-            },
+            { facebookId: 'another-facebook-id' },
           );
 
           const dependentGraph = dependency.createDependentGraph(update);
 
           assert(!dependentGraph.isEmpty());
           assert.deepEqual(dependentGraph.graphFilter.inputValue, {
-            createdBy: {
-              id: '8e3587e8-2e4e-46a4-a6e0-27f08aebb215',
-            },
+            createdBy: { id: '8e3587e8-2e4e-46a4-a6e0-27f08aebb215' },
           });
         });
       });

@@ -2,7 +2,7 @@ import assert from 'node:assert';
 import { before, describe, it } from 'node:test';
 import {
   GraphQLPlatform,
-  NodeChangeAggregation,
+  MutationContextChanges,
   NodeCreation,
   NodeDeletion,
   NodeUpdate,
@@ -91,7 +91,7 @@ describe('Change', () => {
     const Tag = gp.getNodeByName('Tag');
     const ArticleTag = gp.getNodeByName('ArticleTag');
 
-    using aggregate = new NodeChangeAggregation([
+    using aggregate = new MutationContextChanges(myContext, [
       // These 2 changes are aggregated
       new NodeCreation(Article, myContext, {
         id: '2e9b5020-b9fe-4dab-bb59-59c986fffc12',

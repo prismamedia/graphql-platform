@@ -2,8 +2,7 @@ import { AsyncEventEmitter } from '@prismamedia/async-event-emitter';
 import { MMethod } from '@prismamedia/memoize';
 import assert from 'node:assert';
 import { inspect } from 'node:util';
-import type { Options as PQueueOptions } from 'p-queue';
-import PQueue from 'p-queue';
+import PQueue, { type Options as PQueueOptions } from 'p-queue';
 import type { Except, Promisable } from 'type-fest';
 import type {
   BrokerInterface,

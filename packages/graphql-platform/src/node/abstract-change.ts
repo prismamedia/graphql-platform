@@ -1,5 +1,6 @@
 import type * as utils from '@prismamedia/graphql-platform-utils';
 import type { Node, UniqueConstraintValue } from '../node.js';
+import type { NodeChange } from './change.js';
 
 export abstract class AbstractNodeChange<TRequestContext extends object> {
   public abstract readonly kind: utils.MutationType;
@@ -10,8 +11,7 @@ export abstract class AbstractNodeChange<TRequestContext extends object> {
     public readonly node: Node<TRequestContext>,
     public readonly id: Readonly<UniqueConstraintValue>,
     public readonly requestContext: TRequestContext,
-    public readonly executedAt: Date = new Date(),
-    public committedAt?: Date,
+    public at: Date = new Date(),
   ) {
     Object.freeze(id);
 
@@ -28,7 +28,16 @@ export abstract class AbstractNodeChange<TRequestContext extends object> {
     return `${this.node}/${this.stringifiedId}/${this.kind}`;
   }
 
-  public get at(): Date {
-    return this.committedAt ?? this.executedAt;
+  public isMergeableWith(other: NodeChange<TRequestContext>): boolean {
+    return (
+      this.node === other.node &&
+      this.stringifiedId === other.stringifiedId &&
+      this.requestContext === other.requestContext &&
+      this.at <= other.at
+    );
   }
+
+  public abstract mergeWith(
+    other: NodeChange<TRequestContext>,
+  ): NodeChange<TRequestContext> | undefined;
 }

@@ -2,7 +2,6 @@ import { NodeCreation } from './change/creation.js';
 import { NodeDeletion } from './change/deletion.js';
 import { NodeUpdate } from './change/update.js';
 
-export * from './change/aggregation.js';
 export * from './change/creation.js';
 export * from './change/deletion.js';
 export * from './change/dependency.js';

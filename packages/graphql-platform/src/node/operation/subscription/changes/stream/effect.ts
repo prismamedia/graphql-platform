@@ -38,16 +38,18 @@ export class ChangesSubscriptionEffect<
   public async *[Symbol.asyncIterator](): AsyncIterator<
     ChangesSubscriptionChange<TRequestContext, TUpsert, TDeletion>
   > {
+    const initiator = this.dependentGraph.initiator;
+
     // First, the deletions:
     if (this.subscription.onDeletionSelection) {
       // pass-through - we have everything we need
       yield* this.dependentGraph.deletions
         .values()
         .map(
-          ({ requestContext, oldValue }) =>
+          ({ oldValue }) =>
             new ChangesSubscriptionDeletion(
               this.subscription,
-              requestContext,
+              initiator,
               oldValue,
             ),
         );
@@ -83,7 +85,7 @@ export class ChangesSubscriptionEffect<
           for await (const deletion of this.subscription.api.scroll(args)) {
             yield new ChangesSubscriptionDeletion(
               this.subscription,
-              this.dependentGraph.filter.graphInitiators,
+              initiator,
               deletion,
             );
           }
@@ -96,7 +98,7 @@ export class ChangesSubscriptionEffect<
           for (const deletion of deletions) {
             yield new ChangesSubscriptionDeletion(
               this.subscription,
-              this.dependentGraph.filter.graphInitiators,
+              initiator,
               deletion,
             );
           }
@@ -114,10 +116,10 @@ export class ChangesSubscriptionEffect<
           yield* this.dependentGraph.upserts
             .values()
             .map(
-              ({ requestContext, newValue }) =>
+              ({ newValue }) =>
                 new ChangesSubscriptionUpsert(
                   this.subscription,
-                  requestContext,
+                  initiator,
                   newValue,
                 ),
             );
@@ -150,27 +152,11 @@ export class ChangesSubscriptionEffect<
         selection: this.subscription.onUpsertSelection,
       } satisfies ScrollSubscriptionArgs;
 
-      const initiators = this.dependentGraph.graphInitiators
-        .union(
-          new Set(
-            this.dependentGraph.upsertIfFounds
-              .values()
-              .map(({ requestContext }) => requestContext),
-          ),
-        )
-        .union(
-          new Set(
-            incompleteUpserts
-              ?.values()
-              .map(({ requestContext }) => requestContext),
-          ),
-        );
-
       if (this.subscription.scrollable) {
         for await (const upsert of this.subscription.api.scroll(args)) {
           yield new ChangesSubscriptionUpsert(
             this.subscription,
-            initiators,
+            initiator,
             upsert,
           );
         }
@@ -183,7 +169,7 @@ export class ChangesSubscriptionEffect<
         for (const upsert of upserts) {
           yield new ChangesSubscriptionUpsert(
             this.subscription,
-            initiators,
+            initiator,
             upsert,
           );
         }

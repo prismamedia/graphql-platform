@@ -1,10 +1,9 @@
-import { isIterableObject } from '@prismamedia/graphql-platform-utils';
+import * as utils from '@prismamedia/graphql-platform-utils';
 import { MGetter, MMethod } from '@prismamedia/memoize';
 import assert from 'node:assert';
-import type { Arrayable, JsonObject } from 'type-fest';
+import type { JsonObject } from 'type-fest';
 import { Node, type NodeValue } from '../../node.js';
 import {
-  NodeChangeAggregation,
   NodeCreation,
   NodeDeletion,
   NodeUpdate,
@@ -17,6 +16,7 @@ import {
   type Component,
   type ReverseEdge,
 } from '../definition.js';
+import { MutationContextChanges } from '../operation/mutation/context/changes.js';
 import {
   EdgeExistsFilter,
   MultipleReverseEdgeExistsFilter,
@@ -78,7 +78,9 @@ export class DependencyGraph {
 
   public constructor(
     public readonly node: Node,
-    ...dependencies: ReadonlyArray<Arrayable<Dependency | undefined>>
+    ...dependencies: ReadonlyArray<
+      utils.ReadonlyArrayable<Dependency | undefined>
+    >
   ) {
     const components = new Set<Component>();
     const dependenciesByEdge = new Map<Edge, EdgeDependencyGraph[]>();
@@ -279,16 +281,19 @@ export class DependencyGraph {
     );
   }
 
-  public createDependentGraph(
-    changes: NodeChangeAggregation | Iterable<NodeChange> | NodeChange,
+  public createDependentGraph<TRequestContext extends object>(
+    changes:
+      | MutationContextChanges<TRequestContext>
+      | utils.ReadonlyArrayable<NodeChange<TRequestContext>>,
     visitedParents?: ReadonlyArray<NodeValue>,
     path?: Edge | ReverseEdge,
-  ): DependentGraph {
+  ): DependentGraph<TRequestContext> {
     const aggregation =
-      changes instanceof NodeChangeAggregation
+      changes instanceof MutationContextChanges
         ? changes
-        : new NodeChangeAggregation(
-            isIterableObject(changes) ? changes : [changes],
+        : new MutationContextChanges(
+            undefined,
+            utils.resolveArrayable(changes),
           );
 
     const hasReverseEdgeHeadChanges = this.dependenciesByReverseEdge
@@ -301,60 +306,63 @@ export class DependencyGraph {
     const filteredOuts: NodeValue[] = [];
 
     const changesByNode = aggregation.changesByNode.get(this.node);
+    if (changesByNode) {
+      const { creation, update, deletion } = changesByNode;
 
-    changesByNode?.creation.forEach((creation) => {
-      switch (this.nodeDependsOnCreation(creation, visitedParents)) {
-        case DependentKind.UPSERT:
-          upserts.add(creation);
-          break;
+      creation.forEach((creation) => {
+        switch (this.nodeDependsOnCreation(creation, visitedParents)) {
+          case DependentKind.UPSERT:
+            upserts.add(creation);
+            break;
 
-        case DependentKind.UPSERT_IF_FOUND:
-          upsertIfFounds.add(creation);
-          break;
+          case DependentKind.UPSERT_IF_FOUND:
+            upsertIfFounds.add(creation);
+            break;
 
-        case false:
-          hasReverseEdgeHeadChanges &&
-            this.filter?.isCreationFilteredOut(creation) &&
-            filteredOuts.push(creation.newValue);
-          break;
-      }
-    });
+          case false:
+            hasReverseEdgeHeadChanges &&
+              this.filter?.isCreationFilteredOut(creation) &&
+              filteredOuts.push(creation.newValue);
+            break;
+        }
+      });
 
-    changesByNode?.update.forEach((update) => {
-      switch (this.nodeDependsOnUpdate(update, visitedParents)) {
-        case DependentKind.UPSERT:
-          upserts.add(update);
-          break;
+      update.forEach((update) => {
+        switch (this.nodeDependsOnUpdate(update, visitedParents)) {
+          case DependentKind.UPSERT:
+            upserts.add(update);
+            break;
 
-        case DependentKind.UPSERT_IF_FOUND:
-          upsertIfFounds.add(update);
-          break;
+          case DependentKind.UPSERT_IF_FOUND:
+            upsertIfFounds.add(update);
+            break;
 
-        case DependentKind.DELETION:
-          deletions.add(update);
-          break;
+          case DependentKind.DELETION:
+            deletions.add(update);
+            break;
 
-        case false:
-          hasReverseEdgeHeadChanges &&
-            this.filter?.isUpdateFilteredOut(update) &&
-            filteredOuts.push(update.oldValue, update.newValue);
-          break;
-      }
-    });
+          case false:
+            hasReverseEdgeHeadChanges &&
+              this.filter?.isUpdateFilteredOut(update) &&
+              filteredOuts.push(update.oldValue, update.newValue);
+            break;
+        }
+      });
 
-    changesByNode?.deletion.forEach((deletion) => {
-      switch (this.nodeDependsOnDeletion(deletion, visitedParents)) {
-        case DependentKind.DELETION:
-          deletions.add(deletion);
-          break;
+      deletion.forEach((deletion) => {
+        switch (this.nodeDependsOnDeletion(deletion, visitedParents)) {
+          case DependentKind.DELETION:
+            deletions.add(deletion);
+            break;
 
-        case false:
-          hasReverseEdgeHeadChanges &&
-            this.filter?.isDeletionFilteredOut(deletion) &&
-            filteredOuts.push(deletion.oldValue);
-          break;
-      }
-    });
+          case false:
+            hasReverseEdgeHeadChanges &&
+              this.filter?.isDeletionFilteredOut(deletion) &&
+              filteredOuts.push(deletion.oldValue);
+            break;
+        }
+      });
+    }
 
     const visitedNodes = hasReverseEdgeHeadChanges
       ? [
@@ -385,6 +393,7 @@ export class DependencyGraph {
       : undefined;
 
     return new DependentGraph(
+      aggregation.requestContext,
       path ??
         this.filter?.dependencyGraph.createDependentGraph(
           aggregation,
@@ -398,7 +407,7 @@ export class DependencyGraph {
         .entries()
         .map(([edge, dependencies]) => [
           edge,
-          new DependentGraph(edge).mergeWith(
+          new DependentGraph(aggregation.requestContext, edge).mergeWith(
             ...dependencies.map((dependency) =>
               dependency.createDependentGraph(aggregation),
             ),
@@ -408,7 +417,7 @@ export class DependencyGraph {
         .entries()
         .map(([reverseEdge, dependencies]) => [
           reverseEdge,
-          new DependentGraph(reverseEdge).mergeWith(
+          new DependentGraph(aggregation.requestContext, reverseEdge).mergeWith(
             ...dependencies.map((dependency) =>
               dependency.createDependentGraph(aggregation, visitedNodes),
             ),
@@ -467,10 +476,12 @@ export class EdgeDependencyGraph extends NodeDependencyGraph {
     super(edge.head, filter, undefined, selection);
   }
 
-  public override createDependentGraph(
-    changes: NodeChangeAggregation | Iterable<NodeChange>,
+  public override createDependentGraph<TRequestContext extends object>(
+    changes:
+      | MutationContextChanges<TRequestContext>
+      | utils.ReadonlyArrayable<NodeChange<TRequestContext>>,
     visitedParents?: ReadonlyArray<NodeValue>,
-  ): DependentGraph {
+  ): DependentGraph<TRequestContext> {
     return super.createDependentGraph(changes, visitedParents, this.edge);
   }
 }
@@ -596,10 +607,12 @@ export class ReverseEdgeDependencyGraph extends NodeSetDependencyGraph {
     return super.nodeDependsOnDeletion(deletion, visitedParents);
   }
 
-  public override createDependentGraph(
-    changes: NodeChangeAggregation | Iterable<NodeChange> | NodeChange,
+  public override createDependentGraph<TRequestContext extends object>(
+    changes:
+      | MutationContextChanges<TRequestContext>
+      | utils.ReadonlyArrayable<NodeChange<TRequestContext>>,
     visitedParents?: ReadonlyArray<NodeValue>,
-  ): DependentGraph {
+  ): DependentGraph<TRequestContext> {
     return super.createDependentGraph(
       changes,
       visitedParents,
@@ -638,6 +651,7 @@ export class DependentGraph<TRequestContext extends object = any> {
   >;
 
   public constructor(
+    public readonly initiator: TRequestContext,
     nodeOrDependentGraphOrPath:
       | Node
       | DependentGraph<TRequestContext>
@@ -670,6 +684,7 @@ export class DependentGraph<TRequestContext extends object = any> {
     this.dependentsByEdge = new Map(
       dependentsByEdge?.filter(([edge, dependents]) => {
         assert.strictEqual(edge.tail, this.node);
+        assert.strictEqual(dependents.initiator, this.initiator);
 
         return !dependents.isEmpty();
       }),
@@ -678,6 +693,7 @@ export class DependentGraph<TRequestContext extends object = any> {
     this.dependentsByReverseEdge = new Map(
       dependentsByReverseEdge?.filter(([reverseEdge, dependents]) => {
         assert.strictEqual(reverseEdge.tail, this.node);
+        assert.strictEqual(dependents.initiator, this.initiator);
 
         return !dependents.isEmpty();
       }),
@@ -724,6 +740,7 @@ export class DependentGraph<TRequestContext extends object = any> {
     }
 
     return new DependentGraph(
+      this.initiator,
       this.path ?? this.filter ?? this.node,
       deletions,
       upserts,
@@ -775,33 +792,6 @@ export class DependentGraph<TRequestContext extends object = any> {
         ),
       }),
     };
-  }
-
-  @MGetter
-  public get graphInitiators(): ReadonlySet<TRequestContext> {
-    return new Set<TRequestContext>(
-      this.path
-        ? this.changes.values().map(({ requestContext }) => requestContext)
-        : [],
-    )
-      .union(
-        this.dependentsByEdge
-          .values()
-          .reduce(
-            (initiators, { graphInitiators }) =>
-              initiators.union(graphInitiators),
-            new Set<TRequestContext>(),
-          ),
-      )
-      .union(
-        this.dependentsByReverseEdge
-          .values()
-          .reduce(
-            (initiators, { graphInitiators }) =>
-              initiators.union(graphInitiators),
-            new Set<TRequestContext>(),
-          ),
-      );
   }
 
   @MGetter
@@ -916,5 +906,19 @@ export class DependentGraph<TRequestContext extends object = any> {
           .map(({ graphFilter: { filter } }) => filter),
       ]),
     );
+  }
+
+  @MGetter
+  public get count(): Promise<number> {
+    return this.node.api
+      .count(this.initiator, {
+        where: {
+          OR: [
+            ...this.upsertIfFounds.values().map(({ id }) => id),
+            this.graphFilter.inputValue,
+          ],
+        },
+      })
+      .then((count) => count + this.deletions.size + this.upserts.size);
   }
 }

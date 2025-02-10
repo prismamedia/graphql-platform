@@ -7,7 +7,7 @@ import type { NodeChangeSubscriptionInterface } from '../../broker-interface.js'
 import type {
   ChangesSubscriptionStream,
   DependentGraph,
-  NodeChangeAggregation,
+  MutationContextChanges,
 } from '../../node.js';
 import type { InMemoryBroker } from '../in-memory.js';
 
@@ -41,7 +41,7 @@ export class InMemorySubscription
   }
 
   public async enqueue(
-    changes: NodeChangeAggregation,
+    changes: MutationContextChanges,
     waitUntilProcessed: boolean = this.subscription.isConsumingNodeChanges(),
   ): Promise<void> {
     const dependentGraph =

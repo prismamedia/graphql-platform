@@ -7,6 +7,7 @@ import {
 } from '@prismamedia/graphql-platform/__tests__/config.js';
 import * as fixtures from '@prismamedia/graphql-platform/__tests__/fixture.js';
 import { format } from '@sqltools/formatter';
+import { EOL } from 'node:os';
 import { after, before, describe, it } from 'node:test';
 import { createMyGP } from '../../__tests__/config.js';
 
@@ -57,7 +58,7 @@ describe('Count statement', () => {
 
       snapshot(await gp.api[nodeName].count(context, args));
 
-      snapshot(executedStatements);
+      snapshot(executedStatements.map((sql) => sql.split(EOL)));
     });
   });
 });

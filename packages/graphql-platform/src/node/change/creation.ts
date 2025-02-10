@@ -1,6 +1,8 @@
 import * as utils from '@prismamedia/graphql-platform-utils';
+import assert from 'node:assert';
 import type { Component, ComponentValue, Node, NodeValue } from '../../node.js';
 import { AbstractNodeChange } from '../abstract-change.js';
+import type { NodeChange } from '../change.js';
 
 export class NodeCreation<
   TRequestContext extends object = any,
@@ -9,8 +11,7 @@ export class NodeCreation<
     node: Node<TRequestContext>,
     requestContext: TRequestContext,
     partialNewValue: Record<Component['name'], ComponentValue>,
-    createdAt?: Date,
-    committedAt?: Date,
+    at?: Date,
   ) {
     return new this(
       node,
@@ -24,8 +25,7 @@ export class NodeCreation<
         ),
         ...partialNewValue,
       },
-      createdAt,
-      committedAt,
+      at,
     );
   }
 
@@ -38,19 +38,36 @@ export class NodeCreation<
     node: Node<TRequestContext>,
     requestContext: TRequestContext,
     maybeNewValue: unknown,
-    createdAt?: Date,
-    committedAt?: Date,
+    at?: Date,
   ) {
     const newValue = Object.freeze(node.selection.parseSource(maybeNewValue));
 
-    super(
-      node,
-      node.mainIdentifier.parseValue(newValue),
-      requestContext,
-      createdAt,
-      committedAt,
-    );
+    super(node, node.mainIdentifier.parseValue(newValue), requestContext, at);
 
     this.newValue = newValue;
+  }
+
+  public mergeWith(
+    other: NodeChange<TRequestContext>,
+  ): NodeChange<TRequestContext> | undefined {
+    assert(this.isMergeableWith(other));
+
+    switch (other.kind) {
+      case utils.MutationType.CREATION:
+        // Should not happen, we missed something
+        return other;
+
+      case utils.MutationType.UPDATE:
+        return new NodeCreation(
+          other.node,
+          other.requestContext,
+          other.newValue,
+          this.at,
+        );
+
+      case utils.MutationType.DELETION:
+        // This "deletion" cancels the previous "creation" => no change
+        return;
+    }
   }
 }

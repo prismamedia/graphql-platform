@@ -1,8 +1,10 @@
 import * as utils from '@prismamedia/graphql-platform-utils';
 import type { BrokerInterface } from '../../../broker-interface.js';
 import type { ConnectorInterface } from '../../../connector-interface.js';
-import { NodeChangeAggregation } from '../../change.js';
 import { OperationContext } from '../context.js';
+import { MutationContextChanges } from './context/changes.js';
+
+export * from './context/changes.js';
 
 export class MutationContext<
   TRequestContext extends object = any,
@@ -13,8 +15,9 @@ export class MutationContext<
   /**
    * Contains the nodes' changes that will be fired after the success of the whole mutation, including all the nested actions
    */
-  public readonly changes: NodeChangeAggregation<TRequestContext> =
-    new NodeChangeAggregation(
+  public readonly changes: MutationContextChanges<TRequestContext> =
+    new MutationContextChanges(
+      this.request,
       undefined,
       utils.resolveThunkable(this.gp.maxNodeChanges, this.request),
     );

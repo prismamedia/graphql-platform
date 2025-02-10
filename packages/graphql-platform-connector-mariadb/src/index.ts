@@ -4,11 +4,13 @@ import {
 } from '@prismamedia/async-event-emitter';
 import * as core from '@prismamedia/graphql-platform';
 import * as utils from '@prismamedia/graphql-platform-utils';
+import { MGetter } from '@prismamedia/memoize';
 import * as mariadb from 'mariadb';
 import assert from 'node:assert';
 import { hrtime } from 'node:process';
 import * as semver from 'semver';
 import type { Except } from 'type-fest';
+import { Broker } from './broker.js';
 import { trace } from './instrumentation.js';
 import {
   Schema,
@@ -27,6 +29,7 @@ import {
 } from './statement.js';
 
 export * as mariadb from 'mariadb';
+export * from './broker.js';
 export * from './escaping.js';
 export * from './schema.js';
 export * from './statement.js';
@@ -60,6 +63,7 @@ export interface MariaDBConnectorConfig {
   schema?: SchemaConfig;
   pool?: Except<mariadb.PoolConfig, 'logger'>;
   on?: EventConfigByName<MariaDBConnectorEventDataByName>;
+  broker?: utils.OptionalFlag;
 }
 
 /**
@@ -141,6 +145,17 @@ export class MariaDBConnector
     this.version =
       (config.version && semver.coerce(config.version)) || undefined;
     this.schema = new Schema(this);
+  }
+
+  @MGetter
+  public get broker(): Broker | undefined {
+    return utils.getOptionalFlag(
+      this.config.broker,
+      false,
+      utils.addPath(this.configPath, 'broker'),
+    )
+      ? new Broker(this)
+      : undefined;
   }
 
   public getPool(
@@ -418,6 +433,8 @@ export class MariaDBConnector
           table.addForeignKeys(undefined, connection),
         ),
       );
+
+      await this.broker?.setup(connection);
     }, StatementKind.DATA_DEFINITION);
   }
 

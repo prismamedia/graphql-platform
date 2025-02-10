@@ -12,6 +12,7 @@ import {
 import * as fixtures from '@prismamedia/graphql-platform/__tests__/fixture.js';
 import { format } from '@sqltools/formatter';
 import assert from 'node:assert';
+import { EOL } from 'node:os';
 import { after, before, describe, it } from 'node:test';
 import { createMyGP } from '../../__tests__/config.js';
 
@@ -39,21 +40,21 @@ describe('Find statement', () => {
           orderBy: ['createdAt_ASC'],
           first: 5,
           selection: `{
-          status
-          title
-          body
-          views
-          score
-          machineTags
-          metas
-          tagCount
-          createdAt
-          a: lowerCasedTitle
-          b: lowerCasedTitle
-          upperCasedTitle
-          c: mixedCasedTitle
-          d: mixedCasedTitle
-        }`,
+            status
+            title
+            body
+            views
+            score
+            machineTags
+            metas
+            tagCount
+            createdAt
+            a: lowerCasedTitle
+            b: lowerCasedTitle
+            upperCasedTitle
+            c: mixedCasedTitle
+            d: mixedCasedTitle
+          }`,
         },
         [
           {
@@ -155,9 +156,9 @@ describe('Find statement', () => {
           orderBy: ['createdAt_ASC'],
           first: 5,
           selection: `{
-          status
-          title
-        }`,
+            status
+            title
+          }`,
         },
         [
           {
@@ -189,9 +190,9 @@ describe('Find statement', () => {
           where: { category_is_null: true },
           first: 5,
           selection: `{
-          title
-          category { _id }
-        }`,
+            title
+            category { _id }
+          }`,
         },
         [],
       ],
@@ -202,9 +203,9 @@ describe('Find statement', () => {
           where: { category: { _id: 5 } },
           first: 5,
           selection: `{
-          title
-          category { _id }
-        }`,
+            title
+            category { _id }
+          }`,
         },
         [],
       ],
@@ -237,35 +238,35 @@ describe('Find statement', () => {
           orderBy: ['createdAt_ASC'],
           first: 5,
           selection: `{
-          status
-          title
-          category {
+            status
             title
-          }
-          createdBy {
-            username
-            profile {
-              facebookId
-              googleId
-              twitterHandle
-            }
-          }
-          allTagCount: tagCount
-          filteredTagCount: tagCount(where: { tag_not: { deprecated: true }})
-          allTags: tags(orderBy: [order_ASC], first: 5) {
-            order
-            tag {
-              title
-              deprecated
-            }
-          }
-          filteredTags: tags(where: { tag_not: { deprecated: true }}, orderBy: [order_ASC], first: 5) {
-            order
-            tag {
+            category {
               title
             }
-          }
-        }`,
+            createdBy {
+              username
+              profile {
+                facebookId
+                googleId
+                twitterHandle
+              }
+            }
+            allTagCount: tagCount
+            filteredTagCount: tagCount(where: { tag_not: { deprecated: true }})
+            allTags: tags(orderBy: [order_ASC], first: 5) {
+              order
+              tag {
+                title
+                deprecated
+              }
+            }
+            filteredTags: tags(where: { tag_not: { deprecated: true }}, orderBy: [order_ASC], first: 5) {
+              order
+              tag {
+                title
+              }
+            }
+          }`,
         },
         [],
       ],
@@ -277,17 +278,17 @@ describe('Find statement', () => {
           orderBy: ['createdAt_ASC'],
           first: 1,
           selection: `{
-          title
-          second: tags(orderBy: [order_ASC], skip: 1, first: 1) {
-            order
-          }
-          penultimate: tags(orderBy: [order_DESC], skip: 1, first: 1) {
-            order
-          }
-          all: tags(orderBy: [order_ASC], first: 10) {
-            order
-          }
-        }`,
+            title
+            second: tags(orderBy: [order_ASC], skip: 1, first: 1) {
+              order
+            }
+            penultimate: tags(orderBy: [order_DESC], skip: 1, first: 1) {
+              order
+            }
+            all: tags(orderBy: [order_ASC], first: 10) {
+              order
+            }
+          }`,
         },
         [
           {
@@ -299,19 +300,53 @@ describe('Find statement', () => {
         ],
       ],
       [
+        'Article',
+        myAdminContext,
+        {
+          where: { tags_every: { tag: { deprecated: true } } },
+          first: 5,
+          selection: `{
+            title
+            tags(first: 10) {
+              tag {
+                deprecated
+              }
+            }
+          }`,
+        },
+        [
+          {
+            title: 'My first draft article',
+            tags: [],
+          },
+          {
+            title: 'My second draft article',
+            tags: [],
+          },
+          {
+            title: 'My second published article',
+            tags: [{ tag: { deprecated: true } }],
+          },
+          {
+            title: 'My third published article in root category',
+            tags: [],
+          },
+        ],
+      ],
+      [
         'Category',
         myAdminContext,
         {
           where: { parent: null },
           first: 1,
           selection: `{
-          title
-          childCount
-          children(first: 10) {
-            parent { title }
-            title 
-          }
-        }`,
+            title
+            childCount
+            children(first: 10) {
+              parent { title }
+              title 
+            }
+          }`,
         },
         [
           {
@@ -343,20 +378,20 @@ describe('Find statement', () => {
           },
           first: 1,
           selection: `{
-          moderation
-          articleTag {
-            article { _id },
-            tag { id },
-          },
-        }`,
+            moderation
+            articleTag {
+              article { _id },
+              tag { id },
+            },
+          }`,
         },
         [],
       ],
     ] satisfies ReadonlyArray<
       [Node['name'], MyContext, FindManyQueryArgs, NodeSelectedValue[]]
     >
-  ).forEach(([nodeName, context, args, expectedResult]) => {
-    it(`generates statements for ${nodeName}`, async ({
+  ).forEach(([nodeName, context, args, expectedResult], index) => {
+    it(`#${index}: generates statements for ${nodeName}`, async ({
       assert: { snapshot },
     }) => {
       executedStatements.length = 0;
@@ -366,7 +401,7 @@ describe('Find statement', () => {
         expectedResult,
       );
 
-      snapshot(executedStatements);
+      snapshot(executedStatements.map((sql) => sql.split(EOL)));
     });
   });
 });

@@ -108,7 +108,7 @@ export function createMyGP<
       new MariaDBConnector(
         gp,
         {
-          version: '10.11',
+          version: '11.4',
 
           schema: {
             name: `tests_${schemaName}`,

@@ -19,14 +19,14 @@ import {
   InvalidRequestContextError,
   MutationContext,
   Node,
-  NodeChangeAggregation,
   OperationContext,
   catchConnectorWorkflowError,
   createAPI,
   createContextBoundAPI,
   type API,
   type ContextBoundAPI,
-  type NodeChangeAggregationConfig,
+  type MutationContextChanges,
+  type MutationContextChangesConfig,
   type NodeConfig,
   type NodeName,
   type Operation,
@@ -64,7 +64,7 @@ export type RequestContextAssertion<
 ) => asserts maybeRequestContext is TRequestContext;
 
 export type EventDataByName<TRequestContext extends object = any> = {
-  'node-changes': NodeChangeAggregation<TRequestContext>;
+  'node-changes': MutationContextChanges<TRequestContext>;
 };
 
 export type ConnectorConfig<
@@ -182,7 +182,7 @@ export interface GraphQLPlatformConfig<
    * @default undefined (= Infinity)
    */
   maxNodeChanges?: utils.Thunkable<
-    NodeChangeAggregationConfig | NodeChangeAggregationConfig['maxSize'],
+    MutationContextChangesConfig | MutationContextChangesConfig['maxSize'],
     [TRequestContext]
   >;
 
@@ -223,7 +223,7 @@ export class GraphQLPlatform<
   ) => asserts maybeRequestContext is TRequestContext;
 
   public readonly maxNodeChanges?: utils.Thunkable<
-    NodeChangeAggregationConfig | NodeChangeAggregationConfig['maxSize'],
+    MutationContextChangesConfig | MutationContextChangesConfig['maxSize'],
     [TRequestContext]
   >;
 
@@ -406,7 +406,9 @@ export class GraphQLPlatform<
         config.broker,
         this,
         utils.addPath(configPath, 'broker'),
-      ) || new InMemoryBroker(this)) as any;
+      ) ||
+        this.#connector?.broker ||
+        new InMemoryBroker(this)) as any;
     }
 
     // on

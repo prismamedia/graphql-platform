@@ -1,5 +1,5 @@
+import * as utils from '@prismamedia/graphql-platform-utils';
 import type * as graphql from 'graphql';
-import type { Arrayable } from 'type-fest';
 import type { NodeSelectedValue, UniqueConstraint } from '../../../node.js';
 import type { Dependency } from '../../change.js';
 import type { NodeFilterInputValue } from '../../type.js';
@@ -79,5 +79,5 @@ export abstract class AbstractBooleanFilter {
     return false;
   }
 
-  public abstract get dependency(): Arrayable<Dependency | undefined>;
+  public abstract get dependency(): utils.Arrayable<Dependency | undefined>;
 }
