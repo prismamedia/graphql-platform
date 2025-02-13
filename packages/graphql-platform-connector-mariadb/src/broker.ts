@@ -1,4 +1,7 @@
-import type { EventListener } from '@prismamedia/async-event-emitter';
+import {
+  AsyncEventEmitter,
+  type EventListener,
+} from '@prismamedia/async-event-emitter';
 import * as core from '@prismamedia/graphql-platform';
 import * as utils from '@prismamedia/graphql-platform-utils';
 import type * as mariadb from 'mariadb';
@@ -55,7 +58,14 @@ export interface MariaDBBrokerOptions<TRequestContext extends object = any> {
   unserializeRequestContext?: (requestContext: JsonObject) => TRequestContext;
 }
 
+export type MariaDBBrokerEvents = {
+  subscription: MariaDBSubscription;
+  unsubscription: MariaDBSubscription;
+  idle: undefined;
+};
+
 export class MariaDBBroker<TRequestContext extends object = any>
+  extends AsyncEventEmitter<MariaDBBrokerEvents>
   implements core.BrokerInterface
 {
   public readonly requestsTableName: string;
@@ -74,6 +84,8 @@ export class MariaDBBroker<TRequestContext extends object = any>
     public readonly connector: MariaDBConnector<TRequestContext>,
     public readonly options?: MariaDBBrokerOptions<TRequestContext>,
   ) {
+    super();
+
     this.requestsTableName = options?.requestsTable ?? '_gp_requests';
     this.changesByRequestTableName =
       options?.changesByRequestTable ?? '_gp_changes_by_request';
@@ -180,6 +192,7 @@ export class MariaDBBroker<TRequestContext extends object = any>
   ): Promise<core.NodeChangeSubscriptionInterface> {
     const queue = new MariaDBSubscription(this, subscription);
     this.#subscriptions.set(subscription, queue);
+    await this.emit('subscription', queue);
 
     return queue;
   }
@@ -197,7 +210,16 @@ export class MariaDBBroker<TRequestContext extends object = any>
     await this.#subscriptions.get(subscription)?.waitForIdle();
   }
 
-  public unsubscribe(subscription: core.ChangesSubscriptionStream): void {
-    this.#subscriptions.delete(subscription);
+  public async unsubscribe(
+    subscription: core.ChangesSubscriptionStream,
+  ): Promise<void> {
+    const queue = this.#subscriptions.get(subscription);
+    if (queue) {
+      this.#subscriptions.delete(subscription);
+      await Promise.all([
+        this.emit('unsubscription', queue),
+        !this.#subscriptions.size && this.emit('idle', undefined),
+      ]);
+    }
   }
 }

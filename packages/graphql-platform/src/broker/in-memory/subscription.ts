@@ -37,7 +37,7 @@ export class InMemorySubscription
   public async [Symbol.asyncDispose](): Promise<void> {
     this.off();
     this.#queue.clear();
-    this.broker.unsubscribe(this.subscription);
+    await this.broker.unsubscribe(this.subscription);
   }
 
   public async enqueue(

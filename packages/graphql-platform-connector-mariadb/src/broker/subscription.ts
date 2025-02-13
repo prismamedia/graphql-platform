@@ -35,7 +35,7 @@ export class MariaDBSubscription
 
   public async [Symbol.asyncDispose](): Promise<void> {
     this.off();
-    this.broker.unsubscribe(this.subscription);
+    await this.broker.unsubscribe(this.subscription);
   }
 
   public async *[Symbol.asyncIterator](): AsyncIterator<
