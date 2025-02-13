@@ -33,7 +33,7 @@ export class MutationContextChanges<TRequestContext extends object = any>
     MutationContextChangesByNode<TRequestContext>
   >;
 
-  public at: Date = new Date();
+  public committedAt?: Date;
 
   public readonly maxSize?: number;
   public readonly onMaxSizeReached: 'error' | 'ignore';
@@ -108,7 +108,7 @@ export class MutationContextChanges<TRequestContext extends object = any>
 
   public commit(at: Date = new Date()): void {
     this.changesByNode.forEach((changes) => changes.commit(at));
-    this.at = at;
+    this.committedAt = at;
   }
 
   public get size(): number {

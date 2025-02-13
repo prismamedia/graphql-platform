@@ -2,7 +2,6 @@ import {
   ChangesSubscriptionDeletion,
   type ChangesSubscriptionChange,
   type ChangesSubscriptionStream,
-  type InMemoryBroker,
 } from '@prismamedia/graphql-platform';
 import {
   ArticleStatus,
@@ -14,15 +13,16 @@ import { afterEach, beforeEach, describe, it } from 'node:test';
 import { createMyGP } from './__tests__/config.js';
 
 describe('Subscription', () => {
-  const gp = createMyGP<InMemoryBroker, any>(`connector_mariadb_subscription`);
+  const gp = createMyGP(`connector_mariadb_subscription`);
+
+  const Article = gp.getNodeByName('Article');
+  const Category = gp.getNodeByName('Category');
+  const Tag = gp.getNodeByName('Tag');
+
   let subscription: ChangesSubscriptionStream;
 
   beforeEach(async () => {
     await gp.connector.setup();
-
-    const Article = gp.getNodeByName('Article');
-    const Category = gp.getNodeByName('Category');
-    const Tag = gp.getNodeByName('Tag');
 
     subscription = await Article.api.subscribeToChanges(myAdminContext, {
       where: {

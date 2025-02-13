@@ -171,7 +171,7 @@ describe('Filter', () => {
 
       describe('Article', () => {
         it('The updated "slug" changes nothing', () => {
-          const update = NodeUpdate.createFromPartial(
+          const update = new NodeUpdate(
             Article,
             {},
             {
@@ -195,7 +195,7 @@ describe('Filter', () => {
 
         it('The updated "title" changes the root', () => {
           {
-            const update = NodeUpdate.createFromPartial(
+            const update = new NodeUpdate(
               Article,
               {},
               {
@@ -218,7 +218,7 @@ describe('Filter', () => {
           }
 
           {
-            const update = NodeUpdate.createFromPartial(
+            const update = new NodeUpdate(
               Article,
               {},
               {
@@ -249,7 +249,7 @@ describe('Filter', () => {
         });
 
         it('The updated "title" changes nothing if there is no "createdBy"', () => {
-          const update = NodeUpdate.createFromPartial(
+          const update = new NodeUpdate(
             Article,
             {},
             {
@@ -272,7 +272,7 @@ describe('Filter', () => {
         });
 
         it('The updated "title" changes the graph if there is a "createdBy"', () => {
-          const update = NodeUpdate.createFromPartial(
+          const update = new NodeUpdate(
             Article,
             {},
             {
@@ -300,7 +300,7 @@ describe('Filter', () => {
         });
 
         it('The updated "title" changes nothing if there is no "updatedBy"', () => {
-          const update = NodeUpdate.createFromPartial(
+          const update = new NodeUpdate(
             Article,
             {},
             {
@@ -323,7 +323,7 @@ describe('Filter', () => {
         });
 
         it('The updated "title" changes the graph if there is an "updatedBy"', () => {
-          const update = NodeUpdate.createFromPartial(
+          const update = new NodeUpdate(
             Article,
             {},
             {
@@ -353,7 +353,7 @@ describe('Filter', () => {
 
       describe('ArticleExtension', () => {
         it('The creation may change some document(s)', () => {
-          const creation = NodeCreation.createFromPartial(
+          const creation = new NodeCreation(
             ArticleExtension,
             {},
             { article: { _id: 4 }, source: null },
@@ -366,7 +366,7 @@ describe('Filter', () => {
         });
 
         it('The deletion may change some document(s)', () => {
-          const deletion = NodeDeletion.createFromPartial(
+          const deletion = new NodeDeletion(
             ArticleExtension,
             {},
             { article: { _id: 5 }, source: null },
@@ -379,7 +379,7 @@ describe('Filter', () => {
         });
 
         it('The updated "source" does not change any document', () => {
-          const update = NodeUpdate.createFromPartial(
+          const update = new NodeUpdate(
             ArticleExtension,
             {},
             { article: { _id: 6 }, source: null },
@@ -394,7 +394,7 @@ describe('Filter', () => {
 
       describe('UserProfile', () => {
         it('The creation may change some document(s)', () => {
-          const creation = NodeCreation.createFromPartial(
+          const creation = new NodeCreation(
             UserProfile,
             {},
             {
@@ -412,7 +412,7 @@ describe('Filter', () => {
         });
 
         it('The deletion may change some document(s)', () => {
-          const deletion = NodeDeletion.createFromPartial(
+          const deletion = new NodeDeletion(
             UserProfile,
             {},
             {
@@ -430,7 +430,7 @@ describe('Filter', () => {
         });
 
         it('The updated "birthday" does not change any document', () => {
-          const update = NodeUpdate.createFromPartial(
+          const update = new NodeUpdate(
             UserProfile,
             {},
             { user: { id: '8e3587e8-2e4e-46a4-a6e0-27f08aebb215' } },
@@ -443,7 +443,7 @@ describe('Filter', () => {
         });
 
         it('The updated "facebookId" may change some document(s)', () => {
-          const update = NodeUpdate.createFromPartial(
+          const update = new NodeUpdate(
             UserProfile,
             {},
             {

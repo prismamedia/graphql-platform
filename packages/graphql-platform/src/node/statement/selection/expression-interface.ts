@@ -1,6 +1,6 @@
 import type * as utils from '@prismamedia/graphql-platform-utils';
 import type * as graphql from 'graphql';
-import type { Promisable } from 'type-fest';
+import type { JsonValue, Promisable } from 'type-fest';
 import type { Dependency } from '../../change.js';
 import type { OperationContext } from '../../operation.js';
 
@@ -31,4 +31,8 @@ export interface SelectionExpressionInterface<TSource = any, TValue = TSource> {
   pickValue(superSetOfValue: TValue, path?: utils.Path): TValue;
 
   areValuesEqual(a: TValue, b: TValue): boolean;
+
+  serialize(value: TValue, path: utils.Path): JsonValue;
+
+  unserialize(value: JsonValue | undefined, path: utils.Path): TValue;
 }

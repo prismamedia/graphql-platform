@@ -76,10 +76,12 @@ describe('Change', () => {
     const ArticleTag = gp.getNodeByName('ArticleTag');
 
     assert.throws(() => new NodeCreation(Article, myContext, {}), {
-      message: /^\/Article - 2 errors:/,
+      message:
+        /^\/Article\/id - Expects a non-undefined "UUIDv4", got: undefined/,
     });
     assert.throws(() => new NodeCreation(Tag, myContext, {}), {
-      message: /^\/Tag - 2 errors:/,
+      message:
+        /^\/Tag\/id - Expects a non-undefined "UnsignedInt", got: undefined/,
     });
     assert.throws(() => new NodeCreation(ArticleTag, myContext, {}), {
       message: /^\/ArticleTag - 3 errors:/,

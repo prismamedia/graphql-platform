@@ -1,6 +1,7 @@
 import * as utils from '@prismamedia/graphql-platform-utils';
 import * as graphql from 'graphql';
 import assert from 'node:assert';
+import type { JsonValue } from 'type-fest';
 import type { Component, Leaf, LeafValue } from '../../../../definition.js';
 import type { OperationContext } from '../../../../operation.js';
 import type { SelectionExpressionInterface } from '../../expression-interface.js';
@@ -88,5 +89,16 @@ export class LeafSelection<TSource extends LeafValue = any, TValue = TSource>
 
   public areValuesEqual(a: TValue, b: TValue): boolean {
     return this.leaf.areValuesEqual(a as any, b as any);
+  }
+
+  public serialize(value: TValue, _path: utils.Path): JsonValue {
+    return value == null ? null : (this.leaf.type.serialize(value) as any);
+  }
+
+  public unserialize(value: JsonValue | undefined, path: utils.Path): TValue {
+    return this.leaf.parseValue(
+      value == null ? null : this.leaf.type.parseValue(value),
+      path,
+    ) as TValue;
   }
 }

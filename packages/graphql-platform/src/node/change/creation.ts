@@ -1,34 +1,12 @@
 import * as utils from '@prismamedia/graphql-platform-utils';
 import assert from 'node:assert';
-import type { Component, ComponentValue, Node, NodeValue } from '../../node.js';
+import type { Node, NodeValue } from '../../node.js';
 import { AbstractNodeChange } from '../abstract-change.js';
 import type { NodeChange } from '../change.js';
 
 export class NodeCreation<
   TRequestContext extends object = any,
 > extends AbstractNodeChange<TRequestContext> {
-  public static createFromPartial<TRequestContext extends object>(
-    node: Node<TRequestContext>,
-    requestContext: TRequestContext,
-    partialNewValue: Record<Component['name'], ComponentValue>,
-    at?: Date,
-  ) {
-    return new this(
-      node,
-      requestContext,
-      {
-        ...Object.fromEntries(
-          Array.from(node.componentSet, (component) => [
-            component.name,
-            component.isNullable() ? null : undefined,
-          ]),
-        ),
-        ...partialNewValue,
-      },
-      at,
-    );
-  }
-
   public override readonly kind = utils.MutationType.CREATION;
 
   public readonly oldValue: undefined;
@@ -37,12 +15,36 @@ export class NodeCreation<
   public constructor(
     node: Node<TRequestContext>,
     requestContext: TRequestContext,
-    maybeNewValue: unknown,
-    at?: Date,
+    rawNewValue: unknown,
+    executedAt?: Date,
+    committedAt?: Date,
   ) {
-    const newValue = Object.freeze(node.selection.parseSource(maybeNewValue));
+    utils.assertPlainObject(rawNewValue);
 
-    super(node, node.mainIdentifier.parseValue(newValue), requestContext, at);
+    const newValue = Object.freeze(
+      node.selection.parseSource(
+        Object.fromEntries(
+          node.componentSet.values().map((component) => {
+            const rawNewComponentValue = rawNewValue[component.name];
+
+            return [
+              component.name,
+              rawNewComponentValue === undefined && component.isNullable()
+                ? null
+                : rawNewComponentValue,
+            ];
+          }),
+        ),
+      ),
+    );
+
+    super(
+      node,
+      node.mainIdentifier.parseValue(newValue),
+      requestContext,
+      executedAt,
+      committedAt,
+    );
 
     this.newValue = newValue;
   }
@@ -62,7 +64,7 @@ export class NodeCreation<
           other.node,
           other.requestContext,
           other.newValue,
-          this.at,
+          other.executedAt,
         );
 
       case utils.MutationType.DELETION:

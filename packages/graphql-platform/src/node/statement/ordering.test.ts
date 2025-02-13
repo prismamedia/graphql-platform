@@ -74,7 +74,7 @@ describe('Ordering', () => {
 
       describe('Article', () => {
         it('The updated "slug" changes nothing', () => {
-          const update = NodeUpdate.createFromPartial(
+          const update = new NodeUpdate(
             Article,
             {},
             {
@@ -99,7 +99,7 @@ describe('Ordering', () => {
 
       describe('ArticleTag', () => {
         it('The creation changes the root', () => {
-          const creation = NodeCreation.createFromPartial(
+          const creation = new NodeCreation(
             ArticleTag,
             {},
             {
@@ -116,7 +116,7 @@ describe('Ordering', () => {
         });
 
         it('The deletion changes the root', () => {
-          const deletion = NodeDeletion.createFromPartial(
+          const deletion = new NodeDeletion(
             ArticleTag,
             {},
             {
@@ -132,7 +132,7 @@ describe('Ordering', () => {
         });
 
         it('The updated "order" changes nothing', () => {
-          const update = NodeUpdate.createFromPartial(
+          const update = new NodeUpdate(
             ArticleTag,
             {},
             {

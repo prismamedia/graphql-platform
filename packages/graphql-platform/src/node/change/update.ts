@@ -13,32 +13,6 @@ export type ComponentUpdate<TValue extends ComponentValue = any> = {
 export class NodeUpdate<
   TRequestContext extends object = any,
 > extends AbstractNodeChange<TRequestContext> {
-  public static createFromPartial<TRequestContext extends object>(
-    node: Node<TRequestContext>,
-    requestContext: TRequestContext,
-    partialOldValue: Record<Component['name'], ComponentValue>,
-    partialNewValue: Record<Component['name'], ComponentValue>,
-    at?: Date,
-  ) {
-    const oldValue = {
-      ...Object.fromEntries(
-        Array.from(node.componentSet, (component) => [
-          component.name,
-          component.isNullable() ? null : undefined,
-        ]),
-      ),
-      ...partialOldValue,
-    };
-
-    return new this(
-      node,
-      requestContext,
-      oldValue,
-      { ...oldValue, ...partialNewValue },
-      at,
-    );
-  }
-
   public override readonly kind = utils.MutationType.UPDATE;
 
   public readonly oldValue: Readonly<NodeValue>;
@@ -52,14 +26,57 @@ export class NodeUpdate<
   public constructor(
     node: Node<TRequestContext>,
     requestContext: TRequestContext,
-    maybeOldValue: unknown,
-    maybeNewValue: unknown,
-    at?: Date,
+    rawOldValue: unknown,
+    rawNewValue: unknown,
+    executedAt?: Date,
+    committedAt?: Date,
   ) {
-    const oldValue = Object.freeze(node.selection.parseSource(maybeOldValue));
-    const newValue = Object.freeze(node.selection.parseSource(maybeNewValue));
+    utils.assertPlainObject(rawOldValue);
+    utils.assertNillablePlainObject(rawNewValue);
 
-    super(node, node.mainIdentifier.parseValue(newValue), requestContext, at);
+    const oldValue = Object.freeze(
+      node.selection.parseSource(
+        Object.fromEntries(
+          node.componentSet.values().map((component) => {
+            const rawOldComponentValue = rawOldValue[component.name];
+
+            return [
+              component.name,
+              rawOldComponentValue === undefined && component.isNullable()
+                ? null
+                : rawOldComponentValue,
+            ];
+          }),
+        ),
+      ),
+    );
+
+    const newValue = rawNewValue
+      ? Object.freeze(
+          node.selection.parseSource(
+            Object.fromEntries(
+              node.componentSet.values().map((component) => {
+                const rawNewComponentValue = rawNewValue[component.name];
+
+                return [
+                  component.name,
+                  rawNewComponentValue === undefined
+                    ? oldValue[component.name]
+                    : rawNewComponentValue,
+                ];
+              }),
+            ),
+          ),
+        )
+      : oldValue;
+
+    super(
+      node,
+      node.mainIdentifier.parseValue(newValue),
+      requestContext,
+      executedAt,
+      committedAt,
+    );
 
     this.oldValue = oldValue;
     this.newValue = newValue;
@@ -129,7 +146,7 @@ export class NodeUpdate<
           other.requestContext,
           this.oldValue,
           other.newValue,
-          other.at,
+          other.executedAt,
         );
 
         return aggregate.isEmpty() ? undefined : aggregate;
@@ -139,7 +156,7 @@ export class NodeUpdate<
           other.node,
           other.requestContext,
           this.oldValue,
-          other.at,
+          other.executedAt,
         );
     }
   }

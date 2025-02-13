@@ -10,7 +10,7 @@ import assert from 'node:assert';
 import { hrtime } from 'node:process';
 import * as semver from 'semver';
 import type { Except } from 'type-fest';
-import { Broker } from './broker.js';
+import { MariaDBBroker, type MariaDBBrokerOptions } from './broker.js';
 import { trace } from './instrumentation.js';
 import {
   Schema,
@@ -56,20 +56,22 @@ export type MariaDBConnectorEventDataByName = {
   };
 };
 
-export interface MariaDBConnectorConfig {
+export interface MariaDBConnectorConfig<TRequestContext extends object = any> {
   charset?: string;
   collation?: string;
   version?: string;
   schema?: SchemaConfig;
   pool?: Except<mariadb.PoolConfig, 'logger'>;
   on?: EventConfigByName<MariaDBConnectorEventDataByName>;
-  broker?: utils.OptionalFlag;
+  broker?:
+    | MariaDBBrokerOptions<TRequestContext>
+    | MariaDBBrokerOptions['enabled'];
 }
 
 /**
  * @see https://mariadb.com/kb/en/nodejs-connector/
  */
-export class MariaDBConnector
+export class MariaDBConnector<TRequestContext extends object = any>
   extends AsyncEventEmitter<MariaDBConnectorEventDataByName>
   implements core.ConnectorInterface
 {
@@ -121,8 +123,8 @@ export class MariaDBConnector
   >();
 
   public constructor(
-    public readonly gp: core.GraphQLPlatform,
-    public readonly config: MariaDBConnectorConfig,
+    public readonly gp: core.GraphQLPlatform<TRequestContext>,
+    public readonly config: MariaDBConnectorConfig<TRequestContext>,
     public readonly configPath: utils.Path = utils.addPath(
       gp.configPath,
       'connector',
@@ -148,13 +150,22 @@ export class MariaDBConnector
   }
 
   @MGetter
-  public get broker(): Broker | undefined {
+  public get broker(): MariaDBBroker | undefined {
+    const config: MariaDBBrokerOptions | undefined =
+      this.config.broker == null
+        ? undefined
+        : typeof this.config.broker === 'boolean'
+          ? { enabled: this.config.broker }
+          : { enabled: true, ...this.config.broker };
+
+    const configPath = utils.addPath(this.configPath, 'broker');
+
     return utils.getOptionalFlag(
-      this.config.broker,
+      config?.enabled,
       false,
-      utils.addPath(this.configPath, 'broker'),
+      utils.addPath(configPath, 'enabled'),
     )
-      ? new Broker(this)
+      ? new MariaDBBroker(this, config)
       : undefined;
   }
 

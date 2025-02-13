@@ -1,5 +1,4 @@
 import type { EventListener } from '@prismamedia/async-event-emitter';
-import assert from 'node:assert';
 import type { BrokerInterface } from '../broker-interface.js';
 import type { GraphQLPlatform } from '../index.js';
 import type {
@@ -14,11 +13,12 @@ import {
 export * from './in-memory/subscription.js';
 
 export class InMemoryBroker implements BrokerInterface {
-  readonly #subscriptions: Map<ChangesSubscriptionStream, InMemorySubscription>;
+  readonly #subscriptions = new Map<
+    ChangesSubscriptionStream,
+    InMemorySubscription
+  >();
 
-  public constructor(public readonly gp: GraphQLPlatform) {
-    this.#subscriptions = new Map();
-  }
+  public constructor(public readonly gp: GraphQLPlatform) {}
 
   public async publish(changes: MutationContextChanges): Promise<void> {
     await Promise.all(
@@ -41,10 +41,7 @@ export class InMemoryBroker implements BrokerInterface {
     subscription: ChangesSubscriptionStream,
     listener: EventListener<InMemorySubscriptionEvents, 'idle'>,
   ): void {
-    const queue = this.#subscriptions.get(subscription);
-    assert(queue, `The subscription is not registered`);
-
-    queue.onIdle(listener);
+    this.#subscriptions.get(subscription)?.onIdle(listener);
   }
 
   public async waitForIdle(

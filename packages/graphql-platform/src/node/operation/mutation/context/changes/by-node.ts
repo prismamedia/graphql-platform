@@ -59,7 +59,7 @@ export class MutationContextChangesByNode<TRequestContext extends object = any>
       }
 
       this[change.kind].set(change.stringifiedId, change as any);
-    } else if (previousChange.at <= change.at) {
+    } else if (previousChange.executedAt <= change.executedAt) {
       this[previousChange.kind].delete(previousChange.stringifiedId);
 
       const aggregate = previousChange.mergeWith(change);
@@ -81,7 +81,7 @@ export class MutationContextChangesByNode<TRequestContext extends object = any>
 
   public commit(at: Date = new Date()): void {
     utils.mutationTypes.forEach((type) =>
-      this[type].forEach((change) => (change.at = at)),
+      this[type].forEach((change) => (change.committedAt = at)),
     );
   }
 

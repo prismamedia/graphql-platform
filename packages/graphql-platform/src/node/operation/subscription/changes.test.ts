@@ -97,7 +97,7 @@ describe('ChangesSubscription', () => {
       const myRequestContext: MyContext = {};
 
       [
-        NodeDeletion.createFromPartial(Article, myRequestContext, {
+        new NodeDeletion(Article, myRequestContext, {
           id: '271f9c10-327f-4be3-8b3d-97bb78c0f4a6',
           _id: 1,
           status: ArticleStatus.DRAFT,
@@ -108,7 +108,7 @@ describe('ChangesSubscription', () => {
           views: 0,
           score: 1,
         }),
-        NodeCreation.createFromPartial(Article, myRequestContext, {
+        new NodeCreation(Article, myRequestContext, {
           id: '271f9c10-327f-4be3-8b3d-97bb78c0f4a6',
           _id: 1,
           status: ArticleStatus.DRAFT,
@@ -119,7 +119,7 @@ describe('ChangesSubscription', () => {
           views: 0,
           score: 1,
         }),
-        NodeUpdate.createFromPartial(
+        new NodeUpdate(
           Article,
           myRequestContext,
           {
@@ -135,7 +135,7 @@ describe('ChangesSubscription', () => {
           },
           { status: ArticleStatus.DELETED },
         ),
-        NodeUpdate.createFromPartial(
+        new NodeUpdate(
           Article,
           myRequestContext,
           {
@@ -163,7 +163,7 @@ describe('ChangesSubscription', () => {
       it('handles filtered-in deletion', () => {
         const dependentGraph =
           subscription.dependencyGraph.createDependentGraph([
-            NodeDeletion.createFromPartial(Article, myRequestContext, {
+            new NodeDeletion(Article, myRequestContext, {
               id: '271f9c10-327f-4be3-8b3d-97bb78c0f4a6',
               _id: 1,
               status: ArticleStatus.PUBLISHED,
@@ -182,7 +182,7 @@ describe('ChangesSubscription', () => {
       it('handles filtered-in creation', () => {
         const dependentGraph =
           subscription.dependencyGraph.createDependentGraph([
-            NodeCreation.createFromPartial(Article, myRequestContext, {
+            new NodeCreation(Article, myRequestContext, {
               id: '271f9c10-327f-4be3-8b3d-97bb78c0f4a6',
               _id: 1,
               status: ArticleStatus.PUBLISHED,
@@ -247,7 +247,7 @@ describe('ChangesSubscription', () => {
 
         const dependentGraph =
           subscription.dependencyGraph.createDependentGraph([
-            NodeCreation.createFromPartial(Article, myRequestContext, {
+            new NodeCreation(Article, myRequestContext, {
               id: '271f9c10-327f-4be3-8b3d-97bb78c0f4a6',
               _id: 1,
               status: ArticleStatus.PUBLISHED,
@@ -268,7 +268,7 @@ describe('ChangesSubscription', () => {
 
         const dependentGraph =
           subscription.dependencyGraph.createDependentGraph([
-            NodeCreation.createFromPartial(Article, myRequestContext, {
+            new NodeCreation(Article, myRequestContext, {
               id: '271f9c10-327f-4be3-8b3d-97bb78c0f4a6',
               _id: 1,
               status: ArticleStatus.DRAFT,
@@ -356,7 +356,7 @@ describe('ChangesSubscription', () => {
       (
         [
           [
-            NodeCreation.createFromPartial(User, myRequestContext, {
+            new NodeCreation(User, myRequestContext, {
               id: '20c816d1-d390-45a1-9711-83697bc97766',
               username: 'test00',
               createdAt: new Date(),
@@ -364,7 +364,7 @@ describe('ChangesSubscription', () => {
             }),
           ],
           [
-            NodeDeletion.createFromPartial(User, myRequestContext, {
+            new NodeDeletion(User, myRequestContext, {
               id: '1a04ef91-104e-457e-829c-f4561f77f1e3',
               username: 'test01',
               createdAt: new Date(),
@@ -372,12 +372,12 @@ describe('ChangesSubscription', () => {
             }),
           ],
           [
-            NodeCreation.createFromPartial(ArticleTag, myRequestContext, {
+            new NodeCreation(ArticleTag, myRequestContext, {
               article: { _id: 5 },
               order: 1,
               tag: { id: '75b1356c-6e88-4f94-9e84-1cd58c2afc23' },
             }),
-            NodeUpdate.createFromPartial(
+            new NodeUpdate(
               Article,
               myRequestContext,
               {
@@ -395,7 +395,7 @@ describe('ChangesSubscription', () => {
             ),
           ],
           [
-            NodeUpdate.createFromPartial(
+            new NodeUpdate(
               UserProfile,
               myRequestContext,
               {
@@ -422,12 +422,12 @@ describe('ChangesSubscription', () => {
       it('discards the ArticleTag as the Article, filtered-in, is already visited', () => {
         const dependentGraph =
           subscription.dependencyGraph.createDependentGraph([
-            NodeCreation.createFromPartial(ArticleTag, myRequestContext, {
+            new NodeCreation(ArticleTag, myRequestContext, {
               article: { _id: 5 },
               order: 1,
               tag: { id: '75b1356c-6e88-4f94-9e84-1cd58c2afc23' },
             }),
-            NodeCreation.createFromPartial(Article, myRequestContext, {
+            new NodeCreation(Article, myRequestContext, {
               id: '74a744c1-13d5-47aa-9006-52a05b72fa84',
               _id: 5,
               status: ArticleStatus.PUBLISHED,
@@ -451,17 +451,17 @@ describe('ChangesSubscription', () => {
 
         const dependentGraph =
           subscription.dependencyGraph.createDependentGraph([
-            NodeCreation.createFromPartial(ArticleTag, myRequestContext, {
+            new NodeCreation(ArticleTag, myRequestContext, {
               article: { _id: 5 },
               order: 1,
               tag: { id: '75b1356c-6e88-4f94-9e84-1cd58c2afc23' },
             }),
-            NodeCreation.createFromPartial(ArticleTag, myRequestContext, {
+            new NodeCreation(ArticleTag, myRequestContext, {
               article: { _id: 5 },
               order: 2,
               tag: { id: 'df012a04-30aa-41e9-b929-6c73e6679ff4' },
             }),
-            NodeCreation.createFromPartial(Article, myRequestContext, {
+            new NodeCreation(Article, myRequestContext, {
               id: '74a744c1-13d5-47aa-9006-52a05b72fa84',
               _id: 5,
               status: ArticleStatus.DRAFT,
@@ -472,7 +472,7 @@ describe('ChangesSubscription', () => {
               views: 0,
               score: 1,
             }),
-            NodeCreation.createFromPartial(Tag, myRequestContext, {
+            new NodeCreation(Tag, myRequestContext, {
               id: '3236f0ba-538a-43fa-a449-97d6cf244721',
               deprecated: true,
               title: 'My new tag',
@@ -481,7 +481,7 @@ describe('ChangesSubscription', () => {
               updatedAt: new Date(),
             }),
             // Only this one should remain
-            NodeCreation.createFromPartial(ArticleTag, myRequestContext, {
+            new NodeCreation(ArticleTag, myRequestContext, {
               article: { _id: 10 },
               order: 1,
               tag: { id: 'df012a04-30aa-41e9-b929-6c73e6679ff4' },
@@ -509,7 +509,7 @@ describe('ChangesSubscription', () => {
       it('handles this Category "update"', () => {
         const dependentGraph =
           subscription.dependencyGraph.createDependentGraph([
-            NodeUpdate.createFromPartial(
+            new NodeUpdate(
               Category,
               myRequestContext,
               {
@@ -536,7 +536,7 @@ describe('ChangesSubscription', () => {
       it('handles this User "update"', () => {
         const dependentGraph =
           subscription.dependencyGraph.createDependentGraph([
-            NodeUpdate.createFromPartial(
+            new NodeUpdate(
               User,
               myRequestContext,
               {
@@ -577,7 +577,7 @@ describe('ChangesSubscription', () => {
       it('handles this User "update"', () => {
         const dependentGraph =
           subscription.dependencyGraph.createDependentGraph([
-            NodeUpdate.createFromPartial(
+            new NodeUpdate(
               User,
               myRequestContext,
               {
@@ -609,7 +609,7 @@ describe('ChangesSubscription', () => {
       it('handles this ArticleTag "creation"', () => {
         const dependentGraph =
           subscription.dependencyGraph.createDependentGraph([
-            NodeCreation.createFromPartial(ArticleTag, myRequestContext, {
+            new NodeCreation(ArticleTag, myRequestContext, {
               article: { _id: 4 },
               order: 1,
               tag: { id: '75b1356c-6e88-4f94-9e84-1cd58c2afc23' },
@@ -637,7 +637,7 @@ describe('ChangesSubscription', () => {
       it('handles this ArticleTag "deletion"', () => {
         const dependentGraph =
           subscription.dependencyGraph.createDependentGraph([
-            NodeDeletion.createFromPartial(ArticleTag, myRequestContext, {
+            new NodeDeletion(ArticleTag, myRequestContext, {
               article: { _id: 5 },
               order: 1,
               tag: { id: '75b1356c-6e88-4f94-9e84-1cd58c2afc23' },
@@ -665,7 +665,7 @@ describe('ChangesSubscription', () => {
       it('handles this ArticleTag "update"', () => {
         const dependentGraph =
           subscription.dependencyGraph.createDependentGraph([
-            NodeUpdate.createFromPartial(
+            new NodeUpdate(
               ArticleTag,
               myRequestContext,
               {
@@ -696,7 +696,7 @@ describe('ChangesSubscription', () => {
       it('handles this UserProfile "creation"', () => {
         const dependentGraph =
           subscription.dependencyGraph.createDependentGraph([
-            NodeCreation.createFromPartial(UserProfile, myRequestContext, {
+            new NodeCreation(UserProfile, myRequestContext, {
               user: { id: '5da4ac5b-1620-4bfc-aacb-acf4011e7300' },
               birthday: null,
               facebookId: null,
@@ -730,7 +730,7 @@ describe('ChangesSubscription', () => {
       it('handles this UserProfile "deletion"', () => {
         const dependentGraph =
           subscription.dependencyGraph.createDependentGraph([
-            NodeDeletion.createFromPartial(UserProfile, myRequestContext, {
+            new NodeDeletion(UserProfile, myRequestContext, {
               user: { id: '16f4dbff-b1e6-4c0b-b192-a0f4a4d51ec2' },
               birthday: null,
               facebookId: null,
@@ -764,7 +764,7 @@ describe('ChangesSubscription', () => {
       it('handles this UserProfile "update"', () => {
         const dependentGraph =
           subscription.dependencyGraph.createDependentGraph([
-            NodeUpdate.createFromPartial(
+            new NodeUpdate(
               UserProfile,
               myRequestContext,
               {

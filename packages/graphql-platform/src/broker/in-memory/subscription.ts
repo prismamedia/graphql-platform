@@ -21,8 +21,8 @@ export class InMemorySubscription
   extends AsyncEventEmitter<InMemorySubscriptionEvents>
   implements NodeChangeSubscriptionInterface
 {
-  readonly #queue: Denque<DependentGraph>;
   readonly #signal: AbortSignal;
+  readonly #queue: Denque<DependentGraph>;
 
   public constructor(
     public readonly broker: InMemoryBroker,
@@ -30,8 +30,8 @@ export class InMemorySubscription
   ) {
     super();
 
-    this.#queue = new Denque();
     this.#signal = subscription.signal;
+    this.#queue = new Denque();
   }
 
   public async [Symbol.asyncDispose](): Promise<void> {
@@ -97,8 +97,6 @@ export class InMemorySubscription
   }
 
   public async waitForIdle(): Promise<void> {
-    if (this.#queue.size()) {
-      await this.wait('idle', this.#signal);
-    }
+    this.#queue.isEmpty() || (await this.wait('idle', this.#signal));
   }
 }

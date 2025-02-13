@@ -2,6 +2,7 @@ import * as utils from '@prismamedia/graphql-platform-utils';
 import { MGetter, MMethod } from '@prismamedia/memoize';
 import * as graphql from 'graphql';
 import assert from 'node:assert';
+import type { JsonObject } from 'type-fest';
 import type { Node } from '../../node.js';
 import { DependencyGraph } from '../change/dependency.js';
 import type {
@@ -305,6 +306,48 @@ export class NodeSelection<
       ) &&
       aKeySet.size === 0 &&
       bKeySet.size === 0
+    );
+  }
+
+  public serialize(
+    value: unknown,
+    path: utils.Path = utils.addPath(undefined, this.node.toString()),
+  ): JsonObject {
+    utils.assertPlainObject(value, path);
+
+    return utils.aggregateGraphError<SelectionExpression, TSource>(
+      this.expressions,
+      (document: any, expression) => {
+        document[expression.key] = expression.serialize(
+          value[expression.key],
+          utils.addPath(path, expression.key),
+        );
+
+        return document;
+      },
+      Object.create(null),
+      { path },
+    );
+  }
+
+  public unserialize(
+    value: unknown,
+    path: utils.Path = utils.addPath(undefined, this.node.toString()),
+  ): TValue {
+    utils.assertPlainObject(value, path);
+
+    return utils.aggregateGraphError<SelectionExpression, TValue>(
+      this.expressions,
+      (document: any, expression) => {
+        document[expression.key] = expression.unserialize(
+          value[expression.key],
+          utils.addPath(path, expression.key),
+        );
+
+        return document;
+      },
+      Object.create(null),
+      { path },
     );
   }
 }

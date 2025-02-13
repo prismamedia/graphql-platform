@@ -1,6 +1,6 @@
 import * as utils from '@prismamedia/graphql-platform-utils';
 import assert from 'node:assert';
-import type { Component, ComponentValue, Node, NodeValue } from '../../node.js';
+import type { Node, NodeValue } from '../../node.js';
 import { AbstractNodeChange } from '../abstract-change.js';
 import type { NodeChange } from '../change.js';
 import { NodeUpdate } from './update.js';
@@ -8,28 +8,6 @@ import { NodeUpdate } from './update.js';
 export class NodeDeletion<
   TRequestContext extends object = any,
 > extends AbstractNodeChange<TRequestContext> {
-  public static createFromPartial<TRequestContext extends object>(
-    node: Node<TRequestContext>,
-    requestContext: TRequestContext,
-    partialOldValue: Record<Component['name'], ComponentValue>,
-    at?: Date,
-  ) {
-    return new this(
-      node,
-      requestContext,
-      {
-        ...Object.fromEntries(
-          Array.from(node.componentSet, (component) => [
-            component.name,
-            component.isNullable() ? null : undefined,
-          ]),
-        ),
-        ...partialOldValue,
-      },
-      at,
-    );
-  }
-
   public override readonly kind = utils.MutationType.DELETION;
 
   public readonly oldValue: Readonly<NodeValue>;
@@ -38,12 +16,36 @@ export class NodeDeletion<
   public constructor(
     node: Node<TRequestContext>,
     requestContext: TRequestContext,
-    maybeOldValue: unknown,
-    at?: Date,
+    rawOldValue: unknown,
+    executedAt?: Date,
+    committedAt?: Date,
   ) {
-    const oldValue = Object.freeze(node.selection.parseSource(maybeOldValue));
+    utils.assertPlainObject(rawOldValue);
 
-    super(node, node.mainIdentifier.parseValue(oldValue), requestContext, at);
+    const oldValue = Object.freeze(
+      node.selection.parseSource(
+        Object.fromEntries(
+          node.componentSet.values().map((component) => {
+            const rawOldComponentValue = rawOldValue[component.name];
+
+            return [
+              component.name,
+              rawOldComponentValue === undefined && component.isNullable()
+                ? null
+                : rawOldComponentValue,
+            ];
+          }),
+        ),
+      ),
+    );
+
+    super(
+      node,
+      node.mainIdentifier.parseValue(oldValue),
+      requestContext,
+      executedAt,
+      committedAt,
+    );
 
     this.oldValue = oldValue;
   }
@@ -60,7 +62,7 @@ export class NodeDeletion<
           other.requestContext,
           this.oldValue,
           other.newValue,
-          other.at,
+          other.executedAt,
         );
 
         return aggregate.isEmpty() ? undefined : aggregate;

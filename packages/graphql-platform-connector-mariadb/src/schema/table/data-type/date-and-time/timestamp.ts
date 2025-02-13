@@ -72,14 +72,19 @@ export class TimestampType<
         );
   }
 
-  protected override doSerialize(value: Date): string {
+  /**
+   * Transforms a `Date` into a string in the format `YYYY-MM-DD HH:MM:SS.ffffff`.
+   */
+  public format(value: Date): string {
     assert(value instanceof Date);
 
-    return escapeStringValue(
-      value
-        .toISOString()
-        .replace(/^(?<date>[^T]+)T(?<time>[^Z]+)Z$/, '$<date> $<time>'),
-    );
+    return value
+      .toISOString()
+      .replace(/^(?<date>[^T]+)T(?<time>[^Z]+)Z$/, '$<date> $<time>');
+  }
+
+  protected override doSerialize(value: Date): string {
+    return escapeStringValue(this.format(value));
   }
 
   public override isInformationValid(information: ColumnInformation): boolean {

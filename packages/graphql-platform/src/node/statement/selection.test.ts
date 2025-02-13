@@ -190,7 +190,7 @@ describe('Selection', () => {
 
       describe('Article', () => {
         it('The updated "slug" changes nothing', () => {
-          const update = NodeUpdate.createFromPartial(
+          const update = new NodeUpdate(
             Article,
             {},
             {
@@ -213,7 +213,7 @@ describe('Selection', () => {
         });
 
         it('The updated "title" changes the root', () => {
-          const update = NodeUpdate.createFromPartial(
+          const update = new NodeUpdate(
             Article,
             {},
             {
@@ -238,7 +238,7 @@ describe('Selection', () => {
         });
 
         it('The updated "title" changes the root and the graph', () => {
-          const update = NodeUpdate.createFromPartial(
+          const update = new NodeUpdate(
             Article,
             {},
             {
@@ -270,7 +270,7 @@ describe('Selection', () => {
         });
 
         it('The updated "updatedAt" changes the graph', () => {
-          const update = NodeUpdate.createFromPartial(
+          const update = new NodeUpdate(
             Article,
             {},
             {
@@ -300,7 +300,7 @@ describe('Selection', () => {
 
       describe('Category', () => {
         it('The updated "order" changes the graph', () => {
-          const update = NodeUpdate.createFromPartial(
+          const update = new NodeUpdate(
             Category,
             {},
             {
@@ -323,7 +323,7 @@ describe('Selection', () => {
         });
 
         it('The updated "parent" changes the graph', () => {
-          const update = NodeUpdate.createFromPartial(
+          const update = new NodeUpdate(
             Category,
             {},
             {
@@ -348,7 +348,7 @@ describe('Selection', () => {
 
       describe('User', () => {
         it('The updated "lastLoggedInAt" changes nothing', () => {
-          const update = NodeUpdate.createFromPartial(
+          const update = new NodeUpdate(
             User,
             {},
             {
@@ -367,7 +367,7 @@ describe('Selection', () => {
 
       describe('UserProfile', () => {
         it('The creation changes the graph', () => {
-          const creation = NodeCreation.createFromPartial(
+          const creation = new NodeCreation(
             UserProfile,
             {},
             { user: { id: '16050880-dabc-4348-bd3b-d41efe1b6057' } },
@@ -386,7 +386,7 @@ describe('Selection', () => {
         });
 
         it('The deletion changes nothing', () => {
-          const deletion = NodeDeletion.createFromPartial(
+          const deletion = new NodeDeletion(
             UserProfile,
             {},
             { user: { id: '7caf940a-058a-4ef2-a8bf-ac2d6cae3485' } },
@@ -405,7 +405,7 @@ describe('Selection', () => {
         });
 
         it('The updated "birthday" changes nothing', () => {
-          const update = NodeUpdate.createFromPartial(
+          const update = new NodeUpdate(
             UserProfile,
             {},
             { user: { id: '8e3587e8-2e4e-46a4-a6e0-27f08aebb215' } },
@@ -418,7 +418,7 @@ describe('Selection', () => {
         });
 
         it('The updated "facebookId" changes the graph', () => {
-          const update = NodeUpdate.createFromPartial(
+          const update = new NodeUpdate(
             UserProfile,
             {},
             { user: { id: '8e3587e8-2e4e-46a4-a6e0-27f08aebb215' } },
@@ -440,7 +440,7 @@ describe('Selection', () => {
 
       describe('ArticleTag', () => {
         it('The creation changes the graph', () => {
-          const creation = NodeCreation.createFromPartial(
+          const creation = new NodeCreation(
             ArticleTag,
             {},
             {
@@ -458,7 +458,7 @@ describe('Selection', () => {
         });
 
         it('The deletion changes the graph', () => {
-          const deletion = NodeDeletion.createFromPartial(
+          const deletion = new NodeDeletion(
             ArticleTag,
             {},
             {
@@ -476,7 +476,7 @@ describe('Selection', () => {
         });
 
         it('The updated "order", from 4 to 0, changes the graph', () => {
-          const update = NodeUpdate.createFromPartial(
+          const update = new NodeUpdate(
             ArticleTag,
             {},
             {
@@ -495,7 +495,7 @@ describe('Selection', () => {
         });
 
         it('The updated "order", from 4 to 5, changes nothing', () => {
-          const update = NodeUpdate.createFromPartial(
+          const update = new NodeUpdate(
             ArticleTag,
             {},
             {
@@ -516,7 +516,7 @@ describe('Selection', () => {
 
       describe('Tag', () => {
         it('The updated "deprecated", from NULL to TRUE, changes the graph', () => {
-          const update = NodeUpdate.createFromPartial(
+          const update = new NodeUpdate(
             Tag,
             {},
             {
@@ -539,7 +539,7 @@ describe('Selection', () => {
         });
 
         it('The updated "deprecated", from NULL to FALSE, changes nothing', () => {
-          const update = NodeUpdate.createFromPartial(
+          const update = new NodeUpdate(
             Tag,
             {},
             {
