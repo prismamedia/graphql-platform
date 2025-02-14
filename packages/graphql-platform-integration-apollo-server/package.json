@@ -29,8 +29,8 @@
   "devDependencies": {
     "@apollo/server": "4.11.3",
     "@opentelemetry/instrumentation-express": "0.47.0",
-    "@opentelemetry/instrumentation-http": "0.57.1",
-    "@opentelemetry/sdk-node": "0.57.1",
+    "@opentelemetry/instrumentation-http": "0.57.2",
+    "@opentelemetry/sdk-node": "0.57.2",
     "@opentelemetry/sdk-trace-node": "1.30.1",
     "@prismamedia/graphql-platform-connector-mariadb": "workspace:packages/graphql-platform-connector-mariadb",
     "@types/body-parser": "^1.19.5",
@@ -42,7 +42,7 @@
     "express": "4.21.2",
     "graphql": "16.10.0",
     "graphql-ws": "6.0.3",
-    "publint": "0.3.4",
+    "publint": "0.3.5",
     "tsx": "4.19.2",
     "typescript": "5.7.3",
     "ws": "8.18.0"

@@ -36,7 +36,7 @@ export interface MariaDBBrokerOptions<TRequestContext extends object = any> {
   /**
    * The number of seconds to keep the changes in the database.
    *
-   * @default 3600 * 24
+   * @default 3600 * 12
    */
   retention?: number;
 
@@ -91,7 +91,7 @@ export class MariaDBBroker<TRequestContext extends object = any>
       options?.changesByRequestTable ?? '_gp_changes_by_request';
 
     this.pullInterval = Math.max(1, options?.pullInterval ?? 5);
-    this.retention = Math.max(1, options?.retention ?? 3600 * 24);
+    this.retention = Math.max(1, options?.retention ?? 3600 * 12);
     this.batchSize = Math.max(1, options?.batchSize ?? 100);
   }
 
@@ -102,7 +102,8 @@ export class MariaDBBroker<TRequestContext extends object = any>
         ${escapeIdentifier('context')} JSON NOT NULL,
         ${escapeIdentifier('changes')} JSON NOT NULL,
         ${escapeIdentifier('committedAt')} ${msTimestampType.definition} NOT NULL,
-        INDEX idx_id_committedAt (${['id', 'committedAt'].map(escapeIdentifier).join()})
+        INDEX idx_id_committedAt (${['id', 'committedAt'].map(escapeIdentifier).join()}),
+        INDEX idx_committedAt (${escapeIdentifier('committedAt')})
       )`,
       `CREATE TABLE IF NOT EXISTS ${escapeIdentifier(`${this.connector.schema}.${this.changesByRequestTableName}`)} (
         ${escapeIdentifier('requestId')} BIGINT UNSIGNED NOT NULL,
@@ -113,7 +114,7 @@ export class MariaDBBroker<TRequestContext extends object = any>
         ${escapeIdentifier('newValue')} JSON NULL,
         ${escapeIdentifier('executedAt')} ${msTimestampType.definition} NOT NULL,
         ${escapeIdentifier('committedAt')} ${msTimestampType.definition} NOT NULL,
-        PRIMARY KEY (${escapeIdentifier('requestId')}, ${escapeIdentifier('id')}),
+        PRIMARY KEY (${['requestId', 'id'].map(escapeIdentifier).join()}),
         FOREIGN KEY ${escapeIdentifier(`fk_${this.changesByRequestTableName}_requestId`)} (${escapeIdentifier('requestId')}) REFERENCES ${escapeIdentifier(`${this.connector.schema}.${this.requestsTableName}`)}(${escapeIdentifier('id')}) ON DELETE CASCADE
       )`,
       `CREATE EVENT IF NOT EXISTS ${escapeIdentifier(`${this.connector.schema}.${this.requestsTableName}_ttl`)}
@@ -139,52 +140,52 @@ export class MariaDBBroker<TRequestContext extends object = any>
   }
 
   public async publish(changes: core.MutationContextChanges): Promise<void> {
-    assert(changes.committedAt, 'The changes must have been committed');
+    await this.connector.withConnectionInTransaction(async (connection) => {
+      assert(changes.committedAt, 'The changes must have been committed');
 
-    await using connection = await this.connector.getConnection();
+      const { insertId: requestId } = await connection.query<OkPacket>(
+        `INSERT INTO ${escapeIdentifier(this.requestsTableName)} (${['context', 'changes', 'committedAt'].map(escapeIdentifier).join(',')}) VALUES (?, ?, ?)`,
+        [
+          this.options?.serializeRequestContext
+            ? this.options.serializeRequestContext(changes.requestContext)
+            : changes.requestContext,
+          Object.fromEntries(
+            changes.changesByNode.values().map((changes) => [
+              changes.node.name,
+              R.pipe(
+                utils.mutationTypes,
+                R.filter((type) => changes[type].size > 0),
+                R.mapToObj((type) => [type, changes[type].size]),
+              ),
+            ]),
+          ),
+          msTimestampType.format(changes.committedAt),
+        ],
+      );
 
-    const { insertId: requestId } = await connection.query<OkPacket>(
-      `INSERT INTO ${escapeIdentifier(this.requestsTableName)} (${['context', 'changes', 'committedAt'].map(escapeIdentifier).join(',')}) VALUES (?, ?, ?)`,
-      [
-        this.options?.serializeRequestContext
-          ? this.options.serializeRequestContext(changes.requestContext)
-          : changes.requestContext,
-        Object.fromEntries(
-          changes.changesByNode.values().map((changes) => [
-            changes.node.name,
-            R.pipe(
-              utils.mutationTypes,
-              R.filter((type) => changes[type].size > 0),
-              R.mapToObj((type) => [type, changes[type].size]),
-            ),
-          ]),
-        ),
-        msTimestampType.format(changes.committedAt),
-      ],
-    );
-
-    await Promise.all(
-      Array.from(
-        changes,
-        ({ node, kind, oldValue, newValue, executedAt, committedAt }, id) => {
-          assert(committedAt, 'The change must have been committed');
+      await Promise.all(
+        Array.from(changes, (change, id) => {
+          assert(change.committedAt, 'The change must have been committed');
 
           return connection.execute(
             `INSERT INTO ${escapeIdentifier(this.changesByRequestTableName)} (${['requestId', 'id', 'node', 'kind', 'oldValue', 'newValue', 'executedAt', 'committedAt'].map(escapeIdentifier).join(',')}) VALUES (?, ?, ?, ?, ?, ?, ?, ?)`,
             [
               requestId,
               id + 1,
-              node.name,
-              kind,
-              oldValue ? node.selection.serialize(oldValue) : null,
-              newValue ? node.selection.serialize(newValue) : null,
-              msTimestampType.format(executedAt),
-              msTimestampType.format(committedAt),
+              change.node.name,
+              change.kind,
+              ...(change instanceof core.NodeCreation
+                ? [null, change.serializedNewValue]
+                : change instanceof core.NodeUpdate
+                  ? [change.serializedOldValue, change.serializedUpdates]
+                  : [change.serializedOldValue, null]),
+              msTimestampType.format(change.executedAt),
+              msTimestampType.format(change.committedAt),
             ],
           );
-        },
-      ),
-    );
+        }),
+      );
+    });
   }
 
   public async subscribe(

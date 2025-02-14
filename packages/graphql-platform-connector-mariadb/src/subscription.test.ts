@@ -18,6 +18,7 @@ describe('Subscription', () => {
   const Article = gp.getNodeByName('Article');
   const Category = gp.getNodeByName('Category');
   const Tag = gp.getNodeByName('Tag');
+  const User = gp.getNodeByName('User');
 
   let subscription: ChangesSubscriptionStream;
 
@@ -43,6 +44,13 @@ describe('Subscription', () => {
     });
 
     await gp.seed(myAdminContext, fixtures.constant);
+
+    await User.api.createOne(myAdminContext, {
+      data: {
+        username: 'My new user',
+      },
+      selection: `{ id }`,
+    });
 
     await Category.api.updateOne(myAdminContext, {
       data: { order: 2 },

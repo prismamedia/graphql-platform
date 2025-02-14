@@ -1,5 +1,7 @@
 import * as utils from '@prismamedia/graphql-platform-utils';
+import { MGetter } from '@prismamedia/memoize';
 import assert from 'node:assert';
+import type { JsonObject } from 'type-fest';
 import type { Component, ComponentValue, Node, NodeValue } from '../../node.js';
 import { AbstractNodeChange } from '../abstract-change.js';
 import type { NodeChange } from '../change.js';
@@ -13,6 +15,35 @@ export type ComponentUpdate<TValue extends ComponentValue = any> = {
 export class NodeUpdate<
   TRequestContext extends object = any,
 > extends AbstractNodeChange<TRequestContext> {
+  public static unserialize<TRequestContext extends object>(
+    node: Node<TRequestContext>,
+    requestContext: TRequestContext,
+    serializedOldValue: JsonObject,
+    serializedUpdates: JsonObject | undefined,
+    executedAt?: Date,
+    committedAt?: Date,
+  ): NodeUpdate<TRequestContext> {
+    return new this(
+      node,
+      requestContext,
+      node.selection.unserialize(serializedOldValue),
+      serializedUpdates
+        ? Object.fromEntries(
+            Object.entries(serializedUpdates).map(
+              ([componentName, componentNewValue]) => [
+                componentName,
+                node
+                  .getComponentByName(componentName)
+                  .selection.unserialize(componentNewValue),
+              ],
+            ),
+          )
+        : undefined,
+      executedAt,
+      committedAt,
+    );
+  }
+
   public override readonly kind = utils.MutationType.UPDATE;
 
   public readonly oldValue: Readonly<NodeValue>;
@@ -159,5 +190,26 @@ export class NodeUpdate<
           other.executedAt,
         );
     }
+  }
+
+  @MGetter
+  public get serializedOldValue(): JsonObject {
+    return this.node.selection.serialize(this.oldValue);
+  }
+
+  @MGetter
+  public get serializedUpdates(): JsonObject {
+    return this.updatesByComponent.entries().reduce(
+      (document, [{ name, selection }, update]) =>
+        Object.assign(document, {
+          [name]: selection.serialize(update.newValue),
+        }),
+      Object.create(null),
+    );
+  }
+
+  @MGetter
+  public get serializedNewValue(): JsonObject {
+    return this.node.selection.serialize(this.newValue);
   }
 }

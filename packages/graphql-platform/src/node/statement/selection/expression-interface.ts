@@ -32,7 +32,7 @@ export interface SelectionExpressionInterface<TSource = any, TValue = TSource> {
 
   areValuesEqual(a: TValue, b: TValue): boolean;
 
-  serialize(value: TValue, path: utils.Path): JsonValue;
+  serialize(value: TValue, path?: utils.Path): JsonValue;
 
-  unserialize(value: JsonValue | undefined, path: utils.Path): TValue;
+  unserialize(value: JsonValue | undefined, path?: utils.Path): TValue;
 }

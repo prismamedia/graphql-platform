@@ -21,6 +21,7 @@ export class MariaDBSubscription
 {
   readonly #subscribedAt: Date = new Date();
   readonly #signal: AbortSignal;
+  readonly #dependencies: ReadonlyArray<core.Node['name']>;
 
   #idle?: boolean;
 
@@ -31,6 +32,10 @@ export class MariaDBSubscription
     super();
 
     this.#signal = subscription.signal;
+    this.#dependencies = Array.from(
+      subscription.dependencyGraph.summary.changes,
+      ({ name }) => name,
+    );
   }
 
   public async [Symbol.asyncDispose](): Promise<void> {
@@ -65,11 +70,16 @@ export class MariaDBSubscription
         `
           SELECT ${['id', 'context'].map(escapeIdentifier).join()}
           FROM ${escapeIdentifier(this.broker.requestsTableName)}
-          WHERE ${processedRequestId ? `${escapeIdentifier('id')} > ?` : `${escapeIdentifier('committedAt')} >= ?`}
+          WHERE 
+            ${processedRequestId ? `${escapeIdentifier('id')} > ?` : `${escapeIdentifier('committedAt')} >= ?`}
+            AND JSON_OVERLAPS(JSON_KEYS(${escapeIdentifier('changes')}), ?)
           ORDER BY ${escapeIdentifier('id')} ASC
           LIMIT 1
         `,
-        [processedRequestId ?? msTimestampType.format(this.#subscribedAt)],
+        [
+          processedRequestId ?? msTimestampType.format(this.#subscribedAt),
+          JSON.stringify(this.#dependencies),
+        ],
       );
 
       if (processingRequest) {
@@ -98,13 +108,20 @@ export class MariaDBSubscription
             `
               SELECT *
               FROM ${escapeIdentifier(this.broker.changesByRequestTableName)}
-              WHERE ${[`${escapeIdentifier('requestId')} = ?`, processedChangeId ? `${escapeIdentifier('id')} > ?` : undefined].filter(Boolean).join(' AND ')}
+              WHERE ${[
+                `${escapeIdentifier('requestId')} = ?`,
+                processedChangeId ? `${escapeIdentifier('id')} > ?` : undefined,
+                `${escapeIdentifier('node')} IN (?)`,
+              ]
+                .filter(Boolean)
+                .join(' AND ')}
               ORDER BY ${escapeIdentifier('id')} ASC
               LIMIT ?
             `,
             [
               processingRequest.id,
               processedChangeId,
+              this.#dependencies,
               this.broker.batchSize,
             ].filter(Boolean),
           );
@@ -120,40 +137,26 @@ export class MariaDBSubscription
               );
 
               return kind === utils.MutationType.CREATION
-                ? new core.NodeCreation(
+                ? core.NodeCreation.unserialize(
                     node,
                     requestContext,
-                    change.newValue
-                      ? node.selection.unserialize(JSON.parse(change.newValue))
-                      : undefined,
+                    change.newValue ? JSON.parse(change.newValue) : undefined,
                     executedAt,
                     committedAt,
                   )
                 : kind === utils.MutationType.UPDATE
-                  ? new core.NodeUpdate(
+                  ? core.NodeUpdate.unserialize(
                       node,
                       requestContext,
-                      change.oldValue
-                        ? node.selection.unserialize(
-                            JSON.parse(change.oldValue),
-                          )
-                        : undefined,
-                      change.newValue
-                        ? node.selection.unserialize(
-                            JSON.parse(change.newValue),
-                          )
-                        : undefined,
+                      change.oldValue ? JSON.parse(change.oldValue) : undefined,
+                      change.newValue ? JSON.parse(change.newValue) : undefined,
                       executedAt,
                       committedAt,
                     )
-                  : new core.NodeDeletion(
+                  : core.NodeDeletion.unserialize(
                       node,
                       requestContext,
-                      change.oldValue
-                        ? node.selection.unserialize(
-                            JSON.parse(change.oldValue),
-                          )
-                        : undefined,
+                      change.oldValue ? JSON.parse(change.oldValue) : undefined,
                       executedAt,
                       committedAt,
                     );

@@ -1,5 +1,7 @@
 import * as utils from '@prismamedia/graphql-platform-utils';
+import { MGetter } from '@prismamedia/memoize';
 import assert from 'node:assert';
+import type { JsonObject } from 'type-fest';
 import type { Node, NodeValue } from '../../node.js';
 import { AbstractNodeChange } from '../abstract-change.js';
 import type { NodeChange } from '../change.js';
@@ -8,6 +10,22 @@ import { NodeUpdate } from './update.js';
 export class NodeDeletion<
   TRequestContext extends object = any,
 > extends AbstractNodeChange<TRequestContext> {
+  public static unserialize<TRequestContext extends object>(
+    node: Node<TRequestContext>,
+    requestContext: TRequestContext,
+    serializedOldValue: JsonObject,
+    executedAt?: Date,
+    committedAt?: Date,
+  ): NodeDeletion<TRequestContext> {
+    return new this(
+      node,
+      requestContext,
+      node.selection.unserialize(serializedOldValue),
+      executedAt,
+      committedAt,
+    );
+  }
+
   public override readonly kind = utils.MutationType.DELETION;
 
   public readonly oldValue: Readonly<NodeValue>;
@@ -71,5 +89,10 @@ export class NodeDeletion<
         // Should not happen, we missed something
         return other;
     }
+  }
+
+  @MGetter
+  public get serializedOldValue(): JsonObject {
+    return this.node.selection.serialize(this.oldValue);
   }
 }

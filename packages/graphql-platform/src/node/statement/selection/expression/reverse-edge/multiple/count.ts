@@ -136,11 +136,11 @@ export class MultipleReverseEdgeCountSelection<
     return a === b;
   }
 
-  public serialize(_value: TValue, path: utils.Path): JsonValue {
+  public serialize(_value: TValue, path?: utils.Path): JsonValue {
     throw new utils.GraphError('Cannot be serialized', { path });
   }
 
-  public unserialize(_value: JsonValue | undefined, path: utils.Path): TValue {
+  public unserialize(_value: JsonValue | undefined, path?: utils.Path): TValue {
     throw new utils.GraphError('Cannot be unserialized', { path });
   }
 }

@@ -91,11 +91,11 @@ export class LeafSelection<TSource extends LeafValue = any, TValue = TSource>
     return this.leaf.areValuesEqual(a as any, b as any);
   }
 
-  public serialize(value: TValue, _path: utils.Path): JsonValue {
+  public serialize(value: TValue, _path?: utils.Path): JsonValue {
     return value == null ? null : (this.leaf.type.serialize(value) as any);
   }
 
-  public unserialize(value: JsonValue | undefined, path: utils.Path): TValue {
+  public unserialize(value: JsonValue | undefined, path?: utils.Path): TValue {
     return this.leaf.parseValue(
       value == null ? null : this.leaf.type.parseValue(value),
       path,

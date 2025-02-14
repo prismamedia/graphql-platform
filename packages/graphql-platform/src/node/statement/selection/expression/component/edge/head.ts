@@ -141,11 +141,11 @@ export class EdgeHeadSelection<
       : this.headSelection.areValuesEqual(a, b);
   }
 
-  public serialize(value: TValue, path: utils.Path): JsonValue {
+  public serialize(value: TValue, path?: utils.Path): JsonValue {
     return value == null ? null : this.headSelection.serialize(value, path);
   }
 
-  public unserialize(value: JsonValue | undefined, path: utils.Path): TValue {
+  public unserialize(value: JsonValue | undefined, path?: utils.Path): TValue {
     if (value == null) {
       if (!this.edge.isNullable()) {
         throw new utils.UnexpectedValueError(
