@@ -47,7 +47,7 @@
     "inflection": "^3.0.2",
     "p-queue": "^8.1.0",
     "p-retry": "^6.2.1",
-    "remeda": "^2.20.1",
+    "remeda": "^2.20.2",
     "type-fest": "^4.34.1"
   },
   "peerDependencies": {

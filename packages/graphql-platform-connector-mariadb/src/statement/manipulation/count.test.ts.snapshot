@@ -66,7 +66,7 @@ exports[`Count statement > generates statements 8`] = `
     "    \`articles\`.\`status\` = 'published'",
     "    AND (",
     "      \`articles\`.\`category_private_id\` IS NOT NULL",
-    "      AND \`articles\`.\`category_private_id\` = 10",
+    "      AND \`articles\`.\`category_private_id\` <=> 10",
     "    )",
     "  )"
   ]

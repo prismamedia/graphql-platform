@@ -63,6 +63,8 @@ describe('SchemaDiagnosis', () => {
         DEFAULT CHARSET ${escapeStringValue(CategoryTable.defaultCharset)}
         DEFAULT COLLATE ${escapeStringValue(CategoryTable.defaultCollation)}
       `);
+
+      await connector.broker?.setup(connection);
     }, StatementKind.DATA_DEFINITION);
 
     let diagnosis = await schema.diagnose();

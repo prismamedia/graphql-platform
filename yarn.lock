@@ -971,7 +971,7 @@ __metadata:
     inflection: "npm:^3.0.2"
     mariadb: "npm:^3.4.0"
     publint: "npm:0.3.5"
-    remeda: "npm:^2.20.1"
+    remeda: "npm:^2.20.2"
     semver: "npm:^7.7.1"
     tsx: "npm:4.19.2"
     type-fest: "npm:^4.34.1"
@@ -1001,7 +1001,7 @@ __metadata:
     cors: "npm:2.8.5"
     express: "npm:4.21.2"
     graphql: "npm:16.10.0"
-    graphql-ws: "npm:6.0.3"
+    graphql-ws: "npm:6.0.4"
     publint: "npm:0.3.5"
     tsx: "npm:4.19.2"
     typescript: "npm:5.7.3"
@@ -1020,7 +1020,7 @@ __metadata:
     "@types/draft-js": "npm:^0.11.18"
     graphql: "npm:16.10.0"
     publint: "npm:0.3.5"
-    remeda: "npm:^2.20.1"
+    remeda: "npm:^2.20.2"
     tsx: "npm:4.19.2"
     type-fest: "npm:^4.34.1"
     typescript: "npm:5.7.3"
@@ -1039,7 +1039,7 @@ __metadata:
     graphql: "npm:16.10.0"
     indefinite: "npm:^2.5.1"
     publint: "npm:0.3.5"
-    remeda: "npm:^2.20.1"
+    remeda: "npm:^2.20.2"
     tsx: "npm:4.19.2"
     type-fest: "npm:^4.34.1"
     typescript: "npm:5.7.3"
@@ -1067,7 +1067,7 @@ __metadata:
     p-queue: "npm:^8.1.0"
     p-retry: "npm:^6.2.1"
     publint: "npm:0.3.5"
-    remeda: "npm:^2.20.1"
+    remeda: "npm:^2.20.2"
     tsx: "npm:4.19.2"
     type-fest: "npm:^4.34.1"
     typescript: "npm:5.7.3"
@@ -2149,9 +2149,9 @@ __metadata:
   languageName: node
   linkType: hard
 
-"graphql-ws@npm:6.0.3":
-  version: 6.0.3
-  resolution: "graphql-ws@npm:6.0.3"
+"graphql-ws@npm:6.0.4":
+  version: 6.0.4
+  resolution: "graphql-ws@npm:6.0.4"
   peerDependencies:
     "@fastify/websocket": ^10 || ^11
     graphql: ^15.10.1 || ^16
@@ -2164,7 +2164,7 @@ __metadata:
       optional: true
     ws:
       optional: true
-  checksum: 10/58d8ab8760443235387b1a921ad0c3fcbb40c85c5ad1dcc6eeb64e66072e5202bf08a70dcc30377183c7bf87823c7a1315b13e8f153c1100ef6c72ef77528db2
+  checksum: 10/9cfd6bdf03a65c2b390e049b0e6ce43dd3e428eb7df74afaad45bbfe1f074687a507509f5ab3f9467fea90a7fbe468558621e8c7be06729ea9dc56e116f236da
   languageName: node
   linkType: hard
 
@@ -2915,12 +2915,12 @@ __metadata:
   languageName: node
   linkType: hard
 
-"remeda@npm:^2.20.1":
-  version: 2.20.1
-  resolution: "remeda@npm:2.20.1"
+"remeda@npm:^2.20.2":
+  version: 2.20.2
+  resolution: "remeda@npm:2.20.2"
   dependencies:
     type-fest: "npm:^4.33.0"
-  checksum: 10/027fba42f709e7545f1c2736a71cd231a8dbb6673f75708979860ec9477588485435bdb722608a6a8d80cd2b875e4bbd9ed5434dc43e4a99e7d267fcc03413e5
+  checksum: 10/703a6efc8c8321e6ba2e574f049d10609b0c36d4351055f2a0ff8a30e1d5a6a86ef6ded7edc066f2d6e6536d0ac259a87a050b41dda86c106ad3eb836e2f4829
   languageName: node
   linkType: hard
 

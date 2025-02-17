@@ -75,7 +75,7 @@ function parseLeafFilter(
       case 'eq':
         return filter.value === null
           ? `${columnIdentifier} IS NULL`
-          : `${columnIdentifier} = ${serializedColumnValue}`;
+          : `${columnIdentifier} ${column.isNullable() ? '<=>' : '='} ${serializedColumnValue}`;
 
       case 'not':
         return filter.value === null
@@ -197,17 +197,17 @@ function parseEdgeFilter(
               ),
           )
         : undefined,
-      mergedHeadAuthorizationAndHeadFilter
-        ? mergedHeadAuthorizationAndHeadFilter.isExecutableWithinUniqueConstraint(
-            edge.referencedUniqueConstraint,
+      mergedHeadAuthorizationAndHeadFilter?.isExecutableWithinUniqueConstraint(
+        edge.referencedUniqueConstraint,
+      )
+        ? filterNode(
+            tableReference,
+            mergedHeadAuthorizationAndHeadFilter,
+            tableReference.table.getColumnTreeByEdge(edge),
           )
-          ? filterNode(
-              tableReference,
-              mergedHeadAuthorizationAndHeadFilter,
-              tableReference.table.getColumnTreeByEdge(edge),
-            )
-          : `EXISTS ${tableReference.subquery(edge, '*', filter.headFilter)}`
-        : undefined,
+        : filter.headFilter
+          ? filterNode(tableReference.join(edge), filter.headFilter)
+          : undefined,
     ]);
   } else {
     throw new utils.UnreachableValueError(filter);

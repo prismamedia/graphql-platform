@@ -179,9 +179,16 @@ export class SchemaDiagnosis {
         (diagnosis) => !diagnosis.isValid(),
       );
 
-      const extraTableNames = Array.from(informations.tables.keys()).filter(
-        (name) => !schema.tables.some((table) => table.name === name),
-      );
+      const extraTableNames = Array.from(informations.tables.keys())
+        .filter((name) => !schema.tables.some((table) => table.name === name))
+        .filter(
+          (name) =>
+            !schema.connector.broker ||
+            ![
+              schema.connector.broker.requestsTableName,
+              schema.connector.broker.changesByRequestTableName,
+            ].includes(name),
+        );
 
       this.extraTables = Array.isArray(options?.extraTables)
         ? extraTableNames.filter(

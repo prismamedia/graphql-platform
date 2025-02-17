@@ -77,9 +77,7 @@ function parseEdgeSelection(
             selection.headSelection,
             tableReference.table.getColumnTreeByEdge(edge),
           )
-        : tableReference.subquery(selection.edge, (headReference) =>
-            selectNode(headReference, selection.headSelection),
-          );
+        : selectNode(tableReference.join(edge), selection.headSelection);
 
     return edge.isNullable() || parsedHeadAuthorization
       ? `IF(
