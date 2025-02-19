@@ -14,40 +14,75 @@ import { createMyGP } from './__tests__/config.js';
 
 describe('Subscription', () => {
   const gp = createMyGP(`connector_mariadb_subscription`);
+  gp.broker.on('error', console.error);
 
   const Article = gp.getNodeByName('Article');
   const Category = gp.getNodeByName('Category');
   const Tag = gp.getNodeByName('Tag');
   const User = gp.getNodeByName('User');
 
-  let subscription: ChangesSubscriptionStream;
+  let subscriptions: ChangesSubscriptionStream[];
 
   beforeEach(async () => {
     await gp.connector.setup();
 
-    subscription = await Article.api.subscribeToChanges(myAdminContext, {
-      where: {
-        status: ArticleStatus.PUBLISHED,
-        tags_some: { tag: { deprecated_not: true } },
-      },
-      selection: {
-        onUpsert: `{
-          id
-          title
-          category {
-            order
+    subscriptions = await Promise.all([
+      Article.api.subscribeToChanges(myAdminContext, {
+        where: {
+          status: ArticleStatus.PUBLISHED,
+          tags_some: { tag: { deprecated_not: true } },
+        },
+        selection: {
+          onUpsert: `{
+            id
             title
-          }
-        }`,
-        onDeletion: `{ id }`,
-      },
-    });
+            category {
+              order
+              title
+            }
+          }`,
+          onDeletion: `{ id }`,
+        },
+      }),
+      User.api.subscribeToChanges(myAdminContext, {
+        where: {
+          lastLoggedInAt_gte: '2025-01-01T00:00:00Z',
+        },
+        selection: {
+          onUpsert: `{
+            username
+            createdArticles(first: 100) {
+              id
+              title
+              tagCount(where: { tag: { deprecated: true }})
+            }
+          }`,
+        },
+      }),
+    ]);
 
     await gp.seed(myAdminContext, fixtures.constant);
+
+    await Article.api.updateMany(myAdminContext, {
+      data: {
+        slug: 'a-new-slug',
+      },
+      where: { title: fixtures.constant.Article.article_01.title },
+      first: 10,
+      selection: `{ id }`,
+    });
 
     await User.api.createOne(myAdminContext, {
       data: {
         username: 'My new user',
+      },
+      selection: `{ id }`,
+    });
+
+    await User.api.createOne(myAdminContext, {
+      data: {
+        username: 'My second new user',
+        lastLoggedInAt: new Date('2025-02-01T00:00:00Z'),
       },
       selection: `{ id }`,
     });
@@ -64,30 +99,63 @@ describe('Subscription', () => {
       selection: `{ id }`,
     });
 
-    gp.broker.onIdle(subscription, () => subscription.dispose());
+    await gp.broker.assign();
+
+    subscriptions.forEach((subscription) =>
+      gp.broker.onIdle(subscription, () => subscription.dispose()),
+    );
   });
 
   afterEach(async () => {
-    await subscription.dispose();
+    await Promise.all(
+      subscriptions.map((subscription) => subscription.dispose()),
+    );
     await gp.connector.teardown();
   });
 
   it('has a dependency-graph', () => {
-    assert.deepEqual(subscription.dependencyGraph.summary.toJSON(), {
-      componentsByNode: {
-        Article: ['status', 'title', 'category'],
-        Category: ['order'],
-        Tag: ['deprecated'],
+    assert.deepEqual(subscriptions[0].dependencyGraph.flattened.toJSON(), {
+      Article: {
+        creation: true,
+        deletion: true,
+        update: ['status', 'title', 'category'],
       },
-      creations: ['Article', 'ArticleTag'],
-      deletions: ['Article', 'ArticleTag'],
-      changes: ['Article', 'ArticleTag', 'Category', 'Tag'],
+      ArticleTag: {
+        creation: true,
+        deletion: true,
+      },
+      Category: {
+        update: ['order'],
+      },
+      Tag: {
+        update: ['deprecated'],
+      },
+    });
+
+    assert.deepEqual(subscriptions[1].dependencyGraph.flattened.toJSON(), {
+      Article: {
+        creation: true,
+        deletion: true,
+        update: ['title'],
+      },
+      ArticleTag: {
+        creation: true,
+        deletion: true,
+      },
+      Tag: {
+        update: ['deprecated'],
+      },
+      User: {
+        creation: true,
+        deletion: true,
+        update: ['lastLoggedInAt'],
+      },
     });
   });
 
   it('is iterable through "Array.fromAsync"', async () => {
     assert.deepEqual(
-      await Array.fromAsync(subscription, (change) =>
+      await Array.fromAsync(subscriptions[0], (change) =>
         change instanceof ChangesSubscriptionDeletion ? 'deletion' : 'upsert',
       ),
       ['upsert', 'upsert', 'upsert', 'deletion'],
@@ -97,7 +165,7 @@ describe('Subscription', () => {
   it('is iterable through "for await"', async () => {
     const changes: ChangesSubscriptionChange[] = [];
 
-    for await (const change of subscription) {
+    for await (const change of subscriptions[0]) {
       changes.push(change);
     }
 
@@ -112,7 +180,7 @@ describe('Subscription', () => {
   it('is forEach-able', async () => {
     const changes: ChangesSubscriptionChange[] = [];
 
-    await subscription.forEach((change) => changes.push(change));
+    await subscriptions[0].forEach((change) => changes.push(change));
 
     assert.deepEqual(
       changes.map((change) =>
@@ -125,7 +193,7 @@ describe('Subscription', () => {
   it('is byBatch-able', async () => {
     const changes: ChangesSubscriptionChange[] = [];
 
-    await subscription.byBatch((batch) => changes.push(...batch), {
+    await subscriptions[0].byBatch((batch) => changes.push(...batch), {
       batchSize: 2,
     });
 

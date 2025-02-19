@@ -8,7 +8,7 @@ import {
   NodeDeletion,
   NodeSetDependencyGraph,
   NodeUpdate,
-  type DependencySummaryJSON,
+  type FlattenedDependencyGraphJSON,
   type NodeDependencyGraph,
 } from '../change.js';
 import type { NodeFilterInputValue } from '../type/input/filter.js';
@@ -73,33 +73,40 @@ describe('Filter', () => {
 
     (
       [
-        ['Article', { _id_gt: 4, _id_lt: 8 }, { changes: [] }],
+        ['Article', { _id_gt: 4, _id_lt: 8 }, {}],
         [
           'Article',
           { category: {} },
-          { componentsByNode: { Article: ['category'] }, changes: ['Article'] },
+          {
+            Article: {
+              update: ['category'],
+            },
+          },
         ],
         [
           'Article',
           { tags_some: { tag: { deprecated_not: true } } },
           {
-            creations: ['ArticleTag'],
-            deletions: ['ArticleTag'],
-            componentsByNode: { Tag: ['deprecated'] },
-            changes: ['ArticleTag', 'Tag'],
+            ArticleTag: {
+              creation: true,
+              deletion: true,
+            },
+            Tag: {
+              update: ['deprecated'],
+            },
           },
         ],
       ] satisfies [
         nodeName: string,
         input: NodeFilterInputValue,
-        expected: DependencySummaryJSON,
+        expected: FlattenedDependencyGraphJSON,
       ][]
     ).forEach(([nodeName, input, expected], index) => {
       it(`${index} - ${nodeName}.dependency`, () => {
         const node = gp.getNodeByName(nodeName);
         const filter = node.filterInputType.parseAndFilter(input);
 
-        assert.deepEqual(filter.dependencyGraph.summary.toJSON(), expected);
+        assert.deepEqual(filter.dependencyGraph.flattened.toJSON(), expected);
       });
     });
   });

@@ -5,13 +5,15 @@ import {
   createMyGP,
   myAdminContext,
 } from '../../__tests__/config.js';
-import type { RawNodeSelection } from '../../node.js';
+import type {
+  FlattenedDependencyGraphJSON,
+  RawNodeSelection,
+} from '../../node.js';
 import {
   NodeCreation,
   NodeDeletion,
   NodeSetDependencyGraph,
   NodeUpdate,
-  type DependencySummaryJSON,
 } from '../change.js';
 import { OperationContext } from '../operation.js';
 import { NodeSelection } from './selection.js';
@@ -31,40 +33,50 @@ describe('Selection', () => {
       [
         [
           `{ title }`,
-          { componentsByNode: { Article: ['title'] }, changes: ['Article'] },
+          {
+            Article: {
+              update: ['title'],
+            },
+          },
         ],
         [
           `{ title category { title order } }`,
           {
-            componentsByNode: {
-              Article: ['title', 'category'],
-              Category: ['order'],
+            Article: {
+              update: ['title', 'category'],
             },
-            changes: ['Article', 'Category'],
+            Category: {
+              update: ['order'],
+            },
           },
         ],
         [
           `{ tagCount }`,
           {
-            creations: ['ArticleTag'],
-            deletions: ['ArticleTag'],
-            changes: ['ArticleTag'],
+            ArticleTag: {
+              creation: true,
+              deletion: true,
+            },
           },
         ],
         [
           `{ tags(where: { tag: { deprecated_not: true }}, orderBy: [order_ASC], first: 10) { tag { slug }}}`,
           {
-            creations: ['ArticleTag'],
-            deletions: ['ArticleTag'],
-            componentsByNode: { ArticleTag: ['order'], Tag: ['deprecated'] },
-            changes: ['ArticleTag', 'Tag'],
+            ArticleTag: {
+              creation: true,
+              deletion: true,
+              update: ['order'],
+            },
+            Tag: {
+              update: ['deprecated'],
+            },
           },
         ],
-      ] satisfies [RawNodeSelection, DependencySummaryJSON][]
+      ] satisfies [RawNodeSelection, FlattenedDependencyGraphJSON][]
     ).forEach(([input, expected]) => {
       it(`${input}.dependency = ${expected}`, () => {
         assert.deepEqual(
-          Article.outputType.select(input).dependencyGraph?.summary.toJSON(),
+          Article.outputType.select(input).dependencyGraph?.flattened.toJSON(),
           expected,
         );
       });

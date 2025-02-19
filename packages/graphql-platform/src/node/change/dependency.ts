@@ -26,9 +26,9 @@ import {
   OrOperation,
   UniqueReverseEdgeExistsFilter,
 } from '../statement.js';
-import { DependencyTreeSummary } from './dependency/summary.js';
+import { FlattenedDependencyGraph } from './dependency/flattened.js';
 
-export * from './dependency/summary.js';
+export * from './dependency/flattened.js';
 
 export type Dependency =
   | EdgeDependencyGraph
@@ -58,9 +58,9 @@ export class DependencyGraph {
   public readonly ordering?: NodeOrdering;
   public readonly selection?: NodeSelection;
 
-  public readonly creation: boolean = false;
-  public readonly deletion: boolean = false;
-  public readonly components: ReadonlySet<Component>;
+  public readonly [utils.MutationType.CREATION]: boolean = false;
+  public readonly [utils.MutationType.UPDATE]: ReadonlySet<Component>;
+  public readonly [utils.MutationType.DELETION]: boolean = false;
 
   public readonly dependenciesByEdge: ReadonlyMap<
     Edge,
@@ -82,7 +82,7 @@ export class DependencyGraph {
       utils.ReadonlyArrayable<Dependency | undefined>
     >
   ) {
-    const components = new Set<Component>();
+    const update = new Set<Component>();
     const dependenciesByEdge = new Map<Edge, EdgeDependencyGraph[]>();
     const dependenciesByReverseEdge = new Map<
       ReverseEdge,
@@ -93,7 +93,7 @@ export class DependencyGraph {
       if (dependency instanceof EdgeDependencyGraph) {
         const edge = dependency.edge;
         assert.strictEqual(edge.tail, this.node);
-        edge.isMutable() && components.add(edge);
+        edge.isMutable() && update.add(edge);
 
         let dependencies = dependenciesByEdge.get(edge);
         if (!dependencies) {
@@ -114,7 +114,7 @@ export class DependencyGraph {
       } else if (dependency instanceof DependencyGraph) {
         assert.strictEqual(dependency.node, this.node);
 
-        dependency.components.forEach((component) => components.add(component));
+        dependency.update.forEach((component) => update.add(component));
 
         dependency.dependenciesByEdge.forEach((others, edge) => {
           if (others.length) {
@@ -138,11 +138,11 @@ export class DependencyGraph {
           }
         });
       } else if (isComponent(dependency)) {
-        dependency.isMutable() && components.add(dependency);
+        dependency.isMutable() && update.add(dependency);
       }
     }
 
-    this.components = components;
+    this.update = update;
     this.dependenciesByEdge = dependenciesByEdge;
     this.dependenciesByReverseEdge = dependenciesByReverseEdge;
 
@@ -153,8 +153,8 @@ export class DependencyGraph {
   }
 
   @MGetter
-  public get summary(): DependencyTreeSummary {
-    return new DependencyTreeSummary(this);
+  public get flattened(): FlattenedDependencyGraph {
+    return new FlattenedDependencyGraph(this);
   }
 
   public nodeDependsOnCreation(
@@ -186,9 +186,9 @@ export class DependencyGraph {
     assert.strictEqual(update.node, this.node);
 
     if (
-      !this.components.size ||
+      !this.update.size ||
       !update.updatesByComponent.size ||
-      this.components.isDisjointFrom(update.updatesByComponent)
+      this.update.isDisjointFrom(update.updatesByComponent)
     ) {
       return false;
     }
@@ -268,7 +268,7 @@ export class DependencyGraph {
   }
 
   public dependsOnChange(change: NodeChange): boolean {
-    if (!this.summary.dependsOnChange(change)) {
+    if (!this.flattened.dependsOnChange(change)) {
       return false;
     }
 

@@ -121,7 +121,10 @@ export function createMyGP<TContainer extends object>(
             password,
           },
 
-          broker: true,
+          broker: {
+            heartbeatInterval: 5,
+            retention: 15,
+          },
         },
         configPath,
       ),

@@ -67,6 +67,7 @@ export type ChangesSubscriptionStreamConfig<
   TUpsert extends NodeSelectedValue = any,
   TDeletion extends NodeValue = any,
 > = {
+  since: Date;
   filter?: NodeFilter;
   selection: {
     onDeletion?: NodeSelection<TDeletion>;
@@ -110,6 +111,7 @@ export class ChangesSubscriptionStream<
     >,
     AsyncDisposable
 {
+  public readonly since: Date;
   public readonly filter?: NodeFilter;
   public readonly onUpsertSelection: NodeSelection<TUpsert>;
   public readonly onDeletionSelection?: NodeSelection<TDeletion>;
@@ -131,6 +133,9 @@ export class ChangesSubscriptionStream<
     config: Readonly<ChangesSubscriptionStreamConfig<TUpsert, TDeletion>>,
   ) {
     super();
+
+    assert(config.since instanceof Date);
+    this.since = config.since;
 
     if (config.filter) {
       assert(config.filter instanceof NodeFilter);

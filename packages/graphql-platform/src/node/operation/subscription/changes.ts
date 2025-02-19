@@ -1,3 +1,4 @@
+import * as scalars from '@prismamedia/graphql-platform-scalars';
 import * as utils from '@prismamedia/graphql-platform-utils';
 import { MGetter, MMethod } from '@prismamedia/memoize';
 import * as graphql from 'graphql';
@@ -26,6 +27,7 @@ enum ChangeKind {
 }
 
 export type ChangesSubscriptionArgs = {
+  since?: Date;
   where?: NodeFilterInputValue;
   selection:
     | graphql.GraphQLResolveInfo
@@ -38,6 +40,7 @@ export type ChangesSubscriptionArgs = {
 export type ParsedChangesSubscriptionArgs = Merge<
   ChangesSubscriptionArgs,
   {
+    since: Date;
     selection: {
       onUpsert: NodeSelection;
       onDeletion?: NodeSelection;
@@ -83,6 +86,12 @@ export class ChangesSubscription<
   @MGetter
   public override get arguments() {
     return [
+      new utils.Input({
+        name: 'since',
+        description: 'Changes since the given date will be included',
+        type: utils.nonNillableInputType(scalars.GraphQLDateTime),
+        defaultValue: () => new Date(),
+      }),
       new utils.Input({
         name: 'where',
         type: this.node.filterInputType,
@@ -227,6 +236,7 @@ export class ChangesSubscription<
     )?.normalized;
 
     const stream = new ChangesSubscriptionStream(this.node, context, {
+      since: args.since,
       filter,
       selection: args.selection,
     });

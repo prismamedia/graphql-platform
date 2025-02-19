@@ -4,14 +4,23 @@ import {
 } from '@prismamedia/async-event-emitter';
 import * as core from '@prismamedia/graphql-platform';
 import * as utils from '@prismamedia/graphql-platform-utils';
-import { setTimeout } from 'node:timers/promises';
-import type { MariaDBBroker } from '../broker.js';
-import { escapeIdentifier } from '../escaping.js';
+import Denque from 'denque';
+import { randomUUID, type UUID } from 'node:crypto';
+import type {
+  MariaDBBroker,
+  MariaDBBrokerMutation,
+  SerializedMariaDBBrokerChange,
+} from '../broker.js';
+import { escapeIdentifier, escapeStringValue } from '../escaping.js';
 import { TimestampType } from '../schema/table/data-type/date-and-time/timestamp.js';
+import { AND, OR } from '../statement/manipulation/clause/where-condition.js';
 
 export const msTimestampType = new TimestampType({ microsecondPrecision: 3 });
 
 export type MariaDBSubscriptionEvents = {
+  assignments: ReadonlyArray<MariaDBBrokerMutation>;
+  processing: MariaDBBrokerMutation;
+  processed: MariaDBBrokerMutation;
   idle: undefined;
 };
 
@@ -19,11 +28,13 @@ export class MariaDBSubscription
   extends AsyncEventEmitter<MariaDBSubscriptionEvents>
   implements core.NodeChangeSubscriptionInterface
 {
-  readonly #subscribedAt: Date = new Date();
-  readonly #signal: AbortSignal;
-  readonly #dependencies: ReadonlyArray<core.Node['name']>;
-
   #idle?: boolean;
+
+  public readonly id: UUID = randomUUID();
+  public assignedMutationId: bigint = 0n;
+
+  readonly #signal: AbortSignal;
+  readonly #assignments: Denque<MariaDBBrokerMutation>;
 
   public constructor(
     public readonly broker: MariaDBBroker,
@@ -32,156 +43,175 @@ export class MariaDBSubscription
     super();
 
     this.#signal = subscription.signal;
-    this.#dependencies = Array.from(
-      subscription.dependencyGraph.summary.changes,
-      ({ name }) => name,
+    this.#assignments = new Denque();
+  }
+
+  public async assign(
+    mutations: ReadonlyArray<MariaDBBrokerMutation>,
+  ): Promise<void> {
+    if (mutations.length) {
+      this.assignedMutationId = mutations.at(-1)!.id;
+      mutations.forEach((mutation) => this.#assignments.push(mutation));
+      await this.emit('assignments', mutations);
+    }
+  }
+
+  public async dequeue(): Promise<MariaDBBrokerMutation | undefined> {
+    return (
+      this.#assignments.shift() ||
+      ((await this.wait('assignments', this.#signal).catch(() => undefined)) &&
+        this.#assignments.shift())
     );
   }
 
   public async [Symbol.asyncDispose](): Promise<void> {
     this.off();
-    await this.broker.unsubscribe(this.subscription);
+
+    try {
+      await Promise.all([
+        this.broker.unsubscribe(this.subscription),
+        this.broker.connector.executeQuery(`
+          DELETE FROM ${escapeIdentifier(this.broker.assignmentsTableName)}
+          WHERE ${escapeIdentifier('subscriptionId')} = ${escapeStringValue(this.id)}
+        `),
+      ]);
+    } finally {
+      this.#assignments.clear();
+    }
   }
 
   public async *[Symbol.asyncIterator](): AsyncIterator<
     core.MutationContextChanges,
     undefined
   > {
-    let processingRequest:
-      | Readonly<{ id: bigint; context: string }>
-      | undefined;
+    let mutation: MariaDBBrokerMutation | undefined;
+    let serializedChanges: ReadonlyArray<SerializedMariaDBBrokerChange>;
 
-    let processingChanges: ReadonlyArray<{
-      requestId: bigint;
-      id: bigint;
-      node: string;
-      kind: utils.MutationType;
-      oldValue: string | null;
-      newValue: string | null;
-      executedAt: string;
-      committedAt: string;
-    }>;
+    while ((mutation = await this.dequeue()) && !this.#signal.aborted) {
+      this.#idle = false;
+      await this.emit('processing', mutation);
 
-    let processedRequestId: bigint | undefined;
-    do {
-      [processingRequest] = await this.broker.connector.executeQuery<
-        { id: bigint; context: string }[]
-      >(
-        `
-          SELECT ${['id', 'context'].map(escapeIdentifier).join()}
-          FROM ${escapeIdentifier(this.broker.requestsTableName)}
-          WHERE 
-            ${processedRequestId ? `${escapeIdentifier('id')} > ?` : `${escapeIdentifier('committedAt')} >= ?`}
-            AND JSON_OVERLAPS(JSON_KEYS(${escapeIdentifier('changes')}), ?)
-          ORDER BY ${escapeIdentifier('id')} ASC
-          LIMIT 1
-        `,
-        [
-          processedRequestId ?? msTimestampType.format(this.#subscribedAt),
-          JSON.stringify(this.#dependencies),
-        ],
-      );
+      let processedChangeId: bigint = 0n;
+      do {
+        serializedChanges = await this.broker.connector.executeQuery<
+          SerializedMariaDBBrokerChange[]
+        >(
+          `
+            SELECT *
+            FROM ${escapeIdentifier(this.broker.changesTableName)}
+            WHERE ${AND([
+              `${escapeIdentifier('mutationId')} = ${mutation.id}`,
+              `${escapeIdentifier('id')} > ${processedChangeId}`,
+              OR(
+                Array.from(
+                  this.subscription.dependencyGraph.flattened.byNode,
+                  ([node, dependency]) =>
+                    AND([
+                      `${escapeIdentifier('node')} = ${escapeStringValue(node.name)}`,
+                      OR([
+                        dependency.creation || dependency.deletion
+                          ? `${escapeIdentifier('kind')} IN (${[
+                              dependency.creation &&
+                                utils.MutationType.CREATION,
+                              dependency.deletion &&
+                                utils.MutationType.DELETION,
+                            ]
+                              .filter(utils.isNonNil)
+                              .map((type) => escapeStringValue(type))
+                              .join(',')})`
+                          : undefined,
+                        dependency.update
+                          ? AND([
+                              `${escapeIdentifier('kind')} = ${escapeStringValue(utils.MutationType.UPDATE)}`,
+                              `JSON_OVERLAPS(
+                                JSON_KEYS(${escapeIdentifier('newValue')}),
+                                JSON_ARRAY(${Array.from(dependency.update, ({ name }) => escapeStringValue(name)).join(',')})
+                              )`,
+                            ])
+                          : undefined,
+                      ]),
+                    ]),
+                ),
+              ),
+            ])}
+            ORDER BY ${escapeIdentifier('id')} ASC
+            LIMIT ${this.broker.batchSize}
+          `,
+        );
 
-      if (processingRequest) {
-        this.#idle = false;
-
-        const requestContext = this.broker.options?.unserializeRequestContext
-          ? this.broker.options.unserializeRequestContext(
-              JSON.parse(processingRequest.context),
-            )
-          : JSON.parse(processingRequest.context);
-
-        let processedChangeId: bigint | undefined;
-        do {
-          processingChanges = await this.broker.connector.executeQuery<
-            {
-              requestId: bigint;
-              id: bigint;
-              node: string;
-              kind: utils.MutationType;
-              oldValue: string | null;
-              newValue: string | null;
-              executedAt: string;
-              committedAt: string;
-            }[]
-          >(
-            `
-              SELECT *
-              FROM ${escapeIdentifier(this.broker.changesByRequestTableName)}
-              WHERE ${[
-                `${escapeIdentifier('requestId')} = ?`,
-                processedChangeId ? `${escapeIdentifier('id')} > ?` : undefined,
-                `${escapeIdentifier('node')} IN (?)`,
-              ]
-                .filter(Boolean)
-                .join(' AND ')}
-              ORDER BY ${escapeIdentifier('id')} ASC
-              LIMIT ?
-            `,
-            [
-              processingRequest.id,
-              processedChangeId,
-              this.#dependencies,
-              this.broker.batchSize,
-            ].filter(Boolean),
-          );
-
-          if (processingChanges.length) {
-            const changes = processingChanges.map(({ kind, ...change }) => {
-              const node = this.broker.connector.gp.getNodeByName(change.node);
-              const executedAt = msTimestampType.parseColumnValue(
-                change.executedAt,
+        if (serializedChanges.length && !this.#signal.aborted) {
+          const changes = serializedChanges.map(
+            ({ kind, ...serializedChange }) => {
+              const node = this.broker.connector.gp.getNodeByName(
+                serializedChange.node,
               );
-              const committedAt = msTimestampType.parseColumnValue(
-                change.committedAt,
+              const executedAt = msTimestampType.parseColumnValue(
+                serializedChange.executedAt,
               );
 
               return kind === utils.MutationType.CREATION
                 ? core.NodeCreation.unserialize(
                     node,
-                    requestContext,
-                    change.newValue ? JSON.parse(change.newValue) : undefined,
+                    mutation!.requestContext,
+                    serializedChange.newValue
+                      ? JSON.parse(serializedChange.newValue)
+                      : undefined,
                     executedAt,
-                    committedAt,
+                    mutation!.committedAt,
                   )
                 : kind === utils.MutationType.UPDATE
                   ? core.NodeUpdate.unserialize(
                       node,
-                      requestContext,
-                      change.oldValue ? JSON.parse(change.oldValue) : undefined,
-                      change.newValue ? JSON.parse(change.newValue) : undefined,
+                      mutation!.requestContext,
+                      serializedChange.oldValue
+                        ? JSON.parse(serializedChange.oldValue)
+                        : undefined,
+                      serializedChange.newValue
+                        ? JSON.parse(serializedChange.newValue)
+                        : undefined,
                       executedAt,
-                      committedAt,
+                      mutation!.committedAt,
                     )
                   : core.NodeDeletion.unserialize(
                       node,
-                      requestContext,
-                      change.oldValue ? JSON.parse(change.oldValue) : undefined,
+                      mutation!.requestContext,
+                      serializedChange.oldValue
+                        ? JSON.parse(serializedChange.oldValue)
+                        : undefined,
                       executedAt,
-                      committedAt,
+                      mutation!.committedAt,
                     );
-            });
+            },
+          );
 
-            yield new core.MutationContextChanges(requestContext, changes);
+          yield new core.MutationContextChanges(
+            mutation!.requestContext,
+            changes,
+          );
 
-            processedChangeId = processingChanges.at(-1)!.id;
-          }
-        } while (
-          processingChanges.length === this.broker.batchSize &&
-          !this.#signal.aborted
-        );
+          processedChangeId = serializedChanges.at(-1)!.id;
+        }
+      } while (
+        serializedChanges.length === this.broker.batchSize &&
+        !this.#signal.aborted
+      );
 
-        processedRequestId = processingRequest.id;
-      } else if (!this.#idle) {
+      await Promise.all([
+        this.broker.connector.executeQuery(
+          `
+            DELETE FROM ${escapeIdentifier(this.broker.assignmentsTableName)}
+            WHERE ${escapeIdentifier('mutationId')} = ${mutation.id}
+              AND ${escapeIdentifier('subscriptionId')} = ${escapeStringValue(this.id)}
+          `,
+        ),
+        this.emit('processed', mutation),
+      ]);
+
+      if (!this.#assignments.length) {
         this.#idle = true;
-        this.emit('idle', undefined);
+        await this.emit('idle', undefined);
       }
-    } while (
-      !this.#idle ||
-      (await setTimeout(this.broker.pullInterval * 1000, true, {
-        signal: this.#signal,
-      }).catch(() => false))
-    );
+    }
   }
 
   public onIdle(

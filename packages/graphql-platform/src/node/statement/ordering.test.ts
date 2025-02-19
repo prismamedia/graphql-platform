@@ -7,7 +7,7 @@ import {
   NodeDeletion,
   NodeSetDependencyGraph,
   NodeUpdate,
-  type DependencySummaryJSON,
+  type FlattenedDependencyGraphJSON,
 } from '../change.js';
 import type { NodeOrdering } from './ordering.js';
 
@@ -23,28 +23,39 @@ describe('Ordering', () => {
         [
           ['createdAt_DESC'],
           {
-            creations: ['Article'],
-            deletions: ['Article'],
-            changes: ['Article'],
+            Article: {
+              creation: true,
+              deletion: true,
+            },
           },
         ],
         [
           ['tagCount_DESC'],
           {
-            creations: ['Article', 'ArticleTag'],
-            deletions: ['Article', 'ArticleTag'],
-            changes: ['Article', 'ArticleTag'],
+            Article: {
+              creation: true,
+              deletion: true,
+            },
+            ArticleTag: {
+              creation: true,
+              deletion: true,
+            },
           },
         ],
         [
           ['createdAt_DESC', 'tagCount_DESC'],
           {
-            creations: ['Article', 'ArticleTag'],
-            deletions: ['Article', 'ArticleTag'],
-            changes: ['Article', 'ArticleTag'],
+            Article: {
+              creation: true,
+              deletion: true,
+            },
+            ArticleTag: {
+              creation: true,
+              deletion: true,
+            },
           },
         ],
-      ] satisfies [OrderByInputValue, DependencySummaryJSON][]
+      ] satisfies [OrderByInputValue, FlattenedDependencyGraphJSON][]
     ).forEach(([input, expected]) => {
       it(`${input}.dependency`, () => {
         const dependency = new NodeSetDependencyGraph(
@@ -53,7 +64,7 @@ describe('Ordering', () => {
           Article.orderingInputType.sort(input),
         );
 
-        assert.deepEqual(dependency.summary.toJSON(), expected);
+        assert.deepEqual(dependency.flattened.toJSON(), expected);
       });
     });
   });

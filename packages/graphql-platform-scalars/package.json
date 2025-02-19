@@ -29,14 +29,14 @@
   "devDependencies": {
     "graphql": "16.10.0",
     "publint": "0.3.5",
-    "tsx": "4.19.2",
+    "tsx": "4.19.3",
     "typescript": "5.7.3"
   },
   "dependencies": {
     "@prismamedia/graphql-platform-utils": "workspace:packages/graphql-platform-utils",
     "@types/draft-js": "^0.11.18",
     "remeda": "^2.20.2",
-    "type-fest": "^4.34.1"
+    "type-fest": "^4.35.0"
   },
   "peerDependencies": {
     "graphql": "^16.10.0"

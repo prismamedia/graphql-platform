@@ -86,11 +86,12 @@ describe('ChangesSubscription', () => {
       after(() => subscription.dispose());
 
       it('has a dependency-graph', () => {
-        assert.deepStrictEqual(subscription.dependencyGraph.summary.toJSON(), {
-          creations: ['Article'],
-          deletions: ['Article'],
-          componentsByNode: { Article: ['status', 'title'] },
-          changes: ['Article'],
+        assert.deepEqual(subscription.dependencyGraph.flattened.toJSON(), {
+          Article: {
+            creation: true,
+            deletion: true,
+            update: ['status', 'title'],
+          },
         });
       });
 
@@ -230,15 +231,20 @@ describe('ChangesSubscription', () => {
       after(() => subscription.dispose());
 
       it('has a dependency-graph', () => {
-        assert.deepStrictEqual(subscription.dependencyGraph.summary.toJSON(), {
-          creations: ['Article', 'ArticleTag'],
-          deletions: ['Article', 'ArticleTag'],
-          componentsByNode: {
-            Article: ['status', 'category', 'title'],
-            ArticleTag: ['order'],
-            Tag: ['deprecated'],
+        assert.deepEqual(subscription.dependencyGraph.flattened.toJSON(), {
+          Article: {
+            creation: true,
+            deletion: true,
+            update: ['status', 'category', 'title'],
           },
-          changes: ['Article', 'ArticleTag', 'Tag'],
+          ArticleTag: {
+            creation: true,
+            deletion: true,
+            update: ['order'],
+          },
+          Tag: {
+            update: ['deprecated'],
+          },
         });
       });
 
@@ -329,25 +335,31 @@ describe('ChangesSubscription', () => {
       after(() => subscription.dispose());
 
       it('has a dependency-graph', () => {
-        assert.deepStrictEqual(subscription.dependencyGraph.summary.toJSON(), {
-          creations: ['Article', 'UserProfile', 'ArticleTag'],
-          deletions: ['Article', 'UserProfile', 'ArticleTag'],
-          componentsByNode: {
-            Article: ['status', 'updatedBy', 'title', 'category'],
-            ArticleTag: ['order'],
-            Category: ['order'],
-            Tag: ['deprecated'],
-            User: ['lastLoggedInAt'],
-            UserProfile: ['birthday'],
+        assert.deepEqual(subscription.dependencyGraph.flattened.toJSON(), {
+          Article: {
+            creation: true,
+            deletion: true,
+            update: ['status', 'updatedBy', 'title', 'category'],
           },
-          changes: [
-            'Article',
-            'UserProfile',
-            'ArticleTag',
-            'User',
-            'Category',
-            'Tag',
-          ],
+          ArticleTag: {
+            creation: true,
+            deletion: true,
+            update: ['order'],
+          },
+          Category: {
+            update: ['order'],
+          },
+          Tag: {
+            update: ['deprecated'],
+          },
+          User: {
+            update: ['lastLoggedInAt'],
+          },
+          UserProfile: {
+            creation: true,
+            deletion: true,
+            update: ['birthday'],
+          },
         });
       });
 
