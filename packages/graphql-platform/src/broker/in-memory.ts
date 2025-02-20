@@ -25,7 +25,7 @@ export class InMemoryBroker
   extends AsyncEventEmitter<InMemoryBrokerEvents>
   implements BrokerInterface
 {
-  readonly #subscriptions = new Map<
+  public readonly subscriptions = new Map<
     ChangesSubscriptionStream,
     InMemorySubscription
   >();
@@ -36,7 +36,7 @@ export class InMemoryBroker
 
   public async publish(changes: MutationContextChanges): Promise<void> {
     await Promise.all(
-      Array.from(this.#subscriptions.values(), (queue) =>
+      Array.from(this.subscriptions.values(), (queue) =>
         queue.enqueue(changes),
       ),
     );
@@ -45,35 +45,37 @@ export class InMemoryBroker
   public async subscribe(
     subscription: ChangesSubscriptionStream,
   ): Promise<InMemorySubscription> {
-    const queue = new InMemorySubscription(this, subscription);
-    this.#subscriptions.set(subscription, queue);
-    await this.emit('subscription', queue);
+    const worker = new InMemorySubscription(this, subscription);
 
-    return queue;
+    this.subscriptions.set(subscription, worker);
+    await this.emit('subscription', worker);
+
+    return worker;
   }
 
   public onIdle(
     subscription: ChangesSubscriptionStream,
     listener: EventListener<InMemorySubscriptionEvents, 'idle'>,
   ): void {
-    this.#subscriptions.get(subscription)?.onIdle(listener);
+    this.subscriptions.get(subscription)?.onIdle(listener);
   }
 
   public async waitForIdle(
     subscription: ChangesSubscriptionStream,
   ): Promise<void> {
-    await this.#subscriptions.get(subscription)?.waitForIdle();
+    await this.subscriptions.get(subscription)?.waitForIdle();
   }
 
   public async unsubscribe(
     subscription: ChangesSubscriptionStream,
   ): Promise<void> {
-    const queue = this.#subscriptions.get(subscription);
-    if (queue) {
-      this.#subscriptions.delete(subscription);
+    const worker = this.subscriptions.get(subscription);
+    if (worker) {
+      this.subscriptions.delete(subscription);
+
       await Promise.all([
-        this.emit('unsubscription', queue),
-        !this.#subscriptions.size && this.emit('idle', undefined),
+        this.emit('unsubscription', worker),
+        !this.subscriptions.size && this.emit('idle', undefined),
       ]);
     }
   }

@@ -207,7 +207,6 @@ export class ChangesSubscriptionStream<
     undefined
   > {
     const changesSubscription = await this.subscribeToNodeChanges();
-
     this.#consumingNodeChanges = true;
 
     for await (const changes of changesSubscription) {

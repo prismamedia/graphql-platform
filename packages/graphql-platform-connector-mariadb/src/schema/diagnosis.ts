@@ -185,9 +185,9 @@ export class SchemaDiagnosis {
           (name) =>
             !schema.connector.broker ||
             ![
-              schema.connector.broker.mutationsTableName,
-              schema.connector.broker.changesTableName,
               schema.connector.broker.assignmentsTableName,
+              schema.connector.broker.changesTableName,
+              schema.connector.broker.mutationsTableName,
             ].includes(name),
         );
 

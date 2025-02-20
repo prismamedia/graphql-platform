@@ -105,6 +105,8 @@ export type MariaDBBrokerEvents = {
   subscription: MariaDBSubscription;
   unsubscription: MariaDBSubscription;
   idle: undefined;
+  assigner: undefined;
+  heartbeat: undefined;
 };
 
 export class MariaDBBroker<TRequestContext extends object = any>
@@ -124,7 +126,7 @@ export class MariaDBBroker<TRequestContext extends object = any>
   public readonly retentionInSeconds: number;
   public readonly batchSize: number;
 
-  readonly #subscriptions = new Map<
+  public readonly subscriptions = new Map<
     core.ChangesSubscriptionStream,
     MariaDBSubscription
   >();
@@ -316,10 +318,12 @@ export class MariaDBBroker<TRequestContext extends object = any>
     if (this.#assigning) {
       // Avoid overlapping assignments
       return;
-    } else if (!this.#subscriptions.size) {
+    } else if (!this.subscriptions.size) {
       // No subscriptions, no need to assign
       return;
     }
+
+    await this.emit('assigner', undefined);
 
     this.#assigning = true;
     try {
@@ -340,26 +344,26 @@ export class MariaDBBroker<TRequestContext extends object = any>
             LIMIT ${this.#assignerBatchSize}
           `,
           [
-            this.#subscriptions
+            this.subscriptions
               .values()
               .reduce(
                 (min, { assignedMutationId }) =>
                   assignedMutationId < min ? assignedMutationId : min,
-                this.#subscriptions.values().next().value!.assignedMutationId,
+                this.subscriptions.values().next().value!.assignedMutationId,
               ),
             msTimestampType.format(
-              this.#subscriptions
+              this.subscriptions
                 .values()
                 .reduce(
                   (min, { subscription }) =>
                     min < subscription.since ? min : subscription.since,
-                  this.#subscriptions.values().next().value!.subscription.since,
+                  this.subscriptions.values().next().value!.subscription.since,
                 ),
             ),
           ],
         );
 
-        if (this.#subscriptions.size && serializedMutations.length) {
+        if (this.subscriptions.size && serializedMutations.length) {
           const assignmentsBySubscription = new Map<
             MariaDBSubscription,
             Array<MariaDBBrokerMutation>
@@ -379,7 +383,7 @@ export class MariaDBBroker<TRequestContext extends object = any>
               ),
             };
 
-            this.#subscriptions
+            this.subscriptions
               .values()
               .filter(
                 ({ assignedMutationId, subscription }) =>
@@ -437,7 +441,7 @@ export class MariaDBBroker<TRequestContext extends object = any>
           }
         }
       } while (
-        this.#subscriptions.size &&
+        this.subscriptions.size &&
         serializedMutations.length === this.#assignerBatchSize
       );
     } finally {
@@ -449,10 +453,12 @@ export class MariaDBBroker<TRequestContext extends object = any>
     if (this.#heartbeating) {
       // Avoid overlapping heartbeats
       return;
-    } else if (!this.#subscriptions.size) {
+    } else if (!this.subscriptions.size) {
       // No subscriptions, no need to heartbeat
       return;
     }
+
+    await this.emit('heartbeat', undefined);
 
     this.#heartbeating = true;
     try {
@@ -460,7 +466,7 @@ export class MariaDBBroker<TRequestContext extends object = any>
         `
           UPDATE ${escapeIdentifier(this.assignmentsTableName)} 
           SET ${escapeIdentifier('heartbeatAt')} = NOW(3)
-            WHERE ${escapeIdentifier('subscriptionId')} IN (${Array.from(this.#subscriptions.values(), ({ id }) => escapeStringValue(id)).join(',')})
+            WHERE ${escapeIdentifier('subscriptionId')} IN (${Array.from(this.subscriptions.values(), ({ id }) => escapeStringValue(id)).join(',')})
         `,
       );
     } finally {
@@ -473,7 +479,7 @@ export class MariaDBBroker<TRequestContext extends object = any>
   ): Promise<core.NodeChangeSubscriptionInterface> {
     const worker = new MariaDBSubscription(this, subscription);
 
-    this.#subscriptions.set(subscription, worker);
+    this.subscriptions.set(subscription, worker);
     await this.emit('subscription', worker);
 
     this.#assigner ??= setInterval(
@@ -499,23 +505,23 @@ export class MariaDBBroker<TRequestContext extends object = any>
     subscription: core.ChangesSubscriptionStream,
     listener: EventListener<MariaDBSubscriptionEvents, 'idle'>,
   ): void {
-    this.#subscriptions.get(subscription)?.onIdle(listener);
+    this.subscriptions.get(subscription)?.onIdle(listener);
   }
 
   public async waitForIdle(
     subscription: core.ChangesSubscriptionStream,
   ): Promise<void> {
-    await this.#subscriptions.get(subscription)?.waitForIdle();
+    await this.subscriptions.get(subscription)?.waitForIdle();
   }
 
   public async unsubscribe(
     subscription: core.ChangesSubscriptionStream,
   ): Promise<void> {
-    const worker = this.#subscriptions.get(subscription);
+    const worker = this.subscriptions.get(subscription);
     if (worker) {
-      this.#subscriptions.delete(subscription);
+      this.subscriptions.delete(subscription);
 
-      if (!this.#subscriptions.size) {
+      if (!this.subscriptions.size) {
         clearInterval(this.#assigner);
         this.#assigner = undefined;
 
@@ -525,7 +531,7 @@ export class MariaDBBroker<TRequestContext extends object = any>
 
       await Promise.all([
         this.emit('unsubscription', worker),
-        !this.#subscriptions.size && this.emit('idle', undefined),
+        !this.subscriptions.size && this.emit('idle', undefined),
       ]);
     }
   }
