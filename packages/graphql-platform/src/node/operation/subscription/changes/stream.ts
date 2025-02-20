@@ -1,6 +1,7 @@
 import { AsyncEventEmitter } from '@prismamedia/async-event-emitter';
 import { MMethod } from '@prismamedia/memoize';
 import assert from 'node:assert';
+import { randomUUID, type UUID } from 'node:crypto';
 import { inspect } from 'node:util';
 import PQueue, { type Options as PQueueOptions } from 'p-queue';
 import type { Except, Promisable } from 'type-fest';
@@ -112,6 +113,8 @@ export class ChangesSubscriptionStream<
     >,
     AsyncDisposable
 {
+  public readonly id: UUID = randomUUID();
+
   public readonly since: Date;
   public readonly filter?: NodeFilter;
   public readonly onUpsertSelection: NodeSelection<TUpsert>;

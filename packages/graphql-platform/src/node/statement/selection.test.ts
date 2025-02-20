@@ -245,7 +245,7 @@ describe('Selection', () => {
           const dependentGraph = dependency.createDependentGraph(update);
 
           assert(!dependentGraph.isEmpty());
-          assert.strictEqual(dependentGraph.changes.size, 1);
+          assert.strictEqual(dependentGraph.dependents.size, 1);
           assert(dependentGraph.graphFilter.isFalse());
         });
 
@@ -272,7 +272,7 @@ describe('Selection', () => {
           const dependentGraph = dependency.createDependentGraph(update);
 
           assert(!dependentGraph.isEmpty());
-          assert.strictEqual(dependentGraph.changes.size, 1);
+          assert.strictEqual(dependentGraph.dependents.size, 1);
           assert.deepEqual(dependentGraph.graphFilter.inputValue, {
             OR: [
               { createdBy: { id: '9121c47b-87b6-4334-ae1d-4c9777e87576' } },
@@ -303,7 +303,7 @@ describe('Selection', () => {
           const dependentGraph = dependency.createDependentGraph(update);
 
           assert(!dependentGraph.isEmpty());
-          assert.strictEqual(dependentGraph.changes.size, 0);
+          assert.strictEqual(dependentGraph.dependents.size, 0);
           assert.deepEqual(dependentGraph.graphFilter.inputValue, {
             updatedBy: { username: 'yvann' },
           });
@@ -328,7 +328,7 @@ describe('Selection', () => {
           const dependentGraph = dependency.createDependentGraph(update);
 
           assert(!dependentGraph.isEmpty());
-          assert.strictEqual(dependentGraph.changes.size, 0);
+          assert.strictEqual(dependentGraph.dependents.size, 0);
           assert.deepEqual(dependentGraph.graphFilter.inputValue, {
             category: { OR: [{ _id: 10 }, { parent: { _id: 10 } }] },
           });
@@ -351,7 +351,7 @@ describe('Selection', () => {
           const dependentGraph = dependency.createDependentGraph(update);
 
           assert(!dependentGraph.isEmpty());
-          assert.strictEqual(dependentGraph.changes.size, 0);
+          assert.strictEqual(dependentGraph.dependents.size, 0);
           assert.deepEqual(dependentGraph.graphFilter.inputValue, {
             category: { _id: 10 },
           });
@@ -388,7 +388,7 @@ describe('Selection', () => {
           const dependentGraph = dependency.createDependentGraph(creation);
 
           assert(!dependentGraph.isEmpty());
-          assert.strictEqual(dependentGraph.changes.size, 0);
+          assert.strictEqual(dependentGraph.dependents.size, 0);
           assert.deepEqual(dependentGraph.graphFilter.inputValue, {
             OR: [
               { createdBy: { id: '16050880-dabc-4348-bd3b-d41efe1b6057' } },
@@ -407,7 +407,7 @@ describe('Selection', () => {
           const dependentGraph = dependency.createDependentGraph(deletion);
 
           assert(!dependentGraph.isEmpty());
-          assert.strictEqual(dependentGraph.changes.size, 0);
+          assert.strictEqual(dependentGraph.dependents.size, 0);
           assert.deepEqual(dependentGraph.graphFilter.inputValue, {
             OR: [
               { createdBy: { id: '7caf940a-058a-4ef2-a8bf-ac2d6cae3485' } },
@@ -440,7 +440,7 @@ describe('Selection', () => {
           const dependentGraph = dependency.createDependentGraph(update);
 
           assert(!dependentGraph.isEmpty());
-          assert.strictEqual(dependentGraph.changes.size, 0);
+          assert.strictEqual(dependentGraph.dependents.size, 0);
           assert.deepEqual(dependentGraph.graphFilter.inputValue, {
             OR: [
               { createdBy: { id: '8e3587e8-2e4e-46a4-a6e0-27f08aebb215' } },
@@ -465,7 +465,7 @@ describe('Selection', () => {
           const dependentGraph = dependency.createDependentGraph(creation);
 
           assert(!dependentGraph.isEmpty());
-          assert.strictEqual(dependentGraph.changes.size, 0);
+          assert.strictEqual(dependentGraph.dependents.size, 0);
           assert.deepEqual(dependentGraph.graphFilter.inputValue, { _id: 2 });
         });
 
@@ -483,7 +483,7 @@ describe('Selection', () => {
           const dependentGraph = dependency.createDependentGraph(deletion);
 
           assert(!dependentGraph.isEmpty());
-          assert.strictEqual(dependentGraph.changes.size, 0);
+          assert.strictEqual(dependentGraph.dependents.size, 0);
           assert.deepEqual(dependentGraph.graphFilter.inputValue, { _id: 3 });
         });
 
@@ -502,7 +502,7 @@ describe('Selection', () => {
           const dependentGraph = dependency.createDependentGraph(update);
 
           assert(!dependentGraph.isEmpty());
-          assert.strictEqual(dependentGraph.changes.size, 0);
+          assert.strictEqual(dependentGraph.dependents.size, 0);
           assert.deepEqual(dependentGraph.graphFilter.inputValue, { _id: 4 });
         });
 
@@ -521,7 +521,7 @@ describe('Selection', () => {
           const dependentGraph = dependency.createDependentGraph(update);
 
           assert(!dependentGraph.isEmpty());
-          assert.strictEqual(dependentGraph.changes.size, 0);
+          assert.strictEqual(dependentGraph.dependents.size, 0);
           assert.deepEqual(dependentGraph.graphFilter.inputValue, { _id: 5 });
         });
       });
@@ -544,7 +544,7 @@ describe('Selection', () => {
           const dependentGraph = dependency.createDependentGraph(update);
 
           assert(!dependentGraph.isEmpty());
-          assert.strictEqual(dependentGraph.changes.size, 0);
+          assert.strictEqual(dependentGraph.dependents.size, 0);
           assert.deepEqual(dependentGraph.graphFilter.inputValue, {
             tags_some: { tag: { id: '68f3d88d-1308-4019-8118-fc20042e8c20' } },
           });
@@ -567,7 +567,7 @@ describe('Selection', () => {
           const dependentGraph = dependency.createDependentGraph(update);
 
           assert(!dependentGraph.isEmpty());
-          assert.strictEqual(dependentGraph.changes.size, 0);
+          assert.strictEqual(dependentGraph.dependents.size, 0);
           assert.deepEqual(dependentGraph.graphFilter.inputValue, {
             tags_some: { tag: { id: '68f3d88d-1308-4019-8118-fc20042e8c20' } },
           });

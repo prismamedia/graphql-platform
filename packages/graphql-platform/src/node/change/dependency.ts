@@ -393,7 +393,7 @@ export class DependencyGraph {
       : undefined;
 
     return new DependentGraph(
-      aggregation.requestContext,
+      aggregation,
       path ??
         this.filter?.dependencyGraph.createDependentGraph(
           aggregation,
@@ -407,7 +407,7 @@ export class DependencyGraph {
         .entries()
         .map(([edge, dependencies]) => [
           edge,
-          new DependentGraph(aggregation.requestContext, edge).mergeWith(
+          new DependentGraph(aggregation, edge).mergeWith(
             ...dependencies.map((dependency) =>
               dependency.createDependentGraph(aggregation),
             ),
@@ -417,7 +417,7 @@ export class DependencyGraph {
         .entries()
         .map(([reverseEdge, dependencies]) => [
           reverseEdge,
-          new DependentGraph(aggregation.requestContext, reverseEdge).mergeWith(
+          new DependentGraph(aggregation, reverseEdge).mergeWith(
             ...dependencies.map((dependency) =>
               dependency.createDependentGraph(aggregation, visitedNodes),
             ),
@@ -638,7 +638,7 @@ export class DependentGraph<TRequestContext extends object = any> {
    */
   public readonly filter?: DependentGraph<TRequestContext>;
 
-  public readonly changes: ReadonlySet<NodeChange<TRequestContext>>;
+  public readonly dependents: ReadonlySet<NodeChange<TRequestContext>>;
 
   public readonly dependentsByEdge: ReadonlyMap<
     Edge,
@@ -651,7 +651,7 @@ export class DependentGraph<TRequestContext extends object = any> {
   >;
 
   public constructor(
-    public readonly initiator: TRequestContext,
+    public readonly changes: MutationContextChanges<TRequestContext>,
     nodeOrDependentGraphOrPath:
       | Node
       | DependentGraph<TRequestContext>
@@ -679,12 +679,12 @@ export class DependentGraph<TRequestContext extends object = any> {
       this.node = nodeOrDependentGraphOrPath.head;
     }
 
-    this.changes = new Set([...deletions, ...upserts, ...upsertIfFounds]);
+    this.dependents = new Set([...deletions, ...upserts, ...upsertIfFounds]);
 
     this.dependentsByEdge = new Map(
       dependentsByEdge?.filter(([edge, dependents]) => {
         assert.strictEqual(edge.tail, this.node);
-        assert.strictEqual(dependents.initiator, this.initiator);
+        assert.strictEqual(dependents.changes, this.changes);
 
         return !dependents.isEmpty();
       }),
@@ -693,7 +693,7 @@ export class DependentGraph<TRequestContext extends object = any> {
     this.dependentsByReverseEdge = new Map(
       dependentsByReverseEdge?.filter(([reverseEdge, dependents]) => {
         assert.strictEqual(reverseEdge.tail, this.node);
-        assert.strictEqual(dependents.initiator, this.initiator);
+        assert.strictEqual(dependents.changes, this.changes);
 
         return !dependents.isEmpty();
       }),
@@ -740,7 +740,7 @@ export class DependentGraph<TRequestContext extends object = any> {
     }
 
     return new DependentGraph(
-      this.initiator,
+      this.changes,
       this.path ?? this.filter ?? this.node,
       deletions,
       upserts,
@@ -753,7 +753,7 @@ export class DependentGraph<TRequestContext extends object = any> {
   @MMethod()
   public isEmpty(): boolean {
     return (
-      !this.changes.size &&
+      !this.dependents.size &&
       !this.dependentsByEdge.size &&
       !this.dependentsByReverseEdge.size
     );
@@ -810,7 +810,7 @@ export class DependentGraph<TRequestContext extends object = any> {
             new NodeFilter(
               head,
               OrOperation.create([
-                ...this.changes
+                ...this.dependents
                   .values()
                   .flatMap((change) =>
                     change instanceof NodeCreation
@@ -863,7 +863,7 @@ export class DependentGraph<TRequestContext extends object = any> {
         return new NodeFilter(
           tail,
           OrOperation.create([
-            ...this.changes
+            ...this.dependents
               .values()
               .flatMap((change) =>
                 change instanceof NodeCreation
@@ -911,7 +911,7 @@ export class DependentGraph<TRequestContext extends object = any> {
   @MGetter
   public get count(): Promise<number> {
     return this.node.api
-      .count(this.initiator, {
+      .count(this.changes, {
         where: {
           OR: [
             ...this.upsertIfFounds.values().map(({ id }) => id),

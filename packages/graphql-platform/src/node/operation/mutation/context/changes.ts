@@ -27,13 +27,12 @@ export class MutationContextChanges<TRequestContext extends object = any>
   implements Iterable<NodeChange<TRequestContext>>, Disposable
 {
   public readonly requestContext: TRequestContext;
+  public committedAt?: Date;
 
   public readonly changesByNode: Map<
     Node,
     MutationContextChangesByNode<TRequestContext>
   >;
-
-  public committedAt?: Date;
 
   public readonly maxSize?: number;
   public readonly onMaxSizeReached: 'error' | 'ignore';
@@ -68,11 +67,20 @@ export class MutationContextChanges<TRequestContext extends object = any>
 
   public add(...changes: ReadonlyArray<NodeChange<TRequestContext>>): this {
     if (changes.length) {
+      if (this.isEmpty()) {
+        this.committedAt = changes[0].committedAt;
+      }
+
       for (const change of changes) {
         assert.strictEqual(
           change.requestContext,
           this.requestContext,
           'Changes must share the same request-context',
+        );
+        assert.strictEqual(
+          change.committedAt,
+          this.committedAt,
+          'Changes must share the same commit',
         );
 
         let aggregation = this.changesByNode.get(change.node);

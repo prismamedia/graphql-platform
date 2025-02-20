@@ -250,7 +250,7 @@ describe('Filter', () => {
             const dependentGraph = dependency.createDependentGraph(update);
 
             assert(!dependentGraph.isEmpty());
-            assert.strictEqual(dependentGraph.changes.size, 1);
+            assert.strictEqual(dependentGraph.dependents.size, 1);
             assert(dependentGraph.graphFilter.isFalse());
           }
         });

@@ -5,7 +5,6 @@ import {
 import * as core from '@prismamedia/graphql-platform';
 import * as utils from '@prismamedia/graphql-platform-utils';
 import Denque from 'denque';
-import { randomUUID, type UUID } from 'node:crypto';
 import type {
   MariaDBBroker,
   MariaDBBrokerMutation,
@@ -29,8 +28,6 @@ export class MariaDBSubscription
   implements core.NodeChangeSubscriptionInterface
 {
   #idle?: boolean;
-
-  public readonly id: UUID = randomUUID();
   public assignedMutationId: bigint = 0n;
 
   readonly #signal: AbortSignal;
@@ -60,7 +57,7 @@ export class MariaDBSubscription
     return (
       this.#assignments.shift() ||
       ((await this.wait('assignments', this.#signal).catch(() => undefined)) &&
-        this.#assignments.shift())
+        this.dequeue())
     );
   }
 
@@ -72,7 +69,7 @@ export class MariaDBSubscription
         this.broker.unsubscribe(this.subscription),
         this.broker.connector.executeQuery(`
           DELETE FROM ${escapeIdentifier(this.broker.assignmentsTableName)}
-          WHERE ${escapeIdentifier('subscriptionId')} = ${escapeStringValue(this.id)}
+          WHERE ${escapeIdentifier('subscriptionId')} = ${escapeStringValue(this.subscription.id)}
         `),
       ]);
     } finally {
@@ -201,7 +198,7 @@ export class MariaDBSubscription
           `
             DELETE FROM ${escapeIdentifier(this.broker.assignmentsTableName)}
             WHERE ${escapeIdentifier('mutationId')} = ${mutation.id}
-              AND ${escapeIdentifier('subscriptionId')} = ${escapeStringValue(this.id)}
+              AND ${escapeIdentifier('subscriptionId')} = ${escapeStringValue(this.subscription.id)}
           `,
         ),
         this.emit('processed', mutation),

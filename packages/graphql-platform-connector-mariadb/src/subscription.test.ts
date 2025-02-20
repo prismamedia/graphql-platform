@@ -14,7 +14,6 @@ import { createMyGP } from './__tests__/config.js';
 
 describe('Subscription', () => {
   const gp = createMyGP(`connector_mariadb_subscription`);
-  gp.broker.on('error', console.error);
 
   const Article = gp.getNodeByName('Article');
   const Category = gp.getNodeByName('Category');

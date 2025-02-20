@@ -77,7 +77,7 @@ export interface MariaDBBrokerOptions<TRequestContext extends object = any> {
   heartbeatInterval?: number;
 
   /**
-   * The number of seconds to keep the unassigned requests in the database.
+   * The number of seconds to keep the unassigned mutations in the database.
    *
    * @default 300
    */
@@ -105,8 +105,8 @@ export type MariaDBBrokerEvents = {
   subscription: MariaDBSubscription;
   unsubscription: MariaDBSubscription;
   idle: undefined;
-  assigner: undefined;
-  heartbeat: undefined;
+  assignation: number;
+  heartbeat: number;
 };
 
 export class MariaDBBroker<TRequestContext extends object = any>
@@ -323,8 +323,6 @@ export class MariaDBBroker<TRequestContext extends object = any>
       return;
     }
 
-    await this.emit('assigner', undefined);
-
     this.#assigning = true;
     try {
       let serializedMutations: ReadonlyArray<SerializedMariaDBBrokerMutation>;
@@ -419,19 +417,25 @@ export class MariaDBBroker<TRequestContext extends object = any>
 
           if (assignmentsBySubscription.size) {
             await Promise.all([
-              this.connector.executeQuery(`
-                INSERT INTO ${escapeIdentifier(this.assignmentsTableName)} (${['mutationId', 'subscriptionId', 'heartbeatAt'].map(escapeIdentifier).join(',')})
-                VALUES ${assignmentsBySubscription
-                  .entries()
-                  .flatMap(([subscription, assignments]) =>
-                    assignments.map(
-                      (mutation) =>
-                        `(${[mutation.id, escapeStringValue(subscription.id), 'NOW(3)'].join(',')})`,
-                    ),
-                  )
-                  .toArray()
-                  .join(',')}
-              `),
+              this.connector
+                .executeQuery<OkPacket>(
+                  `
+                    INSERT INTO ${escapeIdentifier(this.assignmentsTableName)} (${['mutationId', 'subscriptionId', 'heartbeatAt'].map(escapeIdentifier).join(',')})
+                    VALUES ${assignmentsBySubscription
+                      .entries()
+                      .flatMap(([{ subscription }, assignments]) =>
+                        assignments.map(
+                          (mutation) =>
+                            `(${[mutation.id, escapeStringValue(subscription.id), 'NOW(3)'].join(',')})`,
+                        ),
+                      )
+                      .toArray()
+                      .join(',')}
+                  `,
+                )
+                .then(({ affectedRows }) =>
+                  this.emit('assignation', affectedRows),
+                ),
               ...Array.from(
                 assignmentsBySubscription,
                 ([subscription, assignments]) =>
@@ -458,17 +462,17 @@ export class MariaDBBroker<TRequestContext extends object = any>
       return;
     }
 
-    await this.emit('heartbeat', undefined);
-
     this.#heartbeating = true;
     try {
-      await this.connector.executeQuery(
+      const { affectedRows } = await this.connector.executeQuery<OkPacket>(
         `
           UPDATE ${escapeIdentifier(this.assignmentsTableName)} 
           SET ${escapeIdentifier('heartbeatAt')} = NOW(3)
-            WHERE ${escapeIdentifier('subscriptionId')} IN (${Array.from(this.subscriptions.values(), ({ id }) => escapeStringValue(id)).join(',')})
+            WHERE ${escapeIdentifier('subscriptionId')} IN (${Array.from(this.subscriptions.values(), ({ subscription: { id } }) => escapeStringValue(id)).join(',')})
         `,
       );
+
+      await this.emit('heartbeat', affectedRows);
     } finally {
       this.#heartbeating = false;
     }
