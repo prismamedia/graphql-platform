@@ -79,10 +79,15 @@ export class ChangesSubscriptionEffect<
             ],
           },
           selection: this.subscription.onDeletionSelection,
-        } satisfies ScrollSubscriptionArgs;
+        } satisfies Omit<ScrollSubscriptionArgs, 'chunkSize'>;
 
         if (this.subscription.scrollable) {
-          for await (const deletion of this.subscription.api.scroll(args)) {
+          for await (const deletion of this.subscription.api.scroll({
+            ...args,
+            ...(this.subscription.cursorSize && {
+              chunkSize: this.subscription.cursorSize * 2,
+            }),
+          })) {
             yield new ChangesSubscriptionDeletion(
               this.subscription,
               initiator,
@@ -150,10 +155,15 @@ export class ChangesSubscriptionEffect<
           ],
         },
         selection: this.subscription.onUpsertSelection,
-      } satisfies ScrollSubscriptionArgs;
+      } satisfies Omit<ScrollSubscriptionArgs, 'chunkSize'>;
 
       if (this.subscription.scrollable) {
-        for await (const upsert of this.subscription.api.scroll(args)) {
+        for await (const upsert of this.subscription.api.scroll({
+          ...args,
+          ...(this.subscription.cursorSize && {
+            chunkSize: this.subscription.cursorSize,
+          }),
+        })) {
           yield new ChangesSubscriptionUpsert(
             this.subscription,
             initiator,

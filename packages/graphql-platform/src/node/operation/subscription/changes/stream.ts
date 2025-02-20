@@ -73,6 +73,7 @@ export type ChangesSubscriptionStreamConfig<
     onDeletion?: NodeSelection<TDeletion>;
     onUpsert: NodeSelection<TUpsert>;
   };
+  cursorSize?: number;
 };
 
 /**
@@ -116,6 +117,7 @@ export class ChangesSubscriptionStream<
   public readonly onUpsertSelection: NodeSelection<TUpsert>;
   public readonly onDeletionSelection?: NodeSelection<TDeletion>;
   public readonly dependencyGraph: NodeSetDependencyGraph;
+  public readonly cursorSize?: number;
 
   public readonly api: ContextBoundNodeAPI;
   public readonly scrollable: boolean;
@@ -169,6 +171,8 @@ export class ChangesSubscriptionStream<
       undefined,
       this.onUpsertSelection,
     );
+
+    this.cursorSize = config.cursorSize;
 
     this.api = node.createContextBoundAPI(context);
     this.scrollable = node.getSubscriptionByKey('scroll').isEnabled();

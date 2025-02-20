@@ -35,6 +35,12 @@ export type ChangesSubscriptionArgs = {
         onUpsert: RawNodeSelection;
         onDeletion?: RawNodeSelection;
       };
+  /**
+   * A "mutation", which may contains many "node-changes", can produce a lot of "subscription-changes".
+   *
+   * This is the size of the cursor used to fetch these "subscription-changes" in batches.
+   */
+  cursorSize?: number;
 };
 
 export type ParsedChangesSubscriptionArgs = Merge<
@@ -95,6 +101,11 @@ export class ChangesSubscription<
       new utils.Input({
         name: 'where',
         type: this.node.filterInputType,
+      }),
+      new utils.Input({
+        public: false,
+        name: 'cursorSize',
+        type: new utils.NonNullableInputType(scalars.GraphQLUnsignedInt),
       }),
     ];
   }
@@ -239,6 +250,7 @@ export class ChangesSubscription<
       since: args.since,
       filter,
       selection: args.selection,
+      cursorSize: args.cursorSize,
     });
     await stream.subscribeToNodeChanges();
 
