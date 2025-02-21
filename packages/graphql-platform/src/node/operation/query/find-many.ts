@@ -17,12 +17,17 @@ import {
   catchConnectorOperationError,
   ConnectorOperationKind,
 } from '../error.js';
+import {
+  changesSubscriptionCacheControlInputType,
+  type ChangesSubscriptionCacheControlInputValue,
+} from '../subscription/changes/cache-control.js';
 
 export type FindManyQueryArgs = RawNodeSelectionAwareArgs<{
   where?: NodeFilterInputValue;
   orderBy?: OrderByInputValue;
   skip?: utils.Nillable<number>;
   first: number;
+  forSubscription?: ChangesSubscriptionCacheControlInputValue;
 }>;
 
 export type FindManyQueryResult = NodeSelectedValue[];
@@ -61,6 +66,13 @@ export class FindManyQuery<
       new utils.Input({
         name: 'first',
         type: utils.nonNillableInputType(scalars.typesByName.UnsignedInt),
+      }),
+      new utils.Input({
+        public: false,
+        name: 'forSubscription',
+        type: new utils.NonNullableInputType(
+          changesSubscriptionCacheControlInputType,
+        ),
       }),
     ];
   }
@@ -114,6 +126,9 @@ export class FindManyQuery<
           ...(args.skip && { offset: args.skip }),
           limit: args.first,
           selection: args.selection,
+          ...(args.forSubscription && {
+            forSubscription: args.forSubscription,
+          }),
         }),
       this.node,
       ConnectorOperationKind.FIND,

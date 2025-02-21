@@ -11,7 +11,7 @@ exports[`NodeOrderingInputType > Definition > Category has an ordering input typ
 `;
 
 exports[`NodeOrderingInputType > Definition > Tag has an ordering input type 1`] = `
-"\\"\\"\\"Order the \\"Tag\\" nodes\\"\\"\\"\\nenum TagOrderingInput {\\n  \\"\\"\\"from the lowest \\"createdAt\\" to the highest\\"\\"\\"\\n  createdAt_ASC\\n\\n  \\"\\"\\"from the highest \\"createdAt\\" to the lowest\\"\\"\\"\\n  createdAt_DESC\\n\\n  \\"\\"\\"from the lowest \\"updatedAt\\" to the highest\\"\\"\\"\\n  updatedAt_ASC\\n\\n  \\"\\"\\"from the highest \\"updatedAt\\" to the lowest\\"\\"\\"\\n  updatedAt_DESC\\n\\n  \\"\\"\\"from the lowest number of \\"articles\\" to the highest\\"\\"\\"\\n  articleCount_ASC\\n\\n  \\"\\"\\"from the highest number of \\"articles\\" to the lowest\\"\\"\\"\\n  articleCount_DESC\\n}"
+"\\"\\"\\"Order the \\"Tag\\" nodes\\"\\"\\"\\nenum TagOrderingInput {\\n  \\"\\"\\"from the lowest \\"id\\" to the highest\\"\\"\\"\\n  id_ASC\\n\\n  \\"\\"\\"from the highest \\"id\\" to the lowest\\"\\"\\"\\n  id_DESC\\n\\n  \\"\\"\\"from the lowest \\"createdAt\\" to the highest\\"\\"\\"\\n  createdAt_ASC\\n\\n  \\"\\"\\"from the highest \\"createdAt\\" to the lowest\\"\\"\\"\\n  createdAt_DESC\\n\\n  \\"\\"\\"from the lowest \\"updatedAt\\" to the highest\\"\\"\\"\\n  updatedAt_ASC\\n\\n  \\"\\"\\"from the highest \\"updatedAt\\" to the lowest\\"\\"\\"\\n  updatedAt_DESC\\n\\n  \\"\\"\\"from the lowest number of \\"articles\\" to the highest\\"\\"\\"\\n  articleCount_ASC\\n\\n  \\"\\"\\"from the highest number of \\"articles\\" to the lowest\\"\\"\\"\\n  articleCount_DESC\\n}"
 `;
 
 exports[`NodeOrderingInputType > Definition > User has an ordering input type 1`] = `

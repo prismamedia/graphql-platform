@@ -83,7 +83,7 @@ describe('GraphQL-Platform', () => {
       const cases = [
         [graphql.OperationTypeNode.QUERY, 65, 57],
         [graphql.OperationTypeNode.MUTATION, 116, 99],
-        [graphql.OperationTypeNode.SUBSCRIPTION, 12, 7],
+        [graphql.OperationTypeNode.SUBSCRIPTION, 8, 6],
       ] satisfies [
         operationType: OperationType,
         enabledCount: number,

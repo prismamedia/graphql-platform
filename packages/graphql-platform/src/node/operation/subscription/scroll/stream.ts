@@ -23,6 +23,7 @@ import {
 } from '../../../statement.js';
 import type { NodeFilterInputValue } from '../../../type/input/filter.js';
 import { LeafFilterInput } from '../../../type/input/filter/field/leaf.js';
+import type { ScrollSubscriptionArgs } from '../scroll.js';
 
 const averageFormattedKey = 'average_formatted';
 
@@ -131,6 +132,7 @@ export type ScrollSubscriptionStreamConfig<
   ordering: LeafOrdering;
   selection: NodeSelection<TValue>;
   chunkSize: number;
+  forSubscription?: ScrollSubscriptionArgs['forSubscription'];
 };
 
 /**
@@ -163,10 +165,11 @@ export class ScrollSubscriptionStream<
   public readonly filter?: NodeFilter;
   public readonly ordering: LeafOrdering;
   public readonly selection: NodeSelection<TValue>;
+  readonly #chunkSize: number;
+  readonly #forSubscription?: ScrollSubscriptionArgs['forSubscription'];
 
   readonly #nextFilterInput: LeafFilterInput;
   readonly #internalSelection: NodeSelection;
-  readonly #chunkSize: number;
   readonly #api: ContextBoundNodeAPI;
 
   public constructor(
@@ -187,6 +190,9 @@ export class ScrollSubscriptionStream<
     assert(config.selection instanceof NodeSelection);
     this.selection = config.selection;
 
+    this.#chunkSize = Math.max(1, config.chunkSize);
+    this.#forSubscription = config.forSubscription;
+
     {
       const nextFilterInput = node.filterInputType.fields.find(
         (field): field is LeafFilterInput =>
@@ -206,7 +212,6 @@ export class ScrollSubscriptionStream<
       node.outputType.selectComponents([this.ordering.leaf.name]),
     );
 
-    this.#chunkSize = Math.max(1, config.chunkSize);
     this.#api = node.createContextBoundAPI(context);
   }
 
@@ -218,6 +223,7 @@ export class ScrollSubscriptionStream<
         orderBy: [this.ordering.inputValue],
         first: this.#chunkSize,
         selection: this.#internalSelection,
+        forSubscription: this.#forSubscription,
       });
 
       next =

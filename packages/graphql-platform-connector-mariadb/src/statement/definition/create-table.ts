@@ -44,7 +44,7 @@ export class CreateTableStatement implements mariadb.QueryOptions {
         utils.getOptionalFlag(config?.orReplace, false) && 'OR REPLACE',
         'TABLE',
         utils.getOptionalFlag(config?.ifNotExists, false) && 'IF NOT EXISTS',
-        `${escapeIdentifier(table.qualifiedName)}`,
+        escapeIdentifier(table.qualifiedName),
         `(${EOL}${[
           ...table.columns.map(
             ({ name, definition }) => `${escapeIdentifier(name)} ${definition}`,

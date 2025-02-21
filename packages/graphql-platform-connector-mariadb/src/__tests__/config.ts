@@ -45,6 +45,8 @@ export function createMyGP<TContainer extends object>(
                   ['status', 'slug'],
                   ['category', 'updatedAt'],
                 ],
+
+                subscriptionsState: true,
               },
             }
           : undefined,

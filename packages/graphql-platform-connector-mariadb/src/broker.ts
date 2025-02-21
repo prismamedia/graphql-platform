@@ -4,63 +4,45 @@ import {
 } from '@prismamedia/async-event-emitter';
 import * as core from '@prismamedia/graphql-platform';
 import * as utils from '@prismamedia/graphql-platform-utils';
-import type * as mariadb from 'mariadb';
-import assert from 'node:assert';
 import type { JsonObject } from 'type-fest';
 import {
   MariaDBSubscription,
   msTimestampType,
   type MariaDBSubscriptionEvents,
 } from './broker/subscription.js';
-import { escapeIdentifier, escapeStringValue } from './escaping.js';
-import type { MariaDBConnector, OkPacket } from './index.js';
+import {
+  MariaDBBrokerAssignmentsTable,
+  MariaDBBrokerChangesTable,
+  MariaDBBrokerMutationsTable,
+  type MariaDBBrokerAssignmentsTableOptions,
+  type MariaDBBrokerChangesTableOptions,
+  type MariaDBBrokerMutation,
+  type MariaDBBrokerMutationsTableOptions,
+  type SerializedMariaDBBrokerMutation,
+} from './broker/table.js';
+import { escapeIdentifier } from './escaping.js';
+import type { MariaDBConnector, PoolConnection } from './index.js';
+import { StatementKind } from './statement.js';
 import { AND } from './statement/manipulation/clause/where-condition.js';
 
 export {
   MariaDBSubscription,
   type MariaDBSubscriptionEvents,
 } from './broker/subscription.js';
+export * from './broker/table.js';
 
-export interface SerializedMariaDBBrokerMutation {
-  id: bigint;
-  requestContext: string;
-  changes: string;
-  committedAt: string;
-}
-
-export interface MariaDBBrokerMutation<TRequestContext extends object = any> {
-  id: bigint;
-  requestContext: TRequestContext;
-  changes: Record<
-    core.Node['name'],
-    Partial<{
-      creation: true;
-      update: core.Component['name'][];
-      deletion: true;
-    }>
-  >;
-  committedAt: Date;
-}
-
-export interface SerializedMariaDBBrokerChange {
-  mutationId: bigint;
-  id: bigint;
-  node: string;
-  kind: utils.MutationType;
-  oldValue: string | null;
-  newValue: string | null;
-  executedAt: string;
-  committedAt: string;
-}
+export type MariaDBBrokerEvents = {
+  subscription: MariaDBSubscription;
+  unsubscription: MariaDBSubscription;
+  idle: undefined;
+};
 
 export interface MariaDBBrokerOptions<TRequestContext extends object = any> {
   enabled?: utils.OptionalFlag;
 
-  assignmentsTable?: string;
-  assignmentsJanitorEvent?: string;
-  changesTable?: string;
-  mutationsTable?: string;
-  mutationsJanitorEvent?: string;
+  mutationsTable?: MariaDBBrokerMutationsTableOptions;
+  changesTable?: MariaDBBrokerChangesTableOptions;
+  assignmentsTable?: MariaDBBrokerAssignmentsTableOptions;
 
   /**
    * The number of seconds to wait before polling for new assignments.
@@ -79,12 +61,12 @@ export interface MariaDBBrokerOptions<TRequestContext extends object = any> {
   /**
    * The number of seconds to keep the unassigned mutations in the database.
    *
-   * @default 300
+   * @default 60 * 5 (5 minutes)
    */
   retention?: number;
 
   /**
-   * The number of changes to process in a single batch.
+   * The maximum number of changes, from a single-mutation, to process in a single batch.
    *
    * @default 100
    */
@@ -101,30 +83,18 @@ export interface MariaDBBrokerOptions<TRequestContext extends object = any> {
   unserializeRequestContext?: (requestContext: JsonObject) => TRequestContext;
 }
 
-export type MariaDBBrokerEvents = {
-  subscription: MariaDBSubscription;
-  unsubscription: MariaDBSubscription;
-  idle: undefined;
-  assignation: number;
-  heartbeat: number;
-};
-
 export class MariaDBBroker<TRequestContext extends object = any>
   extends AsyncEventEmitter<MariaDBBrokerEvents>
   implements core.BrokerInterface
 {
-  public readonly assignmentsTableName: string;
-  public readonly assignmentsJanitorEventName: string;
-
-  public readonly changesTableName: string;
-
-  public readonly mutationsTableName: string;
-  public readonly mutationsJanitorEventName: string;
-
   public readonly assignerIntervalInSeconds: number;
   public readonly heartbeatIntervalInSeconds: number;
   public readonly retentionInSeconds: number;
   public readonly batchSize: number;
+
+  public readonly mutationsTable: MariaDBBrokerMutationsTable;
+  public readonly changesTable: MariaDBBrokerChangesTable;
+  public readonly assignmentsTable: MariaDBBrokerAssignmentsTable;
 
   public readonly subscriptions = new Map<
     core.ChangesSubscriptionStream,
@@ -144,173 +114,44 @@ export class MariaDBBroker<TRequestContext extends object = any>
   ) {
     super();
 
-    this.assignmentsTableName = options?.assignmentsTable ?? '_gp_assignments';
-    this.assignmentsJanitorEventName =
-      options?.assignmentsJanitorEvent ??
-      `${this.assignmentsTableName}_janitor`;
+    this.assignerIntervalInSeconds = options?.assignerInterval ?? 1;
+    this.heartbeatIntervalInSeconds = options?.heartbeatInterval ?? 30;
+    this.retentionInSeconds = options?.retention ?? 60 * 5;
+    this.batchSize = options?.batchSize ?? 100;
 
-    this.changesTableName = options?.changesTable ?? '_gp_changes';
-
-    this.mutationsTableName = options?.mutationsTable ?? '_gp_mutations';
-    this.mutationsJanitorEventName =
-      options?.mutationsJanitorEvent ?? `${this.mutationsTableName}_janitor`;
-
-    this.assignerIntervalInSeconds = Math.max(
-      1,
-      options?.assignerInterval ?? 1,
+    this.mutationsTable = new MariaDBBrokerMutationsTable(
+      this,
+      options?.mutationsTable,
     );
-    this.heartbeatIntervalInSeconds = Math.max(
-      1,
-      options?.heartbeatInterval ?? 30,
+    this.changesTable = new MariaDBBrokerChangesTable(
+      this,
+      options?.changesTable,
     );
-    this.retentionInSeconds = Math.max(1, options?.retention ?? 300);
-    this.batchSize = Math.max(1, options?.batchSize ?? 100);
+    this.assignmentsTable = new MariaDBBrokerAssignmentsTable(
+      this,
+      options?.assignmentsTable,
+    );
   }
 
-  public async setup(connection?: mariadb.Connection): Promise<void> {
-    const queries = [
-      `CREATE TABLE IF NOT EXISTS ${escapeIdentifier(`${this.connector.schema}.${this.mutationsTableName}`)} (${[
-        `${escapeIdentifier('id')} BIGINT UNSIGNED AUTO_INCREMENT NOT NULL PRIMARY KEY`,
-        `${escapeIdentifier('requestContext')} JSON NOT NULL`,
-        `${escapeIdentifier('changes')} JSON NOT NULL`,
-        `${escapeIdentifier('committedAt')} ${msTimestampType.definition} NOT NULL`,
-        ...[['id', 'committedAt'], ['committedAt']].map(
-          (columns) =>
-            `INDEX idx_${columns.join('_')} (${columns.map(escapeIdentifier).join(',')})`,
-        ),
-      ].join(',')})`,
-      `CREATE TABLE IF NOT EXISTS ${escapeIdentifier(`${this.connector.schema}.${this.changesTableName}`)} (${[
-        `${escapeIdentifier('mutationId')} BIGINT UNSIGNED NOT NULL`,
-        `${escapeIdentifier('id')} BIGINT UNSIGNED NOT NULL`,
-        `${escapeIdentifier('node')} VARCHAR(255) NOT NULL`,
-        `${escapeIdentifier('kind')} ENUM(${utils.mutationTypes.map(escapeStringValue).join(',')}) NOT NULL`,
-        `${escapeIdentifier('oldValue')} JSON NULL`,
-        `${escapeIdentifier('newValue')} JSON NULL`,
-        `${escapeIdentifier('executedAt')} ${msTimestampType.definition} NOT NULL`,
-        `PRIMARY KEY (${['mutationId', 'id'].map(escapeIdentifier).join()})`,
-        `FOREIGN KEY ${escapeIdentifier(`fk_${this.changesTableName}_mutationId`)} (${escapeIdentifier('mutationId')}) REFERENCES ${escapeIdentifier(`${this.connector.schema}.${this.mutationsTableName}`)}(${escapeIdentifier('id')}) ON DELETE CASCADE`,
-        ...[['mutationId', 'id', 'node', 'kind']].map(
-          (columns) =>
-            `INDEX idx_${columns.join('_')} (${columns.map(escapeIdentifier).join(',')})`,
-        ),
-      ].join(',')})`,
-      `CREATE TABLE IF NOT EXISTS ${escapeIdentifier(`${this.connector.schema}.${this.assignmentsTableName}`)} (${[
-        `${escapeIdentifier('mutationId')} BIGINT UNSIGNED NOT NULL`,
-        `${escapeIdentifier('subscriptionId')} UUID NOT NULL`,
-        `${escapeIdentifier('heartbeatAt')} ${msTimestampType.definition} NOT NULL`,
-        `PRIMARY KEY (${['mutationId', 'subscriptionId'].map(escapeIdentifier).join()})`,
-        `FOREIGN KEY ${escapeIdentifier(`fk_${this.assignmentsTableName}_mutationId`)} (${escapeIdentifier('mutationId')}) REFERENCES ${escapeIdentifier(`${this.connector.schema}.${this.mutationsTableName}`)}(${escapeIdentifier('id')}) ON DELETE CASCADE`,
-        ...[['subscriptionId'], ['heartbeatAt']].map(
-          (columns) =>
-            `INDEX idx_${columns.join('_')} (${columns.map(escapeIdentifier).join(',')})`,
-        ),
-      ].join(',')})`,
-      `CREATE EVENT IF NOT EXISTS ${escapeIdentifier(`${this.connector.schema}.${this.assignmentsJanitorEventName}`)}
-        ON SCHEDULE EVERY ${this.heartbeatIntervalInSeconds} SECOND
-        DO
-          DELETE FROM ${escapeIdentifier(`${this.connector.schema}.${this.assignmentsTableName}`)}
-          WHERE ${escapeIdentifier('heartbeatAt')} < NOW(3) - INTERVAL ${this.heartbeatIntervalInSeconds * 2} SECOND;
-      `,
-      `CREATE EVENT IF NOT EXISTS ${escapeIdentifier(`${this.connector.schema}.${this.mutationsJanitorEventName}`)}
-        ON SCHEDULE EVERY ${Math.round(this.retentionInSeconds / 2)} SECOND
-        DO
-          DELETE FROM ${escapeIdentifier(`${this.connector.schema}.${this.mutationsTableName}`)}
-          WHERE ${escapeIdentifier('committedAt')} < NOW(3) - INTERVAL ${this.retentionInSeconds} SECOND
-            AND NOT EXISTS (
-              SELECT 1
-              FROM ${escapeIdentifier(`${this.connector.schema}.${this.assignmentsTableName}`)}
-              WHERE ${escapeIdentifier('mutationId')} = ${escapeIdentifier('id')}
-            );
-      `,
-      `SET GLOBAL event_scheduler=ON`,
-    ];
+  public async setup(connection?: PoolConnection): Promise<void> {
+    await this.connector.withConnection(
+      async (connection) => {
+        await this.mutationsTable.setup(connection);
+        await this.changesTable.setup(connection);
+        await this.assignmentsTable.setup(connection);
 
-    if (connection) {
-      for (const query of queries) {
-        await connection.query(query);
-      }
-    } else {
-      await this.connector.withConnection(async (connection) => {
-        for (const query of queries) {
-          await connection.query(query);
-        }
-      });
-    }
+        await this.mutationsTable.janitor.create(undefined, connection);
+        await this.assignmentsTable.janitor.create(undefined, connection);
+      },
+      StatementKind.DATA_DEFINITION,
+      connection,
+    );
   }
 
   public async publish(changes: core.MutationContextChanges): Promise<void> {
     await this.connector.withConnectionInTransaction(async (connection) => {
-      assert(changes.committedAt, 'The changes must have been committed');
-
-      const { insertId: mutationId } = await connection.query<OkPacket>(
-        `INSERT INTO ${escapeIdentifier(this.mutationsTableName)} (${['requestContext', 'changes', 'committedAt'].map(escapeIdentifier).join(',')}) VALUES (?, ?, ?)`,
-        [
-          this.options?.serializeRequestContext
-            ? this.options.serializeRequestContext(changes.requestContext)
-            : changes.requestContext,
-          Object.fromEntries(
-            changes.changesByNode.values().map((changes) => [
-              changes.node.name,
-              {
-                ...(changes.creation.size && { creation: true }),
-                ...(changes.update.size && {
-                  update: Array.from(
-                    changes.update
-                      .values()
-                      .reduce(
-                        (components, { updatesByComponent }) =>
-                          components.union(updatesByComponent),
-                        new Set<core.Component>(),
-                      ),
-                    ({ name }) => name,
-                  ),
-                }),
-                ...(changes.deletion.size && { deletion: true }),
-              },
-            ]),
-          ),
-          msTimestampType.format(changes.committedAt),
-        ],
-      );
-
-      await connection.query(
-        `
-          INSERT INTO ${escapeIdentifier(this.changesTableName)} (${['mutationId', 'id', 'node', 'kind', 'oldValue', 'newValue', 'executedAt'].map(escapeIdentifier).join(',')})
-          VALUES ${Array.from(
-            changes,
-            (change, id) =>
-              `(${[
-                mutationId,
-                id + 1,
-                escapeStringValue(change.node.name),
-                escapeStringValue(change.kind),
-                ...(change instanceof core.NodeCreation
-                  ? [
-                      'NULL',
-                      escapeStringValue(
-                        JSON.stringify(change.serializedNewValue),
-                      ),
-                    ]
-                  : change instanceof core.NodeUpdate
-                    ? [
-                        escapeStringValue(
-                          JSON.stringify(change.serializedOldValue),
-                        ),
-                        escapeStringValue(
-                          JSON.stringify(change.serializedUpdates),
-                        ),
-                      ]
-                    : [
-                        escapeStringValue(
-                          JSON.stringify(change.serializedOldValue),
-                        ),
-                        'NULL',
-                      ]),
-                msTimestampType.serialize(change.executedAt),
-              ].join(',')})`,
-          ).join(',')}
-        `,
-      );
+      const mutationId = await this.mutationsTable.publish(changes, connection);
+      await this.changesTable.publish(mutationId, changes, connection);
     });
   }
 
@@ -333,7 +174,7 @@ export class MariaDBBroker<TRequestContext extends object = any>
         >(
           `
             SELECT *
-            FROM ${escapeIdentifier(this.mutationsTableName)}
+            FROM ${escapeIdentifier(this.mutationsTable.name)}
             WHERE ${AND([
               `${escapeIdentifier('id')} > ?`,
               `${escapeIdentifier('committedAt')} >= ?`,
@@ -417,25 +258,7 @@ export class MariaDBBroker<TRequestContext extends object = any>
 
           if (assignmentsBySubscription.size) {
             await Promise.all([
-              this.connector
-                .executeQuery<OkPacket>(
-                  `
-                    INSERT INTO ${escapeIdentifier(this.assignmentsTableName)} (${['mutationId', 'subscriptionId', 'heartbeatAt'].map(escapeIdentifier).join(',')})
-                    VALUES ${assignmentsBySubscription
-                      .entries()
-                      .flatMap(([{ subscription }, assignments]) =>
-                        assignments.map(
-                          (mutation) =>
-                            `(${[mutation.id, escapeStringValue(subscription.id), 'NOW(3)'].join(',')})`,
-                        ),
-                      )
-                      .toArray()
-                      .join(',')}
-                  `,
-                )
-                .then(({ affectedRows }) =>
-                  this.emit('assignation', affectedRows),
-                ),
+              this.assignmentsTable.assign(assignmentsBySubscription),
               ...Array.from(
                 assignmentsBySubscription,
                 ([subscription, assignments]) =>
@@ -464,15 +287,9 @@ export class MariaDBBroker<TRequestContext extends object = any>
 
     this.#heartbeating = true;
     try {
-      const { affectedRows } = await this.connector.executeQuery<OkPacket>(
-        `
-          UPDATE ${escapeIdentifier(this.assignmentsTableName)} 
-          SET ${escapeIdentifier('heartbeatAt')} = NOW(3)
-            WHERE ${escapeIdentifier('subscriptionId')} IN (${Array.from(this.subscriptions.values(), ({ subscription: { id } }) => escapeStringValue(id)).join(',')})
-        `,
+      await this.assignmentsTable.heartbeat(
+        this.subscriptions.values().map(({ subscription: { id } }) => id),
       );
-
-      await this.emit('heartbeat', affectedRows);
     } finally {
       this.#heartbeating = false;
     }

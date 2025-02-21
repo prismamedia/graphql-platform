@@ -67,10 +67,7 @@ export class MariaDBSubscription
     try {
       await Promise.all([
         this.broker.unsubscribe(this.subscription),
-        this.broker.connector.executeQuery(`
-          DELETE FROM ${escapeIdentifier(this.broker.assignmentsTableName)}
-          WHERE ${escapeIdentifier('subscriptionId')} = ${escapeStringValue(this.subscription.id)}
-        `),
+        this.broker.assignmentsTable.unassign(this.subscription.id),
       ]);
     } finally {
       this.#assignments.clear();
@@ -95,7 +92,7 @@ export class MariaDBSubscription
         >(
           `
             SELECT *
-            FROM ${escapeIdentifier(this.broker.changesTableName)}
+            FROM ${escapeIdentifier(this.broker.changesTable.name)}
             WHERE ${AND([
               `${escapeIdentifier('mutationId')} = ${mutation.id}`,
               `${escapeIdentifier('id')} > ${processedChangeId}`,
@@ -194,12 +191,9 @@ export class MariaDBSubscription
       );
 
       await Promise.all([
-        this.broker.connector.executeQuery(
-          `
-            DELETE FROM ${escapeIdentifier(this.broker.assignmentsTableName)}
-            WHERE ${escapeIdentifier('mutationId')} = ${mutation.id}
-              AND ${escapeIdentifier('subscriptionId')} = ${escapeStringValue(this.subscription.id)}
-          `,
+        this.broker.assignmentsTable.unassign(
+          this.subscription.id,
+          mutation.id,
         ),
         this.emit('processed', mutation),
       ]);

@@ -1,6 +1,7 @@
 import type * as utils from '@prismamedia/graphql-platform-utils';
 import type { BrokerInterface } from './broker-interface.js';
 import type {
+  ChangesSubscriptionCacheControlInputValue,
   MutationContext,
   Node,
   NodeCreationStatement,
@@ -45,6 +46,7 @@ export interface ConnectorFindStatement<
   readonly forMutation?:
     | utils.MutationType.DELETION
     | utils.MutationType.UPDATE;
+  readonly forSubscription?: ChangesSubscriptionCacheControlInputValue;
 }
 
 export interface ConnectorCreateStatement {

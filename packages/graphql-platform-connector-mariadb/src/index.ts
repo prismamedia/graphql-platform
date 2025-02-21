@@ -34,6 +34,10 @@ export * from './escaping.js';
 export * from './schema.js';
 export * from './statement.js';
 
+export type PoolConnection = mariadb.PoolConnection & {
+  kind: StatementKind;
+} & AsyncDisposable;
+
 /**
  * @see https://mariadb.com/kb/en/ok_packet/
  */
@@ -115,11 +119,14 @@ export class MariaDBConnector<TRequestContext extends object = any>
   public readonly version?: semver.SemVer;
   public readonly schema: Schema;
 
-  readonly #poolsByStatementKind = new Map<StatementKind, mariadb.Pool>();
+  readonly #poolsByStatementKind = new Map<
+    StatementKind,
+    mariadb.Pool & { kind: StatementKind }
+  >();
 
   readonly #connectionsByMutation = new WeakMap<
     core.MutationContext,
-    mariadb.PoolConnection
+    PoolConnection
   >();
 
   public constructor(
@@ -171,7 +178,7 @@ export class MariaDBConnector<TRequestContext extends object = any>
 
   public getPool(
     kind: StatementKind = StatementKind.DATA_MANIPULATION,
-  ): mariadb.Pool {
+  ): mariadb.Pool & { kind: StatementKind } {
     let pool = this.#poolsByStatementKind.get(kind);
     if (!pool) {
       utils.assertPlainObject(this.poolConfig, this.poolConfigPath);
@@ -195,29 +202,32 @@ export class MariaDBConnector<TRequestContext extends object = any>
 
       this.#poolsByStatementKind.set(
         kind,
-        (pool = mariadb.createPool(
-          kind === StatementKind.DATA_MANIPULATION
-            ? {
-                ...poolConfig,
-                sessionVariables: {
-                  ...poolConfig?.sessionVariables,
-                  // For "JSON_ARRAYAGG" & "JSON_OBJECTAGG", 100M instead of the default 1M
-                  group_concat_max_len: 104857600,
-                },
-                autoJsonMap: false,
-                bigIntAsNumber: false,
-                charset: this.charset,
-                collation: this.collation,
-                database: this.schema.name,
-                dateStrings: true,
-                decimalAsNumber: true,
-                insertIdAsNumber: false,
-                multipleStatements: false,
-                timezone: 'Z',
-                ...({ bitOneIsBoolean: false } as any),
-                logger,
-              }
-            : { ...poolConfig, connectionLimit: 1, logger },
+        (pool = Object.assign(
+          mariadb.createPool(
+            kind === StatementKind.DATA_MANIPULATION
+              ? {
+                  ...poolConfig,
+                  sessionVariables: {
+                    ...poolConfig?.sessionVariables,
+                    // For "JSON_ARRAYAGG" & "JSON_OBJECTAGG", 100M instead of the default 1M
+                    group_concat_max_len: 104857600,
+                  },
+                  autoJsonMap: false,
+                  bigIntAsNumber: false,
+                  charset: this.charset,
+                  collation: this.collation,
+                  database: this.schema.name,
+                  dateStrings: true,
+                  decimalAsNumber: true,
+                  insertIdAsNumber: false,
+                  multipleStatements: false,
+                  timezone: 'Z',
+                  ...({ bitOneIsBoolean: false } as any),
+                  logger,
+                }
+              : { ...poolConfig, connectionLimit: 1, logger },
+          ),
+          { kind },
         )),
       );
     }
@@ -227,38 +237,44 @@ export class MariaDBConnector<TRequestContext extends object = any>
 
   public async disconnect(): Promise<void> {
     await Promise.all(
-      Array.from(this.#poolsByStatementKind, async ([kind, pool]) => {
+      Array.from(this.#poolsByStatementKind.values(), async (pool) => {
         try {
           await pool.end();
         } finally {
-          this.#poolsByStatementKind.delete(kind);
+          this.#poolsByStatementKind.delete(pool.kind);
         }
       }),
     );
   }
 
-  public async getConnection(
-    kind?: StatementKind,
-  ): Promise<mariadb.Connection & AsyncDisposable> {
+  public async getConnection(kind?: StatementKind): Promise<PoolConnection> {
     const pool = this.getPool(kind);
     const connection = await pool.getConnection();
 
     return Object.assign(connection, {
+      kind: pool.kind,
       [Symbol.asyncDispose]: () => connection.release(),
     });
   }
 
   public async withConnection<TResult = unknown>(
-    task: (connection: mariadb.Connection) => Promise<TResult>,
+    task: (connection: PoolConnection) => Promise<TResult>,
     kind?: StatementKind,
+    maybeConnection?: PoolConnection,
   ): Promise<TResult> {
+    if (kind && maybeConnection) {
+      assert.strictEqual(maybeConnection.kind, kind);
+
+      return task(maybeConnection);
+    }
+
     await using connection = await this.getConnection(kind);
 
     return await task(connection);
   }
 
   public async withConnectionInTransaction<TResult = unknown>(
-    task: (connection: mariadb.Connection) => Promise<TResult>,
+    task: (connection: PoolConnection) => Promise<TResult>,
     kind?: StatementKind,
   ): Promise<TResult> {
     await using connection = await this.getConnection(kind);
@@ -333,7 +349,7 @@ export class MariaDBConnector<TRequestContext extends object = any>
 
   public async executeStatement<TResult extends OkPacket | utils.PlainObject[]>(
     statement: Statement,
-    maybeConnection?: mariadb.Connection,
+    connection?: PoolConnection,
   ): Promise<TResult> {
     return trace(
       'statement.execution',
@@ -343,9 +359,11 @@ export class MariaDBConnector<TRequestContext extends object = any>
         let result: any;
 
         try {
-          result = (await (maybeConnection
-            ? maybeConnection.query(statement)
-            : this.executeQuery(statement, undefined, statement.kind))) as any;
+          result = await this.withConnection(
+            (connection) => connection.query(statement),
+            statement.kind,
+            connection,
+          );
 
           await this.emit('executed-statement', {
             statement,
@@ -463,10 +481,9 @@ export class MariaDBConnector<TRequestContext extends object = any>
   }
 
   public async preMutation(context: core.MutationContext): Promise<void> {
-    const connection = await this.getPool(
+    const connection = await this.getConnection(
       StatementKind.DATA_MANIPULATION,
-    ).getConnection();
-
+    );
     await connection.beginTransaction();
 
     this.#connectionsByMutation.set(context, connection);
@@ -477,7 +494,7 @@ export class MariaDBConnector<TRequestContext extends object = any>
    */
   public getConnectionForMutation(
     context: core.MutationContext,
-  ): mariadb.PoolConnection {
+  ): PoolConnection {
     const connection = this.#connectionsByMutation.get(context);
     assert(connection, `The connection has been released`);
 

@@ -1,8 +1,7 @@
 import type * as core from '@prismamedia/graphql-platform';
 import * as utils from '@prismamedia/graphql-platform-utils';
-import type * as mariadb from 'mariadb';
 import assert from 'node:assert';
-import type { MariaDBConnector, OkPacket } from './index.js';
+import type { MariaDBConnector, OkPacket, PoolConnection } from './index.js';
 import {
   SchemaDiagnosis,
   type SchemaDiagnosisOptions,
@@ -39,6 +38,7 @@ import {
 } from './statement.js';
 
 export * from './schema/diagnosis.js';
+export * from './schema/event.js';
 export * from './schema/naming-strategy.js';
 export * from './schema/table.js';
 
@@ -171,21 +171,21 @@ export class Schema {
 
   public async drop(
     config?: DropSchemaStatementConfig,
-    maybeConnection?: mariadb.Connection,
+    connection?: PoolConnection,
   ): Promise<void> {
     await this.connector.executeStatement<OkPacket>(
       new DropSchemaStatement(this, config),
-      maybeConnection,
+      connection,
     );
   }
 
   public async create(
     config?: CreateSchemaStatementConfig,
-    maybeConnection?: mariadb.Connection,
+    connection?: PoolConnection,
   ): Promise<void> {
     await this.connector.executeStatement<OkPacket>(
       new CreateSchemaStatement(this, config),
-      maybeConnection,
+      connection,
     );
   }
 
