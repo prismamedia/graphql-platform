@@ -43,18 +43,13 @@ describe('Subscription', () => {
           onDeletion: `{ id }`,
         },
       }),
-      User.api.subscribeToChanges(myAdminContext, {
-        where: {
-          lastLoggedInAt_gte: '2025-01-01T00:00:00Z',
-        },
+      Tag.api.subscribeToChanges(myAdminContext, {
+        where: { deprecated_not: true },
         selection: {
           onUpsert: `{
-            username
-            createdArticles(first: 100) {
-              id
-              title
-              tagCount(where: { tag: { deprecated: true }})
-            }
+            title
+            deprecated
+            articleCount(where: { article: { status: "${ArticleStatus.PUBLISHED}"}})
           }`,
         },
       }),
@@ -133,21 +128,16 @@ describe('Subscription', () => {
 
     assert.deepEqual(subscriptions[1].dependencyGraph.flattened.toJSON(), {
       Article: {
-        creation: true,
-        deletion: true,
-        update: ['title'],
+        update: ['status'],
       },
       ArticleTag: {
         creation: true,
         deletion: true,
       },
       Tag: {
-        update: ['deprecated'],
-      },
-      User: {
         creation: true,
         deletion: true,
-        update: ['lastLoggedInAt'],
+        update: ['deprecated'],
       },
     });
   });
@@ -157,7 +147,7 @@ describe('Subscription', () => {
       await Array.fromAsync(subscriptions[0], (change) =>
         change instanceof ChangesSubscriptionDeletion ? 'deletion' : 'upsert',
       ),
-      ['upsert', 'upsert', 'upsert', 'deletion'],
+      ['upsert', 'upsert', 'deletion'],
     );
   });
 
@@ -172,7 +162,7 @@ describe('Subscription', () => {
       changes.map((change) =>
         change instanceof ChangesSubscriptionDeletion ? 'deletion' : 'upsert',
       ),
-      ['upsert', 'upsert', 'upsert', 'deletion'],
+      ['upsert', 'upsert', 'deletion'],
     );
   });
 
@@ -185,7 +175,7 @@ describe('Subscription', () => {
       changes.map((change) =>
         change instanceof ChangesSubscriptionDeletion ? 'deletion' : 'upsert',
       ),
-      ['upsert', 'upsert', 'upsert', 'deletion'],
+      ['upsert', 'upsert', 'deletion'],
     );
   });
 
@@ -200,7 +190,7 @@ describe('Subscription', () => {
       changes.map((change) =>
         change instanceof ChangesSubscriptionDeletion ? 'deletion' : 'upsert',
       ),
-      ['upsert', 'upsert', 'upsert', 'deletion'],
+      ['upsert', 'upsert', 'deletion'],
     );
   });
 });

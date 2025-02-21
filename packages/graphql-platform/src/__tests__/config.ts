@@ -714,6 +714,7 @@ export const Tag = {
       type: 'UUIDv4',
       nullable: false,
       mutable: false,
+      sortable: true,
 
       creation: {
         defaultValue: () => randomUUID(),

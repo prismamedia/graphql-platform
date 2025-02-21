@@ -2,6 +2,7 @@ import * as core from '@prismamedia/graphql-platform';
 import * as scalars from '@prismamedia/graphql-platform-scalars';
 import * as utils from '@prismamedia/graphql-platform-utils';
 import assert from 'node:assert';
+import * as R from 'remeda';
 import { escapeStringValue } from '../../../escaping.js';
 import { LeafColumn, type ReferenceColumnTree } from '../../../schema.js';
 import type { TableReference } from './table-reference.js';
@@ -11,25 +12,37 @@ export type WhereCondition = string;
 export function AND(
   maybeConditions: ReadonlyArray<utils.Nillable<WhereCondition>>,
 ): WhereCondition {
-  const conditions = maybeConditions.filter(utils.isNonNil);
+  const conditions = R.pipe(
+    maybeConditions,
+    R.filter(R.isNonNullish),
+    R.filter((condition) => condition.toUpperCase() !== 'TRUE'),
+  );
 
-  return conditions.length > 1
-    ? `(${conditions.join(' AND ')})`
-    : conditions.length === 1
-      ? conditions[0]
-      : 'TRUE';
+  return conditions.some((condition) => condition.toUpperCase() === 'FALSE')
+    ? 'FALSE'
+    : conditions.length > 1
+      ? `(${conditions.join(' AND ')})`
+      : conditions.length === 1
+        ? conditions[0]
+        : 'TRUE';
 }
 
 export function OR(
   maybeConditions: ReadonlyArray<utils.Nillable<WhereCondition>>,
 ): WhereCondition {
-  const conditions = maybeConditions.filter(utils.isNonNil);
+  const conditions = R.pipe(
+    maybeConditions,
+    R.filter(R.isNonNullish),
+    R.filter((condition) => condition.toUpperCase() !== 'FALSE'),
+  );
 
-  return conditions.length > 1
-    ? `(${conditions.join(' OR ')})`
-    : conditions.length === 1
-      ? conditions[0]
-      : 'FALSE';
+  return conditions.some((condition) => condition.toUpperCase() === 'TRUE')
+    ? 'TRUE'
+    : conditions.length > 1
+      ? `(${conditions.join(' OR ')})`
+      : conditions.length === 1
+        ? conditions[0]
+        : 'FALSE';
 }
 
 function parseBooleanOperation(

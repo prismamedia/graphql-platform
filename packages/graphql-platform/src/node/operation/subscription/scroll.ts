@@ -13,6 +13,10 @@ import type { NodeFilterInputValue } from '../../type.js';
 import { AbstractSubscription } from '../abstract-subscription.js';
 import type { OperationContext } from '../context.js';
 import {
+  changesSubscriptionCacheControlInputType,
+  type ChangesSubscriptionCacheControlInputValue,
+} from './changes/cache-control.js';
+import {
   ScrollSubscriptionOrderingInputType,
   type ScrollSubscriptionOrderingInputValue,
 } from './scroll/ordering-input-type.js';
@@ -25,6 +29,7 @@ export type ScrollSubscriptionArgs = RawNodeSelectionAwareArgs<{
   where?: NodeFilterInputValue;
   orderBy?: ScrollSubscriptionOrderingInputValue;
   chunkSize?: number;
+  forSubscription?: ChangesSubscriptionCacheControlInputValue;
 }>;
 
 export class ScrollSubscription<
@@ -78,6 +83,13 @@ export class ScrollSubscription<
         defaultValue: 100,
         public: false,
       }),
+      new utils.Input({
+        public: false,
+        name: 'forSubscription',
+        type: new utils.NonNullableInputType(
+          changesSubscriptionCacheControlInputType,
+        ),
+      }),
     ];
   }
 
@@ -110,6 +122,7 @@ export class ScrollSubscription<
       ordering,
       selection: args.selection,
       chunkSize: args.chunkSize!,
+      forSubscription: args.forSubscription,
     });
   }
 

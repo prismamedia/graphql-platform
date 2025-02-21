@@ -83,7 +83,7 @@ export class LeafColumn extends AbstractColumn {
     table: Table,
     public readonly leaf: core.Leaf<MariaDBConnector>,
   ) {
-    super(table, leaf);
+    super(table);
 
     // config
     {

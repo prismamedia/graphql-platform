@@ -2,10 +2,9 @@ import * as core from '@prismamedia/graphql-platform';
 import * as utils from '@prismamedia/graphql-platform-utils';
 import { UnreachableValueError } from '@prismamedia/graphql-platform-utils';
 import { MGetter } from '@prismamedia/memoize';
-import type * as mariadb from 'mariadb';
 import assert from 'node:assert';
 import type { SetOptional } from 'type-fest';
-import type { MariaDBConnector, OkPacket } from '../index.js';
+import type { MariaDBConnector, OkPacket, PoolConnection } from '../index.js';
 import type { Schema } from '../schema.js';
 import {
   AddTableForeignKeysStatement,
@@ -16,6 +15,8 @@ import {
   FindStatement,
   InsertStatement,
   NormalizeStatement,
+  RevalidateSubscriptionStatement,
+  StatementKind,
   UpdateStatement,
   type CreateTableStatementConfig,
   type DeleteStatementConfig,
@@ -28,7 +29,9 @@ import {
   LeafColumn,
   ReferenceColumnTree,
   type Column,
+  type SubscriptionsStateColumnOptions,
 } from './table/column.js';
+import { SubscriptionsStateColumn } from './table/column/subscriptions-state.js';
 import { ForeignKey } from './table/foreign-key.js';
 import {
   FullTextIndex,
@@ -49,21 +52,21 @@ export interface TableConfig {
   /**
    * Optional, the table's name
    *
-   * Default: node's name plural in snake_cased
+   * @default `node's name plural in snake_cased`
    */
   name?: utils.Nillable<string>;
 
   /**
    * Optional, the table's default charset
    *
-   * Default: the schema's default charset
+   * @default `the schema's default charset`
    */
   defaultCharset?: utils.Nillable<string>;
 
   /**
    * Optional, the table's default collation
    *
-   * Default: the schema's default collation
+   * @default `the schema's default collation`
    */
   defaultCollation?: utils.Nillable<string>;
 
@@ -71,6 +74,10 @@ export interface TableConfig {
    * Optional, some additional plain indexes
    */
   indexes?: (PlainIndexConfig | PlainIndexConfig['components'])[];
+
+  subscriptionsState?:
+    | SubscriptionsStateColumnOptions['enabled']
+    | SubscriptionsStateColumnOptions;
 }
 
 export class Table {
@@ -98,6 +105,8 @@ export class Table {
   public readonly indexes: ReadonlyArray<Index>;
   public readonly foreignKeysByEdge: ReadonlyMap<core.Edge, ForeignKey>;
   public readonly foreignKeys: ReadonlyArray<ForeignKey>;
+
+  public readonly subscriptionsStateColumn?: SubscriptionsStateColumn;
 
   public constructor(
     public readonly schema: Schema,
@@ -156,6 +165,33 @@ export class Table {
           new LeafColumn(this, leaf),
         ]),
       );
+    }
+
+    // subscriptions-state-column
+    {
+      const subscriptionsStateConfig:
+        | SubscriptionsStateColumnOptions
+        | undefined =
+        typeof this.config?.subscriptionsState === 'boolean'
+          ? { enabled: this.config.subscriptionsState }
+          : utils.isPlainObject(this.config?.subscriptionsState)
+            ? { enabled: true, ...this.config!.subscriptionsState }
+            : undefined;
+
+      const subscriptionsStateConfigPath = utils.addPath(
+        this.configPath,
+        'subscriptionsState',
+      );
+
+      this.subscriptionsStateColumn =
+        node.getSubscriptionByKey('changes').isEnabled() &&
+        utils.getOptionalFlag(
+          subscriptionsStateConfig?.enabled,
+          false,
+          utils.addPath(subscriptionsStateConfigPath, 'enabled'),
+        )
+          ? new SubscriptionsStateColumn(this, subscriptionsStateConfig)
+          : undefined;
     }
 
     // primary-key
@@ -283,7 +319,10 @@ export class Table {
   @MGetter
   public get columns(): ReadonlyArray<Column> {
     return Object.freeze(
-      this.getColumnsByComponents(...this.node.componentsByName.values()),
+      [
+        ...this.getColumnsByComponents(...this.node.componentsByName.values()),
+        this.subscriptionsStateColumn,
+      ].filter((column) => column !== undefined),
     );
   }
 
@@ -393,47 +432,58 @@ export class Table {
 
   public async create(
     config?: CreateTableStatementConfig,
-    maybeConnection?: mariadb.Connection,
+    connection?: PoolConnection<StatementKind.DATA_DEFINITION>,
   ): Promise<void> {
-    await this.schema.connector.executeStatement(
-      new CreateTableStatement(this, config),
-      maybeConnection,
+    await this.schema.connector.withConnection(
+      async (connection) => {
+        await this.schema.connector.executeStatement(
+          new CreateTableStatement(this, config),
+          connection,
+        );
+
+        await this.subscriptionsStateColumn?.janitor.create(
+          { orReplace: true },
+          connection,
+        );
+      },
+      StatementKind.DATA_DEFINITION,
+      connection,
     );
   }
 
   public async dropForeignKeys(
     foreignKeys: ReadonlyArray<ForeignKey | ForeignKey['name']> = this
       .foreignKeys,
-    maybeConnection?: mariadb.Connection,
+    connection?: PoolConnection,
   ): Promise<void> {
     if (foreignKeys.length) {
       await this.schema.connector.executeStatement(
         new DropTableForeignKeysStatement(this, foreignKeys),
-        maybeConnection,
+        connection,
       );
     }
   }
 
   public async addForeignKeys(
     foreignKeys: ReadonlyArray<ForeignKey> = this.foreignKeys,
-    maybeConnection?: mariadb.Connection,
+    connection?: PoolConnection,
   ): Promise<void> {
     if (foreignKeys.length) {
       await this.schema.connector.executeStatement(
         new AddTableForeignKeysStatement(this, foreignKeys),
-        maybeConnection,
+        connection,
       );
     }
   }
 
   public async normalize(
     config?: NormalizeStatementConfig,
-    maybeConnection?: mariadb.Connection,
+    connection?: PoolConnection,
   ): Promise<void> {
     if (NormalizeStatement.normalizations(this, config).size) {
       await this.schema.connector.executeStatement(
         new NormalizeStatement(this, config),
-        maybeConnection,
+        connection,
       );
     }
   }
@@ -441,11 +491,11 @@ export class Table {
   public async count(
     context: core.OperationContext,
     statement: SetOptional<core.ConnectorCountStatement, 'node'>,
-    maybeConnection?: mariadb.Connection,
+    connection?: PoolConnection,
   ): Promise<number> {
     const [{ COUNT }] = await this.schema.connector.executeStatement<
       [{ COUNT: bigint }]
-    >(new CountStatement(this, context, statement), maybeConnection);
+    >(new CountStatement(this, context, statement), connection);
 
     return Number(COUNT);
   }
@@ -453,15 +503,34 @@ export class Table {
   public async find<TValue extends core.NodeSelectedValue>(
     context: core.OperationContext,
     statement: SetOptional<core.ConnectorFindStatement<TValue>, 'node'>,
-    maybeConnection?: mariadb.Connection,
+    connection?: PoolConnection,
   ): Promise<TValue[]> {
-    const tuples = await this.schema.connector.executeStatement<
-      utils.PlainObject[]
-    >(new FindStatement(this, context, statement), maybeConnection);
+    const findStatement = new FindStatement(this, context, statement);
 
-    return tuples.map((tuple) =>
+    const revalidatedAt = new Date();
+    const rows = await this.schema.connector.executeStatement<
+      utils.PlainObject[]
+    >(findStatement, connection);
+
+    if (
+      rows.length &&
+      statement.forSubscription &&
+      this.subscriptionsStateColumn
+    ) {
+      await this.schema.connector.executeStatement<OkPacket>(
+        new RevalidateSubscriptionStatement(
+          this,
+          rows,
+          statement.forSubscription,
+          revalidatedAt,
+        ),
+        connection,
+      );
+    }
+
+    return rows.map((row) =>
       this.parseJsonDocument(
-        JSON.parse(tuple[this.node.name]),
+        JSON.parse(row[findStatement.selectionKey]),
         statement.selection,
       ),
     );
@@ -470,7 +539,7 @@ export class Table {
   public async insert(
     context: core.MutationContext,
     statement: SetOptional<core.ConnectorCreateStatement, 'node'>,
-    connection: mariadb.Connection,
+    connection: PoolConnection,
     config?: InsertStatementConfig,
   ): Promise<core.NodeValue[]> {
     const rows = await this.schema.connector.executeStatement<
@@ -483,7 +552,7 @@ export class Table {
   public async update(
     context: core.MutationContext,
     statement: SetOptional<core.ConnectorUpdateStatement, 'node'>,
-    connection: mariadb.Connection,
+    connection: PoolConnection,
     config?: UpdateStatementConfig,
   ): Promise<number> {
     const { affectedRows } =
@@ -498,7 +567,7 @@ export class Table {
   public async delete(
     context: core.MutationContext,
     statement: SetOptional<core.ConnectorDeleteStatement, 'node'>,
-    connection: mariadb.Connection,
+    connection: PoolConnection,
     config?: DeleteStatementConfig,
   ): Promise<number> {
     const { affectedRows } =

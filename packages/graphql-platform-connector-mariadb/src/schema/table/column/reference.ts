@@ -3,10 +3,11 @@ import * as utils from '@prismamedia/graphql-platform-utils';
 import { MGetter, MMethod } from '@prismamedia/memoize';
 import assert from 'node:assert';
 import type { MariaDBConnector } from '../../../index.js';
-import type { Column, Schema, Table } from '../../../schema.js';
+import type { Schema, Table } from '../../../schema.js';
 import { ensureIdentifierName } from '../../naming-strategy.js';
 import { AbstractColumn } from '../abstract-column.js';
 import type { DataType } from '../data-type.js';
+import type { LeafColumn } from './leaf.js';
 
 export * from './reference/diagnosis.js';
 
@@ -18,11 +19,11 @@ export class ReferenceColumn extends AbstractColumn {
   public constructor(
     table: Table,
     public readonly edge: core.Edge<MariaDBConnector>,
-    public readonly referencedColumn: Column,
+    public readonly referencedColumn: LeafColumn | ReferenceColumn,
     nameConfig: utils.Nillable<string>,
     nameConfigPath: utils.Path,
   ) {
-    super(table, edge);
+    super(table);
 
     // name
     {
@@ -35,10 +36,6 @@ export class ReferenceColumn extends AbstractColumn {
     {
       this.dataType = referencedColumn.dataType;
     }
-  }
-
-  public override isAutoIncrement(): boolean {
-    return false;
   }
 
   @MMethod()

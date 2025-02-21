@@ -8,7 +8,7 @@ import { StatementKind } from '../kind.js';
 import { orderNode } from './clause/ordering-expression.js';
 import { selectNode } from './clause/select-expression.js';
 import { TableFactor } from './clause/table-reference.js';
-import { filterNode } from './clause/where-condition.js';
+import { AND, filterNode } from './clause/where-condition.js';
 
 /**
  * @see https://mariadb.com/kb/en/selecting-data/
@@ -16,22 +16,39 @@ import { filterNode } from './clause/where-condition.js';
 export class FindStatement implements mariadb.QueryOptions {
   public readonly kind = StatementKind.DATA_MANIPULATION;
   public readonly sql: string;
+  public readonly selectionKey: string;
 
   public constructor(
     public readonly table: Table,
     context: core.OperationContext,
     statement: SetOptional<core.ConnectorFindStatement, 'node'>,
   ) {
+    this.selectionKey = `_${table.node.name}`;
+
     const tableReference = new TableFactor(table, context);
 
-    const selectExpression = `${selectNode(
-      tableReference,
-      statement.selection,
-    )} as ${escapeIdentifier(table.node.name)}`;
+    const selectExpression = [
+      `${selectNode(
+        tableReference,
+        statement.selection,
+      )} as ${escapeIdentifier(this.selectionKey)}`,
+      statement.forSubscription &&
+        table.subscriptionsStateColumn?.select(tableReference),
+    ]
+      .filter(Boolean)
+      .join(',');
 
-    const whereCondition = statement.filter
-      ? filterNode(tableReference, statement.filter)
-      : undefined;
+    const whereCondition =
+      statement.filter || statement.forSubscription
+        ? AND([
+            statement.filter && filterNode(tableReference, statement.filter),
+            statement.forSubscription &&
+              table.subscriptionsStateColumn?.filter(
+                tableReference,
+                statement.forSubscription,
+              ),
+          ])
+        : undefined;
 
     const orderingExpressions = statement.ordering
       ? orderNode(tableReference, statement.ordering)
