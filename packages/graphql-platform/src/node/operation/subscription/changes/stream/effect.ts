@@ -1,4 +1,3 @@
-import * as scalars from '@prismamedia/graphql-platform-scalars';
 import assert from 'node:assert';
 import type { NodeValue } from '../../../../../node.js';
 import type {
@@ -7,7 +6,6 @@ import type {
   NodeUpdate,
 } from '../../../../change.js';
 import type { NodeSelectedValue } from '../../../../statement.js';
-import type { ScrollSubscriptionArgs } from '../../scroll.js';
 import type { ChangesSubscriptionStream } from '../stream.js';
 import {
   type ChangesSubscriptionChange,
@@ -74,7 +72,7 @@ export class ChangesSubscriptionEffect<
        * }
        */
       if (this.subscription.filter && this.dependentGraph.filter) {
-        const args = {
+        for await (const deletion of this.subscription.api.scroll({
           where: {
             AND: [
               this.subscription.filter.complement.inputValue,
@@ -82,34 +80,15 @@ export class ChangesSubscriptionEffect<
             ],
           },
           selection: this.subscription.onDeletionSelection,
-        } satisfies Omit<ScrollSubscriptionArgs, 'chunkSize'>;
-
-        if (this.subscription.scrollable) {
-          for await (const deletion of this.subscription.api.scroll({
-            ...args,
-            ...(this.subscription.cursorSize && {
-              chunkSize: this.subscription.cursorSize * 2,
-            }),
-          })) {
-            yield new ChangesSubscriptionDeletion(
-              this.subscription,
-              initiator,
-              deletion,
-            );
-          }
-        } else {
-          const deletions = await this.subscription.api.findMany({
-            ...args,
-            first: scalars.GRAPHQL_MAX_UNSIGNED_INT,
-          });
-
-          for (const deletion of deletions) {
-            yield new ChangesSubscriptionDeletion(
-              this.subscription,
-              initiator,
-              deletion,
-            );
-          }
+          ...(this.subscription.cursorSize && {
+            chunkSize: this.subscription.cursorSize * 2,
+          }),
+        })) {
+          yield new ChangesSubscriptionDeletion(
+            this.subscription,
+            initiator,
+            deletion,
+          );
         }
       }
     }
@@ -136,7 +115,7 @@ export class ChangesSubscriptionEffect<
         }
       }
 
-      const args = {
+      for await (const upsert of this.subscription.api.scroll({
         where: {
           AND: [
             !this.dependentGraph.graphFilter.isFalse() ||
@@ -158,34 +137,15 @@ export class ChangesSubscriptionEffect<
           ],
         },
         selection: this.subscription.onUpsertSelection,
-      } satisfies Omit<ScrollSubscriptionArgs, 'chunkSize'>;
-
-      if (this.subscription.scrollable) {
-        for await (const upsert of this.subscription.api.scroll({
-          ...args,
-          ...(this.subscription.cursorSize && {
-            chunkSize: this.subscription.cursorSize,
-          }),
-        })) {
-          yield new ChangesSubscriptionUpsert(
-            this.subscription,
-            initiator,
-            upsert,
-          );
-        }
-      } else {
-        const upserts = await this.subscription.api.findMany({
-          ...args,
-          first: scalars.GRAPHQL_MAX_UNSIGNED_INT,
-        });
-
-        for (const upsert of upserts) {
-          yield new ChangesSubscriptionUpsert(
-            this.subscription,
-            initiator,
-            upsert,
-          );
-        }
+        ...(this.subscription.cursorSize && {
+          chunkSize: this.subscription.cursorSize,
+        }),
+      })) {
+        yield new ChangesSubscriptionUpsert(
+          this.subscription,
+          initiator,
+          upsert,
+        );
       }
     }
   }

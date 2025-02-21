@@ -74,7 +74,8 @@ export class ChangesSubscription<
       super.isEnabled() &&
       utils.mutationTypes.some((mutationType) =>
         this.node.isMutable(mutationType),
-      )
+      ) &&
+      this.node.getSubscriptionByKey('scroll').isEnabled()
     );
   }
 

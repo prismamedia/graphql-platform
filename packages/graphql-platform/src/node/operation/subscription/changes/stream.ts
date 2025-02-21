@@ -123,7 +123,6 @@ export class ChangesSubscriptionStream<
   public readonly cursorSize?: number;
 
   public readonly api: ContextBoundNodeAPI;
-  public readonly scrollable: boolean;
 
   readonly #broker: BrokerInterface;
 
@@ -178,7 +177,6 @@ export class ChangesSubscriptionStream<
     this.cursorSize = config.cursorSize;
 
     this.api = node.createContextBoundAPI(context);
-    this.scrollable = node.getSubscriptionByKey('scroll').isEnabled();
 
     this.#broker = node.gp.broker;
 
