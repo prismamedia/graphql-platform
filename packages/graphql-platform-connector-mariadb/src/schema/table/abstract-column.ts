@@ -10,10 +10,7 @@ export abstract class AbstractColumn {
   public abstract readonly comment?: string;
   public abstract readonly dataType: DataType;
 
-  public constructor(
-    public readonly table: Table,
-    public readonly component: core.Component,
-  ) {}
+  public constructor(public readonly table: Table) {}
 
   /**
    * @see https://mariadb.com/kb/en/identifier-qualifiers/
@@ -35,9 +32,13 @@ export abstract class AbstractColumn {
     return this.fullyQualifiedName;
   }
 
-  public abstract isAutoIncrement(): boolean;
+  public isAutoIncrement(): boolean {
+    return false;
+  }
 
-  public abstract isNullable(): boolean;
+  public isNullable(): boolean {
+    return true;
+  }
 
   @MGetter
   public get constraint(): string | undefined {

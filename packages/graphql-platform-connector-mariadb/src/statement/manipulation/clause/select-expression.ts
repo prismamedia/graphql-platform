@@ -80,8 +80,7 @@ function parseEdgeSelection(
         : selectNode(tableReference.join(edge), selection.headSelection);
 
     return edge.isNullable() || parsedHeadAuthorization
-      ? `IF(
-        ${AND([
+      ? `IF(${AND([
           OR(
             tableReference.table
               .getForeignKeyByEdge(edge)
@@ -93,10 +92,7 @@ function parseEdgeSelection(
               ),
           ),
           parsedHeadAuthorization,
-        ])},
-        ${parsedHeadSelection},
-        NULL
-      )`
+        ])}, ${parsedHeadSelection}, NULL)`
       : parsedHeadSelection;
   } else {
     throw new utils.UnreachableValueError(selection);

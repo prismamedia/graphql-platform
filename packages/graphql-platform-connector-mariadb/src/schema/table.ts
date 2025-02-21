@@ -16,6 +16,7 @@ import {
   FindStatement,
   InsertStatement,
   NormalizeStatement,
+  RevalidateSubscriptionStatement,
   UpdateStatement,
   type CreateTableStatementConfig,
   type DeleteStatementConfig,
@@ -28,7 +29,9 @@ import {
   LeafColumn,
   ReferenceColumnTree,
   type Column,
+  type SubscriptionsStateColumnConfig,
 } from './table/column.js';
+import { SubscriptionsStateColumn } from './table/column/subscriptions-state.js';
 import { ForeignKey } from './table/foreign-key.js';
 import {
   FullTextIndex,
@@ -49,21 +52,21 @@ export interface TableConfig {
   /**
    * Optional, the table's name
    *
-   * Default: node's name plural in snake_cased
+   * @default `node's name plural in snake_cased`
    */
   name?: utils.Nillable<string>;
 
   /**
    * Optional, the table's default charset
    *
-   * Default: the schema's default charset
+   * @default `the schema's default charset`
    */
   defaultCharset?: utils.Nillable<string>;
 
   /**
    * Optional, the table's default collation
    *
-   * Default: the schema's default collation
+   * @default `the schema's default collation`
    */
   defaultCollation?: utils.Nillable<string>;
 
@@ -71,6 +74,10 @@ export interface TableConfig {
    * Optional, some additional plain indexes
    */
   indexes?: (PlainIndexConfig | PlainIndexConfig['components'])[];
+
+  subscriptionsState?:
+    | SubscriptionsStateColumnConfig['enabled']
+    | SubscriptionsStateColumnConfig;
 }
 
 export class Table {
@@ -98,6 +105,8 @@ export class Table {
   public readonly indexes: ReadonlyArray<Index>;
   public readonly foreignKeysByEdge: ReadonlyMap<core.Edge, ForeignKey>;
   public readonly foreignKeys: ReadonlyArray<ForeignKey>;
+
+  public readonly subscriptionsStateColumn?: SubscriptionsStateColumn;
 
   public constructor(
     public readonly schema: Schema,
@@ -156,6 +165,33 @@ export class Table {
           new LeafColumn(this, leaf),
         ]),
       );
+    }
+
+    // subscriptions-state-column
+    {
+      const subscriptionsStateConfig:
+        | SubscriptionsStateColumnConfig
+        | undefined =
+        typeof this.config?.subscriptionsState === 'boolean'
+          ? { enabled: this.config.subscriptionsState }
+          : utils.isPlainObject(this.config?.subscriptionsState)
+            ? { enabled: true, ...this.config!.subscriptionsState }
+            : undefined;
+
+      const subscriptionsStateConfigPath = utils.addPath(
+        this.configPath,
+        'subscriptionsState',
+      );
+
+      this.subscriptionsStateColumn =
+        node.getSubscriptionByKey('changes').isEnabled() &&
+        utils.getOptionalFlag(
+          subscriptionsStateConfig?.enabled,
+          false,
+          utils.addPath(subscriptionsStateConfigPath, 'enabled'),
+        )
+          ? new SubscriptionsStateColumn(this, subscriptionsStateConfig)
+          : undefined;
     }
 
     // primary-key
@@ -283,7 +319,10 @@ export class Table {
   @MGetter
   public get columns(): ReadonlyArray<Column> {
     return Object.freeze(
-      this.getColumnsByComponents(...this.node.componentsByName.values()),
+      [
+        ...this.getColumnsByComponents(...this.node.componentsByName.values()),
+        this.subscriptionsStateColumn,
+      ].filter((column) => column !== undefined),
     );
   }
 
@@ -455,13 +494,32 @@ export class Table {
     statement: SetOptional<core.ConnectorFindStatement<TValue>, 'node'>,
     maybeConnection?: mariadb.Connection,
   ): Promise<TValue[]> {
-    const tuples = await this.schema.connector.executeStatement<
-      utils.PlainObject[]
-    >(new FindStatement(this, context, statement), maybeConnection);
+    const foundAt = new Date();
 
-    return tuples.map((tuple) =>
+    const findStatement = new FindStatement(this, context, statement);
+    const rows = await this.schema.connector.executeStatement<
+      utils.PlainObject[]
+    >(findStatement, maybeConnection);
+
+    if (
+      rows.length &&
+      statement.forSubscription &&
+      this.subscriptionsStateColumn
+    ) {
+      await this.schema.connector.executeStatement<OkPacket>(
+        new RevalidateSubscriptionStatement(
+          this,
+          rows,
+          statement.forSubscription,
+          foundAt,
+        ),
+        maybeConnection,
+      );
+    }
+
+    return rows.map((row) =>
       this.parseJsonDocument(
-        JSON.parse(tuple[this.node.name]),
+        JSON.parse(row[findStatement.selectionKey]),
         statement.selection,
       ),
     );

@@ -17,6 +17,7 @@ import {
   type ChangesSubscriptionChange,
 } from './changes/stream.js';
 
+export * from './changes/cache-control.js';
 export * from './changes/stream.js';
 
 const ChangeKindProperty = Symbol('ChangeKind');
