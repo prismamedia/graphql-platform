@@ -1,4 +1,5 @@
 import * as scalars from '@prismamedia/graphql-platform-scalars';
+import assert from 'node:assert';
 import type { NodeValue } from '../../../../../node.js';
 import type {
   DependentGraph,
@@ -38,7 +39,9 @@ export class ChangesSubscriptionEffect<
   public async *[Symbol.asyncIterator](): AsyncIterator<
     ChangesSubscriptionChange<TRequestContext, TUpsert, TDeletion>
   > {
-    const initiator = this.dependentGraph.initiator;
+    const initiator = this.dependentGraph.changes.requestContext;
+    const committedAt = this.dependentGraph.changes.committedAt;
+    assert(committedAt, 'Changes must be committed');
 
     // First, the deletions:
     if (this.subscription.onDeletionSelection) {

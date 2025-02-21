@@ -907,18 +907,4 @@ export class DependentGraph<TRequestContext extends object = any> {
       ]),
     );
   }
-
-  @MGetter
-  public get count(): Promise<number> {
-    return this.node.api
-      .count(this.changes, {
-        where: {
-          OR: [
-            ...this.upsertIfFounds.values().map(({ id }) => id),
-            this.graphFilter.inputValue,
-          ],
-        },
-      })
-      .then((count) => count + this.deletions.size + this.upserts.size);
-  }
 }
