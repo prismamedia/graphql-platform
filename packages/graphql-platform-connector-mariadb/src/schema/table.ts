@@ -73,7 +73,7 @@ export interface TableConfig {
   /**
    * Optional, some additional plain indexes
    */
-  indexes?: (PlainIndexConfig | PlainIndexConfig['components'])[];
+  indexes?: (PlainIndexConfig | ReadonlyArray<core.Component['name']>)[];
 
   subscriptionsState?:
     | SubscriptionsStateColumnOptions['enabled']
@@ -239,7 +239,12 @@ export class Table {
       }
 
       this.plainIndexes = Object.freeze(
-        (indexesConfig ?? []).reduce<PlainIndex[]>(
+        [
+          ...(indexesConfig ?? []),
+          ...(this.subscriptionsStateColumn
+            ? [{ columns: [this.subscriptionsStateColumn.name] }]
+            : []),
+        ].reduce<PlainIndex[]>(
           (indexes, config, index) => [
             ...indexes,
             new PlainIndex(
@@ -324,6 +329,13 @@ export class Table {
         this.subscriptionsStateColumn,
       ].filter((column) => column !== undefined),
     );
+  }
+
+  public getColumnByName(name: Column['name']): Column {
+    const column = this.columns.find((column) => column.name === name);
+    assert(column, `No column found for the name "${name}"`);
+
+    return column;
   }
 
   public getUniqueIndexByUniqueConstraint(
@@ -441,10 +453,10 @@ export class Table {
           connection,
         );
 
-        await this.subscriptionsStateColumn?.janitor.create(
-          { orReplace: true },
-          connection,
-        );
+        if (this.subscriptionsStateColumn) {
+          await this.subscriptionsStateColumn.janitor.create(connection);
+          await connection.query(`SET GLOBAL event_scheduler = ON`);
+        }
       },
       StatementKind.DATA_DEFINITION,
       connection,

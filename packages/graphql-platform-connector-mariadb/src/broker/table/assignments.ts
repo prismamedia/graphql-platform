@@ -69,7 +69,7 @@ export class MariaDBBrokerAssignmentsTable extends AbstractTable {
     connection: PoolConnection<StatementKind.DATA_DEFINITION>,
   ): Promise<void> {
     await super.setup(connection);
-    await this.janitor.create({ orReplace: true }, connection);
+    await this.janitor.create(connection);
   }
 
   public async assign(

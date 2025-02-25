@@ -72,7 +72,7 @@ describe('SchemaDiagnosis', () => {
     assert(diagnosis instanceof SchemaDiagnosis);
     assert(!diagnosis.isValid());
     assert.deepEqual(diagnosis.summarize(), {
-      errors: 90,
+      errors: 91,
 
       collation: {
         actual: 'utf8mb4_uca1400_ai_ci',
@@ -175,7 +175,7 @@ describe('SchemaDiagnosis', () => {
     assert(diagnosis instanceof SchemaDiagnosis);
     assert(!diagnosis.isValid());
     assert.deepEqual(diagnosis.summarize(), {
-      errors: 88,
+      errors: 89,
 
       tables: {
         extra: ['extra_table'],

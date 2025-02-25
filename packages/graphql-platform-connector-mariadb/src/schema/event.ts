@@ -1,9 +1,6 @@
 import { CreateEventStatement, type PoolConnection } from '../index.js';
 import type { Schema } from '../schema.js';
-import type {
-  CreateEventStatementConfig,
-  StatementKind,
-} from '../statement.js';
+import type { StatementKind } from '../statement.js';
 
 /**
  * @see https://mariadb.com/kb/en/events/
@@ -21,11 +18,10 @@ export class Event {
   }
 
   public async create(
-    config?: CreateEventStatementConfig,
     connection?: PoolConnection<StatementKind.DATA_DEFINITION>,
   ): Promise<void> {
     await this.schema.connector.executeStatement(
-      new CreateEventStatement(this, config),
+      new CreateEventStatement(this, { orReplace: true }),
       connection,
     );
   }

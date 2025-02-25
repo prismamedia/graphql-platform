@@ -126,6 +126,7 @@ export class MariaDBBroker<TRequestContext extends object = any>
         await this.mutationsTable.setup(connection);
         await this.changesTable.setup(connection);
         await this.assignmentsTable.setup(connection);
+        await connection.query(`SET GLOBAL event_scheduler = ON`);
       },
       StatementKind.DATA_DEFINITION,
       connection,

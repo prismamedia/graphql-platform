@@ -9,17 +9,25 @@ import type { Column } from '../column.js';
 
 export * from './plain/diagnosis.js';
 
-export interface PlainIndexConfig {
+export type PlainIndexConfig = {
   /**
    * Optional, the index's name
    */
   name?: utils.Nillable<string>;
-
-  /**
-   * Required, the index's components' name
-   */
-  components: ReadonlyArray<core.Component['name']>;
-}
+} & (
+  | {
+      /**
+       * Required, the index's components' name
+       */
+      components: ReadonlyArray<core.Component['name']>;
+    }
+  | {
+      /**
+       * Required, the index's columns' name
+       */
+      columns: ReadonlyArray<Column['name']>;
+    }
+);
 
 /**
  * @see https://mariadb.com/kb/en/getting-started-with-indexes/#plain-indexes
@@ -37,6 +45,14 @@ export class PlainIndex extends AbstractIndex {
 
   @MGetter
   public override get columns(): ReadonlyArray<Column> {
+    if ('columns' in this.config) {
+      return Object.freeze(
+        this.config.columns.map((columnName) =>
+          this.table.getColumnByName(columnName),
+        ),
+      );
+    }
+
     const config = this.config.components;
     const configPath = utils.addPath(this.configPath, 'components');
 

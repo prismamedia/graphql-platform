@@ -113,9 +113,9 @@ export class SchemaNamingStrategy {
 
     return ensureIdentifierName(
       config?.(index) ??
-        ['fk', index.table.name, ...index.columns.map(({ name }) => name)].join(
-          '_',
-        ),
+        ['fk', index.table.name, ...index.columns.map(({ name }) => name)]
+          .join('_')
+          .replace(/_+/g, '_'),
       configPath,
     );
   }
@@ -126,7 +126,9 @@ export class SchemaNamingStrategy {
 
     return ensureIdentifierName(
       config?.(index) ??
-        ['unq', ...index.columns.map(({ name }) => name)].join('_'),
+        ['unq', ...index.columns.map(({ name }) => name)]
+          .join('_')
+          .replace(/_+/g, '_'),
       configPath,
     );
   }
@@ -137,7 +139,9 @@ export class SchemaNamingStrategy {
 
     return ensureIdentifierName(
       config?.(index) ??
-        ['idx', ...index.columns.map(({ name }) => name)].join('_'),
+        ['idx', ...index.columns.map(({ name }) => name)]
+          .join('_')
+          .replace(/_+/g, '_'),
       configPath,
     );
   }
@@ -148,7 +152,9 @@ export class SchemaNamingStrategy {
 
     return ensureIdentifierName(
       config?.(index) ??
-        ['ft', ...index.columns.map(({ name }) => name)].join('_'),
+        ['ft', ...index.columns.map(({ name }) => name)]
+          .join('_')
+          .replace(/_+/g, '_'),
       configPath,
     );
   }
