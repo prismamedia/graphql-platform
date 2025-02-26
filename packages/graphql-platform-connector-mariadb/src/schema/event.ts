@@ -2,6 +2,10 @@ import { CreateEventStatement, type PoolConnection } from '../index.js';
 import type { Schema } from '../schema.js';
 import type { StatementKind } from '../statement.js';
 
+export interface EventOptions {
+  comment?: string;
+}
+
 /**
  * @see https://mariadb.com/kb/en/events/
  */
@@ -13,6 +17,7 @@ export class Event {
     public readonly name: string,
     public readonly schedule: string,
     public readonly statement: string,
+    public readonly options?: EventOptions,
   ) {
     this.qualifiedName = `${this.schema}.${this.name}`;
   }

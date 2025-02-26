@@ -46,26 +46,22 @@ export class PlainIndex extends AbstractIndex {
   @MGetter
   public override get columns(): ReadonlyArray<Column> {
     if ('columns' in this.config) {
-      return Object.freeze(
-        this.config.columns.map((columnName) =>
-          this.table.getColumnByName(columnName),
-        ),
+      return this.config.columns.map((columnName) =>
+        this.table.getColumnByName(columnName),
       );
     }
 
     const config = this.config.components;
     const configPath = utils.addPath(this.configPath, 'components');
 
-    return Object.freeze(
-      config.flatMap((componentName, index) => {
-        const component = this.table.node.getComponentByName(
-          componentName,
-          utils.addPath(configPath, index),
-        );
+    return config.flatMap((componentName, index) => {
+      const component = this.table.node.getComponentByName(
+        componentName,
+        utils.addPath(configPath, index),
+      );
 
-        return this.table.getColumnsByComponents(component);
-      }),
-    );
+      return this.table.getColumnsByComponents(component);
+    });
   }
 
   @MGetter

@@ -50,7 +50,7 @@ export class EnumType<
         }
       });
 
-      this.values = Object.freeze([...new Set(valuesConfig)]);
+      this.values = [...new Set(valuesConfig)];
     }
 
     this.definition = [

@@ -100,13 +100,16 @@ export class MariaDBBrokerMutationsTable extends AbstractTable {
             WHERE ${escapeIdentifier('id')} = ${escapeIdentifier('mutationId')}
           )
       `,
+      {
+        comment: `Cleanup the mutations that have been committed and whose assignments have been deleted`,
+      },
     );
   }
 
   public override async setup(
     connection: PoolConnection<StatementKind.DATA_DEFINITION>,
   ): Promise<void> {
-    await super.setup(connection);
+    await super.setup(connection, { orReplace: false });
     await this.janitor.create(connection);
   }
 

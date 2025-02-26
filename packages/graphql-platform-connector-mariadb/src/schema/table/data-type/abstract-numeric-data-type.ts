@@ -28,11 +28,9 @@ export abstract class AbstractNumericDataType<
   ) {
     super(config, configPath);
 
-    this.modifiers = Object.freeze(
-      [...new Set(config?.modifiers)].filter(
-        // As it is the default, we don't need to specify it
-        (modifier) => modifier !== 'SIGNED',
-      ),
+    this.modifiers = [...new Set(config?.modifiers)].filter(
+      // As it is the default, we don't need to specify it
+      (modifier) => modifier !== 'SIGNED',
     );
   }
 

@@ -65,38 +65,34 @@ export class NodeUpdate<
     utils.assertPlainObject(rawOldValue);
     utils.assertNillablePlainObject(rawNewValue);
 
-    const oldValue = Object.freeze(
-      node.selection.parseSource(
-        Object.fromEntries(
-          node.componentSet.values().map((component) => {
-            const rawOldComponentValue = rawOldValue[component.name];
+    const oldValue = node.selection.parseSource(
+      Object.fromEntries(
+        node.componentSet.values().map((component) => {
+          const rawOldComponentValue = rawOldValue[component.name];
 
-            return [
-              component.name,
-              rawOldComponentValue === undefined && component.isNullable()
-                ? null
-                : rawOldComponentValue,
-            ];
-          }),
-        ),
+          return [
+            component.name,
+            rawOldComponentValue === undefined && component.isNullable()
+              ? null
+              : rawOldComponentValue,
+          ];
+        }),
       ),
     );
 
     const newValue = rawNewValue
-      ? Object.freeze(
-          node.selection.parseSource(
-            Object.fromEntries(
-              node.componentSet.values().map((component) => {
-                const rawNewComponentValue = rawNewValue[component.name];
+      ? node.selection.parseSource(
+          Object.fromEntries(
+            node.componentSet.values().map((component) => {
+              const rawNewComponentValue = rawNewValue[component.name];
 
-                return [
-                  component.name,
-                  rawNewComponentValue === undefined
-                    ? oldValue[component.name]
-                    : rawNewComponentValue,
-                ];
-              }),
-            ),
+              return [
+                component.name,
+                rawNewComponentValue === undefined
+                  ? oldValue[component.name]
+                  : rawNewComponentValue,
+              ];
+            }),
           ),
         )
       : oldValue;
@@ -128,10 +124,10 @@ export class NodeUpdate<
             ) {
               entries.push([
                 component,
-                Object.freeze({
+                {
                   oldValue: oldComponentValue,
                   newValue: newComponentValue,
-                }),
+                },
               ]);
             }
           }

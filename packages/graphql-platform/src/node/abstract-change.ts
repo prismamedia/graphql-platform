@@ -15,8 +15,6 @@ export abstract class AbstractNodeChange<TRequestContext extends object> {
     public executedAt: Date = new Date(),
     public committedAt?: Date,
   ) {
-    Object.freeze(id);
-
     const pureLeafIdentifier = node.mainIdentifier.isPureLeaf()
       ? node.mainIdentifier.getPureLeaf()
       : undefined;

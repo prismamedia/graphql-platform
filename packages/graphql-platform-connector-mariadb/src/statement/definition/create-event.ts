@@ -1,7 +1,7 @@
 import * as utils from '@prismamedia/graphql-platform-utils';
 import type * as mariadb from 'mariadb';
 import { EOL } from 'node:os';
-import { escapeIdentifier } from '../../escaping.js';
+import { escapeIdentifier, escapeStringValue } from '../../escaping.js';
 import { Event } from '../../schema/event.js';
 import { StatementKind } from '../kind.js';
 
@@ -32,6 +32,8 @@ export class CreateEventStatement implements mariadb.QueryOptions {
         .filter(Boolean)
         .join(' '),
       `ON SCHEDULE ${event.schedule}`,
+      event.options?.comment &&
+        `COMMENT ${escapeStringValue(event.options.comment.slice(0, 64))}`,
       `DO ${event.statement};`,
     ]
       .filter(Boolean)

@@ -218,12 +218,12 @@ export class Table {
 
     // full-text-indexes-by-leaf
     {
-      this.fullTextIndexes = Object.freeze(
-        Array.from(this.columnsByLeaf.values()).reduce<FullTextIndex[]>(
-          (indexes, column) =>
-            column.fullTextIndex ? [...indexes, column.fullTextIndex] : indexes,
-          [],
-        ),
+      this.fullTextIndexes = Array.from(this.columnsByLeaf.values()).reduce<
+        FullTextIndex[]
+      >(
+        (indexes, column) =>
+          column.fullTextIndex ? [...indexes, column.fullTextIndex] : indexes,
+        [],
       );
     }
 
@@ -238,34 +238,32 @@ export class Table {
         });
       }
 
-      this.plainIndexes = Object.freeze(
-        [
-          ...(indexesConfig ?? []),
-          ...(this.subscriptionsStateColumn
-            ? [{ columns: [this.subscriptionsStateColumn.name] }]
-            : []),
-        ].reduce<PlainIndex[]>(
-          (indexes, config, index) => [
-            ...indexes,
-            new PlainIndex(
-              this,
-              (Array.isArray(config)
-                ? { components: config }
-                : config) as PlainIndexConfig,
-              utils.addPath(indexesConfigPath, index),
-            ),
-          ],
-          [],
-        ),
+      this.plainIndexes = [
+        ...(indexesConfig ?? []),
+        ...(this.subscriptionsStateColumn
+          ? [{ columns: [this.subscriptionsStateColumn.name] }]
+          : []),
+      ].reduce<PlainIndex[]>(
+        (indexes, config, index) => [
+          ...indexes,
+          new PlainIndex(
+            this,
+            (Array.isArray(config)
+              ? { components: config }
+              : config) as PlainIndexConfig,
+            utils.addPath(indexesConfigPath, index),
+          ),
+        ],
+        [],
       );
     }
 
-    this.indexes = Object.freeze([
+    this.indexes = [
       this.primaryKey,
       ...this.uniqueIndexes,
       ...this.fullTextIndexes,
       ...this.plainIndexes,
-    ]);
+    ];
 
     // foreign-keys-by-edge
     {
@@ -323,12 +321,10 @@ export class Table {
 
   @MGetter
   public get columns(): ReadonlyArray<Column> {
-    return Object.freeze(
-      [
-        ...this.getColumnsByComponents(...this.node.componentsByName.values()),
-        this.subscriptionsStateColumn,
-      ].filter((column) => column !== undefined),
-    );
+    return [
+      ...this.getColumnsByComponents(...this.node.componentsByName.values()),
+      this.subscriptionsStateColumn,
+    ].filter((column) => column !== undefined);
   }
 
   public getColumnByName(name: Column['name']): Column {

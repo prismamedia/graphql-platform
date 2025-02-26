@@ -49,7 +49,7 @@ export class NodeSelection<
   ) {
     assert(expressionsByKey.size, `The "${node}"'s selection is empty`);
 
-    this.expressions = Object.freeze(Array.from(expressionsByKey.values()));
+    this.expressions = Array.from(expressionsByKey.values());
   }
 
   /**
@@ -57,17 +57,15 @@ export class NodeSelection<
    */
   @MGetter
   public get components(): ReadonlyArray<Component> {
-    return Object.freeze(
-      Array.from(
-        new Set(
-          this.expressions.flatMap((expression) =>
-            isComponentSelection(expression)
-              ? [expression.component]
-              : expression instanceof VirtualSelection &&
-                  expression.sourceSelection
-                ? expression.sourceSelection.components
-                : [],
-          ),
+    return Array.from(
+      new Set(
+        this.expressions.flatMap((expression) =>
+          isComponentSelection(expression)
+            ? [expression.component]
+            : expression instanceof VirtualSelection &&
+                expression.sourceSelection
+              ? expression.sourceSelection.components
+              : [],
         ),
       ),
     );
@@ -78,17 +76,15 @@ export class NodeSelection<
    */
   @MGetter
   public get reverseEdges(): ReadonlyArray<ReverseEdge> {
-    return Object.freeze(
-      Array.from(
-        new Set(
-          this.expressions.flatMap((expression) =>
-            isReverseEdgeSelection(expression)
-              ? [expression.reverseEdge]
-              : expression instanceof VirtualSelection &&
-                  expression.sourceSelection
-                ? expression.sourceSelection.reverseEdges
-                : [],
-          ),
+    return Array.from(
+      new Set(
+        this.expressions.flatMap((expression) =>
+          isReverseEdgeSelection(expression)
+            ? [expression.reverseEdge]
+            : expression instanceof VirtualSelection &&
+                expression.sourceSelection
+              ? expression.sourceSelection.reverseEdges
+              : [],
         ),
       ),
     );
@@ -99,29 +95,27 @@ export class NodeSelection<
    */
   @MGetter
   public get uniqueConstraints(): ReadonlyArray<UniqueConstraint> {
-    return Object.freeze(
-      Array.from(this.node.uniqueConstraintSet)
-        .filter((uniqueConstraint) =>
-          this.isSupersetOf(uniqueConstraint.selection),
-        )
-        .sort(
-          (a, b) =>
-            Math.min(
-              ...Array.from(a.componentSet, (aComponent) =>
-                this.components.findIndex(
-                  (thisComponent) => thisComponent === aComponent,
-                ),
-              ),
-            ) -
-            Math.min(
-              ...Array.from(b.componentSet, (bComponent) =>
-                this.components.findIndex(
-                  (thisComponent) => thisComponent === bComponent,
-                ),
+    return Array.from(this.node.uniqueConstraintSet)
+      .filter((uniqueConstraint) =>
+        this.isSupersetOf(uniqueConstraint.selection),
+      )
+      .sort(
+        (a, b) =>
+          Math.min(
+            ...Array.from(a.componentSet, (aComponent) =>
+              this.components.findIndex(
+                (thisComponent) => thisComponent === aComponent,
               ),
             ),
-        ),
-    );
+          ) -
+          Math.min(
+            ...Array.from(b.componentSet, (bComponent) =>
+              this.components.findIndex(
+                (thisComponent) => thisComponent === bComponent,
+              ),
+            ),
+          ),
+      );
   }
 
   /**
@@ -129,10 +123,8 @@ export class NodeSelection<
    */
   @MGetter
   public get identifiers(): ReadonlyArray<UniqueConstraint> {
-    return Object.freeze(
-      this.uniqueConstraints.filter((uniqueConstraint) =>
-        uniqueConstraint.isIdentifier(),
-      ),
+    return this.uniqueConstraints.filter((uniqueConstraint) =>
+      uniqueConstraint.isIdentifier(),
     );
   }
 

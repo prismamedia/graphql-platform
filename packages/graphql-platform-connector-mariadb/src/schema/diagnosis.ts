@@ -202,11 +202,11 @@ export class SchemaDiagnosis {
           ? extraTableNames
           : [];
 
-      this.fixableTableNames = Object.freeze([
+      this.fixableTableNames = [
         ...this.extraTables,
         ...this.missingTables.map(({ name }) => name),
         ...this.invalidTables.map(({ table: { name } }) => name),
-      ]);
+      ];
     }
 
     this.errorCount =

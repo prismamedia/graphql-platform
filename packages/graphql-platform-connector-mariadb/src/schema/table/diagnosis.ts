@@ -260,11 +260,11 @@ export class TableDiagnosis {
           ? extraColumnNames
           : [];
 
-      this.fixableColumnNames = Object.freeze([
+      this.fixableColumnNames = [
         ...this.extraColumns,
         ...this.missingColumns.map(({ name }) => name),
         ...this.invalidColumns.map(({ column: { name } }) => name),
-      ]);
+      ];
     }
 
     // indexes
@@ -340,11 +340,11 @@ export class TableDiagnosis {
           ? extraIndexNames
           : [];
 
-      this.fixableIndexNames = Object.freeze([
+      this.fixableIndexNames = [
         ...this.extraIndexes,
         ...this.missingIndexes.map(({ name }) => name),
         ...this.invalidIndexes.map(({ index: { name } }) => name),
-      ]);
+      ];
     }
 
     // foreign-keys
@@ -402,11 +402,11 @@ export class TableDiagnosis {
           ? extraForeignKeyNames
           : [];
 
-      this.fixableForeignKeyNames = Object.freeze([
+      this.fixableForeignKeyNames = [
         ...this.extraForeignKeys,
         ...this.missingForeignKeys.map(({ name }) => name),
         ...this.invalidForeignKeys.map(({ foreignKey: { name } }) => name),
-      ]);
+      ];
     }
 
     this.errorCount =

@@ -62,6 +62,9 @@ export class MariaDBBrokerAssignmentsTable extends AbstractTable {
         DELETE FROM ${escapeIdentifier(this.qualifiedName)}
         WHERE ${escapeIdentifier('heartbeatAt')} < NOW(3) - INTERVAL ${this.broker.heartbeatIntervalInSeconds * 2} SECOND
       `,
+      {
+        comment: `Cleanup the assignments that have not been heartbeat for a while`,
+      },
     );
   }
 

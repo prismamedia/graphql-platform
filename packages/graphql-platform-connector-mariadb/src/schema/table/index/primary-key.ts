@@ -34,10 +34,8 @@ export class PrimaryKey extends AbstractIndex {
 
   @MGetter
   public override get columns(): ReadonlyArray<Column> {
-    return Object.freeze(
-      this.table.getColumnsByComponents(
-        ...this.uniqueConstraint.componentsByName.values(),
-      ),
+    return this.table.getColumnsByComponents(
+      ...this.uniqueConstraint.componentsByName.values(),
     );
   }
 

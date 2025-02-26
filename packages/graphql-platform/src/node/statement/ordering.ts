@@ -17,9 +17,7 @@ export class NodeOrdering {
     public readonly node: Node,
     expressions: ReadonlyArray<OrderingExpression>,
   ) {
-    this.expressions = Object.freeze(
-      R.uniqueWith(expressions, (a, b) => a.equals(b)),
-    );
+    this.expressions = R.uniqueWith(expressions, (a, b) => a.equals(b));
 
     this.normalized = this.expressions.length ? this : undefined;
   }

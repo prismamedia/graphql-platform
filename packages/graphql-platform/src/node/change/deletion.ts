@@ -40,20 +40,18 @@ export class NodeDeletion<
   ) {
     utils.assertPlainObject(rawOldValue);
 
-    const oldValue = Object.freeze(
-      node.selection.parseSource(
-        Object.fromEntries(
-          node.componentSet.values().map((component) => {
-            const rawOldComponentValue = rawOldValue[component.name];
+    const oldValue = node.selection.parseSource(
+      Object.fromEntries(
+        node.componentSet.values().map((component) => {
+          const rawOldComponentValue = rawOldValue[component.name];
 
-            return [
-              component.name,
-              rawOldComponentValue === undefined && component.isNullable()
-                ? null
-                : rawOldComponentValue,
-            ];
-          }),
-        ),
+          return [
+            component.name,
+            rawOldComponentValue === undefined && component.isNullable()
+              ? null
+              : rawOldComponentValue,
+          ];
+        }),
       ),
     );
 

@@ -259,7 +259,7 @@ export class GraphQLPlatform<
         subscriptionConfigPath,
       );
 
-      this.subscriptionConfig = Object.freeze({
+      this.subscriptionConfig = {
         enabled: utils.getOptionalFlag(
           subscriptionConfig?.enabled,
           true,
@@ -270,7 +270,7 @@ export class GraphQLPlatform<
           false,
           utils.addPath(subscriptionConfigPath, 'public'),
         ),
-      });
+      };
     }
 
     // nodes

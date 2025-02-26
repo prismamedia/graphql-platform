@@ -192,14 +192,12 @@ export class ReferenceColumnTree {
 
   @MGetter
   public get columns(): ReadonlyArray<ReferenceColumn> {
-    return Object.freeze(
-      Array.from(
-        this.currentEdge.referencedUniqueConstraint.componentsByName.values(),
-      ).flatMap((component) =>
-        component instanceof core.Leaf
-          ? this.getColumnByLeaf(component)
-          : this.getColumnTreeByEdge(component).columns,
-      ),
+    return Array.from(
+      this.currentEdge.referencedUniqueConstraint.componentsByName.values(),
+    ).flatMap((component) =>
+      component instanceof core.Leaf
+        ? this.getColumnByLeaf(component)
+        : this.getColumnTreeByEdge(component).columns,
     );
   }
 

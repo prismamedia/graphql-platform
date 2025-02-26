@@ -1,3 +1,4 @@
+import * as utils from '@prismamedia/graphql-platform-utils';
 import assert from 'node:assert';
 import type { MariaDBBroker } from '../broker.js';
 import { escapeIdentifier, escapeStringValue } from '../escaping.js';
@@ -84,9 +85,24 @@ export abstract class AbstractTable {
 
   public async setup(
     connection: PoolConnection<StatementKind.DATA_DEFINITION>,
+    options?: {
+      orReplace?: utils.OptionalFlag;
+      ifNotExists?: utils.OptionalFlag;
+    },
   ): Promise<void> {
+    const orReplace = utils.getOptionalFlag(options?.orReplace, true);
+    const ifNotExists = utils.getOptionalFlag(options?.ifNotExists, !orReplace);
+
     await connection.query(`
-      CREATE OR REPLACE TABLE ${escapeIdentifier(this.qualifiedName)} (${[
+      ${[
+        'CREATE',
+        orReplace && 'OR REPLACE',
+        'TABLE',
+        ifNotExists && 'IF NOT EXISTS',
+        escapeIdentifier(this.qualifiedName),
+      ]
+        .filter(Boolean)
+        .join(' ')} (${[
         ...this.columnsByName
           .values()
           .map(

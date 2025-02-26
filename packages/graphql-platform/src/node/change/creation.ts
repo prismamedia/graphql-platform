@@ -39,20 +39,18 @@ export class NodeCreation<
   ) {
     utils.assertPlainObject(rawNewValue);
 
-    const newValue = Object.freeze(
-      node.selection.parseSource(
-        Object.fromEntries(
-          node.componentSet.values().map((component) => {
-            const rawNewComponentValue = rawNewValue[component.name];
+    const newValue = node.selection.parseSource(
+      Object.fromEntries(
+        node.componentSet.values().map((component) => {
+          const rawNewComponentValue = rawNewValue[component.name];
 
-            return [
-              component.name,
-              rawNewComponentValue === undefined && component.isNullable()
-                ? null
-                : rawNewComponentValue,
-            ];
-          }),
-        ),
+          return [
+            component.name,
+            rawNewComponentValue === undefined && component.isNullable()
+              ? null
+              : rawNewComponentValue,
+          ];
+        }),
       ),
     );
 
