@@ -3,12 +3,7 @@ import type * as mariadb from 'mariadb';
 import { EOL } from 'node:os';
 import type { SetOptional } from 'type-fest';
 import { escapeIdentifier } from '../../escaping.js';
-import {
-  LeafColumn,
-  SubscriptionsStateColumn,
-  type Column,
-  type Table,
-} from '../../schema.js';
+import { LeafColumn, type Table } from '../../schema.js';
 import { StatementKind } from '../kind.js';
 
 export interface InsertStatementConfig {
@@ -31,11 +26,6 @@ export class InsertStatement implements mariadb.QueryOptions {
     statement: SetOptional<core.ConnectorCreateStatement, 'node'>,
     config?: InsertStatementConfig,
   ) {
-    const columns = table.columns.filter(
-      (column): column is Exclude<Column, SubscriptionsStateColumn> =>
-        !(column instanceof SubscriptionsStateColumn),
-    );
-
     this.sql = [
       [
         'INSERT',
@@ -44,12 +34,12 @@ export class InsertStatement implements mariadb.QueryOptions {
       ]
         .filter(Boolean)
         .join(' '),
-      `  (${columns.map(({ name }) => escapeIdentifier(name)).join(',')})`,
+      `  (${table.columns.map(({ name }) => escapeIdentifier(name)).join(',')})`,
       'VALUES',
       statement.creations
         .map(
           (creation) =>
-            `  (${columns
+            `  (${table.columns
               .map((column) =>
                 column.dataType.serialize(
                   column instanceof LeafColumn
@@ -63,7 +53,7 @@ export class InsertStatement implements mariadb.QueryOptions {
         )
         .join(`,${EOL}`),
       `RETURNING`,
-      `  ${columns.map(({ name }) => escapeIdentifier(name)).join(',')}`,
+      `  ${table.columns.map(({ name }) => escapeIdentifier(name)).join(',')}`,
     ].join(EOL);
   }
 }

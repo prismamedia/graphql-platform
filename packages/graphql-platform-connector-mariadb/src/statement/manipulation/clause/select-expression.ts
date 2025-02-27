@@ -17,7 +17,7 @@ function parseLeafSelection(
     referenceColumnTree?.getColumnByLeaf(selection.leaf) ??
     tableReference.table.getColumnByLeaf(selection.leaf);
 
-  return tableReference.getEscapedColumnIdentifier(column);
+  return tableReference.escapeColumnIdentifier(column);
 }
 
 function parseEdgeSelection(
@@ -42,9 +42,7 @@ function parseEdgeSelection(
           ${OR(
             subTree.columns.map(
               (column) =>
-                `${tableReference.getEscapedColumnIdentifier(
-                  column,
-                )} IS NOT NULL`,
+                `${tableReference.escapeColumnIdentifier(column)} IS NOT NULL`,
             ),
           )},
           ${parsedHeadSelection},
@@ -86,7 +84,7 @@ function parseEdgeSelection(
               .getForeignKeyByEdge(edge)
               .columns.map(
                 (column) =>
-                  `${tableReference.getEscapedColumnIdentifier(
+                  `${tableReference.escapeColumnIdentifier(
                     column,
                   )} IS NOT NULL`,
               ),

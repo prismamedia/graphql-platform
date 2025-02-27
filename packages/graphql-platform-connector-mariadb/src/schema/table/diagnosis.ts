@@ -25,9 +25,7 @@ import {
   type ColumnDiagnosis,
   LeafColumn,
   LeafColumnDiagnosis,
-  ReferenceColumn,
   ReferenceColumnDiagnosis,
-  SubscriptionsStateColumnDiagnosis,
 } from './column.js';
 import type { InvalidTableFixOptions } from './diagnosis/fix.js';
 import {
@@ -217,17 +215,11 @@ export class TableDiagnosis {
                     columnInformations,
                     columnDiagnosisOptions,
                   )
-                : column instanceof ReferenceColumn
-                  ? new ReferenceColumnDiagnosis(
-                      column,
-                      columnInformations,
-                      columnDiagnosisOptions,
-                    )
-                  : new SubscriptionsStateColumnDiagnosis(
-                      column,
-                      columnInformations,
-                      columnDiagnosisOptions,
-                    ),
+                : new ReferenceColumnDiagnosis(
+                    column,
+                    columnInformations,
+                    columnDiagnosisOptions,
+                  ),
             ]);
           }
 

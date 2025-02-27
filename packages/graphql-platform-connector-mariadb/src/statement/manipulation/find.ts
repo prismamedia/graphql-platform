@@ -33,7 +33,10 @@ export class FindStatement implements mariadb.QueryOptions {
         statement.selection,
       )} as ${escapeIdentifier(this.selectionKey)}`,
       statement.forSubscription &&
-        table.subscriptionsStateColumn?.select(tableReference),
+        table.subscriptionsStateTable?.select(
+          tableReference,
+          statement.forSubscription,
+        ),
     ]
       .filter(Boolean)
       .join(',');
@@ -43,7 +46,7 @@ export class FindStatement implements mariadb.QueryOptions {
         ? AND([
             statement.filter && filterNode(tableReference, statement.filter),
             statement.forSubscription &&
-              table.subscriptionsStateColumn?.filter(
+              table.subscriptionsStateTable?.filter(
                 tableReference,
                 statement.forSubscription,
               ),
@@ -58,11 +61,19 @@ export class FindStatement implements mariadb.QueryOptions {
 
     const offset = statement.offset;
 
-    this.sql = [
+    const sql = [
       `SELECT ${selectExpression}`,
       `FROM ${tableReference}`,
       whereCondition && `WHERE ${whereCondition}`,
       orderingExpressions && `ORDER BY ${orderingExpressions}`,
+    ]
+      .filter(Boolean)
+      .join(EOL);
+
+    this.sql = [
+      statement.forSubscription && table.subscriptionsStateTable
+        ? table.subscriptionsStateTable.compareHashes(sql, this.selectionKey)
+        : sql,
       `LIMIT ${limit}`,
       offset && `OFFSET ${offset}`,
       statement.forMutation != null && 'FOR UPDATE',

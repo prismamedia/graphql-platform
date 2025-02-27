@@ -1,7 +1,7 @@
 import { MGetter } from '@prismamedia/memoize';
 import type { UUID } from 'node:crypto';
 import type { MariaDBBroker } from '../../broker.js';
-import { escapeIdentifier, escapeStringValue } from '../../escaping.js';
+import { escapeIdentifier } from '../../escaping.js';
 import type { OkPacket, PoolConnection } from '../../index.js';
 import { Event } from '../../schema/event.js';
 import {
@@ -48,7 +48,7 @@ export class MariaDBBrokerAssignmentsTable extends AbstractTable {
         // Index for the janitor
         ['heartbeatAt'],
       ],
-      [['mutationId', broker.mutationsTable.getColumnByName('id')]],
+      [[['mutationId', broker.mutationsTable.getColumnByName('id')]]],
     );
   }
 
@@ -60,7 +60,7 @@ export class MariaDBBrokerAssignmentsTable extends AbstractTable {
       `EVERY ${this.broker.heartbeatIntervalInSeconds} SECOND`,
       `
         DELETE FROM ${escapeIdentifier(this.qualifiedName)}
-        WHERE ${escapeIdentifier('heartbeatAt')} < NOW(3) - INTERVAL ${this.broker.heartbeatIntervalInSeconds * 2} SECOND
+        WHERE ${this.escapeColumnIdentifier('heartbeatAt')} < NOW(3) - INTERVAL ${this.broker.heartbeatIntervalInSeconds * 2} SECOND
       `,
       {
         comment: `Cleanup the assignments that have not been heartbeat for a while`,
@@ -78,47 +78,55 @@ export class MariaDBBrokerAssignmentsTable extends AbstractTable {
   public async assign(
     mutationsBySubscription: UnassignedMutationsBySubscription,
   ): Promise<void> {
-    await this.connector.executeQuery<OkPacket>(
-      `
-        INSERT INTO ${escapeIdentifier(this.name)} (${['mutationId', 'subscriptionId', 'heartbeatAt'].map(escapeIdentifier).join(',')})
-        VALUES ${mutationsBySubscription
-          .entries()
-          .flatMap(([{ subscription }, mutations]) =>
-            mutations.map(
-              (mutation) =>
-                `(${[mutation.id, escapeStringValue(subscription.id), 'NOW(3)'].join(',')})`,
-            ),
-          )
-          .toArray()
-          .join(',')}
-      `,
-    );
+    await this.connector.executeQuery<OkPacket>(`
+      INSERT INTO ${escapeIdentifier(this.name)} (${[
+        'mutationId',
+        'subscriptionId',
+        'heartbeatAt',
+      ]
+        .map((columnName) => this.escapeColumnIdentifier(columnName))
+        .join(',')})
+      VALUES ${mutationsBySubscription
+        .entries()
+        .flatMap(([{ subscription }, mutations]) =>
+          mutations.map(
+            (mutation) =>
+              `(${[
+                this.serializeColumnValue('mutationId', mutation.id),
+                this.serializeColumnValue('subscriptionId', subscription.id),
+                'NOW(3)',
+              ].join(',')})`,
+          ),
+        )
+        .toArray()
+        .join(',')}
+    `);
   }
 
   public async unassign(
     subscriptionId: UUID,
     mutationId?: bigint,
   ): Promise<void> {
-    await this.connector.executeQuery<OkPacket>(
-      `
-        DELETE FROM ${escapeIdentifier(this.name)}
-        WHERE ${AND([
-          `${escapeIdentifier('subscriptionId')} = ${escapeStringValue(subscriptionId)}`,
-          mutationId
-            ? `${escapeIdentifier('mutationId')} = ${mutationId}`
-            : undefined,
-        ])}
-      `,
-    );
+    await this.connector.executeQuery<OkPacket>(`
+      DELETE FROM ${escapeIdentifier(this.name)}
+      WHERE ${AND([
+        `${this.escapeColumnIdentifier('subscriptionId')} = ${this.serializeColumnValue('subscriptionId', subscriptionId)}`,
+        mutationId
+          ? `${this.escapeColumnIdentifier('mutationId')} = ${this.serializeColumnValue('mutationId', mutationId)}`
+          : undefined,
+      ])}
+    `);
+  }
+
+  public async unsubscribe(subscriptionId: UUID): Promise<void> {
+    return this.unassign(subscriptionId);
   }
 
   public async heartbeat(subscriptionIds: Iterable<UUID>): Promise<void> {
-    await this.connector.executeQuery<OkPacket>(
-      `
-        UPDATE ${escapeIdentifier(this.name)} 
-        SET ${escapeIdentifier('heartbeatAt')} = NOW(3)
-        WHERE ${escapeIdentifier('subscriptionId')} IN (${Array.from(subscriptionIds, escapeStringValue).join(',')})
-      `,
-    );
+    await this.connector.executeQuery<OkPacket>(`
+      UPDATE ${escapeIdentifier(this.name)} 
+      SET ${this.escapeColumnIdentifier('heartbeatAt')} = NOW(3)
+      WHERE ${this.escapeColumnIdentifier('subscriptionId')} IN (${Array.from(subscriptionIds, (subscriptionId) => this.serializeColumnValue('subscriptionId', subscriptionId)).join(',')})
+    `);
   }
 }

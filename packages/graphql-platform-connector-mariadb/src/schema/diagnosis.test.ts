@@ -29,7 +29,7 @@ describe('SchemaDiagnosis', () => {
     const CategoryTable = schema.getTableByNode(CategoryNode);
 
     await connector.withConnection(async (connection) => {
-      // await schema.create(undefined, connection);
+      // Create a schema with a wrong comment
       await connection.query(
         `CREATE SCHEMA ${escapeIdentifier(
           schema.name,
@@ -63,8 +63,6 @@ describe('SchemaDiagnosis', () => {
         DEFAULT CHARSET ${escapeStringValue(CategoryTable.defaultCharset)}
         DEFAULT COLLATE ${escapeStringValue(CategoryTable.defaultCollation)}
       `);
-
-      await connector.broker?.setup(connection);
     }, StatementKind.DATA_DEFINITION);
 
     let diagnosis = await schema.diagnose();
@@ -72,7 +70,7 @@ describe('SchemaDiagnosis', () => {
     assert(diagnosis instanceof SchemaDiagnosis);
     assert(!diagnosis.isValid());
     assert.deepEqual(diagnosis.summarize(), {
-      errors: 91,
+      errors: 89,
 
       collation: {
         actual: 'utf8mb4_uca1400_ai_ci',
@@ -175,7 +173,7 @@ describe('SchemaDiagnosis', () => {
     assert(diagnosis instanceof SchemaDiagnosis);
     assert(!diagnosis.isValid());
     assert.deepEqual(diagnosis.summarize(), {
-      errors: 89,
+      errors: 87,
 
       tables: {
         extra: ['extra_table'],

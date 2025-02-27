@@ -4,12 +4,14 @@ import type { MariaDBBroker } from '../broker.js';
 import { escapeIdentifier, escapeStringValue } from '../escaping.js';
 import type { MariaDBConnector, PoolConnection } from '../index.js';
 import type { DataType, Schema } from '../schema.js';
+import * as schema from '../schema.js';
 import { StatementKind } from '../statement.js';
 
 export interface ColumnConfig {
   dataType: DataType;
   autoIncrement?: boolean;
   nullable?: boolean;
+  comment?: string;
 }
 
 export class Column<TTable extends AbstractTable = any> {
@@ -18,6 +20,7 @@ export class Column<TTable extends AbstractTable = any> {
   public readonly dataType: DataType;
   public readonly autoIncrement: boolean;
   public readonly nullable: boolean;
+  public readonly comment?: string;
 
   public constructor(
     public readonly table: TTable,
@@ -29,6 +32,7 @@ export class Column<TTable extends AbstractTable = any> {
     this.dataType = config.dataType;
     this.autoIncrement = config.autoIncrement ?? false;
     this.nullable = config.nullable ?? false;
+    this.comment = config.comment?.substring(0, 1024) || undefined;
   }
 }
 
@@ -46,7 +50,7 @@ export abstract class AbstractTable {
     public readonly primary: ReadonlyArray<Column['name']>,
     public readonly indexes?: ReadonlyArray<ReadonlyArray<Column['name']>>,
     public readonly foreignKeys?: ReadonlyArray<
-      [source: Column['name'], reference: Column]
+      ReadonlyArray<[source: Column['name'], target: Column | schema.Column]>
     >,
   ) {
     this.connector = broker.connector;
@@ -66,10 +70,11 @@ export abstract class AbstractTable {
       index.forEach((column) => assert(this.columnsByName.has(column))),
     );
 
-    foreignKeys?.forEach(([source, reference]) => {
-      assert(this.columnsByName.has(source));
-      assert(reference instanceof Column);
-    });
+    foreignKeys?.forEach((references) =>
+      references.forEach(([source, _target]) =>
+        assert(this.columnsByName.has(source)),
+      ),
+    );
   }
 
   public toString(): string {
@@ -81,6 +86,14 @@ export abstract class AbstractTable {
     assert(column, `Column ${name} not found in table ${this.qualifiedName}`);
 
     return column;
+  }
+
+  public escapeColumnIdentifier(name: Column['name']): string {
+    return escapeIdentifier(this.getColumnByName(name).name);
+  }
+
+  public serializeColumnValue(name: Column['name'], value: any): string {
+    return this.getColumnByName(name).dataType.serialize(value);
   }
 
   public async setup(
@@ -111,6 +124,8 @@ export abstract class AbstractTable {
                 column.dataType.definition,
                 column.autoIncrement && 'AUTO_INCREMENT',
                 column.nullable && 'NULL',
+                column.comment &&
+                  `COMMENT ${escapeStringValue(column.comment)}`,
               ]
                 .filter(Boolean)
                 .join(' ')}`,
@@ -118,11 +133,15 @@ export abstract class AbstractTable {
         `PRIMARY KEY (${this.primary.map(escapeIdentifier).join(',')})`,
         ...(this.indexes?.map(
           (columns) =>
-            `INDEX ${escapeIdentifier(`idx_${columns.join('_')}`)} (${columns.map(escapeIdentifier).join(', ')})`,
+            `INDEX ${escapeIdentifier(`idx_${columns.join('_')}`.replace(/_+/g, '_'))} (${columns.map(escapeIdentifier).join(', ')})`,
         ) ?? []),
         ...(this.foreignKeys?.map(
-          ([source, reference]) =>
-            `FOREIGN KEY ${escapeIdentifier(`fk_${this.name}_${source}`)} (${escapeIdentifier(source)}) REFERENCES ${escapeIdentifier(reference.table.qualifiedName)} (${escapeIdentifier(reference.name)}) ON DELETE CASCADE`,
+          (references) =>
+            `FOREIGN KEY ${escapeIdentifier(
+              `fk_${this.name}_${references
+                .map(([source]) => source)
+                .join('_')}`.replace(/_+/g, '_'),
+            )} (${references.map(([source]) => escapeIdentifier(source)).join()}) REFERENCES ${escapeIdentifier(references[0][1].table.qualifiedName)} (${references.map(([, target]) => escapeIdentifier(target.name)).join()}) ON DELETE CASCADE`,
         ) ?? []),
       ].join(`, `)})
       ENGINE = ${escapeStringValue('InnoDB')}

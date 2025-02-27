@@ -4,7 +4,7 @@ import { MGetter, MMethod } from '@prismamedia/memoize';
 import assert from 'node:assert';
 import { escapeIdentifier } from '../../escaping.js';
 import type { MariaDBConnector } from '../../index.js';
-import type { TableReference } from '../../statement/manipulation/clause/table-reference.js';
+import type { AbstractTableReference } from '../../statement/manipulation/clause/abstract-table-reference.js';
 import type { WhereCondition } from '../../statement/manipulation/clause/where-condition.js';
 import { ensureIdentifierName } from '../naming-strategy.js';
 import type { Table } from '../table.js';
@@ -113,17 +113,17 @@ export class ForeignKey {
   }
 
   public getJoinConditions(
-    tail: TableReference,
-    head: TableReference,
+    tail: AbstractTableReference,
+    head: AbstractTableReference,
   ): Array<WhereCondition> {
     assert.strictEqual(tail.table.node, this.edge.tail);
     assert.strictEqual(head.table.node, this.edge.head);
 
     return this.columns.map(
       (column) =>
-        `${tail.getEscapedColumnIdentifier(column)} ${
+        `${tail.escapeColumnIdentifier(column)} ${
           column.referencedColumn.isNullable() ? '<=>' : '='
-        } ${head.getEscapedColumnIdentifier(column.referencedColumn)}`,
+        } ${head.escapeColumnIdentifier(column.referencedColumn)}`,
     );
   }
 }

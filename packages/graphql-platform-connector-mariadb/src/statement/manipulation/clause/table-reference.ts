@@ -1,6 +1,7 @@
 import type { JoinTable } from './table-reference/join-table.js';
 import type { TableFactor } from './table-reference/table-factor.js';
 
+export * from './table-reference/join-subscriptions-state-table.js';
 export * from './table-reference/join-table.js';
 export * from './table-reference/table-factor.js';
 

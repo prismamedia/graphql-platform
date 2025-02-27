@@ -20,7 +20,7 @@ export function orderNode(
           : 'DESC';
 
       if (expression instanceof core.LeafOrdering) {
-        return `${tableReference.getEscapedColumnIdentifierByLeaf(
+        return `${tableReference.escapeColumnIdentifierByLeaf(
           expression.leaf,
         )} ${direction}`;
       } else if (expression instanceof core.MultipleReverseEdgeCountOrdering) {

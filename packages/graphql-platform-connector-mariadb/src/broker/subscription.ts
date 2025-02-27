@@ -4,7 +4,11 @@ import {
 } from '@prismamedia/async-event-emitter';
 import * as core from '@prismamedia/graphql-platform';
 import Denque from 'denque';
-import type { MariaDBBroker, MariaDBBrokerMutation } from '../broker.js';
+import type {
+  MariaDBBroker,
+  MariaDBBrokerMutation,
+  MariaDBBrokerSubscriptionsStateTable,
+} from '../broker.js';
 
 export type MariaDBSubscriptionEvents = {
   assignments: ReadonlyArray<MariaDBBrokerMutation>;
@@ -26,6 +30,8 @@ export class MariaDBSubscription
   readonly #signal: AbortSignal;
   readonly #assignments: Denque<MariaDBBrokerMutation>;
 
+  public readonly stateTable?: MariaDBBrokerSubscriptionsStateTable;
+
   public constructor(
     public readonly broker: MariaDBBroker,
     public readonly subscription: core.ChangesSubscriptionStream,
@@ -34,6 +40,10 @@ export class MariaDBSubscription
 
     this.#signal = subscription.signal;
     this.#assignments = new Denque();
+
+    this.stateTable = broker.connector.schema.getTableByNode(
+      subscription.node,
+    ).subscriptionsStateTable;
   }
 
   public async assign(
@@ -60,7 +70,8 @@ export class MariaDBSubscription
     try {
       await Promise.all([
         this.broker.unsubscribe(this.subscription),
-        this.broker.assignmentsTable.unassign(this.subscription.id),
+        this.broker.assignmentsTable.unsubscribe(this.subscription.id),
+        this.stateTable?.unsubscribe(this.subscription.id),
       ]);
     } finally {
       this.#assignments.clear();

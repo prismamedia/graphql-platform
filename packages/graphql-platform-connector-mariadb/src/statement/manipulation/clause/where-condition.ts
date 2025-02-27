@@ -79,7 +79,7 @@ function parseLeafFilter(
     tableReference.table.getColumnByLeaf(filter.leaf);
 
   const columnDataType = column.dataType;
-  const columnIdentifier = tableReference.getEscapedColumnIdentifier(column);
+  const columnIdentifier = tableReference.escapeColumnIdentifier(column);
 
   if (filter instanceof core.LeafComparisonFilter) {
     const serializedColumnValue = columnDataType.serialize(filter.value);
@@ -176,7 +176,7 @@ function parseEdgeFilter(
           ? OR(
               subTree.columns.map(
                 (column) =>
-                  `${tableReference.getEscapedColumnIdentifier(
+                  `${tableReference.escapeColumnIdentifier(
                     column,
                   )} IS NOT NULL`,
               ),
@@ -204,7 +204,7 @@ function parseEdgeFilter(
               .getForeignKeyByEdge(edge)
               .columns.map(
                 (column) =>
-                  `${tableReference.getEscapedColumnIdentifier(
+                  `${tableReference.escapeColumnIdentifier(
                     column,
                   )} IS NOT NULL`,
               ),

@@ -93,11 +93,11 @@ export class MariaDBBrokerMutationsTable extends AbstractTable {
       `EVERY ${Math.round(this.broker.retentionInSeconds / 2)} SECOND`,
       `
         DELETE FROM ${escapeIdentifier(this.qualifiedName)}
-        WHERE ${escapeIdentifier('committedAt')} < NOW(3) - INTERVAL ${this.broker.retentionInSeconds} SECOND
+        WHERE ${this.escapeColumnIdentifier('committedAt')} < NOW(3) - INTERVAL ${this.broker.retentionInSeconds} SECOND
           AND NOT EXISTS (
             SELECT 1
             FROM ${escapeIdentifier(this.broker.assignmentsTable.qualifiedName)}
-            WHERE ${escapeIdentifier('id')} = ${escapeIdentifier('mutationId')}
+            WHERE ${this.escapeColumnIdentifier('id')} = ${this.broker.assignmentsTable.escapeColumnIdentifier('mutationId')}
           )
       `,
       {
@@ -120,7 +120,13 @@ export class MariaDBBrokerMutationsTable extends AbstractTable {
     assert(changes.committedAt, 'The changes must have been committed');
 
     const { insertId: mutationId } = await connection.query<OkPacket>(
-      `INSERT INTO ${escapeIdentifier(this.broker.mutationsTable.name)} (${['requestContext', 'changes', 'committedAt'].map(escapeIdentifier).join(',')}) VALUES (?, ?, ?)`,
+      `INSERT INTO ${escapeIdentifier(this.broker.mutationsTable.name)} (${[
+        'requestContext',
+        'changes',
+        'committedAt',
+      ]
+        .map((columnName) => this.escapeColumnIdentifier(columnName))
+        .join(',')}) VALUES (?, ?, ?)`,
       [
         this.broker.options?.serializeRequestContext
           ? this.broker.options.serializeRequestContext(changes.requestContext)
@@ -171,10 +177,10 @@ export class MariaDBBrokerMutationsTable extends AbstractTable {
           SELECT *
           FROM ${escapeIdentifier(this.name)}
           WHERE ${AND([
-            `${escapeIdentifier('id')} > ?`,
-            `${escapeIdentifier('committedAt')} >= ?`,
+            `${this.escapeColumnIdentifier('id')} > ?`,
+            `${this.escapeColumnIdentifier('committedAt')} >= ?`,
           ])}
-          ORDER BY ${escapeIdentifier('id')} ASC
+          ORDER BY ${this.escapeColumnIdentifier('id')} ASC
           LIMIT ${batchSize}
         `,
         [

@@ -2,7 +2,6 @@ import * as core from '@prismamedia/graphql-platform';
 import { MGetter } from '@prismamedia/memoize';
 import { escapeIdentifier } from '../../../../escaping.js';
 import { AbstractTableReference } from '../abstract-table-reference.js';
-import type { TableReference } from '../table-reference.js';
 import { type WhereCondition, filterNode } from '../where-condition.js';
 
 export enum JoinTableKind {
@@ -20,7 +19,7 @@ export class JoinTable extends AbstractTableReference {
   protected readonly authorization?: core.NodeFilter;
 
   public constructor(
-    public readonly parent: TableReference,
+    public readonly parent: AbstractTableReference,
     public readonly edgeOrUniqueReverseEdge: core.Edge | core.UniqueReverseEdge,
   ) {
     super(

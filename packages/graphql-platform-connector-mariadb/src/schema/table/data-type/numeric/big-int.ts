@@ -81,8 +81,8 @@ export class BigIntType<
     return BigInt(jsonValue);
   }
 
-  protected override doSerialize(value: bigint): string {
-    assert.strictEqual(typeof value, 'bigint');
+  protected override doSerialize(value: bigint | number): string {
+    assert(['bigint', 'number'].includes(typeof value));
 
     return value.toString(10);
   }

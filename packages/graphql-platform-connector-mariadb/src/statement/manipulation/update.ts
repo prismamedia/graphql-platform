@@ -44,7 +44,7 @@ export class UpdateStatement implements mariadb.QueryOptions {
           if (component instanceof core.Leaf) {
             const column = table.getColumnByLeaf(component);
 
-            return `${tableReference.getEscapedColumnIdentifier(
+            return `${tableReference.escapeColumnIdentifier(
               column,
             )}=${column.dataType.serialize(
               update as utils.NonOptional<core.LeafUpdateValue>,
@@ -54,7 +54,7 @@ export class UpdateStatement implements mariadb.QueryOptions {
               .getColumnTreeByEdge(component)
               .columns.map(
                 (column) =>
-                  `${tableReference.getEscapedColumnIdentifier(
+                  `${tableReference.escapeColumnIdentifier(
                     column,
                   )}=${column.dataType.serialize(
                     column.pickLeafValueFromReferenceValue(

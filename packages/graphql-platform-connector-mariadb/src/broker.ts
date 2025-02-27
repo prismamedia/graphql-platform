@@ -4,6 +4,8 @@ import {
 } from '@prismamedia/async-event-emitter';
 import * as core from '@prismamedia/graphql-platform';
 import * as utils from '@prismamedia/graphql-platform-utils';
+import { MGetter } from '@prismamedia/memoize';
+import * as R from 'remeda';
 import type { JsonObject } from 'type-fest';
 import {
   MariaDBSubscription,
@@ -13,6 +15,7 @@ import {
   MariaDBBrokerAssignmentsTable,
   MariaDBBrokerChangesTable,
   MariaDBBrokerMutationsTable,
+  MariaDBBrokerSubscriptionsStateTable,
   type MariaDBBrokerAssignmentsTableOptions,
   type MariaDBBrokerChangesTableOptions,
   type MariaDBBrokerMutationsTableOptions,
@@ -42,14 +45,14 @@ export interface MariaDBBrokerOptions<TRequestContext extends object = any> {
   /**
    * The number of seconds to wait before polling for new assignments.
    *
-   * @default 1
+   * @default 5
    */
   assignerInterval?: number;
 
   /**
    * The number of seconds to wait between heartbeats.
    *
-   * @default 30
+   * @default 60 (1 minute)
    */
   heartbeatInterval?: number;
 
@@ -100,8 +103,8 @@ export class MariaDBBroker<TRequestContext extends object = any>
   ) {
     super();
 
-    this.assignerIntervalInSeconds = options?.assignerInterval ?? 1;
-    this.heartbeatIntervalInSeconds = options?.heartbeatInterval ?? 30;
+    this.assignerIntervalInSeconds = options?.assignerInterval ?? 5;
+    this.heartbeatIntervalInSeconds = options?.heartbeatInterval ?? 60;
     this.retentionInSeconds = options?.retention ?? 60 * 5;
 
     this.mutationsTable = new MariaDBBrokerMutationsTable(
@@ -118,6 +121,15 @@ export class MariaDBBroker<TRequestContext extends object = any>
     );
   }
 
+  @MGetter
+  public get subscriptionsStateTables(): ReadonlyArray<MariaDBBrokerSubscriptionsStateTable> {
+    return R.pipe(
+      this.connector.schema.tables,
+      R.map((table) => table.subscriptionsStateTable),
+      R.filter(R.isDefined),
+    );
+  }
+
   public async setup(
     connection?: PoolConnection<StatementKind.DATA_DEFINITION>,
   ): Promise<void> {
@@ -126,6 +138,11 @@ export class MariaDBBroker<TRequestContext extends object = any>
         await this.mutationsTable.setup(connection);
         await this.changesTable.setup(connection);
         await this.assignmentsTable.setup(connection);
+
+        for (const table of this.subscriptionsStateTables) {
+          await table.setup(connection);
+        }
+
         await connection.query(`SET GLOBAL event_scheduler = ON`);
       },
       StatementKind.DATA_DEFINITION,
@@ -175,9 +192,21 @@ export class MariaDBBroker<TRequestContext extends object = any>
 
     this.#heartbeating = true;
     try {
-      await this.assignmentsTable.heartbeat(
-        this.subscriptions.values().map(({ subscription: { id } }) => id),
-      );
+      await Promise.all([
+        this.assignmentsTable.heartbeat(
+          this.subscriptions.values().map(({ subscription: { id } }) => id),
+        ),
+        ...Map.groupBy(
+          this.subscriptions.values(),
+          ({ stateTable }) => stateTable,
+        )
+          .entries()
+          .map(([stateTable, subscriptions]) =>
+            stateTable?.heartbeat(
+              subscriptions.map(({ subscription: { id } }) => id),
+            ),
+          ),
+      ]);
     } finally {
       this.#heartbeating = false;
     }

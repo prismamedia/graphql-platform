@@ -145,13 +145,13 @@ export abstract class AbstractTableReference {
       .join(' ')})`;
   }
 
-  public getEscapedColumnIdentifier(column: Column): string {
+  public escapeColumnIdentifier(column: Column): string {
     assert(this.table.columns.includes(column));
 
     return escapeIdentifier(`${this.alias}.${column.name}`);
   }
 
-  public getEscapedColumnIdentifierByLeaf(leaf: core.Leaf): string {
-    return this.getEscapedColumnIdentifier(this.table.getColumnByLeaf(leaf));
+  public escapeColumnIdentifierByLeaf(leaf: core.Leaf): string {
+    return this.escapeColumnIdentifier(this.table.getColumnByLeaf(leaf));
   }
 }

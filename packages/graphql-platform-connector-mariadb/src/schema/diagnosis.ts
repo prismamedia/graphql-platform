@@ -188,6 +188,9 @@ export class SchemaDiagnosis {
               schema.connector.broker.assignmentsTable.name,
               schema.connector.broker.changesTable.name,
               schema.connector.broker.mutationsTable.name,
+              ...schema.connector.broker.subscriptionsStateTables.map(
+                ({ name }) => name,
+              ),
             ].includes(name),
         );
 

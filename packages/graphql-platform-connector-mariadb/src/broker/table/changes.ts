@@ -1,7 +1,7 @@
 import * as core from '@prismamedia/graphql-platform';
 import * as utils from '@prismamedia/graphql-platform-utils';
 import type { MariaDBBroker } from '../../broker.js';
-import { escapeIdentifier, escapeStringValue } from '../../escaping.js';
+import { escapeIdentifier } from '../../escaping.js';
 import type { PoolConnection } from '../../index.js';
 import {
   BigIntType,
@@ -72,7 +72,7 @@ export class MariaDBBrokerChangesTable extends AbstractTable {
       },
       ['mutationId', 'id'],
       [['mutationId', 'id', 'node', 'kind']],
-      [['mutationId', broker.mutationsTable.getColumnByName('id')]],
+      [[['mutationId', broker.mutationsTable.getColumnByName('id')]]],
     );
   }
 
@@ -83,40 +83,52 @@ export class MariaDBBrokerChangesTable extends AbstractTable {
   ): Promise<void> {
     await connection.query(
       `
-        INSERT INTO ${escapeIdentifier(this.name)} (${['mutationId', 'id', 'node', 'kind', 'oldValue', 'newValue', 'executedAt'].map(escapeIdentifier).join(',')})
+        INSERT INTO ${escapeIdentifier(this.name)} (${[
+          'mutationId',
+          'id',
+          'node',
+          'kind',
+          'oldValue',
+          'newValue',
+          'executedAt',
+        ]
+          .map((columnName) => this.escapeColumnIdentifier(columnName))
+          .join(',')})
         VALUES ${Array.from(
           changes,
           (change, id) =>
             `(${[
-              mutationId,
-              id + 1,
-              this.getColumnByName('node').dataType.serialize(change.node.name),
-              this.getColumnByName('kind').dataType.serialize(change.kind),
+              this.serializeColumnValue('mutationId', mutationId),
+              this.serializeColumnValue('id', id + 1),
+              this.serializeColumnValue('node', change.node.name),
+              this.serializeColumnValue('kind', change.kind),
               ...(change instanceof core.NodeCreation
                 ? [
-                    this.getColumnByName('oldValue').dataType.serialize(null),
-                    this.getColumnByName('newValue').dataType.serialize(
+                    this.serializeColumnValue('oldValue', null),
+                    this.serializeColumnValue(
+                      'newValue',
                       change.serializedNewValue,
                     ),
                   ]
                 : change instanceof core.NodeUpdate
                   ? [
-                      this.getColumnByName('oldValue').dataType.serialize(
+                      this.serializeColumnValue(
+                        'oldValue',
                         change.serializedOldValue,
                       ),
-                      this.getColumnByName('newValue').dataType.serialize(
+                      this.serializeColumnValue(
+                        'newValue',
                         change.serializedUpdates,
                       ),
                     ]
                   : [
-                      this.getColumnByName('oldValue').dataType.serialize(
+                      this.serializeColumnValue(
+                        'oldValue',
                         change.serializedOldValue,
                       ),
-                      this.getColumnByName('newValue').dataType.serialize(null),
+                      this.serializeColumnValue('newValue', null),
                     ]),
-              this.getColumnByName('executedAt').dataType.serialize(
-                change.executedAt,
-              ),
+              this.serializeColumnValue('executedAt', change.executedAt),
             ].join(',')})`,
         ).join(',')}
       `,
@@ -141,32 +153,34 @@ export class MariaDBBrokerChangesTable extends AbstractTable {
           SELECT *
           FROM ${escapeIdentifier(this.name)}
           WHERE ${AND([
-            `${escapeIdentifier('mutationId')} = ${mutation.id}`,
+            `${this.escapeColumnIdentifier('mutationId')} = ${this.serializeColumnValue('mutationId', mutation.id)}`,
             lastChangeId
-              ? `${escapeIdentifier('id')} > ${lastChangeId}`
+              ? `${this.escapeColumnIdentifier('id')} > ${this.serializeColumnValue('id', lastChangeId)}`
               : undefined,
             OR(
               Array.from(
                 subscription.dependencyGraph.flattened.byNode,
                 ([node, dependency]) =>
                   AND([
-                    `${escapeIdentifier('node')} = ${escapeStringValue(node.name)}`,
+                    `${this.escapeColumnIdentifier('node')} = ${this.serializeColumnValue('node', node.name)}`,
                     OR([
                       dependency.creation || dependency.deletion
-                        ? `${escapeIdentifier('kind')} IN (${[
+                        ? `${this.escapeColumnIdentifier('kind')} IN (${[
                             dependency.creation && utils.MutationType.CREATION,
                             dependency.deletion && utils.MutationType.DELETION,
                           ]
                             .filter(utils.isNonNil)
-                            .map((type) => escapeStringValue(type))
+                            .map((kind) =>
+                              this.serializeColumnValue('kind', kind),
+                            )
                             .join(',')})`
                         : undefined,
                       dependency.update
                         ? AND([
-                            `${escapeIdentifier('kind')} = ${escapeStringValue(utils.MutationType.UPDATE)}`,
+                            `${this.escapeColumnIdentifier('kind')} = ${this.serializeColumnValue('kind', utils.MutationType.UPDATE)}`,
                             `JSON_OVERLAPS(
-                              JSON_KEYS(${escapeIdentifier('newValue')}),
-                              JSON_ARRAY(${Array.from(dependency.update, ({ name }) => escapeStringValue(name)).join(',')})
+                              JSON_KEYS(${this.escapeColumnIdentifier('newValue')}),
+                              JSON_ARRAY(${Array.from(dependency.update, ({ name }) => this.serializeColumnValue('node', name)).join(',')})
                             )`,
                           ])
                         : undefined,

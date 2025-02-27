@@ -3,7 +3,6 @@ import { DeleteStatement } from './manipulation/delete.js';
 import { FindStatement } from './manipulation/find.js';
 import { InsertStatement } from './manipulation/insert.js';
 import { NormalizeStatement } from './manipulation/normalize.js';
-import { RevalidateSubscriptionStatement } from './manipulation/revalidate-subscription.js';
 import { UpdateStatement } from './manipulation/update.js';
 
 export * from './manipulation/count.js';
@@ -11,7 +10,6 @@ export * from './manipulation/delete.js';
 export * from './manipulation/find.js';
 export * from './manipulation/insert.js';
 export * from './manipulation/normalize.js';
-export * from './manipulation/revalidate-subscription.js';
 export * from './manipulation/update.js';
 
 /**
@@ -23,7 +21,6 @@ export type ManipulationStatement =
   | FindStatement
   | InsertStatement
   | NormalizeStatement
-  | RevalidateSubscriptionStatement
   | UpdateStatement;
 
 export function isManipulationStatement(
@@ -35,7 +32,6 @@ export function isManipulationStatement(
     maybeStatement instanceof FindStatement ||
     maybeStatement instanceof InsertStatement ||
     maybeStatement instanceof NormalizeStatement ||
-    maybeStatement instanceof RevalidateSubscriptionStatement ||
     maybeStatement instanceof UpdateStatement
   );
 }

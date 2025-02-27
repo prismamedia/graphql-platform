@@ -4,6 +4,10 @@ import { UnreachableValueError } from '@prismamedia/graphql-platform-utils';
 import { MGetter } from '@prismamedia/memoize';
 import assert from 'node:assert';
 import type { SetOptional } from 'type-fest';
+import {
+  MariaDBBrokerSubscriptionsStateTable,
+  type MariaDBBrokerSubscriptionsStateTableOptions,
+} from '../broker/table/subscriptions-state.js';
 import type { MariaDBConnector, OkPacket, PoolConnection } from '../index.js';
 import type { Schema } from '../schema.js';
 import {
@@ -15,7 +19,6 @@ import {
   FindStatement,
   InsertStatement,
   NormalizeStatement,
-  RevalidateSubscriptionStatement,
   StatementKind,
   UpdateStatement,
   type CreateTableStatementConfig,
@@ -29,9 +32,7 @@ import {
   LeafColumn,
   ReferenceColumnTree,
   type Column,
-  type SubscriptionsStateColumnOptions,
 } from './table/column.js';
-import { SubscriptionsStateColumn } from './table/column/subscriptions-state.js';
 import { ForeignKey } from './table/foreign-key.js';
 import {
   FullTextIndex,
@@ -75,9 +76,12 @@ export interface TableConfig {
    */
   indexes?: (PlainIndexConfig | ReadonlyArray<core.Component['name']>)[];
 
+  /**
+   * Optional, the subscriptions' state table configuration
+   */
   subscriptionsState?:
-    | SubscriptionsStateColumnOptions['enabled']
-    | SubscriptionsStateColumnOptions;
+    | MariaDBBrokerSubscriptionsStateTableOptions['enabled']
+    | MariaDBBrokerSubscriptionsStateTableOptions;
 }
 
 export class Table {
@@ -105,8 +109,6 @@ export class Table {
   public readonly indexes: ReadonlyArray<Index>;
   public readonly foreignKeysByEdge: ReadonlyMap<core.Edge, ForeignKey>;
   public readonly foreignKeys: ReadonlyArray<ForeignKey>;
-
-  public readonly subscriptionsStateColumn?: SubscriptionsStateColumn;
 
   public constructor(
     public readonly schema: Schema,
@@ -167,33 +169,6 @@ export class Table {
       );
     }
 
-    // subscriptions-state-column
-    {
-      const subscriptionsStateConfig:
-        | SubscriptionsStateColumnOptions
-        | undefined =
-        typeof this.config?.subscriptionsState === 'boolean'
-          ? { enabled: this.config.subscriptionsState }
-          : utils.isPlainObject(this.config?.subscriptionsState)
-            ? { enabled: true, ...this.config!.subscriptionsState }
-            : undefined;
-
-      const subscriptionsStateConfigPath = utils.addPath(
-        this.configPath,
-        'subscriptionsState',
-      );
-
-      this.subscriptionsStateColumn =
-        node.getSubscriptionByKey('changes').isEnabled() &&
-        utils.getOptionalFlag(
-          subscriptionsStateConfig?.enabled,
-          false,
-          utils.addPath(subscriptionsStateConfigPath, 'enabled'),
-        )
-          ? new SubscriptionsStateColumn(this, subscriptionsStateConfig)
-          : undefined;
-    }
-
     // primary-key
     {
       this.primaryKey = new PrimaryKey(this, node.mainIdentifier);
@@ -238,12 +213,7 @@ export class Table {
         });
       }
 
-      this.plainIndexes = [
-        ...(indexesConfig ?? []),
-        ...(this.subscriptionsStateColumn
-          ? [{ columns: [this.subscriptionsStateColumn.name] }]
-          : []),
-      ].reduce<PlainIndex[]>(
+      this.plainIndexes = (indexesConfig ?? []).reduce<PlainIndex[]>(
         (indexes, config, index) => [
           ...indexes,
           new PlainIndex(
@@ -280,6 +250,34 @@ export class Table {
 
   public toString(): string {
     return this.qualifiedName;
+  }
+
+  @MGetter
+  public get subscriptionsStateTable():
+    | MariaDBBrokerSubscriptionsStateTable
+    | undefined {
+    const config: MariaDBBrokerSubscriptionsStateTableOptions | undefined =
+      typeof this.config?.subscriptionsState === 'boolean'
+        ? { enabled: this.config.subscriptionsState }
+        : utils.isPlainObject(this.config?.subscriptionsState)
+          ? { enabled: true, ...this.config!.subscriptionsState }
+          : undefined;
+
+    const configPath = utils.addPath(this.configPath, 'subscriptionsState');
+
+    return this.schema.connector.broker &&
+      this.node.getSubscriptionByKey('changes').isEnabled() &&
+      utils.getOptionalFlag(
+        config?.enabled,
+        false,
+        utils.addPath(configPath, 'enabled'),
+      )
+      ? new MariaDBBrokerSubscriptionsStateTable(
+          this.schema.connector.broker,
+          this,
+          config,
+        )
+      : undefined;
   }
 
   public getColumnByLeaf(
@@ -321,10 +319,7 @@ export class Table {
 
   @MGetter
   public get columns(): ReadonlyArray<Column> {
-    return [
-      ...this.getColumnsByComponents(...this.node.componentsByName.values()),
-      this.subscriptionsStateColumn,
-    ].filter((column) => column !== undefined);
+    return this.getColumnsByComponents(...this.node.componentsByName.values());
   }
 
   public getColumnByName(name: Column['name']): Column {
@@ -442,19 +437,8 @@ export class Table {
     config?: CreateTableStatementConfig,
     connection?: PoolConnection<StatementKind.DATA_DEFINITION>,
   ): Promise<void> {
-    await this.schema.connector.withConnection(
-      async (connection) => {
-        await this.schema.connector.executeStatement(
-          new CreateTableStatement(this, config),
-          connection,
-        );
-
-        if (this.subscriptionsStateColumn) {
-          await this.subscriptionsStateColumn.janitor.create(connection);
-          await connection.query(`SET GLOBAL event_scheduler = ON`);
-        }
-      },
-      StatementKind.DATA_DEFINITION,
+    await this.schema.connector.executeStatement(
+      new CreateTableStatement(this, config),
       connection,
     );
   }
@@ -515,23 +499,14 @@ export class Table {
   ): Promise<TValue[]> {
     const findStatement = new FindStatement(this, context, statement);
 
-    const revalidatedAt = new Date();
     const rows = await this.schema.connector.executeStatement<
       utils.PlainObject[]
     >(findStatement, connection);
 
-    if (
-      rows.length &&
-      statement.forSubscription &&
-      this.subscriptionsStateColumn
-    ) {
-      await this.schema.connector.executeStatement<OkPacket>(
-        new RevalidateSubscriptionStatement(
-          this,
-          rows,
-          statement.forSubscription,
-          revalidatedAt,
-        ),
+    if (rows.length && statement.forSubscription) {
+      await this.subscriptionsStateTable?.revalidate(
+        rows,
+        statement.forSubscription,
         connection,
       );
     }
