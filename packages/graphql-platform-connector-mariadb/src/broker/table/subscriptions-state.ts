@@ -196,9 +196,8 @@ export class MariaDBBrokerSubscriptionsStateTable extends AbstractTable {
 
   public compareHashes(sql: string, selectionKey: string): string {
     return [
-      `WITH data AS (${sql})`,
       `SELECT data.*, SHA2(data.${escapeIdentifier(selectionKey)}, 256) AS ${escapeIdentifier(this.hashAliases.NEW)}`,
-      `FROM data`,
+      `FROM (${sql}) AS data`,
       `HAVING ${OR([
         `data.${escapeIdentifier(this.hashAliases.OLD)} IS NULL`,
         `data.${escapeIdentifier(this.hashAliases.OLD)} != ${escapeIdentifier(this.hashAliases.NEW)}`,
