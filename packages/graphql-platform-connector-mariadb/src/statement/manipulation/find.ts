@@ -53,6 +53,10 @@ export class FindStatement implements mariadb.QueryOptions {
           ])
         : undefined;
 
+    const havingCondition = statement.forSubscription
+      ? table.subscriptionsStateTable?.having(tableReference, this.selectionKey)
+      : undefined;
+
     const orderingExpressions = statement.ordering
       ? orderNode(tableReference, statement.ordering)
       : undefined;
@@ -61,19 +65,12 @@ export class FindStatement implements mariadb.QueryOptions {
 
     const offset = statement.offset;
 
-    const sql = [
+    this.sql = [
       `SELECT ${selectExpression}`,
       `FROM ${tableReference}`,
       whereCondition && `WHERE ${whereCondition}`,
+      havingCondition && `HAVING ${havingCondition}`,
       orderingExpressions && `ORDER BY ${orderingExpressions}`,
-    ]
-      .filter(Boolean)
-      .join(EOL);
-
-    this.sql = [
-      statement.forSubscription && table.subscriptionsStateTable
-        ? table.subscriptionsStateTable.compareHashes(sql, this.selectionKey)
-        : sql,
       `LIMIT ${limit}`,
       offset && `OFFSET ${offset}`,
       statement.forMutation != null && 'FOR UPDATE',

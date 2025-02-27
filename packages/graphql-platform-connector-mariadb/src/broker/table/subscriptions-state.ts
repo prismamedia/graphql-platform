@@ -3,10 +3,9 @@ import * as utils from '@prismamedia/graphql-platform-utils';
 import { MGetter } from '@prismamedia/memoize';
 import inflection from 'inflection';
 import assert from 'node:assert';
-import { type UUID } from 'node:crypto';
-import { EOL } from 'node:os';
+import { createHash, type UUID } from 'node:crypto';
 import type { MariaDBBroker } from '../../broker.js';
-import { escapeIdentifier, escapeStringValue } from '../../escaping.js';
+import { escapeIdentifier } from '../../escaping.js';
 import type { OkPacket, PoolConnection } from '../../index.js';
 import type { Table } from '../../schema.js';
 import * as schema from '../../schema.js';
@@ -63,11 +62,6 @@ export interface MariaDBBrokerSubscriptionsStateTableOptions {
 
 export class MariaDBBrokerSubscriptionsStateTable extends AbstractTable {
   public readonly references: ReadonlyArray<Reference>;
-
-  public readonly hashAliases = {
-    OLD: 'oldHash',
-    NEW: 'newHash',
-  };
 
   public constructor(
     broker: MariaDBBroker,
@@ -167,8 +161,7 @@ export class MariaDBBrokerSubscriptionsStateTable extends AbstractTable {
       ...this.references.map(({ target }) =>
         tableReference.escapeColumnIdentifier(target),
       ),
-      `${joinTable.escapeColumnIdentifier('hash')} AS ${escapeIdentifier(this.hashAliases.OLD)}`,
-      `NOW(3) AS ${escapeIdentifier('revalidatedAt')}`,
+      joinTable.escapeColumnIdentifier('hash'),
     ].join(',');
   }
 
@@ -194,20 +187,23 @@ export class MariaDBBrokerSubscriptionsStateTable extends AbstractTable {
     ]);
   }
 
-  public compareHashes(sql: string, selectionKey: string): string {
-    return [
-      `SELECT data.*, SHA2(data.${escapeIdentifier(selectionKey)}, 256) AS ${escapeIdentifier(this.hashAliases.NEW)}`,
-      `FROM (${sql}) AS data`,
-      `HAVING ${OR([
-        `data.${escapeIdentifier(this.hashAliases.OLD)} IS NULL`,
-        `data.${escapeIdentifier(this.hashAliases.OLD)} != ${escapeIdentifier(this.hashAliases.NEW)}`,
-      ])}`,
-    ].join(EOL);
+  public having(
+    tableReference: TableFactor,
+    selectionKey: string,
+  ): WhereCondition {
+    assert.strictEqual(tableReference.table, this.targetTable);
+
+    return OR([
+      `${escapeIdentifier('hash')} IS NULL`,
+      `${escapeIdentifier('hash')} != SHA2(${escapeIdentifier(selectionKey)}, 256)`,
+    ]);
   }
 
   public async revalidate(
     rows: ReadonlyArray<utils.PlainObject>,
     { id }: core.ChangesSubscriptionCacheControlInputValue,
+    selectionKey: string,
+    at: Date,
     connection?: PoolConnection<StatementKind.DATA_MANIPULATION>,
   ): Promise<void> {
     await this.connector.withConnection<OkPacket>(
@@ -230,15 +226,20 @@ export class MariaDBBrokerSubscriptionsStateTable extends AbstractTable {
                   source.dataType.serialize(target.pickLeafValueFromRow(row)),
                 ),
                 this.serializeColumnValue('subscriptionId', id),
-                this.serializeColumnValue('hash', row[this.hashAliases.NEW]),
-                escapeStringValue(row['revalidatedAt']),
+                this.serializeColumnValue(
+                  'hash',
+                  createHash('sha256').update(row[selectionKey]).digest('hex'),
+                ),
+                this.serializeColumnValue('revalidatedAt', at),
                 'NOW(3)',
               ].join(',')})`,
           ).join(',')}
-          ON DUPLICATE KEY UPDATE
-            ${this.escapeColumnIdentifier('hash')} = VALUES(${this.escapeColumnIdentifier('hash')}),
-            ${this.escapeColumnIdentifier('revalidatedAt')} = VALUES(${this.escapeColumnIdentifier('revalidatedAt')}),
-            ${this.escapeColumnIdentifier('heartbeatAt')} = VALUES(${this.escapeColumnIdentifier('heartbeatAt')})
+          ON DUPLICATE KEY UPDATE ${['hash', 'revalidatedAt', 'heartbeatAt']
+            .map(
+              (columnName) =>
+                `${this.escapeColumnIdentifier(columnName)} = VALUES(${this.escapeColumnIdentifier(columnName)})`,
+            )
+            .join(', ')}
         `),
       StatementKind.DATA_MANIPULATION,
       connection,

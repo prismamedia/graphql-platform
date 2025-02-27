@@ -499,6 +499,8 @@ export class Table {
   ): Promise<TValue[]> {
     const findStatement = new FindStatement(this, context, statement);
 
+    const revalidatedAt = new Date();
+
     const rows = await this.schema.connector.executeStatement<
       utils.PlainObject[]
     >(findStatement, connection);
@@ -507,6 +509,8 @@ export class Table {
       await this.subscriptionsStateTable?.revalidate(
         rows,
         statement.forSubscription,
+        findStatement.selectionKey,
+        revalidatedAt,
         connection,
       );
     }
