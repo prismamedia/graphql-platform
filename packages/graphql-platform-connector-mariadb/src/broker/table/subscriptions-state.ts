@@ -179,9 +179,9 @@ export class MariaDBBrokerSubscriptionsStateTable extends AbstractTable {
     return OR([
       `${joinTable.escapeColumnIdentifier('revalidatedAt')} IS NULL`,
       AND([
-        `${joinTable.escapeColumnIdentifier('revalidatedAt')} > ${this.serializeColumnValue('revalidatedAt', ifModifiedSince)}`,
+        `${joinTable.escapeColumnIdentifier('revalidatedAt')} < ${this.serializeColumnValue('revalidatedAt', ifModifiedSince)}`,
         maxAge
-          ? `${joinTable.escapeColumnIdentifier('revalidatedAt')} > NOW(3) - INTERVAL ${maxAge} SECOND`
+          ? `${joinTable.escapeColumnIdentifier('revalidatedAt')} < NOW(3) - INTERVAL ${maxAge} SECOND`
           : undefined,
       ]),
     ]);
