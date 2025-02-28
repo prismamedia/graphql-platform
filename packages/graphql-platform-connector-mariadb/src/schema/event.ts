@@ -1,6 +1,6 @@
 import { CreateEventStatement, type PoolConnection } from '../index.js';
 import type { Schema } from '../schema.js';
-import type { StatementKind } from '../statement.js';
+import { StatementKind } from '../statement.js';
 
 export interface EventOptions {
   comment?: string;
@@ -25,8 +25,16 @@ export class Event {
   public async create(
     connection?: PoolConnection<StatementKind.DATA_DEFINITION>,
   ): Promise<void> {
-    await this.schema.connector.executeStatement(
-      new CreateEventStatement(this, { orReplace: true }),
+    await this.schema.connector.withConnection(
+      async (connection) => {
+        await this.schema.connector.executeStatement(
+          new CreateEventStatement(this, { orReplace: true }),
+          connection,
+        );
+
+        await this.schema.connector.ensureEventSchedulerIsEnabled(connection);
+      },
+      StatementKind.DATA_DEFINITION,
       connection,
     );
   }

@@ -130,6 +130,8 @@ export class MariaDBConnector<TRequestContext extends object = any>
     PoolConnection
   >();
 
+  #eventSchedulerIsEnabled?: boolean;
+
   public constructor(
     public readonly gp: core.GraphQLPlatform<TRequestContext>,
     public readonly config: MariaDBConnectorConfig<TRequestContext>,
@@ -443,6 +445,28 @@ export class MariaDBConnector<TRequestContext extends object = any>
         },
       },
     );
+  }
+
+  public async ensureEventSchedulerIsEnabled(
+    connection?: PoolConnection<StatementKind.DATA_DEFINITION>,
+  ): Promise<void> {
+    if (!this.#eventSchedulerIsEnabled) {
+      await this.withConnection(
+        async (connection) => {
+          const [{ Value }] = await connection.query<
+            [{ Variable_name: 'event_scheduler'; Value: 'ON' | 'OFF' }]
+          >(`SHOW GLOBAL VARIABLES LIKE 'event_scheduler';`);
+
+          if (Value !== 'ON') {
+            await connection.query(`SET GLOBAL event_scheduler = ON;`);
+          }
+        },
+        StatementKind.DATA_DEFINITION,
+        connection,
+      );
+
+      this.#eventSchedulerIsEnabled = true;
+    }
   }
 
   /**
