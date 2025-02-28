@@ -24,7 +24,7 @@ export class MariaDBSubscription
   /**
    * The last mutation's id that has been assigned to this subscription.
    */
-  public lastAssignationId: bigint = 0n;
+  public lastAssignedMutationId?: bigint;
 
   #idle?: boolean;
   readonly #signal: AbortSignal;
@@ -50,7 +50,7 @@ export class MariaDBSubscription
     mutations: ReadonlyArray<MariaDBBrokerMutation>,
   ): Promise<void> {
     if (mutations.length) {
-      this.lastAssignationId = mutations.at(-1)!.id;
+      this.lastAssignedMutationId = mutations.at(-1)!.id;
       mutations.forEach((mutation) => this.#assignments.push(mutation));
       await this.emit('assignments', mutations);
     }

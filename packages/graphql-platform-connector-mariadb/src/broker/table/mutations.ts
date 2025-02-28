@@ -79,6 +79,8 @@ export class MariaDBBrokerMutationsTable extends AbstractTable {
       },
       ['id'],
       [
+        // Index for the assignation
+        ['id', 'committedAt'],
         // Index for the janitor
         ['committedAt', 'id'],
       ],
@@ -162,7 +164,7 @@ export class MariaDBBrokerMutationsTable extends AbstractTable {
   }
 
   public async *getUnassignedsBySubscription<TRequestContext extends object>(
-    batchSize: number = 10,
+    batchSize: number = 100,
   ): AsyncGenerator<UnassignedMutationsBySubscription<TRequestContext>> {
     let rows: MariaDBBrokerMutationRow[];
     do {
@@ -172,34 +174,33 @@ export class MariaDBBrokerMutationsTable extends AbstractTable {
 
       const [first, ...rest] = this.broker.subscriptions.values();
 
-      rows = await this.connector.executeQuery<MariaDBBrokerMutationRow[]>(
-        `
-          SELECT *
-          FROM ${escapeIdentifier(this.name)}
-          WHERE ${AND([
-            `${this.escapeColumnIdentifier('id')} > ?`,
-            `${this.escapeColumnIdentifier('committedAt')} >= ?`,
-          ])}
-          ORDER BY ${this.escapeColumnIdentifier('id')} ASC
-          LIMIT ${batchSize}
-        `,
-        [
-          rest.reduce(
-            (min, { lastAssignationId: assignedMutationId }) =>
-              assignedMutationId < min ? assignedMutationId : min,
-            first.lastAssignationId,
-          ),
-          (
-            this.getColumnByName('committedAt').dataType as TimestampType
-          ).format(
-            rest.reduce(
-              (min, { subscription }) =>
-                min < subscription.since ? min : subscription.since,
-              first.subscription.since,
-            ),
-          ),
-        ],
+      const minAssignedMutationId = rest.reduce(
+        (min, { lastAssignedMutationId }) =>
+          min && lastAssignedMutationId
+            ? min <= lastAssignedMutationId
+              ? min
+              : lastAssignedMutationId
+            : min || lastAssignedMutationId,
+        first.lastAssignedMutationId,
       );
+
+      const minSince = rest.reduce(
+        (min, { subscription: { since } }) => (min <= since ? min : since),
+        first.subscription.since,
+      );
+
+      rows = await this.connector.executeQuery<MariaDBBrokerMutationRow[]>(`
+        SELECT *
+        FROM ${escapeIdentifier(this.name)}
+        WHERE ${AND([
+          minAssignedMutationId
+            ? `${this.escapeColumnIdentifier('id')} > ${this.serializeColumnValue('id', minAssignedMutationId)}`
+            : undefined,
+          `${this.escapeColumnIdentifier('committedAt')} >= ${this.serializeColumnValue('committedAt', minSince)}`,
+        ])}
+        ORDER BY ${this.escapeColumnIdentifier('id')} ASC
+        LIMIT ${batchSize}
+      `);
 
       if (!this.broker.subscriptions.size || !rows.length) {
         return;
@@ -227,8 +228,9 @@ export class MariaDBBrokerMutationsTable extends AbstractTable {
         this.broker.subscriptions
           .values()
           .filter(
-            ({ lastAssignationId, subscription }) =>
-              lastAssignationId < mutation.id &&
+            ({ lastAssignedMutationId, subscription }) =>
+              (!lastAssignedMutationId ||
+                lastAssignedMutationId < mutation.id) &&
               subscription.since <= mutation.committedAt &&
               subscription.dependencyGraph.flattened.byNode
                 .entries()
