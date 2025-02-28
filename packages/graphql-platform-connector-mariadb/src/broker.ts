@@ -52,14 +52,21 @@ export interface MariaDBBrokerOptions<TRequestContext extends object = any> {
   /**
    * The number of seconds to wait between heartbeats.
    *
-   * @default 60 (1 minute)
+   * @default 60 * 5 (5 minutes)
    */
   heartbeatInterval?: number;
 
   /**
+   * The number of missed heartbeats allowed before assignments and subscriptions' state are considered stale.
+   *
+   * @default 2
+   */
+  allowedHeartbeatMisses?: number;
+
+  /**
    * The number of seconds to keep the unassigned mutations in the database.
    *
-   * @default 60 * 5 (5 minutes)
+   * @default 60 * 30 (30 minutes)
    */
   retention?: number;
 
@@ -80,6 +87,7 @@ export class MariaDBBroker<TRequestContext extends object = any>
 {
   public readonly assignerIntervalInSeconds: number;
   public readonly heartbeatIntervalInSeconds: number;
+  public readonly heartbeatMaxAgeInSeconds: number;
   public readonly retentionInSeconds: number;
 
   public readonly mutationsTable: MariaDBBrokerMutationsTable;
@@ -104,8 +112,11 @@ export class MariaDBBroker<TRequestContext extends object = any>
     super();
 
     this.assignerIntervalInSeconds = options?.assignerInterval ?? 5;
-    this.heartbeatIntervalInSeconds = options?.heartbeatInterval ?? 60;
-    this.retentionInSeconds = options?.retention ?? 60 * 5;
+    this.heartbeatIntervalInSeconds = options?.heartbeatInterval ?? 60 * 5;
+    this.heartbeatMaxAgeInSeconds =
+      this.heartbeatIntervalInSeconds *
+      ((options?.allowedHeartbeatMisses ?? 2) + 1);
+    this.retentionInSeconds = options?.retention ?? 60 * 30;
 
     this.mutationsTable = new MariaDBBrokerMutationsTable(
       this,

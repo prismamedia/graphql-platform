@@ -37,7 +37,8 @@ export class MariaDBBrokerAssignmentsTable extends AbstractTable {
           nullable: false,
         },
         heartbeatAt: {
-          dataType: new TimestampType({ microsecondPrecision: 3 }),
+          comment: 'The timestamp of the last heartbeat',
+          dataType: new TimestampType(),
           nullable: false,
         },
       },
@@ -60,7 +61,7 @@ export class MariaDBBrokerAssignmentsTable extends AbstractTable {
       `EVERY ${this.broker.heartbeatIntervalInSeconds} SECOND`,
       `
         DELETE FROM ${escapeIdentifier(this.qualifiedName)}
-        WHERE ${this.escapeColumnIdentifier('heartbeatAt')} < NOW(3) - INTERVAL ${this.broker.heartbeatIntervalInSeconds * 2} SECOND
+        WHERE ${this.escapeColumnIdentifier('heartbeatAt')} < NOW() - INTERVAL ${this.broker.heartbeatMaxAgeInSeconds} SECOND
       `,
       {
         comment: `Cleanup the assignments that have not been heartbeat for a while`,
@@ -94,7 +95,7 @@ export class MariaDBBrokerAssignmentsTable extends AbstractTable {
               `(${[
                 this.serializeColumnValue('mutationId', mutation.id),
                 this.serializeColumnValue('subscriptionId', subscription.id),
-                'NOW(3)',
+                'NOW()',
               ].join(',')})`,
           ),
         )
