@@ -116,13 +116,13 @@ export class UniqueReverseEdgeHeadSelection<
   ): Promise<TValue> {
     return source
       ? this.headSelection.resolveValue(source, context, path)
-      : null;
+      : (null as TValue);
   }
 
   public pickValue(superSetOfValue: TValue, path?: utils.Path): TValue {
     return superSetOfValue
       ? this.headSelection.pickValue(superSetOfValue, path)
-      : null;
+      : (null as TValue);
   }
 
   public areValuesEqual(a: TValue, b: TValue): boolean {

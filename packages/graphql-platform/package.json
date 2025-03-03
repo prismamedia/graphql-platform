@@ -29,9 +29,9 @@
   },
   "devDependencies": {
     "graphql": "16.10.0",
-    "publint": "0.3.7",
+    "publint": "0.3.8",
     "tsx": "4.19.3",
-    "typescript": "5.7.3"
+    "typescript": "5.8.2"
   },
   "dependencies": {
     "@opentelemetry/api": "^1.9.0",
@@ -48,7 +48,7 @@
     "p-queue": "^8.1.0",
     "p-retry": "^6.2.1",
     "remeda": "^2.21.0",
-    "type-fest": "^4.35.0"
+    "type-fest": "^4.37.0"
   },
   "peerDependencies": {
     "graphql": "^16.10.0"
