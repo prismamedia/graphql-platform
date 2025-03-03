@@ -66,7 +66,7 @@ export interface MariaDBBrokerOptions<TRequestContext extends object = any> {
   /**
    * The number of seconds to keep the unassigned mutations in the database.
    *
-   * @default 60 * 30 (30 minutes)
+   * @default 60 * 15 (15 minutes)
    */
   retention?: number;
 
@@ -116,7 +116,7 @@ export class MariaDBBroker<TRequestContext extends object = any>
     this.heartbeatMaxAgeInSeconds =
       this.heartbeatIntervalInSeconds *
       ((options?.allowedHeartbeatMisses ?? 2) + 1);
-    this.retentionInSeconds = options?.retention ?? 60 * 30;
+    this.retentionInSeconds = options?.retention ?? 60 * 15;
 
     this.mutationsTable = new MariaDBBrokerMutationsTable(
       this,

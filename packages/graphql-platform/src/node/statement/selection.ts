@@ -259,7 +259,7 @@ export class NodeSelection<
             ),
           ),
         )
-      : source;
+      : (source as unknown as TValue);
   }
 
   public pickValue(

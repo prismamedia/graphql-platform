@@ -19,9 +19,9 @@
     "test:update": "yarn workspaces foreach --all --no-private --parallel run test:update"
   },
   "devDependencies": {
-    "prettier": "3.5.2",
+    "prettier": "3.5.3",
     "tsx": "4.19.3",
-    "typescript": "5.7.3"
+    "typescript": "5.8.2"
   },
-  "packageManager": "yarn@4.6.0"
+  "packageManager": "yarn@4.7.0"
 }

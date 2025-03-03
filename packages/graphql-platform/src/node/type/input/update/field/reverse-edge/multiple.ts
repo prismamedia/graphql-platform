@@ -56,23 +56,31 @@ export type MultipleReverseEdgeUpdateInputValue = utils.Optional<
       data: NonNullable<NodeCreationInputValue>;
     }>;
     [MultipleReverseEdgeUpdateInputAction.UPDATE_ALL]: NonNullable<NodeUpdateInputValue>;
-    [MultipleReverseEdgeUpdateInputAction.UPDATE_MANY]: NonNullable<{
-      where?: NodeFilterInputValue;
-      data?: NodeUpdateInputValue;
-    }>[];
-    [MultipleReverseEdgeUpdateInputAction.UPDATE_SOME]: NonNullable<{
-      where: NonNullable<NodeUniqueFilterInputValue>;
-      data?: NodeUpdateInputValue;
-    }>[];
-    [MultipleReverseEdgeUpdateInputAction.UPDATE_SOME_IF_EXISTS]: NonNullable<{
-      where: NonNullable<NodeUniqueFilterInputValue>;
-      data?: NodeUpdateInputValue;
-    }>[];
-    [MultipleReverseEdgeUpdateInputAction.UPSERT_SOME]: NonNullable<{
-      where: NonNullable<NodeUniqueFilterInputValue>;
-      create: NonNullable<NodeCreationInputValue>;
-      update?: NodeUpdateInputValue;
-    }>[];
+    [MultipleReverseEdgeUpdateInputAction.UPDATE_MANY]: ReadonlyArray<
+      NonNullable<{
+        where?: NodeFilterInputValue;
+        data?: NodeUpdateInputValue;
+      }>
+    >;
+    [MultipleReverseEdgeUpdateInputAction.UPDATE_SOME]: ReadonlyArray<
+      NonNullable<{
+        where: NonNullable<NodeUniqueFilterInputValue>;
+        data?: NodeUpdateInputValue;
+      }>
+    >;
+    [MultipleReverseEdgeUpdateInputAction.UPDATE_SOME_IF_EXISTS]: ReadonlyArray<
+      NonNullable<{
+        where: NonNullable<NodeUniqueFilterInputValue>;
+        data?: NodeUpdateInputValue;
+      }>
+    >;
+    [MultipleReverseEdgeUpdateInputAction.UPSERT_SOME]: ReadonlyArray<
+      NonNullable<{
+        where: NonNullable<NodeUniqueFilterInputValue>;
+        create: NonNullable<NodeCreationInputValue>;
+        update?: NodeUpdateInputValue;
+      }>
+    >;
   }>
 >;
 
