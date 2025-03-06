@@ -65,7 +65,7 @@ export class FindStatement implements mariadb.QueryOptions {
 
     const offset = statement.offset;
 
-    this.sql = [
+    const sql = [
       `SELECT ${selectExpression}`,
       `FROM ${tableReference}`,
       whereCondition && `WHERE ${whereCondition}`,
@@ -77,5 +77,10 @@ export class FindStatement implements mariadb.QueryOptions {
     ]
       .filter(Boolean)
       .join(EOL);
+
+    this.sql =
+      statement.forSubscription && table.subscriptionsStateTable
+        ? table.subscriptionsStateTable.wrap(sql, this.selectionKey)
+        : sql;
   }
 }

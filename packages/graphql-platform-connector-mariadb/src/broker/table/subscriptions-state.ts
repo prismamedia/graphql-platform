@@ -3,9 +3,9 @@ import * as utils from '@prismamedia/graphql-platform-utils';
 import { MGetter } from '@prismamedia/memoize';
 import inflection from 'inflection';
 import assert from 'node:assert';
-import { createHash, type UUID } from 'node:crypto';
+import type { UUID } from 'node:crypto';
 import type { MariaDBBroker } from '../../broker.js';
-import { escapeIdentifier } from '../../escaping.js';
+import { escapeIdentifier, escapeStringValue } from '../../escaping.js';
 import type { OkPacket, PoolConnection } from '../../index.js';
 import type { Table } from '../../schema.js';
 import * as schema from '../../schema.js';
@@ -163,7 +163,7 @@ export class MariaDBBrokerSubscriptionsStateTable extends AbstractTable {
         tableReference.escapeColumnIdentifier(target),
       ),
       joinTable.escapeColumnIdentifier('hash'),
-    ].join(',');
+    ].join();
   }
 
   public filter(
@@ -200,25 +200,31 @@ export class MariaDBBrokerSubscriptionsStateTable extends AbstractTable {
     ]);
   }
 
+  public wrap(sql: string, selectionKey: string): string {
+    return `SELECT ${[
+      `data.*`,
+      `SHA2(data.${escapeIdentifier(selectionKey)}, 256) as revalidatedHash`,
+      `NOW(3) as revalidatedAt`,
+    ].join()} FROM (${sql}) as data`;
+  }
+
   public async revalidate(
     rows: ReadonlyArray<utils.PlainObject>,
     { id }: core.ChangesSubscriptionCacheControlInputValue,
-    selectionKey: string,
-    at: Date,
     connection?: PoolConnection<StatementKind.DATA_MANIPULATION>,
   ): Promise<void> {
+    const columnNames = ['hash', 'revalidatedAt', 'heartbeatAt'];
+
     await this.connector.withConnection<OkPacket>(
       (connection) =>
         connection.query(`
           INSERT INTO ${escapeIdentifier(this.name)} (${[
             ...this.references.map(({ source }) => source.name),
             'subscriptionId',
-            'hash',
-            'revalidatedAt',
-            'heartbeatAt',
+            ...columnNames,
           ]
             .map((columnName) => this.escapeColumnIdentifier(columnName))
-            .join(',')})
+            .join()})
           VALUES ${Array.from(
             rows,
             (row) =>
@@ -227,20 +233,17 @@ export class MariaDBBrokerSubscriptionsStateTable extends AbstractTable {
                   source.dataType.serialize(target.pickLeafValueFromRow(row)),
                 ),
                 this.serializeColumnValue('subscriptionId', id),
-                this.serializeColumnValue(
-                  'hash',
-                  createHash('sha256').update(row[selectionKey]).digest('hex'),
-                ),
-                this.serializeColumnValue('revalidatedAt', at),
+                escapeStringValue(row['revalidatedHash']),
+                escapeStringValue(row['revalidatedAt']),
                 'NOW()',
-              ].join(',')})`,
-          ).join(',')}
-          ON DUPLICATE KEY UPDATE ${['hash', 'revalidatedAt', 'heartbeatAt']
+              ].join()})`,
+          ).join()}
+          ON DUPLICATE KEY UPDATE ${columnNames
             .map(
               (columnName) =>
                 `${this.escapeColumnIdentifier(columnName)} = VALUES(${this.escapeColumnIdentifier(columnName)})`,
             )
-            .join(', ')}
+            .join()}
         `),
       StatementKind.DATA_MANIPULATION,
       connection,
