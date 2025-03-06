@@ -180,12 +180,11 @@ export class MariaDBBroker<TRequestContext extends object = any>
     this.#assigning = true;
     try {
       for await (const mutationsBySubscription of this.mutationsTable.getUnassignedsBySubscription()) {
-        await Promise.all([
-          this.assignmentsTable.assign(mutationsBySubscription),
-          ...Array.from(mutationsBySubscription, ([subscription, mutations]) =>
-            subscription.assign(mutations),
-          ),
-        ]);
+        await this.assignmentsTable.assign(mutationsBySubscription);
+
+        mutationsBySubscription.forEach((mutations, subscription) =>
+          subscription.notify(mutations),
+        );
       }
     } finally {
       this.#assigning = false;

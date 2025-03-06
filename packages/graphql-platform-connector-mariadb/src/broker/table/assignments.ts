@@ -12,7 +12,11 @@ import {
 import type { StatementKind } from '../../statement.js';
 import { AND } from '../../statement/manipulation/clause/where-condition.js';
 import { AbstractTable } from '../abstract-table.js';
-import type { UnassignedMutationsBySubscription } from './mutations.js';
+import type {
+  MariaDBBrokerMutation,
+  MariaDBBrokerMutationRow,
+  UnassignedMutationsBySubscription,
+} from './mutations.js';
 
 export interface MariaDBBrokerAssignmentsTableOptions {
   name?: string;
@@ -44,8 +48,8 @@ export class MariaDBBrokerAssignmentsTable extends AbstractTable {
       },
       ['mutationId', 'subscriptionId'],
       [
-        // Index for the heartbeat
-        ['subscriptionId'],
+        // Index for the heartbeat & the "dequeue" & the "unassign"
+        ['subscriptionId', 'mutationId'],
         // Index for the janitor
         ['heartbeatAt'],
       ],
@@ -102,6 +106,28 @@ export class MariaDBBrokerAssignmentsTable extends AbstractTable {
         .toArray()
         .join(',')}
     `);
+  }
+
+  public async *dequeue<TRequestContext extends object>(
+    subscriptionId: UUID,
+  ): AsyncGenerator<MariaDBBrokerMutation<TRequestContext>> {
+    let row: MariaDBBrokerMutationRow | undefined;
+    while (
+      (row = (
+        await this.connector.executeQuery<MariaDBBrokerMutationRow[]>(`
+          SELECT m.*
+          FROM ${escapeIdentifier(this.name)} a
+            INNER JOIN ${escapeIdentifier(this.broker.mutationsTable.name)} m ON m.${this.broker.mutationsTable.escapeColumnIdentifier('id')} = a.${this.escapeColumnIdentifier('mutationId')}
+          WHERE a.${this.escapeColumnIdentifier('subscriptionId')} = ${this.serializeColumnValue('subscriptionId', subscriptionId)}
+          ORDER BY a.${this.escapeColumnIdentifier('mutationId')} ASC
+          LIMIT 1
+        `)
+      )[0])
+    ) {
+      yield this.broker.mutationsTable.parseRow<TRequestContext>(row);
+
+      await this.unassign(subscriptionId, row.id);
+    }
   }
 
   public async unassign(

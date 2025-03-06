@@ -3,7 +3,7 @@ import {
   type EventListener,
 } from '@prismamedia/async-event-emitter';
 import * as core from '@prismamedia/graphql-platform';
-import Denque from 'denque';
+import assert from 'node:assert';
 import type {
   MariaDBBroker,
   MariaDBBrokerMutation,
@@ -28,7 +28,6 @@ export class MariaDBSubscription
 
   #idle?: boolean;
   readonly #signal: AbortSignal;
-  readonly #assignments: Denque<MariaDBBrokerMutation>;
 
   public readonly stateTable?: MariaDBBrokerSubscriptionsStateTable;
 
@@ -39,69 +38,63 @@ export class MariaDBSubscription
     super();
 
     this.#signal = subscription.signal;
-    this.#assignments = new Denque();
 
     this.stateTable = broker.connector.schema.getTableByNode(
       subscription.node,
     ).subscriptionsStateTable;
   }
 
-  public async assign(
-    mutations: ReadonlyArray<MariaDBBrokerMutation>,
-  ): Promise<void> {
-    if (mutations.length) {
-      this.lastAssignedMutationId = mutations.at(-1)!.id;
-      mutations.forEach((mutation) => this.#assignments.push(mutation));
-      await this.emit('assignments', mutations);
-    }
-  }
+  public notify(mutations: ReadonlyArray<MariaDBBrokerMutation>): void {
+    assert(mutations.length);
 
-  public async dequeue(): Promise<MariaDBBrokerMutation | undefined> {
-    return (
-      this.#assignments.shift() ||
-      ((await this.wait('assignments', this.#signal).catch(() => undefined)) &&
-        this.dequeue())
+    this.lastAssignedMutationId = mutations.at(-1)!.id;
+    this.emit('assignments', mutations).catch((cause) =>
+      this.broker.connector.emit(
+        'error',
+        new Error(
+          `Failed to notify the subscription ${this.subscription.id} of the ${mutations.length} assignment(s)`,
+          { cause },
+        ),
+      ),
     );
   }
 
   public async [Symbol.asyncDispose](): Promise<void> {
     this.off();
 
-    try {
-      await Promise.all([
-        this.broker.unsubscribe(this.subscription),
-        this.broker.assignmentsTable.unsubscribe(this.subscription.id),
-        this.stateTable?.unsubscribe(this.subscription.id),
-      ]);
-    } finally {
-      this.#assignments.clear();
-    }
+    await Promise.all([
+      this.broker.unsubscribe(this.subscription),
+      this.broker.assignmentsTable.unsubscribe(this.subscription.id),
+      this.stateTable?.unsubscribe(this.subscription.id),
+    ]);
   }
 
   public async *[Symbol.asyncIterator](): AsyncIterator<
     core.MutationContextChanges,
     undefined
   > {
-    let mutation: MariaDBBrokerMutation | undefined;
-    while ((mutation = await this.dequeue()) && !this.#signal.aborted) {
-      this.#idle = false;
-      await this.emit('processing', mutation);
+    do {
+      for await (const mutation of this.broker.assignmentsTable.dequeue(
+        this.subscription.id,
+      )) {
+        this.#idle = false;
+        await this.emit('processing', mutation);
 
-      yield* this.broker.changesTable.getChanges(this.subscription, mutation);
+        yield* this.broker.changesTable.getChanges(this.subscription, mutation);
 
-      await Promise.all([
-        this.broker.assignmentsTable.unassign(
-          this.subscription.id,
-          mutation.id,
-        ),
-        this.emit('processed', mutation),
-      ]);
-
-      if (!this.#assignments.length) {
-        this.#idle = true;
-        await this.emit('idle', undefined);
+        await this.emit('processed', mutation);
       }
-    }
+
+      this.#idle = true;
+    } while (
+      !this.#signal.aborted &&
+      (
+        await Promise.all([
+          this.emit('idle', undefined),
+          this.wait('assignments', this.#signal).catch(() => []),
+        ])
+      )[1].length
+    );
   }
 
   public onIdle(

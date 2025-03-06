@@ -42,7 +42,6 @@
     "@prismamedia/graphql-platform-scalars": "workspace:packages/graphql-platform-scalars",
     "@prismamedia/graphql-platform-utils": "workspace:packages/graphql-platform-utils",
     "@prismamedia/memoize": "^6.1.0",
-    "denque": "^2.1.0",
     "dependency-graph": "^1.0.0",
     "inflection": "^3.0.2",
     "mariadb": "^3.4.0",

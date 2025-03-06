@@ -7,6 +7,7 @@ import type { OkPacket, PoolConnection } from '../../index.js';
 import { Event } from '../../schema/event.js';
 import {
   BigIntType,
+  IntType,
   JsonType,
   TimestampType,
 } from '../../schema/table/data-type.js';
@@ -15,17 +16,19 @@ import { AND } from '../../statement/manipulation/clause/where-condition.js';
 import { AbstractTable } from '../abstract-table.js';
 import type { MariaDBSubscription } from '../subscription.js';
 
-interface MariaDBBrokerMutationRow {
+export interface MariaDBBrokerMutationRow {
   id: bigint;
   requestContext: string;
-  changes: string;
+  changeCount: number;
+  changesByNode: string;
   committedAt: string;
 }
 
 export interface MariaDBBrokerMutation<TRequestContext extends object = any> {
   id: bigint;
   requestContext: TRequestContext;
-  changes: Record<
+  changeCount: number;
+  changesByNode: Record<
     core.Node['name'],
     Partial<{
       creation: true;
@@ -68,7 +71,11 @@ export class MariaDBBrokerMutationsTable extends AbstractTable {
           dataType: new JsonType(),
           nullable: false,
         },
-        changes: {
+        changeCount: {
+          dataType: new IntType({ modifiers: ['UNSIGNED'] }),
+          nullable: false,
+        },
+        changesByNode: {
           dataType: new JsonType(),
           nullable: false,
         },
@@ -124,15 +131,17 @@ export class MariaDBBrokerMutationsTable extends AbstractTable {
     const { insertId: mutationId } = await connection.query<OkPacket>(
       `INSERT INTO ${escapeIdentifier(this.broker.mutationsTable.name)} (${[
         'requestContext',
-        'changes',
+        'changeCount',
+        'changesByNode',
         'committedAt',
       ]
         .map((columnName) => this.escapeColumnIdentifier(columnName))
-        .join(',')}) VALUES (?, ?, ?)`,
+        .join(',')}) VALUES (?, ?, ?, ?)`,
       [
         this.broker.options?.serializeRequestContext
           ? this.broker.options.serializeRequestContext(changes.requestContext)
           : changes.requestContext,
+        changes.size,
         Object.fromEntries(
           changes.changesByNode.values().map((changes) => [
             changes.node.name,
@@ -161,6 +170,24 @@ export class MariaDBBrokerMutationsTable extends AbstractTable {
     );
 
     return mutationId;
+  }
+
+  public parseRow<TRequestContext extends object>(
+    row: MariaDBBrokerMutationRow,
+  ): MariaDBBrokerMutation<TRequestContext> {
+    return {
+      id: row.id,
+      requestContext: this.broker.options?.unserializeRequestContext
+        ? this.broker.options.unserializeRequestContext(
+            JSON.parse(row.requestContext),
+          )
+        : JSON.parse(row.requestContext),
+      changeCount: row.changeCount,
+      changesByNode: JSON.parse(row.changesByNode),
+      committedAt: this.getColumnByName(
+        'committedAt',
+      ).dataType.parseColumnValue(row.committedAt),
+    };
   }
 
   public async *getUnassignedsBySubscription<TRequestContext extends object>(
@@ -212,18 +239,7 @@ export class MariaDBBrokerMutationsTable extends AbstractTable {
       >();
 
       for (const row of rows) {
-        const mutation: MariaDBBrokerMutation = {
-          id: row.id,
-          requestContext: this.broker.options?.unserializeRequestContext
-            ? this.broker.options.unserializeRequestContext(
-                JSON.parse(row.requestContext),
-              )
-            : JSON.parse(row.requestContext),
-          changes: JSON.parse(row.changes),
-          committedAt: this.getColumnByName(
-            'committedAt',
-          ).dataType.parseColumnValue(row.committedAt),
-        };
+        const mutation = this.parseRow(row);
 
         this.broker.subscriptions
           .values()
@@ -236,18 +252,18 @@ export class MariaDBBrokerMutationsTable extends AbstractTable {
                 .entries()
                 .some(
                   ([node, { creation, update, deletion }]) =>
-                    mutation.changes[node.name] &&
-                    ((creation && mutation.changes[node.name].creation) ||
+                    mutation.changesByNode[node.name] &&
+                    ((creation && mutation.changesByNode[node.name].creation) ||
                       (update?.size &&
-                        mutation.changes[node.name].update?.length &&
+                        mutation.changesByNode[node.name].update?.length &&
                         update
                           .values()
                           .some((component) =>
-                            mutation.changes[node.name].update!.includes(
+                            mutation.changesByNode[node.name].update!.includes(
                               component.name,
                             ),
                           )) ||
-                      (deletion && mutation.changes[node.name].deletion)),
+                      (deletion && mutation.changesByNode[node.name].deletion)),
                 ),
           )
           .forEach((subscription) => {
