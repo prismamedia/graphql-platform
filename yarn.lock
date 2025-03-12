@@ -959,8 +959,8 @@ __metadata:
     graphql: "npm:16.10.0"
     inflection: "npm:^3.0.2"
     mariadb: "npm:^3.4.0"
-    publint: "npm:0.3.8"
-    remeda: "npm:^2.21.0"
+    publint: "npm:0.3.9"
+    remeda: "npm:^2.21.1"
     semver: "npm:^7.7.1"
     tsx: "npm:4.19.3"
     type-fest: "npm:^4.37.0"
@@ -991,7 +991,7 @@ __metadata:
     express: "npm:4.21.2"
     graphql: "npm:16.10.0"
     graphql-ws: "npm:6.0.4"
-    publint: "npm:0.3.8"
+    publint: "npm:0.3.9"
     tsx: "npm:4.19.3"
     typescript: "npm:5.8.2"
     ws: "npm:8.18.1"
@@ -1008,8 +1008,8 @@ __metadata:
     "@prismamedia/graphql-platform-utils": "workspace:packages/graphql-platform-utils"
     "@types/draft-js": "npm:^0.11.18"
     graphql: "npm:16.10.0"
-    publint: "npm:0.3.8"
-    remeda: "npm:^2.21.0"
+    publint: "npm:0.3.9"
+    remeda: "npm:^2.21.1"
     tsx: "npm:4.19.3"
     type-fest: "npm:^4.37.0"
     typescript: "npm:5.8.2"
@@ -1027,8 +1027,8 @@ __metadata:
     "@types/indefinite": "npm:2.3.4"
     graphql: "npm:16.10.0"
     indefinite: "npm:^2.5.1"
-    publint: "npm:0.3.8"
-    remeda: "npm:^2.21.0"
+    publint: "npm:0.3.9"
+    remeda: "npm:^2.21.1"
     tsx: "npm:4.19.3"
     type-fest: "npm:^4.37.0"
     typescript: "npm:5.8.2"
@@ -1055,8 +1055,8 @@ __metadata:
     inflection: "npm:^3.0.2"
     p-queue: "npm:^8.1.0"
     p-retry: "npm:^6.2.1"
-    publint: "npm:0.3.8"
-    remeda: "npm:^2.21.0"
+    publint: "npm:0.3.9"
+    remeda: "npm:^2.21.1"
     tsx: "npm:4.19.3"
     type-fest: "npm:^4.37.0"
     typescript: "npm:5.8.2"
@@ -2889,9 +2889,9 @@ __metadata:
   languageName: node
   linkType: hard
 
-"publint@npm:0.3.8":
-  version: 0.3.8
-  resolution: "publint@npm:0.3.8"
+"publint@npm:0.3.9":
+  version: 0.3.9
+  resolution: "publint@npm:0.3.9"
   dependencies:
     "@publint/pack": "npm:^0.1.2"
     package-manager-detector: "npm:^0.2.9"
@@ -2899,7 +2899,7 @@ __metadata:
     sade: "npm:^1.8.1"
   bin:
     publint: src/cli.js
-  checksum: 10/78f85617939c46e5af135c77405a2a220f9780e80c6773a5bc573f80eacab62fe352142d98323ff92a91f89c935c648f307c5cd901d5f9cfcbbf2e1b232c40c8
+  checksum: 10/bfa96a78e38df964422602d22afd52561a47591bc5e06ffe39e0029ee0953205ad379506dd643dfbbf89f443b7ae753150b5e6cc03872c2fc852f9a755533c48
   languageName: node
   linkType: hard
 
@@ -2938,12 +2938,12 @@ __metadata:
   languageName: node
   linkType: hard
 
-"remeda@npm:^2.21.0":
-  version: 2.21.0
-  resolution: "remeda@npm:2.21.0"
+"remeda@npm:^2.21.1":
+  version: 2.21.1
+  resolution: "remeda@npm:2.21.1"
   dependencies:
-    type-fest: "npm:^4.35.0"
-  checksum: 10/cc01343c20a6b4b1ac192a966e8da875997359c7f27132b0116128288dc6df287068a4ef16e1ff978d6d3b8bcec031070e5c6b0974c6b80f89329b07eba6e160
+    type-fest: "npm:^4.37.0"
+  checksum: 10/7466771a1bfa369a200a7ea676147c9ee0d184ef213ebf35c4f75ec7377b613248ffd9890383b3e3bc6eadd609aaccb20b69ffe2808d53b9d94836125ae158f0
   languageName: node
   linkType: hard
 
@@ -3341,13 +3341,6 @@ __metadata:
   bin:
     tsx: dist/cli.mjs
   checksum: 10/a7e7f41e5593b242772050abacf51908aa8a6d4d9ea6c29e80161eb557d664a0f4cc8d38d0c8c151fddb6c2e9e337af27ba0e269c9707ccd7eeff0e0ea7fcf98
-  languageName: node
-  linkType: hard
-
-"type-fest@npm:^4.35.0":
-  version: 4.36.0
-  resolution: "type-fest@npm:4.36.0"
-  checksum: 10/7b022daef6abafc6095892b3da821b80c37d3a48d5ce514cd4a1eb9fe0f7348b0c90ae0a93c24cc7df25df3c6f556c46408ddc069fdedb04edc72cd205323371
   languageName: node
   linkType: hard
 
