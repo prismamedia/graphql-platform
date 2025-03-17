@@ -30,8 +30,9 @@ export type ChangesSubscriptionStreamForEachTask<
   TUpsert extends NodeSelectedValue = any,
   TDeletion extends NodeValue = any,
 > = (
+  this: ChangesSubscriptionStream<TRequestContext, TUpsert, TDeletion>,
   change: ChangesSubscriptionChange<TRequestContext, TUpsert, TDeletion>,
-  stream: ChangesSubscriptionStream<TRequestContext, TUpsert, TDeletion>,
+  signal: AbortSignal,
 ) => Promisable<any>;
 
 export type ChangesSubscriptionStreamForEachOptions = Except<
@@ -44,10 +45,11 @@ export type ChangesSubscriptionStreamByBatchTask<
   TUpsert extends NodeSelectedValue = any,
   TDeletion extends NodeValue = any,
 > = (
+  this: ChangesSubscriptionStream<TRequestContext, TUpsert, TDeletion>,
   changes: ReadonlyArray<
     ChangesSubscriptionChange<TRequestContext, TUpsert, TDeletion>
   >,
-  stream: ChangesSubscriptionStream<TRequestContext, TUpsert, TDeletion>,
+  signal: AbortSignal,
 ) => Promisable<any>;
 
 export type ChangesSubscriptionStreamByBatchOptions =
@@ -271,16 +273,27 @@ export class ChangesSubscriptionStream<
 
     this.on('post-effect', () => tasks.onIdle(), this.signal);
 
-    await new Promise<void>(async (resolve, reject) => {
-      tasks.on('error', reject);
+    const controller = new AbortController();
+    const combinedSignal = AbortSignal.any([this.signal, controller.signal]);
 
+    await new Promise<void>(async (resolve, reject) => {
       try {
         for await (const change of this) {
           await tasks.onSizeLessThan(tasks.concurrency);
+          combinedSignal.throwIfAborted();
 
-          if (!this.signal.aborted) {
-            tasks.add(() => task(change, this));
-          }
+          tasks
+            .add(
+              async () => {
+                try {
+                  await task.call(this, change, combinedSignal);
+                } catch (error) {
+                  controller.abort(error);
+                }
+              },
+              { signal: combinedSignal },
+            )
+            .catch(reject);
         }
 
         resolve();
@@ -317,34 +330,47 @@ export class ChangesSubscriptionStream<
       { [Symbol.dispose]: () => tasks.clear() },
     );
 
+    const controller = new AbortController();
+    const combinedSignal = AbortSignal.any([this.signal, controller.signal]);
+
     let batch: ChangesSubscriptionChange[] = [];
 
     const enqueueBatch = () => {
-      if (batch.length) {
-        const current = Object.freeze(batch);
-        batch = [];
-        tasks.add(() => task(current, this));
-      }
+      const changes = batch;
+      batch = [];
+
+      return tasks.add(
+        async () => {
+          try {
+            await task.call(this, changes, combinedSignal);
+          } catch (error) {
+            controller.abort(error);
+          }
+        },
+        { signal: combinedSignal },
+      );
     };
 
-    this.on(
-      'post-effect',
-      async () => {
-        enqueueBatch();
-        await tasks.onIdle();
-      },
-      this.signal,
-    );
-
     await new Promise<void>(async (resolve, reject) => {
-      tasks.on('error', reject);
+      this.on(
+        'post-effect',
+        async () => {
+          if (batch.length) {
+            enqueueBatch().catch(reject);
+          }
+
+          await tasks.onIdle();
+        },
+        combinedSignal,
+      );
 
       try {
         for await (const change of this) {
           await tasks.onSizeLessThan(tasks.concurrency);
+          combinedSignal.throwIfAborted();
 
-          if (!this.signal.aborted && batch.push(change) >= batchSize) {
-            enqueueBatch();
+          if (batch.push(change) >= batchSize) {
+            enqueueBatch().catch(reject);
           }
         }
 

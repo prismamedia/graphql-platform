@@ -1,5 +1,6 @@
 import assert from 'node:assert';
 import { beforeEach, describe, it } from 'node:test';
+import { setTimeout } from 'node:timers/promises';
 import {
   myAdminContext,
   type MyContext,
@@ -65,6 +66,95 @@ describe('ScrollSubscription', () => {
 
         assert.strictEqual(gp.connector.find.mock.callCount(), 0);
       });
+    });
+
+    it("throws on forEach's callback synchronous error on first call", async () => {
+      await assert.rejects(
+        () =>
+          gp.api.Article.scroll(myAdminContext, {
+            selection: `{ _id }`,
+          }).forEach(
+            (_value, index) => {
+              if (index === 0) {
+                throw new Error('Synchronous error');
+              }
+            },
+            { concurrency: 2 },
+          ),
+        { message: 'Synchronous error' },
+      );
+    });
+
+    it("throws on forEach's callback synchronous error on second call", async () => {
+      await assert.rejects(
+        () =>
+          gp.api.Article.scroll(myAdminContext, {
+            selection: `{ _id }`,
+          }).forEach(
+            (_value, index) => {
+              if (index === 1) {
+                throw new Error('Synchronous error');
+              }
+            },
+            { concurrency: 2 },
+          ),
+        { message: 'Synchronous error' },
+      );
+    });
+
+    it("throws on forEach's callback asynchronous error on first call", async () => {
+      await assert.rejects(
+        () =>
+          gp.api.Article.scroll(myAdminContext, {
+            selection: `{ _id }`,
+          }).forEach(
+            async (_value, index, signal) => {
+              await setTimeout(25, undefined, { signal });
+
+              if (index === 0) {
+                throw new Error('Asynchronous error');
+              }
+            },
+            { concurrency: 2 },
+          ),
+        { message: 'Asynchronous error' },
+      );
+    });
+
+    it("throws on forEach's callback asynchronous error on second call", async () => {
+      await assert.rejects(
+        () =>
+          gp.api.Article.scroll(myAdminContext, {
+            selection: `{ _id }`,
+          }).forEach(
+            async (_value, index, signal) => {
+              await setTimeout(25, undefined, { signal });
+
+              if (index === 1) {
+                throw new Error('Asynchronous error');
+              }
+            },
+            { concurrency: 2 },
+          ),
+        { message: 'Asynchronous error' },
+      );
+    });
+
+    it("throws on byBatch's callback synchronous error on first call", async () => {
+      await assert.rejects(
+        () =>
+          gp.api.Article.scroll(myAdminContext, {
+            selection: `{ _id }`,
+          }).byBatch(
+            async (_values, signal) => {
+              await setTimeout(25, undefined, { signal });
+
+              throw new Error('Synchronous error');
+            },
+            { batchSize: 2 },
+          ),
+        { message: 'Synchronous error' },
+      );
     });
   });
 

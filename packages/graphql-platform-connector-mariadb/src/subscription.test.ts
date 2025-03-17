@@ -10,6 +10,7 @@ import {
 import * as fixtures from '@prismamedia/graphql-platform/__tests__/fixture.js';
 import assert from 'node:assert';
 import { afterEach, beforeEach, describe, it } from 'node:test';
+import { setTimeout } from 'node:timers/promises';
 import { createMyGP } from './__tests__/config.js';
 
 describe('Subscription', () => {
@@ -140,6 +141,62 @@ describe('Subscription', () => {
         update: ['deprecated'],
       },
     });
+  });
+
+  it("throws on forEach's callback synchronous error", async () => {
+    await assert.rejects(
+      () =>
+        subscriptions[0].forEach(
+          (_value, _signal) => {
+            throw new Error('Synchronous error');
+          },
+          { concurrency: 2 },
+        ),
+      { message: 'Synchronous error' },
+    );
+  });
+
+  it("throws on forEach's callback asynchronous error", async () => {
+    await assert.rejects(
+      () =>
+        subscriptions[0].forEach(
+          async (_value, signal) => {
+            await setTimeout(25, undefined, { signal });
+
+            throw new Error('Asynchronous error');
+          },
+          { concurrency: 2 },
+        ),
+      { message: 'Asynchronous error' },
+    );
+  });
+
+  it("throws on byBatch's callback synchronous error", async () => {
+    await assert.rejects(
+      () =>
+        subscriptions[0].byBatch(
+          (_values, _signal) => {
+            throw new Error('Synchronous error');
+          },
+          { concurrency: 2 },
+        ),
+      { message: 'Synchronous error' },
+    );
+  });
+
+  it("throws on byBatch's callback asynchronous error", async () => {
+    await assert.rejects(
+      () =>
+        subscriptions[0].byBatch(
+          async (_values, signal) => {
+            await setTimeout(25, undefined, { signal });
+
+            throw new Error('Asynchronous error');
+          },
+          { concurrency: 2 },
+        ),
+      { message: 'Asynchronous error' },
+    );
   });
 
   it('is iterable through "Array.fromAsync"', async () => {

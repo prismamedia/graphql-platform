@@ -4,6 +4,7 @@ import {
   type Options as ProgressBarOptions,
 } from 'cli-progress';
 import assert from 'node:assert';
+import type { Abortable } from 'node:events';
 import { inspect } from 'node:util';
 import PQueue, { type Options as PQueueOptions } from 'p-queue';
 import PRetry, { type Options as PRetryOptions } from 'p-retry';
@@ -62,57 +63,60 @@ export type ScrollSubscriptionStreamForEachTask<
   TValue extends NodeSelectedValue = any,
   TRequestContext extends object = any,
 > = (
+  this: ScrollSubscriptionStream<TValue, TRequestContext>,
   value: TValue,
   index: number,
-  stream: ScrollSubscriptionStream<TValue, TRequestContext>,
+  signal: AbortSignal,
 ) => Promisable<any>;
 
 export type ScrollSubscriptionStreamForEachOptions = Except<
   PQueueOptions<any, any>,
   'autoStart' | 'queueClass'
-> & {
-  /**
-   * Optional, the number of tasks waiting to be processed
-   *
-   * Default: the queue's concurrency, so we're able to fill all the workers at any time
-   */
-  buffer?: number;
+> &
+  Abortable & {
+    /**
+     * Optional, the number of tasks waiting to be processed
+     *
+     * Default: the queue's concurrency, so we're able to fill all the workers at any time
+     */
+    buffer?: number;
 
-  /**
-   * Optional, define a retry strategy
-   *
-   * Default: false / no retry
-   *
-   * @see https://github.com/sindresorhus/p-retry/blob/main/readme.md
-   */
-  retry?: PRetryOptions | number | boolean;
+    /**
+     * Optional, define a retry strategy
+     *
+     * Default: false / no retry
+     *
+     * @see https://github.com/sindresorhus/p-retry/blob/main/readme.md
+     */
+    retry?: Except<PRetryOptions, 'signal'> | number | boolean;
 
-  /**
-   * Optional, let the cursor continue on error, if a number is provided it defines the maximum number of errors allowed before an AggregateError is thrown
-   *
-   * @default false
-   */
-  continueOnError?: boolean | number;
+    /**
+     * Optional, let the cursor continue on error, if a number is provided it defines the maximum number of errors allowed before an AggregateError is thrown
+     *
+     * @default false
+     */
+    continueOnError?: boolean | number;
 
-  /**
-   * Optional, either:
-   * - provide a progress-bar which will be updated with the current progress
-   * - provide a multi-progress-bar on which will be appended a new one which will be updated with the current progress
-   *
-   * Default: none
-   */
-  progressBar?:
-    | boolean
-    | ProgressBar
-    | { container: MultiProgressBar; name: string };
-};
+    /**
+     * Optional, either:
+     * - provide a progress-bar which will be updated with the current progress
+     * - provide a multi-progress-bar on which will be appended a new one which will be updated with the current progress
+     *
+     * Default: none
+     */
+    progressBar?:
+      | boolean
+      | ProgressBar
+      | { container: MultiProgressBar; name: string };
+  };
 
 export type ScrollSubscriptionStreamByBatchTask<
   TValue extends NodeSelectedValue = any,
   TRequestContext extends object = any,
 > = (
+  this: ScrollSubscriptionStream<TValue, TRequestContext>,
   values: ReadonlyArray<TValue>,
-  stream: ScrollSubscriptionStream<TValue, TRequestContext>,
+  signal: AbortSignal,
 ) => Promisable<any>;
 
 export type ScrollSubscriptionStreamByBatchOptions =
@@ -252,6 +256,7 @@ export class ScrollSubscriptionStream<
       progressBar: progressBarOptions,
       retry: retryOptions,
       buffer: bufferOptions,
+      signal: providedSignal,
       ...queueOptions
     }: ScrollSubscriptionStreamForEachOptions = {},
   ): Promise<void> {
@@ -284,7 +289,7 @@ export class ScrollSubscriptionStream<
           : retryOptions
       : false;
 
-    let currentIndex: number = 0;
+    let currentIndex: number = -1;
 
     let progressBar: ProgressBar | undefined;
     if (progressBarOptions) {
@@ -333,17 +338,30 @@ export class ScrollSubscriptionStream<
         : continueOnError
       : 0;
 
-    await new Promise<void>(async (resolve, reject) => {
-      tasks.on('error', reject);
+    const controller = new AbortController();
 
+    const combinedSignal = providedSignal
+      ? AbortSignal.any([providedSignal, controller.signal])
+      : controller.signal;
+
+    await new Promise<void>(async (resolve, reject) => {
       try {
         for await (const value of this) {
           await tasks.onSizeLessThan(buffer);
+          combinedSignal.throwIfAborted();
 
-          const boundTask = task.bind(undefined, value, ++currentIndex, this);
+          const boundTask = task.bind(
+            this,
+            value,
+            ++currentIndex,
+            combinedSignal,
+          );
 
           const retryTaskWrapper = normalizedRetryOptions
-            ? () => PRetry(boundTask, normalizedRetryOptions)
+            ? PRetry.bind(undefined, boundTask, {
+                ...normalizedRetryOptions,
+                signal: combinedSignal,
+              })
             : boundTask;
 
           const continueOnErrorTaskWrapper =
@@ -369,7 +387,18 @@ export class ScrollSubscriptionStream<
               }
             : continueOnErrorTaskWrapper;
 
-          tasks.add(progressBarTaskWrapper);
+          tasks
+            .add(
+              async () => {
+                try {
+                  await progressBarTaskWrapper();
+                } catch (error) {
+                  controller.abort(error);
+                }
+              },
+              { signal: combinedSignal },
+            )
+            .catch(reject);
         }
 
         await tasks.onIdle();
@@ -395,6 +424,7 @@ export class ScrollSubscriptionStream<
       continueOnError,
       progressBar: progressBarOptions,
       retry: retryOptions,
+      signal: providedSignal,
       ...queueOptions
     }: ScrollSubscriptionStreamByBatchOptions = {},
   ): Promise<void> {
@@ -476,16 +506,24 @@ export class ScrollSubscriptionStream<
         : continueOnError
       : 0;
 
+    const controller = new AbortController();
+    const combinedSignal = providedSignal
+      ? AbortSignal.any([providedSignal, controller.signal])
+      : controller.signal;
+
     let batch: TValue[] = [];
 
     const enqueueBatch = () => {
       const values = batch;
       batch = [];
 
-      const boundTask = task.bind(undefined, values, this);
+      const boundTask = task.bind(this, values, combinedSignal);
 
       const retryTaskWrapper = normalizedRetryOptions
-        ? () => PRetry(boundTask, normalizedRetryOptions)
+        ? PRetry.bind(undefined, boundTask, {
+            ...normalizedRetryOptions,
+            signal: combinedSignal,
+          })
         : boundTask;
 
       const continueOnErrorTaskWrapper =
@@ -511,23 +549,31 @@ export class ScrollSubscriptionStream<
           }
         : continueOnErrorTaskWrapper;
 
-      tasks.add(progressBarTaskWrapper);
+      return tasks.add(
+        async () => {
+          try {
+            await progressBarTaskWrapper();
+          } catch (error) {
+            controller.abort(error);
+          }
+        },
+        { signal: combinedSignal },
+      );
     };
 
     await new Promise<void>(async (resolve, reject) => {
-      tasks.on('error', reject);
-
       try {
         for await (const value of this) {
           await tasks.onSizeLessThan(buffer);
+          combinedSignal.throwIfAborted();
 
           if (batch.push(value) >= batchSize) {
-            enqueueBatch();
+            enqueueBatch().catch(reject);
           }
         }
 
         if (batch.length) {
-          enqueueBatch();
+          enqueueBatch().catch(reject);
         }
 
         await tasks.onIdle();
