@@ -144,59 +144,75 @@ describe('Subscription', () => {
   });
 
   it("throws on forEach's callback synchronous error", async () => {
+    let originalError: Error | undefined;
+
     await assert.rejects(
       () =>
         subscriptions[0].forEach(
           (_value, _signal) => {
-            throw new Error('Synchronous error');
+            throw (originalError = new Error('Synchronous error'));
           },
           { concurrency: 2 },
         ),
-      { message: 'Synchronous error' },
+      originalError,
     );
+
+    assert(originalError);
   });
 
   it("throws on forEach's callback asynchronous error", async () => {
+    let originalError: Error | undefined;
+
     await assert.rejects(
       () =>
         subscriptions[0].forEach(
           async (_value, signal) => {
             await setTimeout(25, undefined, { signal });
 
-            throw new Error('Asynchronous error');
+            throw (originalError = new Error('Asynchronous error'));
           },
           { concurrency: 2 },
         ),
-      { message: 'Asynchronous error' },
+      originalError,
     );
+
+    assert(originalError);
   });
 
   it("throws on byBatch's callback synchronous error", async () => {
+    let originalError: Error | undefined;
+
     await assert.rejects(
       () =>
         subscriptions[0].byBatch(
           (_values, _signal) => {
-            throw new Error('Synchronous error');
+            throw (originalError = new Error('Synchronous error'));
           },
           { concurrency: 2 },
         ),
-      { message: 'Synchronous error' },
+      originalError,
     );
+
+    assert(originalError);
   });
 
   it("throws on byBatch's callback asynchronous error", async () => {
+    let originalError: Error | undefined;
+
     await assert.rejects(
       () =>
         subscriptions[0].byBatch(
           async (_values, signal) => {
             await setTimeout(25, undefined, { signal });
 
-            throw new Error('Asynchronous error');
+            throw (originalError = new Error('Asynchronous error'));
           },
           { concurrency: 2 },
         ),
-      { message: 'Asynchronous error' },
+      originalError,
     );
+
+    assert(originalError);
   });
 
   it('is iterable through "Array.fromAsync"', async () => {
@@ -220,6 +236,23 @@ describe('Subscription', () => {
         change instanceof ChangesSubscriptionDeletion ? 'deletion' : 'upsert',
       ),
       ['upsert', 'upsert', 'deletion'],
+    );
+  });
+
+  it('is iterable through "for await" untill break', async () => {
+    const changes: ChangesSubscriptionChange[] = [];
+
+    for await (const change of subscriptions[0]) {
+      changes.push(change);
+
+      break;
+    }
+
+    assert.deepEqual(
+      changes.map((change) =>
+        change instanceof ChangesSubscriptionDeletion ? 'deletion' : 'upsert',
+      ),
+      ['upsert'],
     );
   });
 

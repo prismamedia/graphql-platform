@@ -2,6 +2,7 @@ import { AsyncEventEmitter } from '@prismamedia/async-event-emitter';
 import { MMethod } from '@prismamedia/memoize';
 import assert from 'node:assert';
 import { randomUUID, type UUID } from 'node:crypto';
+import type { Abortable } from 'node:events';
 import { inspect } from 'node:util';
 import PQueue, { type Options as PQueueOptions } from 'p-queue';
 import type { Except, Promisable } from 'type-fest';
@@ -38,7 +39,8 @@ export type ChangesSubscriptionStreamForEachTask<
 export type ChangesSubscriptionStreamForEachOptions = Except<
   PQueueOptions<any, any>,
   'autoStart' | 'queueClass'
->;
+> &
+  Abortable;
 
 export type ChangesSubscriptionStreamByBatchTask<
   TRequestContext extends object = any,
@@ -258,7 +260,10 @@ export class ChangesSubscriptionStream<
       TUpsert,
       TDeletion
     >,
-    queueOptions?: ChangesSubscriptionStreamForEachOptions,
+    {
+      signal: externalSignal,
+      ...queueOptions
+    }: ChangesSubscriptionStreamForEachOptions = {},
   ): Promise<void> {
     this.signal.throwIfAborted();
 
@@ -271,12 +276,23 @@ export class ChangesSubscriptionStream<
       { [Symbol.dispose]: () => tasks.clear() },
     );
 
+    const errorController = new AbortController();
+    const errorSignal = errorController.signal;
+
+    const combinedSignal = externalSignal
+      ? AbortSignal.any([externalSignal, errorSignal])
+      : errorSignal;
+
+    // This ensures that all the effects provoked by a "node-change" are processed before the next "node-change" is dequeued
     this.on('post-effect', () => tasks.onIdle(), this.signal);
 
-    const controller = new AbortController();
-    const combinedSignal = AbortSignal.any([this.signal, controller.signal]);
-
     await new Promise<void>(async (resolve, reject) => {
+      combinedSignal.addEventListener(
+        'abort',
+        () => reject(combinedSignal.reason),
+        { once: true },
+      );
+
       try {
         for await (const change of this) {
           await tasks.onSizeLessThan(tasks.concurrency);
@@ -288,13 +304,17 @@ export class ChangesSubscriptionStream<
                 try {
                   await task.call(this, change, combinedSignal);
                 } catch (error) {
-                  controller.abort(error);
+                  errorController.abort(error);
                 }
               },
               { signal: combinedSignal },
             )
-            .catch(reject);
+            .catch((_error) => {
+              // Silent the abort
+            });
         }
+
+        await tasks.onIdle();
 
         resolve();
       } catch (error) {
@@ -311,6 +331,7 @@ export class ChangesSubscriptionStream<
     >,
     {
       batchSize: batchSize = 100,
+      signal: externalSignal,
       ...queueOptions
     }: ChangesSubscriptionStreamByBatchOptions = {},
   ): Promise<void> {
@@ -330,8 +351,12 @@ export class ChangesSubscriptionStream<
       { [Symbol.dispose]: () => tasks.clear() },
     );
 
-    const controller = new AbortController();
-    const combinedSignal = AbortSignal.any([this.signal, controller.signal]);
+    const errorController = new AbortController();
+    const errorSignal = errorController.signal;
+
+    const combinedSignal = externalSignal
+      ? AbortSignal.any([externalSignal, errorSignal])
+      : errorSignal;
 
     let batch: ChangesSubscriptionChange[] = [];
 
@@ -339,29 +364,40 @@ export class ChangesSubscriptionStream<
       const changes = batch;
       batch = [];
 
-      return tasks.add(
-        async () => {
-          try {
-            await task.call(this, changes, combinedSignal);
-          } catch (error) {
-            controller.abort(error);
-          }
-        },
-        { signal: combinedSignal },
-      );
+      tasks
+        .add(
+          async () => {
+            try {
+              await task.call(this, changes, combinedSignal);
+            } catch (error) {
+              errorController.abort(error);
+            }
+          },
+          { signal: combinedSignal },
+        )
+        .catch((_error) => {
+          // Silent the abort
+        });
     };
 
-    await new Promise<void>(async (resolve, reject) => {
-      this.on(
-        'post-effect',
-        async () => {
-          if (batch.length) {
-            enqueueBatch().catch(reject);
-          }
+    // This ensures that all the effects provoked by a "node-change" are processed before the next "node-change" is dequeued
+    this.on(
+      'post-effect',
+      async () => {
+        if (batch.length) {
+          enqueueBatch();
+        }
 
-          await tasks.onIdle();
-        },
-        combinedSignal,
+        await tasks.onIdle();
+      },
+      combinedSignal,
+    );
+
+    await new Promise<void>(async (resolve, reject) => {
+      combinedSignal.addEventListener(
+        'abort',
+        () => reject(combinedSignal.reason),
+        { once: true },
       );
 
       try {
@@ -370,9 +406,11 @@ export class ChangesSubscriptionStream<
           combinedSignal.throwIfAborted();
 
           if (batch.push(change) >= batchSize) {
-            enqueueBatch().catch(reject);
+            enqueueBatch();
           }
         }
+
+        await tasks.onIdle();
 
         resolve();
       } catch (error) {

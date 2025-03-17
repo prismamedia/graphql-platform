@@ -21,7 +21,9 @@ import {
 
 describe('ScrollSubscription', () => {
   let gp: MyGP<MockedConnector>;
+
   let Article: Node;
+
   const articles = [
     { _id: 1, id: 'ca001c1c-2e90-461f-96c8-658afa089728' },
     { _id: 3, id: 'c4f05098-9484-4a2f-b82a-60c3a5d54ec6' },
@@ -69,6 +71,8 @@ describe('ScrollSubscription', () => {
     });
 
     it("throws on forEach's callback synchronous error on first call", async () => {
+      let originalError: Error | undefined;
+
       await assert.rejects(
         () =>
           gp.api.Article.scroll(myAdminContext, {
@@ -76,16 +80,20 @@ describe('ScrollSubscription', () => {
           }).forEach(
             (_value, index) => {
               if (index === 0) {
-                throw new Error('Synchronous error');
+                throw (originalError = new Error('Synchronous error'));
               }
             },
-            { concurrency: 2 },
+            { concurrency: 3 },
           ),
-        { message: 'Synchronous error' },
+        originalError,
       );
+
+      assert(originalError);
     });
 
     it("throws on forEach's callback synchronous error on second call", async () => {
+      let originalError: Error | undefined;
+
       await assert.rejects(
         () =>
           gp.api.Article.scroll(myAdminContext, {
@@ -93,16 +101,20 @@ describe('ScrollSubscription', () => {
           }).forEach(
             (_value, index) => {
               if (index === 1) {
-                throw new Error('Synchronous error');
+                throw (originalError = new Error('Synchronous error'));
               }
             },
-            { concurrency: 2 },
+            { concurrency: 3 },
           ),
-        { message: 'Synchronous error' },
+        originalError,
       );
+
+      assert(originalError);
     });
 
     it("throws on forEach's callback asynchronous error on first call", async () => {
+      let originalError: Error | undefined;
+
       await assert.rejects(
         () =>
           gp.api.Article.scroll(myAdminContext, {
@@ -112,16 +124,20 @@ describe('ScrollSubscription', () => {
               await setTimeout(25, undefined, { signal });
 
               if (index === 0) {
-                throw new Error('Asynchronous error');
+                throw (originalError = new Error('Asynchronous error'));
               }
             },
-            { concurrency: 2 },
+            { concurrency: 3 },
           ),
-        { message: 'Asynchronous error' },
+        originalError,
       );
+
+      assert(originalError);
     });
 
     it("throws on forEach's callback asynchronous error on second call", async () => {
+      let originalError: Error | undefined;
+
       await assert.rejects(
         () =>
           gp.api.Article.scroll(myAdminContext, {
@@ -131,16 +147,20 @@ describe('ScrollSubscription', () => {
               await setTimeout(25, undefined, { signal });
 
               if (index === 1) {
-                throw new Error('Asynchronous error');
+                throw (originalError = new Error('Asynchronous error'));
               }
             },
-            { concurrency: 2 },
+            { concurrency: 3 },
           ),
-        { message: 'Asynchronous error' },
+        originalError,
       );
+
+      assert(originalError);
     });
 
     it("throws on byBatch's callback synchronous error on first call", async () => {
+      let originalError: Error | undefined;
+
       await assert.rejects(
         () =>
           gp.api.Article.scroll(myAdminContext, {
@@ -149,12 +169,14 @@ describe('ScrollSubscription', () => {
             async (_values, signal) => {
               await setTimeout(25, undefined, { signal });
 
-              throw new Error('Synchronous error');
+              throw (originalError = new Error('Synchronous error'));
             },
             { batchSize: 2 },
           ),
-        { message: 'Synchronous error' },
+        originalError,
       );
+
+      assert(originalError);
     });
   });
 

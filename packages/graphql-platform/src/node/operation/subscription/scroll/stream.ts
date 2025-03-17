@@ -256,7 +256,7 @@ export class ScrollSubscriptionStream<
       progressBar: progressBarOptions,
       retry: retryOptions,
       buffer: bufferOptions,
-      signal: providedSignal,
+      signal: externalSignal,
       ...queueOptions
     }: ScrollSubscriptionStreamForEachOptions = {},
   ): Promise<void> {
@@ -338,13 +338,20 @@ export class ScrollSubscriptionStream<
         : continueOnError
       : 0;
 
-    const controller = new AbortController();
+    const errorController = new AbortController();
+    const errorSignal = errorController.signal;
 
-    const combinedSignal = providedSignal
-      ? AbortSignal.any([providedSignal, controller.signal])
-      : controller.signal;
+    const combinedSignal = externalSignal
+      ? AbortSignal.any([externalSignal, errorSignal])
+      : errorSignal;
 
     await new Promise<void>(async (resolve, reject) => {
+      combinedSignal.addEventListener(
+        'abort',
+        () => reject(combinedSignal.reason),
+        { once: true },
+      );
+
       try {
         for await (const value of this) {
           await tasks.onSizeLessThan(buffer);
@@ -393,12 +400,14 @@ export class ScrollSubscriptionStream<
                 try {
                   await progressBarTaskWrapper();
                 } catch (error) {
-                  controller.abort(error);
+                  errorController.abort(error);
                 }
               },
               { signal: combinedSignal },
             )
-            .catch(reject);
+            .catch((_error) => {
+              // Silent the abort
+            });
         }
 
         await tasks.onIdle();
@@ -424,7 +433,7 @@ export class ScrollSubscriptionStream<
       continueOnError,
       progressBar: progressBarOptions,
       retry: retryOptions,
-      signal: providedSignal,
+      signal: externalSignal,
       ...queueOptions
     }: ScrollSubscriptionStreamByBatchOptions = {},
   ): Promise<void> {
@@ -506,10 +515,12 @@ export class ScrollSubscriptionStream<
         : continueOnError
       : 0;
 
-    const controller = new AbortController();
-    const combinedSignal = providedSignal
-      ? AbortSignal.any([providedSignal, controller.signal])
-      : controller.signal;
+    const errorController = new AbortController();
+    const errorSignal = errorController.signal;
+
+    const combinedSignal = externalSignal
+      ? AbortSignal.any([externalSignal, errorSignal])
+      : errorSignal;
 
     let batch: TValue[] = [];
 
@@ -549,31 +560,41 @@ export class ScrollSubscriptionStream<
           }
         : continueOnErrorTaskWrapper;
 
-      return tasks.add(
-        async () => {
-          try {
-            await progressBarTaskWrapper();
-          } catch (error) {
-            controller.abort(error);
-          }
-        },
-        { signal: combinedSignal },
-      );
+      tasks
+        .add(
+          async () => {
+            try {
+              await progressBarTaskWrapper();
+            } catch (error) {
+              errorController.abort(error);
+            }
+          },
+          { signal: combinedSignal },
+        )
+        .catch((_error) => {
+          // Silent the abort
+        });
     };
 
     await new Promise<void>(async (resolve, reject) => {
+      combinedSignal.addEventListener(
+        'abort',
+        () => reject(combinedSignal.reason),
+        { once: true },
+      );
+
       try {
         for await (const value of this) {
           await tasks.onSizeLessThan(buffer);
           combinedSignal.throwIfAborted();
 
           if (batch.push(value) >= batchSize) {
-            enqueueBatch().catch(reject);
+            enqueueBatch();
           }
         }
 
         if (batch.length) {
-          enqueueBatch().catch(reject);
+          enqueueBatch();
         }
 
         await tasks.onIdle();
