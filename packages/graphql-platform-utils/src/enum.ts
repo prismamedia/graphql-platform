@@ -46,44 +46,60 @@ export function getEnumValueSet<TEnumerable extends PlainObject>(
 
 export function isEnumKey<TEnumerable extends PlainObject>(
   enumerable: TEnumerable,
-  maybeKey: unknown,
+  key: unknown,
   keySet: ReadonlySet<EnumKey<TEnumerable>> = getEnumKeySet(enumerable),
-): maybeKey is EnumKey<TEnumerable> {
-  return keySet.has(maybeKey as any);
+): key is EnumKey<TEnumerable> {
+  return keySet.has(key as any);
 }
 
-export function isEnumValue<TEnumerable extends PlainObject>(
+export function assertEnumKey<TEnumerable extends PlainObject>(
   enumerable: TEnumerable,
-  maybeValue: unknown,
-  valueSet: ReadonlySet<EnumValue<TEnumerable>> = getEnumValueSet(enumerable),
-): maybeValue is EnumValue<TEnumerable> {
-  return valueSet.has(maybeValue as any);
+  key: unknown,
+  keySet: ReadonlySet<EnumKey<TEnumerable>> = getEnumKeySet(enumerable),
+): asserts key is EnumKey<TEnumerable> {
+  assert(
+    isEnumKey(enumerable, key, keySet),
+    `"${key}" is not among this enum's keys`,
+  );
 }
 
 export function ensureEnumKey<TEnumerable extends PlainObject>(
   enumerable: TEnumerable,
-  maybeKey: unknown,
+  key: unknown,
   keySet: ReadonlySet<EnumKey<TEnumerable>> = getEnumKeySet(enumerable),
 ): EnumKey<TEnumerable> {
-  assert(
-    isEnumKey(enumerable, maybeKey, keySet),
-    `"${maybeKey}" is not among this enum's keys`,
-  );
+  assertEnumKey(enumerable, key, keySet);
 
-  return maybeKey;
+  return key;
+}
+
+export function isEnumValue<TEnumerable extends PlainObject>(
+  enumerable: TEnumerable,
+  value: unknown,
+  valueSet: ReadonlySet<EnumValue<TEnumerable>> = getEnumValueSet(enumerable),
+): value is EnumValue<TEnumerable> {
+  return valueSet.has(value as any);
+}
+
+export function assertEnumValue<TEnumerable extends PlainObject>(
+  enumerable: TEnumerable,
+  value: unknown,
+  valueSet: ReadonlySet<EnumValue<TEnumerable>> = getEnumValueSet(enumerable),
+): asserts value is EnumValue<TEnumerable> {
+  assert(
+    isEnumValue(enumerable, value, valueSet),
+    `"${value}" is not among this enum's values`,
+  );
 }
 
 export function ensureEnumValue<TEnumerable extends PlainObject>(
   enumerable: TEnumerable,
-  maybeValue: unknown,
+  value: unknown,
   valueSet: ReadonlySet<EnumValue<TEnumerable>> = getEnumValueSet(enumerable),
 ): EnumValue<TEnumerable> {
-  assert(
-    isEnumValue(enumerable, maybeValue, valueSet),
-    `"${maybeValue}" is not among this enum's values`,
-  );
+  assertEnumValue(enumerable, value, valueSet);
 
-  return maybeValue;
+  return value;
 }
 
 export function getEnumKeysByValue<TEnumerable extends PlainObject>(
@@ -146,14 +162,18 @@ export function createEnumUtils<TEnumerable extends PlainObject>(
   return {
     keys,
     values,
-    isKey: (maybeKey: unknown): maybeKey is EnumKey<TEnumerable> =>
-      isEnumKey(enumerable, maybeKey, keySet),
-    ensureKey: (maybeKey: unknown): EnumKey<TEnumerable> =>
-      ensureEnumKey(enumerable, maybeKey, keySet),
-    isValue: (maybeValue: unknown): maybeValue is EnumValue<TEnumerable> =>
-      isEnumValue(enumerable, maybeValue, valueSet),
-    ensureValue: (maybeValue: unknown): EnumValue<TEnumerable> =>
-      ensureEnumValue(enumerable, maybeValue, valueSet),
+    isKey: (key: unknown): key is EnumKey<TEnumerable> =>
+      isEnumKey(enumerable, key, keySet),
+    assertKey: (key: unknown): asserts key is EnumKey<TEnumerable> =>
+      assertEnumKey(enumerable, key, keySet),
+    ensureKey: (key: unknown): EnumKey<TEnumerable> =>
+      ensureEnumKey(enumerable, key, keySet),
+    isValue: (value: unknown): value is EnumValue<TEnumerable> =>
+      isEnumValue(enumerable, value, valueSet),
+    assertValue: (value: unknown): asserts value is EnumValue<TEnumerable> =>
+      assertEnumValue(enumerable, value, valueSet),
+    ensureValue: (value: unknown): EnumValue<TEnumerable> =>
+      ensureEnumValue(enumerable, value, valueSet),
     getKeyByValue: (value: EnumValue<TEnumerable>): EnumKey<TEnumerable> =>
       getEnumKeyByValue(enumerable, value, keysByValue),
     getValueByKey: (key: EnumKey<TEnumerable>): EnumValue<TEnumerable> =>
