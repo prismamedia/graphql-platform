@@ -164,14 +164,14 @@ export function createEnumUtils<TEnumerable extends PlainObject>(
     values,
     isKey: (key: unknown): key is EnumKey<TEnumerable> =>
       isEnumKey(enumerable, key, keySet),
-    assertKey: (key: unknown): asserts key is EnumKey<TEnumerable> =>
-      assertEnumKey(enumerable, key, keySet),
+    // assertKey: (key: unknown): asserts key is EnumKey<TEnumerable> =>
+    //   assertEnumKey(enumerable, key, keySet),
     ensureKey: (key: unknown): EnumKey<TEnumerable> =>
       ensureEnumKey(enumerable, key, keySet),
     isValue: (value: unknown): value is EnumValue<TEnumerable> =>
       isEnumValue(enumerable, value, valueSet),
-    assertValue: (value: unknown): asserts value is EnumValue<TEnumerable> =>
-      assertEnumValue(enumerable, value, valueSet),
+    // assertValue: (value: unknown): asserts value is EnumValue<TEnumerable> =>
+    //   assertEnumValue(enumerable, value, valueSet),
     ensureValue: (value: unknown): EnumValue<TEnumerable> =>
       ensureEnumValue(enumerable, value, valueSet),
     getKeyByValue: (value: EnumValue<TEnumerable>): EnumKey<TEnumerable> =>

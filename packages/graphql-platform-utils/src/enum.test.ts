@@ -42,10 +42,10 @@ describe('Enum', () => {
         keys,
         values,
         isKey,
-        assertKey,
+        // assertKey,
         ensureKey,
         isValue,
-        assertValue,
+        // assertValue,
         ensureValue,
         getKeyByValue,
         getValueByKey,
@@ -56,13 +56,13 @@ describe('Enum', () => {
 
         Object.keys(object).forEach((key) => {
           assert.strictEqual(isKey(key), true);
-          assert.strictEqual(assertKey(key), undefined);
+          // assert.strictEqual(assertKey(key), undefined);
           assert.strictEqual(ensureKey(key), key);
         });
 
         ['FOUR', 0].forEach((key) => {
           assert.strictEqual(isKey(key), false);
-          assert.throws(() => assertKey(key));
+          // assert.throws(() => assertKey(key));
           assert.throws(() => ensureKey(key));
         });
       });
@@ -72,13 +72,13 @@ describe('Enum', () => {
 
         Object.values(object).forEach((value) => {
           assert.strictEqual(isValue(value), true);
-          assert.strictEqual(assertValue(value), undefined);
+          // assert.strictEqual(assertValue(value), undefined);
           assert.strictEqual(ensureValue(value), value);
         });
 
         [-1, '1', 'ONE'].forEach((value) => {
           assert.strictEqual(isValue(value), false);
-          assert.throws(() => assertValue(value));
+          // assert.throws(() => assertValue(value));
           assert.throws(() => ensureValue(value));
         });
       });
