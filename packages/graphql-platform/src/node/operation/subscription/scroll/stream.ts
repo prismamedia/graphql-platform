@@ -1,3 +1,4 @@
+import * as utils from '@prismamedia/graphql-platform-utils';
 import {
   MultiBar as MultiProgressBar,
   SingleBar as ProgressBar,
@@ -396,14 +397,16 @@ export class ScrollSubscriptionStream<
 
           tasks
             .add(
-              async () => {
-                try {
-                  await progressBarTaskWrapper();
-                } catch (error) {
-                  errorController.abort(error);
-                }
-              },
-              { signal: combinedSignal },
+              () =>
+                combinedSignal.aborted ||
+                utils
+                  .PromiseTry(progressBarTaskWrapper)
+                  .catch(
+                    (error) =>
+                      combinedSignal.aborted || errorController.abort(error),
+                  ),
+              // Huge performance issue when using the signal
+              // { signal: combinedSignal },
             )
             .catch((_error) => {
               // Silent the abort
@@ -562,14 +565,16 @@ export class ScrollSubscriptionStream<
 
       tasks
         .add(
-          async () => {
-            try {
-              await progressBarTaskWrapper();
-            } catch (error) {
-              errorController.abort(error);
-            }
-          },
-          { signal: combinedSignal },
+          () =>
+            combinedSignal.aborted ||
+            utils
+              .PromiseTry(progressBarTaskWrapper)
+              .catch(
+                (error) =>
+                  combinedSignal.aborted || errorController.abort(error),
+              ),
+          // Huge performance issue when using the signal
+          // { signal: combinedSignal },
         )
         .catch((_error) => {
           // Silent the abort

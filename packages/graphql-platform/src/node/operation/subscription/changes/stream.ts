@@ -1,4 +1,5 @@
 import { AsyncEventEmitter } from '@prismamedia/async-event-emitter';
+import * as utils from '@prismamedia/graphql-platform-utils';
 import { MMethod } from '@prismamedia/memoize';
 import assert from 'node:assert';
 import { randomUUID, type UUID } from 'node:crypto';
@@ -298,16 +299,20 @@ export class ChangesSubscriptionStream<
           await tasks.onSizeLessThan(tasks.concurrency);
           combinedSignal.throwIfAborted();
 
+          const boundTask = task.bind(this, change, combinedSignal);
+
           tasks
             .add(
-              async () => {
-                try {
-                  await task.call(this, change, combinedSignal);
-                } catch (error) {
-                  errorController.abort(error);
-                }
-              },
-              { signal: combinedSignal },
+              () =>
+                combinedSignal.aborted ||
+                utils
+                  .PromiseTry(boundTask)
+                  .catch(
+                    (error) =>
+                      combinedSignal.aborted || errorController.abort(error),
+                  ),
+              // Huge performance issue when using the signal
+              // { signal: combinedSignal },
             )
             .catch((_error) => {
               // Silent the abort
@@ -364,16 +369,20 @@ export class ChangesSubscriptionStream<
       const changes = batch;
       batch = [];
 
+      const boundTask = task.bind(this, changes, combinedSignal);
+
       tasks
         .add(
-          async () => {
-            try {
-              await task.call(this, changes, combinedSignal);
-            } catch (error) {
-              errorController.abort(error);
-            }
-          },
-          { signal: combinedSignal },
+          () =>
+            combinedSignal.aborted ||
+            utils
+              .PromiseTry(boundTask)
+              .catch(
+                (error) =>
+                  combinedSignal.aborted || errorController.abort(error),
+              ),
+          // Huge performance issue when using the signal
+          // { signal: combinedSignal },
         )
         .catch((_error) => {
           // Silent the abort
