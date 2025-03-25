@@ -163,18 +163,22 @@ export abstract class AbstractMutation<
     TRequestContext,
     Omit<TArgs, 'selection'>
   >['resolve'] {
-    return async (_, args, context, info) => {
-      try {
-        return await this.execute(
-          context,
-          (this.selectionAware ? { ...args, selection: info } : args) as TArgs,
-          info.path,
-        );
-      } catch (error) {
-        throw error instanceof utils.GraphError
-          ? error.toGraphQLError()
-          : error;
-      }
-    };
+    return (_, args, context, info) =>
+      utils
+        .PromiseTry(
+          this.execute.bind(
+            this,
+            context,
+            (this.selectionAware
+              ? { ...args, selection: info }
+              : args) as TArgs,
+            info.path,
+          ),
+        )
+        .catch((error) => {
+          throw error instanceof utils.GraphError
+            ? error.toGraphQLError()
+            : error;
+        });
   }
 }

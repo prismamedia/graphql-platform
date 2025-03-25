@@ -296,27 +296,19 @@ export class ChangesSubscriptionStream<
 
       try {
         for await (const change of this) {
-          await tasks.onSizeLessThan(tasks.concurrency);
           combinedSignal.throwIfAborted();
 
           const boundTask = task.bind(this, change, combinedSignal);
 
-          tasks
-            .add(
-              () =>
-                combinedSignal.aborted ||
-                utils
-                  .PromiseTry(boundTask)
-                  .catch(
-                    (error) =>
-                      combinedSignal.aborted || errorController.abort(error),
-                  ),
-              // Huge performance issue when using the signal
-              // { signal: combinedSignal },
-            )
-            .catch((_error) => {
-              // Silent the abort
-            });
+          tasks.add(
+            () =>
+              combinedSignal.aborted ||
+              utils
+                .PromiseTry(boundTask)
+                .catch((error) => errorController.abort(error)),
+          );
+
+          await tasks.onSizeLessThan(tasks.concurrency);
         }
 
         await tasks.onIdle();
@@ -371,22 +363,13 @@ export class ChangesSubscriptionStream<
 
       const boundTask = task.bind(this, changes, combinedSignal);
 
-      tasks
-        .add(
-          () =>
-            combinedSignal.aborted ||
-            utils
-              .PromiseTry(boundTask)
-              .catch(
-                (error) =>
-                  combinedSignal.aborted || errorController.abort(error),
-              ),
-          // Huge performance issue when using the signal
-          // { signal: combinedSignal },
-        )
-        .catch((_error) => {
-          // Silent the abort
-        });
+      tasks.add(
+        () =>
+          combinedSignal.aborted ||
+          utils
+            .PromiseTry(boundTask)
+            .catch((error) => errorController.abort(error)),
+      );
     };
 
     // This ensures that all the effects provoked by a "node-change" are processed before the next "node-change" is dequeued
@@ -399,7 +382,7 @@ export class ChangesSubscriptionStream<
 
         await tasks.onIdle();
       },
-      combinedSignal,
+      this.signal,
     );
 
     await new Promise<void>(async (resolve, reject) => {
@@ -411,11 +394,11 @@ export class ChangesSubscriptionStream<
 
       try {
         for await (const change of this) {
-          await tasks.onSizeLessThan(tasks.concurrency);
           combinedSignal.throwIfAborted();
 
           if (batch.push(change) >= batchSize) {
             enqueueBatch();
+            await tasks.onSizeLessThan(tasks.concurrency);
           }
         }
 

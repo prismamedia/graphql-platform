@@ -85,21 +85,22 @@ export abstract class AbstractSubscription<
     >['subscribe']
   > {
     return (_, args, context, info) =>
-      new Promise((resolve) =>
-        resolve(
-          this.execute(
+      utils
+        .PromiseTry(
+          this.execute.bind(
+            this,
             context,
             (this.selectionAware
               ? { ...args, selection: info }
               : args) as TArgs,
             info.path,
           ),
-        ),
-      ).catch((error) => {
-        throw error instanceof utils.GraphError
-          ? error.toGraphQLError()
-          : error;
-      });
+        )
+        .catch((error) => {
+          throw error instanceof utils.GraphError
+            ? error.toGraphQLError()
+            : error;
+        });
   }
 
   protected getGraphQLFieldConfigResolver(): graphql.GraphQLFieldConfig<

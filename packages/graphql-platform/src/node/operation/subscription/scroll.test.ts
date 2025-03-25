@@ -171,7 +171,7 @@ describe('ScrollSubscription', () => {
 
               throw (originalError = new Error('Synchronous error'));
             },
-            { batchSize: 2 },
+            { batchSize: 3, concurrency: 2 },
           ),
         originalError,
       );

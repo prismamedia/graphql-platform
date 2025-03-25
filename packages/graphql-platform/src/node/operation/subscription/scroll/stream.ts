@@ -333,7 +333,7 @@ export class ScrollSubscriptionStream<
     }
 
     const errors: unknown[] = [];
-    const maxErrorCount = continueOnError
+    const maxErrorAllowedCount = continueOnError
       ? continueOnError === true
         ? Infinity
         : continueOnError
@@ -355,7 +355,6 @@ export class ScrollSubscriptionStream<
 
       try {
         for await (const value of this) {
-          await tasks.onSizeLessThan(buffer);
           combinedSignal.throwIfAborted();
 
           const boundTask = task.bind(
@@ -365,52 +364,39 @@ export class ScrollSubscriptionStream<
             combinedSignal,
           );
 
-          const retryTaskWrapper = normalizedRetryOptions
+          const retryWrapper = normalizedRetryOptions
             ? PRetry.bind(undefined, boundTask, {
                 ...normalizedRetryOptions,
                 signal: combinedSignal,
               })
             : boundTask;
 
-          const continueOnErrorTaskWrapper =
-            maxErrorCount > 0
-              ? async () => {
-                  try {
-                    await retryTaskWrapper();
-                  } catch (error) {
-                    if (errors.push(error) >= maxErrorCount) {
-                      throw errors.length > 1
-                        ? new AggregateError(errors)
-                        : errors[0];
+          const continueOnErrorWrapper =
+            maxErrorAllowedCount > 0
+              ? () =>
+                  utils.PromiseTry(retryWrapper).catch((error) => {
+                    if (errors.push(error) > maxErrorAllowedCount) {
+                      throw new AggregateError(errors);
                     }
-                  }
-                }
-              : retryTaskWrapper;
+                  })
+              : retryWrapper;
 
-          const progressBarTaskWrapper = progressBar
-            ? async () => {
-                await continueOnErrorTaskWrapper();
-
-                incrementProgressBar(progressBar, 1);
-              }
-            : continueOnErrorTaskWrapper;
-
-          tasks
-            .add(
-              () =>
-                combinedSignal.aborted ||
+          const progressBarWrapper = progressBar
+            ? () =>
                 utils
-                  .PromiseTry(progressBarTaskWrapper)
-                  .catch(
-                    (error) =>
-                      combinedSignal.aborted || errorController.abort(error),
-                  ),
-              // Huge performance issue when using the signal
-              // { signal: combinedSignal },
-            )
-            .catch((_error) => {
-              // Silent the abort
-            });
+                  .PromiseTry(continueOnErrorWrapper)
+                  .then(() => incrementProgressBar(progressBar, 1))
+            : continueOnErrorWrapper;
+
+          tasks.add(
+            () =>
+              combinedSignal.aborted ||
+              utils
+                .PromiseTry(progressBarWrapper)
+                .catch((error) => errorController.abort(error)),
+          );
+
+          await tasks.onSizeLessThan(buffer);
         }
 
         await tasks.onIdle();
@@ -512,7 +498,7 @@ export class ScrollSubscriptionStream<
     }
 
     const errors: unknown[] = [];
-    const maxErrorCount = continueOnError
+    const maxErrorAllowedCount = continueOnError
       ? continueOnError === true
         ? Infinity
         : continueOnError
@@ -533,52 +519,37 @@ export class ScrollSubscriptionStream<
 
       const boundTask = task.bind(this, values, combinedSignal);
 
-      const retryTaskWrapper = normalizedRetryOptions
+      const retryWrapper = normalizedRetryOptions
         ? PRetry.bind(undefined, boundTask, {
             ...normalizedRetryOptions,
             signal: combinedSignal,
           })
         : boundTask;
 
-      const continueOnErrorTaskWrapper =
-        maxErrorCount > 0
-          ? async () => {
-              try {
-                await retryTaskWrapper();
-              } catch (error) {
-                if (errors.push(error) >= maxErrorCount) {
-                  throw errors.length > 1
-                    ? new AggregateError(errors)
-                    : errors[0];
+      const continueOnErrorWrapper =
+        maxErrorAllowedCount > 0
+          ? () =>
+              utils.PromiseTry(retryWrapper).catch((error) => {
+                if (errors.push(error) > maxErrorAllowedCount) {
+                  throw new AggregateError(errors);
                 }
-              }
-            }
-          : retryTaskWrapper;
+              })
+          : retryWrapper;
 
-      const progressBarTaskWrapper = progressBar
-        ? async () => {
-            await continueOnErrorTaskWrapper();
-
-            incrementProgressBar(progressBar, values.length);
-          }
-        : continueOnErrorTaskWrapper;
-
-      tasks
-        .add(
-          () =>
-            combinedSignal.aborted ||
+      const progressBarWrapper = progressBar
+        ? () =>
             utils
-              .PromiseTry(progressBarTaskWrapper)
-              .catch(
-                (error) =>
-                  combinedSignal.aborted || errorController.abort(error),
-              ),
-          // Huge performance issue when using the signal
-          // { signal: combinedSignal },
-        )
-        .catch((_error) => {
-          // Silent the abort
-        });
+              .PromiseTry(continueOnErrorWrapper)
+              .then(() => incrementProgressBar(progressBar, values.length))
+        : continueOnErrorWrapper;
+
+      return tasks.add(
+        () =>
+          combinedSignal.aborted ||
+          utils
+            .PromiseTry(progressBarWrapper)
+            .catch((error) => errorController.abort(error)),
+      );
     };
 
     await new Promise<void>(async (resolve, reject) => {
@@ -590,11 +561,11 @@ export class ScrollSubscriptionStream<
 
       try {
         for await (const value of this) {
-          await tasks.onSizeLessThan(buffer);
           combinedSignal.throwIfAborted();
 
           if (batch.push(value) >= batchSize) {
             enqueueBatch();
+            await tasks.onSizeLessThan(buffer);
           }
         }
 
