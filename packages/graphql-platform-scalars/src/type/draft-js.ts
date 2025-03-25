@@ -165,15 +165,19 @@ export function parseRawDraftContentBlock(
   // depth
   let depth: number;
   {
-    if (!Number.isSafeInteger(maybeRawDraftContentBlock.depth)) {
-      throw new utils.UnexpectedValueError(
-        `an integer`,
-        maybeRawDraftContentBlock.depth,
-        { path: utils.addPath(path, 'depth') },
-      );
-    }
+    if (maybeRawDraftContentBlock.depth != null) {
+      if (!Number.isSafeInteger(maybeRawDraftContentBlock.depth)) {
+        throw new utils.UnexpectedValueError(
+          `an integer`,
+          maybeRawDraftContentBlock.depth,
+          { path: utils.addPath(path, 'depth') },
+        );
+      }
 
-    depth = maybeRawDraftContentBlock.depth;
+      depth = maybeRawDraftContentBlock.depth;
+    } else {
+      depth = 0;
+    }
   }
 
   let text: string;
@@ -196,56 +200,60 @@ export function parseRawDraftContentBlock(
   // inlineStyleRanges
   const inlineStyleRanges: RawDraftInlineStyleRange[] = [];
   {
-    const inlineStyleRangesPath = utils.addPath(path, 'inlineStyleRanges');
+    if (maybeRawDraftContentBlock.inlineStyleRanges != null) {
+      const inlineStyleRangesPath = utils.addPath(path, 'inlineStyleRanges');
 
-    if (!Array.isArray(maybeRawDraftContentBlock.inlineStyleRanges)) {
-      throw new utils.UnexpectedValueError(
-        `an array of RawDraftInlineStyleRange`,
+      if (!Array.isArray(maybeRawDraftContentBlock.inlineStyleRanges)) {
+        throw new utils.UnexpectedValueError(
+          `an array of RawDraftInlineStyleRange`,
+          maybeRawDraftContentBlock.inlineStyleRanges,
+          { path: inlineStyleRangesPath },
+        );
+      }
+
+      utils.aggregateGraphError<unknown, void>(
         maybeRawDraftContentBlock.inlineStyleRanges,
+        (_, rawValue, index) =>
+          inlineStyleRanges.push(
+            parseRawDraftInlineStyleRange(
+              rawValue,
+              utils.addPath(inlineStyleRangesPath, index),
+            ),
+          ),
+        undefined,
         { path: inlineStyleRangesPath },
       );
     }
-
-    utils.aggregateGraphError<unknown, void>(
-      maybeRawDraftContentBlock.inlineStyleRanges,
-      (_, rawValue, index) =>
-        inlineStyleRanges.push(
-          parseRawDraftInlineStyleRange(
-            rawValue,
-            utils.addPath(inlineStyleRangesPath, index),
-          ),
-        ),
-      undefined,
-      { path: inlineStyleRangesPath },
-    );
   }
 
   // entityRanges
   const entityRanges: RawDraftEntityRange[] = [];
   {
-    const entityRangesPath = utils.addPath(path, 'entityRanges');
+    if (maybeRawDraftContentBlock.entityRanges != null) {
+      const entityRangesPath = utils.addPath(path, 'entityRanges');
 
-    if (!Array.isArray(maybeRawDraftContentBlock.entityRanges)) {
-      throw new utils.UnexpectedValueError(
-        `an array of RawDraftEntityRange`,
+      if (!Array.isArray(maybeRawDraftContentBlock.entityRanges)) {
+        throw new utils.UnexpectedValueError(
+          `an array of RawDraftEntityRange`,
+          maybeRawDraftContentBlock.entityRanges,
+          { path: entityRangesPath },
+        );
+      }
+
+      utils.aggregateGraphError<unknown, void>(
         maybeRawDraftContentBlock.entityRanges,
+        (_, rawValue, index) =>
+          entityRanges.push(
+            parseRawDraftEntityRange(
+              rawValue,
+              entityMap,
+              utils.addPath(entityRangesPath, index),
+            ),
+          ),
+        undefined,
         { path: entityRangesPath },
       );
     }
-
-    utils.aggregateGraphError<unknown, void>(
-      maybeRawDraftContentBlock.entityRanges,
-      (_, rawValue, index) =>
-        entityRanges.push(
-          parseRawDraftEntityRange(
-            rawValue,
-            entityMap,
-            utils.addPath(entityRangesPath, index),
-          ),
-        ),
-      undefined,
-      { path: entityRangesPath },
-    );
   }
 
   // data
