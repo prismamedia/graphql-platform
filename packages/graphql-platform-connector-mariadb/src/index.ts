@@ -186,22 +186,10 @@ export class MariaDBConnector<TRequestContext extends object = any>
     if (!pool) {
       utils.assertPlainObject(this.poolConfig, this.poolConfigPath);
 
-      const logger: mariadb.PoolConfig['logger'] = {
-        error: async (error) => {
-          if (error instanceof mariadb.SqlError && error.fatal) {
-            try {
-              await this.emit(
-                'error',
-                Object.assign(error, { pool: StatementKind[kind] }),
-              );
-            } catch {
-              // Silently ignore the error
-            }
-          }
-        },
+      const poolConfig: mariadb.PoolConfig = {
+        ...this.poolConfig,
+        acquireTimeout: this.poolConfig.acquireTimeout || 1000,
       };
-
-      const poolConfig = this.poolConfig;
 
       this.#poolsByStatementKind.set(
         kind,
@@ -226,9 +214,8 @@ export class MariaDBConnector<TRequestContext extends object = any>
                   multipleStatements: false,
                   timezone: 'Z',
                   ...({ bitOneIsBoolean: false } as any),
-                  logger,
                 }
-              : { ...poolConfig, connectionLimit: 1, logger },
+              : { ...poolConfig, connectionLimit: 1 },
           ),
           { kind },
         )),
