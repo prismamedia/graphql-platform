@@ -315,7 +315,7 @@ export class ScrollSubscriptionStream<
           `The "name" has to be a string`,
         );
 
-        progressBar = progressBarOptions.container.create(total, currentIndex, {
+        progressBar = progressBarOptions.container.create(total, 0, {
           name: progressBarOptions.name,
           etaBuffer,
           [averageFormattedKey]: '-/s',
@@ -326,7 +326,7 @@ export class ScrollSubscriptionStream<
             ? progressBarOptions
             : new ProgressBar({ etaBuffer, format: defaultProgressBarFormat });
 
-        progressBar.start(total, currentIndex, {
+        progressBar.start(total, 0, {
           [averageFormattedKey]: '-/s',
         });
       }
