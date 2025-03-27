@@ -29,7 +29,7 @@
   },
   "devDependencies": {
     "@sqltools/formatter": "1.2.5",
-    "@types/semver": "7.5.8",
+    "@types/semver": "7.7.0",
     "graphql": "16.10.0",
     "publint": "0.3.9",
     "tsx": "4.19.3",
