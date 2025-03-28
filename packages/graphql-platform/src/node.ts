@@ -140,6 +140,22 @@ export type PartialNodeForAssociatedNodes = PartialForDefinition<
   | 'mainIdentifier'
 >;
 
+export type ThunkableNodeFeatureConfig<
+  TRequestContext extends object = any,
+  TConnector extends ConnectorInterface = any,
+  TBroker extends BrokerInterface = any,
+  TContainer extends object = any,
+> = utils.Thunkable<
+  | NodeFeatureConfig<TRequestContext, TConnector, TBroker, TContainer>
+  | undefined,
+  [
+    node: Pick<
+      Node<TRequestContext, TConnector, TBroker, TContainer>,
+      PartialNodeForFeatures
+    >,
+  ]
+>;
+
 export type NodeConfig<
   TRequestContext extends object = any,
   TConnector extends ConnectorInterface = any,
@@ -170,8 +186,12 @@ export type NodeConfig<
    */
   features?: utils.Thunkable<
     | ReadonlyArray<
-        | NodeFeatureConfig<TRequestContext, TConnector, TBroker, TContainer>
-        | undefined
+        ThunkableNodeFeatureConfig<
+          TRequestContext,
+          TConnector,
+          TBroker,
+          TContainer
+        >
       >
     | undefined,
     [
@@ -518,19 +538,22 @@ export class Node<
       const featuresConfigPath = utils.addPath(configPath, 'features');
 
       const features = R.pipe(
-        utils.ensureArray<NodeFeatureConfig | undefined>(
+        utils.ensureArray<ThunkableNodeFeatureConfig>(
           featuresConfig ?? [],
           featuresConfigPath,
         ),
-        R.map(
-          (config, index) =>
+        R.map((thunkableConfig, index) => {
+          const config = utils.resolveThunkable(thunkableConfig, this);
+
+          return (
             config &&
             new NodeFeature(
               this,
               config,
               utils.addPath(featuresConfigPath, index),
-            ),
-        ),
+            )
+          );
+        }),
         R.filter(R.isNonNullish),
       );
 
