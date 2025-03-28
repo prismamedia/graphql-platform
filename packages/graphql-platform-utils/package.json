@@ -38,7 +38,7 @@
     "@prismamedia/memoize": "^6.1.0",
     "indefinite": "^2.5.1",
     "remeda": "^2.21.2",
-    "type-fest": "^4.37.0"
+    "type-fest": "4.37.0"
   },
   "peerDependencies": {
     "graphql": "^16.10.0"

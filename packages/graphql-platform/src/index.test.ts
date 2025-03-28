@@ -68,6 +68,7 @@ describe('GraphQL-Platform', () => {
     it(`has nodes' definition`, () => {
       assert.deepStrictEqual(Array.from(gp.nodesByName.keys()), [
         'Article',
+        'ArticleHistory',
         'ArticleExtension',
         'Category',
         'Tag',
@@ -81,8 +82,8 @@ describe('GraphQL-Platform', () => {
 
     it('generates operations with correct counts', () => {
       const cases = [
-        [graphql.OperationTypeNode.QUERY, 65, 57],
-        [graphql.OperationTypeNode.MUTATION, 116, 99],
+        [graphql.OperationTypeNode.QUERY, 72, 64],
+        [graphql.OperationTypeNode.MUTATION, 124, 107],
         [graphql.OperationTypeNode.SUBSCRIPTION, 8, 6],
       ] satisfies [
         operationType: OperationType,

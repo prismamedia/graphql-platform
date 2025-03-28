@@ -286,38 +286,32 @@ export class GraphQLPlatform<
         });
       }
 
-      this.nodesByName = new Map(
-        utils.aggregateGraphError<
-          [Node['name'], NodeConfig],
-          [Node['name'], Node][]
-        >(
-          Object.entries(nodesConfig),
-          (entries, [nodeName, nodeConfig]) => [
-            ...entries,
-            [
-              nodeName,
-              new Node(
-                this,
-                nodeName,
-                nodeConfig,
-                utils.addPath(nodesConfigPath, nodeName),
-              ),
-            ],
-          ],
-          [],
-          { path: nodesConfigPath },
-        ),
+      this.nodesByName = utils.aggregateGraphError<
+        [Node['name'], NodeConfig],
+        Map<Node['name'], Node>
+      >(
+        Object.entries(nodesConfig),
+        (nodesByName, [nodeName, nodeConfig]) => {
+          const node = new Node(
+            this,
+            nodeName,
+            nodeConfig,
+            utils.addPath(nodesConfigPath, nodeName),
+          );
+
+          [node, ...node.associatedNodes].forEach((node) =>
+            nodesByName.set(node.name, node),
+          );
+
+          return nodesByName;
+        },
+        new Map<Node['name'], Node>(),
+        { path: nodesConfigPath },
       );
 
       this.nodeSet = new Set(this.nodesByName.values());
 
-      // Validate the nodes' definition
-      utils.aggregateGraphError<Node, void>(
-        this.nodeSet,
-        (_, node) => node.validateDefinition(),
-        undefined,
-        { path: configPath },
-      );
+      this.nodesByName.forEach((node) => node.validateDefinition());
     }
 
     // container (has access to the nodes' definition)

@@ -2,11 +2,7 @@ import * as utils from '@prismamedia/graphql-platform-utils';
 import { MMethod } from '@prismamedia/memoize';
 import type { BrokerInterface } from '../broker-interface.js';
 import type { ConnectorInterface } from '../connector-interface.js';
-import type { Node } from '../node.js';
-import {
-  type ComponentConfig,
-  type UniqueConstraintConfig,
-} from './definition.js';
+import type { Node, NodeConfig } from '../node.js';
 import type {
   CustomOperationConstructor,
   MutationConfig,
@@ -31,41 +27,40 @@ export type NodeFeatureConfig<
    * Default: 0
    */
   priority?: number;
+} & Pick<
+  NodeConfig<TRequestContext, TConnector, TBroker, TContainer>,
+  'components' | 'uniques' | 'associatedNodes' | 'reverseEdges'
+> & {
+    output?: Pick<
+      NodeOutputTypeConfig<TRequestContext, TConnector, TBroker, TContainer>,
+      'virtualFields'
+    >;
 
-  components?: Record<string, ComponentConfig<TConnector>>;
+    query?: {
+      customs?: CustomOperationConstructor<
+        TRequestContext,
+        TConnector,
+        TBroker,
+        TContainer
+      >[];
+    };
 
-  uniques?: UniqueConstraintConfig<TConnector>[];
-
-  output?: Pick<
-    NodeOutputTypeConfig<TRequestContext, TConnector, TBroker, TContainer>,
-    'virtualFields'
-  >;
-
-  query?: {
-    customs?: CustomOperationConstructor<
-      TRequestContext,
-      TConnector,
-      TBroker,
-      TContainer
-    >[];
+    mutation?: {
+      [TType in keyof MutationConfig]?: MutationConfig<
+        TRequestContext,
+        TConnector,
+        TBroker,
+        TContainer
+      >[TType];
+    } & {
+      customs?: CustomOperationConstructor<
+        TRequestContext,
+        TConnector,
+        TBroker,
+        TContainer
+      >[];
+    };
   };
-
-  mutation?: {
-    [TType in keyof MutationConfig]?: MutationConfig<
-      TRequestContext,
-      TConnector,
-      TBroker,
-      TContainer
-    >[TType];
-  } & {
-    customs?: CustomOperationConstructor<
-      TRequestContext,
-      TConnector,
-      TBroker,
-      TContainer
-    >[];
-  };
-};
 
 export class NodeFeature<
   TRequestContext extends object = any,
@@ -104,7 +99,7 @@ export class NodeFeature<
 
   @MMethod()
   public toString(): string {
-    return `${this.node.name}.feature${this.name ? `.${this.name}` : ''}`;
+    return [this.node.name, 'feature', this.name].filter(Boolean).join('.');
   }
 
   @MMethod((mutationType) => mutationType)

@@ -47,7 +47,7 @@
     "mariadb": "^3.4.0",
     "remeda": "^2.21.2",
     "semver": "^7.7.1",
-    "type-fest": "^4.37.0"
+    "type-fest": "4.37.0"
   },
   "peerDependencies": {
     "graphql": "^16.10.0"

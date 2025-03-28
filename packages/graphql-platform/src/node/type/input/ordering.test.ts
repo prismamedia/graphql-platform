@@ -46,7 +46,7 @@ describe('NodeOrderingInputType', () => {
           [
             'Article',
             ['_id_DESCS'],
-            '/0 - Expects a value among "_id_ASC, _id_DESC, createdAt_ASC, createdAt_DESC, updatedAt_ASC, updatedAt_DESC, views_ASC, views_DESC, score_ASC, score_DESC, tagCount_ASC, tagCount_DESC", got: \'_id_DESCS\'',
+            '/0 - Expects a value among "_id_ASC, _id_DESC, createdAt_ASC, createdAt_DESC, updatedAt_ASC, updatedAt_DESC, views_ASC, views_DESC, score_ASC, score_DESC, historyCount_ASC, historyCount_DESC, tagCount_ASC, tagCount_DESC", got: \'_id_DESCS\'',
           ],
         ] as const
       ).forEach(([nodeName, input, error]) => {

@@ -963,7 +963,7 @@ __metadata:
     remeda: "npm:^2.21.2"
     semver: "npm:^7.7.1"
     tsx: "npm:4.19.3"
-    type-fest: "npm:^4.37.0"
+    type-fest: "npm:4.37.0"
     typescript: "npm:5.8.2"
   peerDependencies:
     graphql: ^16.10.0
@@ -1010,7 +1010,7 @@ __metadata:
     publint: "npm:0.3.9"
     remeda: "npm:^2.21.2"
     tsx: "npm:4.19.3"
-    type-fest: "npm:^4.37.0"
+    type-fest: "npm:4.37.0"
     typescript: "npm:5.8.2"
   peerDependencies:
     graphql: ^16.10.0
@@ -1029,7 +1029,7 @@ __metadata:
     publint: "npm:0.3.9"
     remeda: "npm:^2.21.2"
     tsx: "npm:4.19.3"
-    type-fest: "npm:^4.37.0"
+    type-fest: "npm:4.37.0"
     typescript: "npm:5.8.2"
   peerDependencies:
     graphql: ^16.10.0
@@ -1057,7 +1057,7 @@ __metadata:
     publint: "npm:0.3.9"
     remeda: "npm:^2.21.2"
     tsx: "npm:4.19.3"
-    type-fest: "npm:^4.37.0"
+    type-fest: "npm:4.37.0"
     typescript: "npm:5.8.2"
   peerDependencies:
     graphql: ^16.10.0
@@ -3401,6 +3401,13 @@ __metadata:
   bin:
     tsx: dist/cli.mjs
   checksum: 10/a7e7f41e5593b242772050abacf51908aa8a6d4d9ea6c29e80161eb557d664a0f4cc8d38d0c8c151fddb6c2e9e337af27ba0e269c9707ccd7eeff0e0ea7fcf98
+  languageName: node
+  linkType: hard
+
+"type-fest@npm:4.37.0":
+  version: 4.37.0
+  resolution: "type-fest@npm:4.37.0"
+  checksum: 10/882cf05374d7c635cbbbc50cb89863dad3d27a77c426d062144ba32b23a44087193213c5bbd64f3ab8be04215005c950286567be06fecca9d09c66abd290ef01
   languageName: node
   linkType: hard
 

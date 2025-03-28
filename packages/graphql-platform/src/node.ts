@@ -104,6 +104,42 @@ export type NodeValue = NodeSelectedValue &
   UniqueConstraintValue &
   Record<Component['name'], ComponentValue>;
 
+type PartialForDefinition<TKey extends keyof Node> = TKey;
+
+export type PartialNodeForFeatures = PartialForDefinition<
+  | 'gp'
+  | 'name'
+  | 'config'
+  | 'configPath'
+  | 'plural'
+  | 'indefinite'
+  | 'description'
+  | 'deprecationReason'
+  | 'priority'
+>;
+
+export type PartialNodeForComponents = PartialForDefinition<
+  PartialNodeForFeatures | 'features'
+>;
+
+export type PartialNodeForUniques = PartialForDefinition<
+  | PartialNodeForComponents
+  | 'componentsByName'
+  | 'componentSet'
+  | 'leavesByName'
+  | 'leafSet'
+  | 'edgesByName'
+  | 'edgeSet'
+>;
+
+export type PartialNodeForAssociatedNodes = PartialForDefinition<
+  | PartialNodeForUniques
+  | 'uniqueConstraintsByName'
+  | 'uniqueConstraintSet'
+  | 'identifierSet'
+  | 'mainIdentifier'
+>;
+
 export type NodeConfig<
   TRequestContext extends object = any,
   TConnector extends ConnectorInterface = any,
@@ -132,26 +168,42 @@ export type NodeConfig<
   /**
    * Optional, you can provide a set of features, an easy way to share some common configurations, including components, uniques, hooks...
    */
-  features?: NodeFeatureConfig<
-    TRequestContext,
-    TConnector,
-    TBroker,
-    TContainer
-  >[];
+  features?: utils.Thunkable<
+    | ReadonlyArray<
+        | NodeFeatureConfig<TRequestContext, TConnector, TBroker, TContainer>
+        | undefined
+      >
+    | undefined,
+    [
+      node: Pick<
+        Node<TRequestContext, TConnector, TBroker, TContainer>,
+        PartialNodeForFeatures
+      >,
+    ]
+  >;
 
   /**
    * A component is either a leaf (= an enum or a scalar) or an edge (= a link to another node)
    *
    * At least one must be defined
    */
-  components?: {
-    /**
-     * The components' name are expected to be valid against the GraphQL "Names" rules
-     *
-     * @see https://spec.graphql.org/draft/#sec-Names
-     */
-    [componentName: utils.Name]: ComponentConfig<TConnector>;
-  };
+  components?: utils.Thunkable<
+    | {
+        /**
+         * The components' name are expected to be valid against the GraphQL "Names" rules
+         *
+         * @see https://spec.graphql.org/draft/#sec-Names
+         */
+        [componentName: utils.Name]: ComponentConfig<TConnector> | undefined;
+      }
+    | undefined,
+    [
+      node: Pick<
+        Node<TRequestContext, TConnector, TBroker, TContainer>,
+        PartialNodeForComponents
+      >,
+    ]
+  >;
 
   /**
    * Define the unique-constraints for this node
@@ -162,21 +214,52 @@ export type NodeConfig<
    *  - non-nullable (= at least one of its components being non-nullable)
    *  - immutable (= all its components being immutable)
    */
-  uniques?: UniqueConstraintConfig<TConnector>[];
+  uniques?: utils.Thunkable<
+    ReadonlyArray<UniqueConstraintConfig<TConnector> | undefined>,
+    [
+      node: Pick<
+        Node<TRequestContext, TConnector, TBroker, TContainer>,
+        PartialNodeForUniques
+      >,
+    ]
+  >;
+
+  /**
+   * Optional, define some associated-nodes, based on this node's definition
+   *
+   * They are regular nodes, nothing special about them except that they are defined inside this node's definition
+   */
+  associatedNodes?: utils.Thunkable<
+    | Record<
+        NodeName,
+        NodeConfig<TRequestContext, TConnector, TBroker, TContainer> | undefined
+      >
+    | undefined,
+    [
+      node: Pick<
+        Node<TRequestContext, TConnector, TBroker, TContainer>,
+        PartialNodeForAssociatedNodes
+      >,
+    ]
+  >;
 
   /**
    * Optional, define some reverse edges
    *
    * @see https://en.wikipedia.org/wiki/Glossary_of_graph_theory#inverted_arrow
    */
-  reverseEdges?: {
-    /**
-     * The reverse edges' name are expected to be valid against the GraphQL "Names" rules
-     *
-     * @see https://spec.graphql.org/draft/#sec-Names
-     */
-    [reverseEdge: utils.Name]: ReverseEdgeConfig;
-  };
+  reverseEdges?: utils.Thunkable<
+    | {
+        /**
+         * The reverse edges' name are expected to be valid against the GraphQL "Names" rules
+         *
+         * @see https://spec.graphql.org/draft/#sec-Names
+         */
+        [reverseEdge: utils.Name]: ReverseEdgeConfig | undefined;
+      }
+    | undefined,
+    [node: Node<TRequestContext, TConnector, TBroker, TContainer>]
+  >;
 
   /**
    * Optional, either the node is exposed publicly (in the GraphQL API) or not (only available internally)
@@ -317,6 +400,10 @@ export class Node<
 
   public readonly mainIdentifier: UniqueConstraint<TConnector>;
 
+  public readonly associatedNodes: ReadonlyArray<
+    Node<TRequestContext, TConnector, TBroker, TContainer>
+  >;
+
   public constructor(
     public readonly gp: GraphQLPlatform<
       TRequestContext,
@@ -335,6 +422,20 @@ export class Node<
   ) {
     assertNodeName(name, configPath);
     utils.assertPlainObject(config, configPath);
+
+    // authorization
+    {
+      const authorizationConfig = config.authorization;
+      const authorizationConfigPath = utils.addPath(
+        configPath,
+        'authorization',
+      );
+
+      utils.assertNillableFunction(
+        authorizationConfig,
+        authorizationConfigPath,
+      );
+    }
 
     // on-changes
     {
@@ -397,7 +498,7 @@ export class Node<
       );
     }
 
-    // deprecated
+    // deprecation-reason
     {
       const deprecatedConfig = config.deprecated;
       const deprecatedConfigPath = utils.addPath(configPath, 'deprecated');
@@ -413,22 +514,25 @@ export class Node<
 
     // features
     {
-      const featuresConfig = config.features;
+      const featuresConfig = utils.resolveThunkable(config.features, this);
       const featuresConfigPath = utils.addPath(configPath, 'features');
 
-      const features = utils
-        .ensureNillableArray<NodeFeatureConfig>(
-          featuresConfig,
+      const features = R.pipe(
+        utils.ensureArray<NodeFeatureConfig | undefined>(
+          featuresConfig ?? [],
           featuresConfigPath,
-        )
-        ?.map(
+        ),
+        R.map(
           (config, index) =>
+            config &&
             new NodeFeature(
               this,
               config,
               utils.addPath(featuresConfigPath, index),
             ),
-        );
+        ),
+        R.filter(R.isNonNullish),
+      );
 
       this.features = features
         ? R.sortBy([...features, this], [({ priority }) => priority, 'desc'])
@@ -442,12 +546,12 @@ export class Node<
 
     // components
     {
-      const componentsConfig = config.components;
-      const componentsConfigPath = utils.addPath(configPath, 'components');
-
       this.componentsByName = new Map(
         this.features.flatMap(({ config, configPath }) => {
-          const componentsConfig = config.components;
+          const componentsConfig = utils.resolveThunkable(
+            config.components,
+            this,
+          );
           const componentsConfigPath = utils.addPath(configPath, 'components');
 
           utils.assertNillablePlainObject(
@@ -457,7 +561,7 @@ export class Node<
 
           return componentsConfig
             ? utils.aggregateGraphError<
-                [Component['name'], ComponentConfig],
+                [Component['name'], ComponentConfig | undefined],
                 [Component['name'], Component][]
               >(
                 Object.entries(componentsConfig),
@@ -467,37 +571,44 @@ export class Node<
                     componentName,
                   );
 
-                  utils.assertPlainObject(componentConfig, componentConfigPath);
-
-                  let component: Component;
-
-                  const kindConfig = componentConfig.kind;
-                  const kindConfigPath = utils.addPath(
+                  utils.assertNillablePlainObject(
+                    componentConfig,
                     componentConfigPath,
-                    'kind',
                   );
 
-                  if (!kindConfig || kindConfig === 'Leaf') {
-                    component = new Leaf(
-                      this,
-                      componentName,
-                      componentConfig,
+                  if (componentConfig) {
+                    let component: Component;
+
+                    const kindConfig = componentConfig.kind;
+                    const kindConfigPath = utils.addPath(
                       componentConfigPath,
+                      'kind',
                     );
-                  } else if (kindConfig === 'Edge') {
-                    component = new Edge(
-                      this,
-                      componentName,
-                      componentConfig,
-                      componentConfigPath,
-                    );
-                  } else {
-                    throw new utils.UnreachableValueError(kindConfig, {
-                      path: kindConfigPath,
-                    });
+
+                    if (!kindConfig || kindConfig === 'Leaf') {
+                      component = new Leaf(
+                        this,
+                        componentName,
+                        componentConfig,
+                        componentConfigPath,
+                      );
+                    } else if (kindConfig === 'Edge') {
+                      component = new Edge(
+                        this,
+                        componentName,
+                        componentConfig,
+                        componentConfigPath,
+                      );
+                    } else {
+                      throw new utils.UnreachableValueError(kindConfig, {
+                        path: kindConfigPath,
+                      });
+                    }
+
+                    entries.push([component.name, component]);
                   }
 
-                  return [...entries, [component.name, component]];
+                  return entries;
                 },
                 [],
                 { path: componentsConfigPath },
@@ -507,11 +618,9 @@ export class Node<
       );
 
       if (!this.componentsByName.size) {
-        throw new utils.UnexpectedValueError(
-          `at least one component`,
-          componentsConfig,
-          { path: componentsConfigPath },
-        );
+        throw new utils.GraphError(`Expects at least one component`, {
+          path: utils.addPath(configPath, 'components'),
+        });
       }
 
       this.componentSet = new Set(this.componentsByName.values());
@@ -545,33 +654,33 @@ export class Node<
 
     // uniques
     {
-      const uniquesConfig = config.uniques;
       const uniquesConfigPath = utils.addPath(configPath, 'uniques');
 
       this.uniqueConstraintsByName = new Map(
         this.features.flatMap(({ config, configPath }) => {
-          const uniquesConfig = config.uniques;
+          const uniquesConfig = utils.resolveThunkable(config.uniques, this);
           const uniquesConfigPath = utils.addPath(configPath, 'uniques');
 
           utils.assertNillableArray(uniquesConfig, uniquesConfigPath);
 
           return uniquesConfig
             ? utils.aggregateGraphError<
-                UniqueConstraintConfig,
+                UniqueConstraintConfig | undefined,
                 [UniqueConstraint['name'], UniqueConstraint][]
               >(
                 uniquesConfig,
                 (entries, uniqueConfig, index) => {
-                  const uniqueConstraint = new UniqueConstraint(
-                    this,
-                    uniqueConfig,
-                    utils.addPath(uniquesConfigPath, index),
-                  );
+                  if (uniqueConfig) {
+                    const unique = new UniqueConstraint(
+                      this,
+                      uniqueConfig,
+                      utils.addPath(uniquesConfigPath, index),
+                    );
 
-                  return [
-                    ...entries,
-                    [uniqueConstraint.name, uniqueConstraint],
-                  ];
+                    entries.push([unique.name, unique]);
+                  }
+
+                  return entries;
                 },
                 [],
                 { path: uniquesConfigPath },
@@ -581,11 +690,9 @@ export class Node<
       );
 
       if (!this.uniqueConstraintsByName.size) {
-        throw new utils.UnexpectedValueError(
-          `at least one unique-constraint`,
-          uniquesConfig,
-          { path: uniquesConfigPath },
-        );
+        throw new utils.GraphError(`Expects at least one unique-constraint`, {
+          path: uniquesConfigPath,
+        });
       }
 
       this.uniqueConstraintSet = new Set(this.uniqueConstraintsByName.values());
@@ -599,16 +706,13 @@ export class Node<
         );
 
         if (!this.identifierSet.size) {
-          throw new utils.UnexpectedValueError(
-            `at least one identifier (= a non-nullable and immutable unique-constraint)`,
-            uniquesConfig,
+          throw new utils.GraphError(
+            `Expects at least one identifier (= a non-nullable and immutable unique-constraint)`,
             { path: uniquesConfigPath },
           );
         }
 
         {
-          const mainIdentifierConfigPath = utils.addPath(uniquesConfigPath, 0);
-
           this.mainIdentifier = Array.from(this.uniqueConstraintSet)[0];
 
           if (this.mainIdentifier.isNullable()) {
@@ -618,7 +722,7 @@ export class Node<
               } "${[...this.mainIdentifier.componentsByName.keys()].join(
                 ', ',
               )}") to be non-nullable (= at least one of its components being non-nullable)`,
-              { path: mainIdentifierConfigPath },
+              { path: uniquesConfigPath },
             );
           }
 
@@ -629,25 +733,55 @@ export class Node<
               } "${[...this.mainIdentifier.componentsByName.keys()].join(
                 ', ',
               )}") to be immutable (= all its components being immutable)`,
-              { path: mainIdentifierConfigPath },
+              { path: uniquesConfigPath },
             );
           }
         }
       }
     }
 
-    // authorization
+    // associated-nodes
     {
-      const authorizationConfig = config.authorization;
-      const authorizationConfigPath = utils.addPath(
-        configPath,
-        'authorization',
-      );
+      this.associatedNodes = this.features.flatMap(({ config, configPath }) => {
+        const nodeConfigsByName = utils.resolveThunkable(
+          config.associatedNodes,
+          this,
+        );
+        const nodeConfigsByNamePath = utils.addPath(
+          configPath,
+          'associatedNodes',
+        );
 
-      utils.assertNillableFunction(
-        authorizationConfig,
-        authorizationConfigPath,
-      );
+        utils.assertNillablePlainObject(
+          nodeConfigsByName,
+          nodeConfigsByNamePath,
+        );
+
+        return nodeConfigsByName
+          ? utils.aggregateGraphError<
+              [Node['name'], NodeConfig | undefined],
+              Node[]
+            >(
+              Object.entries(nodeConfigsByName),
+              (nodes, [name, nodeConfig]) => {
+                if (nodeConfig) {
+                  const node = new Node(
+                    gp,
+                    name,
+                    nodeConfig,
+                    utils.addPath(nodeConfigsByNamePath, name),
+                  );
+
+                  nodes.push(node, ...node.associatedNodes);
+                }
+
+                return nodes;
+              },
+              [],
+              { path: nodeConfigsByNamePath },
+            )
+          : [];
+      });
     }
   }
 
@@ -1179,14 +1313,6 @@ export class Node<
     ReverseEdge['name'],
     ReverseEdge<TConnector>
   > {
-    const reverseEdgesConfig = this.config.reverseEdges;
-    const reverseEdgesConfigPath = utils.addPath(
-      this.configPath,
-      'reverseEdges',
-    );
-
-    utils.assertNillablePlainObject(reverseEdgesConfig, reverseEdgesConfigPath);
-
     // Let's find all the edges heading to this node
     const referrers = new Set(
       this.gp.nodeSet
@@ -1196,22 +1322,33 @@ export class Node<
         ),
     );
 
-    if (
-      !referrers.size &&
-      utils.isPlainObject(reverseEdgesConfig) &&
-      Object.entries(reverseEdgesConfig).length
-    ) {
-      throw new utils.UnexpectedValueError(
-        `no configuration as there is no node heading to this "${this}" node`,
-        reverseEdgesConfig,
-        { path: reverseEdgesConfigPath },
-      );
-    }
-
     const reverseEdges = new Map(
-      reverseEdgesConfig
-        ? utils.aggregateGraphError<
-            [ReverseEdge['name'], ReverseEdgeConfig],
+      this.features.flatMap(({ config, configPath }) => {
+        const reverseEdgesConfig = utils.resolveThunkable(
+          config.reverseEdges,
+          this,
+        );
+        const reverseEdgesConfigPath = utils.addPath(
+          configPath,
+          'reverseEdges',
+        );
+
+        utils.assertNillablePlainObject(
+          reverseEdgesConfig,
+          reverseEdgesConfigPath,
+        );
+
+        if (reverseEdgesConfig && Object.entries(reverseEdgesConfig).length) {
+          if (!referrers.size) {
+            throw new utils.UnexpectedValueError(
+              `no configuration as there is no node heading to this "${this}" node`,
+              reverseEdgesConfig,
+              { path: reverseEdgesConfigPath },
+            );
+          }
+
+          return utils.aggregateGraphError<
+            [ReverseEdge['name'], ReverseEdgeConfig | undefined],
             [ReverseEdge['name'], ReverseEdge][]
           >(
             Object.entries(reverseEdgesConfig),
@@ -1221,103 +1358,113 @@ export class Node<
                 reverseEdgeName,
               );
 
-              if (this.componentsByName.has(reverseEdgeName)) {
-                throw new utils.UnexpectedValueError(
-                  `a "name" not among "${[...this.componentsByName.keys()].join(
-                    ', ',
-                  )}"`,
-                  reverseEdgeName,
-                  { path: reverseEdgeConfigPath },
-                );
-              }
-
-              utils.assertPlainObject(reverseEdgeConfig, reverseEdgeConfigPath);
-
-              const originalEdgeConfig = reverseEdgeConfig.originalEdge;
-              const originalEdgeConfigPath = utils.addPath(
+              utils.assertNillablePlainObject(
+                reverseEdgeConfig,
                 reverseEdgeConfigPath,
-                'originalEdge',
               );
 
-              if (
-                typeof originalEdgeConfig !== 'string' ||
-                !originalEdgeConfig
-              ) {
-                throw new utils.UnexpectedValueError(
-                  `a non-empty string`,
-                  originalEdgeConfig,
-                  { path: originalEdgeConfigPath },
-                );
-              }
-
-              const [nodeName, edgeName] = originalEdgeConfig.split('.');
-
-              const originalEdge = referrers
-                .values()
-                .find(
-                  (referrer) =>
-                    referrer.tail.name === nodeName &&
-                    (!edgeName || referrer.name === edgeName),
-                );
-
-              if (!originalEdge) {
-                throw new utils.UnexpectedValueError(
-                  `${
-                    edgeName ? `an edge` : `a node`
-                  } heading to this "${this}" node`,
-                  originalEdgeConfig,
-                  { path: originalEdgeConfigPath },
-                );
-              } else {
-                referrers.delete(originalEdge);
-              }
-
-              let reverseEdge: ReverseEdge;
-
-              const kindConfig = reverseEdgeConfig.kind;
-              const kindConfigPath = utils.addPath(
-                reverseEdgeConfigPath,
-                'kind',
-              );
-
-              if (originalEdge.isUnique()) {
-                if (kindConfig != null && kindConfig !== 'Unique') {
+              if (reverseEdgeConfig) {
+                if (this.componentsByName.has(reverseEdgeName)) {
                   throw new utils.UnexpectedValueError(
-                    `"Unique" as the "${originalEdge}" edge is unique`,
-                    kindConfig,
-                    { path: kindConfigPath },
+                    `a "name" not among "${[
+                      ...this.componentsByName.keys(),
+                    ].join(', ')}"`,
+                    reverseEdgeName,
+                    { path: reverseEdgeConfigPath },
                   );
                 }
 
-                reverseEdge = new UniqueReverseEdge(
-                  originalEdge,
-                  reverseEdgeName,
-                  reverseEdgeConfig as any,
+                const originalEdgeConfig = reverseEdgeConfig.originalEdge;
+                const originalEdgeConfigPath = utils.addPath(
                   reverseEdgeConfigPath,
+                  'originalEdge',
                 );
-              } else {
-                if (kindConfig != null && kindConfig !== 'Multiple') {
+
+                if (
+                  typeof originalEdgeConfig !== 'string' ||
+                  !originalEdgeConfig
+                ) {
                   throw new utils.UnexpectedValueError(
-                    `"Multiple" as the "${originalEdge}" edge is not unique`,
-                    kindConfig,
-                    { path: kindConfigPath },
+                    `a non-empty string`,
+                    originalEdgeConfig,
+                    { path: originalEdgeConfigPath },
                   );
                 }
 
-                reverseEdge = new MultipleReverseEdge(
-                  originalEdge,
-                  reverseEdgeName,
-                  reverseEdgeConfig as any,
+                const [nodeName, edgeName] = originalEdgeConfig.split('.');
+
+                const originalEdge = referrers
+                  .values()
+                  .find(
+                    (referrer) =>
+                      referrer.tail.name === nodeName &&
+                      (!edgeName || referrer.name === edgeName),
+                  );
+
+                if (!originalEdge) {
+                  throw new utils.UnexpectedValueError(
+                    `${
+                      edgeName ? `an edge` : `a node`
+                    } heading to this "${this}" node`,
+                    originalEdgeConfig,
+                    { path: originalEdgeConfigPath },
+                  );
+                } else {
+                  referrers.delete(originalEdge);
+                }
+
+                let reverseEdge: ReverseEdge;
+
+                const kindConfig = reverseEdgeConfig.kind;
+                const kindConfigPath = utils.addPath(
                   reverseEdgeConfigPath,
+                  'kind',
                 );
+
+                if (originalEdge.isUnique()) {
+                  if (kindConfig != null && kindConfig !== 'Unique') {
+                    throw new utils.UnexpectedValueError(
+                      `"Unique" as the "${originalEdge}" edge is unique`,
+                      kindConfig,
+                      { path: kindConfigPath },
+                    );
+                  }
+
+                  reverseEdge = new UniqueReverseEdge(
+                    originalEdge,
+                    reverseEdgeName,
+                    reverseEdgeConfig as any,
+                    reverseEdgeConfigPath,
+                  );
+                } else {
+                  if (kindConfig != null && kindConfig !== 'Multiple') {
+                    throw new utils.UnexpectedValueError(
+                      `"Multiple" as the "${originalEdge}" edge is not unique`,
+                      kindConfig,
+                      { path: kindConfigPath },
+                    );
+                  }
+
+                  reverseEdge = new MultipleReverseEdge(
+                    originalEdge,
+                    reverseEdgeName,
+                    reverseEdgeConfig as any,
+                    reverseEdgeConfigPath,
+                  );
+                }
+
+                entries.push([reverseEdge.name, reverseEdge]);
               }
 
-              return [...entries, [reverseEdge.name, reverseEdge]];
+              return entries;
             },
             [],
             { path: reverseEdgesConfigPath },
-          )
-        : undefined,
+          );
+        }
+
+        return [];
+      }),
     );
 
     if (referrers.size) {
@@ -1326,7 +1473,7 @@ export class Node<
           referrers,
           String,
         ).join(', ')}`,
-        { path: reverseEdgesConfigPath },
+        { path: utils.addPath(this.configPath, 'reverseEdges') },
       );
     }
 
@@ -1675,19 +1822,9 @@ export class Node<
 
   @MMethod()
   public validateDefinition(): void {
-    utils.aggregateGraphError<Component, void>(
-      this.componentSet,
-      (_, component) => component.validateDefinition(),
-      undefined,
-      { path: this.configPath },
-    );
+    this.componentSet.forEach((component) => component.validateDefinition());
 
-    utils.aggregateGraphError<UniqueConstraint, void>(
-      this.uniqueConstraintSet,
-      (_, uniqueConstraint) => uniqueConstraint.validateDefinition(),
-      undefined,
-      { path: this.configPath },
-    );
+    this.uniqueConstraintSet.forEach((unique) => unique.validateDefinition());
 
     this.selection;
 
@@ -1739,11 +1876,8 @@ export class Node<
       }
     }
 
-    utils.aggregateGraphError<ReverseEdge, void>(
-      this.reverseEdgesByName.values(),
-      (_, reverseEdge) => reverseEdge.validateDefinition(),
-      undefined,
-      { path: this.configPath },
+    this.reverseEdgeSet.forEach((reverseEdge) =>
+      reverseEdge.validateDefinition(),
     );
   }
 

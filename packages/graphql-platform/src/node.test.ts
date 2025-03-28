@@ -54,11 +54,11 @@ describe('Node', () => {
       [
         [
           { features: [{ components: null }], components: null },
-          `/GraphQLPlatformConfig/nodes/Test/components - Expects at least one component, got: null`,
+          `/GraphQLPlatformConfig/nodes/Test/components - Expects at least one component`,
         ],
         [
           { components: {} },
-          `/GraphQLPlatformConfig/nodes/Test/components - Expects at least one component, got: {}`,
+          `/GraphQLPlatformConfig/nodes/Test/components - Expects at least one component`,
         ],
       ].forEach(([config, expectedErrorMessage]) => {
         it(`throws an error on invalid components: ${inspect(config, undefined, 5)}`, () => {
@@ -74,6 +74,7 @@ describe('Node', () => {
           );
         });
       });
+
       it('throws an error on edge missing "head"', () => {
         assert.throws(
           () =>
@@ -93,7 +94,7 @@ describe('Node', () => {
               },
             }),
           {
-            message: `/GraphQLPlatformConfig/nodes/Article/components/edgeToAMissingModel/head - Expects a node's name among "Article, ArticleExtension, Category, Tag, ArticleTag, ArticleTagModeration, User, UserProfile, Log", got: 'MissingModel'`,
+            message: `/GraphQLPlatformConfig/nodes/Article/components/edgeToAMissingModel/head - Expects a node's name among "Article, ArticleHistory, ArticleExtension, Category, Tag, ArticleTag, ArticleTagModeration, User, UserProfile, Log", got: 'MissingModel'`,
           },
         );
       });
@@ -200,7 +201,7 @@ describe('Node', () => {
               },
             }),
           {
-            message: `/GraphQLPlatformConfig/nodes/Test/uniques - Expects at least one unique-constraint, got: []`,
+            message: `/GraphQLPlatformConfig/nodes/Test/uniques - Expects at least one unique-constraint`,
           },
         );
       });
@@ -219,7 +220,7 @@ describe('Node', () => {
               },
             }),
           {
-            message: `/GraphQLPlatformConfig/nodes/Test/uniques - Expects at least one identifier (= a non-nullable and immutable unique-constraint), got: [ [ '_id' ] ]`,
+            message: `/GraphQLPlatformConfig/nodes/Test/uniques - Expects at least one identifier (= a non-nullable and immutable unique-constraint)`,
           },
         );
       });
@@ -238,7 +239,7 @@ describe('Node', () => {
               },
             }),
           {
-            message: `/GraphQLPlatformConfig/nodes/Test/uniques - Expects at least one identifier (= a non-nullable and immutable unique-constraint), got: [ [ '_id' ] ]`,
+            message: `/GraphQLPlatformConfig/nodes/Test/uniques - Expects at least one identifier (= a non-nullable and immutable unique-constraint)`,
           },
         );
       });
@@ -505,7 +506,7 @@ describe('Node', () => {
             'machineTags',
           ],
           ['_id', 'id', 'category-slug'],
-          ['tags', 'extension'],
+          ['histories', 'tags', 'extension'],
         ],
         [
           'Category',
@@ -659,7 +660,7 @@ describe('Node', () => {
             ([name, config]) => [
               name,
               {
-                ...config,
+                ...R.omit(config, ['features'] as any),
                 mutation: false,
                 components: Object.fromEntries(
                   Object.entries(config.components).map<
@@ -692,7 +693,7 @@ describe('Node', () => {
                 ([name, config]) => [
                   name,
                   {
-                    ...config,
+                    ...R.omit(config, ['features'] as any),
                     mutation: {
                       ...(utils.isPlainObject(config.mutation)
                         ? config.mutation

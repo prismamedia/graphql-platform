@@ -70,7 +70,7 @@ describe('SchemaDiagnosis', () => {
     assert(diagnosis instanceof SchemaDiagnosis);
     assert(!diagnosis.isValid());
     assert.deepEqual(diagnosis.summarize(), {
-      errors: 89,
+      errors: 94,
 
       collation: {
         actual: 'utf8mb4_uca1400_ai_ci',
@@ -84,6 +84,7 @@ describe('SchemaDiagnosis', () => {
         extra: ['extra_table'],
         missing: [
           'articles',
+          'article_histories',
           'article_extensions',
           'tags',
           'article_tags',
@@ -173,12 +174,13 @@ describe('SchemaDiagnosis', () => {
     assert(diagnosis instanceof SchemaDiagnosis);
     assert(!diagnosis.isValid());
     assert.deepEqual(diagnosis.summarize(), {
-      errors: 87,
+      errors: 92,
 
       tables: {
         extra: ['extra_table'],
         missing: [
           'articles',
+          'article_histories',
           'article_extensions',
           'tags',
           'article_tags',
@@ -270,10 +272,11 @@ describe('SchemaDiagnosis', () => {
     assert(diagnosis instanceof SchemaDiagnosis);
     assert(!diagnosis.isValid());
     assert.deepEqual(diagnosis.summarize(), {
-      errors: 41,
+      errors: 46,
 
       tables: {
         missing: [
+          'article_histories',
           'tags',
           'article_tags',
           'article_tag_moderations',

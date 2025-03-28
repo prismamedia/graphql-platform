@@ -14,11 +14,13 @@ import {
   type ConnectorInterface,
   type CustomOperationsByNameByTypeConfig,
   type Edge,
+  type FullUniqueConstraintConfig,
   type GraphQLPlatformConfig,
   type Leaf,
   type Node,
   type NodeConfig,
   type UniqueConstraint,
+  type UniqueConstraintConfig,
 } from '../index.js';
 
 export const slugify = (input: string): string =>
@@ -551,6 +553,39 @@ export const Article = {
       interfaces: [PublicNodeInterfaceType],
     },
   },
+
+  features: [
+    {
+      name: 'history',
+
+      reverseEdges: (node) => ({
+        histories: {
+          originalEdge: `${node}History.article`,
+        },
+      }),
+
+      associatedNodes: (node) => ({
+        [`${node}History`]: {
+          components: {
+            article: {
+              kind: 'Edge',
+              head: node.name,
+              mutable: false,
+              nullable: false,
+            },
+            createdAt: { type: 'DateTime', mutable: false, nullable: false },
+            message: {
+              type: 'NonEmptyTrimmedString',
+              mutable: false,
+              nullable: false,
+            },
+          },
+          uniques: [['article', 'createdAt']],
+          mutation: { update: false },
+        },
+      }),
+    },
+  ],
 } satisfies NodeConfig<MyContext>;
 
 export const ArticleExtension = {
@@ -1058,6 +1093,12 @@ export const customOperations: CustomOperationsByNameByTypeConfig<MyContext> = {
   subscription: undefined,
 };
 
+export type MyNodeConfig<
+  TConnector extends ConnectorInterface = any,
+  TBroker extends BrokerInterface = any,
+  TContainer extends object = any,
+> = NodeConfig<MyContext, TConnector, TBroker, TContainer>;
+
 export type MyGP<
   TConnector extends ConnectorInterface = any,
   TBroker extends BrokerInterface = any,
@@ -1122,49 +1163,50 @@ export function createMyGP<
 ): MyGP<TConnector, TBroker, TContainer> {
   return new GraphQLPlatform({
     nodes: Object.fromEntries(
-      Object.entries<NodeConfig>(nodes).map(([nodeName, nodeConfig]) => [
+      Object.entries(nodes).map(([nodeName, nodeConfig]) => [
         nodeName,
         {
           ...nodeConfig,
 
-          ...config?.overrides?.node?.(nodeName),
+          ...(config?.overrides?.node?.(nodeName) as any),
 
           components:
             nodeConfig.components &&
             (config?.overrides?.edge || config?.overrides?.leaf)
               ? Object.fromEntries(
-                  Object.entries(nodeConfig.components).map(
-                    ([componentName, componentConfig]) => [
-                      componentName,
-                      {
-                        ...componentConfig,
+                  Object.entries(
+                    utils.ensurePlainObject(nodeConfig.components),
+                  ).map(([componentName, componentConfig]) => [
+                    componentName,
+                    {
+                      ...componentConfig,
 
-                        ...(componentConfig.kind === 'Edge'
-                          ? config?.overrides?.edge?.(componentName, nodeName)
-                          : config?.overrides?.leaf?.(componentName, nodeName)),
-                      },
-                    ],
-                  ),
+                      ...(componentConfig.kind === 'Edge'
+                        ? config?.overrides?.edge?.(componentName, nodeName)
+                        : config?.overrides?.leaf?.(componentName, nodeName)),
+                    },
+                  ]),
                 )
               : nodeConfig.components,
 
           uniques:
             nodeConfig.uniques && config?.overrides?.uniqueConstraint
-              ? nodeConfig.uniques.map((unique, index) => {
-                  const uniqueConstraintConfig = Array.isArray(unique)
-                    ? { components: unique }
-                    : unique;
+              ? utils
+                  .ensureArray<UniqueConstraintConfig>(nodeConfig.uniques)
+                  .map((unique, index) => {
+                    const uniqueConstraintConfig: FullUniqueConstraintConfig =
+                      Array.isArray(unique) ? { components: unique } : unique;
 
-                  return {
-                    ...uniqueConstraintConfig,
+                    return {
+                      ...uniqueConstraintConfig,
 
-                    ...config?.overrides?.uniqueConstraint?.(
-                      index,
-                      uniqueConstraintConfig.name,
-                      nodeName,
-                    ),
-                  };
-                })
+                      ...config?.overrides?.uniqueConstraint?.(
+                        index,
+                        uniqueConstraintConfig.name,
+                        nodeName,
+                      ),
+                    };
+                  })
               : nodeConfig.uniques,
         },
       ]),

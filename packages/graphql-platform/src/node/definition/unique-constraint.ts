@@ -21,7 +21,9 @@ export type UniqueConstraintValue = {
   [componentName: string]: ComponentValue;
 };
 
-type FullUniqueConstraintConfig<TConnector extends ConnectorInterface = any> = {
+export type FullUniqueConstraintConfig<
+  TConnector extends ConnectorInterface = any,
+> = {
   components: Component['name'][];
   name?: utils.Name;
 } & ConnectorConfigOverride<
@@ -29,7 +31,7 @@ type FullUniqueConstraintConfig<TConnector extends ConnectorInterface = any> = {
   ConnectorConfigOverrideKind.UNIQUE_CONSTRAINT
 >;
 
-type ShortUniqueConstraintConfig = Component['name'][];
+export type ShortUniqueConstraintConfig = Component['name'][];
 
 export type UniqueConstraintConfig<
   TConnector extends ConnectorInterface = any,
