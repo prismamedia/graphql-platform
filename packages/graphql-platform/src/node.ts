@@ -208,14 +208,14 @@ export type NodeConfig<
    * At least one must be defined
    */
   components?: utils.Thunkable<
-    | {
+    | Readonly<{
         /**
          * The components' name are expected to be valid against the GraphQL "Names" rules
          *
          * @see https://spec.graphql.org/draft/#sec-Names
          */
         [componentName: utils.Name]: ComponentConfig<TConnector> | undefined;
-      }
+      }>
     | undefined,
     [
       node: Pick<
@@ -250,9 +250,12 @@ export type NodeConfig<
    * They are regular nodes, nothing special about them except that they are defined inside this node's definition
    */
   associatedNodes?: utils.Thunkable<
-    | Record<
-        NodeName,
-        NodeConfig<TRequestContext, TConnector, TBroker, TContainer> | undefined
+    | Readonly<
+        Record<
+          NodeName,
+          | NodeConfig<TRequestContext, TConnector, TBroker, TContainer>
+          | undefined
+        >
       >
     | undefined,
     [
@@ -269,14 +272,14 @@ export type NodeConfig<
    * @see https://en.wikipedia.org/wiki/Glossary_of_graph_theory#inverted_arrow
    */
   reverseEdges?: utils.Thunkable<
-    | {
+    | Readonly<{
         /**
          * The reverse edges' name are expected to be valid against the GraphQL "Names" rules
          *
          * @see https://spec.graphql.org/draft/#sec-Names
          */
         [reverseEdge: utils.Name]: ReverseEdgeConfig | undefined;
-      }
+      }>
     | undefined,
     [node: Node<TRequestContext, TConnector, TBroker, TContainer>]
   >;

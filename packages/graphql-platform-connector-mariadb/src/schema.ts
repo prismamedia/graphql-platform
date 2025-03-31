@@ -147,13 +147,12 @@ export class Schema {
     // tables-by-node
     {
       this.tablesByNode = new Map(
-        Array.from(connector.gp.nodesByName.values(), (node) => [
-          node,
-          new Table(this, node),
-        ]),
+        connector.gp.nodesByName
+          .values()
+          .map((node) => [node, new Table(this, node)]),
       );
 
-      this.tables = Array.from(this.tablesByNode.values());
+      this.tables = this.tablesByNode.values().toArray();
     }
   }
 

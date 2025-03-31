@@ -162,10 +162,9 @@ export class Table {
     // columns-by-leaf
     {
       this.columnsByLeaf = new Map(
-        Array.from(node.leavesByName.values(), (leaf) => [
-          leaf,
-          new LeafColumn(this, leaf),
-        ]),
+        node.leavesByName
+          .values()
+          .map((leaf) => [leaf, new LeafColumn(this, leaf)]),
       );
     }
 
@@ -186,44 +185,50 @@ export class Table {
           ]),
       );
 
-      this.uniqueIndexes = Array.from(
-        this.uniqueIndexesByUniqueConstraint.values(),
-      );
+      this.uniqueIndexes = this.uniqueIndexesByUniqueConstraint
+        .values()
+        .toArray();
     }
 
     // full-text-indexes-by-leaf
     {
-      this.fullTextIndexes = Array.from(this.columnsByLeaf.values()).reduce<
-        FullTextIndex[]
-      >(
-        (indexes, column) =>
-          column.fullTextIndex ? [...indexes, column.fullTextIndex] : indexes,
-        [],
-      );
+      this.fullTextIndexes = this.columnsByLeaf
+        .values()
+        .reduce<
+          FullTextIndex[]
+        >((indexes, column) => (column.fullTextIndex ? [...indexes, column.fullTextIndex] : indexes), []);
     }
 
     // plain-indexes
     {
-      const indexesConfig = this.config?.indexes;
-      const indexesConfigPath = utils.addPath(this.configPath, 'indexes');
+      this.plainIndexes = node.features.reduce<PlainIndex[]>(
+        (indexes, { config, configPath }) => {
+          const tableConfig = config.table;
+          const tableConfigPath = utils.addPath(configPath, 'table');
 
-      if (indexesConfig !== undefined && !Array.isArray(indexesConfig)) {
-        throw new utils.UnexpectedValueError(`an array`, indexesConfig, {
-          path: indexesConfigPath,
-        });
-      }
+          utils.assertNillablePlainObject(tableConfig, tableConfigPath);
 
-      this.plainIndexes = (indexesConfig ?? []).reduce<PlainIndex[]>(
-        (indexes, config, index) => [
-          ...indexes,
-          new PlainIndex(
-            this,
-            (Array.isArray(config)
-              ? { components: config }
-              : config) as PlainIndexConfig,
-            utils.addPath(indexesConfigPath, index),
-          ),
-        ],
+          if (tableConfig) {
+            const indexesConfig = tableConfig.indexes;
+            const indexesConfigPath = utils.addPath(tableConfigPath, 'indexes');
+
+            utils
+              .ensureNillableArray(indexesConfig, indexesConfigPath)
+              ?.forEach((config, index) =>
+                indexes.push(
+                  new PlainIndex(
+                    this,
+                    (Array.isArray(config)
+                      ? { components: config }
+                      : config) as PlainIndexConfig,
+                    utils.addPath(indexesConfigPath, index),
+                  ),
+                ),
+              );
+          }
+
+          return indexes;
+        },
         [],
       );
     }
@@ -238,13 +243,12 @@ export class Table {
     // foreign-keys-by-edge
     {
       this.foreignKeysByEdge = new Map(
-        Array.from(node.edgesByName.values(), (edge) => [
-          edge,
-          new ForeignKey(this, edge),
-        ]),
+        node.edgesByName
+          .values()
+          .map((edge) => [edge, new ForeignKey(this, edge)]),
       );
 
-      this.foreignKeys = Array.from(this.foreignKeysByEdge.values());
+      this.foreignKeys = this.foreignKeysByEdge.values().toArray();
     }
   }
 
@@ -293,10 +297,9 @@ export class Table {
   @MGetter
   public get columnTreesByEdge(): ReadonlyMap<core.Edge, ReferenceColumnTree> {
     return new Map(
-      Array.from(this.node.edgesByName.values(), (edge) => [
-        edge,
-        new ReferenceColumnTree(this.schema, edge),
-      ]),
+      this.node.edgesByName
+        .values()
+        .map((edge) => [edge, new ReferenceColumnTree(this.schema, edge)]),
     );
   }
 
@@ -358,7 +361,7 @@ export class Table {
   ): TValue {
     utils.assertPlainObject(row, path);
 
-    return Array.from(this.node.componentSet).reduce((result, component) => {
+    return this.node.componentSet.values().reduce((result, component) => {
       result[component.name] =
         component instanceof core.Leaf
           ? this.getColumnByLeaf(component).pickLeafValueFromRow(row)

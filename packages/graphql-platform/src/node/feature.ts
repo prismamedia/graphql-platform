@@ -1,7 +1,11 @@
 import * as utils from '@prismamedia/graphql-platform-utils';
 import { MMethod } from '@prismamedia/memoize';
 import type { BrokerInterface } from '../broker-interface.js';
-import type { ConnectorInterface } from '../connector-interface.js';
+import type {
+  ConnectorConfigOverride,
+  ConnectorConfigOverrideKind,
+  ConnectorInterface,
+} from '../connector-interface.js';
 import type { Node, NodeConfig } from '../node.js';
 import type {
   CustomOperationConstructor,
@@ -60,7 +64,7 @@ export type NodeFeatureConfig<
         TContainer
       >[];
     };
-  };
+  } & ConnectorConfigOverride<TConnector, ConnectorConfigOverrideKind.FEATURE>;
 
 export class NodeFeature<
   TRequestContext extends object = any,

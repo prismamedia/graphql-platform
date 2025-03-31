@@ -126,9 +126,9 @@ export class ReferenceColumnTree {
     // columns-by-leaf
     {
       this.#columnsByLeaf = new Map(
-        Array.from(
-          this.currentEdge.referencedUniqueConstraint.leafSet,
-          (leaf) => [
+        this.currentEdge.referencedUniqueConstraint.leafSet
+          .values()
+          .map((leaf) => [
             leaf,
             new ReferenceColumn(
               tail,
@@ -142,21 +142,19 @@ export class ReferenceColumnTree {
               columnsConfig?.[leaf.name] as any,
               utils.addPath(columnsConfigPath, leaf.name),
             ),
-          ],
-        ),
+          ]),
       );
     }
 
     // column-trees-by-edge
     {
       this.#columnTreesByEdge = new Map(
-        Array.from(
-          this.currentEdge.referencedUniqueConstraint.edgeSet,
-          (edge) => [
+        this.currentEdge.referencedUniqueConstraint.edgeSet
+          .values()
+          .map((edge) => [
             edge,
             new ReferenceColumnTree(schema, root, [...path, edge]),
-          ],
-        ),
+          ]),
       );
     }
   }

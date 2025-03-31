@@ -87,6 +87,12 @@ export class MariaDBConnector<TRequestContext extends object = any>
        */
       table?: TableConfig;
     };
+    [core.ConnectorConfigOverrideKind.FEATURE]: {
+      /**
+       * Optional, customize the node's table
+       */
+      table?: Pick<TableConfig, 'indexes'>;
+    };
     [core.ConnectorConfigOverrideKind.LEAF]: {
       /**
        * Optional, customize the leaf's column

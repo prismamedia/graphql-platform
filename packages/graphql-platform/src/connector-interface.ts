@@ -19,6 +19,7 @@ import type {
  */
 export enum ConnectorConfigOverrideKind {
   'NODE',
+  'FEATURE',
   'LEAF',
   'EDGE',
   'UNIQUE_CONSTRAINT',
