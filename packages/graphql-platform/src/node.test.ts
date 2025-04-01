@@ -53,7 +53,10 @@ describe('Node', () => {
     describe('Invalid component(s)', () => {
       [
         [
-          { features: [{ components: null }], components: null },
+          {
+            features: [{ name: 'feature1', components: null }],
+            components: null,
+          },
           `/GraphQLPlatformConfig/nodes/Test/components - Expects at least one component`,
         ],
         [
@@ -507,6 +510,7 @@ describe('Node', () => {
           ],
           ['_id', 'id', 'category-slug'],
           ['histories', 'tags', 'extension'],
+          ['auditor'],
         ],
         [
           'Category',
@@ -546,7 +550,13 @@ describe('Node', () => {
         ['Log', ['_id', 'message', 'createdAt'], ['_id'], []],
       ] as const
     ).forEach(
-      ([nodeName, componentNames, uniqueConstraintNames, reverseEdgeNames]) => {
+      ([
+        nodeName,
+        componentNames,
+        uniqueConstraintNames,
+        reverseEdgeNames,
+        serviceNames = [],
+      ]) => {
         it(`"${nodeName}" has valid definition`, () => {
           const node = gp.getNodeByName(nodeName);
 
@@ -563,6 +573,7 @@ describe('Node', () => {
             [...node.reverseEdgesByName.keys()],
             reverseEdgeNames,
           );
+          assert.deepStrictEqual([...node.servicesByName.keys()], serviceNames);
           assert(node.selection instanceof NodeSelection);
         });
       },

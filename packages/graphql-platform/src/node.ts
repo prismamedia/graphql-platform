@@ -285,6 +285,14 @@ export type NodeConfig<
   >;
 
   /**
+   * Optional, register some services into the container
+   */
+  services?: utils.Thunkable<
+    Readonly<Record<utils.Name, any>> | undefined,
+    [node: Node<TRequestContext, TConnector, TBroker, TContainer>]
+  >;
+
+  /**
    * Optional, either the node is exposed publicly (in the GraphQL API) or not (only available internally)
    *
    * Default: true
@@ -1646,6 +1654,29 @@ export class Node<
   }
 
   @MGetter
+  public get servicesByName(): ReadonlyMap<utils.Name, any> {
+    return new Map(
+      this.features.flatMap(({ config, configPath }) => {
+        const servicesConfig = config.services;
+        const servicesConfigPath = utils.addPath(configPath, 'services');
+
+        const services = utils.resolveThunkable(servicesConfig, this);
+
+        return services
+          ? Object.entries(
+              utils.ensurePlainObject(services, servicesConfigPath),
+            )
+              .filter(([_name, service]) => service !== undefined)
+              .map(([name, service]) => [
+                utils.ensureName(name, servicesConfigPath),
+                service,
+              ])
+          : [];
+      }),
+    );
+  }
+
+  @MGetter
   public get outputType(): NodeOutputType {
     return new NodeOutputType(this);
   }
@@ -1917,7 +1948,7 @@ export class Node<
     );
 
     utils.aggregateGraphError<ReverseEdge, void>(
-      this.reverseEdgesByName.values(),
+      this.reverseEdgeSet,
       (_, reverseEdge) => reverseEdge.validateTypes(),
       undefined,
       { path: this.configPath },

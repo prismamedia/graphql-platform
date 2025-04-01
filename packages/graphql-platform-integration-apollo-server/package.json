@@ -35,7 +35,7 @@
     "@prismamedia/graphql-platform-connector-mariadb": "workspace:packages/graphql-platform-connector-mariadb",
     "@types/cors": "^2.8.17",
     "@types/express": "^4.17.21",
-    "@types/ws": "^8.18.0",
+    "@types/ws": "^8.18.1",
     "body-parser": "2.2.0",
     "cors": "2.8.5",
     "express": "4.21.2",

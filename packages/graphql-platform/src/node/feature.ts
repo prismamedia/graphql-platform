@@ -20,9 +20,9 @@ export type NodeFeatureConfig<
   TContainer extends object = any,
 > = {
   /**
-   * Optional, identifies the feature in case of errors
+   * Required, identifies the feature in case of errors
    */
-  name?: utils.Name;
+  name: utils.Name;
 
   /**
    * Optional, define the priority of this feature, against the others features and the main configuration (having the priority 0)
@@ -33,7 +33,7 @@ export type NodeFeatureConfig<
   priority?: number;
 } & Pick<
   NodeConfig<TRequestContext, TConnector, TBroker, TContainer>,
-  'components' | 'uniques' | 'associatedNodes' | 'reverseEdges'
+  'components' | 'uniques' | 'associatedNodes' | 'reverseEdges' | 'services'
 > & {
     output?: Pick<
       NodeOutputTypeConfig<TRequestContext, TConnector, TBroker, TContainer>,
@@ -72,7 +72,7 @@ export class NodeFeature<
   TBroker extends BrokerInterface = any,
   TContainer extends object = any,
 > {
-  public readonly name?: utils.Name;
+  public readonly name: utils.Name;
 
   public readonly configPath: utils.Path;
 
@@ -90,20 +90,19 @@ export class NodeFeature<
   ) {
     utils.assertPlainObject(config, configPath);
 
-    this.name = config.name
-      ? utils.ensureName(config.name, utils.addPath(configPath, 'name'))
-      : undefined;
+    this.name = utils.ensureName(
+      config.name,
+      utils.addPath(configPath, 'name'),
+    );
 
-    this.configPath = this.name
-      ? utils.addPath(configPath, this.name)
-      : configPath;
+    this.configPath = utils.addPath(configPath, this.name);
 
     this.priority = config.priority ?? node.priority;
   }
 
   @MMethod()
   public toString(): string {
-    return [this.node.name, 'feature', this.name].filter(Boolean).join('.');
+    return [this.node.name, 'feature', this.name].join('.');
   }
 
   @MMethod((mutationType) => mutationType)

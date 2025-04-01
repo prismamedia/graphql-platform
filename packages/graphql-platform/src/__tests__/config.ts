@@ -584,6 +584,10 @@ export const Article = {
           mutation: { update: false },
         },
       }),
+
+      services: {
+        auditor: () => {},
+      },
     },
   ],
 } satisfies NodeConfig<MyContext>;

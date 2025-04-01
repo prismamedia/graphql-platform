@@ -71,6 +71,8 @@ describe('Feature', () => {
         Article: {
           features: [
             {
+              name: 'feature1',
+
               components: {
                 _id: {
                   kind: 'Leaf',

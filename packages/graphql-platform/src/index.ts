@@ -218,6 +218,10 @@ export class GraphQLPlatform<
     Node<TRequestContext, TConnector, TBroker, TContainer>
   >;
 
+  public readonly container: TContainer & {
+    servicesByNode?: ReadonlyMap<Node, ReadonlyMap<utils.Name, any>>;
+  };
+
   readonly #requestContextAssertion?: (
     maybeRequestContext: object,
   ) => asserts maybeRequestContext is TRequestContext;
@@ -230,8 +234,6 @@ export class GraphQLPlatform<
   readonly #connector?: TConnector;
 
   public readonly broker: TBroker;
-
-  public readonly container: TContainer;
 
   public constructor(
     public readonly config: GraphQLPlatformConfig<
@@ -311,7 +313,7 @@ export class GraphQLPlatform<
 
       this.nodeSet = new Set(this.nodesByName.values());
 
-      this.nodesByName.forEach((node) => node.validateDefinition());
+      this.nodeSet.forEach((node) => node.validateDefinition());
     }
 
     // container (has access to the nodes' definition)
@@ -319,23 +321,33 @@ export class GraphQLPlatform<
       const containerConfig = config.container;
       const containerConfigPath = utils.addPath(configPath, 'container');
 
-      const container = utils.resolveThunkable(
-        containerConfig,
-        this,
-        containerConfigPath,
+      const container =
+        utils.resolveThunkable(containerConfig, this, containerConfigPath) ??
+        Object.create(null);
+
+      if (typeof container !== 'object') {
+        throw new utils.UnexpectedValueError('an object', container, {
+          path: containerConfigPath,
+        });
+      }
+
+      const servicesByNode = new Map(
+        this.nodeSet
+          .values()
+          .reduce<[Node, ReadonlyMap<utils.Name, any>][]>((entries, node) => {
+            if (node.servicesByName.size) {
+              entries.push([node, node.servicesByName]);
+            }
+
+            return entries;
+          }, []),
       );
 
-      if (container != null) {
-        if (typeof container !== 'object') {
-          throw new utils.UnexpectedValueError('an object', container, {
-            path: containerConfigPath,
-          });
-        }
-
-        this.container = Object.freeze(container);
-      } else {
-        this.container = Object.freeze(Object.create(null) as TContainer);
-      }
+      this.container = Object.freeze(
+        servicesByNode.size
+          ? Object.assign(container, { servicesByNode })
+          : container,
+      );
     }
 
     /**
