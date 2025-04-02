@@ -1,7 +1,7 @@
 import * as utils from '@prismamedia/graphql-platform-utils';
 import * as graphql from 'graphql';
 import assert from 'node:assert';
-import type { JsonValue } from 'type-fest';
+import type { JsonObject } from 'type-fest';
 import { EdgeDependencyGraph } from '../../../../../change/dependency.js';
 import type { Component, Edge } from '../../../../../definition.js';
 import type { OperationContext } from '../../../../../operation.js';
@@ -141,11 +141,11 @@ export class EdgeHeadSelection<
       : this.headSelection.areValuesEqual(a, b);
   }
 
-  public serialize(value: TValue, path?: utils.Path): JsonValue {
-    return value == null ? null : this.headSelection.serialize(value, path);
+  public serialize(value: TValue, path?: utils.Path): JsonObject | null {
+    return value === null ? null : this.headSelection.serialize(value, path);
   }
 
-  public unserialize(value: JsonValue | undefined, path?: utils.Path): TValue {
+  public unserialize(value: JsonObject | null, path?: utils.Path): TValue {
     if (value == null) {
       if (!this.edge.isNullable()) {
         throw new utils.UnexpectedValueError(

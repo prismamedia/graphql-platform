@@ -1,7 +1,7 @@
 import * as utils from '@prismamedia/graphql-platform-utils';
 import * as graphql from 'graphql';
 import assert from 'node:assert';
-import type { JsonValue } from 'type-fest';
+import type { JsonObject } from 'type-fest';
 import { ReverseEdgeDependencyGraph } from '../../../../../change/dependency.js';
 import type { UniqueReverseEdge } from '../../../../../definition.js';
 import type { OperationContext } from '../../../../../operation.js';
@@ -131,11 +131,13 @@ export class UniqueReverseEdgeHeadSelection<
       : this.headSelection.areValuesEqual(a, b);
   }
 
-  public serialize(_value: TValue, path?: utils.Path): JsonValue {
-    throw new utils.GraphError('Cannot be serialized', { path });
+  public serialize(value: TValue, path?: utils.Path): JsonObject | null {
+    return value === null ? null : this.headSelection.serialize(value, path);
   }
 
-  public unserialize(_value: JsonValue | undefined, path?: utils.Path): TValue {
-    throw new utils.GraphError('Cannot be unserialized', { path });
+  public unserialize(value: JsonObject | null, path?: utils.Path): TValue {
+    return value === null
+      ? (null as TValue)
+      : this.headSelection.unserialize(value, path);
   }
 }

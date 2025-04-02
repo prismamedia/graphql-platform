@@ -92,7 +92,7 @@ export class LeafSelection<TSource extends LeafValue = any, TValue = TSource>
   }
 
   public serialize(value: TValue, _path?: utils.Path): JsonValue {
-    return value == null ? null : (this.leaf.type.serialize(value) as any);
+    return value === null ? null : (this.leaf.type.serialize(value) as any);
   }
 
   public unserialize(value: JsonValue | undefined, path?: utils.Path): TValue {

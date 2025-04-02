@@ -2,7 +2,6 @@ import * as scalars from '@prismamedia/graphql-platform-scalars';
 import * as utils from '@prismamedia/graphql-platform-utils';
 import * as graphql from 'graphql';
 import assert from 'node:assert';
-import type { JsonValue } from 'type-fest';
 import { ReverseEdgeDependencyGraph } from '../../../../../change/dependency.js';
 import type { MultipleReverseEdge } from '../../../../../definition.js';
 import type { OperationContext } from '../../../../../operation.js';
@@ -104,20 +103,16 @@ export class MultipleReverseEdgeCountSelection<
     };
   }
 
-  public parseSource(maybeSource: unknown, path?: utils.Path): TSource {
-    if (maybeSource == null) {
+  public parseSource(source: unknown, path?: utils.Path): TSource {
+    if (source == null) {
       throw new utils.UnexpectedValueError(
         `a non-nil "${scalars.typesByName.UnsignedInt}"`,
-        maybeSource,
+        source,
         { path },
       );
     }
 
-    return utils.parseGraphQLScalarValue(
-      scalars.typesByName.UnsignedInt,
-      maybeSource,
-      path,
-    ) as any;
+    return scalars.parseUnsignedInt(source, path) as any;
   }
 
   public resolveValue(
@@ -136,11 +131,11 @@ export class MultipleReverseEdgeCountSelection<
     return a === b;
   }
 
-  public serialize(_value: TValue, path?: utils.Path): JsonValue {
-    throw new utils.GraphError('Cannot be serialized', { path });
+  public serialize(value: TValue, path?: utils.Path): number {
+    return scalars.parseUnsignedInt(value, path);
   }
 
-  public unserialize(_value: JsonValue | undefined, path?: utils.Path): TValue {
-    throw new utils.GraphError('Cannot be unserialized', { path });
+  public unserialize(value: number, path?: utils.Path): TValue {
+    return scalars.parseUnsignedInt(value, path) as TValue;
   }
 }

@@ -34,7 +34,7 @@ export class NodeUpdate<
                 componentName,
                 node
                   .getComponentByName(componentName)
-                  .selection.unserialize(componentNewValue),
+                  .selection.unserialize(componentNewValue as any),
               ],
             ),
           )

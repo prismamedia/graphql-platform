@@ -1,7 +1,7 @@
 import * as utils from '@prismamedia/graphql-platform-utils';
 import * as graphql from 'graphql';
 import assert from 'node:assert';
-import type { JsonValue } from 'type-fest';
+import type { JsonArray } from 'type-fest';
 import { ReverseEdgeDependencyGraph } from '../../../../../change/dependency.js';
 import type { MultipleReverseEdge } from '../../../../../definition.js';
 import type { OperationContext } from '../../../../../operation.js';
@@ -224,7 +224,10 @@ export class MultipleReverseEdgeHeadSelection<
     );
   }
 
-  public areValuesEqual(a: TValue[], b: TValue[]): boolean {
+  public areValuesEqual(
+    a: ReadonlyArray<TValue>,
+    b: ReadonlyArray<TValue>,
+  ): boolean {
     return (
       a.length === b.length &&
       a.every((item, index) =>
@@ -233,14 +236,20 @@ export class MultipleReverseEdgeHeadSelection<
     );
   }
 
-  public serialize(_value: TValue[], path?: utils.Path): JsonValue {
-    throw new utils.GraphError('Cannot be serialized', { path });
+  public serialize(
+    values: ReadonlyArray<TValue>,
+    path?: utils.Path,
+  ): JsonArray {
+    return values.map((value, index) =>
+      this.headSelection.serialize(value, utils.addPath(path, index)),
+    );
   }
 
-  public unserialize(
-    _value: JsonValue | undefined,
-    path?: utils.Path,
-  ): TValue[] {
-    throw new utils.GraphError('Cannot be unserialized', { path });
+  public unserialize(values: JsonArray, path?: utils.Path): TValue[] {
+    return utils
+      .ensureArray(values, path)
+      .map((value, index) =>
+        this.headSelection.unserialize(value, utils.addPath(path, index)),
+      );
   }
 }

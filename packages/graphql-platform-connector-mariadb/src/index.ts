@@ -192,20 +192,15 @@ export class MariaDBConnector<TRequestContext extends object = any>
     if (!pool) {
       utils.assertPlainObject(this.poolConfig, this.poolConfigPath);
 
-      const poolConfig: mariadb.PoolConfig = {
-        ...this.poolConfig,
-        acquireTimeout: this.poolConfig.acquireTimeout || 1000,
-      };
-
       this.#poolsByStatementKind.set(
         kind,
         (pool = Object.assign(
           mariadb.createPool(
             kind === StatementKind.DATA_MANIPULATION
               ? {
-                  ...poolConfig,
+                  ...this.poolConfig,
                   sessionVariables: {
-                    ...poolConfig?.sessionVariables,
+                    ...this.poolConfig?.sessionVariables,
                     // For "JSON_ARRAYAGG" & "JSON_OBJECTAGG", 100M instead of the default 1M
                     group_concat_max_len: 104857600,
                   },
@@ -221,7 +216,7 @@ export class MariaDBConnector<TRequestContext extends object = any>
                   timezone: 'Z',
                   ...({ bitOneIsBoolean: false } as any),
                 }
-              : { ...poolConfig, connectionLimit: 1 },
+              : { ...this.poolConfig, connectionLimit: 1 },
           ),
           { kind },
         )),
