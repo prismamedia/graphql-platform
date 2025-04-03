@@ -76,7 +76,7 @@ export type ScrollSubscriptionStreamForEachOptions = Except<
 > &
   Abortable & {
     /**
-     * Optional, the number of tasks waiting to be processed
+     * Optional, the maximum number of tasks waiting to be processed, to avoid too much back-pressure
      *
      * Default: the queue's concurrency, so we're able to fill all the workers at any time
      */

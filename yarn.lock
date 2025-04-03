@@ -948,8 +948,8 @@ __metadata:
     dependency-graph: "npm:^1.0.0"
     graphql: "npm:16.10.0"
     inflection: "npm:^3.0.2"
-    mariadb: "npm:^3.4.0"
-    publint: "npm:0.3.9"
+    mariadb: "npm:^3.4.1"
+    publint: "npm:0.3.10"
     remeda: "npm:^2.21.2"
     semver: "npm:^7.7.1"
     tsx: "npm:4.19.3"
@@ -980,7 +980,7 @@ __metadata:
     express: "npm:4.21.2"
     graphql: "npm:16.10.0"
     graphql-ws: "npm:6.0.4"
-    publint: "npm:0.3.9"
+    publint: "npm:0.3.10"
     tsx: "npm:4.19.3"
     typescript: "npm:5.8.2"
     ws: "npm:8.18.1"
@@ -997,7 +997,7 @@ __metadata:
     "@prismamedia/graphql-platform-utils": "workspace:packages/graphql-platform-utils"
     "@types/draft-js": "npm:^0.11.18"
     graphql: "npm:16.10.0"
-    publint: "npm:0.3.9"
+    publint: "npm:0.3.10"
     remeda: "npm:^2.21.2"
     tsx: "npm:4.19.3"
     type-fest: "npm:4.37.0"
@@ -1016,7 +1016,7 @@ __metadata:
     "@types/indefinite": "npm:2.3.4"
     graphql: "npm:16.10.0"
     indefinite: "npm:^2.5.1"
-    publint: "npm:0.3.9"
+    publint: "npm:0.3.10"
     remeda: "npm:^2.21.2"
     tsx: "npm:4.19.3"
     type-fest: "npm:4.37.0"
@@ -1044,7 +1044,7 @@ __metadata:
     inflection: "npm:^3.0.2"
     p-queue: "npm:^8.1.0"
     p-retry: "npm:^6.2.1"
-    publint: "npm:0.3.9"
+    publint: "npm:0.3.10"
     remeda: "npm:^2.21.2"
     tsx: "npm:4.19.3"
     type-fest: "npm:4.37.0"
@@ -2458,16 +2458,16 @@ __metadata:
   languageName: node
   linkType: hard
 
-"mariadb@npm:^3.4.0":
-  version: 3.4.0
-  resolution: "mariadb@npm:3.4.0"
+"mariadb@npm:^3.4.1":
+  version: 3.4.1
+  resolution: "mariadb@npm:3.4.1"
   dependencies:
     "@types/geojson": "npm:^7946.0.14"
     "@types/node": "npm:^22.5.4"
     denque: "npm:^2.1.0"
     iconv-lite: "npm:^0.6.3"
     lru-cache: "npm:^10.3.0"
-  checksum: 10/a7d17dc38354573eb0c413c4326798188af31fd27b6610765b7c76da96dba4988eba2e6a4ff0160d65bc23a131816311c3bcd06a7350eb0110f52bba3888f7c3
+  checksum: 10/f206b07ab75b2f33a27e688eff77d37f52f5cc096a53615106c4d252d6743ba70bd28cbdbef72b9a93bba718dac6185a7cdfd6a856f86f5e3f67c4099d5cbc20
   languageName: node
   linkType: hard
 
@@ -2808,12 +2808,10 @@ __metadata:
   languageName: node
   linkType: hard
 
-"package-manager-detector@npm:^0.2.9":
-  version: 0.2.11
-  resolution: "package-manager-detector@npm:0.2.11"
-  dependencies:
-    quansync: "npm:^0.2.7"
-  checksum: 10/2c1a8da0e5895f0be06a8e1f4b4336fb78a19167ca3932dbaeca7260f948e67cf53b32585a13f8108341e7a468b38b4f2a8afc7b11691cb2d856ecd759d570fb
+"package-manager-detector@npm:^1.1.0":
+  version: 1.1.0
+  resolution: "package-manager-detector@npm:1.1.0"
+  checksum: 10/c72162e11dd2ec89588541d74e2814f5b0a92f05e25f44e74b1c3556c0232ea6873c6ca5417c12baeb86d54622979b2858e8696d2dcb25fe0242574a7438e377
   languageName: node
   linkType: hard
 
@@ -2918,17 +2916,17 @@ __metadata:
   languageName: node
   linkType: hard
 
-"publint@npm:0.3.9":
-  version: 0.3.9
-  resolution: "publint@npm:0.3.9"
+"publint@npm:0.3.10":
+  version: 0.3.10
+  resolution: "publint@npm:0.3.10"
   dependencies:
     "@publint/pack": "npm:^0.1.2"
-    package-manager-detector: "npm:^0.2.9"
+    package-manager-detector: "npm:^1.1.0"
     picocolors: "npm:^1.1.1"
     sade: "npm:^1.8.1"
   bin:
     publint: src/cli.js
-  checksum: 10/bfa96a78e38df964422602d22afd52561a47591bc5e06ffe39e0029ee0953205ad379506dd643dfbbf89f443b7ae753150b5e6cc03872c2fc852f9a755533c48
+  checksum: 10/204bad3fbc9ed58aa82c1595eb1355c6cb6148d6ffb912935aaa0746a73be970474c575e20470b133a002c0231fa8551e9ab0012a39b4832a7ec2bb7dff8d7e4
   languageName: node
   linkType: hard
 
@@ -2947,13 +2945,6 @@ __metadata:
   dependencies:
     side-channel: "npm:^1.1.0"
   checksum: 10/a60e49bbd51c935a8a4759e7505677b122e23bf392d6535b8fc31c1e447acba2c901235ecb192764013cd2781723dc1f61978b5fdd93cc31d7043d31cdc01974
-  languageName: node
-  linkType: hard
-
-"quansync@npm:^0.2.7":
-  version: 0.2.10
-  resolution: "quansync@npm:0.2.10"
-  checksum: 10/b54d955de867e104025f2666d52b2b67befe4e0f184a96acc9adcbdc572e46dce49c69d1e79f99413beae8a974a576383806a05f85f9a826865dc589ee1bcaf2
   languageName: node
   linkType: hard
 

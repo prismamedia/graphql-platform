@@ -80,12 +80,14 @@ export class ChangesSubscriptionEffect<
             ],
           },
           selection: this.subscription.onDeletionSelection,
-          forSubscription: {
-            id: this.subscription.id,
-            ifModifiedSince: committedAt,
-          },
           ...(this.subscription.cursorSize && {
             chunkSize: this.subscription.cursorSize * 2,
+          }),
+          ...(this.subscription.useCache && {
+            forSubscription: {
+              id: this.subscription.id,
+              ifModifiedSince: committedAt,
+            },
           }),
         })) {
           yield new ChangesSubscriptionDeletion(
@@ -141,12 +143,14 @@ export class ChangesSubscriptionEffect<
           ],
         },
         selection: this.subscription.onUpsertSelection,
-        forSubscription: {
-          id: this.subscription.id,
-          ifModifiedSince: committedAt,
-        },
         ...(this.subscription.cursorSize && {
           chunkSize: this.subscription.cursorSize,
+        }),
+        ...(this.subscription.useCache && {
+          forSubscription: {
+            id: this.subscription.id,
+            ifModifiedSince: committedAt,
+          },
         }),
       })) {
         yield new ChangesSubscriptionUpsert(
