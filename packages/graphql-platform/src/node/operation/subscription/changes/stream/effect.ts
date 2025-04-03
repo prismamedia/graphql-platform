@@ -38,8 +38,8 @@ export class ChangesSubscriptionEffect<
     ChangesSubscriptionChange<TRequestContext, TUpsert, TDeletion>
   > {
     const initiator = this.dependentGraph.changes.requestContext;
-    const committedAt = this.dependentGraph.changes.committedAt;
-    assert(committedAt, 'Changes must be committed');
+    const initiatedAt = this.dependentGraph.changes.committedAt;
+    assert(initiatedAt, 'Changes must have been committed');
 
     // First, the deletions:
     if (this.subscription.onDeletionSelection) {
@@ -51,6 +51,7 @@ export class ChangesSubscriptionEffect<
             new ChangesSubscriptionDeletion(
               this.subscription,
               initiator,
+              initiatedAt,
               oldValue,
             ),
         );
@@ -86,13 +87,14 @@ export class ChangesSubscriptionEffect<
           ...(this.subscription.useCache && {
             forSubscription: {
               id: this.subscription.id,
-              ifModifiedSince: committedAt,
+              ifModifiedSince: initiatedAt,
             },
           }),
         })) {
           yield new ChangesSubscriptionDeletion(
             this.subscription,
             initiator,
+            initiatedAt,
             deletion,
           );
         }
@@ -113,6 +115,7 @@ export class ChangesSubscriptionEffect<
                 new ChangesSubscriptionUpsert(
                   this.subscription,
                   initiator,
+                  initiatedAt,
                   newValue,
                 ),
             );
@@ -149,13 +152,14 @@ export class ChangesSubscriptionEffect<
         ...(this.subscription.useCache && {
           forSubscription: {
             id: this.subscription.id,
-            ifModifiedSince: committedAt,
+            ifModifiedSince: initiatedAt,
           },
         }),
       })) {
         yield new ChangesSubscriptionUpsert(
           this.subscription,
           initiator,
+          initiatedAt,
           upsert,
         );
       }

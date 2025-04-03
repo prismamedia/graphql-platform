@@ -12,10 +12,11 @@ export class ChangesSubscriptionDeletion<
   public constructor(
     subscription: ChangesSubscriptionStream<TRequestContext, any, TValue>,
     initiator: TRequestContext,
+    initiatedAt: Date,
     value: Readonly<any>,
   ) {
     assert(subscription.onDeletionSelection);
-    super(subscription, initiator);
+    super(subscription, initiator, initiatedAt);
 
     this.value = subscription.onDeletionSelection.pickValue(value);
   }

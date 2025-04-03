@@ -6,5 +6,6 @@ export abstract class AbstractChangesSubscriptionChange<
   public constructor(
     public readonly subscription: ChangesSubscriptionStream<TRequestContext>,
     public readonly initiator: TRequestContext,
+    public readonly initiatedAt: Date,
   ) {}
 }
