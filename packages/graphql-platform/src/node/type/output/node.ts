@@ -72,7 +72,7 @@ export type RawNodeSelection<
   TValue extends NodeSelectedValue = TSource,
 > =
   | NodeSelection<TSource, TValue>
-  | ReadonlyArray<Component['name']>
+  | ReadonlyArray<Component | Component['name']>
   | GraphQLFragment
   | GraphQLSelectionAST
   | PartialGraphQLResolveInfo;
@@ -369,14 +369,14 @@ export class NodeOutputType {
   }
 
   public selectComponents(
-    componentNames: ReadonlyArray<Component['name']>,
+    componentOrNames: ReadonlyArray<Component | Component['name']>,
     _operationContext?: OperationContext,
     path?: utils.Path,
   ): NodeSelection {
-    if (!Array.isArray(componentNames)) {
+    if (!Array.isArray(componentOrNames)) {
       throw new utils.UnexpectedValueError(
-        `an array of component's name`,
-        componentNames,
+        `an array of component`,
+        componentOrNames,
         { path },
       );
     }
@@ -384,10 +384,10 @@ export class NodeOutputType {
     return new NodeSelection(
       this.node,
       mergeSelectionExpressions(
-        componentNames.map(
-          (componentName, index) =>
-            this.node.getComponentByName(
-              componentName,
+        componentOrNames.map(
+          (componentOrName, index) =>
+            this.node.ensureComponent(
+              componentOrName,
               utils.addPath(path, index),
             ).selection,
         ),

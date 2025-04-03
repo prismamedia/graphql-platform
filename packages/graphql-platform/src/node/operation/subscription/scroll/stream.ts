@@ -214,7 +214,7 @@ export class ScrollSubscriptionStream<
     }
 
     this.#internalSelection = this.selection.mergeWith(
-      node.outputType.selectComponents([this.ordering.leaf.name]),
+      node.outputType.selectComponents([this.ordering.leaf]),
     );
 
     this.#api = node.createContextBoundAPI(context);

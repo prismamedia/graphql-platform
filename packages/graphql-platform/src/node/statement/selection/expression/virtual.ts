@@ -116,8 +116,8 @@ export class VirtualSelection<
     return isDeepStrictEqual(a, b);
   }
 
-  public serialize(_value: TValue, path: utils.Path): JsonValue {
-    throw new utils.GraphError('Cannot be serialized', { path });
+  public serialize(value: TValue, path: utils.Path): JsonValue {
+    return utils.serializeGraphQLOutputType(this.type.type, value, path);
   }
 
   public unserialize(_value: JsonValue | undefined, path: utils.Path): TValue {

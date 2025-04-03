@@ -1,11 +1,13 @@
 import * as graphql from 'graphql';
 import { isDeepStrictEqual } from 'node:util';
+import type { JsonValue } from 'type-fest';
+import { ensureArray } from './array.js';
 import { getOptionalFlag, type OptionalFlag } from './config.js';
 import { getEnumKeys } from './enum.js';
-import { UnexpectedValueError } from './error.js';
+import { UnexpectedValueError, UnreachableValueError } from './error.js';
 import { indefinite } from './indefinite.js';
 import { isNil, type Nillable } from './nil.js';
-import type { Path } from './path.js';
+import { addPath, type Path } from './path.js';
 import { isPlainObject, type PlainObject } from './plain-object.js';
 
 export const isGraphQLResolveInfo = (
@@ -106,6 +108,42 @@ export const parseGraphQLLeafValue = (
   return graphql.isScalarType(type)
     ? parseGraphQLScalarValue(type, maybeLeafValue, path)
     : parseGraphQLEnumValue(type, maybeLeafValue, path);
+};
+
+export const serializeGraphQLOutputType = (
+  type: graphql.GraphQLOutputType,
+  value: any,
+  path?: Path,
+): JsonValue => {
+  if (value === null) {
+    return value;
+  } else if (graphql.isEnumType(type) || graphql.isScalarType(type)) {
+    return type.serialize(value) as JsonValue;
+  } else if (graphql.isNonNullType(type)) {
+    return serializeGraphQLOutputType(type.ofType, value, path);
+  } else if (graphql.isListType(type)) {
+    return ensureArray(value, path).map((value, index) =>
+      serializeGraphQLOutputType(type.ofType, value, addPath(path, index)),
+    );
+  } else if (graphql.isObjectType(type)) {
+    return Object.entries(value).reduce(
+      (object, [key, value]) =>
+        Object.assign(object, {
+          [key]: serializeGraphQLOutputType(
+            type.getFields()[key].type,
+            value,
+            addPath(path, key),
+          ),
+        }),
+      Object.create(null),
+    );
+  } else if (graphql.isInterfaceType(type) || graphql.isUnionType(type)) {
+    throw new UnexpectedValueError(`a supported GraphQL output type`, type, {
+      path,
+    });
+  }
+
+  throw new UnreachableValueError(type, { path });
 };
 
 export const areGraphQLLeafValuesEqual = (

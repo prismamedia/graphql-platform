@@ -1,7 +1,11 @@
 import * as graphql from 'graphql';
 import assert from 'node:assert';
 import { describe, it } from 'node:test';
-import { createGraphQLEnumType, parseGraphQLLeafValue } from './graphql.js';
+import {
+  createGraphQLEnumType,
+  parseGraphQLLeafValue,
+  serializeGraphQLOutputType,
+} from './graphql.js';
 
 describe('GraphQL', () => {
   it('parses valid values', () => {
@@ -21,6 +25,65 @@ describe('GraphQL', () => {
 
     cases.forEach(([type, value]) => {
       assert.strictEqual(parseGraphQLLeafValue(type, value), value);
+    });
+  });
+
+  it('serializes valid values', () => {
+    const cases = [
+      [graphql.GraphQLBoolean, null, null],
+      [graphql.GraphQLBoolean, true, true],
+      [graphql.GraphQLString, 'A string', 'A string'],
+      [
+        new graphql.GraphQLEnumType({
+          name: 'AnEnumTest',
+          values: { first: { value: 'FIRST' }, two: { value: 'TWO' } },
+        }),
+        'TWO',
+        'two',
+      ],
+      [
+        new graphql.GraphQLObjectType({
+          name: 'AnObjectTypeTest',
+          fields: {
+            key1: {
+              type: graphql.GraphQLString,
+            },
+            key2: {
+              type: new graphql.GraphQLList(
+                new graphql.GraphQLObjectType({
+                  name: 'AnObjectTypeTest2',
+                  fields: {
+                    key3: {
+                      type: graphql.GraphQLString,
+                    },
+                    key4: {
+                      type: new graphql.GraphQLEnumType({
+                        name: 'AnEnumTest3',
+                        values: {
+                          first: { value: 'FIRST' },
+                          two: { value: 'TWO' },
+                        },
+                      }),
+                    },
+                  },
+                }),
+              ),
+            },
+          },
+        }),
+        {
+          key1: 'A string',
+          key2: [{ key3: 'A string', key4: 'TWO' }, { key4: 'FIRST' }],
+        },
+        {
+          key1: 'A string',
+          key2: [{ key3: 'A string', key4: 'two' }, { key4: 'first' }],
+        },
+      ],
+    ] as const;
+
+    cases.forEach(([type, input, output]) => {
+      assert.deepEqual(serializeGraphQLOutputType(type, input), output);
     });
   });
 
