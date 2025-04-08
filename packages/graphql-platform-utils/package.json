@@ -31,7 +31,7 @@
     "graphql": "16.10.0",
     "publint": "0.3.10",
     "tsx": "4.19.3",
-    "typescript": "5.8.2"
+    "typescript": "5.8.3"
   },
   "dependencies": {
     "@opentelemetry/api": "^1.9.0",

@@ -27,7 +27,7 @@
     "test:watch": "NODE_ENV=test tsx --test --watch --experimental-test-snapshots \"./src/**/*.test.ts\""
   },
   "devDependencies": {
-    "@apollo/server": "4.11.3",
+    "@apollo/server": "4.12.0",
     "@opentelemetry/instrumentation-express": "0.48.0",
     "@opentelemetry/instrumentation-http": "0.200.0",
     "@opentelemetry/sdk-node": "0.200.0",
@@ -43,7 +43,7 @@
     "graphql-ws": "6.0.4",
     "publint": "0.3.10",
     "tsx": "4.19.3",
-    "typescript": "5.8.2",
+    "typescript": "5.8.3",
     "ws": "8.18.1"
   },
   "dependencies": {
