@@ -16,7 +16,7 @@ export class JoinTable extends AbstractTableReference {
   public override readonly alias: string;
   public override readonly depth: number;
 
-  protected readonly authorization?: core.NodeFilter;
+  public readonly authorization?: core.NodeFilter;
 
   public constructor(
     public readonly parent: AbstractTableReference,

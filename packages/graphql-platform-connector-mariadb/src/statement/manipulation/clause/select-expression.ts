@@ -77,18 +77,38 @@ function parseEdgeSelection(
           )
         : selectNode(tableReference.join(edge), selection.headSelection);
 
-    return edge.isNullable() || parsedHeadAuthorization
+    const joinTable = tableReference.hasJoin(edge)
+      ? tableReference.join(edge)
+      : undefined;
+
+    return edge.isNullable() ||
+      joinTable?.authorization ||
+      parsedHeadAuthorization
       ? `IF(${AND([
-          OR(
-            tableReference.table
-              .getForeignKeyByEdge(edge)
-              .columns.map(
-                (column) =>
-                  `${tableReference.escapeColumnIdentifier(
-                    column,
-                  )} IS NOT NULL`,
-              ),
-          ),
+          edge.isNullable()
+            ? OR(
+                tableReference.table
+                  .getForeignKeyByEdge(edge)
+                  .columns.map(
+                    (column) =>
+                      `${tableReference.escapeColumnIdentifier(
+                        column,
+                      )} IS NOT NULL`,
+                  ),
+              )
+            : undefined,
+          joinTable?.authorization
+            ? OR(
+                joinTable.table
+                  .getColumnsByComponents(
+                    ...edge.referencedUniqueConstraint.componentSet,
+                  )
+                  .map(
+                    (column) =>
+                      `${joinTable.escapeColumnIdentifier(column)} IS NOT NULL`,
+                  ),
+              )
+            : undefined,
           parsedHeadAuthorization,
         ])}, ${parsedHeadSelection}, NULL)`
       : parsedHeadSelection;
