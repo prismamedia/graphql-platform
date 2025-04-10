@@ -41,7 +41,7 @@
     "express": "4.21.2",
     "graphql": "16.10.0",
     "graphql-ws": "6.0.4",
-    "publint": "0.3.10",
+    "publint": "0.3.11",
     "tsx": "4.19.3",
     "typescript": "5.8.3",
     "ws": "8.18.1"

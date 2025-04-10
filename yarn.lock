@@ -949,7 +949,7 @@ __metadata:
     graphql: "npm:16.10.0"
     inflection: "npm:^3.0.2"
     mariadb: "npm:^3.4.1"
-    publint: "npm:0.3.10"
+    publint: "npm:0.3.11"
     remeda: "npm:^2.21.2"
     semver: "npm:^7.7.1"
     tsx: "npm:4.19.3"
@@ -980,7 +980,7 @@ __metadata:
     express: "npm:4.21.2"
     graphql: "npm:16.10.0"
     graphql-ws: "npm:6.0.4"
-    publint: "npm:0.3.10"
+    publint: "npm:0.3.11"
     tsx: "npm:4.19.3"
     typescript: "npm:5.8.3"
     ws: "npm:8.18.1"
@@ -997,7 +997,7 @@ __metadata:
     "@prismamedia/graphql-platform-utils": "workspace:packages/graphql-platform-utils"
     "@types/draft-js": "npm:^0.11.18"
     graphql: "npm:16.10.0"
-    publint: "npm:0.3.10"
+    publint: "npm:0.3.11"
     remeda: "npm:^2.21.2"
     tsx: "npm:4.19.3"
     type-fest: "npm:4.37.0"
@@ -1016,7 +1016,7 @@ __metadata:
     "@types/indefinite": "npm:2.3.4"
     graphql: "npm:16.10.0"
     indefinite: "npm:^2.5.1"
-    publint: "npm:0.3.10"
+    publint: "npm:0.3.11"
     remeda: "npm:^2.21.2"
     tsx: "npm:4.19.3"
     type-fest: "npm:4.37.0"
@@ -1044,7 +1044,7 @@ __metadata:
     inflection: "npm:^3.0.2"
     p-queue: "npm:^8.1.0"
     p-retry: "npm:^6.2.1"
-    publint: "npm:0.3.10"
+    publint: "npm:0.3.11"
     remeda: "npm:^2.21.2"
     tsx: "npm:4.19.3"
     type-fest: "npm:4.37.0"
@@ -2916,9 +2916,9 @@ __metadata:
   languageName: node
   linkType: hard
 
-"publint@npm:0.3.10":
-  version: 0.3.10
-  resolution: "publint@npm:0.3.10"
+"publint@npm:0.3.11":
+  version: 0.3.11
+  resolution: "publint@npm:0.3.11"
   dependencies:
     "@publint/pack": "npm:^0.1.2"
     package-manager-detector: "npm:^1.1.0"
@@ -2926,7 +2926,7 @@ __metadata:
     sade: "npm:^1.8.1"
   bin:
     publint: src/cli.js
-  checksum: 10/204bad3fbc9ed58aa82c1595eb1355c6cb6148d6ffb912935aaa0746a73be970474c575e20470b133a002c0231fa8551e9ab0012a39b4832a7ec2bb7dff8d7e4
+  checksum: 10/2b9c062d9b14d99813511e0762a30ec46c305ff3907d25d73254091fa06c46f4c5d7c8a99f7b8ba425368b5087c01b531fe6765749a5214eb73c473e3cbf6da3
   languageName: node
   linkType: hard
 

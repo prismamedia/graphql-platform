@@ -59,14 +59,6 @@ export abstract class AbstractTableReference {
           .getJoinConditions(head, this);
   }
 
-  public hasJoin(
-    edgeOrUniqueReverseEdge: core.Edge | core.UniqueReverseEdge,
-  ): boolean {
-    return this.joinsByAlias.has(
-      new JoinTable(this, edgeOrUniqueReverseEdge).alias,
-    );
-  }
-
   public join(
     edgeOrUniqueReverseEdge: core.Edge | core.UniqueReverseEdge,
   ): JoinTable {

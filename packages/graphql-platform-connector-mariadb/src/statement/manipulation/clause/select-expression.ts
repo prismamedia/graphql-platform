@@ -55,10 +55,17 @@ function parseEdgeSelection(
       edge.head,
     );
 
-    const parsedHeadAuthorization =
-      headAuthorization?.isExecutableWithinUniqueConstraint(
-        edge.referencedUniqueConstraint,
+    // If we can avoid a join, we do so.
+    if (
+      (!headAuthorization ||
+        headAuthorization.isExecutableWithinUniqueConstraint(
+          edge.referencedUniqueConstraint,
+        )) &&
+      edge.referencedUniqueConstraint.selection.isSupersetOf(
+        selection.headSelection,
       )
+    ) {
+      const parsedHeadAuthorization = headAuthorization
         ? filterNode(
             tableReference,
             headAuthorization,
@@ -66,51 +73,44 @@ function parseEdgeSelection(
           )
         : undefined;
 
-    const parsedHeadSelection =
-      edge.referencedUniqueConstraint.selection.isSupersetOf(
+      const parsedHeadSelection = selectNode(
+        tableReference,
         selection.headSelection,
-      )
-        ? selectNode(
-            tableReference,
-            selection.headSelection,
-            tableReference.table.getColumnTreeByEdge(edge),
-          )
-        : selectNode(tableReference.join(edge), selection.headSelection);
+        tableReference.table.getColumnTreeByEdge(edge),
+      );
 
-    const joinTable = tableReference.hasJoin(edge)
-      ? tableReference.join(edge)
-      : undefined;
+      return edge.isNullable() || parsedHeadAuthorization
+        ? `IF(${AND([
+            OR(
+              tableReference.table
+                .getForeignKeyByEdge(edge)
+                .columns.map(
+                  (column) =>
+                    `${tableReference.escapeColumnIdentifier(
+                      column,
+                    )} IS NOT NULL`,
+                ),
+            ),
+            parsedHeadAuthorization,
+          ])}, ${parsedHeadSelection}, NULL)`
+        : parsedHeadSelection;
+    }
 
-    return edge.isNullable() ||
-      joinTable?.authorization ||
-      parsedHeadAuthorization
-      ? `IF(${AND([
-          edge.isNullable()
-            ? OR(
-                tableReference.table
-                  .getForeignKeyByEdge(edge)
-                  .columns.map(
-                    (column) =>
-                      `${tableReference.escapeColumnIdentifier(
-                        column,
-                      )} IS NOT NULL`,
-                  ),
-              )
-            : undefined,
-          joinTable?.authorization
-            ? OR(
-                joinTable.table
-                  .getColumnsByComponents(
-                    ...edge.referencedUniqueConstraint.componentSet,
-                  )
-                  .map(
-                    (column) =>
-                      `${joinTable.escapeColumnIdentifier(column)} IS NOT NULL`,
-                  ),
-              )
-            : undefined,
-          parsedHeadAuthorization,
-        ])}, ${parsedHeadSelection}, NULL)`
+    const joinTable = tableReference.join(edge);
+
+    const parsedHeadSelection = selectNode(joinTable, selection.headSelection);
+
+    return edge.isNullable() || joinTable.authorization
+      ? `IF(${OR(
+          joinTable.table
+            .getColumnsByComponents(
+              ...edge.referencedUniqueConstraint.componentSet,
+            )
+            .map(
+              (column) =>
+                `${joinTable.escapeColumnIdentifier(column)} IS NOT NULL`,
+            ),
+        )}, ${parsedHeadSelection}, NULL)`
       : parsedHeadSelection;
   } else {
     throw new utils.UnreachableValueError(selection);

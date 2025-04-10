@@ -31,7 +31,7 @@
     "@sqltools/formatter": "1.2.5",
     "@types/semver": "7.7.0",
     "graphql": "16.10.0",
-    "publint": "0.3.10",
+    "publint": "0.3.11",
     "tsx": "4.19.3",
     "typescript": "5.8.3"
   },
