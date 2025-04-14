@@ -154,7 +154,7 @@ export class MariaDBBroker<TRequestContext extends object = any>
           await table.setup(connection);
         }
 
-        // await this.connector.ensureEventSchedulerIsEnabled(connection);
+        await this.connector.ensureEventSchedulerIsEnabled(connection);
       },
       StatementKind.DATA_DEFINITION,
       connection,
