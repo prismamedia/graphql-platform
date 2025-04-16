@@ -197,6 +197,13 @@ export class NodeUpdateInputType extends utils.ObjectInputType<FieldUpdateInput>
     return resolvedUpdate;
   }
 
+  public hasVirtualData(
+    data: Readonly<NonNullable<NodeUpdateInputValue>>,
+    fields: ReadonlyArray<utils.Input> = this.virtualFields,
+  ): boolean {
+    return fields.some((field) => data[field.name] !== undefined);
+  }
+
   public hasReverseEdgeActions(
     data: Readonly<NonNullable<NodeUpdateInputValue>>,
     reverseEdges: ReadonlyArray<ReverseEdge> = Array.from(
