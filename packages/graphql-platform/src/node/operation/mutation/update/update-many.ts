@@ -173,13 +173,17 @@ export class UpdateManyMutation<
         path,
       );
 
+    const hasVirtualField = this.node.updateInputType.virtualFields.some(
+      (field) => data[field.name] !== undefined,
+    );
+
     let hasUpdate = false;
 
     for (const [index, oldSource] of oldSources.entries()) {
       // Create a statement for it
       const statement = new NodeUpdateStatement(this.node, oldSource, update);
 
-      if (!statement.isEmpty()) {
+      if (!statement.isEmpty() || hasVirtualField) {
         // Apply the "preUpdate"-hooks, if any
         await this.node.preUpdate(
           {

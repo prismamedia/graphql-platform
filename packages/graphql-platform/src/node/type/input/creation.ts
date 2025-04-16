@@ -45,7 +45,7 @@ export class NodeCreationInputType extends utils.ObjectInputType<FieldCreationIn
   }
 
   @MGetter
-  protected get componentFields(): ReadonlyArray<ComponentCreationInput> {
+  public get componentFields(): ReadonlyArray<ComponentCreationInput> {
     return this.node.componentsByName
       .values()
       .reduce<ComponentCreationInput[]>((fields, component) => {
@@ -58,7 +58,7 @@ export class NodeCreationInputType extends utils.ObjectInputType<FieldCreationIn
   }
 
   @MGetter
-  protected get reverseEdgeFields(): ReadonlyArray<ReverseEdgeCreationInput> {
+  public get reverseEdgeFields(): ReadonlyArray<ReverseEdgeCreationInput> {
     return this.node.reverseEdgesByName
       .values()
       .reduce<ReverseEdgeCreationInput[]>((fields, reverseEdge) => {
@@ -71,7 +71,7 @@ export class NodeCreationInputType extends utils.ObjectInputType<FieldCreationIn
   }
 
   @MGetter
-  protected get virtualFields(): ReadonlyArray<utils.Input> {
+  public get virtualFields(): ReadonlyArray<utils.Input> {
     return this.node.features.flatMap((feature) => {
       const { config, configPath } = feature.getMutationConfig(
         utils.MutationType.CREATION,

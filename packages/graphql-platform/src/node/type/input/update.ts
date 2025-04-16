@@ -53,7 +53,7 @@ export class NodeUpdateInputType extends utils.ObjectInputType<FieldUpdateInput>
   }
 
   @MGetter
-  protected get componentFields(): ReadonlyArray<ComponentUpdateInput> {
+  public get componentFields(): ReadonlyArray<ComponentUpdateInput> {
     return this.node.componentsByName
       .values()
       .reduce<ComponentUpdateInput[]>((fields, component) => {
@@ -66,7 +66,7 @@ export class NodeUpdateInputType extends utils.ObjectInputType<FieldUpdateInput>
   }
 
   @MGetter
-  protected get reverseEdgeFields(): ReadonlyArray<ReverseEdgeUpdateInput> {
+  public get reverseEdgeFields(): ReadonlyArray<ReverseEdgeUpdateInput> {
     return this.node.reverseEdgesByName
       .values()
       .reduce<ReverseEdgeUpdateInput[]>((fields, reverseEdge) => {
@@ -79,7 +79,7 @@ export class NodeUpdateInputType extends utils.ObjectInputType<FieldUpdateInput>
   }
 
   @MGetter
-  protected get virtualFields(): ReadonlyArray<utils.Input> {
+  public get virtualFields(): ReadonlyArray<utils.Input> {
     return this.node.features.flatMap((feature) => {
       const { config, configPath } = feature.getMutationConfig(
         utils.MutationType.UPDATE,
