@@ -3,7 +3,13 @@ import { MGetter, MMethod } from '@prismamedia/memoize';
 import inflection from 'inflection';
 import assert from 'node:assert';
 import type { Except } from 'type-fest';
-import type { Edge, Node, NodeValue, ReverseEdge } from '../../../node.js';
+import type {
+  Component,
+  Edge,
+  Node,
+  NodeValue,
+  ReverseEdge,
+} from '../../../node.js';
 import type { MutationContext } from '../../operation.js';
 import type { NodeCreationValue } from '../../statement/creation.js';
 import {
@@ -150,6 +156,16 @@ export class NodeCreationInputType extends utils.ObjectInputType<FieldCreationIn
     );
   }
 
+  public hasComponentValues(
+    data: Readonly<NonNullable<NodeCreationInputValue>>,
+    components: ReadonlyArray<Component> = Array.from(this.node.componentSet),
+  ): boolean {
+    return this.componentFields.some(
+      (field) =>
+        data[field.name] !== undefined && components.includes(field.component),
+    );
+  }
+
   public async resolveValue(
     data: Readonly<NonNullable<NodeCreationInputValue>>,
     context: MutationContext,
@@ -175,6 +191,13 @@ export class NodeCreationInputType extends utils.ObjectInputType<FieldCreationIn
     }
 
     return resolvedValue;
+  }
+
+  public hasVirtualData(
+    data: Readonly<NonNullable<NodeCreationInputValue>>,
+    fields: ReadonlyArray<utils.Input> = this.virtualFields,
+  ): boolean {
+    return fields.some((field) => data[field.name] !== undefined);
   }
 
   public hasReverseEdgeActions(

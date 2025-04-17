@@ -22,9 +22,9 @@ export class MariaDBSubscription
   implements core.NodeChangeSubscriptionInterface
 {
   /**
-   * The last mutation's id that has been assigned to this subscription.
+   * The last mutation's id that has been visited by this subscription.
    */
-  public lastAssignedMutationId?: bigint;
+  public lastVisitedMutationId?: bigint;
 
   #idle?: boolean;
   readonly #signal: AbortSignal;
@@ -47,7 +47,6 @@ export class MariaDBSubscription
   public notify(mutations: ReadonlyArray<MariaDBBrokerMutation>): void {
     assert(mutations.length);
 
-    this.lastAssignedMutationId = mutations.at(-1)!.id;
     this.emit('assignments', mutations).catch((cause) =>
       this.broker.connector.emit(
         'error',

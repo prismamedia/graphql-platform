@@ -305,14 +305,13 @@ export class MariaDBConnector<TRequestContext extends object = any>
   /**
    * Returns the first row, if any
    */
-  public async findRow<TRow extends utils.PlainObject>(
+  public async getRowIfExists<TRow extends utils.PlainObject>(
     query: string | mariadb.QueryOptions,
     values?: any,
     kind?: StatementKind,
   ): Promise<TRow | undefined> {
     const rows = await this.executeQuery<[TRow]>(query, values, kind);
     assert(Array.isArray(rows), `Expects a result-set`);
-    assert(rows.length <= 1, `Expects a single row`);
 
     return rows[0];
   }
@@ -325,7 +324,7 @@ export class MariaDBConnector<TRequestContext extends object = any>
     values?: any,
     kind?: StatementKind,
   ): Promise<TRow> {
-    const row = await this.findRow<TRow>(query, values, kind);
+    const row = await this.getRowIfExists<TRow>(query, values, kind);
     assert(row, `Not found`);
 
     return row;

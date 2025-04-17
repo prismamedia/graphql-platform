@@ -113,16 +113,14 @@ export class MariaDBBrokerAssignmentsTable extends AbstractTable {
   ): AsyncGenerator<MariaDBBrokerMutation<TRequestContext>> {
     let row: MariaDBBrokerMutationRow | undefined;
     while (
-      (row = (
-        await this.connector.executeQuery<MariaDBBrokerMutationRow[]>(`
+      (row = await this.connector.getRowIfExists<MariaDBBrokerMutationRow>(`
           SELECT m.*
           FROM ${escapeIdentifier(this.name)} a
             INNER JOIN ${escapeIdentifier(this.broker.mutationsTable.name)} m ON m.${this.broker.mutationsTable.escapeColumnIdentifier('id')} = a.${this.escapeColumnIdentifier('mutationId')}
           WHERE a.${this.escapeColumnIdentifier('subscriptionId')} = ${this.serializeColumnValue('subscriptionId', subscriptionId)}
           ORDER BY a.${this.escapeColumnIdentifier('mutationId')} ASC
           LIMIT 1
-        `)
-      )[0])
+        `))
     ) {
       yield this.broker.mutationsTable.parseRow<TRequestContext>(row);
 

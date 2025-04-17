@@ -12,7 +12,6 @@ import {
   TimestampType,
 } from '../../schema/table/data-type.js';
 import type { StatementKind } from '../../statement.js';
-import { AND } from '../../statement/manipulation/clause/where-condition.js';
 import { AbstractTable } from '../abstract-table.js';
 import type { MariaDBSubscription } from '../subscription.js';
 
@@ -201,14 +200,14 @@ export class MariaDBBrokerMutationsTable extends AbstractTable {
 
       const [first, ...rest] = this.broker.subscriptions.values();
 
-      const minAssignedMutationId = rest.reduce(
-        (min, { lastAssignedMutationId }) =>
-          min && lastAssignedMutationId
-            ? min <= lastAssignedMutationId
+      const minVisitedMutationId = rest.reduce(
+        (min, { lastVisitedMutationId }) =>
+          min && lastVisitedMutationId
+            ? min <= lastVisitedMutationId
               ? min
-              : lastAssignedMutationId
-            : min || lastAssignedMutationId,
-        first.lastAssignedMutationId,
+              : lastVisitedMutationId
+            : undefined,
+        first.lastVisitedMutationId,
       );
 
       const minSince = rest.reduce(
@@ -219,12 +218,11 @@ export class MariaDBBrokerMutationsTable extends AbstractTable {
       rows = await this.connector.executeQuery<MariaDBBrokerMutationRow[]>(`
         SELECT *
         FROM ${escapeIdentifier(this.name)}
-        WHERE ${AND([
-          minAssignedMutationId
-            ? `${this.escapeColumnIdentifier('id')} > ${this.serializeColumnValue('id', minAssignedMutationId)}`
-            : undefined,
-          `${this.escapeColumnIdentifier('committedAt')} >= ${this.serializeColumnValue('committedAt', minSince)}`,
-        ])}
+        WHERE ${
+          minVisitedMutationId
+            ? `${this.escapeColumnIdentifier('id')} > ${this.serializeColumnValue('id', minVisitedMutationId)}`
+            : `${this.escapeColumnIdentifier('committedAt')} > ${this.serializeColumnValue('committedAt', minSince)}`
+        }
         ORDER BY ${this.escapeColumnIdentifier('id')} ASC
         LIMIT ${batchSize}
       `);
@@ -241,14 +239,16 @@ export class MariaDBBrokerMutationsTable extends AbstractTable {
       for (const row of rows) {
         const mutation = this.parseRow(row);
 
-        this.broker.subscriptions
-          .values()
-          .filter(
-            ({ lastAssignedMutationId, subscription }) =>
-              (!lastAssignedMutationId ||
-                lastAssignedMutationId < mutation.id) &&
-              subscription.since <= mutation.committedAt &&
-              subscription.dependencyGraph.flattened.byNode
+        for (const worker of this.broker.subscriptions.values()) {
+          if (
+            !worker.lastVisitedMutationId ||
+            worker.lastVisitedMutationId < mutation.id
+          ) {
+            worker.lastVisitedMutationId = mutation.id;
+
+            if (
+              worker.subscription.since < mutation.committedAt &&
+              worker.subscription.dependencyGraph.flattened.byNode
                 .entries()
                 .some(
                   ([node, { creation, update, deletion }]) =>
@@ -264,16 +264,17 @@ export class MariaDBBrokerMutationsTable extends AbstractTable {
                             ),
                           )) ||
                       (deletion && mutation.changesByNode[node.name].deletion)),
-                ),
-          )
-          .forEach((subscription) => {
-            let mutations = mutationsBySubscription.get(subscription);
-            if (!mutations) {
-              mutationsBySubscription.set(subscription, (mutations = []));
-            }
+                )
+            ) {
+              let mutations = mutationsBySubscription.get(worker);
+              if (!mutations) {
+                mutationsBySubscription.set(worker, (mutations = []));
+              }
 
-            mutations.push(mutation);
-          });
+              mutations.push(mutation);
+            }
+          }
+        }
       }
 
       if (mutationsBySubscription.size) {

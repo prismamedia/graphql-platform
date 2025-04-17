@@ -81,58 +81,56 @@ export class MariaDBBrokerChangesTable extends AbstractTable {
     changes: core.MutationContextChanges,
     connection: PoolConnection,
   ): Promise<void> {
-    await connection.query(
-      `
-        INSERT INTO ${escapeIdentifier(this.name)} (${[
-          'mutationId',
-          'id',
-          'node',
-          'kind',
-          'oldValue',
-          'newValue',
-          'executedAt',
-        ]
-          .map((columnName) => this.escapeColumnIdentifier(columnName))
-          .join(',')})
-        VALUES ${Array.from(
-          changes,
-          (change, id) =>
-            `(${[
-              this.serializeColumnValue('mutationId', mutationId),
-              this.serializeColumnValue('id', id + 1),
-              this.serializeColumnValue('node', change.node.name),
-              this.serializeColumnValue('kind', change.kind),
-              ...(change instanceof core.NodeCreation
+    await connection.query(`
+      INSERT INTO ${escapeIdentifier(this.name)} (${[
+        'mutationId',
+        'id',
+        'node',
+        'kind',
+        'oldValue',
+        'newValue',
+        'executedAt',
+      ]
+        .map((columnName) => this.escapeColumnIdentifier(columnName))
+        .join(',')})
+      VALUES ${Array.from(
+        changes,
+        (change, id) =>
+          `(${[
+            this.serializeColumnValue('mutationId', mutationId),
+            this.serializeColumnValue('id', id + 1),
+            this.serializeColumnValue('node', change.node.name),
+            this.serializeColumnValue('kind', change.kind),
+            ...(change instanceof core.NodeCreation
+              ? [
+                  this.serializeColumnValue('oldValue', null),
+                  this.serializeColumnValue(
+                    'newValue',
+                    change.serializedNewValue,
+                  ),
+                ]
+              : change instanceof core.NodeUpdate
                 ? [
-                    this.serializeColumnValue('oldValue', null),
+                    this.serializeColumnValue(
+                      'oldValue',
+                      change.serializedOldValue,
+                    ),
                     this.serializeColumnValue(
                       'newValue',
-                      change.serializedNewValue,
+                      change.serializedUpdates,
                     ),
                   ]
-                : change instanceof core.NodeUpdate
-                  ? [
-                      this.serializeColumnValue(
-                        'oldValue',
-                        change.serializedOldValue,
-                      ),
-                      this.serializeColumnValue(
-                        'newValue',
-                        change.serializedUpdates,
-                      ),
-                    ]
-                  : [
-                      this.serializeColumnValue(
-                        'oldValue',
-                        change.serializedOldValue,
-                      ),
-                      this.serializeColumnValue('newValue', null),
-                    ]),
-              this.serializeColumnValue('executedAt', change.executedAt),
-            ].join(',')})`,
-        ).join(',')}
-      `,
-    );
+                : [
+                    this.serializeColumnValue(
+                      'oldValue',
+                      change.serializedOldValue,
+                    ),
+                    this.serializeColumnValue('newValue', null),
+                  ]),
+            this.serializeColumnValue('executedAt', change.executedAt),
+          ].join(',')})`,
+      ).join(',')}
+    `);
   }
 
   public async *getChanges<TRequestContext extends object>(
@@ -148,51 +146,49 @@ export class MariaDBBrokerChangesTable extends AbstractTable {
         return;
       }
 
-      rows = await this.connector.executeQuery<MariaDBBrokerChangeRow[]>(
-        `
-          SELECT *
-          FROM ${escapeIdentifier(this.name)}
-          WHERE ${AND([
-            `${this.escapeColumnIdentifier('mutationId')} = ${this.serializeColumnValue('mutationId', mutation.id)}`,
-            lastChangeId
-              ? `${this.escapeColumnIdentifier('id')} > ${this.serializeColumnValue('id', lastChangeId)}`
-              : undefined,
-            OR(
-              Array.from(
-                subscription.dependencyGraph.flattened.byNode,
-                ([node, dependency]) =>
-                  AND([
-                    `${this.escapeColumnIdentifier('node')} = ${this.serializeColumnValue('node', node.name)}`,
-                    OR([
-                      dependency.creation || dependency.deletion
-                        ? `${this.escapeColumnIdentifier('kind')} IN (${[
-                            dependency.creation && utils.MutationType.CREATION,
-                            dependency.deletion && utils.MutationType.DELETION,
-                          ]
-                            .filter(utils.isNonNil)
-                            .map((kind) =>
-                              this.serializeColumnValue('kind', kind),
-                            )
-                            .join(',')})`
-                        : undefined,
-                      dependency.update
-                        ? AND([
-                            `${this.escapeColumnIdentifier('kind')} = ${this.serializeColumnValue('kind', utils.MutationType.UPDATE)}`,
-                            `JSON_OVERLAPS(
-                              JSON_KEYS(${this.escapeColumnIdentifier('newValue')}),
-                              JSON_ARRAY(${Array.from(dependency.update, ({ name }) => this.serializeColumnValue('node', name)).join(',')})
-                            )`,
-                          ])
-                        : undefined,
-                    ]),
+      rows = await this.connector.executeQuery<MariaDBBrokerChangeRow[]>(`
+        SELECT *
+        FROM ${escapeIdentifier(this.name)}
+        WHERE ${AND([
+          `${this.escapeColumnIdentifier('mutationId')} = ${this.serializeColumnValue('mutationId', mutation.id)}`,
+          lastChangeId
+            ? `${this.escapeColumnIdentifier('id')} > ${this.serializeColumnValue('id', lastChangeId)}`
+            : undefined,
+          OR(
+            Array.from(
+              subscription.dependencyGraph.flattened.byNode,
+              ([node, dependency]) =>
+                AND([
+                  `${this.escapeColumnIdentifier('node')} = ${this.serializeColumnValue('node', node.name)}`,
+                  OR([
+                    dependency.creation || dependency.deletion
+                      ? `${this.escapeColumnIdentifier('kind')} IN (${[
+                          dependency.creation && utils.MutationType.CREATION,
+                          dependency.deletion && utils.MutationType.DELETION,
+                        ]
+                          .filter(utils.isNonNil)
+                          .map((kind) =>
+                            this.serializeColumnValue('kind', kind),
+                          )
+                          .join(',')})`
+                      : undefined,
+                    dependency.update
+                      ? AND([
+                          `${this.escapeColumnIdentifier('kind')} = ${this.serializeColumnValue('kind', utils.MutationType.UPDATE)}`,
+                          `JSON_OVERLAPS(
+                            JSON_KEYS(${this.escapeColumnIdentifier('newValue')}),
+                            JSON_ARRAY(${Array.from(dependency.update, ({ name }) => this.serializeColumnValue('node', name)).join(',')})
+                          )`,
+                        ])
+                      : undefined,
                   ]),
-              ),
+                ]),
             ),
-          ])}
-          ORDER BY ${escapeIdentifier('id')} ASC
-          LIMIT ${batchSize}
-        `,
-      );
+          ),
+        ])}
+        ORDER BY ${escapeIdentifier('id')} ASC
+        LIMIT ${batchSize}
+      `);
 
       if (subscription.signal.aborted || !rows.length) {
         return;
