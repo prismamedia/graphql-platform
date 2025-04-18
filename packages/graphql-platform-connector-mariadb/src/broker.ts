@@ -162,7 +162,7 @@ export class MariaDBBroker<TRequestContext extends object = any>
   }
 
   public async publish(changes: core.MutationContextChanges): Promise<void> {
-    await this.connector.withConnection(async (connection) => {
+    await this.connector.withConnectionInTransaction(async (connection) => {
       const mutationId = await this.mutationsTable.publish(changes, connection);
       await this.changesTable.publish(mutationId, changes, connection);
     });

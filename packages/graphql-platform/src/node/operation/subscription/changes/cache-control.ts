@@ -1,12 +1,13 @@
 import * as scalars from '@prismamedia/graphql-platform-scalars';
 import * as utils from '@prismamedia/graphql-platform-utils';
+import * as graphql from 'graphql';
 import type { MutationContextChanges } from '../../mutation.js';
 import type { ChangesSubscriptionStream } from './stream.js';
 
-export const changesSubscriptionCacheControlInputType =
+export const ChangesSubscriptionCacheControlInputType =
   new utils.ObjectInputType({
     name: 'ChangesSubscriptionCacheControl',
-    description: `In the context of a changes-subscription, identified by its "id": won't return documents processed after the "ifModifiedSince" date.`,
+    description: `In the context of a changes-subscription, identified by its "id", control the cache behavior.`,
     fields: [
       new utils.Input({
         name: 'id',
@@ -15,6 +16,11 @@ export const changesSubscriptionCacheControlInputType =
       new utils.Input({
         name: 'ifModifiedSince',
         type: utils.nonNillableInputType(scalars.GraphQLDateTime),
+      }),
+      new utils.Input({
+        name: 'ifNoneMatch',
+        type: new utils.NonNullableInputType(graphql.GraphQLBoolean),
+        defaultValue: true,
       }),
       new utils.Input({
         name: 'maxAge',
@@ -27,5 +33,6 @@ export const changesSubscriptionCacheControlInputType =
 export interface ChangesSubscriptionCacheControlInputValue {
   id: ChangesSubscriptionStream['id'];
   ifModifiedSince: NonNullable<MutationContextChanges['committedAt']>;
+  ifNoneMatch?: boolean;
   maxAge?: number;
 }

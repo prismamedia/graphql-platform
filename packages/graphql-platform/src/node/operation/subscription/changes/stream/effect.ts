@@ -84,12 +84,10 @@ export class ChangesSubscriptionEffect<
           ...(this.subscription.cursorSize && {
             chunkSize: this.subscription.cursorSize * 2,
           }),
-          ...(this.subscription.useCache && {
-            forSubscription: {
-              id: this.subscription.id,
-              ifModifiedSince: initiatedAt,
-            },
-          }),
+          forSubscription: {
+            id: this.subscription.id,
+            ifModifiedSince: initiatedAt,
+          },
         })) {
           yield new ChangesSubscriptionDeletion(
             this.subscription,
@@ -149,12 +147,10 @@ export class ChangesSubscriptionEffect<
         ...(this.subscription.cursorSize && {
           chunkSize: this.subscription.cursorSize,
         }),
-        ...(this.subscription.useCache && {
-          forSubscription: {
-            id: this.subscription.id,
-            ifModifiedSince: initiatedAt,
-          },
-        }),
+        forSubscription: {
+          id: this.subscription.id,
+          ifModifiedSince: initiatedAt,
+        },
       })) {
         yield new ChangesSubscriptionUpsert(
           this.subscription,

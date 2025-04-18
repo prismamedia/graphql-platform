@@ -13,7 +13,7 @@ import type { NodeFilterInputValue } from '../../type.js';
 import { AbstractSubscription } from '../abstract-subscription.js';
 import type { OperationContext } from '../context.js';
 import {
-  changesSubscriptionCacheControlInputType,
+  ChangesSubscriptionCacheControlInputType,
   type ChangesSubscriptionCacheControlInputValue,
 } from './changes/cache-control.js';
 import {
@@ -86,9 +86,7 @@ export class ScrollSubscription<
       new utils.Input({
         public: false,
         name: 'forSubscription',
-        type: new utils.NonNullableInputType(
-          changesSubscriptionCacheControlInputType,
-        ),
+        type: ChangesSubscriptionCacheControlInputType,
       }),
     ];
   }

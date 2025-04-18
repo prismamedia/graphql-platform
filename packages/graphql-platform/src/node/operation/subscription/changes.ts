@@ -43,13 +43,6 @@ export type ChangesSubscriptionArgs = {
    * This is the size of the cursor used to fetch these "subscription-changes" in batches.
    */
   cursorSize?: number;
-
-  /**
-   * Optional, use the cache to reduce the number of "documents" sent to the client by avoiding duplicates.
-   *
-   * @default true
-   */
-  useCache?: boolean;
 };
 
 export type ParsedChangesSubscriptionArgs = Merge<
@@ -60,7 +53,6 @@ export type ParsedChangesSubscriptionArgs = Merge<
       onUpsert: NodeSelection;
       onDeletion?: NodeSelection;
     };
-    useCache: boolean;
   }
 >;
 
@@ -117,13 +109,6 @@ export class ChangesSubscription<
         public: false,
         name: 'cursorSize',
         type: new utils.NonNullableInputType(scalars.GraphQLUnsignedInt),
-      }),
-      new utils.Input({
-        public: false,
-        name: 'useCache',
-        description: `Use the cache to reduce the number of "documents" sent to the client by avoiding duplicates.`,
-        type: utils.nonNillableInputType(graphql.GraphQLBoolean),
-        defaultValue: true,
       }),
     ];
   }
@@ -269,7 +254,6 @@ export class ChangesSubscription<
       filter,
       selection: args.selection,
       cursorSize: args.cursorSize,
-      useCache: args.useCache,
     });
     await stream.subscribeToNodeChanges();
 

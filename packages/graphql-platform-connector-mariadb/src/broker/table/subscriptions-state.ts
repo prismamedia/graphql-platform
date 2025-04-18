@@ -11,7 +11,7 @@ import type { Table } from '../../schema.js';
 import * as schema from '../../schema.js';
 import { Event } from '../../schema/event.js';
 import {
-  CharType,
+  IntType,
   TimestampType,
   UuidType,
 } from '../../schema/table/data-type.js';
@@ -38,7 +38,7 @@ export interface MariaDBBrokerSubscriptionsStateTableOptions {
   /**
    * Enables subscriptions' state tracking for optimized cache invalidation.
    *
-   * When enabled, store the last revalidation timestamp (revalidatedAt) and hash of every subscriptions' documents.
+   * When enabled, store the last revalidation timestamp (revalidatedAt) and hash (etag) of every subscriptions' documents.
    * These informations are then used to reduce the number of changes sent to the clients that are not needed.
    *
    * @default false
@@ -96,9 +96,9 @@ export class MariaDBBrokerSubscriptionsStateTable extends AbstractTable {
           dataType: new UuidType(),
           nullable: false,
         },
-        hash: {
-          comment: 'The SHA-256 hash of the document',
-          dataType: new CharType({ length: 64 }),
+        etag: {
+          comment: 'The CRC32 hash of the document',
+          dataType: new IntType({ modifiers: ['UNSIGNED'] }),
           nullable: false,
         },
         revalidatedAt: {
@@ -162,7 +162,7 @@ export class MariaDBBrokerSubscriptionsStateTable extends AbstractTable {
       ...this.references.map(({ target }) =>
         tableReference.escapeColumnIdentifier(target),
       ),
-      joinTable.escapeColumnIdentifier('hash'),
+      joinTable.escapeColumnIdentifier('etag'),
     ].join();
   }
 
@@ -181,7 +181,7 @@ export class MariaDBBrokerSubscriptionsStateTable extends AbstractTable {
       `${joinTable.escapeColumnIdentifier('revalidatedAt')} IS NULL`,
       AND([
         `${joinTable.escapeColumnIdentifier('revalidatedAt')} < ${this.serializeColumnValue('revalidatedAt', ifModifiedSince)}`,
-        maxAge
+        maxAge != null
           ? `${joinTable.escapeColumnIdentifier('revalidatedAt')} < NOW(3) - INTERVAL ${maxAge} SECOND`
           : undefined,
       ]),
@@ -191,19 +191,28 @@ export class MariaDBBrokerSubscriptionsStateTable extends AbstractTable {
   public having(
     tableReference: TableFactor,
     selectionKey: string,
-  ): WhereCondition {
+    { ifNoneMatch }: core.ChangesSubscriptionCacheControlInputValue,
+  ): WhereCondition | undefined {
+    if (!ifNoneMatch) {
+      return;
+    }
+
     assert.strictEqual(tableReference.table, this.targetTable);
 
     return OR([
-      `${escapeIdentifier('hash')} IS NULL`,
-      `${escapeIdentifier('hash')} != SHA2(${escapeIdentifier(selectionKey)}, 256)`,
+      `${escapeIdentifier('etag')} IS NULL`,
+      `${escapeIdentifier('etag')} != CRC32(${escapeIdentifier(selectionKey)})`,
     ]);
   }
 
-  public wrap(sql: string, selectionKey: string): string {
+  public wrap(
+    sql: string,
+    selectionKey: string,
+    _cacheControl: core.ChangesSubscriptionCacheControlInputValue,
+  ): string {
     return `SELECT ${[
       `data.*`,
-      `SHA2(data.${escapeIdentifier(selectionKey)}, 256) as revalidatedHash`,
+      `CRC32(data.${escapeIdentifier(selectionKey)}) as revalidatedETag`,
       `NOW(3) as revalidatedAt`,
     ].join()} FROM (${sql}) as data`;
   }
@@ -213,7 +222,7 @@ export class MariaDBBrokerSubscriptionsStateTable extends AbstractTable {
     { id }: core.ChangesSubscriptionCacheControlInputValue,
     connection?: PoolConnection<StatementKind.DATA_MANIPULATION>,
   ): Promise<void> {
-    const columnNames = ['hash', 'revalidatedAt', 'heartbeatAt'];
+    const columnNames = ['etag', 'revalidatedAt', 'heartbeatAt'];
 
     await this.connector.withConnection<OkPacket>(
       (connection) =>
@@ -233,7 +242,7 @@ export class MariaDBBrokerSubscriptionsStateTable extends AbstractTable {
                   source.dataType.serialize(target.pickLeafValueFromRow(row)),
                 ),
                 this.serializeColumnValue('subscriptionId', id),
-                escapeStringValue(row['revalidatedHash']),
+                row['revalidatedETag'],
                 escapeStringValue(row['revalidatedAt']),
                 'NOW()',
               ].join()})`,

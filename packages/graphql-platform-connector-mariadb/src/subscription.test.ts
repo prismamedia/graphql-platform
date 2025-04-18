@@ -283,4 +283,41 @@ describe('Subscription', () => {
       ['upsert', 'upsert', 'deletion'],
     );
   });
+
+  it('uses cache', async () => {
+    const changes: ChangesSubscriptionChange[] = [];
+
+    await Promise.all([
+      Promise.all([
+        Article.api.updateMany(myAdminContext, {
+          data: {
+            title: `${fixtures.constant.Article.article_03.title} - v2`,
+          },
+          where: { title: fixtures.constant.Article.article_03.title },
+          first: 10,
+          selection: `{ id }`,
+        }),
+        Category.api.updateOne(myAdminContext, {
+          data: { order: 4 },
+          where: { id: '26348235-ffe8-4ed1-985f-94e58961578f' },
+          selection: `{ id }`,
+        }),
+      ]).then(() => gp.broker.assign()),
+      subscriptions[0].byBatch(
+        async (batch) => {
+          await setTimeout(50);
+
+          changes.push(...batch);
+        },
+        { batchSize: 2 },
+      ),
+    ]);
+
+    assert.deepEqual(
+      changes.map((change) =>
+        change instanceof ChangesSubscriptionDeletion ? 'deletion' : 'upsert',
+      ),
+      ['upsert', 'upsert', 'deletion', 'upsert'],
+    );
+  });
 });

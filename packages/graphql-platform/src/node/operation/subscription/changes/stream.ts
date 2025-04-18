@@ -80,7 +80,6 @@ export type ChangesSubscriptionStreamConfig<
     onUpsert: NodeSelection<TUpsert>;
   };
   cursorSize?: number;
-  useCache: boolean;
 };
 
 /**
@@ -127,7 +126,6 @@ export class ChangesSubscriptionStream<
   public readonly onDeletionSelection?: NodeSelection<TDeletion>;
   public readonly dependencyGraph: NodeSetDependencyGraph;
   public readonly cursorSize?: number;
-  public readonly useCache: boolean;
 
   public readonly api: ContextBoundNodeAPI;
 
@@ -182,7 +180,6 @@ export class ChangesSubscriptionStream<
     );
 
     this.cursorSize = config.cursorSize;
-    this.useCache = config.useCache;
 
     this.api = node.createContextBoundAPI(context);
 

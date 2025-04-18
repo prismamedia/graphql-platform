@@ -54,7 +54,11 @@ export class FindStatement implements mariadb.QueryOptions {
         : undefined;
 
     const havingCondition = statement.forSubscription
-      ? table.subscriptionsStateTable?.having(tableReference, this.selectionKey)
+      ? table.subscriptionsStateTable?.having(
+          tableReference,
+          this.selectionKey,
+          statement.forSubscription,
+        )
       : undefined;
 
     const orderingExpressions = statement.ordering
@@ -80,7 +84,11 @@ export class FindStatement implements mariadb.QueryOptions {
 
     this.sql =
       statement.forSubscription && table.subscriptionsStateTable
-        ? table.subscriptionsStateTable.wrap(sql, this.selectionKey)
+        ? table.subscriptionsStateTable.wrap(
+            sql,
+            this.selectionKey,
+            statement.forSubscription,
+          )
         : sql;
   }
 }

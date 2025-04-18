@@ -18,7 +18,7 @@ import {
   ConnectorOperationKind,
 } from '../error.js';
 import {
-  changesSubscriptionCacheControlInputType,
+  ChangesSubscriptionCacheControlInputType,
   type ChangesSubscriptionCacheControlInputValue,
 } from '../subscription/changes/cache-control.js';
 
@@ -70,9 +70,7 @@ export class FindManyQuery<
       new utils.Input({
         public: false,
         name: 'forSubscription',
-        type: new utils.NonNullableInputType(
-          changesSubscriptionCacheControlInputType,
-        ),
+        type: ChangesSubscriptionCacheControlInputType,
       }),
     ];
   }
