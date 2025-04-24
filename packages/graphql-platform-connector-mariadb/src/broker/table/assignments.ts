@@ -150,7 +150,7 @@ export class MariaDBBrokerAssignmentsTable extends AbstractTable {
   public async heartbeat(subscriptionIds: Iterable<UUID>): Promise<void> {
     await this.connector.executeQuery<OkPacket>(`
       UPDATE ${escapeIdentifier(this.name)} 
-      SET ${this.escapeColumnIdentifier('heartbeatAt')} = NOW(3)
+      SET ${this.escapeColumnIdentifier('heartbeatAt')} = NOW()
       WHERE ${this.escapeColumnIdentifier('subscriptionId')} IN (${Array.from(subscriptionIds, (subscriptionId) => this.serializeColumnValue('subscriptionId', subscriptionId)).join(',')})
     `);
   }
