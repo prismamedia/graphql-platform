@@ -30,9 +30,9 @@
   "devDependencies": {
     "@sqltools/formatter": "1.2.5",
     "@types/semver": "7.7.0",
-    "graphql": "16.10.0",
+    "graphql": "16.11.0",
     "publint": "0.3.12",
-    "tsx": "4.19.3",
+    "tsx": "4.19.4",
     "typescript": "5.8.3"
   },
   "dependencies": {
@@ -44,7 +44,7 @@
     "@prismamedia/memoize": "^6.1.0",
     "dependency-graph": "^1.0.0",
     "inflection": "^3.0.2",
-    "mariadb": "^3.4.1",
+    "mariadb": "^3.4.2",
     "remeda": "^2.21.3",
     "semver": "^7.7.1",
     "type-fest": "4.37.0"

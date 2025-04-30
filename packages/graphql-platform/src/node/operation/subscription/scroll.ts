@@ -1,8 +1,8 @@
-import * as scalars from '@prismamedia/graphql-platform-scalars';
 import * as utils from '@prismamedia/graphql-platform-utils';
 import { MGetter, MMethod } from '@prismamedia/memoize';
 import * as graphql from 'graphql';
 import inflection from 'inflection';
+import type { Merge } from 'type-fest';
 import {
   argsPathKey,
   type NodeSelectionAwareArgs,
@@ -17,20 +17,24 @@ import {
   type ChangesSubscriptionCacheControlInputValue,
 } from './changes/cache-control.js';
 import {
-  ScrollSubscriptionOrderingInputType,
-  type ScrollSubscriptionOrderingInputValue,
-} from './scroll/ordering-input-type.js';
+  ScrollCursorInputType,
+  type ScrollCursorInputValue,
+} from './scroll/cursor.js';
 import { ScrollSubscriptionStream } from './scroll/stream.js';
 
-export * from './scroll/ordering-input-type.js';
+export * from './scroll/cursor.js';
 export * from './scroll/stream.js';
 
 export type ScrollSubscriptionArgs = RawNodeSelectionAwareArgs<{
   where?: NodeFilterInputValue;
-  orderBy?: ScrollSubscriptionOrderingInputValue;
-  chunkSize?: number;
+  cursor?: ScrollCursorInputValue;
   forSubscription?: ChangesSubscriptionCacheControlInputValue;
 }>;
+
+type ParsedScrollSubscriptionArgs = Merge<
+  ScrollSubscriptionArgs,
+  { cursor: Required<ScrollCursorInputValue> }
+>;
 
 export class ScrollSubscription<
   TRequestContext extends object,
@@ -57,31 +61,22 @@ export class ScrollSubscription<
   }
 
   @MGetter
-  public get orderingInputType() {
-    return new ScrollSubscriptionOrderingInputType(this.node);
+  public get cursorInputType() {
+    return new ScrollCursorInputType(this.node);
   }
 
   @MGetter
   public override get arguments() {
-    const firstOrderingInputValue = this.orderingInputType.enumValues[0];
-
     return [
       new utils.Input({
         name: 'where',
         type: this.node.filterInputType,
       }),
       new utils.Input({
-        name: 'orderBy',
-        type: utils.nonNillableInputType(this.orderingInputType),
-        defaultValue: firstOrderingInputValue.isPublic()
-          ? firstOrderingInputValue.value
-          : () => firstOrderingInputValue.value,
-      }),
-      new utils.Input({
-        name: 'chunkSize',
-        type: utils.nonNillableInputType(scalars.GraphQLUnsignedInt),
-        defaultValue: 100,
         public: false,
+        name: 'cursor',
+        type: utils.nonNillableInputType(this.cursorInputType),
+        defaultValue: {},
       }),
       new utils.Input({
         public: false,
@@ -94,32 +89,31 @@ export class ScrollSubscription<
   protected executeWithValidArgumentsAndContext(
     context: OperationContext,
     authorization: NodeFilter | undefined,
-    args: NodeSelectionAwareArgs<ScrollSubscriptionArgs>,
+    args: NodeSelectionAwareArgs<ParsedScrollSubscriptionArgs>,
     path: utils.Path,
   ): ScrollSubscriptionStream {
     const argsPath = utils.addPath(path, argsPathKey);
 
-    const wherePath = utils.addPath(argsPath, 'where');
     const where = this.node.filterInputType.filter(
       args.where,
       context,
-      wherePath,
+      utils.addPath(argsPath, 'where'),
     ).normalized;
 
     const filter = (
       authorization && where ? authorization.and(where) : authorization || where
     )?.normalized;
 
-    const orderByPath = utils.addPath(argsPath, 'orderBy');
-    const ordering = this.orderingInputType
-      .getEnumValue(args.orderBy, orderByPath)
-      .sort(context, orderByPath);
+    const cursor = this.cursorInputType.createCursor(
+      context,
+      args.cursor,
+      utils.addPath(argsPath, 'cursor'),
+    );
 
     return new ScrollSubscriptionStream(this.node, context, {
       filter,
-      ordering,
+      cursor,
       selection: args.selection,
-      chunkSize: args.chunkSize!,
       forSubscription: args.forSubscription,
     });
   }

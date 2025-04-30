@@ -27,9 +27,9 @@
     "test:watch": "NODE_ENV=test tsx --test --watch --experimental-test-snapshots \"./src/**/*.test.ts\""
   },
   "devDependencies": {
-    "graphql": "16.10.0",
+    "graphql": "16.11.0",
     "publint": "0.3.12",
-    "tsx": "4.19.3",
+    "tsx": "4.19.4",
     "typescript": "5.8.3"
   },
   "dependencies": {

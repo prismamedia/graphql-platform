@@ -39,10 +39,10 @@
     "body-parser": "2.2.0",
     "cors": "2.8.5",
     "express": "4.21.2",
-    "graphql": "16.10.0",
+    "graphql": "16.11.0",
     "graphql-ws": "6.0.4",
     "publint": "0.3.12",
-    "tsx": "4.19.3",
+    "tsx": "4.19.4",
     "typescript": "5.8.3",
     "ws": "8.18.1"
   },

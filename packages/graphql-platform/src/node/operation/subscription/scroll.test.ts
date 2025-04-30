@@ -207,7 +207,7 @@ describe('ScrollSubscription', () => {
     it('scrolls articles, 2 by 2', async () => {
       const cursor = Article.api.scroll(myAdminContext, {
         selection: '{ _id id }',
-        chunkSize: 2,
+        cursor: { size: 2 },
       });
 
       assert.deepEqual(await Array.fromAsync(cursor), articles);
@@ -217,7 +217,7 @@ describe('ScrollSubscription', () => {
     it('stops a cursor through for-await-of', async () => {
       const cursor = Article.api.scroll(myAdminContext, {
         selection: '{ _id id }',
-        chunkSize: 2,
+        cursor: { size: 2 },
       });
 
       for await (const value of cursor) {

@@ -22,6 +22,7 @@ import {
   NodeSelection,
   type NodeSelectedValue,
 } from '../../../statement.js';
+import type { ScrollCursorInputValue } from '../scroll.js';
 import type { ChangesSubscriptionChange } from './stream/change.js';
 import { ChangesSubscriptionEffect } from './stream/effect.js';
 
@@ -75,11 +76,11 @@ export type ChangesSubscriptionStreamConfig<
 > = {
   since: Date;
   filter?: NodeFilter;
+  cursor?: ScrollCursorInputValue;
   selection: {
     onDeletion?: NodeSelection<TDeletion>;
     onUpsert: NodeSelection<TUpsert>;
   };
-  cursorSize?: number;
 };
 
 /**
@@ -122,10 +123,10 @@ export class ChangesSubscriptionStream<
 
   public readonly since: Date;
   public readonly filter?: NodeFilter;
+  public readonly cursor?: ScrollCursorInputValue;
   public readonly onUpsertSelection: NodeSelection<TUpsert>;
   public readonly onDeletionSelection?: NodeSelection<TDeletion>;
   public readonly dependencyGraph: NodeSetDependencyGraph;
-  public readonly cursorSize?: number;
 
   public readonly api: ContextBoundNodeAPI;
 
@@ -153,6 +154,8 @@ export class ChangesSubscriptionStream<
       this.filter = config.filter?.normalized;
     }
 
+    this.cursor = config.cursor;
+
     assert(config.selection.onUpsert instanceof NodeSelection);
     assert.strictEqual(config.selection.onUpsert.node, node);
     this.onUpsertSelection = config.selection.onUpsert;
@@ -178,8 +181,6 @@ export class ChangesSubscriptionStream<
       undefined,
       this.onUpsertSelection,
     );
-
-    this.cursorSize = config.cursorSize;
 
     this.api = node.createContextBoundAPI(context);
 

@@ -32,6 +32,7 @@ describe('Subscription', () => {
           status: ArticleStatus.PUBLISHED,
           tags_some: { tag: { deprecated_not: true } },
         },
+        cursor: { orderBy: '_id_DESC', size: 25 },
         selection: {
           onUpsert: `{
             id

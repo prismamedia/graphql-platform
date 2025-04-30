@@ -80,10 +80,8 @@ export class ChangesSubscriptionEffect<
               this.dependentGraph.filter.graphFilter.inputValue,
             ],
           },
+          ...(this.subscription.cursor && { cursor: this.subscription.cursor }),
           selection: this.subscription.onDeletionSelection,
-          ...(this.subscription.cursorSize && {
-            chunkSize: this.subscription.cursorSize * 2,
-          }),
           forSubscription: {
             id: this.subscription.id,
             ifModifiedSince: initiatedAt,
@@ -143,10 +141,8 @@ export class ChangesSubscriptionEffect<
               ).inputValue,
           ],
         },
+        ...(this.subscription.cursor && { cursor: this.subscription.cursor }),
         selection: this.subscription.onUpsertSelection,
-        ...(this.subscription.cursorSize && {
-          chunkSize: this.subscription.cursorSize,
-        }),
         forSubscription: {
           id: this.subscription.id,
           ifModifiedSince: initiatedAt,

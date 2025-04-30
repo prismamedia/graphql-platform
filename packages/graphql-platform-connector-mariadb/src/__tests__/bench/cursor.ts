@@ -3,7 +3,7 @@ import type { MyGP } from '../config.js';
 
 export default async function (gp: MyGP, iteration: number) {
   const scroll = gp.getNodeByName('Article').api.scroll(myAdminContext, {
-    chunkSize: 100,
+    cursor: { size: 100 },
     selection: `{
       id
       status

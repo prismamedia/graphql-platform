@@ -16,6 +16,7 @@ import {
   ChangesSubscriptionStream,
   type ChangesSubscriptionChange,
 } from './changes/stream.js';
+import type { ScrollCursorInputValue } from './scroll.js';
 
 export * from './changes/cache-control.js';
 export * from './changes/stream.js';
@@ -30,22 +31,16 @@ enum ChangeKind {
 export type ChangesSubscriptionArgs = {
   since?: Date;
   where?: NodeFilterInputValue;
+  cursor?: ScrollCursorInputValue;
   selection:
     | graphql.GraphQLResolveInfo
     | {
         onUpsert: RawNodeSelection;
         onDeletion?: RawNodeSelection;
       };
-
-  /**
-   * A "mutation", which may contains many "node-changes", can produce a lot of "subscription-changes".
-   *
-   * This is the size of the cursor used to fetch these "subscription-changes" in batches.
-   */
-  cursorSize?: number;
 };
 
-export type ParsedChangesSubscriptionArgs = Merge<
+type ParsedChangesSubscriptionArgs = Merge<
   ChangesSubscriptionArgs,
   {
     since: Date;
@@ -107,8 +102,10 @@ export class ChangesSubscription<
       }),
       new utils.Input({
         public: false,
-        name: 'cursorSize',
-        type: new utils.NonNullableInputType(scalars.GraphQLUnsignedInt),
+        name: 'cursor',
+        type: new utils.NonNullableInputType(
+          this.node.getSubscriptionByKey('scroll').cursorInputType,
+        ),
       }),
     ];
   }
@@ -252,8 +249,8 @@ export class ChangesSubscription<
     const stream = new ChangesSubscriptionStream(this.node, context, {
       since: args.since,
       filter,
+      cursor: args.cursor,
       selection: args.selection,
-      cursorSize: args.cursorSize,
     });
     await stream.subscribeToNodeChanges();
 

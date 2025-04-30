@@ -17,15 +17,13 @@ import type {
   OperationContext,
 } from '../../../operation.js';
 import {
-  LeafOrdering,
   NodeFilter,
   NodeSelection,
-  OrderingDirection,
   type NodeSelectedValue,
 } from '../../../statement.js';
 import type { NodeFilterInputValue } from '../../../type/input/filter.js';
-import { LeafFilterInput } from '../../../type/input/filter/field/leaf.js';
 import type { ScrollSubscriptionArgs } from '../scroll.js';
+import { ScrollCursor } from './cursor.js';
 
 const averageFormattedKey = 'average_formatted';
 
@@ -134,9 +132,8 @@ export type ScrollSubscriptionStreamConfig<
   TValue extends NodeSelectedValue = any,
 > = {
   filter?: NodeFilter;
-  ordering: LeafOrdering;
+  cursor: ScrollCursor;
   selection: NodeSelection<TValue>;
-  chunkSize: number;
   forSubscription?: ScrollSubscriptionArgs['forSubscription'];
 };
 
@@ -168,12 +165,10 @@ export class ScrollSubscriptionStream<
 > implements AsyncIterable<TValue>
 {
   public readonly filter?: NodeFilter;
-  public readonly ordering: LeafOrdering;
+  public readonly cursor: ScrollCursor;
   public readonly selection: NodeSelection<TValue>;
-  readonly #chunkSize: number;
   readonly #forSubscription?: ScrollSubscriptionArgs['forSubscription'];
 
-  readonly #nextFilterInput: LeafFilterInput;
   readonly #internalSelection: NodeSelection;
   readonly #api: ContextBoundNodeAPI;
 
@@ -185,36 +180,16 @@ export class ScrollSubscriptionStream<
     assert(config.filter === undefined || config.filter instanceof NodeFilter);
     this.filter = config.filter?.normalized;
 
-    assert(
-      config.ordering instanceof LeafOrdering &&
-        config.ordering.leaf.isUnique() &&
-        !config.ordering.leaf.isNullable(),
-    );
-    this.ordering = config.ordering;
+    assert(config.cursor instanceof ScrollCursor);
+    this.cursor = config.cursor;
 
     assert(config.selection instanceof NodeSelection);
     this.selection = config.selection;
 
-    this.#chunkSize = Math.max(1, config.chunkSize);
     this.#forSubscription = config.forSubscription;
 
-    {
-      const nextFilterInput = node.filterInputType.fields.find(
-        (field): field is LeafFilterInput =>
-          field instanceof LeafFilterInput &&
-          field.leaf === this.ordering.leaf &&
-          field.id ===
-            (this.ordering.direction === OrderingDirection.ASCENDING
-              ? 'gt'
-              : 'lt'),
-      );
-
-      assert(nextFilterInput);
-      this.#nextFilterInput = nextFilterInput;
-    }
-
     this.#internalSelection = this.selection.mergeWith(
-      node.outputType.selectComponents([this.ordering.leaf]),
+      node.outputType.selectComponents([this.cursor.ordering.leaf]),
     );
 
     this.#api = node.createContextBoundAPI(context);
@@ -225,17 +200,17 @@ export class ScrollSubscriptionStream<
     while (next !== null) {
       const values = await this.#api.findMany({
         where: { AND: [this.filter?.inputValue, next] },
-        orderBy: [this.ordering.inputValue],
-        first: this.#chunkSize,
+        orderBy: [this.cursor.ordering.inputValue],
+        first: this.cursor.size,
         selection: this.#internalSelection,
         forSubscription: this.#forSubscription,
       });
 
       next =
-        values.length === this.#chunkSize
+        values.length === this.cursor.size
           ? {
-              [this.#nextFilterInput.name]:
-                values.at(-1)![this.ordering.leaf.name],
+              [this.cursor.nextFilterInput.name]:
+                values.at(-1)![this.cursor.ordering.leaf.name],
             }
           : null;
 
@@ -417,7 +392,7 @@ export class ScrollSubscriptionStream<
   public async byBatch(
     task: ScrollSubscriptionStreamByBatchTask<TValue, TRequestContext>,
     {
-      batchSize = this.#chunkSize,
+      batchSize = this.cursor.size,
       buffer: bufferOptions,
       continueOnError,
       progressBar: progressBarOptions,
