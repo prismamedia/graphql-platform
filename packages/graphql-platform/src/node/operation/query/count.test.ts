@@ -62,7 +62,6 @@ describe('CountQuery', () => {
       assert.strictEqual(await gp.api.Article.count(myAdminContext, {}), 5);
 
       assert.strictEqual(gp.connector.count.mock.callCount(), 1);
-      assert.strictEqual(gp.connector.count.mock.calls[0].arguments.length, 2);
 
       const [context, { node, filter }] =
         gp.connector.count.mock.calls[0].arguments;
@@ -81,7 +80,6 @@ describe('CountQuery', () => {
       );
 
       assert.strictEqual(gp.connector.count.mock.callCount(), 1);
-      assert.strictEqual(gp.connector.count.mock.calls[0].arguments.length, 2);
 
       const [context, { node, filter }] =
         gp.connector.count.mock.calls[0].arguments;

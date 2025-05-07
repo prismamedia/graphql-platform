@@ -487,10 +487,11 @@ export class Table {
     context: core.OperationContext,
     statement: SetOptional<core.ConnectorCountStatement, 'node'>,
     connection?: PoolConnection,
+    path?: utils.Path,
   ): Promise<number> {
     const [{ COUNT }] = await this.schema.connector.executeStatement<
       [{ COUNT: bigint }]
-    >(new CountStatement(this, context, statement), connection);
+    >(new CountStatement(this, context, statement), connection, path);
 
     return Number(COUNT);
   }
@@ -499,12 +500,13 @@ export class Table {
     context: core.OperationContext,
     statement: SetOptional<core.ConnectorFindStatement<TValue>, 'node'>,
     connection?: PoolConnection,
+    path?: utils.Path,
   ): Promise<TValue[]> {
     const findStatement = new FindStatement(this, context, statement);
 
     const rows = await this.schema.connector.executeStatement<
       utils.PlainObject[]
-    >(findStatement, connection);
+    >(findStatement, connection, path);
 
     if (
       rows.length &&
@@ -531,10 +533,11 @@ export class Table {
     statement: SetOptional<core.ConnectorCreateStatement, 'node'>,
     connection: PoolConnection,
     config?: InsertStatementConfig,
+    path?: utils.Path,
   ): Promise<core.NodeValue[]> {
     const rows = await this.schema.connector.executeStatement<
       utils.PlainObject[]
-    >(new InsertStatement(this, context, statement, config), connection);
+    >(new InsertStatement(this, context, statement, config), connection, path);
 
     return rows.map((row) => this.parseRow(row));
   }
@@ -544,11 +547,13 @@ export class Table {
     statement: SetOptional<core.ConnectorUpdateStatement, 'node'>,
     connection: PoolConnection,
     config?: UpdateStatementConfig,
+    path?: utils.Path,
   ): Promise<number> {
     const { affectedRows } =
       await this.schema.connector.executeStatement<OkPacket>(
         new UpdateStatement(this, context, statement, config),
         connection,
+        path,
       );
 
     return affectedRows;
@@ -559,11 +564,13 @@ export class Table {
     statement: SetOptional<core.ConnectorDeleteStatement, 'node'>,
     connection: PoolConnection,
     config?: DeleteStatementConfig,
+    path?: utils.Path,
   ): Promise<number> {
     const { affectedRows } =
       await this.schema.connector.executeStatement<OkPacket>(
         new DeleteStatement(this, context, statement, config),
         connection,
+        path,
       );
 
     return affectedRows;

@@ -107,14 +107,18 @@ export class DeleteManyMutation<
     // Fetch the current nodes' value
     const rawOldSources = await catchConnectorOperationError(
       () =>
-        this.connector.find(context, {
-          node: this.node,
-          ...(filter && { filter }),
-          ...(ordering && { ordering }),
-          limit: args.first,
-          selection: internalSelection,
-          forMutation: utils.MutationType.DELETION,
-        }),
+        this.connector.find(
+          context,
+          {
+            node: this.node,
+            ...(filter && { filter }),
+            ...(ordering && { ordering }),
+            limit: args.first,
+            selection: internalSelection,
+            forMutation: utils.MutationType.DELETION,
+          },
+          path,
+        ),
       context.request,
       this.node,
       ConnectorOperationKind.FIND,
@@ -226,10 +230,14 @@ export class DeleteManyMutation<
     // Actually delete the nodes
     await catchConnectorOperationError(
       () =>
-        this.connector.delete(context, {
-          node: this.node,
-          filter: this.node.filterInputType.filter({ OR: ids }),
-        }),
+        this.connector.delete(
+          context,
+          {
+            node: this.node,
+            filter: this.node.filterInputType.filter({ OR: ids }),
+          },
+          path,
+        ),
       context.request,
       this.node,
       ConnectorOperationKind.DELETE,

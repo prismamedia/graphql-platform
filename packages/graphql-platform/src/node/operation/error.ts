@@ -371,7 +371,6 @@ export class ConnectorWorkflowError<
     super(request, `The connector failed at "${ConnectorWorkflowKind[kind]}"`, {
       ...options,
       code: OperationErrorCode.CONNECTOR_WORKFLOW_ERROR,
-      causeIsPrivate: options?.causeIsPrivate ?? true,
     });
   }
 }
@@ -401,7 +400,9 @@ export enum ConnectorOperationKind {
   DELETE,
 }
 
-export interface ConnectorOperationErrorOptions extends OperationErrorOptions {}
+export interface ConnectorOperationErrorOptions extends OperationErrorOptions {
+  readonly message?: string;
+}
 
 export class ConnectorOperationError<
   TRequestContext extends object = any,
@@ -410,17 +411,21 @@ export class ConnectorOperationError<
     request: TRequestContext,
     node: Node,
     kind: ConnectorOperationKind,
-    options?: ConnectorOperationErrorOptions & {
+    {
+      code,
+      message,
+      ...options
+    }: ConnectorOperationErrorOptions & {
       readonly code?: OperationErrorCode.DUPLICATE;
-    },
+    } = {},
   ) {
     super(
       request,
-      `The connector failed at "${node}.${ConnectorOperationKind[kind]}"`,
+      message ??
+        `The connector failed at "${node}.${ConnectorOperationKind[kind]}"`,
       {
         ...options,
-        code: options?.code ?? OperationErrorCode.CONNECTOR_OPERATION_ERROR,
-        causeIsPrivate: options?.causeIsPrivate ?? true,
+        code: code ?? OperationErrorCode.CONNECTOR_OPERATION_ERROR,
       },
     );
   }
@@ -443,17 +448,7 @@ export class DuplicateError<
     super(request, node, kind, {
       ...options,
       code: OperationErrorCode.DUPLICATE,
-      cause: new Error(
-        [
-          'duplicate',
-          options?.uniqueConstraint && `"${options?.uniqueConstraint.name}"`,
-          options?.hint && `(${options.hint})`,
-        ]
-          .filter(Boolean)
-          .join(' '),
-        { cause: options?.cause },
-      ),
-      causeIsPrivate: false,
+      message: `Duplicate "${options?.uniqueConstraint ?? node}"${options?.hint ? `: ${options.hint}` : ''}`,
     });
   }
 }

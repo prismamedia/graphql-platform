@@ -70,7 +70,6 @@ describe('FindManyQuery', () => {
       );
 
       assert.strictEqual(gp.connector.find.mock.callCount(), 1);
-      assert.strictEqual(gp.connector.find.mock.calls[0].arguments.length, 2);
 
       const [context, { node, filter, ordering, offset, limit, selection }] =
         gp.connector.find.mock.calls[0].arguments;
@@ -98,7 +97,6 @@ describe('FindManyQuery', () => {
       );
 
       assert.strictEqual(gp.connector.find.mock.callCount(), 1);
-      assert.strictEqual(gp.connector.find.mock.calls[0].arguments.length, 2);
 
       const [context, { node, filter, ordering, offset, limit, selection }] =
         gp.connector.find.mock.calls[0].arguments;

@@ -73,10 +73,14 @@ export class CountQuery<TRequestContext extends object> extends AbstractQuery<
 
     return catchConnectorOperationError(
       () =>
-        this.connector.count(context, {
-          node: this.node,
-          ...(filter && { filter }),
-        }),
+        this.connector.count(
+          context,
+          {
+            node: this.node,
+            ...(filter && { filter }),
+          },
+          path,
+        ),
       context.request,
       this.node,
       ConnectorOperationKind.COUNT,

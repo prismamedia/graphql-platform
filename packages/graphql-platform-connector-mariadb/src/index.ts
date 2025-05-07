@@ -348,6 +348,7 @@ export class MariaDBConnector<TRequestContext extends object = any>
   public async executeStatement<TResult extends OkPacket | utils.PlainObject[]>(
     statement: Statement,
     connection?: PoolConnection,
+    path?: utils.Path,
   ): Promise<TResult> {
     return trace(
       'statement.execution',
@@ -412,6 +413,7 @@ export class MariaDBConnector<TRequestContext extends object = any>
                   uniqueConstraint: uniqueIndex?.uniqueConstraint,
                   hint: match?.groups?.value,
                   cause: error,
+                  path,
                 },
               );
             }
@@ -547,6 +549,7 @@ export class MariaDBConnector<TRequestContext extends object = any>
   public async count(
     context: core.OperationContext,
     { node, ...statement }: core.ConnectorCountStatement,
+    path?: utils.Path,
   ): Promise<number> {
     const table = this.schema.getTableByNode(node);
     const maybeConnection =
@@ -554,12 +557,13 @@ export class MariaDBConnector<TRequestContext extends object = any>
         ? this.getConnectionForMutation(context)
         : undefined;
 
-    return table.count(context, statement, maybeConnection);
+    return table.count(context, statement, maybeConnection, path);
   }
 
   public async find<TValue extends core.NodeSelectedValue>(
     context: core.OperationContext,
     { node, ...statement }: core.ConnectorFindStatement<TValue>,
+    path?: utils.Path,
   ): Promise<TValue[]> {
     const table = this.schema.getTableByNode(node);
     const maybeConnection =
@@ -567,36 +571,39 @@ export class MariaDBConnector<TRequestContext extends object = any>
         ? this.getConnectionForMutation(context)
         : undefined;
 
-    return table.find(context, statement, maybeConnection);
+    return table.find(context, statement, maybeConnection, path);
   }
 
   public async create(
     context: core.MutationContext,
     { node, ...statement }: core.ConnectorCreateStatement,
+    path?: utils.Path,
   ): Promise<core.NodeValue[]> {
     const table = this.schema.getTableByNode(node);
     const connection = this.getConnectionForMutation(context);
 
-    return table.insert(context, statement, connection);
+    return table.insert(context, statement, connection, undefined, path);
   }
 
   public async update(
     context: core.MutationContext,
     { node, ...statement }: core.ConnectorUpdateStatement,
+    path?: utils.Path,
   ): Promise<number> {
     const table = this.schema.getTableByNode(node);
     const connection = this.getConnectionForMutation(context);
 
-    return table.update(context, statement, connection);
+    return table.update(context, statement, connection, undefined, path);
   }
 
   public async delete(
     context: core.MutationContext,
     { node, ...statement }: core.ConnectorDeleteStatement,
+    path?: utils.Path,
   ): Promise<number> {
     const table = this.schema.getTableByNode(node);
     const connection = this.getConnectionForMutation(context);
 
-    return table.delete(context, statement, connection);
+    return table.delete(context, statement, connection, undefined, path);
   }
 }

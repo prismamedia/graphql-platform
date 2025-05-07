@@ -32,25 +32,17 @@ export function setGraphErrorAncestor<TError = unknown>(
 export interface GraphErrorOptions extends ErrorOptions {
   readonly path?: Path;
   readonly code?: string;
-
-  /**
-   * Either the cause's message is printed or not in the generated GraphQLError
-   *
-   * Default: false
-   */
-  readonly causeIsPrivate?: boolean;
 }
 
 export class GraphError extends Error {
   public readonly path?: Path;
   public readonly code?: string;
   readonly #message: string;
-  readonly #causeIsPrivate: boolean;
   #ancestor?: Path;
 
   public constructor(
     message: string,
-    { path, code, causeIsPrivate, ...options }: GraphErrorOptions = {},
+    { path, code, ...options }: GraphErrorOptions = {},
   ) {
     super(undefined, {
       ...options,
@@ -76,7 +68,6 @@ export class GraphError extends Error {
     });
 
     this.#message = message;
-    this.#causeIsPrivate = causeIsPrivate === true;
   }
 
   public setAncestor(ancestor: Path): void {
@@ -97,17 +88,13 @@ export class GraphError extends Error {
   }
 
   public toGraphQLError(): GraphQLError {
-    return new GraphQLError(
-      `${this.#message}${
-        this.cause instanceof Error && !this.#causeIsPrivate
-          ? ` - ${this.cause.message}`
-          : ``
-      }`,
-      {
+    return Object.assign(
+      new GraphQLError(this.#message, {
         ...(this.cause instanceof Error && { originalError: this.cause }),
         ...(this.path && { path: pathToArray(this.path) }),
         ...(this.code && { extensions: { code: this.code } }),
-      },
+      }),
+      { stack: this.stack },
     );
   }
 }

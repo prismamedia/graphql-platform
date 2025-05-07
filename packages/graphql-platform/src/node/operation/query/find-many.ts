@@ -117,17 +117,21 @@ export class FindManyQuery<
 
     const rawSources = await catchConnectorOperationError(
       () =>
-        this.connector.find(context, {
-          node: this.node,
-          ...(filter && { filter }),
-          ...(ordering && { ordering }),
-          ...(args.skip && { offset: args.skip }),
-          limit: args.first,
-          selection: args.selection,
-          ...(args.forSubscription && {
-            forSubscription: args.forSubscription,
-          }),
-        }),
+        this.connector.find(
+          context,
+          {
+            node: this.node,
+            ...(filter && { filter }),
+            ...(ordering && { ordering }),
+            ...(args.skip && { offset: args.skip }),
+            limit: args.first,
+            selection: args.selection,
+            ...(args.forSubscription && {
+              forSubscription: args.forSubscription,
+            }),
+          },
+          path,
+        ),
       context.request,
       this.node,
       ConnectorOperationKind.FIND,

@@ -82,6 +82,7 @@ export interface ConnectorInterface {
   count(
     context: OperationContext,
     statement: ConnectorCountStatement,
+    path: utils.Path,
   ): Promise<number>;
 
   /**
@@ -90,6 +91,7 @@ export interface ConnectorInterface {
   find<TValue extends NodeSelectedValue>(
     context: OperationContext,
     statement: ConnectorFindStatement<TValue>,
+    path: utils.Path,
   ): Promise<TValue[]>;
 
   /**
@@ -118,6 +120,7 @@ export interface ConnectorInterface {
   create(
     context: MutationContext,
     statement: ConnectorCreateStatement,
+    path: utils.Path,
   ): Promise<NodeValue[]>;
 
   /**
@@ -126,6 +129,7 @@ export interface ConnectorInterface {
   update(
     context: MutationContext,
     statement: ConnectorUpdateStatement,
+    path: utils.Path,
   ): Promise<number>;
 
   /**
@@ -134,6 +138,7 @@ export interface ConnectorInterface {
   delete(
     context: MutationContext,
     statement: ConnectorDeleteStatement,
+    path: utils.Path,
   ): Promise<number>;
 
   /**
