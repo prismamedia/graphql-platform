@@ -25,7 +25,7 @@ export class UpdateStatement implements mariadb.QueryOptions {
 
   public constructor(
     public readonly table: Table,
-    context: core.MutationContext,
+    public readonly context: core.MutationContext,
     statement: SetOptional<core.ConnectorUpdateStatement, 'node'>,
     config?: UpdateStatementConfig,
   ) {

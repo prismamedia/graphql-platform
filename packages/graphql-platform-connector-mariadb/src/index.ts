@@ -403,6 +403,7 @@ export class MariaDBConnector<TRequestContext extends object = any>
                 : undefined;
 
               throw new core.DuplicateError(
+                statement.context.request,
                 statement.table.node,
                 statement instanceof InsertStatement
                   ? core.ConnectorOperationKind.CREATE

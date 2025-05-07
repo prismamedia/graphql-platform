@@ -135,6 +135,7 @@ export class UpdateManyMutation<
             ? utils.MutationType.UPDATE
             : undefined,
         }),
+      context.request,
       this.node,
       ConnectorOperationKind.FIND,
       { path },
@@ -205,6 +206,7 @@ export class UpdateManyMutation<
                 update: statement,
                 filter: this.node.filterInputType.filter(ids[index]),
               }),
+            context.request,
             this.node,
             ConnectorOperationKind.UPDATE,
             { path },

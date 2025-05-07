@@ -33,6 +33,7 @@
     "graphql": "16.11.0",
     "publint": "0.3.12",
     "tsx": "4.19.4",
+    "type-fest": "4.37.0",
     "typescript": "5.8.3"
   },
   "dependencies": {
@@ -46,10 +47,9 @@
     "inflection": "^3.0.2",
     "mariadb": "^3.4.2",
     "remeda": "^2.21.3",
-    "semver": "^7.7.1",
-    "type-fest": "4.37.0"
+    "semver": "^7.7.1"
   },
   "peerDependencies": {
-    "graphql": "^16.10.0"
+    "graphql": "^16.11.0"
   }
 }

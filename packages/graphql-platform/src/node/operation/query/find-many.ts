@@ -128,6 +128,7 @@ export class FindManyQuery<
             forSubscription: args.forSubscription,
           }),
         }),
+      context.request,
       this.node,
       ConnectorOperationKind.FIND,
       { path },

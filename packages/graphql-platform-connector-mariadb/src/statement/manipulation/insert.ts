@@ -22,7 +22,7 @@ export class InsertStatement implements mariadb.QueryOptions {
 
   public constructor(
     public readonly table: Table,
-    _context: core.MutationContext,
+    public readonly context: core.MutationContext,
     statement: SetOptional<core.ConnectorCreateStatement, 'node'>,
     config?: InsertStatementConfig,
   ) {

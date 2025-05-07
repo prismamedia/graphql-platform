@@ -20,7 +20,7 @@ export class FindStatement implements mariadb.QueryOptions {
 
   public constructor(
     public readonly table: Table,
-    context: core.OperationContext,
+    public readonly context: core.OperationContext,
     statement: SetOptional<core.ConnectorFindStatement, 'node'>,
   ) {
     this.selectionKey = `_${table.node.name}`;

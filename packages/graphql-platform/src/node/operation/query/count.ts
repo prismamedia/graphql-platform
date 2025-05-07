@@ -77,6 +77,7 @@ export class CountQuery<TRequestContext extends object> extends AbstractQuery<
           node: this.node,
           ...(filter && { filter }),
         }),
+      context.request,
       this.node,
       ConnectorOperationKind.COUNT,
       { path },

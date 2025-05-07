@@ -1,7 +1,7 @@
-import type * as utils from '@prismamedia/graphql-platform-utils';
+import * as utils from '@prismamedia/graphql-platform-utils';
 import DataLoader from 'dataloader';
 import type { Node } from '../node.js';
-import type { OperationContext } from './operation/context.js';
+import { OperationContext } from './operation/context.js';
 import { NotFoundError } from './operation/error.js';
 import type { NodeSelectedValue } from './statement/selection.js';
 import type { NodeFilterInputValue } from './type/input/filter.js';
@@ -29,6 +29,10 @@ export function createNodeLoader<
 ): NodeLoader<TValue> {
   const api = node.createContextBoundAPI(context);
   const selection = node.outputType.select(rawSelection);
+  const requestContext =
+    context instanceof OperationContext
+      ? context.request
+      : utils.resolveThunkable(context);
 
   return new DataLoader<NonNullable<NodeUniqueFilterInputValue>, TValue>(
     async (ids) => {
@@ -40,7 +44,7 @@ export function createNodeLoader<
 
       return maybeValues.map(
         (maybeValue, index) =>
-          maybeValue ?? new NotFoundError(node, ids[index]),
+          maybeValue ?? new NotFoundError(requestContext, node, ids[index]),
       );
     },
     { cache: false, ...options },

@@ -487,7 +487,10 @@ export class GraphQLPlatform<
 
       this.#requestContextAssertion?.(maybeRequestContext);
     } catch (cause) {
-      throw new InvalidRequestContextError({ cause, path });
+      throw new InvalidRequestContextError(maybeRequestContext, {
+        cause,
+        path,
+      });
     }
   }
 
@@ -672,6 +675,7 @@ export class GraphQLPlatform<
 
     await catchConnectorWorkflowError(
       () => this.connector.preMutation?.(mutationContext),
+      requestContext,
       ConnectorWorkflowKind.PRE_MUTATION,
       { path },
     );
@@ -683,6 +687,7 @@ export class GraphQLPlatform<
 
       await catchConnectorWorkflowError(
         () => this.connector.postSuccessfulMutation?.(mutationContext),
+        requestContext,
         ConnectorWorkflowKind.POST_SUCCESSFUL_MUTATION,
         { path },
       );
@@ -691,6 +696,7 @@ export class GraphQLPlatform<
 
       await catchConnectorWorkflowError(
         () => this.connector.postFailedMutation?.(mutationContext, error),
+        requestContext,
         ConnectorWorkflowKind.POST_FAILED_MUTATION,
         { path },
       );
@@ -699,6 +705,7 @@ export class GraphQLPlatform<
     } finally {
       await catchConnectorWorkflowError(
         () => this.connector.postMutation?.(mutationContext),
+        requestContext,
         ConnectorWorkflowKind.POST_MUTATION,
         { path },
       );

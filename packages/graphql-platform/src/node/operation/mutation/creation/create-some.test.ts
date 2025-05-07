@@ -14,9 +14,9 @@ import {
 } from '../../../../__tests__/connector-mock.js';
 import { GraphQLPlatform } from '../../../../index.js';
 import {
+  AbstractLifecycleHookError,
   ConnectorOperationError,
   ConnectorWorkflowError,
-  LifecycleHookError,
   UnauthorizedError,
 } from '../../error.js';
 import type { CreateSomeMutationArgs } from './create-some.js';
@@ -104,7 +104,7 @@ describe('CreateSomeMutation', () => {
       assert.strictEqual(gp.connector.create.mock.callCount(), 1);
     });
 
-    it('throws a LifecycleHookError', async () => {
+    it('throws an AbstractLifecycleHookError', async () => {
       await assert.rejects(
         gp.api.Article.createSome(myAdminContext, {
           data: [
@@ -121,7 +121,7 @@ describe('CreateSomeMutation', () => {
           ],
           selection: '{ id }',
         }),
-        LifecycleHookError,
+        AbstractLifecycleHookError,
       );
     });
   });

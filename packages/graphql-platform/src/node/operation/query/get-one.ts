@@ -47,7 +47,7 @@ export class GetOneQuery<TRequestContext extends object> extends AbstractQuery<
       .internal(context, authorization, args, path);
 
     if (!nodeValue) {
-      throw new NotFoundError(this.node, args.where, { path });
+      throw new NotFoundError(context.request, this.node, args.where, { path });
     }
 
     return nodeValue;

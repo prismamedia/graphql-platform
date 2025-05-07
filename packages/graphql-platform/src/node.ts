@@ -33,8 +33,12 @@ import { NodeFeature, type NodeFeatureConfig } from './node/feature.js';
 import { createNodeLoader } from './node/loader.js';
 import { assertNodeName, type NodeName } from './node/name.js';
 import {
-  LifecycleHookError,
-  LifecycleHookKind,
+  PostCreateError,
+  PostDeleteError,
+  PostUpdateError,
+  PreCreateError,
+  PreDeleteError,
+  PreUpdateError,
   constructCustomOperation,
   createContextBoundNodeAPI,
   createNodeAPI,
@@ -993,9 +997,10 @@ export class Node<
                 ...args,
               });
           } catch (cause) {
-            throw new LifecycleHookError(
+            throw new PreCreateError(
+              args.context.request,
               nodeOrFeature,
-              LifecycleHookKind.PRE_CREATE,
+              args.statement,
               { cause, path },
             );
           }
@@ -1030,9 +1035,10 @@ export class Node<
                 ...args,
               });
           } catch (cause) {
-            throw new LifecycleHookError(
+            throw new PostCreateError(
+              args.context.request,
               nodeOrFeature,
-              LifecycleHookKind.POST_CREATE,
+              args.change,
               { cause, path },
             );
           }
@@ -1067,9 +1073,10 @@ export class Node<
                 ...args,
               });
           } catch (cause) {
-            throw new LifecycleHookError(
+            throw new PreUpdateError(
+              args.context.request,
               nodeOrFeature,
-              LifecycleHookKind.PRE_UPDATE,
+              args.statement,
               { cause, path },
             );
           }
@@ -1104,9 +1111,10 @@ export class Node<
                 ...args,
               });
           } catch (cause) {
-            throw new LifecycleHookError(
+            throw new PostUpdateError(
+              args.context.request,
               nodeOrFeature,
-              LifecycleHookKind.POST_UPDATE,
+              args.change,
               { cause, path },
             );
           }
@@ -1141,9 +1149,10 @@ export class Node<
                 ...args,
               });
           } catch (cause) {
-            throw new LifecycleHookError(
+            throw new PreDeleteError(
+              args.context.request,
               nodeOrFeature,
-              LifecycleHookKind.PRE_DELETE,
+              args.current,
               { cause, path },
             );
           }
@@ -1178,9 +1187,10 @@ export class Node<
                 ...args,
               });
           } catch (cause) {
-            throw new LifecycleHookError(
+            throw new PostDeleteError(
+              args.context.request,
               nodeOrFeature,
-              LifecycleHookKind.POST_DELETE,
+              args.change,
               { cause, path },
             );
           }

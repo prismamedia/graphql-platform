@@ -16,7 +16,7 @@ export class CountStatement implements mariadb.QueryOptions {
 
   public constructor(
     public readonly table: Table,
-    context: core.OperationContext,
+    public readonly context: core.OperationContext,
     statement: SetOptional<core.ConnectorCountStatement, 'node'>,
   ) {
     const tableReference = new TableFactor(table, context);

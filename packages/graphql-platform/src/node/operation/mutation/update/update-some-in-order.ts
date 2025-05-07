@@ -52,9 +52,12 @@ export class UpdateSomeInOrderMutation<
       maybeValues,
       (values, maybeValue, index) => {
         if (!maybeValue) {
-          throw new NotFoundError(this.node, args.where[index], {
-            path: utils.addPath(path, index),
-          });
+          throw new NotFoundError(
+            context.request,
+            this.node,
+            args.where[index],
+            { path: utils.addPath(path, index) },
+          );
         }
 
         values.push(maybeValue);

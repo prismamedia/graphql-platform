@@ -74,14 +74,14 @@ export class OperationContext<
     try {
       authorization = this.getAuthorization(node, mutationType);
     } catch (cause) {
-      throw new UnauthorizedError(node, mutationType, {
+      throw new UnauthorizedError(this.request, node, mutationType, {
         path,
         cause: new utils.GraphError(`The request-authorizer failed`, { cause }),
       });
     }
 
     if (authorization?.isFalse()) {
-      throw new UnauthorizedError(node, mutationType, { path });
+      throw new UnauthorizedError(this.request, node, mutationType, { path });
     }
 
     return authorization;

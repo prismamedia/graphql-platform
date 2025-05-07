@@ -24,7 +24,7 @@ export class DeleteStatement implements mariadb.QueryOptions {
 
   public constructor(
     public readonly table: Table,
-    context: core.MutationContext,
+    public readonly context: core.MutationContext,
     statement: SetOptional<core.ConnectorDeleteStatement, 'node'>,
     config?: DeleteStatementConfig,
   ) {

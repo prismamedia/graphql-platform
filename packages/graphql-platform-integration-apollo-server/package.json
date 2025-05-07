@@ -28,7 +28,7 @@
   },
   "devDependencies": {
     "@apollo/server": "4.12.0",
-    "@opentelemetry/instrumentation-express": "0.48.1",
+    "@opentelemetry/instrumentation-express": "0.49.0",
     "@opentelemetry/instrumentation-http": "0.200.0",
     "@opentelemetry/sdk-node": "0.200.0",
     "@opentelemetry/sdk-trace-node": "2.0.0",
@@ -44,7 +44,7 @@
     "publint": "0.3.12",
     "tsx": "4.19.4",
     "typescript": "5.8.3",
-    "ws": "8.18.1"
+    "ws": "8.18.2"
   },
   "dependencies": {
     "@opentelemetry/api": "^1.9.0",
@@ -52,6 +52,6 @@
   },
   "peerDependencies": {
     "@apollo/server": "^4.11.2",
-    "graphql": "^16.10.0"
+    "graphql": "^16.11.0"
   }
 }

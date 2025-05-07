@@ -98,6 +98,7 @@ export class CreateSomeMutation<
     // Actually create the nodes
     const rawNewSources = await catchConnectorOperationError(
       () => this.connector.create(context, { node: this.node, creations }),
+      context.request,
       this.node,
       ConnectorOperationKind.CREATE,
       { path },

@@ -87,8 +87,6 @@ const targetProxyHandler: ProxyHandler<NodeUpdateStatement> = {
 };
 
 export class NodeUpdateStatement {
-  readonly #currentValue: Readonly<NodeValue>;
-
   public readonly updatesByComponent: Map<
     Component,
     utils.NonOptional<ComponentUpdateValue>
@@ -106,10 +104,9 @@ export class NodeUpdateStatement {
 
   public constructor(
     public readonly node: Node,
-    currentValue: Readonly<NodeValue>,
+    public readonly current: Readonly<NodeValue>,
     update?: Readonly<NodeUpdateValue>,
   ) {
-    this.#currentValue = currentValue;
     this.updatesByComponent = new Map();
     update != null && this.setUpdate(update);
 
@@ -130,7 +127,7 @@ export class NodeUpdateStatement {
 
       if (
         component.selection.areValuesEqual(
-          this.#currentValue[component.name] as any,
+          this.current[component.name] as any,
           update as any,
         )
       ) {
@@ -186,7 +183,7 @@ export class NodeUpdateStatement {
     const componentUpdate = this.updatesByComponent.get(component);
 
     return componentUpdate === undefined
-      ? this.#currentValue[component.name]
+      ? this.current[component.name]
       : componentUpdate;
   }
 
