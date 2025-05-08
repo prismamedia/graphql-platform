@@ -1,6 +1,7 @@
 import { GraphQLError } from 'graphql';
 import { EOL } from 'node:os';
 import { inspect } from 'node:util';
+import * as R from 'remeda';
 import type { Nillable } from './nil.js';
 import {
   isPathEqualOrDescendantOf,
@@ -56,16 +57,14 @@ export class GraphError extends Error {
     });
 
     this.name = new.target.name;
+    this.path = path ?? undefined;
+    this.code = code ?? undefined;
 
-    Object.defineProperty(this, 'path', {
-      value: path || undefined,
-      enumerable: false,
-    });
-
-    Object.defineProperty(this, 'code', {
-      value: code || undefined,
-      enumerable: false,
-    });
+    // Prevent these properties from being enumerable
+    Object.defineProperties(
+      this,
+      R.fromKeys(['path', 'code'], R.constant({ enumerable: false })),
+    );
 
     this.#message = message;
   }
@@ -88,14 +87,11 @@ export class GraphError extends Error {
   }
 
   public toGraphQLError(): GraphQLError {
-    return Object.assign(
-      new GraphQLError(this.#message, {
-        ...(this.cause instanceof Error && { originalError: this.cause }),
-        ...(this.path && { path: pathToArray(this.path) }),
-        ...(this.code && { extensions: { code: this.code } }),
-      }),
-      { stack: this.stack },
-    );
+    return new GraphQLError(this.#message, {
+      originalError: this,
+      ...(this.path && { path: pathToArray(this.path) }),
+      ...(this.code && { extensions: { code: this.code } }),
+    });
   }
 }
 
@@ -148,11 +144,10 @@ export class AggregateGraphError extends AggregateError {
     );
 
     this.name = new.target.name;
+    this.path = path ?? undefined;
 
-    Object.defineProperty(this, 'path', {
-      value: path || undefined,
-      enumerable: false,
-    });
+    // Prevent this property from being enumerable
+    Object.defineProperty(this, 'path', { enumerable: false });
 
     this.#message = message || undefined;
   }

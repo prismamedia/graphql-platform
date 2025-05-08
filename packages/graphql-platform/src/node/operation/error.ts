@@ -1,5 +1,6 @@
 import * as utils from '@prismamedia/graphql-platform-utils';
 import { inspect } from 'node:util';
+import * as R from 'remeda';
 import type { Except, Promisable } from 'type-fest';
 import type {
   Node,
@@ -33,10 +34,8 @@ export type OperationErrorOptions = Except<utils.GraphErrorOptions, 'code'>;
 abstract class AbstractOperationError<
   TRequestContext extends object = any,
 > extends utils.GraphError {
-  declare public readonly request: TRequestContext;
-
   public constructor(
-    request: TRequestContext,
+    public readonly request: TRequestContext,
     message: string,
     options?: OperationErrorOptions & {
       readonly code: OperationErrorCode;
@@ -48,10 +47,11 @@ abstract class AbstractOperationError<
         options?.code != null ? OperationErrorCode[options.code] : undefined,
     });
 
-    Object.defineProperty(this, 'request', {
-      value: request,
-      enumerable: false,
-    });
+    // Prevent these properties from being enumerable
+    Object.defineProperties(
+      this,
+      R.fromKeys(['request'], R.constant({ enumerable: false })),
+    );
   }
 }
 
@@ -161,7 +161,7 @@ export abstract class AbstractLifecycleHookError<
   TRequestContext extends object = any,
 > extends AbstractOperationError<TRequestContext> {
   public readonly feature?: NodeFeature;
-  declare public readonly node: Node;
+  public readonly node: Node;
 
   public constructor(
     request: TRequestContext,
@@ -176,141 +176,110 @@ export abstract class AbstractLifecycleHookError<
     );
 
     if (nodeOrFeature instanceof NodeFeature) {
-      Object.defineProperty(this, 'feature', {
-        value: nodeOrFeature,
-        enumerable: false,
-      });
-
-      Object.defineProperty(this, 'node', {
-        value: nodeOrFeature.node,
-        enumerable: false,
-      });
+      this.feature = nodeOrFeature;
+      this.node = nodeOrFeature.node;
     } else {
-      Object.defineProperty(this, 'node', {
-        value: nodeOrFeature,
-        enumerable: false,
-      });
+      this.node = nodeOrFeature;
     }
+
+    // Prevent these properties from being enumerable
+    Object.defineProperties(
+      this,
+      R.fromKeys(
+        ['feature', 'node', 'kind'],
+        R.constant({ enumerable: false }),
+      ),
+    );
   }
 }
 
 export class PreCreateError<
   TRequestContext extends object = any,
 > extends AbstractLifecycleHookError<TRequestContext> {
-  declare public readonly statement: NodeCreationStatement;
-
   public constructor(
     request: TRequestContext,
     nodeOrFeature: Node | NodeFeature,
-    statement: NodeCreationStatement,
+    public readonly statement: NodeCreationStatement,
     options?: OperationErrorOptions,
   ) {
     super(request, nodeOrFeature, LifecycleHookKind.PRE_CREATE, options);
 
-    Object.defineProperty(this, 'statement', {
-      value: statement,
-      enumerable: false,
-    });
+    Object.defineProperty(this, 'statement', { enumerable: false });
   }
 }
 
 export class PostCreateError<
   TRequestContext extends object = any,
 > extends AbstractLifecycleHookError<TRequestContext> {
-  declare public readonly change: NodeCreation<TRequestContext>;
-
   public constructor(
     request: TRequestContext,
     nodeOrFeature: Node | NodeFeature,
-    change: NodeCreation,
+    public readonly change: NodeCreation<TRequestContext>,
     options?: OperationErrorOptions,
   ) {
     super(request, nodeOrFeature, LifecycleHookKind.POST_CREATE, options);
 
-    Object.defineProperty(this, 'change', {
-      value: change,
-      enumerable: false,
-    });
+    Object.defineProperty(this, 'change', { enumerable: false });
   }
 }
 
 export class PreUpdateError<
   TRequestContext extends object = any,
 > extends AbstractLifecycleHookError<TRequestContext> {
-  declare public readonly statement: NodeUpdateStatement;
-
   public constructor(
     request: TRequestContext,
     nodeOrFeature: Node | NodeFeature,
-    statement: NodeUpdateStatement,
+    public readonly statement: NodeUpdateStatement,
     options?: OperationErrorOptions,
   ) {
     super(request, nodeOrFeature, LifecycleHookKind.PRE_UPDATE, options);
 
-    Object.defineProperty(this, 'statement', {
-      value: statement,
-      enumerable: false,
-    });
+    Object.defineProperty(this, 'statement', { enumerable: false });
   }
 }
 
 export class PostUpdateError<
   TRequestContext extends object = any,
 > extends AbstractLifecycleHookError<TRequestContext> {
-  declare public readonly change: NodeUpdate<TRequestContext>;
-
   public constructor(
     request: TRequestContext,
     nodeOrFeature: Node | NodeFeature,
-    change: NodeUpdate,
+    public readonly change: NodeUpdate<TRequestContext>,
     options?: OperationErrorOptions,
   ) {
     super(request, nodeOrFeature, LifecycleHookKind.POST_UPDATE, options);
 
-    Object.defineProperty(this, 'change', {
-      value: change,
-      enumerable: false,
-    });
+    Object.defineProperty(this, 'change', { enumerable: false });
   }
 }
 
 export class PreDeleteError<
   TRequestContext extends object = any,
 > extends AbstractLifecycleHookError<TRequestContext> {
-  declare public readonly current: Readonly<NodeValue>;
-
   public constructor(
     request: TRequestContext,
     nodeOrFeature: Node | NodeFeature,
-    current: Readonly<NodeValue>,
+    public readonly currentValue: Readonly<NodeValue>,
     options?: OperationErrorOptions,
   ) {
     super(request, nodeOrFeature, LifecycleHookKind.PRE_DELETE, options);
 
-    Object.defineProperty(this, 'current', {
-      value: current,
-      enumerable: false,
-    });
+    Object.defineProperty(this, 'currentValue', { enumerable: false });
   }
 }
 
 export class PostDeleteError<
   TRequestContext extends object = any,
 > extends AbstractLifecycleHookError<TRequestContext> {
-  declare public readonly change: NodeDeletion<TRequestContext>;
-
   public constructor(
     request: TRequestContext,
     nodeOrFeature: Node | NodeFeature,
-    change: NodeDeletion,
+    public readonly change: NodeDeletion<TRequestContext>,
     options?: OperationErrorOptions,
   ) {
     super(request, nodeOrFeature, LifecycleHookKind.POST_DELETE, options);
 
-    Object.defineProperty(this, 'change', {
-      value: change,
-      enumerable: false,
-    });
+    Object.defineProperty(this, 'change', { enumerable: false });
   }
 }
 
@@ -375,22 +344,17 @@ export class ConnectorWorkflowError<
   }
 }
 
-export async function catchConnectorWorkflowError<
-  TRequestContext extends object,
->(
+export const catchConnectorWorkflowError = <TRequestContext extends object>(
   workflow: () => Promisable<void>,
   request: TRequestContext,
   kind: ConnectorWorkflowKind,
   options?: Except<ConnectorWorkflowErrorOptions, 'cause'>,
-): Promise<void> {
-  try {
-    await workflow();
-  } catch (cause) {
-    throw cause instanceof ConnectorWorkflowError
-      ? cause
-      : new ConnectorWorkflowError(request, kind, { ...options, cause });
-  }
-}
+): Promise<void> =>
+  utils.PromiseTry(workflow).catch((error) => {
+    throw error instanceof ConnectorWorkflowError
+      ? error
+      : new ConnectorWorkflowError(request, kind, { ...options, cause: error });
+  });
 
 export enum ConnectorOperationKind {
   COUNT,
@@ -453,24 +417,18 @@ export class DuplicateError<
   }
 }
 
-export async function catchConnectorOperationError<
-  T,
-  TRequestContext extends object,
->(
-  operation: () => Promise<T>,
+export const catchConnectorOperationError = <T, TRequestContext extends object>(
+  operation: () => Promisable<T>,
   request: TRequestContext,
   node: Node,
   kind: ConnectorOperationKind,
   options?: Except<ConnectorOperationErrorOptions, 'cause'>,
-): Promise<T> {
-  try {
-    return await operation();
-  } catch (cause) {
-    throw cause instanceof ConnectorOperationError
-      ? cause
+): Promise<T> =>
+  utils.PromiseTry(operation).catch((error) => {
+    throw error instanceof ConnectorOperationError
+      ? error
       : new ConnectorOperationError(request, node, kind, {
           ...options,
-          cause,
+          cause: error,
         });
-  }
-}
+  });
