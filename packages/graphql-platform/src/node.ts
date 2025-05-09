@@ -1446,6 +1446,23 @@ export class Node<
                   );
 
                 if (!originalEdge) {
+                  if (!this.gp.nodesByName.has(nodeName)) {
+                    throw new utils.UnexpectedValueError(
+                      `an existing node`,
+                      nodeName,
+                      { path: originalEdgeConfigPath },
+                    );
+                  } else if (
+                    edgeName &&
+                    !this.gp.getNodeByName(nodeName).edgesByName.has(edgeName)
+                  ) {
+                    throw new utils.UnexpectedValueError(
+                      `an existing edge`,
+                      originalEdgeConfig,
+                      { path: originalEdgeConfigPath },
+                    );
+                  }
+
                   throw new utils.UnexpectedValueError(
                     `${
                       edgeName ? `an edge` : `a node`

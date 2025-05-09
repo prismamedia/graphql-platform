@@ -322,28 +322,7 @@ describe('Node', () => {
               },
             }),
           {
-            message: `/GraphQLPlatformConfig/nodes/User/reverseEdges/invalidEdge/originalEdge - Expects a node heading to this "User" node, got: 'UnknownModel'`,
-          },
-        );
-      });
-
-      it('throws an error on extra configuration', () => {
-        assert.throws(
-          () =>
-            new GraphQLPlatform({
-              nodes: {
-                ...nodes,
-                User: {
-                  ...nodes.User,
-                  reverseEdges: {
-                    ...nodes.User.reverseEdges,
-                    invalidEdge: { originalEdge: 'Article.unknownEdgeName' },
-                  },
-                },
-              },
-            }),
-          {
-            message: `/GraphQLPlatformConfig/nodes/User/reverseEdges/invalidEdge/originalEdge - Expects an edge heading to this "User" node, got: 'Article.unknownEdgeName'`,
+            message: `/GraphQLPlatformConfig/nodes/User/reverseEdges/invalidEdge/originalEdge - Expects an existing node, got: 'UnknownModel'`,
           },
         );
       });
@@ -363,7 +342,7 @@ describe('Node', () => {
               },
             }),
           {
-            message: `/GraphQLPlatformConfig/nodes/User/reverseEdges/invalidEdge/originalEdge - Expects an edge heading to this "User" node, got: 'Article.unknownEdgeName'`,
+            message: `/GraphQLPlatformConfig/nodes/User/reverseEdges/invalidEdge/originalEdge - Expects an existing edge, got: 'Article.unknownEdgeName'`,
           },
         );
       });
