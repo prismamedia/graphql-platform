@@ -1686,6 +1686,22 @@ export class Node<
     );
   }
 
+  public getServiceByName<T extends unknown>(
+    name: utils.Name,
+    path?: utils.Path,
+  ): T {
+    const service = this.servicesByName.get(name);
+    if (!service) {
+      throw new utils.UnexpectedValueError(
+        `a service among "${this.servicesByName.keys().toArray().join(', ')}"`,
+        name,
+        { path },
+      );
+    }
+
+    return service;
+  }
+
   @MGetter
   public get outputType(): NodeOutputType {
     return new NodeOutputType(this);

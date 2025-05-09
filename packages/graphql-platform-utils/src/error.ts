@@ -1,3 +1,4 @@
+import { MMethod } from '@prismamedia/memoize';
 import { GraphQLError } from 'graphql';
 import { EOL } from 'node:os';
 import { inspect } from 'node:util';
@@ -86,6 +87,7 @@ export class GraphError extends Error {
       .join(' - ');
   }
 
+  @MMethod()
   public toGraphQLError(): GraphQLError {
     return new GraphQLError(this.#message, {
       originalError: this,
@@ -130,7 +132,7 @@ export interface AggregateGraphErrorOptions {
 
 export class AggregateGraphError extends AggregateError {
   public readonly path?: Path;
-  readonly #message?: string;
+  readonly #message: string;
   #ancestor?: Path;
 
   public constructor(
@@ -149,7 +151,9 @@ export class AggregateGraphError extends AggregateError {
     // Prevent this property from being enumerable
     Object.defineProperty(this, 'path', { enumerable: false });
 
-    this.#message = message || undefined;
+    this.#message = [message, `${this.errors.length} errors:`]
+      .filter(Boolean)
+      .join(' - ');
   }
 
   public setAncestor(ancestor: Path): void {
@@ -166,7 +170,6 @@ export class AggregateGraphError extends AggregateError {
           ? printPath(this.path, this.#ancestor)
           : undefined,
         this.#message,
-        `${this.errors.length} errors:`,
       ]
         .filter(Boolean)
         .join(' - '),
@@ -179,6 +182,14 @@ export class AggregateGraphError extends AggregateError {
           : [],
       ),
     ].join(EOL);
+  }
+
+  @MMethod()
+  public toGraphQLError(): GraphQLError {
+    return new GraphQLError(this.#message, {
+      originalError: this,
+      ...(this.path && { path: pathToArray(this.path) }),
+    });
   }
 }
 

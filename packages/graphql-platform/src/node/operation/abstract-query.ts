@@ -86,9 +86,7 @@ export abstract class AbstractQuery<
           ),
         )
         .catch((error) => {
-          throw error instanceof utils.GraphError
-            ? error.toGraphQLError()
-            : error;
+          throw utils.isGraphError(error) ? error.toGraphQLError() : error;
         });
   }
 }

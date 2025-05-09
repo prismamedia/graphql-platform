@@ -97,9 +97,7 @@ export abstract class AbstractSubscription<
           ),
         )
         .catch((error) => {
-          throw error instanceof utils.GraphError
-            ? error.toGraphQLError()
-            : error;
+          throw utils.isGraphError(error) ? error.toGraphQLError() : error;
         });
   }
 
