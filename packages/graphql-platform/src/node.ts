@@ -33,7 +33,7 @@ import { NodeFeature, type NodeFeatureConfig } from './node/feature.js';
 import { createNodeLoader } from './node/loader.js';
 import { assertNodeName, type NodeName } from './node/name.js';
 import {
-  OperationError,
+  MutationHookError,
   constructCustomOperation,
   createContextBoundNodeAPI,
   createNodeAPI,
@@ -992,13 +992,14 @@ export class Node<
                 ...args,
               });
           } catch (cause) {
-            throw new OperationError(args.context.request, nodeOrFeature, {
-              reason: `executing the "pre-${utils.MutationType.CREATION}" hook`,
-              mutationType: utils.MutationType.CREATION,
-              mutatedValue: args.creation,
-              cause,
-              path,
-            });
+            throw new MutationHookError(
+              args.context.request,
+              nodeOrFeature,
+              utils.MutationType.CREATION,
+              'pre',
+              args.creation,
+              { cause, path },
+            );
           }
         }),
       );
@@ -1031,13 +1032,14 @@ export class Node<
                 ...args,
               });
           } catch (cause) {
-            throw new OperationError(args.context.request, nodeOrFeature, {
-              reason: `executing the "post-${utils.MutationType.CREATION}" hook`,
-              mutationType: utils.MutationType.CREATION,
-              mutatedValue: args.change.newValue,
-              cause,
-              path,
-            });
+            throw new MutationHookError(
+              args.context.request,
+              nodeOrFeature,
+              utils.MutationType.CREATION,
+              'post',
+              args.change.newValue,
+              { cause, path },
+            );
           }
         }),
       );
@@ -1070,13 +1072,14 @@ export class Node<
                 ...args,
               });
           } catch (cause) {
-            throw new OperationError(args.context.request, nodeOrFeature, {
-              reason: `executing the "pre-${utils.MutationType.UPDATE}" hook`,
-              mutationType: utils.MutationType.UPDATE,
-              mutatedValue: args.current,
-              cause,
-              path,
-            });
+            throw new MutationHookError(
+              args.context.request,
+              nodeOrFeature,
+              utils.MutationType.UPDATE,
+              'pre',
+              args.current,
+              { cause, path },
+            );
           }
         }),
       );
@@ -1109,13 +1112,14 @@ export class Node<
                 ...args,
               });
           } catch (cause) {
-            throw new OperationError(args.context.request, nodeOrFeature, {
-              reason: `executing the "post-${utils.MutationType.UPDATE}" hook`,
-              mutationType: utils.MutationType.UPDATE,
-              mutatedValue: args.change.oldValue,
-              cause,
-              path,
-            });
+            throw new MutationHookError(
+              args.context.request,
+              nodeOrFeature,
+              utils.MutationType.UPDATE,
+              'post',
+              args.change.oldValue,
+              { cause, path },
+            );
           }
         }),
       );
@@ -1148,13 +1152,14 @@ export class Node<
                 ...args,
               });
           } catch (cause) {
-            throw new OperationError(args.context.request, nodeOrFeature, {
-              reason: `executing the "pre-${utils.MutationType.DELETION}" hook`,
-              mutationType: utils.MutationType.DELETION,
-              mutatedValue: args.current,
-              cause,
-              path,
-            });
+            throw new MutationHookError(
+              args.context.request,
+              nodeOrFeature,
+              utils.MutationType.DELETION,
+              'pre',
+              args.current,
+              { cause, path },
+            );
           }
         }),
       );
@@ -1187,13 +1192,14 @@ export class Node<
                 ...args,
               });
           } catch (cause) {
-            throw new OperationError(args.context.request, nodeOrFeature, {
-              reason: `executing the "post-${utils.MutationType.DELETION}" hook`,
-              mutationType: utils.MutationType.DELETION,
-              mutatedValue: args.change.oldValue,
-              cause,
-              path,
-            });
+            throw new MutationHookError(
+              args.context.request,
+              nodeOrFeature,
+              utils.MutationType.DELETION,
+              'post',
+              args.change.oldValue,
+              { cause, path },
+            );
           }
         }),
       );

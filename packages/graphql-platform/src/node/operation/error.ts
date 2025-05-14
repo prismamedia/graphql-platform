@@ -102,14 +102,12 @@ export interface OperationErrorOptions extends RequestErrorOptions {
 export class OperationError<
   TRequestContext extends object = any,
 > extends RequestError<TRequestContext> {
-  public readonly node: Node;
-  public readonly feature?: NodeFeature;
   public readonly mutationType?: utils.MutationType;
   public readonly mutatedValue?: Readonly<NodeValue>;
 
   public constructor(
     requestContext: TRequestContext,
-    nodeOrFeature: Node | NodeFeature,
+    public readonly node: Node,
     {
       code = RequestErrorCode.OPERATION_ERROR,
       mutationType,
@@ -119,28 +117,22 @@ export class OperationError<
       ...options
     }: OperationErrorOptions = {},
   ) {
-    const [node, feature] =
-      nodeOrFeature instanceof NodeFeature
-        ? [nodeOrFeature.node, nodeOrFeature]
-        : [nodeOrFeature, undefined];
-
     super(
       requestContext,
       message ??
-        `The "${node}"'s "${mutationType ?? 'query'}" failed${reason ? `: ${reason}` : ''}`,
+        [`The "${node}"'s "${mutationType ?? 'query'}" failed`, reason]
+          .filter(Boolean)
+          .join(' - '),
       { code, ...options },
     );
 
-    this.node = node;
-    feature && (this.feature = feature);
     mutationType && (this.mutationType = mutationType);
     mutatedValue && (this.mutatedValue = mutatedValue);
 
-    // Prevent these properties from being enumerable
     Object.defineProperties(
       this,
       R.fromKeys(
-        ['node', 'feature', 'mutationType', 'mutatedValue'],
+        ['node', 'mutationType', 'mutatedValue'],
         R.constant({ enumerable: false }),
       ),
     );
@@ -152,10 +144,10 @@ export class UnauthorizedError<
 > extends OperationError<TRequestContext> {
   public constructor(
     requestContext: TRequestContext,
-    nodeOrFeature: Node | NodeFeature,
+    node: Node,
     options?: Except<OperationErrorOptions, 'code'>,
   ) {
-    super(requestContext, nodeOrFeature, {
+    super(requestContext, node, {
       reason: `unauthorized`,
       ...options,
       code: RequestErrorCode.UNAUTHORIZED,
@@ -168,10 +160,10 @@ export class InvalidArgumentsError<
 > extends OperationError<TRequestContext> {
   public constructor(
     requestContext: TRequestContext,
-    nodeOrFeature: Node | NodeFeature,
+    node: Node,
     options?: Except<OperationErrorOptions, 'code'>,
   ) {
-    super(requestContext, nodeOrFeature, {
+    super(requestContext, node, {
       reason: `invalid argument(s)`,
       ...options,
       code: RequestErrorCode.INVALID_ARGUMENTS,
@@ -184,10 +176,10 @@ export class InvalidSelectionError<
 > extends OperationError<TRequestContext> {
   public constructor(
     requestContext: TRequestContext,
-    nodeOrFeature: Node | NodeFeature,
+    node: Node,
     options?: Except<OperationErrorOptions, 'code'>,
   ) {
-    super(requestContext, nodeOrFeature, {
+    super(requestContext, node, {
       reason: `invalid selection`,
       ...options,
       code: RequestErrorCode.INVALID_SELECTION,
@@ -200,17 +192,57 @@ export class NotFoundError<
 > extends OperationError<TRequestContext> {
   public constructor(
     requestContext: TRequestContext,
-    nodeOrFeature: Node | NodeFeature,
+    node: Node,
     public readonly where: NonNullable<NodeUniqueFilterInputValue>,
     options?: Except<OperationErrorOptions, 'code'>,
   ) {
-    super(requestContext, nodeOrFeature, {
+    super(requestContext, node, {
       reason: `no entry found given the filter "${inspect(where)}"`,
       ...options,
       code: RequestErrorCode.NOT_FOUND,
     });
 
     Object.defineProperty(this, 'where', { enumerable: false });
+  }
+}
+
+export class MutationHookError<
+  TRequestContext extends object = any,
+> extends OperationError<TRequestContext> {
+  public readonly feature?: NodeFeature;
+
+  public constructor(
+    requestContext: TRequestContext,
+    nodeOrFeature: Node | NodeFeature,
+    mutationType: utils.MutationType,
+    mutationHook: 'pre' | 'post',
+    mutatedValue: Readonly<NodeValue>,
+    options: Except<
+      OperationErrorOptions,
+      'code' | 'message' | 'mutationType' | 'mutatedValue' | 'reason'
+    >,
+  ) {
+    const [node, feature] =
+      nodeOrFeature instanceof NodeFeature
+        ? [nodeOrFeature.node, nodeOrFeature]
+        : [nodeOrFeature, undefined];
+
+    super(requestContext, node, {
+      ...options,
+      mutationType,
+      mutatedValue,
+      reason: [
+        nodeOrFeature instanceof NodeFeature &&
+          `"${nodeOrFeature.name}" feature's`,
+        `"${mutationHook}-${mutationType}" hook`,
+      ]
+        .filter(Boolean)
+        .join(' '),
+    });
+
+    feature && (this.feature = feature);
+
+    Object.defineProperty(this, 'feature', { enumerable: false });
   }
 }
 

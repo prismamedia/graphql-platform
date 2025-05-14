@@ -12,11 +12,7 @@ import type {
   ReverseEdge,
 } from '../../../node.js';
 import type { MutationContext } from '../../operation.js';
-import { OperationError } from '../../operation/error.js';
-import type {
-  ComponentUpdateValue,
-  NodeUpdateValue,
-} from '../../statement/update.js';
+import type { NodeUpdateValue } from '../../statement/update.js';
 import {
   type ComponentUpdateInput,
   EdgeUpdateInput,
@@ -200,6 +196,7 @@ export class NodeUpdateInputType extends utils.ObjectInputType<FieldUpdateInput>
 
     for (const field of this.leafFields) {
       const leafUpdate = data[field.name];
+
       if (leafUpdate !== undefined) {
         Object.assign(resolvedUpdate, { [field.name]: leafUpdate });
       }
@@ -207,28 +204,15 @@ export class NodeUpdateInputType extends utils.ObjectInputType<FieldUpdateInput>
 
     for (const field of this.edgeFields) {
       const edgeData = data[field.name];
-
-      let edgeUpdate: ComponentUpdateValue;
-      try {
-        edgeUpdate =
-          edgeData == null
-            ? edgeData
-            : await field.resolveUpdate(
-                currentValues,
-                edgeData,
-                context,
-                utils.addPath(path, field.name),
-              );
-      } catch (cause) {
-        throw new OperationError(context.request, this.node, {
-          reason: `resolving the "${field.name}" edge's update`,
-          mutatedValue:
-            currentValues.length === 1 ? currentValues[0] : undefined,
-          mutationType: utils.MutationType.UPDATE,
-          cause,
-          path,
-        });
-      }
+      const edgeUpdate =
+        edgeData == null
+          ? edgeData
+          : await field.resolveUpdate(
+              currentValues,
+              edgeData,
+              context,
+              utils.addPath(path, field.name),
+            );
 
       if (edgeUpdate !== undefined) {
         Object.assign(resolvedUpdate, { [field.name]: edgeUpdate });
@@ -269,23 +253,12 @@ export class NodeUpdateInputType extends utils.ObjectInputType<FieldUpdateInput>
       const fieldData = data[field.name];
 
       if (fieldData != null && field.hasActions(fieldData)) {
-        try {
-          await field.applyActions(
-            currentValues,
-            fieldData,
-            context,
-            utils.addPath(path, field.name),
-          );
-        } catch (cause) {
-          throw new OperationError(context.request, this.node, {
-            reason: `applying the "${field.name}" reverse-edge's action(s)`,
-            mutatedValue:
-              currentValues.length === 1 ? currentValues[0] : undefined,
-            mutationType: utils.MutationType.UPDATE,
-            cause,
-            path,
-          });
-        }
+        await field.applyActions(
+          currentValues,
+          fieldData,
+          context,
+          utils.addPath(path, field.name),
+        );
       }
     }
   }

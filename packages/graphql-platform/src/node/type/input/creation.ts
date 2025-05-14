@@ -12,11 +12,7 @@ import type {
   ReverseEdge,
 } from '../../../node.js';
 import type { MutationContext } from '../../operation.js';
-import { OperationError } from '../../operation/error.js';
-import type {
-  ComponentCreationValue,
-  NodeCreationValue,
-} from '../../statement/creation.js';
+import type { NodeCreationValue } from '../../statement/creation.js';
 import {
   type ComponentCreationInput,
   EdgeCreationInput,
@@ -197,6 +193,7 @@ export class NodeCreationInputType extends utils.ObjectInputType<FieldCreationIn
 
     for (const field of this.leafFields) {
       const leafValue = data[field.name];
+
       if (leafValue !== undefined) {
         Object.assign(resolvedValue, { [field.name]: leafValue });
       }
@@ -204,26 +201,14 @@ export class NodeCreationInputType extends utils.ObjectInputType<FieldCreationIn
 
     for (const field of this.edgeFields) {
       const edgeData = data[field.name];
-
-      let edgeValue: ComponentCreationValue;
-      try {
-        edgeValue =
-          edgeData == null
-            ? edgeData
-            : await field.resolveValue(
-                edgeData,
-                context,
-                utils.addPath(path, field.name),
-              );
-      } catch (cause) {
-        throw new OperationError(context.request, this.node, {
-          reason: `resolving the "${field.name}" edge's value`,
-          mutatedValue: resolvedValue,
-          mutationType: utils.MutationType.CREATION,
-          cause,
-          path,
-        });
-      }
+      const edgeValue =
+        edgeData == null
+          ? edgeData
+          : await field.resolveValue(
+              edgeData,
+              context,
+              utils.addPath(path, field.name),
+            );
 
       if (edgeValue !== undefined) {
         Object.assign(resolvedValue, { [field.name]: edgeValue });
@@ -264,22 +249,12 @@ export class NodeCreationInputType extends utils.ObjectInputType<FieldCreationIn
       const fieldData = data[field.name];
 
       if (fieldData != null && field.hasActions(fieldData)) {
-        try {
-          await field.applyActions(
-            currentValue,
-            fieldData,
-            context,
-            utils.addPath(path, field.name),
-          );
-        } catch (cause) {
-          throw new OperationError(context.request, this.node, {
-            reason: `applying the "${field.name}" reverse-edge's action(s)`,
-            mutatedValue: currentValue,
-            mutationType: utils.MutationType.CREATION,
-            cause,
-            path,
-          });
-        }
+        await field.applyActions(
+          currentValue,
+          fieldData,
+          context,
+          utils.addPath(path, field.name),
+        );
       }
     }
   }

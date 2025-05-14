@@ -183,10 +183,10 @@ export class DeleteManyMutation<
           );
         } catch (cause) {
           throw new OperationError(context.request, this.node, {
-            mutationType: utils.MutationType.DELETION,
             cause,
+            mutationType: utils.MutationType.DELETION,
             path,
-            reason: `deleting linked "${head.plural}"`,
+            reason: `deleting "${reverseEdges.map(({ name }) => name).join(', ')}"`,
           });
         }
       }
@@ -196,7 +196,7 @@ export class DeleteManyMutation<
           OnEdgeHeadDeletion.SET_NULL,
         );
 
-      for (const { head, originalEdge } of setNullReverseEdges) {
+      for (const { head, name, originalEdge } of setNullReverseEdges) {
         try {
           await head.getMutationByKey('update-many').execute(
             context,
@@ -218,10 +218,10 @@ export class DeleteManyMutation<
           );
         } catch (cause) {
           throw new OperationError(context.request, this.node, {
-            mutationType: utils.MutationType.DELETION,
             cause,
+            mutationType: utils.MutationType.DELETION,
             path,
-            reason: `unlinking "${head.plural}"`,
+            reason: `unlinking "${name}"`,
           });
         }
       }
@@ -243,7 +243,7 @@ export class DeleteManyMutation<
       {
         mutatedValue:
           oldValues.length === 1
-            ? this.node.selection.pickValue(oldValues[0], path)
+            ? this.node.selection.pickValue(oldValues[0])
             : undefined,
         mutationType: utils.MutationType.DELETION,
         path,
