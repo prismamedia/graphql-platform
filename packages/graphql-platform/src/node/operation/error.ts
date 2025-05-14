@@ -210,6 +210,8 @@ export class MutationHookError<
   TRequestContext extends object = any,
 > extends OperationError<TRequestContext> {
   public readonly feature?: NodeFeature;
+  declare public readonly mutationType: utils.MutationType;
+  declare public readonly mutatedValue: Readonly<NodeValue>;
 
   public constructor(
     requestContext: TRequestContext,
