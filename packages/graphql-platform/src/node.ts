@@ -33,12 +33,7 @@ import { NodeFeature, type NodeFeatureConfig } from './node/feature.js';
 import { createNodeLoader } from './node/loader.js';
 import { assertNodeName, type NodeName } from './node/name.js';
 import {
-  PostCreateError,
-  PostDeleteError,
-  PostUpdateError,
-  PreCreateError,
-  PreDeleteError,
-  PreUpdateError,
+  OperationError,
   constructCustomOperation,
   createContextBoundNodeAPI,
   createNodeAPI,
@@ -997,12 +992,13 @@ export class Node<
                 ...args,
               });
           } catch (cause) {
-            throw new PreCreateError(
-              args.context.request,
-              nodeOrFeature,
-              args.statement,
-              { cause, path },
-            );
+            throw new OperationError(args.context.request, nodeOrFeature, {
+              reason: `executing the "pre-${utils.MutationType.CREATION}" hook`,
+              mutationType: utils.MutationType.CREATION,
+              mutatedValue: args.creation,
+              cause,
+              path,
+            });
           }
         }),
       );
@@ -1035,12 +1031,13 @@ export class Node<
                 ...args,
               });
           } catch (cause) {
-            throw new PostCreateError(
-              args.context.request,
-              nodeOrFeature,
-              args.change,
-              { cause, path },
-            );
+            throw new OperationError(args.context.request, nodeOrFeature, {
+              reason: `executing the "post-${utils.MutationType.CREATION}" hook`,
+              mutationType: utils.MutationType.CREATION,
+              mutatedValue: args.change.newValue,
+              cause,
+              path,
+            });
           }
         }),
       );
@@ -1073,12 +1070,13 @@ export class Node<
                 ...args,
               });
           } catch (cause) {
-            throw new PreUpdateError(
-              args.context.request,
-              nodeOrFeature,
-              args.statement,
-              { cause, path },
-            );
+            throw new OperationError(args.context.request, nodeOrFeature, {
+              reason: `executing the "pre-${utils.MutationType.UPDATE}" hook`,
+              mutationType: utils.MutationType.UPDATE,
+              mutatedValue: args.current,
+              cause,
+              path,
+            });
           }
         }),
       );
@@ -1111,12 +1109,13 @@ export class Node<
                 ...args,
               });
           } catch (cause) {
-            throw new PostUpdateError(
-              args.context.request,
-              nodeOrFeature,
-              args.change,
-              { cause, path },
-            );
+            throw new OperationError(args.context.request, nodeOrFeature, {
+              reason: `executing the "post-${utils.MutationType.UPDATE}" hook`,
+              mutationType: utils.MutationType.UPDATE,
+              mutatedValue: args.change.oldValue,
+              cause,
+              path,
+            });
           }
         }),
       );
@@ -1149,12 +1148,13 @@ export class Node<
                 ...args,
               });
           } catch (cause) {
-            throw new PreDeleteError(
-              args.context.request,
-              nodeOrFeature,
-              args.current,
-              { cause, path },
-            );
+            throw new OperationError(args.context.request, nodeOrFeature, {
+              reason: `executing the "pre-${utils.MutationType.DELETION}" hook`,
+              mutationType: utils.MutationType.DELETION,
+              mutatedValue: args.current,
+              cause,
+              path,
+            });
           }
         }),
       );
@@ -1187,12 +1187,13 @@ export class Node<
                 ...args,
               });
           } catch (cause) {
-            throw new PostDeleteError(
-              args.context.request,
-              nodeOrFeature,
-              args.change,
-              { cause, path },
-            );
+            throw new OperationError(args.context.request, nodeOrFeature, {
+              reason: `executing the "post-${utils.MutationType.DELETION}" hook`,
+              mutationType: utils.MutationType.DELETION,
+              mutatedValue: args.change.oldValue,
+              cause,
+              path,
+            });
           }
         }),
       );

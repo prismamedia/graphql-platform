@@ -385,41 +385,65 @@ export class MariaDBConnector<TRequestContext extends object = any>
               durationInSeconds,
             });
 
-            if (
-              error.errno === 1062 &&
-              (statement instanceof InsertStatement ||
-                statement instanceof UpdateStatement)
-            ) {
-              const match = error.sqlMessage?.match(
-                /Duplicate entry '(?<value>.+)' for key '(?<unique>.+)'/,
-              );
+            if ('context' in statement && 'table' in statement) {
+              switch (error.errno) {
+                case 1062: {
+                  const match = error.sqlMessage?.match(
+                    /Duplicate entry '(?<value>.+)' for key '(?<unique>.+)'/,
+                  );
 
-              const uniqueIndex = match?.groups?.unique
-                ? match?.groups?.unique === 'PRIMARY'
-                  ? statement.table.primaryKey
-                  : statement.table.uniqueIndexes.find(
-                      (uniqueIndex) =>
-                        uniqueIndex.name === match?.groups?.unique,
-                    )
-                : undefined;
+                  const uniqueIndex = match?.groups?.unique
+                    ? match?.groups?.unique === 'PRIMARY'
+                      ? statement.table.primaryKey
+                      : statement.table.uniqueIndexes.find(
+                          (uniqueIndex) =>
+                            uniqueIndex.name === match?.groups?.unique,
+                        )
+                    : undefined;
 
-              throw new core.DuplicateError(
-                statement.context.request,
-                statement.table.node,
-                statement instanceof InsertStatement
-                  ? core.ConnectorOperationKind.CREATE
-                  : core.ConnectorOperationKind.UPDATE,
-                {
-                  uniqueConstraint: uniqueIndex?.uniqueConstraint,
-                  hint: match?.groups?.value,
-                  cause: error,
-                  path,
-                },
-              );
+                  throw new core.DuplicateError(
+                    statement.context.request,
+                    statement.table.node,
+                    {
+                      ...('mutationType' in statement && {
+                        mutationType: statement.mutationType,
+                      }),
+                      uniqueConstraint: uniqueIndex?.uniqueConstraint,
+                      hint: match?.groups?.value,
+                      cause: error,
+                      path,
+                    },
+                  );
+                }
+
+                case 1969:
+                  throw new core.ConnectorOperationError(
+                    statement.context.request,
+                    statement.table.node,
+                    { cause: error, path, reason: 'timeout' },
+                  );
+
+                default:
+                  throw new core.ConnectorOperationError(
+                    statement.context.request,
+                    statement.table.node,
+                    {
+                      cause: error,
+                      path,
+                      ...(error.sqlMessage && { reason: error.sqlMessage }),
+                    },
+                  );
+              }
             }
           }
 
-          throw error;
+          throw 'context' in statement && 'table' in statement
+            ? new core.ConnectorOperationError(
+                statement.context.request,
+                statement.table.node,
+                { cause: error, path },
+              )
+            : error;
         }
 
         return result;

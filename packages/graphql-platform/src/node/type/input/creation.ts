@@ -2,6 +2,7 @@ import * as utils from '@prismamedia/graphql-platform-utils';
 import { MGetter, MMethod } from '@prismamedia/memoize';
 import inflection from 'inflection';
 import assert from 'node:assert';
+import * as R from 'remeda';
 import type { Except } from 'type-fest';
 import type {
   Component,
@@ -11,9 +12,14 @@ import type {
   ReverseEdge,
 } from '../../../node.js';
 import type { MutationContext } from '../../operation.js';
-import type { NodeCreationValue } from '../../statement/creation.js';
+import { OperationError } from '../../operation/error.js';
+import type {
+  ComponentCreationValue,
+  NodeCreationValue,
+} from '../../statement/creation.js';
 import {
   type ComponentCreationInput,
+  EdgeCreationInput,
   type FieldCreationInput,
   LeafCreationInput,
   type ReverseEdgeCreationInput,
@@ -61,6 +67,22 @@ export class NodeCreationInputType extends utils.ObjectInputType<FieldCreationIn
 
         return fields;
       }, []);
+  }
+
+  @MGetter
+  public get leafFields(): ReadonlyArray<LeafCreationInput> {
+    return R.filter(
+      this.componentFields,
+      (field) => field instanceof LeafCreationInput,
+    );
+  }
+
+  @MGetter
+  public get edgeFields(): ReadonlyArray<EdgeCreationInput> {
+    return R.filter(
+      this.componentFields,
+      (field) => field instanceof EdgeCreationInput,
+    );
   }
 
   @MGetter
@@ -173,20 +195,38 @@ export class NodeCreationInputType extends utils.ObjectInputType<FieldCreationIn
   ): Promise<NodeCreationValue> {
     const resolvedValue: NodeCreationValue = Object.create(null);
 
-    for (const field of this.componentFields) {
-      const fieldData = data[field.name];
+    for (const field of this.leafFields) {
+      const leafValue = data[field.name];
+      if (leafValue !== undefined) {
+        Object.assign(resolvedValue, { [field.name]: leafValue });
+      }
+    }
 
-      const componentValue =
-        fieldData == null || field instanceof LeafCreationInput
-          ? fieldData
-          : await field.resolveValue(
-              fieldData,
-              context,
-              utils.addPath(path, field.name),
-            );
+    for (const field of this.edgeFields) {
+      const edgeData = data[field.name];
 
-      if (componentValue !== undefined) {
-        Object.assign(resolvedValue, { [field.name]: componentValue });
+      let edgeValue: ComponentCreationValue;
+      try {
+        edgeValue =
+          edgeData == null
+            ? edgeData
+            : await field.resolveValue(
+                edgeData,
+                context,
+                utils.addPath(path, field.name),
+              );
+      } catch (cause) {
+        throw new OperationError(context.request, this.node, {
+          reason: `resolving the "${field.name}" edge's value`,
+          mutatedValue: resolvedValue,
+          mutationType: utils.MutationType.CREATION,
+          cause,
+          path,
+        });
+      }
+
+      if (edgeValue !== undefined) {
+        Object.assign(resolvedValue, { [field.name]: edgeValue });
       }
     }
 
@@ -215,7 +255,7 @@ export class NodeCreationInputType extends utils.ObjectInputType<FieldCreationIn
   }
 
   public async applyReverseEdgeActions(
-    nodeValue: Readonly<NodeValue>,
+    currentValue: Readonly<NodeValue>,
     data: Readonly<NonNullable<NodeCreationInputValue>>,
     context: MutationContext,
     path?: utils.Path,
@@ -224,12 +264,22 @@ export class NodeCreationInputType extends utils.ObjectInputType<FieldCreationIn
       const fieldData = data[field.name];
 
       if (fieldData != null && field.hasActions(fieldData)) {
-        await field.applyActions(
-          nodeValue,
-          fieldData,
-          context,
-          utils.addPath(path, field.name),
-        );
+        try {
+          await field.applyActions(
+            currentValue,
+            fieldData,
+            context,
+            utils.addPath(path, field.name),
+          );
+        } catch (cause) {
+          throw new OperationError(context.request, this.node, {
+            reason: `applying the "${field.name}" reverse-edge's action(s)`,
+            mutatedValue: currentValue,
+            mutationType: utils.MutationType.CREATION,
+            cause,
+            path,
+          });
+        }
       }
     }
   }

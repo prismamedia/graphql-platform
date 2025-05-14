@@ -12,10 +12,7 @@ import { NodeFilter } from '../../statement.js';
 import type { NodeFilterInputValue } from '../../type.js';
 import { AbstractQuery } from '../abstract-query.js';
 import type { OperationContext } from '../context.js';
-import {
-  catchConnectorOperationError,
-  ConnectorOperationKind,
-} from '../error.js';
+import { catchConnectorOperationError } from '../error.js';
 
 export type CountQueryArgs = utils.Nillable<{
   where?: NodeFilterInputValue;
@@ -83,7 +80,6 @@ export class CountQuery<TRequestContext extends object> extends AbstractQuery<
         ),
       context.request,
       this.node,
-      ConnectorOperationKind.COUNT,
       { path },
     );
   }

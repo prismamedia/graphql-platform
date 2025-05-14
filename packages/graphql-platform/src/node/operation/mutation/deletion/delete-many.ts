@@ -12,10 +12,7 @@ import { NodeDeletion } from '../../../change.js';
 import { OnEdgeHeadDeletion } from '../../../definition.js';
 import { NodeFilter, type NodeSelectedValue } from '../../../statement.js';
 import type { NodeFilterInputValue, OrderByInputValue } from '../../../type.js';
-import {
-  ConnectorOperationKind,
-  catchConnectorOperationError,
-} from '../../error.js';
+import { OperationError, catchConnectorOperationError } from '../../error.js';
 import { AbstractDeletion } from '../abstract-deletion.js';
 import type { MutationContext } from '../context.js';
 
@@ -121,7 +118,6 @@ export class DeleteManyMutation<
         ),
       context.request,
       this.node,
-      ConnectorOperationKind.FIND,
       { path },
     );
 
@@ -166,32 +162,32 @@ export class DeleteManyMutation<
 
       for (const [head, reverseEdges] of cascadeReverseEdgesByHead) {
         try {
-          await head.getMutationByKey('delete-many').execute(context, {
-            where: {
-              OR: reverseEdges.map(({ originalEdge }) => ({
-                [originalEdge.name]: {
-                  OR: oldValues.map((oldValue) =>
-                    originalEdge.referencedUniqueConstraint.parseValue(
-                      oldValue,
+          await head.getMutationByKey('delete-many').execute(
+            context,
+            {
+              where: {
+                OR: reverseEdges.map(({ originalEdge }) => ({
+                  [originalEdge.name]: {
+                    OR: oldValues.map((oldValue) =>
+                      originalEdge.referencedUniqueConstraint.parseValue(
+                        oldValue,
+                      ),
                     ),
-                  ),
-                },
-              })),
+                  },
+                })),
+              },
+              first: scalars.GRAPHQL_MAX_UNSIGNED_INT,
+              selection: head.mainIdentifier.selection,
             },
-            first: scalars.GRAPHQL_MAX_UNSIGNED_INT,
-            selection: head.mainIdentifier.selection,
-          });
-        } catch (cause) {
-          throw new utils.GraphError(
-            `An error occurred while applying the "on-edge-head-deletion" action "${
-              OnEdgeHeadDeletion[OnEdgeHeadDeletion.CASCADE]
-            }" of the original-edge of "${
-              this.node
-            }"'s reverse-edge(s) heading to "${head}": ${reverseEdges
-              .map(({ name, originalEdge }) => `${name} (${originalEdge})`)
-              .join(', ')}`,
-            { path, cause },
+            path,
           );
+        } catch (cause) {
+          throw new OperationError(context.request, this.node, {
+            mutationType: utils.MutationType.DELETION,
+            cause,
+            path,
+            reason: `deleting linked "${head.plural}"`,
+          });
         }
       }
 
@@ -200,29 +196,33 @@ export class DeleteManyMutation<
           OnEdgeHeadDeletion.SET_NULL,
         );
 
-      for (const { name, head, originalEdge } of setNullReverseEdges) {
+      for (const { head, originalEdge } of setNullReverseEdges) {
         try {
-          await head.getMutationByKey('update-many').execute(context, {
-            where: {
-              [originalEdge.name]: {
-                OR: oldValues.map((oldValue) =>
-                  originalEdge.referencedUniqueConstraint.parseValue(oldValue),
-                ),
+          await head.getMutationByKey('update-many').execute(
+            context,
+            {
+              where: {
+                [originalEdge.name]: {
+                  OR: oldValues.map((oldValue) =>
+                    originalEdge.referencedUniqueConstraint.parseValue(
+                      oldValue,
+                    ),
+                  ),
+                },
               },
+              first: scalars.GRAPHQL_MAX_UNSIGNED_INT,
+              data: { [originalEdge.name]: null },
+              selection: head.mainIdentifier.selection,
             },
-            first: scalars.GRAPHQL_MAX_UNSIGNED_INT,
-            data: { [originalEdge.name]: null },
-            selection: head.mainIdentifier.selection,
-          });
-        } catch (cause) {
-          throw new utils.GraphError(
-            `An error occurred while applying the "on-edge-head-deletion" action "${
-              OnEdgeHeadDeletion[OnEdgeHeadDeletion.SET_NULL]
-            }" of the original-edge of "${
-              this.node
-            }"'s reverse-edge "${name}": ${originalEdge}`,
-            { path, cause },
+            path,
           );
+        } catch (cause) {
+          throw new OperationError(context.request, this.node, {
+            mutationType: utils.MutationType.DELETION,
+            cause,
+            path,
+            reason: `unlinking "${head.plural}"`,
+          });
         }
       }
     }
@@ -240,8 +240,14 @@ export class DeleteManyMutation<
         ),
       context.request,
       this.node,
-      ConnectorOperationKind.DELETE,
-      { path },
+      {
+        mutatedValue:
+          oldValues.length === 1
+            ? this.node.selection.pickValue(oldValues[0], path)
+            : undefined,
+        mutationType: utils.MutationType.DELETION,
+        path,
+      },
     );
 
     for (const oldValue of oldValues) {

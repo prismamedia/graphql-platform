@@ -1,4 +1,4 @@
-import type * as utils from '@prismamedia/graphql-platform-utils';
+import * as utils from '@prismamedia/graphql-platform-utils';
 import * as graphql from 'graphql';
 import type {
   NodeSelectionAwareArgs,
@@ -50,7 +50,10 @@ export class DeleteOneMutation<
       .internal(context, authorization, args, path);
 
     if (!nodeValue) {
-      throw new NotFoundError(context.request, this.node, args.where, { path });
+      throw new NotFoundError(context.request, this.node, args.where, {
+        mutationType: utils.MutationType.DELETION,
+        path,
+      });
     }
 
     return nodeValue;

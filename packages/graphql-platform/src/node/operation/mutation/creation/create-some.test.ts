@@ -14,9 +14,9 @@ import {
 } from '../../../../__tests__/connector-mock.js';
 import { GraphQLPlatform } from '../../../../index.js';
 import {
-  AbstractLifecycleHookError,
   ConnectorOperationError,
   ConnectorWorkflowError,
+  OperationError,
   UnauthorizedError,
 } from '../../error.js';
 import type { CreateSomeMutationArgs } from './create-some.js';
@@ -121,7 +121,7 @@ describe('CreateSomeMutation', () => {
           ],
           selection: '{ id }',
         }),
-        AbstractLifecycleHookError,
+        OperationError,
       );
     });
   });

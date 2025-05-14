@@ -10,10 +10,7 @@ import { NodeCreation } from '../../../change.js';
 import type { NodeFilter, NodeSelectedValue } from '../../../statement.js';
 import { NodeCreationStatement } from '../../../statement.js';
 import type { NodeCreationInputValue } from '../../../type.js';
-import {
-  ConnectorOperationKind,
-  catchConnectorOperationError,
-} from '../../error.js';
+import { catchConnectorOperationError } from '../../error.js';
 import { AbstractCreation } from '../abstract-creation.js';
 import type { MutationContext } from '../context.js';
 
@@ -108,8 +105,11 @@ export class CreateSomeMutation<
         ),
       context.request,
       this.node,
-      ConnectorOperationKind.CREATE,
-      { path },
+      {
+        mutatedValue: creations.length === 1 ? creations[0].value : undefined,
+        mutationType: utils.MutationType.CREATION,
+        path,
+      },
     );
 
     const changes: NodeCreation[] = [];

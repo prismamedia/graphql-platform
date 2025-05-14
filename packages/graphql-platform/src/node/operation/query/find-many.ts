@@ -13,10 +13,7 @@ import { NodeFilter, type NodeSelectedValue } from '../../statement.js';
 import type { NodeFilterInputValue, OrderByInputValue } from '../../type.js';
 import { AbstractQuery } from '../abstract-query.js';
 import type { OperationContext } from '../context.js';
-import {
-  catchConnectorOperationError,
-  ConnectorOperationKind,
-} from '../error.js';
+import { catchConnectorOperationError } from '../error.js';
 import {
   ChangesSubscriptionCacheControlInputType,
   type ChangesSubscriptionCacheControlInputValue,
@@ -134,7 +131,6 @@ export class FindManyQuery<
         ),
       context.request,
       this.node,
-      ConnectorOperationKind.FIND,
       { path },
     );
 

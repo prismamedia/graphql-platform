@@ -124,7 +124,10 @@ export class ChangesSubscription<
         utils.addPath(path, argsPathKey),
       );
     } catch (cause) {
-      throw new InvalidArgumentsError({ cause, path });
+      throw new InvalidArgumentsError(context.request, this.node, {
+        cause,
+        path,
+      });
     }
 
     try {
@@ -222,7 +225,10 @@ export class ChangesSubscription<
 
       Object.assign(parsedArgs, { selection });
     } catch (cause) {
-      throw new InvalidSelectionError({ cause, path });
+      throw new InvalidSelectionError(context.request, this.node, {
+        cause,
+        path,
+      });
     }
 
     return parsedArgs as any;

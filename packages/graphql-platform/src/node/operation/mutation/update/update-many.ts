@@ -23,10 +23,7 @@ import type {
   NodeUpdateInputValue,
   OrderByInputValue,
 } from '../../../type.js';
-import {
-  catchConnectorOperationError,
-  ConnectorOperationKind,
-} from '../../error.js';
+import { catchConnectorOperationError } from '../../error.js';
 import { AbstractUpdate } from '../abstract-update.js';
 import type { MutationContext } from '../context.js';
 
@@ -141,7 +138,6 @@ export class UpdateManyMutation<
         ),
       context.request,
       this.node,
-      ConnectorOperationKind.FIND,
       { path },
     );
 
@@ -216,8 +212,11 @@ export class UpdateManyMutation<
               ),
             context.request,
             this.node,
-            ConnectorOperationKind.UPDATE,
-            { path },
+            {
+              mutatedValue: statement.current,
+              mutationType: utils.MutationType.UPDATE,
+              path,
+            },
           );
 
           hasUpdate ||= true;

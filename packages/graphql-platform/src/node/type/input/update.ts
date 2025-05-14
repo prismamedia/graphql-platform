@@ -2,6 +2,7 @@ import * as utils from '@prismamedia/graphql-platform-utils';
 import { MGetter, MMethod } from '@prismamedia/memoize';
 import inflection from 'inflection';
 import assert from 'node:assert';
+import * as R from 'remeda';
 import type { Except } from 'type-fest';
 import type {
   Component,
@@ -11,9 +12,14 @@ import type {
   ReverseEdge,
 } from '../../../node.js';
 import type { MutationContext } from '../../operation.js';
-import type { NodeUpdateValue } from '../../statement/update.js';
+import { OperationError } from '../../operation/error.js';
+import type {
+  ComponentUpdateValue,
+  NodeUpdateValue,
+} from '../../statement/update.js';
 import {
   type ComponentUpdateInput,
+  EdgeUpdateInput,
   type FieldUpdateInput,
   LeafUpdateInput,
   type ReverseEdgeUpdateInput,
@@ -63,6 +69,22 @@ export class NodeUpdateInputType extends utils.ObjectInputType<FieldUpdateInput>
 
         return fields;
       }, []);
+  }
+
+  @MGetter
+  public get leafFields(): ReadonlyArray<LeafUpdateInput> {
+    return R.filter(
+      this.componentFields,
+      (field) => field instanceof LeafUpdateInput,
+    );
+  }
+
+  @MGetter
+  public get edgeFields(): ReadonlyArray<EdgeUpdateInput> {
+    return R.filter(
+      this.componentFields,
+      (field) => field instanceof EdgeUpdateInput,
+    );
   }
 
   @MGetter
@@ -176,21 +198,40 @@ export class NodeUpdateInputType extends utils.ObjectInputType<FieldUpdateInput>
   ): Promise<NodeUpdateValue> {
     const resolvedUpdate: NodeUpdateValue = Object.create(null);
 
-    for (const field of this.componentFields) {
-      const fieldData = data[field.name];
+    for (const field of this.leafFields) {
+      const leafUpdate = data[field.name];
+      if (leafUpdate !== undefined) {
+        Object.assign(resolvedUpdate, { [field.name]: leafUpdate });
+      }
+    }
 
-      const componentUpdate =
-        fieldData == null || field instanceof LeafUpdateInput
-          ? fieldData
-          : await field.resolveUpdate(
-              currentValues,
-              fieldData,
-              context,
-              utils.addPath(path, field.name),
-            );
+    for (const field of this.edgeFields) {
+      const edgeData = data[field.name];
 
-      if (componentUpdate !== undefined) {
-        Object.assign(resolvedUpdate, { [field.name]: componentUpdate });
+      let edgeUpdate: ComponentUpdateValue;
+      try {
+        edgeUpdate =
+          edgeData == null
+            ? edgeData
+            : await field.resolveUpdate(
+                currentValues,
+                edgeData,
+                context,
+                utils.addPath(path, field.name),
+              );
+      } catch (cause) {
+        throw new OperationError(context.request, this.node, {
+          reason: `resolving the "${field.name}" edge's update`,
+          mutatedValue:
+            currentValues.length === 1 ? currentValues[0] : undefined,
+          mutationType: utils.MutationType.UPDATE,
+          cause,
+          path,
+        });
+      }
+
+      if (edgeUpdate !== undefined) {
+        Object.assign(resolvedUpdate, { [field.name]: edgeUpdate });
       }
     }
 
@@ -219,7 +260,7 @@ export class NodeUpdateInputType extends utils.ObjectInputType<FieldUpdateInput>
   }
 
   public async applyReverseEdgeActions(
-    nodeValues: ReadonlyArray<NodeValue>,
+    currentValues: ReadonlyArray<NodeValue>,
     data: Readonly<NonNullable<NodeUpdateInputValue>>,
     context: MutationContext,
     path?: utils.Path,
@@ -228,12 +269,23 @@ export class NodeUpdateInputType extends utils.ObjectInputType<FieldUpdateInput>
       const fieldData = data[field.name];
 
       if (fieldData != null && field.hasActions(fieldData)) {
-        await field.applyActions(
-          nodeValues,
-          fieldData,
-          context,
-          utils.addPath(path, field.name),
-        );
+        try {
+          await field.applyActions(
+            currentValues,
+            fieldData,
+            context,
+            utils.addPath(path, field.name),
+          );
+        } catch (cause) {
+          throw new OperationError(context.request, this.node, {
+            reason: `applying the "${field.name}" reverse-edge's action(s)`,
+            mutatedValue:
+              currentValues.length === 1 ? currentValues[0] : undefined,
+            mutationType: utils.MutationType.UPDATE,
+            cause,
+            path,
+          });
+        }
       }
     }
   }

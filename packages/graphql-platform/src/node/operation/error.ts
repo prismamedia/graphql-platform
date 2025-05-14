@@ -1,324 +1,70 @@
 import * as utils from '@prismamedia/graphql-platform-utils';
 import { inspect } from 'node:util';
 import * as R from 'remeda';
-import type { Except, Promisable } from 'type-fest';
-import type {
-  Node,
-  NodeCreation,
-  NodeCreationStatement,
-  NodeCreationValue,
-  NodeDeletion,
-  NodeUpdate,
-  NodeUpdateStatement,
-  NodeValue,
-  UniqueConstraint,
-} from '../../node.js';
+import type { Except, Merge, Promisable } from 'type-fest';
+import type { Node, NodeValue, UniqueConstraint } from '../../node.js';
 import { NodeFeature } from '../feature.js';
 import type { NodeUniqueFilterInputValue } from '../type/input/unique-filter.js';
 
-export enum OperationErrorCode {
-  INVALID_REQUEST_CONTEXT,
-  UNAUTHENTICATED,
-  UNAUTHORIZED,
+export enum RequestErrorCode {
+  CONNECTOR_WORKFLOW_ERROR,
+  DUPLICATE,
   INVALID_ARGUMENTS,
+  INVALID_REQUEST_CONTEXT,
   INVALID_SELECTION,
   NOT_FOUND,
-  LIFECYCLE_HOOK_ERROR,
-  CONNECTOR_WORKFLOW_ERROR,
-  CONNECTOR_OPERATION_ERROR,
-  DUPLICATE,
+  OPERATION_ERROR,
+  UNAUTHENTICATED,
+  UNAUTHORIZED,
 }
 
-export type OperationErrorOptions = Except<utils.GraphErrorOptions, 'code'>;
+export type RequestErrorOptions = Merge<
+  utils.GraphErrorOptions,
+  { readonly code?: RequestErrorCode }
+>;
 
-abstract class AbstractOperationError<
+export class RequestError<
   TRequestContext extends object = any,
 > extends utils.GraphError {
   public constructor(
-    public readonly request: TRequestContext,
+    public readonly requestContext: TRequestContext,
     message: string,
-    options?: OperationErrorOptions & {
-      readonly code: OperationErrorCode;
-    },
+    options?: RequestErrorOptions,
   ) {
     super(message, {
       ...options,
-      code:
-        options?.code != null ? OperationErrorCode[options.code] : undefined,
+      code: options?.code != null ? RequestErrorCode[options.code] : undefined,
     });
 
-    // Prevent these properties from being enumerable
-    Object.defineProperties(
-      this,
-      R.fromKeys(['request'], R.constant({ enumerable: false })),
-    );
+    Object.defineProperty(this, 'requestContext', { enumerable: false });
   }
 }
 
-export class InvalidRequestContextError extends AbstractOperationError<any> {
-  public constructor(request: unknown, options?: OperationErrorOptions) {
-    super(request, `Invalid request-context`, {
+export class InvalidRequestContextError extends RequestError<any> {
+  public constructor(
+    requestContext: unknown,
+    options?: Except<RequestErrorOptions, 'code'>,
+  ) {
+    super(requestContext, `Invalid request-context`, {
       ...options,
-      code: OperationErrorCode.INVALID_REQUEST_CONTEXT,
+      code: RequestErrorCode.INVALID_REQUEST_CONTEXT,
     });
   }
 }
 
 export class UnauthenticatedError<
   TRequestContext extends object = any,
-> extends AbstractOperationError<TRequestContext> {
+> extends RequestError<TRequestContext> {
   public constructor(
-    request: TRequestContext,
-    options?: OperationErrorOptions,
+    requestContext: TRequestContext,
+    options?: Except<RequestErrorOptions, 'code'>,
   ) {
-    super(request, `Unauthenticated`, {
+    super(requestContext, `Unauthenticated`, {
       ...options,
-      code: OperationErrorCode.UNAUTHENTICATED,
+      code: RequestErrorCode.UNAUTHENTICATED,
     });
   }
 }
-
-export class UnauthorizedError<
-  TRequestContext extends object = any,
-> extends AbstractOperationError<TRequestContext> {
-  public constructor(
-    request: TRequestContext,
-    node: Node,
-    mutationType?: utils.MutationType,
-    options?: OperationErrorOptions,
-  ) {
-    super(
-      request,
-      `Unauthorized access to "${node}"${
-        mutationType ? `'s ${mutationType}` : ''
-      }`,
-      { ...options, code: OperationErrorCode.UNAUTHORIZED },
-    );
-  }
-}
-
-export class InvalidArgumentsError<
-  TRequestContext extends object = any,
-> extends AbstractOperationError<TRequestContext> {
-  public constructor(
-    request: TRequestContext,
-    options?: OperationErrorOptions,
-  ) {
-    super(request, `Invalid argument(s)`, {
-      ...options,
-      code: OperationErrorCode.INVALID_ARGUMENTS,
-    });
-  }
-}
-
-export class InvalidSelectionError<
-  TRequestContext extends object = any,
-> extends AbstractOperationError<TRequestContext> {
-  public constructor(
-    request: TRequestContext,
-    options?: OperationErrorOptions,
-  ) {
-    super(request, `Invalid selection`, {
-      ...options,
-      code: OperationErrorCode.INVALID_SELECTION,
-    });
-  }
-}
-
-export class NotFoundError<
-  TRequestContext extends object = any,
-> extends AbstractOperationError<TRequestContext> {
-  public constructor(
-    request: TRequestContext,
-    node: Node,
-    where: NonNullable<NodeUniqueFilterInputValue>,
-    options?: OperationErrorOptions,
-  ) {
-    super(
-      request,
-      `No "${node}" has been found given the following filter: ${inspect(
-        where,
-      )}`,
-      { ...options, code: OperationErrorCode.NOT_FOUND },
-    );
-  }
-}
-
-export enum LifecycleHookKind {
-  PRE_CREATE,
-  POST_CREATE,
-  PRE_UPDATE,
-  POST_UPDATE,
-  PRE_DELETE,
-  POST_DELETE,
-}
-
-export interface LifecycleHookErrorOptions extends OperationErrorOptions {
-  readonly creation?: NodeCreationValue;
-}
-
-export abstract class AbstractLifecycleHookError<
-  TRequestContext extends object = any,
-> extends AbstractOperationError<TRequestContext> {
-  public readonly feature?: NodeFeature;
-  public readonly node: Node;
-
-  public constructor(
-    request: TRequestContext,
-    nodeOrFeature: Node | NodeFeature,
-    public readonly kind: LifecycleHookKind,
-    options?: OperationErrorOptions,
-  ) {
-    super(
-      request,
-      `The "${nodeOrFeature}"'s "${LifecycleHookKind[kind]}" lifecycle-hook failed`,
-      { ...options, code: OperationErrorCode.LIFECYCLE_HOOK_ERROR },
-    );
-
-    if (nodeOrFeature instanceof NodeFeature) {
-      this.feature = nodeOrFeature;
-      this.node = nodeOrFeature.node;
-    } else {
-      this.node = nodeOrFeature;
-    }
-
-    // Prevent these properties from being enumerable
-    Object.defineProperties(
-      this,
-      R.fromKeys(
-        ['feature', 'node', 'kind'],
-        R.constant({ enumerable: false }),
-      ),
-    );
-  }
-}
-
-export class PreCreateError<
-  TRequestContext extends object = any,
-> extends AbstractLifecycleHookError<TRequestContext> {
-  public constructor(
-    request: TRequestContext,
-    nodeOrFeature: Node | NodeFeature,
-    public readonly statement: NodeCreationStatement,
-    options?: OperationErrorOptions,
-  ) {
-    super(request, nodeOrFeature, LifecycleHookKind.PRE_CREATE, options);
-
-    Object.defineProperty(this, 'statement', { enumerable: false });
-  }
-}
-
-export class PostCreateError<
-  TRequestContext extends object = any,
-> extends AbstractLifecycleHookError<TRequestContext> {
-  public constructor(
-    request: TRequestContext,
-    nodeOrFeature: Node | NodeFeature,
-    public readonly change: NodeCreation<TRequestContext>,
-    options?: OperationErrorOptions,
-  ) {
-    super(request, nodeOrFeature, LifecycleHookKind.POST_CREATE, options);
-
-    Object.defineProperty(this, 'change', { enumerable: false });
-  }
-}
-
-export class PreUpdateError<
-  TRequestContext extends object = any,
-> extends AbstractLifecycleHookError<TRequestContext> {
-  public constructor(
-    request: TRequestContext,
-    nodeOrFeature: Node | NodeFeature,
-    public readonly statement: NodeUpdateStatement,
-    options?: OperationErrorOptions,
-  ) {
-    super(request, nodeOrFeature, LifecycleHookKind.PRE_UPDATE, options);
-
-    Object.defineProperty(this, 'statement', { enumerable: false });
-  }
-}
-
-export class PostUpdateError<
-  TRequestContext extends object = any,
-> extends AbstractLifecycleHookError<TRequestContext> {
-  public constructor(
-    request: TRequestContext,
-    nodeOrFeature: Node | NodeFeature,
-    public readonly change: NodeUpdate<TRequestContext>,
-    options?: OperationErrorOptions,
-  ) {
-    super(request, nodeOrFeature, LifecycleHookKind.POST_UPDATE, options);
-
-    Object.defineProperty(this, 'change', { enumerable: false });
-  }
-}
-
-export class PreDeleteError<
-  TRequestContext extends object = any,
-> extends AbstractLifecycleHookError<TRequestContext> {
-  public constructor(
-    request: TRequestContext,
-    nodeOrFeature: Node | NodeFeature,
-    public readonly currentValue: Readonly<NodeValue>,
-    options?: OperationErrorOptions,
-  ) {
-    super(request, nodeOrFeature, LifecycleHookKind.PRE_DELETE, options);
-
-    Object.defineProperty(this, 'currentValue', { enumerable: false });
-  }
-}
-
-export class PostDeleteError<
-  TRequestContext extends object = any,
-> extends AbstractLifecycleHookError<TRequestContext> {
-  public constructor(
-    request: TRequestContext,
-    nodeOrFeature: Node | NodeFeature,
-    public readonly change: NodeDeletion<TRequestContext>,
-    options?: OperationErrorOptions,
-  ) {
-    super(request, nodeOrFeature, LifecycleHookKind.POST_DELETE, options);
-
-    Object.defineProperty(this, 'change', { enumerable: false });
-  }
-}
-
-export type PreLifecycleHookError<TRequestContext extends object = any> =
-  | PreCreateError<TRequestContext>
-  | PreUpdateError<TRequestContext>
-  | PreDeleteError<TRequestContext>;
-
-export const isPreLifecycleHookError = <TRequestContext extends object = any>(
-  error: unknown,
-): error is PreLifecycleHookError<TRequestContext> =>
-  error instanceof PreCreateError ||
-  error instanceof PreUpdateError ||
-  error instanceof PreDeleteError;
-
-export type PostLifecycleHookError<TRequestContext extends object = any> =
-  | PostCreateError<TRequestContext>
-  | PostUpdateError<TRequestContext>
-  | PostDeleteError<TRequestContext>;
-
-export const isPostLifecycleHookError = <TRequestContext extends object = any>(
-  error: unknown,
-): error is PostLifecycleHookError<TRequestContext> =>
-  error instanceof PostCreateError ||
-  error instanceof PostUpdateError ||
-  error instanceof PostDeleteError;
-
-export type LifecycleHookError<TRequestContext extends object = any> =
-  | PreLifecycleHookError<TRequestContext>
-  | PostLifecycleHookError<TRequestContext>;
-
-export const isLifecycleHookError = <TRequestContext extends object = any>(
-  error: unknown,
-): error is LifecycleHookError<TRequestContext> =>
-  isPreLifecycleHookError(error) || isPostLifecycleHookError(error);
-
-export abstract class AbstractConnectorError<
-  TRequestContext extends object,
-> extends AbstractOperationError<TRequestContext> {}
 
 export enum ConnectorWorkflowKind {
   PRE_MUTATION,
@@ -327,78 +73,150 @@ export enum ConnectorWorkflowKind {
   POST_MUTATION,
 }
 
-export interface ConnectorWorkflowErrorOptions extends OperationErrorOptions {}
-
 export class ConnectorWorkflowError<
   TRequestContext extends object = any,
-> extends AbstractConnectorError<TRequestContext> {
+> extends RequestError<TRequestContext> {
   public constructor(
-    request: TRequestContext,
+    requestContext: TRequestContext,
     kind: ConnectorWorkflowKind,
-    options?: ConnectorWorkflowErrorOptions,
-  ) {
-    super(request, `The connector failed at "${ConnectorWorkflowKind[kind]}"`, {
-      ...options,
-      code: OperationErrorCode.CONNECTOR_WORKFLOW_ERROR,
-    });
-  }
-}
-
-export const catchConnectorWorkflowError = <TRequestContext extends object>(
-  workflow: () => Promisable<void>,
-  request: TRequestContext,
-  kind: ConnectorWorkflowKind,
-  options?: Except<ConnectorWorkflowErrorOptions, 'cause'>,
-): Promise<void> =>
-  utils.PromiseTry(workflow).catch((error) => {
-    throw error instanceof ConnectorWorkflowError
-      ? error
-      : new ConnectorWorkflowError(request, kind, { ...options, cause: error });
-  });
-
-export enum ConnectorOperationKind {
-  COUNT,
-  FIND,
-  CREATE,
-  UPDATE,
-  DELETE,
-}
-
-export interface ConnectorOperationErrorOptions extends OperationErrorOptions {
-  readonly message?: string;
-}
-
-export class ConnectorOperationError<
-  TRequestContext extends object = any,
-> extends AbstractConnectorError<TRequestContext> {
-  public constructor(
-    request: TRequestContext,
-    node: Node,
-    kind: ConnectorOperationKind,
-    {
-      code,
-      message,
-      ...options
-    }: ConnectorOperationErrorOptions & {
-      readonly code?: OperationErrorCode.DUPLICATE;
-    } = {},
+    options?: Except<RequestErrorOptions, 'code'>,
   ) {
     super(
-      request,
-      message ??
-        `The connector failed at "${node}.${ConnectorOperationKind[kind]}"`,
+      requestContext,
+      `The connector failed at "${ConnectorWorkflowKind[kind]}"`,
       {
         ...options,
-        code: code ?? OperationErrorCode.CONNECTOR_OPERATION_ERROR,
+        code: RequestErrorCode.CONNECTOR_WORKFLOW_ERROR,
       },
     );
   }
 }
 
-export interface DuplicateErrorOptions extends OperationErrorOptions {
-  readonly uniqueConstraint?: UniqueConstraint;
-  readonly hint?: string;
+export interface OperationErrorOptions extends RequestErrorOptions {
+  readonly mutationType?: utils.MutationType;
+  readonly mutatedValue?: Readonly<NodeValue>;
+  readonly message?: string;
+  readonly reason?: string;
 }
+
+export class OperationError<
+  TRequestContext extends object = any,
+> extends RequestError<TRequestContext> {
+  public readonly node: Node;
+  public readonly feature?: NodeFeature;
+  public readonly mutationType?: utils.MutationType;
+  public readonly mutatedValue?: Readonly<NodeValue>;
+
+  public constructor(
+    requestContext: TRequestContext,
+    nodeOrFeature: Node | NodeFeature,
+    {
+      code = RequestErrorCode.OPERATION_ERROR,
+      mutationType,
+      mutatedValue,
+      message,
+      reason,
+      ...options
+    }: OperationErrorOptions = {},
+  ) {
+    const [node, feature] =
+      nodeOrFeature instanceof NodeFeature
+        ? [nodeOrFeature.node, nodeOrFeature]
+        : [nodeOrFeature, undefined];
+
+    super(
+      requestContext,
+      message ??
+        `The "${node}"'s "${mutationType ?? 'query'}" failed${reason ? `: ${reason}` : ''}`,
+      { code, ...options },
+    );
+
+    this.node = node;
+    feature && (this.feature = feature);
+    mutationType && (this.mutationType = mutationType);
+    mutatedValue && (this.mutatedValue = mutatedValue);
+
+    // Prevent these properties from being enumerable
+    Object.defineProperties(
+      this,
+      R.fromKeys(
+        ['node', 'feature', 'mutationType', 'mutatedValue'],
+        R.constant({ enumerable: false }),
+      ),
+    );
+  }
+}
+
+export class UnauthorizedError<
+  TRequestContext extends object = any,
+> extends OperationError<TRequestContext> {
+  public constructor(
+    requestContext: TRequestContext,
+    nodeOrFeature: Node | NodeFeature,
+    options?: Except<OperationErrorOptions, 'code'>,
+  ) {
+    super(requestContext, nodeOrFeature, {
+      reason: `unauthorized`,
+      ...options,
+      code: RequestErrorCode.UNAUTHORIZED,
+    });
+  }
+}
+
+export class InvalidArgumentsError<
+  TRequestContext extends object = any,
+> extends OperationError<TRequestContext> {
+  public constructor(
+    requestContext: TRequestContext,
+    nodeOrFeature: Node | NodeFeature,
+    options?: Except<OperationErrorOptions, 'code'>,
+  ) {
+    super(requestContext, nodeOrFeature, {
+      reason: `invalid argument(s)`,
+      ...options,
+      code: RequestErrorCode.INVALID_ARGUMENTS,
+    });
+  }
+}
+
+export class InvalidSelectionError<
+  TRequestContext extends object = any,
+> extends OperationError<TRequestContext> {
+  public constructor(
+    requestContext: TRequestContext,
+    nodeOrFeature: Node | NodeFeature,
+    options?: Except<OperationErrorOptions, 'code'>,
+  ) {
+    super(requestContext, nodeOrFeature, {
+      reason: `invalid selection`,
+      ...options,
+      code: RequestErrorCode.INVALID_SELECTION,
+    });
+  }
+}
+
+export class NotFoundError<
+  TRequestContext extends object = any,
+> extends OperationError<TRequestContext> {
+  public constructor(
+    requestContext: TRequestContext,
+    nodeOrFeature: Node | NodeFeature,
+    public readonly where: NonNullable<NodeUniqueFilterInputValue>,
+    options?: Except<OperationErrorOptions, 'code'>,
+  ) {
+    super(requestContext, nodeOrFeature, {
+      reason: `no entry found given the filter "${inspect(where)}"`,
+      ...options,
+      code: RequestErrorCode.NOT_FOUND,
+    });
+
+    Object.defineProperty(this, 'where', { enumerable: false });
+  }
+}
+
+export class ConnectorOperationError<
+  TRequestContext extends object = any,
+> extends OperationError<TRequestContext> {}
 
 export class DuplicateError<
   TRequestContext extends object = any,
@@ -406,28 +224,38 @@ export class DuplicateError<
   public constructor(
     request: TRequestContext,
     node: Node,
-    kind: ConnectorOperationKind.CREATE | ConnectorOperationKind.UPDATE,
-    options?: DuplicateErrorOptions,
+    options?: Except<OperationErrorOptions, 'code' | 'reason' | 'message'> & {
+      readonly uniqueConstraint?: UniqueConstraint;
+      readonly hint?: string;
+    },
   ) {
-    super(request, node, kind, {
+    super(request, node, {
       ...options,
-      code: OperationErrorCode.DUPLICATE,
-      message: `Duplicate "${options?.uniqueConstraint ?? node}"${options?.hint ? `: ${options.hint}` : ''}`,
+      code: RequestErrorCode.DUPLICATE,
+      reason: [
+        'duplicate',
+        options?.uniqueConstraint
+          ? `"${options.uniqueConstraint.name}"`
+          : undefined,
+        options?.hint ? `(${options.hint})` : undefined,
+        'found',
+      ]
+        .filter(Boolean)
+        .join(' '),
     });
   }
 }
 
 export const catchConnectorOperationError = <T, TRequestContext extends object>(
   operation: () => Promisable<T>,
-  request: TRequestContext,
+  requestContext: TRequestContext,
   node: Node,
-  kind: ConnectorOperationKind,
-  options?: Except<ConnectorOperationErrorOptions, 'cause'>,
+  options?: Except<OperationErrorOptions, 'code' | 'cause'>,
 ): Promise<T> =>
   utils.PromiseTry(operation).catch((error) => {
     throw error instanceof ConnectorOperationError
       ? error
-      : new ConnectorOperationError(request, node, kind, {
+      : new ConnectorOperationError(requestContext, node, {
           ...options,
           cause: error,
         });

@@ -1,4 +1,5 @@
 import type * as core from '@prismamedia/graphql-platform';
+import * as utils from '@prismamedia/graphql-platform-utils';
 import type * as mariadb from 'mariadb';
 import { EOL } from 'node:os';
 import type { SetOptional } from 'type-fest';
@@ -19,6 +20,7 @@ export interface DeleteStatementConfig {
  * @see https://mariadb.com/kb/en/delete/
  */
 export class DeleteStatement implements mariadb.QueryOptions {
+  public readonly mutationType = utils.MutationType.DELETION;
   public readonly kind = StatementKind.DATA_MANIPULATION;
   public readonly sql: string;
 

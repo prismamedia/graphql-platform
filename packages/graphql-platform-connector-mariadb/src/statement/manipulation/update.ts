@@ -20,6 +20,7 @@ export interface UpdateStatementConfig {
  * @see https://mariadb.com/kb/en/update/
  */
 export class UpdateStatement implements mariadb.QueryOptions {
+  public readonly mutationType = utils.MutationType.UPDATE;
   public readonly kind = StatementKind.DATA_MANIPULATION;
   public readonly sql: string;
 

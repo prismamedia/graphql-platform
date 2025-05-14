@@ -15,12 +15,12 @@ import {
   type CustomOperationsByNameByTypeConfig,
 } from './custom-operations.js';
 import {
+  ConnectorWorkflowError,
   ConnectorWorkflowKind,
   InvalidRequestContextError,
   MutationContext,
   Node,
   OperationContext,
-  catchConnectorWorkflowError,
   createAPI,
   createContextBoundAPI,
   type API,
@@ -673,42 +673,54 @@ export class GraphQLPlatform<
 
     using mutationContext = new MutationContext(this, requestContext);
 
-    await catchConnectorWorkflowError(
-      () => this.connector.preMutation?.(mutationContext),
-      requestContext,
-      ConnectorWorkflowKind.PRE_MUTATION,
-      { path },
-    );
+    try {
+      await this.connector.preMutation?.(mutationContext);
+    } catch (cause) {
+      throw new ConnectorWorkflowError(
+        requestContext,
+        ConnectorWorkflowKind.PRE_MUTATION,
+        { cause, path },
+      );
+    }
 
     let result: TResult;
 
     try {
       result = await task(mutationContext);
 
-      await catchConnectorWorkflowError(
-        () => this.connector.postSuccessfulMutation?.(mutationContext),
-        requestContext,
-        ConnectorWorkflowKind.POST_SUCCESSFUL_MUTATION,
-        { path },
-      );
+      try {
+        await this.connector.postSuccessfulMutation?.(mutationContext);
+      } catch (cause) {
+        throw new ConnectorWorkflowError(
+          requestContext,
+          ConnectorWorkflowKind.POST_SUCCESSFUL_MUTATION,
+          { cause, path },
+        );
+      }
     } catch (rawError) {
       const error = utils.castToError(rawError);
 
-      await catchConnectorWorkflowError(
-        () => this.connector.postFailedMutation?.(mutationContext, error),
-        requestContext,
-        ConnectorWorkflowKind.POST_FAILED_MUTATION,
-        { path },
-      );
+      try {
+        await this.connector.postFailedMutation?.(mutationContext, error);
+      } catch (cause) {
+        throw new ConnectorWorkflowError(
+          requestContext,
+          ConnectorWorkflowKind.POST_FAILED_MUTATION,
+          { cause, path },
+        );
+      }
 
       throw error;
     } finally {
-      await catchConnectorWorkflowError(
-        () => this.connector.postMutation?.(mutationContext),
-        requestContext,
-        ConnectorWorkflowKind.POST_MUTATION,
-        { path },
-      );
+      try {
+        await this.connector.postMutation?.(mutationContext);
+      } catch (cause) {
+        throw new ConnectorWorkflowError(
+          requestContext,
+          ConnectorWorkflowKind.POST_MUTATION,
+          { cause, path },
+        );
+      }
     }
 
     if (mutationContext.changes.size) {

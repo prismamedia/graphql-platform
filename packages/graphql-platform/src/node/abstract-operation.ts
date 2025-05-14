@@ -183,7 +183,10 @@ export abstract class AbstractOperation<
         utils.addPath(path, argsPathKey),
       );
     } catch (cause) {
-      throw new InvalidArgumentsError({ cause, path });
+      throw new InvalidArgumentsError(context.request, this.node, {
+        cause,
+        path,
+      });
     }
 
     if (this.selectionAware) {
@@ -197,7 +200,10 @@ export abstract class AbstractOperation<
           ),
         });
       } catch (cause) {
-        throw new InvalidSelectionError({ cause, path });
+        throw new InvalidSelectionError(context.request, this.node, {
+          cause,
+          path,
+        });
       }
     }
 

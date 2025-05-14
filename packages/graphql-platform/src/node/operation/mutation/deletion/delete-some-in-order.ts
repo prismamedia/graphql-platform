@@ -55,7 +55,10 @@ export class DeleteSomeInOrderMutation<
             context.request,
             this.node,
             args.where[index],
-            { path: utils.addPath(path, index) },
+            {
+              mutationType: utils.MutationType.DELETION,
+              path: utils.addPath(path, index),
+            },
           );
         }
 
