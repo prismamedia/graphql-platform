@@ -14,13 +14,23 @@ export enum RequestErrorCode {
   INVALID_SELECTION,
   NOT_FOUND,
   OPERATION_ERROR,
+  REQUEST_ERROR,
   UNAUTHENTICATED,
   UNAUTHORIZED,
 }
 
+// export interface RequestErrorExtensions<TRequestContext extends object = any>
+//   extends utils.GraphErrorExtensions {
+//   readonly requestContext: TRequestContext;
+// }
+
 export type RequestErrorOptions = Merge<
   utils.GraphErrorOptions,
-  { readonly code?: RequestErrorCode }
+  {
+    readonly code?: RequestErrorCode;
+    readonly message?: string;
+    readonly reason?: string;
+  }
 >;
 
 export class RequestError<
@@ -28,16 +38,32 @@ export class RequestError<
 > extends utils.GraphError {
   public constructor(
     public readonly requestContext: TRequestContext,
-    message: string,
-    options?: RequestErrorOptions,
+    { code, message, reason, ...options }: RequestErrorOptions = {},
   ) {
-    super(message, {
-      ...options,
-      code: options?.code != null ? RequestErrorCode[options.code] : undefined,
-    });
+    super(
+      message ??
+        [
+          `The request failed`,
+          reason ?? (code != null ? RequestErrorCode[code] : undefined),
+        ]
+          .filter(Boolean)
+          .join(' - '),
+      {
+        ...options,
+        code: code != null ? RequestErrorCode[code] : undefined,
+      },
+    );
 
     Object.defineProperty(this, 'requestContext', { enumerable: false });
   }
+
+  // @MGetter
+  // public override get extensions(): RequestErrorExtensions<TRequestContext> {
+  //   return {
+  //     ...super.extensions,
+  //     requestContext: this.requestContext,
+  //   };
+  // }
 }
 
 export class InvalidRequestContextError extends RequestError<any> {
@@ -45,9 +71,9 @@ export class InvalidRequestContextError extends RequestError<any> {
     requestContext: unknown,
     options?: Except<RequestErrorOptions, 'code'>,
   ) {
-    super(requestContext, `Invalid request-context`, {
-      ...options,
+    super(requestContext, {
       code: RequestErrorCode.INVALID_REQUEST_CONTEXT,
+      ...options,
     });
   }
 }
@@ -59,9 +85,9 @@ export class UnauthenticatedError<
     requestContext: TRequestContext,
     options?: Except<RequestErrorOptions, 'code'>,
   ) {
-    super(requestContext, `Unauthenticated`, {
-      ...options,
+    super(requestContext, {
       code: RequestErrorCode.UNAUTHENTICATED,
+      ...options,
     });
   }
 }
@@ -81,19 +107,19 @@ export class ConnectorWorkflowError<
     kind: ConnectorWorkflowKind,
     options?: Except<RequestErrorOptions, 'code'>,
   ) {
-    super(
-      requestContext,
-      `The connector failed at "${ConnectorWorkflowKind[kind]}"`,
-      {
-        ...options,
-        code: RequestErrorCode.CONNECTOR_WORKFLOW_ERROR,
-      },
-    );
+    super(requestContext, {
+      code: RequestErrorCode.CONNECTOR_WORKFLOW_ERROR,
+      reason: `the connector failed at "${ConnectorWorkflowKind[kind]}"`,
+      ...options,
+    });
   }
 }
 
+export type MutationHook = `${'pre' | 'post'}-${utils.MutationType}`;
+
 export interface OperationErrorOptions extends RequestErrorOptions {
   readonly mutationType?: utils.MutationType;
+  readonly mutationHook?: MutationHook;
   readonly mutatedValue?: Readonly<NodeValue>;
   readonly message?: string;
   readonly reason?: string;
@@ -103,36 +129,43 @@ export class OperationError<
   TRequestContext extends object = any,
 > extends RequestError<TRequestContext> {
   public readonly mutationType?: utils.MutationType;
+  public readonly mutationHook?: MutationHook;
   public readonly mutatedValue?: Readonly<NodeValue>;
 
   public constructor(
     requestContext: TRequestContext,
     public readonly node: Node,
     {
-      code = RequestErrorCode.OPERATION_ERROR,
+      code,
       mutationType,
+      mutationHook,
       mutatedValue,
       message,
       reason,
       ...options
     }: OperationErrorOptions = {},
   ) {
-    super(
-      requestContext,
-      message ??
-        [`The "${node}"'s "${mutationType ?? 'query'}" failed`, reason]
+    super(requestContext, {
+      code: code ?? RequestErrorCode.OPERATION_ERROR,
+      message:
+        message ??
+        [
+          `The "${node}"'s "${mutationHook ?? mutationType ?? 'query'}" failed`,
+          reason ?? (code != null ? RequestErrorCode[code] : undefined),
+        ]
           .filter(Boolean)
           .join(' - '),
-      { code, ...options },
-    );
+      ...options,
+    });
 
     mutationType && (this.mutationType = mutationType);
+    mutationHook && (this.mutationHook = mutationHook);
     mutatedValue && (this.mutatedValue = mutatedValue);
 
     Object.defineProperties(
       this,
       R.fromKeys(
-        ['node', 'mutationType', 'mutatedValue'],
+        ['node', 'mutationType', 'mutationHook', 'mutatedValue'],
         R.constant({ enumerable: false }),
       ),
     );
@@ -148,9 +181,8 @@ export class UnauthorizedError<
     options?: Except<OperationErrorOptions, 'code'>,
   ) {
     super(requestContext, node, {
-      reason: `unauthorized`,
-      ...options,
       code: RequestErrorCode.UNAUTHORIZED,
+      ...options,
     });
   }
 }
@@ -164,9 +196,8 @@ export class InvalidArgumentsError<
     options?: Except<OperationErrorOptions, 'code'>,
   ) {
     super(requestContext, node, {
-      reason: `invalid argument(s)`,
-      ...options,
       code: RequestErrorCode.INVALID_ARGUMENTS,
+      ...options,
     });
   }
 }
@@ -180,9 +211,8 @@ export class InvalidSelectionError<
     options?: Except<OperationErrorOptions, 'code'>,
   ) {
     super(requestContext, node, {
-      reason: `invalid selection`,
-      ...options,
       code: RequestErrorCode.INVALID_SELECTION,
+      ...options,
     });
   }
 }
@@ -197,9 +227,9 @@ export class NotFoundError<
     options?: Except<OperationErrorOptions, 'code'>,
   ) {
     super(requestContext, node, {
-      reason: `no entry found given the filter "${inspect(where)}"`,
-      ...options,
       code: RequestErrorCode.NOT_FOUND,
+      reason: `no entry found for: ${inspect(where)}`,
+      ...options,
     });
 
     Object.defineProperty(this, 'where', { enumerable: false });
@@ -211,14 +241,14 @@ export class MutationHookError<
 > extends OperationError<TRequestContext> {
   public readonly feature?: NodeFeature;
   declare public readonly mutationType: utils.MutationType;
+  declare public readonly mutationHook: MutationHook;
   declare public readonly mutatedValue: Readonly<NodeValue>;
-  public readonly mutationHook: `${'pre' | 'post'}-${utils.MutationType}`;
 
   public constructor(
     requestContext: TRequestContext,
     nodeOrFeature: Node | NodeFeature,
     mutationType: utils.MutationType,
-    mutationHookKind: 'pre' | 'post',
+    mutationHook: 'pre' | 'post',
     mutatedValue: Readonly<NodeValue>,
     options: Except<
       OperationErrorOptions,
@@ -230,31 +260,20 @@ export class MutationHookError<
         ? [nodeOrFeature.node, nodeOrFeature]
         : [nodeOrFeature, undefined];
 
-    const mutationHook = `${mutationHookKind}-${mutationType}` as const;
-
     super(requestContext, node, {
       ...options,
       mutationType,
+      mutationHook: `${mutationHook}-${mutationType}`,
       mutatedValue,
-      reason: [
-        nodeOrFeature instanceof NodeFeature &&
-          `"${nodeOrFeature.name}" feature's`,
-        `"${mutationHook}" hook`,
-      ]
-        .filter(Boolean)
-        .join(' '),
+      reason:
+        options?.cause && options.cause instanceof Error
+          ? options.cause.message
+          : undefined,
     });
 
     feature && (this.feature = feature);
-    this.mutationHook = mutationHook;
 
-    Object.defineProperties(
-      this,
-      R.fromKeys(
-        ['feature', 'mutationHook'],
-        R.constant({ enumerable: false }),
-      ),
-    );
+    Object.defineProperty(this, 'feature', { enumerable: false });
   }
 }
 
@@ -274,7 +293,6 @@ export class DuplicateError<
     },
   ) {
     super(request, node, {
-      ...options,
       code: RequestErrorCode.DUPLICATE,
       reason: [
         'duplicate',
@@ -286,6 +304,7 @@ export class DuplicateError<
       ]
         .filter(Boolean)
         .join(' '),
+      ...options,
     });
   }
 }

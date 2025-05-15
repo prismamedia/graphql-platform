@@ -1,8 +1,9 @@
-import { MMethod } from '@prismamedia/memoize';
-import { GraphQLError } from 'graphql';
+import { MGetter, MMethod } from '@prismamedia/memoize';
+import { GraphQLError, type GraphQLErrorExtensions } from 'graphql';
 import { EOL } from 'node:os';
 import { inspect } from 'node:util';
 import * as R from 'remeda';
+import type { Merge } from 'type-fest';
 import type { Nillable } from './nil.js';
 import {
   isPathEqualOrDescendantOf,
@@ -29,6 +30,10 @@ export function setGraphErrorAncestor<TError = unknown>(
   }
 
   return error;
+}
+
+export interface GraphErrorExtensions extends GraphQLErrorExtensions {
+  readonly code?: string;
 }
 
 export interface GraphErrorOptions extends ErrorOptions {
@@ -58,8 +63,8 @@ export class GraphError extends Error {
     });
 
     this.name = new.target.name;
-    this.path = path ?? undefined;
-    this.code = code ?? undefined;
+    path && (this.path = path);
+    code && (this.code = code);
 
     // Prevent these properties from being enumerable
     Object.defineProperties(
@@ -87,13 +92,23 @@ export class GraphError extends Error {
       .join(' - ');
   }
 
+  /**
+   * @see https://www.graphql-js.org/docs/graphql-errors/#customizing-errors-with-extensions
+   */
+  @MGetter
+  public get extensions(): GraphErrorExtensions | undefined {
+    return this.code ? { code: this.code } : undefined;
+  }
+
   @MMethod()
-  public toGraphQLError(): GraphQLError {
+  public toGraphQLError(): Merge<GraphQLError, { originalError: GraphError }> {
+    const extensions = this.extensions;
+
     return new GraphQLError(this.#message, {
       originalError: this,
       ...(this.path && { path: pathToArray(this.path) }),
-      ...(this.code && { extensions: { code: this.code } }),
-    });
+      ...(extensions && Object.values(extensions).length && { extensions }),
+    }) as any;
   }
 }
 
@@ -184,11 +199,22 @@ export class AggregateGraphError extends AggregateError {
     ].join(EOL);
   }
 
+  /**
+   * @see https://www.graphql-js.org/docs/graphql-errors/#customizing-errors-with-extensions
+   */
+  @MGetter
+  public get extensions(): GraphQLErrorExtensions | undefined {
+    return undefined;
+  }
+
   @MMethod()
   public toGraphQLError(): GraphQLError {
+    const extensions = this.extensions;
+
     return new GraphQLError(this.#message, {
       originalError: this,
       ...(this.path && { path: pathToArray(this.path) }),
+      ...(extensions && Object.values(extensions).length && { extensions }),
     });
   }
 }

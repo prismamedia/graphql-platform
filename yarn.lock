@@ -960,7 +960,7 @@ __metadata:
     inflection: "npm:^3.0.2"
     mariadb: "npm:^3.4.2"
     publint: "npm:0.3.12"
-    remeda: "npm:^2.21.5"
+    remeda: "npm:^2.21.6"
     semver: "npm:^7.7.2"
     tsx: "npm:4.19.4"
     type-fest: "npm:4.37.0"
@@ -1008,7 +1008,7 @@ __metadata:
     "@types/draft-js": "npm:^0.11.18"
     graphql: "npm:16.11.0"
     publint: "npm:0.3.12"
-    remeda: "npm:^2.21.5"
+    remeda: "npm:^2.21.6"
     tsx: "npm:4.19.4"
     type-fest: "npm:4.37.0"
     typescript: "npm:5.8.3"
@@ -1027,7 +1027,7 @@ __metadata:
     graphql: "npm:16.11.0"
     indefinite: "npm:^2.5.1"
     publint: "npm:0.3.12"
-    remeda: "npm:^2.21.5"
+    remeda: "npm:^2.21.6"
     tsx: "npm:4.19.4"
     type-fest: "npm:4.37.0"
     typescript: "npm:5.8.3"
@@ -1055,7 +1055,7 @@ __metadata:
     p-queue: "npm:^8.1.0"
     p-retry: "npm:^6.2.1"
     publint: "npm:0.3.12"
-    remeda: "npm:^2.21.5"
+    remeda: "npm:^2.21.6"
     tsx: "npm:4.19.4"
     type-fest: "npm:4.37.0"
     typescript: "npm:5.8.3"
@@ -3152,12 +3152,12 @@ __metadata:
   languageName: node
   linkType: hard
 
-"remeda@npm:^2.21.5":
-  version: 2.21.5
-  resolution: "remeda@npm:2.21.5"
+"remeda@npm:^2.21.6":
+  version: 2.21.6
+  resolution: "remeda@npm:2.21.6"
   dependencies:
     type-fest: "npm:^4.40.1"
-  checksum: 10/6175f34ffb8247815e579633f180d003b9980cb209fb3db6054b7ae4f150731e01f9db8dfebdfc70b209b4f96798fc9b1d4aa3172012e2c142eb4e7c68160693
+  checksum: 10/6f6eda0217d2a4d4c3c03902e3d67f275bcb6f14f79845f70b1f144bd766ebbdf3f172908eb107899f885aac859f0f49561314b11ab03c225baabaf1ea86f748
   languageName: node
   linkType: hard
 
