@@ -1,9 +1,8 @@
-import { expressMiddleware } from '@apollo/server/express4';
 import { ApolloServerPluginDrainHttpServer } from '@apollo/server/plugin/drainHttpServer';
+import { expressMiddleware } from '@as-integrations/express5';
 import { createMyGP } from '@prismamedia/graphql-platform-connector-mariadb/__tests__/config.js';
 import { myAdminContext } from '@prismamedia/graphql-platform/__tests__/config.js';
 import * as fixtures from '@prismamedia/graphql-platform/__tests__/fixture.js';
-import bodyParser from 'body-parser';
 import cors from 'cors';
 import express from 'express';
 import { useServer } from 'graphql-ws/use/ws';
@@ -53,7 +52,7 @@ await server.start();
 app.use(
   '/',
   cors<cors.CorsRequest>(),
-  bodyParser.json(),
+  express.json(),
   expressMiddleware(server, { context: async () => myAdminContext }),
 );
 

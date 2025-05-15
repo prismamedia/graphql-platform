@@ -212,12 +212,13 @@ export class MutationHookError<
   public readonly feature?: NodeFeature;
   declare public readonly mutationType: utils.MutationType;
   declare public readonly mutatedValue: Readonly<NodeValue>;
+  public readonly mutationHook: `${'pre' | 'post'}-${utils.MutationType}`;
 
   public constructor(
     requestContext: TRequestContext,
     nodeOrFeature: Node | NodeFeature,
     mutationType: utils.MutationType,
-    mutationHook: 'pre' | 'post',
+    mutationHookKind: 'pre' | 'post',
     mutatedValue: Readonly<NodeValue>,
     options: Except<
       OperationErrorOptions,
@@ -229,6 +230,8 @@ export class MutationHookError<
         ? [nodeOrFeature.node, nodeOrFeature]
         : [nodeOrFeature, undefined];
 
+    const mutationHook = `${mutationHookKind}-${mutationType}` as const;
+
     super(requestContext, node, {
       ...options,
       mutationType,
@@ -236,15 +239,22 @@ export class MutationHookError<
       reason: [
         nodeOrFeature instanceof NodeFeature &&
           `"${nodeOrFeature.name}" feature's`,
-        `"${mutationHook}-${mutationType}" hook`,
+        `"${mutationHook}" hook`,
       ]
         .filter(Boolean)
         .join(' '),
     });
 
     feature && (this.feature = feature);
+    this.mutationHook = mutationHook;
 
-    Object.defineProperty(this, 'feature', { enumerable: false });
+    Object.defineProperties(
+      this,
+      R.fromKeys(
+        ['feature', 'mutationHook'],
+        R.constant({ enumerable: false }),
+      ),
+    );
   }
 }
 
