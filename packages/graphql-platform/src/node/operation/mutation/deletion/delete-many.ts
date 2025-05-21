@@ -229,15 +229,15 @@ export class DeleteManyMutation<
 
     // Actually delete the nodes
     await catchConnectorOperationError(
-      () =>
-        this.connector.delete(
-          context,
-          {
-            node: this.node,
-            filter: this.node.filterInputType.filter({ OR: ids }),
-          },
-          path,
-        ),
+      this.connector.delete.bind(
+        this.connector,
+        context,
+        {
+          node: this.node,
+          filter: this.node.filterInputType.filter({ OR: ids }),
+        },
+        path,
+      ),
       context.request,
       this.node,
       {

@@ -126,5 +126,7 @@ export abstract class AbstractCreation<
   TBroker,
   TContainer
 > {
-  public readonly mutationTypes = [utils.MutationType.CREATION];
+  public readonly mutationTypes: ReadonlyArray<utils.MutationType> = [
+    utils.MutationType.CREATION,
+  ];
 }

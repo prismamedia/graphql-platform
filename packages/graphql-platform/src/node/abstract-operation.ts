@@ -12,8 +12,10 @@ import type { OperationContext } from './operation/context.js';
 import {
   InvalidArgumentsError,
   InvalidSelectionError,
+  OperationError,
+  RequestErrorCode,
 } from './operation/error.js';
-import type { NodeFilter } from './statement/filter.js';
+import { AndOperation, NodeFilter, TrueValue } from './statement/filter.js';
 import type { NodeSelection } from './statement/selection.js';
 import type { RawNodeSelection } from './type/output/node.js';
 
@@ -57,6 +59,7 @@ export abstract class AbstractOperation<
     : false;
 
   public abstract readonly operationType: graphql.OperationTypeNode;
+  public abstract readonly mutationTypes?: ReadonlyArray<utils.MutationType>;
 
   /**
    * This is unique for a node/operation-type
@@ -111,13 +114,26 @@ export abstract class AbstractOperation<
     return this.name;
   }
 
+  @MMethod()
   public isEnabled(): boolean {
-    return true;
+    return (
+      !this.mutationTypes?.length ||
+      this.mutationTypes.every((mutationType) =>
+        this.node.isMutable(mutationType),
+      )
+    );
   }
 
   @MMethod()
   public isPublic(): boolean {
-    return this.isEnabled() && this.node.isPublic();
+    return (
+      this.isEnabled() &&
+      this.node.isPublic() &&
+      (!this.mutationTypes?.length ||
+        this.mutationTypes.every((mutationType) =>
+          this.node.isPubliclyMutable(mutationType),
+        ))
+    );
   }
 
   @MMethod()
@@ -144,12 +160,16 @@ export abstract class AbstractOperation<
     }
   }
 
-  protected assertIsEnabled(path: utils.Path): void {
+  protected assertIsEnabled(
+    context: TOperationContext,
+    path: utils.Path,
+  ): void {
     if (!this.isEnabled()) {
-      throw new utils.GraphError(
-        `The "${this}" ${this.operationType} is disabled`,
-        { path },
-      );
+      throw new OperationError(context.request, this.node, {
+        mutationType: this.mutationTypes?.[0],
+        code: RequestErrorCode.DISABLED,
+        path,
+      });
     }
   }
 
@@ -157,7 +177,19 @@ export abstract class AbstractOperation<
     context: TOperationContext,
     path: utils.Path,
   ): NodeFilter | undefined {
-    return context.ensureAuthorization(this.node, path);
+    return this.mutationTypes?.length
+      ? new NodeFilter(
+          this.node,
+          AndOperation.create([
+            context.ensureAuthorization(this.node, path)?.filter ?? TrueValue,
+            ...this.mutationTypes.map(
+              (mutationType) =>
+                context.ensureAuthorization(this.node, path, mutationType)
+                  ?.filter ?? TrueValue,
+            ),
+          ]),
+        ).normalized
+      : context.ensureAuthorization(this.node, path);
   }
 
   /**
@@ -226,7 +258,7 @@ export abstract class AbstractOperation<
     args: TArgs,
     path: utils.Path,
   ): TResult {
-    this.assertIsEnabled(path);
+    this.assertIsEnabled(context, path);
 
     const parsedArguments = this.parseArguments(context, args, path);
 
@@ -246,7 +278,7 @@ export abstract class AbstractOperation<
       this.name,
     ),
   ): TResult {
-    this.assertIsEnabled(path);
+    this.assertIsEnabled(context, path);
 
     const authorization = this.ensureAuthorization(context, path);
 
@@ -274,8 +306,8 @@ export abstract class AbstractOperation<
   > {
     assert(this.isPublic(), `The "${this}" ${this.operationType} is private`);
 
-    const subscriber = this.getGraphQLFieldConfigSubscriber();
-    const resolver = this.getGraphQLFieldConfigResolver();
+    const subscribe = this.getGraphQLFieldConfigSubscriber();
+    const resolve = this.getGraphQLFieldConfigResolver();
 
     return {
       ...(this.description && { description: this.description }),
@@ -286,8 +318,8 @@ export abstract class AbstractOperation<
         args: utils.getGraphQLFieldConfigArgumentMap(this.arguments),
       }),
       type: this.getGraphQLFieldConfigType(),
-      ...(subscriber && { subscribe: subscriber }),
-      ...(resolver && { resolve: resolver }),
+      ...(subscribe && { subscribe }),
+      ...(resolve && { resolve }),
     };
   }
 }

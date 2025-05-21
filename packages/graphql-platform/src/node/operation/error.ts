@@ -8,6 +8,7 @@ import type { NodeUniqueFilterInputValue } from '../type/input/unique-filter.js'
 
 export enum RequestErrorCode {
   CONNECTOR_WORKFLOW_ERROR,
+  DISABLED,
   DUPLICATE,
   INVALID_ARGUMENTS,
   INVALID_REQUEST_CONTEXT,
@@ -172,6 +173,18 @@ export class OperationError<
   }
 }
 
+export const catchOperationError = <T, TRequestContext extends object>(
+  operation: () => Promisable<T>,
+  requestContext: TRequestContext,
+  node: Node,
+  options?: Except<OperationErrorOptions, 'cause'>,
+): Promise<T> =>
+  utils.PromiseTry(operation).catch((error) => {
+    throw error instanceof OperationError
+      ? error
+      : new OperationError(requestContext, node, { ...options, cause: error });
+  });
+
 export class UnauthorizedError<
   TRequestContext extends object = any,
 > extends OperationError<TRequestContext> {
@@ -313,7 +326,7 @@ export const catchConnectorOperationError = <T, TRequestContext extends object>(
   operation: () => Promisable<T>,
   requestContext: TRequestContext,
   node: Node,
-  options?: Except<OperationErrorOptions, 'code' | 'cause'>,
+  options?: Except<OperationErrorOptions, 'cause'>,
 ): Promise<T> =>
   utils.PromiseTry(operation).catch((error) => {
     throw error instanceof ConnectorOperationError

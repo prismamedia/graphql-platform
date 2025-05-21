@@ -7,7 +7,9 @@ import type { BrokerInterface } from '../../broker-interface.js';
 import type { ConnectorInterface } from '../../connector-interface.js';
 import { trace } from '../../instrumentation.js';
 import { AbstractOperation } from '../abstract-operation.js';
+import type { NodeFilter } from '../statement/filter.js';
 import { OperationContext } from './context.js';
+import { catchOperationError } from './error.js';
 
 export abstract class AbstractQuery<
   TArgs extends utils.Nillable<utils.PlainObject> = any,
@@ -26,12 +28,27 @@ export abstract class AbstractQuery<
   OperationContext<TRequestContext, TConnector, TBroker, TContainer>
 > {
   public readonly operationType = graphql.OperationTypeNode.QUERY;
+  public readonly mutationTypes = undefined;
 
   @MGetter
   public get method(): CamelCase<this['key']> {
     return this.key.replaceAll(/((?:-).)/g, ([_match, letter]) =>
       letter.toUpperCase(),
     ) as any;
+  }
+
+  public override internal(
+    context: OperationContext,
+    authorization: NodeFilter | undefined,
+    args: TArgs,
+    path: utils.Path,
+  ): Promise<TResult> {
+    return catchOperationError(
+      super.internal.bind(this, context, authorization, args, path),
+      context.request,
+      this.node,
+      { path },
+    );
   }
 
   public override async execute(

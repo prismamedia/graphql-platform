@@ -143,5 +143,7 @@ export abstract class AbstractUpdate<
   TBroker,
   TContainer
 > {
-  public readonly mutationTypes = [utils.MutationType.UPDATE];
+  public readonly mutationTypes: ReadonlyArray<utils.MutationType> = [
+    utils.MutationType.UPDATE,
+  ];
 }

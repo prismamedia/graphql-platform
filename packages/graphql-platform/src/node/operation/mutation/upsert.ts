@@ -29,7 +29,7 @@ export class UpsertMutation<
   UpsertMutationResult,
   TRequestContext
 > {
-  public readonly mutationTypes = [
+  public readonly mutationTypes: ReadonlyArray<utils.MutationType> = [
     utils.MutationType.CREATION,
     utils.MutationType.UPDATE,
   ];

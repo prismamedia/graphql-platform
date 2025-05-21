@@ -121,21 +121,21 @@ export class UpdateManyMutation<
 
     // Fetch the current nodes' source
     const rawOldSources = await catchConnectorOperationError(
-      () =>
-        this.connector.find(
-          context,
-          {
-            node: this.node,
-            ...(filter && { filter }),
-            ...(ordering && { ordering }),
-            limit: args.first,
-            selection: this.node.selection,
-            forMutation: this.node.updateInputType.hasComponentUpdates(data)
-              ? utils.MutationType.UPDATE
-              : undefined,
-          },
-          path,
-        ),
+      this.connector.find.bind(
+        this.connector,
+        context,
+        {
+          node: this.node,
+          ...(filter && { filter }),
+          ...(ordering && { ordering }),
+          limit: args.first,
+          selection: this.node.selection,
+          forMutation: this.node.updateInputType.hasComponentUpdates(data)
+            ? utils.MutationType.UPDATE
+            : undefined,
+        },
+        path,
+      ),
       context.request,
       this.node,
       { path },
@@ -200,16 +200,16 @@ export class UpdateManyMutation<
         if (!statement.isEmpty()) {
           // Actually update the node
           await catchConnectorOperationError(
-            () =>
-              this.connector.update(
-                context,
-                {
-                  node: this.node,
-                  update: statement,
-                  filter: this.node.filterInputType.filter(ids[index]),
-                },
-                path,
-              ),
+            this.connector.update.bind(
+              this.connector,
+              context,
+              {
+                node: this.node,
+                update: statement,
+                filter: this.node.filterInputType.filter(ids[index]),
+              },
+              path,
+            ),
             context.request,
             this.node,
             {

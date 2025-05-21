@@ -46,6 +46,7 @@ export abstract class AbstractSubscription<
   OperationContext<TRequestContext, TConnector, TBroker, TContainer>
 > {
   public readonly operationType = graphql.OperationTypeNode.SUBSCRIPTION;
+  public readonly mutationTypes = undefined;
 
   @MMethod()
   public override isEnabled(): boolean {

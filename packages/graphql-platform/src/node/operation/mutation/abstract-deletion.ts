@@ -110,5 +110,7 @@ export abstract class AbstractDeletion<
   TBroker,
   TContainer
 > {
-  public readonly mutationTypes = [utils.MutationType.DELETION];
+  public readonly mutationTypes: ReadonlyArray<utils.MutationType> = [
+    utils.MutationType.DELETION,
+  ];
 }

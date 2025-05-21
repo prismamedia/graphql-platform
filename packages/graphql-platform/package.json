@@ -48,7 +48,7 @@
     "inflection": "^3.0.2",
     "p-queue": "^8.1.0",
     "p-retry": "^6.2.1",
-    "remeda": "^2.21.6"
+    "remeda": "^2.21.8"
   },
   "peerDependencies": {
     "graphql": "^16.11.0"

@@ -1,6 +1,6 @@
 import * as opentelemetry from '@opentelemetry/api';
 import * as utils from '@prismamedia/graphql-platform-utils';
-import { MGetter, MMethod } from '@prismamedia/memoize';
+import { MGetter } from '@prismamedia/memoize';
 import * as graphql from 'graphql';
 import type { CamelCase } from 'type-fest';
 import type { BrokerInterface } from '../../broker-interface.js';
@@ -9,8 +9,9 @@ import type { GraphQLPlatform } from '../../index.js';
 import { trace } from '../../instrumentation.js';
 import type { Node } from '../../node.js';
 import { AbstractOperation } from '../abstract-operation.js';
-import { AndOperation, NodeFilter, TrueValue } from '../statement/filter.js';
+import { NodeFilter } from '../statement/filter.js';
 import type { ContextBoundAPI } from './api.js';
+import { catchOperationError } from './error.js';
 import { MutationContext } from './mutation/context.js';
 
 export interface AbstractMutationHookArgs<
@@ -80,7 +81,7 @@ export abstract class AbstractMutation<
   MutationContext<TRequestContext, TConnector, TBroker, TContainer>
 > {
   public readonly operationType = graphql.OperationTypeNode.MUTATION;
-  public abstract readonly mutationTypes: ReadonlyArray<utils.MutationType>;
+  public abstract override readonly mutationTypes: ReadonlyArray<utils.MutationType>;
 
   @MGetter
   public get method(): CamelCase<this['key']> {
@@ -89,38 +90,18 @@ export abstract class AbstractMutation<
     ) as any;
   }
 
-  @MMethod()
-  public override isEnabled(): boolean {
-    return this.mutationTypes.every((mutationType) =>
-      this.node.isMutable(mutationType),
-    );
-  }
-
-  @MMethod()
-  public override isPublic(): boolean {
-    return (
-      this.isEnabled() &&
-      this.mutationTypes.every((mutationType) =>
-        this.node.isPubliclyMutable(mutationType),
-      )
-    );
-  }
-
-  protected override ensureAuthorization(
+  public override internal(
     context: MutationContext,
+    authorization: NodeFilter | undefined,
+    args: TArgs,
     path: utils.Path,
-  ): NodeFilter | undefined {
-    return new NodeFilter(
+  ): Promise<TResult> {
+    return catchOperationError(
+      super.internal.bind(this, context, authorization, args, path),
+      context.request,
       this.node,
-      AndOperation.create([
-        super.ensureAuthorization(context, path)?.filter ?? TrueValue,
-        ...this.mutationTypes.map(
-          (mutationType) =>
-            context.ensureAuthorization(this.node, path, mutationType)
-              ?.filter ?? TrueValue,
-        ),
-      ]),
-    ).normalized;
+      { path, mutationType: this.mutationTypes[0] },
+    );
   }
 
   public override async execute(
