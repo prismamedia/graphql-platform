@@ -210,6 +210,8 @@ export class InvalidArgumentsError<
   ) {
     super(requestContext, node, {
       code: RequestErrorCode.INVALID_ARGUMENTS,
+      reason:
+        options?.cause instanceof Error ? options.cause.message : undefined,
       ...options,
     });
   }

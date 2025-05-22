@@ -15,7 +15,7 @@ import {
   OperationError,
   RequestErrorCode,
 } from './operation/error.js';
-import { AndOperation, NodeFilter, TrueValue } from './statement/filter.js';
+import { AndOperation, NodeFilter } from './statement/filter.js';
 import type { NodeSelection } from './statement/selection.js';
 import type { RawNodeSelection } from './type/output/node.js';
 
@@ -180,14 +180,19 @@ export abstract class AbstractOperation<
     return this.mutationTypes?.length
       ? new NodeFilter(
           this.node,
-          AndOperation.create([
-            context.ensureAuthorization(this.node, path)?.filter ?? TrueValue,
-            ...this.mutationTypes.map(
-              (mutationType) =>
-                context.ensureAuthorization(this.node, path, mutationType)
-                  ?.filter ?? TrueValue,
+          AndOperation.create(
+            R.filter(
+              [
+                context.ensureAuthorization(this.node, path)?.filter,
+                ...this.mutationTypes.map(
+                  (mutationType) =>
+                    context.ensureAuthorization(this.node, path, mutationType)
+                      ?.filter,
+                ),
+              ],
+              R.isDefined,
             ),
-          ]),
+          ),
         ).normalized
       : context.ensureAuthorization(this.node, path);
   }
