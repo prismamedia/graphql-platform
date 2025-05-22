@@ -23,9 +23,9 @@ export const castToError = (error: unknown): Error =>
 
 export function setGraphErrorAncestor<TError = unknown>(
   error: TError,
-  ancestor: Path,
+  ancestor?: Path,
 ): TError {
-  if (isGraphError(error)) {
+  if (isGraphError(error) && ancestor) {
     error.setAncestor(ancestor);
   }
 
@@ -54,11 +54,7 @@ export class GraphError extends Error {
     super(undefined, {
       ...options,
       ...(options?.cause
-        ? {
-            cause: path
-              ? setGraphErrorAncestor(options.cause, path)
-              : options.cause,
-          }
+        ? { cause: setGraphErrorAncestor(options.cause, path) }
         : undefined),
     });
 

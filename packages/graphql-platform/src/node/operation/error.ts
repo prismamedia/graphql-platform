@@ -211,7 +211,9 @@ export class InvalidArgumentsError<
     super(requestContext, node, {
       code: RequestErrorCode.INVALID_ARGUMENTS,
       reason:
-        options?.cause instanceof Error ? options.cause.message : undefined,
+        options?.cause instanceof Error
+          ? utils.setGraphErrorAncestor(options.cause, options.path).message
+          : undefined,
       ...options,
     });
   }
@@ -281,8 +283,8 @@ export class MutationHookError<
       mutationHook: `${mutationHook}-${mutationType}`,
       mutatedValue,
       reason:
-        options?.cause && options.cause instanceof Error
-          ? options.cause.message
+        options?.cause instanceof Error
+          ? utils.setGraphErrorAncestor(options.cause, options.path).message
           : undefined,
     });
 
