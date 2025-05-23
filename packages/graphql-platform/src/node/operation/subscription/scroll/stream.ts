@@ -35,7 +35,7 @@ export const defaultProgressBarFormat =
 
 function incrementProgressBar(progress: ProgressBar, increment: number): void {
   const elapsedTimeInMs = progress.startTime
-    ? new Date().getTime() - progress.startTime
+    ? Date.now() - progress.startTime
     : 0;
 
   progress.increment(increment, {
@@ -376,6 +376,7 @@ export class ScrollSubscriptionStream<
 
         await tasks.onIdle();
 
+        progressBar?.render();
         progressBar?.stop();
 
         resolve();
@@ -550,6 +551,7 @@ export class ScrollSubscriptionStream<
 
         await tasks.onIdle();
 
+        progressBar?.render();
         progressBar?.stop();
 
         resolve();
