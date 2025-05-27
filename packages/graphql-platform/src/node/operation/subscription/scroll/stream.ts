@@ -376,7 +376,6 @@ export class ScrollSubscriptionStream<
 
         await tasks.onIdle();
 
-        progressBar?.render();
         progressBar?.stop();
 
         resolve();
@@ -551,7 +550,6 @@ export class ScrollSubscriptionStream<
 
         await tasks.onIdle();
 
-        progressBar?.render();
         progressBar?.stop();
 
         resolve();

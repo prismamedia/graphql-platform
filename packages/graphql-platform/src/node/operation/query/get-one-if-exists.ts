@@ -6,12 +6,16 @@ import type {
   RawNodeSelectionAwareArgs,
 } from '../../abstract-operation.js';
 import type { NodeFilter, NodeSelectedValue } from '../../statement.js';
-import type { NodeUniqueFilterInputValue } from '../../type.js';
+import type {
+  NodeFilterInputValue,
+  NodeUniqueFilterInputValue,
+} from '../../type.js';
 import { AbstractQuery } from '../abstract-query.js';
 import type { OperationContext } from '../context.js';
 
 export type GetOneIfExistsQueryArgs = RawNodeSelectionAwareArgs<{
   where: NonNullable<NodeUniqueFilterInputValue>;
+  subset?: NodeFilterInputValue;
 }>;
 
 export type GetOneIfExistsQueryResult = NodeSelectedValue | null;
@@ -36,6 +40,12 @@ export class GetOneIfExistsQuery<
         name: 'where',
         type: utils.nonNillableInputType(this.node.uniqueFilterInputType),
       }),
+      new utils.Input({
+        name: 'subset',
+        description:
+          'It is possible to provide a filter in order to perform this operation in a subset of the documents',
+        type: this.node.filterInputType,
+      }),
     ];
   }
 
@@ -55,7 +65,7 @@ export class GetOneIfExistsQuery<
         context,
         authorization,
         {
-          where: args.where,
+          where: { AND: [args.where, args.subset] },
           first: 1,
           selection: args.selection,
         },

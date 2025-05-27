@@ -36,7 +36,7 @@
   "dependencies": {
     "@prismamedia/graphql-platform-utils": "workspace:packages/graphql-platform-utils",
     "@types/draft-js": "^0.11.18",
-    "remeda": "^2.22.1"
+    "remeda": "^2.22.3"
   },
   "peerDependencies": {
     "graphql": "^16.11.0"
