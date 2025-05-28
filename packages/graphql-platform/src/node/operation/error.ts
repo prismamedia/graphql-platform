@@ -2,7 +2,12 @@ import * as utils from '@prismamedia/graphql-platform-utils';
 import { inspect } from 'node:util';
 import * as R from 'remeda';
 import type { Except, Merge, Promisable } from 'type-fest';
-import type { Node, NodeValue, UniqueConstraint } from '../../node.js';
+import type {
+  MutationContextChanges,
+  Node,
+  NodeValue,
+  UniqueConstraint,
+} from '../../node.js';
 import { NodeFeature } from '../feature.js';
 import type { NodeUniqueFilterInputValue } from '../type/input/unique-filter.js';
 
@@ -113,6 +118,23 @@ export class ConnectorWorkflowError<
       reason: `the connector failed at "${ConnectorWorkflowKind[kind]}"`,
       ...options,
     });
+  }
+}
+
+export class ChangesNotificationError<
+  TRequestContext extends object = any,
+> extends RequestError<TRequestContext> {
+  public constructor(
+    requestContext: TRequestContext,
+    public readonly changes: MutationContextChanges<TRequestContext>,
+    options: RequestErrorOptions,
+  ) {
+    super(requestContext, {
+      reason: `the "changes" have been applied but have failed to be notified`,
+      ...options,
+    });
+
+    Object.defineProperty(this, 'changes', { enumerable: false });
   }
 }
 

@@ -15,6 +15,7 @@ import {
   type CustomOperationsByNameByTypeConfig,
 } from './custom-operations.js';
 import {
+  ChangesNotificationError,
   ConnectorWorkflowError,
   ConnectorWorkflowKind,
   InvalidRequestContextError,
@@ -743,10 +744,18 @@ export class GraphQLPlatform<
         ),
       );
 
-      await Promise.all([
-        this.emit('node-changes', mutationContext.changes),
-        this.broker.publish(mutationContext.changes),
-      ]);
+      try {
+        await Promise.all([
+          this.emit('node-changes', mutationContext.changes),
+          this.broker.publish(mutationContext.changes),
+        ]);
+      } catch (cause) {
+        throw new ChangesNotificationError(
+          requestContext,
+          mutationContext.changes,
+          { cause, path },
+        );
+      }
     }
 
     return result;
