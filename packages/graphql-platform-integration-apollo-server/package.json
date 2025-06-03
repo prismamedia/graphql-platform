@@ -27,7 +27,7 @@
     "test:watch": "NODE_ENV=test tsx --test --watch --experimental-test-snapshots \"./src/**/*.test.ts\""
   },
   "devDependencies": {
-    "@apollo/server": "4.12.1",
+    "@apollo/server": "4.12.2",
     "@as-integrations/express5": "1.0.0",
     "@opentelemetry/instrumentation-express": "0.50.0",
     "@opentelemetry/instrumentation-http": "0.201.1",
