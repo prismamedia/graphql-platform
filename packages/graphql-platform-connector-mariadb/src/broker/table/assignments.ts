@@ -13,6 +13,10 @@ import type { StatementKind } from '../../statement.js';
 import { AND } from '../../statement/manipulation/clause/where-condition.js';
 import { AbstractTable } from '../abstract-table.js';
 import type {
+  MariaDBSubscription,
+  MariaDBSubscriptionAssignmentDiagnosis,
+} from '../subscription.js';
+import type {
   MariaDBBrokerMutation,
   MariaDBBrokerMutationRow,
   UnassignedMutationsBySubscription,
@@ -153,5 +157,29 @@ export class MariaDBBrokerAssignmentsTable extends AbstractTable {
       SET ${this.escapeColumnIdentifier('heartbeatAt')} = NOW()
       WHERE ${this.escapeColumnIdentifier('subscriptionId')} IN (${Array.from(subscriptionIds, (subscriptionId) => this.serializeColumnValue('subscriptionId', subscriptionId)).join(',')})
     `);
+  }
+
+  public async diagnose(
+    worker: MariaDBSubscription,
+  ): Promise<MariaDBSubscriptionAssignmentDiagnosis> {
+    const row = await this.connector.getRow<{
+      mutationCount: bigint | number;
+      changeCount: bigint | number;
+      latencyInSeconds: bigint | number;
+    }>(`
+      SELECT
+        COUNT(*) AS ${escapeIdentifier('mutationCount')},
+        IFNULL(SUM(m.${this.broker.mutationsTable.escapeColumnIdentifier('changeCount')}), 0) AS ${escapeIdentifier('changeCount')},
+        IFNULL(NOW(3) - MIN(m.${this.broker.mutationsTable.escapeColumnIdentifier('committedAt')}), 0) AS ${escapeIdentifier('latencyInSeconds')}
+      FROM ${escapeIdentifier(this.name)} a
+        INNER JOIN ${escapeIdentifier(this.broker.mutationsTable.name)} m ON a.${this.escapeColumnIdentifier('mutationId')} = m.${this.broker.mutationsTable.escapeColumnIdentifier('id')}
+      WHERE ${this.escapeColumnIdentifier('subscriptionId')} = ${this.serializeColumnValue('subscriptionId', worker.subscription.id)}
+    `);
+
+    return {
+      mutationCount: Number(row.mutationCount),
+      changeCount: Number(row.changeCount),
+      latencyInSeconds: Number(row.latencyInSeconds),
+    };
   }
 }

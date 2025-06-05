@@ -29,9 +29,9 @@
   "devDependencies": {
     "@apollo/server": "4.12.2",
     "@as-integrations/express5": "1.0.0",
-    "@opentelemetry/instrumentation-express": "0.50.0",
-    "@opentelemetry/instrumentation-http": "0.201.1",
-    "@opentelemetry/sdk-node": "0.201.1",
+    "@opentelemetry/instrumentation-express": "0.51.0",
+    "@opentelemetry/instrumentation-http": "0.202.0",
+    "@opentelemetry/sdk-node": "0.202.0",
     "@opentelemetry/sdk-trace-node": "2.0.1",
     "@prismamedia/graphql-platform-connector-mariadb": "workspace:packages/graphql-platform-connector-mariadb",
     "@types/cors": "2.8.18",

@@ -7,8 +7,10 @@ import * as utils from '@prismamedia/graphql-platform-utils';
 import { MGetter } from '@prismamedia/memoize';
 import * as R from 'remeda';
 import type { JsonObject } from 'type-fest';
+import { BrokerError, BrokerErrorCode } from './broker/error.js';
 import {
   MariaDBSubscription,
+  type MariaDBSubscriptionDiagnosis,
   type MariaDBSubscriptionEvents,
 } from './broker/subscription.js';
 import {
@@ -23,8 +25,10 @@ import {
 import type { MariaDBConnector, PoolConnection } from './index.js';
 import { StatementKind } from './statement.js';
 
+export * from './broker/error.js';
 export {
   MariaDBSubscription,
+  MariaDBSubscriptionDiagnosis,
   type MariaDBSubscriptionEvents,
 } from './broker/subscription.js';
 export * from './broker/table.js';
@@ -182,8 +186,10 @@ export class MariaDBBroker<TRequestContext extends object = any>
       for await (const mutationsBySubscription of this.mutationsTable.getUnassignedsBySubscription()) {
         await this.assignmentsTable.assign(mutationsBySubscription);
 
-        mutationsBySubscription.forEach((mutations, subscription) =>
-          subscription.notify(mutations),
+        await utils.PromiseAllSettledThenThrowIfErrors(
+          mutationsBySubscription
+            .entries()
+            .map(([subscription, mutations]) => subscription.notify(mutations)),
         );
       }
     } finally {
@@ -202,7 +208,7 @@ export class MariaDBBroker<TRequestContext extends object = any>
 
     this.#heartbeating = true;
     try {
-      await Promise.all([
+      await utils.PromiseAllSettledThenThrowIfErrors([
         this.assignmentsTable.heartbeat(
           this.subscriptions.values().map(({ subscription: { id } }) => id),
         ),
@@ -224,7 +230,7 @@ export class MariaDBBroker<TRequestContext extends object = any>
 
   public async subscribe(
     subscription: core.ChangesSubscriptionStream,
-  ): Promise<core.NodeChangeSubscriptionInterface> {
+  ): Promise<MariaDBSubscription> {
     const worker = new MariaDBSubscription(this, subscription);
 
     this.subscriptions.set(subscription, worker);
@@ -233,7 +239,10 @@ export class MariaDBBroker<TRequestContext extends object = any>
     this.#assigner ??= setInterval(
       () =>
         this.assign().catch((cause) =>
-          this.emit('error', new Error('Assigner failed', { cause })),
+          this.emit(
+            'error',
+            new BrokerError({ code: BrokerErrorCode.ASSIGNER, cause }),
+          ),
         ),
       this.assignerIntervalInSeconds * 1000,
     );
@@ -241,7 +250,10 @@ export class MariaDBBroker<TRequestContext extends object = any>
     this.#heartbeat ??= setInterval(
       () =>
         this.heartbeat().catch((cause) =>
-          this.emit('error', new Error('Heartbeat failed', { cause })),
+          this.emit(
+            'error',
+            new BrokerError({ code: BrokerErrorCode.HEARTBEAT, cause }),
+          ),
         ),
       this.heartbeatIntervalInSeconds * 1000,
     );
@@ -282,5 +294,13 @@ export class MariaDBBroker<TRequestContext extends object = any>
         !this.subscriptions.size && this.emit('idle', undefined),
       ]);
     }
+  }
+
+  public diagnose(): Promise<MariaDBSubscriptionDiagnosis[]> {
+    return Promise.all(
+      this.subscriptions
+        .values()
+        .map((subscription) => subscription.diagnose()),
+    );
   }
 }

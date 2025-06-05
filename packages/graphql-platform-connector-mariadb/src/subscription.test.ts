@@ -11,6 +11,7 @@ import * as fixtures from '@prismamedia/graphql-platform/__tests__/fixture.js';
 import assert from 'node:assert';
 import { afterEach, beforeEach, describe, it } from 'node:test';
 import { setTimeout } from 'node:timers/promises';
+import * as R from 'remeda';
 import { createMyGP } from './__tests__/config.js';
 
 describe('Subscription', () => {
@@ -214,6 +215,44 @@ describe('Subscription', () => {
     );
 
     assert(originalError);
+  });
+
+  it('has diagnosis', async () => {
+    const diagnoses = await gp.broker.diagnose();
+
+    assert.deepEqual(
+      {
+        assigned: R.omit(diagnoses[0].assigned, ['latencyInSeconds']),
+        unassigned: R.omit(diagnoses[0].unassigned, ['latencyInSeconds']),
+      },
+      {
+        assigned: {
+          mutationCount: 3,
+          changeCount: 30,
+        },
+        unassigned: {
+          mutationCount: 0,
+          changeCount: 0,
+        },
+      },
+    );
+
+    assert.deepEqual(
+      {
+        assigned: R.omit(diagnoses[1].assigned, ['latencyInSeconds']),
+        unassigned: R.omit(diagnoses[1].unassigned, ['latencyInSeconds']),
+      },
+      {
+        assigned: {
+          mutationCount: 2,
+          changeCount: 29,
+        },
+        unassigned: {
+          mutationCount: 0,
+          changeCount: 0,
+        },
+      },
+    );
   });
 
   it('is iterable through "Array.fromAsync"', async () => {

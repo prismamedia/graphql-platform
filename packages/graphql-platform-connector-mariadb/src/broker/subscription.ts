@@ -9,6 +9,9 @@ import type {
   MariaDBBrokerMutation,
   MariaDBBrokerSubscriptionsStateTable,
 } from '../broker.js';
+import { MariaDBSubscriptionDiagnosis } from './subscription/diagnosis.js';
+
+export * from './subscription/diagnosis.js';
 
 export type MariaDBSubscriptionEvents = {
   assignments: ReadonlyArray<MariaDBBrokerMutation>;
@@ -44,18 +47,19 @@ export class MariaDBSubscription
     ).subscriptionsStateTable;
   }
 
-  public notify(mutations: ReadonlyArray<MariaDBBrokerMutation>): void {
+  public async notify(
+    mutations: ReadonlyArray<MariaDBBrokerMutation>,
+  ): Promise<void> {
     assert(mutations.length);
 
-    this.emit('assignments', mutations).catch((cause) =>
-      this.broker.connector.emit(
-        'error',
-        new Error(
-          `Failed to notify the subscription ${this.subscription.id} of the ${mutations.length} assignment(s)`,
-          { cause },
-        ),
-      ),
-    );
+    try {
+      await this.emit('assignments', mutations);
+    } catch (cause) {
+      throw new Error(
+        `Failed to notify the subscription ${this.subscription.id} of the ${mutations.length} assignment(s)`,
+        { cause },
+      );
+    }
   }
 
   public async [Symbol.asyncDispose](): Promise<void> {
@@ -104,5 +108,14 @@ export class MariaDBSubscription
 
   public async waitForIdle(): Promise<void> {
     this.#idle || (await this.wait('idle', this.#signal));
+  }
+
+  public async diagnose(): Promise<MariaDBSubscriptionDiagnosis> {
+    const [assigned, unassigned] = await Promise.all([
+      this.broker.assignmentsTable.diagnose(this),
+      this.broker.mutationsTable.diagnose(this),
+    ]);
+
+    return new MariaDBSubscriptionDiagnosis(this, assigned, unassigned);
   }
 }

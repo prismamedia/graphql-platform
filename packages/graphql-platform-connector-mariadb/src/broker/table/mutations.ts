@@ -13,7 +13,10 @@ import {
 } from '../../schema/table/data-type.js';
 import type { StatementKind } from '../../statement.js';
 import { AbstractTable } from '../abstract-table.js';
-import type { MariaDBSubscription } from '../subscription.js';
+import type {
+  MariaDBSubscription,
+  MariaDBSubscriptionAssignmentDiagnosis,
+} from '../subscription.js';
 
 export interface MariaDBBrokerMutationRow {
   id: bigint;
@@ -247,7 +250,7 @@ export class MariaDBBrokerMutationsTable extends AbstractTable {
             worker.lastVisitedMutationId = mutation.id;
 
             if (
-              worker.subscription.since < mutation.committedAt &&
+              worker.subscription.since <= mutation.committedAt &&
               worker.subscription.dependencyGraph.flattened.byNode
                 .entries()
                 .some(
@@ -281,5 +284,32 @@ export class MariaDBBrokerMutationsTable extends AbstractTable {
         yield mutationsBySubscription;
       }
     } while (rows.length === batchSize);
+  }
+
+  public async diagnose(
+    worker: MariaDBSubscription,
+  ): Promise<MariaDBSubscriptionAssignmentDiagnosis> {
+    const row = await this.connector.getRow<{
+      mutationCount: bigint | number;
+      changeCount: bigint | number;
+      latencyInSeconds: bigint | number;
+    }>(`
+      SELECT 
+        COUNT(*) AS ${escapeIdentifier('mutationCount')},
+        IFNULL(SUM(${this.escapeColumnIdentifier('changeCount')}), 0) AS ${escapeIdentifier('changeCount')},
+        IFNULL(NOW(3) - MIN(${this.escapeColumnIdentifier('committedAt')}), 0) AS ${escapeIdentifier('latencyInSeconds')}
+      FROM ${escapeIdentifier(this.name)}
+      WHERE ${
+        worker.lastVisitedMutationId
+          ? `${this.escapeColumnIdentifier('id')} > ${this.serializeColumnValue('id', worker.lastVisitedMutationId)}`
+          : `${this.escapeColumnIdentifier('committedAt')} > ${this.serializeColumnValue('committedAt', worker.subscription.since)}`
+      }
+    `);
+
+    return {
+      mutationCount: Number(row.mutationCount),
+      changeCount: Number(row.changeCount),
+      latencyInSeconds: Number(row.latencyInSeconds),
+    };
   }
 }
