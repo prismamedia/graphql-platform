@@ -111,11 +111,18 @@ export class MariaDBSubscription
   }
 
   public async diagnose(): Promise<MariaDBSubscriptionDiagnosis> {
+    const startedAt = new Date();
+
     const [assigned, unassigned] = await Promise.all([
       this.broker.assignmentsTable.diagnose(this),
       this.broker.mutationsTable.diagnose(this),
     ]);
 
-    return new MariaDBSubscriptionDiagnosis(this, assigned, unassigned);
+    return new MariaDBSubscriptionDiagnosis(
+      this,
+      assigned,
+      unassigned,
+      startedAt,
+    );
   }
 }
