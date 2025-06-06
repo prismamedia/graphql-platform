@@ -10,8 +10,10 @@ import type {
   MariaDBBrokerSubscriptionsStateTable,
 } from '../broker.js';
 import { MariaDBSubscriptionDiagnosis } from './subscription/diagnosis.js';
+import { MariaDBSubscriptionError } from './subscription/error.js';
 
 export * from './subscription/diagnosis.js';
+export * from './subscription/error.js';
 
 export type MariaDBSubscriptionEvents = {
   assignments: ReadonlyArray<MariaDBBrokerMutation>;
@@ -55,8 +57,9 @@ export class MariaDBSubscription
     try {
       await this.emit('assignments', mutations);
     } catch (cause) {
-      throw new Error(
-        `Failed to notify the subscription ${this.subscription.id} of the ${mutations.length} assignment(s)`,
+      throw new MariaDBSubscriptionError(
+        this,
+        `Failed while notifying the subscription "${this.subscription.id}" of ${mutations.length} assignment(s)`,
         { cause },
       );
     }
@@ -111,18 +114,28 @@ export class MariaDBSubscription
   }
 
   public async diagnose(): Promise<MariaDBSubscriptionDiagnosis> {
+    this.subscription.signal.throwIfAborted();
+
     const startedAt = new Date();
 
-    const [assigned, unassigned] = await Promise.all([
-      this.broker.assignmentsTable.diagnose(this),
-      this.broker.mutationsTable.diagnose(this),
-    ]);
+    try {
+      const [assigned, unassigned] = await Promise.all([
+        this.broker.assignmentsTable.diagnose(this),
+        this.broker.mutationsTable.diagnose(this),
+      ]);
 
-    return new MariaDBSubscriptionDiagnosis(
-      this,
-      assigned,
-      unassigned,
-      startedAt,
-    );
+      return new MariaDBSubscriptionDiagnosis(
+        this,
+        assigned,
+        unassigned,
+        startedAt,
+      );
+    } catch (cause) {
+      throw new MariaDBSubscriptionError(
+        this,
+        `Failed while diagnosing the subscription "${this.subscription.id}"`,
+        { cause },
+      );
+    }
   }
 }
