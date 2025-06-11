@@ -2,7 +2,7 @@ import * as core from '@prismamedia/graphql-platform';
 import { MGetter } from '@prismamedia/memoize';
 import assert from 'node:assert';
 import type { MariaDBBroker } from '../../broker.js';
-import { escapeIdentifier } from '../../escaping.js';
+import { escapeIdentifier, escapeStringValue } from '../../escaping.js';
 import type { OkPacket, PoolConnection } from '../../index.js';
 import { Event } from '../../schema/event.js';
 import {
@@ -12,6 +12,10 @@ import {
   TimestampType,
 } from '../../schema/table/data-type.js';
 import type { StatementKind } from '../../statement.js';
+import {
+  AND,
+  OR,
+} from '../../statement/manipulation/clause/where-condition.js';
 import { AbstractTable } from '../abstract-table.js';
 import type {
   MariaDBSubscription,
@@ -192,98 +196,87 @@ export class MariaDBBrokerMutationsTable extends AbstractTable {
     };
   }
 
-  public async *getUnassignedsBySubscription<TRequestContext extends object>(
-    batchSize: number = 100,
-  ): AsyncGenerator<UnassignedMutationsBySubscription<TRequestContext>> {
-    let rows: MariaDBBrokerMutationRow[];
-    do {
-      if (!this.broker.subscriptions.size) {
-        return;
-      }
-
-      const [first, ...rest] = this.broker.subscriptions.values();
-
-      const minVisitedMutationId = rest.reduce(
-        (min, { lastVisitedMutationId }) =>
-          min && lastVisitedMutationId
-            ? min <= lastVisitedMutationId
-              ? min
-              : lastVisitedMutationId
+  public filterDependencies(
+    worker: MariaDBSubscription,
+    alias?: string,
+  ): string {
+    return OR(
+      worker.subscription.dependencyGraph.flattened.byNode
+        .entries()
+        .flatMap(([node, { creation, deletion, update }]) => [
+          creation || deletion
+            ? `JSON_OVERLAPS(JSON_QUERY(${this.escapeColumnIdentifier('changesByNode', alias)}, '$.${node.name}'), ${escapeStringValue(
+                JSON.stringify({
+                  ...(creation && { creation }),
+                  ...(deletion && { deletion }),
+                }),
+              )})`
             : undefined,
-        first.lastVisitedMutationId,
-      );
+          update?.size
+            ? `JSON_OVERLAPS(JSON_QUERY(${this.escapeColumnIdentifier('changesByNode', alias)}, '$.${node.name}.update'), ${escapeStringValue(
+                JSON.stringify(Array.from(update, ({ name }) => name)),
+              )})`
+            : undefined,
+        ])
+        .toArray(),
+    );
+  }
 
-      const minSince = rest.reduce(
-        (min, { subscription: { since } }) => (min <= since ? min : since),
-        first.subscription.since,
-      );
+  public filterAssignables(
+    worker: MariaDBSubscription,
+    alias?: string,
+  ): string {
+    return AND([
+      worker.lastVisitedMutationId
+        ? `${this.escapeColumnIdentifier('id', alias)} > ${this.serializeColumnValue('id', worker.lastVisitedMutationId)}`
+        : `${this.escapeColumnIdentifier('committedAt', alias)} > ${this.serializeColumnValue('committedAt', worker.subscription.since)}`,
+      this.filterDependencies(worker, alias),
+    ]);
+  }
 
-      rows = await this.connector.executeQuery<MariaDBBrokerMutationRow[]>(`
-        SELECT *
-        FROM ${escapeIdentifier(this.name)}
-        WHERE ${
-          minVisitedMutationId
-            ? `${this.escapeColumnIdentifier('id')} > ${this.serializeColumnValue('id', minVisitedMutationId)}`
-            : `${this.escapeColumnIdentifier('committedAt')} > ${this.serializeColumnValue('committedAt', minSince)}`
-        }
-        ORDER BY ${this.escapeColumnIdentifier('id')} ASC
-        LIMIT ${batchSize}
+  public async *getAssignables<TRequestContext extends object>(
+    worker: MariaDBSubscription,
+    batchSize: number = 100,
+  ): AsyncGenerator<MariaDBBrokerMutation<TRequestContext>[]> {
+    let last: MariaDBBrokerMutationRow | undefined;
+    let rows: MariaDBBrokerMutationRow[];
+
+    do {
+      [last, ...rows] = await this.connector.executeQuery<
+        MariaDBBrokerMutationRow[]
+      >(`
+        (
+          SELECT *
+          FROM ${escapeIdentifier(this.name)}
+          ORDER BY ${this.escapeColumnIdentifier('id')} DESC
+          LIMIT 1
+        ) UNION ALL (
+          SELECT *
+          FROM ${escapeIdentifier(this.name)}
+          WHERE ${this.filterAssignables(worker)}
+          ORDER BY ${this.escapeColumnIdentifier('id')} ASC
+          LIMIT ${batchSize}
+        )
       `);
 
-      if (!this.broker.subscriptions.size || !rows.length) {
+      if (worker.subscription.signal.aborted) {
         return;
       }
 
-      const mutationsBySubscription = new Map<
-        MariaDBSubscription,
-        Array<MariaDBBrokerMutation>
-      >();
+      if (rows.length) {
+        yield rows.map((row) => this.parseRow(row));
 
-      for (const row of rows) {
-        const mutation = this.parseRow(row);
-
-        for (const worker of this.broker.subscriptions.values()) {
-          if (
-            !worker.lastVisitedMutationId ||
-            worker.lastVisitedMutationId < mutation.id
-          ) {
-            worker.lastVisitedMutationId = mutation.id;
-
-            if (
-              worker.subscription.since <= mutation.committedAt &&
-              worker.subscription.dependencyGraph.flattened.byNode
-                .entries()
-                .some(
-                  ([node, { creation, update, deletion }]) =>
-                    mutation.changesByNode[node.name] &&
-                    ((creation && mutation.changesByNode[node.name].creation) ||
-                      (update?.size &&
-                        mutation.changesByNode[node.name].update?.length &&
-                        update
-                          .values()
-                          .some((component) =>
-                            mutation.changesByNode[node.name].update!.includes(
-                              component.name,
-                            ),
-                          )) ||
-                      (deletion && mutation.changesByNode[node.name].deletion)),
-                )
-            ) {
-              let mutations = mutationsBySubscription.get(worker);
-              if (!mutations) {
-                mutationsBySubscription.set(worker, (mutations = []));
-              }
-
-              mutations.push(mutation);
-            }
-          }
-        }
+        worker.lastVisitedMutationId = rows.at(-1)!.id;
       }
 
-      if (mutationsBySubscription.size) {
-        yield mutationsBySubscription;
+      if (worker.subscription.signal.aborted) {
+        return;
       }
     } while (rows.length === batchSize);
+
+    if (last) {
+      worker.lastVisitedMutationId = last.id;
+    }
   }
 
   public async diagnose(
@@ -296,14 +289,17 @@ export class MariaDBBrokerMutationsTable extends AbstractTable {
     }>(`
       SELECT 
         COUNT(*) AS ${escapeIdentifier('mutationCount')},
-        IFNULL(SUM(${this.escapeColumnIdentifier('changeCount')}), 0) AS ${escapeIdentifier('changeCount')},
-        IFNULL(NOW(3) - MIN(${this.escapeColumnIdentifier('committedAt')}), 0) AS ${escapeIdentifier('latencyInSeconds')}
-      FROM ${escapeIdentifier(this.name)}
-      WHERE ${
-        worker.lastVisitedMutationId
-          ? `${this.escapeColumnIdentifier('id')} > ${this.serializeColumnValue('id', worker.lastVisitedMutationId)}`
-          : `${this.escapeColumnIdentifier('committedAt')} > ${this.serializeColumnValue('committedAt', worker.subscription.since)}`
-      }
+        SUM((
+          SELECT COUNT(*)
+          FROM ${escapeIdentifier(this.broker.changesTable.name)} c
+          WHERE ${AND([
+            `${this.broker.changesTable.escapeColumnIdentifier('mutationId', 'c')} = ${this.broker.mutationsTable.escapeColumnIdentifier('id', 'm')}`,
+            this.broker.changesTable.filterDependencies(worker, 'c'),
+          ])}
+        )) AS ${escapeIdentifier('changeCount')},
+        IFNULL(NOW(3) - MIN(${this.escapeColumnIdentifier('committedAt', 'm')}), 0) AS ${escapeIdentifier('latencyInSeconds')}
+      FROM ${escapeIdentifier(this.name)} m
+      WHERE ${this.filterAssignables(worker, 'm')}
     `);
 
     return {

@@ -30,7 +30,7 @@
     "@types/indefinite": "2.3.4",
     "graphql": "16.11.0",
     "publint": "0.3.12",
-    "tsx": "4.19.4",
+    "tsx": "4.20.0",
     "type-fest": "4.37.0",
     "typescript": "5.8.3"
   },
@@ -38,7 +38,7 @@
     "@opentelemetry/api": "^1.9.0",
     "@prismamedia/memoize": "^6.1.0",
     "indefinite": "^2.5.1",
-    "remeda": "^2.22.6"
+    "remeda": "^2.23.0"
   },
   "peerDependencies": {
     "graphql": "^16.11.0"

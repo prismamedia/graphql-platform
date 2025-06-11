@@ -3,12 +3,13 @@ import {
   type EventListener,
 } from '@prismamedia/async-event-emitter';
 import * as core from '@prismamedia/graphql-platform';
-import assert from 'node:assert';
+import * as utils from '@prismamedia/graphql-platform-utils';
 import type {
   MariaDBBroker,
   MariaDBBrokerMutation,
   MariaDBBrokerSubscriptionsStateTable,
 } from '../broker.js';
+import { BrokerError, BrokerErrorCode } from './error.js';
 import { MariaDBSubscriptionDiagnosis } from './subscription/diagnosis.js';
 import { MariaDBSubscriptionError } from './subscription/error.js';
 
@@ -36,6 +37,9 @@ export class MariaDBSubscription
 
   public readonly stateTable?: MariaDBBrokerSubscriptionsStateTable;
 
+  readonly #assigner: NodeJS.Timeout;
+  #assigning?: Promise<void>;
+
   public constructor(
     public readonly broker: MariaDBBroker,
     public readonly subscription: core.ChangesSubscriptionStream,
@@ -47,32 +51,51 @@ export class MariaDBSubscription
     this.stateTable = broker.connector.schema.getTableByNode(
       subscription.node,
     ).subscriptionsStateTable;
-  }
 
-  public async notify(
-    mutations: ReadonlyArray<MariaDBBrokerMutation>,
-  ): Promise<void> {
-    assert(mutations.length);
-
-    try {
-      await this.emit('assignments', mutations);
-    } catch (cause) {
-      throw new MariaDBSubscriptionError(
-        this,
-        `Failed while notifying the subscription "${this.subscription.id}" of ${mutations.length} assignment(s)`,
-        { cause },
-      );
-    }
+    this.#assigner = setInterval(
+      () =>
+        this.assign().catch((cause) =>
+          this.emit(
+            'error',
+            new BrokerError({ code: BrokerErrorCode.ASSIGNER, cause }),
+          ),
+        ),
+      this.broker.assignerIntervalInSeconds * 1000,
+    );
   }
 
   public async [Symbol.asyncDispose](): Promise<void> {
+    clearInterval(this.#assigner);
     this.off();
 
-    await Promise.all([
+    await utils.PromiseAllSettledThenThrowIfErrors([
       this.broker.unsubscribe(this.subscription),
       this.broker.assignmentsTable.unsubscribe(this.subscription.id),
       this.stateTable?.unsubscribe(this.subscription.id),
     ]);
+  }
+
+  public assign(): Promise<void> {
+    return (this.#assigning ??= new Promise<void>(async (resolve, reject) => {
+      try {
+        for await (const mutations of this.broker.mutationsTable.getAssignables(
+          this,
+        )) {
+          await this.broker.assignmentsTable.assign(
+            this.subscription.id,
+            mutations,
+          );
+
+          await this.emit('assignments', mutations);
+        }
+
+        resolve();
+      } catch (error) {
+        reject(error);
+      } finally {
+        this.#assigning = undefined;
+      }
+    }));
   }
 
   public async *[Symbol.asyncIterator](): AsyncIterator<
@@ -86,7 +109,7 @@ export class MariaDBSubscription
         this.#idle = false;
         await this.emit('processing', mutation);
 
-        yield* this.broker.changesTable.getChanges(this.subscription, mutation);
+        yield* this.broker.changesTable.getChanges(this, mutation);
 
         await this.emit('processed', mutation);
       }

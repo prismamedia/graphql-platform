@@ -30,7 +30,7 @@
   "devDependencies": {
     "graphql": "16.11.0",
     "publint": "0.3.12",
-    "tsx": "4.19.4",
+    "tsx": "4.20.0",
     "type-fest": "4.37.0",
     "typescript": "5.8.3"
   },
@@ -48,7 +48,7 @@
     "inflection": "^3.0.2",
     "p-queue": "^8.1.0",
     "p-retry": "^6.2.1",
-    "remeda": "^2.22.6"
+    "remeda": "^2.23.0"
   },
   "peerDependencies": {
     "graphql": "^16.11.0"

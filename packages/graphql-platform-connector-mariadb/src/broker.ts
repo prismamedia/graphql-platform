@@ -103,9 +103,6 @@ export class MariaDBBroker<TRequestContext extends object = any>
     MariaDBSubscription
   >();
 
-  #assigning: boolean = false;
-  #assigner?: NodeJS.Timeout;
-
   #heartbeating: boolean = false;
   #heartbeat?: NodeJS.Timeout;
 
@@ -172,31 +169,6 @@ export class MariaDBBroker<TRequestContext extends object = any>
     });
   }
 
-  public async assign(): Promise<void> {
-    if (this.#assigning) {
-      // Avoid overlapping assignments
-      return;
-    } else if (!this.subscriptions.size) {
-      // No subscriptions, no need to assign
-      return;
-    }
-
-    this.#assigning = true;
-    try {
-      for await (const mutationsBySubscription of this.mutationsTable.getUnassignedsBySubscription()) {
-        await this.assignmentsTable.assign(mutationsBySubscription);
-
-        await utils.PromiseAllSettledThenThrowIfErrors(
-          mutationsBySubscription
-            .entries()
-            .map(([subscription, mutations]) => subscription.notify(mutations)),
-        );
-      }
-    } finally {
-      this.#assigning = false;
-    }
-  }
-
   public async heartbeat(): Promise<void> {
     if (this.#heartbeating) {
       // Avoid overlapping heartbeats
@@ -236,17 +208,6 @@ export class MariaDBBroker<TRequestContext extends object = any>
     this.subscriptions.set(subscription, worker);
     await this.emit('subscription', worker);
 
-    this.#assigner ??= setInterval(
-      () =>
-        this.assign().catch((cause) =>
-          this.emit(
-            'error',
-            new BrokerError({ code: BrokerErrorCode.ASSIGNER, cause }),
-          ),
-        ),
-      this.assignerIntervalInSeconds * 1000,
-    );
-
     this.#heartbeat ??= setInterval(
       () =>
         this.heartbeat().catch((cause) =>
@@ -282,9 +243,6 @@ export class MariaDBBroker<TRequestContext extends object = any>
       this.subscriptions.delete(subscription);
 
       if (!this.subscriptions.size) {
-        clearInterval(this.#assigner);
-        this.#assigner = undefined;
-
         clearInterval(this.#heartbeat);
         this.#heartbeat = undefined;
       }
@@ -296,11 +254,15 @@ export class MariaDBBroker<TRequestContext extends object = any>
     }
   }
 
+  public async assign(): Promise<void> {
+    await Promise.all(
+      this.subscriptions.values().map((worker) => worker.assign()),
+    );
+  }
+
   public diagnose(): Promise<MariaDBSubscriptionDiagnosis[]> {
     return Promise.all(
-      this.subscriptions
-        .values()
-        .map((subscription) => subscription.diagnose()),
+      this.subscriptions.values().map((worker) => worker.diagnose()),
     );
   }
 }

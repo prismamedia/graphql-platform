@@ -88,8 +88,10 @@ export abstract class AbstractTable {
     return column;
   }
 
-  public escapeColumnIdentifier(name: Column['name']): string {
-    return escapeIdentifier(this.getColumnByName(name).name);
+  public escapeColumnIdentifier(name: Column['name'], alias?: string): string {
+    return escapeIdentifier(
+      [alias, this.getColumnByName(name).name].filter(Boolean).join('.'),
+    );
   }
 
   public serializeColumnValue(name: Column['name'], value: any): string {

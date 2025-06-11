@@ -1,4 +1,4 @@
-import type { MariaDBSubscription } from '../subscription';
+import type { MariaDBSubscription } from '../subscription.js';
 
 export class MariaDBSubscriptionError extends Error {
   public constructor(

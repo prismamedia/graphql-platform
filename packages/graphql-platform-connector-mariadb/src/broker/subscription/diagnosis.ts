@@ -1,3 +1,4 @@
+import type { JsonObject } from 'type-fest';
 import type { MariaDBSubscription } from '../subscription.js';
 
 export interface MariaDBSubscriptionAssignmentDiagnosis {
@@ -20,5 +21,23 @@ export class MariaDBSubscriptionDiagnosis {
     public readonly endedAt: Date = new Date(),
   ) {
     this.tookInSeconds = (endedAt.getTime() - startedAt.getTime()) / 1000;
+  }
+
+  public toJSON(): JsonObject {
+    return {
+      subscription: this.subscription.subscription.id,
+      startedAt: this.startedAt.toISOString(),
+      tookInSeconds: this.tookInSeconds,
+      assigned: {
+        mutationCount: this.assigned.mutationCount,
+        changeCount: this.assigned.changeCount,
+        latencyInSeconds: this.assigned.latencyInSeconds,
+      },
+      unassigned: {
+        mutationCount: this.unassigned.mutationCount,
+        changeCount: this.unassigned.changeCount,
+        latencyInSeconds: this.unassigned.latencyInSeconds,
+      },
+    };
   }
 }

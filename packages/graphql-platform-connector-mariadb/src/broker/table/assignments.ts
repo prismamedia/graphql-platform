@@ -19,7 +19,6 @@ import type {
 import type {
   MariaDBBrokerMutation,
   MariaDBBrokerMutationRow,
-  UnassignedMutationsBySubscription,
 } from './mutations.js';
 
 export interface MariaDBBrokerAssignmentsTableOptions {
@@ -85,7 +84,8 @@ export class MariaDBBrokerAssignmentsTable extends AbstractTable {
   }
 
   public async assign(
-    mutationsBySubscription: UnassignedMutationsBySubscription,
+    subscriptionId: UUID,
+    mutations: ReadonlyArray<MariaDBBrokerMutation>,
   ): Promise<void> {
     await this.connector.executeQuery<OkPacket>(`
       INSERT INTO ${escapeIdentifier(this.name)} (${[
@@ -95,19 +95,15 @@ export class MariaDBBrokerAssignmentsTable extends AbstractTable {
       ]
         .map((columnName) => this.escapeColumnIdentifier(columnName))
         .join(',')})
-      VALUES ${mutationsBySubscription
-        .entries()
-        .flatMap(([{ subscription }, mutations]) =>
-          mutations.map(
-            (mutation) =>
-              `(${[
-                this.serializeColumnValue('mutationId', mutation.id),
-                this.serializeColumnValue('subscriptionId', subscription.id),
-                'NOW()',
-              ].join(',')})`,
-          ),
+      VALUES ${mutations
+        .map(
+          (mutation) =>
+            `(${[
+              this.serializeColumnValue('mutationId', mutation.id),
+              this.serializeColumnValue('subscriptionId', subscriptionId),
+              'NOW()',
+            ].join(',')})`,
         )
-        .toArray()
         .join(',')}
     `);
   }
@@ -118,13 +114,13 @@ export class MariaDBBrokerAssignmentsTable extends AbstractTable {
     let row: MariaDBBrokerMutationRow | undefined;
     while (
       (row = await this.connector.getRowIfExists<MariaDBBrokerMutationRow>(`
-          SELECT m.*
-          FROM ${escapeIdentifier(this.name)} a
-            INNER JOIN ${escapeIdentifier(this.broker.mutationsTable.name)} m ON m.${this.broker.mutationsTable.escapeColumnIdentifier('id')} = a.${this.escapeColumnIdentifier('mutationId')}
-          WHERE a.${this.escapeColumnIdentifier('subscriptionId')} = ${this.serializeColumnValue('subscriptionId', subscriptionId)}
-          ORDER BY a.${this.escapeColumnIdentifier('mutationId')} ASC
-          LIMIT 1
-        `))
+        SELECT m.*
+        FROM ${escapeIdentifier(this.name)} a
+          INNER JOIN ${escapeIdentifier(this.broker.mutationsTable.name)} m ON ${this.broker.mutationsTable.escapeColumnIdentifier('id', 'm')} = ${this.escapeColumnIdentifier('mutationId', 'a')}
+        WHERE ${this.escapeColumnIdentifier('subscriptionId', 'a')} = ${this.serializeColumnValue('subscriptionId', subscriptionId)}
+        ORDER BY ${this.escapeColumnIdentifier('mutationId', 'a')} ASC
+        LIMIT 1
+      `))
     ) {
       yield this.broker.mutationsTable.parseRow<TRequestContext>(row);
 
@@ -169,11 +165,18 @@ export class MariaDBBrokerAssignmentsTable extends AbstractTable {
     }>(`
       SELECT
         COUNT(*) AS ${escapeIdentifier('mutationCount')},
-        IFNULL(SUM(m.${this.broker.mutationsTable.escapeColumnIdentifier('changeCount')}), 0) AS ${escapeIdentifier('changeCount')},
-        IFNULL(NOW(3) - MIN(m.${this.broker.mutationsTable.escapeColumnIdentifier('committedAt')}), 0) AS ${escapeIdentifier('latencyInSeconds')}
+        SUM((
+          SELECT COUNT(*)
+          FROM ${escapeIdentifier(this.broker.changesTable.name)} c
+          WHERE ${AND([
+            `${this.broker.changesTable.escapeColumnIdentifier('mutationId', 'c')} = ${this.broker.mutationsTable.escapeColumnIdentifier('id', 'm')}`,
+            this.broker.changesTable.filterDependencies(worker, 'c'),
+          ])}
+        )) AS ${escapeIdentifier('changeCount')},
+        IFNULL(NOW(3) - MIN(${this.broker.mutationsTable.escapeColumnIdentifier('committedAt', 'm')}), 0) AS ${escapeIdentifier('latencyInSeconds')}
       FROM ${escapeIdentifier(this.name)} a
-        INNER JOIN ${escapeIdentifier(this.broker.mutationsTable.name)} m ON a.${this.escapeColumnIdentifier('mutationId')} = m.${this.broker.mutationsTable.escapeColumnIdentifier('id')}
-      WHERE ${this.escapeColumnIdentifier('subscriptionId')} = ${this.serializeColumnValue('subscriptionId', worker.subscription.id)}
+        INNER JOIN ${escapeIdentifier(this.broker.mutationsTable.name)} m ON ${this.escapeColumnIdentifier('mutationId', 'a')} = ${this.broker.mutationsTable.escapeColumnIdentifier('id', 'm')}
+      WHERE ${this.escapeColumnIdentifier('subscriptionId', 'a')} = ${this.serializeColumnValue('subscriptionId', worker.subscription.id)}
     `);
 
     return {

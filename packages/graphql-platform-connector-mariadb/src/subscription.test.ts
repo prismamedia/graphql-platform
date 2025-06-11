@@ -61,18 +61,14 @@ describe('Subscription', () => {
     await gp.seed(myAdminContext, fixtures.constant);
 
     await Article.api.updateMany(myAdminContext, {
-      data: {
-        slug: 'a-new-slug',
-      },
+      data: { slug: 'a-new-slug' },
       where: { title: fixtures.constant.Article.article_01.title },
       first: 10,
       selection: `{ id }`,
     });
 
     await User.api.createOne(myAdminContext, {
-      data: {
-        username: 'My new user',
-      },
+      data: { username: 'My new user' },
       selection: `{ id }`,
     });
 
@@ -145,6 +141,39 @@ describe('Subscription', () => {
     });
   });
 
+  it('has diagnosis', async () => {
+    const diagnoses = await gp.broker.diagnose();
+
+    assert.deepEqual(
+      diagnoses.map(({ assigned, unassigned }) => ({
+        assigned: R.omit(assigned, ['latencyInSeconds']),
+        unassigned: R.omit(unassigned, ['latencyInSeconds']),
+      })),
+      [
+        {
+          assigned: {
+            mutationCount: 3,
+            changeCount: 17,
+          },
+          unassigned: {
+            mutationCount: 0,
+            changeCount: 0,
+          },
+        },
+        {
+          assigned: {
+            mutationCount: 2,
+            changeCount: 12,
+          },
+          unassigned: {
+            mutationCount: 0,
+            changeCount: 0,
+          },
+        },
+      ],
+    );
+  });
+
   it("throws on forEach's callback synchronous error", async () => {
     let originalError: Error | undefined;
 
@@ -215,44 +244,6 @@ describe('Subscription', () => {
     );
 
     assert(originalError);
-  });
-
-  it('has diagnosis', async () => {
-    const diagnoses = await gp.broker.diagnose();
-
-    assert.deepEqual(
-      {
-        assigned: R.omit(diagnoses[0].assigned, ['latencyInSeconds']),
-        unassigned: R.omit(diagnoses[0].unassigned, ['latencyInSeconds']),
-      },
-      {
-        assigned: {
-          mutationCount: 3,
-          changeCount: 30,
-        },
-        unassigned: {
-          mutationCount: 0,
-          changeCount: 0,
-        },
-      },
-    );
-
-    assert.deepEqual(
-      {
-        assigned: R.omit(diagnoses[1].assigned, ['latencyInSeconds']),
-        unassigned: R.omit(diagnoses[1].unassigned, ['latencyInSeconds']),
-      },
-      {
-        assigned: {
-          mutationCount: 2,
-          changeCount: 29,
-        },
-        unassigned: {
-          mutationCount: 0,
-          changeCount: 0,
-        },
-      },
-    );
   });
 
   it('is iterable through "Array.fromAsync"', async () => {

@@ -1,7 +1,7 @@
 import * as core from '@prismamedia/graphql-platform';
 import * as utils from '@prismamedia/graphql-platform-utils';
 import type { MariaDBBroker } from '../../broker.js';
-import { escapeIdentifier } from '../../escaping.js';
+import { escapeIdentifier, escapeStringValue } from '../../escaping.js';
 import type { PoolConnection } from '../../index.js';
 import {
   BigIntType,
@@ -15,6 +15,7 @@ import {
   OR,
 } from '../../statement/manipulation/clause/where-condition.js';
 import { AbstractTable } from '../abstract-table.js';
+import type { MariaDBSubscription } from '../subscription.js';
 import type { MariaDBBrokerMutation } from './mutations.js';
 
 export interface MariaDBBrokerChangeRow {
@@ -133,19 +134,52 @@ export class MariaDBBrokerChangesTable extends AbstractTable {
     `);
   }
 
+  public filterDependencies(
+    worker: MariaDBSubscription,
+    alias?: string,
+  ): string {
+    return OR(
+      Array.from(
+        worker.subscription.dependencyGraph.flattened.byNode,
+        ([node, { creation, deletion, update }]) =>
+          AND([
+            `${this.escapeColumnIdentifier('node', alias)} = ${this.serializeColumnValue('node', node.name)}`,
+            OR([
+              creation || deletion
+                ? `${this.escapeColumnIdentifier('kind', alias)} IN (${[
+                    creation && utils.MutationType.CREATION,
+                    deletion && utils.MutationType.DELETION,
+                  ]
+                    .filter(utils.isNonNil)
+                    .map((kind) => this.serializeColumnValue('kind', kind))
+                    .join(',')})`
+                : undefined,
+              update
+                ? AND([
+                    `${this.escapeColumnIdentifier('kind', alias)} = ${this.serializeColumnValue('kind', utils.MutationType.UPDATE)}`,
+                    `JSON_OVERLAPS(${[
+                      `JSON_KEYS(${this.escapeColumnIdentifier('newValue', alias)})`,
+                      escapeStringValue(
+                        JSON.stringify(Array.from(update, ({ name }) => name)),
+                      ),
+                    ].join(',')})`,
+                  ])
+                : undefined,
+            ]),
+          ]),
+      ),
+    );
+  }
+
   public async *getChanges<TRequestContext extends object>(
-    subscription: core.ChangesSubscriptionStream<TRequestContext>,
+    worker: MariaDBSubscription,
     mutation: MariaDBBrokerMutation<TRequestContext>,
     batchSize: number = 100,
   ): AsyncGenerator<core.MutationContextChanges<TRequestContext>> {
-    let lastChangeId: bigint = 0n;
+    let lastChangeId: bigint | undefined;
 
     let rows: MariaDBBrokerChangeRow[];
     do {
-      if (subscription.signal.aborted) {
-        return;
-      }
-
       rows = await this.connector.executeQuery<MariaDBBrokerChangeRow[]>(`
         SELECT *
         FROM ${escapeIdentifier(this.name)}
@@ -154,90 +188,66 @@ export class MariaDBBrokerChangesTable extends AbstractTable {
           lastChangeId
             ? `${this.escapeColumnIdentifier('id')} > ${this.serializeColumnValue('id', lastChangeId)}`
             : undefined,
-          OR(
-            Array.from(
-              subscription.dependencyGraph.flattened.byNode,
-              ([node, dependency]) =>
-                AND([
-                  `${this.escapeColumnIdentifier('node')} = ${this.serializeColumnValue('node', node.name)}`,
-                  OR([
-                    dependency.creation || dependency.deletion
-                      ? `${this.escapeColumnIdentifier('kind')} IN (${[
-                          dependency.creation && utils.MutationType.CREATION,
-                          dependency.deletion && utils.MutationType.DELETION,
-                        ]
-                          .filter(utils.isNonNil)
-                          .map((kind) =>
-                            this.serializeColumnValue('kind', kind),
-                          )
-                          .join(',')})`
-                      : undefined,
-                    dependency.update
-                      ? AND([
-                          `${this.escapeColumnIdentifier('kind')} = ${this.serializeColumnValue('kind', utils.MutationType.UPDATE)}`,
-                          `JSON_OVERLAPS(
-                            JSON_KEYS(${this.escapeColumnIdentifier('newValue')}),
-                            JSON_ARRAY(${Array.from(dependency.update, ({ name }) => this.serializeColumnValue('node', name)).join(',')})
-                          )`,
-                        ])
-                      : undefined,
-                  ]),
-                ]),
-            ),
-          ),
+          this.filterDependencies(worker),
         ])}
         ORDER BY ${escapeIdentifier('id')} ASC
         LIMIT ${batchSize}
       `);
 
-      if (subscription.signal.aborted || !rows.length) {
+      if (worker.subscription.signal.aborted) {
         return;
       }
 
-      yield new core.MutationContextChanges(
-        mutation.requestContext,
-        rows.map(({ kind, ...row }) => {
-          const node = this.connector.gp.getNodeByName(row.node);
-          const newValue =
-            this.getColumnByName('newValue').dataType.parseColumnValue(
-              row.newValue,
-            ) ?? undefined;
-          const oldValue =
-            this.getColumnByName('oldValue').dataType.parseColumnValue(
-              row.oldValue,
-            ) ?? undefined;
-          const executedAt = this.getColumnByName(
-            'executedAt',
-          ).dataType.parseColumnValue(row.executedAt);
+      if (rows.length) {
+        yield new core.MutationContextChanges(
+          mutation.requestContext,
+          rows.map(({ kind, ...row }) => {
+            const node = this.connector.gp.getNodeByName(row.node);
+            const newValue =
+              this.getColumnByName('newValue').dataType.parseColumnValue(
+                row.newValue,
+              ) ?? undefined;
+            const oldValue =
+              this.getColumnByName('oldValue').dataType.parseColumnValue(
+                row.oldValue,
+              ) ?? undefined;
+            const executedAt = this.getColumnByName(
+              'executedAt',
+            ).dataType.parseColumnValue(row.executedAt);
 
-          return kind === utils.MutationType.CREATION
-            ? core.NodeCreation.unserialize(
-                node,
-                mutation.requestContext,
-                newValue,
-                executedAt,
-                mutation.committedAt,
-              )
-            : kind === utils.MutationType.UPDATE
-              ? core.NodeUpdate.unserialize(
+            return kind === utils.MutationType.CREATION
+              ? core.NodeCreation.unserialize(
                   node,
                   mutation.requestContext,
-                  oldValue,
                   newValue,
                   executedAt,
                   mutation.committedAt,
                 )
-              : core.NodeDeletion.unserialize(
-                  node,
-                  mutation.requestContext,
-                  oldValue,
-                  executedAt,
-                  mutation.committedAt,
-                );
-        }),
-      );
+              : kind === utils.MutationType.UPDATE
+                ? core.NodeUpdate.unserialize(
+                    node,
+                    mutation.requestContext,
+                    oldValue,
+                    newValue,
+                    executedAt,
+                    mutation.committedAt,
+                  )
+                : core.NodeDeletion.unserialize(
+                    node,
+                    mutation.requestContext,
+                    oldValue,
+                    executedAt,
+                    mutation.committedAt,
+                  );
+          }),
+        );
 
-      lastChangeId = rows.at(-1)!.id;
+        lastChangeId = rows.at(-1)!.id;
+      }
+
+      if (worker.subscription.signal.aborted) {
+        return;
+      }
     } while (rows.length === batchSize);
   }
 }
