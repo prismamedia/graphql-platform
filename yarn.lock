@@ -960,7 +960,7 @@ __metadata:
     publint: "npm:0.3.12"
     remeda: "npm:^2.23.0"
     semver: "npm:^7.7.2"
-    tsx: "npm:4.20.0"
+    tsx: "npm:4.20.1"
     type-fest: "npm:4.37.0"
     typescript: "npm:5.8.3"
   peerDependencies:
@@ -989,7 +989,7 @@ __metadata:
     graphql: "npm:16.11.0"
     graphql-ws: "npm:6.0.5"
     publint: "npm:0.3.12"
-    tsx: "npm:4.20.0"
+    tsx: "npm:4.20.1"
     typescript: "npm:5.8.3"
     ws: "npm:8.18.2"
   peerDependencies:
@@ -1007,7 +1007,7 @@ __metadata:
     graphql: "npm:16.11.0"
     publint: "npm:0.3.12"
     remeda: "npm:^2.23.0"
-    tsx: "npm:4.20.0"
+    tsx: "npm:4.20.1"
     type-fest: "npm:4.37.0"
     typescript: "npm:5.8.3"
   peerDependencies:
@@ -1026,7 +1026,7 @@ __metadata:
     indefinite: "npm:^2.5.1"
     publint: "npm:0.3.12"
     remeda: "npm:^2.23.0"
-    tsx: "npm:4.20.0"
+    tsx: "npm:4.20.1"
     type-fest: "npm:4.37.0"
     typescript: "npm:5.8.3"
   peerDependencies:
@@ -1054,7 +1054,7 @@ __metadata:
     p-retry: "npm:^6.2.1"
     publint: "npm:0.3.12"
     remeda: "npm:^2.23.0"
-    tsx: "npm:4.20.0"
+    tsx: "npm:4.20.1"
     type-fest: "npm:4.37.0"
     typescript: "npm:5.8.3"
   peerDependencies:
@@ -3223,7 +3223,7 @@ __metadata:
   resolution: "root-workspace-0b6124@workspace:."
   dependencies:
     prettier: "npm:3.5.3"
-    tsx: "npm:4.20.0"
+    tsx: "npm:4.20.1"
     typescript: "npm:5.8.3"
   languageName: unknown
   linkType: soft
@@ -3570,9 +3570,9 @@ __metadata:
   languageName: node
   linkType: hard
 
-"tsx@npm:4.20.0":
-  version: 4.20.0
-  resolution: "tsx@npm:4.20.0"
+"tsx@npm:4.20.1":
+  version: 4.20.1
+  resolution: "tsx@npm:4.20.1"
   dependencies:
     esbuild: "npm:~0.25.0"
     fsevents: "npm:~2.3.3"
@@ -3582,7 +3582,7 @@ __metadata:
       optional: true
   bin:
     tsx: dist/cli.mjs
-  checksum: 10/3b5f8d14e85067b379d9c904ee2e34fad69d02ef8199ed4c82a97434f8bbc5f1cee9000b6d45bd60160f1f24eedc0bcfc3b8b4641eb304a71fe68e7bc18b027e
+  checksum: 10/fc6f3861f70975f0008d4ac28058e23fea0e9c033fed93234e7d72c65148e9368b4c6d5cd31b1cce3461a3aa50a34a87e1ba787e991d571e1c0e9d4b272909cd
   languageName: node
   linkType: hard
 

@@ -32,7 +32,7 @@
     "@types/semver": "7.7.0",
     "graphql": "16.11.0",
     "publint": "0.3.12",
-    "tsx": "4.20.0",
+    "tsx": "4.20.1",
     "type-fest": "4.37.0",
     "typescript": "5.8.3"
   },
