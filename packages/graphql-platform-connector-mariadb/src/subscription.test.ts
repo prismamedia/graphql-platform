@@ -37,6 +37,7 @@ describe('Subscription', () => {
         selection: {
           onUpsert: `{
             id
+            slug
             title
             category {
               order
@@ -56,16 +57,41 @@ describe('Subscription', () => {
           }`,
         },
       }),
+      Category.api.subscribeToChanges(myAdminContext, {
+        where: { order_gt: 0 },
+        selection: {
+          onUpsert: `{
+            id
+            order
+            slug
+            title
+          }`,
+        },
+      }),
     ]);
 
     await gp.seed(myAdminContext, fixtures.constant);
 
-    await Article.api.updateMany(myAdminContext, {
-      data: { slug: 'a-new-slug' },
-      where: { title: fixtures.constant.Article.article_01.title },
-      first: 10,
-      selection: `{ id }`,
-    });
+    await Promise.all([
+      Article.api.updateMany(myAdminContext, {
+        data: { slug: 'a-new-slug-1' },
+        where: { title: fixtures.constant.Article.article_01.title },
+        first: 1,
+        selection: `{ id }`,
+      }),
+      Article.api.updateMany(myAdminContext, {
+        data: { slug: 'a-new-slug-2' },
+        where: { title: fixtures.constant.Article.article_02.title },
+        first: 1,
+        selection: `{ id }`,
+      }),
+      Article.api.updateMany(myAdminContext, {
+        data: { slug: 'a-new-slug-3' },
+        where: { title: fixtures.constant.Article.article_03.title },
+        first: 1,
+        selection: `{ id }`,
+      }),
+    ]);
 
     await User.api.createOne(myAdminContext, {
       data: { username: 'My new user' },
@@ -111,7 +137,7 @@ describe('Subscription', () => {
       Article: {
         creation: true,
         deletion: true,
-        update: ['status', 'title', 'category'],
+        update: ['status', 'slug', 'title', 'category'],
       },
       ArticleTag: {
         creation: true,
@@ -146,29 +172,42 @@ describe('Subscription', () => {
 
     assert.deepEqual(
       diagnoses.map(({ assigned, unassigned }) => ({
-        assigned: R.omit(assigned, ['latencyInSeconds']),
-        unassigned: R.omit(unassigned, ['latencyInSeconds']),
+        assigned:
+          assigned.mutationCount &&
+          R.omit(assigned, [
+            'oldestCommitDate',
+            'newestCommitDate',
+            'latencyInSeconds',
+          ]),
+        unassigned:
+          unassigned.mutationCount &&
+          R.omit(unassigned, [
+            'oldestCommitDate',
+            'newestCommitDate',
+            'latencyInSeconds',
+          ]),
       })),
       [
         {
           assigned: {
-            mutationCount: 3,
-            changeCount: 17,
+            mutationCount: 6,
+            changeCount: 20,
           },
-          unassigned: {
-            mutationCount: 0,
-            changeCount: 0,
-          },
+          unassigned: 0,
         },
         {
           assigned: {
             mutationCount: 2,
             changeCount: 12,
           },
-          unassigned: {
-            mutationCount: 0,
-            changeCount: 0,
+          unassigned: 0,
+        },
+        {
+          assigned: {
+            mutationCount: 2,
+            changeCount: 4,
           },
+          unassigned: 0,
         },
       ],
     );

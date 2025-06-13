@@ -161,6 +161,8 @@ export class MariaDBBrokerAssignmentsTable extends AbstractTable {
     const row = await this.connector.getRow<{
       mutationCount: bigint | number;
       changeCount: bigint | number;
+      oldestCommitDate: string | null;
+      newestCommitDate: string | null;
       latencyInSeconds: bigint | number;
     }>(`
       SELECT
@@ -173,6 +175,8 @@ export class MariaDBBrokerAssignmentsTable extends AbstractTable {
             this.broker.changesTable.filterDependencies(worker, 'c'),
           ])}
         )) AS ${escapeIdentifier('changeCount')},
+        MIN(${this.broker.mutationsTable.escapeColumnIdentifier('committedAt', 'm')}) AS ${escapeIdentifier('oldestCommitDate')},
+        MAX(${this.broker.mutationsTable.escapeColumnIdentifier('committedAt', 'm')}) AS ${escapeIdentifier('newestCommitDate')},
         IFNULL(NOW(3) - MIN(${this.broker.mutationsTable.escapeColumnIdentifier('committedAt', 'm')}), 0) AS ${escapeIdentifier('latencyInSeconds')}
       FROM ${escapeIdentifier(this.name)} a
         INNER JOIN ${escapeIdentifier(this.broker.mutationsTable.name)} m ON ${this.escapeColumnIdentifier('mutationId', 'a')} = ${this.broker.mutationsTable.escapeColumnIdentifier('id', 'm')}
@@ -182,6 +186,16 @@ export class MariaDBBrokerAssignmentsTable extends AbstractTable {
     return {
       mutationCount: Number(row.mutationCount),
       changeCount: Number(row.changeCount),
+      ...(row.oldestCommitDate && {
+        oldestCommitDate: this.broker.mutationsTable
+          .getColumnByName('committedAt')
+          .dataType.parseColumnValue(row.oldestCommitDate),
+      }),
+      ...(row.newestCommitDate && {
+        newestCommitDate: this.broker.mutationsTable
+          .getColumnByName('committedAt')
+          .dataType.parseColumnValue(row.newestCommitDate),
+      }),
       latencyInSeconds: Number(row.latencyInSeconds),
     };
   }

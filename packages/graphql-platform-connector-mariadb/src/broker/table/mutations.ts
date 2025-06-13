@@ -285,6 +285,8 @@ export class MariaDBBrokerMutationsTable extends AbstractTable {
     const row = await this.connector.getRow<{
       mutationCount: bigint | number;
       changeCount: bigint | number;
+      oldestCommitDate: string | null;
+      newestCommitDate: string | null;
       latencyInSeconds: bigint | number;
     }>(`
       SELECT 
@@ -293,10 +295,12 @@ export class MariaDBBrokerMutationsTable extends AbstractTable {
           SELECT COUNT(*)
           FROM ${escapeIdentifier(this.broker.changesTable.name)} c
           WHERE ${AND([
-            `${this.broker.changesTable.escapeColumnIdentifier('mutationId', 'c')} = ${this.broker.mutationsTable.escapeColumnIdentifier('id', 'm')}`,
+            `${this.broker.changesTable.escapeColumnIdentifier('mutationId', 'c')} = ${this.escapeColumnIdentifier('id', 'm')}`,
             this.broker.changesTable.filterDependencies(worker, 'c'),
           ])}
         )) AS ${escapeIdentifier('changeCount')},
+        MIN(${this.escapeColumnIdentifier('committedAt', 'm')}) AS ${escapeIdentifier('oldestCommitDate')},
+        MAX(${this.escapeColumnIdentifier('committedAt', 'm')}) AS ${escapeIdentifier('newestCommitDate')},
         IFNULL(NOW(3) - MIN(${this.escapeColumnIdentifier('committedAt', 'm')}), 0) AS ${escapeIdentifier('latencyInSeconds')}
       FROM ${escapeIdentifier(this.name)} m
       WHERE ${this.filterAssignables(worker, 'm')}
@@ -305,6 +309,16 @@ export class MariaDBBrokerMutationsTable extends AbstractTable {
     return {
       mutationCount: Number(row.mutationCount),
       changeCount: Number(row.changeCount),
+      ...(row.oldestCommitDate && {
+        oldestCommitDate: this.getColumnByName(
+          'committedAt',
+        ).dataType.parseColumnValue(row.oldestCommitDate),
+      }),
+      ...(row.newestCommitDate && {
+        newestCommitDate: this.getColumnByName(
+          'committedAt',
+        ).dataType.parseColumnValue(row.newestCommitDate),
+      }),
       latencyInSeconds: Number(row.latencyInSeconds),
     };
   }
