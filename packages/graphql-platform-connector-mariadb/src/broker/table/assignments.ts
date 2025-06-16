@@ -177,7 +177,17 @@ export class MariaDBBrokerAssignmentsTable extends AbstractTable {
         )) AS ${escapeIdentifier('changeCount')},
         MIN(${this.broker.mutationsTable.escapeColumnIdentifier('committedAt', 'm')}) AS ${escapeIdentifier('oldestCommitDate')},
         MAX(${this.broker.mutationsTable.escapeColumnIdentifier('committedAt', 'm')}) AS ${escapeIdentifier('newestCommitDate')},
-        IFNULL(NOW(3) - MIN(${this.broker.mutationsTable.escapeColumnIdentifier('committedAt', 'm')}), 0) AS ${escapeIdentifier('latencyInSeconds')}
+        IFNULL(
+          ROUND(
+            TIMESTAMPDIFF(
+              MICROSECOND,
+              MIN(${this.broker.mutationsTable.escapeColumnIdentifier('committedAt', 'm')}),
+              NOW(3)
+            ) / 1000000,
+            3
+          ),
+          0
+        ) AS ${escapeIdentifier('latencyInSeconds')}
       FROM ${escapeIdentifier(this.name)} a
         INNER JOIN ${escapeIdentifier(this.broker.mutationsTable.name)} m ON ${this.escapeColumnIdentifier('mutationId', 'a')} = ${this.broker.mutationsTable.escapeColumnIdentifier('id', 'm')}
       WHERE ${this.escapeColumnIdentifier('subscriptionId', 'a')} = ${this.serializeColumnValue('subscriptionId', worker.subscription.id)}

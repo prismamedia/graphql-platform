@@ -30,7 +30,7 @@
     "@types/indefinite": "2.3.4",
     "graphql": "16.11.0",
     "publint": "0.3.12",
-    "tsx": "4.20.1",
+    "tsx": "4.20.3",
     "type-fest": "4.37.0",
     "typescript": "5.8.3"
   },

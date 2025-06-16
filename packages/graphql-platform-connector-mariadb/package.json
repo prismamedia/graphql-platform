@@ -23,7 +23,7 @@
   "scripts": {
     "compile": "tsc --build",
     "compile:watch": "tsc --build --watch",
-    "test": "NODE_ENV=test tsx --test --experimental-test-snapshots \"./src/subscription.test.ts\"",
+    "test": "NODE_ENV=test tsx --test --experimental-test-snapshots \"./src/**/*.test.ts\"",
     "test:update": "NODE_ENV=test tsx --test --experimental-test-snapshots --test-update-snapshots \"./src/**/*.test.ts\"",
     "test:watch": "NODE_ENV=test tsx --test --watch --experimental-test-snapshots \"./src/**/*.test.ts\""
   },
@@ -32,7 +32,7 @@
     "@types/semver": "7.7.0",
     "graphql": "16.11.0",
     "publint": "0.3.12",
-    "tsx": "4.20.1",
+    "tsx": "4.20.3",
     "type-fest": "4.37.0",
     "typescript": "5.8.3"
   },
