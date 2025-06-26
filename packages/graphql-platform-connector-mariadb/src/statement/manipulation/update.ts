@@ -32,7 +32,7 @@ export class UpdateStatement implements mariadb.QueryOptions {
   ) {
     assert(!statement.update.isEmpty(), 'Update statement is empty');
 
-    const tableReference = new TableFactor(table, context);
+    const tableReference = new TableFactor(table, { context });
 
     const whereCondition = filterNode(tableReference, statement.filter);
 

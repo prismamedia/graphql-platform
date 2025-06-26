@@ -4,13 +4,17 @@ import * as utils from '@prismamedia/graphql-platform-utils';
 import assert from 'node:assert';
 import * as R from 'remeda';
 import { escapeStringValue } from '../../../escaping.js';
-import { LeafColumn, type ReferenceColumnTree } from '../../../schema.js';
+import {
+  LeafColumn,
+  type ReferenceColumnTree,
+} from '../../../schema/table/column.js';
 import type { TableReference } from './table-reference.js';
 
 export type WhereCondition = string;
 
 export function AND(
   maybeConditions: ReadonlyArray<utils.Nillable<WhereCondition>>,
+  parenthesize: boolean = true,
 ): WhereCondition {
   const conditions = R.pipe(
     maybeConditions,
@@ -18,17 +22,20 @@ export function AND(
     R.filter((condition) => condition.toUpperCase() !== 'TRUE'),
   );
 
-  return conditions.some((condition) => condition.toUpperCase() === 'FALSE')
-    ? 'FALSE'
-    : conditions.length > 1
-      ? `(${conditions.join(' AND ')})`
-      : conditions.length === 1
-        ? conditions[0]
-        : 'TRUE';
+  return conditions.length === 0
+    ? 'TRUE'
+    : conditions.length === 1
+      ? conditions[0]
+      : conditions.some((condition) => condition.toUpperCase() === 'FALSE')
+        ? 'FALSE'
+        : parenthesize
+          ? `(${conditions.join(' AND ')})`
+          : conditions.join(' AND ');
 }
 
 export function OR(
   maybeConditions: ReadonlyArray<utils.Nillable<WhereCondition>>,
+  parenthesize: boolean = true,
 ): WhereCondition {
   const conditions = R.pipe(
     maybeConditions,
@@ -36,13 +43,15 @@ export function OR(
     R.filter((condition) => condition.toUpperCase() !== 'FALSE'),
   );
 
-  return conditions.some((condition) => condition.toUpperCase() === 'TRUE')
-    ? 'TRUE'
-    : conditions.length > 1
-      ? `(${conditions.join(' OR ')})`
-      : conditions.length === 1
-        ? conditions[0]
-        : 'FALSE';
+  return conditions.length === 0
+    ? 'FALSE'
+    : conditions.length === 1
+      ? conditions[0]
+      : conditions.some((condition) => condition.toUpperCase() === 'TRUE')
+        ? 'TRUE'
+        : parenthesize
+          ? `(${conditions.join(' OR ')})`
+          : conditions.join(' OR ');
 }
 
 function parseBooleanOperation(
@@ -63,7 +72,11 @@ function parseBooleanOperation(
       ),
     );
   } else if (filter instanceof core.NotOperation) {
-    return `NOT ${parseBooleanFilter(tableReference, filter.operand)}`;
+    return `NOT ${parseBooleanFilter(
+      tableReference,
+      filter.operand,
+      referenceColumnTree,
+    )}`;
   } else {
     throw new utils.UnreachableValueError(filter);
   }
@@ -171,24 +184,17 @@ function parseEdgeFilter(
     if (referenceColumnTree) {
       const subTree = referenceColumnTree.getColumnTreeByEdge(edge);
 
-      return AND([
-        edge.isNullable()
-          ? OR(
-              subTree.columns.map(
-                (column) =>
-                  `${tableReference.escapeColumnIdentifier(
-                    column,
-                  )} IS NOT NULL`,
-              ),
-            )
-          : undefined,
-        filter.headFilter
-          ? filterNode(tableReference, filter.headFilter, subTree)
-          : undefined,
-      ]);
+      return filter.headFilter
+        ? filterNode(tableReference, filter.headFilter, subTree)
+        : OR(
+            subTree.columns.map(
+              (column) =>
+                `${tableReference.escapeColumnIdentifier(column)} IS NOT NULL`,
+            ),
+          );
     }
 
-    const headAuthorization = tableReference.context.getAuthorization(
+    const headAuthorization = tableReference.context?.getAuthorization(
       edge.head,
     );
 
@@ -197,9 +203,17 @@ function parseEdgeFilter(
         ? headAuthorization.and(filter.headFilter).normalized
         : headAuthorization || filter.headFilter;
 
-    return AND([
-      edge.isNullable()
-        ? OR(
+    return mergedHeadAuthorizationAndHeadFilter?.isExecutableWithinUniqueConstraint(
+      edge.referencedUniqueConstraint,
+    )
+      ? filterNode(
+          tableReference,
+          mergedHeadAuthorizationAndHeadFilter,
+          tableReference.table.getColumnTreeByEdge(edge),
+        )
+      : filter.headFilter
+        ? filterNode(tableReference.join(edge), filter.headFilter)
+        : OR(
             tableReference.table
               .getForeignKeyByEdge(edge)
               .columns.map(
@@ -208,20 +222,7 @@ function parseEdgeFilter(
                     column,
                   )} IS NOT NULL`,
               ),
-          )
-        : undefined,
-      mergedHeadAuthorizationAndHeadFilter?.isExecutableWithinUniqueConstraint(
-        edge.referencedUniqueConstraint,
-      )
-        ? filterNode(
-            tableReference,
-            mergedHeadAuthorizationAndHeadFilter,
-            tableReference.table.getColumnTreeByEdge(edge),
-          )
-        : filter.headFilter
-          ? filterNode(tableReference.join(edge), filter.headFilter)
-          : undefined,
-    ]);
+          );
   } else {
     throw new utils.UnreachableValueError(filter);
   }
@@ -244,13 +245,12 @@ function parseComponentFilter(
 function parseUniqueReverseEdgeFilter(
   tableReference: TableReference,
   filter: core.UniqueReverseEdgeFilter,
+  _referenceColumnTree?: ReferenceColumnTree,
 ): WhereCondition {
   if (filter instanceof core.UniqueReverseEdgeExistsFilter) {
-    return `EXISTS ${tableReference.subquery(
-      filter.reverseEdge,
-      '*',
-      filter.headFilter,
-    )}`;
+    return `EXISTS ${tableReference.subquery(filter.reverseEdge, {
+      where: filter.headFilter,
+    })}`;
   } else {
     throw new utils.UnreachableValueError(filter);
   }
@@ -259,6 +259,7 @@ function parseUniqueReverseEdgeFilter(
 function parseMultipleReverseEdgeFilter(
   tableReference: TableReference,
   filter: core.MultipleReverseEdgeFilter,
+  _referenceColumnTree?: ReferenceColumnTree,
 ): WhereCondition {
   if (filter instanceof core.MultipleReverseEdgeCountFilter) {
     let operator: string;
@@ -280,16 +281,13 @@ function parseMultipleReverseEdgeFilter(
         throw new utils.UnreachableValueError(filter.operator);
     }
 
-    return `${tableReference.subquery(
-      filter.reverseEdge,
-      'COUNT(*)',
-    )} ${operator} ${filter.value}`;
+    return `${tableReference.subquery(filter.reverseEdge, {
+      select: 'COUNT(*)',
+    })} ${operator} ${filter.value}`;
   } else if (filter instanceof core.MultipleReverseEdgeExistsFilter) {
-    return `EXISTS ${tableReference.subquery(
-      filter.reverseEdge,
-      '*',
-      filter.headFilter,
-    )}`;
+    return `EXISTS ${tableReference.subquery(filter.reverseEdge, {
+      where: filter.headFilter,
+    })}`;
   } else {
     throw new utils.UnreachableValueError(filter);
   }
@@ -298,11 +296,20 @@ function parseMultipleReverseEdgeFilter(
 function parseReverseEdgeFilter(
   tableReference: TableReference,
   filter: core.ReverseEdgeFilter,
+  referenceColumnTree?: ReferenceColumnTree,
 ): WhereCondition {
   if (core.isUniqueReverseEdgeFilter(filter)) {
-    return parseUniqueReverseEdgeFilter(tableReference, filter);
+    return parseUniqueReverseEdgeFilter(
+      tableReference,
+      filter,
+      referenceColumnTree,
+    );
   } else if (core.isMultipleReverseEdgeFilter(filter)) {
-    return parseMultipleReverseEdgeFilter(tableReference, filter);
+    return parseMultipleReverseEdgeFilter(
+      tableReference,
+      filter,
+      referenceColumnTree,
+    );
   } else {
     throw new utils.UnreachableValueError(filter);
   }
@@ -316,7 +323,7 @@ function parseBooleanExpression(
   if (core.isComponentFilter(filter)) {
     return parseComponentFilter(tableReference, filter, referenceColumnTree);
   } else if (core.isReverseEdgeFilter(filter)) {
-    return parseReverseEdgeFilter(tableReference, filter);
+    return parseReverseEdgeFilter(tableReference, filter, referenceColumnTree);
   } else if (filter instanceof core.AbstractBooleanExpression) {
     // TODO: Allow the handling of custom boolean-expressions
     throw new utils.UnexpectedValueError(`a supported-expression`, filter);

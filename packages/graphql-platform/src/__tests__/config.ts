@@ -23,15 +23,15 @@ import {
   type UniqueConstraintConfig,
 } from '../index.js';
 
-export const slugify = (input: string): string =>
+export const slugify = (input: string, separator: string = '-'): string =>
   input
     .normalize('NFD') // split an accented letter in the base letter and the acent
     .replace(/[\u0300-\u036f]/g, '') // remove all previously split accents
     .toLowerCase()
     .trim()
-    .replace(/[^a-z0-9 ]/g, '-') // remove all chars not letters, numbers and spaces (to be replaced)
-    .replace(/\s+/g, '-')
-    .replace(/-{2,}/g, '-');
+    .replace(/[^a-z0-9 ]/g, separator) // remove all chars not letters, numbers and spaces (to be replaced)
+    .replace(/\s+/g, separator)
+    .replace(new RegExp(`${separator}{2,}`, 'g'), separator);
 
 export type MyUser = {
   id: string;

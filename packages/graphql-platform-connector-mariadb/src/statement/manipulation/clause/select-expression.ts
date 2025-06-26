@@ -51,7 +51,7 @@ function parseEdgeSelection(
         : parsedHeadSelection;
     }
 
-    const headAuthorization = tableReference.context.getAuthorization(
+    const headAuthorization = tableReference.context?.getAuthorization(
       edge.head,
     );
 
@@ -100,7 +100,7 @@ function parseEdgeSelection(
 
     const parsedHeadSelection = selectNode(joinTable, selection.headSelection);
 
-    return edge.isNullable() || joinTable.authorization
+    return edge.isNullable() || headAuthorization
       ? `IF(${OR(
           joinTable.table
             .getColumnsByComponents(
@@ -122,9 +122,11 @@ function parseUniqueReverseEdgeSelection(
   selection: core.UniqueReverseEdgeSelection,
 ): string {
   if (selection instanceof core.UniqueReverseEdgeHeadSelection) {
-    return tableReference.subquery(selection.reverseEdge, (headReference) =>
-      selectNode(headReference, selection.headSelection),
-    );
+    return tableReference
+      .subquery(selection.reverseEdge, {
+        select: selection.headSelection,
+      })
+      .toString();
   } else {
     throw new utils.UnreachableValueError(selection);
   }
@@ -135,26 +137,28 @@ function parseMultipleReverseEdgeSelection(
   selection: core.MultipleReverseEdgeSelection,
 ): string {
   if (selection instanceof core.MultipleReverseEdgeCountSelection) {
-    return tableReference.subquery(
-      selection.reverseEdge,
-      `COUNT(*)`,
-      selection.headFilter,
-    );
+    return tableReference
+      .subquery(selection.reverseEdge, {
+        select: `COUNT(*)`,
+        where: selection.headFilter,
+      })
+      .toString();
   } else if (selection instanceof core.MultipleReverseEdgeHeadSelection) {
-    return tableReference.subquery(
-      selection.reverseEdge,
-      (headReference) =>
-        `JSON_ARRAYAGG(${[
-          selectNode(headReference, selection.headSelection),
-          selection.headOrdering &&
-            `ORDER BY ${orderNode(headReference, selection.headOrdering)}`,
-          `LIMIT ${selection.limit}`,
-          selection.offset && `OFFSET ${selection.offset}`,
-        ]
-          .filter(Boolean)
-          .join(' ')})`,
-      selection.headFilter,
-    );
+    return tableReference
+      .subquery(selection.reverseEdge, {
+        select: (headReference) =>
+          `JSON_ARRAYAGG(${[
+            selectNode(headReference, selection.headSelection),
+            selection.headOrdering &&
+              `ORDER BY ${orderNode(headReference, selection.headOrdering).join()}`,
+            `LIMIT ${selection.limit}`,
+            selection.offset && `OFFSET ${selection.offset}`,
+          ]
+            .filter(Boolean)
+            .join(' ')})`,
+        where: selection.headFilter,
+      })
+      .toString();
   } else {
     throw new utils.UnreachableValueError(selection);
   }

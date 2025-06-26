@@ -62,6 +62,7 @@ export type MariaDBConnectorEventDataByName = {
 };
 
 export interface MariaDBConnectorConfig<TRequestContext extends object = any> {
+  useCommonTableExpression?: boolean;
   charset?: string;
   collation?: string;
   version?: string;
@@ -118,6 +119,8 @@ export class MariaDBConnector<TRequestContext extends object = any>
     };
   };
 
+  public readonly useCommonTableExpression: boolean;
+
   public readonly poolConfig?: Except<mariadb.PoolConfig, 'logger'>;
   public readonly poolConfigPath: utils.Path;
 
@@ -149,6 +152,11 @@ export class MariaDBConnector<TRequestContext extends object = any>
     utils.assertPlainObject(config, configPath);
 
     super(config.on);
+
+    this.useCommonTableExpression = utils.getOptionalFlag(
+      config.useCommonTableExpression,
+      false,
+    );
 
     // pool-config
     {

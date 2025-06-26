@@ -1,36 +1,24 @@
 import type * as core from '@prismamedia/graphql-platform';
-import type * as mariadb from 'mariadb';
-import { EOL } from 'node:os';
 import type { SetOptional } from 'type-fest';
+import { escapeIdentifier } from '../../escaping.js';
 import type { Table } from '../../schema.js';
-import { StatementKind } from '../kind.js';
-import { TableFactor } from './clause/table-reference.js';
-import { filterNode } from './clause/where-condition.js';
+import { SelectStatement } from './select.js';
 
-/**
- * @see https://mariadb.com/kb/en/selecting-data/
- */
-export class CountStatement implements mariadb.QueryOptions {
-  public readonly kind = StatementKind.DATA_MANIPULATION;
-  public readonly sql: string;
+export class CountStatement extends SelectStatement {
+  public readonly selectionKey: string;
 
   public constructor(
     public readonly table: Table,
     public readonly context: core.OperationContext,
     statement: SetOptional<core.ConnectorCountStatement, 'node'>,
   ) {
-    const tableReference = new TableFactor(table, context);
+    const selectionKey = `COUNT`;
 
-    const whereCondition = statement.filter
-      ? filterNode(tableReference, statement.filter)
-      : undefined;
+    super(table, context, {
+      select: `COUNT(*) AS ${escapeIdentifier(selectionKey)}`,
+      where: statement.filter,
+    });
 
-    this.sql = [
-      'SELECT COUNT(*) AS COUNT',
-      `FROM ${tableReference}`,
-      whereCondition && `WHERE ${whereCondition}`,
-    ]
-      .filter(Boolean)
-      .join(EOL);
+    this.selectionKey = selectionKey;
   }
 }

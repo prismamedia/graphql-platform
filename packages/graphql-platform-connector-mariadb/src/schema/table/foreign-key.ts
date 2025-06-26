@@ -4,7 +4,7 @@ import { MGetter, MMethod } from '@prismamedia/memoize';
 import assert from 'node:assert';
 import { escapeIdentifier } from '../../escaping.js';
 import type { MariaDBConnector } from '../../index.js';
-import type { AbstractTableReference } from '../../statement/manipulation/clause/abstract-table-reference.js';
+import type { AbstractTableReference } from '../../statement/manipulation/clause/table-reference.js';
 import type { WhereCondition } from '../../statement/manipulation/clause/where-condition.js';
 import { ensureIdentifierName } from '../naming-strategy.js';
 import type { Table } from '../table.js';

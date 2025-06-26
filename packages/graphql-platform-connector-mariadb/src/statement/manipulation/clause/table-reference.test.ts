@@ -8,6 +8,7 @@ import {
 } from '@prismamedia/graphql-platform/__tests__/config.js';
 import { format } from '@sqltools/formatter';
 import assert from 'node:assert';
+import { EOL } from 'node:os';
 import { after, before, describe, it } from 'node:test';
 import { createMyGP } from '../../../__tests__/config.js';
 import { TableFactor } from './table-reference.js';
@@ -15,10 +16,7 @@ import { TableFactor } from './table-reference.js';
 describe('Table reference', () => {
   const gp = createMyGP('connector_mariadb_table_reference_clause');
 
-  before(async () => {
-    await gp.connector.setup();
-  });
-
+  before(() => gp.connector.setup());
   after(() => gp.connector.teardown());
 
   (
@@ -42,13 +40,23 @@ describe('Table reference', () => {
 
       const from = new TableFactor(
         gp.connector.schema.getTableByNode(ArticleNode),
-        new OperationContext(gp, requestContext),
+        { context: new OperationContext(gp, requestContext) },
       );
 
       from.join(ArticleCategoryEdge);
       from.join(ArticleCreatedByEdge).join(UserProfileReverseEdge);
 
-      snapshot(format(`SELECT * FROM ${from}`));
+      snapshot(
+        format(
+          [
+            from.authorizedTables.size &&
+              `WITH ${Array.from(from.authorizedTables, String).join()}`,
+            `SELECT * FROM ${from}`,
+          ]
+            .filter(Boolean)
+            .join(' '),
+        ).split(EOL),
+      );
     });
   });
 
@@ -60,7 +68,7 @@ describe('Table reference', () => {
 
     const from = new TableFactor(
       gp.connector.schema.getTableByNode(ArticleNode),
-      new OperationContext(gp, myAdminContext),
+      { context: new OperationContext(gp, myAdminContext) },
     );
 
     from
@@ -76,6 +84,7 @@ describe('Table reference', () => {
 
     from.join(ArticleCreatedByEdge).join(UserProfileReverseEdge);
 
+    assert.strictEqual(from.authorizedTables.size, 0);
     assert.strictEqual(
       format(`SELECT * FROM ${from}`),
       `SELECT *

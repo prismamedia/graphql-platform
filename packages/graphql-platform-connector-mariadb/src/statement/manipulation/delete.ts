@@ -30,7 +30,7 @@ export class DeleteStatement implements mariadb.QueryOptions {
     statement: SetOptional<core.ConnectorDeleteStatement, 'node'>,
     config?: DeleteStatementConfig,
   ) {
-    const tableReference = new TableFactor(table, context);
+    const tableReference = new TableFactor(table, { context });
 
     const whereCondition = filterNode(tableReference, statement.filter);
 

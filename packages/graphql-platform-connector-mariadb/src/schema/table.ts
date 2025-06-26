@@ -489,9 +489,11 @@ export class Table {
     connection?: PoolConnection,
     path?: utils.Path,
   ): Promise<number> {
+    const countStatement = new CountStatement(this, context, statement);
+
     const [{ COUNT }] = await this.schema.connector.executeStatement<
       [{ COUNT: bigint }]
-    >(new CountStatement(this, context, statement), connection, path);
+    >(countStatement, connection, path);
 
     return Number(COUNT);
   }

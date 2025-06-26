@@ -5,7 +5,7 @@ exports[`Count statement > generates statements 1`] = `
 exports[`Count statement > generates statements 2`] = `
 [
   [
-    "SELECT COUNT(*) AS COUNT",
+    "SELECT COUNT(*) AS \`COUNT\`",
     "FROM \`articles\`",
     "WHERE \`articles\`.\`status\` = 'published'"
   ]
@@ -19,7 +19,7 @@ exports[`Count statement > generates statements 3`] = `
 exports[`Count statement > generates statements 4`] = `
 [
   [
-    "SELECT COUNT(*) AS COUNT",
+    "SELECT COUNT(*) AS \`COUNT\`",
     "FROM \`articles\`"
   ]
 ]
@@ -32,7 +32,7 @@ exports[`Count statement > generates statements 5`] = `
 exports[`Count statement > generates statements 6`] = `
 [
   [
-    "SELECT COUNT(*) AS COUNT",
+    "SELECT COUNT(*) AS \`COUNT\`",
     "FROM \`articles\`",
     "WHERE (",
     "    \`articles\`.\`status\` = 'published'",
@@ -60,14 +60,11 @@ exports[`Count statement > generates statements 7`] = `
 exports[`Count statement > generates statements 8`] = `
 [
   [
-    "SELECT COUNT(*) AS COUNT",
+    "SELECT COUNT(*) AS \`COUNT\`",
     "FROM \`articles\`",
     "WHERE (",
     "    \`articles\`.\`status\` = 'published'",
-    "    AND (",
-    "      \`articles\`.\`category_private_id\` IS NOT NULL",
-    "      AND \`articles\`.\`category_private_id\` <=> 10",
-    "    )",
+    "    AND \`articles\`.\`category_private_id\` <=> 10",
     "  )"
   ]
 ]
