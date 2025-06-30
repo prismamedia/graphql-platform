@@ -11,13 +11,33 @@ import {
   AuthorizedTableDerivedTable,
   Subquery,
   type AbstractSelectOptions,
-  type AuthorizedTable,
 } from '../query/select.js';
 import { AND, filterNode, type WhereCondition } from './where-condition.js';
 
+export class InlineTableAuthorization {
+  public readonly name: string;
+
+  public constructor(
+    public readonly tableReference: TableReference,
+    public readonly filter: core.NodeFilter,
+  ) {
+    this.name = tableReference.table.name;
+  }
+
+  @MGetter
+  public get condition(): WhereCondition {
+    return filterNode(this.tableReference, this.filter);
+  }
+}
+
+export type TableAuthorization =
+  | AuthorizedTableCTE
+  | AuthorizedTableDerivedTable
+  | InlineTableAuthorization;
+
 export abstract class AbstractTableReference {
   public abstract readonly root: TableFactor;
-  public abstract readonly source: AuthorizedTable | Table;
+  public abstract readonly source: TableAuthorization | Table;
   public abstract readonly alias: string;
 
   public readonly joinsByAlias = new Map<JoinTable['alias'], JoinTable>();
@@ -30,25 +50,27 @@ export abstract class AbstractTableReference {
 
   public abstract toString(): string;
 
-  public isRoot(): this is TableFactor {
+  public isRoot(): boolean {
     assert(isTableReference(this));
 
     return this.root === this;
   }
 
-  public authorize(table: Table): AuthorizedTable | Table {
+  public authorize(tableReference: TableReference): TableAuthorization | Table {
+    const table = tableReference.table;
+
     const authorization = this.context?.getAuthorization(table.node);
     if (authorization) {
-      assert(isTableReference(this));
-
-      if (this.root.useCommonTableExpression) {
+      if (authorization.isExecutableWithin(table.node.selection)) {
+        return new InlineTableAuthorization(tableReference, authorization);
+      } else if (this.root.useCommonTableExpression) {
         let authorizedTable = this.root.authorizedTables.get(table);
 
         if (!authorizedTable) {
           this.root.authorizedTables.set(
             table,
             (authorizedTable = new AuthorizedTableCTE(
-              new TableFactor(table, { parent: this }),
+              new TableFactor(table, { parent: tableReference }),
               authorization,
             )),
           );
@@ -57,7 +79,7 @@ export abstract class AbstractTableReference {
         return authorizedTable;
       } else {
         return new AuthorizedTableDerivedTable(
-          new TableFactor(table, { parent: this }),
+          new TableFactor(table, { parent: tableReference }),
           authorization,
         );
       }
@@ -160,8 +182,8 @@ export class TableFactor extends AbstractTableReference {
   public readonly useCommonTableExpression: boolean;
 
   public override readonly root: TableFactor;
-  public override readonly source: AuthorizedTable | Table;
   public override readonly alias: string;
+  public override readonly source: TableAuthorization | Table;
 
   public readonly authorizedTables = new Map<Table, AuthorizedTableCTE>();
 
@@ -176,8 +198,8 @@ export class TableFactor extends AbstractTableReference {
     );
 
     this.root = options?.parent?.root ?? this;
-    this.source = !this.root && this.context ? this.authorize(table) : table;
     this.alias = options?.alias ?? table.name;
+    this.source = !this.isRoot() && this.context ? this.authorize(this) : table;
   }
 
   public joinSubscriptionsState(
@@ -233,8 +255,8 @@ export enum JoinTableKind {
 
 export class JoinTable extends AbstractTableReference {
   public override readonly root: TableFactor;
-  public override readonly source: AuthorizedTable | Table;
   public override readonly alias: string;
+  public override readonly source: TableAuthorization | Table;
 
   public constructor(
     public readonly parent: TableReference,
@@ -252,8 +274,8 @@ export class JoinTable extends AbstractTableReference {
     );
 
     this.root = parent.root;
-    this.source = this.context ? this.authorize(this.table) : this.table;
     this.alias = `${parent.alias}>${edgeOrUniqueReverseEdge.name}`;
+    this.source = this.context ? this.authorize(this) : this.table;
   }
 
   @MGetter
@@ -267,8 +289,15 @@ export class JoinTable extends AbstractTableReference {
 
   @MGetter
   public get condition(): WhereCondition {
+    const joinConditions = this.parent.getJoinConditions(
+      this.edgeOrUniqueReverseEdge,
+      this,
+    );
+
     return AND(
-      this.parent.getJoinConditions(this.edgeOrUniqueReverseEdge, this),
+      this.source instanceof InlineTableAuthorization
+        ? [...joinConditions, this.source.condition]
+        : joinConditions,
       false,
     );
   }

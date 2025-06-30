@@ -1,10 +1,7 @@
 import Denque from 'denque';
 import * as graphql from 'graphql';
 import assert from 'node:assert';
-import type {
-  NodeSelectedValue,
-  UniqueConstraint,
-} from '../../../../../node.js';
+import type { NodeSelectedValue, NodeSelection } from '../../../../../node.js';
 import type { Dependency } from '../../../../change.js';
 import type { NodeFilterInputValue } from '../../../../type.js';
 import { AbstractBooleanFilter } from '../../abstract.js';
@@ -206,6 +203,12 @@ export class OrOperation extends AbstractBooleanFilter {
     );
   }
 
+  public override isExecutableWithin(selection: NodeSelection): boolean {
+    return this.operands.every((operand) =>
+      operand.isExecutableWithin(selection),
+    );
+  }
+
   public override execute(value: NodeSelectedValue): boolean | undefined {
     let hasUndefinedOperand: boolean = false;
 
@@ -220,14 +223,6 @@ export class OrOperation extends AbstractBooleanFilter {
     }
 
     return hasUndefinedOperand ? undefined : false;
-  }
-
-  public override isExecutableWithinUniqueConstraint(
-    unique: UniqueConstraint,
-  ): boolean {
-    return this.operands.every((operand) =>
-      operand.isExecutableWithinUniqueConstraint(unique),
-    );
   }
 
   public get dependency(): Array<Dependency | undefined> {

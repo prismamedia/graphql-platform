@@ -100,6 +100,10 @@ describe('Select statement', () => {
         },
       },
       ArticleTag: {
+        authorization: ({ user }) =>
+          user?.role === 'ADMIN'
+            ? undefined
+            : { article: { id: 'c96be474-23fa-452d-97b3-094c226c4675' } },
         components: {
           article: {
             kind: 'Edge',
@@ -144,6 +148,10 @@ describe('Select statement', () => {
             id
             title
             category {
+              brand {
+                id
+                title
+              }
               id
               title
             }

@@ -958,7 +958,7 @@ __metadata:
     inflection: "npm:^3.0.2"
     mariadb: "npm:^3.4.2"
     publint: "npm:0.3.12"
-    remeda: "npm:^2.23.1"
+    remeda: "npm:^2.23.2"
     semver: "npm:^7.7.2"
     tsx: "npm:4.20.3"
     type-fest: "npm:4.37.0"
@@ -991,7 +991,7 @@ __metadata:
     publint: "npm:0.3.12"
     tsx: "npm:4.20.3"
     typescript: "npm:5.8.3"
-    ws: "npm:8.18.2"
+    ws: "npm:8.18.3"
   peerDependencies:
     "@apollo/server": ^4.12.1
     graphql: ^16.11.0
@@ -1006,7 +1006,7 @@ __metadata:
     "@types/draft-js": "npm:^0.11.18"
     graphql: "npm:16.11.0"
     publint: "npm:0.3.12"
-    remeda: "npm:^2.23.1"
+    remeda: "npm:^2.23.2"
     tsx: "npm:4.20.3"
     type-fest: "npm:4.37.0"
     typescript: "npm:5.8.3"
@@ -1025,7 +1025,7 @@ __metadata:
     graphql: "npm:16.11.0"
     indefinite: "npm:^2.5.1"
     publint: "npm:0.3.12"
-    remeda: "npm:^2.23.1"
+    remeda: "npm:^2.23.2"
     tsx: "npm:4.20.3"
     type-fest: "npm:4.37.0"
     typescript: "npm:5.8.3"
@@ -1053,7 +1053,7 @@ __metadata:
     p-queue: "npm:^8.1.0"
     p-retry: "npm:^6.2.1"
     publint: "npm:0.3.12"
-    remeda: "npm:^2.23.1"
+    remeda: "npm:^2.23.2"
     tsx: "npm:4.20.3"
     type-fest: "npm:4.37.0"
     typescript: "npm:5.8.3"
@@ -3034,12 +3034,12 @@ __metadata:
   languageName: node
   linkType: hard
 
-"prettier@npm:3.6.1":
-  version: 3.6.1
-  resolution: "prettier@npm:3.6.1"
+"prettier@npm:3.6.2":
+  version: 3.6.2
+  resolution: "prettier@npm:3.6.2"
   bin:
     prettier: bin/prettier.cjs
-  checksum: 10/e2c4b47bf1bda4f932143e52e0f57239dd60cfef08296b56d4073426e2d310edc353a7daa5285a546bd3c1619c76894759cc98d82d4ac710f72a711ae2899bcc
+  checksum: 10/1213691706bcef1371d16ef72773c8111106c3533b660b1cc8ec158bd109cdf1462804125f87f981f23c4a3dba053b6efafda30ab0114cc5b4a725606bb9ff26
   languageName: node
   linkType: hard
 
@@ -3153,12 +3153,12 @@ __metadata:
   languageName: node
   linkType: hard
 
-"remeda@npm:^2.23.1":
-  version: 2.23.1
-  resolution: "remeda@npm:2.23.1"
+"remeda@npm:^2.23.2":
+  version: 2.23.2
+  resolution: "remeda@npm:2.23.2"
   dependencies:
     type-fest: "npm:^4.41.0"
-  checksum: 10/24545a160ac191acadc751c5dc3ad5797d1da28e6f89e8fe7e4b3873254aea00c5e59bfb3ad4998ebb835b4755e07b48f426b6df5291c2e6664294ddd9e9408c
+  checksum: 10/617d567d05ce1b070c1e3ba9dce07c35db097402ae4247057338455f385d0b967f58d281fae20c51c61e038dac6229a1a219fefc7e54e65229279eb13d729a9e
   languageName: node
   linkType: hard
 
@@ -3231,7 +3231,7 @@ __metadata:
   version: 0.0.0-use.local
   resolution: "root-workspace-0b6124@workspace:."
   dependencies:
-    prettier: "npm:3.6.1"
+    prettier: "npm:3.6.2"
     tsx: "npm:4.20.3"
     typescript: "npm:5.8.3"
   languageName: unknown
@@ -3801,9 +3801,9 @@ __metadata:
   languageName: node
   linkType: hard
 
-"ws@npm:8.18.2":
-  version: 8.18.2
-  resolution: "ws@npm:8.18.2"
+"ws@npm:8.18.3":
+  version: 8.18.3
+  resolution: "ws@npm:8.18.3"
   peerDependencies:
     bufferutil: ^4.0.1
     utf-8-validate: ">=5.0.2"
@@ -3812,7 +3812,7 @@ __metadata:
       optional: true
     utf-8-validate:
       optional: true
-  checksum: 10/018e04ec95561d88248d53a2eaf094b4ae131e9b062f2679e6e8a62f04649bc543448f1e038125225ac6bbb25f54c1e65d7a2cc9dbc1e28b43e5e6b7162ad88e
+  checksum: 10/725964438d752f0ab0de582cd48d6eeada58d1511c3f613485b5598a83680bedac6187c765b0fe082e2d8cc4341fc57707c813ae780feee82d0c5efe6a4c61b6
   languageName: node
   linkType: hard
 

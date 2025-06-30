@@ -44,7 +44,7 @@
     "publint": "0.3.12",
     "tsx": "4.20.3",
     "typescript": "5.8.3",
-    "ws": "8.18.2"
+    "ws": "8.18.3"
   },
   "dependencies": {
     "@opentelemetry/api": "^1.9.0",

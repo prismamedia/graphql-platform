@@ -1,10 +1,7 @@
 import * as scalars from '@prismamedia/graphql-platform-scalars';
 import * as utils from '@prismamedia/graphql-platform-utils';
 import * as graphql from 'graphql';
-import type {
-  NodeSelectedValue,
-  UniqueConstraint,
-} from '../../../../../../../node.js';
+import type { NodeSelectedValue } from '../../../../../../../node.js';
 import type { Leaf } from '../../../../../../definition/component.js';
 import type { NodeFilterInputValue } from '../../../../../../type.js';
 import { AbstractLeafFilter } from '../abstract-leaf.js';
@@ -72,12 +69,6 @@ export class LeafFullTextFilter extends AbstractLeafFilter {
       default:
         throw new utils.UnreachableValueError(this.operator);
     }
-  }
-
-  public override isExecutableWithinUniqueConstraint(
-    unique: UniqueConstraint,
-  ): boolean {
-    return unique.leafSet.has(this.leaf);
   }
 
   public get ast(): graphql.ConstObjectValueNode {

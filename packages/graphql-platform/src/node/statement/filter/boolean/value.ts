@@ -1,7 +1,7 @@
 import { MGetter } from '@prismamedia/memoize';
 import * as graphql from 'graphql';
 import assert from 'node:assert';
-import type { NodeSelectedValue, UniqueConstraint } from '../../../../node.js';
+import type { NodeSelectedValue, NodeSelection } from '../../../../node.js';
 import { AbstractBooleanFilter } from '../abstract.js';
 
 export class BooleanValue extends AbstractBooleanFilter {
@@ -25,14 +25,12 @@ export class BooleanValue extends AbstractBooleanFilter {
     return new BooleanValue(!this.value);
   }
 
-  public override execute(_value: NodeSelectedValue): boolean {
-    return this.value;
+  public override isExecutableWithin(_selection: NodeSelection): boolean {
+    return true;
   }
 
-  public override isExecutableWithinUniqueConstraint(
-    _unique: UniqueConstraint,
-  ): boolean {
-    return true;
+  public override execute(_value: NodeSelectedValue): boolean {
+    return this.value;
   }
 
   public get dependency() {

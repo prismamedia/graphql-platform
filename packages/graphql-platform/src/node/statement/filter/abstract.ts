@@ -1,7 +1,8 @@
 import * as utils from '@prismamedia/graphql-platform-utils';
 import type * as graphql from 'graphql';
-import type { NodeSelectedValue, UniqueConstraint } from '../../../node.js';
+import type { NodeSelectedValue } from '../../../node.js';
 import type { Dependency } from '../../change.js';
+import type { NodeSelection } from '../../statement.js';
 import type { NodeFilterInputValue } from '../../type.js';
 import type { AndOperand, BooleanFilter, OrOperand } from './boolean.js';
 
@@ -63,20 +64,13 @@ export abstract class AbstractBooleanFilter {
     return;
   }
 
+  public abstract isExecutableWithin(selection: NodeSelection): boolean;
+
   /**
    * Execute this expression against a partial value, returns undefined if not applicable
    */
   public execute(_value: NodeSelectedValue): boolean | undefined {
     return;
-  }
-
-  /**
-   * Is the provided unique-constraint's value enough to execute this filter's expression?
-   */
-  public isExecutableWithinUniqueConstraint(
-    _unique: UniqueConstraint,
-  ): boolean {
-    return false;
   }
 
   public abstract get dependency(): utils.Arrayable<Dependency | undefined>;

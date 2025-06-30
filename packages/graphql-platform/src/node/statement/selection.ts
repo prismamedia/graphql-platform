@@ -5,17 +5,23 @@ import assert from 'node:assert';
 import type { JsonObject } from 'type-fest';
 import type { Node } from '../../node.js';
 import { DependencyGraph } from '../change/dependency.js';
-import type {
-  Component,
-  ReverseEdge,
-  UniqueConstraint,
+import {
+  Edge,
+  Leaf,
+  type Component,
+  type ReverseEdge,
+  type UniqueConstraint,
 } from '../definition.js';
 import type { OperationContext } from '../operation.js';
 import {
+  LeafSelection,
   VirtualSelection,
   isComponentSelection,
   isReverseEdgeSelection,
   mergeSelectionExpressions,
+  type ComponentSelection,
+  type EdgeSelection,
+  type ReverseEdgeSelection,
   type SelectionExpression,
 } from './selection/expression.js';
 
@@ -49,45 +55,97 @@ export class NodeSelection<
   ) {
     assert(expressionsByKey.size, `The "${node}"'s selection is empty`);
 
-    this.expressions = Array.from(expressionsByKey.values());
+    this.expressions = expressionsByKey.values().toArray();
   }
 
-  /**
-   * Returns the selected components
-   */
+  @MGetter
+  public get expressionsByComponent(): ReadonlyMap<
+    Component,
+    ReadonlyArray<ComponentSelection>
+  > {
+    return Map.groupBy(
+      this.expressions.flatMap((expression) =>
+        isComponentSelection(expression)
+          ? [expression]
+          : expression instanceof VirtualSelection && expression.sourceSelection
+            ? expression.sourceSelection.expressionsByComponent
+                .values()
+                .toArray()
+                .flat()
+            : [],
+      ),
+      ({ component }) => component,
+    );
+  }
+
   @MGetter
   public get components(): ReadonlyArray<Component> {
-    return Array.from(
-      new Set(
-        this.expressions.flatMap((expression) =>
-          isComponentSelection(expression)
-            ? [expression.component]
-            : expression instanceof VirtualSelection &&
-                expression.sourceSelection
-              ? expression.sourceSelection.components
-              : [],
+    return this.expressionsByComponent.keys().toArray();
+  }
+
+  @MGetter
+  public get expressionsByLeaf(): ReadonlyMap<
+    Leaf,
+    ReadonlyArray<LeafSelection>
+  > {
+    return new Map(
+      this.expressionsByComponent
+        .entries()
+        .filter(
+          (entry): entry is [Leaf, ReadonlyArray<LeafSelection>] =>
+            entry[0] instanceof Leaf,
         ),
-      ),
     );
   }
 
-  /**
-   * Returns the selected reverse-edges
-   */
+  @MGetter
+  public get leaves(): ReadonlyArray<Leaf> {
+    return this.expressionsByLeaf.keys().toArray();
+  }
+
+  @MGetter
+  public get expressionsByEdge(): ReadonlyMap<
+    Edge,
+    ReadonlyArray<EdgeSelection>
+  > {
+    return new Map(
+      this.expressionsByComponent
+        .entries()
+        .filter(
+          (entry): entry is [Edge, ReadonlyArray<EdgeSelection>] =>
+            entry[0] instanceof Edge,
+        ),
+    );
+  }
+
+  @MGetter
+  public get edges(): ReadonlyArray<Edge> {
+    return this.expressionsByEdge.keys().toArray();
+  }
+
+  @MGetter
+  public get expressionsByReverseEdge(): ReadonlyMap<
+    ReverseEdge,
+    ReadonlyArray<ReverseEdgeSelection>
+  > {
+    return Map.groupBy(
+      this.expressions.flatMap((expression) =>
+        isReverseEdgeSelection(expression)
+          ? [expression]
+          : expression instanceof VirtualSelection && expression.sourceSelection
+            ? expression.sourceSelection.expressionsByReverseEdge
+                .values()
+                .toArray()
+                .flat()
+            : [],
+      ),
+      ({ reverseEdge }) => reverseEdge,
+    );
+  }
+
   @MGetter
   public get reverseEdges(): ReadonlyArray<ReverseEdge> {
-    return Array.from(
-      new Set(
-        this.expressions.flatMap((expression) =>
-          isReverseEdgeSelection(expression)
-            ? [expression.reverseEdge]
-            : expression instanceof VirtualSelection &&
-                expression.sourceSelection
-              ? expression.sourceSelection.reverseEdges
-              : [],
-        ),
-      ),
-    );
+    return this.expressionsByReverseEdge.keys().toArray();
   }
 
   /**

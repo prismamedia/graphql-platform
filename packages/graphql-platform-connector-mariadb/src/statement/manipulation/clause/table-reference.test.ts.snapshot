@@ -3,11 +3,7 @@ exports[`Table reference > generates valid SQL with authorization 1`] = `
   "SELECT *",
   "FROM \`articles\`",
   "  LEFT JOIN \`categories\` AS \`articles>category\` ON \`articles\`.\`category_private_id\` = \`articles>category\`.\`private_id\`",
-  "  LEFT JOIN (",
-  "    SELECT users.*",
-  "    FROM \`users\`",
-  "    WHERE FALSE",
-  "  ) AS \`articles>createdBy\` ON \`articles\`.\`created_by_id\` = \`articles>createdBy\`.\`id\`",
+  "  LEFT JOIN \`users\` AS \`articles>createdBy\` ON FALSE",
   "  LEFT JOIN \`user_profiles\` AS \`articles>createdBy>profile\` ON \`articles>createdBy>profile\`.\`theUserId\` = \`articles>createdBy\`.\`id\`"
 ]
 `;

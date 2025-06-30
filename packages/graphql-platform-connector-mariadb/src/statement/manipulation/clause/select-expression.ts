@@ -58,8 +58,8 @@ function parseEdgeSelection(
     // If we can avoid a join, we do so.
     if (
       (!headAuthorization ||
-        headAuthorization.isExecutableWithinUniqueConstraint(
-          edge.referencedUniqueConstraint,
+        headAuthorization.isExecutableWithin(
+          edge.referencedUniqueConstraint.selection,
         )) &&
       edge.referencedUniqueConstraint.selection.isSupersetOf(
         selection.headSelection,

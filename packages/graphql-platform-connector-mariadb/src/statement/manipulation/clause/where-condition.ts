@@ -203,8 +203,8 @@ function parseEdgeFilter(
         ? headAuthorization.and(filter.headFilter).normalized
         : headAuthorization || filter.headFilter;
 
-    return mergedHeadAuthorizationAndHeadFilter?.isExecutableWithinUniqueConstraint(
-      edge.referencedUniqueConstraint,
+    return mergedHeadAuthorizationAndHeadFilter?.isExecutableWithin(
+      edge.referencedUniqueConstraint.selection,
     )
       ? filterNode(
           tableReference,

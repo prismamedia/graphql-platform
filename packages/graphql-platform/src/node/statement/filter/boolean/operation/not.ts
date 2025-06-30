@@ -1,8 +1,5 @@
 import * as graphql from 'graphql';
-import type {
-  NodeSelectedValue,
-  UniqueConstraint,
-} from '../../../../../node.js';
+import type { NodeSelectedValue, NodeSelection } from '../../../../../node.js';
 import type { NodeFilterInputValue } from '../../../../type.js';
 import { AbstractBooleanFilter } from '../../abstract.js';
 import type { BooleanFilter } from '../../boolean.js';
@@ -45,16 +42,14 @@ export class NotOperation extends AbstractBooleanFilter {
     return this.operand;
   }
 
+  public override isExecutableWithin(selection: NodeSelection): boolean {
+    return this.operand.isExecutableWithin(selection);
+  }
+
   public override execute(value: NodeSelectedValue): boolean | undefined {
     const result = this.operand.execute(value);
 
     return result === undefined ? undefined : !result;
-  }
-
-  public override isExecutableWithinUniqueConstraint(
-    unique: UniqueConstraint,
-  ): boolean {
-    return this.operand.isExecutableWithinUniqueConstraint(unique);
   }
 
   public get dependency() {

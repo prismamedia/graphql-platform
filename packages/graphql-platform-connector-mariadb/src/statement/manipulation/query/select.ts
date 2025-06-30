@@ -11,8 +11,15 @@ import {
   selectNode,
   type SelectExpression,
 } from '../clause/select-expression.js';
-import type { TableFactor } from '../clause/table-reference.js';
-import { filterNode, type WhereCondition } from '../clause/where-condition.js';
+import {
+  InlineTableAuthorization,
+  type TableFactor,
+} from '../clause/table-reference.js';
+import {
+  AND,
+  filterNode,
+  type WhereCondition,
+} from '../clause/where-condition.js';
 
 export interface AbstractSelectOptions {
   select?: utils.Thunkable<
@@ -72,11 +79,15 @@ export abstract class AbstractSelect {
 
     {
       const rawWhere = utils.resolveThunkable(options?.where, tableReference);
-
-      this.whereCondition =
+      const whereCondition =
         rawWhere instanceof core.NodeFilter
           ? filterNode(tableReference, rawWhere)
           : rawWhere;
+
+      this.whereCondition =
+        tableReference.source instanceof InlineTableAuthorization
+          ? AND([whereCondition, tableReference.source.condition], false)
+          : whereCondition;
     }
 
     {
@@ -151,5 +162,3 @@ export class AuthorizedTableCTE extends AbstractAuthorizedTable {
 }
 
 export class AuthorizedTableDerivedTable extends AbstractAuthorizedTable {}
-
-export type AuthorizedTable = AuthorizedTableCTE | AuthorizedTableDerivedTable;

@@ -1,7 +1,7 @@
 import { MGetter, MMethod } from '@prismamedia/memoize';
 import * as graphql from 'graphql';
 import assert from 'node:assert';
-import type { Node, UniqueConstraint } from '../../node.js';
+import type { Node } from '../../node.js';
 import {
   DependencyGraph,
   NodeCreation,
@@ -17,7 +17,7 @@ import {
   OrOperation,
 } from './filter/boolean/operation.js';
 import { FalseValue, TrueValue } from './filter/boolean/value.js';
-import type { NodeSelectedValue } from './selection.js';
+import type { NodeSelectedValue, NodeSelection } from './selection.js';
 
 export * from './filter/boolean.js';
 
@@ -108,6 +108,12 @@ export class NodeFilter {
     return this.isTrue() ? undefined : this;
   }
 
+  public isExecutableWithin(selection: NodeSelection): boolean {
+    assert.strictEqual(selection.node, this.node);
+
+    return this.filter.isExecutableWithin(selection);
+  }
+
   /**
    * Execute this filter against a partial value, returns undefined if not applicable
    */
@@ -126,15 +132,6 @@ export class NodeFilter {
     }
 
     return result as any;
-  }
-
-  /**
-   * Is the provided unique-constraint's value enough to execute this filter?
-   */
-  public isExecutableWithinUniqueConstraint(unique: UniqueConstraint): boolean {
-    assert.strictEqual(unique.node, this.node);
-
-    return this.filter.isExecutableWithinUniqueConstraint(unique);
   }
 
   public isCreationFilteredOut(creation: NodeCreation): boolean {

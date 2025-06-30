@@ -2,10 +2,13 @@ import { MGetter } from '@prismamedia/memoize';
 import * as graphql from 'graphql';
 import assert from 'node:assert';
 import { EdgeDependencyGraph } from '../../../../../../change/dependency.js';
-import type { Edge, UniqueConstraint } from '../../../../../../definition.js';
+import type { Edge } from '../../../../../../definition.js';
 import type { NodeFilterInputValue } from '../../../../../../type.js';
 import { NodeFilter, areFiltersEqual } from '../../../../../filter.js';
-import type { NodeSelectedValue } from '../../../../../selection.js';
+import type {
+  NodeSelectedValue,
+  NodeSelection,
+} from '../../../../../selection.js';
 import type { BooleanFilter } from '../../../../boolean.js';
 import type { AndOperand, OrOperand } from '../../../operation.js';
 import { AndOperation, NotOperation, OrOperation } from '../../../operation.js';
@@ -100,6 +103,17 @@ export class EdgeExistsFilter extends AbstractComponentFilter {
     }
   }
 
+  public override isExecutableWithin(selection: NodeSelection): boolean {
+    const expressions = selection.expressionsByEdge.get(this.edge);
+
+    return expressions?.length
+      ? !this.headFilter ||
+          expressions.some(({ headSelection }) =>
+            this.headFilter!.isExecutableWithin(headSelection),
+          )
+      : false;
+  }
+
   public override execute(value: NodeSelectedValue): boolean | undefined {
     const edgeHeadValue = value[this.edge.name];
 
@@ -112,18 +126,6 @@ export class EdgeExistsFilter extends AbstractComponentFilter {
     return this.headFilter
       ? this.headFilter.execute(edgeHeadValue, true)
       : true;
-  }
-
-  public override isExecutableWithinUniqueConstraint(
-    unique: UniqueConstraint,
-  ): boolean {
-    return (
-      unique.edgeSet.has(this.edge) &&
-      (!this.headFilter ||
-        this.headFilter.isExecutableWithinUniqueConstraint(
-          this.edge.referencedUniqueConstraint,
-        ))
-    );
   }
 
   public get dependency() {

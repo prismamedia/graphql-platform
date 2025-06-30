@@ -32,6 +32,13 @@ exports[`Select statement > works 1`] = `
   "          )",
   "        )",
   "    )",
+  "),",
+  "\`authorized_articles\` AS (",
+  "  SELECT articles.*",
+  "  FROM \`articles\`",
+  "    LEFT JOIN \`categories\` AS \`articles>category\` ON \`articles\`.\`category_id\` = \`articles>category\`.\`id\`",
+  "    LEFT JOIN \`brands\` AS \`articles>category>brand\` ON \`articles>category\`.\`brand_id\` = \`articles>category>brand\`.\`id\`",
+  "  WHERE \`articles>category>brand\`.\`title\` IN ('brand1', 'brand2')",
   ")",
   "SELECT JSON_OBJECT(",
   "    \\"id\\",",
@@ -42,6 +49,17 @@ exports[`Select statement > works 1`] = `
   "    IF(",
   "      \`articles>category\`.\`id\` IS NOT NULL,",
   "      JSON_OBJECT(",
+  "        \\"brand\\",",
+  "        IF(",
+  "          \`articles>category>brand\`.\`id\` IS NOT NULL,",
+  "          JSON_OBJECT(",
+  "            \\"id\\",",
+  "            \`articles>category>brand\`.\`id\`,",
+  "            \\"title\\",",
+  "            \`articles>category>brand\`.\`title\`",
+  "          ),",
+  "          NULL",
+  "        ),",
   "        \\"id\\",",
   "        \`articles>category\`.\`id\`,",
   "        \\"title\\",",
@@ -69,11 +87,15 @@ exports[`Select statement > works 1`] = `
   "        )",
   "      FROM \`article_tags\` AS \`articles>tags\`",
   "        INNER JOIN \`authorized_tags\` AS \`articles>tags>tag\` ON \`articles>tags\`.\`tag_id\` = \`articles>tags>tag\`.\`id\`",
+  "        INNER JOIN \`authorized_articles\` AS \`articles>tags>article\` ON \`articles>tags\`.\`article_id\` = \`articles>tags>article\`.\`id\`",
   "      WHERE \`articles>tags\`.\`article_id\` = \`articles\`.\`id\`",
+  "        AND \`articles>tags>article\`.\`id\` = 'c96be474-23fa-452d-97b3-094c226c4675'",
   "    )",
   "  )",
   "FROM \`articles\`",
-  "  LEFT JOIN \`authorized_categories\` AS \`articles>category\` ON \`articles\`.\`category_id\` = \`articles>category\`.\`id\`"
+  "  LEFT JOIN \`authorized_categories\` AS \`articles>category\` ON \`articles\`.\`category_id\` = \`articles>category\`.\`id\`",
+  "  LEFT JOIN \`brands\` AS \`articles>category>brand\` ON \`articles>category\`.\`brand_id\` = \`articles>category>brand\`.\`id\`",
+  "  AND \`articles>category>brand\`.\`title\` IN ('brand1', 'brand2')"
 ]
 `;
 
@@ -88,6 +110,13 @@ exports[`Select statement > works 2`] = `
   "    IF(",
   "      \`articles>category\`.\`id\` IS NOT NULL,",
   "      JSON_OBJECT(",
+  "        \\"brand\\",",
+  "        JSON_OBJECT(",
+  "          \\"id\\",",
+  "          \`articles>category>brand\`.\`id\`,",
+  "          \\"title\\",",
+  "          \`articles>category>brand\`.\`title\`",
+  "        ),",
   "        \\"id\\",",
   "        \`articles>category\`.\`id\`,",
   "        \\"title\\",",
@@ -115,6 +144,7 @@ exports[`Select statement > works 2`] = `
   "    )",
   "  )",
   "FROM \`articles\`",
-  "  LEFT JOIN \`categories\` AS \`articles>category\` ON \`articles\`.\`category_id\` = \`articles>category\`.\`id\`"
+  "  LEFT JOIN \`categories\` AS \`articles>category\` ON \`articles\`.\`category_id\` = \`articles>category\`.\`id\`",
+  "  LEFT JOIN \`brands\` AS \`articles>category>brand\` ON \`articles>category\`.\`brand_id\` = \`articles>category>brand\`.\`id\`"
 ]
 `;

@@ -2,11 +2,7 @@ import { MGetter } from '@prismamedia/memoize';
 import * as graphql from 'graphql';
 import assert from 'node:assert';
 import * as R from 'remeda';
-import type {
-  Leaf,
-  LeafValue,
-  UniqueConstraint,
-} from '../../../../../../definition.js';
+import type { Leaf, LeafValue } from '../../../../../../definition.js';
 import type { NodeFilterInputValue } from '../../../../../../type.js';
 import type { NodeSelectedValue } from '../../../../../selection.js';
 import type { BooleanFilter } from '../../../../boolean.js';
@@ -186,12 +182,6 @@ export class LeafInFilter extends AbstractLeafFilter {
     }
 
     return this.has(leafValue);
-  }
-
-  public override isExecutableWithinUniqueConstraint(
-    unique: UniqueConstraint,
-  ): boolean {
-    return unique.leafSet.has(this.leaf);
   }
 
   public get ast(): graphql.ConstObjectValueNode {

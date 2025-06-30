@@ -34,14 +34,14 @@ describe('Filter', () => {
         expected: boolean,
       ][]
     ).forEach(([nodeName, filter, uniqueName, expected], index) => {
-      it(`${index} - ${nodeName}.filter(${inspect(filter, undefined, 5)}).isExecutableWithinUniqueConstraint(${uniqueName})`, () => {
+      it(`${index} - ${nodeName}.filter(${inspect(filter, undefined, 5)}).isExecutableWithin(${uniqueName})`, () => {
         const node = gp.getNodeByName(nodeName);
         const unique = node.getUniqueConstraintByName(uniqueName);
 
         assert.strictEqual(
           node.filterInputType
             .parseAndFilter(filter)
-            .isExecutableWithinUniqueConstraint(unique),
+            .isExecutableWithin(unique.selection),
           expected,
         );
       });

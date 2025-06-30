@@ -1,7 +1,12 @@
 import type * as core from '@prismamedia/graphql-platform';
 import * as utils from '@prismamedia/graphql-platform-utils';
 import assert from 'node:assert';
-import type { MariaDBConnector, OkPacket, PoolConnection } from './index.js';
+import type {
+  MariaDBConnector,
+  OkPacket,
+  PoolConnection,
+  SchemaFixOptions,
+} from './index.js';
 import {
   SchemaDiagnosis,
   type SchemaDiagnosisOptions,
@@ -356,8 +361,10 @@ export class Schema {
     );
   }
 
-  public async fix(options?: SchemaDiagnosisOptions): Promise<void> {
-    const diagnosis = await this.diagnose(options);
-    await diagnosis.fix();
+  public async fix(
+    options?: utils.Thunkable<SchemaFixOptions, [SchemaDiagnosis]>,
+  ): Promise<void> {
+    const diagnosis = await this.diagnose();
+    await diagnosis.fix(utils.resolveThunkable(options, diagnosis));
   }
 }
