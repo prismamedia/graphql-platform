@@ -45,8 +45,8 @@
     "@prismamedia/memoize": "^6.1.0",
     "dependency-graph": "^1.0.0",
     "inflection": "^3.0.2",
-    "mariadb": "^3.4.2",
-    "remeda": "^2.23.2",
+    "mariadb": "^3.4.4",
+    "remeda": "^2.26.0",
     "semver": "^7.7.2"
   },
   "peerDependencies": {
