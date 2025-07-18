@@ -5,11 +5,7 @@ export type ApolloServerIntegrationOptions<
   TRequestContext extends object = any,
 > = Omit<
   ApolloServerOptions<TRequestContext>,
-  | 'schema'
-  | 'typeDefs'
-  | 'resolvers'
-  | 'gateway'
-  | 'status400ForVariableCoercionErrors'
+  'schema' | 'typeDefs' | 'resolvers' | 'gateway'
 >;
 
 export class ApolloServerIntegration<
@@ -30,7 +26,6 @@ export class ApolloServerIntegration<
     super({
       ...options,
       schema: gp.schema,
-      status400ForVariableCoercionErrors: true,
     });
   }
 }
