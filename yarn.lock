@@ -962,13 +962,13 @@ __metadata:
     dependency-graph: "npm:^1.0.0"
     graphql: "npm:16.11.0"
     inflection: "npm:^3.0.2"
-    mariadb: "npm:^3.4.4"
+    mariadb: "npm:^3.4.5"
     publint: "npm:0.3.12"
-    remeda: "npm:^2.26.0"
+    remeda: "npm:^2.28.0"
     semver: "npm:^7.7.2"
     tsx: "npm:4.20.3"
-    type-fest: "npm:4.37.0"
-    typescript: "npm:5.8.3"
+    type-fest: "npm:4.41.0"
+    typescript: "npm:5.9.2"
   peerDependencies:
     graphql: ^16.11.0
   languageName: unknown
@@ -996,7 +996,7 @@ __metadata:
     graphql-ws: "npm:6.0.6"
     publint: "npm:0.3.12"
     tsx: "npm:4.20.3"
-    typescript: "npm:5.8.3"
+    typescript: "npm:5.9.2"
     ws: "npm:8.18.3"
   peerDependencies:
     "@apollo/server": ^5.0.0
@@ -1012,10 +1012,10 @@ __metadata:
     "@types/draft-js": "npm:^0.11.18"
     graphql: "npm:16.11.0"
     publint: "npm:0.3.12"
-    remeda: "npm:^2.26.0"
+    remeda: "npm:^2.28.0"
     tsx: "npm:4.20.3"
-    type-fest: "npm:4.37.0"
-    typescript: "npm:5.8.3"
+    type-fest: "npm:4.41.0"
+    typescript: "npm:5.9.2"
   peerDependencies:
     graphql: ^16.11.0
   languageName: unknown
@@ -1031,10 +1031,10 @@ __metadata:
     graphql: "npm:16.11.0"
     indefinite: "npm:^2.5.1"
     publint: "npm:0.3.12"
-    remeda: "npm:^2.26.0"
+    remeda: "npm:^2.28.0"
     tsx: "npm:4.20.3"
-    type-fest: "npm:4.37.0"
-    typescript: "npm:5.8.3"
+    type-fest: "npm:4.41.0"
+    typescript: "npm:5.9.2"
   peerDependencies:
     graphql: ^16.11.0
   languageName: unknown
@@ -1059,10 +1059,10 @@ __metadata:
     p-queue: "npm:^8.1.0"
     p-retry: "npm:^6.2.1"
     publint: "npm:0.3.12"
-    remeda: "npm:^2.26.0"
+    remeda: "npm:^2.28.0"
     tsx: "npm:4.20.3"
-    type-fest: "npm:4.37.0"
-    typescript: "npm:5.8.3"
+    type-fest: "npm:4.41.0"
+    typescript: "npm:5.9.2"
   peerDependencies:
     graphql: ^16.11.0
   languageName: unknown
@@ -1246,6 +1246,13 @@ __metadata:
   languageName: node
   linkType: hard
 
+"@types/geojson@npm:^7946.0.16":
+  version: 7946.0.16
+  resolution: "@types/geojson@npm:7946.0.16"
+  checksum: 10/34d07421bdd60e7b99fa265441d17ac6e9aef48e3ce22d04324127d0de1daf7fbaa0bd3be1cece2092eb6995f21da84afa5231e24621a2910ff7340bc98f496f
+  languageName: node
+  linkType: hard
+
 "@types/http-errors@npm:*":
   version: 2.0.5
   resolution: "@types/http-errors@npm:2.0.5"
@@ -1280,6 +1287,15 @@ __metadata:
   dependencies:
     undici-types: "npm:~7.8.0"
   checksum: 10/60e546f905734ab37f02f5c30eeb98e350c97837c96e2191972fba0638aa0d414489fad989245a9f106b0a0405410e56fab769fdcfb6504341fc2286d9e1f496
+  languageName: node
+  linkType: hard
+
+"@types/node@npm:^24.0.13":
+  version: 24.1.0
+  resolution: "@types/node@npm:24.1.0"
+  dependencies:
+    undici-types: "npm:~7.8.0"
+  checksum: 10/02c3d91e1407a93a2363f97a245475fa0f6209d3f3e6ba9fdaabe65389e3e078f648da81b8738125dec6b6bf98c50fb928f36f4e72b8b015817bc21479a868c2
   languageName: node
   linkType: hard
 
@@ -2469,7 +2485,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"lru-cache@npm:^10.0.1, lru-cache@npm:^10.2.0, lru-cache@npm:^10.3.0":
+"lru-cache@npm:^10.0.1, lru-cache@npm:^10.2.0, lru-cache@npm:^10.4.3":
   version: 10.4.3
   resolution: "lru-cache@npm:10.4.3"
   checksum: 10/e6e90267360476720fa8e83cc168aa2bf0311f3f2eea20a6ba78b90a885ae72071d9db132f40fda4129c803e7dcec3a6b6a6fbb44ca90b081630b810b5d6a41a
@@ -2502,14 +2518,16 @@ __metadata:
   languageName: node
   linkType: hard
 
-"mariadb@npm:^3.4.4":
-  version: 3.4.4
-  resolution: "mariadb@npm:3.4.4"
+"mariadb@npm:^3.4.5":
+  version: 3.4.5
+  resolution: "mariadb@npm:3.4.5"
   dependencies:
+    "@types/geojson": "npm:^7946.0.16"
+    "@types/node": "npm:^24.0.13"
     denque: "npm:^2.1.0"
     iconv-lite: "npm:^0.6.3"
-    lru-cache: "npm:^10.3.0"
-  checksum: 10/8e18f390c8772362b9607cc910c3c96da44e9fb07e164cde10f227f7b5aa13d88764418dd94ed675f952a5f7e573a3461c8b6d050dc3c1cb5ba12404b7823a22
+    lru-cache: "npm:^10.4.3"
+  checksum: 10/dce0d25124736a0b1db9ed002a8c0cfc54c0ebfce92f26b085fc8ef06f5c8873d49a55c5af61787acbd16bce8945cec862f8be9907202014c313c6a6e3f1f34e
   languageName: node
   linkType: hard
 
@@ -2951,12 +2969,12 @@ __metadata:
   languageName: node
   linkType: hard
 
-"remeda@npm:^2.26.0":
-  version: 2.26.0
-  resolution: "remeda@npm:2.26.0"
+"remeda@npm:^2.28.0":
+  version: 2.28.0
+  resolution: "remeda@npm:2.28.0"
   dependencies:
     type-fest: "npm:^4.41.0"
-  checksum: 10/c50a6833309a03ef0a82067aab8db241f22d911e875afe35a08b4260bbc1e21a1690a6e0518850d91c6568a722ec26d3114f1e5202a2616915a9bc70c5cac00f
+  checksum: 10/e207834babdf0924642d33a25401ce47b9d72d687b3efe2cb22b26f3d02fe098ba0ada0ad3aa40c4d330b7b5515f9377772f6ca1bc5372c2f08e9cd3c4da9c0d
   languageName: node
   linkType: hard
 
@@ -3031,7 +3049,7 @@ __metadata:
   dependencies:
     prettier: "npm:3.6.2"
     tsx: "npm:4.20.3"
-    typescript: "npm:5.8.3"
+    typescript: "npm:5.9.2"
   languageName: unknown
   linkType: soft
 
@@ -3386,14 +3404,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"type-fest@npm:4.37.0":
-  version: 4.37.0
-  resolution: "type-fest@npm:4.37.0"
-  checksum: 10/882cf05374d7c635cbbbc50cb89863dad3d27a77c426d062144ba32b23a44087193213c5bbd64f3ab8be04215005c950286567be06fecca9d09c66abd290ef01
-  languageName: node
-  linkType: hard
-
-"type-fest@npm:^4.41.0":
+"type-fest@npm:4.41.0, type-fest@npm:^4.41.0":
   version: 4.41.0
   resolution: "type-fest@npm:4.41.0"
   checksum: 10/617ace794ac0893c2986912d28b3065ad1afb484cad59297835a0807dc63286c39e8675d65f7de08fafa339afcb8fe06a36e9a188b9857756ae1e92ee8bda212
@@ -3422,23 +3433,23 @@ __metadata:
   languageName: node
   linkType: hard
 
-"typescript@npm:5.8.3":
-  version: 5.8.3
-  resolution: "typescript@npm:5.8.3"
+"typescript@npm:5.9.2":
+  version: 5.9.2
+  resolution: "typescript@npm:5.9.2"
   bin:
     tsc: bin/tsc
     tsserver: bin/tsserver
-  checksum: 10/65c40944c51b513b0172c6710ee62e951b70af6f75d5a5da745cb7fab132c09ae27ffdf7838996e3ed603bb015dadd099006658046941bd0ba30340cc563ae92
+  checksum: 10/cc2fe6c822819de5d453fa25aa9f32096bf70dde215d481faa1ad84a283dfb264e33988ed8f6d36bc803dd0b16dbe943efa311a798ef76d5b3892a05dfbfd628
   languageName: node
   linkType: hard
 
-"typescript@patch:typescript@npm%3A5.8.3#optional!builtin<compat/typescript>":
-  version: 5.8.3
-  resolution: "typescript@patch:typescript@npm%3A5.8.3#optional!builtin<compat/typescript>::version=5.8.3&hash=5786d5"
+"typescript@patch:typescript@npm%3A5.9.2#optional!builtin<compat/typescript>":
+  version: 5.9.2
+  resolution: "typescript@patch:typescript@npm%3A5.9.2#optional!builtin<compat/typescript>::version=5.9.2&hash=5786d5"
   bin:
     tsc: bin/tsc
     tsserver: bin/tsserver
-  checksum: 10/b9b1e73dabac5dc730c041325dbd9c99467c1b0d239f1b74ec3b90d831384af3e2ba973946232df670519147eb51a2c20f6f96163cea2b359f03de1e2091cc4f
+  checksum: 10/bd810ab13e8e557225a8b5122370385440b933e4e077d5c7641a8afd207fdc8be9c346e3c678adba934b64e0e70b0acf5eef9493ea05170a48ce22bef845fdc7
   languageName: node
   linkType: hard
 

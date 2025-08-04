@@ -8,7 +8,7 @@
     "lib": ["ESNext"],
     "target": "ES2024",
 
-    "module": "NodeNext",
+    "module": "node20",
     "moduleDetection": "force",
 
     "composite": true,
