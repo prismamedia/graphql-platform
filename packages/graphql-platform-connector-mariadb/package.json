@@ -32,7 +32,7 @@
     "@types/semver": "7.7.0",
     "graphql": "16.11.0",
     "publint": "0.3.12",
-    "tsx": "4.20.3",
+    "tsx": "4.20.5",
     "type-fest": "4.41.0",
     "typescript": "5.9.2"
   },
@@ -46,7 +46,7 @@
     "dependency-graph": "^1.0.0",
     "inflection": "^3.0.2",
     "mariadb": "^3.4.5",
-    "remeda": "^2.28.0",
+    "remeda": "^2.30.0",
     "semver": "^7.7.2"
   },
   "peerDependencies": {
