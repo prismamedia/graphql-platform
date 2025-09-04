@@ -155,7 +155,7 @@ export class MariaDBConnector<TRequestContext extends object = any>
 
     this.useCommonTableExpression = utils.getOptionalFlag(
       config.useCommonTableExpression,
-      false,
+      true,
     );
 
     // pool-config

@@ -23,9 +23,10 @@ export class SelectStatement
   ) {
     const tableReference = new TableFactor(table, {
       context,
-      useCommonTableExpression:
-        table.schema.connector.useCommonTableExpression &&
-        utils.getOptionalFlag(options?.useCommonTableExpression, true),
+      useCommonTableExpression: utils.getOptionalFlag(
+        options?.useCommonTableExpression,
+        table.schema.connector.useCommonTableExpression,
+      ),
     });
     super(tableReference, options);
   }
