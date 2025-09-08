@@ -108,6 +108,21 @@ export class MariaDBBrokerAssignmentsTable extends AbstractTable {
     `);
   }
 
+  public async unassign(
+    subscriptionId: UUID,
+    mutationId?: bigint,
+  ): Promise<void> {
+    await this.connector.executeQuery<OkPacket>(`
+      DELETE FROM ${escapeIdentifier(this.name)}
+      WHERE ${AND([
+        `${this.escapeColumnIdentifier('subscriptionId')} = ${this.serializeColumnValue('subscriptionId', subscriptionId)}`,
+        mutationId
+          ? `${this.escapeColumnIdentifier('mutationId')} = ${this.serializeColumnValue('mutationId', mutationId)}`
+          : undefined,
+      ])}
+    `);
+  }
+
   public async *dequeue<TRequestContext extends object>(
     subscriptionId: UUID,
   ): AsyncGenerator<MariaDBBrokerMutation<TRequestContext>> {
@@ -126,21 +141,6 @@ export class MariaDBBrokerAssignmentsTable extends AbstractTable {
 
       await this.unassign(subscriptionId, row.id);
     }
-  }
-
-  public async unassign(
-    subscriptionId: UUID,
-    mutationId?: bigint,
-  ): Promise<void> {
-    await this.connector.executeQuery<OkPacket>(`
-      DELETE FROM ${escapeIdentifier(this.name)}
-      WHERE ${AND([
-        `${this.escapeColumnIdentifier('subscriptionId')} = ${this.serializeColumnValue('subscriptionId', subscriptionId)}`,
-        mutationId
-          ? `${this.escapeColumnIdentifier('mutationId')} = ${this.serializeColumnValue('mutationId', mutationId)}`
-          : undefined,
-      ])}
-    `);
   }
 
   public async unsubscribe(subscriptionId: UUID): Promise<void> {

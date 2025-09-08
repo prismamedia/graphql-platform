@@ -301,7 +301,17 @@ export class MariaDBBrokerMutationsTable extends AbstractTable {
         )) AS ${escapeIdentifier('changeCount')},
         MIN(${this.escapeColumnIdentifier('committedAt', 'm')}) AS ${escapeIdentifier('oldestCommitDate')},
         MAX(${this.escapeColumnIdentifier('committedAt', 'm')}) AS ${escapeIdentifier('newestCommitDate')},
-        IFNULL(NOW(3) - MIN(${this.escapeColumnIdentifier('committedAt', 'm')}), 0) AS ${escapeIdentifier('latencyInSeconds')}
+        IFNULL(
+          ROUND(
+            TIMESTAMPDIFF(
+              MICROSECOND,
+              MIN(${this.escapeColumnIdentifier('committedAt', 'm')}),
+              NOW(3)
+            ) / 1000000,
+            3
+          ),
+          0
+        ) AS ${escapeIdentifier('latencyInSeconds')}
       FROM ${escapeIdentifier(this.name)} m
       WHERE ${this.filterAssignables(worker, 'm')}
     `);
