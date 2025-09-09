@@ -46,7 +46,7 @@
     "dependency-graph": "^1.0.0",
     "inflection": "^3.0.2",
     "mariadb": "^3.4.5",
-    "remeda": "^2.30.0",
+    "remeda": "^2.31.0",
     "semver": "^7.7.2"
   },
   "peerDependencies": {
