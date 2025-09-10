@@ -66,8 +66,15 @@ export type ChangesSubscriptionStreamByBatchOptions =
     batchSize?: number;
   };
 
-export type ChangesSubscriptionStreamEvents = {
-  'post-effect': ChangesSubscriptionEffect;
+export type ChangesSubscriptionStreamEvents<
+  TRequestContext extends object = any,
+> = {
+  'post-effect': ChangesSubscriptionEffect<TRequestContext>;
+  'post-changes': {
+    changes: DependentGraph<TRequestContext>;
+    startedAt: Date;
+    tookInSeconds: number;
+  };
 };
 
 export type ChangesSubscriptionStreamConfig<
@@ -221,6 +228,8 @@ export class ChangesSubscriptionStream<
     this.#consumingNodeChanges = true;
 
     for await (const changes of changesSubscription) {
+      const startedAt = new Date();
+
       const dependentGraph =
         changes instanceof DependentGraph
           ? changes
@@ -239,6 +248,12 @@ export class ChangesSubscriptionStream<
 
         await this.emit('post-effect', effect);
       }
+
+      await this.emit('post-changes', {
+        changes: dependentGraph,
+        startedAt,
+        tookInSeconds: (Date.now() - startedAt.getTime()) / 1000,
+      });
     }
   }
 
