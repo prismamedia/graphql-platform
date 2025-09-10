@@ -23,7 +23,10 @@ import {
   type NodeSelectedValue,
 } from '../../../statement.js';
 import type { ScrollCursorInputValue } from '../scroll.js';
-import type { ChangesSubscriptionChange } from './stream/change.js';
+import {
+  ChangesSubscriptionUpsert,
+  type ChangesSubscriptionChange,
+} from './stream/change.js';
 import { ChangesSubscriptionEffect } from './stream/effect.js';
 
 export * from './stream/change.js';
@@ -70,9 +73,15 @@ export type ChangesSubscriptionStreamEvents<
   TRequestContext extends object = any,
 > = {
   'post-effect': ChangesSubscriptionEffect<TRequestContext>;
-  'post-changes': {
-    changes: DependentGraph<TRequestContext>;
+  'post-processed-mutation-changes': {
+    mutationChanges: DependentGraph<TRequestContext>;
+    subscriptionChanges: {
+      upsertCount: number;
+      deletionCount: number;
+      total: number;
+    };
     startedAt: Date;
+    endedAt: Date;
     tookInSeconds: number;
   };
 };
@@ -228,14 +237,16 @@ export class ChangesSubscriptionStream<
     this.#consumingNodeChanges = true;
 
     for await (const changes of changesSubscription) {
-      const startedAt = new Date();
-
       const dependentGraph =
         changes instanceof DependentGraph
           ? changes
           : this.dependencyGraph.createDependentGraph(changes);
 
       if (!dependentGraph.isEmpty()) {
+        const startedAt = new Date();
+        let upsertCount: number = 0;
+        let deletionCount: number = 0;
+
         const effect = new ChangesSubscriptionEffect(this, dependentGraph);
 
         for await (const change of effect) {
@@ -244,16 +255,30 @@ export class ChangesSubscriptionStream<
           if (this.signal.aborted) {
             return;
           }
+
+          if (change instanceof ChangesSubscriptionUpsert) {
+            upsertCount++;
+          } else {
+            deletionCount++;
+          }
         }
 
         await this.emit('post-effect', effect);
-      }
 
-      await this.emit('post-changes', {
-        changes: dependentGraph,
-        startedAt,
-        tookInSeconds: (Date.now() - startedAt.getTime()) / 1000,
-      });
+        const endedAt = new Date();
+
+        await this.emit('post-processed-mutation-changes', {
+          mutationChanges: dependentGraph,
+          subscriptionChanges: {
+            upsertCount,
+            deletionCount,
+            total: upsertCount + deletionCount,
+          },
+          startedAt,
+          endedAt,
+          tookInSeconds: (endedAt.getTime() - startedAt.getTime()) / 1000,
+        });
+      }
     }
   }
 
