@@ -128,7 +128,7 @@ export class ChangesSubscriptionStream<
     TUpsert extends NodeSelectedValue = any,
     TDeletion extends NodeValue = any,
   >
-  extends AsyncEventEmitter<ChangesSubscriptionStreamEvents>
+  extends AsyncEventEmitter<ChangesSubscriptionStreamEvents<TRequestContext>>
   implements
     AsyncIterable<
       ChangesSubscriptionChange<TRequestContext, TUpsert, TDeletion>
