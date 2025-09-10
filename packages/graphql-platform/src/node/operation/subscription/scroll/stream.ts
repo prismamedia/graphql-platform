@@ -33,7 +33,10 @@ export const defaultNamedProgressBarFormat =
 export const defaultProgressBarFormat =
   `[{bar}] {value}/{total} ({${averageFormattedKey}}) | {percentage}% | ETA: {eta_formatted} | Elapsed: {duration_formatted}` satisfies ProgressBarOptions['format'];
 
-function incrementProgressBar(progress: ProgressBar, increment: number): void {
+export function incrementProgressBar(
+  progress: ProgressBar,
+  increment: number,
+): void {
   const elapsedTimeInMs = progress.startTime
     ? Date.now() - progress.startTime
     : 0;
