@@ -265,6 +265,7 @@ export class ChangesSubscriptionStream<
 
         await this.emit('post-effect', effect);
 
+        const total = upsertCount + deletionCount;
         const endedAt = new Date();
 
         await this.emit('post-processed-mutation-changes', {
@@ -272,7 +273,7 @@ export class ChangesSubscriptionStream<
           subscriptionChanges: {
             upsertCount,
             deletionCount,
-            total: upsertCount + deletionCount,
+            total,
           },
           startedAt,
           endedAt,

@@ -7,7 +7,6 @@ import * as utils from '@prismamedia/graphql-platform-utils';
 import { MGetter } from '@prismamedia/memoize';
 import * as mariadb from 'mariadb';
 import assert from 'node:assert';
-import { hrtime } from 'node:process';
 import * as semver from 'semver';
 import type { Except } from 'type-fest';
 import { MariaDBBroker, type MariaDBBrokerOptions } from './broker.js';
@@ -361,7 +360,7 @@ export class MariaDBConnector<TRequestContext extends object = any>
     return trace(
       'statement.execution',
       async () => {
-        const startedAt = hrtime.bigint();
+        const startedAt = Date.now();
 
         let result: any;
 
@@ -372,19 +371,17 @@ export class MariaDBConnector<TRequestContext extends object = any>
             connection,
           );
 
+          const durationInSeconds = (Date.now() - startedAt) / 1000;
+
           await this.emit('executed-statement', {
             statement,
             result,
-            durationInSeconds:
-              Math.round(Number(hrtime.bigint() - startedAt) / 10 ** 6) /
-              10 ** 3,
+            durationInSeconds,
           });
         } catch (error) {
-          if (error instanceof mariadb.SqlError) {
-            const durationInSeconds =
-              Math.round(Number(hrtime.bigint() - startedAt) / 10 ** 6) /
-              10 ** 3;
+          const durationInSeconds = (Date.now() - startedAt) / 1000;
 
+          if (error instanceof mariadb.SqlError) {
             Object.assign(error, { sql: statement.sql, durationInSeconds });
 
             await this.emit('failed-statement', {

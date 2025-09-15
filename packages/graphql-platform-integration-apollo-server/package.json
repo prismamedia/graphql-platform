@@ -29,7 +29,7 @@
   "devDependencies": {
     "@apollo/server": "5.0.0",
     "@as-integrations/express5": "1.1.2",
-    "@opentelemetry/instrumentation-express": "0.53.0",
+    "@opentelemetry/instrumentation-express": "0.54.0",
     "@opentelemetry/instrumentation-http": "0.205.0",
     "@opentelemetry/sdk-node": "0.205.0",
     "@opentelemetry/sdk-trace-node": "2.1.0",
