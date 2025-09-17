@@ -78,6 +78,9 @@ export class MultipleReverseEdgeCountSelection<
     return this;
   }
 
+  /**
+   * @deprecated
+   */
   public get dependency() {
     return new ReverseEdgeDependencyGraph(this.reverseEdge, this.headFilter);
   }

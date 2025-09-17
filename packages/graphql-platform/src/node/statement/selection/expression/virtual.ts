@@ -78,6 +78,9 @@ export class VirtualSelection<
     return this;
   }
 
+  /**
+   * @deprecated
+   */
   public get dependency() {
     return this.sourceSelection?.dependencyGraph;
   }

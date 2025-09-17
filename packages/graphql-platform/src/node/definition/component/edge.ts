@@ -222,6 +222,7 @@ export class Edge<
     return new EdgeHeadSelection(
       this,
       undefined,
+      undefined,
       this.referencedUniqueConstraint.selection,
     );
   }

@@ -321,7 +321,7 @@ export class DependencyGraph {
 
           case false:
             hasReverseEdgeHeadChanges &&
-              this.filter?.isCreationFilteredOut(creation) &&
+              this.filter?.isChangeFilteredOut(creation) &&
               filteredOuts.push(creation.newValue);
             break;
         }
@@ -343,7 +343,7 @@ export class DependencyGraph {
 
           case false:
             hasReverseEdgeHeadChanges &&
-              this.filter?.isUpdateFilteredOut(update) &&
+              this.filter?.isChangeFilteredOut(update) &&
               filteredOuts.push(update.oldValue, update.newValue);
             break;
         }
@@ -357,7 +357,7 @@ export class DependencyGraph {
 
           case false:
             hasReverseEdgeHeadChanges &&
-              this.filter?.isDeletionFilteredOut(deletion) &&
+              this.filter?.isChangeFilteredOut(deletion) &&
               filteredOuts.push(deletion.oldValue);
             break;
         }

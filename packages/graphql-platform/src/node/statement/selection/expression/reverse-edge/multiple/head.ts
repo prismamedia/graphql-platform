@@ -120,6 +120,9 @@ export class MultipleReverseEdgeHeadSelection<
     );
   }
 
+  /**
+   * @deprecated
+   */
   public get dependency() {
     return new ReverseEdgeDependencyGraph(
       this.reverseEdge,

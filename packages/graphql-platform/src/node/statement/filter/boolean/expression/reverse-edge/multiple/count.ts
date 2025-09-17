@@ -1,7 +1,8 @@
 import { MGetter } from '@prismamedia/memoize';
 import * as graphql from 'graphql';
-import { ReverseEdgeDependencyGraph } from '../../../../../../change/dependency.js';
+import { ReverseEdgeDependencyGraph } from '../../../../../../change.js';
 import type { MultipleReverseEdge } from '../../../../../../definition.js';
+import type { RawDependency } from '../../../../../../dependency.js';
 import type { NodeFilterInputValue } from '../../../../../../type.js';
 import type { BooleanFilter } from '../../../../boolean.js';
 import { NotOperation, type AndOperand } from '../../../operation.js';
@@ -106,8 +107,20 @@ export class MultipleReverseEdgeCountFilter extends AbstractReverseEdgeFilter {
     }
   }
 
+  /**
+   * @deprecated
+   */
   public get dependency() {
     return new ReverseEdgeDependencyGraph(this.reverseEdge);
+  }
+
+  public override get dependencies(): RawDependency[] {
+    return [
+      {
+        kind: 'ReverseEdge',
+        reverseEdge: this.reverseEdge,
+      },
+    ];
   }
 
   public get ast(): graphql.ConstObjectValueNode {

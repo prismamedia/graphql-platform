@@ -1,6 +1,6 @@
 import * as graphql from 'graphql';
-import type { NodeSelectedValue, NodeSelection } from '../../../../../node.js';
 import type { NodeFilterInputValue } from '../../../../type.js';
+import type { NodeSelectedValue, NodeSelection } from '../../../selection.js';
 import { AbstractBooleanFilter } from '../../abstract.js';
 import type { BooleanFilter } from '../../boolean.js';
 import type { BooleanExpression } from '../expression.js';
@@ -52,8 +52,15 @@ export class NotOperation extends AbstractBooleanFilter {
     return result === undefined ? undefined : !result;
   }
 
+  /**
+   * @deprecated
+   */
   public get dependency() {
     return this.operand.dependency;
+  }
+
+  public override get dependencies() {
+    return this.operand.dependencies;
   }
 
   public get ast(): graphql.ConstObjectValueNode {

@@ -29,16 +29,16 @@
   "devDependencies": {
     "@types/indefinite": "2.3.4",
     "graphql": "16.11.0",
-    "publint": "0.3.12",
+    "publint": "0.3.13",
     "tsx": "4.20.5",
-    "type-fest": "5.0.0",
+    "type-fest": "5.0.1",
     "typescript": "5.9.2"
   },
   "dependencies": {
     "@opentelemetry/api": "^1.9.0",
     "@prismamedia/memoize": "^6.1.0",
     "indefinite": "^2.5.2",
-    "remeda": "^2.31.1"
+    "remeda": "^2.32.0"
   },
   "peerDependencies": {
     "graphql": "^16.11.0"

@@ -9,6 +9,9 @@ export abstract class AbstractOrderingExpression {
    */
   public readonly inputValue: NonNullable<NodeOrderingInputValue>;
 
+  /**
+   * @deprecated
+   */
   public abstract readonly dependency?: Dependency;
 
   public constructor(

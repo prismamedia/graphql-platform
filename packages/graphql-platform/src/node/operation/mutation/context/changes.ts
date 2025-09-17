@@ -26,6 +26,19 @@ export interface MutationContextChangesConfig {
 export class MutationContextChanges<TRequestContext extends object = any>
   implements Iterable<NodeChange<TRequestContext>>, Disposable
 {
+  public static createFromChanges<TRequestContext extends object>(
+    changes: utils.ReadonlyArrayable<NodeChange<TRequestContext>>,
+    configOrMaxSize?:
+      | MutationContextChangesConfig
+      | MutationContextChangesConfig['maxSize'],
+  ): MutationContextChanges<TRequestContext> {
+    return new MutationContextChanges(
+      undefined,
+      utils.resolveArrayable(changes),
+      configOrMaxSize,
+    );
+  }
+
   public readonly requestContext: TRequestContext;
   public committedAt?: Date;
 

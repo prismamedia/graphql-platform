@@ -1,7 +1,8 @@
 import { MGetter } from '@prismamedia/memoize';
 import * as graphql from 'graphql';
 import assert from 'node:assert';
-import type { NodeSelectedValue, NodeSelection } from '../../../../node.js';
+import type { RawDependency } from '../../../dependency.js';
+import type { NodeSelectedValue, NodeSelection } from '../../selection.js';
 import { AbstractBooleanFilter } from '../abstract.js';
 
 export class BooleanValue extends AbstractBooleanFilter {
@@ -33,8 +34,15 @@ export class BooleanValue extends AbstractBooleanFilter {
     return this.value;
   }
 
+  /**
+   * @deprecated
+   */
   public get dependency() {
     return undefined;
+  }
+
+  public override get dependencies(): RawDependency[] {
+    return [];
   }
 
   public get ast(): graphql.ConstObjectValueNode | graphql.NullValueNode {

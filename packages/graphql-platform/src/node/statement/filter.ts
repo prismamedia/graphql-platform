@@ -6,9 +6,9 @@ import {
   DependencyGraph,
   NodeCreation,
   NodeDeletion,
-  NodeUpdate,
   type NodeChange,
 } from '../change.js';
+import { NodeDependencyTree } from '../dependency.js';
 import type { NodeFilterInputValue } from '../type.js';
 import type { BooleanFilter } from './filter/boolean.js';
 import {
@@ -134,34 +134,28 @@ export class NodeFilter {
     return result as any;
   }
 
-  public isCreationFilteredOut(creation: NodeCreation): boolean {
-    return this.execute(creation.newValue, true) === false;
-  }
-
-  public isUpdateFilteredOut(update: NodeUpdate): boolean {
-    return (
-      this.execute(update.newValue, true) === false &&
-      this.execute(update.oldValue, true) === false
-    );
-  }
-
-  public isDeletionFilteredOut(deletion: NodeDeletion): boolean {
-    return this.execute(deletion.oldValue, true) === false;
-  }
-
   public isChangeFilteredOut(change: NodeChange): boolean {
     assert.strictEqual(change.node, this.node);
 
     return change instanceof NodeCreation
-      ? this.isCreationFilteredOut(change)
+      ? this.execute(change.newValue, true) === false
       : change instanceof NodeDeletion
-        ? this.isDeletionFilteredOut(change)
-        : this.isUpdateFilteredOut(change);
+        ? this.execute(change.oldValue, true) === false
+        : this.execute(change.newValue, true) === false &&
+          this.execute(change.oldValue, true) === false;
   }
 
+  /**
+   * @deprecated
+   */
   @MGetter
   public get dependencyGraph(): DependencyGraph {
     return new DependencyGraph(this.node, this.filter.dependency);
+  }
+
+  @MGetter
+  public get dependencyTree(): NodeDependencyTree {
+    return new NodeDependencyTree(this.node, this.filter.dependencies);
   }
 
   @MMethod()

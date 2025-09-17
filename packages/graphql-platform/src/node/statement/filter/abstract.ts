@@ -1,9 +1,9 @@
 import * as utils from '@prismamedia/graphql-platform-utils';
 import type * as graphql from 'graphql';
-import type { NodeSelectedValue } from '../../../node.js';
 import type { Dependency } from '../../change.js';
-import type { NodeSelection } from '../../statement.js';
+import type { RawDependency } from '../../dependency.js';
 import type { NodeFilterInputValue } from '../../type.js';
+import type { NodeSelectedValue, NodeSelection } from '../selection.js';
 import type { AndOperand, BooleanFilter, OrOperand } from './boolean.js';
 
 export abstract class AbstractBooleanFilter {
@@ -74,4 +74,6 @@ export abstract class AbstractBooleanFilter {
   }
 
   public abstract get dependency(): utils.Arrayable<Dependency | undefined>;
+
+  public abstract get dependencies(): RawDependency[];
 }

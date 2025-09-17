@@ -13,6 +13,9 @@ export class MultipleReverseEdgeCountOrdering extends AbstractOrderingExpression
     super(direction, ast);
   }
 
+  /**
+   * @deprecated
+   */
   public get dependency() {
     return new ReverseEdgeDependencyGraph(this.reverseEdge);
   }

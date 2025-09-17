@@ -13,6 +13,7 @@ import type {
 } from '../../../../broker-interface.js';
 import type { Node, NodeValue } from '../../../../node.js';
 import { DependentGraph, NodeSetDependencyGraph } from '../../../change.js';
+import { DocumentSetDependency } from '../../../dependency.js';
 import type {
   ContextBoundNodeAPI,
   OperationContext,
@@ -143,6 +144,7 @@ export class ChangesSubscriptionStream<
   public readonly onUpsertSelection: NodeSelection<TUpsert>;
   public readonly onDeletionSelection?: NodeSelection<TDeletion>;
   public readonly dependencyGraph: NodeSetDependencyGraph;
+  public readonly dependencyTree: DocumentSetDependency;
 
   public readonly api: ContextBoundNodeAPI;
 
@@ -197,6 +199,11 @@ export class ChangesSubscriptionStream<
       undefined,
       this.onUpsertSelection,
     );
+
+    this.dependencyTree = new DocumentSetDependency(this.node, {
+      filter: this.filter,
+      selection: this.onUpsertSelection,
+    });
 
     this.api = node.createContextBoundAPI(context);
 

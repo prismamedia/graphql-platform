@@ -18,6 +18,9 @@ export interface SelectionExpressionInterface<TSource = any, TValue = TSource> {
 
   isSupersetOf(expression: unknown): boolean;
 
+  /**
+   * @deprecated
+   */
   dependency?: Dependency;
 
   parseSource(maybeSource: unknown, path?: utils.Path): TSource;

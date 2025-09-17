@@ -1,0 +1,189 @@
+exports[`Dependency > Complex > has a consistent dependency-tree 1`] = `
+{
+  "Article": {
+    "creation": true,
+    "deletion": true,
+    "update": [
+      "status",
+      "updatedBy",
+      "title",
+      "category"
+    ]
+  },
+  "User": {
+    "update": [
+      "lastLoggedInAt"
+    ]
+  },
+  "UserProfile": {
+    "creation": true,
+    "deletion": true,
+    "update": [
+      "birthday"
+    ]
+  },
+  "ArticleTag": {
+    "creation": true,
+    "deletion": true,
+    "update": [
+      "order"
+    ]
+  },
+  "Tag": {
+    "update": [
+      "deprecated",
+      "slug",
+      "title"
+    ]
+  },
+  "ArticleTagModeration": {
+    "creation": true,
+    "deletion": true,
+    "update": [
+      "moderation"
+    ]
+  },
+  "Category": {
+    "creation": true,
+    "deletion": true,
+    "update": [
+      "order",
+      "parent"
+    ]
+  },
+  "ArticleExtension": {
+    "creation": true,
+    "deletion": true,
+    "update": [
+      "source"
+    ]
+  }
+}
+`;
+
+exports[`Dependency > Complex > has a consistent dependency-tree 2`] = `
+{
+  "changes": {
+    "creation": 2,
+    "update": 2
+  },
+  "children": {
+    "createdBy": {
+      "changes": {
+        "update": 2
+      }
+    },
+    "updatedBy": {
+      "changes": {
+        "update": 2
+      },
+      "children": {
+        "profile": {
+          "changes": {
+            "creation": 2,
+            "deletion": 1
+          }
+        }
+      }
+    },
+    "tags": {
+      "children": {
+        "tag": {
+          "changes": {
+            "update": 3
+          }
+        },
+        "moderations": {
+          "changes": {
+            "creation": 1,
+            "deletion": 1,
+            "update": 1
+          }
+        }
+      }
+    },
+    "category": {
+      "changes": {
+        "update": 2
+      },
+      "children": {
+        "children": {
+          "changes": {
+            "creation": 1
+          }
+        }
+      }
+    }
+  }
+}
+`;
+
+exports[`Dependency > Pure > has a consistent dependency-tree 1`] = `
+{
+  "Article": {
+    "creation": true,
+    "deletion": true,
+    "update": [
+      "status",
+      "title"
+    ]
+  }
+}
+`;
+
+exports[`Dependency > Pure > has a consistent dependency-tree 2`] = `
+{
+  "changes": {
+    "creation": 1,
+    "deletion": 1,
+    "update": 1
+  }
+}
+`;
+
+exports[`Dependency > With virtual-selection > has a consistent dependency-tree 1`] = `
+{
+  "Article": {
+    "creation": true,
+    "deletion": true,
+    "update": [
+      "title",
+      "status",
+      "category"
+    ]
+  },
+  "ArticleTag": {
+    "creation": true,
+    "deletion": true,
+    "update": [
+      "order"
+    ]
+  },
+  "Tag": {
+    "update": [
+      "title"
+    ]
+  }
+}
+`;
+
+exports[`Dependency > With virtual-selection > has a consistent dependency-tree 2`] = `
+{
+  "changes": {
+    "creation": 3,
+    "deletion": 1,
+    "update": 3
+  },
+  "children": {
+    "tags": {
+      "children": {
+        "tag": {
+          "changes": {
+            "update": 3
+          }
+        }
+      }
+    }
+  }
+}
+`;

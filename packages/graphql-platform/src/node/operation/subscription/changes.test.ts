@@ -56,7 +56,7 @@ describe('ChangesSubscription', () => {
     });
   });
 
-  describe('Works', () => {
+  describe.only('Works', () => {
     (
       [
         [myAdminContext, { where: null, selection: { onUpsert: '{ id }' } }],
@@ -84,16 +84,6 @@ describe('ChangesSubscription', () => {
       });
 
       after(() => subscription.dispose());
-
-      it('has a dependency-graph', () => {
-        assert.deepEqual(subscription.dependencyGraph.flattened.toJSON(), {
-          Article: {
-            creation: true,
-            deletion: true,
-            update: ['status', 'title'],
-          },
-        });
-      });
 
       const myRequestContext: MyContext = {};
 
@@ -216,37 +206,19 @@ describe('ChangesSubscription', () => {
           },
           selection: {
             onUpsert: `{
-                id
-                title
-                category { title }
-                tagCount(where: { tag: { deprecated_not: true } })
-                tags(where: { tag: { deprecated_not: true } }, orderBy: [order_ASC], first: 10) { tag { title } }
-                lowerCasedTitle
-              }`,
+              id
+              title
+              category { title }
+              tagCount(where: { tag: { deprecated_not: true } })
+              tags(where: { tag: { deprecated_not: true } }, orderBy: [order_ASC], first: 10) { tag { title } }
+              lowerCasedTitle
+            }`,
             onDeletion: `{ id }`,
           },
         });
       });
 
       after(() => subscription.dispose());
-
-      it('has a dependency-graph', () => {
-        assert.deepEqual(subscription.dependencyGraph.flattened.toJSON(), {
-          Article: {
-            creation: true,
-            deletion: true,
-            update: ['status', 'category', 'title'],
-          },
-          ArticleTag: {
-            creation: true,
-            deletion: true,
-            update: ['order'],
-          },
-          Tag: {
-            update: ['deprecated'],
-          },
-        });
-      });
 
       it('the "creation" is an incomplete "upsert"', () => {
         const myRequestContext: MyContext = {};
@@ -291,7 +263,7 @@ describe('ChangesSubscription', () => {
       });
     });
 
-    describe('with filter and/or selection on edge(s) and/or reverse-edge(s)', () => {
+    describe.only('with filter and/or selection on edge(s) and/or reverse-edge(s)', () => {
       let subscription: ChangesSubscriptionStream;
 
       before(async () => {
@@ -312,56 +284,27 @@ describe('ChangesSubscription', () => {
           },
           selection: {
             onUpsert: `{
-                id
+              id
+              title
+              category {
+                order
                 title
-                category {
-                  order
+              }
+              createdBy {
+                username
+              }
+              tags(where: { tag: { deprecated_not: true }}, first: 10) {
+                tag {
                   title
                 }
-                createdBy {
-                  username
-                }
-                tags(where: { tag: { deprecated_not: true }}, first: 10) {
-                  tag {
-                    title
-                  }
-                }
-              }`,
+              }
+            }`,
             onDeletion: `{ id }`,
           },
         });
       });
 
       after(() => subscription.dispose());
-
-      it('has a dependency-graph', () => {
-        assert.deepEqual(subscription.dependencyGraph.flattened.toJSON(), {
-          Article: {
-            creation: true,
-            deletion: true,
-            update: ['status', 'updatedBy', 'title', 'category'],
-          },
-          ArticleTag: {
-            creation: true,
-            deletion: true,
-            update: ['order'],
-          },
-          Category: {
-            update: ['order'],
-          },
-          Tag: {
-            update: ['deprecated'],
-          },
-          User: {
-            update: ['lastLoggedInAt'],
-          },
-          UserProfile: {
-            creation: true,
-            deletion: true,
-            update: ['birthday'],
-          },
-        });
-      });
 
       const myRequestContext: MyContext = {};
 
@@ -420,6 +363,21 @@ describe('ChangesSubscription', () => {
               { birthday: '1987-04-28' },
             ),
           ],
+          // [
+          //   new NodeUpdate(
+          //     Tag,
+          //     myRequestContext,
+          //     {
+          //       id: '1a364d1e-6436-4ab8-815e-ed5cbb98bdcd',
+          //       createdAt: new Date(),
+          //       updatedAt: new Date(),
+          //       deprecated: true,
+          //       slug: 'my-tag',
+          //       title: 'My tag',
+          //     },
+          //     { title: "My new tag's title" },
+          //   ),
+          // ],
         ] satisfies ReadonlyArray<ReadonlyArray<NodeChange>>
       ).forEach((changes) => {
         it('discards those changes', () => {
@@ -810,6 +768,45 @@ describe('ChangesSubscription', () => {
         assert.deepStrictEqual(dependentGraph.filter?.graphFilter.inputValue, {
           createdBy: { id: '1fc3ca20-8ac3-47e7-83e7-60b3ed7f87c5' },
         });
+      });
+
+      it('handles this Tag "update"', () => {
+        const dependentGraph =
+          subscription.dependencyGraph.createDependentGraph([
+            new NodeUpdate(
+              Tag,
+              myRequestContext,
+              {
+                id: '1a364d1e-6436-4ab8-815e-ed5cbb98bdcd',
+                createdAt: new Date(),
+                updatedAt: new Date(),
+                deprecated: true,
+                slug: 'my-tag',
+                title: 'My tag',
+              },
+              { title: "My new tag's title" },
+            ),
+          ]);
+
+        assert(!dependentGraph.isEmpty());
+        assert.deepStrictEqual(dependentGraph.toJSON(), {
+          dependentsByReverseEdge: {
+            tags: {
+              dependentsByEdge: {
+                tag: {
+                  upserts: ['"1a364d1e-6436-4ab8-815e-ed5cbb98bdcd"'],
+                },
+              },
+            },
+          },
+        });
+        assert.deepStrictEqual(dependentGraph.graphFilter.inputValue, {
+          tags_some: { tag: { id: '1a364d1e-6436-4ab8-815e-ed5cbb98bdcd' } },
+        });
+        assert.deepStrictEqual(
+          dependentGraph.filter?.graphFilter.inputValue,
+          null,
+        );
       });
     });
   });

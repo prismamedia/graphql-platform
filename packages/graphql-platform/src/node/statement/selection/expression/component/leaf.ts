@@ -48,6 +48,9 @@ export class LeafSelection<TSource extends LeafValue = any, TValue = TSource>
     return this;
   }
 
+  /**
+   * @deprecated
+   */
   public get dependency() {
     return this.leaf;
   }
