@@ -45,9 +45,9 @@ export class InMemorySubscription
     waitUntilProcessed: boolean = this.subscription.isConsumingNodeChanges(),
   ): Promise<void> {
     const dependentGraph =
-      this.subscription.dependencyGraph.createDependentGraph(changes);
+      this.subscription.dependencyTree.createDependentGraph(changes);
 
-    if (dependentGraph.isEmpty()) {
+    if (!dependentGraph) {
       return;
     }
 

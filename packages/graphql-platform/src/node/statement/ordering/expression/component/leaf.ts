@@ -14,8 +14,4 @@ export class LeafOrdering extends AbstractOrderingExpression {
 
     super(direction, ast);
   }
-
-  public get dependency() {
-    return this.leaf;
-  }
 }

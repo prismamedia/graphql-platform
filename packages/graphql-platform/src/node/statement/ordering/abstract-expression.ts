@@ -1,5 +1,4 @@
 import type * as graphql from 'graphql';
-import type { Dependency } from '../../change.js';
 import type { NodeOrderingInputValue } from '../../type.js';
 import type { OrderingDirection } from './direction.js';
 
@@ -8,8 +7,6 @@ export abstract class AbstractOrderingExpression {
    * Returns the input-value for this expression
    */
   public readonly inputValue: NonNullable<NodeOrderingInputValue>;
-
-  public abstract readonly dependency?: Dependency;
 
   public constructor(
     public readonly direction: OrderingDirection,

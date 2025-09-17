@@ -97,6 +97,10 @@ export class MultipleReverseEdgeHeadOutputType extends AbstractReverseEdgeOutput
 
     const argsPath = utils.addPath(path, argsPathKey);
 
+    const authorization = operationContext?.getAuthorization(
+      this.reverseEdge.head,
+    );
+
     const headFilter = this.reverseEdge.head.filterInputType.filter(
       args?.where,
       operationContext,
@@ -120,7 +124,9 @@ export class MultipleReverseEdgeHeadOutputType extends AbstractReverseEdgeOutput
     return new MultipleReverseEdgeHeadSelection(
       this.reverseEdge,
       ast.alias?.value,
-      headFilter,
+      authorization && headFilter
+        ? authorization.and(headFilter).normalized
+        : authorization || headFilter,
       headOrdering,
       args.skip || undefined,
       args.first,

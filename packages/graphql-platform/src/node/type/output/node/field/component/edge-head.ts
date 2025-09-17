@@ -47,9 +47,9 @@ export class EdgeHeadOutputType extends AbstractComponentOutputType<undefined> {
       );
     }
 
-    if (!this.edge.isNullable()) {
-      operationContext?.ensureAuthorization(this.edge.head, path);
-    }
+    const authorization = this.edge.isNullable()
+      ? operationContext?.getAuthorization(this.edge.head)
+      : operationContext?.ensureAuthorization(this.edge.head, path);
 
     const headSelection =
       this.edge.head.outputType.selectGraphQLSelectionSetNode(
@@ -59,7 +59,12 @@ export class EdgeHeadOutputType extends AbstractComponentOutputType<undefined> {
         path,
       );
 
-    return new EdgeHeadSelection(this.edge, ast.alias?.value, headSelection);
+    return new EdgeHeadSelection(
+      this.edge,
+      ast.alias?.value,
+      authorization,
+      headSelection,
+    );
   }
 
   public selectShape(
@@ -67,9 +72,9 @@ export class EdgeHeadOutputType extends AbstractComponentOutputType<undefined> {
     operationContext: OperationContext | undefined,
     path: utils.Path,
   ): EdgeHeadSelection {
-    if (!this.edge.isNullable()) {
-      operationContext?.ensureAuthorization(this.edge.head, path);
-    }
+    const headFilter = this.edge.isNullable()
+      ? operationContext?.getAuthorization(this.edge.head)
+      : operationContext?.ensureAuthorization(this.edge.head, path);
 
     if (value === null) {
       return this.edge.selection;
@@ -81,6 +86,11 @@ export class EdgeHeadOutputType extends AbstractComponentOutputType<undefined> {
       path,
     );
 
-    return new EdgeHeadSelection(this.edge, undefined, headSelection);
+    return new EdgeHeadSelection(
+      this.edge,
+      undefined,
+      headFilter,
+      headSelection,
+    );
   }
 }

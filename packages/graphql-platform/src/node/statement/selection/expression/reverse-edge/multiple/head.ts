@@ -2,7 +2,6 @@ import * as utils from '@prismamedia/graphql-platform-utils';
 import * as graphql from 'graphql';
 import assert from 'node:assert';
 import type { JsonArray } from 'type-fest';
-import { ReverseEdgeDependencyGraph } from '../../../../../change/dependency.js';
 import type { MultipleReverseEdge } from '../../../../../definition.js';
 import type { OperationContext } from '../../../../../operation.js';
 import type {
@@ -117,15 +116,6 @@ export class MultipleReverseEdgeHeadSelection<
       this.offset,
       this.limit,
       this.headSelection.mergeWith(expression.headSelection, path),
-    );
-  }
-
-  public get dependency() {
-    return new ReverseEdgeDependencyGraph(
-      this.reverseEdge,
-      this.headFilter,
-      this.headOrdering,
-      this.headSelection,
     );
   }
 

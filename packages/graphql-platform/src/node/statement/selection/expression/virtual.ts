@@ -78,10 +78,6 @@ export class VirtualSelection<
     return this;
   }
 
-  public get dependency() {
-    return this.sourceSelection?.dependencyGraph;
-  }
-
   public parseSource(maybeSource: unknown, path?: utils.Path): TSource {
     return this.sourceSelection?.parseSource(maybeSource, path);
   }

@@ -1,0 +1,408 @@
+exports[`Dependency > Complex filter & selection > has a consistent dependency-tree 1`] = `
+{
+  "Article": {
+    "creation": true,
+    "deletion": true,
+    "update": [
+      "status",
+      "updatedBy",
+      "title",
+      "category"
+    ]
+  },
+  "User": {
+    "update": [
+      "lastLoggedInAt"
+    ]
+  },
+  "UserProfile": {
+    "creation": true,
+    "deletion": true,
+    "update": [
+      "birthday"
+    ]
+  },
+  "ArticleTag": {
+    "creation": true,
+    "deletion": true,
+    "update": [
+      "order"
+    ]
+  },
+  "Tag": {
+    "update": [
+      "deprecated",
+      "slug",
+      "title"
+    ]
+  },
+  "ArticleTagModeration": {
+    "creation": true,
+    "deletion": true,
+    "update": [
+      "moderation"
+    ]
+  },
+  "Category": {
+    "creation": true,
+    "deletion": true,
+    "update": [
+      "order",
+      "parent"
+    ]
+  },
+  "ArticleExtension": {
+    "creation": true,
+    "deletion": true,
+    "update": [
+      "source"
+    ]
+  }
+}
+`;
+
+exports[`Dependency > Complex filter & selection > produces a dependent-graph > deletion-filter 1`] = `
+{
+  "NOT": {
+    "status": "published",
+    "NOT": {
+      "createdBy": {
+        "lastLoggedInAt_gte": "2023-01-01T00:00:00.000Z",
+        "profile": {
+          "birthday_gte": "2000-01-01"
+        }
+      },
+      "updatedBy": {
+        "lastLoggedInAt_gte": "2023-06-01T00:00:00.000Z",
+        "profile": {}
+      }
+    },
+    "tags_some": {
+      "tag": {
+        "deprecated_not": true
+      }
+    }
+  },
+  "OR": [
+    {
+      "createdBy": {
+        "id_in": [
+          "a207a3f6-474a-4ac9-8821-cc53bca56899",
+          "0f9e1c0d-0eae-4567-8607-d62a887f49af"
+        ]
+      }
+    },
+    {
+      "updatedBy": {
+        "OR": [
+          {
+            "username_in": [
+              "updateduser",
+              "frequentuser"
+            ]
+          },
+          {
+            "id_in": [
+              "ae09ca2f-bbf3-413a-9a7b-a5802712db71",
+              "d0f09d4a-1147-4f85-98ed-bcda3d7a0c69",
+              "3a517817-8c97-405f-94d5-4fa95d1770e5"
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "_id_in": [
+        5,
+        7,
+        8,
+        10
+      ]
+    },
+    {
+      "tags_some": {
+        "tag": {
+          "id": "e9937c6e-b774-4b40-91c1-794b53ccb771"
+        }
+      }
+    }
+  ]
+}
+`;
+
+exports[`Dependency > Complex filter & selection > produces a dependent-graph > summary 1`] = `
+{
+  "changes": {
+    "update": 2,
+    "creation": 2
+  },
+  "children": {
+    "updatedBy": {
+      "children": {
+        "profile": {
+          "changes": {
+            "creation": 2,
+            "deletion": 1
+          }
+        }
+      }
+    },
+    "tags": {
+      "children": {
+        "tag": {
+          "changes": {
+            "update": 3
+          }
+        },
+        "moderations": {
+          "changes": {
+            "creation": 1,
+            "deletion": 1,
+            "update": 1
+          }
+        }
+      }
+    },
+    "category": {
+      "children": {
+        "children": {
+          "changes": {
+            "creation": 1
+          }
+        }
+      }
+    }
+  }
+}
+`;
+
+exports[`Dependency > Complex filter & selection > produces a dependent-graph > upsert-filter 1`] = `
+{
+  "OR": [
+    {
+      "updatedBy": {
+        "id_in": [
+          "ae09ca2f-bbf3-413a-9a7b-a5802712db71",
+          "d0f09d4a-1147-4f85-98ed-bcda3d7a0c69",
+          "3a517817-8c97-405f-94d5-4fa95d1770e5"
+        ]
+      }
+    },
+    {
+      "tags_some": {
+        "OR": [
+          {
+            "tag": {
+              "id_in": [
+                "e9937c6e-b774-4b40-91c1-794b53ccb771",
+                "d919d8aa-31a9-451b-adfe-b903e39f0427",
+                "1a364d1e-6436-4ab8-815e-ed5cbb98bdcd"
+              ]
+            }
+          },
+          {
+            "article": {
+              "_id": 7
+            },
+            "tag": {
+              "id": "1b5688b2-2a6d-48bc-a1c6-77015a2994ba"
+            }
+          },
+          {
+            "article": {
+              "_id": 9
+            },
+            "tag": {
+              "id": "2a7b118a-0a81-4eeb-b43e-1f95e91ac0a9"
+            }
+          },
+          {
+            "article": {
+              "_id": 8
+            },
+            "tag": {
+              "id": "3c278a21-fa82-49f4-9bf3-6d88ce8cec2d"
+            }
+          }
+        ]
+      }
+    },
+    {
+      "category": {
+        "_id": 12
+      }
+    }
+  ]
+}
+`;
+
+exports[`Dependency > Complex filter > has a consistent dependency-tree 1`] = `
+{
+  "Article": {
+    "creation": true,
+    "deletion": true,
+    "update": [
+      "status",
+      "title",
+      "category"
+    ]
+  },
+  "ArticleTag": {
+    "creation": true,
+    "deletion": true
+  },
+  "Tag": {
+    "update": [
+      "deprecated"
+    ]
+  }
+}
+`;
+
+exports[`Dependency > Complex filter > produces a dependent-graph > deletion-filter 1`] = `
+{
+  "NOT": {
+    "status": "published",
+    "tags_some": {
+      "tag": {
+        "deprecated_not": true
+      }
+    }
+  },
+  "OR": [
+    {
+      "_id_in": [
+        5,
+        7,
+        8,
+        10
+      ]
+    },
+    {
+      "tags_some": {
+        "tag": {
+          "id": "e9937c6e-b774-4b40-91c1-794b53ccb771"
+        }
+      }
+    }
+  ]
+}
+`;
+
+exports[`Dependency > Complex filter > produces a dependent-graph > summary 1`] = `
+{
+  "changes": {
+    "update": 2,
+    "creation": 2
+  },
+  "children": {
+    "tags": {
+      "children": {
+        "tag": {
+          "changes": {
+            "update": 1
+          }
+        }
+      }
+    }
+  }
+}
+`;
+
+exports[`Dependency > Complex filter > produces a dependent-graph > upsert-filter 1`] = `
+{
+  "tags_some": {
+    "tag": {
+      "id": "e9937c6e-b774-4b40-91c1-794b53ccb771"
+    }
+  }
+}
+`;
+
+exports[`Dependency > Pure > has a consistent dependency-tree 1`] = `
+{
+  "Article": {
+    "creation": true,
+    "deletion": true,
+    "update": [
+      "status",
+      "title"
+    ]
+  }
+}
+`;
+
+exports[`Dependency > Pure > produces a dependent-graph > summary 1`] = `
+{
+  "changes": {
+    "deletion": 1,
+    "update": 1,
+    "creation": 1
+  }
+}
+`;
+
+exports[`Dependency > Pure > produces a dependent-graph > upsert-filter 1`] = `
+null
+`;
+
+exports[`Dependency > With virtual-selection > has a consistent dependency-tree 1`] = `
+{
+  "Article": {
+    "creation": true,
+    "deletion": true,
+    "update": [
+      "title",
+      "status",
+      "category"
+    ]
+  },
+  "ArticleTag": {
+    "creation": true,
+    "deletion": true,
+    "update": [
+      "order"
+    ]
+  },
+  "Tag": {
+    "update": [
+      "title"
+    ]
+  }
+}
+`;
+
+exports[`Dependency > With virtual-selection > produces a dependent-graph > summary 1`] = `
+{
+  "changes": {
+    "deletion": 1,
+    "creation": 3,
+    "update": 3
+  },
+  "children": {
+    "tags": {
+      "children": {
+        "tag": {
+          "changes": {
+            "update": 3
+          }
+        }
+      }
+    }
+  }
+}
+`;
+
+exports[`Dependency > With virtual-selection > produces a dependent-graph > upsert-filter 1`] = `
+{
+  "tags_some": {
+    "tag": {
+      "id_in": [
+        "1a364d1e-6436-4ab8-815e-ed5cbb98bdcd",
+        "e9937c6e-b774-4b40-91c1-794b53ccb771",
+        "d919d8aa-31a9-451b-adfe-b903e39f0427"
+      ]
+    }
+  }
+}
+`;

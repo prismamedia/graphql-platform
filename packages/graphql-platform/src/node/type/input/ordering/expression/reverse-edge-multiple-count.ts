@@ -21,8 +21,13 @@ export class MultipleReverseEdgeCountOrderingInput extends OrderingExpressionInp
           : `from the highest number of "${reverseEdge.name}" to the lowest`,
       deprecated: reverseEdge.deprecationReason,
       direction,
-      sort: () =>
-        new MultipleReverseEdgeCountOrdering(reverseEdge, direction, this.ast),
+      sort: (operationContext) =>
+        new MultipleReverseEdgeCountOrdering(
+          reverseEdge,
+          direction,
+          this.ast,
+          operationContext?.getAuthorization(reverseEdge.head),
+        ),
     });
   }
 }

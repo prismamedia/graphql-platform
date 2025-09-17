@@ -2,7 +2,6 @@ import * as scalars from '@prismamedia/graphql-platform-scalars';
 import * as utils from '@prismamedia/graphql-platform-utils';
 import * as graphql from 'graphql';
 import assert from 'node:assert';
-import { ReverseEdgeDependencyGraph } from '../../../../../change/dependency.js';
 import type { MultipleReverseEdge } from '../../../../../definition.js';
 import type { OperationContext } from '../../../../../operation.js';
 import type { NodeFilterInputValue } from '../../../../../type.js';
@@ -76,10 +75,6 @@ export class MultipleReverseEdgeCountSelection<
     assert(this.isAkinTo(expression));
 
     return this;
-  }
-
-  public get dependency() {
-    return new ReverseEdgeDependencyGraph(this.reverseEdge, this.headFilter);
   }
 
   public get ast(): graphql.FieldNode {

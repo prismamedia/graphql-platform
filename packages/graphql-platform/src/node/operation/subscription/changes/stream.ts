@@ -12,7 +12,7 @@ import type {
   NodeChangeSubscriptionInterface,
 } from '../../../../broker-interface.js';
 import type { Node, NodeValue } from '../../../../node.js';
-import { DependentGraph, NodeSetDependencyGraph } from '../../../change.js';
+import { DependentGraph, DocumentSetDependency } from '../../../dependency.js';
 import type {
   ContextBoundNodeAPI,
   OperationContext,
@@ -73,8 +73,8 @@ export type ChangesSubscriptionStreamEvents<
   TRequestContext extends object = any,
 > = {
   'post-effect': ChangesSubscriptionEffect<TRequestContext>;
-  'post-processed-mutation-changes': {
-    mutationChanges: DependentGraph<TRequestContext>;
+  'post-dependent-graph': {
+    dependentGraph: DependentGraph<TRequestContext>;
     subscriptionChanges: {
       upsertCount: number;
       deletionCount: number;
@@ -142,7 +142,7 @@ export class ChangesSubscriptionStream<
   public readonly cursor?: ScrollCursorInputValue;
   public readonly onUpsertSelection: NodeSelection<TUpsert>;
   public readonly onDeletionSelection?: NodeSelection<TDeletion>;
-  public readonly dependencyGraph: NodeSetDependencyGraph;
+  public readonly dependencyTree: DocumentSetDependency;
 
   public readonly api: ContextBoundNodeAPI;
 
@@ -191,12 +191,10 @@ export class ChangesSubscriptionStream<
       this.onDeletionSelection = config.selection.onDeletion;
     }
 
-    this.dependencyGraph = new NodeSetDependencyGraph(
-      this.node,
-      this.filter,
-      undefined,
-      this.onUpsertSelection,
-    );
+    this.dependencyTree = new DocumentSetDependency(this.node, {
+      filter: this.filter,
+      selection: this.onUpsertSelection,
+    });
 
     this.api = node.createContextBoundAPI(context);
 
@@ -240,9 +238,9 @@ export class ChangesSubscriptionStream<
       const dependentGraph =
         changes instanceof DependentGraph
           ? changes
-          : this.dependencyGraph.createDependentGraph(changes);
+          : this.dependencyTree.createDependentGraph(changes);
 
-      if (!dependentGraph.isEmpty()) {
+      if (dependentGraph) {
         const startedAt = new Date();
         let upsertCount: number = 0;
         let deletionCount: number = 0;
@@ -268,8 +266,8 @@ export class ChangesSubscriptionStream<
         const total = upsertCount + deletionCount;
         const endedAt = new Date();
 
-        await this.emit('post-processed-mutation-changes', {
-          mutationChanges: dependentGraph,
+        await this.emit('post-dependent-graph', {
+          dependentGraph,
           subscriptionChanges: {
             upsertCount,
             deletionCount,

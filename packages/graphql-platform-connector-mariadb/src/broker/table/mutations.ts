@@ -201,7 +201,7 @@ export class MariaDBBrokerMutationsTable extends AbstractTable {
     alias?: string,
   ): string {
     return OR(
-      worker.subscription.dependencyGraph.flattened.byNode
+      worker.subscription.dependencyTree.flattened.dependencies
         .entries()
         .flatMap(([node, { creation, deletion, update }]) => [
           creation || deletion

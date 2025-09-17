@@ -1,9 +1,10 @@
 import Denque from 'denque';
 import * as graphql from 'graphql';
 import assert from 'node:assert';
-import type { NodeSelectedValue, NodeSelection } from '../../../../../node.js';
-import type { Dependency } from '../../../../change.js';
+import type { NodeChange } from '../../../../change.js';
+import type { RawDependency } from '../../../../dependency.js';
 import type { NodeFilterInputValue } from '../../../../type.js';
+import type { NodeSelectedValue, NodeSelection } from '../../../selection.js';
 import { AbstractBooleanFilter } from '../../abstract.js';
 import type { BooleanFilter } from '../../boolean.js';
 import type { BooleanExpression } from '../expression.js';
@@ -225,8 +226,14 @@ export class OrOperation extends AbstractBooleanFilter {
     return hasUndefinedOperand ? undefined : false;
   }
 
-  public get dependency(): Array<Dependency | undefined> {
-    return this.operands.flatMap(({ dependency }) => dependency);
+  public override isEdgeHeadChangeFilteredOut(change: NodeChange): boolean {
+    return this.operands.every((operand) =>
+      operand.isEdgeHeadChangeFilteredOut(change),
+    );
+  }
+
+  public override get dependencies(): RawDependency[] {
+    return this.operands.flatMap(({ dependencies }) => dependencies);
   }
 
   public get ast(): graphql.ConstObjectValueNode {

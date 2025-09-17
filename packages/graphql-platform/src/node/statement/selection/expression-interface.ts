@@ -1,7 +1,6 @@
 import type * as utils from '@prismamedia/graphql-platform-utils';
 import type * as graphql from 'graphql';
 import type { JsonValue, Promisable } from 'type-fest';
-import type { Dependency } from '../../change.js';
 import type { OperationContext } from '../../operation.js';
 
 export interface SelectionExpressionInterface<TSource = any, TValue = TSource> {
@@ -17,8 +16,6 @@ export interface SelectionExpressionInterface<TSource = any, TValue = TSource> {
   equals(expression: unknown): boolean;
 
   isSupersetOf(expression: unknown): boolean;
-
-  dependency?: Dependency;
 
   parseSource(maybeSource: unknown, path?: utils.Path): TSource;
 

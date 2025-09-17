@@ -76,6 +76,7 @@ import {
 
 export * from './node/change.js';
 export * from './node/definition.js';
+export * from './node/dependency.js';
 export * from './node/feature.js';
 export * from './node/fixture.js';
 export * from './node/loader.js';
@@ -820,6 +821,15 @@ export class Node<
 
   public toString(): string {
     return this.name;
+  }
+
+  @MGetter
+  public get componentsInUniqueConstraints(): ReadonlySet<Component> {
+    return new Set(
+      this.uniqueConstraintSet
+        .values()
+        .flatMap(({ componentSet }) => componentSet),
+    );
   }
 
   @MMethod()

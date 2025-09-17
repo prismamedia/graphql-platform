@@ -6,6 +6,7 @@ import {
 import {
   ArticleStatus,
   myAdminContext,
+  type MyContext,
 } from '@prismamedia/graphql-platform/__tests__/config.js';
 import * as fixtures from '@prismamedia/graphql-platform/__tests__/fixture.js';
 import assert from 'node:assert';
@@ -22,7 +23,64 @@ describe('Subscription', () => {
   const Tag = gp.getNodeByName('Tag');
   const User = gp.getNodeByName('User');
 
-  let subscriptions: ChangesSubscriptionStream[];
+  let subscriptions: ChangesSubscriptionStream<MyContext>[];
+  const additionalMutations = async () => {
+    await gp.withMutationContext(
+      { ...myAdminContext, action: 'additional mutations' },
+      async ({ api }) => {
+        await Promise.all([
+          api.Article.updateMany({
+            data: { slug: 'a-new-slug-1' },
+            where: { title: fixtures.constant.Article.article_01.title },
+            first: 1,
+            selection: `{ id }`,
+          }),
+          api.Article.updateMany({
+            data: { slug: 'a-new-slug-2' },
+            where: { title: fixtures.constant.Article.article_02.title },
+            first: 1,
+            selection: `{ id }`,
+          }),
+          api.Article.updateMany({
+            data: { slug: 'a-new-slug-3' },
+            where: { title: fixtures.constant.Article.article_03.title },
+            first: 1,
+            selection: `{ id }`,
+          }),
+        ]);
+
+        await api.User.createOne({
+          data: { username: 'My new user' },
+          selection: `{ id }`,
+        });
+
+        await api.User.createOne({
+          data: {
+            username: 'My second new user',
+            lastLoggedInAt: new Date('2025-02-01T00:00:00Z'),
+          },
+          selection: `{ id }`,
+        });
+
+        await api.Category.updateOne({
+          data: { order: 2 },
+          where: { id: '26348235-ffe8-4ed1-985f-94e58961578f' },
+          selection: `{ id }`,
+        });
+      },
+    );
+
+    await Tag.api.updateOne(
+      { ...myAdminContext, action: '"TV" tag deprecation' },
+      {
+        data: { deprecated: true },
+        where: { slug: 'tv' },
+        selection: `{ id }`,
+      },
+    );
+
+    await gp.broker.assign();
+  };
 
   beforeEach(async () => {
     await gp.connector.setup();
@@ -44,7 +102,10 @@ describe('Subscription', () => {
               title
             }
           }`,
-          onDeletion: `{ id }`,
+          onDeletion: `{
+            id
+            slug
+          }`,
         },
       }),
       Tag.api.subscribeToChanges(myAdminContext, {
@@ -70,58 +131,24 @@ describe('Subscription', () => {
       }),
     ]);
 
-    await gp.seed(myAdminContext, fixtures.constant);
-
-    await Promise.all([
-      Article.api.updateMany(myAdminContext, {
-        data: { slug: 'a-new-slug-1' },
-        where: { title: fixtures.constant.Article.article_01.title },
-        first: 1,
-        selection: `{ id }`,
-      }),
-      Article.api.updateMany(myAdminContext, {
-        data: { slug: 'a-new-slug-2' },
-        where: { title: fixtures.constant.Article.article_02.title },
-        first: 1,
-        selection: `{ id }`,
-      }),
-      Article.api.updateMany(myAdminContext, {
-        data: { slug: 'a-new-slug-3' },
-        where: { title: fixtures.constant.Article.article_03.title },
-        first: 1,
-        selection: `{ id }`,
-      }),
-    ]);
-
-    await User.api.createOne(myAdminContext, {
-      data: { username: 'My new user' },
-      selection: `{ id }`,
-    });
-
-    await User.api.createOne(myAdminContext, {
-      data: {
-        username: 'My second new user',
-        lastLoggedInAt: new Date('2025-02-01T00:00:00Z'),
-      },
-      selection: `{ id }`,
-    });
-
-    await Category.api.updateOne(myAdminContext, {
-      data: { order: 2 },
-      where: { id: '26348235-ffe8-4ed1-985f-94e58961578f' },
-      selection: `{ id }`,
-    });
-
-    await Tag.api.updateOne(myAdminContext, {
-      data: { deprecated: true },
-      where: { slug: 'tv' },
-      selection: `{ id }`,
-    });
+    await gp.seed(
+      { ...myAdminContext, action: 'fixtures seeding' },
+      fixtures.constant,
+    );
 
     await gp.broker.assign();
 
+    let hasBeenIdle = false;
     subscriptions.forEach((subscription) =>
-      gp.broker.onIdle(subscription, () => subscription.dispose()),
+      gp.broker.onIdle(subscription, async () => {
+        if (!hasBeenIdle) {
+          hasBeenIdle = true;
+
+          await additionalMutations();
+        } else {
+          subscription.dispose();
+        }
+      }),
     );
   });
 
@@ -132,46 +159,58 @@ describe('Subscription', () => {
     await gp.connector.teardown();
   });
 
-  it('has a dependency-graph', () => {
-    assert.deepEqual(subscriptions[0].dependencyGraph.flattened.toJSON(), {
-      Article: {
-        creation: true,
-        deletion: true,
-        update: ['status', 'slug', 'title', 'category'],
-      },
-      ArticleTag: {
-        creation: true,
-        deletion: true,
-      },
-      Category: {
-        update: ['order'],
-      },
-      Tag: {
-        update: ['deprecated'],
-      },
+  describe('has consistent dependency-trees', () => {
+    it('articles', () => {
+      assert.deepEqual(subscriptions[0].dependencyTree.flattened.toJSON(), {
+        Article: {
+          creation: true,
+          deletion: true,
+          update: ['status', 'slug', 'title', 'category'],
+        },
+        ArticleTag: {
+          creation: true,
+          deletion: true,
+        },
+        Category: {
+          update: ['order'],
+        },
+        Tag: {
+          update: ['deprecated'],
+        },
+      });
     });
 
-    assert.deepEqual(subscriptions[1].dependencyGraph.flattened.toJSON(), {
-      Article: {
-        update: ['status'],
-      },
-      ArticleTag: {
-        creation: true,
-        deletion: true,
-      },
-      Tag: {
-        creation: true,
-        deletion: true,
-        update: ['deprecated'],
-      },
+    it('tags', () => {
+      assert.deepEqual(subscriptions[1].dependencyTree.flattened.toJSON(), {
+        Article: {
+          update: ['status'],
+        },
+        ArticleTag: {
+          creation: true,
+          deletion: true,
+        },
+        Tag: {
+          creation: true,
+          deletion: true,
+          update: ['deprecated', 'title'],
+        },
+      });
+    });
+
+    it('categories', () => {
+      assert.deepEqual(subscriptions[2].dependencyTree.flattened.toJSON(), {
+        Category: {
+          creation: true,
+          deletion: true,
+          update: ['order'],
+        },
+      });
     });
   });
 
   it('has diagnosis', async () => {
-    const diagnoses = await gp.broker.diagnose();
-
     assert.deepEqual(
-      diagnoses.map(({ assigned, unassigned }) => ({
+      (await gp.broker.diagnose()).map(({ assigned, unassigned }) => ({
         assigned:
           assigned.mutationCount &&
           R.omit(assigned, [
@@ -190,7 +229,51 @@ describe('Subscription', () => {
       [
         {
           assigned: {
-            mutationCount: 6,
+            mutationCount: 1,
+            changeCount: 15,
+          },
+          unassigned: 0,
+        },
+        {
+          assigned: {
+            mutationCount: 1,
+            changeCount: 11,
+          },
+          unassigned: 0,
+        },
+        {
+          assigned: {
+            mutationCount: 1,
+            changeCount: 3,
+          },
+          unassigned: 0,
+        },
+      ],
+    );
+
+    await additionalMutations();
+
+    assert.deepEqual(
+      (await gp.broker.diagnose()).map(({ assigned, unassigned }) => ({
+        assigned:
+          assigned.mutationCount &&
+          R.omit(assigned, [
+            'oldestCommitDate',
+            'newestCommitDate',
+            'latencyInSeconds',
+          ]),
+        unassigned:
+          unassigned.mutationCount &&
+          R.omit(unassigned, [
+            'oldestCommitDate',
+            'newestCommitDate',
+            'latencyInSeconds',
+          ]),
+      })),
+      [
+        {
+          assigned: {
+            mutationCount: 3,
             changeCount: 20,
           },
           unassigned: 0,
@@ -287,30 +370,47 @@ describe('Subscription', () => {
 
   it('is iterable through "Array.fromAsync"', async () => {
     assert.deepEqual(
-      await Array.fromAsync(subscriptions[0], (change) =>
-        change instanceof ChangesSubscriptionDeletion ? 'deletion' : 'upsert',
+      await Array.fromAsync(
+        subscriptions[0],
+        (change) =>
+          `${change instanceof ChangesSubscriptionDeletion ? 'deletion' : 'upsert'}:${change.value.slug}${change.initiator.action ? ` - ${change.initiator.action}` : ''}`,
       ),
-      ['upsert', 'upsert', 'deletion'],
+      [
+        'deletion:my-second-published-article - fixtures seeding',
+        'upsert:my-second-published-article-in-root-category - fixtures seeding',
+        'upsert:my-first-published-article-in-root-category - fixtures seeding',
+        'upsert:my-first-published-article - fixtures seeding',
+        'upsert:a-new-slug-3 - additional mutations',
+        'deletion:my-second-published-article-in-root-category - "TV" tag deprecation',
+      ],
     );
   });
 
   it('is iterable through "for await"', async () => {
-    const changes: ChangesSubscriptionChange[] = [];
+    const changes: ChangesSubscriptionChange<MyContext>[] = [];
 
     for await (const change of subscriptions[0]) {
       changes.push(change);
     }
 
     assert.deepEqual(
-      changes.map((change) =>
-        change instanceof ChangesSubscriptionDeletion ? 'deletion' : 'upsert',
+      changes.map(
+        (change) =>
+          `${change instanceof ChangesSubscriptionDeletion ? 'deletion' : 'upsert'}:${change.value.slug}${change.initiator.action ? ` - ${change.initiator.action}` : ''}`,
       ),
-      ['upsert', 'upsert', 'deletion'],
+      [
+        'deletion:my-second-published-article - fixtures seeding',
+        'upsert:my-second-published-article-in-root-category - fixtures seeding',
+        'upsert:my-first-published-article-in-root-category - fixtures seeding',
+        'upsert:my-first-published-article - fixtures seeding',
+        'upsert:a-new-slug-3 - additional mutations',
+        'deletion:my-second-published-article-in-root-category - "TV" tag deprecation',
+      ],
     );
   });
 
   it('is iterable through "for await" untill break', async () => {
-    const changes: ChangesSubscriptionChange[] = [];
+    const changes: ChangesSubscriptionChange<MyContext>[] = [];
 
     for await (const change of subscriptions[0]) {
       changes.push(change);
@@ -319,75 +419,55 @@ describe('Subscription', () => {
     }
 
     assert.deepEqual(
-      changes.map((change) =>
-        change instanceof ChangesSubscriptionDeletion ? 'deletion' : 'upsert',
+      changes.map(
+        (change) =>
+          `${change instanceof ChangesSubscriptionDeletion ? 'deletion' : 'upsert'}:${change.value.slug}${change.initiator.action ? ` - ${change.initiator.action}` : ''}`,
       ),
-      ['upsert'],
+      ['deletion:my-second-published-article - fixtures seeding'],
     );
   });
 
   it('is forEach-able', async () => {
-    const changes: ChangesSubscriptionChange[] = [];
+    const changes: ChangesSubscriptionChange<MyContext>[] = [];
 
     await subscriptions[0].forEach((change) => changes.push(change));
 
     assert.deepEqual(
-      changes.map((change) =>
-        change instanceof ChangesSubscriptionDeletion ? 'deletion' : 'upsert',
+      changes.map(
+        (change) =>
+          `${change instanceof ChangesSubscriptionDeletion ? 'deletion' : 'upsert'}:${change.value.slug}${change.initiator.action ? ` - ${change.initiator.action}` : ''}`,
       ),
-      ['upsert', 'upsert', 'deletion'],
+      [
+        'deletion:my-second-published-article - fixtures seeding',
+        'upsert:my-second-published-article-in-root-category - fixtures seeding',
+        'upsert:my-first-published-article-in-root-category - fixtures seeding',
+        'upsert:my-first-published-article - fixtures seeding',
+        'upsert:a-new-slug-3 - additional mutations',
+        'deletion:my-second-published-article-in-root-category - "TV" tag deprecation',
+      ],
     );
   });
 
   it('is byBatch-able', async () => {
-    const changes: ChangesSubscriptionChange[] = [];
+    const changes: ChangesSubscriptionChange<MyContext>[] = [];
 
     await subscriptions[0].byBatch((batch) => changes.push(...batch), {
       batchSize: 2,
     });
 
     assert.deepEqual(
-      changes.map((change) =>
-        change instanceof ChangesSubscriptionDeletion ? 'deletion' : 'upsert',
+      changes.map(
+        (change) =>
+          `${change instanceof ChangesSubscriptionDeletion ? 'deletion' : 'upsert'}:${change.value.slug}${change.initiator.action ? ` - ${change.initiator.action}` : ''}`,
       ),
-      ['upsert', 'upsert', 'deletion'],
-    );
-  });
-
-  it('uses cache', async () => {
-    const changes: ChangesSubscriptionChange[] = [];
-
-    await Promise.all([
-      Promise.all([
-        Article.api.updateMany(myAdminContext, {
-          data: {
-            title: `${fixtures.constant.Article.article_03.title} - v2`,
-          },
-          where: { title: fixtures.constant.Article.article_03.title },
-          first: 10,
-          selection: `{ id }`,
-        }),
-        Category.api.updateOne(myAdminContext, {
-          data: { order: 4 },
-          where: { id: '26348235-ffe8-4ed1-985f-94e58961578f' },
-          selection: `{ id }`,
-        }),
-      ]).then(() => gp.broker.assign()),
-      subscriptions[0].byBatch(
-        async (batch) => {
-          await setTimeout(50);
-
-          changes.push(...batch);
-        },
-        { batchSize: 2 },
-      ),
-    ]);
-
-    assert.deepEqual(
-      changes.map((change) =>
-        change instanceof ChangesSubscriptionDeletion ? 'deletion' : 'upsert',
-      ),
-      ['upsert', 'upsert', 'deletion', 'upsert'],
+      [
+        'deletion:my-second-published-article - fixtures seeding',
+        'upsert:my-second-published-article-in-root-category - fixtures seeding',
+        'upsert:my-first-published-article-in-root-category - fixtures seeding',
+        'upsert:my-first-published-article - fixtures seeding',
+        'upsert:a-new-slug-3 - additional mutations',
+        'deletion:my-second-published-article-in-root-category - "TV" tag deprecation',
+      ],
     );
   });
 });

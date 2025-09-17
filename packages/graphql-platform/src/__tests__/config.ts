@@ -41,6 +41,11 @@ export type MyUser = {
 
 export interface MyContext {
   user?: MyUser;
+
+  /**
+   * Optional, a description of the action being performed
+   */
+  action?: string;
 }
 
 export const myAdminContext = Object.freeze<MyContext>({
@@ -81,6 +86,7 @@ export const PublicNodeInterfaceType = new graphql.GraphQLInterfaceType({
 
 export enum ArticleStatus {
   DRAFT = 'draft',
+  PREVIEW = 'preview',
   PUBLISHED = 'published',
   DELETED = 'deleted',
 }
@@ -770,13 +776,11 @@ export const Tag = {
       kind: 'Leaf',
       type: 'NonEmptyTrimmedString',
       nullable: false,
-      mutable: false,
     },
     slug: {
       kind: 'Leaf',
       type: 'NonEmptyTrimmedString',
       nullable: false,
-      mutable: false,
 
       creation: {
         description: `You can either provide a slug or let the title be "slugified" for you`,

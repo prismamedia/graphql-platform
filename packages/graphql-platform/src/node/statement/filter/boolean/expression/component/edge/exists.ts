@@ -1,8 +1,9 @@
 import { MGetter } from '@prismamedia/memoize';
 import * as graphql from 'graphql';
 import assert from 'node:assert';
-import { EdgeDependencyGraph } from '../../../../../../change/dependency.js';
+import { type NodeChange } from '../../../../../../change.js';
 import type { Edge } from '../../../../../../definition.js';
+import type { RawDependency } from '../../../../../../dependency.js';
 import type { NodeFilterInputValue } from '../../../../../../type.js';
 import { NodeFilter, areFiltersEqual } from '../../../../../filter.js';
 import type {
@@ -128,8 +129,22 @@ export class EdgeExistsFilter extends AbstractComponentFilter {
       : true;
   }
 
-  public get dependency() {
-    return new EdgeDependencyGraph(this.edge, this.headFilter);
+  public override isEdgeHeadChangeFilteredOut(change: NodeChange): boolean {
+    return this.headFilter && change.node === this.edge.head
+      ? this.headFilter.isChangeFilteredOut(change)
+      : false;
+  }
+
+  public override get dependencies(): RawDependency[] {
+    return [
+      {
+        kind: 'Edge',
+        edge: this.edge,
+        head: {
+          filter: this.headFilter,
+        },
+      },
+    ];
   }
 
   public get ast(): graphql.ConstObjectValueNode {

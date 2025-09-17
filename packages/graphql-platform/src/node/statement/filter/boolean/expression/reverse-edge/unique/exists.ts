@@ -2,8 +2,8 @@ import { MGetter } from '@prismamedia/memoize';
 import * as graphql from 'graphql';
 import assert from 'node:assert';
 import type { NodeSelectedValue } from '../../../../../../../node.js';
-import { ReverseEdgeDependencyGraph } from '../../../../../../change/dependency.js';
 import type { UniqueReverseEdge } from '../../../../../../definition.js';
+import type { RawDependency } from '../../../../../../dependency.js';
 import type { NodeFilterInputValue } from '../../../../../../type.js';
 import { NodeFilter, areFiltersEqual } from '../../../../../filter.js';
 import type { BooleanFilter } from '../../../../boolean.js';
@@ -126,8 +126,16 @@ export class UniqueReverseEdgeExistsFilter extends AbstractReverseEdgeFilter {
       : true;
   }
 
-  public get dependency() {
-    return new ReverseEdgeDependencyGraph(this.reverseEdge, this.headFilter);
+  public override get dependencies(): RawDependency[] {
+    return [
+      {
+        kind: 'ReverseEdge',
+        reverseEdge: this.reverseEdge,
+        head: {
+          filter: this.headFilter,
+        },
+      },
+    ];
   }
 
   public get ast(): graphql.ConstObjectValueNode {

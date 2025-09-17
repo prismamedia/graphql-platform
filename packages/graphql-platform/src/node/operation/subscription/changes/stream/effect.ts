@@ -1,16 +1,12 @@
 import assert from 'node:assert';
 import type { NodeValue } from '../../../../../node.js';
-import type {
-  DependentGraph,
-  NodeCreation,
-  NodeUpdate,
-} from '../../../../change.js';
+import type { DependentGraph } from '../../../../dependency.js';
 import type { NodeSelectedValue } from '../../../../statement.js';
 import type { ChangesSubscriptionStream } from '../stream.js';
 import {
-  type ChangesSubscriptionChange,
   ChangesSubscriptionDeletion,
   ChangesSubscriptionUpsert,
+  type ChangesSubscriptionChange,
 } from './change.js';
 
 /**
@@ -72,14 +68,9 @@ export class ChangesSubscriptionEffect<
        *   slug: my-tag-slug -> my-new-tag-slug
        * }
        */
-      if (this.subscription.filter && this.dependentGraph.filter) {
+      if (!this.dependentGraph.deletionFilter.isFalse()) {
         for await (const deletion of this.subscription.api.scroll({
-          where: {
-            AND: [
-              this.subscription.filter.complement.inputValue,
-              this.dependentGraph.filter.graphFilter.inputValue,
-            ],
-          },
+          where: this.dependentGraph.deletionFilter.inputValue,
           ...(this.subscription.cursor && { cursor: this.subscription.cursor }),
           selection: this.subscription.onDeletionSelection,
           forSubscription: {
@@ -98,49 +89,9 @@ export class ChangesSubscriptionEffect<
     }
 
     // Then, the upserts:
-    {
-      let incompleteUpserts: ReadonlySet<NodeCreation | NodeUpdate> | undefined;
-
-      if (this.dependentGraph.upserts.size) {
-        if (this.subscription.onUpsertSelection.isPure()) {
-          // pass-through - we have everything we need
-          yield* this.dependentGraph.upserts
-            .values()
-            .map(
-              ({ newValue }) =>
-                new ChangesSubscriptionUpsert(
-                  this.subscription,
-                  initiator,
-                  initiatedAt,
-                  newValue,
-                ),
-            );
-        } else {
-          incompleteUpserts = this.dependentGraph.upserts;
-        }
-      }
-
+    if (!this.dependentGraph.upsertFilter.isFalse()) {
       for await (const upsert of this.subscription.api.scroll({
-        where: {
-          AND: [
-            !this.dependentGraph.graphFilter.isFalse() ||
-            this.dependentGraph.upsertIfFounds.size
-              ? this.subscription.filter?.inputValue
-              : undefined,
-            this.dependentGraph.graphFilter
-              .or(
-                ...this.dependentGraph.upsertIfFounds
-                  .values()
-                  .map(({ node, id }) => node.filterInputType.filter(id)),
-              )
-              .or(
-                ...(incompleteUpserts
-                  ?.values()
-                  .map(({ node, id }) => node.filterInputType.filter(id)) ??
-                  []),
-              ).inputValue,
-          ],
-        },
+        where: this.dependentGraph.upsertFilter.inputValue,
         ...(this.subscription.cursor && { cursor: this.subscription.cursor }),
         selection: this.subscription.onUpsertSelection,
         forSubscription: {

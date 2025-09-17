@@ -139,9 +139,9 @@ export class MariaDBBrokerChangesTable extends AbstractTable {
     alias?: string,
   ): string {
     return OR(
-      Array.from(
-        worker.subscription.dependencyGraph.flattened.byNode,
-        ([node, { creation, deletion, update }]) =>
+      worker.subscription.dependencyTree.flattened.dependencies
+        .entries()
+        .map(([node, { creation, deletion, update }]) =>
           AND([
             `${this.escapeColumnIdentifier('node', alias)} = ${this.serializeColumnValue('node', node.name)}`,
             OR([
@@ -167,7 +167,8 @@ export class MariaDBBrokerChangesTable extends AbstractTable {
                 : undefined,
             ]),
           ]),
-      ),
+        )
+        .toArray(),
     );
   }
 

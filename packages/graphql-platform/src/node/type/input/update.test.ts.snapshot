@@ -55,7 +55,7 @@ exports[`NodeUpdateInputType > Definition > Category may have an update input ty
 `;
 
 exports[`NodeUpdateInputType > Definition > Tag may have an update input type 1`] = `
-"\\"\\"\\"The \\"Tag\\" node's update\\"\\"\\"\\ninput TagUpdateInput {\\n  \\"\\"\\"A tag can be deprecated\\"\\"\\"\\n  deprecated: Boolean\\n  articles: TagUpdateArticlesInput\\n}"
+"\\"\\"\\"The \\"Tag\\" node's update\\"\\"\\"\\ninput TagUpdateInput {\\n  \\"\\"\\"A tag can be deprecated\\"\\"\\"\\n  deprecated: Boolean\\n  title: NonEmptyTrimmedString\\n  slug: NonEmptyTrimmedString\\n  articles: TagUpdateArticlesInput\\n}"
 `;
 
 exports[`NodeUpdateInputType > Definition > UserProfile may have an update input type 1`] = `

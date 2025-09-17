@@ -4,7 +4,6 @@ import { NodeUpdate } from './change/update.js';
 
 export * from './change/creation.js';
 export * from './change/deletion.js';
-export * from './change/dependency.js';
 export * from './change/update.js';
 
 export type NodeChange<TRequestContext extends object = any> =

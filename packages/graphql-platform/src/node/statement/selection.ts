@@ -4,7 +4,6 @@ import * as graphql from 'graphql';
 import assert from 'node:assert';
 import type { JsonObject } from 'type-fest';
 import type { Node } from '../../node.js';
-import { DependencyGraph } from '../change/dependency.js';
 import {
   Edge,
   Leaf,
@@ -12,13 +11,17 @@ import {
   type ReverseEdge,
   type UniqueConstraint,
 } from '../definition.js';
+import { NodeDependencyTree, type RawDependency } from '../dependency.js';
 import type { OperationContext } from '../operation.js';
 import {
-  LeafSelection,
-  VirtualSelection,
   isComponentSelection,
+  isEdgeSelection,
   isReverseEdgeSelection,
+  LeafSelection,
   mergeSelectionExpressions,
+  MultipleReverseEdgeHeadSelection,
+  UniqueReverseEdgeHeadSelection,
+  VirtualSelection,
   type ComponentSelection,
   type EdgeSelection,
   type ReverseEdgeSelection,
@@ -207,11 +210,54 @@ export class NodeSelection<
   }
 
   @MGetter
-  public get dependencyGraph(): DependencyGraph {
-    return new DependencyGraph(
-      this.node,
-      ...this.expressions.map(({ dependency }) => dependency),
-    );
+  public get dependencyTree(): NodeDependencyTree {
+    return new NodeDependencyTree(this.node, {
+      dependencies: this.expressions.flatMap<RawDependency | undefined>(
+        (expression) => {
+          if (expression instanceof LeafSelection) {
+            return {
+              kind: 'Leaf',
+              leaf: expression.leaf,
+            };
+          } else if (isEdgeSelection(expression)) {
+            return {
+              kind: 'Edge',
+              edge: expression.edge,
+              head: {
+                filter: expression.headFilter,
+                selection: expression.headSelection,
+              },
+            };
+          } else if (isReverseEdgeSelection(expression)) {
+            return {
+              kind: 'ReverseEdge',
+              reverseEdge: expression.reverseEdge,
+              head:
+                expression instanceof UniqueReverseEdgeHeadSelection
+                  ? {
+                      filter: expression.headFilter,
+                      selection: expression.headSelection,
+                    }
+                  : expression instanceof MultipleReverseEdgeHeadSelection
+                    ? {
+                        filter: expression.headFilter,
+                        ordering: expression.headOrdering,
+                        selection: expression.headSelection,
+                      }
+                    : {
+                        filter: expression.headFilter,
+                      },
+            };
+          } else if (expression instanceof VirtualSelection) {
+            return expression.sourceSelection?.dependencyTree.dependencies
+              .entries()
+              .toArray();
+          } else {
+            throw new utils.UnreachableValueError(expression);
+          }
+        },
+      ),
+    });
   }
 
   public isAkinTo(maybeSelection: unknown): maybeSelection is NodeSelection {

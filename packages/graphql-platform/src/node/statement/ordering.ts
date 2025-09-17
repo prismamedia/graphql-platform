@@ -2,9 +2,13 @@ import { MGetter, MMethod } from '@prismamedia/memoize';
 import * as graphql from 'graphql';
 import * as R from 'remeda';
 import type { Node } from '../../node.js';
-import { DependencyGraph } from '../change/dependency.js';
+import { NodeDependencyTree } from '../dependency.js';
 import type { OrderByInputValue } from '../type.js';
-import type { OrderingExpression } from './ordering/expression.js';
+import {
+  isComponentOrdering,
+  isReverseEdgeOrdering,
+  type OrderingExpression,
+} from './ordering/expression.js';
 
 export * from './ordering/direction.js';
 export * from './ordering/expression.js';
@@ -34,11 +38,25 @@ export class NodeOrdering {
   }
 
   @MGetter
-  public get dependencyGraph(): DependencyGraph {
-    return new DependencyGraph(
-      this.node,
-      ...this.expressions.map(({ dependency }) => dependency),
-    );
+  public get dependencyTree(): NodeDependencyTree {
+    return new NodeDependencyTree(this.node, {
+      dependencies: this.expressions.flatMap((expression) => {
+        if (isComponentOrdering(expression)) {
+          return {
+            kind: 'Leaf',
+            leaf: expression.leaf,
+          };
+        } else if (isReverseEdgeOrdering(expression)) {
+          return {
+            kind: 'ReverseEdge',
+            reverseEdge: expression.reverseEdge,
+            head: {
+              filter: expression.headFilter,
+            },
+          };
+        }
+      }),
+    });
   }
 
   @MGetter

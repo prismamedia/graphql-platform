@@ -65,6 +65,10 @@ export class MultipleReverseEdgeCountOutputType extends AbstractReverseEdgeOutpu
 
     const argsPath = utils.addPath(path, argsPathKey);
 
+    const authorization = operationContext?.getAuthorization(
+      this.reverseEdge.head,
+    );
+
     const headFilter = this.reverseEdge.head.filterInputType.filter(
       args?.where,
       operationContext,
@@ -74,7 +78,9 @@ export class MultipleReverseEdgeCountOutputType extends AbstractReverseEdgeOutpu
     return new MultipleReverseEdgeCountSelection(
       this.reverseEdge,
       ast.alias?.value,
-      headFilter,
+      authorization && headFilter
+        ? authorization.and(headFilter).normalized
+        : authorization || headFilter,
     );
   }
 

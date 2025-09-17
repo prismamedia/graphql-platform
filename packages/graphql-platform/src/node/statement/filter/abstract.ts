@@ -1,9 +1,8 @@
-import * as utils from '@prismamedia/graphql-platform-utils';
 import type * as graphql from 'graphql';
-import type { NodeSelectedValue } from '../../../node.js';
-import type { Dependency } from '../../change.js';
-import type { NodeSelection } from '../../statement.js';
+import type { NodeChange } from '../../change.js';
+import type { RawDependency } from '../../dependency.js';
 import type { NodeFilterInputValue } from '../../type.js';
+import type { NodeSelectedValue, NodeSelection } from '../selection.js';
 import type { AndOperand, BooleanFilter, OrOperand } from './boolean.js';
 
 export abstract class AbstractBooleanFilter {
@@ -69,9 +68,13 @@ export abstract class AbstractBooleanFilter {
   /**
    * Execute this expression against a partial value, returns undefined if not applicable
    */
-  public execute(_value: NodeSelectedValue): boolean | undefined {
+  public execute(value: NodeSelectedValue): boolean | undefined {
     return;
   }
 
-  public abstract get dependency(): utils.Arrayable<Dependency | undefined>;
+  public isEdgeHeadChangeFilteredOut(_change: NodeChange): boolean {
+    return false;
+  }
+
+  public abstract get dependencies(): RawDependency[];
 }

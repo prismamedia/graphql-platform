@@ -2,9 +2,10 @@ import * as utils from '@prismamedia/graphql-platform-utils';
 import * as graphql from 'graphql';
 import assert from 'node:assert';
 import type { JsonObject } from 'type-fest';
-import { EdgeDependencyGraph } from '../../../../../change/dependency.js';
 import type { Component, Edge } from '../../../../../definition.js';
 import type { OperationContext } from '../../../../../operation.js';
+import type { NodeFilterInputValue } from '../../../../../type.js';
+import { areFiltersEqual, NodeFilter } from '../../../../filter.js';
 import type {
   NodeSelectedValue,
   NodeSelection,
@@ -21,15 +22,28 @@ export class EdgeHeadSelection<
   public readonly component: Component;
   public readonly name: string;
   public readonly key: string;
+  public readonly headFilter?: NodeFilter;
 
   public constructor(
     public readonly edge: Edge,
     public readonly alias: string | undefined,
+    headFilter: NodeFilter | NodeFilterInputValue | undefined,
     public readonly headSelection: NodeSelection,
   ) {
     this.component = edge;
     this.name = edge.name;
     this.key = this.alias ?? this.name;
+
+    if (headFilter) {
+      if (headFilter instanceof NodeFilter) {
+        assert.strictEqual(edge.head, headFilter.node);
+
+        this.headFilter = headFilter.normalized;
+      } else {
+        this.headFilter =
+          edge.head.filterInputType.filter(headFilter).normalized;
+      }
+    }
 
     assert.strictEqual(edge.head, headSelection.node);
   }
@@ -42,7 +56,8 @@ export class EdgeHeadSelection<
     return (
       expression instanceof EdgeHeadSelection &&
       expression.edge === this.edge &&
-      expression.alias === this.alias
+      expression.alias === this.alias &&
+      areFiltersEqual(expression.headFilter, this.headFilter)
     );
   }
 
@@ -69,12 +84,9 @@ export class EdgeHeadSelection<
     return new EdgeHeadSelection(
       this.edge,
       this.alias,
+      this.headFilter,
       this.headSelection.mergeWith(expression.headSelection, path),
     );
-  }
-
-  public get dependency() {
-    return new EdgeDependencyGraph(this.edge, undefined, this.headSelection);
   }
 
   public get ast(): graphql.FieldNode {
