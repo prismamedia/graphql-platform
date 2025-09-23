@@ -579,7 +579,7 @@ describe('Dependency', () => {
       });
 
       it('upsert-filter', (t) => {
-        t.assert.snapshot(dependentGraph?.graphFilter.inputValue);
+        t.assert.snapshot(dependentGraph?.upsertFilter.inputValue);
       });
     });
   });
@@ -614,7 +614,7 @@ describe('Dependency', () => {
       });
 
       it('upsert-filter', (t) => {
-        t.assert.snapshot(dependentGraph?.graphFilter.inputValue);
+        t.assert.snapshot(dependentGraph?.upsertFilter.inputValue);
       });
     });
   });
@@ -654,7 +654,7 @@ describe('Dependency', () => {
       });
 
       it('upsert-filter', (t) => {
-        t.assert.snapshot(dependentGraph?.graphFilter.inputValue);
+        t.assert.snapshot(dependentGraph?.upsertFilter.inputValue);
       });
     });
   });
@@ -863,7 +863,7 @@ describe('Dependency', () => {
       });
 
       it('upsert-filter', (t) => {
-        t.assert.snapshot(dependentGraph?.graphFilter.inputValue);
+        t.assert.snapshot(dependentGraph?.upsertFilter.inputValue);
       });
     });
   });

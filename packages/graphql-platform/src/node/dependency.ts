@@ -283,7 +283,7 @@ export class NodeDependencyTree {
     discardedChanges?: ReadonlySet<NodeChange<TRequestContext>>,
   ):
     | {
-        currentLevelHits?: Set<NodeChange<TRequestContext>>;
+        hits?: Set<NodeChange<TRequestContext>>;
         children?: IteratorObject<
           [Edge | ReverseEdge, DependentNode | undefined]
         >;
@@ -411,7 +411,7 @@ export class NodeDependencyTree {
         },
       );
 
-    return { currentLevelHits, children };
+    return { hits: currentLevelHits, children };
   }
 
   public createDependentNode<TRequestContext extends object>(
@@ -425,9 +425,9 @@ export class NodeDependencyTree {
       return;
     }
 
-    const { currentLevelHits, children } = processedChanges;
+    const { hits, children } = processedChanges;
 
-    return new DependentNode(this.path, currentLevelHits, children).normalized;
+    return new DependentNode(this.path, hits, children).normalized;
   }
 
   public createDependentGraph<TRequestContext extends object>(
@@ -450,52 +450,60 @@ export class NodeDependencyTree {
       return;
     }
 
-    const { currentLevelHits, children } = processedChanges;
+    const { hits, children } = processedChanges;
 
-    const currentLevelDeletions = new Set<NodeDeletion | NodeUpdate>();
-    const currentLevelDeletionOrUpserts = new Set<NodeUpdate>();
-    const currentLevelUpserts = new Set<NodeCreation | NodeUpdate>();
+    const deletions = new Set<NodeDeletion | NodeUpdate>();
+    const deletionOrUpserts = new Set<NodeUpdate>();
+    const upsertIfFilteredIns = new Set<NodeCreation | NodeUpdate>();
+    const upserts = new Set<NodeCreation | NodeUpdate>();
 
-    if (currentLevelHits?.size) {
-      for (const change of currentLevelHits) {
-        if (change instanceof NodeCreation) {
-          currentLevelUpserts.add(change);
-        } else if (change instanceof NodeDeletion) {
-          currentLevelDeletions.add(change);
-        } else if (this.filter) {
-          const oldFilterValue = this.filter.execute(change.oldValue, true);
-          const newFilterValue = this.filter.execute(change.newValue, true);
+    hits?.forEach((hit) => {
+      if (hit instanceof NodeCreation) {
+        const filterValue =
+          !this.filter || this.filter.execute(hit.newValue, true);
 
-          switch (newFilterValue) {
-            case true:
-              currentLevelUpserts.add(change);
-              break;
-
-            case false:
-              currentLevelDeletions.add(change);
-              break;
-
-            case undefined:
-              if (oldFilterValue === false) {
-                currentLevelUpserts.add(change);
-              } else {
-                currentLevelDeletionOrUpserts.add(change);
-              }
-              break;
-          }
+        if (filterValue) {
+          upserts.add(hit);
         } else {
-          currentLevelUpserts.add(change);
+          upsertIfFilteredIns.add(hit);
+        }
+      } else if (hit instanceof NodeDeletion) {
+        deletions.add(hit);
+      } else {
+        const newFilterValue =
+          !this.filter || this.filter.execute(hit.newValue, true);
+
+        switch (newFilterValue) {
+          case true:
+            upserts.add(hit);
+            break;
+
+          case false:
+            deletions.add(hit);
+            break;
+
+          case undefined:
+            const oldFilterValue =
+              !this.filter || this.filter.execute(hit.oldValue, true);
+
+            if (oldFilterValue === false) {
+              upsertIfFilteredIns.add(hit);
+            } else {
+              deletionOrUpserts.add(hit);
+            }
+            break;
         }
       }
-    }
+    });
 
     return new DependentGraph(
       changes,
       this.path,
       this.filter,
-      currentLevelDeletions,
-      currentLevelDeletionOrUpserts,
-      currentLevelUpserts,
+      deletions,
+      deletionOrUpserts,
+      upsertIfFilteredIns,
+      upserts,
       children,
     ).normalized;
   }

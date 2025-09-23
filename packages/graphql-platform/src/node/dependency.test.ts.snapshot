@@ -178,7 +178,33 @@ exports[`Dependency > Complex filter & selection > produces a dependent-graph > 
 
 exports[`Dependency > Complex filter & selection > produces a dependent-graph > upsert-filter 1`] = `
 {
+  "status": "published",
+  "NOT": {
+    "createdBy": {
+      "lastLoggedInAt_gte": "2023-01-01T00:00:00.000Z",
+      "profile": {
+        "birthday_gte": "2000-01-01"
+      }
+    },
+    "updatedBy": {
+      "lastLoggedInAt_gte": "2023-06-01T00:00:00.000Z",
+      "profile": {}
+    }
+  },
+  "tags_some": {
+    "tag": {
+      "deprecated_not": true
+    }
+  },
   "OR": [
+    {
+      "_id_in": [
+        8,
+        5,
+        10,
+        11
+      ]
+    },
     {
       "updatedBy": {
         "id_in": [
@@ -311,11 +337,29 @@ exports[`Dependency > Complex filter > produces a dependent-graph > summary 1`] 
 
 exports[`Dependency > Complex filter > produces a dependent-graph > upsert-filter 1`] = `
 {
+  "status": "published",
   "tags_some": {
     "tag": {
-      "id": "e9937c6e-b774-4b40-91c1-794b53ccb771"
+      "deprecated_not": true
     }
-  }
+  },
+  "OR": [
+    {
+      "_id_in": [
+        8,
+        5,
+        10,
+        11
+      ]
+    },
+    {
+      "tags_some": {
+        "tag": {
+          "id": "e9937c6e-b774-4b40-91c1-794b53ccb771"
+        }
+      }
+    }
+  ]
 }
 `;
 
@@ -343,7 +387,9 @@ exports[`Dependency > Pure > produces a dependent-graph > summary 1`] = `
 `;
 
 exports[`Dependency > Pure > produces a dependent-graph > upsert-filter 1`] = `
-null
+{
+  "_id": 7
+}
 `;
 
 exports[`Dependency > With virtual-selection > has a consistent dependency-tree 1`] = `
@@ -395,14 +441,28 @@ exports[`Dependency > With virtual-selection > produces a dependent-graph > summ
 
 exports[`Dependency > With virtual-selection > produces a dependent-graph > upsert-filter 1`] = `
 {
-  "tags_some": {
-    "tag": {
-      "id_in": [
-        "1a364d1e-6436-4ab8-815e-ed5cbb98bdcd",
-        "e9937c6e-b774-4b40-91c1-794b53ccb771",
-        "d919d8aa-31a9-451b-adfe-b903e39f0427"
+  "OR": [
+    {
+      "_id_in": [
+        5,
+        7,
+        10,
+        6,
+        8,
+        11
       ]
+    },
+    {
+      "tags_some": {
+        "tag": {
+          "id_in": [
+            "1a364d1e-6436-4ab8-815e-ed5cbb98bdcd",
+            "e9937c6e-b774-4b40-91c1-794b53ccb771",
+            "d919d8aa-31a9-451b-adfe-b903e39f0427"
+          ]
+        }
+      }
     }
-  }
+  ]
 }
 `;

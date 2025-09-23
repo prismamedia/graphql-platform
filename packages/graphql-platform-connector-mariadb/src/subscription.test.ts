@@ -21,7 +21,6 @@ describe('Subscription', () => {
   const Article = gp.getNodeByName('Article');
   const Category = gp.getNodeByName('Category');
   const Tag = gp.getNodeByName('Tag');
-  const User = gp.getNodeByName('User');
 
   let subscriptions: ChangesSubscriptionStream<MyContext>[];
   const additionalMutations = async () => {

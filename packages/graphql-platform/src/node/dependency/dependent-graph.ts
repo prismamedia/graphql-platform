@@ -95,7 +95,7 @@ export class DependentNode<TRequestContext extends object = any> {
     };
   }
 
-  public get graphFilter(): NodeFilter {
+  protected get graphFilter(): NodeFilter {
     const currentLevel = this.path.at(-1)!;
 
     if (currentLevel instanceof Node) {
@@ -210,6 +210,9 @@ export class DependentGraph<
       NodeDeletion<TRequestContext> | NodeUpdate<TRequestContext>
     >,
     deletionOrUpserts: ReadonlySet<NodeUpdate<TRequestContext>>,
+    upsertIfFilteredIns: ReadonlySet<
+      NodeCreation<TRequestContext> | NodeUpdate<TRequestContext>
+    >,
     upserts: ReadonlySet<
       NodeCreation<TRequestContext> | NodeUpdate<TRequestContext>
     >,
@@ -217,7 +220,14 @@ export class DependentGraph<
       [Edge | ReverseEdge, DependentNode<TRequestContext> | undefined]
     >,
   ) {
-    super(path, deletions.union(deletionOrUpserts).union(upserts), rawChildren);
+    super(
+      path,
+      deletions
+        .union(deletionOrUpserts)
+        .union(upsertIfFilteredIns)
+        .union(upserts),
+      rawChildren,
+    );
 
     this.node = path[0];
 
@@ -243,16 +253,21 @@ export class DependentGraph<
 
     this.upsertFilter = new NodeFilter(
       this.node,
-      AndOperation.create([
-        filter?.filter ?? TrueValue,
-        OrOperation.create([
-          ...upserts
-            .values()
-            .map(({ node, id }) => node.filterInputType.filter(id).filter),
-          ...deletionOrUpserts
-            .values()
-            .map(({ node, id }) => node.filterInputType.filter(id).filter),
-          this.graphFilter.filter,
+      OrOperation.create([
+        ...upserts
+          .values()
+          .map(({ node, id }) => node.filterInputType.filter(id).filter),
+        AndOperation.create([
+          filter?.filter ?? TrueValue,
+          OrOperation.create([
+            ...deletionOrUpserts
+              .values()
+              .map(({ node, id }) => node.filterInputType.filter(id).filter),
+            ...upsertIfFilteredIns
+              .values()
+              .map(({ node, id }) => node.filterInputType.filter(id).filter),
+            this.graphFilter.filter,
+          ]),
         ]),
       ]),
     );
