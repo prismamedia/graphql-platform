@@ -5,7 +5,7 @@ import type { JsonObject } from 'type-fest';
 import type { Component, Edge } from '../../../../../definition.js';
 import type { OperationContext } from '../../../../../operation.js';
 import type { NodeFilterInputValue } from '../../../../../type.js';
-import { NodeFilter } from '../../../../filter.js';
+import { areFiltersEqual, NodeFilter } from '../../../../filter.js';
 import type {
   NodeSelectedValue,
   NodeSelection,
@@ -56,13 +56,17 @@ export class EdgeHeadSelection<
     return (
       expression instanceof EdgeHeadSelection &&
       expression.edge === this.edge &&
-      expression.alias === this.alias
+      expression.alias === this.alias &&
+      (!expression.headFilter ||
+        !this.headFilter ||
+        areFiltersEqual(expression.headFilter, this.headFilter))
     );
   }
 
   public equals(expression: unknown): expression is EdgeHeadSelection {
     return (
       this.isAkinTo(expression) &&
+      areFiltersEqual(expression.headFilter, this.headFilter) &&
       expression.headSelection.equals(this.headSelection)
     );
   }
@@ -83,7 +87,7 @@ export class EdgeHeadSelection<
     return new EdgeHeadSelection(
       this.edge,
       this.alias,
-      this.headFilter,
+      this.headFilter || expression.headFilter,
       this.headSelection.mergeWith(expression.headSelection, path),
     );
   }

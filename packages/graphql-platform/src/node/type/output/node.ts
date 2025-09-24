@@ -10,6 +10,7 @@ import type { Node } from '../../../node.js';
 import { Leaf, UniqueReverseEdge, type Component } from '../../definition.js';
 import type { OperationContext } from '../../operation/context.js';
 import {
+  EdgeHeadSelection,
   NodeSelection,
   mergeSelectionExpressions,
   type NodeSelectedSource,
@@ -370,7 +371,7 @@ export class NodeOutputType {
 
   public selectComponents(
     componentOrNames: ReadonlyArray<Component | Component['name']>,
-    _operationContext?: OperationContext,
+    operationContext?: OperationContext,
     path?: utils.Path,
   ): NodeSelection {
     if (!Array.isArray(componentOrNames)) {
@@ -384,13 +385,36 @@ export class NodeOutputType {
     return new NodeSelection(
       this.node,
       mergeSelectionExpressions(
-        componentOrNames.map(
-          (componentOrName, index) =>
-            this.node.ensureComponent(
-              componentOrName,
-              utils.addPath(path, index),
-            ).selection,
-        ),
+        componentOrNames.map((componentOrName, index) => {
+          const component = this.node.ensureComponent(
+            componentOrName,
+            utils.addPath(path, index),
+          );
+
+          if (component instanceof Leaf || !operationContext) {
+            return component.selection;
+          }
+
+          const componentPath = utils.addPath(path, component.name);
+
+          const authorization = component.isNullable()
+            ? operationContext.getAuthorization(component.head)
+            : operationContext.ensureAuthorization(
+                component.head,
+                componentPath,
+              );
+
+          return new EdgeHeadSelection(
+            component,
+            undefined,
+            authorization,
+            component.head.outputType.selectComponents(
+              Array.from(component.referencedUniqueConstraint.componentSet),
+              operationContext,
+              componentPath,
+            ),
+          );
+        }),
         path,
       ),
     );

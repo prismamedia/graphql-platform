@@ -72,18 +72,19 @@ export class EdgeHeadOutputType extends AbstractComponentOutputType<undefined> {
     operationContext: OperationContext | undefined,
     path: utils.Path,
   ): EdgeHeadSelection {
+    if (value === null) {
+      return this.edge.selection;
+    }
+
     const authorization = this.edge.isNullable()
       ? operationContext?.getAuthorization(this.edge.head)
       : operationContext?.ensureAuthorization(this.edge.head, path);
 
-    const headSelection =
-      value === null
-        ? this.edge.head.outputType.selectComponents(
-            Array.from(this.edge.referencedUniqueConstraint.componentSet),
-            operationContext,
-            path,
-          )
-        : this.edge.head.outputType.selectShape(value, operationContext, path);
+    const headSelection = this.edge.head.outputType.selectShape(
+      value,
+      operationContext,
+      path,
+    );
 
     return new EdgeHeadSelection(
       this.edge,
