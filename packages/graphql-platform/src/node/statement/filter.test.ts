@@ -48,6 +48,26 @@ describe('Filter', () => {
         ['Article', { views_gt: BigInt(123456) }, '{views_gt: "123456"}'],
         ['Article', { score_gte: 0.5 }, '{score_gte: 0.5}'],
         ['Article', { category: {} }, '{category: {}}'],
+        [
+          'Article',
+          {
+            OR: [
+              { tags_some: { tag: { slug: 'tv' } } },
+              { tags_some: { tag: { slug: 'news' } } },
+            ],
+          },
+          '{tags_some: {tag: {slug_in: ["tv", "news"]}}}',
+        ],
+        [
+          'Article',
+          {
+            AND: [
+              { tags_some: { tag: { slug: 'tv' } } },
+              { tags_some: { tag: { slug: 'news' } } },
+            ],
+          },
+          '{tags_some: {tag: {slug: "tv"}}, AND: [{tags_some: {tag: {slug: "news"}}}]}',
+        ],
       ] satisfies [
         nodeName: string,
         input: NodeFilterInputValue,
