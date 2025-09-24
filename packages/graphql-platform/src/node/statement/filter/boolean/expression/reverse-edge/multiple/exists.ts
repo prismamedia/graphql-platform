@@ -6,12 +6,7 @@ import type { RawDependency } from '../../../../../../dependency.js';
 import type { NodeFilterInputValue } from '../../../../../../type.js';
 import { NodeFilter, areFiltersEqual } from '../../../../../filter.js';
 import type { BooleanFilter } from '../../../../boolean.js';
-import {
-  AndOperation,
-  OrOperation,
-  type AndOperand,
-  type OrOperand,
-} from '../../../operation.js';
+import { OrOperation, type OrOperand } from '../../../operation.js';
 import { FalseValue, TrueValue } from '../../../value.js';
 import { AbstractReverseEdgeFilter } from '../../abstract-reverse-edge.js';
 
@@ -54,31 +49,6 @@ export class MultipleReverseEdgeExistsFilter extends AbstractReverseEdgeFilter {
       expression.reverseEdge === this.reverseEdge &&
       areFiltersEqual(expression.headFilter, this.headFilter)
     );
-  }
-
-  public override and(
-    operand: AndOperand,
-    remainingReducers: number,
-  ): BooleanFilter | undefined {
-    if (
-      operand instanceof MultipleReverseEdgeExistsFilter &&
-      operand.reverseEdge === this.reverseEdge
-    ) {
-      return MultipleReverseEdgeExistsFilter.create(
-        this.reverseEdge,
-        this.headFilter && operand.headFilter
-          ? new NodeFilter(
-              this.reverseEdge.head,
-              AndOperation.create(
-                [this.headFilter.filter, operand.headFilter.filter],
-                remainingReducers,
-              ),
-            )
-          : this.headFilter || operand.headFilter,
-      );
-    }
-
-    return;
   }
 
   public override or(
