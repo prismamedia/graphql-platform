@@ -164,47 +164,45 @@ export class DependentNode<TRequestContext extends object = any> {
       return new NodeFilter(
         currentLevel.tail,
         OrOperation.create([
-          ...this.hits
-            .values()
-            .flatMap((change) =>
-              change instanceof NodeCreation
-                ? [
+          ...this.hits.values().flatMap((change) =>
+            change instanceof NodeCreation
+              ? [
+                  currentLevel.originalEdge.referencedUniqueConstraint.createFilterFromValue(
+                    change.newValue[currentLevel.originalEdge.name],
+                  ).filter,
+                ]
+              : change instanceof NodeDeletion
+                ? // A reverse-edge deletion synthesizes a re-read of its
+                  // referenced tail (the parent). If that tail is itself
+                  // deleted within this very change-set, the surrounding
+                  // *ExistsFilter towards it is unsatisfiable: after commit no
+                  // row can still reference the deleted parent (referencing
+                  // rows were cascade-deleted / set-null, and those changes are
+                  // captured elsewhere in the dependent graph). Contributing
+                  // nothing lets the surrounding OrOperation / *ExistsFilter
+                  // fold to FalseValue.
+                  isReferencedTailDeleted(
+                    changes,
+                    currentLevel.tail,
+                    currentLevel.originalEdge.referencedUniqueConstraint.createFilterFromValue(
+                      change.oldValue[currentLevel.originalEdge.name],
+                    ),
+                  )
+                  ? []
+                  : [
+                      currentLevel.originalEdge.referencedUniqueConstraint.createFilterFromValue(
+                        change.oldValue[currentLevel.originalEdge.name],
+                      ).filter,
+                    ]
+                : [
                     currentLevel.originalEdge.referencedUniqueConstraint.createFilterFromValue(
                       change.newValue[currentLevel.originalEdge.name],
                     ).filter,
-                  ]
-                : change instanceof NodeDeletion
-                  ? // A reverse-edge deletion synthesizes a re-read of its
-                    // referenced tail (the parent). If that tail is itself
-                    // deleted within this very change-set, the surrounding
-                    // *ExistsFilter towards it is unsatisfiable: after commit no
-                    // row can still reference the deleted parent (referencing
-                    // rows were cascade-deleted / set-null, and those changes are
-                    // captured elsewhere in the dependent graph). Contributing
-                    // nothing lets the surrounding OrOperation / *ExistsFilter
-                    // fold to FalseValue.
-                    isReferencedTailDeleted(
-                      changes,
-                      currentLevel.tail,
-                      currentLevel.originalEdge.referencedUniqueConstraint.createFilterFromValue(
-                        change.oldValue[currentLevel.originalEdge.name],
-                      ),
-                    )
-                    ? []
-                    : [
-                        currentLevel.originalEdge.referencedUniqueConstraint.createFilterFromValue(
-                          change.oldValue[currentLevel.originalEdge.name],
-                        ).filter,
-                      ]
-                  : [
-                      currentLevel.originalEdge.referencedUniqueConstraint.createFilterFromValue(
-                        change.newValue[currentLevel.originalEdge.name],
-                      ).filter,
-                      currentLevel.originalEdge.referencedUniqueConstraint.createFilterFromValue(
-                        change.oldValue[currentLevel.originalEdge.name],
-                      ).filter,
-                    ],
-            ),
+                    currentLevel.originalEdge.referencedUniqueConstraint.createFilterFromValue(
+                      change.oldValue[currentLevel.originalEdge.name],
+                    ).filter,
+                  ],
+          ),
           currentLevel instanceof UniqueReverseEdge
             ? UniqueReverseEdgeExistsFilter.create(currentLevel, headFilter)
             : MultipleReverseEdgeExistsFilter.create(currentLevel, headFilter),
@@ -223,12 +221,15 @@ function isReferencedTailDeleted(
   tail: Node,
   tailFilter: NodeFilter,
 ): boolean {
-  const deletions = changes.changesByNode.get(tail)?.[utils.MutationType.DELETION];
+  const deletions =
+    changes.changesByNode.get(tail)?.[utils.MutationType.DELETION];
 
   return deletions
     ? deletions
         .values()
-        .some((deletion) => tailFilter.execute(deletion.oldValue, true) === true)
+        .some(
+          (deletion) => tailFilter.execute(deletion.oldValue, true) === true,
+        )
     : false;
 }
 
