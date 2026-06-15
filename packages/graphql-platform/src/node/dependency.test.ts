@@ -948,6 +948,18 @@ describe('Dependency', () => {
       { tag: { id: tagId }, brandKey: 'CAP', isActive: true },
     );
 
+    it('surfaces the edge-head deletion to the flattened dependencies (broker delivery)', () => {
+      // The fold can only collapse the redundant existence if the broker
+      // actually delivers the Tag deletion. The Article subscription reads only
+      // immutable Tag fields, so Tag would otherwise be invisible: an edge with
+      // re-read-synthesizing children (here `tag`, via `brandedContents`) must
+      // therefore surface its head deletion so the broker wakes on - and
+      // delivers - it.
+      assert.deepEqual(dependency.flattened.dependencies.get(Tag)?.toJSON(), {
+        deletion: true,
+      });
+    });
+
     it('does not synthesize a reverse-edge existence towards the deleted tag', () => {
       const dependentGraph = dependency.createDependentGraph(
         MutationContextChanges.createFromChanges([
