@@ -147,10 +147,9 @@ export class MariaDBBrokerChangesTable extends AbstractTable {
             OR([
               creation || deletion
                 ? `${this.escapeColumnIdentifier('kind', alias)} IN (${[
-                    creation && utils.MutationType.CREATION,
-                    deletion && utils.MutationType.DELETION,
+                    ...(creation ? [utils.MutationType.CREATION] : []),
+                    ...(deletion ? [utils.MutationType.DELETION] : []),
                   ]
-                    .filter(utils.isNonNil)
                     .map((kind) => this.serializeColumnValue('kind', kind))
                     .join(',')})`
                 : undefined,
