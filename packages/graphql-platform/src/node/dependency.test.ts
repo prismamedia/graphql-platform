@@ -2,7 +2,7 @@ import * as utils from '@prismamedia/graphql-platform-utils';
 import assert from 'node:assert';
 import { before, describe, it } from 'node:test';
 import { ArticleStatus, nodes, type MyContext } from '../__tests__/config.js';
-import { GraphQLPlatform } from '../index.js';
+import { GraphQLPlatform, OnEdgeHeadDeletion } from '../index.js';
 import {
   NodeCreation,
   NodeDeletion,
@@ -865,6 +865,141 @@ describe('Dependency', () => {
       it('upsert-filter', (t) => {
         t.assert.snapshot(dependentGraph?.upsertFilter.inputValue);
       });
+    });
+  });
+
+  // @see https://github.com/prismamedia/graphql-platform - reverse-edge towards a deleted head
+  describe('Reverse-edge towards a cascade-deleted head', () => {
+    // A dedicated platform adding a "TagBrandedContent" node, cascade-deleted
+    // with its "Tag", and reachable from the "Article" selection through
+    // Article -> tags -> tag -> brandedContents.
+    const cascadingGP = new GraphQLPlatform({
+      nodes: {
+        ...nodes,
+        Tag: {
+          ...nodes.Tag,
+          reverseEdges: {
+            ...nodes.Tag.reverseEdges,
+            brandedContents: { originalEdge: 'TagBrandedContent.tag' },
+          },
+        },
+        TagBrandedContent: {
+          components: {
+            tag: {
+              kind: 'Edge',
+              head: 'Tag',
+              onHeadDeletion: OnEdgeHeadDeletion.CASCADE,
+              nullable: false,
+              mutable: false,
+            },
+            brandKey: {
+              kind: 'Leaf',
+              type: 'NonEmptyTrimmedString',
+              nullable: false,
+              mutable: false,
+            },
+            isActive: { kind: 'Leaf', type: 'Boolean' },
+          },
+          uniques: [['tag', 'brandKey']],
+        },
+      },
+    } as any);
+
+    const CascadingArticle = cascadingGP.getNodeByName('Article');
+    const Tag = cascadingGP.getNodeByName('Tag');
+    const ArticleTag = cascadingGP.getNodeByName('ArticleTag');
+    const TagBrandedContent = cascadingGP.getNodeByName('TagBrandedContent');
+
+    const tagId = '00000000-0000-4000-8000-000000000900';
+
+    const dependency = new DocumentSetDependency(CascadingArticle, {
+      selection: CascadingArticle.outputType.select(`{
+        _id
+        tags(first: 100) {
+          tag {
+            id
+            brandedContents(where: { isActive: true }, first: 100) { brandKey }
+          }
+        }
+      }`),
+    });
+
+    const tagDeletion = new NodeDeletion(Tag, myRequestContext, {
+      id: tagId,
+      title: 'Old Tag',
+      slug: 'old-tag',
+      deprecated: false,
+      createdAt: new Date(),
+      updatedAt: new Date(),
+    });
+
+    const articleTagDeletions = [11, 22, 33].map(
+      (_id) =>
+        new NodeDeletion(ArticleTag, myRequestContext, {
+          article: { _id },
+          order: 1,
+          tag: { id: tagId },
+        }),
+    );
+
+    const brandedContentDeletion = new NodeDeletion(
+      TagBrandedContent,
+      myRequestContext,
+      { tag: { id: tagId }, brandKey: 'CAP', isActive: true },
+    );
+
+    it('surfaces the edge-head deletion to the flattened dependencies (broker delivery)', () => {
+      // The fold can only collapse the redundant existence if the broker
+      // actually delivers the Tag deletion. The Article subscription reads only
+      // immutable Tag fields, so Tag would otherwise be invisible: an edge with
+      // re-read-synthesizing children (here `tag`, via `brandedContents`) must
+      // therefore surface its head deletion so the broker wakes on - and
+      // delivers - it.
+      assert.deepEqual(dependency.flattened.dependencies.get(Tag)?.toJSON(), {
+        deletion: true,
+      });
+    });
+
+    it('does not synthesize a reverse-edge existence towards the deleted tag', () => {
+      const dependentGraph = dependency.createDependentGraph(
+        MutationContextChanges.createFromChanges([
+          tagDeletion,
+          ...articleTagDeletions,
+          brandedContentDeletion,
+        ]),
+      );
+
+      assert(dependentGraph);
+
+      const upsert = dependentGraph.upsertFilter.inputValue;
+
+      // The impacted articles are already captured through the cascade-deleted
+      // junction rows: the re-read is a plain primary-key lookup.
+      assert.deepEqual(upsert, { _id_in: [11, 22, 33] });
+
+      // Explicit guard: no existence towards the deleted tag.
+      assert(
+        !JSON.stringify(upsert).includes('tags_some'),
+        `upsertFilter must not contain an existence towards the deleted tag, got: ${JSON.stringify(upsert)}`,
+      );
+    });
+
+    it('still synthesizes the existence when the tag is NOT deleted', () => {
+      // Same branded-content deletion, but the tag survives (no Tag deletion,
+      // no ArticleTag deletion): the existence towards the affected tag must
+      // remain, so the affected articles can be re-read.
+      const dependentGraph = dependency.createDependentGraph(
+        MutationContextChanges.createFromChanges([brandedContentDeletion]),
+      );
+
+      assert(dependentGraph);
+
+      assert(
+        JSON.stringify(dependentGraph.upsertFilter.inputValue).includes(
+          'tags_some',
+        ),
+        `upsertFilter must keep the existence towards the surviving tag, got: ${JSON.stringify(dependentGraph.upsertFilter.inputValue)}`,
+      );
     });
   });
 });

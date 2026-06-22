@@ -11,6 +11,7 @@ exports[`Dependency > Complex filter & selection > has a consistent dependency-t
     ]
   },
   "User": {
+    "deletion": true,
     "update": [
       "lastLoggedInAt"
     ]

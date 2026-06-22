@@ -470,3 +470,58 @@ describe('Subscription', () => {
     );
   });
 });
+
+// Regression for the companion of PR #20: `EdgeDependency.flattened` surfaces a
+// head-node deletion-only dependency (e.g. `Tag` with `{ deletion: true }` and
+// no `creation`) whenever the edge has a re-read-synthesizing child. The
+// changes-table `filterDependencies` must build a valid `kind IN (...)` clause
+// for it instead of crashing while serializing the `false` boolean as a `kind`
+// enum value.
+describe('Subscription diagnosis with a deletion-only dependency', () => {
+  const gp = createMyGP('connector_mariadb_subscription_deletion_only');
+
+  const Article = gp.getNodeByName('Article');
+
+  let subscription: ChangesSubscriptionStream<MyContext>;
+
+  beforeEach(async () => {
+    await gp.connector.setup();
+
+    // Article -> tags -> tag (edge to Tag) -> articles (reverse-edge): the
+    // `tag` edge gains a re-read-synthesizing child, so its head `Tag` is
+    // surfaced as deletion-only (no mutable `Tag` field is selected).
+    subscription = await Article.api.subscribeToChanges(myAdminContext, {
+      where: { status: ArticleStatus.PUBLISHED },
+      selection: {
+        onUpsert: `{
+          id
+          tags(first: 10) {
+            tag {
+              id
+              articles(first: 10) {
+                article { id }
+              }
+            }
+          }
+        }`,
+      },
+    });
+  });
+
+  afterEach(async () => {
+    await subscription.dispose();
+    await gp.connector.teardown();
+  });
+
+  it('surfaces "Tag" as a deletion-only dependency', () => {
+    assert.deepEqual(subscription.dependencyTree.flattened.toJSON().Tag, {
+      deletion: true,
+    });
+  });
+
+  it('diagnoses without crashing on the deletion-only dependency', async () => {
+    // Before the fix, this rejected with an AssertionError (boolean vs string)
+    // while building the `kind IN (...)` clause in `filterDependencies`.
+    await assert.doesNotReject(() => gp.broker.diagnose());
+  });
+});

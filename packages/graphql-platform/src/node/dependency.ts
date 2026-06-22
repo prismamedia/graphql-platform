@@ -538,6 +538,45 @@ export class EdgeDependency extends NodeDependencyTree {
     return [...this.parent.path, this.edge];
   }
 
+  /**
+   * An edge surfaces its head-node deletion to the flattened dependencies (and
+   * therefore to the broker) whenever it has children synthesizing a re-read of
+   * that head.
+   *
+   * When the head is deleted, the existence-filters those children generate
+   * towards it become unsatisfiable (the referencing rows have been
+   * cascade-deleted / set-null). Making the head deletion visible lets the
+   * dependent-graph fold those existences away instead of emitting a
+   * full-scanning existence towards a row that no longer exists.
+   *
+   * Note: this is intentionally added to `flattened` only, not to
+   * `currentLevel`: the head deletion must be *delivered* so the fold can see
+   * it, but it must NOT become a hit at this edge level (which would re-emit the
+   * very existence we want to fold).
+   */
+  @MGetter
+  public override get flattened(): FlattenedNodeDependencyTree {
+    const flattened = super.flattened;
+
+    if (!this.children.size || !this.node.isDeletable()) {
+      return flattened;
+    }
+
+    const dependencies = new Map(flattened.dependencies);
+
+    const headDeletion = new NodeDependency(this.node, {
+      [utils.MutationType.DELETION]: true,
+    });
+
+    const current = dependencies.get(this.node);
+    dependencies.set(
+      this.node,
+      current ? current.mergeWith(headDeletion) : headDeletion,
+    );
+
+    return new FlattenedNodeDependencyTree(dependencies);
+  }
+
   public attachTo(parent: NodeDependencyTree): this | EdgeDependency {
     return new EdgeDependency(parent, this.edge, this.config);
   }

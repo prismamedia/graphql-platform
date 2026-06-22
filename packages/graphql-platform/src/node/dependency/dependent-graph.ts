@@ -1,3 +1,4 @@
+import * as utils from '@prismamedia/graphql-platform-utils';
 import assert from 'node:assert';
 import type { JsonObject } from 'type-fest';
 import { Node } from '../../node.js';
@@ -95,7 +96,9 @@ export class DependentNode<TRequestContext extends object = any> {
     };
   }
 
-  protected get graphFilter(): NodeFilter {
+  protected graphFilter(
+    changes: MutationContextChanges<TRequestContext>,
+  ): NodeFilter {
     const currentLevel = this.path.at(-1)!;
 
     if (currentLevel instanceof Node) {
@@ -104,7 +107,7 @@ export class DependentNode<TRequestContext extends object = any> {
         OrOperation.create(
           Array.from(
             this.children.values(),
-            (child) => child.graphFilter.filter,
+            (child) => child.graphFilter(changes).filter,
           ),
         ),
       );
@@ -142,7 +145,7 @@ export class DependentNode<TRequestContext extends object = any> {
                 ),
               ...this.children
                 .values()
-                .map((child) => child.graphFilter.filter),
+                .map((child) => child.graphFilter(changes).filter),
             ]),
           ),
         ),
@@ -153,7 +156,7 @@ export class DependentNode<TRequestContext extends object = any> {
         OrOperation.create(
           Array.from(
             this.children.values(),
-            (child) => child.graphFilter.filter,
+            (child) => child.graphFilter(changes).filter,
           ),
         ),
       );
@@ -161,30 +164,45 @@ export class DependentNode<TRequestContext extends object = any> {
       return new NodeFilter(
         currentLevel.tail,
         OrOperation.create([
-          ...this.hits
-            .values()
-            .flatMap((change) =>
-              change instanceof NodeCreation
-                ? [
+          ...this.hits.values().flatMap((change) =>
+            change instanceof NodeCreation
+              ? [
+                  currentLevel.originalEdge.referencedUniqueConstraint.createFilterFromValue(
+                    change.newValue[currentLevel.originalEdge.name],
+                  ).filter,
+                ]
+              : change instanceof NodeDeletion
+                ? // A reverse-edge deletion synthesizes a re-read of its
+                  // referenced tail (the parent). If that tail is itself
+                  // deleted within this very change-set, the surrounding
+                  // *ExistsFilter towards it is unsatisfiable: after commit no
+                  // row can still reference the deleted parent (referencing
+                  // rows were cascade-deleted / set-null, and those changes are
+                  // captured elsewhere in the dependent graph). Contributing
+                  // nothing lets the surrounding OrOperation / *ExistsFilter
+                  // fold to FalseValue.
+                  isReferencedTailDeleted(
+                    changes,
+                    currentLevel.tail,
                     currentLevel.originalEdge.referencedUniqueConstraint.createFilterFromValue(
-                      change.newValue[currentLevel.originalEdge.name],
-                    ).filter,
-                  ]
-                : change instanceof NodeDeletion
-                  ? [
+                      change.oldValue[currentLevel.originalEdge.name],
+                    ),
+                  )
+                  ? []
+                  : [
                       currentLevel.originalEdge.referencedUniqueConstraint.createFilterFromValue(
                         change.oldValue[currentLevel.originalEdge.name],
                       ).filter,
                     ]
-                  : [
-                      currentLevel.originalEdge.referencedUniqueConstraint.createFilterFromValue(
-                        change.newValue[currentLevel.originalEdge.name],
-                      ).filter,
-                      currentLevel.originalEdge.referencedUniqueConstraint.createFilterFromValue(
-                        change.oldValue[currentLevel.originalEdge.name],
-                      ).filter,
-                    ],
-            ),
+                : [
+                    currentLevel.originalEdge.referencedUniqueConstraint.createFilterFromValue(
+                      change.newValue[currentLevel.originalEdge.name],
+                    ).filter,
+                    currentLevel.originalEdge.referencedUniqueConstraint.createFilterFromValue(
+                      change.oldValue[currentLevel.originalEdge.name],
+                    ).filter,
+                  ],
+          ),
           currentLevel instanceof UniqueReverseEdge
             ? UniqueReverseEdgeExistsFilter.create(currentLevel, headFilter)
             : MultipleReverseEdgeExistsFilter.create(currentLevel, headFilter),
@@ -192,6 +210,27 @@ export class DependentNode<TRequestContext extends object = any> {
       );
     }
   }
+}
+
+/**
+ * Returns whether the given tail-filter (a re-read synthesized by a reverse-edge
+ * change) targets a tail-node that is itself deleted within this change-set.
+ */
+function isReferencedTailDeleted(
+  changes: MutationContextChanges,
+  tail: Node,
+  tailFilter: NodeFilter,
+): boolean {
+  const deletions =
+    changes.changesByNode.get(tail)?.[utils.MutationType.DELETION];
+
+  return deletions
+    ? deletions
+        .values()
+        .some(
+          (deletion) => tailFilter.execute(deletion.oldValue, true) === true,
+        )
+    : false;
 }
 
 export class DependentGraph<
@@ -244,8 +283,9 @@ export class DependentGraph<
               ...deletionOrUpserts
                 .values()
                 .map(({ node, id }) => node.filterInputType.filter(id).filter),
-              filter.dependencyTree.createDependentGraph(changes)?.graphFilter
-                .filter ?? FalseValue,
+              filter.dependencyTree
+                .createDependentGraph(changes)
+                ?.graphFilter(changes).filter ?? FalseValue,
             ]),
           ])
         : FalseValue,
@@ -266,7 +306,7 @@ export class DependentGraph<
             ...upsertIfFilteredIns
               .values()
               .map(({ node, id }) => node.filterInputType.filter(id).filter),
-            this.graphFilter.filter,
+            this.graphFilter(changes).filter,
           ]),
         ]),
       ]),
