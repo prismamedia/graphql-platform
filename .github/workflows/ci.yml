@@ -6,6 +6,10 @@ jobs:
   setup-compile-test-and-publish:
     runs-on: ubuntu-latest
 
+    permissions:
+      contents: read
+      id-token: write
+
     services:
       mariadb:
         image: mariadb:11.4
@@ -67,5 +71,3 @@ jobs:
         run: |
           yarn workspaces foreach --all --no-private exec npm version --no-workspaces-update --no-git-tag-version ${GITHUB_REF#refs/tags/}
           yarn workspaces foreach --all --no-private npm publish --access public
-        env:
-          YARN_NPM_AUTH_TOKEN: ${{ secrets.NPM_REGISTRY_AUTH_TOKEN }}
